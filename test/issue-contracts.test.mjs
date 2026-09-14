@@ -146,6 +146,11 @@ test("all public forms accept harmless heading variations and absent optional an
       labels: [{ name: "enhancement" }, { name: "needs-triage" }],
     },
     {
+      name: "feature request with CRLF",
+      body: "### Problem\r\n\r\nSearch is slow.\r\n\r\n### Desired outcome\r\n\r\nSearch finishes quickly.",
+      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+    },
+    {
       name: "implementation ticket",
       body: "#### What To Build\n\nAdd caching.\n\n#### ACCEPTANCE CRITERIA\n\n- [ ] Search is fast.\n\n#### Blocked By\n\nNone.",
       labels: [{ name: "ready-for-agent" }],
@@ -222,6 +227,7 @@ test("an empty checklist is rejected as a required-field placeholder", async () 
 test("required sections use rendered visible content", async (context) => {
   const examples = [
     { name: "empty HTML", value: "<br><br>", valid: false },
+    { name: "hidden HTML", value: "<span hidden>Secret text.</span><title>Secret title.</title>", valid: false },
     { name: "HTML text", value: "<p>Add caching.</p>", valid: true },
     { name: "code example", value: "```js\ncache.enable();\n```", valid: true },
   ];
@@ -428,6 +434,21 @@ test("contract authority follows the planning, native-body, and triaged-brief de
   }
 });
 
+test("a triage category cannot make a native body bypass the Agent Brief", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\nA user gets a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.\n\n## Further Notes\n\nNone.",
+      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+      state: "open",
+    },
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /Agent Brief/);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
 test("trailing peer sections do not complete required contract answers", async (context) => {
   await context.test("implementation ticket", async () => {
     const result = await exercise({
@@ -581,7 +602,7 @@ test("explicit blocker links are used when the native dependency endpoint is una
   const result = await exercise({
     issue: {
       number: 42,
-      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n```md\n#999\n```\n\n    #998\n\n`#997`\n\n<code>#996</code>\n\n| Blocker |\n| --- |\n| [Issue](https://github.com/example/repository/issues/41) |\n\n<a href=\"https://github.com/example/repository/issues/43\">Another blocker</a>",
+      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n```md\n#999\n```\n\n    #998\n\n`#997`\n\n<code>#996</code>\n\n<span hidden>#995 <a href=\"https://github.com/example/repository/issues/44\">Hidden blocker</a></span>\n\n| Blocker |\n| --- |\n| [Issue](https://github.com/example/repository/issues/41) |\n\n<a href=\"https://github.com/example/repository/issues/43\">Another blocker</a>",
       labels: [{ name: "ready-for-agent" }],
       state: "open",
     },
@@ -596,7 +617,7 @@ test("explicit blocker links are used when the native dependency endpoint is una
   assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/41"));
   assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/43"));
   assert.ok(!result.requests.some(({ url }) => url === "/repos/example/repository/issues/999"));
-  assert.ok(!result.requests.some(({ url }) => ["/repos/example/repository/issues/998", "/repos/example/repository/issues/997", "/repos/example/repository/issues/996"].includes(url)));
+  assert.ok(!result.requests.some(({ url }) => ["/repos/example/repository/issues/998", "/repos/example/repository/issues/997", "/repos/example/repository/issues/996", "/repos/example/repository/issues/995", "/repos/example/repository/issues/44"].includes(url)));
 });
 
 test("an unresolvable blocker link removes readiness with actionable feedback", async () => {

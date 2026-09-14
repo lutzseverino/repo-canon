@@ -10,6 +10,7 @@ const workflowLabels = new Set(["needs-triage", "needs-info", "ready-for-agent",
 const categoryLabels = new Set(["bug", "enhancement"]);
 const childLabels = new Set(["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"]);
 const agentBriefHeadingNames = new Set(["agent brief"]);
+const nonRenderedElements = new Set(["head", "script", "style", "template", "title"]);
 const contractSectionNames = new Set([
   "acceptance criteria",
   "actual behavior",
@@ -198,8 +199,8 @@ function markdownReferenceText(markdown) {
       fragments.push(node.value);
       return;
     }
-    if (["code", "pre", "script", "style", "template"].includes(node.tagName)) return;
-    const href = node.tagName === "a" ? node.attrs?.find(({ name }) => name === "href")?.value : null;
+    if (isHidden(node) || ["code", "pre"].includes(node.tagName)) return;
+    const href = node.tagName === "a" ? attribute(node, "href") : null;
     if (href) fragments.push(href);
     for (const child of node.childNodes ?? []) visit(child);
   }
@@ -219,12 +220,20 @@ function renderedMarkdownFragment(markdown) {
 function htmlVisibleText(fragment) {
   function textContent(node) {
     if (node.nodeName === "#text") return node.value;
-    if (["script", "style", "template"].includes(node.tagName)) return "";
-    if (node.tagName === "img") return node.attrs?.find(({ name }) => name === "alt")?.value ?? "";
+    if (isHidden(node)) return "";
+    if (node.tagName === "img") return attribute(node, "alt") ?? "";
     return (node.childNodes ?? []).map(textContent).join("");
   }
 
   return textContent(fragment);
+}
+
+function attribute(node, name) {
+  return node.attrs?.find((candidate) => candidate.name === name)?.value ?? null;
+}
+
+function isHidden(node) {
+  return nonRenderedElements.has(node.tagName) || attribute(node, "hidden") !== null;
 }
 
 function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
@@ -245,14 +254,15 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   }
 
   const brief = latestAgentBrief(comments);
-  if (brief && [...labels].some((label) => categoryLabels.has(label))) {
+  const hasTriageCategory = [...labels].some((label) => categoryLabels.has(label));
+  if (brief && hasTriageCategory) {
     validateTriagedLabels(labels, null, errors);
     validateAgentBrief(brief.body, labels, errors);
     return outcome("triaged Agent Brief", errors, labels, true);
   }
 
   const contractKind = identifyContract(sections);
-  if (contractKind === "specification") {
+  if (!hasTriageCategory && contractKind === "specification") {
     requireSections(sections, ["Problem Statement", "Solution", "User Stories", "Out of Scope"], errors);
     for (const name of ["Implementation Decisions", "Testing Decisions", "Further Notes"]) {
       requireSection(sections, name, errors, { allowEmpty: true });
@@ -260,7 +270,7 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
     return outcome("specification", errors, labels, false);
   }
 
-  if (contractKind === "implementation ticket") {
+  if (!hasTriageCategory && contractKind === "implementation ticket") {
     errors.push(...relationshipErrors);
     requireSections(sections, ["What to build", "Acceptance criteria"], errors);
     requireSection(sections, "Blocked by", errors, { allowExternalValue: blockedBy.length > 0 });
@@ -285,6 +295,12 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
     validateTriagedLabels(labels, "enhancement", errors);
     requireAgentBriefForReadiness(labels, errors);
     return outcome("feature request", errors, labels, true);
+  }
+
+  if (hasTriageCategory) {
+    validateTriagedLabels(labels, null, errors);
+    errors.push("Add an Agent Brief for this category-labeled triaged request, or use the matching public bug or feature form.");
+    return outcome("triaged request", errors, labels, true);
   }
 
   errors.push("Use one supported issue contract: a public form, native specification or ticket, triaged Agent Brief, Wayfinder map, or labeled Wayfinder child.");
@@ -315,6 +331,7 @@ function outcome(kind, errors, labels, triaged) {
 }
 
 function parseSections(markdown) {
+  markdown = normalizeMarkdown(markdown);
   const markdownHeadings = findMarkdownHeadings(markdown);
   const headings = markdownHeadings.filter((heading) => contractSectionNames.has(normalize(heading.name)));
   const sections = new Map();
@@ -330,6 +347,7 @@ function parseSections(markdown) {
 }
 
 function findMarkdownHeadings(markdown, acceptedNames = null) {
+  markdown = normalizeMarkdown(markdown);
   return markdownTokenSpans(markdown)
     .filter(({ token }) => token.type === "heading")
     .map(({ token, index }) => ({
@@ -342,6 +360,7 @@ function findMarkdownHeadings(markdown, acceptedNames = null) {
 }
 
 function markdownTokenSpans(markdown) {
+  markdown = normalizeMarkdown(markdown);
   let cursor = 0;
   return lexer(markdown).map((token) => {
     const index = markdown.indexOf(token.raw, cursor);
@@ -361,6 +380,7 @@ function markdownInlineText(tokens) {
 }
 
 function briefFieldMatches(markdown) {
+  markdown = normalizeMarkdown(markdown);
   const matches = [];
   for (const { token, index } of markdownTokenSpans(markdown)) {
     if (token.type !== "paragraph") continue;
@@ -382,6 +402,10 @@ function briefFieldMatches(markdown) {
 
 function normalize(value) {
   return value.replace(/[*_`]/g, "").replace(/[ \t]+/g, " ").trim().toLowerCase();
+}
+
+function normalizeMarkdown(value) {
+  return value.replace(/\r\n?/g, "\n");
 }
 
 function requireSections(sections, names, errors) {
@@ -451,6 +475,7 @@ function latestAgentBrief(comments) {
 }
 
 function validateAgentBrief(body, labels, errors) {
+  body = normalizeMarkdown(body);
   const heading = agentBriefHeading(body);
   if (!isAgentBriefPreamble(body.slice(0, heading.index))) {
     errors.push("Start the Agent Brief comment with `> *This was generated by AI during triage.*`.");
@@ -467,12 +492,14 @@ function validateAgentBrief(body, labels, errors) {
 }
 
 function markdownSection(markdown, heading) {
+  markdown = normalizeMarkdown(markdown);
   const end = findMarkdownHeadings(markdown)
     .find((candidate) => candidate.index > heading.index && candidate.level <= heading.level)?.index ?? markdown.length;
   return markdown.slice(heading.index + heading.length, end);
 }
 
 function parseBriefFields(body) {
+  body = normalizeMarkdown(body);
   const matches = briefFieldMatches(body);
   const fields = new Map();
   for (let index = 0; index < matches.length; index += 1) {
