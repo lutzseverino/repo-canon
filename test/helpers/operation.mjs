@@ -40,6 +40,19 @@ export function invokeCheck(script, root, overrides = {}) {
   };
 }
 
+export function invokeOperation(script, request, options = {}) {
+  const child = spawnSync(process.execPath, [...(options.nodeArguments ?? []), script], {
+    cwd: request.projectRoot,
+    encoding: 'utf8',
+    env: { ...process.env, ...options.env },
+    input: JSON.stringify(request),
+  });
+  return {
+    ...child,
+    result: child.status === 0 && child.stdout.trim() ? JSON.parse(child.stdout) : null,
+  };
+}
+
 export function snapshot(root) {
   const entries = {};
   function visit(directory) {
