@@ -14,6 +14,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   agent workflow, template, and preparation evidence.
 - [Upstream compatibility](upstream-compatibility.md): the regular skill
   inventory and native issue formats that automation must respect.
+- [Repository README check](repository-readme-check.md): operation protocol,
+  outcomes, prerequisites, and focused fixture command.
 
 ## Authoring status
 
@@ -42,9 +44,13 @@ planning uses authenticated `gh` access.
 
 Review Markdown file links, issue-form fields, and consistency with the confirmed
 preferences. Run `git diff --check`, `npm run check`, and `npm test` before
-requesting review. The Node test suite exercises pull request creation and update
-event inputs, valid and invalid metadata, harmless formatting variations, and a
-hostile fork payload. The project has no compilation step. The four draft issue
-forms were parsed as YAML and checked for basic field structure and duplicate IDs
-during bootstrap; no GitHub submission behavior was exercised. Source validation
-and adoption evidence remain separate from these checks.
+requesting review. Use Node.js 24; the project has no package dependencies,
+typecheck, or build step. Run a single fixture with
+`node --test test/<name>.test.mjs` while developing.
+
+The Node test suite exercises executable operation fixtures plus pull request
+creation and update event inputs, valid and invalid metadata, harmless formatting
+variations, and a hostile fork payload. The four draft issue forms were parsed as
+YAML and checked for basic field structure and duplicate IDs during bootstrap; no
+GitHub submission behavior was exercised. Source validation and adoption evidence
+remain separate from these checks.
