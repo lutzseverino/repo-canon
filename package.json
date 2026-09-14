@@ -7,6 +7,7 @@
   },
   "scripts": {
     "check": "node --check .github/scripts/validate-pr-metadata.mjs && node --check test/pr-metadata.test.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "test:issue-contracts": "node --test test/issue-contracts.test.mjs"
   }
 }
