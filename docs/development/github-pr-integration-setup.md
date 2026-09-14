@@ -22,6 +22,20 @@ names, rules, branch includes, bypass actors, and strict-check policy in that
 ruleset while making it active and applicable to the default branch. Other
 rulesets and branch policy remain untouched.
 
+The classic-protection read distinguishes GitHub's documented response states
+before choosing an enforcement location:
+
+| Branch protection response | Required-check action | Readback |
+| --- | --- | --- |
+| `404 Branch not protected` | Use the dedicated ruleset | Confirm an active ruleset applies to the default branch and requires `PR metadata` |
+| `200` with no `required_status_checks` policy | Preserve the other classic protections and use the dedicated ruleset | Confirm the same ruleset enforcement |
+| `200` with `required_status_checks` | Add `PR metadata` to the existing classic contexts | Re-read branch protection and confirm the context |
+| Any other `404` or unreadable response | Return `blocked` without mutation | None; the operation cannot safely distinguish absence from inaccessible state |
+
+Ruleset readback checks active enforcement, branch applicability, exclusions,
+and the required-check rule together. An inactive or non-applicable managed
+ruleset is reconciled before settings are changed.
+
 Repository settings are updated with only the five fields in the table, so
 settings such as automatic merging, branch deletion, security features, and
 repository visibility retain their current values. The configured title and

@@ -69,7 +69,7 @@ function mutate(action) {
 }
 
 const repositoryEndpoint = /^repos\/[^/]+\/[^/?]+$/;
-const statusChecksEndpoint = /\/branches\/[^/]+\/protection\/required_status_checks$/;
+const branchProtectionEndpoint = /\/branches\/[^/]+\/protection$/;
 const contextsEndpoint = /\/branches\/[^/]+\/protection\/required_status_checks\/contexts$/;
 const rulesetsEndpoint = /\/rulesets(?:\?.*)?$/;
 const rulesetEndpoint = /\/rulesets\/(\d+)$/;
@@ -90,36 +90,39 @@ if (method === 'GET' && repositoryEndpoint.test(endpoint)) {
   process.exit(0);
 }
 
-if (method === 'GET' && statusChecksEndpoint.test(endpoint)) {
+if (method === 'GET' && branchProtectionEndpoint.test(endpoint)) {
   state.branchReads = (state.branchReads ?? 0) + 1;
   save();
   if (state.failBranchInspection) {
     process.stderr.write('gh: Not Found (HTTP 404)\n');
     process.exit(1);
   }
-  if (state.branchStatusChecks === null || state.branchStatusChecks === undefined) {
+  if (state.branchProtection === null || state.branchProtection === undefined) {
     process.stderr.write('gh: Branch not protected (HTTP 404)\n');
     process.exit(1);
   }
-  const checks = structuredClone(state.branchStatusChecks);
+  const protection = structuredClone(state.branchProtection);
   if (state.readbackMismatch === 'branch' && state.branchReads > 1) {
-    checks.contexts = (checks.contexts ?? []).filter(context => context !== 'PR metadata');
-    checks.checks = (checks.checks ?? []).filter(check => check.context !== 'PR metadata');
+    const checks = protection.required_status_checks;
+    if (checks) {
+      checks.contexts = (checks.contexts ?? []).filter(context => context !== 'PR metadata');
+      checks.checks = (checks.checks ?? []).filter(check => check.context !== 'PR metadata');
+    }
   }
-  process.stdout.write(`${JSON.stringify(checks)}\n`);
+  process.stdout.write(`${JSON.stringify(protection)}\n`);
   process.exit(0);
 }
 
 if (method === 'POST' && contextsEndpoint.test(endpoint)) {
   mutate('add branch status check');
-  state.branchStatusChecks.contexts ??= [];
+  state.branchProtection.required_status_checks.contexts ??= [];
   for (const context of input.contexts ?? []) {
-    if (!state.branchStatusChecks.contexts.includes(context)) {
-      state.branchStatusChecks.contexts.push(context);
+    if (!state.branchProtection.required_status_checks.contexts.includes(context)) {
+      state.branchProtection.required_status_checks.contexts.push(context);
     }
   }
   save();
-  process.stdout.write(`${JSON.stringify(state.branchStatusChecks.contexts)}\n`);
+  process.stdout.write(`${JSON.stringify(state.branchProtection.required_status_checks.contexts)}\n`);
   process.exit(0);
 }
 
@@ -141,7 +144,11 @@ if (method === 'GET' && rulesetMatch) {
     process.stderr.write('gh: Not Found (HTTP 404)\n');
     process.exit(1);
   }
-  process.stdout.write(`${JSON.stringify(ruleset)}\n`);
+  const response = structuredClone(ruleset);
+  if (state.readbackMismatch === 'ruleset' && (state.mutations ?? 0) > 0) {
+    response.enforcement = 'evaluate';
+  }
+  process.stdout.write(`${JSON.stringify(response)}\n`);
   process.exit(0);
 }
 

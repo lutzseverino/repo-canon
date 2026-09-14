@@ -22,10 +22,10 @@ function matchingMergeSettings(repository) {
   return Object.entries(mergeSettings).every(([name, value]) => repository[name] === value);
 }
 
-function readBranchStatusChecks(identity, defaultBranch, projectRoot) {
+function readBranchProtection(identity, defaultBranch, projectRoot) {
   const endpoint = apiEndpoint(
     identity,
-    `/branches/${encodeURIComponent(defaultBranch)}/protection/required_status_checks`,
+    `/branches/${encodeURIComponent(defaultBranch)}/protection`,
   );
   const response = githubApi([endpoint], projectRoot);
   if (!response.ok
@@ -35,16 +35,29 @@ function readBranchStatusChecks(identity, defaultBranch, projectRoot) {
   }
   const parsed = jsonFrom(response);
   if (parsed.error) return parsed;
-  const value = parsed.value;
-  if (!value || !Array.isArray(value.contexts)
-      || (value.checks !== undefined && !Array.isArray(value.checks))) {
-    return { error: 'invalid required status checks response' };
+  const protection = parsed.value;
+  if (!protection || typeof protection !== 'object' || Array.isArray(protection)) {
+    return { error: 'invalid branch protection response' };
   }
-  if (!value.contexts.every(context => typeof context === 'string')
-      || !(value.checks ?? []).every(check => check && typeof check.context === 'string')) {
-    return { error: 'invalid required status checks response' };
+  const statusChecks = protection.required_status_checks;
+  if (statusChecks === undefined || statusChecks === null) {
+    return { value: { protection, statusChecks: null } };
   }
-  return { value: { ...value, checks: value.checks ?? [] } };
+  if (typeof statusChecks !== 'object' || Array.isArray(statusChecks)
+      || !Array.isArray(statusChecks.contexts)
+      || (statusChecks.checks !== undefined && !Array.isArray(statusChecks.checks))) {
+    return { error: 'invalid required status checks in branch protection response' };
+  }
+  if (!statusChecks.contexts.every(context => typeof context === 'string')
+      || !(statusChecks.checks ?? []).every(check => check && typeof check.context === 'string')) {
+    return { error: 'invalid required status checks in branch protection response' };
+  }
+  return {
+    value: {
+      protection,
+      statusChecks: { ...statusChecks, checks: statusChecks.checks ?? [] },
+    },
+  };
 }
 
 function hasRequiredCheck(statusChecks) {
@@ -236,7 +249,7 @@ function setupIntegration(request) {
     return;
   }
 
-  const branchBefore = readBranchStatusChecks(
+  const branchBefore = readBranchProtection(
     inferred.identity,
     repository.default_branch,
     request.projectRoot,
@@ -254,9 +267,9 @@ function setupIntegration(request) {
   let checkAction;
   let checkLocation;
   let managedRulesetId;
-  if (branchBefore.value !== null) {
+  if (branchBefore.value?.statusChecks) {
     checkLocation = 'branch';
-    if (!hasRequiredCheck(branchBefore.value)) checkAction = { type: 'branch' };
+    if (!hasRequiredCheck(branchBefore.value.statusChecks)) checkAction = { type: 'branch' };
   } else {
     const plan = managedRulesetPlan(rulesetsBefore.value, repository.default_branch);
     if (plan.error) {
@@ -325,7 +338,7 @@ function setupIntegration(request) {
   }
 
   const repositoryAfter = jsonFrom(githubApi([apiEndpoint(inferred.identity)], request.projectRoot));
-  const branchAfter = readBranchStatusChecks(
+  const branchAfter = readBranchProtection(
     inferred.identity,
     repository.default_branch,
     request.projectRoot,
@@ -340,7 +353,7 @@ function setupIntegration(request) {
         || !rulesetMatches(rulesetsAfter.value, managedRulesetId, repository.default_branch)) {
       mismatches.push(`${checkName} ruleset enforcement`);
     }
-  } else if (branchAfter.error || !hasRequiredCheck(branchAfter.value)) {
+  } else if (branchAfter.error || !hasRequiredCheck(branchAfter.value?.statusChecks ?? null)) {
     mismatches.push(`${checkName} branch enforcement`);
   }
   if (rulesetsAfter.error && checkLocation !== 'ruleset') {

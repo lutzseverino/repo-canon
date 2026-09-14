@@ -41,6 +41,17 @@ function canonicalRuleset(overrides = {}) {
   };
 }
 
+function classicProtection(statusChecks, overrides = {}) {
+  return {
+    url: 'https://api.github.com/repos/acme/widgets/branches/main/protection',
+    required_status_checks: statusChecks,
+    enforce_admins: { enabled: true },
+    required_pull_request_reviews: { required_approving_review_count: 2 },
+    allow_force_pushes: { enabled: false },
+    ...overrides,
+  };
+}
+
 function operationRequest(projectRoot, overrides = {}) {
   return {
     format: 'repo-standards/operation/v1',
@@ -84,7 +95,7 @@ function setup(t, options = {}) {
       squash_merge_commit_message: 'COMMIT_MESSAGES',
       delete_branch_on_merge: true,
     },
-    branchStatusChecks: null,
+    branchProtection: null,
     rulesets: [],
     ...options.state,
   })}\n`);
@@ -130,6 +141,38 @@ test('creates required-check enforcement, configures squash defaults, and is unc
   assertProjectUnchanged(before, scenario);
 });
 
+test('uses rulesets when classic protection is present but required checks are disabled', async t => {
+  const protectionWithoutChecks = {
+    url: 'https://api.github.com/repos/acme/widgets/branches/main/protection',
+    enforce_admins: { enabled: true },
+    required_pull_request_reviews: { required_approving_review_count: 2 },
+    allow_force_pushes: { enabled: false },
+  };
+
+  await t.test('creates fallback enforcement and preserves classic policy', st => {
+    const scenario = setup(st, { state: { branchProtection: protectionWithoutChecks } });
+    const outcome = scenario.invoke();
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'changed');
+    assert.match(outcome.result.message, /created required-check ruleset/);
+    assert.deepEqual(scenario.readState().branchProtection, protectionWithoutChecks);
+    assert.deepEqual(scenario.readState().rulesets, [canonicalRuleset({ id: 100 })]);
+  });
+
+  await t.test('accepts active applicable ruleset enforcement as unchanged', st => {
+    const scenario = setup(st, { state: {
+      settings: matchingSettings,
+      branchProtection: protectionWithoutChecks,
+      rulesets: [canonicalRuleset()],
+    } });
+    const outcome = scenario.invoke();
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'unchanged');
+    assert.equal(scenario.readState().mutations ?? 0, 0);
+    assert.deepEqual(scenario.readState().branchProtection, protectionWithoutChecks);
+  });
+});
+
 test('returns unchanged when branch protection and merge settings already match', t => {
   const unrelatedRuleset = {
     id: 7,
@@ -142,11 +185,11 @@ test('returns unchanged when branch protection and merge settings already match'
   };
   const scenario = setup(t, { state: {
     settings: { ...matchingSettings, web_commit_signoff_required: true },
-    branchStatusChecks: {
+    branchProtection: classicProtection({
       strict: true,
       contexts: ['build', checkName],
       checks: [{ context: 'build', app_id: 123 }],
-    },
+    }),
     rulesets: [unrelatedRuleset],
   } });
 
@@ -165,11 +208,11 @@ test('adds PR metadata to classic branch checks while preserving checks, ruleset
   const unrelatedRuleset = canonicalRuleset({ id: 8, name: 'Adopter security checks' });
   const scenario = setup(t, { state: {
     settings: { ...matchingSettings, allow_auto_merge: true },
-    branchStatusChecks: {
+    branchProtection: classicProtection({
       strict: true,
       contexts: ['build'],
       checks: [{ context: 'security', app_id: 456 }],
-    },
+    }),
     rulesets: [unrelatedRuleset],
   } });
 
@@ -178,7 +221,7 @@ test('adds PR metadata to classic branch checks while preserving checks, ruleset
   assert.equal(outcome.result.status, 'changed');
   assert.match(outcome.result.message, /required PR metadata through main branch protection/);
   const state = scenario.readState();
-  assert.deepEqual(state.branchStatusChecks, {
+  assert.deepEqual(state.branchProtection.required_status_checks, {
     strict: true,
     contexts: ['build', checkName],
     checks: [{ context: 'security', app_id: 456 }],
@@ -190,13 +233,13 @@ test('adds PR metadata to classic branch checks while preserving checks, ruleset
 test('accepts GitHub classic status-check responses that omit the optional checks list', t => {
   const scenario = setup(t, { state: {
     settings: matchingSettings,
-    branchStatusChecks: { strict: false, contexts: ['build'] },
+    branchProtection: classicProtection({ strict: false, contexts: ['build'] }),
   } });
 
   const outcome = scenario.invoke();
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, 'changed');
-  assert.deepEqual(scenario.readState().branchStatusChecks, {
+  assert.deepEqual(scenario.readState().branchProtection.required_status_checks, {
     strict: false,
     contexts: ['build', checkName],
   });
@@ -344,7 +387,7 @@ test('pins API requests and authentication to the inferred github.com target', a
   await t.test('enterprise environment override', st => {
     const scenario = setup(st, { state: {
       settings: matchingSettings,
-      branchStatusChecks: { strict: false, contexts: [checkName], checks: [] },
+      branchProtection: classicProtection({ strict: false, contexts: [checkName], checks: [] }),
     } });
     const outcome = scenario.invoke({}, { GH_HOST: 'enterprise.example' });
     assert.equal(outcome.status, 0, outcome.stderr);
@@ -367,7 +410,7 @@ test('pins API requests and authentication to the inferred github.com target', a
   await t.test('global remote cannot conflict with a local target', st => {
     const scenario = setup(st, { state: {
       settings: matchingSettings,
-      branchStatusChecks: { strict: false, contexts: [checkName], checks: [] },
+      branchProtection: classicProtection({ strict: false, contexts: [checkName], checks: [] }),
     } });
     const globalConfig = join(scenario.toolsRoot, 'global.gitconfig');
     writeFileSync(globalConfig, '[remote "injected"]\n\turl = git@github.com:other/widgets.git\n');
@@ -443,7 +486,7 @@ test('blocks for unavailable prerequisites, authentication, permission, and insp
     const scenario = setup(st, { state: {
       inactiveAuthInvalid: true,
       settings: matchingSettings,
-      branchStatusChecks: { strict: false, contexts: [checkName], checks: [] },
+      branchProtection: classicProtection({ strict: false, contexts: [checkName], checks: [] }),
     } });
     const outcome = scenario.invoke();
     assert.equal(outcome.result.status, 'unchanged');
@@ -513,10 +556,10 @@ test('recovers after interruption by applying only the remaining change', t => {
 });
 
 test('blocks when final readback disagrees and reports applied effects', async t => {
-  for (const mismatch of ['settings', 'branch']) {
+  for (const mismatch of ['settings', 'branch', 'ruleset']) {
     await t.test(mismatch, st => {
       const state = mismatch === 'branch'
-        ? { settings: matchingSettings, branchStatusChecks: { strict: true, contexts: ['build'], checks: [] }, readbackMismatch: mismatch }
+        ? { settings: matchingSettings, branchProtection: classicProtection({ strict: true, contexts: ['build'], checks: [] }), readbackMismatch: mismatch }
         : { readbackMismatch: mismatch };
       const scenario = setup(st, { state });
       const outcome = scenario.invoke();
