@@ -93,7 +93,8 @@ if (method === 'GET' && repositoryEndpoint.test(endpoint)) {
 if (method === 'GET' && branchProtectionEndpoint.test(endpoint)) {
   state.branchReads = (state.branchReads ?? 0) + 1;
   save();
-  if (state.failBranchInspection) {
+  if (state.failBranchInspection
+      || (state.failBranchReadback && state.branchReads > 1)) {
     process.stderr.write('gh: Not Found (HTTP 404)\n');
     process.exit(1);
   }

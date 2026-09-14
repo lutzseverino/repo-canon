@@ -348,12 +348,16 @@ function setupIntegration(request) {
   if (repositoryAfter.error || !matchingMergeSettings(repositoryAfter.value)) {
     mismatches.push('squash merge settings');
   }
+  if (branchAfter.error) {
+    mismatches.push('branch protection readback');
+  }
   if (checkLocation === 'ruleset') {
     if (rulesetsAfter.error
         || !rulesetMatches(rulesetsAfter.value, managedRulesetId, repository.default_branch)) {
       mismatches.push(`${checkName} ruleset enforcement`);
     }
-  } else if (branchAfter.error || !hasRequiredCheck(branchAfter.value?.statusChecks ?? null)) {
+  } else if (!branchAfter.error
+      && !hasRequiredCheck(branchAfter.value?.statusChecks ?? null)) {
     mismatches.push(`${checkName} branch enforcement`);
   }
   if (rulesetsAfter.error && checkLocation !== 'ruleset') {

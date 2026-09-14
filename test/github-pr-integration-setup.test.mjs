@@ -556,11 +556,13 @@ test('recovers after interruption by applying only the remaining change', t => {
 });
 
 test('blocks when final readback disagrees and reports applied effects', async t => {
-  for (const mismatch of ['settings', 'branch', 'ruleset']) {
+  for (const mismatch of ['settings', 'branch', 'ruleset', 'branch inspection']) {
     await t.test(mismatch, st => {
       const state = mismatch === 'branch'
         ? { settings: matchingSettings, branchProtection: classicProtection({ strict: true, contexts: ['build'], checks: [] }), readbackMismatch: mismatch }
-        : { readbackMismatch: mismatch };
+        : mismatch === 'branch inspection'
+          ? { failBranchReadback: true }
+          : { readbackMismatch: mismatch };
       const scenario = setup(st, { state });
       const outcome = scenario.invoke();
       assert.equal(outcome.status, 0, outcome.stderr);
