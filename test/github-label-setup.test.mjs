@@ -118,6 +118,15 @@ test('reports unchanged after a successful matching setup', t => {
   assert.equal(scenario.readState().mutations ?? 0, 0);
 });
 
+test('pins every API request to github.com when the environment selects another host', t => {
+  const scenario = setup(t, { state: { labels: structuredClone(canonicalLabels) } });
+  const outcome = scenario.invoke({}, { GH_HOST: 'enterprise.example' });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'unchanged');
+  assert.deepEqual([...new Set(scenario.readState().apiHosts)], ['github.com']);
+});
+
 test('reconciles conflicting desired label values without replacing unrelated labels', t => {
   const labels = structuredClone(canonicalLabels);
   labels[0] = { name: 'Needs-Triage', color: '000000', description: 'Old meaning' };

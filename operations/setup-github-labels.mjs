@@ -133,15 +133,18 @@ function jsonFrom(outcome) {
   }
 }
 
+function githubApi(args, projectRoot) {
+  return run('gh', ['api', '--hostname', 'github.com', ...args], projectRoot);
+}
+
 function apiEndpoint(identity, suffix = '') {
   const [owner, repository] = identity.split('/');
   return `repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}${suffix}`;
 }
 
 function readLabels(identity, projectRoot) {
-  const response = jsonFrom(run(
-    'gh',
-    ['api', '--paginate', '--slurp', `${apiEndpoint(identity, '/labels')}?per_page=100`],
+  const response = jsonFrom(githubApi(
+    ['--paginate', '--slurp', `${apiEndpoint(identity, '/labels')}?per_page=100`],
     projectRoot,
   ));
   if (response.error) return response;
@@ -174,13 +177,13 @@ function mutateLabel(identity, action, projectRoot) {
     '-f', `description=${action.desired.description}`,
   ];
   if (action.kind === 'create') {
-    return run('gh', [
-      'api', apiEndpoint(identity, '/labels'), '--method', 'POST',
+    return githubApi([
+      apiEndpoint(identity, '/labels'), '--method', 'POST',
       '-f', `name=${action.desired.name}`, ...fields,
     ], projectRoot);
   }
-  return run('gh', [
-    'api', apiEndpoint(identity, `/labels/${encodeURIComponent(action.actual.name)}`), '--method', 'PATCH',
+  return githubApi([
+    apiEndpoint(identity, `/labels/${encodeURIComponent(action.actual.name)}`), '--method', 'PATCH',
     '-f', `new_name=${action.desired.name}`, ...fields,
   ], projectRoot);
 }
@@ -226,7 +229,7 @@ function setupLabels(request) {
     return;
   }
 
-  const repositoryResponse = jsonFrom(run('gh', ['api', apiEndpoint(inferred.identity)], request.projectRoot));
+  const repositoryResponse = jsonFrom(githubApi([apiEndpoint(inferred.identity)], request.projectRoot));
   if (repositoryResponse.error) {
     result('blocked', `GitHub label setup could not verify ${inferred.identity}; repository access is incomplete (${repositoryResponse.error}).`);
     return;

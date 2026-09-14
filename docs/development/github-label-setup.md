@@ -35,7 +35,8 @@ All `github.com` fetch and push remote URLs must identify one repository.
 Multiple remotes may name that same repository, but different repository
 identities block setup before any API mutation. The operation also blocks when
 the API's canonical `full_name` does not match the remote-derived owner and
-repository.
+repository. Every API call is pinned to `github.com`, so a `GH_HOST` environment
+override cannot redirect verification or mutation to a GitHub Enterprise host.
 
 ## Results and recovery
 

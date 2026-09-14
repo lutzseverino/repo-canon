@@ -28,6 +28,11 @@ if (args[0] !== 'api') {
   process.exit(2);
 }
 
+const hostnameIndex = args.indexOf('--hostname');
+state.apiHosts ??= [];
+state.apiHosts.push(hostnameIndex >= 0 ? args[hostnameIndex + 1] : process.env.GH_HOST ?? 'github.com');
+save();
+
 const methodIndex = args.indexOf('--method');
 const method = methodIndex >= 0 ? args[methodIndex + 1] : 'GET';
 const endpoint = args.find(argument => /^repos\//.test(argument));
