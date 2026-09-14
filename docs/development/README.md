@@ -8,6 +8,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   validation baseline, preparation requirements, and historical v1 limits.
 - [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
   identity and permission prerequisites, protocol outcomes, and fixture coverage.
+- [GitHub PR integration setup](github-pr-integration-setup.md): required-check
+  enforcement, squash-only merge defaults, preservation, and recovery behavior.
 - [Pull request metadata validation](pr-metadata-validation.md): trusted check
   behavior, stable identity, permissions, and local verification.
 - [Historical scope proposal](scope-capability-specification.md): the original
@@ -33,8 +35,9 @@ There is no `standards.yaml` yet and no source validation has passed.
 
 The required product scope capability is delivered and accepted. Pull request
 metadata validation, issue contract validation, Repository README checking,
-GitHub label setup, and their CI suites are implemented. Use the installed
-public CLI 1.2.1 with Node.js 24 as the initial source-validation baseline;
+GitHub label setup, PR integration setup, and their CI suites are implemented.
+Use the installed public CLI 1.2.1 with Node.js 24 as the initial
+source-validation baseline;
 claim compatibility only after validating the final source bytes. The earlier
 CLI 1.1.0 experiments remain historical evidence. Source validation, remaining
 operation and skill exercises, and complete Repo Canon adoption are still
@@ -56,12 +59,12 @@ typecheck, or build step. Run a single fixture with
 `node --test test/<name>.test.mjs` while developing.
 
 The Node test suite exercises executable operation fixtures, including
-disposable remote-label state and interruption recovery, plus pull request
-creation and update event inputs, valid and invalid metadata, harmless
-formatting variations, a hostile fork payload, and issue-contract events and
-state changes. The label fixtures do not contact GitHub or establish live remote
-setup. Run `npm run test:issue-contracts` for the focused issue-contract
-fixtures. The four draft issue forms were parsed as YAML and checked for basic
-field structure and duplicate IDs during bootstrap; no GitHub submission
-behavior was exercised. Source validation and adoption evidence remain separate
-from these checks.
+disposable remote-label and PR-integration state with interruption recovery,
+plus pull request creation and update event inputs. It covers valid and invalid
+metadata, harmless formatting variations, a hostile fork payload, and
+issue-contract events and state changes. The GitHub setup fixtures do not
+contact GitHub or establish live remote setup. Run
+`npm run test:issue-contracts` for the focused issue-contract fixtures. The four
+draft issue forms were parsed as YAML and checked for basic field structure and
+duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
+Source validation and adoption evidence remain separate from these checks.
