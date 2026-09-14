@@ -32,11 +32,14 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   [architecture report](engineering-skill-architecture-report.html), and
   [research result](engineering-skill-research-result.md) retain the observed
   session outputs; the [runtime-builder patch](engineering-skill-runtime-builder.patch)
-   preserves exact harness provenance, and the
-   [visual-inspection record](engineering-skill-architecture-visual-inspection.md)
-   records the browser-render review.
+  preserves exact harness provenance, and the
+  [visual-inspection record](engineering-skill-architecture-visual-inspection.md)
+  records the browser-render review.
 - [Productivity skill exercises](productivity-skill-exercises.md): runtime
   scenarios, outcomes, retained artifacts, prerequisites, and limitations.
+- [Planning skill exercises](planning-skill-exercises.md): runtime evidence,
+  native artifacts, and limitations for the planning, delivery, and
+  adoption-preparation skills.
 
 ## Authoring status
 
@@ -51,9 +54,9 @@ metadata validation, issue contract validation, Repository README checking,
 GitHub label setup, PR integration setup, and their CI suites are implemented.
 Public CLI 1.2.1 with Node.js 24 validates the complete profile, and the source
 declares that exact compatibility. The earlier CLI 1.1.0 experiments remain
-historical evidence. Operation fixtures and the pinned skill inventory remain
-separate from source validation; remaining skill exercises and complete Repo
-Canon adoption are still outstanding.
+historical evidence. Operation fixtures, the pinned skill inventory, and the
+engineering, productivity, and planning skill exercises remain separate from
+source validation. Complete Repo Canon adoption is still outstanding.
 
 ## Working locally
 
@@ -77,7 +80,8 @@ metadata, harmless formatting variations, a hostile fork payload, and
 issue-contract structure, exact revision association, actor authority,
 invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
-`npm run test:issue-contracts` for the focused issue-contract fixtures. The four
+`npm run test:issue-contracts` for the focused issue-contract fixtures and
+`npm run test:planning-skill-fixtures` for the planning-skill harness. The four
 draft issue forms were parsed as YAML and checked for basic field structure and
 duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
 The public source-validation command and its evidence boundary are recorded in
