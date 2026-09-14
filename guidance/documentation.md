@@ -27,3 +27,12 @@ configuration. Project-specific agent constraints belong in optional
 Assess documents against their actual audience and topic. Mechanical checks
 cover categories, directory READMEs, required entry points, and local link
 targets. They do not prove correctness or usefulness.
+
+Use the associated v2 discovery guidance to propose individual source,
+destination, index, glossary, project-agent-guidance, and link-repair paths.
+Review the evidence, candidate decisions, unresolved questions, complete
+coverage, and concrete paths in the full inspection before confirming any
+write. Keep exact shared agent configuration outside this scope. A newly found
+file requires a confirmed additions-only scope amendment before editing; after
+a complete adoption, use fresh discovery during deliberate re-adoption. Scope
+that omits a file grants no authority to change it.
