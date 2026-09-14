@@ -55,9 +55,21 @@ test('reports the missing mandatory guide and indexes for populated documentatio
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, 'failed');
   assert.match(outcome.result.message, /Create docs\/development\/README\.md with the project's prerequisites/);
-  assert.match(outcome.result.message, /Create docs\/README\.md to explain this documentation directory/);
+  assert.match(outcome.result.message, /Create docs\/README\.md to map the documentation categories/);
   assert.match(outcome.result.message, /Create docs\/usage\/README\.md/);
   assert.match(outcome.result.message, /Create docs\/usage\/examples\/README\.md/);
+});
+
+test('reports both required root documentation files before the docs tree exists', t => {
+  const outcome = check(t, {}, [
+    'docs/README.md',
+    'docs/development/README.md',
+  ]);
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Create docs\/README\.md to map the documentation categories/);
+  assert.match(outcome.result.message, /Create docs\/development\/README\.md with the project's prerequisites/);
 });
 
 test('reports broken rendered file links across documentation and migration sources', t => {

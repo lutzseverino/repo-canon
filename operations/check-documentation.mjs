@@ -3,6 +3,7 @@ import { isAbsolute, posix, sep } from 'node:path';
 import { brokenLocalLinks, renderedMarkdown } from './lib/rendered-markdown.mjs';
 
 const resultFormat = 'repo-standards/result/v1';
+const documentationIndex = 'docs/README.md';
 const developmentGuide = 'docs/development/README.md';
 const documentationCategories = new Set(['usage', 'development', 'adr', 'agents']);
 
@@ -89,6 +90,15 @@ function documentationTree(projectRoot) {
 
 function validate(projectRoot, allowedPaths) {
   const corrections = [];
+  const index = fileContent(projectRoot, documentationIndex);
+  if (index === null) {
+    corrections.push(`Create ${documentationIndex} to map the documentation categories and their placement rules.`);
+  } else if (renderedMarkdown(index).length === 0) {
+    corrections.push(`Populate ${documentationIndex} with the documentation map and placement rules.`);
+  }
+  if (!allowedPaths.includes(documentationIndex)) {
+    corrections.push(`Include ${documentationIndex} in the confirmed documentation scope.`);
+  }
   const guide = fileContent(projectRoot, developmentGuide);
   if (guide === null) {
     corrections.push(`Create ${developmentGuide} with the project's prerequisites, setup, development commands, and required validation.`);
@@ -105,10 +115,11 @@ function validate(projectRoot, allowedPaths) {
     corrections.push(`Move docs/${entry.name} into usage, development, adr, or agents, preserving useful content and affected links.`);
   }
   for (const directory of tree.directories) {
-    const index = `${directory}/README.md`;
-    const content = fileContent(projectRoot, index);
-    if (content === null) corrections.push(`Create ${index} to explain this documentation directory and link its useful contents.`);
-    else if (renderedMarkdown(content).length === 0) corrections.push(`Populate ${index} with the directory purpose and links to useful contents.`);
+    if (directory === 'docs') continue;
+    const directoryIndex = `${directory}/README.md`;
+    const content = fileContent(projectRoot, directoryIndex);
+    if (content === null) corrections.push(`Create ${directoryIndex} to explain this documentation directory and link its useful contents.`);
+    else if (renderedMarkdown(content).length === 0) corrections.push(`Populate ${directoryIndex} with the directory purpose and links to useful contents.`);
   }
 
   const markdownFiles = new Set(tree.markdownFiles);

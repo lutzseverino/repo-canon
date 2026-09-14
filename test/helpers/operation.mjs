@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 
@@ -48,6 +48,7 @@ export function snapshot(root) {
       const absolute = join(directory, entry.name);
       const path = relative(root, absolute).replaceAll('\\', '/');
       if (entry.isDirectory()) visit(absolute);
+      else if (entry.isSymbolicLink()) entries[path] = `symlink:${readlinkSync(absolute)}`;
       else entries[path] = readFileSync(absolute).toString('base64');
     }
   }

@@ -1,7 +1,7 @@
 import { marked } from '../../vendor/marked/marked.esm.js';
 import { parseFragment } from '../../vendor/parse5/parse5.esm.js';
-import { lstatSync } from 'node:fs';
-import { posix, sep } from 'node:path';
+import { lstatSync, readdirSync, realpathSync, statSync } from 'node:fs';
+import { isAbsolute, join, posix, relative, sep } from 'node:path';
 
 const renderedElementsWithoutText = new Set([
   'audio', 'canvas', 'embed', 'hr', 'iframe', 'img', 'input', 'math', 'object', 'picture', 'svg', 'video',
@@ -99,6 +99,7 @@ export function resolvedLocalPath(sourcePath, target) {
     if (destination.origin !== root.origin) return null;
     if (!destination.pathname.startsWith(root.pathname)) return undefined;
     const decoded = decodeURIComponent(destination.pathname.slice(root.pathname.length));
+    if (decoded.includes('\\')) return undefined;
     const normalized = posix.normalize(decoded);
     if (posix.isAbsolute(normalized) || normalized === '..' || normalized.startsWith('../')) return undefined;
     return normalized;
@@ -109,7 +110,18 @@ export function resolvedLocalPath(sourcePath, target) {
 
 function pathExists(projectRoot, path) {
   try {
-    lstatSync(`${projectRoot}${sep}${path.split('/').join(sep)}`);
+    const root = realpathSync(projectRoot);
+    let current = root;
+    const segments = path.split('/');
+    for (const [index, segment] of segments.entries()) {
+      if (!readdirSync(current).includes(segment)) return false;
+      const candidate = join(current, segment);
+      const entry = lstatSync(candidate);
+      current = entry.isSymbolicLink() ? realpathSync(candidate) : candidate;
+      const fromRoot = relative(root, current);
+      if (fromRoot === '..' || fromRoot.startsWith(`..${sep}`) || isAbsolute(fromRoot)) return false;
+      if (index < segments.length - 1 && !statSync(current).isDirectory()) return false;
+    }
     return true;
   } catch {
     return false;

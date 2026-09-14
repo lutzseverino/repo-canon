@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { mkdirSync, symlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { fixture, invokeCheck, snapshot } from './helpers/operation.mjs';
@@ -120,6 +122,7 @@ test('checks heading links and rejects decoded paths that escape the repository'
 Component provides shared behavior.
 
 [Escaped path](..%2f..%2f..%2f..%2fetc/passwd)
+[Windows escape](..%5c..%5cWindows%5cwin.ini)
 `,
   }, ['component/README.md']);
 
@@ -127,6 +130,43 @@ Component provides shared behavior.
   assert.equal(outcome.result.status, 'failed');
   assert.match(outcome.result.message, /links to missing heading-missing\.md/);
   assert.match(outcome.result.message, /links to missing \.\.%2f\.\.%2f\.\.%2f\.\.%2fetc\/passwd/);
+  assert.match(outcome.result.message, /links to missing \.\.%5c\.\.%5cWindows%5cwin\.ini/);
+});
+
+test('does not follow external or dangling symlinks when checking local links', t => {
+  const project = fixture({
+    'component/README.md': `# Component
+
+[External host file](jump/etc/passwd)
+[Dangling link](dangling.md)
+`,
+  });
+  t.after(project.close);
+  mkdirSync(join(project.root, 'component'), { recursive: true });
+  symlinkSync('/', join(project.root, 'component/jump'), 'dir');
+  symlinkSync('missing.md', join(project.root, 'component/dangling.md'));
+  const before = snapshot(project.root);
+  const outcome = invokeCheck(script, project.root, {
+    operation: { declaration: 'project-readmes', phase: 'checks', id: 'structure' },
+    allowedTargets: { paths: ['component/README.md'], directories: [] },
+  });
+
+  assert.deepEqual(snapshot(project.root), before, 'the check must not change project content');
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /links to missing jump\/etc\/passwd/);
+  assert.match(outcome.result.message, /links to missing dangling\.md/);
+});
+
+test('requires link casing to match the repository entry', t => {
+  const outcome = check(t, {
+    'component/README.md': '# Component\n\n[Guide](Guide.md)\n',
+    'component/guide.md': '# Guide\n',
+  }, ['component/README.md']);
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /links to missing Guide\.md/);
 });
 
 test('allows empty concrete Project README scope while leaving coverage to review', t => {

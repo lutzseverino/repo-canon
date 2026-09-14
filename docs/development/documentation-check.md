@@ -6,7 +6,7 @@ through the Repository Standards public operation protocol:
 - `operations/check-project-readmes.mjs` checks each concrete Project README
   target for a single non-centered level-one title and valid rendered local
   links. A selected missing path receives a create-file diagnostic.
-- `operations/check-documentation.mjs` requires
+- `operations/check-documentation.mjs` requires `docs/README.md` and
   `docs/development/README.md`, rejects populated top-level documentation
   outside the four recognized categories, checks that every existing
   documentation directory has a nonempty `README.md`, and validates rendered
@@ -15,9 +15,9 @@ through the Repository Standards public operation protocol:
 
 The Project README operation accepts individual non-root `README.md` paths.
 The documentation operation accepts individual repository-relative file paths
-and requires `docs/development/README.md` in its concrete scope. Neither accepts
-directory targets. Discovery supplies those concrete paths; the operations do
-not infer Project membership or expand adoption scope.
+and requires both root documentation files in its concrete scope. Neither
+operation accepts directory targets. Discovery supplies those concrete paths;
+the operations do not infer Project membership or expand adoption scope.
 
 Both operations render each Markdown file once with the retained, pinned Marked
 18.0.13 build, parse the result with the retained, pinned parse5 8.0.1 build,
