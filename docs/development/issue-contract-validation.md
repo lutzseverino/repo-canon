@@ -39,19 +39,50 @@ labels remain separate from intake labels.
 
 ## Feedback and readiness
 
-An incomplete contract receives one comment marked for the validator to
-maintain. Later events update that comment instead of creating another one.
-The validator removes `ready-for-agent` and `ready-for-human` from incomplete
-contracts. If that leaves a triaged request without a workflow state, it adds
-`needs-triage`. A correction updates the maintained comment and leaves
-readiness for an authorized reviewer to restore.
+The validator maintains one marked feedback comment. Incomplete contracts list
+the structural corrections there. Complete specifications, tickets, and Agent
+Briefs publish a `sha256:` revision and wait for authorized review. The same
+comment records the reviewer, revision, and resulting readiness state after an
+accepted review event, so repeated workflow events can verify the association
+without reapproving or duplicating feedback.
 
-Structural success never adds readiness or proves that a contract revision was
-reviewed. Binding readiness to the exact revision and the authorized reviewer
-is separate implementation work tracked by issue #8.
+The revision is computed from a versioned record containing the selected
+contract kind, exact contract bytes, source identity and edit revision, and the
+identities of the current native parent and blocker relationships. Direct-body
+contracts use the issue GraphQL node ID and `lastEditedAt`. Agent Briefs use the
+comment node ID and `updated_at`, so editing a brief or replacing it with an
+identical-looking comment still changes the revision. Relationship state is
+excluded: closing an existing blocker does not change readiness, while replacing
+the referenced blocker does.
+
+For a direct specification or ticket, an authoritative `opened` event carrying
+one readiness label or a later readiness `labeled` event can supply the exact
+review snapshot. For an Agent Brief, the validator must first publish the exact
+revision in its feedback comment; the reviewer then applies a readiness label.
+This ordering prevents a stale label event from approving a brief that was
+edited or replaced while the event waited. The validator re-fetches the issue,
+complete discussion, relationships, and direct-body edit revision before every
+decision, and rejects an event whose issue snapshot no longer matches.
+
+The event actor is authorized only when GitHub reports the repository `admin`,
+`maintain`, or `triage` role. The triage role is the explicit authorization for
+a triaging agent. A `write` role, `author_association`, login shape, bot identity,
+heading, preamble, or structural pass supplies no authority. An accepted
+triaged review replaces its previous workflow state with the chosen readiness
+label. Removing readiness returns a triaged request to `needs-triage` unless it
+already has another non-readiness state.
+
+Incomplete, edited, replaced, stale, unauthorized, or multiply-ready contracts
+lose `ready-for-agent` and `ready-for-human`. Corrections update the same comment
+with a new revision and require fresh review. Structural success never grants
+readiness, readiness never dispatches work, and an open blocker still prevents
+implementation even when the ticket remains sufficiently specified.
 
 The workflow needs `contents: read` to load trusted code and `issues: write` to
-read issue context and maintain labels and comments. Node.js 24 is the runtime.
+read issue context and maintain labels and comments. GitHub's metadata access
+must expose collaborator roles, and `GITHUB_GRAPHQL_URL` must be available for
+direct-body edit revisions; both are standard GitHub Actions facilities. Node.js
+24 is the runtime.
 GitHub Actions does not expose issue-dependency changes as an `issues` workflow
 activity type, so the validator observes the latest relationships on each
 supported issue or comment event.
@@ -68,7 +99,9 @@ The fixtures invoke the same executable boundary as GitHub Actions against a
 local HTTP server. They exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, repeat-safe feedback,
-corrections, pull request exclusion, and hostile Markdown that must remain
-inert. The `CI` workflow runs the complete repository test suite with
-`npm test`; these fixtures do not claim semantic review or authorized revision
-association.
+corrections, direct and Agent Brief revision changes, authorized and unauthorized
+actors, stale and repeated events, native creation, readiness removal, pull
+request exclusion, and hostile Markdown that must remain inert. The `CI`
+workflow runs the complete repository test suite with `npm test`. These fixtures
+exercise the authorization mechanism but do not claim that a reviewer made a
+sound semantic judgment.

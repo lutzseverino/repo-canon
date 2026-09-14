@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
@@ -18,6 +19,8 @@ async function exercise({
   parent = null,
   event = {},
   relatedIssues = {},
+  permissions = {},
+  bodyLastEditedAt = null,
 }) {
   const requests = [];
   const server = createServer(async (request, response) => {
@@ -26,6 +29,11 @@ async function exercise({
     requests.push({ method: request.method, url: request.url, body });
 
     const issuePath = "/repos/example/repository/issues/42";
+    if (request.method === "POST" && request.url === "/graphql") {
+      return json(response, 200, {
+        data: { repository: { issue: { id: issue.node_id ?? "ISSUE_42", lastEditedAt: bodyLastEditedAt } } },
+      });
+    }
     if (request.method === "GET" && request.url === issuePath) {
       return json(response, 200, issue);
     }
@@ -48,6 +56,13 @@ async function exercise({
     }
     if (request.method === "GET" && Object.hasOwn(relatedIssues, request.url)) {
       return json(response, 200, relatedIssues[request.url]);
+    }
+    const permissionMatch = request.url?.match(/^\/repos\/example\/repository\/collaborators\/([^/]+)\/permission$/);
+    if (request.method === "GET" && permissionMatch) {
+      const login = decodeURIComponent(permissionMatch[1]);
+      const permission = permissions[login];
+      if (permission?.status) return json(response, permission.status, permission.body ?? { message: "Permission unavailable" });
+      return permission ? json(response, 200, permission) : json(response, 404, { message: "Not Found" });
     }
     if (request.method === "POST" && request.url === `${issuePath}/comments`) {
       comments.push({ id: 99, body: JSON.parse(body).body, user: { login: "github-actions[bot]" } });
@@ -75,6 +90,7 @@ async function exercise({
   try {
     const result = await runValidator({
       GITHUB_API_URL: `http://127.0.0.1:${server.address().port}`,
+      GITHUB_GRAPHQL_URL: `http://127.0.0.1:${server.address().port}/graphql`,
       GITHUB_EVENT_PATH: eventPath,
       GITHUB_REPOSITORY: repository,
       GITHUB_TOKEN: "fixture-token",
@@ -84,6 +100,37 @@ async function exercise({
     await new Promise((resolve) => server.close(resolve));
     await rm(directory, { recursive: true, force: true });
   }
+}
+
+function bodyRevision(issue, lastEditedAt = null, kind = "implementation ticket", relationships = { parent: null, blockedBy: [] }) {
+  return revision({
+    kind,
+    source: { type: "issue-body", id: issue.node_id ?? "ISSUE_42", editedAt: lastEditedAt },
+    body: issue.body,
+    relationships,
+  });
+}
+
+function briefRevision(comment, kind = "triaged Agent Brief", relationships = { parent: null, blockedBy: [] }) {
+  return revision({
+    kind,
+    source: { type: "comment", id: String(comment.node_id ?? comment.id), editedAt: comment.updated_at ?? null },
+    body: comment.body,
+    relationships,
+  });
+}
+
+function revision(contract) {
+  const value = JSON.stringify({ format: "repo-canon/issue-contract-revision/v1", ...contract });
+  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+}
+
+function feedbackState({ status, revision: contractRevision, label = null, reviewer = null, kind = "implementation ticket" }) {
+  const state = JSON.stringify({ status, revision: contractRevision, label, reviewer });
+  if (status === "approved") {
+    return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${contractRevision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract, changing its parent or blocker references, or removing readiness invalidates this association.`;
+  }
+  return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${contractRevision}\`.\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
 }
 
 function json(response, status, value, headers = {}) {
@@ -153,12 +200,12 @@ test("all public forms accept harmless heading variations and absent optional an
     {
       name: "implementation ticket",
       body: "#### What To Build\n\nAdd caching.\n\n#### ACCEPTANCE CRITERIA\n\n- [ ] Search is fast.\n\n#### Blocked By\n\nNone.",
-      labels: [{ name: "ready-for-agent" }],
+      labels: [],
     },
     {
       name: "specification",
       body: "#### Problem Statement\n\nSearch is slow.\n\n#### SOLUTION\n\nAdd caching.\n\n#### User Stories\n\n1. As a user, I want fast search.\n\n#### Implementation Decisions\n\n_No response_\n\n#### Testing Decisions\n\n_No response_\n\n#### Out Of Scope\n\nNone.\n\n#### Further Notes\n\n_No response_",
-      labels: [{ name: "ready-for-agent" }],
+      labels: [],
     },
   ];
 
@@ -238,7 +285,7 @@ test("required sections use rendered visible content", async (context) => {
         issue: {
           number: 42,
           body: `## What to build\n\n${example.value}\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.`,
-          labels: [{ name: "ready-for-agent" }],
+          labels: example.valid ? [] : [{ name: "ready-for-agent" }],
           state: "open",
         },
       });
@@ -253,15 +300,24 @@ test("required sections use rendered visible content", async (context) => {
 });
 
 test("a native ticket can use relationships and remain valid with an open blocker", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    updated_at: "2026-09-14T17:00:00Z",
+  };
   const result = await exercise({
-    issue: {
-      number: 42,
-      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
-      labels: [{ name: "ready-for-agent" }],
-      state: "open",
-    },
+    issue,
     blockedBy: [{ number: 41, state: "open", html_url: "https://github.com/example/repository/issues/41" }],
     parent: { number: 7, state: "open", labels: [] },
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
   });
 
   assert.equal(result.code, 0, result.stderr);
@@ -333,7 +389,7 @@ test("all seven native specification sections are recognized", async () => {
     issue: {
       number: 42,
       body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\n1. As a user, I want a result.\n\n## Implementation Decisions\n\n_No response_\n\n## Testing Decisions\n\n_No response_\n\n## Out of Scope\n\nNone.\n\n## Further Notes\n\n_No response_",
-      labels: [{ name: "ready-for-agent" }],
+      labels: [],
       state: "open",
     },
   });
@@ -361,7 +417,7 @@ test("a ready triaged request requires a complete latest Agent Brief and exact p
     issue: {
       number: 42,
       body: "## Problem\n\nSearch is slow.\n\n## Desired outcome\n\nSearch finishes quickly.",
-      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
       state: "open",
     },
     comments: [{
@@ -380,7 +436,7 @@ test("the latest Agent Brief is found across the complete discussion", async () 
     issue: {
       number: 42,
       body: "## Problem\n\nSearch is slow.\n\n## Desired outcome\n\nSearch finishes quickly.",
-      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
       state: "open",
     },
     commentPages: [
@@ -398,19 +454,19 @@ test("contract authority follows the planning, native-body, and triaged-brief de
     {
       name: "specification",
       body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\nA user gets a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.\n\n## Further Notes\n\nNone.",
-      labels: [{ name: "ready-for-agent" }],
+      labels: [],
       expectedKind: "specification",
     },
     {
       name: "implementation ticket",
       body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
-      labels: [{ name: "ready-for-agent" }],
+      labels: [],
       expectedKind: "implementation ticket",
     },
     {
       name: "triaged Agent Brief",
       body: "Free-form intake context.\n\n## Solution\n\nTry a cache.\n\n## Acceptance criteria\n\nThe result should be fast.",
-      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
       expectedKind: "triaged Agent Brief",
     },
     {
@@ -478,7 +534,7 @@ test("trailing peer sections do not complete required contract answers", async (
       issue: {
         number: 42,
         body: "Free-form intake context.",
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
         state: "open",
       },
       comments: [{ id: 1, body: brief, user: { login: "maintainer" } }],
@@ -494,7 +550,7 @@ test("an Agent Brief heading inside a fenced discussion example is ignored", asy
     issue: {
       number: 42,
       body: "## Problem\n\nSearch is slow.\n\n## Desired outcome\n\nSearch finishes quickly.",
-      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
       state: "open",
     },
     comments: [
@@ -526,7 +582,7 @@ test("HTML-commented contract syntax remains inert", async (context) => {
       issue: {
         number: 42,
         body: "## Problem\n\nSearch is slow.\n\n## Desired outcome\n\nSearch finishes quickly.",
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
         state: "open",
       },
       comments: [
@@ -546,7 +602,7 @@ test("HTML-commented contract syntax remains inert", async (context) => {
       issue: {
         number: 42,
         body: "Free-form intake context.",
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
         state: "open",
       },
       comments: [{ id: 1, body: brief, user: { login: "maintainer" } }],
@@ -577,7 +633,7 @@ test("HTML delimiters inside inline code remain ordinary contract content", asyn
       issue: {
         number: 42,
         body: "Free-form intake context.",
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
         state: "open",
       },
       comments: [{ id: 1, body: brief, user: { login: "maintainer" } }],
@@ -592,7 +648,7 @@ test("explicit parent and blocker links are read when native relationships are a
     issue: {
       number: 42,
       body: "## Parent\n\n#7\n\n## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nhttps://github.com/example/repository/issues/41",
-      labels: [{ name: "ready-for-agent" }],
+      labels: [],
       state: "open",
     },
     relatedIssues: {
@@ -611,7 +667,7 @@ test("explicit blocker links are used when the native dependency endpoint is una
     issue: {
       number: 42,
       body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n```md\n#999\n```\n\n    #998\n\n`#997`\n\n<code>#996</code>\n\n<span hidden>#995 <a href=\"https://github.com/example/repository/issues/44\">Hidden blocker</a></span>\n\n| Blocker |\n| --- |\n| [Issue](https://github.com/example/repository/issues/41) |\n\n<a href=\"https://github.com/example/repository/issues/43\">Another blocker</a>",
-      labels: [{ name: "ready-for-agent" }],
+      labels: [],
       state: "open",
     },
     blockedByStatus: 404,
@@ -680,6 +736,361 @@ test("a correction updates existing feedback without restoring readiness", async
   assert.ok(!result.requests.some(({ url }) => url.includes("/labels")));
 });
 
+test("an authorized maintainer can bind a direct contract readiness label to the event revision", async () => {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    updated_at: "2026-09-14T17:00:00Z",
+  };
+  const result = await exercise({
+    issue,
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin", user: { login: "maintainer" } } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  const feedback = result.requests.find(({ method, url }) => method === "POST" && url.endsWith("/comments"));
+  assert.match(JSON.parse(feedback.body).body, new RegExp(bodyRevision(issue).replace(":", "\\:")));
+  assert.match(JSON.parse(feedback.body).body, /reviewed by @maintainer/i);
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.includes("/labels/ready")));
+});
+
+test("an authorized native issue creation preserves its reviewed readiness", async () => {
+  const issue = {
+    number: 42,
+    body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\nA user gets a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.\n\n## Further Notes\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    updated_at: "2026-09-14T17:00:00Z",
+  };
+  const result = await exercise({
+    issue,
+    event: {
+      action: "opened",
+      issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /valid specification with ready-for-agent bound/i);
+});
+
+test("a triage-role reviewer can bind the latest Agent Brief after the exact revision is published", async () => {
+  const brief = {
+    id: 12,
+    node_id: "COMMENT_12",
+    body: completeAgentBrief,
+    created_at: "2026-09-14T16:58:00Z",
+    updated_at: "2026-09-14T16:58:00Z",
+    user: { login: "triager" },
+  };
+  const contractRevision = briefRevision(brief);
+  const comments = [
+    brief,
+    { id: 13, body: feedbackState({ status: "awaiting-review", revision: contractRevision }), user: { login: "github-actions[bot]" } },
+  ];
+  const issue = {
+    number: 42,
+    body: "## Problem\n\nSearch is slow.\n\n## Desired outcome\n\nSearch finishes quickly.",
+    labels: [{ name: "enhancement" }, { name: "needs-triage" }, { name: "ready-for-human" }],
+    state: "open",
+    updated_at: "2026-09-14T17:00:00Z",
+  };
+  const result = await exercise({
+    issue,
+    comments,
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+      label: { name: "ready-for-human" },
+      sender: { login: "triager" },
+    },
+    permissions: {
+      triager: {
+        permission: "read",
+        role_name: "triage",
+        permissions: { pull: true, triage: true, push: false, maintain: false, admin: false },
+        user: { login: "triager" },
+      },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
+  assert.match(JSON.parse(update.body).body, /ready-for-human/);
+  assert.match(JSON.parse(update.body).body, /reviewed by @triager/i);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/needs-triage")));
+});
+
+test("a triaged Agent Brief cannot gain readiness before its exact revision is published", async () => {
+  const brief = {
+    id: 12,
+    node_id: "COMMENT_12",
+    body: completeAgentBrief,
+    created_at: "2026-09-14T16:58:00Z",
+    updated_at: "2026-09-14T16:58:00Z",
+    user: { login: "triager" },
+  };
+  const issue = {
+    number: 42,
+    body: "Intake context.",
+    labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+    state: "open",
+    updated_at: "2026-09-14T17:00:00Z",
+  };
+  const result = await exercise({
+    issue,
+    comments: [brief],
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+      label: { name: "ready-for-agent" },
+      sender: { login: "triager" },
+    },
+    permissions: { triager: { permission: "read", role_name: "triage", user: { login: "triager" } } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  const feedback = result.requests.find(({ method, url }) => method === "POST" && url.endsWith("/comments"));
+  assert.match(JSON.parse(feedback.body).body, /wait for the validator to publish/i);
+});
+
+test("write access, a readiness label, and bot identity do not establish review authority", async (context) => {
+  for (const example of [
+    { name: "write collaborator", login: "writer", permission: { permission: "write", role_name: "write" } },
+    { name: "unprivileged bot", login: "automation[bot]", permission: { permission: "none", role_name: "none" } },
+  ]) {
+    await context.test(example.name, async () => {
+      const issue = {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+        labels: [{ name: "ready-for-agent" }],
+        state: "open",
+        updated_at: "2026-09-14T17:00:00Z",
+      };
+      const result = await exercise({
+        issue,
+        event: {
+          action: "labeled",
+          issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+          label: { name: "ready-for-agent" },
+          sender: { login: example.login },
+        },
+        permissions: { [example.login]: example.permission },
+      });
+
+      assert.equal(result.code, 1);
+      assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+    });
+  }
+});
+
+test("a permission lookup failure cannot leave an unverified readiness label", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    updated_at: "2026-09-14T17:00:00Z",
+  };
+  const result = await exercise({
+    issue,
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { status: 403, body: { message: "Resource not accessible by integration" } } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.match(result.stderr, /could not verify/i);
+});
+
+test("stale readiness events cannot approve a newer direct contract revision", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd the revised cache.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    updated_at: "2026-09-14T17:01:00Z",
+  };
+  const result = await exercise({
+    issue,
+    bodyLastEditedAt: "2026-09-14T17:01:00Z",
+    event: {
+      action: "labeled",
+      issue: {
+        number: 42,
+        body: issue.body.replace("revised ", ""),
+        updated_at: "2026-09-14T17:00:00Z",
+      },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("direct body edits invalidate an approval even when the visible bytes are restored", async () => {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+  };
+  const oldRevision = bodyRevision(issue, "2026-09-14T17:00:00Z");
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: oldRevision, label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    bodyLastEditedAt: "2026-09-14T17:02:00Z",
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+    event: { action: "edited", issue: { number: 42, body: issue.body } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
+  assert.match(JSON.parse(update.body).body, /fresh authorized review/i);
+});
+
+test("changing native contract relationship identity invalidates readiness", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+  };
+  const oldRevision = bodyRevision(issue, null, "implementation ticket", { parent: null, blockedBy: ["BLOCKER_41"] });
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: oldRevision, label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    blockedBy: [{ id: "BLOCKER_44", number: 44, state: "open" }],
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+    event: { action: "reopened", issue: { number: 42 } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("replacing an Agent Brief invalidates approval even when its text is identical", async () => {
+  const oldBrief = { id: 11, node_id: "COMMENT_11", body: completeAgentBrief, updated_at: "2026-09-14T17:00:00Z", user: { login: "triager" } };
+  const newBrief = { id: 12, node_id: "COMMENT_12", body: completeAgentBrief, updated_at: "2026-09-14T17:01:00Z", user: { login: "triager" } };
+  const comments = [newBrief, {
+    id: 13,
+    body: feedbackState({ status: "approved", revision: briefRevision(oldBrief), label: "ready-for-agent", reviewer: "triager" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue: { number: 42, body: "Intake context.", labels: [{ name: "enhancement" }, { name: "ready-for-agent" }], state: "open" },
+    comments,
+    permissions: { triager: { permission: "read", role_name: "triage" } },
+    event: { action: "created", issue: { number: 42 }, comment: { id: 12 } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("editing an Agent Brief invalidates approval even when its visible bytes are restored", async () => {
+  const oldBrief = { id: 12, node_id: "COMMENT_12", body: completeAgentBrief, updated_at: "2026-09-14T17:00:00Z", user: { login: "triager" } };
+  const currentBrief = { ...oldBrief, updated_at: "2026-09-14T17:02:00Z" };
+  const comments = [currentBrief, {
+    id: 13,
+    body: feedbackState({ status: "approved", revision: briefRevision(oldBrief), label: "ready-for-agent", reviewer: "triager", kind: "triaged Agent Brief" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue: { number: 42, body: "Intake context.", labels: [{ name: "enhancement" }, { name: "ready-for-agent" }], state: "open" },
+    comments,
+    permissions: { triager: { permission: "read", role_name: "triage" } },
+    event: { action: "edited", issue: { number: 42 }, comment: { id: 12 } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("removing readiness revokes the recorded approval and returns a triaged request to review", async () => {
+  const brief = { id: 12, node_id: "COMMENT_12", body: completeAgentBrief, updated_at: "2026-09-14T17:00:00Z", user: { login: "triager" } };
+  const contractRevision = briefRevision(brief);
+  const comments = [brief, {
+    id: 13,
+    body: feedbackState({ status: "approved", revision: contractRevision, label: "ready-for-agent", reviewer: "triager", kind: "triaged Agent Brief" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue: { number: 42, body: "Intake context.", labels: [{ name: "enhancement" }], state: "open" },
+    comments,
+    event: {
+      action: "unlabeled",
+      issue: { number: 42, body: "Intake context." },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ method, url, body }) => method === "POST" && url.endsWith("/labels") && JSON.parse(body).labels.includes("needs-triage")));
+  const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
+  assert.match(JSON.parse(update.body).body, /awaiting review/i);
+});
+
+test("repeated events preserve an active exact-revision approval without rewriting readiness", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+  };
+  const contractRevision = bodyRevision(issue);
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: contractRevision, label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+    event: { action: "reopened", issue: { number: 42 } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.equal(result.requests.filter(({ method }) => ["POST", "PATCH", "DELETE"].includes(method) && !comments.some(({ id }) => id && false)).length, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "POST" && url === "/graphql"));
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.includes("/labels/")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "PATCH" && url.includes("/comments/")));
+});
+
 test("an invalid direct contract loses readiness without acquiring intake labels", async () => {
   const result = await exercise({
     issue: {
@@ -732,7 +1143,8 @@ test("created, edited, and deleted comment events use the authoritative discussi
     });
 
     assert.equal(result.code, 0, result.stderr);
-    assert.ok(result.requests.every(({ method }) => method === "GET"));
+    assert.ok(result.requests.some(({ method, url }) => method === "GET" && url.includes("comments?per_page=100")));
+    assert.ok(result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/comments")));
   });
 
   await context.test("edited", async () => {
@@ -781,7 +1193,7 @@ test("contract text is treated only as data", async () => {
       issue: {
         number: 42,
         body: `## What to build\n\n$(touch ${sentinel})\n\n## Acceptance criteria\n\n- [ ] Never execute this text.\n\n## Blocked by\n\nNone.`,
-        labels: [{ name: "ready-for-agent" }],
+        labels: [],
         state: "open",
       },
     });

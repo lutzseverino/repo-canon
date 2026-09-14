@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { lexer, marked } from "../vendor/marked/marked.esm.js";
 import { parseFragment } from "../vendor/parse5/parse5.esm.js";
 
 const feedbackMarker = "<!-- repo-canon:issue-contract-feedback -->";
+const feedbackStatePrefix = "<!-- repo-canon:issue-contract-state ";
 const readyLabels = new Set(["ready-for-agent", "ready-for-human"]);
 const workflowLabels = new Set(["needs-triage", "needs-info", "ready-for-agent", "ready-for-human", "wontfix"]);
 const categoryLabels = new Set(["bug", "enhancement"]);
@@ -59,6 +61,7 @@ if (!Number.isInteger(issueNumber)) throw new Error("The event does not identify
 
 const api = createApi({
   baseUrl: required("GITHUB_API_URL"),
+  graphqlUrl: required("GITHUB_GRAPHQL_URL"),
   repository: required("GITHUB_REPOSITORY"),
   token: required("GITHUB_TOKEN"),
 });
@@ -72,13 +75,26 @@ if (issue.pull_request) {
 const comments = await api.listComments(issueNumber);
 const blockedBy = await api.listBlockedBy(issueNumber);
 const relationships = await readRelationships(api, issue, blockedBy);
+const authoritativeLabels = new Set((issue.labels ?? []).map(labelName));
+const transitionLabel = readyLabels.has(event.label?.name) ? event.label.name : null;
+const validationIssue = transitionLabel && ["labeled", "unlabeled"].includes(event.action)
+  ? {
+      ...issue,
+      labels: (issue.labels ?? []).filter((label) => {
+        const name = labelName(label);
+        if (!workflowLabels.has(name)) return true;
+        return event.action === "labeled" ? name === transitionLabel : name === "needs-triage";
+      }).concat(event.action === "unlabeled" ? [{ name: "needs-triage" }] : []),
+    }
+  : issue;
 const result = validate({
-  issue,
+  issue: validationIssue,
   comments,
   blockedBy: relationships.blockedBy,
   parent: relationships.parent,
   relationshipErrors: relationships.errors,
 });
+result.labels = authoritativeLabels;
 
 if (!result.valid) {
   await removeReadiness(api, issueNumber, result.labels);
@@ -89,10 +105,40 @@ if (!result.valid) {
 }
 
 const previousFeedback = findFeedback(comments);
-if (previousFeedback) {
-  await maintainFeedback(api, issueNumber, comments, resolvedFeedback(result.kind));
+if (!result.contract) {
+  if (previousFeedback) {
+    await maintainFeedback(api, issueNumber, comments, resolvedFeedback(result.kind));
+  }
+  console.log(`Valid ${result.kind}.`);
+  process.exit(0);
 }
-console.log(`Valid ${result.kind}.`);
+
+const revision = await contractRevision(api, issue, result, relationships);
+const readiness = await assessReadiness({ api, event, issue, result, comments, previousFeedback, revision });
+if (!readiness.valid) {
+  await removeReadiness(api, issueNumber, result.labels);
+  if (result.triaged) await returnTriagedRequestToReview(api, issueNumber, result.labels);
+  await maintainFeedback(api, issueNumber, comments, awaitingReviewFeedback(result.kind, revision, readiness.error));
+  console.error(readiness.error);
+  process.exit(1);
+}
+
+if (readiness.approved && result.triaged) {
+  await replaceTriagedState(api, issueNumber, result.labels, readiness.label);
+} else if (event.action === "unlabeled" && transitionLabel && result.triaged) {
+  const remainingStates = [...result.labels].filter((label) => workflowLabels.has(label));
+  if (remainingStates.length === 0) await api.addLabels(issueNumber, ["needs-triage"]);
+}
+
+await maintainFeedback(
+  api,
+  issueNumber,
+  comments,
+  readiness.approved
+    ? approvedFeedback(result.kind, revision, readiness.label, readiness.reviewer)
+    : awaitingReviewFeedback(result.kind, revision),
+);
+console.log(`Valid ${result.kind}${readiness.approved ? ` with ${readiness.label} bound to ${revision}` : "; awaiting authorized review"}.`);
 
 function required(name) {
   const value = environment[name];
@@ -100,7 +146,7 @@ function required(name) {
   return value;
 }
 
-function createApi({ baseUrl, repository, token }) {
+function createApi({ baseUrl, graphqlUrl, repository, token }) {
   const issuePath = `/repos/${repository}/issues`;
 
   async function requestResponse(path, { allowNotFound = false, ...options } = {}) {
@@ -140,10 +186,31 @@ function createApi({ baseUrl, repository, token }) {
     return values;
   }
 
+  async function graphql(query, variables) {
+    const response = await request(graphqlUrl, {
+      method: "POST",
+      body: JSON.stringify({ query, variables }),
+    });
+    if (response.errors?.length) {
+      throw new Error(`GitHub GraphQL returned errors: ${response.errors.map(({ message }) => message).join("; ")}`);
+    }
+    return response.data;
+  }
+
   return {
     getIssue: (number) => request(`${issuePath}/${number}`),
     getParent: (number) => request(`${issuePath}/${number}/parent`, { allowNotFound: true }),
     getOptionalUrl: (url) => request(url, { allowNotFound: true }),
+    getPermission: (login) => request(`/repos/${repository}/collaborators/${encodeURIComponent(login)}/permission`, { allowNotFound: true }),
+    getIssueBodyRevision: async (number) => {
+      const [owner, name] = repository.split("/");
+      const data = await graphql(
+        "query IssueBodyRevision($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) { issue(number: $number) { id lastEditedAt } } }",
+        { owner, name, number },
+      );
+      if (!data?.repository?.issue) throw new Error(`GitHub GraphQL did not return issue #${number}.`);
+      return data.repository.issue;
+    },
     listComments: (number) => paginate(`${issuePath}/${number}/comments?per_page=100`),
     listBlockedBy: (number) => paginate(`${issuePath}/${number}/dependencies/blocked_by?per_page=100`, { allowNotFound: true }),
     removeLabel: (number, label) => request(`${issuePath}/${number}/labels/${encodeURIComponent(label)}`, { method: "DELETE" }),
@@ -273,7 +340,7 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   if (brief && hasTriageCategory) {
     validateTriagedLabels(labels, null, errors);
     validateAgentBrief(brief.body, labels, errors);
-    return outcome("triaged Agent Brief", errors, labels, true);
+    return outcome("triaged Agent Brief", errors, labels, true, { type: "comment", comment: brief, body: brief.body ?? "" });
   }
 
   const contractKind = identifyContract(sections);
@@ -283,20 +350,20 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
     for (const name of ["Implementation Decisions", "Testing Decisions", "Further Notes"]) {
       requireSection(sections, name, errors, { allowEmpty: true });
     }
-    return outcome("specification", errors, labels, false);
+    return outcome("specification", errors, labels, false, { type: "issue-body", body });
   }
 
   if (!hasTriageCategory && contractKind === "implementation ticket") {
     errors.push(...relationshipErrors);
     requireSections(sections, ["What to build", "Acceptance criteria"], errors);
     requireSection(sections, "Blocked by", errors, { allowExternalValue: blockedBy.length > 0 });
-    return outcome("implementation ticket", errors, labels, false);
+    return outcome("implementation ticket", errors, labels, false, { type: "issue-body", body });
   }
 
   if (brief) {
     validateTriagedLabels(labels, null, errors);
     validateAgentBrief(brief.body, labels, errors);
-    return outcome("triaged Agent Brief", errors, labels, true);
+    return outcome("triaged Agent Brief", errors, labels, true, { type: "comment", comment: brief, body: brief.body ?? "" });
   }
 
   if (contractKind === "bug report") {
@@ -342,8 +409,8 @@ function identifyContract(sections) {
   return null;
 }
 
-function outcome(kind, errors, labels, triaged) {
-  return { valid: errors.length === 0, kind, errors: [...new Set(errors)], labels, triaged };
+function outcome(kind, errors, labels, triaged, contract = null) {
+  return { valid: errors.length === 0, kind, errors: [...new Set(errors)], labels, triaged, contract };
 }
 
 function parseSections(markdown, acceptedNames = contractSectionNames) {
@@ -554,6 +621,130 @@ function agentBriefHeading(body) {
   return findMarkdownHeadings(body, agentBriefHeadingNames)[0] ?? null;
 }
 
+async function contractRevision(apiClient, issue, result, relationships) {
+  let source;
+  if (result.contract.type === "issue-body") {
+    const metadata = await apiClient.getIssueBodyRevision(issue.number);
+    source = { type: "issue-body", id: metadata.id, editedAt: metadata.lastEditedAt ?? null };
+  } else {
+    const comment = result.contract.comment;
+    source = {
+      type: "comment",
+      id: String(comment.node_id ?? comment.id),
+      editedAt: comment.updated_at ?? null,
+    };
+  }
+  const value = JSON.stringify({
+    format: "repo-canon/issue-contract-revision/v1",
+    kind: result.kind,
+    source,
+    body: result.contract.body,
+    relationships: {
+      parent: relationshipIdentity(relationships.parent),
+      blockedBy: relationships.blockedBy.map(relationshipIdentity).filter(Boolean).sort(),
+    },
+  });
+  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+}
+
+function relationshipIdentity(issue) {
+  if (!issue) return null;
+  return String(issue.node_id ?? issue.id ?? issue.url ?? issue.html_url ?? issue.number);
+}
+
+async function assessReadiness({ api: apiClient, event: currentEvent, issue, result, comments, previousFeedback, revision }) {
+  const currentReadyLabels = [...result.labels].filter((label) => readyLabels.has(label));
+  if (currentReadyLabels.length > 1) {
+    return { valid: false, error: "Apply only one readiness label to an implementation contract." };
+  }
+
+  const recorded = feedbackState(previousFeedback?.body);
+  const grant = readinessGrant(currentEvent, issue, result, revision, recorded, currentReadyLabels);
+  if (grant.candidate) {
+    if (!grant.valid) return { valid: false, error: grant.error };
+    const authority = await reviewerAuthority(apiClient, grant.reviewer);
+    if (!authority.authorized) {
+      return {
+        valid: false,
+        error: authority.error
+          ? `Could not verify @${grant.reviewer}'s review authority: ${authority.error}`
+          : `@${grant.reviewer} is not authorized to grant readiness. Use a repository admin, maintainer, or collaborator with the triage role.`,
+      };
+    }
+    return { valid: true, approved: true, label: grant.label, reviewer: grant.reviewer };
+  }
+
+  if (currentReadyLabels.length === 0) return { valid: true, approved: false };
+
+  const active = await activeApproval(apiClient, recorded, revision, currentReadyLabels[0]);
+  if (active) return { valid: true, approved: true, label: recorded.label, reviewer: recorded.reviewer };
+
+  return {
+    valid: false,
+    error: "Readiness is not bound to an authorized review of the current contract revision. Remove the stale attempt and review the published revision again.",
+  };
+}
+
+function readinessGrant(currentEvent, issue, result, revision, recorded, currentReadyLabels) {
+  const label = currentEvent.action === "labeled" && readyLabels.has(currentEvent.label?.name)
+    ? currentEvent.label.name
+    : currentEvent.action === "opened" && result.contract.type === "issue-body" && currentReadyLabels.length === 1
+      ? currentReadyLabels[0]
+      : null;
+  if (!label) return { candidate: false };
+  const reviewer = currentEvent.sender?.login;
+  if (!reviewer) return { candidate: true, valid: false, error: "The readiness event does not identify its actor." };
+  if (!currentReadyLabels.includes(label)) {
+    return { candidate: true, valid: false, error: `The stale readiness event no longer matches the issue's \`${label}\` label.` };
+  }
+  if (currentEvent.issue?.body !== issue.body || currentEvent.issue?.updated_at !== issue.updated_at) {
+    return { candidate: true, valid: false, error: "The readiness event predates the current authoritative issue state. Review the published revision again." };
+  }
+  if (result.contract.type === "comment" && !(recorded?.status === "awaiting-review" && recorded.revision === revision)) {
+    return {
+      candidate: true,
+      valid: false,
+      error: "Wait for the validator to publish the exact latest Agent Brief revision before applying readiness.",
+    };
+  }
+  return { candidate: true, valid: true, label, reviewer };
+}
+
+async function activeApproval(apiClient, recorded, revision, label) {
+  if (recorded?.status !== "approved" || recorded.revision !== revision || recorded.label !== label || !recorded.reviewer) {
+    return false;
+  }
+  return (await reviewerAuthority(apiClient, recorded.reviewer)).authorized;
+}
+
+async function reviewerAuthority(apiClient, login) {
+  let permission;
+  try {
+    permission = await apiClient.getPermission(login);
+  } catch (error) {
+    return { authorized: false, error: error.message };
+  }
+  if (!permission) return { authorized: false };
+  const role = permission.role_name ?? permission.permission;
+  const grants = permission.permissions ?? {};
+  return {
+    authorized: ["admin", "maintain", "triage"].includes(role)
+      || grants.admin === true
+      || grants.maintain === true
+      || grants.triage === true,
+  };
+}
+
+function feedbackState(body = "") {
+  const line = normalizeMarkdown(body).split("\n").find((candidate) => candidate.startsWith(feedbackStatePrefix) && candidate.endsWith(" -->"));
+  if (!line) return null;
+  try {
+    return JSON.parse(line.slice(feedbackStatePrefix.length, -4));
+  } catch {
+    return null;
+  }
+}
+
 async function removeReadiness(apiClient, number, labels) {
   for (const label of labels) {
     if (readyLabels.has(label)) await apiClient.removeLabel(number, label);
@@ -564,6 +755,12 @@ async function returnTriagedRequestToReview(apiClient, number, labels) {
   const hadReadiness = [...labels].some((label) => readyLabels.has(label));
   const remainingStates = [...labels].filter((label) => workflowLabels.has(label) && !readyLabels.has(label));
   if (hadReadiness && remainingStates.length === 0) await apiClient.addLabels(number, ["needs-triage"]);
+}
+
+async function replaceTriagedState(apiClient, number, labels, readinessLabel) {
+  for (const label of labels) {
+    if (workflowLabels.has(label) && label !== readinessLabel) await apiClient.removeLabel(number, label);
+  }
 }
 
 async function maintainFeedback(apiClient, number, comments, body) {
@@ -578,6 +775,17 @@ function findFeedback(comments) {
 
 function invalidFeedback(errors) {
   return `${feedbackMarker}\n## Issue contract needs attention\n\n${errors.map((error) => `- ${error}`).join("\n")}\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.`;
+}
+
+function awaitingReviewFeedback(kind, revision, reason = null) {
+  const state = JSON.stringify({ status: "awaiting-review", revision, label: null, reviewer: null });
+  const explanation = reason ? `\n\nThe last readiness attempt was rejected: ${reason}` : "";
+  return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${revision}\`.${explanation}\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
+}
+
+function approvedFeedback(kind, revision, label, reviewer) {
+  const state = JSON.stringify({ status: "approved", revision, label, reviewer });
+  return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${revision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract, changing its parent or blocker references, or removing readiness invalidates this association.`;
 }
 
 function resolvedFeedback(kind) {

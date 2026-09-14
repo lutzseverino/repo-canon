@@ -56,10 +56,10 @@ typecheck, or build step. Run a single fixture with
 The Node test suite exercises executable operation fixtures, including
 disposable remote-label state and interruption recovery, plus pull request
 creation and update event inputs, valid and invalid metadata, harmless
-formatting variations, a hostile fork payload, and issue-contract events and
-state changes. The label fixtures do not contact GitHub or establish live remote
-setup. Run `npm run test:issue-contracts` for the focused issue-contract
-fixtures. The four draft issue forms were parsed as YAML and checked for basic
-field structure and duplicate IDs during bootstrap; no GitHub submission
-behavior was exercised. Source validation and adoption evidence remain separate
-from these checks.
+variations, a hostile fork payload, and issue-contract structure, exact revision
+association, actor authority, invalidation, and repeated or stale events.
+The label fixtures do not contact GitHub or establish live remote setup. Run
+`npm run test:issue-contracts` for the focused issue-contract fixtures. The four
+draft issue forms were parsed as YAML and checked for basic field structure and
+duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
+Source validation and adoption evidence remain separate from these checks.
