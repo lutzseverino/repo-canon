@@ -115,6 +115,37 @@ mkdirSync(dirname(fixtureGh), { recursive: true });
 cpSync(join(repositoryRoot, 'scripts', 'support', 'fake-gh-adoption.mjs'), fixtureGh);
 chmodSync(fixtureGh, 0o755);
 
+const fixtureNames = [
+  'prepared-monorepo',
+  'amendment-success',
+  'retroactive-write-rejected',
+  'readoption',
+  'empty-and-unresolved',
+  'protection',
+];
+for (const name of fixtureNames) {
+  write(outputRoot, `remote-state/${name}.json`, `${JSON.stringify({
+    repo: `repo-canon-fixtures/${name}`,
+    labels: [{ name: 'adopter-owned', color: '123456', description: 'Preserved unrelated label' }],
+    rulesets: [{
+      id: 41,
+      name: 'Adopter release policy',
+      target: 'branch',
+      enforcement: 'active',
+      bypass_actors: [],
+      conditions: { ref_name: { include: ['refs/heads/release/**'], exclude: [] } },
+      rules: [{ type: 'deletion' }],
+    }],
+    settings: {
+      allow_squash_merge: false,
+      allow_merge_commit: true,
+      allow_rebase_merge: true,
+      squash_merge_commit_title: 'COMMIT_OR_PR_TITLE',
+      squash_merge_commit_message: 'COMMIT_MESSAGES',
+    },
+  }, null, 2)}\n`);
+}
+
 const plan = {
   format: 'repo-canon/adoption-fixture-plan/v1',
   createdWith: {
@@ -122,16 +153,14 @@ const plan = {
     sourceHead: git(repositoryRoot, 'rev-parse', 'HEAD'),
   },
   root: realpathSync(outputRoot),
-  repositories: Object.fromEntries([
-    'prepared-monorepo',
-    'amendment-success',
-    'retroactive-write-rejected',
-    'readoption',
-    'empty-and-unresolved',
-    'protection',
-  ].map(name => [name, {
+  fixtureEnvironment: {
+    path: join(outputRoot, 'bin'),
+    stateVariable: 'FAKE_GH_STATE',
+  },
+  repositories: Object.fromEntries(fixtureNames.map(name => [name, {
     head: git(join(outputRoot, name), 'rev-parse', 'HEAD'),
     status: git(join(outputRoot, name), 'status', '--porcelain=v1'),
+    remoteState: join(outputRoot, 'remote-state', `${name}.json`),
   }])),
   expectations: {
     'prepared-monorepo': {

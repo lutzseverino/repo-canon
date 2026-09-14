@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { lstatSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -34,6 +34,10 @@ test('prepares clean real Git repositories for the adoption evidence matrix', t 
   for (const name of Object.keys(plan.repositories)) {
     assert.equal(git(join(output, name), 'status', '--porcelain=v1'), '');
     assert.match(git(join(output, name), 'remote', 'get-url', 'origin'), /^https:\/\/github\.com\/repo-canon-fixtures\//);
+    const remoteState = JSON.parse(readFileSync(plan.repositories[name].remoteState, 'utf8'));
+    assert.equal(remoteState.repo, `repo-canon-fixtures/${name}`);
+    assert.equal(remoteState.labels[0].name, 'adopter-owned');
+    assert.equal(remoteState.rulesets[0].name, 'Adopter release policy');
   }
 
   const prepared = join(output, 'prepared-monorepo');
@@ -49,4 +53,53 @@ test('prepares clean real Git repositories for the adoption evidence matrix', t 
   }
   assert.equal(lstatSync(join(output, 'protection', 'docs/linked.md')).isSymbolicLink(), true);
   assert.equal(lstatSync(join(output, 'bin/gh')).mode & 0o111, 0o111);
+
+  const statePath = plan.repositories['empty-and-unresolved'].remoteState;
+  const projectRoot = join(output, 'empty-and-unresolved');
+  const environment = {
+    ...process.env,
+    PATH: `${plan.fixtureEnvironment.path}:${process.env.PATH}`,
+    FAKE_GH_STATE: statePath,
+  };
+  const baseRequest = {
+    format: 'repo-standards/operation/v1',
+    projectRoot,
+    standards: {
+      repository: 'https://github.com/lutzseverino/repo-canon',
+      version: 'v0.0.1-evidence',
+      commit: '0000000000000000000000000000000000000000',
+    },
+    profile: 'complete',
+    declarations: [],
+    allowedTargets: { paths: [], directories: [] },
+  };
+  for (const [script, id] of [
+    ['operations/setup-github-labels.mjs', 'canonical-labels'],
+    ['operations/setup-github-pr-integration.mjs', 'pull-request-integration'],
+  ]) {
+    const result = spawnSync(process.execPath, [join(repositoryRoot, script)], {
+      cwd: projectRoot,
+      env: environment,
+      encoding: 'utf8',
+      input: JSON.stringify({
+        ...baseRequest,
+        operation: { declaration: 'github-repository-configuration', phase: 'fixes', id },
+      }),
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).status, 'changed');
+  }
+  const finalRemoteState = JSON.parse(readFileSync(statePath, 'utf8'));
+  assert.equal(finalRemoteState.labels.length, 13);
+  assert.equal(finalRemoteState.labels.some(label => label.name === 'adopter-owned'), true);
+  assert.equal(finalRemoteState.rulesets.length, 2);
+  assert.equal(finalRemoteState.rulesets.some(rule => rule.name === 'Adopter release policy'), true);
+  assert.equal(finalRemoteState.rulesets.some(rule => rule.name === 'Repo Canon required PR checks'), true);
+  assert.deepEqual(finalRemoteState.settings, {
+    allow_squash_merge: true,
+    allow_merge_commit: false,
+    allow_rebase_merge: false,
+    squash_merge_commit_title: 'PR_TITLE',
+    squash_merge_commit_message: 'PR_BODY',
+  });
 });

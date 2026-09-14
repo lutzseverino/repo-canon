@@ -22,8 +22,18 @@ npm run prepare:adoption-fixtures -- /tmp/repo-canon-adoption-fixtures
 The command refuses to overwrite an existing output path. It creates ordinary
 Git worktrees with committed content, unambiguous GitHub-shaped remotes, and a
 `plan.json` inventory that binds each fixture HEAD and expected evidence paths.
-The generated `bin/gh` is a local remote-state fixture for author-operation
-exercises; using it is never remote evidence.
+The generated `bin/gh` and per-repository JSON files under `remote-state` form a
+local remote-state fixture for author-operation exercises. `plan.json` records
+the required `PATH` directory and each repository's `FAKE_GH_STATE` path. Using
+them is never remote evidence.
+
+For a local CLI run, select the repository's values without modifying the state
+file:
+
+```sh
+export PATH="$(jq -r .fixtureEnvironment.path /tmp/repo-canon-adoption-fixtures/plan.json):$PATH"
+export FAKE_GH_STATE="$(jq -r '.repositories["prepared-monorepo"].remoteState' /tmp/repo-canon-adoption-fixtures/plan.json)"
+```
 
 The reviewed scope templates under `test/fixtures/adoption` contain every
 candidate decision, reason, coverage explanation, and evidence path before any
