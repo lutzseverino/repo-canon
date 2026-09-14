@@ -89,9 +89,10 @@ const blockElements = new Set([
   "table",
   "ul",
 ]);
+const codeElements = new Set(["code", "kbd", "pre"]);
 const hiddenElements = new Set(["script", "style", "template"]);
 
-function parsedHtml(value) {
+function parsedHtml(value, includeCode = true) {
   const links = [];
   let text = "";
   const stack = [{ node: parseFragment(value), closing: false }];
@@ -109,7 +110,10 @@ function parsedHtml(value) {
       text += node.value;
       continue;
     }
-    if (hiddenElements.has(node.nodeName)) {
+    if (
+      hiddenElements.has(node.nodeName) ||
+      (!includeCode && codeElements.has(node.nodeName))
+    ) {
       continue;
     }
 
@@ -143,7 +147,7 @@ function tokenText(token, includeCode) {
     return includeCode ? token.text : "";
   }
   if (token.type === "html") {
-    return parsedHtml(token.text).text;
+    return parsedHtml(token.text, includeCode).text;
   }
   if (token.type === "image") {
     return decodedText(token.text ?? "");
@@ -152,6 +156,9 @@ function tokenText(token, includeCode) {
     return "\n";
   }
   if (["checkbox", "def", "hr", "space"].includes(token.type)) {
+    return "";
+  }
+  if (!includeCode && token.type === "text" && token.escaped) {
     return "";
   }
   if (token.type === "list") {
@@ -275,7 +282,8 @@ function hasIssueReference(tokens) {
     }
     if (
       token.type === "html" &&
-      parsedHtml(token.text).links.some((href) => issueUrl.test(href))
+      !token.inRawBlock &&
+      parsedHtml(token.text, false).links.some((href) => issueUrl.test(href))
     ) {
       found = true;
     }

@@ -242,6 +242,14 @@ Closes #6
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Replace the Summary placeholder/);
   assert.match(result.stderr, /Replace the Validation placeholder/);
+
+  const codeEvidence = runEvent({
+    body: validBody().replace(
+      "`npm test` passed with all event fixtures.",
+      "<pre>npm test\npassed all fixtures</pre>",
+    ),
+  });
+  assert.equal(codeEvidence.status, 0, codeEvidence.stderr);
 });
 
 test("keeps nested subsections attached to required sections", () => {
@@ -272,6 +280,9 @@ test("does not accept issue references or exceptions inside code examples", () =
   for (const relatedIssue of [
     "Use `#123` as the example format.",
     "Use `Small correction: explain the typo here` as the exception format.",
+    "<code>#123</code>",
+    "<pre>#123</pre>",
+    "<code>Small correction: explain the typo here</code>",
   ]) {
     const result = runEvent({
       body: `## Summary
@@ -399,6 +410,17 @@ Migration: clients must use the replacement response field.
   assert.equal(fenced.status, 1);
   assert.match(fenced.stderr, /under an Impact/);
   assert.match(fenced.stderr, /under a Migration/);
+
+  const htmlCode = runEvent({
+    title: "feat(api)!: remove legacy response",
+    body: `${validBody()}
+<pre>Impact: old clients stop working after this change.
+Migration: clients must use the replacement response field.</pre>
+`,
+  });
+  assert.equal(htmlCode.status, 1);
+  assert.match(htmlCode.stderr, /under an Impact/);
+  assert.match(htmlCode.stderr, /under a Migration/);
 });
 
 test("requires the title marker for an explicit breaking-change footer", () => {
@@ -420,6 +442,14 @@ BREAKING CHANGE: example footer text stays inert.
 `,
   });
   assert.equal(fenced.status, 0, fenced.stderr);
+
+  const htmlCode = runEvent({
+    title: "feat(api): document a migration example",
+    body: `${validBody()}
+<code>BREAKING CHANGE: example footer text stays inert.</code>
+`,
+  });
+  assert.equal(htmlCode.status, 0, htmlCode.stderr);
 });
 
 test("treats hostile fork metadata as inert workflow input", () => {
