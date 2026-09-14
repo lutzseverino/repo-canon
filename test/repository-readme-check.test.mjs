@@ -217,11 +217,33 @@ A queue inspector.
 
 [0BSD](LICENSE)
 `,
-    'LICENSE': '0BSD\n',
+    'LICENSE': '# 0BSD #\n',
   });
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, 'passed');
+});
+
+test('rejects an empty rendered Markdown title', t => {
+  const outcome = check(t, {
+    'README.md': `<div align="center">
+
+# #
+
+</div>
+
+A queue inspector.
+
+## License
+
+[MIT License](LICENSE)
+`,
+    'LICENSE': mit,
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Center the Repository README title/);
 });
 
 test('does not accept navigation links hidden in code fences', t => {

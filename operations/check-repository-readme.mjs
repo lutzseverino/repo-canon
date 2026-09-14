@@ -63,6 +63,7 @@ function rootLicense(projectRoot) {
     .find(Boolean);
   const name = firstLine
     ?.replace(/^#{1,6}\s+/, '')
+    .replace(/[ \t]+#+[ \t]*$/, '')
     .replace(/^<h[1-6][^>]*>|<\/h[1-6]>$/gi, '')
     .trim();
   if (!name) {
@@ -87,9 +88,10 @@ function headings(markdown) {
     /\balign\s*=\s*(?:"center"|'center'|center)(?:\s|$)/i.test(attributes)
       || centeredRanges.some(([start, end]) => start < index && index < end)
   );
-  const atx = /^(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$/gm;
+  const atx = /^(#{1,6})(?:[ \t]+(.*?))?[ \t]*$/gm;
   for (const match of markdown.matchAll(atx)) {
-    const name = match[2].trim();
+    const name = (match[2] ?? '').replace(/(?:^|[ \t]+)#+[ \t]*$/, '').trim();
+    if (!name) continue;
     record(match[1].length, name, match.index, match.index + match[0].length, isCentered(match.index));
   }
   const html = /<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1\s*>/gi;
