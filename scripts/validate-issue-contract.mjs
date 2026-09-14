@@ -7,6 +7,7 @@ const readyLabels = new Set(["ready-for-agent", "ready-for-human"]);
 const workflowLabels = new Set(["needs-triage", "needs-info", "ready-for-agent", "ready-for-human", "wontfix"]);
 const categoryLabels = new Set(["bug", "enhancement"]);
 const childLabels = new Set(["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"]);
+const agentBriefHeadingNames = new Set(["agent brief"]);
 const contractSectionNames = new Set([
   "acceptance criteria",
   "actual behavior",
@@ -60,7 +61,13 @@ if (issue.pull_request) {
 const comments = await api.listComments(issueNumber);
 const blockedBy = await api.listBlockedBy(issueNumber);
 const relationships = await readRelationships(api, issue, blockedBy);
-const result = validate({ issue, comments, blockedBy: relationships.blockedBy, parent: relationships.parent });
+const result = validate({
+  issue,
+  comments,
+  blockedBy: relationships.blockedBy,
+  parent: relationships.parent,
+  relationshipErrors: relationships.errors,
+});
 
 if (!result.valid) {
   await removeReadiness(api, issueNumber, result.labels);
@@ -125,6 +132,7 @@ function createApi({ baseUrl, repository, token }) {
     getIssue: (number) => request(`${issuePath}/${number}`),
     getParent: (number) => request(`${issuePath}/${number}/parent`, { allowNotFound: true }),
     getUrl: (url) => request(url),
+    getOptionalUrl: (url) => request(url, { allowNotFound: true }),
     listComments: (number) => paginate(`${issuePath}/${number}/comments?per_page=100`),
     listBlockedBy: (number) => paginate(`${issuePath}/${number}/dependencies/blocked_by?per_page=100`),
     removeLabel: (number, label) => request(`${issuePath}/${number}/labels/${encodeURIComponent(label)}`, { method: "DELETE" }),
@@ -136,15 +144,21 @@ function createApi({ baseUrl, repository, token }) {
 
 async function readRelationships(apiClient, issue, nativeBlockedBy) {
   const sections = parseSections(issue.body ?? "");
+  const errors = [];
   const nativeParent = await apiClient.getParent(issue.number);
   const parentReference = firstIssueReference(sections.get("parent"));
-  const parent = nativeParent ?? (parentReference ? await apiClient.getUrl(parentReference) : null);
+  const fallbackParent = !nativeParent && parentReference ? await apiClient.getOptionalUrl(parentReference) : null;
+  const parent = nativeParent ?? fallbackParent;
+  if (parentReference && !parent) errors.push(`Could not resolve the \`Parent\` issue reference ${parentReference}.`);
   const blockedBy = [...nativeBlockedBy];
   const knownReferences = new Set(nativeBlockedBy.map((blocker) => issueReferenceFor(blocker)).filter(Boolean));
   for (const reference of issueReferences(sections.get("blocked by"))) {
-    if (!knownReferences.has(reference)) blockedBy.push(await apiClient.getUrl(reference));
+    if (knownReferences.has(reference)) continue;
+    const blocker = await apiClient.getOptionalUrl(reference);
+    if (blocker) blockedBy.push(blocker);
+    else errors.push(`Could not resolve the \`Blocked by\` issue reference ${reference}.`);
   }
-  return { parent, blockedBy };
+  return { parent, blockedBy, errors };
 }
 
 function issueReferenceFor(issue) {
@@ -174,10 +188,10 @@ function issueReferences(value = "") {
   return references;
 }
 
-function validate({ issue, comments, blockedBy, parent }) {
+function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   const labels = new Set((issue.labels ?? []).map((label) => typeof label === "string" ? label : label.name));
   const sections = parseSections(issue.body ?? "");
-  const errors = [];
+  const errors = [...relationshipErrors];
 
   if (labels.has("wayfinder:map")) {
     validateWayfinderMap(sections, labels, errors);
@@ -255,7 +269,7 @@ function outcome(kind, errors, labels, triaged) {
 }
 
 function parseSections(markdown) {
-  const headings = findContractHeadings(markdown);
+  const headings = findMarkdownHeadings(markdown, contractSectionNames);
   const sections = new Map();
   for (let index = 0; index < headings.length; index += 1) {
     const heading = headings[index];
@@ -267,8 +281,18 @@ function parseSections(markdown) {
   return sections;
 }
 
-function findContractHeadings(markdown) {
+function findMarkdownHeadings(markdown, acceptedNames) {
   const headings = [];
+  forEachUnfencedLine(markdown, (line, offset) => {
+    const heading = line.match(/^(#{1,6})[ \t]+(.+?)[ \t]*$/i);
+    if (heading && acceptedNames.has(normalize(heading[2]))) {
+      headings.push({ index: offset, length: line.length, name: heading[2] });
+    }
+  });
+  return headings;
+}
+
+function forEachUnfencedLine(markdown, visit) {
   let fence = null;
   let offset = 0;
   for (const lineWithEnding of markdown.match(/[^\n]*(?:\n|$)/g) ?? []) {
@@ -281,14 +305,10 @@ function findContractHeadings(markdown) {
     } else if (fenceMatch) {
       fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
     } else {
-      const heading = line.match(/^(#{1,6})[ \t]+(.+?)[ \t]*$/i);
-      if (heading && contractSectionNames.has(normalize(heading[2]))) {
-        headings.push({ index: offset, length: line.length, name: heading[2] });
-      }
+      visit(line, offset);
     }
     offset += lineWithEnding.length;
   }
-  return headings;
 }
 
 function normalize(value) {
@@ -359,11 +379,11 @@ function validateAgentBriefIfApplicable(labels, comments, expectedCategory, erro
 }
 
 function latestAgentBrief(comments) {
-  return [...comments].reverse().find((comment) => /^#{1,6}[ \t]+agent brief[ \t]*$/im.test(comment.body ?? ""));
+  return [...comments].reverse().find((comment) => agentBriefHeading(comment.body ?? ""));
 }
 
 function validateAgentBrief(body, labels, errors, expectedCategory = null) {
-  const preamble = body.split(/^#{1,6}[ \t]+agent brief[ \t]*$/im)[0].trim();
+  const preamble = body.slice(0, agentBriefHeading(body).index).trim();
   if (preamble !== "> *This was generated by AI during triage.*") {
     errors.push("Start the Agent Brief comment with `> *This was generated by AI during triage.*`.");
   }
@@ -380,15 +400,23 @@ function validateAgentBrief(body, labels, errors, expectedCategory = null) {
 }
 
 function parseBriefFields(body) {
-  const matches = [...body.matchAll(/^\*\*([^*:\n]+):\*\*[ \t]*(.*)$/gim)];
+  const matches = [];
+  forEachUnfencedLine(body, (line, index) => {
+    const match = line.match(/^\*\*([^*:\n]+):\*\*[ \t]*(.*)$/i);
+    if (match) matches.push({ index, length: line.length, name: match[1], initialValue: match[2] });
+  });
   const fields = new Map();
   for (let index = 0; index < matches.length; index += 1) {
     const match = matches[index];
-    const start = match.index + match[0].length;
+    const start = match.index + match.length;
     const end = matches[index + 1]?.index ?? body.length;
-    fields.set(normalize(match[1]), `${match[2]}\n${body.slice(start, end)}`.trim());
+    fields.set(normalize(match.name), `${match.initialValue}\n${body.slice(start, end)}`.trim());
   }
   return fields;
+}
+
+function agentBriefHeading(body) {
+  return findMarkdownHeadings(body, agentBriefHeadingNames)[0] ?? null;
 }
 
 async function removeReadiness(apiClient, number, labels) {
