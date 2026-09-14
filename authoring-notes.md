@@ -218,8 +218,8 @@ notices; this choice does not replace third-party licenses or choose an
 adopting repository's license. The author confirmed
 `Copyright (c) 2026 Jasper Lutz Severino` for the notice. Ticket
 [#14](https://github.com/lutzseverino/repo-canon/issues/14) applies the selected
-license and verifies attribution; the owner decision is complete, while
-licensing implementation remains outstanding.
+license and verifies attribution. The root license covers original Repo Canon
+material; third-party material retains its accompanying licenses and notices.
 
 ## Delivery boundary
 
