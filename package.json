@@ -6,7 +6,8 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "check": "node --check operations/*.mjs && node --check .github/scripts/*.mjs && node --check test/*.test.mjs && node --check test/helpers/*.mjs && node --check test/fixtures/*.mjs",
-    "test": "node --test test/*.test.mjs"
+    "check": "node --check operations/*.mjs && node --check scripts/*.mjs && node --check .github/scripts/*.mjs && node --check test/*.test.mjs && node --check test/helpers/*.mjs && node --check test/fixtures/*.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:issue-contracts": "node --test test/issue-contracts.test.mjs"
   }
 }
