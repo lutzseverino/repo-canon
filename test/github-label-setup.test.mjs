@@ -219,11 +219,11 @@ test('blocks for unavailable or incompatible tools and unauthenticated access', 
   });
 
   await t.test('incompatible gh', st => {
-    const scenario = setup(st, { state: { version: 'gh version 1.14.0' } });
+    const scenario = setup(st, { state: { version: 'gh version 2.47.0' } });
     const outcome = scenario.invoke();
     assert.equal(outcome.status, 0, outcome.stderr);
     assert.equal(outcome.result.status, 'blocked');
-    assert.match(outcome.result.message, /requires gh 2\.0\.0 or newer/);
+    assert.match(outcome.result.message, /requires gh 2\.48\.0 or newer/);
   });
 
   await t.test('not authenticated', st => {
