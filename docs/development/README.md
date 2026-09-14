@@ -35,6 +35,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   preserves exact harness provenance, and the
   [visual-inspection record](engineering-skill-architecture-visual-inspection.md)
   records the browser-render review.
+- [Productivity skill exercises](productivity-skill-exercises.md): runtime
+  scenarios, outcomes, retained artifacts, prerequisites, and limitations.
 - [Planning skill exercises](planning-skill-exercises.md): runtime evidence,
   native artifacts, and limitations for the planning, delivery, and
   adoption-preparation skills.
@@ -52,9 +54,9 @@ metadata validation, issue contract validation, Repository README checking,
 GitHub label setup, PR integration setup, and their CI suites are implemented.
 Public CLI 1.2.1 with Node.js 24 validates the complete profile, and the source
 declares that exact compatibility. The earlier CLI 1.1.0 experiments remain
-historical evidence. Operation fixtures and the pinned skill inventory remain
-separate from source validation; remaining productivity-skill exercises and
-complete Repo Canon adoption are still outstanding.
+historical evidence. Operation fixtures, the pinned skill inventory, and the
+engineering, productivity, and planning skill exercises remain separate from
+source validation. Complete Repo Canon adoption is still outstanding.
 
 ## Working locally
 
@@ -85,3 +87,6 @@ duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
 The public source-validation command and its evidence boundary are recorded in
 [the source profile](source-profile.md). Adoption evidence remains separate
 from these checks.
+
+Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
+disposable local repositories used for the seven productivity skill exercises.
