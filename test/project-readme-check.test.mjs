@@ -169,6 +169,25 @@ test('requires link casing to match the repository entry', t => {
   assert.match(outcome.result.message, /links to missing Guide\.md/);
 });
 
+test('resolves sibling links from Project paths containing URL syntax', t => {
+  const paths = [
+    'component#1/README.md',
+    'component?1/README.md',
+    'component%1/README.md',
+  ];
+  const outcome = check(t, {
+    'component#1/README.md': '# Hash component\n\n[Guide](guide.md)\n',
+    'component#1/guide.md': '# Guide\n',
+    'component?1/README.md': '# Query component\n\n[Guide](guide.md)\n',
+    'component?1/guide.md': '# Guide\n',
+    'component%1/README.md': '# Percent component\n\n[Guide](guide.md)\n',
+    'component%1/guide.md': '# Guide\n',
+  }, paths);
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed');
+});
+
 test('allows empty concrete Project README scope while leaving coverage to review', t => {
   const outcome = check(t, {}, []);
   assert.equal(outcome.status, 0, outcome.stderr);

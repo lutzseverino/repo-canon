@@ -94,7 +94,8 @@ export function resolvedLocalPath(sourcePath, target) {
   if (/^(?:[a-z][a-z+.-]*:|\/|\\)/i.test(target)) return null;
   try {
     const root = new URL('https://repository.invalid/project/');
-    const source = new URL(sourcePath, root);
+    const encodedSourcePath = sourcePath.split('/').map(encodeURIComponent).join('/');
+    const source = new URL(encodedSourcePath, root);
     const destination = new URL(target, source);
     if (destination.origin !== root.origin) return null;
     if (!destination.pathname.startsWith(root.pathname)) return undefined;
