@@ -449,6 +449,57 @@ test("an Agent Brief heading inside a fenced discussion example is ignored", asy
   assert.equal(result.code, 0, result.stderr);
 });
 
+test("HTML-commented contract syntax remains inert", async (context) => {
+  await context.test("body heading", async () => {
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: "## Problem\n\n<!--\n## Desired outcome\n\nHidden example.\n-->\n\n_No response_\n\n## Desired outcome\n\nSearch finishes quickly.",
+        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        state: "open",
+      },
+    });
+
+    assert.equal(result.code, 1);
+    assert.match(result.stderr, /Problem/);
+  });
+
+  await context.test("discussion heading", async () => {
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: "## Problem\n\nSearch is slow.\n\n## Desired outcome\n\nSearch finishes quickly.",
+        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        state: "open",
+      },
+      comments: [
+        { id: 1, body: completeAgentBrief, user: { login: "maintainer" } },
+        { id: 2, body: "Example only:\n\n<!--\n## Agent Brief\n\n**Summary:** Hidden.\n-->", user: { login: "reporter" } },
+      ],
+    });
+
+    assert.equal(result.code, 0, result.stderr);
+  });
+
+  await context.test("brief field", async () => {
+    const brief = completeAgentBrief
+      .replace("**Summary:** Make search fast", "**Summary:** _No response_")
+      .replace("**Out of scope:**", "<!--\n**Summary:** Hidden replacement\n-->\n\n**Out of scope:**");
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: "Free-form intake context.",
+        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        state: "open",
+      },
+      comments: [{ id: 1, body: brief, user: { login: "maintainer" } }],
+    });
+
+    assert.equal(result.code, 1);
+    assert.match(result.stderr, /Summary/);
+  });
+});
+
 test("explicit parent and blocker links are read when native relationships are absent", async () => {
   const result = await exercise({
     issue: {

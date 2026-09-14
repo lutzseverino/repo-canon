@@ -18,6 +18,7 @@ The validator recognizes these contracts:
 
 Heading levels and casing do not affect recognition. Required fields reject
 empty content, template comments, and GitHub's `_No response_` placeholder.
+Contract syntax inside fenced code or HTML comments remains example content.
 When an Agent Brief exists, the latest such comment is the triaged request's
 contract; contract-like headings in the intake body remain context.
 Native parent and blocking relationships are read from GitHub. Explicit issue

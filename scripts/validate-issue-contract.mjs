@@ -299,18 +299,43 @@ function findMarkdownHeadings(markdown, acceptedNames = null) {
 
 function forEachUnfencedLine(markdown, visit) {
   let fence = null;
+  let htmlComment = false;
   let offset = 0;
   for (const lineWithEnding of markdown.match(/[^\n]*(?:\n|$)/g) ?? []) {
     if (!lineWithEnding) continue;
     const line = lineWithEnding.replace(/\r?\n$/, "");
-    const fenceMatch = line.match(/^[ \t]{0,3}(`{3,}|~{3,})/);
     if (fence) {
       const closingFence = new RegExp(`^[ \\t]{0,3}${fence.character}{${fence.length},}[ \\t]*$`);
       if (closingFence.test(line)) fence = null;
-    } else if (fenceMatch) {
-      fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
     } else {
-      visit(line, offset);
+      let visibleLine = "";
+      let cursor = 0;
+      while (cursor < line.length) {
+        if (htmlComment) {
+          const commentEnd = line.indexOf("-->", cursor);
+          const hiddenEnd = commentEnd === -1 ? line.length : commentEnd + 3;
+          visibleLine += " ".repeat(hiddenEnd - cursor);
+          cursor = hiddenEnd;
+          if (commentEnd !== -1) htmlComment = false;
+        } else {
+          const commentStart = line.indexOf("<!--", cursor);
+          if (commentStart === -1) {
+            visibleLine += line.slice(cursor);
+            cursor = line.length;
+          } else {
+            visibleLine += line.slice(cursor, commentStart);
+            visibleLine += " ".repeat(4);
+            cursor = commentStart + 4;
+            htmlComment = true;
+          }
+        }
+      }
+      const fenceMatch = visibleLine.match(/^[ \t]{0,3}(`{3,}|~{3,})/);
+      if (fenceMatch) {
+        fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
+      } else {
+        visit(visibleLine, offset);
+      }
     }
     offset += lineWithEnding.length;
   }
