@@ -6,12 +6,16 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
+- [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
+  identity and permission prerequisites, protocol outcomes, and fixture coverage.
 - [Pull request metadata validation](pr-metadata-validation.md): trusted check
   behavior, stable identity, permissions, and local verification.
 - [Historical scope proposal](scope-capability-specification.md): the original
   product requirement, superseded by the delivered product contract.
 - [Shared material review](shared-material-review.md): finalized contribution,
   agent workflow, template, and preparation evidence.
+- [Issue contract validation](issue-contract-validation.md): supported issue
+  shapes, feedback behavior, workflow permissions, and runnable fixtures.
 - [Upstream compatibility](upstream-compatibility.md): the regular skill
   inventory and native issue formats that automation must respect.
 - [Repository README check](repository-readme-check.md): operation protocol,
@@ -28,10 +32,11 @@ material review and make the work-in-progress repository usable for planning.
 There is no `standards.yaml` yet and no source validation has passed.
 
 The required product scope capability is delivered and accepted. Pull request
-metadata validation and its CI suite are implemented. Use the installed public
-CLI 1.2.1 with Node.js 24 as the initial source-validation baseline; claim
-compatibility only after validating the final source bytes. The earlier CLI
-1.1.0 experiments remain historical evidence. Source validation, remaining
+metadata validation, issue contract validation, Repository README checking,
+GitHub label setup, and their CI suites are implemented. Use the installed
+public CLI 1.2.1 with Node.js 24 as the initial source-validation baseline;
+claim compatibility only after validating the final source bytes. The earlier
+CLI 1.1.0 experiments remain historical evidence. Source validation, remaining
 operation and skill exercises, and complete Repo Canon adoption are still
 outstanding.
 
@@ -50,9 +55,13 @@ requesting review. Use Node.js 24; the project has no package dependencies,
 typecheck, or build step. Run a single fixture with
 `node --test test/<name>.test.mjs` while developing.
 
-The Node test suite exercises executable operation fixtures plus pull request
-creation and update event inputs, valid and invalid metadata, harmless formatting
-variations, and a hostile fork payload. The four draft issue forms were parsed as
-YAML and checked for basic field structure and duplicate IDs during bootstrap; no
-GitHub submission behavior was exercised. Source validation and adoption evidence
-remain separate from these checks.
+The Node test suite exercises executable operation fixtures, including
+disposable remote-label state and interruption recovery, plus pull request
+creation and update event inputs, valid and invalid metadata, harmless
+formatting variations, a hostile fork payload, and issue-contract events and
+state changes. The label fixtures do not contact GitHub or establish live remote
+setup. Run `npm run test:issue-contracts` for the focused issue-contract
+fixtures. The four draft issue forms were parsed as YAML and checked for basic
+field structure and duplicate IDs during bootstrap; no GitHub submission
+behavior was exercised. Source validation and adoption evidence remain separate
+from these checks.
