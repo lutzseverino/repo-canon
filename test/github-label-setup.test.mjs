@@ -145,6 +145,26 @@ test('reconciles conflicting desired label values without replacing unrelated la
 });
 
 test('blocks before mutation when repository identity is absent, ambiguous, or mismatched', async t => {
+  await t.test('global remote without a repository-local target', st => {
+    const scenario = setup(st, { remotes: {} });
+    const globalConfig = join(scenario.toolsRoot, 'global.gitconfig');
+    writeFileSync(globalConfig, '[remote "injected"]\n\turl = git@github.com:other/widgets.git\n');
+    const outcome = scenario.invoke({}, { GIT_CONFIG_GLOBAL: globalConfig });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'blocked');
+    assert.match(outcome.result.message, /No unambiguous github.com repository/);
+    assert.deepEqual(scenario.readState().apiHosts ?? [], []);
+  });
+
+  await t.test('global remote does not conflict with repository-local identity', st => {
+    const scenario = setup(st, { state: { labels: structuredClone(canonicalLabels) } });
+    const globalConfig = join(scenario.toolsRoot, 'global.gitconfig');
+    writeFileSync(globalConfig, '[remote "injected"]\n\turl = git@github.com:other/widgets.git\n');
+    const outcome = scenario.invoke({}, { GIT_CONFIG_GLOBAL: globalConfig });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'unchanged');
+  });
+
   await t.test('absent GitHub remote', st => {
     const scenario = setup(st, { remotes: { origin: 'https://example.com/acme/widgets.git' } });
     const outcome = scenario.invoke();

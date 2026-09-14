@@ -102,7 +102,7 @@ function githubIdentity(remoteUrl) {
 function inferRepository(projectRoot) {
   const remotes = run(
     'git',
-    ['-C', projectRoot, 'config', '--get-regexp', '^remote\\..*\\.(url|pushurl)$'],
+    ['-C', projectRoot, 'config', '--local', '--get-regexp', '^remote\\..*\\.(url|pushurl)$'],
     projectRoot,
   );
   if (!remotes.ok) return { blocked: 'No unambiguous github.com repository was found in Git remotes.' };

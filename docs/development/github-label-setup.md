@@ -31,12 +31,14 @@ or newer, and GitHub CLI 2.48.0 or newer. `gh` must be authenticated to
 repository access so it can manage labels. The GitHub CLI minimum supplies
 the paginated `--slurp` API output used to inspect every existing label.
 
-All `github.com` fetch and push remote URLs must identify one repository.
-Multiple remotes may name that same repository, but different repository
-identities block setup before any API mutation. The operation also blocks when
-the API's canonical `full_name` does not match the remote-derived owner and
-repository. Every API call is pinned to `github.com`, so a `GH_HOST` environment
-override cannot redirect verification or mutation to a GitHub Enterprise host.
+All repository-local `github.com` fetch and push remote URLs must identify one
+repository. Global and system Git configuration cannot supply or conflict with
+that identity. Multiple local remotes may name the same repository, but
+different repository identities block setup before any API mutation. The
+operation also blocks when the API's canonical `full_name` does not match the
+remote-derived owner and repository. Every API call is pinned to `github.com`,
+so a `GH_HOST` environment override cannot redirect verification or mutation to
+a GitHub Enterprise host.
 
 ## Results and recovery
 
