@@ -21,11 +21,12 @@ count. A GitHub issue URL used as a Markdown or HTML link destination does count
 Titles use `type(scope): description`, with an optional scope and an optional
 `!` immediately before the colon. The allowed lowercase types are `feat`,
 `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `style`, `chore`, and
-`revert`. The description must contain meaningful text and must not end in a
-period. When `!` is present, the body must explain both `Impact` and `Migration`
-under headings or labeled lines. An explicit `BREAKING CHANGE:` footer also
-requires `!` in the title. Reviewers remain responsible for type accuracy, the
-truth of validation claims, and whether a change is breaking.
+`revert`. The description must contain a letter or number and must not end in a
+period; a concise one-word description is valid. When `!` is present, the body
+must explain both `Impact` and `Migration` under headings or labeled lines. An
+explicit `BREAKING CHANGE:` footer also requires `!` in the title. Reviewers
+remain responsible for title semantics and type accuracy, the truth of
+validation claims, and whether a change is breaking.
 
 The workflow uses `pull_request_target` so GitHub loads its definition from the
 base repository. It checks out the pull request's base commit explicitly, does
