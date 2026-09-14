@@ -240,7 +240,7 @@ test("a Wayfinder map accepts empty initial decisions and a child reads its pare
     const result = await exercise({
       issue: {
         number: 42,
-        body: "## Destination\n\nChoose a cache.\n\n## Notes\n\nUse the domain model.\n\n## Decisions so far\n\n<!-- none yet -->\n\n## Not yet specified\n\nEviction policy.\n\n## Out of scope\n\n",
+        body: "## Destination\n\nChoose a cache.\n\n## Notes\n\nUse the domain model.\n\n## Decisions so far\n\n<!-- none yet -->\n\n## Not yet specified\n\nEviction policy.\n\n## Out of scope\n\nNone.",
         labels: [{ name: "wayfinder:map" }],
         state: "open",
       },
@@ -262,6 +262,23 @@ test("a Wayfinder map accepts empty initial decisions and a child reads its pare
     assert.equal(result.code, 0, result.stderr);
     assert.ok(result.requests.some(({ url }) => url?.endsWith("/issues/42/parent")));
   });
+});
+
+test("a Wayfinder map only permits its initial decisions section to be empty", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Destination\n\nChoose a cache.\n\n## Notes\n\n<!-- none -->\n\n## Decisions so far\n\n<!-- none yet -->\n\n## Not yet specified\n\n_No response_\n\n## Out of scope\n\n",
+      labels: [{ name: "wayfinder:map" }],
+      state: "open",
+    },
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /Notes/);
+  assert.match(result.stderr, /Not yet specified/);
+  assert.match(result.stderr, /Out of scope/);
+  assert.doesNotMatch(result.stderr, /Decisions so far/);
 });
 
 test("a Wayfinder child rejects an empty parent fallback", async () => {
@@ -499,6 +516,53 @@ test("event payload content cannot override re-fetched authoritative state", asy
 
   assert.equal(result.code, 1);
   assert.match(result.stderr, /Steps to reproduce/);
+});
+
+test("created, edited, and deleted comment events use the authoritative discussion", async (context) => {
+  const issue = {
+    number: 42,
+    body: "## Problem\n\nSearch is slow.\n\n## Desired outcome\n\nSearch finishes quickly.",
+    labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+    state: "open",
+  };
+
+  await context.test("created", async () => {
+    const result = await exercise({
+      issue: { ...issue, labels: [{ name: "enhancement" }, { name: "needs-triage" }] },
+      comments: [{ id: 1, body: completeAgentBrief, user: { login: "maintainer" } }],
+      event: { action: "created", issue: { number: 42 }, comment: { id: 1, body: "stale payload" } },
+    });
+
+    assert.equal(result.code, 0, result.stderr);
+    assert.ok(result.requests.every(({ method }) => method === "GET"));
+  });
+
+  await context.test("edited", async () => {
+    const incompleteBrief = completeAgentBrief.replace("**Summary:** Make search fast", "**Summary:** _No response_");
+    const result = await exercise({
+      issue,
+      comments: [{ id: 1, body: incompleteBrief, user: { login: "maintainer" } }],
+      event: { action: "edited", issue: { number: 42 }, comment: { id: 1, body: completeAgentBrief } },
+    });
+
+    assert.equal(result.code, 1);
+    assert.match(result.stderr, /Summary/);
+    assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/ready-for-agent")));
+    assert.ok(result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+  });
+
+  await context.test("deleted", async () => {
+    const result = await exercise({
+      issue,
+      comments: [],
+      event: { action: "deleted", issue: { number: 42 }, comment: { id: 1, body: completeAgentBrief } },
+    });
+
+    assert.equal(result.code, 1);
+    assert.match(result.stderr, /Add a reviewed Agent Brief/);
+    assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/ready-for-agent")));
+    assert.ok(result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+  });
 });
 
 test("pull request comments are ignored before any API access", async () => {

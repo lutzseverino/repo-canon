@@ -12,7 +12,8 @@ The validator recognizes these contracts:
 - specification forms and native specifications;
 - implementation forms and native tickets, with an optional parent;
 - triaged requests whose latest Agent Brief uses the upstream AI preamble;
-- Wayfinder maps, including an empty initial `Decisions so far` section; and
+- Wayfinder maps, whose initial `Decisions so far` section alone may be empty;
+  and
 - Wayfinder children with exactly one planning label and a parent map.
 
 Heading levels and casing do not affect recognition. Required fields reject

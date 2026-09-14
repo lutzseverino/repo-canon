@@ -345,10 +345,8 @@ function validateWayfinderMap(sections, labels, errors) {
   if ([...labels].some((label) => childLabels.has(label))) {
     errors.push("Keep `wayfinder:map` separate from Wayfinder child labels.");
   }
-  requireSection(sections, "Destination", errors);
-  for (const name of ["Notes", "Decisions so far", "Not yet specified", "Out of scope"]) {
-    requireSection(sections, name, errors, { allowEmpty: true });
-  }
+  requireSections(sections, ["Destination", "Notes", "Not yet specified", "Out of scope"], errors);
+  requireSection(sections, "Decisions so far", errors, { allowEmpty: true });
 }
 
 function validateWayfinderChild(sections, labels, childLabelList, parent, errors) {
