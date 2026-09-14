@@ -79,13 +79,16 @@ required before the prepared repositories can produce the requested evidence.
 The proposed temporary names are
 `lutzseverino/repo-canon-source-evidence-16` and
 `lutzseverino/repo-canon-adopter-evidence-16`. The source remote would receive
-one snapshot commit containing the exact reviewed PR head and temporary tag
-`v0.0.1`; no release would be created. The adopter remote would receive one
-fixture commit, the 12 canonical labels, a required `PR metadata` ruleset, and
-the configured squash-only merge defaults. Full API readback would be retained
-with the local adoption reports and content hashes. Both repositories, their
-tags, branches, settings, and labels would be deleted after the reviewed
-evidence is committed here.
+the reviewed source-integration commit
+`662fdfa88db1833d76a6a4d403a6f567d22b08d9` and temporary tag `v0.0.1`; no
+release would be created. Issue #16 changes only unreferenced evidence tooling,
+tests, and documentation, so every selected manifest input remains byte-identical
+to that whole-source-reviewed commit. The adopter remote would receive one fixture
+commit, the 12 canonical labels, a required `PR metadata` ruleset, and the
+configured squash-only merge defaults. Full API readback would be retained with
+the local adoption reports and content hashes. Both repositories, their tags,
+branches, settings, and labels would be deleted after the reviewed evidence is
+committed here.
 
 Until that explicit authorization exists, source validation and the fixture
 preparation remain local preparation only. They do not satisfy the adoption or
