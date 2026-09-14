@@ -44,6 +44,25 @@ function result(status, message) {
   process.stdout.write(`${JSON.stringify({ format: resultFormat, status, message })}\n`);
 }
 
+function decodeEntities(value) {
+  const namedWhitespace = { nbsp: '\u00a0', ensp: '\u2002', emsp: '\u2003', thinsp: '\u2009' };
+  return value
+    .replace(/&#(?:x([0-9a-f]+)|(\d+));/gi, (entity, hexadecimal, decimal) => {
+      const codePoint = Number.parseInt(hexadecimal ?? decimal, hexadecimal ? 16 : 10);
+      return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : entity;
+    })
+    .replace(/&(nbsp|ensp|emsp|thinsp);/gi, (_, name) => namedWhitespace[name.toLowerCase()]);
+}
+
+function renderedText(value) {
+  return decodeEntities(value
+    .replace(/<[^>]*>/g, '')
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/!?\[([^\]]*)\]\[[^\]]*\]/g, '$1')
+    .replace(/[`*_~]/g, ''))
+    .trim();
+}
+
 function rootLicense(projectRoot) {
   const candidates = readdirSync(projectRoot, { withFileTypes: true })
     .filter(entry => entry.isFile() && /^license(?:\.(?:md|txt|rst))?$/i.test(entry.name))
@@ -61,11 +80,9 @@ function rootLicense(projectRoot) {
     .split(/\r?\n/)
     .map(line => line.trim())
     .find(Boolean);
-  const name = firstLine
-    ?.replace(/^#{1,6}\s+/, '')
-    .replace(/[ \t]+#+[ \t]*$/, '')
-    .replace(/^<h[1-6][^>]*>|<\/h[1-6]>$/gi, '')
-    .trim();
+  const name = firstLine && renderedText(firstLine
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/[ \t]+#+[ \t]*$/, ''));
   if (!name) {
     return { blocked: `${path} does not identify a license name in its first nonempty line.` };
   }
@@ -88,21 +105,21 @@ function headings(markdown) {
     /\balign\s*=\s*(?:"center"|'center'|center)(?:\s|$)/i.test(attributes)
       || centeredRanges.some(([start, end]) => start < index && index < end)
   );
-  const atx = /^(#{1,6})(?:[ \t]+(.*?))?[ \t]*$/gm;
+  const atx = /^[ \t]{0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$/gm;
   for (const match of markdown.matchAll(atx)) {
-    const name = (match[2] ?? '').replace(/(?:^|[ \t]+)#+[ \t]*$/, '').trim();
+    const name = renderedText((match[2] ?? '').replace(/(?:^|[ \t]+)#+[ \t]*$/, ''));
     if (!name) continue;
     record(match[1].length, name, match.index, match.index + match[0].length, isCentered(match.index));
   }
   const html = /<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1\s*>/gi;
-  for (const match of markdown.matchAll(html)) {
-    const name = match[3].replace(/<[^>]*>/g, '').trim();
+  for (const match of maskInlineCode(markdown).matchAll(html)) {
+    const name = renderedText(match[3]);
     if (!name) continue;
     record(Number(match[1]), name, match.index, match.index + match[0].length, isCentered(match.index, match[2]));
   }
   const setext = /^[ \t]{0,3}([^\r\n]+?)[ \t]*\r?\n[ \t]{0,3}(=+|-+)[ \t]*(?:\r?\n|$)/gm;
   for (const match of markdown.matchAll(setext)) {
-    const name = match[1].trim();
+    const name = renderedText(match[1]);
     record(match[2][0] === '=' ? 1 : 2, name, match.index, match.index + match[0].length, isCentered(match.index));
   }
   return found.sort((left, right) => left.index - right.index);
@@ -123,6 +140,7 @@ function markdownStructure(markdown) {
       if (closing && closing[1][0] === fence.character && closing[1].length >= fence.length) fence = null;
       return mask(line);
     }
+    if (/^(?: {4}|\t)/.test(line)) return mask(line);
     return line;
   }).join('');
 }
@@ -137,17 +155,77 @@ function sectionBody(markdown, allHeadings, name) {
   return markdown.slice(start, end).trim();
 }
 
-function linksTo(body, target) {
-  if (body === null) return false;
-  const links = [...body.matchAll(/\[[^\]]+\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)/g)];
-  return links.some(match => match[1].replace(/^\.\//, '') === target);
+function maskInlineCode(markdown) {
+  const mask = value => value.replace(/[^\r\n]/g, ' ');
+  return markdown.replace(/(`+)([\s\S]*?)\1/g, mask);
 }
 
-function checkNavigationLink(projectRoot, markdown, allHeadings, section, target, corrections) {
+function referenceLabel(value) {
+  return value.trim().replace(/[ \t\r\n]+/g, ' ').toLocaleLowerCase('en-US');
+}
+
+function referenceDefinitions(markdown) {
+  const definitions = new Map();
+  const pattern = /^[ \t]{0,3}\[([^\]]+)\]:[ \t]*(?:<([^>\r\n]+)>|([^\s]+))(?:[ \t]+.*)?$/gm;
+  for (const match of markdown.matchAll(pattern)) {
+    definitions.set(referenceLabel(match[1]), match[2] ?? match[3]);
+  }
+  return definitions;
+}
+
+function withoutReferenceDefinitions(markdown) {
+  return markdown.replace(/^[ \t]{0,3}\[[^\]]+\]:[^\r\n]*(?:\r?\n|$)/gm, value => value.replace(/[^\r\n]/g, ' '));
+}
+
+function normalizeTarget(target) {
+  return target.replace(/^\.\//, '');
+}
+
+function markdownLinks(markdown, definitions) {
+  const links = [];
+  const visible = maskInlineCode(withoutReferenceDefinitions(markdown));
+  const inline = /(?<!!)\[([^\]]+)\]\([ \t]*(?:<([^>\r\n]+)>|([^\s)]+))(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*\)/g;
+  for (const match of visible.matchAll(inline)) {
+    links.push({ label: renderedText(match[1]), target: match[2] ?? match[3] });
+  }
+  const fullReference = /(?<!!)\[([^\]]+)\]\[([^\]]*)\]/g;
+  for (const match of visible.matchAll(fullReference)) {
+    const target = definitions.get(referenceLabel(match[2] || match[1]));
+    if (target) links.push({ label: renderedText(match[1]), target });
+  }
+  const shortcutReference = /(?<!!)\[([^\]]+)\](?![[(])/g;
+  for (const match of visible.matchAll(shortcutReference)) {
+    const target = definitions.get(referenceLabel(match[1]));
+    if (target) links.push({ label: renderedText(match[1]), target });
+  }
+  return links;
+}
+
+function singleMarkdownLink(body, definitions) {
+  const visible = maskInlineCode(withoutReferenceDefinitions(body)).trim();
+  let match = visible.match(/^\[([^\]]+)\]\([ \t]*(?:<([^>\r\n]+)>|([^\s)]+))(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*\)$/);
+  if (match) return { label: renderedText(match[1]), target: match[2] ?? match[3] };
+  match = visible.match(/^\[([^\]]+)\]\[([^\]]*)\]$/);
+  if (match) {
+    const target = definitions.get(referenceLabel(match[2] || match[1]));
+    return target ? { label: renderedText(match[1]), target } : null;
+  }
+  match = visible.match(/^\[([^\]]+)\]$/);
+  if (!match) return null;
+  const target = definitions.get(referenceLabel(match[1]));
+  return target ? { label: renderedText(match[1]), target } : null;
+}
+
+function linksTo(body, target, definitions) {
+  if (body === null) return false;
+  return markdownLinks(body, definitions).some(link => normalizeTarget(link.target) === target);
+}
+
+function checkNavigationLink(projectRoot, markdown, allHeadings, definitions, section, target, corrections) {
   if (!lstatIsFile(join(projectRoot, target))) return;
   const body = sectionBody(markdown, allHeadings, section);
   if (body === null) corrections.push(`Add a ${section} section linking to ${target}.`);
-  else if (!linksTo(body, target)) corrections.push(`Link the ${section} section to ${target}.`);
+  else if (!linksTo(body, target, definitions)) corrections.push(`Link the ${section} section to ${target}.`);
 }
 
 function checkStructure(projectRoot, markdown, license) {
@@ -155,6 +233,7 @@ function checkStructure(projectRoot, markdown, license) {
   const corrections = [];
   const structuralMarkdown = markdownStructure(markdown);
   const parsedHeadings = headings(structuralMarkdown);
+  const definitions = referenceDefinitions(structuralMarkdown);
   const title = parsedHeadings.find(heading => heading.level === 1) ?? null;
   if (!title?.centered) {
     corrections.push('Center the Repository README title in a nonempty HTML h1 or a centered block.');
@@ -181,19 +260,19 @@ function checkStructure(projectRoot, markdown, license) {
     corrections.push(`Move Installation before ${allHeadings[0].name}; it is the first section when present.`);
   }
 
-  checkNavigationLink(projectRoot, structuralMarkdown, allHeadings, 'Contributing', 'CONTRIBUTING.md', corrections);
-  checkNavigationLink(projectRoot, structuralMarkdown, allHeadings, 'Documentation', 'docs/README.md', corrections);
+  checkNavigationLink(projectRoot, structuralMarkdown, allHeadings, definitions, 'Contributing', 'CONTRIBUTING.md', corrections);
+  checkNavigationLink(projectRoot, structuralMarkdown, allHeadings, definitions, 'Documentation', 'docs/README.md', corrections);
 
   const licenseBody = sectionBody(structuralMarkdown, allHeadings, 'License');
   if (license && licenseBody === null) {
     corrections.push(`Add a License section containing only [${license.name}](${license.path}).`);
   } else if (license) {
-    const match = licenseBody.match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)$/);
-    if (!match) {
+    const link = singleMarkdownLink(licenseBody, definitions);
+    if (!link) {
       corrections.push('Make the License section contain only the license link.');
     } else {
-      if (match[1] !== license.name) corrections.push(`Use the repository license name: name the link “${license.name}”.`);
-      if (match[2].replace(/^\.\//, '') !== license.path) corrections.push(`Make the License link target ${license.path}.`);
+      if (link.label !== license.name) corrections.push(`Use the repository license name: name the link “${license.name}”.`);
+      if (normalizeTarget(link.target) !== license.path) corrections.push(`Make the License link target ${license.path}.`);
     }
   }
   return [...new Set(corrections)];

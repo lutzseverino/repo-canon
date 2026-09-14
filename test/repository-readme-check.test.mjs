@@ -24,6 +24,9 @@ A queue-backed service for reliable message delivery.
 
 ![Node.js](https://img.shields.io/badge/Node.js-24-green)
 
+[docs]: docs/README.md
+[license]: LICENSE
+
 ## Installation
 
 \`npm install harbor\`
@@ -44,17 +47,17 @@ The inspector is intentionally read-only.
 
 Set \`HARBOR_PORT\`.
 
-## Documentation
+## **Documentation**
 
-See [the documentation map](docs/README.md).
+See [the documentation map][docs].
 
-## Contributing
+## _Contributing_
 
-See [the contribution guide](CONTRIBUTING.md).
+See [the contribution guide](<CONTRIBUTING.md>).
 
-## License
+## **License**
 
-[MIT License](LICENSE)
+[MIT License][license]
 `,
     'LICENSE': mit,
     'CONTRIBUTING.md': '# Contributing\n',
@@ -128,7 +131,9 @@ A queue inspector.
 
 test('reports concrete title and section-order corrections as a policy failure', t => {
   const outcome = check(t, {
-    'README.md': `# Harbor
+    'README.md': `\`<h1 align="center">Example</h1>\`
+
+# Harbor
 
 A queue inspector.
 
@@ -164,7 +169,7 @@ Features
 
 - Small
 
-# Installation
+ # Installation
 
 Install it.
 
@@ -215,7 +220,7 @@ A queue inspector.
 
 ## License
 
-[0BSD](LICENSE)
+[0BSD](<LICENSE>)
 `,
     'LICENSE': '# 0BSD #\n',
   });
@@ -224,11 +229,18 @@ A queue inspector.
   assert.equal(outcome.result.status, 'passed');
 });
 
-test('rejects an empty rendered Markdown title', t => {
-  const outcome = check(t, {
-    'README.md': `<div align="center">
+test('rejects empty rendered titles', async t => {
+  for (const title of ['# #', '<h1 align="center">&#32;</h1>']) await t.test(title, st => {
+    const readme = title.startsWith('<h1') ? `${title}
 
-# #
+A queue inspector.
+
+## License
+
+[MIT License](LICENSE)
+` : `<div align="center">
+
+${title}
 
 </div>
 
@@ -237,13 +249,13 @@ A queue inspector.
 ## License
 
 [MIT License](LICENSE)
-`,
-    'LICENSE': mit,
-  });
+`;
+    const outcome = check(st, { 'README.md': readme, 'LICENSE': mit });
 
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, 'failed');
-  assert.match(outcome.result.message, /Center the Repository README title/);
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'failed');
+    assert.match(outcome.result.message, /Center the Repository README title/);
+  });
 });
 
 test('does not accept navigation links hidden in code fences', t => {
@@ -257,6 +269,10 @@ A queue inspector.
 \`\`\`markdown
 [Documentation](docs/README.md)
 \`\`\`
+
+\`[Documentation](docs/README.md)\`
+
+    [Documentation](docs/README.md)
 
 ## License
 
