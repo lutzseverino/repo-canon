@@ -868,7 +868,15 @@ test("a triaged Agent Brief cannot gain readiness before its exact revision is p
 
 test("write access, a readiness label, and bot identity do not establish review authority", async (context) => {
   for (const example of [
-    { name: "write collaborator", login: "writer", permission: { permission: "write", role_name: "write" } },
+    {
+      name: "write collaborator",
+      login: "writer",
+      permission: {
+        permission: "write",
+        role_name: "write",
+        permissions: { pull: true, triage: true, push: true, maintain: false, admin: false },
+      },
+    },
     { name: "unprivileged bot", login: "automation[bot]", permission: { permission: "none", role_name: "none" } },
   ]) {
     await context.test(example.name, async () => {

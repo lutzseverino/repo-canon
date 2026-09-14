@@ -727,13 +727,7 @@ async function reviewerAuthority(apiClient, login) {
   }
   if (!permission) return { authorized: false };
   const role = permission.role_name ?? permission.permission;
-  const grants = permission.permissions ?? {};
-  return {
-    authorized: ["admin", "maintain", "triage"].includes(role)
-      || grants.admin === true
-      || grants.maintain === true
-      || grants.triage === true,
-  };
+  return { authorized: ["admin", "maintain", "triage"].includes(role) };
 }
 
 function feedbackState(body = "") {
