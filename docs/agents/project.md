@@ -5,11 +5,10 @@ product. Use the confirmed preferences in `authoring-notes.md` and review the
 draft contents in `design-review.md` before changing the intended standards.
 
 The repository is a work in progress. Root contribution and agent configuration
-files are working copies of the selected conventions; `drafts/` retains the
-interview's design material. Read current files before promoting or revising a
-draft. The pinned skill directories are vendored. The source manifest and
-automation are not implemented yet, and behavioral verification remains
-outstanding.
+files are the selected conventions; `drafts/` retains the interview's design
+material. Read current files before promoting or revising a draft. The pinned
+skill directories, automation, and complete source profile are implemented.
+Complete adoption verification remains outstanding.
 
 Use GitHub specification #1 and its existing implementation tickets as the
 contracts. Repository Standards has delivered and accepted the required scope
@@ -22,4 +21,5 @@ before implementation.
 Use `docs/development/README.md` for the current validation requirements. The
 root MIT License, with `Copyright (c) 2026 Jasper Lutz Severino`, covers Repo
 Canon's original material. Third-party material retains its accompanying
-licenses and notices. Source acceptance remains outstanding.
+licenses and notices. Source validation and whole-source review evidence are
+recorded separately from adoption acceptance.

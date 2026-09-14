@@ -25,3 +25,13 @@ jobs:
         run: npm run check
       - name: Run test suite
         run: npm test
+      - name: Validate the complete standards source
+        env:
+          REPO_STANDARDS_PREFIX: ${{ runner.temp }}/repo-standards-cli-1.2.1
+        run: |
+          npm install --prefix "$REPO_STANDARDS_PREFIX" --ignore-scripts \
+            --registry=https://registry.npmjs.org \
+            @lutzseverino/repo-standards@1.2.1
+          "$REPO_STANDARDS_PREFIX/node_modules/.bin/repo-standards" --version
+          "$REPO_STANDARDS_PREFIX/node_modules/.bin/repo-standards" \
+            source validate "$PWD" --json

@@ -1,9 +1,9 @@
 # Repo Canon authoring notes
 
 Status: policy decisions settled; shared contribution and agent workflow
-material reviewed. These notes record confirmed preferences; they are not an
-adoptable standards source. No declarations have been authored or validated
-yet. Declaration IDs and material mappings follow the remaining source review.
+material reviewed. The complete source profile is authored and structurally
+validated with public CLI 1.2.1. Complete adoption evidence remains outstanding,
+so this repository is not yet an adoption-ready release.
 
 ## Confirmed preferences
 
@@ -54,8 +54,8 @@ yet. Declaration IDs and material mappings follow the remaining source review.
 - Automate objective issue/PR requirements. Failed PR validation should block
   merging; incomplete issues should receive actionable feedback and remain
   unready. Agents assess content meaning. Automation identifies missing
-  information rather than inventing it. Concrete behavior and permissions were
-  subsequently agreed below; implementation and exercises remain outstanding.
+  information rather than inventing it. Concrete behavior, permissions, and
+  fixture exercises are implemented; remote execution remains separate.
 - Behavior changes and substantive work require an issue. Small corrections
   such as typos, broken links, and formatting may explain their purpose in the
   PR alone. Larger work can use a parent specification and implementation
@@ -180,17 +180,21 @@ yet. Declaration IDs and material mappings follow the remaining source review.
   preparation exercises are recorded in
   `docs/development/shared-material-review.md`.
 
+## Source profile
+
+The complete `repo-standards/v2` source is `standards.yaml`, with one
+`complete` profile and exact CLI compatibility `1.2.1`. The concise
+policy-to-declaration, material, operation, ownership, and prerequisite mapping
+is maintained in
+[the source profile record](docs/development/source-profile.md). Contextual
+Project README and documentation scope uses separate assessment and discovery
+guidance and resolves to individual adopter-reviewed paths.
+
 ## Remaining authoring work
 
-- Concrete automation implementation and exercises of accepted behaviors,
-  including executable/version prerequisites where operations require them.
-- Translate accepted ownership and scope into `repo-standards/v2` declarations
-  through the supported discovery route in the compatibility audit. The
-  product dependency is satisfied; concrete contextual files still require
-  full inspection confirmation before adoption writes.
 - Exercise installation and licensing edge cases and preservation of existing
   repository information against the agreed guidance.
-- Whole-source review, operation/skill exercises, and public CLI validation.
+- Remaining skill exercises and complete adoption evidence.
 
 The [compatibility audit](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface and retains the

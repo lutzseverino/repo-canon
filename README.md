@@ -7,10 +7,10 @@
   </p>
 </div>
 
-Work in progress. The standards decisions and draft material are recorded;
-the pinned skill collection is vendored, while the source manifest and
-automation remain to be built. Skill exercises and complete adoption are still
-outstanding. There is no adoption-ready release yet.
+Work in progress. The complete source profile, automation, and pinned skill
+collection are implemented and structurally validated. Remaining skill
+exercises and complete adoption are still outstanding. There is no
+adoption-ready release yet.
 
 ## Documentation
 
@@ -18,6 +18,7 @@ outstanding. There is no adoption-ready release yet.
 - [Complete design drafts](design-review.md)
 - [Documentation index](docs/README.md)
 - [Adoption compatibility](docs/development/adoption-compatibility.md)
+- [Complete source profile](docs/development/source-profile.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
 ## Contributing
