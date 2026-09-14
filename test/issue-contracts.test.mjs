@@ -375,6 +375,63 @@ test("a triaged Agent Brief remains authoritative over intake body headings", as
   assert.match(result.stdout, /valid triaged Agent Brief/i);
 });
 
+test("native issue-body contracts remain authoritative over brief comments", async (context) => {
+  const examples = [
+    {
+      name: "specification",
+      body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\nA user gets a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.\n\n## Further Notes\n\nNone.",
+    },
+    {
+      name: "implementation ticket",
+      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    },
+  ];
+
+  for (const example of examples) {
+    await context.test(example.name, async () => {
+      const result = await exercise({
+        issue: { number: 42, body: example.body, labels: [{ name: "ready-for-agent" }], state: "open" },
+        comments: [{ id: 1, body: completeAgentBrief, user: { login: "reporter" } }],
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.match(result.stdout, new RegExp(`valid ${example.name}`, "i"));
+    });
+  }
+});
+
+test("trailing peer sections do not complete required contract answers", async (context) => {
+  await context.test("implementation ticket", async () => {
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_\n\n## Review notes\n\nNone means no blockers.",
+        labels: [{ name: "ready-for-agent" }],
+        state: "open",
+      },
+    });
+
+    assert.equal(result.code, 1);
+    assert.match(result.stderr, /Blocked by/);
+  });
+
+  await context.test("Agent Brief", async () => {
+    const brief = completeAgentBrief.replace("**Out of scope:**\n- Changing storage", "**Out of scope:** _No response_\n\n## Review notes\n\nReviewed.");
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: "Free-form intake context.",
+        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        state: "open",
+      },
+      comments: [{ id: 1, body: brief, user: { login: "maintainer" } }],
+    });
+
+    assert.equal(result.code, 1);
+    assert.match(result.stderr, /Out of scope/);
+  });
+});
+
 test("an Agent Brief heading inside a fenced discussion example is ignored", async () => {
   const result = await exercise({
     issue: {
