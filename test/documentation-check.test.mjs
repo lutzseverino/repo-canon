@@ -81,6 +81,7 @@ test('reports broken rendered file links across documentation and migration sour
     'docs/development/README.md': `# Development
 
 [Setup](setup.md?plain=1#node)
+[Session records](session-finals/)
 <a href="missing.html&amp;mode=full">Missing HTML guide</a>
 ![Architecture](../assets/missing.svg)
 
@@ -89,6 +90,7 @@ test('reports broken rendered file links across documentation and migration sour
 <!-- [Draft](draft-missing.md) -->
 `,
     'docs/development/setup.md': '# Setup\n',
+    'docs/development/session-finals/README.md': '# Session records\n',
     'legacy-notes.md': `# Legacy notes
 
 Move this material to [the intended destination](docs/usage/migrated.md).
@@ -106,7 +108,7 @@ Move this material to [the intended destination](docs/usage/migrated.md).
   assert.match(outcome.result.message, /docs\/development\/README\.md links to missing missing\.html&mode=full/);
   assert.match(outcome.result.message, /docs\/development\/README\.md links to missing \.\.\/assets\/missing\.svg/);
   assert.match(outcome.result.message, /legacy-notes\.md links to missing docs\/usage\/migrated\.md/);
-  assert.doesNotMatch(outcome.result.message, /example-missing|draft-missing/);
+  assert.doesNotMatch(outcome.result.message, /session-finals|example-missing|draft-missing/);
 });
 
 test('checks links nested in rendered headings', t => {
@@ -132,6 +134,79 @@ test('rejects populated top-level documentation outside the recognized categorie
   assert.equal(outcome.result.status, 'failed');
   assert.match(outcome.result.message, /Move docs\/api into usage, development, adr, or agents/);
   assert.match(outcome.result.message, /Move docs\/overview\.md into usage, development, adr, or agents/);
+});
+
+test('validates every context-local documentation root selected by discovery', t => {
+  const files = {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+    'packages/app/handbook/notes.md': '# Notes\n',
+  };
+  const outcome = check(t, files, [
+    ...Object.keys(files),
+    'packages/app/handbook/README.md',
+    'packages/app/handbook/usage/README.md',
+  ]);
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Create packages\/app\/handbook\/README\.md/);
+  assert.match(outcome.result.message, /Create packages\/app\/handbook\/usage\/README\.md/);
+  assert.match(outcome.result.message, /Move packages\/app\/handbook\/notes\.md into usage, development, adr, or agents/);
+});
+
+test('does not confuse a context ancestor named docs with its documentation root', t => {
+  const outcome = check(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+    'contexts/docs/app/handbook/README.md': '# Handbook\n',
+    'contexts/docs/app/handbook/usage/README.md': '# Usage\n',
+    'contexts/docs/app/handbook/notes.md': '# Notes\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Move contexts\/docs\/app\/handbook\/notes\.md into usage, development, adr, or agents/);
+  assert.doesNotMatch(outcome.result.message, /Move contexts\/docs\/app into/);
+});
+
+test('does not confuse a nested folder named docs with a documentation root', t => {
+  const outcome = check(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+    'docs/usage/README.md': '# Usage\n',
+    'docs/usage/docs/README.md': '# API documentation\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed');
+});
+
+test('blocks when confirmed paths cannot identify whether an index starts a documentation root', t => {
+  const outcome = check(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+    'packages/app/handbook/README.md': '# Handbook\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'blocked');
+  assert.match(outcome.result.message, /Cannot determine whether packages\/app\/handbook is a documentation root/);
+  assert.match(outcome.result.message, /confirmed category README under usage, development, adr, or agents/);
+});
+
+test('does not infer a documentation root from a nested category descendant', t => {
+  const outcome = check(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+    'packages/app/handbook/README.md': '# Handbook\n',
+    'packages/app/handbook/usage/deep/README.md': '# Deep usage\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'blocked');
+  assert.match(outcome.result.message, /Cannot determine whether packages\/app\/handbook is a documentation root/);
+  assert.match(outcome.result.message, /confirmed category README/);
 });
 
 test('requires the development guide in concrete scope even when the file exists', t => {

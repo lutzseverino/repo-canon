@@ -1,7 +1,7 @@
 # Repository README check
 
 `operations/check-repository-readme.mjs` is the read-only structural check for
-the [Repository README guidance](../../drafts/guidance/repository-readme.md). It consumes
+the [Repository README guidance](../../guidance/repository-readme.md). It consumes
 `repo-standards/operation/v1` on standard input, accepts only a checks operation
 whose allowed target is the root `README.md`, and returns one
 `repo-standards/result/v1` object on standard output.
