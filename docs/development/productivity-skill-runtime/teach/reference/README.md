@@ -1,4 +1,4 @@
-# Teaching references
+# Teaching reference
 
-This directory contains the printable Git ancestry reference produced by the
-`teach` exercise.
+The [release baseline guard reference](release-baseline-guard.html) is the
+compact HTML reference created by `teach`.

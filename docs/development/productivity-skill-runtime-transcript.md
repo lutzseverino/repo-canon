@@ -1,157 +1,138 @@
 # Productivity skill runtime transcript
 
-This curated transcript records the literal skill invocations and controlled
-participant inputs used for issue #13. It is not the complete Codex JSONL event
-stream. Exact final responses and their SHA-256 values are retained in the
-[session-final directory](productivity-skill-session-finals/README.md); files
-created by the sessions are under
-[runtime artifacts](productivity-skill-runtime/README.md).
+This curated transcript records the literal invocations and controlled
+participant inputs for the corrected issue #13 run. It is an index, not the
+complete Codex JSONL stream. Exact final responses and hashes are in the
+[session-final directory](productivity-skill-session-finals/README.md), and
+created files are in [runtime artifacts](productivity-skill-runtime/README.md).
 
 ## `grill-me`
 
-Session: `01a0a1bf-4907-7ee1-a44a-247b91dc5939`
+Session: `01a0a1d7-f460-7722-8b9b-b1a36bbc756a`
 
 Invocation:
 
-> `$grill-me Help me decide how operators should identify which Incident card
-> needs attention first. This is a controlled runtime exercise: inspect
-> repository facts yourself, ask me the full current frontier with
-> recommendations, and wait for my decisions. Do not implement anything.`
+> `$grill-me Decide how operators should identify which Incident card needs
+> attention first. This controlled exercise requires the pinned grilling
+> behavior: delegate repository fact-finding to a read-only sub-agent,
+> identify that agent and its returned facts, ask the full settled frontier
+> with recommendations, and wait. Do not implement.`
 
-The agent announced, “I’ll use the grilling skill,” inspected the local facts,
-and asked its recommended first frontier. The controlled participant chose
-unowned-first, then staleness, supplied the stable identifier tie-break, and
-selected a textual marker. After the agent reported an empty frontier and
-summarized it, the participant said:
-
-> Yes, that is the complete shared understanding. End the discussion without
-> implementing or changing files.
-
-The final response confirmed completion and no file changes.
+The agent delegated facts to `/root/dispatch_facts` and named its returned
+constraints before asking decisions. Six controlled responses settled the
+frontiers. The final response confirmed the participant's approval of the
+complete summary and no implementation.
 
 ## `grilling`
 
-Session: `01a0a1c0-e7dd-7810-aead-c76fa8696578`
+Session: `01a0a1da-ca21-7060-95ea-06eef402b740`
 
 Invocation:
 
-> `$grilling Stress-test the automatic retry design for failed Export requests.
-> This is a controlled runtime exercise. Inspect facts yourself, ask only
-> decisions whose prerequisites are settled, recommend an answer for each, and
-> wait for participant decisions. Do not implement anything.`
+> `$grilling Stress-test the first-release policy for retrying failed Export
+> requests. This controlled exercise requires the pinned fact-finding
+> behavior: delegate repository facts to a read-only sub-agent, identify the
+> delegate and its returned facts, work the decision frontier in rounds with
+> recommendations, and wait. Keep implementation details outside the design
+> tree and do not change files.`
 
-The controlled participant answered each frontier after the agent supplied it,
-then instructed it to recompute. The final design-affecting answer was:
-
-> Yes, accept Q19 as recommended. Recompute the frontier; if empty, present the
-> complete shared understanding and ask me to confirm. Do not implement.
-
-The agent returned the complete accepted-state summary in
-[round 6](productivity-skill-session-finals/issue-13-grilling-round-6.md).
-The participant explicitly confirmed that summary, and the agent ended without
-implementation.
+The agent delegated facts to `/root/repo_facts`. Five participant rounds
+settled the design tree. The participant confirmed the complete summary; the
+agent ended without implementation.
 
 ## `handoff`
 
-Session: `01a0a1c5-194d-7281-a614-12b2ba770cf6`
+Session: `01a0a1dd-e0bf-7602-8bff-21fe7fe20a32`
 
 Invocation:
 
-> `$handoff The next session will finish validation and review of the
-> percentage-discount implementation. Context from this controlled exercise:
-> the implementation in src/quotation.mjs and one rounding test are complete;
-> boundary tests for 0, 100, negative, and over-100 percentages still need to
-> be added; no commit or publication is authorized. Inspect the repository,
-> run the focused test to establish current state, create the handoff in the
-> operating-system temporary directory, reference existing artifacts instead
-> of duplicating them, include suggested skills, and ensure ignored sensitive
-> material is absent.`
+> `$handoff The next session will add boundary tests and review the
+> percentage-discount implementation. The implementation and one rounding
+> test are complete; tests for 0, 100, negative, and over-100 percentages
+> remain; no commit or publication is authorized. Inspect repository state,
+> run the focused test, write the handoff in the OS temporary directory,
+> reference existing artifacts, include suggested skills, and exclude ignored
+> sensitive material.`
 
-The final response reported the temporary path, focused 1/1 pass, hygiene
-check, and unchanged repository. The exact handoff is retained.
+The exact temporary handoff is retained with the final response.
 
 ## `teach`
 
-Session: `01a0a1c8-f739-7101-a088-a41770431ca2`
+Session: `01a0a1df-09a3-72b3-8d7c-94dc97b00583`
 
 Invocation:
 
-> `$teach I want to learn about Git ancestry. This is a controlled runtime
-> exercise. Follow the pinned teaching workflow, including mission discovery
-> and participant interaction, and wait whenever learner input is required.`
+> `$teach I want to learn about Git ancestry. This controlled exercise requires
+> mission discovery before teaching state. Follow the pinned workflow and wait
+> for learner input.`
 
-The agent asked for mission, success, prior knowledge, and constraints before
-writing. The controlled learner supplied the safe release-script goal, basic
-Git comfort, reachability misconception, 15-minute limit, official-source
-requirement, and history-modification exclusion. After the HTML lesson asked
-for retrieval from memory, the learner answered:
+The controlled learner answered:
 
-> `git merge-base --is-ancestor v1-base release-42`. The required baseline goes
-> first because the question is whether the first commit is reachable by
-> following parent links from the second candidate commit. Status 0 means the
-> candidate contains the baseline and the release check can pass; 1 means it
-> does not and the check must reject; 2 means the ancestry check itself failed,
-> so the script must report the error and preserve that failure rather than
-> treating it as an ordinary no.
+> I maintain a release script and need to decide whether a candidate release
+> commit contains a required baseline with `git merge-base --is-ancestor`.
+> Success is choosing argument order and safely handling statuses 0, 1, and
+> errors. I know basic Git but confuse commit dates with graph reachability.
+> Keep the first lesson under 15 minutes, use official Git documentation,
+> include retrieval feedback, and avoid history changes. Build the mission and
+> first lesson.
 
-The final response corrected the error case to every status other than `0` or
-`1`, recorded demonstrated learning, and assigned spaced practice.
+After the lesson, the controlled learner completed its transfer from memory:
+
+> Command order is baseline candidate, so for this scenario
+> `git merge-base --is-ancestor v1-base release-42`; status 0 means the
+> candidate contains the baseline and the guard passes, status 1 is an ordinary
+> ineligible result, and any other nonzero status such as 128 is an operational
+> error that must stop the release.
+
+The agent gave feedback, updated demonstrated learning state, kept the mission
+unchanged, and assigned spaced practice.
 
 ## `to-questionnaire`
 
-Session: `01a0a1c6-3c75-7843-b79f-832092d309cf`
+Session: `01a0a1ec-a0a4-7110-abd2-d90feebf930b`
 
 Invocation:
 
-> `$to-questionnaire Help me get the missing information needed to choose the
-> launch Retention window and archive approach. This is a controlled runtime
-> exercise. Follow the skill interaction sequence and wait for my answer at
-> each exchange.`
+> `$to-questionnaire Read `.agents/skills/to-questionnaire/SKILL.md` and use
+> that exact pinned workflow to obtain the missing operational evidence for
+> the launch Retention window and archive approach. This controlled exercise
+> must grill the send, not the subject: ask the first exchange only for
+> recipient role, expertise, and relationship, then wait.`
 
-The initial response asked for typical and peak Event volume, which was a
-subject question. The controller supplied no subject answer and corrected the
-sequence:
-
-> That asked the subject, which the pinned to-questionnaire skill explicitly
-> forbids. Read `.agents/skills/to-questionnaire/SKILL.md` now. Restart step 1
-> by asking only who the questionnaire is going to: recipient role, expertise,
-> and relationship to me. Wait for my answer.
-
-The corrected recipient exchange identified a staff reliability engineer who
-owns the missing operational facts. The next exchange asked what the product
-owner needed back. The controlled participant named volume, investigation and
-audit history, cost, archive, restore, deletion/legal, recommendation and risk
-inputs, plus the deadline, effort, and destination. The agent then wrote and
-verified the retained questionnaire.
+The first controlled response identified the staff reliability engineer and
+their ownership. The second supplied the exact evidence package, a 20-minute
+effort, 18 September 2026 deadline, and launch-decision-record destination. The
+final instruction authorized only creating the local questionnaire and
+explicitly prohibited contacting anyone.
 
 ## `wait-what`
 
-Session: `01a0a1c7-b047-7823-9b72-7391ab779d75`
+Session: `01a0a1e6-18fb-7993-a529-1da4008b9839`
 
-The baseline prompt asked for a dense implementation-oriented import status.
-After its response, the skill invocation was:
+The baseline prompt requested a technically precise implementation-oriented
+Import status. The same persistent session then received:
 
-> `$wait-what I am an operator, and that status still did not land. Re-pitch it
-> with enough context for me to know what happened and what I must do next. Do
-> not change files.`
+> `$wait-what I am the operator responsible for resolving this batch. Restate
+> the same verified facts for me.`
 
-The retained before/after responses show the resulting context, domain terms,
-short instructions, and explicit next action.
+The retained before and final responses show the re-pitch.
 
 ## `writing-for-agents`
 
-Session: `01a0a1c8-3773-78e1-b95e-f4ccbd51eda7`
+Session: `01a0a1e6-fd80-7d41-b713-af7bdb60dc35`
 
 Invocation:
 
-> `$writing-for-agents Rewrite this disposable repository AGENTS.md so its
-> context pointer reliably routes synchronization-behavior and
-> supplier-fixture work to docs/agents/project.md. Remove duplicated branches,
-> vague no-op language, and cached validation details. Preserve the actual two
-> branches and keep the document concise. Read the pinned skill and relevant
-> local guidance, edit only AGENTS.md, and validate with git diff --check.`
+> `$writing-for-agents Rewrite docs/agents/project.md so it reliably routes
+> synchronization-behavior and supplier-fixture work to the two downstream
+> docs. Remove duplicated branches, vague no-op language, and cached validation
+> details. Preserve two branches, edit only project.md, validate the diff.`
 
-The final response reported the single pointer and passing diff check. A fresh
-session then asked for one compliant supplier fixture without naming the
-downstream files. Its response cited both the project pointer and the
-supplier-fixture guidance, demonstrating the branch taken by a later agent.
+Fresh probe session: `01a0a1e7-9189-7ea3-87ee-098c345eb7ae`
+
+> I am adding a supplier fixture for a fictional company named Northstar. What
+> supplier name and website should I use? Do not change files.
+
+The probe read the shared root guidance, edited project pointer, and supplier
+fixture document, then returned `Northstar` and
+`https://northstar.example` without changing files.

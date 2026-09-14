@@ -1,4 +1,4 @@
 # Learning records
 
-These records preserve the controlled learner's stated prior knowledge and the
-understanding demonstrated after the lesson.
+The [release ancestry guard record](0001-release-ancestry-guard.md) preserves
+the knowledge demonstrated by the controlled learner.

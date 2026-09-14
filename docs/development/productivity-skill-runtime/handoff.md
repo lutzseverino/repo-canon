@@ -1,47 +1,46 @@
-# Percentage-discount validation and review
-
-## Scope
-
-Finish validation and review for `discountQuotation(amount, percent)` in the
-repository at `/tmp/repo-canon-productivity-runtime-issue-13/handoff`.
-The behavior contract is in
-`/tmp/repo-canon-productivity-runtime-issue-13/handoff/docs/implementation-ticket.md`.
+# Handoff: percentage discounts
 
 ## Current state
 
-- Implementation: `src/quotation.mjs` already implements the percentage
-  bounds check and nearest-cent rounding.
-- Existing focused coverage: `test/quotation.test.mjs` contains the completed
-  fractional-percentage rounding case.
-- The remaining intended coverage is for percentages `0`, `100`, a negative
-  value, and a value greater than `100`.
-- The checked worktree was clean at `fbfe7af chore: establish handoff exercise`.
+The repository is clean on `main` at `09a30a5` (`chore: establish handoff exercise`). No commit, push, publication, or external contact has been performed or is authorized.
 
-## Validation already run
+The implementation is already present in [`src/quotation.mjs`](/tmp/repo-canon-productivity-runtime-issue-13-v2/handoff/src/quotation.mjs). `discountQuotation(amount, percent)` rejects a percentage below 0 or above 100 with `RangeError`, then returns `Math.round(amount * (1 - percent / 100))`.
 
-From the repository root, on Node `v24.21.0`:
+The existing rounding test is in [`test/quotation.test.mjs`](/tmp/repo-canon-productivity-runtime-issue-13-v2/handoff/test/quotation.test.mjs): `discountQuotation(999, 12.5)` yields `874`.
+
+The implementation contract is [`docs/implementation-ticket.md`](/tmp/repo-canon-productivity-runtime-issue-13-v2/handoff/docs/implementation-ticket.md): return cents rounded to the nearest integer and reject percentages outside 0 through 100. Canonical domain terminology is in [`CONTEXT.md`](/tmp/repo-canon-productivity-runtime-issue-13-v2/handoff/CONTEXT.md); use “Quotation,” not “Quote object.”
+
+## Validation completed
+
+Ran with Node `v24.21.0`:
+
+```text
+node --test test/quotation.test.mjs
+pass 1; fail 0
+```
+
+## Next session
+
+Add boundary tests for:
+
+- `0%`: preserves the amount (for example, `discountQuotation(999, 0) === 999`).
+- `100%`: returns zero (`discountQuotation(999, 100) === 0`).
+- a negative percentage: throws `RangeError` (for example, `-1`).
+- a percentage above 100: throws `RangeError` (for example, `101`).
+
+Then review the percentage-discount implementation against the contract. In particular, decide whether the contract needs behavior for `NaN`, nonnumeric values, or negative amounts; it currently specifies only percentages outside the inclusive 0–100 range, so those cases should not be changed without an explicit scope decision.
+
+Run the focused check after any test changes:
 
 ```text
 node --test test/quotation.test.mjs
 ```
 
-Result: passed (`1` test, `0` failures).
-
-## Next actions
-
-1. Add the four boundary cases to the existing focused test artifact.
-2. Re-run the focused command above; also run `git diff --check` before review.
-3. Review the implementation against the implementation ticket and the project
-   terminology in `CONTEXT.md`.
-
-Do not commit, publish, or contact anyone.
-
 ## Suggested skills
 
-- `tdd` — useful for adding the boundary tests as concise behavior checks.
-- `code-review` — useful for a final standards-and-spec review after validation.
+- `tdd` for adding the four boundary tests in a red-green-refactor loop.
+- `code-review` for a contract- and repository-standards-focused review after the tests are in place.
 
-## Handoff hygiene
+## Sensitive material
 
-This handoff references repository artifacts by path and does not copy their
-contents. No ignored-file content is included in this temporary directory.
+Ignored material was deliberately not inspected or included in this handoff.

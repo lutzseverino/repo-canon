@@ -1,1 +1,0 @@
-What measured daily Event volume should we plan for at launch (typical, peak, and expected growth over the first year)?

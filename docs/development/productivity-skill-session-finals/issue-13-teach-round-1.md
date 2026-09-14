@@ -1,1 +1,0 @@
-What release-script decision do you want Git ancestry to make safely, and what would success look like in practice? Also share your current Git comfort level and any constraints (time, preferred depth, or topics to avoid).

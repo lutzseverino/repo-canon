@@ -71,15 +71,15 @@ test('fixtures expose the prerequisites each skill must actually use', (t) => {
 test('retains exact runtime outputs and the teaching feedback loop', () => {
   assert.equal(
     sha256(join(runtimeRoot, 'handoff.md')),
-    '539bc4827b3c3d3507077b8f33aae1eb817b75930fdcd5e83205d10338352b24',
+    '800577c1e1ed9657adc771f584ffc81676dc5c5f778cd121a23b8cb9b1ebc9fb',
   );
   assert.equal(
     sha256(join(runtimeRoot, 'event-retention-questionnaire.md')),
-    'c860383bad3c52afd5f88eb8dea4b071ae119b9605eb0f7991a6f82aaca8fd10',
+    '6fc701db2ee729f7955091806560d5fee9b3e2cd21dc2e6f9e67dfcc1c2c337d',
   );
   assert.equal(
-    sha256(join(runtimeRoot, 'writing-for-agents-AGENTS.md')),
-    '4e776d42be735cf78a07c961f151e4e4143472830be166ae4f772105f3908def',
+    sha256(join(runtimeRoot, 'writing-for-agents-project.md')),
+    '1723db18f0c9a021402934de669b426f415ebd2da8509e138503b09aff7e90e5',
   );
 
   const handoff = readFileSync(join(runtimeRoot, 'handoff.md'), 'utf8');
@@ -90,13 +90,15 @@ test('retains exact runtime outputs and the teaching feedback loop', () => {
   assert.match(questionnaire, /## How to answer/);
   assert.match(questionnaire, /## Anything else\?/);
 
-  const lesson = readFileSync(join(runtimeRoot, 'teach/lessons/0001-release-baseline-ancestry.html'), 'utf8');
-  assert.match(lesson, /data-answer="right"/);
+  const lesson = readFileSync(join(runtimeRoot, 'teach/lessons/0001-release-baseline-guard.html'), 'utf8');
+  assert.match(lesson, /data-check="order"/);
+  assert.match(lesson, /data-check="status"/);
+  assert.match(lesson, /data-check="error"/);
   assert.match(lesson, /git-scm\.com\/docs\/git-merge-base/);
   assert.ok(existsSync(join(runtimeRoot, 'teach/assets/course.css')));
-  assert.ok(existsSync(join(runtimeRoot, 'teach/reference/git-ancestry-release-checks.html')));
-  assert.ok(existsSync(join(runtimeRoot, 'teach/learning-records/0002-release-ancestry-decision-demonstrated.md')));
+  assert.ok(existsSync(join(runtimeRoot, 'teach/reference/release-baseline-guard.html')));
+  assert.ok(existsSync(join(runtimeRoot, 'teach/learning-records/0001-release-ancestry-guard.md')));
 
   const finalResponses = readdirSync(finalsRoot).filter((name) => name.startsWith('issue-13-'));
-  assert.equal(finalResponses.length, 23);
+  assert.equal(finalResponses.length, 24);
 });

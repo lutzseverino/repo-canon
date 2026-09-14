@@ -1,4 +1,5 @@
 # Teaching notes
-- The learner maintains a release script and prefers a practical, under-15-minute first lesson.
-- They are comfortable with basic Git commands but may confuse commit chronology with graph reachability.
-- Keep history-changing operations, including rebasing, out of scope.
+
+- Learner knows basic Git but may conflate commit dates with graph reachability.
+- Prefer a release-script scenario, a lesson under 15 minutes, and immediate retrieval feedback.
+- Do not propose history-changing commands for this mission.

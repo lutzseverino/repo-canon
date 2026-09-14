@@ -1,1 +1,0 @@
-Confirmed. The design exercise is complete; no files were changed and nothing was implemented.

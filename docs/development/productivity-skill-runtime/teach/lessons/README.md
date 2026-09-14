@@ -1,4 +1,4 @@
-# Lessons
+# Teaching lessons
 
-This directory contains the short interactive Git ancestry lesson produced by
-the `teach` exercise.
+The [release baseline guard lesson](0001-release-baseline-guard.html) is the
+interactive HTML lesson created by `teach`.

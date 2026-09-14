@@ -1,6 +1,6 @@
-# Git ancestry Glossary
+# Git ancestry glossary
 
-Canonical language for deciding whether a release candidate contains a required commit.
+Terms the learner has demonstrated in the release-baseline mission.
 
 ## Terms
 
@@ -8,6 +8,10 @@ Canonical language for deciding whether a release candidate contains a required 
 A commit reachable by following parent links from another commit.
 _Avoid_: Older commit
 
+**Ancestry guard**:
+A release decision that tests whether a required baseline is an ancestor of a candidate commit.
+_Avoid_: Date check, timestamp check
+
 **Exit status**:
-The number returned by a command to report its result. For `git merge-base --is-ancestor`, `0` means true, `1` means false, and any other non-zero value is an error.
-_Avoid_: Output code, failure-only code
+The code a command returns to classify its result; for the ancestry guard, `0` permits, `1` rejects normally, and another nonzero value is an operational error.
+_Avoid_: Error code

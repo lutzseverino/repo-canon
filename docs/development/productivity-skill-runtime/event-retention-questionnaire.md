@@ -1,89 +1,97 @@
-# Event retention launch discovery questionnaire
+# Launch Event retention discovery questionnaire
 
-**Purpose:** Gather the operational evidence needed to choose the launch Retention window and archive approach for service Events.
+**Purpose:** obtain the operational evidence needed to choose the launch Retention window and archive approach for Events.
 
-**From:** Product owner, **To:** Staff reliability engineer, **How your answers will be used:** They will be recorded in the launch retention decision record.
+**From:** Product owner, **To:** Staff reliability engineer, **How your answers will be used:** they will be incorporated into the launch decision record.
 
 ## Context
 
-I need to make the launch Event-retention decision, but you own the event-storage platform and the operational evidence behind it: capacity measurements, archive and restore capability, and incident-response practice. Please provide the measured facts and your recommendation so the decision reflects our actual operational limits and investigation needs.
+The product owner needs to make a launch decision about how long Events remain queryable and what archive approach, if any, supports that decision. You own Event-storage capacity, retention operations, restore procedures, and incident response. Please provide the operational evidence and judgment the product owner does not have, with links to the source material for every answer.
 
 ## How to answer
 
-Please respond by **18 September 2026**. This should take about **20 minutes**. Partial answers and “I don’t know” are useful; please flag uncertainty rather than skipping a question.
+Please respond by 18 September 2026. Expected effort is about 20 minutes. For each answer, include links to the dashboards, reports, runbooks, tickets, policies, or measurements that support it. Partial answers and "I don't know" are useful: flag anything you are unsure of rather than skipping it.
 
-## Event volume and investigation needs
+## Event demand and operational need
 
-### What is the measured typical daily Event volume?
+### What is the typical Event volume at launch?
 
-> 
+_Why this matters: typical volume establishes the baseline storage and archive demand._
 
-### What is the measured peak daily Event volume?
+> Include the measured rate, time period, and source links.
 
-> 
+### What peak Event volume must the launch design accommodate?
 
-### What one-year growth in daily Event volume do you expect?
+_Why this matters: peak demand can determine capacity and cost even when average volume is modest._
 
-> 
+> Include the measured or forecast peak, its conditions, and source links.
 
-### What minimum queryable Event history do incident investigations need?
+### What Event-volume growth should the launch decision plan for?
 
-_Why this matters: this sets the lower bound for the Retention window needed to diagnose incidents without restoring archived Events._
+> Include the forecast, planning horizon, assumptions, and source links.
 
-> 
+### What incident-history evidence establishes how far back Events need to be available for investigation?
 
-### What minimum queryable Event history do audits need?
+> Include representative incidents, the Event age needed, and source links.
 
-> 
+### What audit-history evidence establishes how far back Events need to be available?
 
-## Cost and archive capability
+> Include audit examples or requirements, the Event age needed, and source links.
 
-### What storage-cost constraints apply to queryable Events at launch?
+## Storage and archive options
 
-> 
+### What would storage cost for each viable Retention window?
 
-### What retrieval-cost constraints apply when accessing archived Events?
+> Include the candidate windows, cost basis, assumptions, and source links.
 
-> 
+### What retrieval cost would apply to each viable archive option?
+
+> Include the cost basis, retrieval scenarios, and source links.
 
 ### Which archive tiers are available for Events at launch?
 
-> 
+> For each tier, include its service level, access characteristics, capacity limits, and source links.
 
-### What restore time can we achieve for archived Events?
+## Recovery and constraints
 
-_Why this matters: it determines whether archived Events can support time-sensitive investigation and audit work._
+### What measured restore time can each viable archive tier achieve?
 
-> 
+_Why this matters: the chosen approach must support incident and audit access when Events are no longer queryable._
 
-### What recent restore evidence supports that restore-time estimate?
+> Include the measured time, test date, test conditions, and source links.
 
-> 
+### What evidence supports each reported restore time?
 
-## Retention constraints and recommendation
+> Link the restore exercises, monitoring data, runbooks, or incident records and flag any evidence gaps.
 
 ### What deletion constraints apply to Events?
 
-> 
+> Include operational, contractual, security, or policy constraints and source links.
 
-### What legal constraints apply to Event retention or archiving?
+### What legal constraints apply to retaining or deleting Events?
 
-> 
+> Include the applicable requirement, its jurisdiction or scope, and source links.
 
-### What launch Retention window do you recommend?
+## Recommendation
 
-> 
+### What Retention window do you recommend for launch?
 
-### What risks come with your recommended launch Retention window?
+> State one recommended duration, the supporting evidence, and source links.
 
-> 
+### What risks accompany your recommended Retention window?
 
-### What archive approach do you recommend for Events after the Retention window?
+> Include likelihood or impact where known, mitigations, remaining exposure, and source links.
 
-> 
+### What archive approach do you recommend for launch?
+
+> State the recommended tier or approach, its rationale, and source links.
+
+### What risks accompany your recommended archive approach?
+
+> Include likelihood or impact where known, mitigations, remaining exposure, and source links.
 
 ## Anything else?
 
-### What else should we know before making the launch Event-retention decision?
+What have we not asked that the product owner should know before choosing the launch Retention window and archive approach?
 
-> 
+> Include source links where available.

@@ -1,16 +1,19 @@
 # Productivity skill runtime artifacts
 
-These files preserve the concrete outputs created in the disposable exercise
-repositories. They are evidence artifacts, not Repo Canon production guidance.
+These files preserve exact outputs created in the corrected disposable
+exercise repositories. They are evidence artifacts, not Repo Canon production
+guidance.
 
-- [Handoff](handoff.md): temporary continuation document produced by
-  `handoff`.
-- [Event-retention questionnaire](event-retention-questionnaire.md): discovery
-  document produced by `to-questionnaire` after its corrected interaction.
-- [Teaching workspace](teach/): mission, resources, shared asset, lesson,
-  reference, glossary, and learning records produced by `teach`.
-- [Agent pointer result](writing-for-agents-AGENTS.md): complete `AGENTS.md`
-  output produced by `writing-for-agents` and exercised by a fresh probe.
+- [Handoff](handoff.md): continuation document produced by `handoff` in the
+  operating-system temporary directory.
+- [Event-retention questionnaire](event-retention-questionnaire.md): local,
+  unsent discovery document produced by `to-questionnaire`.
+- [Teaching workspace](teach/): mission, resources, asset, lesson, reference,
+  glossary, and demonstrated-learning record produced by `teach`.
+- [Agent pointer result](writing-for-agents-project.md): scenario-specific
+  `docs/agents/project.md` output produced by `writing-for-agents` and used by
+  a fresh probe. The fixture root `AGENTS.md` stayed byte-identical to the
+  shared repository file.
 
-The complete response files and their hashes are indexed separately in the
+Complete response files and hashes are indexed in the
 [session-final directory](../productivity-skill-session-finals/README.md).

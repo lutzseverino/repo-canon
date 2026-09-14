@@ -1,15 +1,22 @@
-# Mission: Git ancestry for safe release checks
+# Mission: Safe release-baseline decisions with Git ancestry
+
 ## Why
-Maintain a release script that can determine whether a candidate release commit contains a required baseline commit, without mistaking timestamp order for the commit graph. This makes the release decision explainable and safe to automate.
+
+Maintain a release script that can decide whether a candidate release commit contains a required baseline. This makes releases safe without changing repository history or guessing from commit dates.
+
 ## Success looks like
-- Choose the correct argument order for `git merge-base --is-ancestor` in a real release check.
-- Interpret status `0`, `1`, and other non-zero statuses without treating an error as a failed ancestry check.
-- Explain that the check follows parent links, rather than commit dates.
+
+- Choose the required baseline as the first argument and the candidate release commit as the second argument to `git merge-base --is-ancestor`.
+- Treat exit status `0` as eligible, `1` as ineligible, and every other nonzero status as an operational error.
+- Explain the decision using commit reachability rather than commit dates.
+
 ## Constraints
-- Keep the first lesson under 15 minutes.
-- Use official Git documentation as the primary knowledge source.
-- The learner is comfortable running basic Git commands.
-- Use interactive retrieval practice and concise reference material.
+
+- First lesson takes under 15 minutes.
+- Use official Git documentation and immediate retrieval feedback.
+- Do not change history.
+
 ## Out of scope
-- Rebasing or any other history modification.
-- Release policy decisions beyond whether the candidate contains the required baseline.
+
+- Rewriting, merging, rebasing, or otherwise changing Git history.
+- General release-process design beyond the ancestry guard.
