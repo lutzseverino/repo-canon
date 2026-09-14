@@ -8,15 +8,17 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   validation baseline, preparation requirements, and historical v1 limits.
 - [Historical scope proposal](scope-capability-specification.md): the original
   product requirement, superseded by the delivered product contract.
+- [Shared material review](shared-material-review.md): finalized contribution,
+  agent workflow, template, and preparation evidence.
 - [Upstream compatibility](upstream-compatibility.md): the regular skill
   inventory and native issue formats that automation must respect.
 
 ## Authoring status
 
 The design decisions are recorded. Draft material lives under `drafts/`;
-confirmed choices live in [authoring notes](../../authoring-notes.md). Root
-contribution and agent configuration files make the work-in-progress repository
-usable for planning.
+confirmed choices live in [authoring notes](../../authoring-notes.md). The root
+contribution, shared agent configuration, and GitHub templates have completed
+material review and make the work-in-progress repository usable for planning.
 There is no `standards.yaml` yet and no source validation has passed.
 
 The required product scope capability is delivered and accepted. Use the

@@ -1,6 +1,6 @@
 # Repo Canon design review
 
-The author preferences are settled in [authoring notes](authoring-notes.md). This document presents the complete current draft files for content review. It is not a validated standards source: the manifest, installed upstream skill directories, automation, and behavioral exercises are still pending.
+The author preferences are settled in [authoring notes](authoring-notes.md). This document presents the complete current draft files. The shared contribution and agent workflow material has completed content review; the contextual guidance remains input to its implementation tickets. This is not a validated standards source: the manifest, installed upstream skill directories, automation, and behavioral exercises are still pending.
 
 The required product support is delivered and accepted. Use the [compatibility mapping](docs/development/adoption-compatibility.md) for the v2 interface and validation baseline; the [original scope proposal](docs/development/scope-capability-specification.md) remains historical context. The [upstream compatibility notes](docs/development/upstream-compatibility.md) identify the native workflows to preserve.
 

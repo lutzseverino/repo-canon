@@ -1,9 +1,9 @@
 # Repo Canon authoring notes
 
-Status: policy decisions settled; drafted material is available for content review.
-These notes record confirmed preferences;
-they are not an adoptable standards source. No declarations have been authored
-or validated yet. Declaration IDs and material mappings follow source review.
+Status: policy decisions settled; shared contribution and agent workflow
+material reviewed. These notes record confirmed preferences; they are not an
+adoptable standards source. No declarations have been authored or validated
+yet. Declaration IDs and material mappings follow the remaining source review.
 
 ## Confirmed preferences
 
@@ -172,15 +172,16 @@ or validated yet. Declaration IDs and material mappings follow source review.
   approved-revision selector, or revision invalidation mechanism. The accepted
   readiness rule above is this standards source's convention and belongs in
   its configuration and automation, preserving upstream skill content.
+- The reviewed shared contribution and agent configuration files are
+  byte-identical between their final locations and `drafts/` review copies.
+  The four public forms preserve optional answers and the native planning
+  formats; the PR template preserves the agreed small-correction and
+  conditional Limits behavior. The material review and separate committed
+  preparation exercises are recorded in
+  `docs/development/shared-material-review.md`.
 
 ## Remaining authoring work
 
-- Review the complete drafted shared configuration. No additional regular-skill
-  exclusions are chosen. The accepted shared AGENTS.md is inspired by
-  upstream's reusable Agent skills section; upstream does not supply the
-  complete file.
-- Review complete issue/PR template contents, including
-  required fields and how optional fields avoid empty boilerplate.
 - Concrete automation implementation and exercises of accepted behaviors,
   including executable/version prerequisites where operations require them.
 - Translate accepted ownership and scope into `repo-standards/v2` declarations
