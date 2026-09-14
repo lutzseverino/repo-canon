@@ -1,9 +1,9 @@
 import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { marked } from '../vendor/marked/marked.esm.js';
+import { parseFragment } from '../vendor/parse5/parse5.esm.js';
 
 const resultFormat = 'repo-standards/result/v1';
-const centerAttribute = /\balign\s*=\s*(?:"center"|'center'|center(?=[ \t]|$))/i;
 const recognizedSections = [
   'Installation',
   'Features',
@@ -13,6 +13,10 @@ const recognizedSections = [
   'Contributing',
   'License',
 ];
+const renderedElementsWithoutText = new Set([
+  'audio', 'canvas', 'embed', 'hr', 'iframe', 'img', 'input', 'math', 'object', 'picture', 'svg', 'video',
+]);
+const nonRenderedElements = new Set(['script', 'style', 'template']);
 
 function failProcess(message) {
   throw new Error(message);
@@ -46,27 +50,12 @@ function result(status, message) {
   process.stdout.write(`${JSON.stringify({ format: resultFormat, status, message })}\n`);
 }
 
-function decodeEntities(value) {
-  const namedWhitespace = { nbsp: '\u00a0', ensp: '\u2002', emsp: '\u2003', thinsp: '\u2009' };
-  return value
-    .replace(/&#(?:x([0-9a-f]+)|(\d+));/gi, (entity, hexadecimal, decimal) => {
-      const codePoint = Number.parseInt(hexadecimal ?? decimal, hexadecimal ? 16 : 10);
-      return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : entity;
-    })
-    .replace(/&(nbsp|ensp|emsp|thinsp);/gi, (_, name) => namedWhitespace[name.toLowerCase()]);
+function attribute(node, name) {
+  return node.attrs?.find(candidate => candidate.name === name)?.value ?? null;
 }
 
-function inlineText(tokens) {
-  const text = tokens.map(token => {
-    if (Array.isArray(token.tokens)) return inlineText(token.tokens);
-    if (token.type === 'html') return token.text.replace(/<[^>]*>/g, '');
-    return typeof token.text === 'string' ? token.text : '';
-  }).join('');
-  return decodeEntities(text);
-}
-
-function renderedText(value) {
-  return inlineText(marked.Lexer.lexInline(value)).trim();
+function isHidden(node) {
+  return nonRenderedElements.has(node.tagName) || attribute(node, 'hidden') !== null;
 }
 
 function rootLicense(projectRoot) {
@@ -88,90 +77,81 @@ function rootLicense(projectRoot) {
   return { path };
 }
 
-function htmlHeadings(markdown, tokenIndex) {
-  const found = [];
-  const centeredRanges = [...markdown.matchAll(/<div\b([^>]*)>[\s\S]*?<\/div\s*>/gi)]
-    .filter(match => centerAttribute.test(match[1]))
-    .map(match => [match.index, match.index + match[0].length, match[0]]);
-  const isCentered = (index, attributes = '') => (
-    centerAttribute.test(attributes)
-      || centeredRanges.some(([start, end]) => start < index && index < end)
-  );
-  const html = /<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1\s*>/gi;
-  for (const match of markdown.matchAll(html)) {
-    const name = renderedText(match[3]);
-    if (!name) continue;
-    found.push({ level: Number(match[1]), name, tokenIndex, offset: match.index, centered: isCentered(match.index, match[2]) });
-  }
-  for (const [start, , range] of centeredRanges) {
-    const openingEnd = range.indexOf('>') + 1;
-    const closingStart = range.toLocaleLowerCase('en-US').lastIndexOf('</div');
-    const inner = range.slice(openingEnd, closingStart);
-    for (const token of marked.lexer(inner)) {
-      if (token.type !== 'heading') continue;
-      const name = inlineText(token.tokens).trim();
-      if (name) found.push({ level: token.depth, name, tokenIndex, offset: start + openingEnd, centered: true });
-    }
-  }
-  return found;
+function renderedText(node) {
+  if (node.nodeName === '#text') return node.value;
+  if (isHidden(node)) return '';
+  return (node.childNodes ?? []).map(renderedText).join('');
 }
 
-function headings(tokens) {
-  const found = [];
-  let centeredBlocks = 0;
-  tokens.forEach((token, tokenIndex) => {
-    if (token.type === 'heading') {
-      const name = inlineText(token.tokens).trim();
-      if (name) found.push({ level: token.depth, name, tokenIndex, offset: 0, centered: centeredBlocks > 0 });
-    } else if (token.type === 'html') {
-      found.push(...htmlHeadings(token.raw, tokenIndex));
-      const centeredOpenings = [...token.raw.matchAll(/<div\b([^>]*)>/gi)]
-        .filter(match => centerAttribute.test(match[1])).length;
-      const closings = [...token.raw.matchAll(/<\/div\s*>/gi)].length;
-      centeredBlocks = Math.max(0, centeredBlocks + centeredOpenings - closings);
-    }
-  });
-  return found
-    .sort((left, right) => left.tokenIndex - right.tokenIndex || left.offset - right.offset)
-    .map(heading => ({ ...heading, folded: heading.name.toLocaleLowerCase('en-US') }));
+function containsHeading(node) {
+  if (isHidden(node)) return false;
+  return (node.childNodes ?? []).some(child => /^h[1-6]$/.test(child.tagName) || containsHeading(child));
 }
 
-function sectionTokens(tokens, allHeadings, name) {
+function renderedStructure(markdown) {
+  const events = [];
+  const visit = (node, centered = false) => {
+    if (isHidden(node)) return;
+    if (node.nodeName === '#text') {
+      if (node.value.trim()) events.push({ type: 'text', text: node.value });
+      return;
+    }
+
+    const ownCenter = attribute(node, 'align')?.toLocaleLowerCase('en-US') === 'center';
+    if (/^h[1-6]$/.test(node.tagName)) {
+      const name = renderedText(node).trim();
+      if (name) events.push({
+        type: 'heading',
+        level: Number(node.tagName[1]),
+        name,
+        centered: ownCenter || centered,
+        folded: name.toLocaleLowerCase('en-US'),
+      });
+      return;
+    }
+    if (node.tagName === 'a') {
+      events.push({ type: 'link', label: renderedText(node).trim(), target: attribute(node, 'href') ?? '' });
+      if (containsHeading(node)) {
+        for (const child of node.childNodes ?? []) visit(child, centered);
+      }
+      return;
+    }
+    if (renderedElementsWithoutText.has(node.tagName)) {
+      events.push({ type: 'content' });
+    }
+    const insideCenter = centered || (node.tagName === 'div' && ownCenter);
+    for (const child of node.childNodes ?? []) visit(child, insideCenter);
+  };
+  visit(parseFragment(marked.parse(markdown)));
+  return events;
+}
+
+function sectionEvents(events, allHeadings, name) {
   const index = allHeadings.findIndex(heading => heading.folded === name.toLocaleLowerCase('en-US'));
   if (index < 0) return null;
-  const start = allHeadings[index].tokenIndex + 1;
-  const nextSection = allHeadings.slice(index + 1)
-    .find(heading => heading.level <= allHeadings[index].level);
-  const end = nextSection?.tokenIndex ?? tokens.length;
-  return tokens.slice(start, end);
+  const start = events.indexOf(allHeadings[index]) + 1;
+  const end = events.findIndex((event, eventIndex) => eventIndex >= start
+    && event.type === 'heading' && event.level <= allHeadings[index].level);
+  return events.slice(start, end < 0 ? events.length : end);
 }
 
 function normalizeTarget(target) {
   return target.replace(/^\.\//, '');
 }
 
-function linksIn(token) {
-  if (token.type === 'link') return [token];
-  const children = [token.tokens, token.items].filter(Array.isArray).flat();
-  return children.flatMap(linksIn);
+function singleLink(events) {
+  return events.length === 1 && events[0].type === 'link' ? events[0] : null;
 }
 
-function singleMarkdownLink(tokens) {
-  const meaningful = tokens.filter(token => !['space', 'def'].includes(token.type));
-  if (meaningful.length !== 1 || meaningful[0].type !== 'paragraph') return null;
-  const inline = meaningful[0].tokens.filter(token => token.type !== 'text' || token.text.trim());
-  if (inline.length !== 1 || inline[0].type !== 'link') return null;
-  return { label: inlineText(inline[0].tokens).trim(), target: inline[0].href };
+function linksTo(events, target) {
+  if (events === null) return false;
+  return events.some(event => event.type === 'link'
+    && normalizeTarget(event.target).split('#')[0] === target);
 }
 
-function linksTo(tokens, target) {
-  if (tokens === null) return false;
-  return tokens.flatMap(linksIn).some(link => normalizeTarget(link.href).split('#')[0] === target);
-}
-
-function checkNavigationLink(projectRoot, tokens, allHeadings, section, target, corrections) {
+function checkNavigationLink(projectRoot, events, allHeadings, section, target, corrections) {
   if (!lstatIsFile(join(projectRoot, target))) return;
-  const body = sectionTokens(tokens, allHeadings, section);
+  const body = sectionEvents(events, allHeadings, section);
   if (body === null) corrections.push(`Add a ${section} section linking to ${target}.`);
   else if (!linksTo(body, target)) corrections.push(`Link the ${section} section to ${target}.`);
 }
@@ -179,8 +159,8 @@ function checkNavigationLink(projectRoot, tokens, allHeadings, section, target, 
 function checkStructure(projectRoot, markdown, license) {
   if (markdown === null) return ['Create the root README.md.'];
   const corrections = [];
-  const tokens = marked.lexer(markdown);
-  const parsedHeadings = headings(tokens);
+  const events = renderedStructure(markdown);
+  const parsedHeadings = events.filter(event => event.type === 'heading');
   const title = parsedHeadings.find(heading => heading.level === 1) ?? null;
   if (!title?.centered) {
     corrections.push('Center the Repository README title in a nonempty HTML h1 or a centered block.');
@@ -207,14 +187,14 @@ function checkStructure(projectRoot, markdown, license) {
     corrections.push(`Move Installation before ${allHeadings[0].name}; it is the first section when present.`);
   }
 
-  checkNavigationLink(projectRoot, tokens, allHeadings, 'Contributing', 'CONTRIBUTING.md', corrections);
-  checkNavigationLink(projectRoot, tokens, allHeadings, 'Documentation', 'docs/README.md', corrections);
+  checkNavigationLink(projectRoot, events, allHeadings, 'Contributing', 'CONTRIBUTING.md', corrections);
+  checkNavigationLink(projectRoot, events, allHeadings, 'Documentation', 'docs/README.md', corrections);
 
-  const licenseBody = sectionTokens(tokens, allHeadings, 'License');
+  const licenseBody = sectionEvents(events, allHeadings, 'License');
   if (license && licenseBody === null) {
     corrections.push(`Add a License section containing only [actual license name](${license.path}).`);
   } else if (license) {
-    const link = singleMarkdownLink(licenseBody);
+    const link = singleLink(licenseBody);
     if (!link) {
       corrections.push('Make the License section contain only the license link.');
     } else {
