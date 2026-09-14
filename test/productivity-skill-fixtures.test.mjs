@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -13,6 +13,20 @@ const finalsRoot = join(sourceRoot, 'docs/development/productivity-skill-session
 
 function sha256(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
+}
+
+function extractShellGuard(html) {
+  const match = html.match(/<pre><code>(if git merge-base --is-ancestor[\s\S]*?\nfi)<\/code><\/pre>/);
+  assert.ok(match, 'expected a displayed ancestry guard');
+  return match[1].replaceAll('&amp;', '&');
+}
+
+function runShellGuard(guard, cwd, baseline, candidate) {
+  return spawnSync('sh', ['-c', `${guard}\nprintf 'SENTINEL_REACHED\\n'`], {
+    cwd,
+    encoding: 'utf8',
+    env: { ...process.env, baseline, candidate },
+  });
 }
 
 function build(t) {
@@ -68,7 +82,7 @@ test('fixtures expose the prerequisites each skill must actually use', (t) => {
   assert.ok(existsSync(join(repositories['writing-for-agents'].path, '.agents/skills/writing-for-agents/SKILL-MECHANICS.md')));
 });
 
-test('retains exact runtime outputs and the teaching feedback loop', () => {
+test('retains exact runtime outputs and the teaching feedback loop', (t) => {
   assert.equal(
     sha256(join(runtimeRoot, 'handoff.md')),
     '800577c1e1ed9657adc771f584ffc81676dc5c5f778cd121a23b8cb9b1ebc9fb',
@@ -101,14 +115,37 @@ test('retains exact runtime outputs and the teaching feedback loop', () => {
   assert.match(lesson, /\.\.\/reference\/release-baseline-guard\.html/);
   assert.match(lesson, /answer: 'ordinary rejection'/);
   assert.match(lesson, /answer: 'processing failure'/);
-  assert.match(lesson, /exit 1/);
-  assert.match(lesson, /exit "\$status"/);
   assert.match(lesson, /git-scm\.com\/docs\/git-merge-base/);
   assert.ok(existsSync(join(runtimeRoot, 'teach/assets/course.css')));
   const reference = readFileSync(join(runtimeRoot, 'teach/reference/release-baseline-guard.html'), 'utf8');
-  assert.match(reference, /exit 1/);
-  assert.match(reference, /exit "\$status"/);
   assert.ok(existsSync(join(runtimeRoot, 'teach/learning-records/0001-release-ancestry-guard.md')));
+
+  const repository = mkdtempSync(join(tmpdir(), 'repo-canon-teach-guard-test-'));
+  t.after(() => rmSync(repository, { recursive: true, force: true }));
+  execFileSync('git', ['init', '--quiet'], { cwd: repository });
+  execFileSync('git', ['config', 'user.name', 'Teach guard test'], { cwd: repository });
+  execFileSync('git', ['config', 'user.email', 'teach-guard@example.invalid'], { cwd: repository });
+  const tree = execFileSync('git', ['mktree'], { cwd: repository, encoding: 'utf8', input: '' }).trim();
+  const root = execFileSync('git', ['commit-tree', tree, '-m', 'common root'], { cwd: repository, encoding: 'utf8' }).trim();
+  const baseline = execFileSync('git', ['commit-tree', tree, '-p', root, '-m', 'baseline sibling'], { cwd: repository, encoding: 'utf8' }).trim();
+  const candidate = execFileSync('git', ['commit-tree', tree, '-p', root, '-m', 'candidate sibling'], { cwd: repository, encoding: 'utf8' }).trim();
+
+  for (const html of [lesson, reference]) {
+    const guard = extractShellGuard(html);
+    assert.equal(spawnSync('sh', ['-n'], { input: guard }).status, 0);
+
+    const eligible = runShellGuard(guard, repository, root, baseline);
+    assert.equal(eligible.status, 0);
+    assert.match(eligible.stdout, /SENTINEL_REACHED/);
+
+    const rejected = runShellGuard(guard, repository, baseline, candidate);
+    assert.equal(rejected.status, 1);
+    assert.doesNotMatch(rejected.stdout, /SENTINEL_REACHED/);
+
+    const failed = runShellGuard(guard, repository, baseline, 'invalid-candidate-revision');
+    assert.equal(failed.status, 128);
+    assert.doesNotMatch(failed.stdout, /SENTINEL_REACHED/);
+  }
 
   const finalResponses = readdirSync(finalsRoot).filter((name) => name.startsWith('issue-13-'));
   assert.equal(finalResponses.length, 28);
