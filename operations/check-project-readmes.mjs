@@ -1,6 +1,6 @@
 import { lstatSync, readFileSync } from 'node:fs';
 import { isAbsolute, posix, sep } from 'node:path';
-import { brokenLocalLinks, renderedMarkdown } from './lib/rendered-markdown.mjs';
+import { brokenLocalLinks, localPathExists, renderedMarkdown } from './lib/rendered-markdown.mjs';
 
 const resultFormat = 'repo-standards/result/v1';
 
@@ -38,9 +38,10 @@ function isProjectReadmePath(path) {
     && !path.startsWith('../') && posix.basename(path) === 'README.md';
 }
 
-function isFile(path) {
+function isFile(projectRoot, path) {
   try {
-    return lstatSync(path).isFile();
+    const absolute = `${projectRoot}${sep}${path.split('/').join(sep)}`;
+    return localPathExists(projectRoot, path) && lstatSync(absolute).isFile();
   } catch {
     return false;
   }
@@ -53,15 +54,16 @@ function result(status, message) {
 function validate(projectRoot, paths) {
   const corrections = [];
   for (const path of paths) {
-    const absolute = `${projectRoot}${sep}${path.split('/').join(sep)}`;
-    if (!isFile(absolute)) {
+    if (!isFile(projectRoot, path)) {
       corrections.push(`Create ${path} for the maintained Project.`);
       continue;
     }
+    const absolute = `${projectRoot}${sep}${path.split('/').join(sep)}`;
     const events = renderedMarkdown(readFileSync(absolute, 'utf8'));
     const renderedHeadings = events.filter(event => event.type === 'heading');
     const headings = renderedHeadings.filter(event => event.level === 1);
-    if (headings.length !== 1 || headings[0].centered || renderedHeadings[0] !== headings[0]) {
+    if (headings.length !== 1 || headings[0].centered || headings[0].source !== 'markdown'
+        || renderedHeadings[0] !== headings[0]) {
       corrections.push(`Give ${path} one non-centered level-one title as its first heading.`);
     }
     for (const link of brokenLocalLinks(projectRoot, path, events)) {

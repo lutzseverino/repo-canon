@@ -83,6 +83,16 @@ Report creates maintenance summaries.
   assert.match(outcome.result.message, /Give tools\/report\/README\.md one non-centered level-one title as its first heading/);
 });
 
+test('requires the Project title to use Markdown heading syntax', t => {
+  const outcome = check(t, {
+    'libraries/raw-title/README.md': '<h1>Raw title</h1>\n\nLibrary purpose.\n',
+  }, ['libraries/raw-title/README.md']);
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Give libraries\/raw-title\/README\.md one non-centered level-one title/);
+});
+
 test('reports broken rendered local links without treating examples as navigation', t => {
   const outcome = check(t, {
     'odd/work-unit/README.md': `# Work unit
@@ -167,6 +177,18 @@ test('requires link casing to match the repository entry', t => {
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, 'failed');
   assert.match(outcome.result.message, /links to missing Guide\.md/);
+});
+
+test('requires concrete Project README path casing to match repository entries', t => {
+  const outcome = check(t, {
+    'component/readme.md': '# Component\n',
+    'Service/README.md': '# Service\n',
+  }, ['component/README.md', 'service/README.md']);
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Create component\/README\.md/);
+  assert.match(outcome.result.message, /Create service\/README\.md/);
 });
 
 test('resolves sibling links from Project paths containing URL syntax', t => {

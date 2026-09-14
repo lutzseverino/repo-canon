@@ -1,5 +1,6 @@
-import { marked } from '../../vendor/marked/marked.esm.js';
+import { marked, Renderer } from '../../vendor/marked/marked.esm.js';
 import { parseFragment } from '../../vendor/parse5/parse5.esm.js';
+import { randomUUID } from 'node:crypto';
 import { lstatSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, posix, relative, sep } from 'node:path';
 
@@ -29,6 +30,11 @@ function containsHeading(node) {
 }
 
 export function renderedMarkdown(markdown) {
+  const markdownHeadingMarker = randomUUID();
+  const renderer = new Renderer();
+  renderer.heading = function ({ depth, tokens }) {
+    return `<h${depth} data-repo-canon-markdown-heading="${markdownHeadingMarker}">${this.parser.parseInline(tokens)}</h${depth}>`;
+  };
   const events = [];
   const visitTargets = node => {
     if (isHidden(node)) return;
@@ -67,6 +73,9 @@ export function renderedMarkdown(markdown) {
         text,
         centered: ownCenter || centered,
         folded: text.toLocaleLowerCase('en-US'),
+        source: attribute(node, 'data-repo-canon-markdown-heading') === markdownHeadingMarker
+          ? 'markdown'
+          : 'html',
       });
       for (const child of node.childNodes ?? []) visitTargets(child);
       return;
@@ -86,7 +95,7 @@ export function renderedMarkdown(markdown) {
     const insideCenter = centered || (node.tagName === 'div' && ownCenter);
     for (const child of node.childNodes ?? []) visit(child, insideCenter);
   };
-  visit(parseFragment(marked.parse(markdown)));
+  visit(parseFragment(marked.parse(markdown, { renderer })));
   return events;
 }
 
@@ -109,7 +118,7 @@ export function resolvedLocalPath(sourcePath, target) {
   }
 }
 
-function pathExists(projectRoot, path) {
+export function localPathExists(projectRoot, path) {
   try {
     const root = realpathSync(projectRoot);
     let current = root;
@@ -134,7 +143,7 @@ export function brokenLocalLinks(projectRoot, sourcePath, events) {
   for (const event of events) {
     if (!['link', 'image'].includes(event.type)) continue;
     const path = resolvedLocalPath(sourcePath, event.target);
-    if (path === null || (path !== undefined && pathExists(projectRoot, path))) continue;
+    if (path === null || (path !== undefined && localPathExists(projectRoot, path))) continue;
     broken.push({ target: event.target, path });
   }
   return broken;
