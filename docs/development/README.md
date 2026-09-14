@@ -12,6 +12,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   agent workflow, template, and preparation evidence.
 - [Upstream compatibility](upstream-compatibility.md): the regular skill
   inventory and native issue formats that automation must respect.
+- [Repository README check](repository-readme-check.md): operation protocol,
+  outcomes, prerequisites, and focused fixture command.
 
 ## Authoring status
 
@@ -41,6 +43,7 @@ preferences. Run `git diff --check` before requesting review. The four draft
 issue forms were parsed as YAML and checked for basic field structure and
 duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
 
-There is no project typecheck, build, or automated test suite yet. These
-requirements must be added with the executable implementation. Source validation
-and adoption evidence remain separate from basic documentation checks.
+Run `npm test` with Node.js 24 for the executable operation fixtures. The project
+has no package dependencies, typecheck, or build step. Run a single fixture with
+`node --test test/<name>.test.mjs` while developing. Source validation and
+adoption evidence remain separate from these operation checks.
