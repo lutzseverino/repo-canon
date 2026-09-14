@@ -34,14 +34,18 @@ check cannot authorize an agent or approve the meaning of a contract.
 
 The issue-contract workflow publishes the current contract revision in its one
 maintained feedback comment. A revision is a SHA-256 association over the
-selected contract kind, exact source bytes and source identity, the source edit
+selected contract kind, exact source bytes and source identity, and the source
+edit revision. The comment also records the latest observed readiness-label
+transition, or the exact GitHub issue-event ID and actor that approved the
 revision. Native parent and blocker relationships remain review context rather
 than part of the body or Brief revision; changing an explicit relationship in
 the contract source changes its exact bytes. For an Agent Brief, wait for that
 revision notice before applying readiness. A direct
 specification or ticket created with readiness can be associated from its
-authoritative creation snapshot; later readiness changes use the authoritative
-label-event snapshot.
+authoritative creation snapshot; later readiness changes use the complete
+authoritative label-event timeline. Removing and re-adding readiness always
+creates a new review event, and delayed or repeated workflows preserve only the
+latest event's association.
 
 Applying `ready-for-agent` or `ready-for-human` is the review action. The actor
 must currently have the repository `admin`, `maintain`, or `triage` role. The

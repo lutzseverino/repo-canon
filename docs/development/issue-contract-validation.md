@@ -44,7 +44,9 @@ the structural corrections there. Complete specifications, tickets, and Agent
 Briefs publish a `sha256:` revision and wait for authorized review. The same
 comment records the reviewer, revision, and resulting readiness state after an
 accepted review event, so repeated workflow events can verify the association
-without reapproving or duplicating feedback.
+without reapproving or duplicating feedback. Awaiting-review state also records
+the latest readiness-label transition it observed. Approved state records the
+exact GitHub issue-event ID that supplied the review.
 
 The revision is computed from a versioned record containing the selected
 contract kind, exact contract bytes, source identity, and source edit revision.
@@ -60,10 +62,15 @@ For a direct specification or ticket, an authoritative `opened` event carrying
 one readiness label or a later readiness `labeled` event can supply the exact
 review snapshot. For an Agent Brief, the validator must first publish the exact
 revision in its feedback comment; the reviewer then applies a readiness label.
-This ordering prevents a stale label event from approving a brief that was
-edited or replaced while the event waited. The validator re-fetches the issue,
-complete discussion, relationships, and direct-body edit revision before every
-decision, and rejects an event whose issue snapshot no longer matches.
+The validator re-fetches the issue, complete discussion, complete issue-event
+timeline, relationships, and direct-body edit revision before every decision.
+It binds approval to the actor and ID of the latest transition for the current
+readiness label. A removal therefore invalidates the old event even if another
+label is added before its workflow runs. A delayed removal or repeated webhook
+cannot overwrite a genuinely newer approval. Source publication time, the
+recorded transition barrier, and a matching current-event snapshot establish
+that the selected label event follows the exact revision. Stale webhook payloads
+cannot supply the actor or restore an older association.
 
 The event actor is authorized only when GitHub reports the repository `admin`,
 `maintain`, or `triage` role. The triage role is the explicit authorization for
@@ -103,8 +110,9 @@ local HTTP server. They exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, repeat-safe feedback,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized
-actors, stale and repeated events, native creation, readiness removal, pull
-request exclusion, and hostile Markdown that must remain inert. The `CI`
+actors, stale and repeated events, native creation, readiness removal and re-add
+ordering across paginated issue events, contract edits, pull request
+exclusion, and hostile Markdown that must remain inert. The `CI`
 workflow runs the complete repository test suite with `npm test`. These fixtures
 exercise the authorization mechanism but do not claim that a reviewer made a
 sound semantic judgment.

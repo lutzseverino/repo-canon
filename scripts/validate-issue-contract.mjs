@@ -113,14 +113,21 @@ if (!result.contract) {
   process.exit(0);
 }
 
-const revision = await contractRevision(api, issue, result);
-const readiness = await assessReadiness({ api, event, issue, result, comments, previousFeedback, revision });
+const contract = await contractRevision(api, issue, result);
+const revision = contract.revision;
+const issueEvents = await api.listEvents(issueNumber);
+const readiness = await assessReadiness({ api, event, issue, result, issueEvents, previousFeedback, revision, publishedAt: contract.publishedAt });
 if (!readiness.valid) {
   await removeReadiness(api, issueNumber, result.labels);
   if (result.triaged) await returnTriagedRequestToReview(api, issueNumber, result.labels);
-  await maintainFeedback(api, issueNumber, comments, awaitingReviewFeedback(result.kind, revision, readiness.error));
+  await maintainFeedback(api, issueNumber, comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.error));
   console.error(readiness.error);
   process.exit(1);
+}
+
+if (readiness.deferred) {
+  console.log(`Valid ${result.kind}; the latest readiness transition is waiting for its matching workflow event.`);
+  process.exit(0);
 }
 
 if (readiness.approved && result.triaged) {
@@ -135,8 +142,8 @@ await maintainFeedback(
   issueNumber,
   comments,
   readiness.approved
-    ? approvedFeedback(result.kind, revision, readiness.label, readiness.reviewer)
-    : awaitingReviewFeedback(result.kind, revision),
+    ? approvedFeedback(result.kind, revision, readiness.label, readiness.reviewer, readiness.reviewEventId)
+    : awaitingReviewFeedback(result.kind, revision, readiness.observedEventId),
 );
 console.log(`Valid ${result.kind}${readiness.approved ? ` with ${readiness.label} bound to ${revision}` : "; awaiting authorized review"}.`);
 
@@ -205,13 +212,14 @@ function createApi({ baseUrl, graphqlUrl, repository, token }) {
     getIssueBodyRevision: async (number) => {
       const [owner, name] = repository.split("/");
       const data = await graphql(
-        "query IssueBodyRevision($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) { issue(number: $number) { id lastEditedAt } } }",
+        "query IssueBodyRevision($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) { issue(number: $number) { id createdAt lastEditedAt } } }",
         { owner, name, number },
       );
       if (!data?.repository?.issue) throw new Error(`GitHub GraphQL did not return issue #${number}.`);
       return data.repository.issue;
     },
     listComments: (number) => paginate(`${issuePath}/${number}/comments?per_page=100`),
+    listEvents: (number) => paginate(`${issuePath}/${number}/events?per_page=100`),
     listBlockedBy: (number) => paginate(`${issuePath}/${number}/dependencies/blocked_by?per_page=100`, { allowNotFound: true }),
     removeLabel: (number, label) => request(`${issuePath}/${number}/labels/${encodeURIComponent(label)}`, { method: "DELETE" }),
     addLabels: (number, labels) => request(`${issuePath}/${number}/labels`, { method: "POST", body: JSON.stringify({ labels }) }),
@@ -631,9 +639,11 @@ function agentBriefHeading(body) {
 
 async function contractRevision(apiClient, issue, result) {
   let source;
+  let publishedAt;
   if (result.contract.type === "issue-body") {
     const metadata = await apiClient.getIssueBodyRevision(issue.number);
     source = { type: "issue-body", id: metadata.id, editedAt: metadata.lastEditedAt ?? null };
+    publishedAt = metadata.lastEditedAt ?? metadata.createdAt ?? issue.created_at ?? null;
   } else {
     const comment = result.contract.comment;
     source = {
@@ -641,6 +651,7 @@ async function contractRevision(apiClient, issue, result) {
       id: String(comment.node_id ?? comment.id),
       editedAt: comment.updated_at ?? null,
     };
+    publishedAt = comment.updated_at ?? comment.created_at ?? null;
   }
   const value = JSON.stringify({
     format: "repo-canon/issue-contract-revision/v1",
@@ -648,73 +659,125 @@ async function contractRevision(apiClient, issue, result) {
     source,
     body: result.contract.body,
   });
-  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+  return { revision: `sha256:${createHash("sha256").update(value).digest("hex")}`, publishedAt };
 }
 
-async function assessReadiness({ api: apiClient, event: currentEvent, issue, result, comments, previousFeedback, revision }) {
+async function assessReadiness({ api: apiClient, event: currentEvent, issue, result, issueEvents, previousFeedback, revision, publishedAt }) {
   const currentReadyLabels = [...result.labels].filter((label) => readyLabels.has(label));
   if (currentReadyLabels.length > 1) {
     return { valid: false, error: "Apply only one readiness label to an implementation contract." };
   }
 
   const recorded = feedbackState(previousFeedback?.body);
-  if (currentReadyLabels.length === 1 && await activeApproval(apiClient, recorded, revision, currentReadyLabels[0])) {
-    return { valid: true, approved: true, label: recorded.label, reviewer: recorded.reviewer };
+  const labelEvent = currentReadyLabels.length === 1 ? latestLabelEvent(issueEvents, currentReadyLabels[0]) : null;
+  if (currentReadyLabels.length === 1 && await activeApproval(apiClient, recorded, revision, currentReadyLabels[0], labelEvent)) {
+    return {
+      valid: true,
+      approved: true,
+      label: recorded.label,
+      reviewer: recorded.reviewer,
+      reviewEventId: recorded.reviewEventId,
+    };
   }
 
-  const grant = readinessGrant(currentEvent, issue, result, revision, recorded, currentReadyLabels);
+  const observedEventId = labelEvent?.id == null ? null : String(labelEvent.id);
+  const grant = readinessGrant(currentEvent, issue, result, revision, publishedAt, recorded, currentReadyLabels, labelEvent);
   if (grant.candidate) {
-    if (!grant.valid) return { valid: false, error: grant.error };
+    if (!grant.valid) return { valid: false, error: grant.error, observedEventId };
     const authority = await reviewerAuthority(apiClient, grant.reviewer);
     if (!authority.authorized) {
       return {
         valid: false,
+        observedEventId,
         error: authority.error
           ? `Could not verify @${grant.reviewer}'s review authority: ${authority.error}`
           : `@${grant.reviewer} is not authorized to grant readiness. Use a repository admin, maintainer, or collaborator with the triage role.`,
       };
     }
-    return { valid: true, approved: true, label: grant.label, reviewer: grant.reviewer };
+    if (grant.pending) return { valid: true, approved: false, deferred: true, observedEventId };
+    return {
+      valid: true,
+      approved: true,
+      label: grant.label,
+      reviewer: grant.reviewer,
+      reviewEventId: grant.reviewEventId,
+    };
   }
 
-  if (currentReadyLabels.length === 0) return { valid: true, approved: false };
+  if (currentReadyLabels.length === 0) {
+    const removedLabel = readyLabels.has(currentEvent.label?.name) ? currentEvent.label.name : recorded?.label;
+    const removedEvent = removedLabel ? latestLabelEvent(issueEvents, removedLabel) : null;
+    return { valid: true, approved: false, observedEventId: removedEvent?.id == null ? null : String(removedEvent.id) };
+  }
 
   return {
     valid: false,
+    observedEventId,
     error: "Readiness is not bound to an authorized review of the current contract revision. Remove the stale attempt and review the published revision again.",
   };
 }
 
-function readinessGrant(currentEvent, issue, result, revision, recorded, currentReadyLabels) {
-  const label = currentEvent.action === "labeled" && readyLabels.has(currentEvent.label?.name)
-    ? currentEvent.label.name
-    : currentEvent.action === "opened" && result.contract.type === "issue-body" && currentReadyLabels.length === 1
-      ? currentReadyLabels[0]
-      : null;
-  if (!label) return { candidate: false };
-  const reviewer = currentEvent.sender?.login;
+function readinessGrant(currentEvent, issue, result, revision, publishedAt, recorded, currentReadyLabels, labelEvent) {
+  if (currentReadyLabels.length !== 1) return { candidate: false };
+  const label = currentReadyLabels[0];
+  if (!labelEvent || labelEvent.id == null || labelEvent.event !== "labeled") {
+    return { candidate: true, valid: false, error: "The authoritative issue timeline does not contain the current readiness label event." };
+  }
+  const reviewer = labelEvent.actor?.login;
   if (!reviewer) return { candidate: true, valid: false, error: "The readiness event does not identify its actor." };
-  if (!currentReadyLabels.includes(label)) {
-    return { candidate: true, valid: false, error: `The stale readiness event no longer matches the issue's \`${label}\` label.` };
+  const reviewEventId = String(labelEvent.id);
+  const exactRevisionWasObserved = recorded?.revision === revision && (
+    (recorded.status === "approved" && recorded.reviewEventId && recorded.reviewEventId !== reviewEventId)
+    || (recorded.status === "awaiting-review" && Object.hasOwn(recorded, "observedEventId") && recorded.observedEventId !== reviewEventId)
+  );
+  const sourcePredatesReview = publishedAt && labelEvent.created_at && publishedAt < labelEvent.created_at;
+  const currentEventIsReview = currentEventMatchesLabelEvent(currentEvent, issue, result, labelEvent);
+  if (!exactRevisionWasObserved && !sourcePredatesReview && !currentEventIsReview) {
+    const followsRecordedApproval = recorded?.status === "approved"
+      && recorded.reviewEventId
+      && recorded.reviewEventId !== reviewEventId;
+    if (result.contract.type === "issue-body" && followsRecordedApproval) {
+      return { candidate: true, valid: true, pending: true, reviewer };
+    }
+    return { candidate: true, valid: false, error: "The readiness event predates the current contract revision. Review the published revision again." };
   }
-  if (currentEvent.issue?.body !== issue.body || currentEvent.issue?.updated_at !== issue.updated_at) {
-    return { candidate: true, valid: false, error: "The readiness event predates the current authoritative issue state. Review the published revision again." };
-  }
-  if (result.contract.type === "comment" && !(recorded?.status === "awaiting-review" && recorded.revision === revision)) {
+  if (result.contract.type === "comment" && recorded?.revision !== revision) {
     return {
       candidate: true,
       valid: false,
       error: "Wait for the validator to publish the exact latest Agent Brief revision before applying readiness.",
     };
   }
-  return { candidate: true, valid: true, label, reviewer };
+  return { candidate: true, valid: true, label, reviewer, reviewEventId };
 }
 
-async function activeApproval(apiClient, recorded, revision, label) {
-  if (recorded?.status !== "approved" || recorded.revision !== revision || recorded.label !== label || !recorded.reviewer) {
+function currentEventMatchesLabelEvent(currentEvent, issue, result, labelEvent) {
+  const labelsMatch = currentEvent.action === "labeled"
+    ? currentEvent.label?.name === labelEvent.label?.name
+    : currentEvent.action === "opened" && result.contract.type === "issue-body";
+  return labelsMatch
+    && currentEvent.sender?.login === labelEvent.actor?.login
+    && currentEvent.issue?.updated_at === labelEvent.created_at
+    && currentEvent.issue?.body === issue.body;
+}
+
+async function activeApproval(apiClient, recorded, revision, label, labelEvent) {
+  if (recorded?.status !== "approved"
+    || recorded.revision !== revision
+    || recorded.label !== label
+    || !recorded.reviewer
+    || !recorded.reviewEventId
+    || labelEvent?.event !== "labeled"
+    || String(labelEvent.id) !== recorded.reviewEventId) {
     return false;
   }
   return (await reviewerAuthority(apiClient, recorded.reviewer)).authorized;
+}
+
+function latestLabelEvent(issueEvents, label) {
+  return [...issueEvents].reverse().find((candidate) => {
+    return ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label;
+  }) ?? null;
 }
 
 async function reviewerAuthority(apiClient, login) {
@@ -771,14 +834,14 @@ function invalidFeedback(errors) {
   return `${feedbackMarker}\n## Issue contract needs attention\n\n${errors.map((error) => `- ${error}`).join("\n")}\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.`;
 }
 
-function awaitingReviewFeedback(kind, revision, reason = null) {
-  const state = JSON.stringify({ status: "awaiting-review", revision, label: null, reviewer: null });
+function awaitingReviewFeedback(kind, revision, observedEventId = null, reason = null) {
+  const state = JSON.stringify({ status: "awaiting-review", revision, label: null, reviewer: null, observedEventId });
   const explanation = reason ? `\n\nThe last readiness attempt was rejected: ${reason}` : "";
   return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${revision}\`.${explanation}\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
 }
 
-function approvedFeedback(kind, revision, label, reviewer) {
-  const state = JSON.stringify({ status: "approved", revision, label, reviewer });
+function approvedFeedback(kind, revision, label, reviewer, reviewEventId) {
+  const state = JSON.stringify({ status: "approved", revision, label, reviewer, reviewEventId });
   return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${revision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`;
 }
 
