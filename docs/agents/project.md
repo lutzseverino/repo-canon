@@ -20,6 +20,6 @@ Preserve the full accepted policy and verify each ticket's remaining blockers
 before implementation.
 
 Use `docs/development/README.md` for the current validation requirements. The
-owner selected MIT with `Copyright (c) 2026 Jasper Lutz Severino`; ticket #14
-applies the license and preserves upstream notices. Licensing implementation
-and source acceptance remain outstanding.
+root MIT License, with `Copyright (c) 2026 Jasper Lutz Severino`, covers Repo
+Canon's original material. Third-party material retains its accompanying
+licenses and notices. Source acceptance remains outstanding.

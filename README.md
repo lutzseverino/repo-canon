@@ -18,7 +18,12 @@ outstanding. There is no adoption-ready release yet.
 - [Complete design drafts](design-review.md)
 - [Documentation index](docs/README.md)
 - [Adoption compatibility](docs/development/adoption-compatibility.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md)
 
 ## Contributing
 
 [Contribution guidelines](CONTRIBUTING.md)
+
+## License
+
+[MIT License](LICENSE)
