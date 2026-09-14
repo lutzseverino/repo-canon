@@ -239,8 +239,8 @@ function setupLabels(request) {
     return;
   }
   const permissions = repository.permissions ?? {};
-  if (!permissions.triage && !permissions.push && !permissions.maintain && !permissions.admin) {
-    result('blocked', `GitHub label setup requires triage, write, maintain, or admin access to ${inferred.identity}.`);
+  if (!permissions.push && !permissions.maintain && !permissions.admin) {
+    result('blocked', `GitHub label setup requires write, maintain, or admin access to ${inferred.identity}.`);
     return;
   }
 

@@ -47,7 +47,7 @@ for (let index = 0; index < args.length; index += 1) {
 if (method === 'GET' && !endpoint.includes('/labels')) {
   process.stdout.write(`${JSON.stringify({
     full_name: state.repo,
-    permissions: state.permissions ?? { admin: false, maintain: false, push: false, triage: true, pull: true },
+    permissions: state.permissions ?? { admin: false, maintain: false, push: true, triage: true, pull: true },
   })}\n`);
   process.exit(0);
 }

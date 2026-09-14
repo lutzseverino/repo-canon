@@ -87,16 +87,21 @@ function assertProjectUnchanged(before, scenario) {
   assert.deepEqual(snapshot(scenario.project.root), before, 'remote setup must not change project content');
 }
 
-test('provisions every canonical label in an empty repository and preserves unrelated labels', t => {
-  const unrelated = { name: 'documentation', color: '0075ca', description: 'Docs' };
-  const scenario = setup(t, { state: { labels: [unrelated] } });
+test('provisions every canonical label in an empty repository and is unchanged on repeat', t => {
+  const scenario = setup(t);
   const before = snapshot(scenario.project.root);
   const outcome = scenario.invoke();
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, 'changed');
   assert.match(outcome.result.message, /created 12 labels/);
-  assert.deepEqual(scenario.readState().labels, [unrelated, ...canonicalLabels]);
+  assert.deepEqual(scenario.readState().labels, canonicalLabels);
+  assertProjectUnchanged(before, scenario);
+
+  const repeat = scenario.invoke();
+  assert.equal(repeat.status, 0, repeat.stderr);
+  assert.equal(repeat.result.status, 'unchanged');
+  assert.equal(scenario.readState().mutations, 12);
   assertProjectUnchanged(before, scenario);
 });
 
@@ -237,13 +242,13 @@ test('blocks for unavailable or incompatible tools and unauthenticated access', 
 
 test('blocks without label-management permission before changing labels', t => {
   const scenario = setup(t, { state: {
-    permissions: { admin: false, maintain: false, push: false, triage: false, pull: true },
+    permissions: { admin: false, maintain: false, push: false, triage: true, pull: true },
   } });
   const outcome = scenario.invoke();
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, 'blocked');
-  assert.match(outcome.result.message, /triage, write, maintain, or admin access/);
+  assert.match(outcome.result.message, /write, maintain, or admin access/);
   assert.equal(scenario.readState().mutations ?? 0, 0);
 });
 
