@@ -25,7 +25,8 @@ visible content. For category-labeled triaged requests, the latest Agent Brief
 is the contract and contract-like headings in the intake body remain context.
 Native specifications and implementation tickets remain authoritative when the
 issue does not carry a triage category. Wayfinder labels select the Wayfinder
-contract before either form.
+contract before either form. A category-labeled `wontfix` outcome does not
+require an Agent Brief.
 Native parent and blocking relationships are read from GitHub. Explicit issue
 links in rendered `Parent` and `Blocked by` section content are used
 when native relationships are absent or the native dependency endpoint is
@@ -68,6 +69,6 @@ local HTTP server. They exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, repeat-safe feedback,
 corrections, pull request exclusion, and hostile Markdown that must remain
-inert. The `Tests` workflow runs the complete repository test suite with
+inert. The `CI` workflow runs the complete repository test suite with
 `npm test`; these fixtures do not claim semantic review or authorized revision
 association.

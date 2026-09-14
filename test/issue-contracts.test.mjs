@@ -157,7 +157,7 @@ test("all public forms accept harmless heading variations and absent optional an
     },
     {
       name: "specification",
-      body: "# Problem Statement\n\nSearch is slow.\n\n## Solution\n\nAdd caching.\n\n### User Stories\n\n1. As a user, I want fast search.\n\n#### Implementation Decisions\n\n_No response_\n\n##### Testing Decisions\n\n_No response_\n\n###### Out Of Scope\n\nNone.\n\n## Further Notes\n\n_No response_",
+      body: "#### Problem Statement\n\nSearch is slow.\n\n#### SOLUTION\n\nAdd caching.\n\n#### User Stories\n\n1. As a user, I want fast search.\n\n#### Implementation Decisions\n\n_No response_\n\n#### Testing Decisions\n\n_No response_\n\n#### Out Of Scope\n\nNone.\n\n#### Further Notes\n\n_No response_",
       labels: [{ name: "ready-for-agent" }],
     },
   ];
@@ -174,7 +174,7 @@ test("headings inside form answers do not change the recognized contract", async
   const result = await exercise({
     issue: {
       number: 42,
-      body: "### Problem\n\nSearch is slow.\n\n## What to build\n\nThis heading is supporting detail, not a ticket.\n\n### Desired outcome\n\nSearch finishes quickly.",
+      body: "### Problem\n\nSearch is slow.\n\n#### What to build\n\nThis heading is supporting detail, not a ticket.\n\n### Desired outcome\n\nSearch finishes quickly.",
       labels: [{ name: "enhancement" }, { name: "needs-triage" }],
       state: "open",
     },
@@ -188,7 +188,7 @@ test("a nested heading can begin a required form answer", async () => {
   const result = await exercise({
     issue: {
       number: 42,
-      body: "### Problem\n\n#### Context\n\nSearch is slow.\n\n### Desired outcome\n\nSearch finishes quickly.",
+      body: "### Problem\n\n#### Actual behavior\n\nSearch is slow.\n\n### Desired outcome\n\nSearch finishes quickly.",
       labels: [{ name: "enhancement" }, { name: "needs-triage" }],
       state: "open",
     },
@@ -419,13 +419,21 @@ test("contract authority follows the planning, native-body, and triaged-brief de
       labels: [{ name: "wayfinder:map" }],
       expectedKind: "Wayfinder map",
     },
+    {
+      name: "triaged wontfix request",
+      body: "Free-form request declined with an explanation.",
+      labels: [{ name: "enhancement" }, { name: "wontfix" }],
+      expectedKind: "triaged wontfix request",
+      comments: [],
+      state: "closed",
+    },
   ];
 
   for (const example of examples) {
     await context.test(example.name, async () => {
       const result = await exercise({
-        issue: { number: 42, body: example.body, labels: example.labels, state: "open" },
-        comments: [{ id: 1, body: completeAgentBrief, user: { login: "reporter" } }],
+        issue: { number: 42, body: example.body, labels: example.labels, state: example.state ?? "open" },
+        comments: example.comments ?? [{ id: 1, body: completeAgentBrief, user: { login: "reporter" } }],
       });
 
       assert.equal(result.code, 0, result.stderr);

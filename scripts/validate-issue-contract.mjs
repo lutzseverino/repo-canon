@@ -37,6 +37,14 @@ const contractSectionNames = new Set([
   "user stories",
   "what to build",
 ]);
+const contractFields = new Map([
+  ["bug report", new Set(["steps to reproduce", "expected behavior", "actual behavior", "environment", "additional context"])],
+  ["feature request", new Set(["problem", "desired outcome", "proposed approach", "additional context"])],
+  ["specification", new Set(["problem statement", "solution", "user stories", "implementation decisions", "testing decisions", "out of scope", "further notes"])],
+  ["implementation ticket", new Set(["parent", "what to build", "acceptance criteria", "blocked by"])],
+]);
+const wayfinderMapFields = new Set(["destination", "notes", "decisions so far", "not yet specified", "out of scope"]);
+const wayfinderChildFields = new Set(["parent", "question"]);
 
 const environment = process.env;
 const event = JSON.parse(await readFile(required("GITHUB_EVENT_PATH"), "utf8"));
@@ -238,16 +246,19 @@ function isHidden(node) {
 
 function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   const labels = new Set((issue.labels ?? []).map(labelName));
-  const sections = parseSections(issue.body ?? "");
+  const body = issue.body ?? "";
+  let sections = parseSections(body);
   const errors = [];
 
   if (labels.has("wayfinder:map")) {
+    sections = parseSections(body, wayfinderMapFields);
     validateWayfinderMap(sections, labels, errors);
     return outcome("Wayfinder map", errors, labels, false);
   }
 
   const wayfinderChildren = [...labels].filter((label) => childLabels.has(label));
   if (wayfinderChildren.length > 0) {
+    sections = parseSections(body, wayfinderChildFields);
     errors.push(...relationshipErrors);
     validateWayfinderChild(sections, labels, wayfinderChildren, parent, errors);
     return outcome("Wayfinder child", errors, labels, false);
@@ -255,6 +266,10 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
 
   const brief = latestAgentBrief(comments);
   const hasTriageCategory = [...labels].some((label) => categoryLabels.has(label));
+  if (hasTriageCategory && labels.has("wontfix")) {
+    validateTriagedLabels(labels, null, errors);
+    return outcome("triaged wontfix request", errors, labels, true);
+  }
   if (brief && hasTriageCategory) {
     validateTriagedLabels(labels, null, errors);
     validateAgentBrief(brief.body, labels, errors);
@@ -262,6 +277,7 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   }
 
   const contractKind = identifyContract(sections);
+  sections = parseSections(body, contractFields.get(contractKind));
   if (!hasTriageCategory && contractKind === "specification") {
     requireSections(sections, ["Problem Statement", "Solution", "User Stories", "Out of Scope"], errors);
     for (const name of ["Implementation Decisions", "Testing Decisions", "Further Notes"]) {
@@ -330,20 +346,32 @@ function outcome(kind, errors, labels, triaged) {
   return { valid: errors.length === 0, kind, errors: [...new Set(errors)], labels, triaged };
 }
 
-function parseSections(markdown) {
+function parseSections(markdown, acceptedNames = contractSectionNames) {
   markdown = normalizeMarkdown(markdown);
   const markdownHeadings = findMarkdownHeadings(markdown);
-  const headings = markdownHeadings.filter((heading) => contractSectionNames.has(normalize(heading.name)));
+  const headings = contractHeadings(markdownHeadings, acceptedNames);
   const sections = new Map();
-  for (let index = 0; index < headings.length; index += 1) {
-    const heading = headings[index];
+  for (const heading of headings) {
     const name = normalize(heading.name);
     const start = heading.index + heading.length;
     const nextPeer = markdownHeadings.find((candidate) => candidate.index > heading.index && candidate.level <= heading.level);
-    const end = Math.min(headings[index + 1]?.index ?? markdown.length, nextPeer?.index ?? markdown.length);
+    const end = nextPeer?.index ?? markdown.length;
     sections.set(name, markdown.slice(start, end).trim());
   }
   return sections;
+}
+
+function contractHeadings(markdownHeadings, acceptedNames) {
+  const headings = [];
+  const hierarchy = [];
+  for (const heading of markdownHeadings) {
+    while (hierarchy.length > 0 && heading.level <= hierarchy.at(-1).level) hierarchy.pop();
+    const insideContractSection = hierarchy.some((entry) => entry.contractSection);
+    const contractSection = Boolean(acceptedNames?.has(normalize(heading.name))) && !insideContractSection;
+    if (contractSection) headings.push(heading);
+    hierarchy.push({ level: heading.level, contractSection });
+  }
+  return headings;
 }
 
 function findMarkdownHeadings(markdown, acceptedNames = null) {
