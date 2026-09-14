@@ -32,6 +32,30 @@ triaging agent reviews it and applies the applicable readiness state. Editing
 or replacing it invalidates readiness and requires renewed review. A structural
 check cannot authorize an agent or approve the meaning of a contract.
 
+The issue-contract workflow publishes the current contract revision in its one
+maintained feedback comment. A revision is a SHA-256 association over the
+selected contract kind, exact source bytes and source identity, and the source
+edit revision. The comment also records the latest observed readiness-label
+transition, or the exact GitHub issue-event ID and actor that approved the
+revision. Native parent and blocker relationships remain review context rather
+than part of the body or Brief revision; changing an explicit relationship in
+the contract source changes its exact bytes. An unedited direct specification or
+ticket created with exactly one readiness label can be associated from its
+authoritative creation snapshot. For every later review and for every Agent
+Brief, wait for the exact revision notice before applying readiness. Later
+readiness changes use the complete authoritative label-event timeline. Removing
+and re-adding readiness always creates a new review event, and delayed or
+repeated workflows preserve only the latest event's association.
+
+Applying `ready-for-agent` or `ready-for-human` is the review action. The actor
+must currently have the repository `admin`, `maintain`, or `triage` role. The
+triage role is the explicit authorization for a triaging agent. Names, author
+associations, bot identity, headings, preambles, and structural success do not
+grant authority. On a triaged request, apply the new readiness label directly;
+the workflow removes the previous nonterminal workflow state after it verifies
+the review. Wayfinder planning issues do not use readiness labels; their
+eligibility continues to use open state, assignment, and blockers.
+
 Incomplete or changed contracts lose readiness. Automation maintains one
 actionable feedback comment and returns corrected work to review rather than
 automatically declaring it ready. Use [triage labels](triage-labels.md) for the
