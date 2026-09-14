@@ -25,6 +25,11 @@ async function exercise({
   issueEventPages,
 }) {
   const requests = [];
+  for (const comment of [...comments, ...(commentPages?.flat() ?? [])]) {
+    if (comment.body?.includes("repo-canon:issue-contract-state") && !comment.updated_at) {
+      comment.updated_at = "2026-09-14T16:59:00Z";
+    }
+  }
   const effectiveIssueEventPages = issueEventPages ?? [issueEvents ?? fixtureIssueEvents({ comments, event, issue })];
   const server = createServer(async (request, response) => {
     let body = "";
@@ -911,6 +916,35 @@ test("a repeated multiply-ready opening cannot approve the one remaining label",
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
 });
 
+test("a delayed opening cannot treat a later same-actor re-add as the creation review", async () => {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    created_at: "2026-09-14T17:00:00Z",
+    updated_at: "2026-09-14T17:02:00Z",
+  };
+  const result = await exercise({
+    issue,
+    issueEvents: [
+      { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+      { id: 102, event: "unlabeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:01:00Z" },
+      { id: 103, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:02:00Z" },
+    ],
+    event: {
+      action: "opened",
+      issue: { number: 42, body: issue.body, labels: issue.labels, created_at: issue.created_at, updated_at: issue.created_at },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
 test("a triage-role reviewer can bind the latest Agent Brief after the exact revision is published", async () => {
   const brief = {
     id: 12,
@@ -990,6 +1024,42 @@ test("a triaged Agent Brief cannot gain readiness before its exact revision is p
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
   const feedback = result.requests.find(({ method, url }) => method === "POST" && url.endsWith("/comments"));
   assert.match(JSON.parse(feedback.body).body, /wait for the validator to publish/i);
+});
+
+test("a readiness event that raced ahead of the revision notice cannot approve it", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "awaiting-review", revision: bodyRevision(issue), observedEventId: null }),
+    updated_at: "2026-09-14T17:02:00Z",
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    issueEvents: [{
+      id: 101,
+      event: "labeled",
+      label: { name: "ready-for-agent" },
+      actor: { login: "maintainer" },
+      created_at: "2026-09-14T17:01:00Z",
+    }],
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: "2026-09-14T17:01:00Z" },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
 });
 
 test("write access, a readiness label, and bot identity do not establish review authority", async (context) => {
@@ -1398,13 +1468,14 @@ test("a same-second direct edit requires a revision notice before authorized re-
   assert.equal(delayedRemoval.code, 1);
   assert.ok(delayedRemoval.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
   assert.match(comments.find(({ id }) => id === 13).body, /"observedEventId":"103"/);
+  comments.find(({ id }) => id === 13).updated_at = "2026-09-14T17:02:00Z";
 
   const freshReview = await exercise({
     ...common,
     issueEvents: [
       ...issueEvents,
       { id: 104, event: "unlabeled", label: { name: "ready-for-agent" }, actor: { login: "github-actions[bot]" }, created_at: "2026-09-14T17:02:00Z" },
-      { id: 105, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "second-maintainer" }, created_at: "2026-09-14T17:02:00Z" },
+      { id: 105, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "second-maintainer" }, created_at: "2026-09-14T17:03:00Z" },
     ],
     event: {
       action: "labeled",
@@ -1644,5 +1715,7 @@ test("the workflow covers issue and comment changes using default-branch code", 
   }
   assert.match(workflow, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
   assert.match(workflow, /issues: write/);
+  assert.match(workflow, /group: issue-contract-\$\{\{ github\.event\.issue\.number \}\}/);
+  assert.match(workflow, /cancel-in-progress: false/);
   assert.doesNotMatch(workflow, /github\.event\.issue\.body/);
 });
