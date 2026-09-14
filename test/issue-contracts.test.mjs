@@ -8,7 +8,16 @@ import test from "node:test";
 
 const repository = "example/repository";
 
-async function exercise({ issue, comments = [], commentPages, blockedBy = [], parent = null, event = {}, relatedIssues = {} }) {
+async function exercise({
+  issue,
+  comments = [],
+  commentPages,
+  blockedBy = [],
+  blockedByStatus = 200,
+  parent = null,
+  event = {},
+  relatedIssues = {},
+}) {
   const requests = [];
   const server = createServer(async (request, response) => {
     let body = "";
@@ -30,7 +39,8 @@ async function exercise({ issue, comments = [], commentPages, blockedBy = [], pa
       return json(response, 200, commentPages?.[1] ?? []);
     }
     if (request.method === "GET" && request.url === `${issuePath}/dependencies/blocked_by?per_page=100`) {
-      return json(response, 200, blockedBy);
+      const responseBody = blockedByStatus === 200 ? blockedBy : { message: "Issue dependencies are unavailable" };
+      return json(response, blockedByStatus, responseBody);
     }
     if (request.method === "GET" && request.url === `${issuePath}/parent`) {
       return parent ? json(response, 200, parent) : json(response, 404, { message: "No parent issue found" });
@@ -368,6 +378,25 @@ test("explicit parent and blocker links are read when native relationships are a
   assert.equal(result.code, 0, result.stderr);
   assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/7"));
   assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/41"));
+});
+
+test("explicit blocker links are used when the native dependency endpoint is unavailable", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n```md\n#999\n```\n\nhttps://github.com/example/repository/issues/41",
+      labels: [{ name: "ready-for-agent" }],
+      state: "open",
+    },
+    blockedByStatus: 404,
+    relatedIssues: {
+      "/repos/example/repository/issues/41": { number: 41, state: "open", labels: [] },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/41"));
+  assert.ok(!result.requests.some(({ url }) => url === "/repos/example/repository/issues/999"));
 });
 
 test("an unresolvable blocker link removes readiness with actionable feedback", async () => {

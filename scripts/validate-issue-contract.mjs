@@ -117,11 +117,12 @@ function createApi({ baseUrl, repository, token }) {
     return (await requestResponse(path, options)).data;
   }
 
-  async function paginate(path) {
+  async function paginate(path, options = {}) {
     const values = [];
     let next = path;
     while (next) {
-      const response = await requestResponse(next);
+      const response = await requestResponse(next, options);
+      if (!response.data) break;
       values.push(...response.data);
       next = response.link?.match(/<([^>]+)>;\s*rel="next"/)?.[1] ?? null;
     }
@@ -131,10 +132,9 @@ function createApi({ baseUrl, repository, token }) {
   return {
     getIssue: (number) => request(`${issuePath}/${number}`),
     getParent: (number) => request(`${issuePath}/${number}/parent`, { allowNotFound: true }),
-    getUrl: (url) => request(url),
     getOptionalUrl: (url) => request(url, { allowNotFound: true }),
     listComments: (number) => paginate(`${issuePath}/${number}/comments?per_page=100`),
-    listBlockedBy: (number) => paginate(`${issuePath}/${number}/dependencies/blocked_by?per_page=100`),
+    listBlockedBy: (number) => paginate(`${issuePath}/${number}/dependencies/blocked_by?per_page=100`, { allowNotFound: true }),
     removeLabel: (number, label) => request(`${issuePath}/${number}/labels/${encodeURIComponent(label)}`, { method: "DELETE" }),
     addLabels: (number, labels) => request(`${issuePath}/${number}/labels`, { method: "POST", body: JSON.stringify({ labels }) }),
     createComment: (number, body) => request(`${issuePath}/${number}/comments`, { method: "POST", body: JSON.stringify({ body }) }),
@@ -176,20 +176,22 @@ function issueReferences(value = "") {
   const seen = new Set();
   const repository = required("GITHUB_REPOSITORY");
   const expression = /https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/issues\/(\d+)|(?:^|[\s(])#(\d+)\b/gim;
-  for (const match of value.matchAll(expression)) {
-    const reference = match[4]
-      ? `/repos/${repository}/issues/${match[4]}`
-      : `/repos/${match[1]}/${match[2]}/issues/${match[3]}`;
-    if (!seen.has(reference)) {
-      seen.add(reference);
-      references.push(reference);
+  forEachUnfencedLine(value, (line) => {
+    for (const match of line.matchAll(expression)) {
+      const reference = match[4]
+        ? `/repos/${repository}/issues/${match[4]}`
+        : `/repos/${match[1]}/${match[2]}/issues/${match[3]}`;
+      if (!seen.has(reference)) {
+        seen.add(reference);
+        references.push(reference);
+      }
     }
-  }
+  });
   return references;
 }
 
 function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
-  const labels = new Set((issue.labels ?? []).map((label) => typeof label === "string" ? label : label.name));
+  const labels = new Set((issue.labels ?? []).map(labelName));
   const sections = parseSections(issue.body ?? "");
   const errors = [...relationshipErrors];
 
@@ -354,9 +356,13 @@ function validateWayfinderChild(sections, labels, childLabelList, parent, errors
   requireSection(sections, "Question", errors);
   if (!parent) {
     errors.push("Link the Wayfinder child to its parent map using the native parent relationship or a `Parent` section.");
-  } else if (!(parent.labels ?? []).some((label) => (typeof label === "string" ? label : label.name) === "wayfinder:map")) {
+  } else if (!(parent.labels ?? []).some((label) => labelName(label) === "wayfinder:map")) {
     errors.push("Link the Wayfinder child to an issue labeled `wayfinder:map`.");
   }
+}
+
+function labelName(label) {
+  return typeof label === "string" ? label : label.name;
 }
 
 function validateTriagedLabels(labels, expectedCategory, errors) {

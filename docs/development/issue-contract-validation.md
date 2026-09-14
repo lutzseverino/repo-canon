@@ -18,8 +18,9 @@ The validator recognizes these contracts:
 Heading levels and casing do not affect recognition. Required fields reject
 empty content, template comments, and GitHub's `_No response_` placeholder.
 Native parent and blocking relationships are read from GitHub. Explicit issue
-links in `Parent` and `Blocked by` sections are used when native relationships
-are absent. An open blocker does not make a complete contract invalid.
+links outside fenced examples in `Parent` and `Blocked by` sections are used
+when native relationships are absent or the native dependency endpoint is
+unavailable. An open blocker does not make a complete contract invalid.
 
 Triaged bug and feature requests must carry exactly one category (`bug` or
 `enhancement`) and one workflow state. Direct specifications and implementation
