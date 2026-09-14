@@ -29,6 +29,7 @@ const skillNames = [
   'writing-for-agents',
 ];
 const sharedFiles = [
+  'AGENTS.md',
   'CONTRIBUTING.md',
   'docs/agents/README.md',
   'docs/agents/domain.md',
@@ -83,7 +84,6 @@ function createRepository(name, skills, { context, project, development, files =
   const root = join(fixtureRoot, name);
   mkdirSync(root, { recursive: true });
   for (const path of sharedFiles) cpSync(join(sourceRoot, path), join(root, path), { recursive: true });
-  write(root, 'AGENTS.md', `# Agent guidance\n\nBefore changing this repository, read \`CONTRIBUTING.md\` and \`docs/agents/project.md\`. Before using domain terms, read \`CONTEXT.md\`. For setup and validation, read \`docs/development/README.md\`.\n`);
   write(root, 'docs/agents/project.md', project);
   write(root, 'CONTEXT.md', context);
   write(root, 'docs/development/README.md', development);
@@ -93,6 +93,7 @@ function createRepository(name, skills, { context, project, development, files =
   git(root, ['init', '--quiet', '--initial-branch=main']);
   git(root, ['config', 'user.name', 'Repo Canon Exercise']);
   git(root, ['config', 'user.email', 'exercise@example.invalid']);
+  git(root, ['config', 'commit.gpgsign', 'false']);
   git(root, ['add', '--all']);
   git(root, ['commit', '--quiet', '-m', `chore: establish ${name} exercise`]);
   return { path: root, skills, head: git(root, ['rev-parse', 'HEAD']) };
@@ -158,10 +159,9 @@ repositories['wait-what'] = createRepository('wait-what', ['wait-what'], {
 
 repositories['writing-for-agents'] = createRepository('writing-for-agents', ['writing-for-agents'], {
   context: `# Catalog sync\n\nLanguage for synchronizing product catalogs.\n\n## Language\n\n**Catalog snapshot**:\nThe complete supplier catalog observed during one synchronization.\n_Avoid_: Data dump\n`,
-  project: `# Catalog sync agent guidance\n\nThis disposable fixture has two branches. Before changing synchronization behavior, read \`docs/agents/sync.md\`. Before changing supplier fixtures, read \`docs/agents/fixtures.md\`. Use \`npm test\` for JavaScript changes.\n`,
+  project: `# Catalog sync agent guidance\n\nThis disposable fixture needs clear routing. Always be careful and thorough. Always inspect everything before doing anything. Read docs/agents/sync.md before changing synchronization behavior. Read docs/agents/fixtures.md before changing supplier fixtures. Read both files whenever doing catalog work. Make sure to follow all relevant instructions and do not forget the tests.\n`,
   development: `# Development\n\nUse Node.js 24. Run \`npm test\` for JavaScript changes. Documentation-only pointer edits use \`git diff --check\`.\n`,
   files: {
-    'AGENTS.md': `# Agent guidance\n\nAlways be careful and thorough. Always inspect everything before doing anything. Read docs/agents/project.md before changing synchronization behavior. Read docs/agents/project.md before changing supplier fixtures. Read docs/agents/project.md whenever doing catalog work. Make sure to follow all relevant instructions and do not forget the tests.\n`,
     'docs/agents/sync.md': `# Synchronization behavior\n\nPreserve supplier ordering in each Catalog snapshot. Run \`npm test\` after behavior changes.\n`,
     'docs/agents/fixtures.md': `# Supplier fixtures\n\nKeep fixture supplier names fictional and use the reserved \`.example\` domain.\n`,
     'package.json': `${JSON.stringify({ name: 'catalog-sync-exercise', private: true, type: 'module', scripts: { test: 'node --test' } }, null, 2)}\n`,

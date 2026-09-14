@@ -40,6 +40,8 @@ test('builds scenario-specific repositories using every pinned productivity skil
   for (const repository of Object.values(manifest.repositories)) {
     assert.match(repository.head, /^[0-9a-f]{40}$/);
     assert.equal(execFileSync('git', ['status', '--short'], { cwd: repository.path, encoding: 'utf8' }), '');
+    assert.equal(readFileSync(join(repository.path, 'AGENTS.md'), 'utf8'), readFileSync(join(sourceRoot, 'AGENTS.md'), 'utf8'));
+    assert.equal(execFileSync('git', ['config', '--get', 'commit.gpgsign'], { cwd: repository.path, encoding: 'utf8' }).trim(), 'false');
     assert.ok(readFileSync(join(repository.path, 'docs/agents/project.md'), 'utf8').includes('disposable'));
     assert.ok(readFileSync(join(repository.path, 'CONTEXT.md'), 'utf8').includes('## Language'));
     assert.ok(readFileSync(join(repository.path, 'docs/development/README.md'), 'utf8').startsWith('# Development'));
@@ -62,7 +64,7 @@ test('fixtures expose the prerequisites each skill must actually use', (t) => {
   assert.ok(existsSync(join(repositories.teach.path, '.agents/skills/teach/RESOURCES-FORMAT.md')));
   assert.ok(readFileSync(join(repositories['to-questionnaire'].path, 'docs/decision-gap.md'), 'utf8').includes('daily volume'));
   assert.ok(readFileSync(join(repositories['wait-what'].path, 'docs/status.md'), 'utf8').includes('84 of 100'));
-  assert.ok(readFileSync(join(repositories['writing-for-agents'].path, 'AGENTS.md'), 'utf8').includes('Always be careful'));
+  assert.ok(readFileSync(join(repositories['writing-for-agents'].path, 'docs/agents/project.md'), 'utf8').includes('Always be careful'));
   assert.ok(existsSync(join(repositories['writing-for-agents'].path, '.agents/skills/writing-for-agents/SKILL-MECHANICS.md')));
 });
 
