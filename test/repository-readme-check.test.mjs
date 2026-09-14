@@ -154,7 +154,7 @@ test('blocks when licensing is missing or ambiguous instead of selecting a licen
     { name: 'unnamed license', files: { LICENSE: '\n\n' }, diagnostic: 'does not identify a license name' },
     {
       name: 'multiple names',
-      files: { LICENSE: 'MIT License OR Apache License 2.0\n' },
+      files: { LICENSE: 'MIT License / Apache License 2.0\n' },
       diagnostic: 'identifies ambiguous licensing',
     },
   ]) await t.test(example.name, st => {

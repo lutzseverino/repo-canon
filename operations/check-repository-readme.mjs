@@ -68,7 +68,8 @@ function rootLicense(projectRoot) {
   if (!name || !/\blicen[cs]e\b/i.test(name)) {
     return { blocked: `${path} does not identify a license name in its first nonempty line.` };
   }
-  if (/\b(?:or|dual(?:ly)?|multiple)\b/i.test(name) && (name.match(/\blicen[cs]e\b/gi)?.length ?? 0) > 0) {
+  const licenseMentions = name.match(/\blicen[cs]e\b/gi)?.length ?? 0;
+  if (licenseMentions > 1 || /\b(?:or|dual(?:ly)?|multiple)\b|\s(?:\/|&)\s/i.test(name)) {
     return { blocked: `${path} identifies ambiguous licensing (“${name}”).` };
   }
   return { path, name };
