@@ -1078,6 +1078,37 @@ test("stale readiness events cannot approve a newer direct contract revision", a
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
 });
 
+test("a restored direct body cannot make an old label event review the newer edit revision", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    updated_at: "2026-09-14T17:02:00Z",
+  };
+  const result = await exercise({
+    issue,
+    bodyLastEditedAt: "2026-09-14T17:02:00Z",
+    issueEvents: [{
+      id: 101,
+      event: "labeled",
+      label: { name: "ready-for-agent" },
+      actor: { login: "maintainer" },
+      created_at: "2026-09-14T17:00:00Z",
+    }],
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: "2026-09-14T17:00:00Z" },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
 test("direct body edits invalidate an approval even when the visible bytes are restored", async () => {
   const issue = {
     number: 42,

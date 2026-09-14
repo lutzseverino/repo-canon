@@ -732,7 +732,8 @@ function readinessGrant(currentEvent, issue, result, revision, publishedAt, reco
     || (recorded.status === "awaiting-review" && Object.hasOwn(recorded, "observedEventId") && recorded.observedEventId !== reviewEventId)
   );
   const sourcePredatesReview = publishedAt && labelEvent.created_at && publishedAt < labelEvent.created_at;
-  const currentEventIsReview = currentEventMatchesLabelEvent(currentEvent, issue, result, labelEvent);
+  const currentEventIsReview = currentEventMatchesLabelEvent(currentEvent, issue, result, labelEvent)
+    && (!publishedAt || !labelEvent.created_at || publishedAt === labelEvent.created_at);
   if (!exactRevisionWasObserved && !sourcePredatesReview && !currentEventIsReview) {
     const followsRecordedApproval = recorded?.status === "approved"
       && recorded.reviewEventId
