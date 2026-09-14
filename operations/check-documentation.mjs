@@ -73,13 +73,31 @@ function directoryEntries(projectRoot, path) {
 }
 
 function documentationRoots(allowedPaths) {
-  const roots = new Set([rootDocumentation]);
+  const candidates = new Set([rootDocumentation]);
   for (const path of allowedPaths) {
     const segments = path.split('/');
-    const index = segments.indexOf('docs');
-    if (index >= 0) roots.add(segments.slice(0, index + 1).join('/'));
+    const fileName = segments.pop();
+    if (fileName !== 'README.md' || segments.length === 0) continue;
+    if (documentationCategories.has(segments.at(-1))) segments.pop();
+    if (segments.length > 0) candidates.add(segments.join('/'));
   }
-  return [...roots].sort();
+
+  const roots = new Set([rootDocumentation]);
+  for (const candidate of candidates) {
+    if ([...documentationCategories].some(category => (
+      allowedPaths.some(path => path.startsWith(`${candidate}/${category}/`))
+    ))) roots.add(candidate);
+  }
+
+  const containedIndex = candidate => [...roots].some(root => (
+    candidate !== root && candidate.startsWith(`${root}/`)
+  ));
+  return {
+    roots: [...roots].sort(),
+    ambiguous: [...candidates]
+      .filter(candidate => !roots.has(candidate) && !containedIndex(candidate))
+      .sort(),
+  };
 }
 
 function documentationTree(projectRoot, root) {
@@ -101,6 +119,7 @@ function documentationTree(projectRoot, root) {
 
 function validate(projectRoot, allowedPaths) {
   const corrections = [];
+  const rootResolution = documentationRoots(allowedPaths);
   const guide = fileContent(projectRoot, developmentGuide);
   if (guide === null) {
     corrections.push(`Create ${developmentGuide} with the project's prerequisites, setup, development commands, and required validation.`);
@@ -112,7 +131,7 @@ function validate(projectRoot, allowedPaths) {
   }
 
   const markdownFiles = new Set();
-  for (const root of documentationRoots(allowedPaths)) {
+  for (const root of rootResolution.roots) {
     const indexPath = `${root}/README.md`;
     const index = fileContent(projectRoot, indexPath);
     if (index === null) {
@@ -137,6 +156,14 @@ function validate(projectRoot, allowedPaths) {
       if (content === null) corrections.push(`Create ${directoryIndex} to explain this documentation directory and link its useful contents.`);
       else if (renderedMarkdown(content).length === 0) corrections.push(`Populate ${directoryIndex} with the directory purpose and links to useful contents.`);
     }
+    for (const path of allowedPaths) {
+      if (!path.startsWith(`${root}/`) || posix.basename(path) !== 'README.md') continue;
+      const relative = path.slice(root.length + 1);
+      if (!documentationCategories.has(relative.split('/')[0])) continue;
+      if (fileContent(projectRoot, path) === null) {
+        corrections.push(`Create ${path} to explain this documentation directory and link its useful contents.`);
+      }
+    }
     for (const path of tree.markdownFiles) markdownFiles.add(path);
   }
   for (const path of allowedPaths) {
@@ -150,7 +177,10 @@ function validate(projectRoot, allowedPaths) {
       corrections.push(`${path} links to missing ${link.target}.`);
     }
   }
-  return [...new Set(corrections)];
+  return {
+    corrections: [...new Set(corrections)],
+    ambiguous: rootResolution.ambiguous,
+  };
 }
 
 function result(status, message) {
@@ -159,13 +189,23 @@ function result(status, message) {
 
 try {
   const request = readRequest();
-  const corrections = validate(request.projectRoot, request.allowedTargets.paths);
-  result(
-    corrections.length === 0 ? 'passed' : 'failed',
-    corrections.length === 0
-      ? 'Documentation navigation is valid; content placement and usefulness still require maintainer or agent review.'
-      : `Documentation navigation needs correction: ${corrections.join(' ')}`,
-  );
+  const validation = validate(request.projectRoot, request.allowedTargets.paths);
+  if (validation.ambiguous.length > 0) {
+    const ambiguity = validation.ambiguous.map(root => (
+      `Cannot determine whether ${root} is a documentation root from the confirmed paths; include its root README and at least one confirmed path under usage, development, adr, or agents, or remove the unrelated index from this declaration.`
+    )).join(' ');
+    const corrections = validation.corrections.length > 0
+      ? ` Other documentation corrections: ${validation.corrections.join(' ')}`
+      : '';
+    result('blocked', `Documentation root selection is ambiguous: ${ambiguity}${corrections}`);
+  } else {
+    result(
+      validation.corrections.length === 0 ? 'passed' : 'failed',
+      validation.corrections.length === 0
+        ? 'Documentation navigation is valid; content placement and usefulness still require maintainer or agent review.'
+        : `Documentation navigation needs correction: ${validation.corrections.join(' ')}`,
+    );
+  }
 } catch (error) {
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exitCode = 1;

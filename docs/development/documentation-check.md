@@ -7,12 +7,12 @@ through the Repository Standards public operation protocol:
   target for a single non-centered level-one title and valid rendered local
   links. A selected missing path receives a create-file diagnostic.
 - `operations/check-documentation.mjs` requires `docs/README.md` and
-  `docs/development/README.md`, derives every context-local `docs` root from
-  the confirmed individual paths, rejects populated top-level documentation
-  outside the four recognized categories at each root, checks that every
-  existing documentation directory has a nonempty `README.md`, and validates
-  rendered local links in those trees and selected migration or link-repair
-  files.
+  `docs/development/README.md`, derives every context-local documentation root
+  from confirmed root-index and category paths, rejects populated top-level
+  documentation outside the four recognized categories at each root, checks
+  that every existing documentation directory has a nonempty `README.md`, and
+  validates rendered local links in those trees and selected migration or
+  link-repair files.
 
 The Project README operation accepts individual non-root `README.md` paths.
 The documentation operation accepts individual repository-relative file paths
@@ -33,10 +33,13 @@ and parse5 resources and notices alongside each operation that imports them.
 A structurally valid check returns a zero-exit `passed` result. Correctable
 policy findings return a zero-exit `failed` result with the affected path and a
 concrete correction. Invalid JSON, protocol versions, phases, or target shapes
-produce a nonzero process error and no result object. These checks have no
-check-level blocked condition: Repository Standards reports a missing or
-incompatible runtime while probing prerequisites before invoking them, and
-reports an unexpected process or protocol failure as an execution error.
+produce a nonzero process error and no result object. The documentation check
+returns `blocked` when confirmed root-index and category paths cannot
+distinguish an arbitrary documentation root from an ordinary nested directory;
+the discovery proposal must resolve that scope question. Repository Standards
+reports a missing or incompatible runtime while probing prerequisites before
+invoking either check, and reports an unexpected process or protocol failure as
+an execution error.
 
 The checks never edit project content. They do not establish whether a component
 is a Project, whether discovery covered every Project or migration path, or
