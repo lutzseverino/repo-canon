@@ -73,6 +73,12 @@ function rootLicense(projectRoot) {
 
 function headings(markdown) {
   const found = [];
+  const centeredRanges = [...markdown.matchAll(/<div\b[^>]*\balign\s*=\s*(?:"center"|'center'|center)[^>]*>[\s\S]*?<\/div\s*>/gi)]
+    .map(match => [match.index, match.index + match[0].length]);
+  const isCentered = (index, attributes = '') => (
+    /\balign\s*=\s*(?:"center"|'center'|center)(?:\s|$)/i.test(attributes)
+      || centeredRanges.some(([start, end]) => start < index && index < end)
+  );
   const atx = /^(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$/gm;
   for (const match of markdown.matchAll(atx)) {
     const name = match[2].trim();
@@ -82,11 +88,12 @@ function headings(markdown) {
       folded: name.toLocaleLowerCase('en-US'),
       index: match.index,
       end: match.index + match[0].length,
+      centered: isCentered(match.index),
     });
   }
-  const html = /<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1\s*>/gi;
+  const html = /<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1\s*>/gi;
   for (const match of markdown.matchAll(html)) {
-    const name = match[2].replace(/<[^>]*>/g, '').trim();
+    const name = match[3].replace(/<[^>]*>/g, '').trim();
     if (!name) continue;
     found.push({
       level: Number(match[1]),
@@ -94,6 +101,7 @@ function headings(markdown) {
       folded: name.toLocaleLowerCase('en-US'),
       index: match.index,
       end: match.index + match[0].length,
+      centered: isCentered(match.index, match[2]),
     });
   }
   const setext = /^[ \t]{0,3}([^\r\n]+?)[ \t]*\r?\n[ \t]{0,3}(=+|-+)[ \t]*(?:\r?\n|$)/gm;
@@ -105,6 +113,7 @@ function headings(markdown) {
       folded: name.toLocaleLowerCase('en-US'),
       index: match.index,
       end: match.index + match[0].length,
+      centered: isCentered(match.index),
     });
   }
   return found.sort((left, right) => left.index - right.index);
@@ -127,38 +136,6 @@ function markdownStructure(markdown) {
     }
     return line;
   }).join('');
-}
-
-function findTitle(markdown) {
-  const titleCandidates = [];
-  const centeredRanges = [...markdown.matchAll(/<div\b[^>]*\balign\s*=\s*(?:"center"|'center'|center)[^>]*>[\s\S]*?<\/div\s*>/gi)]
-    .map(match => [match.index, match.index + match[0].length]);
-  const htmlTitle = /<h1\b([^>]*)>([\s\S]*?)<\/h1\s*>/gi;
-  for (const match of markdown.matchAll(htmlTitle)) {
-    const centered = /\balign\s*=\s*(?:"center"|'center'|center)(?:\s|$)/i.test(match[1])
-      || centeredRanges.some(([start, end]) => start < match.index && match.index < end);
-    const text = match[2].replace(/<[^>]*>/g, '').trim();
-    titleCandidates.push({ index: match.index, centered: centered && text.length > 0 });
-  }
-
-  const markdownTitle = /^#[ \t]+(.+?)[ \t]*#*[ \t]*$/gm;
-  for (const match of markdown.matchAll(markdownTitle)) {
-    titleCandidates.push({
-      index: match.index,
-      centered: match[1].trim().length > 0
-        && centeredRanges.some(([start, end]) => start < match.index && match.index < end),
-    });
-  }
-  const setextTitle = /^[ \t]{0,3}([^\r\n]+?)[ \t]*\r?\n[ \t]{0,3}=+[ \t]*(?:\r?\n|$)/gm;
-  for (const match of markdown.matchAll(setextTitle)) {
-    titleCandidates.push({
-      index: match.index,
-      centered: match[1].trim().length > 0
-        && centeredRanges.some(([start, end]) => start < match.index && match.index < end),
-    });
-  }
-  titleCandidates.sort((left, right) => left.index - right.index);
-  return titleCandidates[0] ?? null;
 }
 
 function sectionBody(markdown, allHeadings, name) {
@@ -188,12 +165,13 @@ function checkStructure(projectRoot, markdown, license) {
   if (markdown === null) return ['Create the root README.md.'];
   const corrections = [];
   const structuralMarkdown = markdownStructure(markdown);
-  const title = findTitle(structuralMarkdown);
+  const parsedHeadings = headings(structuralMarkdown);
+  const title = parsedHeadings.find(heading => heading.level === 1) ?? null;
   if (!title?.centered) {
     corrections.push('Center the Repository README title in a nonempty HTML h1 or a centered block.');
   }
 
-  const allHeadings = headings(structuralMarkdown).filter(heading => heading.index !== title?.index);
+  const allHeadings = parsedHeadings.filter(heading => heading.index !== title?.index);
   const recognized = allHeadings.filter(heading => recognizedSections
     .some(name => name.toLocaleLowerCase('en-US') === heading.folded));
   for (const section of recognizedSections) {
