@@ -161,25 +161,26 @@ function validate({ issue, comments, blockedBy, parent }) {
     return outcome("Wayfinder child", errors, labels, false);
   }
 
-  if (sections.has("problem statement") || sections.has("user stories")) {
+  const contractKind = identifyContract(sections);
+  if (contractKind === "specification") {
     requireSections(sections, ["Problem Statement", "Solution", "User Stories", "Out of Scope"], errors);
     return outcome("specification", errors, labels, false);
   }
 
-  if (sections.has("what to build") || sections.has("acceptance criteria") || sections.has("blocked by")) {
+  if (contractKind === "implementation ticket") {
     requireSections(sections, ["What to build", "Acceptance criteria"], errors);
     requireSection(sections, "Blocked by", errors, { allowExternalValue: blockedBy.length > 0 });
     return outcome("implementation ticket", errors, labels, false);
   }
 
-  if (sections.has("steps to reproduce") || sections.has("expected behavior") || sections.has("actual behavior")) {
+  if (contractKind === "bug report") {
     requireSections(sections, ["Steps to reproduce", "Expected behavior", "Actual behavior"], errors);
     validateTriagedLabels(labels, "bug", errors);
     validateAgentBriefIfApplicable(labels, comments, "bug", errors);
     return outcome("bug report", errors, labels, true);
   }
 
-  if (sections.has("desired outcome") || sections.has("problem")) {
+  if (contractKind === "feature request") {
     requireSections(sections, ["Problem", "Desired outcome"], errors);
     validateTriagedLabels(labels, "enhancement", errors);
     validateAgentBriefIfApplicable(labels, comments, "enhancement", errors);
@@ -195,6 +196,26 @@ function validate({ issue, comments, blockedBy, parent }) {
 
   errors.push("Use one supported issue contract: a public form, native specification or ticket, triaged Agent Brief, Wayfinder map, or labeled Wayfinder child.");
   return outcome("issue contract", errors, labels, false);
+}
+
+function identifyContract(sections) {
+  const headings = new Map([
+    ["problem statement", "specification"],
+    ["solution", "specification"],
+    ["user stories", "specification"],
+    ["what to build", "implementation ticket"],
+    ["acceptance criteria", "implementation ticket"],
+    ["blocked by", "implementation ticket"],
+    ["steps to reproduce", "bug report"],
+    ["expected behavior", "bug report"],
+    ["actual behavior", "bug report"],
+    ["problem", "feature request"],
+    ["desired outcome", "feature request"],
+  ]);
+  for (const heading of sections.keys()) {
+    if (headings.has(heading)) return headings.get(heading);
+  }
+  return null;
 }
 
 function outcome(kind, errors, labels, triaged) {
@@ -235,8 +256,9 @@ function requireSection(sections, name, errors, { allowEmpty = false, allowExter
 
 function isPlaceholder(value) {
   const withoutComments = value.replace(/<!--[\s\S]*?-->/g, "").trim();
-  if (!withoutComments) return true;
-  return /^(?:[_*]*no response[_*]*|tbd|todo|\[(?:your |add |describe |enter )?[^\]]+\]|<[^>]+>)\.?$/i.test(withoutComments);
+  const withoutEmptyTasks = withoutComments.replace(/^\s*[-+*]\s*\[[ xX]\]\s*$/gm, "").trim();
+  if (!withoutEmptyTasks) return true;
+  return /^(?:[_*]*no response[_*]*|tbd|todo|\[(?:your |add |describe |enter )?[^\]]+\]|<[^>]+>)\.?$/i.test(withoutEmptyTasks);
 }
 
 function validateWayfinderMap(sections, labels, errors) {

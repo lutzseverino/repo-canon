@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -32,7 +32,7 @@ async function exercise({ issue, comments = [], commentPages, blockedBy = [], ev
     if (request.method === "GET" && request.url === `${issuePath}/dependencies/blocked_by?per_page=100`) {
       return json(response, 200, blockedBy);
     }
-    if (request.method === "GET" && request.url in relatedIssues) {
+    if (request.method === "GET" && Object.hasOwn(relatedIssues, request.url)) {
       return json(response, 200, relatedIssues[request.url]);
     }
     if (request.method === "POST" && request.url === `${issuePath}/comments`) {
@@ -67,7 +67,7 @@ async function exercise({ issue, comments = [], commentPages, blockedBy = [], ev
     });
     return { ...result, requests };
   } finally {
-    server.close();
+    await new Promise((resolve) => server.close(resolve));
     await rm(directory, { recursive: true, force: true });
   }
 }
@@ -149,6 +149,34 @@ test("all public forms accept harmless heading variations and absent optional an
       assert.equal(result.code, 0, result.stderr);
     });
   }
+});
+
+test("headings inside form answers do not change the recognized contract", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "### Problem\n\nSearch is slow.\n\n## What to build\n\nThis heading is supporting detail, not a ticket.\n\n### Desired outcome\n\nSearch finishes quickly.",
+      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+      state: "open",
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /valid feature request/i);
+});
+
+test("an empty checklist is rejected as a required-field placeholder", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ]\n\n## Blocked by\n\nNone.",
+      labels: [{ name: "ready-for-agent" }],
+      state: "open",
+    },
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /Acceptance criteria/);
 });
 
 test("a native ticket can use relationships and remain valid with an open blocker", async () => {
@@ -297,6 +325,42 @@ test("a correction updates existing feedback without restoring readiness", async
   assert.ok(!result.requests.some(({ url }) => url.includes("/labels")));
 });
 
+test("an invalid direct contract loses readiness without acquiring intake labels", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\n_No response_\n\n## Out of Scope\n\nNone.",
+      labels: [{ name: "ready-for-agent" }],
+      state: "open",
+    },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/ready-for-agent")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+});
+
+test("event payload content cannot override re-fetched authoritative state", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Steps to reproduce\n\n_No response_\n\n## Expected behavior\n\nWorks.\n\n## Actual behavior\n\nBroken.",
+      labels: [{ name: "bug" }, { name: "needs-triage" }],
+      state: "open",
+    },
+    event: {
+      action: "edited",
+      issue: {
+        number: 42,
+        body: "## Steps to reproduce\n\nComplete stale payload.\n\n## Expected behavior\n\nWorks.\n\n## Actual behavior\n\nBroken.",
+      },
+    },
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /Steps to reproduce/);
+});
+
 test("pull request comments are ignored before any API access", async () => {
   const result = await exercise({
     issue: { number: 42, body: "hostile", labels: [], state: "open" },
@@ -320,8 +384,18 @@ test("contract text is treated only as data", async () => {
       },
     });
     assert.equal(result.code, 0, result.stderr);
-    await assert.rejects(() => import("node:fs/promises").then(({ access }) => access(sentinel)), { code: "ENOENT" });
+    await assert.rejects(() => access(sentinel), { code: "ENOENT" });
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("the workflow covers issue and comment changes using default-branch code", async () => {
+  const workflow = await readFile(".github/workflows/issue-contracts.yml", "utf8");
+  for (const activity of ["opened", "edited", "reopened", "labeled", "unlabeled", "created", "deleted"]) {
+    assert.match(workflow, new RegExp(`\\b${activity}\\b`));
+  }
+  assert.match(workflow, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
+  assert.match(workflow, /issues: write/);
+  assert.doesNotMatch(workflow, /github\.event\.issue\.body/);
 });
