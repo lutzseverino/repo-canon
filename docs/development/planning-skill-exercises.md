@@ -73,9 +73,10 @@ existing inventory and engineering runtime records.
 
 The fixture test verifies every installed dependency symlink, including the
 productivity `grilling` dependency used by planning. A separate runtime
-exercise verified the managed-update boundary below. No exercise modified a
-vendored file, and adopting contributors received no independent updater or
-write route.
+exercise verified the managed-update boundary below, and a Node-and-Git test
+reproduces its candidate-only mutation, digest, difference, source-invariance,
+and cleanup checks without requiring Codex. No exercise modified a vendored
+file, and adopting contributors received no independent updater or write route.
 
 ## Observed outcomes
 
@@ -112,12 +113,16 @@ source digest remained
 `570d12b3caf6c468d77e0aba8602efc7a5346697a77cb5372f623cf67247784b`
 before and after; Repo Canon's vendored diff stayed empty. The retained
 [boundary record](planning-skill-artifacts/managed-skill-update-boundary.md)
-and fixture commit `1ea3f66fb0a353eb99282b479def251af831818a` also
+and final fixture commit `77adf0440eaf96ae1a70aedfa14655ea7804877f` also
 record the reviewed upstream pin, manifest, complete selected directories,
 notice, reference reconciliation, byte comparison, and release-review steps
 available only to a standards maintainer.
-This detected a controlled candidate deviation without performing or
-authorizing a standards update.
+An independent review found that the first record described its mutation but
+omitted the command that made it. The same session reran the comparison and
+replaced that transcript with an explicit Node built-in filesystem mutation;
+the final record preserves the correction history and observed diff. This
+detected a controlled candidate deviation without performing or authorizing a
+standards update.
 
 ### `grill-with-docs`
 

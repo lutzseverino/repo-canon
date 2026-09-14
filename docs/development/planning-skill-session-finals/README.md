@@ -10,6 +10,8 @@ to each response; the SHA-256 values cover the original UTF-8 bytes written by
 | [Setup](setup.md) | `01a0a1e1-5866-7380-9653-ed79623b1111` | `76346d2780e182af440559cab26f7a36fcf42f7ce3d23114936e0cf72c6225d2` |
 | [Adoption preparation](adoption-preparation.md) | `01a0a1e1-5837-78f2-8542-4dfd88c53e25` | `efb39906d7b2cf0b347f02169d4e5ff840044fb34bfb855a916671d8879c4427` |
 | [Managed skill update](managed-skill-update.md) | `01a0a1fd-049a-7652-a47b-fa41eca32366` | `89bdb9a5d024077f5dd08c25157d0cb324ac1e7e54828119561213eec1f6aacf` |
+| [Managed skill update, transcript correction](managed-skill-update-correction.md) | `01a0a1fd-049a-7652-a47b-fa41eca32366` | `5fb683f2e7c0933f74c9444166a300f890bd1de49b649eee81ff4f659b8c70b2` |
+| [Managed skill update, portable completion](managed-skill-update-portable.md) | `01a0a1fd-049a-7652-a47b-fa41eca32366` | `c1234ec8214f58fdec2b1e0142cde99109adb25861e00365c9a079b1efcb297a` |
 | [Grilling, initial](grill-initial.md) | `01a0a1e3-c1cb-7402-8ab9-c57a16cb9c6a` | `7adf3db97c56925d9240946c97cd0ec4d57313057a684fa28c9da205867b16f3` |
 | [Grilling, completion](grill-completion.md) | `01a0a1e3-c1cb-7402-8ab9-c57a16cb9c6a` | `41b6698d215f8dc2f79b0a2d9ce69bea1394826bcdb2f498d81dcde5dec78dbf` |
 | [Specification](to-spec.md) | `01a0a1eb-5b49-7f50-9393-c4f4eada4bcc` | `6ed3e1b20a3cc850f540ef55cf416474056b0a1e14dceb146a1fecbfb44cf468` |

@@ -1,15 +1,51 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { test } from 'node:test';
 
 const root = new URL('..', import.meta.url).pathname;
 
 function sha256(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
+}
+
+function sha256Directory(path) {
+  const files = [];
+  function visit(directory) {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const absolute = join(directory, entry.name);
+      if (entry.isDirectory()) visit(absolute);
+      else if (entry.isFile()) files.push(absolute);
+      else throw new Error(`unsupported boundary-fixture entry: ${absolute}`);
+    }
+  }
+  visit(path);
+  files.sort((left, right) => Buffer.compare(
+    Buffer.from(relative(path, left)),
+    Buffer.from(relative(path, right)),
+  ));
+
+  const digest = createHash('sha256');
+  for (const file of files) {
+    digest.update(relative(path, file).replaceAll('\\', '/'));
+    digest.update('\0');
+    digest.update(readFileSync(file));
+    digest.update('\0');
+  }
+  return digest.digest('hex');
 }
 
 test('planning and adoption fixture builder creates runnable bounded scenarios', () => {
@@ -146,4 +182,53 @@ test('retained planning artifacts preserve native formats and runtime outputs', 
 
   const builder = readFileSync(join(root, 'scripts', 'create-planning-skill-fixtures.mjs'), 'utf8');
   assert.doesNotMatch(builder, /execFileSync\(['"]codex['"]/);
+});
+
+test('managed update evidence is reproducible with fixture prerequisites', () => {
+  const expectedSource = '570d12b3caf6c468d77e0aba8602efc7a5346697a77cb5372f623cf67247784b';
+  const expectedCandidate = '13af6e0225c89e4b44d4476b4ca87681219f9d5a49566c5f2d3df173f766ee6d';
+  const source = realpathSync(join(
+    root,
+    'vendor',
+    'mattpocock-skills',
+    'skills',
+    'engineering',
+    'setup-matt-pocock-skills',
+  ));
+  const parent = mkdtempSync(join(tmpdir(), 'repo-canon-managed-skill-test-'));
+  const candidate = join(parent, 'setup-matt-pocock-skills');
+
+  try {
+    const before = sha256Directory(source);
+    assert.equal(before, expectedSource);
+    cpSync(source, candidate, { recursive: true });
+
+    const skillPath = join(candidate, 'SKILL.md');
+    const original = readFileSync(skillPath);
+    const text = original.toString('utf8');
+    assert.equal(Buffer.from(text, 'utf8').equals(original), true);
+    const needle = "# Setup Matt Pocock's Skills\n\n";
+    const replacement = `${needle}<!-- Synthetic candidate-only boundary-test change; do not promote. -->\n\n`;
+    assert.equal(text.indexOf(needle), text.lastIndexOf(needle));
+    assert.notEqual(text.indexOf(needle), -1);
+    writeFileSync(skillPath, text.replace(needle, replacement), 'utf8');
+
+    let diff;
+    try {
+      execFileSync('git', ['diff', '--no-index', '--exit-code', '--no-ext-diff', '--', source, candidate], {
+        encoding: 'utf8',
+        stdio: 'pipe',
+      });
+      assert.fail('candidate comparison should report a difference');
+    } catch (error) {
+      assert.equal(error.status, 1);
+      diff = error.stdout;
+    }
+    assert.match(diff, /Synthetic candidate-only boundary-test change; do not promote/);
+    assert.equal(sha256Directory(candidate), expectedCandidate);
+    assert.equal(sha256Directory(source), before);
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+  assert.equal(existsSync(parent), false);
 });

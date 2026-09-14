@@ -8,7 +8,7 @@ instructions into Repo Canon product behavior.
 | Artifact | Source fixture revision | SHA-256 |
 | --- | --- | --- |
 | [Adoption inspection](adoption-inspection.md) | `f44ed880d3dae67233b3734d7de0dadb01e7a9c9` | `08fc08d369a87986d06e562f0672743fe4851c9806727d6caa2f1187bf733e4d` |
-| [Managed skill update boundary](managed-skill-update-boundary.md) | `1ea3f66fb0a353eb99282b479def251af831818a` | `6ccdc0467cbdabd5b9a4f31a23aa80bf797cc2cb6620fa41a3656e1d42ed98c2` |
+| [Managed skill update boundary](managed-skill-update-boundary.md) | `77adf0440eaf96ae1a70aedfa14655ea7804877f` | `4e3e9aeed4cbe9cd109f5e5515d7f4c95b2f02108098f68058bc79403e68b457` |
 | [Native specification](intake-batch-spec.md) | `221f86aa76c41a41f2a3dad37e340fd070d9cabc` | `f1d6cdb7609e68e6162397ac639e8fe9246e4b84c9da5c602898760005f72e68` |
 | [Public endpoint ticket](intake-batch-ticket-01.md) | `373c1e11b9982e04352d80baa43fae4fe2b56627` | `ca2c9146707d4b56a1094a7dbe9e14557a0888df34e6756823b83a9e45472500` |
 | [Atomic conflict ticket](intake-batch-ticket-02.md) | `373c1e11b9982e04352d80baa43fae4fe2b56627` | `fcf557833708ceb15a21ebb3a867940671a89e111778ba23f5d5634a1f7fd303` |
