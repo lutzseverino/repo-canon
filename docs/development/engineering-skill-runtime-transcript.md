@@ -131,7 +131,8 @@ Browser-completion final SHA-256:
 > 375,968-byte verified PNG has SHA-256 `c1cce255…`. One Mermaid SVG rendered;
 > the Candidate 01 visual grid ended before its details began, so the measured
 > no-overlap result was true. The repository remained clean. Operator visual
-> inspection was recorded separately.
+> inspection was recorded separately in the
+> [visual-inspection record](engineering-skill-architecture-visual-inspection.md).
 
 ## `diagnosing-bugs`
 

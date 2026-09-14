@@ -136,8 +136,10 @@ headless browser. It produced a 375,968-byte PNG with SHA-256
 found one rendered Mermaid SVG, and measured the Candidate 01 visual grid
 ending at y=798 before its detail grid began at y=822. An operator also
 inspected the PNG and confirmed the two complete candidates rendered without
-overlap. The screenshot remained a disposable local verification artifact;
-the corrected HTML is retained. The fixture stayed clean.
+overlap in the retained
+[visual-inspection record](engineering-skill-architecture-visual-inspection.md).
+The screenshot remained a disposable local verification artifact; the
+corrected HTML is retained. The fixture stayed clean.
 
 ### `diagnosing-bugs`
 
