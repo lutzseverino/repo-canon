@@ -17,7 +17,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
-const skillsRoot = join(sourceRoot, 'vendor/mattpocock-skills/skills/engineering');
+const skillsRoot = join(sourceRoot, 'vendor/mattpocock-skills/skills');
 const upstreamCommit = '3cca18b368ae95cdbdebbff572ccafa662551015';
 const skillNames = [
   'setup-matt-pocock-skills',
@@ -92,16 +92,23 @@ function createRepository(name, skills, { agents, context }) {
     scripts: { test: 'node --test' },
   }, null, 2)}\n`);
   mkdirSync(join(root, '.agents/skills'), { recursive: true });
-  for (const skill of skills) symlinkSync(join(skillsRoot, skill), join(root, '.agents/skills', skill), 'dir');
+  for (const skill of skills) symlinkSync(skillPath(skill), join(root, '.agents/skills', skill), 'dir');
   git(root, ['init', '--quiet', '--initial-branch=main']);
   git(root, ['config', 'user.name', 'Repo Canon Exercise']);
   git(root, ['config', 'user.email', 'exercise@example.invalid']);
   return root;
 }
 
+function skillPath(name) {
+  const category = name === 'grilling' ? 'productivity' : 'engineering';
+  const path = join(skillsRoot, category, name);
+  if (!existsSync(path)) throw new Error(`Missing fixture skill dependency: ${category}/${name}`);
+  return path;
+}
+
 function installLocalTracker(root) {
   cpSync(
-    join(skillsRoot, 'setup-matt-pocock-skills', 'issue-tracker-local.md'),
+    join(skillPath('setup-matt-pocock-skills'), 'issue-tracker-local.md'),
     join(root, 'docs/agents/issue-tracker.md'),
   );
   write(root, 'docs/agents/triage-labels.md', readFileSync(join(sourceRoot, 'docs/agents/triage-labels.md'), 'utf8'));
@@ -263,11 +270,10 @@ const manifest = {
   source: {
     repositoryHead: git(sourceRoot, ['rev-parse', 'HEAD']),
     upstreamCommit,
-    codexCli: execFileSync('codex', ['--version'], { encoding: 'utf8' }).trim().replace('codex-cli ', ''),
     node: process.version,
     git: execFileSync('git', ['--version'], { encoding: 'utf8' }).trim(),
   },
-  skills: skillNames.map((name) => ({ name, sha256: hashDirectory(join(skillsRoot, name)) })),
+  skills: skillNames.map((name) => ({ name, sha256: hashDirectory(skillPath(name)) })),
   repositories,
 };
 write(fixtureRoot, 'manifest.json', `${JSON.stringify(manifest, null, 2)}\n`);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -28,7 +28,6 @@ test('planning and adoption fixture builder creates runnable bounded scenarios',
       'triage-wayfinder',
     ]);
     assert.equal(manifest.source.upstreamCommit, '3cca18b368ae95cdbdebbff572ccafa662551015');
-    assert.equal(manifest.source.codexCli, '0.154.0');
     assert.deepEqual(manifest.skills.map(({ name }) => name), [
       'setup-matt-pocock-skills',
       'grill-with-docs',
@@ -42,6 +41,12 @@ test('planning and adoption fixture builder creates runnable bounded scenarios',
     ]);
     for (const skill of manifest.skills) {
       assert.match(skill.sha256, /^[a-f0-9]{64}$/);
+    }
+    for (const repository of Object.values(manifest.repositories)) {
+      for (const skill of readdirSync(join(repository.path, '.agents', 'skills'))) {
+        const target = realpathSync(join(repository.path, '.agents', 'skills', skill));
+        assert.equal(statSync(target).isDirectory(), true);
+      }
     }
 
     const setup = join(target, 'setup');
