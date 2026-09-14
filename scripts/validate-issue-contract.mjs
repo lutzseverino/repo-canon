@@ -113,7 +113,7 @@ if (!result.contract) {
   process.exit(0);
 }
 
-const revision = await contractRevision(api, issue, result, relationships);
+const revision = await contractRevision(api, issue, result);
 const readiness = await assessReadiness({ api, event, issue, result, comments, previousFeedback, revision });
 if (!readiness.valid) {
   await removeReadiness(api, issueNumber, result.labels);
@@ -526,6 +526,7 @@ function isPlaceholder(value) {
 }
 
 function validateWayfinderMap(sections, labels, errors) {
+  rejectPlanningReadiness(labels, errors);
   if ([...labels].some((label) => childLabels.has(label))) {
     errors.push("Keep `wayfinder:map` separate from Wayfinder child labels.");
   }
@@ -534,6 +535,7 @@ function validateWayfinderMap(sections, labels, errors) {
 }
 
 function validateWayfinderChild(sections, labels, childLabelList, parent, errors) {
+  rejectPlanningReadiness(labels, errors);
   if (childLabelList.length !== 1 || labels.has("wayfinder:map")) {
     errors.push("Apply exactly one Wayfinder child label and do not combine it with `wayfinder:map`.");
   }
@@ -542,6 +544,12 @@ function validateWayfinderChild(sections, labels, childLabelList, parent, errors
     errors.push("Link the Wayfinder child to its parent map using the native parent relationship or a `Parent` section.");
   } else if (!(parent.labels ?? []).some((label) => labelName(label) === "wayfinder:map")) {
     errors.push("Link the Wayfinder child to an issue labeled `wayfinder:map`.");
+  }
+}
+
+function rejectPlanningReadiness(labels, errors) {
+  if ([...labels].some((label) => readyLabels.has(label))) {
+    errors.push("Remove readiness labels from Wayfinder planning issues; their eligibility uses open state, assignment, and blockers.");
   }
 }
 
@@ -621,7 +629,7 @@ function agentBriefHeading(body) {
   return findMarkdownHeadings(body, agentBriefHeadingNames)[0] ?? null;
 }
 
-async function contractRevision(apiClient, issue, result, relationships) {
+async function contractRevision(apiClient, issue, result) {
   let source;
   if (result.contract.type === "issue-body") {
     const metadata = await apiClient.getIssueBodyRevision(issue.number);
@@ -639,17 +647,8 @@ async function contractRevision(apiClient, issue, result, relationships) {
     kind: result.kind,
     source,
     body: result.contract.body,
-    relationships: {
-      parent: relationshipIdentity(relationships.parent),
-      blockedBy: relationships.blockedBy.map(relationshipIdentity).filter(Boolean).sort(),
-    },
   });
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
-}
-
-function relationshipIdentity(issue) {
-  if (!issue) return null;
-  return String(issue.node_id ?? issue.id ?? issue.url ?? issue.html_url ?? issue.number);
 }
 
 async function assessReadiness({ api: apiClient, event: currentEvent, issue, result, comments, previousFeedback, revision }) {
@@ -780,7 +779,7 @@ function awaitingReviewFeedback(kind, revision, reason = null) {
 
 function approvedFeedback(kind, revision, label, reviewer) {
   const state = JSON.stringify({ status: "approved", revision, label, reviewer });
-  return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${revision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract, changing its parent or blocker references, or removing readiness invalidates this association.`;
+  return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${revision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`;
 }
 
 function resolvedFeedback(kind) {

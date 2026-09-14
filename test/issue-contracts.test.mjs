@@ -102,21 +102,19 @@ async function exercise({
   }
 }
 
-function bodyRevision(issue, lastEditedAt = null, kind = "implementation ticket", relationships = { parent: null, blockedBy: [] }) {
+function bodyRevision(issue, lastEditedAt = null, kind = "implementation ticket") {
   return revision({
     kind,
     source: { type: "issue-body", id: issue.node_id ?? "ISSUE_42", editedAt: lastEditedAt },
     body: issue.body,
-    relationships,
   });
 }
 
-function briefRevision(comment, kind = "triaged Agent Brief", relationships = { parent: null, blockedBy: [] }) {
+function briefRevision(comment, kind = "triaged Agent Brief") {
   return revision({
     kind,
     source: { type: "comment", id: String(comment.node_id ?? comment.id), editedAt: comment.updated_at ?? null },
     body: comment.body,
-    relationships,
   });
 }
 
@@ -128,7 +126,7 @@ function revision(contract) {
 function feedbackState({ status, revision: contractRevision, label = null, reviewer = null, kind = "implementation ticket" }) {
   const state = JSON.stringify({ status, revision: contractRevision, label, reviewer });
   if (status === "approved") {
-    return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${contractRevision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract, changing its parent or blocker references, or removing readiness invalidates this association.`;
+    return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${contractRevision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`;
   }
   return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${contractRevision}\`.\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
 }
@@ -368,6 +366,29 @@ test("a Wayfinder map only permits its initial decisions section to be empty", a
   assert.match(result.stderr, /Not yet specified/);
   assert.match(result.stderr, /Out of scope/);
   assert.doesNotMatch(result.stderr, /Decisions so far/);
+});
+
+test("Wayfinder planning labels cannot preserve an unreviewed readiness state", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Destination\n\nChoose a cache.\n\n## Notes\n\nUse the domain model.\n\n## Decisions so far\n\n## Not yet specified\n\nEviction policy.\n\n## Out of scope\n\nNone.",
+      labels: [{ name: "wayfinder:map" }, { name: "ready-for-agent" }],
+      state: "open",
+    },
+    event: {
+      action: "labeled",
+      issue: { number: 42 },
+      label: { name: "ready-for-agent" },
+      sender: { login: "reporter" },
+    },
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /Wayfinder planning issues/i);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  const feedback = result.requests.find(({ method, url }) => method === "POST" && url.endsWith("/comments"));
+  assert.match(JSON.parse(feedback.body).body, /eligibility uses open state, assignment, and blockers/i);
 });
 
 test("a Wayfinder child rejects an empty parent fallback", async () => {
@@ -984,14 +1005,14 @@ test("direct body edits invalidate an approval even when the visible bytes are r
   assert.match(JSON.parse(update.body).body, /fresh authorized review/i);
 });
 
-test("changing native contract relationship identity invalidates readiness", async () => {
+test("native relationship changes do not revise already reviewed contract bytes", async () => {
   const issue = {
     number: 42,
     body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
     labels: [{ name: "ready-for-agent" }],
     state: "open",
   };
-  const oldRevision = bodyRevision(issue, null, "implementation ticket", { parent: null, blockedBy: ["BLOCKER_41"] });
+  const oldRevision = bodyRevision(issue);
   const comments = [{
     id: 13,
     body: feedbackState({ status: "approved", revision: oldRevision, label: "ready-for-agent", reviewer: "maintainer" }),
@@ -1005,8 +1026,9 @@ test("changing native contract relationship identity invalidates readiness", asy
     event: { action: "reopened", issue: { number: 42 } },
   });
 
-  assert.equal(result.code, 1);
-  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ method, url }) => method === "GET" && url.includes("/dependencies/blocked_by")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
 });
 
 test("replacing an Agent Brief invalidates approval even when its text is identical", async () => {

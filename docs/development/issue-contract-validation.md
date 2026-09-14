@@ -47,13 +47,14 @@ accepted review event, so repeated workflow events can verify the association
 without reapproving or duplicating feedback.
 
 The revision is computed from a versioned record containing the selected
-contract kind, exact contract bytes, source identity and edit revision, and the
-identities of the current native parent and blocker relationships. Direct-body
-contracts use the issue GraphQL node ID and `lastEditedAt`. Agent Briefs use the
-comment node ID and `updated_at`, so editing a brief or replacing it with an
-identical-looking comment still changes the revision. Relationship state is
-excluded: closing an existing blocker does not change readiness, while replacing
-the referenced blocker does.
+contract kind, exact contract bytes, source identity, and source edit revision.
+Direct-body contracts use the issue GraphQL node ID and `lastEditedAt`. Agent
+Briefs use the comment node ID and `updated_at`, so editing a brief or replacing
+it with an identical-looking comment still changes the revision. Native parent
+and blocker relationships remain separately fetched review context, not body or
+Brief revision bytes. An explicit relationship link inside a direct ticket body
+is part of those exact bytes. Closing or replacing a native relationship alone
+does not silently redefine the reviewed source revision.
 
 For a direct specification or ticket, an authoritative `opened` event carrying
 one readiness label or a later readiness `labeled` event can supply the exact
@@ -70,7 +71,9 @@ a triaging agent. A `write` role, `author_association`, login shape, bot identit
 heading, preamble, or structural pass supplies no authority. An accepted
 triaged review replaces its previous workflow state with the chosen readiness
 label. Removing readiness returns a triaged request to `needs-triage` unless it
-already has another non-readiness state.
+already has another non-readiness state. Wayfinder maps and children reject
+readiness labels because their native eligibility uses open state, assignment,
+and blockers instead of the readiness workflow.
 
 Incomplete, edited, replaced, stale, unauthorized, or multiply-ready contracts
 lose `ready-for-agent` and `ready-for-human`. Corrections update the same comment
