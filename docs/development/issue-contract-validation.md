@@ -17,6 +17,8 @@ The validator recognizes these contracts:
 
 Heading levels and casing do not affect recognition. Required fields reject
 empty content, template comments, and GitHub's `_No response_` placeholder.
+When an Agent Brief exists, the latest such comment is the triaged request's
+contract; contract-like headings in the intake body remain context.
 Native parent and blocking relationships are read from GitHub. Explicit issue
 links outside fenced examples in `Parent` and `Blocked by` sections are used
 when native relationships are absent or the native dependency endpoint is

@@ -193,7 +193,7 @@ function issueReferences(value = "") {
 function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   const labels = new Set((issue.labels ?? []).map(labelName));
   const sections = parseSections(issue.body ?? "");
-  const errors = [...relationshipErrors];
+  const errors = [];
 
   if (labels.has("wayfinder:map")) {
     validateWayfinderMap(sections, labels, errors);
@@ -202,8 +202,16 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
 
   const wayfinderChildren = [...labels].filter((label) => childLabels.has(label));
   if (wayfinderChildren.length > 0) {
+    errors.push(...relationshipErrors);
     validateWayfinderChild(sections, labels, wayfinderChildren, parent, errors);
     return outcome("Wayfinder child", errors, labels, false);
+  }
+
+  const brief = latestAgentBrief(comments);
+  if (brief) {
+    validateTriagedLabels(labels, null, errors);
+    validateAgentBrief(brief.body, labels, errors);
+    return outcome("triaged Agent Brief", errors, labels, true);
   }
 
   const contractKind = identifyContract(sections);
@@ -216,6 +224,7 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   }
 
   if (contractKind === "implementation ticket") {
+    errors.push(...relationshipErrors);
     requireSections(sections, ["What to build", "Acceptance criteria"], errors);
     requireSection(sections, "Blocked by", errors, { allowExternalValue: blockedBy.length > 0 });
     return outcome("implementation ticket", errors, labels, false);
@@ -224,22 +233,15 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   if (contractKind === "bug report") {
     requireSections(sections, ["Steps to reproduce", "Expected behavior", "Actual behavior"], errors);
     validateTriagedLabels(labels, "bug", errors);
-    validateAgentBriefIfApplicable(labels, comments, "bug", errors);
+    requireAgentBriefForReadiness(labels, errors);
     return outcome("bug report", errors, labels, true);
   }
 
   if (contractKind === "feature request") {
     requireSections(sections, ["Problem", "Desired outcome"], errors);
     validateTriagedLabels(labels, "enhancement", errors);
-    validateAgentBriefIfApplicable(labels, comments, "enhancement", errors);
+    requireAgentBriefForReadiness(labels, errors);
     return outcome("feature request", errors, labels, true);
-  }
-
-  const brief = latestAgentBrief(comments);
-  if (brief) {
-    validateTriagedLabels(labels, null, errors);
-    validateAgentBrief(brief.body, labels, errors);
-    return outcome("triaged Agent Brief", errors, labels, true);
   }
 
   errors.push("Use one supported issue contract: a public form, native specification or ticket, triaged Agent Brief, Wayfinder map, or labeled Wayfinder child.");
@@ -375,11 +377,8 @@ function validateTriagedLabels(labels, expectedCategory, errors) {
   if (states.length !== 1) errors.push("Apply exactly one workflow state label.");
 }
 
-function validateAgentBriefIfApplicable(labels, comments, expectedCategory, errors) {
-  const brief = latestAgentBrief(comments);
-  if (brief) {
-    validateAgentBrief(brief.body, labels, errors, expectedCategory);
-  } else if ([...labels].some((label) => readyLabels.has(label))) {
+function requireAgentBriefForReadiness(labels, errors) {
+  if ([...labels].some((label) => readyLabels.has(label))) {
     errors.push("Add a reviewed Agent Brief before applying a readiness label to a triaged request.");
   }
 }
