@@ -180,6 +180,50 @@ Install it.
   assert.match(outcome.result.message, /Move Installation before Features/);
 });
 
+test('orders and validates sections rendered with HTML headings', t => {
+  const outcome = check(t, {
+    'README.md': `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+<h2>Features</h2>
+
+- Small
+
+<h2>Installation</h2>
+
+Install it.
+
+<h2>License</h2>
+
+[MIT](LICENSE)
+`,
+    'LICENSE': 'MIT\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Move Installation before Features/);
+  assert.doesNotMatch(outcome.result.message, /Add a License section/);
+});
+
+test('uses an opaque repository-provided license identity', t => {
+  const outcome = check(t, {
+    'README.md': `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+## License
+
+[0BSD](LICENSE)
+`,
+    'LICENSE': '0BSD\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed');
+});
+
 test('does not accept navigation links hidden in code fences', t => {
   const outcome = check(t, {
     'README.md': `<h1 align="center">Harbor</h1>
@@ -227,11 +271,6 @@ test('blocks when licensing is missing or ambiguous instead of selecting a licen
     { name: 'missing', files: {}, diagnostic: 'No root LICENSE file' },
     { name: 'multiple files', files: { LICENSE: mit, 'LICENSE.md': mit }, diagnostic: 'Multiple root LICENSE variants' },
     { name: 'unnamed license', files: { LICENSE: '\n\n' }, diagnostic: 'does not identify a license name' },
-    {
-      name: 'multiple names',
-      files: { LICENSE: 'MIT/Apache License 2.0\n' },
-      diagnostic: 'identifies ambiguous licensing',
-    },
   ]) await t.test(example.name, st => {
     const outcome = check(st, {
       'README.md': '# Harbor\n\nA queue inspector.\n\n## Features\n\nFast.\n\n## Installation\n\nInstall it.\n',

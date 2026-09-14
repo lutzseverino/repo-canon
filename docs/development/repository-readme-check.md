@@ -24,11 +24,11 @@ The result statuses have distinct meanings:
   exits nonzero, and emits no result. Repository Standards records that as a
   process or protocol error rather than a policy result.
 
-For the License check, the root `LICENSE` file must identify a single license
-name in its first nonempty line. The check compares the README link label and
-target with that repository-provided identity; it does not make a legal or
-semantic licensing judgment. A missing or unclear `LICENSE` file returns
-`blocked` for owner clarification.
+For the License check, the root `LICENSE` file supplies its identity through its
+first nonempty line. The check removes heading markup and otherwise treats that
+identity as opaque when comparing the README link label and target; it does not
+make a legal or semantic licensing judgment. A missing, empty, or ambiguous set
+of root license files returns `blocked` for owner clarification.
 
 Run the public-boundary fixtures with Node.js 24:
 

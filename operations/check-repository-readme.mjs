@@ -65,12 +65,8 @@ function rootLicense(projectRoot) {
     ?.replace(/^#{1,6}\s+/, '')
     .replace(/^<h[1-6][^>]*>|<\/h[1-6]>$/gi, '')
     .trim();
-  if (!name || !/\blicen[cs]e\b/i.test(name)) {
+  if (!name) {
     return { blocked: `${path} does not identify a license name in its first nonempty line.` };
-  }
-  const licenseMentions = name.match(/\blicen[cs]e\b/gi)?.length ?? 0;
-  if (licenseMentions > 1 || /\b(?:and|or|dual(?:ly)?|multiple)\b|[/&]/i.test(name)) {
-    return { blocked: `${path} identifies ambiguous licensing (“${name}”).` };
   }
   return { path, name };
 }
@@ -82,6 +78,18 @@ function headings(markdown) {
     const name = match[2].trim();
     found.push({
       level: match[1].length,
+      name,
+      folded: name.toLocaleLowerCase('en-US'),
+      index: match.index,
+      end: match.index + match[0].length,
+    });
+  }
+  const html = /<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1\s*>/gi;
+  for (const match of markdown.matchAll(html)) {
+    const name = match[2].replace(/<[^>]*>/g, '').trim();
+    if (!name) continue;
+    found.push({
+      level: Number(match[1]),
       name,
       folded: name.toLocaleLowerCase('en-US'),
       index: match.index,
