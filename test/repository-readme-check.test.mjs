@@ -153,6 +153,58 @@ Install it.
   assert.match(outcome.result.message, /Move Installation before Features/);
 });
 
+test('orders recognized sections across Markdown heading forms', t => {
+  const outcome = check(t, {
+    'README.md': `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+Features
+--------
+
+- Small
+
+# Installation
+
+Install it.
+
+## License
+
+[MIT License](LICENSE)
+`,
+    'LICENSE': mit,
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Move Installation before Features/);
+});
+
+test('does not accept navigation links hidden in code fences', t => {
+  const outcome = check(t, {
+    'README.md': `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+## Documentation
+
+\`\`\`markdown
+[Documentation](docs/README.md)
+\`\`\`
+
+## License
+
+[MIT License](LICENSE)
+`,
+    'LICENSE': mit,
+    'docs/README.md': '# Documentation\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Link the Documentation section to docs\/README\.md/);
+});
+
 test('reports malformed license sections against the repository license file', async t => {
   for (const example of [
     { name: 'missing section', body: '', diagnostic: 'Add a License section' },
@@ -177,7 +229,7 @@ test('blocks when licensing is missing or ambiguous instead of selecting a licen
     { name: 'unnamed license', files: { LICENSE: '\n\n' }, diagnostic: 'does not identify a license name' },
     {
       name: 'multiple names',
-      files: { LICENSE: 'MIT and Apache License 2.0\n' },
+      files: { LICENSE: 'MIT/Apache License 2.0\n' },
       diagnostic: 'identifies ambiguous licensing',
     },
   ]) await t.test(example.name, st => {
