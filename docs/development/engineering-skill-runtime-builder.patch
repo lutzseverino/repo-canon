@@ -1,0 +1,27 @@
+--- scripts/create-engineering-skill-fixtures.mjs
++++ runtime/create-engineering-skill-fixtures.mjs
+@@ -20 +19,0 @@
+-const scriptPath = fileURLToPath(import.meta.url);
+@@ -67,7 +65,0 @@
+-function gitOptional(root, args) {
+-  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+-  if (result.status === 0) return result.stdout.trim();
+-  if (result.status === 1) return null;
+-  throw new Error(result.stderr.trim() || `git ${args.join(' ')} failed`);
+-}
+-
+@@ -76 +68 @@
+-  git(root, ['commit', '--quiet', '--no-gpg-sign', '-m', message]);
++  git(root, ['commit', '--quiet', '-m', message]);
+@@ -145 +136,0 @@
+-  write(root, 'docs/adr/README.md', `# Architecture decisions\n\nThis directory records accepted decisions for the disposable Order intake scenario.\n`);
+@@ -165 +155,0 @@
+-  write(root, 'docs/adr/README.md', `# Architecture decisions\n\nThis directory records accepted decisions for the disposable Invoice scenario.\n`);
+@@ -179 +168,0 @@
+-  write(root, 'docs/adr/README.md', `# Architecture decisions\n\nThis directory records accepted decisions for the disposable Subscription scenario.\n`);
+@@ -233,3 +222,2 @@
+-    repository: gitOptional(sourceRoot, ['config', '--get', 'remote.origin.url']),
+-    worktreeCommit: git(sourceRoot, ['rev-parse', 'HEAD']),
+-    fixtureBuilderSha256: createHash('sha256').update(readFileSync(scriptPath)).digest('hex'),
++    repository: git(sourceRoot, ['config', '--get', 'remote.origin.url']),
++    commit: git(sourceRoot, ['rev-parse', 'HEAD']),

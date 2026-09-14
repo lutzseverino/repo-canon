@@ -26,6 +26,15 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   scope, structural outcomes, prerequisites, and focused fixture commands.
 - [Standards source profile](source-profile.md): complete profile ownership,
   declarations, prerequisites, validation, and evidence boundaries.
+- [Engineering skill exercises](engineering-skill-exercises.md): disposable
+  repositories and runtime evidence for the remaining engineering skills.
+  The [curated transcript](engineering-skill-runtime-transcript.md),
+  [architecture report](engineering-skill-architecture-report.html), and
+  [research result](engineering-skill-research-result.md) retain the observed
+  session outputs; the [runtime-builder patch](engineering-skill-runtime-builder.patch)
+  preserves exact harness provenance, and the
+  [visual-inspection record](engineering-skill-architecture-visual-inspection.md)
+  records the browser-render review.
 
 ## Authoring status
 
