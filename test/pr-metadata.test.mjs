@@ -166,6 +166,54 @@ Example summary text.
   assert.equal(realSectionsWithExample.status, 0, realSectionsWithExample.stderr);
 });
 
+test("keeps nested subsections attached to required sections", () => {
+  const result = runEvent({
+    body: `## Summary
+
+### Problem and change
+
+Pull requests need consistent metadata, so this adds validation.
+
+## Validation
+
+### Automated checks
+
+The complete Node test suite passed.
+
+## Related issue
+
+### Tracking issue
+
+Closes #6
+`,
+  });
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("does not accept issue references or exceptions inside code examples", () => {
+  for (const relatedIssue of [
+    "Use `#123` as the example format.",
+    "Use `Small correction: explain the typo here` as the exception format.",
+  ]) {
+    const result = runEvent({
+      body: `## Summary
+
+Validate pull request metadata before merge.
+
+## Validation
+
+The complete Node test suite passed.
+
+## Related issue
+
+${relatedIssue}
+`,
+    });
+    assert.equal(result.status, 1, relatedIssue);
+    assert.match(result.stderr, /Link a related GitHub issue/, relatedIssue);
+  }
+});
+
 test("requires each PR section exactly once without requiring Limits", () => {
   const result = runEvent({
     body: `${validBody()}\n## Summary\n\nA duplicate summary is ambiguous.\n`,

@@ -74,6 +74,10 @@ function withoutFencedCode(markdown) {
     .join("\n");
 }
 
+function withoutCodeExamples(markdown) {
+  return withoutFencedCode(markdown).replace(/(`+)[\s\S]*?\1/g, " ");
+}
+
 function visibleText(markdown) {
   return withoutHtmlComments(markdown)
     .replace(/\[(?<label>[^\]]+)]\([^)]*\)/g, "$<label>")
@@ -113,26 +117,42 @@ function headingName(rawHeading) {
 function parseSections(body) {
   const sections = new Map();
   let current;
+  const recognizedSections = new Set([
+    "summary",
+    "validation",
+    "related issue",
+    "impact",
+    "migration",
+  ]);
 
   for (const { inFence, line } of markdownLines(body)) {
     if (inFence) {
       if (current) {
-        sections.get(current).at(-1).push(line);
+        sections.get(current.name).at(-1).push(line);
       }
       continue;
     }
 
-    const heading = line.match(/^\s{0,3}#{1,6}\s+(.+?)\s*$/);
+    const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*$/);
     if (heading) {
-      current = headingName(heading[1]);
-      const values = sections.get(current) ?? [];
+      const name = headingName(heading[2]);
+      if (!recognizedSections.has(name)) {
+        if (current && heading[1].length > current.level) {
+          continue;
+        }
+        current = undefined;
+        continue;
+      }
+
+      current = { level: heading[1].length, name };
+      const values = sections.get(name) ?? [];
       values.push([]);
-      sections.set(current, values);
+      sections.set(name, values);
       continue;
     }
 
     if (current) {
-      sections.get(current).at(-1).push(line);
+      sections.get(current.name).at(-1).push(line);
     }
   }
 
@@ -158,7 +178,7 @@ function requiredSection(sections, name, errors) {
 }
 
 function hasIssueReference(markdown) {
-  const content = withoutFencedCode(markdown);
+  const content = withoutCodeExamples(markdown);
   return (
     /https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*\b/i.test(content) ||
     /\b[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#[1-9]\d*\b/.test(content) ||
@@ -167,13 +187,13 @@ function hasIssueReference(markdown) {
 }
 
 function hasSmallCorrectionReason(markdown) {
-  const content = withoutFencedCode(markdown);
+  const content = withoutCodeExamples(markdown);
   const marker = content.match(/(?:^|\n)\s*Small correction\s*:\s*([\s\S]*)$/i);
   return marker ? isMeaningful(marker[1]) : false;
 }
 
 function inlineExplanation(body, label) {
-  for (const line of withoutFencedCode(body).split("\n")) {
+  for (const line of withoutCodeExamples(body).split("\n")) {
     const plainLine = line.replace(/[*_`]/g, "");
     const match = plainLine.match(
       new RegExp(`^\\s*(?:[-+]\\s*)?${label}\\s*:\\s*(.+)$`, "i"),
@@ -220,7 +240,7 @@ function validateTitle(title, body, sections, errors) {
   }
 
   const hasBreakingFooter = /^\s*BREAKING[ -]CHANGE\s*:/im.test(
-    withoutFencedCode(body),
+    withoutCodeExamples(body),
   );
   if (hasBreakingFooter && !breaking) {
     errors.push("Add ! before the title colon when the body declares a breaking change.");
