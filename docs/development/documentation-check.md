@@ -7,10 +7,11 @@ through the Repository Standards public operation protocol:
   target for a single non-centered level-one title and valid rendered local
   links. A selected missing path receives a create-file diagnostic.
 - `operations/check-documentation.mjs` requires `docs/README.md` and
-  `docs/development/README.md`, rejects populated top-level documentation
-  outside the four recognized categories, checks that every existing
-  documentation directory has a nonempty `README.md`, and validates rendered
-  local links in the documentation tree and selected migration or link-repair
+  `docs/development/README.md`, derives every context-local `docs` root from
+  the confirmed individual paths, rejects populated top-level documentation
+  outside the four recognized categories at each root, checks that every
+  existing documentation directory has a nonempty `README.md`, and validates
+  rendered local links in those trees and selected migration or link-repair
   files.
 
 The Project README operation accepts individual non-root `README.md` paths.

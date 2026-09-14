@@ -3,7 +3,8 @@ import { isAbsolute, posix, sep } from 'node:path';
 import { brokenLocalLinks, renderedMarkdown } from './lib/rendered-markdown.mjs';
 
 const resultFormat = 'repo-standards/result/v1';
-const documentationIndex = 'docs/README.md';
+const rootDocumentation = 'docs';
+const documentationIndex = `${rootDocumentation}/README.md`;
 const developmentGuide = 'docs/development/README.md';
 const documentationCategories = new Set(['usage', 'development', 'adr', 'agents']);
 
@@ -71,7 +72,17 @@ function directoryEntries(projectRoot, path) {
   }
 }
 
-function documentationTree(projectRoot) {
+function documentationRoots(allowedPaths) {
+  const roots = new Set([rootDocumentation]);
+  for (const path of allowedPaths) {
+    const segments = path.split('/');
+    const index = segments.indexOf('docs');
+    if (index >= 0) roots.add(segments.slice(0, index + 1).join('/'));
+  }
+  return [...roots].sort();
+}
+
+function documentationTree(projectRoot, root) {
   const directories = [];
   const markdownFiles = [];
   const visit = path => {
@@ -84,21 +95,12 @@ function documentationTree(projectRoot) {
       else if (entry.isFile() && entry.name.toLocaleLowerCase('en-US').endsWith('.md')) markdownFiles.push(child);
     }
   };
-  visit('docs');
+  visit(root);
   return { directories, markdownFiles };
 }
 
 function validate(projectRoot, allowedPaths) {
   const corrections = [];
-  const index = fileContent(projectRoot, documentationIndex);
-  if (index === null) {
-    corrections.push(`Create ${documentationIndex} to map the documentation categories and their placement rules.`);
-  } else if (renderedMarkdown(index).length === 0) {
-    corrections.push(`Populate ${documentationIndex} with the documentation map and placement rules.`);
-  }
-  if (!allowedPaths.includes(documentationIndex)) {
-    corrections.push(`Include ${documentationIndex} in the confirmed documentation scope.`);
-  }
   const guide = fileContent(projectRoot, developmentGuide);
   if (guide === null) {
     corrections.push(`Create ${developmentGuide} with the project's prerequisites, setup, development commands, and required validation.`);
@@ -109,20 +111,34 @@ function validate(projectRoot, allowedPaths) {
     corrections.push(`Include ${developmentGuide} in the confirmed documentation scope.`);
   }
 
-  const tree = documentationTree(projectRoot);
-  for (const entry of directoryEntries(projectRoot, 'docs') ?? []) {
-    if (entry.name === 'README.md' || (entry.isDirectory() && documentationCategories.has(entry.name))) continue;
-    corrections.push(`Move docs/${entry.name} into usage, development, adr, or agents, preserving useful content and affected links.`);
-  }
-  for (const directory of tree.directories) {
-    if (directory === 'docs') continue;
-    const directoryIndex = `${directory}/README.md`;
-    const content = fileContent(projectRoot, directoryIndex);
-    if (content === null) corrections.push(`Create ${directoryIndex} to explain this documentation directory and link its useful contents.`);
-    else if (renderedMarkdown(content).length === 0) corrections.push(`Populate ${directoryIndex} with the directory purpose and links to useful contents.`);
-  }
+  const markdownFiles = new Set();
+  for (const root of documentationRoots(allowedPaths)) {
+    const indexPath = `${root}/README.md`;
+    const index = fileContent(projectRoot, indexPath);
+    if (index === null) {
+      corrections.push(`Create ${indexPath} to map the documentation categories and their placement rules.`);
+    } else if (renderedMarkdown(index).length === 0) {
+      corrections.push(`Populate ${indexPath} with the documentation map and placement rules.`);
+    }
+    if (!allowedPaths.includes(indexPath)) {
+      corrections.push(`Include ${indexPath} in the confirmed documentation scope.`);
+    }
 
-  const markdownFiles = new Set(tree.markdownFiles);
+    const tree = documentationTree(projectRoot, root);
+    for (const entry of directoryEntries(projectRoot, root) ?? []) {
+      if (entry.name === 'README.md'
+          || (entry.isDirectory() && documentationCategories.has(entry.name))) continue;
+      corrections.push(`Move ${root}/${entry.name} into usage, development, adr, or agents, preserving useful content and affected links.`);
+    }
+    for (const directory of tree.directories) {
+      if (directory === root) continue;
+      const directoryIndex = `${directory}/README.md`;
+      const content = fileContent(projectRoot, directoryIndex);
+      if (content === null) corrections.push(`Create ${directoryIndex} to explain this documentation directory and link its useful contents.`);
+      else if (renderedMarkdown(content).length === 0) corrections.push(`Populate ${directoryIndex} with the directory purpose and links to useful contents.`);
+    }
+    for (const path of tree.markdownFiles) markdownFiles.add(path);
+  }
   for (const path of allowedPaths) {
     if (path.toLocaleLowerCase('en-US').endsWith('.md') && fileContent(projectRoot, path) !== null) {
       markdownFiles.add(path);

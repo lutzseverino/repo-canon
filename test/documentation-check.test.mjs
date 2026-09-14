@@ -134,6 +134,19 @@ test('rejects populated top-level documentation outside the recognized categorie
   assert.match(outcome.result.message, /Move docs\/overview\.md into usage, development, adr, or agents/);
 });
 
+test('validates every context-local documentation root selected by discovery', t => {
+  const outcome = check(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+    'packages/app/docs/notes.md': '# Notes\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Create packages\/app\/docs\/README\.md/);
+  assert.match(outcome.result.message, /Move packages\/app\/docs\/notes\.md into usage, development, adr, or agents/);
+});
+
 test('requires the development guide in concrete scope even when the file exists', t => {
   const outcome = check(t, {
     'docs/README.md': '# Documentation\n',
