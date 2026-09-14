@@ -2,11 +2,11 @@
 
 The author preferences are settled in [authoring notes](authoring-notes.md). This document presents the complete current draft files for content review. It is not a validated standards source: the manifest, installed upstream skill directories, automation, and behavioral exercises are still pending.
 
-The next session will grill the missing product support using the [scope specification](docs/development/scope-capability-specification.md) and [compatibility audit](docs/development/adoption-compatibility.md). The [upstream compatibility notes](docs/development/upstream-compatibility.md) identify the native workflows to preserve.
+The required product support is delivered and accepted. Use the [compatibility mapping](docs/development/adoption-compatibility.md) for the v2 interface and validation baseline; the [original scope proposal](docs/development/scope-capability-specification.md) remains historical context. The [upstream compatibility notes](docs/development/upstream-compatibility.md) identify the native workflows to preserve.
 
 ## Ownership and destination
 
-AGENTS.md, CONTRIBUTING.md, issue/PR templates, and the shared agent configuration are intended as exact content. Files under drafts/guidance are source-side contextual instructions rather than installed project documents. Repository READMEs, development documentation, glossaries, and project-specific agent guidance remain project-owned. Concrete scope for arbitrary project READMEs and documentation migration depends on the proposed product capability.
+AGENTS.md, CONTRIBUTING.md, issue/PR templates, and the shared agent configuration are intended as exact content. Files under drafts/guidance are source-side contextual instructions rather than installed project documents. Repository READMEs, development documentation, glossaries, and project-specific agent guidance remain project-owned. Resolve concrete scope for arbitrary Project READMEs and documentation migration through v2 discovery and confirm the complete inspection before adoption writes.
 
 ## Current draft contents
 
@@ -453,10 +453,12 @@ Assess documents against their actual audience and topic. Mechanical checks
 cover categories, directory READMEs, required entry points, and local link
 targets. They do not prove correctness or usefulness.
 
-The current product cannot authorize arbitrary old documentation paths while
-protecting exact descendants through a universal declaration. Bind the full
-concrete scope through the future supported product interface; report this
-dependency rather than implying that narrower targets cover the whole policy.
+Use the v2 discovery route to propose individual files covering old locations,
+new destinations, required directory READMEs, and affected links. Keep exact
+shared configuration outside contextual scope. Review evidence and complete
+coverage with the adopter in the full inspection before confirmation. Newly
+discovered files require a confirmed scope amendment before editing; after a
+complete adoption, use fresh discovery during deliberate re-adoption.
 ````
 
 ### drafts/guidance/project-readmes.md
@@ -478,10 +480,13 @@ Discover projects from repository evidence, including manifests, build
 configuration, existing documentation, and meaningful component boundaries.
 Directory names alone do not define project membership.
 
-The scope must be concrete and confirmed before adoption writes. The current
-author format cannot express this location-independent requirement. Do not
-replace it with a hardcoded list of common directories or report unrepresented
-projects as covered.
+Use a v2 repository declaration with separate discovery guidance to identify
+individual Project README paths. Include missing READMEs with absence evidence
+and positive evidence of a maintained Project; explain excluded candidates and
+unresolved membership. The adopter reviews coverage and concrete scope in the
+complete inspection before confirmation. Newly discovered targets require
+confirmed scope before editing; existing scope never implies coverage of an
+unrepresented Project.
 ````
 
 ### drafts/guidance/repository-readme.md

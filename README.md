@@ -16,7 +16,7 @@ There is no adoption-ready release yet.
 - [Standards decisions](authoring-notes.md)
 - [Complete design drafts](design-review.md)
 - [Documentation index](docs/README.md)
-- [Known adoption dependency](docs/development/scope-capability-specification.md)
+- [Adoption compatibility](docs/development/adoption-compatibility.md)
 
 ## Contributing
 

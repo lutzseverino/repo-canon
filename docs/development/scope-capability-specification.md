@@ -1,7 +1,15 @@
-# Resolve project-specific contextual scope before adoption
+# Historical proposal: resolve project-specific contextual scope before adoption
 
-Status: proposed product specification, captured locally. No GitHub issue has
-been published and no product implementation is assigned by this document.
+Status: superseded by the delivered product contract. Product
+[#41](https://github.com/lutzseverino/repo-standards/issues/41) and delivery
+[#50](https://github.com/lutzseverino/repo-standards/issues/50) are complete;
+the owner's [acceptance reconciliation](https://github.com/lutzseverino/repo-standards/issues/41#issuecomment-5664401656)
+records final 1.2.1 acceptance. Use [adoption compatibility](adoption-compatibility.md)
+for Repo Canon's supported v2 mapping and remaining source responsibilities.
+
+The original proposal and CLI 1.1.0 experiment results follow as historical
+design context. Their present-tense limitations describe that earlier product;
+they do not assign new product design or block Repo Canon implementation.
 
 ## Problem Statement
 
@@ -82,10 +90,11 @@ Personal-standard policy changes, automatic project commits, integrated AGENTS
 preparation, remote-state ownership or rollback, arbitrary author adoption
 hooks, weakening existing protections, and publication of the personal source.
 
-## Blocked by
+## Historical blocker
 
-No implementation ticket has been created. Before implementation, settle and
-approve the product-owned scope interface and its architecture-contract change.
+At proposal time, no implementation ticket existed and the product-owned scope
+interface and architecture-contract change still required approval. That
+dependency is now satisfied by the product issues linked above.
 
 ## Further Notes
 
