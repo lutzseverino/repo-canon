@@ -73,6 +73,14 @@ function rootLicense(projectRoot) {
 
 function headings(markdown) {
   const found = [];
+  const record = (level, name, index, end, centered) => found.push({
+    level,
+    name,
+    folded: name.toLocaleLowerCase('en-US'),
+    index,
+    end,
+    centered,
+  });
   const centeredRanges = [...markdown.matchAll(/<div\b[^>]*\balign\s*=\s*(?:"center"|'center'|center)[^>]*>[\s\S]*?<\/div\s*>/gi)]
     .map(match => [match.index, match.index + match[0].length]);
   const isCentered = (index, attributes = '') => (
@@ -82,39 +90,18 @@ function headings(markdown) {
   const atx = /^(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$/gm;
   for (const match of markdown.matchAll(atx)) {
     const name = match[2].trim();
-    found.push({
-      level: match[1].length,
-      name,
-      folded: name.toLocaleLowerCase('en-US'),
-      index: match.index,
-      end: match.index + match[0].length,
-      centered: isCentered(match.index),
-    });
+    record(match[1].length, name, match.index, match.index + match[0].length, isCentered(match.index));
   }
   const html = /<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1\s*>/gi;
   for (const match of markdown.matchAll(html)) {
     const name = match[3].replace(/<[^>]*>/g, '').trim();
     if (!name) continue;
-    found.push({
-      level: Number(match[1]),
-      name,
-      folded: name.toLocaleLowerCase('en-US'),
-      index: match.index,
-      end: match.index + match[0].length,
-      centered: isCentered(match.index, match[2]),
-    });
+    record(Number(match[1]), name, match.index, match.index + match[0].length, isCentered(match.index, match[2]));
   }
   const setext = /^[ \t]{0,3}([^\r\n]+?)[ \t]*\r?\n[ \t]{0,3}(=+|-+)[ \t]*(?:\r?\n|$)/gm;
   for (const match of markdown.matchAll(setext)) {
     const name = match[1].trim();
-    found.push({
-      level: match[2][0] === '=' ? 1 : 2,
-      name,
-      folded: name.toLocaleLowerCase('en-US'),
-      index: match.index,
-      end: match.index + match[0].length,
-      centered: isCentered(match.index),
-    });
+    record(match[2][0] === '=' ? 1 : 2, name, match.index, match.index + match[0].length, isCentered(match.index));
   }
   return found.sort((left, right) => left.index - right.index);
 }
