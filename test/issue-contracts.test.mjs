@@ -8,7 +8,7 @@ import test from "node:test";
 
 const repository = "example/repository";
 
-async function exercise({ issue, comments = [], commentPages, blockedBy = [], event = {}, relatedIssues = {} }) {
+async function exercise({ issue, comments = [], commentPages, blockedBy = [], parent = null, event = {}, relatedIssues = {} }) {
   const requests = [];
   const server = createServer(async (request, response) => {
     let body = "";
@@ -31,6 +31,9 @@ async function exercise({ issue, comments = [], commentPages, blockedBy = [], ev
     }
     if (request.method === "GET" && request.url === `${issuePath}/dependencies/blocked_by?per_page=100`) {
       return json(response, 200, blockedBy);
+    }
+    if (request.method === "GET" && request.url === `${issuePath}/parent`) {
+      return parent ? json(response, 200, parent) : json(response, 404, { message: "No parent issue found" });
     }
     if (request.method === "GET" && Object.hasOwn(relatedIssues, request.url)) {
       return json(response, 200, relatedIssues[request.url]);
@@ -104,7 +107,7 @@ test("a complete public bug report is accepted without changing the issue", asyn
 
   assert.equal(result.code, 0, result.stderr);
   assert.match(result.stdout, /valid bug report/i);
-  assert.deepEqual(result.requests.map(({ method }) => method), ["GET", "GET", "GET"]);
+  assert.ok(result.requests.every(({ method }) => method === "GET"));
 });
 
 test("an incomplete ready bug report loses readiness and receives actionable feedback", async () => {
@@ -206,23 +209,19 @@ test("an empty checklist is rejected as a required-field placeholder", async () 
 });
 
 test("a native ticket can use relationships and remain valid with an open blocker", async () => {
-  const parentUrl = "/repos/example/repository/issues/7";
   const result = await exercise({
     issue: {
       number: 42,
       body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
       labels: [{ name: "ready-for-agent" }],
-      parent_issue_url: parentUrl,
       state: "open",
     },
     blockedBy: [{ number: 41, state: "open", html_url: "https://github.com/example/repository/issues/41" }],
-    relatedIssues: {
-      [parentUrl]: { number: 7, state: "open", labels: [{ name: "wayfinder:map" }] },
-    },
+    parent: { number: 7, state: "open", labels: [] },
   });
 
   assert.equal(result.code, 0, result.stderr);
-  assert.ok(result.requests.some(({ method, url }) => method === "GET" && url === parentUrl));
+  assert.ok(result.requests.some(({ method, url }) => method === "GET" && url.endsWith("/issues/42/parent")));
 });
 
 test("a Wayfinder map accepts empty initial decisions and a child reads its parent", async (context) => {
@@ -239,22 +238,18 @@ test("a Wayfinder map accepts empty initial decisions and a child reads its pare
   });
 
   await context.test("child", async () => {
-    const parentUrl = "/repos/example/repository/issues/7";
     const result = await exercise({
       issue: {
         number: 42,
         body: "## Question\n\nWhich cache meets the latency target?",
         labels: [{ name: "wayfinder:research" }],
-        parent_issue_url: parentUrl,
         state: "open",
       },
       blockedBy: [{ number: 41, state: "open" }],
-      relatedIssues: {
-        [parentUrl]: { number: 7, state: "open", labels: [{ name: "wayfinder:map" }] },
-      },
+      parent: { number: 7, state: "open", labels: [{ name: "wayfinder:map" }] },
     });
     assert.equal(result.code, 0, result.stderr);
-    assert.ok(result.requests.some(({ url }) => url === parentUrl));
+    assert.ok(result.requests.some(({ url }) => url?.endsWith("/issues/42/parent")));
   });
 });
 

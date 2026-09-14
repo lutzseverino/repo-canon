@@ -85,7 +85,7 @@ function required(name) {
 function createApi({ baseUrl, repository, token }) {
   const issuePath = `/repos/${repository}/issues`;
 
-  async function requestResponse(path, options = {}) {
+  async function requestResponse(path, { allowNotFound = false, ...options } = {}) {
     const response = await fetch(path.startsWith("http") ? path : `${baseUrl}${path}`, {
       ...options,
       headers: {
@@ -96,6 +96,7 @@ function createApi({ baseUrl, repository, token }) {
         ...options.headers,
       },
     });
+    if (allowNotFound && response.status === 404) return { data: null, link: null };
     if (!response.ok) {
       throw new Error(`GitHub API ${options.method ?? "GET"} ${path} returned ${response.status}: ${await response.text()}`);
     }
@@ -122,6 +123,7 @@ function createApi({ baseUrl, repository, token }) {
 
   return {
     getIssue: (number) => request(`${issuePath}/${number}`),
+    getParent: (number) => request(`${issuePath}/${number}/parent`, { allowNotFound: true }),
     getUrl: (url) => request(url),
     listComments: (number) => paginate(`${issuePath}/${number}/comments?per_page=100`),
     listBlockedBy: (number) => paginate(`${issuePath}/${number}/dependencies/blocked_by?per_page=100`),
@@ -134,8 +136,9 @@ function createApi({ baseUrl, repository, token }) {
 
 async function readRelationships(apiClient, issue, nativeBlockedBy) {
   const sections = parseSections(issue.body ?? "");
-  const parentReference = issue.parent_issue_url ?? firstIssueReference(sections.get("parent"));
-  const parent = parentReference ? await apiClient.getUrl(parentReference) : null;
+  const nativeParent = await apiClient.getParent(issue.number);
+  const parentReference = firstIssueReference(sections.get("parent"));
+  const parent = nativeParent ?? (parentReference ? await apiClient.getUrl(parentReference) : null);
   const blockedBy = [...nativeBlockedBy];
   const knownReferences = new Set(nativeBlockedBy.map((blocker) => issueReferenceFor(blocker)).filter(Boolean));
   for (const reference of issueReferences(sections.get("blocked by"))) {
