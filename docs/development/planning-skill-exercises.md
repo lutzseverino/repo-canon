@@ -72,11 +72,10 @@ existing inventory and engineering runtime records.
 | `wizard` | `518a4d148ef366cde28bd3b5f3eefc54ac7ddeeb670cd96eaff07cf4d2ce30f0` |
 
 The fixture test verifies every installed dependency symlink, including the
-productivity `grilling` dependency used by planning. No exercise modified a
-vendored file. Managed-snapshot updates therefore remain governed by the
-standards-maintainer process in
-[upstream compatibility](upstream-compatibility.md); adopting contributors
-received no independent updater or write route.
+productivity `grilling` dependency used by planning. A separate runtime
+exercise verified the managed-update boundary below. No exercise modified a
+vendored file, and adopting contributors received no independent updater or
+write route.
 
 ## Observed outcomes
 
@@ -103,6 +102,22 @@ exact replacement in a second commit,
 `f44ed880d3dae67233b3734d7de0dadb01e7a9c9`. `cmp` proved root AGENTS matched
 the candidate byte for byte; all six referenced documents existed. This was a
 disposable local sequence, not Repository Standards adoption evidence.
+
+Session `01a0a1fd-049a-7652-a47b-fa41eca32366` then treated a direct installed
+skill edit as an adopting-contributor request. It declined that route under
+the standards-release ADR, hashed the complete installed
+`setup-matt-pocock-skills` directory, made one synthetic change only in a
+disposable full-directory candidate, and observed `diff -ru` exit 1. The
+source digest remained
+`570d12b3caf6c468d77e0aba8602efc7a5346697a77cb5372f623cf67247784b`
+before and after; Repo Canon's vendored diff stayed empty. The retained
+[boundary record](planning-skill-artifacts/managed-skill-update-boundary.md)
+and fixture commit `1ea3f66fb0a353eb99282b479def251af831818a` also
+record the reviewed upstream pin, manifest, complete selected directories,
+notice, reference reconciliation, byte comparison, and release-review steps
+available only to a standards maintainer.
+This detected a controlled candidate deviation without performing or
+authorizing a standards update.
 
 ### `grill-with-docs`
 

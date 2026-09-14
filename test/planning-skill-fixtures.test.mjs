@@ -116,6 +116,11 @@ test('retained planning artifacts preserve native formats and runtime outputs', 
   assert.doesNotMatch(map, /Whether Retry windows differ by carrier after a default is chosen/);
   assert.match(readFileSync(join(artifacts, 'retry-window-ticket.md'), 'utf8'), /^Status: resolved$/m);
 
+  const managedUpdate = readFileSync(join(artifacts, 'managed-skill-update-boundary.md'), 'utf8');
+  assert.match(managedUpdate, /Source-digest equality required \| passed \(exact equality\)/);
+  assert.match(managedUpdate, /`diff -ru` candidate comparison \| detected the single added/);
+  assert.match(managedUpdate, /adopting-repository contributors do not update those files/);
+
   const prototype = readFileSync(join(artifacts, 'delivery-schedule-cancellation-prototype.html'), 'utf8');
   assert.match(prototype, /Guided walkthroughs/);
   assert.match(prototype, /const transition = \(state, action\) =>/);
