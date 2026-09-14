@@ -9,9 +9,10 @@ whose allowed target is the root `README.md`, and returns one
 The operation requires Node.js 24. Its integration metadata is `node` with
 `["--version"]`, version range `>=24.0.0 <25.0.0`, retained resource directories
 `vendor/marked` and `vendor/parse5`, and a 30-second timeout. It uses the
-vendored Marked 18.0.13 lexer and parse5 8.0.1 fragment parser so structural
-decisions follow rendered Markdown and HTML structure. Ticket #15 owns the
-final declaration and profile wiring.
+vendored Marked 18.0.13 lexer, parse5 8.0.1 fragment parser, and shared
+`operations/lib/rendered-markdown.mjs` resource so structural decisions follow
+one rendered Markdown and HTML representation. Ticket #15 owns the final
+declaration and profile wiring.
 
 The result statuses have distinct meanings:
 
