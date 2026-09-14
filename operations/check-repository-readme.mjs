@@ -1,7 +1,6 @@
 import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { marked } from '../vendor/marked/marked.esm.js';
-import { parseFragment } from '../vendor/parse5/parse5.esm.js';
+import { renderedMarkdown, resolvedLocalPath } from './lib/rendered-markdown.mjs';
 
 const resultFormat = 'repo-standards/result/v1';
 const recognizedSections = [
@@ -13,10 +12,6 @@ const recognizedSections = [
   'Contributing',
   'License',
 ];
-const renderedElementsWithoutText = new Set([
-  'audio', 'canvas', 'embed', 'hr', 'iframe', 'img', 'input', 'math', 'object', 'picture', 'svg', 'video',
-]);
-const nonRenderedElements = new Set(['script', 'style', 'template']);
 
 function failProcess(message) {
   throw new Error(message);
@@ -50,14 +45,6 @@ function result(status, message) {
   process.stdout.write(`${JSON.stringify({ format: resultFormat, status, message })}\n`);
 }
 
-function attribute(node, name) {
-  return node.attrs?.find(candidate => candidate.name === name)?.value ?? null;
-}
-
-function isHidden(node) {
-  return nonRenderedElements.has(node.tagName) || attribute(node, 'hidden') !== null;
-}
-
 function rootLicense(projectRoot) {
   const candidates = readdirSync(projectRoot, { withFileTypes: true })
     .filter(entry => entry.isFile() && /^license(?:[._-].+)?$/i.test(entry.name))
@@ -77,56 +64,6 @@ function rootLicense(projectRoot) {
   return { path };
 }
 
-function renderedText(node) {
-  if (node.nodeName === '#text') return node.value;
-  if (isHidden(node)) return '';
-  if (node.tagName === 'img') return attribute(node, 'alt') ?? '';
-  return (node.childNodes ?? []).map(renderedText).join('');
-}
-
-function containsHeading(node) {
-  if (isHidden(node)) return false;
-  return (node.childNodes ?? []).some(child => /^h[1-6]$/.test(child.tagName) || containsHeading(child));
-}
-
-function renderedStructure(markdown) {
-  const events = [];
-  const visit = (node, centered = false) => {
-    if (isHidden(node)) return;
-    if (node.nodeName === '#text') {
-      if (node.value.trim()) events.push({ type: 'text', text: node.value });
-      return;
-    }
-
-    const ownCenter = attribute(node, 'align')?.toLocaleLowerCase('en-US') === 'center';
-    if (/^h[1-6]$/.test(node.tagName)) {
-      const name = renderedText(node).trim();
-      if (name) events.push({
-        type: 'heading',
-        level: Number(node.tagName[1]),
-        name,
-        centered: ownCenter || centered,
-        folded: name.toLocaleLowerCase('en-US'),
-      });
-      return;
-    }
-    if (node.tagName === 'a') {
-      events.push({ type: 'link', label: renderedText(node).trim(), target: attribute(node, 'href') ?? '' });
-      if (containsHeading(node)) {
-        for (const child of node.childNodes ?? []) visit(child, centered);
-      }
-      return;
-    }
-    if (renderedElementsWithoutText.has(node.tagName)) {
-      events.push({ type: 'content' });
-    }
-    const insideCenter = centered || (node.tagName === 'div' && ownCenter);
-    for (const child of node.childNodes ?? []) visit(child, insideCenter);
-  };
-  visit(parseFragment(marked.parse(markdown)));
-  return events;
-}
-
 function sectionEvents(events, allHeadings, name) {
   const index = allHeadings.findIndex(heading => heading.folded === name.toLocaleLowerCase('en-US'));
   if (index < 0) return null;
@@ -136,20 +73,6 @@ function sectionEvents(events, allHeadings, name) {
   return events.slice(start, end < 0 ? events.length : end);
 }
 
-function localPath(target) {
-  try {
-    if (/^(?:[a-z][a-z+.-]*:|\/|\\)/i.test(target)) return null;
-    const base = new URL('https://repository.invalid/project/');
-    const destination = new URL(target, base);
-    const rootPath = base.pathname;
-    return destination.origin === base.origin && destination.pathname.startsWith(rootPath)
-      ? destination.pathname.slice(rootPath.length)
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 function singleLink(events) {
   return events.length === 1 && events[0].type === 'link' ? events[0] : null;
 }
@@ -157,7 +80,7 @@ function singleLink(events) {
 function linksTo(events, target) {
   if (events === null) return false;
   return events.some(event => event.type === 'link'
-    && event.label && localPath(event.target) === target);
+    && event.text && resolvedLocalPath('README.md', event.target) === target);
 }
 
 function checkNavigationLink(projectRoot, events, allHeadings, section, target, corrections) {
@@ -170,7 +93,7 @@ function checkNavigationLink(projectRoot, events, allHeadings, section, target, 
 function checkStructure(projectRoot, markdown, license) {
   if (markdown === null) return ['Create the root README.md.'];
   const corrections = [];
-  const events = renderedStructure(markdown);
+  const events = renderedMarkdown(markdown);
   const parsedHeadings = events.filter(event => event.type === 'heading');
   const title = parsedHeadings.find(heading => heading.level === 1) ?? null;
   if (!title?.centered) {
@@ -209,8 +132,8 @@ function checkStructure(projectRoot, markdown, license) {
     if (!link) {
       corrections.push('Make the License section contain only the license link.');
     } else {
-      if (!link.label) corrections.push('Name the License link for the actual repository license.');
-      if (localPath(link.target) !== license.path) corrections.push(`Make the License link target ${license.path}.`);
+      if (!link.text) corrections.push('Name the License link for the actual repository license.');
+      if (resolvedLocalPath('README.md', link.target) !== license.path) corrections.push(`Make the License link target ${license.path}.`);
     }
   }
   return [...new Set(corrections)];
