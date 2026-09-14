@@ -1,0 +1,17 @@
+{
+  "action": "opened",
+  "pull_request": {
+    "title": "test(metadata): keep hostile text inert",
+    "body": "## Summary\nPreserve the hostile `$(touch __SENTINEL__)` example without executing it.\n\n## Validation\n`node --test` passed for the hostile event fixture.\n\n## Related issue\nCloses #6\n",
+    "head": {
+      "ref": "$(touch __SENTINEL__)",
+      "sha": "untrusted-head-sha",
+      "repo": {
+        "clone_url": "file://__SENTINEL__"
+      }
+    },
+    "base": {
+      "sha": "trusted-base-sha"
+    }
+  }
+}
