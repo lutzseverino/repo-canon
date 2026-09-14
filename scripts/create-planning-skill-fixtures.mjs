@@ -135,6 +135,9 @@ const repositories = {};
   });
   write(root, 'docs/adr/README.md', '# Architecture decisions\n\nDecisions for the disposable Parcel API.\n');
   write(root, 'docs/adr/0001-parcel-identifiers.md', '# Keep Parcel identifiers opaque\n\nParcel identifiers are opaque strings supplied by the carrier.\n');
+  for (const path of ['README.md', 'domain.md', 'issue-tracker.md', 'triage-labels.md']) {
+    cpSync(join(sourceRoot, 'docs/agents', path), join(root, 'docs/agents', path));
+  }
   write(root, 'candidate/AGENTS.md', readFileSync(join(sourceRoot, 'AGENTS.md'), 'utf8'));
   write(root, 'package.json', `${JSON.stringify({
     name: 'repo-canon-adoption-preparation-exercise',

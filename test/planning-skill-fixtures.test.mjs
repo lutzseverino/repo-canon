@@ -56,6 +56,7 @@ test('planning and adoption fixture builder creates runnable bounded scenarios',
     const preparation = join(target, 'adoption-preparation');
     assert.match(readFileSync(join(preparation, 'candidate', 'AGENTS.md'), 'utf8'), /# Agent guidance/);
     assert.match(readFileSync(join(preparation, 'AGENTS.md'), 'utf8'), /Parcel API/);
+    assert.match(readFileSync(join(preparation, 'docs', 'agents', 'issue-tracker.md'), 'utf8'), /Issue tracker/);
 
     const planning = join(target, 'planning');
     assert.match(readFileSync(join(planning, 'docs', 'agents', 'issue-tracker.md'), 'utf8'), /Local Markdown/);
