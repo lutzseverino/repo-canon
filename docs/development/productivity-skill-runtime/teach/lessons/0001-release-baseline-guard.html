@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release baseline guard | Git ancestry</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Git ancestry · lesson 0001</p>
+      <h1>The release baseline guard</h1>
+      <p class="meta">10–12 minutes · No history changes</p>
+    </header>
+
+    <p>Your release script has two inputs: a <strong>required baseline</strong> and a <strong>candidate release commit</strong>. Its one job is to decide whether the baseline can be reached by following parent links from the candidate.</p>
+
+    <div class="callout">
+      <strong>The decision rule:</strong> a candidate contains a baseline precisely when the baseline is an ancestor of the candidate. Commit dates are not part of that test: a newer-dated commit can be on an unrelated line of history.
+    </div>
+
+    <h2 id="command">1. Put the question in Git’s argument order</h2>
+    <p>Read <code>git merge-base --is-ancestor A B</code> as: “Is <code>A</code> an ancestor of <code>B</code>?” For a release guard, substitute <code>baseline</code> for <code>A</code> and <code>candidate</code> for <code>B</code>.</p>
+
+    <pre><code>git merge-base --is-ancestor "$baseline" "$candidate"</code></pre>
+
+    <p>That command only inspects the commit graph. It does not merge, rebase, move a reference, or otherwise change history.</p>
+
+    <section class="exercise" aria-labelledby="order-heading">
+      <h2 id="order-heading">Retrieve it: argument order</h2>
+      <p>Without looking above, name the roles in the order that makes the command test the release requirement.</p>
+      <label for="order-answer">Command argument order</label>
+      <input id="order-answer" autocomplete="off" spellcheck="false" aria-describedby="order-feedback">
+      <button type="button" data-check="order">Check</button>
+      <p class="feedback" id="order-feedback" aria-live="polite"></p>
+    </section>
+
+    <h2 id="statuses">2. Let the exit status decide</h2>
+    <p>The official Git manual assigns three outcomes:</p>
+    <ul>
+      <li><code>0</code>: baseline <em>is</em> an ancestor of candidate — permit the release.</li>
+      <li><code>1</code>: baseline is <em>not</em> an ancestor — reject this candidate normally.</li>
+      <li>Any other nonzero status: Git could not perform the check — stop and report an error; do not call it a normal rejection.</li>
+    </ul>
+
+    <pre><code>if git merge-base --is-ancestor "$baseline" "$candidate"; then
+  printf '%s\n' "candidate contains required baseline"
+  # permit release
+else
+  status=$?
+  if [ "$status" -eq 1 ]; then
+    printf '%s\n' "candidate does not contain required baseline" >&amp;2
+    # reject candidate normally
+    exit 1
+  else
+    printf 'cannot check release ancestry (git exited %s)\n' "$status" >&amp;2
+    # stop: this is an operational error
+    exit "$status"
+  fi
+fi</code></pre>
+
+    <p>Use this pattern in a release script: only the eligible branch continues. Capture <code>$?</code> immediately after Git fails; <code>exit "$status"</code> then terminates the script with that original error status, even after the diagnostic message.</p>
+
+    <section class="exercise" aria-labelledby="status-heading">
+      <h2 id="status-heading">Retrieve it: status handling</h2>
+      <p>Git returns status <code>1</code> after it checks ancestry. How should the release guard classify that outcome?</p>
+      <label for="status-answer">Outcome classification</label>
+      <input id="status-answer" autocomplete="off" spellcheck="false" aria-describedby="status-feedback">
+      <button type="button" data-check="status">Check</button>
+      <p class="feedback" id="status-feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="exercise" aria-labelledby="error-heading">
+      <h2 id="error-heading">Apply it: safe failure</h2>
+      <p>Your script receives an invalid candidate revision and Git exits <code>128</code>. How should the release guard classify that outcome?</p>
+      <label for="error-answer">Classification</label>
+      <input id="error-answer" autocomplete="off" spellcheck="false" aria-describedby="error-feedback">
+      <button type="button" data-check="error">Check</button>
+      <p class="feedback" id="error-feedback" aria-live="polite"></p>
+    </section>
+
+    <h2 id="takeaway">Takeaway</h2>
+    <p>Ask a graph question, not a calendar question: <code>baseline</code> first, <code>candidate</code> second. Then distinguish <code>0</code>, <code>1</code>, and every other nonzero exit status.</p>
+
+    <p>Keep the <a href="../reference/release-baseline-guard.html">release baseline guard quick reference</a> for the command and status policy.</p>
+
+    <p class="source">Primary source: <a href="https://git-scm.com/docs/git-merge-base#Documentation/git-merge-base.txt---is-ancestor" target="_blank" rel="noreferrer">official <code>git-merge-base</code> documentation</a>. Ask your teacher any follow-up question—especially before adapting this guard to a real release script.</p>
+  </main>
+  <script>
+    const checks = {
+      order: {
+        answer: 'baseline candidate',
+        correct: 'Correct. The question is: “Is the baseline an ancestor of the candidate?”',
+        incorrect: 'Not yet. Put the commit that must already be contained first, then the candidate being tested.'
+      },
+      status: {
+        answer: 'ordinary rejection',
+        correct: 'Correct. Git completed the check and answered that the baseline is not an ancestor, so this is not a processing problem.',
+        incorrect: 'Try again. This is Git’s documented negative ancestry result, distinct from a failure to run the check.'
+      },
+      error: {
+        answer: 'processing failure',
+        correct: 'Correct. Git could not complete the ancestry check, so the release must stop for investigation.',
+        incorrect: 'Not safely. Only status 1 is the normal negative ancestry result; another nonzero status means the check did not complete.'
+      }
+    };
+    document.querySelectorAll('[data-check]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.check;
+        const input = document.getElementById(`${key}-answer`);
+        const feedback = document.getElementById(`${key}-feedback`);
+        const response = input.value.trim().toLowerCase().replace(/\s+/g, ' ');
+        const isCorrect = response === checks[key].answer;
+        feedback.textContent = isCorrect ? checks[key].correct : checks[key].incorrect;
+        feedback.className = `feedback ${isCorrect ? 'good' : 'bad'}`;
+      });
+    });
+  </script>
+</body>
+</html>

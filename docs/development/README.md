@@ -32,9 +32,11 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   [architecture report](engineering-skill-architecture-report.html), and
   [research result](engineering-skill-research-result.md) retain the observed
   session outputs; the [runtime-builder patch](engineering-skill-runtime-builder.patch)
-  preserves exact harness provenance, and the
-  [visual-inspection record](engineering-skill-architecture-visual-inspection.md)
-  records the browser-render review.
+   preserves exact harness provenance, and the
+   [visual-inspection record](engineering-skill-architecture-visual-inspection.md)
+   records the browser-render review.
+- [Productivity skill exercises](productivity-skill-exercises.md): runtime
+  scenarios, outcomes, retained artifacts, prerequisites, and limitations.
 
 ## Authoring status
 
@@ -81,3 +83,6 @@ duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
 The public source-validation command and its evidence boundary are recorded in
 [the source profile](source-profile.md). Adoption evidence remains separate
 from these checks.
+
+Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
+disposable local repositories used for the seven productivity skill exercises.
