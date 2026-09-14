@@ -9,11 +9,14 @@ The description must contain exactly one meaningful `Summary`, `Validation`, and
 letter casing do not affect recognition. HTML comments, placeholders such as
 `TODO`, `TBD`, `N/A`, `Not applicable`, and `None`, rendered-empty HTML, and
 punctuation alone do not count as content. Headings inside fenced code examples
-do not define sections. `Limits` remains optional.
+do not define sections. Code contents can describe Validation evidence, but fence
+delimiters and language info do not count as content. `Limits` remains optional.
 
 `Related issue` accepts a GitHub issue URL, `owner/repository#123`, or `#123`.
 An eligible typo, broken link, or formatting correction can instead use
 `Small correction: reason`, where the reason contains meaningful text.
+References in code examples, HTML comments, and unrelated HTML attributes do not
+count. A GitHub issue URL used as a Markdown or HTML link destination does count.
 
 Titles use `type(scope): description`, with an optional scope and an optional
 `!` immediately before the colon. The allowed lowercase types are `feat`,
@@ -50,3 +53,8 @@ npm test
 The project has no compilation step or external package dependencies. CI runs
 the complete syntax check and Node test suite for pull requests and pushes to
 `main`.
+
+The validator reads Markdown structure with the repository's pinned
+[Marked lexer](../../vendor/marked/README.md) and reads rendered HTML content and
+link attributes with the pinned [parse5 bundle](../../vendor/parse5/README.md).
+Their source and license notices live beside the vendored ESM files.

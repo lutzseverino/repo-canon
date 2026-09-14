@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { appendFileSync, readFileSync } from "node:fs";
+import { marked } from "../../vendor/marked/marked.esm.js";
+import { parseFragment } from "../../vendor/parse5/parse5.esm.js";
 
 const allowedTypes = [
   "feat",
@@ -15,7 +17,6 @@ const allowedTypes = [
   "chore",
   "revert",
 ];
-
 const exactPlaceholders = new Set([
   "todo",
   "tbd",
@@ -37,63 +38,159 @@ const exactPlaceholders = new Set([
   "see above",
   "see title",
 ]);
+const recognizedSections = new Set([
+  "summary",
+  "validation",
+  "related issue",
+  "impact",
+  "migration",
+]);
+const inlineContainers = new Set([
+  "del",
+  "em",
+  "heading",
+  "link",
+  "paragraph",
+  "strong",
+  "text",
+]);
+const issueUrl = /https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*\b/i;
 
-function withoutHtmlComments(markdown) {
-  return markdown.replace(/<!--[\s\S]*?(?:-->|$)/g, " ");
-}
+const blockElements = new Set([
+  "address",
+  "article",
+  "aside",
+  "blockquote",
+  "details",
+  "dialog",
+  "div",
+  "dl",
+  "fieldset",
+  "figcaption",
+  "figure",
+  "footer",
+  "form",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "header",
+  "hgroup",
+  "hr",
+  "li",
+  "main",
+  "nav",
+  "ol",
+  "p",
+  "pre",
+  "section",
+  "table",
+  "ul",
+]);
+const hiddenElements = new Set(["script", "style", "template"]);
 
-function markdownLines(markdown) {
-  let fence;
-  return withoutHtmlComments(markdown)
-    .replace(/\r\n?/g, "\n")
-    .split("\n")
-    .map((line) => {
-      const fenceLine = line.match(/^\s{0,3}(`{3,}|~{3,})(.*)$/);
-      if (fence) {
-        if (
-          fenceLine &&
-          fenceLine[1][0] === fence.character &&
-          fenceLine[1].length >= fence.length &&
-          fenceLine[2].trim() === ""
-        ) {
-          fence = undefined;
-        }
-        return { inFence: true, line };
+function parsedHtml(value) {
+  const links = [];
+  let text = "";
+
+  function visit(node) {
+    if (node.nodeName === "#comment") {
+      return;
+    }
+    if (node.nodeName === "#text") {
+      text += node.value;
+      return;
+    }
+    if (hiddenElements.has(node.nodeName)) {
+      return;
+    }
+
+    if (node.nodeName === "a") {
+      const href = node.attrs?.find((attribute) => attribute.name === "href")?.value;
+      if (href) {
+        links.push(href);
       }
-      if (fenceLine) {
-        fence = { character: fenceLine[1][0], length: fenceLine[1].length };
-        return { inFence: true, line };
-      }
-      return { inFence: false, line };
-    });
+    }
+    if (node.nodeName === "br") {
+      text += "\n";
+    }
+
+    for (const child of node.childNodes ?? []) {
+      visit(child);
+    }
+    if (blockElements.has(node.nodeName)) {
+      text += "\n";
+    }
+  }
+
+  visit(parseFragment(value));
+  return { links, text };
 }
 
-function withoutFencedCode(markdown) {
-  return markdownLines(markdown)
-    .map(({ inFence, line }) => (inFence ? "" : line))
-    .join("\n");
+function decodedText(value) {
+  return parsedHtml(value).text;
 }
 
-function withoutCodeExamples(markdown) {
-  return withoutFencedCode(markdown).replace(/(`+)[\s\S]*?\1/g, " ");
+function tokenText(token, includeCode) {
+  if (token.type === "code" || token.type === "codespan") {
+    return includeCode ? token.text : "";
+  }
+  if (token.type === "html") {
+    return parsedHtml(token.text).text;
+  }
+  if (token.type === "image") {
+    return decodedText(token.text ?? "");
+  }
+  if (token.type === "br") {
+    return "\n";
+  }
+  if (["checkbox", "def", "hr", "space"].includes(token.type)) {
+    return "";
+  }
+  if (token.type === "list") {
+    return token.items
+      .map((item) => renderedTokenList(item.tokens, includeCode))
+      .join("\n");
+  }
+  if (token.type === "table") {
+    const cells = [
+      ...token.header,
+      ...token.rows.flat(),
+    ];
+    return cells
+      .map((cell) => renderedInlineTokens(cell.tokens, includeCode))
+      .join("\n");
+  }
+  if (Array.isArray(token.tokens)) {
+    return inlineContainers.has(token.type)
+      ? renderedInlineTokens(token.tokens, includeCode)
+      : renderedTokenList(token.tokens, includeCode);
+  }
+  return typeof token.text === "string" ? decodedText(token.text) : "";
 }
 
-function visibleText(markdown) {
-  return withoutHtmlComments(markdown)
-    .replace(/\[(?<label>[^\]]+)]\([^)]*\)/g, "$<label>")
-    .replace(/<https?:\/\/[^>]+>/g, " ")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&(?:#\d+|#x[\da-f]+|[a-z][\da-z]+);/gi, " ")
-    .replace(/[`*_~>#|\[\](){}-]/g, " ")
-    .replace(/\s+/g, " ")
+function renderedInlineTokens(tokens, includeCode) {
+  return tokens.map((token) => tokenText(token, includeCode)).join("");
+}
+
+function renderedTokenList(tokens, includeCode = true) {
+  return tokens.map((token) => tokenText(token, includeCode)).join("\n");
+}
+
+function normalizedRenderedText(tokens, includeCode = true) {
+  return renderedTokenList(tokens, includeCode)
+    .replace(/[\t\f\v ]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{2,}/g, "\n")
     .trim();
 }
 
-function isMeaningful(markdown) {
-  const text = visibleText(markdown);
-  const normalized = text.toLowerCase();
+function isMeaningful(text) {
+  const normalized = text.replace(/\s+/g, " ").trim().toLowerCase();
   const placeholderCandidate = normalized.replace(/[.!?,;:…]+$/u, "").trim();
-  const words = text.match(/[\p{L}\p{N}]+/gu) ?? [];
+  const words = normalized.match(/[\p{L}\p{N}]+/gu) ?? [];
 
   if (
     exactPlaceholders.has(placeholderCandidate) ||
@@ -101,50 +198,31 @@ function isMeaningful(markdown) {
   ) {
     return false;
   }
-
   return words.length >= 2;
 }
 
-function headingName(rawHeading) {
-  return rawHeading
-    .replace(/[*_`]/g, "")
-    .replace(/\s*#+\s*$/, "")
+function headingName(token) {
+  return normalizedRenderedText(token.tokens)
     .replace(/:\s*$/, "")
     .trim()
     .toLowerCase();
 }
 
-function parseSections(body) {
+function parseSections(tokens) {
   const sections = new Map();
   let current;
-  const recognizedSections = new Set([
-    "summary",
-    "validation",
-    "related issue",
-    "impact",
-    "migration",
-  ]);
 
-  for (const { inFence, line } of markdownLines(body)) {
-    if (inFence) {
-      if (current) {
-        sections.get(current.name).at(-1).push(line);
-      }
-      continue;
-    }
-
-    const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*$/);
-    if (heading) {
-      const name = headingName(heading[2]);
+  for (const token of tokens) {
+    if (token.type === "heading") {
+      const name = headingName(token);
       if (!recognizedSections.has(name)) {
-        if (current && heading[1].length > current.level) {
-          continue;
+        if (!current || token.depth <= current.level) {
+          current = undefined;
         }
-        current = undefined;
         continue;
       }
 
-      current = { level: heading[1].length, name };
+      current = { level: token.depth, name };
       const values = sections.get(name) ?? [];
       values.push([]);
       sections.set(name, values);
@@ -152,7 +230,7 @@ function parseSections(body) {
     }
 
     if (current) {
-      sections.get(current.name).at(-1).push(line);
+      sections.get(current.name).at(-1).push(token);
     }
   }
 
@@ -169,52 +247,63 @@ function requiredSection(sections, name, errors) {
     errors.push(`Add a ${displayName} section.`);
     return null;
   }
-
   if (matches.length > 1) {
     errors.push(`Keep exactly one ${displayName} section.`);
   }
-
-  return matches[0].join("\n");
+  return matches[0];
 }
 
-function hasIssueReference(markdown) {
-  const content = withoutCodeExamples(markdown);
-  return (
-    /https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*\b/i.test(content) ||
+function hasIssueReference(tokens) {
+  const content = normalizedRenderedText(tokens, false);
+  if (
+    issueUrl.test(content) ||
     /\b[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#[1-9]\d*\b/.test(content) ||
     /(^|[^A-Za-z0-9_])#[1-9]\d*\b/.test(content)
-  );
+  ) {
+    return true;
+  }
+
+  let found = false;
+  marked.walkTokens(tokens, (token) => {
+    if (token.type === "link" && issueUrl.test(token.href)) {
+      found = true;
+    }
+    if (
+      token.type === "html" &&
+      parsedHtml(token.text).links.some((href) => issueUrl.test(href))
+    ) {
+      found = true;
+    }
+  });
+  return found;
 }
 
-function hasSmallCorrectionReason(markdown) {
-  const content = withoutCodeExamples(markdown);
-  const marker = content.match(/(?:^|\n)\s*Small correction\s*:\s*([\s\S]*)$/i);
+function hasSmallCorrectionReason(tokens) {
+  const content = normalizedRenderedText(tokens, false);
+  const marker = content.match(/(?:^|\n)Small correction\s*:\s*([\s\S]*)$/i);
   return marker ? isMeaningful(marker[1]) : false;
 }
 
-function inlineExplanation(body, label) {
-  for (const line of withoutCodeExamples(body).split("\n")) {
-    const plainLine = line.replace(/[*_`]/g, "");
-    const match = plainLine.match(
-      new RegExp(`^\\s*(?:[-+]\\s*)?${label}\\s*:\\s*(.+)$`, "i"),
-    );
-    if (match && isMeaningful(match[1])) {
-      return true;
-    }
-  }
-  return false;
+function inlineExplanation(tokens, label) {
+  const content = normalizedRenderedText(tokens, false);
+  const match = content.match(
+    new RegExp(`(?:^|\\n)(?:[-+]\\s*)?${label}\\s*:\\s*([^\\n]+)`, "i"),
+  );
+  return match ? isMeaningful(match[1]) : false;
 }
 
-function hasExplanation(sections, body, label) {
-  const section = sections.get(label)?.[0]?.join("\n") ?? "";
-  return isMeaningful(section) || inlineExplanation(body, label);
+function hasExplanation(sections, bodyTokens, label) {
+  const section = sections.get(label)?.[0] ?? [];
+  return (
+    isMeaningful(normalizedRenderedText(section)) ||
+    inlineExplanation(bodyTokens, label)
+  );
 }
 
-function validateTitle(title, body, sections, errors) {
+function validateTitle(title, bodyTokens, sections, errors) {
   const titleMatch = title.match(
     /^(?<type>[A-Za-z]+)(?<scope>\([^()\r\n]+\))?(?<breaking>!)?: (?<description>[^\r\n]+)$/,
   );
-
   if (!titleMatch) {
     errors.push(
       "Use a Conventional Commit title in the form type(scope): description, with ! before : for a breaking change.",
@@ -229,8 +318,8 @@ function validateTitle(title, body, sections, errors) {
   if (scope && scope.slice(1, -1).trim() !== scope.slice(1, -1)) {
     errors.push("Remove leading or trailing whitespace from the title scope.");
   }
-  if (!isMeaningful(description)) {
-    errors.push("Write a meaningful title description after the colon.");
+  if (!/[\p{L}\p{N}]/u.test(description)) {
+    errors.push("Write a title description containing a letter or number.");
   }
   if (description.trim() !== description) {
     errors.push("Remove leading or trailing whitespace from the title description.");
@@ -239,18 +328,16 @@ function validateTitle(title, body, sections, errors) {
     errors.push("Remove the trailing period from the title description.");
   }
 
-  const hasBreakingFooter = /^\s*BREAKING[ -]CHANGE\s*:/im.test(
-    withoutCodeExamples(body),
-  );
+  const structuralBody = normalizedRenderedText(bodyTokens, false);
+  const hasBreakingFooter = /^BREAKING[ -]CHANGE\s*:/im.test(structuralBody);
   if (hasBreakingFooter && !breaking) {
     errors.push("Add ! before the title colon when the body declares a breaking change.");
   }
-
   if (breaking) {
-    if (!hasExplanation(sections, body, "impact")) {
+    if (!hasExplanation(sections, bodyTokens, "impact")) {
       errors.push("Explain the breaking change under an Impact heading or Impact: label.");
     }
-    if (!hasExplanation(sections, body, "migration")) {
+    if (!hasExplanation(sections, bodyTokens, "migration")) {
       errors.push("Explain migration under a Migration heading or Migration: label.");
     }
   }
@@ -265,7 +352,6 @@ function writeSummary(errors) {
   if (!summaryPath) {
     return;
   }
-
   const lines = errors.length
     ? ["## PR metadata validation failed", "", ...errors.map((error) => `- ${error}`)]
     : ["## PR metadata validation passed", "", "The title and required PR sections have the expected structure."];
@@ -286,15 +372,16 @@ function main() {
 
   const body = typeof pullRequest.body === "string" ? pullRequest.body : "";
   const errors = [];
-  const sections = parseSections(body);
+  const bodyTokens = marked.lexer(body);
+  const sections = parseSections(bodyTokens);
   const summary = requiredSection(sections, "summary", errors);
   const validation = requiredSection(sections, "validation", errors);
   const relatedIssue = requiredSection(sections, "related issue", errors);
 
-  if (summary !== null && !isMeaningful(summary)) {
+  if (summary !== null && !isMeaningful(normalizedRenderedText(summary))) {
     errors.push("Replace the Summary placeholder with a meaningful problem and resulting change.");
   }
-  if (validation !== null && !isMeaningful(validation)) {
+  if (validation !== null && !isMeaningful(normalizedRenderedText(validation))) {
     errors.push("Replace the Validation placeholder with checks and outcomes, or explain what was not run.");
   }
   if (
@@ -307,7 +394,7 @@ function main() {
     );
   }
 
-  validateTitle(pullRequest.title, body, sections, errors);
+  validateTitle(pullRequest.title, bodyTokens, sections, errors);
   writeSummary(errors);
 
   if (errors.length) {
@@ -318,7 +405,6 @@ function main() {
     process.exitCode = 1;
     return;
   }
-
   console.log("PR metadata validation passed.");
 }
 

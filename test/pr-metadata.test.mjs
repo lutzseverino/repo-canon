@@ -79,6 +79,11 @@ test("accepts every allowed lowercase Conventional Commit type", () => {
   }
 });
 
+test("accepts a concise one-word title description", () => {
+  const result = runEvent({ title: "style: reformat" });
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("reports missing and placeholder PR sections together", () => {
   const body = `## Summary
 
@@ -166,6 +171,40 @@ Example summary text.
   assert.equal(realSectionsWithExample.status, 0, realSectionsWithExample.stderr);
 });
 
+test("treats HTML comment syntax inside fenced code as inert", () => {
+  const result = runEvent({
+    body: `\`\`\`html
+<!-- an intentionally unterminated example
+\`\`\`
+
+${validBody()}
+`,
+  });
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("rejects code fences whose only content is an info string", () => {
+  const result = runEvent({
+    body: `## Summary
+
+\`\`\`text
+\`\`\`
+
+## Validation
+
+\`\`\`shell session
+\`\`\`
+
+## Related issue
+
+Closes #6
+`,
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Replace the Summary placeholder/);
+  assert.match(result.stderr, /Replace the Validation placeholder/);
+});
+
 test("keeps nested subsections attached to required sections", () => {
   const result = runEvent({
     body: `## Summary
@@ -214,6 +253,46 @@ ${relatedIssue}
   }
 });
 
+test("uses rendered issue text and actual link destinations", () => {
+  const inertAttribute = runEvent({
+    body: `## Summary
+
+Validate pull request metadata before merge.
+
+## Validation
+
+The complete Node test suite passed.
+
+## Related issue
+
+<span data-example="#123"></span>
+`,
+  });
+  assert.equal(inertAttribute.status, 1);
+  assert.match(inertAttribute.stderr, /Link a related GitHub issue/);
+
+  for (const reference of [
+    "[Tracking issue](https://github.com/lutzseverino/repo-canon/issues/6)",
+    '<a href="https://github.com/lutzseverino/repo-canon/issues/6">Tracking issue</a>',
+  ]) {
+    const linked = runEvent({
+      body: `## Summary
+
+Validate pull request metadata before merge.
+
+## Validation
+
+The complete Node test suite passed.
+
+## Related issue
+
+${reference}
+`,
+    });
+    assert.equal(linked.status, 0, `${reference}: ${linked.stderr}`);
+  }
+});
+
 test("requires each PR section exactly once without requiring Limits", () => {
   const result = runEvent({
     body: `${validBody()}\n## Summary\n\nA duplicate summary is ambiguous.\n`,
@@ -229,6 +308,7 @@ test("rejects invalid Conventional Commit title structure", () => {
     ["feature(metadata): validate pull requests", /allowed lowercase type/],
     ["feat(metadata) validate pull requests", /form type\(scope\): description/],
     ["feat(): validate pull requests", /form type\(scope\): description/],
+    ["feat: ---", /letter or number/],
     ["feat(metadata): validate pull requests.", /trailing period/],
   ];
 
