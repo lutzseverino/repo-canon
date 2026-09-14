@@ -24,6 +24,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   outcomes, prerequisites, and focused fixture command.
 - [Documentation and Project README checks](documentation-check.md): concrete
   scope, structural outcomes, prerequisites, and focused fixture commands.
+- [Standards source profile](source-profile.md): complete profile ownership,
+  declarations, prerequisites, validation, and evidence boundaries.
 - [Engineering skill exercises](engineering-skill-exercises.md): disposable
   repositories and runtime evidence for the remaining engineering skills.
   The [curated transcript](engineering-skill-runtime-transcript.md),
@@ -39,21 +41,20 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
 ## Authoring status
 
-The design decisions are recorded. Draft material lives under `drafts/`;
+The design decisions are recorded. Review material lives under `drafts/`;
 confirmed choices live in [authoring notes](../../authoring-notes.md). The root
-contribution, shared agent configuration, and GitHub templates have completed
-material review and make the work-in-progress repository usable for planning.
-There is no `standards.yaml` yet and no source validation has passed.
+contribution guidance, shared agent configuration, GitHub templates, and
+contextual source guidance have completed material review. `standards.yaml`
+defines the complete source profile.
 
 The required product scope capability is delivered and accepted. Pull request
 metadata validation, issue contract validation, Repository README checking,
 GitHub label setup, PR integration setup, and their CI suites are implemented.
-Use the installed public CLI 1.2.1 with Node.js 24 as the initial
-source-validation baseline;
-claim compatibility only after validating the final source bytes. The earlier
-CLI 1.1.0 experiments remain historical evidence. Source validation, remaining
-operation and productivity-skill exercises, and complete Repo Canon adoption
-are still outstanding.
+Public CLI 1.2.1 with Node.js 24 validates the complete profile, and the source
+declares that exact compatibility. The earlier CLI 1.1.0 experiments remain
+historical evidence. Operation fixtures and the pinned skill inventory remain
+separate from source validation; remaining productivity-skill exercises and
+complete Repo Canon adoption are still outstanding.
 
 ## Working locally
 
@@ -81,4 +82,6 @@ contact GitHub or establish live remote setup. Run
 `npm run test:planning-skill-fixtures` for the planning-skill harness. The four
 draft issue forms were parsed as YAML and checked for basic field structure and
 duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
-Source validation and adoption evidence remain separate from these checks.
+The public source-validation command and its evidence boundary are recorded in
+[the source profile](source-profile.md). Adoption evidence remains separate
+from these checks.
