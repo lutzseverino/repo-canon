@@ -75,6 +75,11 @@ cannot overwrite a genuinely newer approval. The recorded transition barrier
 and position in the authoritative timeline establish that the selected label
 event follows the exact revision. Stale webhook payloads cannot supply the actor
 or restore an older association.
+If deleting a newer Agent Brief reveals an older previously approved Brief, the
+deletion event is recorded as a source invalidation. The restored source needs a
+new revision notice and review; replaying that deletion after renewed approval
+does not revoke it again, and deleting an older superseded Brief does not affect
+the current source.
 The workflow's per-issue concurrency group serializes validator runs, so a run
 holding an older comment snapshot cannot overlap and overwrite a newer approval
 recorded by another run.

@@ -120,7 +120,7 @@ const readiness = await assessReadiness({ api, event, issue, result, issueEvents
 if (!readiness.valid) {
   await removeReadiness(api, issueNumber, result.labels);
   if (result.triaged) await returnTriagedRequestToReview(api, issueNumber, result.labels);
-  await maintainFeedback(api, issueNumber, comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.error));
+  await maintainFeedback(api, issueNumber, comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, readiness.error));
   console.error(readiness.error);
   process.exit(1);
 }
@@ -137,8 +137,8 @@ await maintainFeedback(
   issueNumber,
   comments,
   readiness.approved
-    ? approvedFeedback(result.kind, revision, readiness.label, readiness.reviewer, readiness.reviewEventId)
-    : awaitingReviewFeedback(result.kind, revision, readiness.observedEventId),
+    ? approvedFeedback(result.kind, revision, readiness.label, readiness.reviewer, readiness.reviewEventId, readiness.sourceInvalidation)
+    : awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation),
 );
 console.log(`Valid ${result.kind}${readiness.approved ? ` with ${readiness.label} bound to ${revision}` : "; awaiting authorized review"}.`);
 
@@ -665,6 +665,16 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
   }
 
   const recorded = feedbackState(previousFeedback?.body);
+  const deletedBrief = supersedingDeletedBrief(currentEvent, result);
+  const sourceInvalidation = deletedBrief ?? recorded?.sourceInvalidation ?? null;
+  if (deletedBrief && recorded?.sourceInvalidation !== deletedBrief) {
+    return {
+      valid: false,
+      observedEventId,
+      sourceInvalidation,
+      error: "Deleting a newer Agent Brief invalidated the restored contract source. Review the published revision again.",
+    };
+  }
   const openingEvent = openingLabelEvent(currentEvent, issue, result, currentReadyLabels[0], issueEvents, latestEvent, openingEligible);
   const labelEvent = openingEvent ?? (
     currentReadyLabels.length === 1
@@ -680,17 +690,19 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
       label: recorded.label,
       reviewer: recorded.reviewer,
       reviewEventId: recorded.reviewEventId,
+      sourceInvalidation,
     };
   }
 
   const grant = readinessGrant(recorded, previousFeedback, revision, currentReadyLabels, labelEvent, issueEvents);
   if (grant.candidate) {
-    if (!grant.valid) return { valid: false, error: grant.error, observedEventId };
+    if (!grant.valid) return { valid: false, error: grant.error, observedEventId, sourceInvalidation };
     const authority = await reviewerAuthority(apiClient, grant.reviewer);
     if (!authority.authorized) {
       return {
         valid: false,
         observedEventId,
+        sourceInvalidation,
         error: authority.error
           ? `Could not verify @${grant.reviewer}'s review authority: ${authority.error}`
           : `@${grant.reviewer} is not authorized to grant readiness. Use a repository admin, maintainer, or collaborator with the triage role.`,
@@ -702,16 +714,18 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
       label: grant.label,
       reviewer: grant.reviewer,
       reviewEventId: grant.reviewEventId,
+      sourceInvalidation,
     };
   }
 
   if (currentReadyLabels.length === 0) {
-    return { valid: true, approved: false, observedEventId };
+    return { valid: true, approved: false, observedEventId, sourceInvalidation };
   }
 
   return {
     valid: false,
     observedEventId,
+    sourceInvalidation,
     error: "Readiness is not bound to an authorized review of the current contract revision. Remove the stale attempt and review the published revision again.",
   };
 }
@@ -809,6 +823,23 @@ function openingReviewId(issue) {
   return `opened:${issue.node_id ?? issue.id ?? issue.number}:${issue.created_at ?? "unknown"}`;
 }
 
+function supersedingDeletedBrief(currentEvent, result) {
+  if (currentEvent.action !== "deleted"
+    || result.contract.type !== "comment"
+    || !agentBriefHeading(currentEvent.comment?.body ?? "")) {
+    return null;
+  }
+  const deleted = currentEvent.comment;
+  const selected = result.contract.comment;
+  const deletedAt = deleted.created_at ?? "";
+  const selectedAt = selected.created_at ?? "";
+  let isNewer = deletedAt > selectedAt;
+  if (deletedAt === selectedAt && deleted.id != null && selected.id != null) {
+    isNewer = BigInt(deleted.id) > BigInt(selected.id);
+  }
+  return isNewer ? `deleted-comment:${deleted.node_id ?? deleted.id}` : null;
+}
+
 async function reviewerAuthority(apiClient, login) {
   let permission;
   try {
@@ -863,14 +894,14 @@ function invalidFeedback(errors) {
   return `${feedbackMarker}\n## Issue contract needs attention\n\n${errors.map((error) => `- ${error}`).join("\n")}\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.`;
 }
 
-function awaitingReviewFeedback(kind, revision, observedEventId = null, reason = null) {
-  const state = JSON.stringify({ status: "awaiting-review", revision, label: null, reviewer: null, observedEventId });
+function awaitingReviewFeedback(kind, revision, observedEventId = null, sourceInvalidation = null, reason = null) {
+  const state = JSON.stringify({ status: "awaiting-review", revision, label: null, reviewer: null, observedEventId, sourceInvalidation });
   const explanation = reason ? `\n\nThe last readiness attempt was rejected: ${reason}` : "";
   return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${revision}\`.${explanation}\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
 }
 
-function approvedFeedback(kind, revision, label, reviewer, reviewEventId) {
-  const state = JSON.stringify({ status: "approved", revision, label, reviewer, reviewEventId });
+function approvedFeedback(kind, revision, label, reviewer, reviewEventId, sourceInvalidation = null) {
+  const state = JSON.stringify({ status: "approved", revision, label, reviewer, reviewEventId, sourceInvalidation });
   return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${revision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`;
 }
 

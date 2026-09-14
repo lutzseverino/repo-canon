@@ -140,10 +140,10 @@ function revision(contract) {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
 
-function feedbackState({ status, revision: contractRevision, label = null, reviewer = null, reviewEventId = "101", observedEventId = null, kind = "implementation ticket" }) {
+function feedbackState({ status, revision: contractRevision, label = null, reviewer = null, reviewEventId = "101", observedEventId = null, sourceInvalidation = null, kind = "implementation ticket" }) {
   const state = JSON.stringify(status === "approved"
-    ? { status, revision: contractRevision, label, reviewer, reviewEventId }
-    : { status, revision: contractRevision, label, reviewer, observedEventId });
+    ? { status, revision: contractRevision, label, reviewer, reviewEventId, sourceInvalidation }
+    : { status, revision: contractRevision, label, reviewer, observedEventId, sourceInvalidation });
   if (status === "approved") {
     return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${contractRevision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`;
   }
@@ -1312,6 +1312,133 @@ test("editing an Agent Brief invalidates approval even when its visible bytes ar
 
   assert.equal(result.code, 1);
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("deleting a newer Agent Brief cannot restore an older Brief approval", async () => {
+  const oldBrief = {
+    id: 12,
+    node_id: "COMMENT_12",
+    body: completeAgentBrief,
+    created_at: "2026-09-14T17:00:00Z",
+    updated_at: "2026-09-14T17:00:00Z",
+    user: { login: "triager" },
+  };
+  const comments = [oldBrief, {
+    id: 13,
+    body: feedbackState({ status: "approved", revision: briefRevision(oldBrief), label: "ready-for-agent", reviewer: "triager", kind: "triaged Agent Brief" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const issue = {
+    number: 42,
+    body: "Intake context.",
+    labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+    state: "open",
+  };
+  const result = await exercise({
+    issue,
+    comments,
+    issueEvents: [{ id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "triager" }, created_at: "2026-09-14T17:01:00Z" }],
+    event: {
+      action: "deleted",
+      issue: { number: 42, body: issue.body },
+      comment: {
+        id: 14,
+        node_id: "COMMENT_14",
+        body: completeAgentBrief,
+        created_at: "2026-09-14T17:02:00Z",
+      },
+    },
+    permissions: { triager: { permission: "read", role_name: "triage" } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.match(comments.find(({ id }) => id === 13).body, /"sourceInvalidation":"deleted-comment:COMMENT_14"/);
+});
+
+test("a repeated Brief deletion cannot revoke the restored source after fresh review", async () => {
+  const brief = {
+    id: 12,
+    node_id: "COMMENT_12",
+    body: completeAgentBrief,
+    created_at: "2026-09-14T17:00:00Z",
+    updated_at: "2026-09-14T17:00:00Z",
+    user: { login: "triager" },
+  };
+  const comments = [brief, {
+    id: 13,
+    body: feedbackState({
+      status: "approved",
+      revision: briefRevision(brief),
+      label: "ready-for-agent",
+      reviewer: "triager",
+      reviewEventId: "103",
+      sourceInvalidation: "deleted-comment:COMMENT_14",
+      kind: "triaged Agent Brief",
+    }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const issue = {
+    number: 42,
+    body: "Intake context.",
+    labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+    state: "open",
+  };
+  const result = await exercise({
+    issue,
+    comments,
+    issueEvents: [
+      { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "triager" }, created_at: "2026-09-14T17:01:00Z" },
+      { id: 102, event: "unlabeled", label: { name: "ready-for-agent" }, actor: { login: "github-actions[bot]" }, created_at: "2026-09-14T17:02:00Z" },
+      { id: 103, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "triager" }, created_at: "2026-09-14T17:03:00Z" },
+    ],
+    event: {
+      action: "deleted",
+      issue: { number: 42, body: issue.body },
+      comment: { id: 14, node_id: "COMMENT_14", body: completeAgentBrief, created_at: "2026-09-14T17:02:00Z" },
+    },
+    permissions: { triager: { permission: "read", role_name: "triage" } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13")));
+});
+
+test("deleting an older Brief cannot invalidate a newer approved Brief", async () => {
+  const currentBrief = {
+    id: 15,
+    node_id: "COMMENT_15",
+    body: completeAgentBrief,
+    created_at: "2026-09-14T17:03:00Z",
+    updated_at: "2026-09-14T17:03:00Z",
+    user: { login: "triager" },
+  };
+  const comments = [currentBrief, {
+    id: 16,
+    body: feedbackState({ status: "approved", revision: briefRevision(currentBrief), label: "ready-for-agent", reviewer: "triager", reviewEventId: "103", kind: "triaged Agent Brief" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const issue = {
+    number: 42,
+    body: "Intake context.",
+    labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+    state: "open",
+  };
+  const result = await exercise({
+    issue,
+    comments,
+    issueEvents: [{ id: 103, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "triager" }, created_at: "2026-09-14T17:04:00Z" }],
+    event: {
+      action: "deleted",
+      issue: { number: 42, body: issue.body },
+      comment: { id: 14, node_id: "COMMENT_14", body: completeAgentBrief, created_at: "2026-09-14T17:02:00Z" },
+    },
+    permissions: { triager: { permission: "read", role_name: "triage" } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
 });
 
 test("removing readiness revokes the recorded approval and returns a triaged request to review", async () => {
