@@ -366,8 +366,10 @@ test("a native ticket can use relationships and remain valid with an open blocke
     state: "open",
     updated_at: "2026-09-14T17:00:00Z",
   };
+  const contractRevision = bodyRevision(issue);
   const result = await exercise({
     issue,
+    comments: [{ id: 13, body: feedbackState({ status: "awaiting-review", revision: contractRevision }), user: { login: "github-actions[bot]" } }],
     blockedBy: [{ number: 41, state: "open", html_url: "https://github.com/example/repository/issues/41" }],
     parent: { number: 7, state: "open", labels: [] },
     event: {
@@ -827,8 +829,10 @@ test("an authorized maintainer can bind a direct contract readiness label to the
     state: "open",
     updated_at: "2026-09-14T17:00:00Z",
   };
+  const contractRevision = bodyRevision(issue);
   const result = await exercise({
     issue,
+    comments: [{ id: 13, body: feedbackState({ status: "awaiting-review", revision: contractRevision }), user: { login: "github-actions[bot]" } }],
     event: {
       action: "labeled",
       issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
@@ -839,7 +843,7 @@ test("an authorized maintainer can bind a direct contract readiness label to the
   });
 
   assert.equal(result.code, 0, result.stderr);
-  const feedback = result.requests.find(({ method, url }) => method === "POST" && url.endsWith("/comments"));
+  const feedback = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
   assert.match(JSON.parse(feedback.body).body, new RegExp(bodyRevision(issue).replace(":", "\\:")));
   assert.match(JSON.parse(feedback.body).body, /reviewed by @maintainer/i);
   assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.includes("/labels/ready")));
@@ -1036,6 +1040,7 @@ test("a permission lookup failure cannot leave an unverified readiness label", a
   };
   const result = await exercise({
     issue,
+    comments: [{ id: 13, body: feedbackState({ status: "awaiting-review", revision: bodyRevision(issue) }), user: { login: "github-actions[bot]" } }],
     event: {
       action: "labeled",
       issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
@@ -1135,6 +1140,44 @@ test("direct body edits invalidate an approval even when the visible bytes are r
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
   const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
   assert.match(JSON.parse(update.body).body, /fresh authorized review/i);
+});
+
+test("a direct edit after re-review cannot preserve the newer readiness event", async () => {
+  const oldIssue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+  };
+  const issue = {
+    ...oldIssue,
+    body: oldIssue.body.replace("Add caching.", "Add bounded caching."),
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({
+      status: "approved",
+      revision: bodyRevision(oldIssue, "2026-09-14T17:00:00Z"),
+      label: "ready-for-agent",
+      reviewer: "maintainer",
+    }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    bodyLastEditedAt: "2026-09-14T17:03:00Z",
+    issueEvents: [
+      { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+      { id: 102, event: "unlabeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:01:00Z" },
+      { id: 103, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:02:00Z" },
+    ],
+    event: { action: "edited", issue: { number: 42, body: issue.body } },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
 });
 
 test("native relationship changes do not revise already reviewed contract bytes", async () => {
@@ -1308,7 +1351,7 @@ test("an authorized re-add establishes a fresh Agent Brief approval before the d
   assert.match(JSON.parse(update.body).body, /"reviewEventId":"103"/);
 });
 
-test("a same-second direct edit and authorized re-add wait for the matching review event", async () => {
+test("a same-second direct edit requires a revision notice before authorized re-add", async () => {
   const oldIssue = {
     number: 42,
     body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
@@ -1352,13 +1395,17 @@ test("a same-second direct edit and authorized re-add wait for the matching revi
     },
   });
 
-  assert.equal(delayedRemoval.code, 0, delayedRemoval.stderr);
-  assert.ok(!delayedRemoval.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
-  assert.ok(!delayedRemoval.requests.some(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13")));
-  assert.match(delayedRemoval.stdout, /waiting for its matching workflow event/i);
+  assert.equal(delayedRemoval.code, 1);
+  assert.ok(delayedRemoval.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.match(comments.find(({ id }) => id === 13).body, /"observedEventId":"103"/);
 
   const freshReview = await exercise({
     ...common,
+    issueEvents: [
+      ...issueEvents,
+      { id: 104, event: "unlabeled", label: { name: "ready-for-agent" }, actor: { login: "github-actions[bot]" }, created_at: "2026-09-14T17:02:00Z" },
+      { id: 105, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "second-maintainer" }, created_at: "2026-09-14T17:02:00Z" },
+    ],
     event: {
       action: "labeled",
       issue: { number: 42, body: issue.body, updated_at: "2026-09-14T17:02:00Z" },
@@ -1368,7 +1415,7 @@ test("a same-second direct edit and authorized re-add wait for the matching revi
   });
 
   assert.equal(freshReview.code, 0, freshReview.stderr);
-  assert.match(comments.find(({ id }) => id === 13).body, /"reviewEventId":"103"/);
+  assert.match(comments.find(({ id }) => id === 13).body, /"reviewEventId":"105"/);
   assert.match(comments.find(({ id }) => id === 13).body, /reviewed by @second-maintainer/i);
 });
 

@@ -39,13 +39,13 @@ edit revision. The comment also records the latest observed readiness-label
 transition, or the exact GitHub issue-event ID and actor that approved the
 revision. Native parent and blocker relationships remain review context rather
 than part of the body or Brief revision; changing an explicit relationship in
-the contract source changes its exact bytes. For an Agent Brief, wait for that
-revision notice before applying readiness. A direct
-specification or ticket created with readiness can be associated from its
-authoritative creation snapshot; later readiness changes use the complete
-authoritative label-event timeline. Removing and re-adding readiness always
-creates a new review event, and delayed or repeated workflows preserve only the
-latest event's association.
+the contract source changes its exact bytes. An unedited direct specification or
+ticket created with exactly one readiness label can be associated from its
+authoritative creation snapshot. For every later review and for every Agent
+Brief, wait for the exact revision notice before applying readiness. Later
+readiness changes use the complete authoritative label-event timeline. Removing
+and re-adding readiness always creates a new review event, and delayed or
+repeated workflows preserve only the latest event's association.
 
 Applying `ready-for-agent` or `ready-for-human` is the review action. The actor
 must currently have the repository `admin`, `maintain`, or `triage` role. The

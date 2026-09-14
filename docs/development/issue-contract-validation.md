@@ -58,19 +58,21 @@ Brief revision bytes. An explicit relationship link inside a direct ticket body
 is part of those exact bytes. Closing or replacing a native relationship alone
 does not silently redefine the reviewed source revision.
 
-For a direct specification or ticket, an authoritative `opened` event carrying
-one readiness label or a later readiness `labeled` event can supply the exact
-review snapshot. For an Agent Brief, the validator must first publish the exact
-revision in its feedback comment; the reviewer then applies a readiness label.
+For an unedited direct specification or ticket, an authoritative `opened` event
+carrying exactly one readiness label can supply the initial review snapshot.
+Every later review, and every Agent Brief review, starts after the validator
+publishes the exact revision in its feedback comment; the reviewer then applies
+a readiness label. This notice-first sequence avoids relying on GitHub's
+second-resolution edit and label timestamps to order otherwise ambiguous events.
 The validator re-fetches the issue, complete discussion, complete issue-event
 timeline, relationships, and direct-body edit revision before every decision.
 It binds approval to the actor and ID of the latest transition for the current
 readiness label. A removal therefore invalidates the old event even if another
 label is added before its workflow runs. A delayed removal or repeated webhook
-cannot overwrite a genuinely newer approval. Source publication time, the
-recorded transition barrier, and a matching current-event snapshot establish
-that the selected label event follows the exact revision. Stale webhook payloads
-cannot supply the actor or restore an older association.
+cannot overwrite a genuinely newer approval. The recorded transition barrier
+and position in the authoritative timeline establish that the selected label
+event follows the exact revision. Stale webhook payloads cannot supply the actor
+or restore an older association.
 
 The event actor is authorized only when GitHub reports the repository `admin`,
 `maintain`, or `triage` role. The triage role is the explicit authorization for

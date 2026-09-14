@@ -116,18 +116,13 @@ if (!result.contract) {
 const contract = await contractRevision(api, issue, result);
 const revision = contract.revision;
 const issueEvents = await api.listEvents(issueNumber);
-const readiness = await assessReadiness({ api, event, issue, result, issueEvents, previousFeedback, revision, publishedAt: contract.publishedAt });
+const readiness = await assessReadiness({ api, event, issue, result, issueEvents, previousFeedback, revision, openingEligible: contract.openingEligible });
 if (!readiness.valid) {
   await removeReadiness(api, issueNumber, result.labels);
   if (result.triaged) await returnTriagedRequestToReview(api, issueNumber, result.labels);
   await maintainFeedback(api, issueNumber, comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.error));
   console.error(readiness.error);
   process.exit(1);
-}
-
-if (readiness.deferred) {
-  console.log(`Valid ${result.kind}; the latest readiness transition is waiting for its matching workflow event.`);
-  process.exit(0);
 }
 
 if (readiness.approved && result.triaged) {
@@ -212,7 +207,7 @@ function createApi({ baseUrl, graphqlUrl, repository, token }) {
     getIssueBodyRevision: async (number) => {
       const [owner, name] = repository.split("/");
       const data = await graphql(
-        "query IssueBodyRevision($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) { issue(number: $number) { id createdAt lastEditedAt } } }",
+        "query IssueBodyRevision($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) { issue(number: $number) { id lastEditedAt } } }",
         { owner, name, number },
       );
       if (!data?.repository?.issue) throw new Error(`GitHub GraphQL did not return issue #${number}.`);
@@ -639,11 +634,11 @@ function agentBriefHeading(body) {
 
 async function contractRevision(apiClient, issue, result) {
   let source;
-  let publishedAt;
+  let openingEligible = false;
   if (result.contract.type === "issue-body") {
     const metadata = await apiClient.getIssueBodyRevision(issue.number);
     source = { type: "issue-body", id: metadata.id, editedAt: metadata.lastEditedAt ?? null };
-    publishedAt = metadata.lastEditedAt ?? metadata.createdAt ?? issue.created_at ?? null;
+    openingEligible = metadata.lastEditedAt == null;
   } else {
     const comment = result.contract.comment;
     source = {
@@ -651,7 +646,6 @@ async function contractRevision(apiClient, issue, result) {
       id: String(comment.node_id ?? comment.id),
       editedAt: comment.updated_at ?? null,
     };
-    publishedAt = comment.updated_at ?? comment.created_at ?? null;
   }
   const value = JSON.stringify({
     format: "repo-canon/issue-contract-revision/v1",
@@ -659,19 +653,27 @@ async function contractRevision(apiClient, issue, result) {
     source,
     body: result.contract.body,
   });
-  return { revision: `sha256:${createHash("sha256").update(value).digest("hex")}`, publishedAt };
+  return { revision: `sha256:${createHash("sha256").update(value).digest("hex")}`, openingEligible };
 }
 
-async function assessReadiness({ api: apiClient, event: currentEvent, issue, result, issueEvents, previousFeedback, revision, publishedAt }) {
+async function assessReadiness({ api: apiClient, event: currentEvent, issue, result, issueEvents, previousFeedback, revision, openingEligible }) {
   const currentReadyLabels = [...result.labels].filter((label) => readyLabels.has(label));
+  const latestEvent = latestReadinessEvent(issueEvents);
+  const observedEventId = latestEvent?.id == null ? null : String(latestEvent.id);
   if (currentReadyLabels.length > 1) {
-    return { valid: false, error: "Apply only one readiness label to an implementation contract." };
+    return { valid: false, observedEventId, error: "Apply only one readiness label to an implementation contract." };
   }
 
   const recorded = feedbackState(previousFeedback?.body);
-  const timelineLabelEvent = currentReadyLabels.length === 1 ? latestLabelEvent(issueEvents, currentReadyLabels[0]) : null;
-  const labelEvent = timelineLabelEvent ?? openingLabelEvent(currentEvent, issue, result, currentReadyLabels[0]);
-  if (currentReadyLabels.length === 1 && await activeApproval(apiClient, recorded, revision, currentReadyLabels[0], timelineLabelEvent, issue)) {
+  const openingEvent = openingLabelEvent(currentEvent, issue, result, currentReadyLabels[0], latestEvent, openingEligible);
+  const labelEvent = openingEvent ?? (
+    currentReadyLabels.length === 1
+      && latestEvent?.event === "labeled"
+      && latestEvent.label?.name === currentReadyLabels[0]
+      ? latestEvent
+      : null
+  );
+  if (currentReadyLabels.length === 1 && await activeApproval(apiClient, recorded, revision, currentReadyLabels[0], latestEvent, issue)) {
     return {
       valid: true,
       approved: true,
@@ -681,8 +683,7 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
     };
   }
 
-  const observedEventId = labelEvent?.id == null ? null : String(labelEvent.id);
-  const grant = readinessGrant(currentEvent, issue, result, revision, publishedAt, recorded, currentReadyLabels, labelEvent);
+  const grant = readinessGrant(recorded, revision, currentReadyLabels, labelEvent, issueEvents);
   if (grant.candidate) {
     if (!grant.valid) return { valid: false, error: grant.error, observedEventId };
     const authority = await reviewerAuthority(apiClient, grant.reviewer);
@@ -695,7 +696,6 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
           : `@${grant.reviewer} is not authorized to grant readiness. Use a repository admin, maintainer, or collaborator with the triage role.`,
       };
     }
-    if (grant.pending) return { valid: true, approved: false, deferred: true, observedEventId };
     return {
       valid: true,
       approved: true,
@@ -706,9 +706,7 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
   }
 
   if (currentReadyLabels.length === 0) {
-    const removedLabel = readyLabels.has(currentEvent.label?.name) ? currentEvent.label.name : recorded?.label;
-    const removedEvent = removedLabel ? latestLabelEvent(issueEvents, removedLabel) : null;
-    return { valid: true, approved: false, observedEventId: removedEvent?.id == null ? null : String(removedEvent.id) };
+    return { valid: true, approved: false, observedEventId };
   }
 
   return {
@@ -718,7 +716,7 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
   };
 }
 
-function readinessGrant(currentEvent, issue, result, revision, publishedAt, recorded, currentReadyLabels, labelEvent) {
+function readinessGrant(recorded, revision, currentReadyLabels, labelEvent, issueEvents) {
   if (currentReadyLabels.length !== 1) return { candidate: false };
   const label = currentReadyLabels[0];
   if (!labelEvent || labelEvent.id == null || labelEvent.event !== "labeled") {
@@ -727,45 +725,34 @@ function readinessGrant(currentEvent, issue, result, revision, publishedAt, reco
   const reviewer = labelEvent.actor?.login;
   if (!reviewer) return { candidate: true, valid: false, error: "The readiness event does not identify its actor." };
   const reviewEventId = String(labelEvent.id);
-  const exactRevisionWasObserved = recorded?.revision === revision && (
-    (recorded.status === "approved" && recorded.reviewEventId && recorded.reviewEventId !== reviewEventId)
-    || (recorded.status === "awaiting-review" && Object.hasOwn(recorded, "observedEventId") && recorded.observedEventId !== reviewEventId)
-  );
-  const sourcePredatesReview = publishedAt && labelEvent.created_at && publishedAt < labelEvent.created_at;
-  const currentEventIsReview = currentEventMatchesLabelEvent(currentEvent, issue, result, labelEvent)
-    && (!publishedAt || !labelEvent.created_at || publishedAt === labelEvent.created_at);
-  if (!exactRevisionWasObserved && !sourcePredatesReview && !currentEventIsReview) {
-    const followsRecordedApproval = recorded?.status === "approved"
-      && recorded.reviewEventId
-      && recorded.reviewEventId !== reviewEventId;
-    if (result.contract.type === "issue-body" && followsRecordedApproval) {
-      return { candidate: true, valid: true, pending: true, reviewer };
-    }
-    return { candidate: true, valid: false, error: "The readiness event predates the current contract revision. Review the published revision again." };
-  }
-  if (result.contract.type === "comment" && recorded?.revision !== revision) {
+  const openingReview = labelEvent.opening === true;
+  const previousEventId = recorded?.status === "approved" ? recorded.reviewEventId : recorded?.observedEventId;
+  const followsRevisionNotice = recorded?.revision === revision
+    && ["approved", "awaiting-review"].includes(recorded.status)
+    && reviewEventFollows(previousEventId, reviewEventId, issueEvents);
+  if (!openingReview && !followsRevisionNotice) {
     return {
       candidate: true,
       valid: false,
-      error: "Wait for the validator to publish the exact latest Agent Brief revision before applying readiness.",
+      error: "Wait for the validator to publish the exact contract revision before applying readiness, then review that revision and apply the label again.",
     };
   }
   return { candidate: true, valid: true, label, reviewer, reviewEventId };
 }
 
-function currentEventMatchesLabelEvent(currentEvent, issue, result, labelEvent) {
-  const labelsMatch = currentEvent.action === "labeled"
-    ? currentEvent.label?.name === labelEvent.label?.name
-    : currentEvent.action === "opened" && result.contract.type === "issue-body";
-  return labelsMatch
-    && currentEvent.sender?.login === labelEvent.actor?.login
-    && currentEvent.issue?.updated_at === labelEvent.created_at
-    && currentEvent.issue?.body === issue.body;
+function reviewEventFollows(previousEventId, reviewEventId, issueEvents) {
+  if (previousEventId == null) return true;
+  if (String(previousEventId).startsWith("opened:")) return true;
+  const previousIndex = issueEvents.findIndex(({ id }) => String(id) === String(previousEventId));
+  const reviewIndex = issueEvents.findIndex(({ id }) => String(id) === reviewEventId);
+  return previousIndex >= 0 && reviewIndex > previousIndex;
 }
 
-async function activeApproval(apiClient, recorded, revision, label, labelEvent, issue) {
-  const eventIsCurrent = labelEvent?.event === "labeled" && String(labelEvent.id) === recorded?.reviewEventId;
-  const openingIsCurrent = !labelEvent && recorded?.reviewEventId === openingReviewId(issue);
+async function activeApproval(apiClient, recorded, revision, label, latestEvent, issue) {
+  const eventIsCurrent = latestEvent?.event === "labeled"
+    && latestEvent.label?.name === label
+    && String(latestEvent.id) === recorded?.reviewEventId;
+  const openingIsCurrent = !latestEvent && recorded?.reviewEventId === openingReviewId(issue);
   if (recorded?.status !== "approved"
     || recorded.revision !== revision
     || recorded.label !== label
@@ -777,28 +764,34 @@ async function activeApproval(apiClient, recorded, revision, label, labelEvent, 
   return (await reviewerAuthority(apiClient, recorded.reviewer)).authorized;
 }
 
-function latestLabelEvent(issueEvents, label) {
+function latestReadinessEvent(issueEvents) {
   return [...issueEvents].reverse().find((candidate) => {
-    return ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label;
+    return ["labeled", "unlabeled"].includes(candidate.event) && readyLabels.has(candidate.label?.name);
   }) ?? null;
 }
 
-function openingLabelEvent(currentEvent, issue, result, label) {
+function openingLabelEvent(currentEvent, issue, result, label, latestEvent, openingEligible) {
   const openingReadyLabels = currentEvent.issue?.labels?.map(labelName).filter((name) => readyLabels.has(name)) ?? [];
   if (currentEvent.action !== "opened"
     || result.contract.type !== "issue-body"
+    || !openingEligible
     || !label
     || currentEvent.issue?.body !== issue.body
     || openingReadyLabels.length !== 1
-    || openingReadyLabels[0] !== label) {
+    || openingReadyLabels[0] !== label
+    || (latestEvent && (
+      latestEvent.event !== "labeled"
+      || latestEvent.label?.name !== label
+      || latestEvent.actor?.login !== currentEvent.sender?.login
+    ))) {
     return null;
   }
   return {
-    id: openingReviewId(issue),
+    id: latestEvent?.id ?? openingReviewId(issue),
     event: "labeled",
     label: { name: label },
     actor: currentEvent.sender,
-    created_at: currentEvent.issue.created_at ?? currentEvent.issue.updated_at,
+    opening: true,
   };
 }
 
