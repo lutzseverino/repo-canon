@@ -122,7 +122,7 @@ export function localPathExists(projectRoot, path) {
   try {
     const root = realpathSync(projectRoot);
     let current = root;
-    const segments = path.split('/');
+    const segments = path.split('/').filter(Boolean);
     for (const [index, segment] of segments.entries()) {
       if (!readdirSync(current).includes(segment)) return false;
       const candidate = join(current, segment);

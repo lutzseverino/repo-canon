@@ -1,12 +1,18 @@
 # Repo Canon design review
 
-The author preferences are settled in [authoring notes](authoring-notes.md). This document presents the complete current draft files. The shared contribution and agent workflow material has completed content review; the contextual guidance remains input to its implementation tickets. This is not a validated standards source: the pinned upstream skill directories are vendored, while the manifest, automation, and behavioral exercises are still pending.
+The author preferences are settled in [authoring notes](authoring-notes.md). This document presents the complete reviewed design material. The shared contribution and agent workflow material has completed content review, and the contextual guidance has been promoted into the complete source profile. The profile and automation are implemented and structurally validated; complete adoption evidence remains separate.
 
 The required product support is delivered and accepted. Use the [compatibility mapping](docs/development/adoption-compatibility.md) for the v2 interface and validation baseline; the [original scope proposal](docs/development/scope-capability-specification.md) remains historical context. The [upstream compatibility notes](docs/development/upstream-compatibility.md) identify the native workflows to preserve.
 
 ## Ownership and destination
 
 AGENTS.md, CONTRIBUTING.md, issue/PR templates, and the shared agent configuration are intended as exact content. Files under drafts/guidance are source-side contextual instructions rather than installed project documents. Repository READMEs, development documentation, glossaries, and project-specific agent guidance remain project-owned. Resolve concrete scope for arbitrary Project READMEs and documentation migration through v2 discovery and confirm the complete inspection before adoption writes.
+
+The promoted source material is under `guidance/` and `discovery/`; the
+`drafts/guidance` copies retain the earlier design review. See
+[`docs/development/source-profile.md`](docs/development/source-profile.md) for
+the final declarations, operation wiring, ownership map, and validation
+boundary.
 
 ## Current draft contents
 
