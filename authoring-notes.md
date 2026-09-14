@@ -64,10 +64,11 @@ or validated yet. Declaration IDs and material mappings follow source review.
   contract. Directly authored specifications and tickets use their issue
   bodies. Agents read the full issue and blockers, clarify contradictions,
   and validate the applicable contract rather than only the intake body.
-- Monorepo documentation policy remains independent of directory names.
-  Record the format's inability to discover arbitrary project README targets
-  as a product capability gap. Resolve it before claiming universal monorepo
-  adoption support; do not silently narrow coverage to conventional folders.
+- Monorepo documentation policy remains independent of directory names. Use
+  the delivered v2 discovery interface for arbitrary Project README targets;
+  demonstrate complete coverage before claiming monorepo adoption support.
+  The original v1 capability gap remains historical evidence in the
+  compatibility audit.
 - CONTRIBUTING.md states contributor-facing requirements for getting a change
   accepted: issue expectations, development setup, validation, and PR/review
   expectations. Agent implementation procedures belong in skills. The file
@@ -116,8 +117,9 @@ or validated yet. Declaration IDs and material mappings follow source review.
   categories, directory READMEs, and local file-link targets. Findings identify
   specific corrections. Agents assess factual descriptions, technology badges,
   commands, and meaningful placement. Approximate length remains guidance;
-  missing or ambiguous licensing requires maintainer clarification. The
-  monorepo adoption capability gap must not be reported as passing coverage.
+  missing or ambiguous licensing requires maintainer clarification. Confirmed
+  scope and repository evidence establish monorepo coverage; standalone
+  documentation checks do not establish complete adoption.
 - Issue titles use concise sentence case and domain terminology. Bugs name
   observable failures; features name desired capabilities; implementation
   tickets name concrete actions; specifications name the capability being
@@ -142,8 +144,8 @@ or validated yet. Declaration IDs and material mappings follow source review.
   revised complete file is included in the final design review.
 - The shared tracker, domain, and triage-label configuration files are
   standards-owned exact content, identical between adopting repositories.
-  Project-specific guidance remains separate. The known scope capability gap
-  therefore includes reorganizing existing docs around protected exact files.
+  Project-specific guidance remains separate. Reorganize existing docs using
+  confirmed individual contextual file paths while preserving exact files.
 - When an existing AGENTS.md contains useful project-specific instructions,
   preserve and reconcile them into docs/agents/project.md in a separate
   preparation change, committed through the project's normal workflow before
@@ -181,41 +183,42 @@ or validated yet. Declaration IDs and material mappings follow source review.
   required fields and how optional fields avoid empty boilerplate.
 - Concrete automation implementation and exercises of accepted behaviors,
   including executable/version prerequisites where operations require them.
-- Translate accepted ownership and scope into declarations after the product
-  scope dependency is resolved. The current format requires explicit disjoint
-  targets; arbitrary discovery cannot silently expand adoption write scope.
+- Translate accepted ownership and scope into `repo-standards/v2` declarations
+  through the supported discovery route in the compatibility audit. The
+  product dependency is satisfied; concrete contextual files still require
+  full inspection confirmation before adoption writes.
 - Exercise installation and licensing edge cases and preservation of existing
   repository information against the agreed guidance.
 - Whole-source review, operation/skill exercises, and public CLI validation.
 
-The compatibility audit is docs/development/adoption-compatibility.md. The
-scope capability remains a product dependency, not an author-policy question.
-The user requested a handoff for a fresh grilling session focused on the
-missing support once the standards decisions were settled. That session should
-design the product solution without reopening these author preferences.
+The [compatibility audit](docs/development/adoption-compatibility.md) maps the
+accepted requirements to the delivered product interface and retains the
+historical v1 findings. Use installed CLI 1.2.1 as the initial validation
+baseline; claim only compatibility demonstrated against the final source.
 
-## Bootstrap and specification handoff
+## Bootstrap and specification refresh
 
-The user subsequently chose to create and develop Repo Canon as a work in
-progress now, with product support developed separately and complete adoption
-verified before treating a release as adoption-ready. They requested a separate
-handoff for the next stage. Their latest direction is to bootstrap the repository
-now and focus the next agent on a to-spec run, synthesizing the recorded
-decisions into the GitHub specification. Ticket breakdown and implementation
-follow that specification.
+The user chose to bootstrap Repo Canon as a work in progress while product
+support developed separately, with complete adoption required before treating
+a release as adoption-ready. GitHub specification
+[#1](https://github.com/lutzseverino/repo-canon/issues/1) and implementation
+tickets #2–17 now carry the implementation contracts.
 
-The recorded design can authorize the initial repository bootstrap before a
-GitHub issue tracker exists. Publish the parent specification and implementation
-tickets after repository creation, then make GitHub the canonical work tracker.
-Keep the product scope dependency in repo-standards, linked from the dependent
-Repo Canon work. Creating the repository does not publish an adoptable source,
-implement the planned automation, or settle the proposed product interface.
+The 2026-09-14 refresh preserves the full accepted vision and reconciles those
+existing contracts with the delivered and accepted product scope capability.
+Amend the parent before reconciling affected children and native relationships;
+retain their substantive source, operation, skill, and adoption requirements.
+Implementation follows verified remaining blockers. Product acceptance does
+not establish Repo Canon completion or publish an adoptable source.
 
-The author's license choice for Repo Canon itself has not been made. Do not
-infer it from the product's or upstream skills' licenses. Preserve required
-upstream notices and obtain the source-license choice before adding LICENSE
-or declaring licensing complete. This does not prevent creating a work-in-
-progress repository and its issue tracker.
+The author selected the MIT License for Repo Canon's original material during
+the 2026-09-14 specification-refresh interview. Preserve required upstream
+notices; this choice does not replace third-party licenses or choose an
+adopting repository's license. The author confirmed
+`Copyright (c) 2026 Jasper Lutz Severino` for the notice. Ticket
+[#14](https://github.com/lutzseverino/repo-canon/issues/14) applies the selected
+license and verifies attribution; the owner decision is complete, while
+licensing implementation remains outstanding.
 
 ## Delivery boundary
 

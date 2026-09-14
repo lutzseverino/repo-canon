@@ -4,23 +4,26 @@ This directory explains development decisions, validation, and maintenance of
 the standards source. Keep end-user instructions under `docs/usage`, durable
 decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
-- [Adoption compatibility](adoption-compatibility.md): current format support,
-  the known scope gap, and preparation requirements.
-- [Scope capability specification](scope-capability-specification.md): the
-  proposed product outcome and acceptance criteria for a follow-up grilling.
+- [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
+  validation baseline, preparation requirements, and historical v1 limits.
+- [Historical scope proposal](scope-capability-specification.md): the original
+  product requirement, superseded by the delivered product contract.
 - [Upstream compatibility](upstream-compatibility.md): the regular skill
   inventory and native issue formats that automation must respect.
 
 ## Authoring status
 
 The design decisions are recorded. Draft material lives under `drafts/`;
-confirmed choices live in `authoring-notes.md`. Root contribution and agent
-configuration files make the work-in-progress repository usable for planning.
+confirmed choices live in [authoring notes](../../authoring-notes.md). Root
+contribution and agent configuration files make the work-in-progress repository
+usable for planning.
 There is no `standards.yaml` yet and no source validation has passed.
 
-The public authoring CLI version 1.1.0 has been acquired outside this directory
-using Node.js 24. Source validation and behavioral exercises follow complete
-material authoring and review; neither is established by this design audit.
+The required product scope capability is delivered and accepted. Use the
+installed public CLI 1.2.1 with Node.js 24 as the initial validation baseline;
+claim compatibility only after validating the final source bytes. The earlier
+CLI 1.1.0 experiments remain historical evidence. Source validation, operation
+and skill exercises, and complete Repo Canon adoption are still outstanding.
 
 ## Working locally
 

@@ -28,7 +28,9 @@ Assess documents against their actual audience and topic. Mechanical checks
 cover categories, directory READMEs, required entry points, and local link
 targets. They do not prove correctness or usefulness.
 
-The current product cannot authorize arbitrary old documentation paths while
-protecting exact descendants through a universal declaration. Bind the full
-concrete scope through the future supported product interface; report this
-dependency rather than implying that narrower targets cover the whole policy.
+Use the v2 discovery route to propose individual files covering old locations,
+new destinations, required directory READMEs, and affected links. Keep exact
+shared configuration outside contextual scope. Review evidence and complete
+coverage with the adopter in the full inspection before confirmation. Newly
+discovered files require a confirmed scope amendment before editing; after a
+complete adoption, use fresh discovery during deliberate re-adoption.

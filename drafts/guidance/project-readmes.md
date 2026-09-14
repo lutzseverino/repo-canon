@@ -14,7 +14,10 @@ Discover projects from repository evidence, including manifests, build
 configuration, existing documentation, and meaningful component boundaries.
 Directory names alone do not define project membership.
 
-The scope must be concrete and confirmed before adoption writes. The current
-author format cannot express this location-independent requirement. Do not
-replace it with a hardcoded list of common directories or report unrepresented
-projects as covered.
+Use a v2 repository declaration with separate discovery guidance to identify
+individual Project README paths. Include missing READMEs with absence evidence
+and positive evidence of a maintained Project; explain excluded candidates and
+unresolved membership. The adopter reviews coverage and concrete scope in the
+complete inspection before confirmation. Newly discovered targets require
+confirmed scope before editing; existing scope never implies coverage of an
+unrepresented Project.
