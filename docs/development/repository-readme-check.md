@@ -18,19 +18,17 @@ The result statuses have distinct meanings:
   title, restoring section order, or fixing the License link. It is returned by
   a successful process so Repository Standards can collect ordinary check
   evidence.
-- `blocked` means a missing, multiple, or unnamed root license file requires
+- `blocked` means a missing, multiple, or unnamed root `LICENSE` file requires
   owner clarification. The operation does not choose a license.
 - A malformed request or an unexpected target writes an error to standard error,
   exits nonzero, and emits no result. Repository Standards records that as a
   process or protocol error rather than a policy result.
 
-For the License check, a conventional root license file named `LICENSE`,
-`LICENCE`, or `COPYING`, optionally with `.md`, `.txt`, or `.rst`, is a
-candidate. Exactly one candidate must identify a license name in its first
-nonempty line. The check compares the README link label and target with that
-repository-provided identity; it does not make a legal or semantic licensing
-judgment. An unrecognized or unclear arrangement returns `blocked` for owner
-clarification.
+For the License check, the root `LICENSE` file must identify a single license
+name in its first nonempty line. The check compares the README link label and
+target with that repository-provided identity; it does not make a legal or
+semantic licensing judgment. A missing or unclear `LICENSE` file returns
+`blocked` for owner clarification.
 
 Run the public-boundary fixtures with Node.js 24:
 

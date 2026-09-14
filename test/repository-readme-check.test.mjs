@@ -107,7 +107,7 @@ Harbor reads queues without modifying them.
   assert.equal(outcome.result.status, 'passed');
 });
 
-test('uses a conventional alternative root license filename', t => {
+test('blocks rather than inferring licensing from another filename', t => {
   const outcome = check(t, {
     'README.md': `<h1 align="center">Harbor</h1>
 
@@ -121,7 +121,9 @@ A queue inspector.
   });
 
   assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, 'passed');
+  assert.equal(outcome.result.status, 'blocked');
+  assert.match(outcome.result.message, /No root LICENSE file/);
+  assert.match(outcome.result.message, /Owner clarification required/);
 });
 
 test('reports concrete title and section-order corrections as a policy failure', t => {
@@ -170,12 +172,12 @@ test('reports malformed license sections against the repository license file', a
 
 test('blocks when licensing is missing or ambiguous instead of selecting a license', async t => {
   for (const example of [
-    { name: 'missing', files: {}, diagnostic: 'No root license file' },
-    { name: 'multiple files', files: { LICENSE: mit, 'LICENSE.md': mit }, diagnostic: 'Multiple root license files' },
+    { name: 'missing', files: {}, diagnostic: 'No root LICENSE file' },
+    { name: 'multiple files', files: { LICENSE: mit, 'LICENSE.md': mit }, diagnostic: 'Multiple root LICENSE variants' },
     { name: 'unnamed license', files: { LICENSE: '\n\n' }, diagnostic: 'does not identify a license name' },
     {
       name: 'multiple names',
-      files: { LICENSE: 'MIT License / Apache License 2.0\n' },
+      files: { LICENSE: 'MIT and Apache License 2.0\n' },
       diagnostic: 'identifies ambiguous licensing',
     },
   ]) await t.test(example.name, st => {

@@ -24,9 +24,9 @@ them from the README.
 The Contributing section links to `CONTRIBUTING.md`. When documentation exists,
 the Documentation section links to `docs/README.md`. The License section
 contains only a link whose label is the actual repository license name and whose
-target is the repository's root license file. If the repository has no clear,
-single license, ask the maintainer to identify it; never select or infer a
-license for the project.
+target is the root `LICENSE` file. If the repository has no clear, single
+license, ask the maintainer to identify it; never select or infer a license for
+the project.
 
 Report evidence for descriptions, commands, technology choices, badges, and
 links. The read-only structural check covers title centering, section order,

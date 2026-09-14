@@ -46,17 +46,17 @@ function result(status, message) {
 
 function rootLicense(projectRoot) {
   const candidates = readdirSync(projectRoot, { withFileTypes: true })
-    .filter(entry => entry.isFile() && /^(?:licen[cs]e|copying)(?:\.(?:md|txt|rst))?$/i.test(entry.name))
-    .map(entry => entry.name)
-    .sort((left, right) => left.localeCompare(right));
-  if (candidates.length === 0) {
-    return { blocked: 'No root license file was found; identify the repository license and its file.' };
+    .filter(entry => entry.isFile() && /^license(?:\.(?:md|txt|rst))?$/i.test(entry.name))
+    .map(entry => entry.name);
+  if (!candidates.includes('LICENSE')) {
+    const detail = candidates.length > 0 ? ` Found ${candidates.sort().join(', ')} instead.` : '';
+    return { blocked: `No root LICENSE file was found; identify the repository license and use the required filename.${detail}` };
   }
   if (candidates.length > 1) {
-    return { blocked: `Multiple root license files were found (${candidates.join(', ')}); identify which license and file the README must name.` };
+    return { blocked: `Multiple root LICENSE variants were found (${candidates.sort().join(', ')}); identify which license applies and keep it in LICENSE.` };
   }
 
-  const path = candidates[0];
+  const path = 'LICENSE';
   const firstLine = readFileSync(join(projectRoot, path), 'utf8')
     .split(/\r?\n/)
     .map(line => line.trim())
@@ -69,7 +69,7 @@ function rootLicense(projectRoot) {
     return { blocked: `${path} does not identify a license name in its first nonempty line.` };
   }
   const licenseMentions = name.match(/\blicen[cs]e\b/gi)?.length ?? 0;
-  if (licenseMentions > 1 || /\b(?:or|dual(?:ly)?|multiple)\b|\s(?:\/|&)\s/i.test(name)) {
+  if (licenseMentions > 1 || /\b(?:and|or|dual(?:ly)?|multiple)\b|\s(?:\/|&)\s/i.test(name)) {
     return { blocked: `${path} identifies ambiguous licensing (“${name}”).` };
   }
   return { path, name };
@@ -149,6 +149,13 @@ function linksTo(body, target) {
   return links.some(match => match[1].replace(/^\.\//, '') === target);
 }
 
+function checkNavigationLink(projectRoot, markdown, allHeadings, section, target, corrections) {
+  if (!lstatIsFile(join(projectRoot, target))) return;
+  const body = sectionBody(markdown, allHeadings, section);
+  if (body === null) corrections.push(`Add a ${section} section linking to ${target}.`);
+  else if (!linksTo(body, target)) corrections.push(`Link the ${section} section to ${target}.`);
+}
+
 function checkStructure(projectRoot, markdown, license) {
   if (markdown === null) return ['Create the root README.md.'];
   const corrections = [];
@@ -178,17 +185,8 @@ function checkStructure(projectRoot, markdown, license) {
     corrections.push(`Move Installation before ${allHeadings[0].name}; it is the first section when present.`);
   }
 
-  const contributing = sectionBody(markdown, allHeadings, 'Contributing');
-  if (lstatIsFile(join(projectRoot, 'CONTRIBUTING.md'))) {
-    if (contributing === null) corrections.push('Add a Contributing section linking to CONTRIBUTING.md.');
-    else if (!linksTo(contributing, 'CONTRIBUTING.md')) corrections.push('Link the Contributing section to CONTRIBUTING.md.');
-  }
-
-  const documentation = sectionBody(markdown, allHeadings, 'Documentation');
-  if (lstatIsFile(join(projectRoot, 'docs/README.md'))) {
-    if (documentation === null) corrections.push('Add a Documentation section linking to docs/README.md.');
-    else if (!linksTo(documentation, 'docs/README.md')) corrections.push('Link the Documentation section to docs/README.md.');
-  }
+  checkNavigationLink(projectRoot, markdown, allHeadings, 'Contributing', 'CONTRIBUTING.md', corrections);
+  checkNavigationLink(projectRoot, markdown, allHeadings, 'Documentation', 'docs/README.md', corrections);
 
   const licenseBody = sectionBody(markdown, allHeadings, 'License');
   if (license && licenseBody === null) {
