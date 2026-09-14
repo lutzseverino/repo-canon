@@ -26,10 +26,11 @@ updated. Other labels are never deleted or edited.
 ## Prerequisites and identity
 
 The operation requires Node.js 24 as its public-protocol executable, Git 2.18.0
-or newer, and GitHub CLI 2.48.0 or newer. `gh` must be authenticated to
+or newer, and GitHub CLI 2.57.0 or newer. `gh` must be authenticated to
 `github.com`, and the current account must have write, maintain, or admin
 repository access so it can manage labels. The GitHub CLI minimum supplies
-the paginated `--slurp` API output used to inspect every existing label.
+the paginated `--slurp` API output and active-account authentication check used
+by the operation.
 
 All repository-local `github.com` fetch and push remote URLs must identify one
 repository. Global and system Git configuration cannot supply or conflict with

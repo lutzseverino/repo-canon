@@ -208,12 +208,12 @@ function setupLabels(request) {
 
   const ghVersion = run('gh', ['--version'], request.projectRoot);
   if (!ghVersion.ok) {
-    result('blocked', 'GitHub CLI (gh) is unavailable; install gh 2.48.0 or newer before GitHub label setup.');
+    result('blocked', 'GitHub CLI (gh) is unavailable; install gh 2.57.0 or newer before GitHub label setup.');
     return;
   }
   const parsedGhVersion = versionFrom(ghVersion.stdout);
-  if (!parsedGhVersion || !atLeast(parsedGhVersion, [2, 48, 0])) {
-    result('blocked', 'GitHub label setup requires gh 2.48.0 or newer.');
+  if (!parsedGhVersion || !atLeast(parsedGhVersion, [2, 57, 0])) {
+    result('blocked', 'GitHub label setup requires gh 2.57.0 or newer.');
     return;
   }
 
