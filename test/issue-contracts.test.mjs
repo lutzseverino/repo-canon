@@ -1,0 +1,327 @@
+import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+
+const repository = "example/repository";
+
+async function exercise({ issue, comments = [], commentPages, blockedBy = [], event = {}, relatedIssues = {} }) {
+  const requests = [];
+  const server = createServer(async (request, response) => {
+    let body = "";
+    for await (const chunk of request) body += chunk;
+    requests.push({ method: request.method, url: request.url, body });
+
+    const issuePath = "/repos/example/repository/issues/42";
+    if (request.method === "GET" && request.url === issuePath) {
+      return json(response, 200, issue);
+    }
+    if (request.method === "GET" && request.url === `${issuePath}/comments?per_page=100`) {
+      const pages = commentPages ?? [comments];
+      const headers = pages.length > 1
+        ? { link: `<http://127.0.0.1:${server.address().port}${issuePath}/comments?per_page=100&page=2>; rel="next"` }
+        : {};
+      return json(response, 200, pages[0], headers);
+    }
+    if (request.method === "GET" && request.url === `${issuePath}/comments?per_page=100&page=2`) {
+      return json(response, 200, commentPages?.[1] ?? []);
+    }
+    if (request.method === "GET" && request.url === `${issuePath}/dependencies/blocked_by?per_page=100`) {
+      return json(response, 200, blockedBy);
+    }
+    if (request.method === "GET" && request.url in relatedIssues) {
+      return json(response, 200, relatedIssues[request.url]);
+    }
+    if (request.method === "POST" && request.url === `${issuePath}/comments`) {
+      comments.push({ id: 99, body: JSON.parse(body).body, user: { login: "github-actions[bot]" } });
+      return json(response, 201, comments.at(-1));
+    }
+    if (request.method === "DELETE" && request.url?.startsWith(`${issuePath}/labels/`)) {
+      return json(response, 200, {});
+    }
+    if (request.method === "POST" && request.url === `${issuePath}/labels`) {
+      return json(response, 200, {});
+    }
+    if (request.method === "PATCH" && request.url?.startsWith("/repos/example/repository/issues/comments/")) {
+      const comment = comments.find(({ id }) => request.url.endsWith(`/${id}`));
+      if (comment) comment.body = JSON.parse(body).body;
+      return json(response, 200, {});
+    }
+    return json(response, 404, { message: `${request.method} ${request.url}` });
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const directory = await mkdtemp(join(tmpdir(), "repo-canon-issue-contract-"));
+  const eventPath = join(directory, "event.json");
+  await writeFile(eventPath, JSON.stringify({ issue: { number: 42 }, ...event }));
+
+  try {
+    const result = await runValidator({
+      GITHUB_API_URL: `http://127.0.0.1:${server.address().port}`,
+      GITHUB_EVENT_PATH: eventPath,
+      GITHUB_REPOSITORY: repository,
+      GITHUB_TOKEN: "fixture-token",
+    });
+    return { ...result, requests };
+  } finally {
+    server.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
+function json(response, status, value, headers = {}) {
+  response.writeHead(status, { "content-type": "application/json", ...headers });
+  response.end(JSON.stringify(value));
+}
+
+function runValidator(environment) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, ["scripts/validate-issue-contract.mjs"], {
+      cwd: process.cwd(),
+      env: { ...process.env, ...environment },
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => (stdout += chunk));
+    child.stderr.on("data", (chunk) => (stderr += chunk));
+    child.on("error", reject);
+    child.on("close", (code) => resolve({ code, stdout, stderr }));
+  });
+}
+
+test("a complete public bug report is accepted without changing the issue", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Steps to reproduce\n\nRun the command.\n\n## Expected behavior\n\nIt exits.\n\n## Actual behavior\n\nIt hangs.",
+      labels: [{ name: "bug" }, { name: "needs-triage" }],
+      state: "open",
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /valid bug report/i);
+  assert.deepEqual(result.requests.map(({ method }) => method), ["GET", "GET", "GET"]);
+});
+
+test("an incomplete ready bug report loses readiness and receives actionable feedback", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Steps to reproduce\n\n_No response_\n\n## Expected behavior\n\nWorks.\n\n## Actual behavior\n\nBroken.",
+      labels: [{ name: "bug" }, { name: "ready-for-agent" }],
+      state: "open",
+    },
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /Steps to reproduce/);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  const feedback = result.requests.find(({ method, url }) => method === "POST" && url.endsWith("/comments"));
+  assert.match(JSON.parse(feedback.body).body, /Replace the placeholder under `Steps to reproduce`/);
+});
+
+test("all public forms accept harmless heading variations and absent optional answers", async (context) => {
+  const examples = [
+    {
+      name: "feature request",
+      body: "### PROBLEM\n\nSearch is slow.\n\n### Desired Outcome\n\nSearch finishes quickly.",
+      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+    },
+    {
+      name: "implementation ticket",
+      body: "#### What To Build\n\nAdd caching.\n\n#### ACCEPTANCE CRITERIA\n\n- [ ] Search is fast.\n\n#### Blocked By\n\nNone.",
+      labels: [{ name: "ready-for-agent" }],
+    },
+    {
+      name: "specification",
+      body: "# Problem Statement\n\nSearch is slow.\n\n## Solution\n\nAdd caching.\n\n### User Stories\n\n1. As a user, I want fast search.\n\n###### Out Of Scope\n\nNone.",
+      labels: [{ name: "ready-for-agent" }],
+    },
+  ];
+
+  for (const example of examples) {
+    await context.test(example.name, async () => {
+      const result = await exercise({ issue: { number: 42, body: example.body, labels: example.labels, state: "open" } });
+      assert.equal(result.code, 0, result.stderr);
+    });
+  }
+});
+
+test("a native ticket can use relationships and remain valid with an open blocker", async () => {
+  const parentUrl = "/repos/example/repository/issues/7";
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
+      labels: [{ name: "ready-for-agent" }],
+      parent_issue_url: parentUrl,
+      state: "open",
+    },
+    blockedBy: [{ number: 41, state: "open", html_url: "https://github.com/example/repository/issues/41" }],
+    relatedIssues: {
+      [parentUrl]: { number: 7, state: "open", labels: [{ name: "wayfinder:map" }] },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ method, url }) => method === "GET" && url === parentUrl));
+});
+
+test("a Wayfinder map accepts empty initial decisions and a child reads its parent", async (context) => {
+  await context.test("map", async () => {
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: "## Destination\n\nChoose a cache.\n\n## Notes\n\nUse the domain model.\n\n## Decisions so far\n\n<!-- none yet -->\n\n## Not yet specified\n\nEviction policy.\n\n## Out of scope\n\n",
+        labels: [{ name: "wayfinder:map" }],
+        state: "open",
+      },
+    });
+    assert.equal(result.code, 0, result.stderr);
+  });
+
+  await context.test("child", async () => {
+    const parentUrl = "/repos/example/repository/issues/7";
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: "## Question\n\nWhich cache meets the latency target?",
+        labels: [{ name: "wayfinder:research" }],
+        parent_issue_url: parentUrl,
+        state: "open",
+      },
+      blockedBy: [{ number: 41, state: "open" }],
+      relatedIssues: {
+        [parentUrl]: { number: 7, state: "open", labels: [{ name: "wayfinder:map" }] },
+      },
+    });
+    assert.equal(result.code, 0, result.stderr);
+    assert.ok(result.requests.some(({ url }) => url === parentUrl));
+  });
+});
+
+test("a ready triaged request requires a complete latest Agent Brief and exact preamble position", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Problem\n\nSearch is slow.\n\n## Desired outcome\n\nSearch finishes quickly.",
+      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+      state: "open",
+    },
+    comments: [{
+      id: 12,
+      user: { login: "maintainer" },
+      body: "Unrelated text must not precede the preamble.\n\n> *This was generated by AI during triage.*\n\n## Agent Brief\n\n**Category:** enhancement\n**Summary:** Make search fast\n\n**Current behavior:**\nSearch is slow.\n\n**Desired behavior:**\nSearch finishes quickly.\n\n**Key interfaces:**\n- Search requests\n\n**Acceptance criteria:**\n- [ ] Search meets the target.\n\n**Out of scope:**\n- Changing storage",
+    }],
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /Start the Agent Brief comment/);
+});
+
+test("the latest Agent Brief is found across the complete discussion", async () => {
+  const brief = "> *This was generated by AI during triage.*\n\n## Agent Brief\n\n**Category:** enhancement\n**Summary:** Make search fast\n\n**Current behavior:**\nSearch is slow.\n\n**Desired behavior:**\nSearch finishes quickly.\n\n**Key interfaces:**\n- Search requests\n\n**Acceptance criteria:**\n- [ ] Search meets the target.\n\n**Out of scope:**\n- Changing storage";
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Problem\n\nSearch is slow.\n\n## Desired outcome\n\nSearch finishes quickly.",
+      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+      state: "open",
+    },
+    commentPages: [
+      [{ id: 1, body: "Earlier discussion", user: { login: "reporter" } }],
+      [{ id: 2, body: brief, user: { login: "maintainer" } }],
+    ],
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ url }) => url?.includes("page=2")));
+});
+
+test("explicit parent and blocker links are read when native relationships are absent", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Parent\n\n#7\n\n## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nhttps://github.com/example/repository/issues/41",
+      labels: [{ name: "ready-for-agent" }],
+      state: "open",
+    },
+    relatedIssues: {
+      "/repos/example/repository/issues/7": { number: 7, state: "open", labels: [] },
+      "/repos/example/repository/issues/41": { number: 41, state: "open", labels: [] },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/7"));
+  assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/41"));
+});
+
+test("repeated invalid events maintain one feedback comment", async () => {
+  const feedback = "<!-- repo-canon:issue-contract-feedback -->\n## Issue contract needs attention\n\n- Replace the placeholder under `Problem` with the required information.\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.";
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Problem\n\n_No response_\n\n## Desired outcome\n\nFast search.",
+      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+      state: "open",
+    },
+    comments: [{ id: 9, body: feedback, user: { login: "github-actions[bot]" } }],
+  });
+
+  assert.equal(result.code, 1);
+  assert.equal(result.requests.filter(({ method }) => method === "POST" || method === "PATCH").length, 0);
+});
+
+test("a correction updates existing feedback without restoring readiness", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+      labels: [],
+      state: "open",
+    },
+    comments: [{
+      id: 9,
+      body: "<!-- repo-canon:issue-contract-feedback -->\n## Issue contract needs attention\n\n- Fix it.",
+      user: { login: "github-actions[bot]" },
+    }],
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ method, url, body }) => method === "PATCH" && url.endsWith("/comments/9") && /fresh authorized review/i.test(body)));
+  assert.ok(!result.requests.some(({ url }) => url.includes("/labels")));
+});
+
+test("pull request comments are ignored before any API access", async () => {
+  const result = await exercise({
+    issue: { number: 42, body: "hostile", labels: [], state: "open" },
+    event: { issue: { number: 42, pull_request: { url: "https://api.github.test/pulls/1" } } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.equal(result.requests.length, 0);
+});
+
+test("contract text is treated only as data", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "repo-canon-hostile-"));
+  const sentinel = join(directory, "executed");
+  try {
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: `## What to build\n\n$(touch ${sentinel})\n\n## Acceptance criteria\n\n- [ ] Never execute this text.\n\n## Blocked by\n\nNone.`,
+        labels: [{ name: "ready-for-agent" }],
+        state: "open",
+      },
+    });
+    assert.equal(result.code, 0, result.stderr);
+    await assert.rejects(() => import("node:fs/promises").then(({ access }) => access(sentinel)), { code: "ENOENT" });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});

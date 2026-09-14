@@ -10,6 +10,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   product requirement, superseded by the delivered product contract.
 - [Shared material review](shared-material-review.md): finalized contribution,
   agent workflow, template, and preparation evidence.
+- [Issue contract validation](issue-contract-validation.md): supported issue
+  shapes, feedback behavior, workflow permissions, and runnable fixtures.
 - [Upstream compatibility](upstream-compatibility.md): the regular skill
   inventory and native issue formats that automation must respect.
 
@@ -41,6 +43,7 @@ preferences. Run `git diff --check` before requesting review. The four draft
 issue forms were parsed as YAML and checked for basic field structure and
 duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
 
-There is no project typecheck, build, or automated test suite yet. These
-requirements must be added with the executable implementation. Source validation
-and adoption evidence remain separate from basic documentation checks.
+Run `npm run test:issue-contracts` for focused issue-contract validation and
+`npm test` for the complete automated test suite. There is no project typecheck
+or build step yet. Source validation and adoption evidence remain separate from
+the executable metadata fixtures and basic documentation checks.

@@ -1,0 +1,12 @@
+{
+  "name": "repo-canon",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:issue-contracts": "node --test test/issue-contracts.test.mjs"
+  }
+}
