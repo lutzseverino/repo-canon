@@ -286,12 +286,48 @@ test('removes a concrete default-branch exclusion from the dedicated ruleset', t
   ]);
 });
 
-test('blocks when a ruleset exclusion makes default-branch applicability ambiguous', t => {
+test('removes a matching glob exclusion while preserving unrelated glob policy', t => {
   const managed = canonicalRuleset({
     conditions: {
       ref_name: {
         include: ['~DEFAULT_BRANCH'],
-        exclude: ['refs/heads/*'],
+        exclude: ['refs/heads/*', 'refs/heads/release/*'],
+      },
+    },
+  });
+  const scenario = setup(t, { state: { settings: matchingSettings, rulesets: [managed] } });
+
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'changed');
+  assert.deepEqual(scenario.readState().rulesets[0].conditions.ref_name.exclude, [
+    'refs/heads/release/*',
+  ]);
+});
+
+test('accepts a direct default-branch include with an unrelated glob as unchanged', t => {
+  const managed = canonicalRuleset({
+    conditions: {
+      ref_name: {
+        include: ['refs/heads/main'],
+        exclude: ['refs/heads/release/*'],
+      },
+    },
+  });
+  const scenario = setup(t, { state: { settings: matchingSettings, rulesets: [managed] } });
+
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'unchanged');
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+});
+
+test('blocks when unsupported pattern syntax makes default-branch applicability ambiguous', t => {
+  const managed = canonicalRuleset({
+    conditions: {
+      ref_name: {
+        include: ['~DEFAULT_BRANCH'],
+        exclude: ['refs/heads/[mr]ain'],
       },
     },
   });

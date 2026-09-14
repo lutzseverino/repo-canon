@@ -101,6 +101,33 @@ function canonicalRuleset() {
   };
 }
 
+function matchesDefaultRef(pattern, defaultRef) {
+  if (pattern === '~DEFAULT_BRANCH' || pattern === '~ALL') return true;
+  if (pattern === '~NON_DEFAULT_BRANCH') return false;
+  if (typeof pattern !== 'string' || /[\\[\]{}]/.test(pattern)) return null;
+
+  let expression = '^';
+  for (let index = 0; index < pattern.length; index += 1) {
+    const character = pattern[index];
+    if (character === '*' && pattern[index + 1] === '*') {
+      if (pattern[index + 2] === '/') {
+        expression += '(?:.*/)?';
+        index += 2;
+      } else {
+        expression += '.*';
+        index += 1;
+      }
+    } else if (character === '*') {
+      expression += '[^/]*';
+    } else if (character === '?') {
+      expression += '[^/]';
+    } else {
+      expression += character.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+  }
+  return new RegExp(`${expression}$`).test(defaultRef);
+}
+
 function managedRulesetPlan(rulesets, defaultBranch) {
   const matches = rulesets.filter(ruleset => ruleset.name.toLowerCase() === rulesetName.toLowerCase());
   if (matches.length > 1) {
@@ -128,20 +155,24 @@ function managedRulesetPlan(rulesets, defaultBranch) {
 
   let changed = existing.enforcement !== 'active';
   const defaultRef = `refs/heads/${defaultBranch}`;
-  const ambiguousExclusion = refName.exclude.find(pattern =>
-    pattern !== '~DEFAULT_BRANCH' && pattern !== defaultRef && /[*?\[]/.test(pattern));
+  const evaluatedExclusions = refName.exclude.map(pattern => ({
+    pattern,
+    matches: matchesDefaultRef(pattern, defaultRef),
+  }));
+  const ambiguousExclusion = evaluatedExclusions.find(({ matches }) => matches === null);
   if (ambiguousExclusion) {
     return {
-      error: `${rulesetName} excludes ${ambiguousExclusion}; default-branch applicability cannot be established safely`,
+      error: `${rulesetName} excludes ${ambiguousExclusion.pattern}; default-branch applicability cannot be established safely`,
     };
   }
-  if (!refName.include.includes('~DEFAULT_BRANCH')) {
+  if (!refName.include.some(pattern => matchesDefaultRef(pattern, defaultRef) === true)) {
     refName.include.push('~DEFAULT_BRANCH');
     changed = true;
   }
-  if (refName.exclude.includes('~DEFAULT_BRANCH') || refName.exclude.includes(defaultRef)) {
-    refName.exclude = refName.exclude.filter(pattern =>
-      pattern !== '~DEFAULT_BRANCH' && pattern !== defaultRef);
+  if (evaluatedExclusions.some(({ matches }) => matches)) {
+    refName.exclude = evaluatedExclusions
+      .filter(({ matches }) => !matches)
+      .map(({ pattern }) => pattern);
     conditions.ref_name = refName;
     changed = true;
   }
@@ -177,9 +208,8 @@ function rulesetMatches(rulesets, id, defaultBranch) {
   if (!existing || existing.enforcement !== 'active' || existing.target !== 'branch') return false;
   const refName = existing.conditions?.ref_name;
   const defaultRef = `refs/heads/${defaultBranch}`;
-  if (!refName?.include?.includes('~DEFAULT_BRANCH')
-      || refName.exclude?.some(pattern =>
-        pattern === '~DEFAULT_BRANCH' || pattern === defaultRef || /[*?\[]/.test(pattern))) return false;
+  if (!refName?.include?.some(pattern => matchesDefaultRef(pattern, defaultRef) === true)
+      || refName.exclude?.some(pattern => matchesDefaultRef(pattern, defaultRef) !== false)) return false;
   return existing.rules?.some(rule => rule.type === 'required_status_checks'
     && rule.parameters?.required_status_checks?.some(check => check.context === checkName));
 }
