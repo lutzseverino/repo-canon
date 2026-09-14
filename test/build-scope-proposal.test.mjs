@@ -1,11 +1,32 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
 
 const repositoryRoot = new URL('..', import.meta.url).pathname;
+
+test('keeps every adoption scope template structurally complete', () => {
+  const templatesRoot = join(repositoryRoot, 'test/fixtures/adoption');
+  for (const name of readdirSync(templatesRoot)) {
+    const template = JSON.parse(readFileSync(join(templatesRoot, name), 'utf8'));
+    assert.equal(template.format, 'repo-canon/scope-template/v1', name);
+    assert.deepEqual(template.declarations.map(declaration => declaration.id).sort(), [
+      'documentation',
+      'github-repository-configuration',
+      'project-readmes',
+    ], name);
+    for (const declaration of template.declarations) {
+      assert.equal(typeof declaration.coverage, 'string', `${name}:${declaration.id}`);
+      assert.notEqual(declaration.coverage.trim(), '', `${name}:${declaration.id}`);
+      assert.ok(declaration.evidence.length > 0, `${name}:${declaration.id}`);
+      assert.ok(Array.isArray(declaration.paths), `${name}:${declaration.id}`);
+      assert.ok(Array.isArray(declaration.candidates), `${name}:${declaration.id}`);
+      assert.ok(Array.isArray(declaration.unresolved), `${name}:${declaration.id}`);
+    }
+  }
+});
 
 test('binds reviewed scope rationale to identities from one public inspection', t => {
   const root = mkdtempSync(join(tmpdir(), 'repo-canon-scope-builder-'));
