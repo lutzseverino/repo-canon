@@ -264,6 +264,46 @@ test('reconciles the dedicated ruleset and conflicting merge settings without re
   assert.deepEqual(state.settings, { ...matchingSettings, delete_branch_on_merge: false });
 });
 
+test('removes a concrete default-branch exclusion from the dedicated ruleset', t => {
+  const managed = canonicalRuleset({
+    conditions: {
+      ref_name: {
+        include: ['~DEFAULT_BRANCH'],
+        exclude: ['refs/heads/main', 'refs/heads/legacy'],
+      },
+    },
+  });
+  const scenario = setup(t, { state: {
+    settings: matchingSettings,
+    rulesets: [managed],
+  } });
+
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'changed');
+  assert.deepEqual(scenario.readState().rulesets[0].conditions.ref_name.exclude, [
+    'refs/heads/legacy',
+  ]);
+});
+
+test('blocks when a ruleset exclusion makes default-branch applicability ambiguous', t => {
+  const managed = canonicalRuleset({
+    conditions: {
+      ref_name: {
+        include: ['~DEFAULT_BRANCH'],
+        exclude: ['refs/heads/*'],
+      },
+    },
+  });
+  const scenario = setup(t, { state: { rulesets: [managed] } });
+
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'blocked');
+  assert.match(outcome.result.message, /applicability cannot be established safely/);
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+});
+
 test('pins API requests and authentication to the inferred github.com target', async t => {
   await t.test('enterprise environment override', st => {
     const scenario = setup(st, { state: {

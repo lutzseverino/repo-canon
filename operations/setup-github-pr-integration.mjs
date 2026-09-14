@@ -101,7 +101,7 @@ function canonicalRuleset() {
   };
 }
 
-function managedRulesetPlan(rulesets) {
+function managedRulesetPlan(rulesets, defaultBranch) {
   const matches = rulesets.filter(ruleset => ruleset.name.toLowerCase() === rulesetName.toLowerCase());
   if (matches.length > 1) {
     return { error: `multiple rulesets are named ${rulesetName}; resolve the ambiguous managed rule before setup` };
@@ -127,12 +127,21 @@ function managedRulesetPlan(rulesets) {
   }
 
   let changed = existing.enforcement !== 'active';
+  const defaultRef = `refs/heads/${defaultBranch}`;
+  const ambiguousExclusion = refName.exclude.find(pattern =>
+    pattern !== '~DEFAULT_BRANCH' && pattern !== defaultRef && /[*?\[]/.test(pattern));
+  if (ambiguousExclusion) {
+    return {
+      error: `${rulesetName} excludes ${ambiguousExclusion}; default-branch applicability cannot be established safely`,
+    };
+  }
   if (!refName.include.includes('~DEFAULT_BRANCH')) {
     refName.include.push('~DEFAULT_BRANCH');
     changed = true;
   }
-  if (refName.exclude.includes('~DEFAULT_BRANCH')) {
-    refName.exclude = refName.exclude.filter(pattern => pattern !== '~DEFAULT_BRANCH');
+  if (refName.exclude.includes('~DEFAULT_BRANCH') || refName.exclude.includes(defaultRef)) {
+    refName.exclude = refName.exclude.filter(pattern =>
+      pattern !== '~DEFAULT_BRANCH' && pattern !== defaultRef);
     conditions.ref_name = refName;
     changed = true;
   }
@@ -163,11 +172,14 @@ function managedRulesetPlan(rulesets) {
   return changed ? { kind: 'update', id: existing.id, payload } : { kind: 'none', id: existing.id };
 }
 
-function rulesetMatches(rulesets, id) {
+function rulesetMatches(rulesets, id, defaultBranch) {
   const existing = rulesets.find(ruleset => ruleset.id === id);
   if (!existing || existing.enforcement !== 'active' || existing.target !== 'branch') return false;
   const refName = existing.conditions?.ref_name;
-  if (!refName?.include?.includes('~DEFAULT_BRANCH') || refName.exclude?.includes('~DEFAULT_BRANCH')) return false;
+  const defaultRef = `refs/heads/${defaultBranch}`;
+  if (!refName?.include?.includes('~DEFAULT_BRANCH')
+      || refName.exclude?.some(pattern =>
+        pattern === '~DEFAULT_BRANCH' || pattern === defaultRef || /[*?\[]/.test(pattern))) return false;
   return existing.rules?.some(rule => rule.type === 'required_status_checks'
     && rule.parameters?.required_status_checks?.some(check => check.context === checkName));
 }
@@ -216,7 +228,7 @@ function setupIntegration(request) {
     checkLocation = 'branch';
     if (!hasRequiredCheck(branchBefore.value)) checkAction = { type: 'branch' };
   } else {
-    const plan = managedRulesetPlan(rulesetsBefore.value);
+    const plan = managedRulesetPlan(rulesetsBefore.value, repository.default_branch);
     if (plan.error) {
       result('blocked', `${operationName} cannot reconcile required checks for ${inferred.identity}: ${plan.error}.`);
       return;
@@ -294,7 +306,8 @@ function setupIntegration(request) {
     mismatches.push('squash merge settings');
   }
   if (checkLocation === 'ruleset') {
-    if (rulesetsAfter.error || !rulesetMatches(rulesetsAfter.value, managedRulesetId)) {
+    if (rulesetsAfter.error
+        || !rulesetMatches(rulesetsAfter.value, managedRulesetId, repository.default_branch)) {
       mismatches.push(`${checkName} ruleset enforcement`);
     }
   } else if (branchAfter.error || !hasRequiredCheck(branchAfter.value)) {
