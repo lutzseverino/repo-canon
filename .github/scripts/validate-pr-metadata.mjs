@@ -94,17 +94,23 @@ const hiddenElements = new Set(["script", "style", "template"]);
 function parsedHtml(value) {
   const links = [];
   let text = "";
+  const stack = [{ node: parseFragment(value), closing: false }];
 
-  function visit(node) {
+  while (stack.length) {
+    const { node, closing } = stack.pop();
+    if (closing) {
+      text += "\n";
+      continue;
+    }
     if (node.nodeName === "#comment") {
-      return;
+      continue;
     }
     if (node.nodeName === "#text") {
       text += node.value;
-      return;
+      continue;
     }
     if (hiddenElements.has(node.nodeName)) {
-      return;
+      continue;
     }
 
     if (node.nodeName === "a") {
@@ -117,15 +123,14 @@ function parsedHtml(value) {
       text += "\n";
     }
 
-    for (const child of node.childNodes ?? []) {
-      visit(child);
-    }
     if (blockElements.has(node.nodeName)) {
-      text += "\n";
+      stack.push({ node, closing: true });
+    }
+    const children = node.childNodes ?? [];
+    for (let index = children.length - 1; index >= 0; index -= 1) {
+      stack.push({ node: children[index], closing: false });
     }
   }
-
-  visit(parseFragment(value));
   return { links, text };
 }
 
@@ -281,7 +286,12 @@ function hasIssueReference(tokens) {
 function hasSmallCorrectionReason(tokens) {
   const content = normalizedRenderedText(tokens, false);
   const marker = content.match(/(?:^|\n)Small correction\s*:\s*([\s\S]*)$/i);
-  return marker ? isMeaningful(marker[1]) : false;
+  if (!marker || !isMeaningful(marker[1])) {
+    return false;
+  }
+  return /\b(?:typo|spelling|punctuation|format(?:ting)?|whitespace|(?:broken|dead)[\s-]+(?:Markdown[\s-]+)?(?:link|anchor))\b/i.test(
+    marker[1],
+  );
 }
 
 function inlineExplanation(tokens, label) {
@@ -390,7 +400,7 @@ function main() {
     !hasSmallCorrectionReason(relatedIssue)
   ) {
     errors.push(
-      "Link a related GitHub issue, or write Small correction: followed by the reason this change qualifies.",
+      "Link a related GitHub issue, or write Small correction: with a meaningful typo, broken-link, or formatting reason.",
     );
   }
 

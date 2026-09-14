@@ -43,7 +43,22 @@ function runEvent({ action = "opened", title = "feat(metadata): validate pull re
 }
 
 test("accepts valid metadata for every configured pull request update", () => {
-  for (const action of ["opened", "edited", "synchronize", "reopened", "ready_for_review"]) {
+  const workflow = readFileSync(
+    join(repositoryRoot, ".github/workflows/pr-metadata.yml"),
+    "utf8",
+  );
+  const configuredTypes = workflow.match(/types:\s*\[([^\]]+)]/)?.[1]
+    .split(",")
+    .map((type) => type.trim());
+  assert.deepEqual(configuredTypes, [
+    "opened",
+    "edited",
+    "synchronize",
+    "reopened",
+    "ready_for_review",
+  ]);
+
+  for (const action of configuredTypes) {
     const valid = runEvent({ action });
     assert.equal(valid.status, 0, `${action}: ${valid.stderr}`);
     assert.match(valid.stdout, /validation passed/);
@@ -70,6 +85,30 @@ Small correction: fix a typo in contributor-facing text.
 `;
   const result = runEvent({ title: "docs: fix contributor typo", body });
   assert.equal(result.status, 0, result.stderr);
+});
+
+test("limits the small-correction exception to eligible categories", () => {
+  for (const reason of [
+    "fix a typo in contributor-facing text",
+    "repair a broken Markdown link in the guide",
+    "correct formatting in the example table",
+  ]) {
+    const eligible = runEvent({
+      title: "docs: fix contributor guidance",
+      body: validBody().replace("Closes #6", `Small correction: ${reason}.`),
+    });
+    assert.equal(eligible.status, 0, `${reason}: ${eligible.stderr}`);
+  }
+
+  const substantive = runEvent({
+    title: "feat: add authorization system",
+    body: validBody().replace(
+      "Closes #6",
+      "Small correction: add a new authorization system.",
+    ),
+  });
+  assert.equal(substantive.status, 1);
+  assert.match(substantive.stderr, /Link a related GitHub issue/);
 });
 
 test("accepts every allowed lowercase Conventional Commit type", () => {
