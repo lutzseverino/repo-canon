@@ -7,8 +7,9 @@ draft contents in `design-review.md` before changing the intended standards.
 The repository is a work in progress. Root contribution and agent configuration
 files are working copies of the selected conventions; `drafts/` retains the
 interview's design material. Read current files before promoting or revising a
-draft. The source manifest, automation, pinned skill directories, and behavioral
-verification are not implemented yet.
+draft. The pinned skill directories are vendored. The source manifest and
+automation are not implemented yet, and behavioral verification remains
+outstanding.
 
 Use GitHub specification #1 and its existing implementation tickets as the
 contracts. Repository Standards has delivered and accepted the required scope

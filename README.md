@@ -8,8 +8,9 @@
 </div>
 
 Work in progress. The standards decisions and draft material are recorded;
-the source manifest, automation, and pinned skill collection remain to be built.
-There is no adoption-ready release yet.
+the pinned skill collection is vendored, while the source manifest and
+automation remain to be built. Skill exercises and complete adoption are still
+outstanding. There is no adoption-ready release yet.
 
 ## Documentation
 
