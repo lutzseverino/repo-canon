@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { readFile } from "node:fs/promises";
+import { lexer, marked } from "../vendor/marked/marked.esm.js";
+import { parseFragment } from "../vendor/parse5/parse5.esm.js";
 
 const feedbackMarker = "<!-- repo-canon:issue-contract-feedback -->";
 const readyLabels = new Set(["ready-for-agent", "ready-for-human"]);
@@ -176,18 +178,53 @@ function issueReferences(value = "") {
   const seen = new Set();
   const repository = required("GITHUB_REPOSITORY");
   const expression = /https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/issues\/(\d+)|(?:^|[\s(])#(\d+)\b/gim;
-  forEachUnfencedLine(value, (line) => {
-    for (const match of line.matchAll(expression)) {
-      const reference = match[4]
-        ? `/repos/${repository}/issues/${match[4]}`
-        : `/repos/${match[1]}/${match[2]}/issues/${match[3]}`;
-      if (!seen.has(reference)) {
-        seen.add(reference);
-        references.push(reference);
-      }
+  for (const match of markdownReferenceText(value).matchAll(expression)) {
+    const reference = match[4]
+      ? `/repos/${repository}/issues/${match[4]}`
+      : `/repos/${match[1]}/${match[2]}/issues/${match[3]}`;
+    if (!seen.has(reference)) {
+      seen.add(reference);
+      references.push(reference);
     }
-  });
+  }
   return references;
+}
+
+function markdownReferenceText(markdown) {
+  const fragments = [];
+
+  function visit(node) {
+    if (node.nodeName === "#text") {
+      fragments.push(node.value);
+      return;
+    }
+    if (["code", "pre", "script", "style", "template"].includes(node.tagName)) return;
+    const href = node.tagName === "a" ? node.attrs?.find(({ name }) => name === "href")?.value : null;
+    if (href) fragments.push(href);
+    for (const child of node.childNodes ?? []) visit(child);
+  }
+
+  visit(renderedMarkdownFragment(markdown));
+  return fragments.join("\n");
+}
+
+function markdownVisibleText(markdown) {
+  return htmlVisibleText(renderedMarkdownFragment(markdown));
+}
+
+function renderedMarkdownFragment(markdown) {
+  return parseFragment(marked.parse(markdown));
+}
+
+function htmlVisibleText(fragment) {
+  function textContent(node) {
+    if (node.nodeName === "#text") return node.value;
+    if (["script", "style", "template"].includes(node.tagName)) return "";
+    if (node.tagName === "img") return node.attrs?.find(({ name }) => name === "alt")?.value ?? "";
+    return (node.childNodes ?? []).map(textContent).join("");
+  }
+
+  return textContent(fragment);
 }
 
 function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
@@ -207,6 +244,13 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
     return outcome("Wayfinder child", errors, labels, false);
   }
 
+  const brief = latestAgentBrief(comments);
+  if (brief && [...labels].some((label) => categoryLabels.has(label))) {
+    validateTriagedLabels(labels, null, errors);
+    validateAgentBrief(brief.body, labels, errors);
+    return outcome("triaged Agent Brief", errors, labels, true);
+  }
+
   const contractKind = identifyContract(sections);
   if (contractKind === "specification") {
     requireSections(sections, ["Problem Statement", "Solution", "User Stories", "Out of Scope"], errors);
@@ -223,7 +267,6 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
     return outcome("implementation ticket", errors, labels, false);
   }
 
-  const brief = latestAgentBrief(comments);
   if (brief) {
     validateTriagedLabels(labels, null, errors);
     validateAgentBrief(brief.body, labels, errors);
@@ -287,58 +330,54 @@ function parseSections(markdown) {
 }
 
 function findMarkdownHeadings(markdown, acceptedNames = null) {
-  const headings = [];
-  forEachUnfencedLine(markdown, (line, offset) => {
-    const heading = line.match(/^(#{1,6})[ \t]+(.+?)[ \t]*$/i);
-    if (heading && (!acceptedNames || acceptedNames.has(normalize(heading[2])))) {
-      headings.push({ index: offset, length: line.length, level: heading[1].length, name: heading[2] });
-    }
-  });
-  return headings;
+  return markdownTokenSpans(markdown)
+    .filter(({ token }) => token.type === "heading")
+    .map(({ token, index }) => ({
+      index,
+      length: token.raw.length,
+      level: token.depth,
+      name: markdownInlineText(token.tokens),
+    }))
+    .filter(({ name }) => !acceptedNames || acceptedNames.has(normalize(name)));
 }
 
-function forEachUnfencedLine(markdown, visit) {
-  let fence = null;
-  let htmlComment = false;
-  let offset = 0;
-  for (const lineWithEnding of markdown.match(/[^\n]*(?:\n|$)/g) ?? []) {
-    if (!lineWithEnding) continue;
-    const line = lineWithEnding.replace(/\r?\n$/, "");
-    if (fence) {
-      const closingFence = new RegExp(`^[ \\t]{0,3}${fence.character}{${fence.length},}[ \\t]*$`);
-      if (closingFence.test(line)) fence = null;
-    } else {
-      let visibleLine = "";
-      let cursor = 0;
-      while (cursor < line.length) {
-        if (htmlComment) {
-          const commentEnd = line.indexOf("-->", cursor);
-          const hiddenEnd = commentEnd === -1 ? line.length : commentEnd + 3;
-          visibleLine += " ".repeat(hiddenEnd - cursor);
-          cursor = hiddenEnd;
-          if (commentEnd !== -1) htmlComment = false;
-        } else {
-          const commentStart = line.indexOf("<!--", cursor);
-          if (commentStart === -1) {
-            visibleLine += line.slice(cursor);
-            cursor = line.length;
-          } else {
-            visibleLine += line.slice(cursor, commentStart);
-            visibleLine += " ".repeat(4);
-            cursor = commentStart + 4;
-            htmlComment = true;
-          }
-        }
-      }
-      const fenceMatch = visibleLine.match(/^[ \t]{0,3}(`{3,}|~{3,})/);
-      if (fenceMatch) {
-        fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
-      } else {
-        visit(visibleLine, offset);
-      }
+function markdownTokenSpans(markdown) {
+  let cursor = 0;
+  return lexer(markdown).map((token) => {
+    const index = markdown.indexOf(token.raw, cursor);
+    if (index === -1) throw new Error(`Could not locate parsed Markdown token after offset ${cursor}.`);
+    cursor = index + token.raw.length;
+    return { token, index };
+  });
+}
+
+function markdownInlineText(tokens) {
+  return (tokens ?? []).map((token) => {
+    if (token.type === "html") return "";
+    if (token.type === "codespan") return token.text;
+    if (token.tokens) return markdownInlineText(token.tokens);
+    return typeof token.text === "string" ? token.text : "";
+  }).join("");
+}
+
+function briefFieldMatches(markdown) {
+  const matches = [];
+  for (const { token, index } of markdownTokenSpans(markdown)) {
+    if (token.type !== "paragraph") continue;
+    let cursor = index;
+    let lineStart = true;
+    for (const inlineToken of token.tokens ?? []) {
+      const inlineIndex = markdown.indexOf(inlineToken.raw, cursor);
+      if (inlineIndex === -1) throw new Error(`Could not locate parsed inline Markdown token after offset ${cursor}.`);
+      cursor = inlineIndex + inlineToken.raw.length;
+      const fieldName = inlineToken.type === "strong" && lineStart
+        ? markdownInlineText(inlineToken.tokens).match(/^([^:\n]+):$/)?.[1]
+        : null;
+      if (fieldName) matches.push({ index: inlineIndex, length: inlineToken.raw.length, name: fieldName });
+      lineStart = inlineToken.raw.endsWith("\n");
     }
-    offset += lineWithEnding.length;
   }
+  return matches;
 }
 
 function normalize(value) {
@@ -361,10 +400,10 @@ function requireSection(sections, name, errors, { allowEmpty = false, allowExter
 }
 
 function isPlaceholder(value) {
-  const withoutComments = value.replace(/<!--[\s\S]*?-->/g, "").trim();
-  const withoutEmptyTasks = withoutComments.replace(/^\s*[-+*]\s*\[[ xX]\]\s*$/gm, "").trim();
-  if (!withoutEmptyTasks) return true;
-  return /^(?:[_*]*no response[_*]*|tbd|todo|\[(?:your |add |describe |enter )?[^\]]+\]|<[^>]+>)\.?$/i.test(withoutEmptyTasks);
+  const withoutEmptyTasks = value.replace(/^\s*[-+*]\s*\[[ xX]\]\s*$/gm, "");
+  const visibleText = markdownVisibleText(withoutEmptyTasks).trim();
+  if (!visibleText) return true;
+  return /^(?:no response|tbd|todo|\[(?:your |add |describe |enter )?[^\]]+\])\.?$/i.test(visibleText);
 }
 
 function validateWayfinderMap(sections, labels, errors) {
@@ -413,8 +452,7 @@ function latestAgentBrief(comments) {
 
 function validateAgentBrief(body, labels, errors) {
   const heading = agentBriefHeading(body);
-  const preamble = body.slice(0, heading.index).trim();
-  if (preamble !== "> *This was generated by AI during triage.*") {
+  if (!isAgentBriefPreamble(body.slice(0, heading.index))) {
     errors.push("Start the Agent Brief comment with `> *This was generated by AI during triage.*`.");
   }
   const fields = parseBriefFields(markdownSection(body, heading));
@@ -435,19 +473,26 @@ function markdownSection(markdown, heading) {
 }
 
 function parseBriefFields(body) {
-  const matches = [];
-  forEachUnfencedLine(body, (line, index) => {
-    const match = line.match(/^\*\*([^*:\n]+):\*\*[ \t]*(.*)$/i);
-    if (match) matches.push({ index, length: line.length, name: match[1], initialValue: match[2] });
-  });
+  const matches = briefFieldMatches(body);
   const fields = new Map();
   for (let index = 0; index < matches.length; index += 1) {
     const match = matches[index];
     const start = match.index + match.length;
     const end = matches[index + 1]?.index ?? body.length;
-    fields.set(normalize(match.name), `${match.initialValue}\n${body.slice(start, end)}`.trim());
+    fields.set(normalize(match.name), body.slice(start, end).trim());
   }
   return fields;
+}
+
+function isAgentBriefPreamble(markdown) {
+  const blocks = lexer(markdown).filter((token) => token.type !== "space");
+  if (blocks.length !== 1 || blocks[0].type !== "blockquote") return false;
+  const quoteBlocks = blocks[0].tokens?.filter((token) => token.type !== "space") ?? [];
+  if (quoteBlocks.length !== 1 || quoteBlocks[0].type !== "paragraph") return false;
+  const inline = quoteBlocks[0].tokens ?? [];
+  return inline.length === 1
+    && inline[0].type === "em"
+    && markdownInlineText(inline[0].tokens) === "This was generated by AI during triage.";
 }
 
 function agentBriefHeading(body) {

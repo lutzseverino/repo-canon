@@ -219,6 +219,33 @@ test("an empty checklist is rejected as a required-field placeholder", async () 
   assert.match(result.stderr, /Acceptance criteria/);
 });
 
+test("required sections use rendered visible content", async (context) => {
+  const examples = [
+    { name: "empty HTML", value: "<br><br>", valid: false },
+    { name: "HTML text", value: "<p>Add caching.</p>", valid: true },
+    { name: "code example", value: "```js\ncache.enable();\n```", valid: true },
+  ];
+
+  for (const example of examples) {
+    await context.test(example.name, async () => {
+      const result = await exercise({
+        issue: {
+          number: 42,
+          body: `## What to build\n\n${example.value}\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.`,
+          labels: [{ name: "ready-for-agent" }],
+          state: "open",
+        },
+      });
+
+      assert.equal(result.code, example.valid ? 0 : 1, result.stderr);
+      if (!example.valid) {
+        assert.match(result.stderr, /What to build/);
+        assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+      }
+    });
+  }
+});
+
 test("a native ticket can use relationships and remain valid with an open blocker", async () => {
   const result = await exercise({
     issue: {
@@ -360,42 +387,43 @@ test("the latest Agent Brief is found across the complete discussion", async () 
   assert.ok(result.requests.some(({ url }) => url?.includes("page=2")));
 });
 
-test("a triaged Agent Brief remains authoritative over intake body headings", async () => {
-  const result = await exercise({
-    issue: {
-      number: 42,
-      body: "Free-form intake context.\n\n## Acceptance criteria\n\nThe result should be fast.",
-      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
-      state: "open",
-    },
-    comments: [{ id: 1, body: completeAgentBrief, user: { login: "maintainer" } }],
-  });
-
-  assert.equal(result.code, 0, result.stderr);
-  assert.match(result.stdout, /valid triaged Agent Brief/i);
-});
-
-test("native issue-body contracts remain authoritative over brief comments", async (context) => {
+test("contract authority follows the planning, native-body, and triaged-brief decision matrix", async (context) => {
   const examples = [
     {
       name: "specification",
       body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\nA user gets a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.\n\n## Further Notes\n\nNone.",
+      labels: [{ name: "ready-for-agent" }],
+      expectedKind: "specification",
     },
     {
       name: "implementation ticket",
       body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+      labels: [{ name: "ready-for-agent" }],
+      expectedKind: "implementation ticket",
+    },
+    {
+      name: "triaged Agent Brief",
+      body: "Free-form intake context.\n\n## Solution\n\nTry a cache.\n\n## Acceptance criteria\n\nThe result should be fast.",
+      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+      expectedKind: "triaged Agent Brief",
+    },
+    {
+      name: "Wayfinder map",
+      body: "## Destination\n\nChoose a cache.\n\n## Notes\n\nUse the domain model.\n\n## Decisions so far\n\n## Not yet specified\n\nEviction policy.\n\n## Out of scope\n\nNone.\n\n## Solution\n\nA misleading native heading.",
+      labels: [{ name: "wayfinder:map" }],
+      expectedKind: "Wayfinder map",
     },
   ];
 
   for (const example of examples) {
     await context.test(example.name, async () => {
       const result = await exercise({
-        issue: { number: 42, body: example.body, labels: [{ name: "ready-for-agent" }], state: "open" },
+        issue: { number: 42, body: example.body, labels: example.labels, state: "open" },
         comments: [{ id: 1, body: completeAgentBrief, user: { login: "reporter" } }],
       });
 
       assert.equal(result.code, 0, result.stderr);
-      assert.match(result.stdout, new RegExp(`valid ${example.name}`, "i"));
+      assert.match(result.stdout, new RegExp(`valid ${example.expectedKind}`, "i"));
     });
   }
 });
@@ -500,6 +528,36 @@ test("HTML-commented contract syntax remains inert", async (context) => {
   });
 });
 
+test("HTML delimiters inside inline code remain ordinary contract content", async (context) => {
+  await context.test("issue body", async () => {
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: "## Problem\n\nDocument the literal `<!--` delimiter.\n\n## Desired outcome\n\nThe documentation is clear.",
+        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        state: "open",
+      },
+    });
+
+    assert.equal(result.code, 0, result.stderr);
+  });
+
+  await context.test("Agent Brief", async () => {
+    const brief = completeAgentBrief.replace("Make search fast", "Document the `<!--` delimiter");
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: "Free-form intake context.",
+        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        state: "open",
+      },
+      comments: [{ id: 1, body: brief, user: { login: "maintainer" } }],
+    });
+
+    assert.equal(result.code, 0, result.stderr);
+  });
+});
+
 test("explicit parent and blocker links are read when native relationships are absent", async () => {
   const result = await exercise({
     issue: {
@@ -523,19 +581,22 @@ test("explicit blocker links are used when the native dependency endpoint is una
   const result = await exercise({
     issue: {
       number: 42,
-      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n```md\n#999\n```\n\nhttps://github.com/example/repository/issues/41",
+      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n```md\n#999\n```\n\n    #998\n\n`#997`\n\n<code>#996</code>\n\n| Blocker |\n| --- |\n| [Issue](https://github.com/example/repository/issues/41) |\n\n<a href=\"https://github.com/example/repository/issues/43\">Another blocker</a>",
       labels: [{ name: "ready-for-agent" }],
       state: "open",
     },
     blockedByStatus: 404,
     relatedIssues: {
       "/repos/example/repository/issues/41": { number: 41, state: "open", labels: [] },
+      "/repos/example/repository/issues/43": { number: 43, state: "open", labels: [] },
     },
   });
 
   assert.equal(result.code, 0, result.stderr);
   assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/41"));
+  assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/43"));
   assert.ok(!result.requests.some(({ url }) => url === "/repos/example/repository/issues/999"));
+  assert.ok(!result.requests.some(({ url }) => ["/repos/example/repository/issues/998", "/repos/example/repository/issues/997", "/repos/example/repository/issues/996"].includes(url)));
 });
 
 test("an unresolvable blocker link removes readiness with actionable feedback", async () => {

@@ -18,11 +18,16 @@ The validator recognizes these contracts:
 
 Heading levels and casing do not affect recognition. Required fields reject
 empty content, template comments, and GitHub's `_No response_` placeholder.
-Contract syntax inside fenced code or HTML comments remains example content.
-When an Agent Brief exists, the latest such comment is the triaged request's
-contract; contract-like headings in the intake body remain context.
+The validator uses the repository's pinned Marked and parse5 resources so
+contract syntax in fenced or indented code, inline code, and HTML comments
+remains example content, and required fields are evaluated by their rendered
+visible content. For category-labeled triaged requests, the latest Agent Brief
+is the contract and contract-like headings in the intake body remain context.
+Native specifications and implementation tickets remain authoritative when the
+issue does not carry a triage category. Wayfinder labels select the Wayfinder
+contract before either form.
 Native parent and blocking relationships are read from GitHub. Explicit issue
-links outside fenced examples in `Parent` and `Blocked by` sections are used
+links in rendered `Parent` and `Blocked by` section content are used
 when native relationships are absent or the native dependency endpoint is
 unavailable. An open blocker does not make a complete contract invalid.
 
