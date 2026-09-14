@@ -1,0 +1,27 @@
+:root { color-scheme: light; --ink: #17212b; --muted: #52606d; --paper: #fbfaf6; --panel: #f1f4f1; --line: #c8d0ca; --accent: #176b52; --accent-pale: #d9eee5; --warning: #855b08; --error: #a43a35; font-family: Georgia, "Times New Roman", serif; }
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); line-height: 1.55; margin: 0; }
+main { margin: 0 auto; max-width: 47rem; padding: 3.5rem 1.5rem 5rem; }
+h1, h2, h3, button, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+h1 { font-size: clamp(2rem, 7vw, 3.5rem); line-height: 1.05; letter-spacing: -.06em; margin: 0; }
+h2 { border-top: 1px solid var(--line); margin-top: 2.7rem; padding-top: 1.1rem; }
+h3 { font-size: 1rem; }
+p, li { max-width: 42rem; }
+.eyebrow { color: var(--accent); font: 700 .78rem/1.2 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.lede { color: var(--muted); font-size: 1.15rem; }
+.panel, .exercise { background: var(--panel); border: 1px solid var(--line); border-radius: .35rem; margin: 1.3rem 0; padding: 1.15rem 1.25rem; }
+.exercise { background: #fff; border-left: .35rem solid var(--accent); }
+.graph { background: #1f2b28; color: #edf7f1; border-radius: .3rem; overflow-x: auto; padding: 1rem; }
+pre { margin: 0; white-space: pre; }
+code { font-size: .92em; }
+.key { color: var(--accent); font-weight: 700; }
+.warning { color: var(--warning); font-weight: 700; }
+.choices { display: flex; flex-wrap: wrap; gap: .55rem; margin: .8rem 0; }
+button { background: #fff; border: 1px solid var(--accent); border-radius: .25rem; color: var(--accent); cursor: pointer; padding: .55rem .72rem; }
+button:hover, button:focus-visible { background: var(--accent-pale); outline: 2px solid var(--accent); outline-offset: 2px; }
+.feedback { min-height: 1.55rem; margin: .65rem 0 0; }
+.correct { color: var(--accent); font-weight: 700; }
+.incorrect { color: var(--error); font-weight: 700; }
+.muted { color: var(--muted); }
+footer { border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; margin-top: 3rem; padding-top: 1rem; }
+@media print { body { background: #fff; } main { max-width: none; padding: 1cm; } button { display: none; } }

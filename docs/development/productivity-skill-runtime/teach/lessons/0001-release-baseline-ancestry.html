@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0001 — Baseline ancestry for releases</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Lesson 0001 · 10 minutes</p>
+    <h1>Baseline ancestry for releases</h1>
+    <p class="lede">Make one safe decision: does this candidate release commit already contain the required baseline?</p>
+    <h2>Your release question</h2>
+    <p>Your script has a required <strong>baseline</strong> commit and a proposed <strong>candidate</strong> commit. The candidate is acceptable only if the baseline is an <strong>ancestor</strong> of it: starting at the candidate, Git can reach the baseline by following parent links.</p>
+    <div class="graph"><pre><code>baseline (B) ──► R ──► candidate (C)
+
+Start at C; follow parent links left: C → R → B.</code></pre></div>
+    <p><strong>Important:</strong> the arrows draw history left-to-right for readability. The test is reachability in the graph, not which commit has the earlier timestamp.</p>
+    <h2>The command reads like the question</h2>
+    <div class="panel"><pre><code>git merge-base --is-ancestor &lt;first&gt; &lt;second&gt;</code></pre></div>
+    <p>The official documentation defines this as: is the <span class="key">first</span> commit an ancestor of the <span class="key">second</span>? For your release question, put the thing that must be included first:</p>
+    <div class="panel"><pre><code>git merge-base --is-ancestor "$baseline" "$candidate"</code></pre></div>
+    <section class="exercise" aria-labelledby="order-title">
+      <h3 id="order-title">Retrieval 1 — choose the order</h3>
+      <p>A release requires <code>B</code>, and its candidate is <code>C</code>. Which pair follows <code>--is-ancestor</code>?</p>
+      <div class="choices">
+        <button type="button" data-answer="wrong" data-target="order-feedback">candidate, baseline</button>
+        <button type="button" data-answer="right" data-target="order-feedback">baseline, candidate</button>
+      </div>
+      <p id="order-feedback" class="feedback" aria-live="polite"></p>
+    </section>
+    <h2>Read the status as a three-way decision</h2>
+    <p>In this mode, Git prints no answer; the exit status is the answer. The official contract is:</p>
+    <ul>
+      <li><strong>0:</strong> true — the baseline is an ancestor of the candidate.</li>
+      <li><strong>1:</strong> false — the baseline is not an ancestor of the candidate.</li>
+      <li><strong>anything else:</strong> an error — do not silently convert it into false.</li>
+    </ul>
+    <p>This distinction protects a release script from accepting an invalid revision name, repository problem, or other command failure as an ordinary “baseline missing” result.</p>
+    <section class="exercise" aria-labelledby="status-title">
+      <h3 id="status-title">Retrieval 2 — classify the result</h3>
+      <p>The command exits <code>1</code>. What should the release decision be?</p>
+      <div class="choices">
+        <button type="button" data-answer="wrong" data-target="status-feedback">accept</button>
+        <button type="button" data-answer="right" data-target="status-feedback">reject</button>
+        <button type="button" data-answer="wrong" data-target="status-feedback">review</button>
+      </div>
+      <p id="status-feedback" class="feedback" aria-live="polite"></p>
+    </section>
+    <h2>Use it safely in a script</h2>
+    <pre class="graph"><code>git merge-base --is-ancestor "$baseline" "$candidate"
+status=$?
+case "$status" in
+  0) printf '%s\n' 'candidate contains baseline' ;;
+  1) printf '%s\n' 'candidate lacks baseline'; exit 1 ;;
+  *) printf '%s\n' 'could not check ancestry' >&2; exit "$status" ;;
+esac</code></pre>
+    <p>The order is deliberate: read it as “is <code>$baseline</code> an ancestor of <code>$candidate</code>?” No dates or history-changing commands are involved.</p>
+    <section class="exercise" aria-labelledby="transfer-title">
+      <h3 id="transfer-title">One-minute transfer</h3>
+      <p>Reply to your teacher with one sentence: for baseline <code>v1-base</code> and candidate <code>release-42</code>, give the command and explain why that order checks containment. Then say what your script does for statuses <code>0</code>, <code>1</code>, and <code>2</code>.</p>
+      <p class="muted">Do this from memory before looking back. Your answer will determine the next lesson.</p>
+    </section>
+    <footer>Primary source: <a href="https://git-scm.com/docs/git-merge-base">official <code>git-merge-base</code> documentation</a>. Keep <a href="../reference/git-ancestry-release-checks.html">the release-check reference</a> handy. Ask your teacher anything that is unclear.</footer>
+  </main>
+  <script>
+    const feedback = {
+      right: 'Correct. Put the required baseline first and the candidate second: “is baseline an ancestor of candidate?”',
+      wrong: 'Not quite. The first argument is the commit that must be an ancestor. Read the command aloud: “is first an ancestor of second?”'
+    };
+    document.querySelectorAll('button[data-answer]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const message = document.getElementById(button.dataset.target);
+        const correct = button.dataset.answer === 'right';
+        message.textContent = feedback[button.dataset.answer];
+        message.className = `feedback ${correct ? 'correct' : 'incorrect'}`;
+      });
+    });
+  </script>
+</body>
+</html>
