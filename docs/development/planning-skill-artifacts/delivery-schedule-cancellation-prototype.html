@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delivery schedule cancellation prototype</title>
+    <style>
+      :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #f7faf9; color: #18201d; }
+      * { box-sizing: border-box; }
+      body { margin: 0; }
+      main { max-width: 960px; margin: 0 auto; padding: 48px 24px 72px; }
+      h1 { margin: 0 0 8px; font-size: clamp(1.9rem, 5vw, 2.7rem); letter-spacing: -0.04em; }
+      h2 { margin: 0 0 16px; font-size: 1.2rem; }
+      p { line-height: 1.55; }
+      .eyebrow { color: #086b4c; font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+      .notice, section { background: #fff; border: 1px solid #dce8e2; border-radius: 14px; margin-top: 24px; padding: 24px; box-shadow: 0 2px 8px rgb(24 32 29 / 4%); }
+      .notice { border-left: 5px solid #137a57; }
+      .state-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+      .field { background: #f4f8f6; border-radius: 9px; padding: 13px; }
+      .field dt { color: #557067; font-size: .76rem; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+      .field dd { margin: 5px 0 0; font-size: 1rem; font-weight: 650; }
+      .history { margin: 18px 0 0; padding-left: 21px; }
+      .history li { margin: 7px 0; line-height: 1.45; }
+      .controls, .tabs, .steps { display: flex; flex-wrap: wrap; gap: 10px; }
+      button { appearance: none; border: 1px solid #167654; border-radius: 8px; background: #137a57; color: white; cursor: pointer; font: inherit; font-weight: 700; padding: 10px 14px; }
+      button:hover:not(:disabled) { background: #075b40; }
+      button:focus-visible { outline: 3px solid #90dbc0; outline-offset: 2px; }
+      button.secondary { border-color: #b9cec4; background: white; color: #1a513e; }
+      button[aria-selected="true"] { background: #0b4e38; color: white; }
+      button:disabled { cursor: not-allowed; opacity: .48; }
+      .scenario-copy { margin: 16px 0; }
+      .step-label { display: block; color: #557067; font-size: .8rem; font-weight: 700; margin: 16px 0 8px; }
+      .outcome { background: #edf8f2; border-radius: 8px; margin-top: 16px; padding: 12px 14px; }
+      .footnote { color: #557067; font-size: .88rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">Throwaway logic prototype · open this file directly</div>
+      <h1>Delivery schedule cancellation</h1>
+      <p>This demo asks: can dispatch coordinators understand a Delivery schedule with the three progression stages <strong>draft</strong>, <strong>confirmed</strong>, and <strong>dispatched</strong> when it may be cancelled only before dispatch?</p>
+
+      <aside class="notice">
+        <strong>Verdict:</strong> Yes, if cancellation is shown as a separate, terminal operational outcome while the three stages retain the last reached scheduling stage. A cancelled confirmed schedule must visibly say both “confirmed” and “cancelled”; it must not appear available for dispatch.
+      </aside>
+
+      <section aria-labelledby="current-state-heading">
+        <h2 id="current-state-heading">Current Delivery schedule</h2>
+        <p id="change-summary" class="outcome" aria-live="polite"></p>
+        <dl id="state-fields" class="state-grid"></dl>
+        <h3>Coordinator activity</h3>
+        <ol id="history" class="history"></ol>
+      </section>
+
+      <section aria-labelledby="free-play-heading">
+        <h2 id="free-play-heading">Free play</h2>
+        <p>Try any coordinator action in any order. The model records an attempted action even when the Delivery schedule cannot accept it.</p>
+        <div id="free-play-controls" class="controls"></div>
+      </section>
+
+      <section aria-labelledby="walkthrough-heading">
+        <h2 id="walkthrough-heading">Guided walkthroughs</h2>
+        <div id="scenario-tabs" class="tabs" role="tablist" aria-label="Walkthrough scenarios"></div>
+        <div id="scenario-panel" role="tabpanel"></div>
+      </section>
+
+      <p class="footnote">This is not production software. It uses in-memory example data only and has no connection to a dispatch system.</p>
+    </main>
+
+    <script>
+      // Pure state module: it has no DOM dependency and can be lifted into application code.
+      const deliveryScheduleModel = (() => {
+        const stages = ['draft', 'confirmed', 'dispatched'];
+        const actionNames = {
+          confirm: 'Confirm the Delivery schedule',
+          dispatch: 'Dispatch the Delivery schedule',
+          cancel: 'Cancel the Delivery schedule',
+        };
+
+        const initialState = () => ({
+          reference: 'DS-1042',
+          parcelCount: 3,
+          schedulingStage: 'draft',
+          operationalOutcome: 'active',
+          cancelledFromStage: null,
+          lastOutcome: 'Delivery schedule opened as a draft.',
+          activity: ['Delivery schedule opened as a draft.'],
+        });
+
+        const availableActions = (state) => {
+          if (state.operationalOutcome === 'cancelled') return [];
+          if (state.schedulingStage === 'draft') return ['confirm', 'cancel'];
+          if (state.schedulingStage === 'confirmed') return ['dispatch', 'cancel'];
+          return [];
+        };
+
+        const record = (state, message) => ({
+          ...state,
+          lastOutcome: message,
+          activity: [...state.activity, message],
+        });
+
+        const transition = (state, action) => {
+          if (!Object.hasOwn(actionNames, action)) {
+            return record(state, 'That coordinator action is not recognised.');
+          }
+
+          if (state.operationalOutcome === 'cancelled') {
+            return record(state, `${actionNames[action]} was not accepted: the Delivery schedule is cancelled.`);
+          }
+
+          if (action === 'confirm' && state.schedulingStage === 'draft') {
+            return record({ ...state, schedulingStage: 'confirmed' }, 'Delivery schedule confirmed and ready for dispatch.');
+          }
+
+          if (action === 'dispatch' && state.schedulingStage === 'confirmed') {
+            return record({ ...state, schedulingStage: 'dispatched' }, 'Delivery schedule dispatched. Cancellation is now unavailable.');
+          }
+
+          if (action === 'cancel' && state.schedulingStage !== 'dispatched') {
+            return record({
+              ...state,
+              operationalOutcome: 'cancelled',
+              cancelledFromStage: state.schedulingStage,
+            }, `Delivery schedule cancelled from the ${state.schedulingStage} stage. No further coordinator actions are available.`);
+          }
+
+          return record(state, `${actionNames[action]} was not accepted from the ${state.schedulingStage} stage.`);
+        };
+
+        return { actionNames, availableActions, initialState, stages, transition };
+      })();
+
+      // Throwaway DOM shell: it only renders state and sends named actions to the pure module.
+      const scenarios = [
+        {
+          id: 'happy',
+          label: 'Happy path',
+          description: 'A coordinator confirms a draft Delivery schedule, then dispatches it. Watch the scheduling stage advance and cancellation become unavailable.',
+          steps: ['confirm', 'dispatch'],
+        },
+        {
+          id: 'cancellation',
+          label: 'Cancellation',
+          description: 'A coordinator confirms a Delivery schedule, then cancels before dispatch. Watch the confirmed stage remain as useful history while the operational outcome becomes cancelled.',
+          steps: ['confirm', 'cancel'],
+        },
+        {
+          id: 'illegal',
+          label: 'Illegal transition',
+          description: 'A coordinator dispatches a confirmed Delivery schedule, then tries to cancel it. Watch the model preserve the dispatched state and clearly reject cancellation.',
+          steps: ['confirm', 'dispatch', 'cancel'],
+        },
+      ];
+
+      let state = deliveryScheduleModel.initialState();
+      let activeScenarioId = scenarios[0].id;
+      let nextStep = 0;
+
+      const pretty = (value) => value.replace(/\b\w/g, (letter) => letter.toUpperCase());
+      const field = (label, value) => `<div class="field"><dt>${label}</dt><dd>${value}</dd></div>`;
+
+      function renderState() {
+        const actions = deliveryScheduleModel.availableActions(state);
+        document.querySelector('#change-summary').textContent = state.lastOutcome;
+        document.querySelector('#state-fields').innerHTML = [
+          field('Schedule reference', state.reference),
+          field('Parcels selected', String(state.parcelCount)),
+          field('Scheduling stage', pretty(state.schedulingStage)),
+          field('Operational outcome', pretty(state.operationalOutcome)),
+          field('Cancelled from stage', state.cancelledFromStage ? pretty(state.cancelledFromStage) : 'Not cancelled'),
+          field('Coordinator actions currently allowed', actions.length ? actions.map((action) => deliveryScheduleModel.actionNames[action]).join('; ') : 'None'),
+        ].join('');
+        document.querySelector('#history').innerHTML = state.activity.map((entry) => `<li>${entry}</li>`).join('');
+        document.querySelector('#free-play-controls').innerHTML = Object.entries(deliveryScheduleModel.actionNames)
+          .map(([action, label]) => `<button type="button" data-action="${action}">${label}</button>`)
+          .join('');
+      }
+
+      function dispatch(action) {
+        state = deliveryScheduleModel.transition(state, action);
+        renderState();
+        renderScenario();
+      }
+
+      function renderScenarioTabs() {
+        document.querySelector('#scenario-tabs').innerHTML = scenarios.map((scenario) => `
+          <button class="secondary" type="button" role="tab" aria-selected="${scenario.id === activeScenarioId}" data-scenario="${scenario.id}">${scenario.label}</button>
+        `).join('');
+      }
+
+      function renderScenario() {
+        const scenario = scenarios.find(({ id }) => id === activeScenarioId);
+        const complete = nextStep >= scenario.steps.length;
+        document.querySelector('#scenario-panel').innerHTML = `
+          <p class="scenario-copy">${scenario.description}</p>
+          <button class="secondary" type="button" data-start="${scenario.id}">Start this walkthrough from a fresh draft</button>
+          <span class="step-label">${complete ? 'Walkthrough complete' : `Next step: ${nextStep + 1} of ${scenario.steps.length}`}</span>
+          <div class="steps">${scenario.steps.map((action, index) => `
+            <button type="button" data-step-action="${action}" ${index === nextStep ? '' : 'disabled'}>${index + 1}. ${deliveryScheduleModel.actionNames[action]}</button>
+          `).join('')}</div>
+        `;
+      }
+
+      document.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        if (button.dataset.action) dispatch(button.dataset.action);
+        if (button.dataset.scenario) {
+          activeScenarioId = button.dataset.scenario;
+          nextStep = 0;
+          renderScenarioTabs();
+          renderScenario();
+        }
+        if (button.dataset.start) {
+          state = deliveryScheduleModel.initialState();
+          nextStep = 0;
+          renderState();
+          renderScenario();
+        }
+        if (button.dataset.stepAction) {
+          dispatch(button.dataset.stepAction);
+          nextStep += 1;
+          renderScenario();
+        }
+      });
+
+      renderState();
+      renderScenarioTabs();
+      renderScenario();
+    </script>
+  </body>
+</html>

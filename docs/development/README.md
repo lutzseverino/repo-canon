@@ -33,6 +33,9 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   preserves exact harness provenance, and the
   [visual-inspection record](engineering-skill-architecture-visual-inspection.md)
   records the browser-render review.
+- [Planning skill exercises](planning-skill-exercises.md): runtime evidence,
+  native artifacts, and limitations for the planning, delivery, and
+  adoption-preparation skills.
 
 ## Authoring status
 
@@ -49,8 +52,8 @@ Use the installed public CLI 1.2.1 with Node.js 24 as the initial
 source-validation baseline;
 claim compatibility only after validating the final source bytes. The earlier
 CLI 1.1.0 experiments remain historical evidence. Source validation, remaining
-operation and skill exercises, and complete Repo Canon adoption are still
-outstanding.
+operation and productivity-skill exercises, and complete Repo Canon adoption
+are still outstanding.
 
 ## Working locally
 
@@ -74,7 +77,8 @@ metadata, harmless formatting variations, a hostile fork payload, and
 issue-contract structure, exact revision association, actor authority,
 invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
-`npm run test:issue-contracts` for the focused issue-contract fixtures. The four
+`npm run test:issue-contracts` for the focused issue-contract fixtures and
+`npm run test:planning-skill-fixtures` for the planning-skill harness. The four
 draft issue forms were parsed as YAML and checked for basic field structure and
 duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
 Source validation and adoption evidence remain separate from these checks.
