@@ -44,10 +44,14 @@ function runEvent({ action = "opened", title = "feat(metadata): validate pull re
 
 test("accepts valid metadata for every configured pull request update", () => {
   for (const action of ["opened", "edited", "synchronize", "reopened", "ready_for_review"]) {
-    const result = runEvent({ action });
-    assert.equal(result.status, 0, `${action}: ${result.stderr}`);
-    assert.match(result.stdout, /validation passed/);
-    assert.match(result.summary, /validation passed/);
+    const valid = runEvent({ action });
+    assert.equal(valid.status, 0, `${action}: ${valid.stderr}`);
+    assert.match(valid.stdout, /validation passed/);
+    assert.match(valid.summary, /validation passed/);
+
+    const invalid = runEvent({ action, body: "Unstructured description" });
+    assert.equal(invalid.status, 1, action);
+    assert.match(invalid.stderr, /Add a Summary section/);
   }
 });
 
@@ -113,6 +117,55 @@ Closes #6
   assert.match(result.stderr, /Add a Related issue section/);
 });
 
+test("rejects common placeholder variants and rendered-empty HTML", () => {
+  for (const placeholder of ["Not applicable", "Not applicable.", "No tests", "Same as title", "<br><br>", "&nbsp;&nbsp;"]) {
+    const result = runEvent({
+      body: `## Summary
+
+${placeholder}
+
+## Validation
+
+${placeholder}
+
+## Related issue
+
+Closes #6
+`,
+    });
+    assert.equal(result.status, 1, placeholder);
+    assert.match(result.stderr, /Replace the Summary placeholder/, placeholder);
+    assert.match(result.stderr, /Replace the Validation placeholder/, placeholder);
+  }
+});
+
+test("ignores headings inside fenced Markdown examples", () => {
+  const onlyExample = runEvent({
+    body: `\`\`\`markdown
+## Summary
+Example summary text.
+## Validation
+Example validation passed.
+## Related issue
+Closes #6
+\`\`\`
+`,
+  });
+  assert.equal(onlyExample.status, 1);
+  assert.match(onlyExample.stderr, /Add a Summary section/);
+
+  const realSectionsWithExample = runEvent({
+    body: `${validBody()}
+
+\`\`\`markdown
+## Summary
+Example summary text.
+\`\`\`
+`,
+  });
+  assert.equal(realSectionsWithExample.status, 0, realSectionsWithExample.stderr);
+});
+
 test("requires each PR section exactly once without requiring Limits", () => {
   const result = runEvent({
     body: `${validBody()}\n## Summary\n\nA duplicate summary is ambiguous.\n`,
@@ -153,6 +206,32 @@ Migration: read the replacement response field before upgrading.
 `;
   const valid = runEvent({ title: "feat(api)!: remove legacy response", body });
   assert.equal(valid.status, 0, valid.stderr);
+
+  const hidden = runEvent({
+    title: "feat(api)!: remove legacy response",
+    body: `${validBody()}
+<!--
+Impact: old clients stop working after this change.
+Migration: clients must use the replacement response field.
+-->
+`,
+  });
+  assert.equal(hidden.status, 1);
+  assert.match(hidden.stderr, /under an Impact/);
+  assert.match(hidden.stderr, /under a Migration/);
+
+  const fenced = runEvent({
+    title: "feat(api)!: remove legacy response",
+    body: `${validBody()}
+\`\`\`text
+Impact: old clients stop working after this change.
+Migration: clients must use the replacement response field.
+\`\`\`
+`,
+  });
+  assert.equal(fenced.status, 1);
+  assert.match(fenced.stderr, /under an Impact/);
+  assert.match(fenced.stderr, /under a Migration/);
 });
 
 test("requires the title marker for an explicit breaking-change footer", () => {
@@ -164,6 +243,16 @@ BREAKING CHANGE: legacy clients must migrate to the replacement field.
   });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Add ! before the title colon/);
+
+  const fenced = runEvent({
+    title: "feat(api): document a migration example",
+    body: `${validBody()}
+\`\`\`text
+BREAKING CHANGE: example footer text stays inert.
+\`\`\`
+`,
+  });
+  assert.equal(fenced.status, 0, fenced.stderr);
 });
 
 test("treats hostile fork metadata as inert workflow input", () => {
@@ -198,4 +287,5 @@ test("trusted workflow checks out the base revision and never names the head rev
   assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/);
   assert.match(workflow, /persist-credentials: false/);
   assert.doesNotMatch(workflow, /pull_request\.head\.(?:sha|ref)/);
+  assert.doesNotMatch(workflow, /(?:issues|pull-requests):\s*write/);
 });

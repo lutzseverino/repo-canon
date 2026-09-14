@@ -16,11 +16,70 @@ const allowedTypes = [
   "revert",
 ];
 
+const exactPlaceholders = new Set([
+  "todo",
+  "tbd",
+  "n/a",
+  "na",
+  "none",
+  "not applicable",
+  "not available",
+  "not provided",
+  "not run",
+  "not tested",
+  "no tests",
+  "placeholder",
+  "coming soon",
+  "to be determined",
+  "fill this in",
+  "fill it in",
+  "same as title",
+  "see above",
+  "see title",
+]);
+
+function withoutHtmlComments(markdown) {
+  return markdown.replace(/<!--[\s\S]*?(?:-->|$)/g, " ");
+}
+
+function markdownLines(markdown) {
+  let fence;
+  return withoutHtmlComments(markdown)
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => {
+      const fenceLine = line.match(/^\s{0,3}(`{3,}|~{3,})(.*)$/);
+      if (fence) {
+        if (
+          fenceLine &&
+          fenceLine[1][0] === fence.character &&
+          fenceLine[1].length >= fence.length &&
+          fenceLine[2].trim() === ""
+        ) {
+          fence = undefined;
+        }
+        return { inFence: true, line };
+      }
+      if (fenceLine) {
+        fence = { character: fenceLine[1][0], length: fenceLine[1].length };
+        return { inFence: true, line };
+      }
+      return { inFence: false, line };
+    });
+}
+
+function withoutFencedCode(markdown) {
+  return markdownLines(markdown)
+    .map(({ inFence, line }) => (inFence ? "" : line))
+    .join("\n");
+}
+
 function visibleText(markdown) {
-  return markdown
-    .replace(/<!--[\s\S]*?-->/g, " ")
+  return withoutHtmlComments(markdown)
     .replace(/\[(?<label>[^\]]+)]\([^)]*\)/g, "$<label>")
     .replace(/<https?:\/\/[^>]+>/g, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&(?:#\d+|#x[\da-f]+|[a-z][\da-z]+);/gi, " ")
     .replace(/[`*_~>#|\[\](){}-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -29,23 +88,12 @@ function visibleText(markdown) {
 function isMeaningful(markdown) {
   const text = visibleText(markdown);
   const normalized = text.toLowerCase();
+  const placeholderCandidate = normalized.replace(/[.!?,;:…]+$/u, "").trim();
   const words = text.match(/[\p{L}\p{N}]+/gu) ?? [];
-  const exactPlaceholders = new Set([
-    "todo",
-    "tbd",
-    "n/a",
-    "na",
-    "none",
-    "placeholder",
-    "coming soon",
-    "to be determined",
-    "fill this in",
-    "fill it in",
-  ]);
 
   if (
-    exactPlaceholders.has(normalized) ||
-    /^(?:todo|tbd|n\/?a|placeholder)\s*:/i.test(normalized)
+    exactPlaceholders.has(placeholderCandidate) ||
+    /^(?:todo|tbd|n\/?a|placeholder)\s*[:.\-–—]/i.test(normalized)
   ) {
     return false;
   }
@@ -66,8 +114,14 @@ function parseSections(body) {
   const sections = new Map();
   let current;
 
-  const uncommentedBody = body.replace(/<!--[\s\S]*?-->/g, " ");
-  for (const line of uncommentedBody.replace(/\r\n?/g, "\n").split("\n")) {
+  for (const { inFence, line } of markdownLines(body)) {
+    if (inFence) {
+      if (current) {
+        sections.get(current).at(-1).push(line);
+      }
+      continue;
+    }
+
     const heading = line.match(/^\s{0,3}#{1,6}\s+(.+?)\s*$/);
     if (heading) {
       current = headingName(heading[1]);
@@ -87,20 +141,24 @@ function parseSections(body) {
 
 function requiredSection(sections, name, errors) {
   const matches = sections.get(name) ?? [];
+  const displayName =
+    name === "related issue"
+      ? "Related issue"
+      : name[0].toUpperCase() + name.slice(1);
   if (matches.length === 0) {
-    errors.push(`Add a ${name === "related issue" ? "Related issue" : name[0].toUpperCase() + name.slice(1)} section.`);
+    errors.push(`Add a ${displayName} section.`);
     return null;
   }
 
   if (matches.length > 1) {
-    errors.push(`Keep exactly one ${name === "related issue" ? "Related issue" : name[0].toUpperCase() + name.slice(1)} section.`);
+    errors.push(`Keep exactly one ${displayName} section.`);
   }
 
   return matches[0].join("\n");
 }
 
 function hasIssueReference(markdown) {
-  const content = markdown.replace(/<!--[\s\S]*?-->/g, " ");
+  const content = withoutFencedCode(markdown);
   return (
     /https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*\b/i.test(content) ||
     /\b[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#[1-9]\d*\b/.test(content) ||
@@ -109,13 +167,13 @@ function hasIssueReference(markdown) {
 }
 
 function hasSmallCorrectionReason(markdown) {
-  const content = markdown.replace(/<!--[\s\S]*?-->/g, " ");
+  const content = withoutFencedCode(markdown);
   const marker = content.match(/(?:^|\n)\s*Small correction\s*:\s*([\s\S]*)$/i);
   return marker ? isMeaningful(marker[1]) : false;
 }
 
 function inlineExplanation(body, label) {
-  for (const line of body.split(/\r?\n/)) {
+  for (const line of withoutFencedCode(body).split("\n")) {
     const plainLine = line.replace(/[*_`]/g, "");
     const match = plainLine.match(
       new RegExp(`^\\s*(?:[-+]\\s*)?${label}\\s*:\\s*(.+)$`, "i"),
@@ -162,7 +220,7 @@ function validateTitle(title, body, sections, errors) {
   }
 
   const hasBreakingFooter = /^\s*BREAKING[ -]CHANGE\s*:/im.test(
-    body.replace(/<!--[\s\S]*?-->/g, " "),
+    withoutFencedCode(body),
   );
   if (hasBreakingFooter && !breaking) {
     errors.push("Add ! before the title colon when the body declares a breaking change.");

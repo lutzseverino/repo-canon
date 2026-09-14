@@ -7,8 +7,9 @@ for review. Its stable check-run name is `PR metadata`.
 The description must contain exactly one meaningful `Summary`, `Validation`, and
 `Related issue` Markdown section. Heading level, emphasis, trailing colons, and
 letter casing do not affect recognition. HTML comments, placeholders such as
-`TODO`, `TBD`, `N/A`, and `None`, and punctuation alone do not count as content.
-`Limits` remains optional.
+`TODO`, `TBD`, `N/A`, `Not applicable`, and `None`, rendered-empty HTML, and
+punctuation alone do not count as content. Headings inside fenced code examples
+do not define sections. `Limits` remains optional.
 
 `Related issue` accepts a GitHub issue URL, `owner/repository#123`, or `#123`.
 An eligible typo, broken link, or formatting correction can instead use
@@ -29,7 +30,9 @@ not persist credentials, and only grants `contents: read` to its token. The
 validator reads title and body values from the event JSON; it does not check out
 or execute the proposed head revision. The hostile event fixture in the test
 suite verifies that command-like values in fork metadata and descriptions stay
-inert.
+inert. The workflow has no issue or pull-request write permission and does not
+label, convert, or otherwise send external pull requests into feature-request
+triage.
 
 Repository setup can require the `PR metadata` check alongside existing checks.
 The setup operator needs permission to edit the target branch rule or ruleset;
