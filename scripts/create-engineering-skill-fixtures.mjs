@@ -17,6 +17,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const scriptPath = fileURLToPath(import.meta.url);
 const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
 const skillsRoot = join(sourceRoot, 'vendor/mattpocock-skills/skills/engineering');
 const skillNames = [
@@ -36,7 +37,6 @@ const sharedFiles = [
   'docs/agents/README.md',
   'docs/agents/domain.md',
   'docs/agents/issue-tracker.md',
-  'docs/agents/project.md',
   'docs/agents/triage-labels.md',
 ];
 
@@ -62,6 +62,13 @@ function write(root, path, content) {
 
 function git(root, args, options = {}) {
   return execFileSync('git', args, { cwd: root, encoding: 'utf8', ...options }).trim();
+}
+
+function gitOptional(root, args) {
+  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  if (result.status === 0) return result.stdout.trim();
+  if (result.status === 1) return null;
+  throw new Error(result.stderr.trim() || `git ${args.join(' ')} failed`);
 }
 
 function commit(root, message) {
@@ -93,6 +100,7 @@ function createRepository(name, skills, { context, development }) {
   const root = join(fixtureRoot, name);
   mkdirSync(root, { recursive: true });
   for (const path of sharedFiles) cpSync(join(sourceRoot, path), join(root, path), { recursive: true });
+  write(root, 'docs/agents/project.md', `# Exercise repository guidance\n\nThis is a disposable local repository for one Repo Canon engineering-skill exercise. Use its local scenario documents as the implementation contract or primary sources. Do not contact an issue tracker, publish its branches, or mutate a remote repository.\n`);
   write(root, 'CONTEXT.md', context);
   write(root, 'docs/development/README.md', development);
   write(root, 'package.json', `${JSON.stringify({
@@ -134,6 +142,7 @@ const repositories = {};
     development: `# Development\n\nRun \`npm test\` with Node.js 24. Architecture work must read \`CONTEXT.md\` and \`docs/adr\` first.\n`,
   });
   write(root, 'docs/adr/0001-canonical-currency-at-order-intake.md', `# Canonical currency at Order intake\n\nOrder intake stores uppercase ISO currency codes so downstream fulfillment does not repeat normalization. This is an accepted decision because changing stored values later requires a migration.\n`);
+  write(root, 'docs/adr/README.md', `# Architecture decisions\n\nThis directory records accepted decisions for the disposable Order intake scenario.\n`);
   write(root, 'src/parse-order.mjs', `export function parseOrder(text) { return JSON.parse(text); }\n`);
   write(root, 'test/order-intake.test.mjs', `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { acceptOrder } from '../src/order-intake.mjs';\n\ntest('Order intake normalizes currency', () => {\n  assert.deepEqual(acceptOrder('{"reference":"A-1","currency":"eur"}'), { reference: 'A-1', currency: 'EUR' });\n});\n`);
   commit(root, 'chore: establish Order intake');
@@ -153,6 +162,7 @@ const repositories = {};
     development: `# Development\n\nRun \`npm test\` with Node.js 24. A diagnosis must preserve the public \`renderInvoice(lines)\` interface.\n`,
   });
   write(root, 'docs/adr/0001-preserve-invoice-line-order.md', `# Preserve Invoice line order\n\nInvoice lines retain their caller-provided order because issued Invoices are legal records. Sorting is presentation-only and must not mutate the Invoice.\n`);
+  write(root, 'docs/adr/README.md', `# Architecture decisions\n\nThis directory records accepted decisions for the disposable Invoice scenario.\n`);
   write(root, 'src/invoice.mjs', `export function renderInvoice(lines) {\n  return lines.sort((left, right) => left.description.localeCompare(right.description)).map(line => line.description).join('\\n');\n}\n`);
   write(root, 'test/invoice.test.mjs', `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { renderInvoice } from '../src/invoice.mjs';\n\ntest('rendering an Invoice preserves its Invoice line order', () => {\n  const lines = [{ description: 'Zebra' }, { description: 'Alpha' }];\n  renderInvoice(lines);\n  assert.deepEqual(lines, [{ description: 'Zebra' }, { description: 'Alpha' }]);\n});\n`);
   const head = commit(root, 'fix: reproduce reordered Invoice lines');
@@ -166,6 +176,7 @@ const repositories = {};
     development: `# Development\n\nRun \`npm test\` with Node.js 24. Durable technical research belongs in this directory and must cite primary sources.\n`,
   });
   write(root, 'docs/adr/0001-external-authentication.md', `# Keep authentication external\n\nAuthentication identities remain owned by the identity provider, while this project stores only their stable subject identifiers. Replacing the provider is expensive, so domain language must not imply that authentication identities own subscriptions.\n`);
+  write(root, 'docs/adr/README.md', `# Architecture decisions\n\nThis directory records accepted decisions for the disposable Subscription scenario.\n`);
   write(root, 'src/subscription.mjs', `export function describeSubscription(account) {\n  return { loginSubject: account.subject, billingName: account.legalName };\n}\n`);
   write(root, 'test/subscription.test.mjs', `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { describeSubscription } from '../src/subscription.mjs';\n\ntest('subscription exposes login and billing identities', () => {\n  assert.deepEqual(describeSubscription({ subject: 'idp-7', legalName: 'Example LLC' }), { loginSubject: 'idp-7', billingName: 'Example LLC' });\n});\n`);
   const head = commit(root, 'chore: establish Subscription language fixture');
@@ -219,8 +230,9 @@ process.stdout.write(`${JSON.stringify({
   format: 'repo-canon/engineering-skill-fixtures/v1',
   root: fixtureRoot,
   source: {
-    repository: git(sourceRoot, ['config', '--get', 'remote.origin.url']),
-    commit: git(sourceRoot, ['rev-parse', 'HEAD']),
+    repository: gitOptional(sourceRoot, ['config', '--get', 'remote.origin.url']),
+    worktreeCommit: git(sourceRoot, ['rev-parse', 'HEAD']),
+    fixtureBuilderSha256: createHash('sha256').update(readFileSync(scriptPath)).digest('hex'),
     pinnedUpstreamCommit: '3cca18b368ae95cdbdebbff572ccafa662551015',
   },
   skills,

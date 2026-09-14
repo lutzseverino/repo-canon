@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { lstatSync, mkdtempSync, readFileSync, readlinkSync, rmSync } from 'node:fs';
+import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +23,9 @@ test('creates disposable engineering-skill repositories with their runtime prere
 
   assert.equal(manifest.format, 'repo-canon/engineering-skill-fixtures/v1');
   assert.equal(manifest.root, root);
+  assert.ok(manifest.source.repository === null || typeof manifest.source.repository === 'string');
+  assert.match(manifest.source.worktreeCommit, /^[a-f0-9]{40}$/);
+  assert.match(manifest.source.fixtureBuilderSha256, /^[a-f0-9]{64}$/);
   assert.deepEqual(Object.keys(manifest.skills).sort(), [
     'ask-matt',
     'code-review',
@@ -58,8 +61,12 @@ test('creates disposable engineering-skill repositories with their runtime prere
       readFileSync(join(repositoryRoot, 'CONTRIBUTING.md'), 'utf8'),
       `${name} has the shared contribution contract`,
     );
+    assert.match(readFileSync(join(repository.path, 'docs/agents/project.md'), 'utf8'), /disposable local repository/);
     assert.match(readFileSync(join(repository.path, 'CONTEXT.md'), 'utf8'), /## Language/);
     assert.match(readFileSync(join(repository.path, 'docs/development/README.md'), 'utf8'), /npm test/);
+    if (['architecture', 'debugging', 'modeling-research'].includes(name)) {
+      assert.match(readFileSync(join(repository.path, 'docs/adr/README.md'), 'utf8'), /Architecture decisions/);
+    }
 
     for (const skill of repository.skills) {
       const link = join(repository.path, '.agents/skills', skill);
@@ -78,4 +85,19 @@ test('creates disposable engineering-skill repositories with their runtime prere
     cwd: conflict.path,
     encoding: 'utf8',
   }).trim().length, 40);
+
+  const shimDirectory = join(parent, 'bin');
+  const gitShim = join(shimDirectory, 'git');
+  const actualGit = execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim();
+  mkdirSync(shimDirectory);
+  writeFileSync(gitShim, `#!/bin/sh\nif [ "$1" = config ] && [ "$2" = --get ] && [ "$3" = remote.origin.url ]; then\n  exit 1\nfi\nexec "${actualGit}" "$@"\n`);
+  chmodSync(gitShim, 0o755);
+  const remoteLessRoot = join(parent, 'remote-less-fixtures');
+  const remoteLess = spawnSync(process.execPath, [script, '--root', remoteLessRoot], {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+    env: { ...process.env, PATH: `${shimDirectory}:${process.env.PATH}` },
+  });
+  assert.equal(remoteLess.status, 0, remoteLess.stderr);
+  assert.equal(JSON.parse(remoteLess.stdout).source.repository, null);
 });
