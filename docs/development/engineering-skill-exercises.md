@@ -44,9 +44,10 @@ runtime builder had SHA-256
 `bdad304ebd987297f1d7c3b6604c71808db49d9cc2ca09afbabe900a38fcf478`.
 
 The current builder retains that scenario-guidance correction and adds
-manifest self-identification, optional-remote handling, and ADR directory
-indexes. Its SHA-256 is
-`388b4ddecba226449cdd36322417b9e3b0a42d376cc7ce12a235828e16800b19`.
+manifest self-identification, optional-remote handling, ADR directory indexes,
+and unsigned disposable commits that do not inherit host signing policy. Its
+SHA-256 is
+`baf0f2849ab61b2abe69ee053b417f883f826ee593549e618ba813e41a676777`.
 Applying the [retained reverse patch](engineering-skill-runtime-builder.patch)
 to the current builder reconstructs the exact runtime bytes:
 
@@ -235,4 +236,5 @@ skill digest. Supplying
 `--root <unused-path>` creates the same repositories at a chosen location.
 The fixture test verifies the shared guidance, scenario-specific project
 guidance, domain and development context, ADR indexes, skill symlinks and
-digests, and an actual unresolved Git merge.
+digests, an actual unresolved Git merge, a source without an `origin` remote,
+and a host that requires commit signing with an unusable signing program.

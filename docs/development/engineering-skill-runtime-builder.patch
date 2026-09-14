@@ -1,17 +1,8 @@
 --- scripts/create-engineering-skill-fixtures.mjs
 +++ runtime/create-engineering-skill-fixtures.mjs
-@@ -17,7 +17,6 @@
- import { dirname, join, relative } from 'node:path';
- import { fileURLToPath } from 'node:url';
-
+@@ -20 +19,0 @@
 -const scriptPath = fileURLToPath(import.meta.url);
- const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
- const skillsRoot = join(sourceRoot, 'vendor/mattpocock-skills/skills/engineering');
- const skillNames = [
-@@ -64,13 +63,6 @@
-   return execFileSync('git', args, { cwd: root, encoding: 'utf8', ...options }).trim();
- }
-
+@@ -67,7 +65,0 @@
 -function gitOptional(root, args) {
 -  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
 -  if (result.status === 0) return result.stdout.trim();
@@ -19,42 +10,18 @@
 -  throw new Error(result.stderr.trim() || `git ${args.join(' ')} failed`);
 -}
 -
- function commit(root, message) {
-   git(root, ['add', '--all']);
-   git(root, ['commit', '--quiet', '-m', message]);
-@@ -142,7 +134,6 @@
-     development: `# Development\n\nRun \`npm test\` with Node.js 24. Architecture work must read \`CONTEXT.md\` and \`docs/adr\` first.\n`,
-   });
-   write(root, 'docs/adr/0001-canonical-currency-at-order-intake.md', `# Canonical currency at Order intake\n\nOrder intake stores uppercase ISO currency codes so downstream fulfillment does not repeat normalization. This is an accepted decision because changing stored values later requires a migration.\n`);
+@@ -76 +68 @@
+-  git(root, ['commit', '--quiet', '--no-gpg-sign', '-m', message]);
++  git(root, ['commit', '--quiet', '-m', message]);
+@@ -145 +136,0 @@
 -  write(root, 'docs/adr/README.md', `# Architecture decisions\n\nThis directory records accepted decisions for the disposable Order intake scenario.\n`);
-   write(root, 'src/parse-order.mjs', `export function parseOrder(text) { return JSON.parse(text); }\n`);
-   write(root, 'test/order-intake.test.mjs', `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { acceptOrder } from '../src/order-intake.mjs';\n\ntest('Order intake normalizes currency', () => {\n  assert.deepEqual(acceptOrder('{"reference":"A-1","currency":"eur"}'), { reference: 'A-1', currency: 'EUR' });\n});\n`);
-   commit(root, 'chore: establish Order intake');
-@@ -162,7 +153,6 @@
-     development: `# Development\n\nRun \`npm test\` with Node.js 24. A diagnosis must preserve the public \`renderInvoice(lines)\` interface.\n`,
-   });
-   write(root, 'docs/adr/0001-preserve-invoice-line-order.md', `# Preserve Invoice line order\n\nInvoice lines retain their caller-provided order because issued Invoices are legal records. Sorting is presentation-only and must not mutate the Invoice.\n`);
+@@ -165 +155,0 @@
 -  write(root, 'docs/adr/README.md', `# Architecture decisions\n\nThis directory records accepted decisions for the disposable Invoice scenario.\n`);
-   write(root, 'src/invoice.mjs', `export function renderInvoice(lines) {\n  return lines.sort((left, right) => left.description.localeCompare(right.description)).map(line => line.description).join('\\n');\n}\n`);
-   write(root, 'test/invoice.test.mjs', `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { renderInvoice } from '../src/invoice.mjs';\n\ntest('rendering an Invoice preserves its Invoice line order', () => {\n  const lines = [{ description: 'Zebra' }, { description: 'Alpha' }];\n  renderInvoice(lines);\n  assert.deepEqual(lines, [{ description: 'Zebra' }, { description: 'Alpha' }]);\n});\n`);
-   const head = commit(root, 'fix: reproduce reordered Invoice lines');
-@@ -176,7 +166,6 @@
-     development: `# Development\n\nRun \`npm test\` with Node.js 24. Durable technical research belongs in this directory and must cite primary sources.\n`,
-   });
-   write(root, 'docs/adr/0001-external-authentication.md', `# Keep authentication external\n\nAuthentication identities remain owned by the identity provider, while this project stores only their stable subject identifiers. Replacing the provider is expensive, so domain language must not imply that authentication identities own subscriptions.\n`);
+@@ -179 +168,0 @@
 -  write(root, 'docs/adr/README.md', `# Architecture decisions\n\nThis directory records accepted decisions for the disposable Subscription scenario.\n`);
-   write(root, 'src/subscription.mjs', `export function describeSubscription(account) {\n  return { loginSubject: account.subject, billingName: account.legalName };\n}\n`);
-   write(root, 'test/subscription.test.mjs', `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { describeSubscription } from '../src/subscription.mjs';\n\ntest('subscription exposes login and billing identities', () => {\n  assert.deepEqual(describeSubscription({ subject: 'idp-7', legalName: 'Example LLC' }), { loginSubject: 'idp-7', billingName: 'Example LLC' });\n});\n`);
-   const head = commit(root, 'chore: establish Subscription language fixture');
-@@ -230,9 +219,8 @@
-   format: 'repo-canon/engineering-skill-fixtures/v1',
-   root: fixtureRoot,
-   source: {
+@@ -233,3 +222,2 @@
 -    repository: gitOptional(sourceRoot, ['config', '--get', 'remote.origin.url']),
 -    worktreeCommit: git(sourceRoot, ['rev-parse', 'HEAD']),
 -    fixtureBuilderSha256: createHash('sha256').update(readFileSync(scriptPath)).digest('hex'),
 +    repository: git(sourceRoot, ['config', '--get', 'remote.origin.url']),
 +    commit: git(sourceRoot, ['rev-parse', 'HEAD']),
-     pinnedUpstreamCommit: '3cca18b368ae95cdbdebbff572ccafa662551015',
-   },
-   skills,

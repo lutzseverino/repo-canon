@@ -73,7 +73,7 @@ function gitOptional(root, args) {
 
 function commit(root, message) {
   git(root, ['add', '--all']);
-  git(root, ['commit', '--quiet', '-m', message]);
+  git(root, ['commit', '--quiet', '--no-gpg-sign', '-m', message]);
   return git(root, ['rev-parse', 'HEAD']);
 }
 

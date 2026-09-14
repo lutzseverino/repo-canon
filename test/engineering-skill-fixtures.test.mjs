@@ -96,7 +96,17 @@ test('creates disposable engineering-skill repositories with their runtime prere
   const remoteLess = spawnSync(process.execPath, [script, '--root', remoteLessRoot], {
     cwd: repositoryRoot,
     encoding: 'utf8',
-    env: { ...process.env, PATH: `${shimDirectory}:${process.env.PATH}` },
+    env: {
+      ...process.env,
+      PATH: `${shimDirectory}:${process.env.PATH}`,
+      GIT_CONFIG_COUNT: '3',
+      GIT_CONFIG_KEY_0: 'commit.gpgSign',
+      GIT_CONFIG_VALUE_0: 'true',
+      GIT_CONFIG_KEY_1: 'gpg.program',
+      GIT_CONFIG_VALUE_1: '/bin/false',
+      GIT_CONFIG_KEY_2: 'gpg.format',
+      GIT_CONFIG_VALUE_2: 'openpgp',
+    },
   });
   assert.equal(remoteLess.status, 0, remoteLess.stderr);
   assert.equal(JSON.parse(remoteLess.stdout).source.repository, null);
