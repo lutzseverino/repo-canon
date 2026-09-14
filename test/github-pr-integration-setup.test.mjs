@@ -187,6 +187,21 @@ test('adds PR metadata to classic branch checks while preserving checks, ruleset
   assert.equal(state.settings.allow_auto_merge, true);
 });
 
+test('accepts GitHub classic status-check responses that omit the optional checks list', t => {
+  const scenario = setup(t, { state: {
+    settings: matchingSettings,
+    branchStatusChecks: { strict: false, contexts: ['build'] },
+  } });
+
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'changed');
+  assert.deepEqual(scenario.readState().branchStatusChecks, {
+    strict: false,
+    contexts: ['build', checkName],
+  });
+});
+
 test('reconciles the dedicated ruleset and conflicting merge settings without removing adopter policy', t => {
   const managed = canonicalRuleset({
     enforcement: 'evaluate',
@@ -371,6 +386,13 @@ test('blocks for unavailable prerequisites, authentication, permission, and insp
     const outcome = scenario.invoke();
     assert.equal(outcome.result.status, 'blocked');
     assert.match(outcome.result.message, /could not inspect repository rulesets/);
+    assert.equal(scenario.readState().mutations ?? 0, 0);
+  });
+  await t.test('ambiguous branch-protection 404', st => {
+    const scenario = setup(st, { state: { failBranchInspection: true } });
+    const outcome = scenario.invoke();
+    assert.equal(outcome.result.status, 'blocked');
+    assert.match(outcome.result.message, /could not inspect required checks/);
     assert.equal(scenario.readState().mutations ?? 0, 0);
   });
 });

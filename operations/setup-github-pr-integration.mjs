@@ -1,8 +1,12 @@
-import { readFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
+import {
+  apiEndpoint,
+  githubApi,
+  jsonFrom,
+  prepareGithubRepository,
+  readFixesRequest,
+  writeOperationResult as result,
+} from './lib/github-operation.mjs';
 
-const resultFormat = 'repo-standards/result/v1';
-const maximumOutput = 1024 * 1024;
 const operationName = 'GitHub PR integration setup';
 const checkName = 'PR metadata';
 const rulesetName = 'Repo Canon required PR checks';
@@ -14,141 +18,6 @@ const mergeSettings = {
   squash_merge_commit_message: 'PR_BODY',
 };
 
-function failProcess(message) {
-  throw new Error(message);
-}
-
-function readRequest() {
-  let request;
-  try {
-    request = JSON.parse(readFileSync(0, 'utf8'));
-  } catch {
-    failProcess(`${operationName} input must be one JSON object.`);
-  }
-  if (request?.format !== 'repo-standards/operation/v1') {
-    failProcess(`${operationName} requires repo-standards/operation/v1 input.`);
-  }
-  if (request.operation?.phase !== 'fixes') {
-    failProcess(`${operationName} must run as a fixes operation.`);
-  }
-  const { paths, directories } = request.allowedTargets ?? {};
-  if (!Array.isArray(paths) || paths.length !== 0
-      || !Array.isArray(directories) || directories.length !== 0) {
-    failProcess(`${operationName} requires an empty project-content target scope.`);
-  }
-  if (typeof request.projectRoot !== 'string' || request.projectRoot.length === 0) {
-    failProcess(`${operationName} input must identify the project root.`);
-  }
-  return request;
-}
-
-function result(status, message) {
-  process.stdout.write(`${JSON.stringify({ format: resultFormat, status, message })}\n`);
-}
-
-function run(executable, args, cwd, input) {
-  const outcome = spawnSync(executable, args, {
-    cwd,
-    encoding: 'utf8',
-    input,
-    maxBuffer: maximumOutput,
-  });
-  if (outcome.error) {
-    return {
-      ok: false,
-      unavailable: outcome.error.code === 'ENOENT',
-      detail: outcome.error.code ?? 'spawn error',
-      stderr: '',
-    };
-  }
-  if (outcome.status !== 0) {
-    const processState = outcome.signal ? `signal ${outcome.signal}` : `exit ${outcome.status}`;
-    return { ok: false, unavailable: false, detail: processState, stderr: outcome.stderr };
-  }
-  return { ok: true, stdout: outcome.stdout, stderr: outcome.stderr };
-}
-
-function versionFrom(output) {
-  const match = output.match(/(?:^|[^0-9])v?(\d+)\.(\d+)\.(\d+)(?:[^0-9]|$)/m);
-  return match ? match.slice(1).map(Number) : null;
-}
-
-function atLeast(actual, minimum) {
-  return actual.some((part, index) => part > minimum[index]
-    && actual.slice(0, index).every((earlier, earlierIndex) => earlier === minimum[earlierIndex]))
-    || actual.every((part, index) => part === minimum[index]);
-}
-
-function githubIdentity(remoteUrl) {
-  let owner;
-  let repository;
-  const scp = remoteUrl.match(/^(?:[^@/]+@)?github\.com:([^/]+)\/(.+)$/i);
-  if (scp) {
-    [, owner, repository] = scp;
-  } else {
-    try {
-      const parsed = new URL(remoteUrl);
-      if (parsed.hostname.toLowerCase() !== 'github.com') return null;
-      const parts = parsed.pathname.split('/').filter(Boolean);
-      if (parts.length !== 2) return null;
-      [owner, repository] = parts.map(part => decodeURIComponent(part));
-    } catch {
-      return null;
-    }
-  }
-  repository = repository.replace(/\.git$/i, '').replace(/\/$/, '');
-  if (!owner || !repository || /[\s/?#]/.test(owner) || /[\s/?#]/.test(repository)) return null;
-  return `${owner}/${repository}`;
-}
-
-function inferRepository(projectRoot) {
-  const remotes = run(
-    'git',
-    ['-C', projectRoot, 'config', '--local', '--get-regexp', '^remote\\..*\\.(url|pushurl)$'],
-    projectRoot,
-  );
-  if (!remotes.ok) return { blocked: 'No unambiguous github.com repository was found in Git remotes.' };
-  const identities = new Map();
-  for (const line of remotes.stdout.split(/\r?\n/)) {
-    const separator = line.search(/\s/);
-    if (separator < 0) continue;
-    const identity = githubIdentity(line.slice(separator).trim());
-    if (identity) identities.set(identity.toLowerCase(), identity);
-  }
-  if (identities.size === 0) {
-    return { blocked: 'No unambiguous github.com repository was found in Git remotes.' };
-  }
-  if (identities.size > 1) {
-    return {
-      blocked: `Multiple github.com repositories were found in Git remotes (${[...identities.values()].sort().join(', ')}); resolve the target before setup.`,
-    };
-  }
-  return { identity: identities.values().next().value };
-}
-
-function jsonFrom(outcome) {
-  if (!outcome.ok) return { error: outcome.detail, outcome };
-  try {
-    return { value: JSON.parse(outcome.stdout) };
-  } catch {
-    return { error: 'invalid JSON response', outcome };
-  }
-}
-
-function githubApi(args, projectRoot, input) {
-  return run(
-    'gh',
-    ['api', '--hostname', 'github.com', ...args],
-    projectRoot,
-    input === undefined ? undefined : `${JSON.stringify(input)}\n`,
-  );
-}
-
-function apiEndpoint(identity, suffix = '') {
-  const [owner, repository] = identity.split('/');
-  return `repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}${suffix}`;
-}
-
 function matchingMergeSettings(repository) {
   return Object.entries(mergeSettings).every(([name, value]) => repository[name] === value);
 }
@@ -159,20 +28,23 @@ function readBranchStatusChecks(identity, defaultBranch, projectRoot) {
     `/branches/${encodeURIComponent(defaultBranch)}/protection/required_status_checks`,
   );
   const response = githubApi([endpoint], projectRoot);
-  if (!response.ok && /(?:HTTP 404|Branch not protected|Not Found)/i.test(response.stderr ?? '')) {
+  if (!response.ok
+      && /Branch not protected/i.test(response.stderr ?? '')
+      && /HTTP 404/i.test(response.stderr ?? '')) {
     return { value: null };
   }
   const parsed = jsonFrom(response);
   if (parsed.error) return parsed;
   const value = parsed.value;
-  if (!value || !Array.isArray(value.contexts) || !Array.isArray(value.checks)) {
+  if (!value || !Array.isArray(value.contexts)
+      || (value.checks !== undefined && !Array.isArray(value.checks))) {
     return { error: 'invalid required status checks response' };
   }
   if (!value.contexts.every(context => typeof context === 'string')
-      || !value.checks.every(check => check && typeof check.context === 'string')) {
+      || !(value.checks ?? []).every(check => check && typeof check.context === 'string')) {
     return { error: 'invalid required status checks response' };
   }
-  return { value };
+  return { value: { ...value, checks: value.checks ?? [] } };
 }
 
 function hasRequiredCheck(statusChecks) {
@@ -306,62 +178,13 @@ function effectSummary(effects) {
 }
 
 function setupIntegration(request) {
-  const nodeVersion = versionFrom(process.versions.node);
-  if (!nodeVersion || nodeVersion[0] !== 24) {
-    result('blocked', `${operationName} requires Node.js 24.`);
+  const prepared = prepareGithubRepository(request, operationName);
+  if (prepared.blocked) {
+    result('blocked', prepared.blocked);
     return;
   }
-
-  const gitVersion = run('git', ['--version'], request.projectRoot);
-  if (!gitVersion.ok) {
-    result('blocked', `Git is unavailable; install Git 2.18.0 or newer before ${operationName}.`);
-    return;
-  }
-  const parsedGitVersion = versionFrom(gitVersion.stdout);
-  if (!parsedGitVersion || !atLeast(parsedGitVersion, [2, 18, 0])) {
-    result('blocked', `${operationName} requires Git 2.18.0 or newer.`);
-    return;
-  }
-
-  const ghVersion = run('gh', ['--version'], request.projectRoot);
-  if (!ghVersion.ok) {
-    result('blocked', `GitHub CLI (gh) is unavailable; install gh 2.57.0 or newer before ${operationName}.`);
-    return;
-  }
-  const parsedGhVersion = versionFrom(ghVersion.stdout);
-  if (!parsedGhVersion || !atLeast(parsedGhVersion, [2, 57, 0])) {
-    result('blocked', `${operationName} requires gh 2.57.0 or newer.`);
-    return;
-  }
-
-  const inferred = inferRepository(request.projectRoot);
-  if (inferred.blocked) {
-    result('blocked', inferred.blocked);
-    return;
-  }
-
-  const authentication = run(
-    'gh',
-    ['auth', 'status', '--hostname', 'github.com', '--active'],
-    request.projectRoot,
-  );
-  if (!authentication.ok) {
-    result('blocked', `${operationName} requires authenticated github.com access through gh.`);
-    return;
-  }
-
-  const repositoryResponse = jsonFrom(githubApi([apiEndpoint(inferred.identity)], request.projectRoot));
-  if (repositoryResponse.error) {
-    result('blocked', `${operationName} could not verify ${inferred.identity}; repository access is incomplete (${repositoryResponse.error}).`);
-    return;
-  }
-  const repository = repositoryResponse.value;
-  if (typeof repository.full_name !== 'string'
-      || repository.full_name.toLowerCase() !== inferred.identity.toLowerCase()) {
-    const resolved = typeof repository.full_name === 'string' ? repository.full_name : 'an unknown repository';
-    result('blocked', `GitHub resolved ${inferred.identity} as ${resolved}; resolve the mismatched target before setup.`);
-    return;
-  }
+  const inferred = { identity: prepared.identity };
+  const repository = prepared.repository;
   if (!repository.permissions?.admin) {
     result('blocked', `${operationName} requires admin access to ${inferred.identity} to manage repository rules and merge settings.`);
     return;
@@ -494,7 +317,7 @@ function setupIntegration(request) {
 }
 
 try {
-  setupIntegration(readRequest());
+  setupIntegration(readFixesRequest(operationName));
 } catch (error) {
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exitCode = 1;
