@@ -7,8 +7,10 @@ whose allowed target is the root `README.md`, and returns one
 `repo-standards/result/v1` object on standard output.
 
 The operation requires Node.js 24. Its integration metadata is `node` with
-`["--version"]`, version range `>=24.0.0 <25.0.0`, no retained resources, and a
-30-second timeout. Ticket #15 owns the final declaration and profile wiring.
+`["--version"]`, version range `>=24.0.0 <25.0.0`, retained resource directory
+`vendor/marked`, and a 30-second timeout. It uses the vendored Marked 18.0.13
+lexer so structural decisions follow parsed Markdown tokens. Ticket #15 owns
+the final declaration and profile wiring.
 
 The result statuses have distinct meanings:
 
@@ -24,11 +26,11 @@ The result statuses have distinct meanings:
   exits nonzero, and emits no result. Repository Standards records that as a
   process or protocol error rather than a policy result.
 
-For the License check, the root `LICENSE` file supplies its identity through its
-first nonempty line. The check removes heading markup and otherwise treats that
-identity as opaque when comparing the README link label and target; it does not
-make a legal or semantic licensing judgment. A missing, empty, or ambiguous set
-of root license files returns `blocked` for owner clarification.
+For the License check, the root `LICENSE` file must exist and contain content,
+and the README section must contain only a link with a nonempty label targeting
+that file. Whether the label names the actual license remains a maintainer or
+agent semantic judgment. A missing, empty, or ambiguous set of root license
+files returns `blocked` for owner clarification.
 
 Run the public-boundary fixtures with Node.js 24:
 

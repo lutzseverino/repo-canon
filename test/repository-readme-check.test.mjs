@@ -24,7 +24,7 @@ A queue-backed service for reliable message delivery.
 
 ![Node.js](https://img.shields.io/badge/Node.js-24-green)
 
-[docs]: docs/README.md
+[docs]: docs/README.md#usage
 [license]: LICENSE
 
 ## Installation
@@ -49,7 +49,8 @@ Set \`HARBOR_PORT\`.
 
 ## **Documentation**
 
-See [the documentation map][docs].
+- Start with:
+    [the documentation map][docs].
 
 ## _Contributing_
 
@@ -212,7 +213,7 @@ Install it.
   assert.doesNotMatch(outcome.result.message, /Add a License section/);
 });
 
-test('uses an opaque repository-provided license identity', t => {
+test('leaves the repository license identity to semantic review', t => {
   const outcome = check(t, {
     'README.md': `<h1 align="center">Harbor</h1>
 
@@ -222,15 +223,19 @@ A queue inspector.
 
 [0BSD](<LICENSE>)
 `,
-    'LICENSE': '# 0BSD #\n',
+    'LICENSE': 'BSD Zero Clause License\n',
   });
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, 'passed');
 });
 
-test('rejects empty rendered titles', async t => {
-  for (const title of ['# #', '<h1 align="center">&#32;</h1>']) await t.test(title, st => {
+test('rejects empty or uncentered rendered titles', async t => {
+  for (const title of [
+    '# #',
+    '<h1 align="center">&#32;</h1>',
+    '<div align=centerpiece><h1>Harbor</h1></div>',
+  ]) await t.test(title, st => {
     const readme = title.startsWith('<h1') ? `${title}
 
 A queue inspector.
@@ -274,6 +279,8 @@ A queue inspector.
 
     [Documentation](docs/README.md)
 
+\\[Documentation](docs/README.md)
+
 ## License
 
 [MIT License](LICENSE)
@@ -290,7 +297,7 @@ A queue inspector.
 test('reports malformed license sections against the repository license file', async t => {
   for (const example of [
     { name: 'missing section', body: '', diagnostic: 'Add a License section' },
-    { name: 'wrong name', body: '## License\n\n[License](LICENSE)\n', diagnostic: 'name the link “MIT License”' },
+    { name: 'empty label', body: '## License\n\n[](LICENSE)\n', diagnostic: 'Name the License link' },
     { name: 'wrong target', body: '## License\n\n[MIT License](COPYING)\n', diagnostic: 'target LICENSE' },
     { name: 'extra prose', body: '## License\n\nReleased under [MIT License](LICENSE).\n', diagnostic: 'contain only the license link' },
   ]) await t.test(example.name, st => {
@@ -308,7 +315,7 @@ test('blocks when licensing is missing or ambiguous instead of selecting a licen
   for (const example of [
     { name: 'missing', files: {}, diagnostic: 'No root LICENSE file' },
     { name: 'multiple files', files: { LICENSE: mit, 'LICENSE.md': mit }, diagnostic: 'Multiple root LICENSE variants' },
-    { name: 'unnamed license', files: { LICENSE: '\n\n' }, diagnostic: 'does not identify a license name' },
+    { name: 'empty license', files: { LICENSE: '\n\n' }, diagnostic: 'is empty' },
   ]) await t.test(example.name, st => {
     const outcome = check(st, {
       'README.md': '# Harbor\n\nA queue inspector.\n\n## Features\n\nFast.\n\n## Installation\n\nInstall it.\n',

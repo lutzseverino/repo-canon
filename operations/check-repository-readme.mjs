@@ -1,7 +1,9 @@
 import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { marked } from '../vendor/marked/marked.esm.js';
 
 const resultFormat = 'repo-standards/result/v1';
+const centerAttribute = /\balign\s*=\s*(?:"center"|'center'|center(?=[ \t]|$))/i;
 const recognizedSections = [
   'Installation',
   'Features',
@@ -54,13 +56,17 @@ function decodeEntities(value) {
     .replace(/&(nbsp|ensp|emsp|thinsp);/gi, (_, name) => namedWhitespace[name.toLowerCase()]);
 }
 
+function inlineText(tokens) {
+  const text = tokens.map(token => {
+    if (Array.isArray(token.tokens)) return inlineText(token.tokens);
+    if (token.type === 'html') return token.text.replace(/<[^>]*>/g, '');
+    return typeof token.text === 'string' ? token.text : '';
+  }).join('');
+  return decodeEntities(text);
+}
+
 function renderedText(value) {
-  return decodeEntities(value
-    .replace(/<[^>]*>/g, '')
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/!?\[([^\]]*)\]\[[^\]]*\]/g, '$1')
-    .replace(/[`*_~]/g, ''))
-    .trim();
+  return inlineText(marked.Lexer.lexInline(value)).trim();
 }
 
 function rootLicense(projectRoot) {
@@ -76,170 +82,111 @@ function rootLicense(projectRoot) {
   }
 
   const path = 'LICENSE';
-  const firstLine = readFileSync(join(projectRoot, path), 'utf8')
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .find(Boolean);
-  const name = firstLine && renderedText(firstLine
-    .replace(/^#{1,6}\s+/, '')
-    .replace(/[ \t]+#+[ \t]*$/, ''));
-  if (!name) {
-    return { blocked: `${path} does not identify a license name in its first nonempty line.` };
+  if (!readFileSync(join(projectRoot, path), 'utf8').trim()) {
+    return { blocked: `${path} is empty and does not establish repository licensing.` };
   }
-  return { path, name };
+  return { path };
 }
 
-function headings(markdown) {
+function htmlHeadings(markdown, tokenIndex) {
   const found = [];
-  const record = (level, name, index, end, centered) => found.push({
-    level,
-    name,
-    folded: name.toLocaleLowerCase('en-US'),
-    index,
-    end,
-    centered,
-  });
-  const centeredRanges = [...markdown.matchAll(/<div\b[^>]*\balign\s*=\s*(?:"center"|'center'|center)[^>]*>[\s\S]*?<\/div\s*>/gi)]
-    .map(match => [match.index, match.index + match[0].length]);
+  const centeredRanges = [...markdown.matchAll(/<div\b([^>]*)>[\s\S]*?<\/div\s*>/gi)]
+    .filter(match => centerAttribute.test(match[1]))
+    .map(match => [match.index, match.index + match[0].length, match[0]]);
   const isCentered = (index, attributes = '') => (
-    /\balign\s*=\s*(?:"center"|'center'|center)(?:\s|$)/i.test(attributes)
+    centerAttribute.test(attributes)
       || centeredRanges.some(([start, end]) => start < index && index < end)
   );
-  const atx = /^[ \t]{0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$/gm;
-  for (const match of markdown.matchAll(atx)) {
-    const name = renderedText((match[2] ?? '').replace(/(?:^|[ \t]+)#+[ \t]*$/, ''));
-    if (!name) continue;
-    record(match[1].length, name, match.index, match.index + match[0].length, isCentered(match.index));
-  }
   const html = /<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1\s*>/gi;
-  for (const match of maskInlineCode(markdown).matchAll(html)) {
+  for (const match of markdown.matchAll(html)) {
     const name = renderedText(match[3]);
     if (!name) continue;
-    record(Number(match[1]), name, match.index, match.index + match[0].length, isCentered(match.index, match[2]));
+    found.push({ level: Number(match[1]), name, tokenIndex, offset: match.index, centered: isCentered(match.index, match[2]) });
   }
-  const setext = /^[ \t]{0,3}([^\r\n]+?)[ \t]*\r?\n[ \t]{0,3}(=+|-+)[ \t]*(?:\r?\n|$)/gm;
-  for (const match of markdown.matchAll(setext)) {
-    const name = renderedText(match[1]);
-    record(match[2][0] === '=' ? 1 : 2, name, match.index, match.index + match[0].length, isCentered(match.index));
+  for (const [start, , range] of centeredRanges) {
+    const openingEnd = range.indexOf('>') + 1;
+    const closingStart = range.toLocaleLowerCase('en-US').lastIndexOf('</div');
+    const inner = range.slice(openingEnd, closingStart);
+    for (const token of marked.lexer(inner)) {
+      if (token.type !== 'heading') continue;
+      const name = inlineText(token.tokens).trim();
+      if (name) found.push({ level: token.depth, name, tokenIndex, offset: start + openingEnd, centered: true });
+    }
   }
-  return found.sort((left, right) => left.index - right.index);
+  return found;
 }
 
-function markdownStructure(markdown) {
-  const mask = value => value.replace(/[^\r\n]/g, ' ');
-  const withoutComments = markdown.replace(/<!--[\s\S]*?-->/g, mask);
-  let fence = null;
-  return withoutComments.split(/(?<=\n)/).map(line => {
-    const marker = line.match(/^[ \t]{0,3}(`{3,}|~{3,})/);
-    if (!fence && marker) {
-      fence = { character: marker[1][0], length: marker[1].length };
-      return mask(line);
+function headings(tokens) {
+  const found = [];
+  let centeredBlocks = 0;
+  tokens.forEach((token, tokenIndex) => {
+    if (token.type === 'heading') {
+      const name = inlineText(token.tokens).trim();
+      if (name) found.push({ level: token.depth, name, tokenIndex, offset: 0, centered: centeredBlocks > 0 });
+    } else if (token.type === 'html') {
+      found.push(...htmlHeadings(token.raw, tokenIndex));
+      const centeredOpenings = [...token.raw.matchAll(/<div\b([^>]*)>/gi)]
+        .filter(match => centerAttribute.test(match[1])).length;
+      const closings = [...token.raw.matchAll(/<\/div\s*>/gi)].length;
+      centeredBlocks = Math.max(0, centeredBlocks + centeredOpenings - closings);
     }
-    if (fence) {
-      const closing = line.match(/^[ \t]{0,3}(`+|~+)[ \t]*(?:\r?\n)?$/);
-      if (closing && closing[1][0] === fence.character && closing[1].length >= fence.length) fence = null;
-      return mask(line);
-    }
-    if (/^(?: {4}|\t)/.test(line)) return mask(line);
-    return line;
-  }).join('');
+  });
+  return found
+    .sort((left, right) => left.tokenIndex - right.tokenIndex || left.offset - right.offset)
+    .map(heading => ({ ...heading, folded: heading.name.toLocaleLowerCase('en-US') }));
 }
 
-function sectionBody(markdown, allHeadings, name) {
+function sectionTokens(tokens, allHeadings, name) {
   const index = allHeadings.findIndex(heading => heading.folded === name.toLocaleLowerCase('en-US'));
   if (index < 0) return null;
-  const start = allHeadings[index].end;
+  const start = allHeadings[index].tokenIndex + 1;
   const nextSection = allHeadings.slice(index + 1)
     .find(heading => heading.level <= allHeadings[index].level);
-  const end = nextSection?.index ?? markdown.length;
-  return markdown.slice(start, end).trim();
-}
-
-function maskInlineCode(markdown) {
-  const mask = value => value.replace(/[^\r\n]/g, ' ');
-  return markdown.replace(/(`+)([\s\S]*?)\1/g, mask);
-}
-
-function referenceLabel(value) {
-  return value.trim().replace(/[ \t\r\n]+/g, ' ').toLocaleLowerCase('en-US');
-}
-
-function referenceDefinitions(markdown) {
-  const definitions = new Map();
-  const pattern = /^[ \t]{0,3}\[([^\]]+)\]:[ \t]*(?:<([^>\r\n]+)>|([^\s]+))(?:[ \t]+.*)?$/gm;
-  for (const match of markdown.matchAll(pattern)) {
-    definitions.set(referenceLabel(match[1]), match[2] ?? match[3]);
-  }
-  return definitions;
-}
-
-function withoutReferenceDefinitions(markdown) {
-  return markdown.replace(/^[ \t]{0,3}\[[^\]]+\]:[^\r\n]*(?:\r?\n|$)/gm, value => value.replace(/[^\r\n]/g, ' '));
+  const end = nextSection?.tokenIndex ?? tokens.length;
+  return tokens.slice(start, end);
 }
 
 function normalizeTarget(target) {
   return target.replace(/^\.\//, '');
 }
 
-function markdownLinks(markdown, definitions) {
-  const links = [];
-  const visible = maskInlineCode(withoutReferenceDefinitions(markdown));
-  const inline = /(?<!!)\[([^\]]+)\]\([ \t]*(?:<([^>\r\n]+)>|([^\s)]+))(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*\)/g;
-  for (const match of visible.matchAll(inline)) {
-    links.push({ label: renderedText(match[1]), target: match[2] ?? match[3] });
-  }
-  const fullReference = /(?<!!)\[([^\]]+)\]\[([^\]]*)\]/g;
-  for (const match of visible.matchAll(fullReference)) {
-    const target = definitions.get(referenceLabel(match[2] || match[1]));
-    if (target) links.push({ label: renderedText(match[1]), target });
-  }
-  const shortcutReference = /(?<!!)\[([^\]]+)\](?![[(])/g;
-  for (const match of visible.matchAll(shortcutReference)) {
-    const target = definitions.get(referenceLabel(match[1]));
-    if (target) links.push({ label: renderedText(match[1]), target });
-  }
-  return links;
+function linksIn(token) {
+  if (token.type === 'link') return [token];
+  const children = [token.tokens, token.items].filter(Array.isArray).flat();
+  return children.flatMap(linksIn);
 }
 
-function singleMarkdownLink(body, definitions) {
-  const visible = maskInlineCode(withoutReferenceDefinitions(body)).trim();
-  let match = visible.match(/^\[([^\]]+)\]\([ \t]*(?:<([^>\r\n]+)>|([^\s)]+))(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*\)$/);
-  if (match) return { label: renderedText(match[1]), target: match[2] ?? match[3] };
-  match = visible.match(/^\[([^\]]+)\]\[([^\]]*)\]$/);
-  if (match) {
-    const target = definitions.get(referenceLabel(match[2] || match[1]));
-    return target ? { label: renderedText(match[1]), target } : null;
-  }
-  match = visible.match(/^\[([^\]]+)\]$/);
-  if (!match) return null;
-  const target = definitions.get(referenceLabel(match[1]));
-  return target ? { label: renderedText(match[1]), target } : null;
+function singleMarkdownLink(tokens) {
+  const meaningful = tokens.filter(token => !['space', 'def'].includes(token.type));
+  if (meaningful.length !== 1 || meaningful[0].type !== 'paragraph') return null;
+  const inline = meaningful[0].tokens.filter(token => token.type !== 'text' || token.text.trim());
+  if (inline.length !== 1 || inline[0].type !== 'link') return null;
+  return { label: inlineText(inline[0].tokens).trim(), target: inline[0].href };
 }
 
-function linksTo(body, target, definitions) {
-  if (body === null) return false;
-  return markdownLinks(body, definitions).some(link => normalizeTarget(link.target) === target);
+function linksTo(tokens, target) {
+  if (tokens === null) return false;
+  return tokens.flatMap(linksIn).some(link => normalizeTarget(link.href).split('#')[0] === target);
 }
 
-function checkNavigationLink(projectRoot, markdown, allHeadings, definitions, section, target, corrections) {
+function checkNavigationLink(projectRoot, tokens, allHeadings, section, target, corrections) {
   if (!lstatIsFile(join(projectRoot, target))) return;
-  const body = sectionBody(markdown, allHeadings, section);
+  const body = sectionTokens(tokens, allHeadings, section);
   if (body === null) corrections.push(`Add a ${section} section linking to ${target}.`);
-  else if (!linksTo(body, target, definitions)) corrections.push(`Link the ${section} section to ${target}.`);
+  else if (!linksTo(body, target)) corrections.push(`Link the ${section} section to ${target}.`);
 }
 
 function checkStructure(projectRoot, markdown, license) {
   if (markdown === null) return ['Create the root README.md.'];
   const corrections = [];
-  const structuralMarkdown = markdownStructure(markdown);
-  const parsedHeadings = headings(structuralMarkdown);
-  const definitions = referenceDefinitions(structuralMarkdown);
+  const tokens = marked.lexer(markdown);
+  const parsedHeadings = headings(tokens);
   const title = parsedHeadings.find(heading => heading.level === 1) ?? null;
   if (!title?.centered) {
     corrections.push('Center the Repository README title in a nonempty HTML h1 or a centered block.');
   }
 
-  const allHeadings = parsedHeadings.filter(heading => heading.index !== title?.index);
+  const allHeadings = parsedHeadings.filter(heading => heading !== title);
   const recognized = allHeadings.filter(heading => recognizedSections
     .some(name => name.toLocaleLowerCase('en-US') === heading.folded));
   for (const section of recognizedSections) {
@@ -260,18 +207,18 @@ function checkStructure(projectRoot, markdown, license) {
     corrections.push(`Move Installation before ${allHeadings[0].name}; it is the first section when present.`);
   }
 
-  checkNavigationLink(projectRoot, structuralMarkdown, allHeadings, definitions, 'Contributing', 'CONTRIBUTING.md', corrections);
-  checkNavigationLink(projectRoot, structuralMarkdown, allHeadings, definitions, 'Documentation', 'docs/README.md', corrections);
+  checkNavigationLink(projectRoot, tokens, allHeadings, 'Contributing', 'CONTRIBUTING.md', corrections);
+  checkNavigationLink(projectRoot, tokens, allHeadings, 'Documentation', 'docs/README.md', corrections);
 
-  const licenseBody = sectionBody(structuralMarkdown, allHeadings, 'License');
+  const licenseBody = sectionTokens(tokens, allHeadings, 'License');
   if (license && licenseBody === null) {
-    corrections.push(`Add a License section containing only [${license.name}](${license.path}).`);
+    corrections.push(`Add a License section containing only [actual license name](${license.path}).`);
   } else if (license) {
-    const link = singleMarkdownLink(licenseBody, definitions);
+    const link = singleMarkdownLink(licenseBody);
     if (!link) {
       corrections.push('Make the License section contain only the license link.');
     } else {
-      if (link.label !== license.name) corrections.push(`Use the repository license name: name the link “${license.name}”.`);
+      if (!link.label) corrections.push('Name the License link for the actual repository license.');
       if (normalizeTarget(link.target) !== license.path) corrections.push(`Make the License link target ${license.path}.`);
     }
   }
