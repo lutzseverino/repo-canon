@@ -6,7 +6,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "check": "node --check .github/scripts/validate-pr-metadata.mjs && node --check test/pr-metadata.test.mjs",
+    "check": "node --check operations/*.mjs && node --check .github/scripts/*.mjs && node --check test/*.test.mjs && node --check test/helpers/*.mjs && node --check test/fixtures/*.mjs",
     "test": "node --test test/*.test.mjs"
   }
 }
