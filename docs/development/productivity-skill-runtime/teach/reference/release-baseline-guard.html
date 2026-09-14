@@ -32,14 +32,19 @@
     <h2>Shell pattern</h2>
     <pre><code>if git merge-base --is-ancestor "$baseline" "$candidate"; then
   # eligible
+  :
 else
   status=$?
   if [ "$status" -eq 1 ]; then
     # ineligible
+    exit 1
   else
     # error: stop
+    exit "$status"
   fi
 fi</code></pre>
+
+    <p>In a release script, only the eligible branch continues. Capture <code>$?</code> immediately; <code>exit "$status"</code> preserves Git’s original error status and terminates the script.</p>
 
     <p class="source">Source: <a href="https://git-scm.com/docs/git-merge-base#Documentation/git-merge-base.txt---is-ancestor" target="_blank" rel="noreferrer">official <code>git-merge-base</code> documentation</a>. See <a href="../lessons/0001-release-baseline-guard.html">lesson 0001</a> for practice.</p>
   </main>

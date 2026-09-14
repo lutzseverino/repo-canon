@@ -119,6 +119,22 @@ only for demonstrated knowledge, kept the mission unchanged, and assigned a
 mixed-topology practice in one to two days. The complete workspace is retained
 under [teach](productivity-skill-runtime/teach/).
 
+An exact-head Codex review then found a defect in the explanatory shell
+patterns: their comments promised to stop on an operational error, but the
+branches did not terminate. A bounded `$teach` correction in the original
+session added explicit exits to the lesson and quick reference. The retained
+[lesson](productivity-skill-runtime/teach/lessons/0001-release-baseline-guard.html)
+has SHA-256
+`31f264a0046090db30b8cbd525b0486079c76fbffa223f6943acf64fbda5512a`;
+the retained [quick reference](productivity-skill-runtime/teach/reference/release-baseline-guard.html)
+has SHA-256
+`3f24ccc271c58614e9db1a55b238edef34b7f008eaacfac58f85d77bd502c69a`.
+The agent then exercised both extracted patterns against real sibling Git commits
+and a real invalid-revision failure. Status `1` remained an ordinary rejection;
+status `128` remained an operational error; neither execution reached a sentinel
+after the guard. This correction does not replace or retroactively alter the
+indexed original session responses.
+
 Official Git documentation was fetched successfully. No graphical opener or
 browser exists in the harness, so the HTML button clicks were not exercised;
 the live persistent-session transfer loop exercised retrieval and feedback.

@@ -101,11 +101,15 @@ test('retains exact runtime outputs and the teaching feedback loop', () => {
   assert.match(lesson, /\.\.\/reference\/release-baseline-guard\.html/);
   assert.match(lesson, /answer: 'ordinary rejection'/);
   assert.match(lesson, /answer: 'processing failure'/);
+  assert.match(lesson, /exit 1/);
+  assert.match(lesson, /exit "\$status"/);
   assert.match(lesson, /git-scm\.com\/docs\/git-merge-base/);
   assert.ok(existsSync(join(runtimeRoot, 'teach/assets/course.css')));
-  assert.ok(existsSync(join(runtimeRoot, 'teach/reference/release-baseline-guard.html')));
+  const reference = readFileSync(join(runtimeRoot, 'teach/reference/release-baseline-guard.html'), 'utf8');
+  assert.match(reference, /exit 1/);
+  assert.match(reference, /exit "\$status"/);
   assert.ok(existsSync(join(runtimeRoot, 'teach/learning-records/0001-release-ancestry-guard.md')));
 
   const finalResponses = readdirSync(finalsRoot).filter((name) => name.startsWith('issue-13-'));
-  assert.equal(finalResponses.length, 26);
+  assert.equal(finalResponses.length, 28);
 });

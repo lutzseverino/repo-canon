@@ -52,11 +52,15 @@ else
   if [ "$status" -eq 1 ]; then
     printf '%s\n' "candidate does not contain required baseline" >&amp;2
     # reject candidate normally
+    exit 1
   else
     printf 'cannot check release ancestry (git exited %s)\n' "$status" >&amp;2
     # stop: this is an operational error
+    exit "$status"
   fi
 fi</code></pre>
+
+    <p>Use this pattern in a release script: only the eligible branch continues. Capture <code>$?</code> immediately after Git fails; <code>exit "$status"</code> then terminates the script with that original error status, even after the diagnostic message.</p>
 
     <section class="exercise" aria-labelledby="status-heading">
       <h2 id="status-heading">Retrieve it: status handling</h2>

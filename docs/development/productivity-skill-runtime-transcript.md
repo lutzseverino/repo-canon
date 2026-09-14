@@ -93,6 +93,25 @@ retained correction response reports three accepted answers with identical
 two-word, 18-character shapes, successful JavaScript compilation, and resolved
 local links.
 
+After the exact-head Codex review found that the explanatory shell branches
+printed an error and then returned success, a controlled learner correction
+invoked `$teach` in the same persistent session. The agent added explicit
+`exit 1` ordinary-rejection branches and `exit "$status"` operational-error
+branches to both the lesson and quick reference. It checked shell syntax and
+statuses `0`, `1`, `2`, `128`, and `255`, then rechecked the inline JavaScript,
+equal answer shapes, and local links. This was an editorial correction to the
+retained teaching artifacts; the original lesson handoff and earlier review
+correction remain indexed separately.
+
+A final `$teach` follow-up tested the displayed patterns with real Git rather
+than a stub. In a disposable repository, `git mktree` and `git commit-tree`
+created a common root and two sibling commits. For both extracted HTML patterns,
+the sibling ancestry check returned status `1`, the guard returned `1`, and its
+post-guard sentinel was not reached. An invalid candidate revision returned
+status `128`, the guard preserved `128`, and the sentinel was again not reached.
+The agent removed the disposable repository and made no further workspace
+changes.
+
 ## `to-questionnaire`
 
 Session: `01a0a1ec-a0a4-7110-abd2-d90feebf930b`
