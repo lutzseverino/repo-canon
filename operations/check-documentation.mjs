@@ -85,7 +85,7 @@ function documentationRoots(allowedPaths) {
   const roots = new Set([rootDocumentation]);
   for (const candidate of candidates) {
     if ([...documentationCategories].some(category => (
-      allowedPaths.some(path => path.startsWith(`${candidate}/${category}/`))
+      allowedPaths.includes(`${candidate}/${category}/README.md`)
     ))) roots.add(candidate);
   }
 
@@ -192,7 +192,7 @@ try {
   const validation = validate(request.projectRoot, request.allowedTargets.paths);
   if (validation.ambiguous.length > 0) {
     const ambiguity = validation.ambiguous.map(root => (
-      `Cannot determine whether ${root} is a documentation root from the confirmed paths; include its root README and at least one confirmed path under usage, development, adr, or agents, or remove the unrelated index from this declaration.`
+      `Cannot determine whether ${root} is a documentation root from the confirmed paths; include its root README and at least one confirmed category README under usage, development, adr, or agents, or remove the unrelated index from this declaration.`
     )).join(' ');
     const corrections = validation.corrections.length > 0
       ? ` Other documentation corrections: ${validation.corrections.join(' ')}`

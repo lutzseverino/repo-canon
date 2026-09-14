@@ -192,7 +192,21 @@ test('blocks when confirmed paths cannot identify whether an index starts a docu
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, 'blocked');
   assert.match(outcome.result.message, /Cannot determine whether packages\/app\/handbook is a documentation root/);
-  assert.match(outcome.result.message, /confirmed path under usage, development, adr, or agents/);
+  assert.match(outcome.result.message, /confirmed category README under usage, development, adr, or agents/);
+});
+
+test('does not infer a documentation root from a nested category descendant', t => {
+  const outcome = check(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+    'packages/app/handbook/README.md': '# Handbook\n',
+    'packages/app/handbook/usage/deep/README.md': '# Deep usage\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'blocked');
+  assert.match(outcome.result.message, /Cannot determine whether packages\/app\/handbook is a documentation root/);
+  assert.match(outcome.result.message, /confirmed category README/);
 });
 
 test('requires the development guide in concrete scope even when the file exists', t => {

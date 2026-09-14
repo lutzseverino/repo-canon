@@ -16,11 +16,12 @@ candidate as included or excluded with a reason, explain complete coverage, and
 disclose unresolved questions.
 
 Represent each applicable documentation root with its root `README.md` path and
-at least one path directly under usage, development, adr, or agents when that
-root has content. This lets the read-only operation distinguish a root at an
-arbitrary location from an ordinary nested directory index. If the confirmed
-individual paths cannot make that distinction, leave the root question
-unresolved rather than guessing that structural coverage is complete.
+the `README.md` path of at least one directly nested usage, development, adr, or
+agents category when that root has content. This lets the read-only operation
+distinguish a root at an arbitrary location from an ordinary nested directory
+index. If the confirmed individual paths cannot make that distinction, leave
+the root question unresolved rather than guessing that structural coverage is
+complete.
 
 Do not propose directory trees or globs. Keep the exact-owned shared files
 `docs/agents/README.md`, `docs/agents/domain.md`,
