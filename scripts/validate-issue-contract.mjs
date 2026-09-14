@@ -190,6 +190,9 @@ function validate({ issue, comments, blockedBy, parent }) {
   const contractKind = identifyContract(sections);
   if (contractKind === "specification") {
     requireSections(sections, ["Problem Statement", "Solution", "User Stories", "Out of Scope"], errors);
+    for (const name of ["Implementation Decisions", "Testing Decisions", "Further Notes"]) {
+      requireSection(sections, name, errors, { allowEmpty: true });
+    }
     return outcome("specification", errors, labels, false);
   }
 
@@ -249,17 +252,40 @@ function outcome(kind, errors, labels, triaged) {
 }
 
 function parseSections(markdown) {
-  const headings = [...markdown.matchAll(/^(#{1,6})[ \t]+(.+?)[ \t]*$/gim)]
-    .filter((heading) => contractSectionNames.has(normalize(heading[2])));
+  const headings = findContractHeadings(markdown);
   const sections = new Map();
   for (let index = 0; index < headings.length; index += 1) {
     const heading = headings[index];
-    const name = normalize(heading[2]);
-    const start = heading.index + heading[0].length;
+    const name = normalize(heading.name);
+    const start = heading.index + heading.length;
     const end = headings[index + 1]?.index ?? markdown.length;
     sections.set(name, markdown.slice(start, end).trim());
   }
   return sections;
+}
+
+function findContractHeadings(markdown) {
+  const headings = [];
+  let fence = null;
+  let offset = 0;
+  for (const lineWithEnding of markdown.match(/[^\n]*(?:\n|$)/g) ?? []) {
+    if (!lineWithEnding) continue;
+    const line = lineWithEnding.replace(/\r?\n$/, "");
+    const fenceMatch = line.match(/^[ \t]{0,3}(`{3,}|~{3,})/);
+    if (fence) {
+      const closingFence = new RegExp(`^[ \\t]{0,3}${fence.character}{${fence.length},}[ \\t]*$`);
+      if (closingFence.test(line)) fence = null;
+    } else if (fenceMatch) {
+      fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
+    } else {
+      const heading = line.match(/^(#{1,6})[ \t]+(.+?)[ \t]*$/i);
+      if (heading && contractSectionNames.has(normalize(heading[2]))) {
+        headings.push({ index: offset, length: line.length, name: heading[2] });
+      }
+    }
+    offset += lineWithEnding.length;
+  }
+  return headings;
 }
 
 function normalize(value) {

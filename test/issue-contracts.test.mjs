@@ -138,7 +138,7 @@ test("all public forms accept harmless heading variations and absent optional an
     },
     {
       name: "specification",
-      body: "# Problem Statement\n\nSearch is slow.\n\n## Solution\n\nAdd caching.\n\n### User Stories\n\n1. As a user, I want fast search.\n\n###### Out Of Scope\n\nNone.",
+      body: "# Problem Statement\n\nSearch is slow.\n\n## Solution\n\nAdd caching.\n\n### User Stories\n\n1. As a user, I want fast search.\n\n#### Implementation Decisions\n\n_No response_\n\n##### Testing Decisions\n\n_No response_\n\n###### Out Of Scope\n\nNone.\n\n## Further Notes\n\n_No response_",
       labels: [{ name: "ready-for-agent" }],
     },
   ];
@@ -170,6 +170,19 @@ test("a nested heading can begin a required form answer", async () => {
     issue: {
       number: 42,
       body: "### Problem\n\n#### Context\n\nSearch is slow.\n\n### Desired outcome\n\nSearch finishes quickly.",
+      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+      state: "open",
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+});
+
+test("contract-like headings inside fenced examples remain answer content", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "### Problem\n\nSearch is slow.\n\n```md\n### Problem\n\n_No response_\n\n### Desired outcome\n\n_No response_\n```\n\n### Desired outcome\n\nSearch finishes quickly.",
       labels: [{ name: "enhancement" }, { name: "needs-triage" }],
       state: "open",
     },
@@ -271,6 +284,20 @@ test("all seven native specification sections are recognized", async () => {
 
   assert.equal(result.code, 0, result.stderr);
   assert.match(result.stdout, /valid specification/i);
+});
+
+test("a native specification missing one of its seven headings is incomplete", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\n1. As a user, I want a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.",
+      labels: [{ name: "ready-for-agent" }],
+      state: "open",
+    },
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /Further Notes/);
 });
 
 test("a ready triaged request requires a complete latest Agent Brief and exact preamble position", async () => {
