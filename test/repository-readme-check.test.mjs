@@ -399,6 +399,26 @@ test('validates headings and links from one rendered HTML fragment', t => {
   assert.equal(outcome.result.status, 'passed');
 });
 
+test('does not treat links inside section headings as section content', t => {
+  const outcome = check(t, {
+    'README.md': `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+## [Contributing](CONTRIBUTING.md)
+
+## [License](LICENSE)
+`,
+    'LICENSE': mit,
+    'CONTRIBUTING.md': '# Contributing\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Link the Contributing section to CONTRIBUTING\.md/);
+  assert.match(outcome.result.message, /Make the License section contain only the license link/);
+});
+
 test('reports malformed license sections against the repository license file', async t => {
   for (const example of [
     { name: 'missing section', body: '', diagnostic: 'Add a License section' },

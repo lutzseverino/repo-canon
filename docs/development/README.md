@@ -22,6 +22,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   inventory and native issue formats that automation must respect.
 - [Repository README check](repository-readme-check.md): operation protocol,
   outcomes, prerequisites, and focused fixture command.
+- [Documentation and Project README checks](documentation-check.md): concrete
+  scope, structural outcomes, prerequisites, and focused fixture commands.
 
 ## Authoring status
 
