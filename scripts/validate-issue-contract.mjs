@@ -669,8 +669,9 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
   }
 
   const recorded = feedbackState(previousFeedback?.body);
-  const labelEvent = currentReadyLabels.length === 1 ? latestLabelEvent(issueEvents, currentReadyLabels[0]) : null;
-  if (currentReadyLabels.length === 1 && await activeApproval(apiClient, recorded, revision, currentReadyLabels[0], labelEvent)) {
+  const timelineLabelEvent = currentReadyLabels.length === 1 ? latestLabelEvent(issueEvents, currentReadyLabels[0]) : null;
+  const labelEvent = timelineLabelEvent ?? openingLabelEvent(currentEvent, issue, result, currentReadyLabels[0]);
+  if (currentReadyLabels.length === 1 && await activeApproval(apiClient, recorded, revision, currentReadyLabels[0], timelineLabelEvent, issue)) {
     return {
       valid: true,
       approved: true,
@@ -761,14 +762,15 @@ function currentEventMatchesLabelEvent(currentEvent, issue, result, labelEvent) 
     && currentEvent.issue?.body === issue.body;
 }
 
-async function activeApproval(apiClient, recorded, revision, label, labelEvent) {
+async function activeApproval(apiClient, recorded, revision, label, labelEvent, issue) {
+  const eventIsCurrent = labelEvent?.event === "labeled" && String(labelEvent.id) === recorded?.reviewEventId;
+  const openingIsCurrent = !labelEvent && recorded?.reviewEventId === openingReviewId(issue);
   if (recorded?.status !== "approved"
     || recorded.revision !== revision
     || recorded.label !== label
     || !recorded.reviewer
     || !recorded.reviewEventId
-    || labelEvent?.event !== "labeled"
-    || String(labelEvent.id) !== recorded.reviewEventId) {
+    || (!eventIsCurrent && !openingIsCurrent)) {
     return false;
   }
   return (await reviewerAuthority(apiClient, recorded.reviewer)).authorized;
@@ -778,6 +780,27 @@ function latestLabelEvent(issueEvents, label) {
   return [...issueEvents].reverse().find((candidate) => {
     return ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label;
   }) ?? null;
+}
+
+function openingLabelEvent(currentEvent, issue, result, label) {
+  if (currentEvent.action !== "opened"
+    || result.contract.type !== "issue-body"
+    || !label
+    || currentEvent.issue?.body !== issue.body
+    || !currentEvent.issue?.labels?.map(labelName).includes(label)) {
+    return null;
+  }
+  return {
+    id: openingReviewId(issue),
+    event: "labeled",
+    label: { name: label },
+    actor: currentEvent.sender,
+    created_at: currentEvent.issue.created_at ?? currentEvent.issue.updated_at,
+  };
+}
+
+function openingReviewId(issue) {
+  return `opened:${issue.node_id ?? issue.id ?? issue.number}:${issue.created_at ?? "unknown"}`;
 }
 
 async function reviewerAuthority(apiClient, login) {

@@ -848,16 +848,19 @@ test("an authorized maintainer can bind a direct contract readiness label to the
 test("an authorized native issue creation preserves its reviewed readiness", async () => {
   const issue = {
     number: 42,
+    node_id: "ISSUE_42",
     body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\nA user gets a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.\n\n## Further Notes\n\nNone.",
     labels: [{ name: "ready-for-agent" }],
     state: "open",
+    created_at: "2026-09-14T17:00:00Z",
     updated_at: "2026-09-14T17:00:00Z",
   };
   const result = await exercise({
     issue,
+    issueEvents: [],
     event: {
       action: "opened",
-      issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+      issue: { number: 42, body: issue.body, labels: issue.labels, created_at: issue.created_at, updated_at: issue.updated_at },
       sender: { login: "maintainer" },
     },
     permissions: { maintainer: { permission: "admin", role_name: "admin" } },
