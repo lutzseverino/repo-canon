@@ -7,6 +7,32 @@ const readyLabels = new Set(["ready-for-agent", "ready-for-human"]);
 const workflowLabels = new Set(["needs-triage", "needs-info", "ready-for-agent", "ready-for-human", "wontfix"]);
 const categoryLabels = new Set(["bug", "enhancement"]);
 const childLabels = new Set(["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"]);
+const contractSectionNames = new Set([
+  "acceptance criteria",
+  "actual behavior",
+  "additional context",
+  "blocked by",
+  "decisions so far",
+  "destination",
+  "desired outcome",
+  "environment",
+  "expected behavior",
+  "further notes",
+  "implementation decisions",
+  "not yet specified",
+  "notes",
+  "out of scope",
+  "parent",
+  "problem",
+  "problem statement",
+  "proposed approach",
+  "question",
+  "solution",
+  "steps to reproduce",
+  "testing decisions",
+  "user stories",
+  "what to build",
+]);
 
 const environment = process.env;
 const event = JSON.parse(await readFile(required("GITHUB_EVENT_PATH"), "utf8"));
@@ -157,7 +183,7 @@ function validate({ issue, comments, blockedBy, parent }) {
 
   const wayfinderChildren = [...labels].filter((label) => childLabels.has(label));
   if (wayfinderChildren.length > 0) {
-    validateWayfinderChild(sections, labels, wayfinderChildren, issue, parent, errors);
+    validateWayfinderChild(sections, labels, wayfinderChildren, parent, errors);
     return outcome("Wayfinder child", errors, labels, false);
   }
 
@@ -223,7 +249,8 @@ function outcome(kind, errors, labels, triaged) {
 }
 
 function parseSections(markdown) {
-  const headings = [...markdown.matchAll(/^(#{1,6})[ \t]+(.+?)[ \t]*$/gim)];
+  const headings = [...markdown.matchAll(/^(#{1,6})[ \t]+(.+?)[ \t]*$/gim)]
+    .filter((heading) => contractSectionNames.has(normalize(heading[2])));
   const sections = new Map();
   for (let index = 0; index < headings.length; index += 1) {
     const heading = headings[index];
@@ -271,14 +298,14 @@ function validateWayfinderMap(sections, labels, errors) {
   }
 }
 
-function validateWayfinderChild(sections, labels, childLabelList, issue, parent, errors) {
+function validateWayfinderChild(sections, labels, childLabelList, parent, errors) {
   if (childLabelList.length !== 1 || labels.has("wayfinder:map")) {
     errors.push("Apply exactly one Wayfinder child label and do not combine it with `wayfinder:map`.");
   }
   requireSection(sections, "Question", errors);
-  if (!issue.parent_issue_url && !sections.has("parent")) {
+  if (!parent) {
     errors.push("Link the Wayfinder child to its parent map using the native parent relationship or a `Parent` section.");
-  } else if (parent && !(parent.labels ?? []).some((label) => (typeof label === "string" ? label : label.name) === "wayfinder:map")) {
+  } else if (!(parent.labels ?? []).some((label) => (typeof label === "string" ? label : label.name) === "wayfinder:map")) {
     errors.push("Link the Wayfinder child to an issue labeled `wayfinder:map`.");
   }
 }
