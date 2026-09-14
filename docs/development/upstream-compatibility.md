@@ -61,11 +61,17 @@ engineering/to-tickets engineering/triage engineering/wayfinder engineering/wiza
 productivity/grill-me productivity/grilling productivity/handoff productivity/teach
 productivity/to-questionnaire productivity/wait-what productivity/writing-for-agents'
 
+expected_snapshot="$(mktemp -d)"
+mkdir -p "$expected_snapshot/skills/engineering" \
+  "$expected_snapshot/skills/productivity"
+cp "$upstream_checkout/LICENSE" "$expected_snapshot/LICENSE"
 for skill in $skills; do
-  diff -ru "$upstream_checkout/skills/$skill" \
-    "vendor/mattpocock-skills/skills/$skill"
+  category="${skill%%/*}"
+  name="${skill#*/}"
+  cp -R "$upstream_checkout/skills/$skill" \
+    "$expected_snapshot/skills/$category/$name"
 done
-cmp "$upstream_checkout/LICENSE" vendor/mattpocock-skills/LICENSE
+diff -ru "$expected_snapshot" vendor/mattpocock-skills
 ```
 
 ## Standards-maintainer updates
@@ -74,7 +80,9 @@ Managed skills change only through a reviewed Repo Canon standards update. An
 adopting repository's contributors do not update these files independently.
 For a proposed upstream pin, a standards maintainer checks out that exact
 commit, reviews the plugin manifest and the complete diff from the current pin,
-and stages only the selected regular directories plus `LICENSE`:
+and stages only the promoted engineering and productivity directories plus
+`LICENSE`. The manifest-reading command uses the project's Node.js 24 authoring
+baseline; that maintainer prerequisite is separate from skill runtime:
 
 ```bash
 set -eu
@@ -86,12 +94,18 @@ git -C "$next_upstream_checkout" diff \
   "3cca18b368ae95cdbdebbff572ccafa662551015..$proposed_commit" -- \
   .claude-plugin/plugin.json LICENSE skills
 
-skills=
-for category in engineering productivity; do
-  for skill_directory in vendor/mattpocock-skills/skills/$category/*; do
-    skills="$skills $category/$(basename "$skill_directory")"
-  done
-done
+skills="$(node -e '
+const manifest = require(process.argv[1]);
+const selected = manifest.skills.map((entry) => {
+  const match = entry.match(/^\.\/skills\/(engineering|productivity)\/([a-z0-9-]+)$/);
+  if (!match) throw new Error(`unexpected promoted skill path: ${entry}`);
+  return `${match[1]}/${match[2]}`;
+});
+if (new Set(selected).size !== selected.length) {
+  throw new Error("duplicate promoted skill path");
+}
+process.stdout.write(selected.join("\n"));
+' "$next_upstream_checkout/.claude-plugin/plugin.json")"
 git rm -r vendor/mattpocock-skills
 mkdir -p vendor/mattpocock-skills/skills/engineering \
   vendor/mattpocock-skills/skills/productivity
