@@ -659,6 +659,10 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
   }
 
   const recorded = feedbackState(previousFeedback?.body);
+  if (currentReadyLabels.length === 1 && await activeApproval(apiClient, recorded, revision, currentReadyLabels[0])) {
+    return { valid: true, approved: true, label: recorded.label, reviewer: recorded.reviewer };
+  }
+
   const grant = readinessGrant(currentEvent, issue, result, revision, recorded, currentReadyLabels);
   if (grant.candidate) {
     if (!grant.valid) return { valid: false, error: grant.error };
@@ -675,9 +679,6 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
   }
 
   if (currentReadyLabels.length === 0) return { valid: true, approved: false };
-
-  const active = await activeApproval(apiClient, recorded, revision, currentReadyLabels[0]);
-  if (active) return { valid: true, approved: true, label: recorded.label, reviewer: recorded.reviewer };
 
   return {
     valid: false,

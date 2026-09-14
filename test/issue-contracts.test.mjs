@@ -1091,6 +1091,50 @@ test("repeated events preserve an active exact-revision approval without rewriti
   assert.ok(!result.requests.some(({ method, url }) => method === "PATCH" && url.includes("/comments/")));
 });
 
+test("a repeated Agent Brief readiness event preserves its active approval", async () => {
+  const brief = {
+    id: 12,
+    node_id: "COMMENT_12",
+    body: completeAgentBrief,
+    updated_at: "2026-09-14T17:00:00Z",
+    user: { login: "triager" },
+  };
+  const contractRevision = briefRevision(brief);
+  const comments = [brief, {
+    id: 13,
+    body: feedbackState({
+      status: "approved",
+      revision: contractRevision,
+      label: "ready-for-agent",
+      reviewer: "triager",
+      kind: "triaged Agent Brief",
+    }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const issue = {
+    number: 42,
+    body: "Intake context.",
+    labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+    state: "open",
+    updated_at: "2026-09-14T17:01:00Z",
+  };
+  const result = await exercise({
+    issue,
+    comments,
+    permissions: { triager: { permission: "read", role_name: "triage" } },
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+      label: { name: "ready-for-agent" },
+      sender: { login: "triager" },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.includes("/labels/")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "PATCH" && url.includes("/comments/")));
+});
+
 test("an invalid direct contract loses readiness without acquiring intake labels", async () => {
   const result = await exercise({
     issue: {
