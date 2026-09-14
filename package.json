@@ -6,7 +6,8 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "check": "node --check operations/*.mjs && node --check scripts/*.mjs && node --check .github/scripts/*.mjs && node --check test/*.test.mjs && node --check test/helpers/*.mjs && node --check test/fixtures/*.mjs",
+    "check": "node --check operations/*.mjs && node --check scripts/*.mjs && node --check scripts/support/*.mjs && node --check .github/scripts/*.mjs && node --check test/*.test.mjs && node --check test/helpers/*.mjs && node --check test/fixtures/*.mjs",
+    "prepare:adoption-fixtures": "node scripts/prepare-adoption-fixtures.mjs",
     "test": "node --test test/*.test.mjs",
     "test:engineering-skill-fixtures": "node --test test/engineering-skill-fixtures.test.mjs",
     "test:github-pr-integration": "node --test test/github-pr-integration-setup.test.mjs",

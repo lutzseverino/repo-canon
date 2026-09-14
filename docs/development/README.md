@@ -6,6 +6,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
+- [Complete adoption evidence](adoption-evidence.md): disposable repository
+  matrix, evidence boundary, and the temporary remote prerequisite.
 - [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
   identity and permission prerequisites, protocol outcomes, and fixture coverage.
 - [GitHub PR integration setup](github-pr-integration-setup.md): required-check
