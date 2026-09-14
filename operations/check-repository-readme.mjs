@@ -70,7 +70,8 @@ function sectionEvents(events, allHeadings, name) {
   const start = events.indexOf(allHeadings[index]) + 1;
   const end = events.findIndex((event, eventIndex) => eventIndex >= start
     && event.type === 'heading' && event.level <= allHeadings[index].level);
-  return events.slice(start, end < 0 ? events.length : end);
+  return events.slice(start, end < 0 ? events.length : end)
+    .filter(event => !event.insideHeading);
 }
 
 function singleLink(events) {

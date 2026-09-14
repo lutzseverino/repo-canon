@@ -113,6 +113,22 @@ Run the checks from this directory.
   assert.doesNotMatch(outcome.result.message, /also-missing|still-missing|hidden-missing/);
 });
 
+test('checks heading links and rejects decoded paths that escape the repository', t => {
+  const outcome = check(t, {
+    'component/README.md': `# [Component](heading-missing.md)
+
+Component provides shared behavior.
+
+[Escaped path](..%2f..%2f..%2f..%2fetc/passwd)
+`,
+  }, ['component/README.md']);
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /links to missing heading-missing\.md/);
+  assert.match(outcome.result.message, /links to missing \.\.%2f\.\.%2f\.\.%2f\.\.%2fetc\/passwd/);
+});
+
 test('allows empty concrete Project README scope while leaving coverage to review', t => {
   const outcome = check(t, {}, []);
   assert.equal(outcome.status, 0, outcome.stderr);

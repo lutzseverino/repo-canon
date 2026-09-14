@@ -97,6 +97,31 @@ Move this material to [the intended destination](docs/usage/migrated.md).
   assert.doesNotMatch(outcome.result.message, /example-missing|draft-missing/);
 });
 
+test('checks links nested in rendered headings', t => {
+  const outcome = check(t, {
+    'docs/README.md': '# [Documentation](missing-map.md)\n',
+    'docs/development/README.md': '# Development\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /docs\/README\.md links to missing missing-map\.md/);
+});
+
+test('rejects populated top-level documentation outside the recognized categories', t => {
+  const outcome = check(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+    'docs/api/README.md': '# API\n',
+    'docs/overview.md': '# Overview\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'failed');
+  assert.match(outcome.result.message, /Move docs\/api into usage, development, adr, or agents/);
+  assert.match(outcome.result.message, /Move docs\/overview\.md into usage, development, adr, or agents/);
+});
+
 test('requires the development guide in concrete scope even when the file exists', t => {
   const outcome = check(t, {
     'docs/README.md': '# Documentation\n',
@@ -123,6 +148,15 @@ test('treats malformed public-protocol input as a process error', t => {
   });
   assert.notEqual(malformed.status, 0);
   assert.equal(malformed.stdout, '');
-  assert.match(malformed.stderr, /individual repository-relative paths and no directory targets/);
+  assert.match(malformed.stderr, /individual repository-relative file paths and no directory targets/);
   assert.deepEqual(snapshot(project.root), before);
+
+  for (const path of ['.', 'docs', 'docs/']) {
+    const directoryAsPath = invokeCheck(script, project.root, {
+      allowedTargets: { paths: [path], directories: [] },
+    });
+    assert.notEqual(directoryAsPath.status, 0, path);
+    assert.equal(directoryAsPath.stdout, '');
+    assert.match(directoryAsPath.stderr, /individual repository-relative file paths/);
+  }
 });

@@ -4,14 +4,23 @@ import { brokenLocalLinks, renderedMarkdown } from './lib/rendered-markdown.mjs'
 
 const resultFormat = 'repo-standards/result/v1';
 const developmentGuide = 'docs/development/README.md';
+const documentationCategories = new Set(['usage', 'development', 'adr', 'agents']);
 
 function failProcess(message) {
   throw new Error(message);
 }
 
-function isSafePath(path) {
-  return typeof path === 'string' && path.length > 0 && !isAbsolute(path)
-    && !path.includes('\\') && posix.normalize(path) === path && !path.startsWith('../');
+function isSafeFilePath(projectRoot, path) {
+  if (typeof path !== 'string' || path.length === 0 || isAbsolute(path)
+      || path === '.' || path.endsWith('/') || path.includes('\\')
+      || posix.normalize(path) !== path || path.startsWith('../')) return false;
+  let existingDirectory = false;
+  try {
+    existingDirectory = lstatSync(absolutePath(projectRoot, path)).isDirectory();
+  } catch {
+    // Missing intended files are valid concrete targets.
+  }
+  return !existingDirectory;
 }
 
 function readRequest() {
@@ -27,13 +36,13 @@ function readRequest() {
   if (request.operation?.phase !== 'checks') {
     failProcess('Documentation validation must run as a checks operation.');
   }
-  const { paths, directories } = request.allowedTargets ?? {};
-  if (!Array.isArray(paths) || paths.some(path => !isSafePath(path))
-      || !Array.isArray(directories) || directories.length !== 0) {
-    failProcess('Documentation validation requires individual repository-relative paths and no directory targets.');
-  }
   if (typeof request.projectRoot !== 'string' || request.projectRoot.length === 0) {
     failProcess('Operation input must identify the project root.');
+  }
+  const { paths, directories } = request.allowedTargets ?? {};
+  if (!Array.isArray(paths) || paths.some(path => !isSafeFilePath(request.projectRoot, path))
+      || !Array.isArray(directories) || directories.length !== 0) {
+    failProcess('Documentation validation requires individual repository-relative file paths and no directory targets.');
   }
   return request;
 }
@@ -91,6 +100,10 @@ function validate(projectRoot, allowedPaths) {
   }
 
   const tree = documentationTree(projectRoot);
+  for (const entry of directoryEntries(projectRoot, 'docs') ?? []) {
+    if (entry.name === 'README.md' || (entry.isDirectory() && documentationCategories.has(entry.name))) continue;
+    corrections.push(`Move docs/${entry.name} into usage, development, adr, or agents, preserving useful content and affected links.`);
+  }
   for (const directory of tree.directories) {
     const index = `${directory}/README.md`;
     const content = fileContent(projectRoot, index);

@@ -30,6 +30,26 @@ function containsHeading(node) {
 
 export function renderedMarkdown(markdown) {
   const events = [];
+  const visitTargets = node => {
+    if (isHidden(node)) return;
+    if (node.tagName === 'a') {
+      events.push({
+        type: 'link',
+        text: renderedText(node).trim(),
+        target: attribute(node, 'href') ?? '',
+        insideHeading: true,
+      });
+    } else if (node.tagName === 'img') {
+      events.push({
+        type: 'image',
+        text: attribute(node, 'alt') ?? '',
+        target: attribute(node, 'src') ?? '',
+        insideHeading: true,
+      });
+      return;
+    }
+    for (const child of node.childNodes ?? []) visitTargets(child);
+  };
   const visit = (node, centered = false) => {
     if (isHidden(node)) return;
     if (node.nodeName === '#text') {
@@ -48,6 +68,7 @@ export function renderedMarkdown(markdown) {
         centered: ownCenter || centered,
         folded: text.toLocaleLowerCase('en-US'),
       });
+      for (const child of node.childNodes ?? []) visitTargets(child);
       return;
     }
     if (node.tagName === 'a') {
@@ -75,10 +96,14 @@ export function resolvedLocalPath(sourcePath, target) {
     const root = new URL('https://repository.invalid/project/');
     const source = new URL(sourcePath, root);
     const destination = new URL(target, source);
-    if (destination.origin !== root.origin || !destination.pathname.startsWith(root.pathname)) return null;
-    return decodeURIComponent(destination.pathname.slice(root.pathname.length));
+    if (destination.origin !== root.origin) return null;
+    if (!destination.pathname.startsWith(root.pathname)) return undefined;
+    const decoded = decodeURIComponent(destination.pathname.slice(root.pathname.length));
+    const normalized = posix.normalize(decoded);
+    if (posix.isAbsolute(normalized) || normalized === '..' || normalized.startsWith('../')) return undefined;
+    return normalized;
   } catch {
-    return null;
+    return undefined;
   }
 }
 
@@ -96,8 +121,8 @@ export function brokenLocalLinks(projectRoot, sourcePath, events) {
   for (const event of events) {
     if (!['link', 'image'].includes(event.type)) continue;
     const path = resolvedLocalPath(sourcePath, event.target);
-    if (path === null || pathExists(projectRoot, path)) continue;
-    broken.push({ target: event.target, path: posix.normalize(path) });
+    if (path === null || (path !== undefined && pathExists(projectRoot, path))) continue;
+    broken.push({ target: event.target, path });
   }
   return broken;
 }
