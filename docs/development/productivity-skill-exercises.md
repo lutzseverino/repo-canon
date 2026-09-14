@@ -107,7 +107,12 @@ and keep the first lesson under 15 minutes without changing history.
 The agent created the retained mission, notes, annotated resources, shared CSS,
 HTML lesson, and reference sheet. The lesson teaches
 `git merge-base --is-ancestor <baseline> <candidate>` and includes three
-immediate-feedback retrieval/application controls. The controlled learner then
+immediate-feedback retrieval/application controls. Independent Spec review
+found that the first lesson revision lacked its reference-sheet link and used
+unequal quiz-answer shapes. In the same teaching session, the agent linked the
+reference and changed all accepted answers to two words and 18 characters,
+then compiled the embedded JavaScript and verified both local links. The
+controlled learner had already
 answered the transfer from memory with the correct argument order and all three
 status classes. The agent gave feedback, created a learning record and glossary
 only for demonstrated knowledge, kept the mission unchanged, and assigned a
@@ -164,13 +169,18 @@ exact result is retained as
 SHA-256
 `1723db18f0c9a021402934de669b426f415ebd2da8509e138503b09aff7e90e5`.
 
-A fresh probe session, `01a0a1e7-9189-7ea3-87ee-098c345eb7ae`, requested a
-supplier fixture without naming either downstream document. It followed the
-shared root guidance into the edited project pointer, read
-`docs/agents/fixtures.md`, and proposed fictional `Northstar` at
-`https://northstar.example`. This single probe exercises the supplier branch;
-it does not statistically establish reliability or probe the synchronization
-branch.
+A read-only probe showed the expected `.example` result, but independent Spec
+review correctly noted that the root guidance requires the project pointer
+before a change, so that prompt was weak routing evidence. Fresh session
+`01a0a1f7-014c-7573-b403-d30b670ffdfc` then changed one supplier fixture. It
+reported the exact path `AGENTS.md` → `CONTRIBUTING.md` →
+`docs/agents/project.md` → shared development/domain guidance → `CONTEXT.md` →
+`docs/agents/fixtures.md`, added fictional `Northstar` at
+`https://northstar.example`, and passed `npm test` (2/2) plus
+`git diff --check`. The exact changed
+[test artifact](productivity-skill-runtime/writing-for-agents-probe-test.mjs)
+is retained. This single change probe exercises the supplier branch; it does
+not statistically establish reliability or probe the synchronization branch.
 
 ## Shared prerequisites and limits
 

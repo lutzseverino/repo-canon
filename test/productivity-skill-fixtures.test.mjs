@@ -81,6 +81,10 @@ test('retains exact runtime outputs and the teaching feedback loop', () => {
     sha256(join(runtimeRoot, 'writing-for-agents-project.md')),
     '1723db18f0c9a021402934de669b426f415ebd2da8509e138503b09aff7e90e5',
   );
+  assert.equal(
+    sha256(join(runtimeRoot, 'writing-for-agents-probe-test.mjs')),
+    '809b6d6a32fd340fdc6846f099056f8a5f47f12250f12a26192edfb776b22464',
+  );
 
   const handoff = readFileSync(join(runtimeRoot, 'handoff.md'), 'utf8');
   assert.match(handoff, /## Suggested skills/);
@@ -94,11 +98,14 @@ test('retains exact runtime outputs and the teaching feedback loop', () => {
   assert.match(lesson, /data-check="order"/);
   assert.match(lesson, /data-check="status"/);
   assert.match(lesson, /data-check="error"/);
+  assert.match(lesson, /\.\.\/reference\/release-baseline-guard\.html/);
+  assert.match(lesson, /answer: 'ordinary rejection'/);
+  assert.match(lesson, /answer: 'processing failure'/);
   assert.match(lesson, /git-scm\.com\/docs\/git-merge-base/);
   assert.ok(existsSync(join(runtimeRoot, 'teach/assets/course.css')));
   assert.ok(existsSync(join(runtimeRoot, 'teach/reference/release-baseline-guard.html')));
   assert.ok(existsSync(join(runtimeRoot, 'teach/learning-records/0001-release-ancestry-guard.md')));
 
   const finalResponses = readdirSync(finalsRoot).filter((name) => name.startsWith('issue-13-'));
-  assert.equal(finalResponses.length, 24);
+  assert.equal(finalResponses.length, 26);
 });

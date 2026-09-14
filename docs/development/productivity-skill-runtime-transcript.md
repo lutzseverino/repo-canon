@@ -87,6 +87,12 @@ After the lesson, the controlled learner completed its transfer from memory:
 The agent gave feedback, updated demonstrated learning state, kept the mission
 unchanged, and assigned spaced practice.
 
+After independent Spec review, the same session received a correction request
+for the missing reference-sheet link and unequal quiz-answer shapes. Its
+retained correction response reports three accepted answers with identical
+two-word, 18-character shapes, successful JavaScript compilation, and resolved
+local links.
+
 ## `to-questionnaire`
 
 Session: `01a0a1ec-a0a4-7110-abd2-d90feebf930b`
@@ -128,11 +134,16 @@ Invocation:
 > docs. Remove duplicated branches, vague no-op language, and cached validation
 > details. Preserve two branches, edit only project.md, validate the diff.`
 
-Fresh probe session: `01a0a1e7-9189-7ea3-87ee-098c345eb7ae`
+An initial read-only probe used session
+`01a0a1e7-9189-7ea3-87ee-098c345eb7ae`. Independent review found that it did
+not trigger the shared root change condition. The authoritative change probe
+used session `01a0a1f7-014c-7573-b403-d30b670ffdfc`:
 
-> I am adding a supplier fixture for a fictional company named Northstar. What
-> supplier name and website should I use? Do not change files.
+> Add a second supplier fixture to `test/catalog.test.mjs` for fictional
+> supplier Northstar with a compliant website. Inspect all applicable agent
+> guidance, make only that test-fixture change in this disposable repository,
+> run the required validation, and report the exact guidance path you followed.
 
-The probe read the shared root guidance, edited project pointer, and supplier
-fixture document, then returned `Northstar` and
-`https://northstar.example` without changing files.
+The probe reported its path from `AGENTS.md` through the edited project pointer
+to `docs/agents/fixtures.md`, changed only the requested test in addition to the
+pre-existing pointer edit, and passed 2/2 tests plus `git diff --check`.

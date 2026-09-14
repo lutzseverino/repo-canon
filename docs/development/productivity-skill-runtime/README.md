@@ -12,8 +12,11 @@ guidance.
   glossary, and demonstrated-learning record produced by `teach`.
 - [Agent pointer result](writing-for-agents-project.md): scenario-specific
   `docs/agents/project.md` output produced by `writing-for-agents` and used by
-  a fresh probe. The fixture root `AGENTS.md` stayed byte-identical to the
-  shared repository file.
+  a fresh change probe. The fixture root `AGENTS.md` stayed byte-identical to
+  the shared repository file.
+- [Pointer-probe test](writing-for-agents-probe-test.mjs): exact supplier
+  fixture added after the change-triggered probe followed shared and project
+  guidance.
 
 Complete response files and hashes are indexed in the
 [session-final directory](../productivity-skill-session-finals/README.md).

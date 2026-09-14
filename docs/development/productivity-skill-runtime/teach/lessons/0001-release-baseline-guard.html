@@ -29,8 +29,8 @@
 
     <section class="exercise" aria-labelledby="order-heading">
       <h2 id="order-heading">Retrieve it: argument order</h2>
-      <p>Without looking above, type the two role names in command order, separated by a space.</p>
-      <label for="order-answer">First argument, then second</label>
+      <p>Without looking above, name the roles in the order that makes the command test the release requirement.</p>
+      <label for="order-answer">Command argument order</label>
       <input id="order-answer" autocomplete="off" spellcheck="false" aria-describedby="order-feedback">
       <button type="button" data-check="order">Check</button>
       <p class="feedback" id="order-feedback" aria-live="polite"></p>
@@ -60,16 +60,16 @@ fi</code></pre>
 
     <section class="exercise" aria-labelledby="status-heading">
       <h2 id="status-heading">Retrieve it: status handling</h2>
-      <p>A candidate does not contain the baseline, but Git successfully answered the question. What status should the command return? Type only the number.</p>
-      <label for="status-answer">Exit status</label>
-      <input id="status-answer" inputmode="numeric" autocomplete="off" aria-describedby="status-feedback">
+      <p>Git returns status <code>1</code> after it checks ancestry. How should the release guard classify that outcome?</p>
+      <label for="status-answer">Outcome classification</label>
+      <input id="status-answer" autocomplete="off" spellcheck="false" aria-describedby="status-feedback">
       <button type="button" data-check="status">Check</button>
       <p class="feedback" id="status-feedback" aria-live="polite"></p>
     </section>
 
     <section class="exercise" aria-labelledby="error-heading">
       <h2 id="error-heading">Apply it: safe failure</h2>
-      <p>Your script receives an invalid candidate revision and Git exits <code>128</code>. Should it classify that as <em>eligible</em>, <em>ineligible</em>, or <em>error</em>? Type one word.</p>
+      <p>Your script receives an invalid candidate revision and Git exits <code>128</code>. How should the release guard classify that outcome?</p>
       <label for="error-answer">Classification</label>
       <input id="error-answer" autocomplete="off" spellcheck="false" aria-describedby="error-feedback">
       <button type="button" data-check="error">Check</button>
@@ -79,6 +79,8 @@ fi</code></pre>
     <h2 id="takeaway">Takeaway</h2>
     <p>Ask a graph question, not a calendar question: <code>baseline</code> first, <code>candidate</code> second. Then distinguish <code>0</code>, <code>1</code>, and every other nonzero exit status.</p>
 
+    <p>Keep the <a href="../reference/release-baseline-guard.html">release baseline guard quick reference</a> for the command and status policy.</p>
+
     <p class="source">Primary source: <a href="https://git-scm.com/docs/git-merge-base#Documentation/git-merge-base.txt---is-ancestor" target="_blank" rel="noreferrer">official <code>git-merge-base</code> documentation</a>. Ask your teacher any follow-up question—especially before adapting this guard to a real release script.</p>
   </main>
   <script>
@@ -86,17 +88,17 @@ fi</code></pre>
       order: {
         answer: 'baseline candidate',
         correct: 'Correct. The question is: “Is the baseline an ancestor of the candidate?”',
-        incorrect: 'Not yet. Put the commit that must already be contained first: baseline candidate.'
+        incorrect: 'Not yet. Put the commit that must already be contained first, then the candidate being tested.'
       },
       status: {
-        answer: '1',
-        correct: 'Correct. Status 1 means Git answered “not an ancestor”; it is a normal rejection.',
-        incorrect: 'Try again. Status 0 permits, status 1 is a normal rejection, and another nonzero status is an error.'
+        answer: 'ordinary rejection',
+        correct: 'Correct. Git completed the check and answered that the baseline is not an ancestor, so this is not a processing problem.',
+        incorrect: 'Try again. This is Git’s documented negative ancestry result, distinct from a failure to run the check.'
       },
       error: {
-        answer: 'error',
-        correct: 'Correct. Status 128 is neither success nor the documented “not an ancestor” result, so stop and report an error.',
-        incorrect: 'Not safely. Only 0 is eligible and only 1 is a normal ineligible result; 128 is an error.'
+        answer: 'processing failure',
+        correct: 'Correct. Git could not complete the ancestry check, so the release must stop for investigation.',
+        incorrect: 'Not safely. Only status 1 is the normal negative ancestry result; another nonzero status means the check did not complete.'
       }
     };
     document.querySelectorAll('[data-check]').forEach((button) => {
