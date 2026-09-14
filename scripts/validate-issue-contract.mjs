@@ -783,11 +783,13 @@ function latestLabelEvent(issueEvents, label) {
 }
 
 function openingLabelEvent(currentEvent, issue, result, label) {
+  const openingReadyLabels = currentEvent.issue?.labels?.map(labelName).filter((name) => readyLabels.has(name)) ?? [];
   if (currentEvent.action !== "opened"
     || result.contract.type !== "issue-body"
     || !label
     || currentEvent.issue?.body !== issue.body
-    || !currentEvent.issue?.labels?.map(labelName).includes(label)) {
+    || openingReadyLabels.length !== 1
+    || openingReadyLabels[0] !== label) {
     return null;
   }
   return {

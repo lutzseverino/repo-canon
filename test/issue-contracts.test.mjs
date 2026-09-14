@@ -870,6 +870,43 @@ test("an authorized native issue creation preserves its reviewed readiness", asy
   assert.match(result.stdout, /valid specification with ready-for-agent bound/i);
 });
 
+test("a repeated multiply-ready opening cannot approve the one remaining label", async () => {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    created_at: "2026-09-14T17:00:00Z",
+    updated_at: "2026-09-14T17:01:00Z",
+  };
+  const result = await exercise({
+    issue,
+    issueEvents: [{
+      id: 102,
+      event: "unlabeled",
+      label: { name: "ready-for-human" },
+      actor: { login: "maintainer" },
+      created_at: "2026-09-14T17:01:00Z",
+    }],
+    event: {
+      action: "opened",
+      issue: {
+        number: 42,
+        body: issue.body,
+        labels: [{ name: "ready-for-agent" }, { name: "ready-for-human" }],
+        created_at: issue.created_at,
+        updated_at: issue.created_at,
+      },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
 test("a triage-role reviewer can bind the latest Agent Brief after the exact revision is published", async () => {
   const brief = {
     id: 12,
