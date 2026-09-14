@@ -1,7 +1,7 @@
 # Repository README check
 
 `operations/check-repository-readme.mjs` is the read-only structural check for
-the Repository README guidance. It consumes
+the [Repository README guidance](../../drafts/guidance/repository-readme.md). It consumes
 `repo-standards/operation/v1` on standard input, accepts only a checks operation
 whose allowed target is the root `README.md`, and returns one
 `repo-standards/result/v1` object on standard output.
@@ -24,11 +24,13 @@ The result statuses have distinct meanings:
   exits nonzero, and emits no result. Repository Standards records that as a
   process or protocol error rather than a policy result.
 
-For the License check, a root file named `LICENSE` or `LICENCE`, optionally with
-`.md` or `.txt`, is a candidate. Exactly one candidate must identify a license
-name in its first nonempty line. The check compares the README link label and
-target with that repository-provided identity; it does not make a legal or
-semantic licensing judgment.
+For the License check, a conventional root license file named `LICENSE`,
+`LICENCE`, or `COPYING`, optionally with `.md`, `.txt`, or `.rst`, is a
+candidate. Exactly one candidate must identify a license name in its first
+nonempty line. The check compares the README link label and target with that
+repository-provided identity; it does not make a legal or semantic licensing
+judgment. An unrecognized or unclear arrangement returns `blocked` for owner
+clarification.
 
 Run the public-boundary fixtures with Node.js 24:
 

@@ -32,7 +32,11 @@ A queue-backed service for reliable message delivery.
 
 - Durable delivery
 
-## Usage
+## Product details
+
+The inspector is intentionally read-only.
+
+### Usage
 
 \`harbor send example\`
 
@@ -83,20 +87,37 @@ A small tool for inspecting queues.
 
 Run \`harbor inspect\`.
 
-## Architecture
+#### Architecture
 
 Harbor reads queues without modifying them.
 
-## Contributing
+### Contributing
 
 [Contribution requirements](./CONTRIBUTING.md)
 
-## License
+### License
 
 [MIT License](./LICENSE)
 `,
     'LICENSE': mit,
     'CONTRIBUTING.md': '# Contributing\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed');
+});
+
+test('uses a conventional alternative root license filename', t => {
+  const outcome = check(t, {
+    'README.md': `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+## License
+
+[GNU General Public License](COPYING)
+`,
+    'COPYING': 'GNU General Public License\n\nVersion 3, 29 June 2007\n',
   });
 
   assert.equal(outcome.status, 0, outcome.stderr);
@@ -159,13 +180,15 @@ test('blocks when licensing is missing or ambiguous instead of selecting a licen
     },
   ]) await t.test(example.name, st => {
     const outcome = check(st, {
-      'README.md': '<h1 align="center">Harbor</h1>\n\nA queue inspector.\n',
+      'README.md': '# Harbor\n\nA queue inspector.\n\n## Features\n\nFast.\n\n## Installation\n\nInstall it.\n',
       ...example.files,
     });
     assert.equal(outcome.status, 0, outcome.stderr);
     assert.equal(outcome.result.status, 'blocked');
     assert.match(outcome.result.message, /Owner clarification required/);
     assert.match(outcome.result.message, new RegExp(example.diagnostic));
+    assert.match(outcome.result.message, /Center the Repository README title/);
+    assert.match(outcome.result.message, /Move Installation before Features/);
   });
 });
 

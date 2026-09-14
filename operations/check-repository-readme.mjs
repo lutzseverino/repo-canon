@@ -46,7 +46,7 @@ function result(status, message) {
 
 function rootLicense(projectRoot) {
   const candidates = readdirSync(projectRoot, { withFileTypes: true })
-    .filter(entry => entry.isFile() && /^licen[cs]e(?:\.(?:md|txt))?$/i.test(entry.name))
+    .filter(entry => entry.isFile() && /^(?:licen[cs]e|copying)(?:\.(?:md|txt|rst))?$/i.test(entry.name))
     .map(entry => entry.name)
     .sort((left, right) => left.localeCompare(right));
   if (candidates.length === 0) {
@@ -77,10 +77,11 @@ function rootLicense(projectRoot) {
 
 function headings(markdown) {
   const found = [];
-  const pattern = /^##[ \t]+(.+?)[ \t]*#*[ \t]*$/gm;
+  const pattern = /^(#{2,6})[ \t]+(.+?)[ \t]*#*[ \t]*$/gm;
   for (const match of markdown.matchAll(pattern)) {
-    const name = match[1].trim();
+    const name = match[2].trim();
     found.push({
+      level: match[1].length,
       name,
       folded: name.toLocaleLowerCase('en-US'),
       index: match.index,
@@ -136,7 +137,9 @@ function sectionBody(markdown, allHeadings, name) {
   const index = allHeadings.findIndex(heading => heading.folded === name.toLocaleLowerCase('en-US'));
   if (index < 0) return null;
   const start = allHeadings[index].end;
-  const end = allHeadings[index + 1]?.index ?? markdown.length;
+  const nextSection = allHeadings.slice(index + 1)
+    .find(heading => heading.level <= allHeadings[index].level);
+  const end = nextSection?.index ?? markdown.length;
   return markdown.slice(start, end).trim();
 }
 
@@ -147,6 +150,7 @@ function linksTo(body, target) {
 }
 
 function checkStructure(projectRoot, markdown, license) {
+  if (markdown === null) return ['Create the root README.md.'];
   const corrections = [];
   const structuralMarkdown = markdownStructure(markdown);
   if (!titleIsCentered(structuralMarkdown)) {
@@ -187,9 +191,9 @@ function checkStructure(projectRoot, markdown, license) {
   }
 
   const licenseBody = sectionBody(markdown, allHeadings, 'License');
-  if (licenseBody === null) {
+  if (license && licenseBody === null) {
     corrections.push(`Add a License section containing only [${license.name}](${license.path}).`);
-  } else {
+  } else if (license) {
     const match = licenseBody.match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)$/);
     if (!match) {
       corrections.push('Make the License section contain only the license link.');
@@ -212,12 +216,15 @@ function lstatIsFile(path) {
 try {
   const request = readRequest();
   const readmePath = join(request.projectRoot, 'README.md');
-  const markdown = lstatIsFile(readmePath) ? readFileSync(readmePath, 'utf8') : '';
+  const markdown = lstatIsFile(readmePath) ? readFileSync(readmePath, 'utf8') : null;
   const license = rootLicense(request.projectRoot);
+  const corrections = checkStructure(request.projectRoot, markdown, license.blocked ? null : license);
   if (license.blocked) {
-    result('blocked', `Owner clarification required: ${license.blocked}`);
+    const otherCorrections = corrections.length > 0
+      ? ` Other structural corrections: ${corrections.join(' ')}`
+      : '';
+    result('blocked', `Owner clarification required: ${license.blocked}${otherCorrections}`);
   } else {
-    const corrections = checkStructure(request.projectRoot, markdown, license);
     result(
       corrections.length === 0 ? 'passed' : 'failed',
       corrections.length === 0
