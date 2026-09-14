@@ -332,6 +332,12 @@ A queue inspector.
 
 \\[Documentation](docs/README.md)
 
+[](docs/README.md)
+
+[External](https://repository.invalid/project/docs/README.md)
+
+[Parent](../docs/README.md)
+
 ## License
 
 [MIT License](LICENSE)
@@ -355,7 +361,7 @@ A queue inspector.
 
 | Resource | Link |
 | --- | --- |
-| Manual | [Documentation](docs/README.md#usage) |
+| Manual | [Documentation](docs/README.md?plain=1#usage) |
 
 ## Contributing
 
@@ -415,6 +421,7 @@ test('blocks when licensing is missing or ambiguous instead of selecting a licen
   for (const example of [
     { name: 'missing', files: {}, diagnostic: 'No root LICENSE file' },
     { name: 'multiple files', files: { LICENSE: mit, 'LICENSE.md': mit }, diagnostic: 'Multiple root LICENSE variants' },
+    { name: 'multiple named licenses', files: { LICENSE: mit, 'LICENSE-MIT': mit }, diagnostic: 'Multiple root LICENSE variants' },
     { name: 'empty license', files: { LICENSE: '\n\n' }, diagnostic: 'is empty' },
   ]) await t.test(example.name, st => {
     const outcome = check(st, {

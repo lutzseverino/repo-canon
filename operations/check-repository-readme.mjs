@@ -60,7 +60,7 @@ function isHidden(node) {
 
 function rootLicense(projectRoot) {
   const candidates = readdirSync(projectRoot, { withFileTypes: true })
-    .filter(entry => entry.isFile() && /^license(?:\.(?:md|txt|rst))?$/i.test(entry.name))
+    .filter(entry => entry.isFile() && /^license(?:[._-].+)?$/i.test(entry.name))
     .map(entry => entry.name);
   if (!candidates.includes('LICENSE')) {
     const detail = candidates.length > 0 ? ` Found ${candidates.sort().join(', ')} instead.` : '';
@@ -80,6 +80,7 @@ function rootLicense(projectRoot) {
 function renderedText(node) {
   if (node.nodeName === '#text') return node.value;
   if (isHidden(node)) return '';
+  if (node.tagName === 'img') return attribute(node, 'alt') ?? '';
   return (node.childNodes ?? []).map(renderedText).join('');
 }
 
@@ -135,8 +136,18 @@ function sectionEvents(events, allHeadings, name) {
   return events.slice(start, end < 0 ? events.length : end);
 }
 
-function normalizeTarget(target) {
-  return target.replace(/^\.\//, '');
+function localPath(target) {
+  try {
+    if (/^(?:[a-z][a-z+.-]*:|\/|\\)/i.test(target)) return null;
+    const base = new URL('https://repository.invalid/project/');
+    const destination = new URL(target, base);
+    const rootPath = base.pathname;
+    return destination.origin === base.origin && destination.pathname.startsWith(rootPath)
+      ? destination.pathname.slice(rootPath.length)
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function singleLink(events) {
@@ -146,7 +157,7 @@ function singleLink(events) {
 function linksTo(events, target) {
   if (events === null) return false;
   return events.some(event => event.type === 'link'
-    && normalizeTarget(event.target).split('#')[0] === target);
+    && event.label && localPath(event.target) === target);
 }
 
 function checkNavigationLink(projectRoot, events, allHeadings, section, target, corrections) {
@@ -199,7 +210,7 @@ function checkStructure(projectRoot, markdown, license) {
       corrections.push('Make the License section contain only the license link.');
     } else {
       if (!link.label) corrections.push('Name the License link for the actual repository license.');
-      if (normalizeTarget(link.target) !== license.path) corrections.push(`Make the License link target ${license.path}.`);
+      if (localPath(link.target) !== license.path) corrections.push(`Make the License link target ${license.path}.`);
     }
   }
   return [...new Set(corrections)];
