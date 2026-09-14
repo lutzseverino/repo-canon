@@ -62,7 +62,8 @@ The Node test suite exercises executable operation fixtures, including
 disposable remote-label and PR-integration state with interruption recovery,
 plus pull request creation and update event inputs. It covers valid and invalid
 metadata, harmless formatting variations, a hostile fork payload, and
-issue-contract events and state changes. The GitHub setup fixtures do not
+issue-contract structure, exact revision association, actor authority,
+invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
 `npm run test:issue-contracts` for the focused issue-contract fixtures. The four
 draft issue forms were parsed as YAML and checked for basic field structure and
