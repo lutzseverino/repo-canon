@@ -24,6 +24,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   outcomes, prerequisites, and focused fixture command.
 - [Documentation and Project README checks](documentation-check.md): concrete
   scope, structural outcomes, prerequisites, and focused fixture commands.
+- [Productivity skill exercises](productivity-skill-exercises.md): runtime
+  scenarios, outcomes, retained artifacts, prerequisites, and limitations.
 
 ## Authoring status
 
@@ -68,3 +70,6 @@ contact GitHub or establish live remote setup. Run
 draft issue forms were parsed as YAML and checked for basic field structure and
 duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
 Source validation and adoption evidence remain separate from these checks.
+
+Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
+disposable local repositories used for the seven productivity skill exercises.
