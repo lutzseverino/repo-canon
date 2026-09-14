@@ -15,8 +15,9 @@ import {
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('..', import.meta.url));
 
 function sha256(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
