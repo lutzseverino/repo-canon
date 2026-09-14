@@ -36,13 +36,29 @@ not publish changes, contact an issue tracker, adopt Repo Canon in another
 repository, configure production, or create a release.
 
 The authoritative fixture root was
-`/tmp/repo-canon-skill-exercises-12b`. The Repo Canon worktree was at
-`69765e22b20b226f33cd95b84a87511e24e16c33`; the exact runtime builder bytes
-had SHA-256
+`/tmp/repo-canon-skill-exercises-12b`. Its worktree `HEAD` was
+`69765e22b20b226f33cd95b84a87511e24e16c33`, while the builder also contained
+an uncommitted correction that replaced Repo Canon's project guidance with the
+scenario-specific guidance used by every authoritative session. The resulting
+runtime builder had SHA-256
 `bdad304ebd987297f1d7c3b6604c71808db49d9cc2ca09afbabe900a38fcf478`.
-The retained builder adds manifest self-identification and ADR directory
-indexes after the sessions. Those harness-only additions do not alter the
-skill bytes or the exercised scenario behavior.
+
+The current builder retains that scenario-guidance correction and adds
+manifest self-identification, optional-remote handling, and ADR directory
+indexes. Its SHA-256 is
+`388b4ddecba226449cdd36322417b9e3b0a42d376cc7ce12a235828e16800b19`.
+Applying the [retained reverse patch](engineering-skill-runtime-builder.patch)
+to the current builder reconstructs the exact runtime bytes:
+
+```bash
+cp scripts/create-engineering-skill-fixtures.mjs /tmp/runtime-builder.mjs
+patch /tmp/runtime-builder.mjs \
+  < docs/development/engineering-skill-runtime-builder.patch
+sha256sum /tmp/runtime-builder.mjs
+```
+
+The additional retained harness behavior does not alter the skill bytes or the
+substantive scenario source used during the exercises.
 
 ## Exercised skill identity
 
@@ -103,13 +119,25 @@ This was design analysis; it intentionally made no source change.
 ### `improve-codebase-architecture`
 
 Session `01a0a19a-03c7-7441-aa74-5dc8824458be` read Git history, the glossary,
-the ADR, and the source with a delegated codebase walk. It produced the
-10,138-byte [visual report](engineering-skill-architecture-report.html),
-SHA-256
-`9c352a9b20dcbae2217c34e0429051fd2903b6a6214b8ce48eafc350ed0124ee`.
-The report shows two before/after candidates and recommends deepening Order
+the ADR, and the source with a delegated codebase walk. Its initial 10,138-byte
+report showed two before/after candidates and recommended deepening Order
 intake at `acceptOrder`. The attempt to open it failed because `xdg-open` was
-not installed; artifact creation still succeeded. The fixture stayed clean.
+not installed.
+
+A Chromium render then exposed a real overlap between the first Mermaid graph
+and its following prose. A continuation produced the corrected 9,852-byte
+[visual report](engineering-skill-architecture-report.html), SHA-256
+`bc78f65f4e9d2e32965f5c47cf56a59f7c2477d2506f9fb000e9386353f9e270`.
+Verification session `01a0a1b9-7aa0-72e1-b545-b1e8b3cbc9ed` recorded that the
+default sandbox prevented Chromium startup. Completion session
+`01a0a1ba-a291-73d3-b735-efe1ab5044a9` used sandbox bypass only for the local
+headless browser. It produced a 375,968-byte PNG with SHA-256
+`c1cce255fde0035e3a87db9aed7dede7eac3feeb7c3b17292f857cb1e2ca1a4e`,
+found one rendered Mermaid SVG, and measured the Candidate 01 visual grid
+ending at y=798 before its detail grid began at y=822. An operator also
+inspected the PNG and confirmed the two complete candidates rendered without
+overlap. The screenshot remained a disposable local verification artifact;
+the corrected HTML is retained. The fixture stayed clean.
 
 ### `diagnosing-bugs`
 
@@ -179,8 +207,11 @@ validation. A second high-reasoning session for each scenario used
 fixture, repeated validation, wrote the local commit, and confirmed a clean
 worktree. No remote existed in those fixtures and nothing was published.
 
-The architecture report could not be opened automatically because the runner
-lacked `xdg-open`. Its bytes and digest were retained for manual inspection.
+The runner lacked desktop `xdg-open`, and the workspace sandbox blocked
+Chromium startup. Browser opening was completed through installed headless
+Chromium in a local sandbox-bypass session, then checked through DOM geometry
+and separate operator inspection. The retained HTML depends on the Tailwind
+and Mermaid CDNs when rendered.
 Routing, review, and design exercises made no code changes by design. The
 domain and research fixtures retained each other's pre-existing changes, which
 demonstrated scoped edits but meant that repository was intentionally not

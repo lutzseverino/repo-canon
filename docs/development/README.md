@@ -27,7 +27,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   The [curated transcript](engineering-skill-runtime-transcript.md),
   [architecture report](engineering-skill-architecture-report.html), and
   [research result](engineering-skill-research-result.md) retain the observed
-  session outputs.
+  session outputs; the [runtime-builder patch](engineering-skill-runtime-builder.patch)
+  preserves exact harness provenance.
 
 ## Authoring status
 

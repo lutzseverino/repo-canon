@@ -12,41 +12,36 @@
     <style>
       .seam { border-style: dashed; }
       .deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
-      .arrow { color: #dc2626; font-size: 1.6rem; line-height: 1; }
-      .mass { min-height: 310px; }
+      .diagram { min-height: 20rem; }
+      .mermaid svg { display: block; max-width: 100%; height: auto !important; margin: auto; }
+      .mermaid-host { display: flex; align-items: center; justify-content: center; overflow: visible; }
     </style>
   </head>
   <body class="bg-stone-50 text-slate-900 font-sans">
-    <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
-      <header class="border-b border-slate-200 pb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p class="text-xs uppercase tracking-[.2em] text-emerald-700">Architecture review · 14 September 2026</p>
-          <h1 class="mt-2 font-serif text-4xl font-semibold">repo-canon-architecture-fixture</h1>
-        </div>
-        <div class="text-xs text-slate-500 flex flex-wrap gap-3"><span>□ module</span><span class="border-b border-dashed border-slate-500">dashed = seam</span><span class="text-red-600">→ leakage</span><span class="font-bold text-slate-900">▣ deep module</span></div>
+    <main class="max-w-5xl mx-auto space-y-12 px-6 py-12">
+      <header class="flex flex-col gap-4 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
+        <div><p class="text-xs uppercase tracking-[.2em] text-emerald-700">Architecture review · 14 September 2026</p><h1 class="mt-2 font-serif text-4xl font-semibold">repo-canon-architecture-fixture</h1></div>
+        <div class="flex flex-wrap gap-3 text-xs text-slate-500"><span>□ module</span><span class="border-b border-dashed border-slate-500">dashed = seam</span><span class="text-red-600">→ leakage</span><span class="font-bold text-slate-900">▣ deep module</span></div>
       </header>
 
       <section id="candidates" class="space-y-10">
-        <article id="deepen-order-intake" class="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm space-y-6">
+        <article id="deepen-order-intake" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
           <div class="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p class="text-xs uppercase tracking-[.18em] text-emerald-700">Candidate 01</p>
-              <h2 class="mt-1 text-2xl font-semibold">Deepen the Order intake module</h2>
-            </div>
+            <div><p class="text-xs uppercase tracking-[.18em] text-emerald-700">Candidate 01</p><h2 class="mt-1 text-2xl font-semibold">Deepen the Order intake module</h2></div>
             <div class="flex gap-2"><span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Strong</span><span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800">in-process</span></div>
           </div>
           <div><p class="text-xs uppercase tracking-wider text-slate-500">Files</p><p class="mt-1 font-mono text-sm">src/order-intake.mjs · src/parse-order.mjs · src/validate-order.mjs · src/normalize-order.mjs · test/order-intake.test.mjs</p></div>
-          <div class="grid gap-5 md:grid-cols-2">
+          <div class="grid items-stretch gap-5 md:grid-cols-2">
             <figure class="rounded-xl bg-stone-100 p-4">
               <figcaption class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Before · call graph</figcaption>
-              <div class="h-80 rounded-lg border border-slate-200 bg-white p-3">
+              <div class="diagram mermaid-host rounded-lg border border-slate-200 bg-white p-5">
                 <pre class="mermaid">flowchart TD
-                  A[Caller / test] --> B[acceptOrder]
+                  A[Order intake caller] --> B[acceptOrder]
                   B --> C[parseOrder]
                   C --> D[validateOrder]
                   D --> E[normalizeOrder]
-                  C -. partially formed Order .-> D
-                  D -. normalization order .-> E
+                  C -. partly formed Order .-> D
+                  D -. implementation order .-> E
                   classDef shallow fill:#fff7ed,stroke:#ea580c,stroke-width:2px;
                   classDef leak fill:#fef2f2,stroke:#dc2626,stroke-width:2px;
                   class B,C,D,E shallow;
@@ -56,61 +51,32 @@
             </figure>
             <figure class="rounded-xl bg-stone-100 p-4">
               <figcaption class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">After · depth at one seam</figcaption>
-              <div class="mass relative h-80 overflow-hidden rounded-lg border-4 border-slate-900 deep p-5 text-white">
+              <div class="diagram deep relative overflow-hidden rounded-lg border-4 border-slate-900 p-5 text-white">
                 <div class="seam inline-block rounded border border-white/70 px-3 py-2 text-xs uppercase tracking-wider">acceptOrder seam</div>
                 <div class="mt-5 text-xl font-semibold">Order intake module</div>
-                <div class="mt-5 grid grid-cols-3 gap-2 opacity-65">
-                  <div class="rounded border border-slate-500 p-3 text-center text-xs">parse<br /><span class="text-slate-300">internal</span></div>
-                  <div class="rounded border border-slate-500 p-3 text-center text-xs">validate<br /><span class="text-slate-300">internal</span></div>
-                  <div class="rounded border border-slate-500 p-3 text-center text-xs">normalize<br /><span class="text-slate-300">internal</span></div>
-                </div>
+                <div class="mt-5 grid grid-cols-3 gap-2 opacity-65"><div class="rounded border border-slate-500 p-3 text-center text-xs">parse<br /><span class="text-slate-300">internal</span></div><div class="rounded border border-slate-500 p-3 text-center text-xs">validate<br /><span class="text-slate-300">internal</span></div><div class="rounded border border-slate-500 p-3 text-center text-xs">normalize<br /><span class="text-slate-300">internal</span></div></div>
                 <div class="absolute bottom-5 left-5 right-5 rounded bg-emerald-400/15 px-4 py-3 text-sm text-emerald-100">submitted data in → accepted Order out</div>
               </div>
             </figure>
           </div>
-          <div class="grid gap-5 md:grid-cols-2">
-            <div><p class="text-xs uppercase tracking-wider text-slate-500">Problem</p><p class="mt-1">Order intake is shallow: its interface exposes parse, validate, and normalize implementation order through three one-use modules.</p></div>
-            <div><p class="text-xs uppercase tracking-wider text-slate-500">Solution</p><p class="mt-1">Keep one deep Order intake interface at the acceptOrder seam; absorb the three steps into its implementation.</p></div>
-          </div>
-          <div><p class="text-xs uppercase tracking-wider text-slate-500">Wins</p><ul class="mt-2 grid gap-2 text-sm sm:grid-cols-3"><li>• locality: Order knowledge concentrates</li><li>• leverage: one interface, all callers</li><li>• tests cross one seam</li><li>• delete shallow modules</li><li>• implementation hides order</li></ul></div>
+          <div class="grid gap-5 md:grid-cols-2"><div><p class="text-xs uppercase tracking-wider text-slate-500">Problem</p><p class="mt-1">Order intake is shallow: its interface exposes parse, validate, and normalize implementation order through three one-use modules.</p></div><div><p class="text-xs uppercase tracking-wider text-slate-500">Solution</p><p class="mt-1">Keep one deep Order intake interface at the acceptOrder seam; absorb the three steps into its implementation.</p></div></div>
+          <div><p class="text-xs uppercase tracking-wider text-slate-500">Benefits</p><ul class="mt-2 grid gap-2 text-sm sm:grid-cols-3"><li>• locality: Order knowledge concentrates</li><li>• leverage: one interface, all callers</li><li>• tests cross one seam</li><li>• delete shallow modules</li><li>• implementation hides order</li></ul></div>
         </article>
 
-        <article id="order-invariants" class="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm space-y-6">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div><p class="text-xs uppercase tracking-[.18em] text-amber-700">Candidate 02</p><h2 class="mt-1 text-2xl font-semibold">Concentrate accepted Order invariants at the seam</h2></div>
-            <div class="flex gap-2"><span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Worth exploring</span><span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800">in-process</span></div>
-          </div>
+        <article id="order-invariants" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
+          <div class="flex flex-wrap items-start justify-between gap-3"><div><p class="text-xs uppercase tracking-[.18em] text-amber-700">Candidate 02</p><h2 class="mt-1 text-2xl font-semibold">Concentrate accepted Order invariants at the seam</h2></div><div class="flex gap-2"><span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Worth exploring</span><span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800">in-process</span></div></div>
           <div><p class="text-xs uppercase tracking-wider text-slate-500">Files</p><p class="mt-1 font-mono text-sm">src/order-intake.mjs · src/validate-order.mjs · src/normalize-order.mjs · test/order-intake.test.mjs · docs/adr/0001-canonical-currency-at-order-intake.md</p></div>
-          <div class="grid gap-5 md:grid-cols-2">
-            <figure class="rounded-xl bg-stone-100 p-4">
-              <figcaption class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Before · split invariants</figcaption>
-              <div class="mass flex flex-col justify-center gap-3 rounded-lg border border-slate-200 bg-white p-5">
-                <div class="rounded border-l-4 border-amber-500 bg-amber-50 p-4"><span class="text-xs uppercase tracking-wider">validateOrder</span><br /><b>reference required</b></div>
-                <div class="arrow text-center">↓</div>
-                <div class="rounded border-l-4 border-red-500 bg-red-50 p-4"><span class="text-xs uppercase tracking-wider">normalizeOrder</span><br /><b>currency uppercase</b></div>
-                <div class="text-center text-xs text-red-700">test learns the implementation sequence</div>
-              </div>
-            </figure>
-            <figure class="rounded-xl bg-stone-100 p-4">
-              <figcaption class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">After · invariant mass inside Order intake</figcaption>
-              <div class="mass rounded-lg border-4 border-slate-900 deep p-5 text-white flex flex-col justify-between">
-                <div class="seam self-start rounded border border-white/70 px-3 py-2 text-xs uppercase tracking-wider">Order intake seam</div>
-                <div class="space-y-3"><div class="rounded bg-white/10 p-3">reference accepted</div><div class="rounded bg-white/10 p-3">currency canonicalized</div><div class="rounded bg-emerald-400/15 p-3 text-emerald-100">one accepted Order invariant</div></div>
-                <div class="text-xs text-slate-300">tests verify accepted and rejected submitted data through the interface</div>
-              </div>
-            </figure>
+          <div class="grid items-stretch gap-5 md:grid-cols-2">
+            <figure class="rounded-xl bg-stone-100 p-4"><figcaption class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Before · split invariants</figcaption><div class="diagram flex flex-col justify-center gap-3 rounded-lg border border-slate-200 bg-white p-5"><div class="rounded border-l-4 border-amber-500 bg-amber-50 p-4"><span class="text-xs uppercase tracking-wider">validateOrder</span><br /><b>reference required</b></div><div class="text-center text-xl text-red-600">↓</div><div class="rounded border-l-4 border-red-500 bg-red-50 p-4"><span class="text-xs uppercase tracking-wider">normalizeOrder</span><br /><b>currency uppercase</b></div><div class="text-center text-xs text-red-700">test learns implementation sequence</div></div></figure>
+            <figure class="rounded-xl bg-stone-100 p-4"><figcaption class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">After · invariant mass inside Order intake</figcaption><div class="diagram deep flex flex-col justify-between rounded-lg border-4 border-slate-900 p-5 text-white"><div class="seam self-start rounded border border-white/70 px-3 py-2 text-xs uppercase tracking-wider">Order intake seam</div><div class="space-y-3"><div class="rounded bg-white/10 p-3">reference accepted</div><div class="rounded bg-white/10 p-3">currency canonicalized</div><div class="rounded bg-emerald-400/15 p-3 text-emerald-100">one accepted Order invariant</div></div><div class="text-xs text-slate-300">tests verify accepted and rejected submitted data through the interface</div></div></figure>
           </div>
           <div class="grid gap-5 md:grid-cols-2"><div><p class="text-xs uppercase tracking-wider text-slate-500">Problem</p><p class="mt-1">The accepted Order invariant is split, while the sole test covers only one accepted currency and misses rejected submitted data.</p></div><div><p class="text-xs uppercase tracking-wider text-slate-500">Solution</p><p class="mt-1">Make the Order intake implementation own the accepted Order invariant and make its interface the test surface.</p></div></div>
-          <div><p class="text-xs uppercase tracking-wider text-slate-500">Wins</p><ul class="mt-2 grid gap-2 text-sm sm:grid-cols-3"><li>• locality: invariants share one module</li><li>• leverage: tests learn one interface</li><li>• errors stay at the seam</li><li>• canonical currency remains internal</li></ul></div>
+          <div><p class="text-xs uppercase tracking-wider text-slate-500">Benefits</p><ul class="mt-2 grid gap-2 text-sm sm:grid-cols-3"><li>• locality: invariants share one module</li><li>• leverage: tests learn one interface</li><li>• errors stay at the seam</li><li>• canonical currency remains internal</li></ul></div>
           <aside class="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">ADR-0001 supports this direction: uppercase ISO currency belongs at Order intake.</aside>
         </article>
       </section>
 
-      <section id="top-recommendation" class="rounded-2xl border-2 border-emerald-700 bg-emerald-50 p-7">
-        <p class="text-xs font-semibold uppercase tracking-[.18em] text-emerald-800">Top recommendation</p>
-        <h2 class="mt-2 text-2xl font-semibold"><a class="underline decoration-emerald-500 underline-offset-4" href="#deepen-order-intake">Deepen the Order intake module</a></h2>
-        <p class="mt-2">It removes three shallow one-use seams, gives callers and tests one deep interface, and preserves ADR-0001 inside the implementation.</p>
-      </section>
+      <section id="top-recommendation" class="rounded-2xl border-2 border-emerald-700 bg-emerald-50 p-7"><p class="text-xs font-semibold uppercase tracking-[.18em] text-emerald-800">Top recommendation</p><h2 class="mt-2 text-2xl font-semibold"><a class="underline decoration-emerald-500 underline-offset-4" href="#deepen-order-intake">Deepen the Order intake module</a></h2><p class="mt-2">It removes three shallow one-use seams, gives callers and tests one deep interface, and preserves ADR-0001 inside the implementation.</p></section>
     </main>
   </body>
 </html>
