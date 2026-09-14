@@ -15,7 +15,10 @@ if (args[0] === '--version') {
 }
 
 if (args[0] === 'auth' && args[1] === 'status') {
-  if (state.authenticated === false) {
+  state.authStatusArguments = args.slice(2);
+  save();
+  if (state.authenticated === false
+      || (state.inactiveAuthInvalid && !args.includes('--active'))) {
     process.stderr.write('not logged into github.com\n');
     process.exit(1);
   }

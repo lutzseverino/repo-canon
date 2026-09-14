@@ -267,6 +267,17 @@ test('blocks for unavailable or incompatible tools and unauthenticated access', 
     assert.equal(outcome.result.status, 'blocked');
     assert.match(outcome.result.message, /authenticated github.com access/);
   });
+
+  await t.test('invalid inactive account does not block the authenticated active account', st => {
+    const scenario = setup(st, { state: {
+      inactiveAuthInvalid: true,
+      labels: structuredClone(canonicalLabels),
+    } });
+    const outcome = scenario.invoke();
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'unchanged');
+    assert.deepEqual(scenario.readState().authStatusArguments, ['--hostname', 'github.com', '--active']);
+  });
 });
 
 test('blocks without label-management permission before changing labels', t => {

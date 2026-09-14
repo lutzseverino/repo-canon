@@ -223,7 +223,11 @@ function setupLabels(request) {
     return;
   }
 
-  const authentication = run('gh', ['auth', 'status', '--hostname', 'github.com'], request.projectRoot);
+  const authentication = run(
+    'gh',
+    ['auth', 'status', '--hostname', 'github.com', '--active'],
+    request.projectRoot,
+  );
   if (!authentication.ok) {
     result('blocked', 'GitHub label setup requires authenticated github.com access through gh.');
     return;
