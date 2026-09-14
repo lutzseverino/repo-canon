@@ -1,0 +1,35 @@
+{
+  "format": "repo-canon/scope-template/v1",
+  "declarations": [
+    {
+      "id": "documentation",
+      "paths": ["docs/README.md", "docs/development/README.md"],
+      "coverage": "The existing documentation map and development guide are complete and require no edits.",
+      "evidence": [{"kind":"directory","path":"docs"}],
+      "candidates": [
+        {"path":"docs/README.md","decision":"include","reason":"The existing documentation map establishes the docs root.","evidence":[{"kind":"file","path":"docs/README.md"}]},
+        {"path":"docs/development/README.md","decision":"include","reason":"The existing development guide is the required project-owned entry point.","evidence":[{"kind":"file","path":"docs/development/README.md"}]}
+      ],
+      "unresolved": []
+    },
+    {
+      "id": "github-repository-configuration",
+      "paths": [],
+      "coverage": "This declaration governs remote settings only and intentionally has no project-content paths.",
+      "evidence": [{"kind":"directory","path":"."}],
+      "candidates": [],
+      "unresolved": []
+    },
+    {
+      "id": "project-readmes",
+      "paths": [],
+      "coverage": "The initial review has not established a maintained nested Project; Bridge is recorded as excluded for this deliberately incomplete discovery exercise and the fixture package is test data.",
+      "evidence": [{"kind":"directory","path":"."}],
+      "candidates": [
+        {"path":"extensions/bridge","decision":"exclude","reason":"The initial review saw a private manifest but did not yet connect its check command to maintained source; later contextual review deliberately tests additions-only correction.","evidence":[{"kind":"directory","path":"extensions/bridge"},{"kind":"file","path":"extensions/bridge/package.json"}]},
+        {"path":"fixtures/bridge","decision":"exclude","reason":"This manifest is fixture data without commands or maintained source.","evidence":[{"kind":"directory","path":"fixtures/bridge"},{"kind":"file","path":"fixtures/bridge/package.json"}]}
+      ],
+      "unresolved": []
+    }
+  ]
+}

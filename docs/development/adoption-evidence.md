@@ -25,6 +25,21 @@ Git worktrees with committed content, unambiguous GitHub-shaped remotes, and a
 The generated `bin/gh` is a local remote-state fixture for author-operation
 exercises; using it is never remote evidence.
 
+The reviewed scope templates under `test/fixtures/adoption` contain every
+candidate decision, reason, coverage explanation, and evidence path before any
+remote exists. After the first public inspection, bind one template to that
+inspection's observed identities without editing its rationale:
+
+```sh
+npm run build:scope-proposal -- \
+  /tmp/evidence/initial-inspection.json \
+  test/fixtures/adoption/prepared-monorepo-scope.json \
+  /tmp/evidence/prepared-monorepo-scope.json
+```
+
+The builder refuses to replace an existing proposal and rejects any file or
+directory evidence reference that the bound inspection did not observe.
+
 | Repository | Evidence purpose |
 | --- | --- |
 | `prepared-monorepo` | Two commits prove that useful `AGENTS.md` instructions were first reconciled into `docs/agents/project.md` without replacing `AGENTS.md`. Unfamiliar Rust and Node project locations need new READMEs. Generated, fixture, and organizational candidates must remain excluded. A legacy operating guide needs a source, destination, directory index, and link repair around exact `docs/agents` descendants. |

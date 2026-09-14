@@ -1,0 +1,44 @@
+{
+  "format": "repo-canon/scope-template/v1",
+  "declarations": [
+    {
+      "id": "documentation",
+      "paths": ["HANDBOOK.md", "docs/README.md", "docs/agents/project.md", "docs/development/README.md", "docs/usage/README.md", "docs/usage/operate.md", "old-guides/operate.md"],
+      "coverage": "The existing docs root, prepared project guidance, legacy operating source, categorized destination and index, and root link repair cover every useful documentation change. Exact docs/agents siblings remain outside contextual scope.",
+      "evidence": [{"kind":"directory","path":"."},{"kind":"directory","path":"docs"},{"kind":"file","path":"docs/agents/project.md"},{"kind":"file","path":"old-guides/operate.md"}],
+      "candidates": [
+        {"path":"HANDBOOK.md","decision":"include","reason":"Its legacy operating-guide link must be repaired after the separately authorized move.","evidence":[{"kind":"file","path":"HANDBOOK.md"}]},
+        {"path":"docs/README.md","decision":"include","reason":"The documentation map must link the introduced usage category.","evidence":[{"kind":"file","path":"docs/README.md"}]},
+        {"path":"docs/agents/project.md","decision":"include","reason":"The separate preparation commit preserved useful repository-specific instructions here; adoption must review and retain them.","evidence":[{"kind":"file","path":"docs/agents/project.md"}]},
+        {"path":"docs/development/README.md","decision":"include","reason":"This is the required project-owned development entry point and its commands remain useful.","evidence":[{"kind":"file","path":"docs/development/README.md"}]},
+        {"path":"docs/usage/README.md","decision":"include","reason":"The populated usage category needs an index linking its operating guide.","evidence":[{"kind":"absence","path":"docs/usage/README.md"}]},
+        {"path":"docs/usage/operate.md","decision":"include","reason":"This is the categorized destination for the complete legacy operating guide.","evidence":[{"kind":"file","path":"old-guides/operate.md"},{"kind":"absence","path":"docs/usage/operate.md"}]},
+        {"path":"old-guides/operate.md","decision":"include","reason":"The migration must separately authorize deletion of the old source after preserving its complete content.","evidence":[{"kind":"file","path":"old-guides/operate.md"}]},
+        {"path":"dist/generated/README.md","decision":"exclude","reason":"The file identifies itself as generated output and must remain unchanged.","evidence":[{"kind":"file","path":"dist/generated/README.md"}]}
+      ],
+      "unresolved": []
+    },
+    {
+      "id": "github-repository-configuration",
+      "paths": [],
+      "coverage": "This declaration governs remote settings only and intentionally has no project-content paths.",
+      "evidence": [{"kind":"directory","path":"."}],
+      "candidates": [],
+      "unresolved": []
+    },
+    {
+      "id": "project-readmes",
+      "paths": ["engines/meteor/README.md", "packages/auth/README.md"],
+      "coverage": "The Cargo engine and private Node package are the only independently maintained nested Projects. Generated, fixture and organizational candidates are excluded by explicit evidence.",
+      "evidence": [{"kind":"directory","path":"."},{"kind":"directory","path":"engines/meteor"},{"kind":"directory","path":"packages/auth"}],
+      "candidates": [
+        {"path":"engines/meteor/README.md","decision":"include","reason":"The versioned Cargo package, owner metadata, maintained source and operating guide establish a Project whose README is absent.","evidence":[{"kind":"directory","path":"engines/meteor"},{"kind":"file","path":"engines/meteor/Cargo.toml"},{"kind":"file","path":"engines/meteor/src/lib.rs"},{"kind":"absence","path":"engines/meteor/README.md"}]},
+        {"path":"packages/auth/README.md","decision":"include","reason":"The private package has its own test command, ownership metadata and maintained source, so the internal Project needs a README.","evidence":[{"kind":"directory","path":"packages/auth"},{"kind":"file","path":"packages/auth/package.json"},{"kind":"file","path":"packages/auth/src/index.mjs"},{"kind":"absence","path":"packages/auth/README.md"}]},
+        {"path":"dist/generated/README.md","decision":"exclude","reason":"The file says the release build generates it and forbids manual edits.","evidence":[{"kind":"file","path":"dist/generated/README.md"}]},
+        {"path":"groups/platform.md","decision":"exclude","reason":"The file explicitly describes an organizational index rather than a maintained Project.","evidence":[{"kind":"file","path":"groups/platform.md"}]},
+        {"path":"specimens/fake","decision":"exclude","reason":"The private manifest is fixture data without commands, ownership or maintained source.","evidence":[{"kind":"directory","path":"specimens/fake"},{"kind":"file","path":"specimens/fake/package.json"}]}
+      ],
+      "unresolved": []
+    }
+  ]
+}

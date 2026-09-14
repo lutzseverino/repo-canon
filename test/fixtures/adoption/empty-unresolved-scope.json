@@ -1,0 +1,34 @@
+{
+  "format": "repo-canon/scope-template/v1",
+  "declarations": [
+    {
+      "id": "documentation",
+      "paths": ["docs/README.md", "docs/development/README.md"],
+      "coverage": "The existing documentation root has only its complete map and development entry point.",
+      "evidence": [{"kind":"directory","path":"docs"}],
+      "candidates": [
+        {"path":"docs/README.md","decision":"include","reason":"The existing file maps the documentation root.","evidence":[{"kind":"file","path":"docs/README.md"}]},
+        {"path":"docs/development/README.md","decision":"include","reason":"The existing file is the required development entry point.","evidence":[{"kind":"file","path":"docs/development/README.md"}]}
+      ],
+      "unresolved": []
+    },
+    {
+      "id": "github-repository-configuration",
+      "paths": [],
+      "coverage": "Remote configuration has intentionally empty project-content scope.",
+      "evidence": [{"kind":"directory","path":"."}],
+      "candidates": [],
+      "unresolved": []
+    },
+    {
+      "id": "project-readmes",
+      "paths": [],
+      "coverage": "No maintained nested Project exists; the only package-shaped candidate is fixture data.",
+      "evidence": [{"kind":"directory","path":"."},{"kind":"directory","path":"fixtures/example"}],
+      "candidates": [
+        {"path":"fixtures/example","decision":"exclude","reason":"The directory is fixture data with no command, ownership or maintained source evidence.","evidence":[{"kind":"directory","path":"fixtures/example"},{"kind":"file","path":"fixtures/example/package.json"}]}
+      ],
+      "unresolved": ["Confirm whether fixtures/example is maintained independently despite its fixture-only evidence."]
+    }
+  ]
+}
