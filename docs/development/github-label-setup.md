@@ -8,9 +8,9 @@ GitHub API resolves the same repository, and reconciles these labels:
 | --- | --- | --- |
 | `needs-triage` | `fbca04` | Requires review or renewed review |
 | `needs-info` | `d4c5f9` | Waiting for information needed to evaluate the request |
-| `ready-for-agent` | `0e8a16` | Reviewed requirements for agent implementation |
-| `ready-for-human` | `1d76db` | Reviewed requirements for human implementation |
-| `wontfix` | `ffffff` | This will not be worked on |
+| `ready-for-agent` | `0e8a16` | Reviewed and sufficiently specified for agent implementation |
+| `ready-for-human` | `1d76db` | Reviewed and requires human implementation |
+| `wontfix` | `ffffff` | Will not be actioned |
 | `bug` | `d73a4a` | Something isn't working |
 | `enhancement` | `a2eeef` | New feature or request |
 | `wayfinder:map` | `5319e7` | Planning map for related work |
@@ -30,10 +30,11 @@ or newer, and GitHub CLI 2.0.0 or newer. `gh` must be authenticated to
 `github.com`, and the current account must have triage, write, maintain, or
 admin repository access so it can manage labels.
 
-All `github.com` fetch remote URLs must identify one repository. Multiple
-remotes may name that same repository, but different repository identities
-block setup before any API mutation. The operation also blocks when the API's
-canonical `full_name` does not match the remote-derived owner and repository.
+All `github.com` fetch and push remote URLs must identify one repository.
+Multiple remotes may name that same repository, but different repository
+identities block setup before any API mutation. The operation also blocks when
+the API's canonical `full_name` does not match the remote-derived owner and
+repository.
 
 ## Results and recovery
 

@@ -6,9 +6,9 @@ const maximumOutput = 1024 * 1024;
 const canonicalLabels = [
   { name: 'needs-triage', color: 'fbca04', description: 'Requires review or renewed review' },
   { name: 'needs-info', color: 'd4c5f9', description: 'Waiting for information needed to evaluate the request' },
-  { name: 'ready-for-agent', color: '0e8a16', description: 'Reviewed requirements for agent implementation' },
-  { name: 'ready-for-human', color: '1d76db', description: 'Reviewed requirements for human implementation' },
-  { name: 'wontfix', color: 'ffffff', description: 'This will not be worked on' },
+  { name: 'ready-for-agent', color: '0e8a16', description: 'Reviewed and sufficiently specified for agent implementation' },
+  { name: 'ready-for-human', color: '1d76db', description: 'Reviewed and requires human implementation' },
+  { name: 'wontfix', color: 'ffffff', description: 'Will not be actioned' },
   { name: 'bug', color: 'd73a4a', description: "Something isn't working" },
   { name: 'enhancement', color: 'a2eeef', description: 'New feature or request' },
   { name: 'wayfinder:map', color: '5319e7', description: 'Planning map for related work' },
@@ -100,7 +100,11 @@ function githubIdentity(remoteUrl) {
 }
 
 function inferRepository(projectRoot) {
-  const remotes = run('git', ['-C', projectRoot, 'config', '--get-regexp', '^remote\\..*\\.url$'], projectRoot);
+  const remotes = run(
+    'git',
+    ['-C', projectRoot, 'config', '--get-regexp', '^remote\\..*\\.(url|pushurl)$'],
+    projectRoot,
+  );
   if (!remotes.ok) return { blocked: 'No unambiguous github.com repository was found in Git remotes.' };
   const identities = new Map();
   for (const line of remotes.stdout.split(/\r?\n/)) {
@@ -182,6 +186,12 @@ function mutateLabel(identity, action, projectRoot) {
 }
 
 function setupLabels(request) {
+  const nodeVersion = versionFrom(process.versions.node);
+  if (!nodeVersion || nodeVersion[0] !== 24) {
+    result('blocked', 'GitHub label setup requires Node.js 24.');
+    return;
+  }
+
   const gitVersion = run('git', ['--version'], request.projectRoot);
   if (!gitVersion.ok) {
     result('blocked', 'Git is unavailable; install Git 2.18.0 or newer before GitHub label setup.');

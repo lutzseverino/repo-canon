@@ -10,13 +10,14 @@ import { fixture, invokeOperation, snapshot } from './helpers/operation.mjs';
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const script = join(repositoryRoot, 'operations/setup-github-labels.mjs');
 const fakeGh = join(repositoryRoot, 'test/fixtures/fake-gh.mjs');
+const fakeNodeVersion = join(repositoryRoot, 'test/fixtures/fake-node-version.mjs');
 
 const canonicalLabels = [
   { name: 'needs-triage', color: 'fbca04', description: 'Requires review or renewed review' },
   { name: 'needs-info', color: 'd4c5f9', description: 'Waiting for information needed to evaluate the request' },
-  { name: 'ready-for-agent', color: '0e8a16', description: 'Reviewed requirements for agent implementation' },
-  { name: 'ready-for-human', color: '1d76db', description: 'Reviewed requirements for human implementation' },
-  { name: 'wontfix', color: 'ffffff', description: 'This will not be worked on' },
+  { name: 'ready-for-agent', color: '0e8a16', description: 'Reviewed and sufficiently specified for agent implementation' },
+  { name: 'ready-for-human', color: '1d76db', description: 'Reviewed and requires human implementation' },
+  { name: 'wontfix', color: 'ffffff', description: 'Will not be actioned' },
   { name: 'bug', color: 'd73a4a', description: "Something isn't working" },
   { name: 'enhancement', color: 'a2eeef', description: 'New feature or request' },
   { name: 'wayfinder:map', color: '5319e7', description: 'Planning map for related work' },
@@ -49,6 +50,9 @@ function setup(t, options = {}) {
   for (const [name, url] of Object.entries(options.remotes ?? { origin: 'git@github.com:acme/widgets.git' })) {
     execFileSync('git', ['remote', 'add', name, url], { cwd: project.root });
   }
+  for (const [name, url] of Object.entries(options.pushUrls ?? {})) {
+    execFileSync('git', ['remote', 'set-url', '--add', '--push', name, url], { cwd: project.root });
+  }
 
   const toolsRoot = mkdtempSync(join(tmpdir(), 'repo-canon-github-tools-'));
   t.after(() => rmSync(toolsRoot, { recursive: true, force: true }));
@@ -65,10 +69,10 @@ function setup(t, options = {}) {
     PATH: `${toolsRoot}:${dirname(process.execPath)}:/usr/bin:/bin`,
     FAKE_GH_STATE: statePath,
   };
-  const invoke = (requestOverrides = {}, envOverrides = {}) => invokeOperation(
+  const invoke = (requestOverrides = {}, envOverrides = {}, nodeArguments = []) => invokeOperation(
     script,
     operationRequest(project.root, requestOverrides),
-    { env: { ...env, ...envOverrides } },
+    { env: { ...env, ...envOverrides }, nodeArguments },
   );
   return {
     project,
@@ -150,6 +154,17 @@ test('blocks before mutation when repository identity is absent, ambiguous, or m
     assert.equal(scenario.readState().mutations ?? 0, 0);
   });
 
+  await t.test('ambiguous fetch and push targets', st => {
+    const scenario = setup(st, {
+      pushUrls: { origin: 'git@github.com:other/widgets.git' },
+    });
+    const outcome = scenario.invoke();
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'blocked');
+    assert.match(outcome.result.message, /Multiple github.com repositories/);
+    assert.equal(scenario.readState().mutations ?? 0, 0);
+  });
+
   await t.test('API identity mismatch', st => {
     const scenario = setup(st, { state: { repo: 'acme/renamed-widgets' } });
     const outcome = scenario.invoke();
@@ -161,6 +176,19 @@ test('blocks before mutation when repository identity is absent, ambiguous, or m
 });
 
 test('blocks for unavailable or incompatible tools and unauthenticated access', async t => {
+  await t.test('incompatible Node.js runtime', st => {
+    const scenario = setup(st);
+    const outcome = scenario.invoke(
+      {},
+      { FAKE_NODE_VERSION: '23.11.0' },
+      ['--import', fakeNodeVersion],
+    );
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'blocked');
+    assert.match(outcome.result.message, /requires Node\.js 24/);
+    assert.equal(scenario.readState().mutations ?? 0, 0);
+  });
+
   await t.test('missing Git', st => {
     const scenario = setup(st);
     const outcome = scenario.invoke({}, { PATH: scenario.toolsRoot });
