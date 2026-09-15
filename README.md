@@ -7,9 +7,10 @@
   </p>
 </div>
 
-Work in progress. The complete source profile, automation, pinned skill
-collection, exercises, and complete adoption evidence are implemented and
-validated. Repo Canon remains untagged and unreleased.
+The complete source profile, automation, pinned skill collection, and adoption
+evidence are implemented and accepted. Repo Canon remains untagged and
+unreleased; stable source publication is the remaining prerequisite before
+adopters can select it from this repository.
 
 ## Documentation
 
@@ -18,6 +19,8 @@ validated. Repo Canon remains untagged and unreleased.
 - [Documentation index](docs/README.md)
 - [Adoption compatibility](docs/development/adoption-compatibility.md)
 - [Complete source profile](docs/development/source-profile.md)
+- [Complete source acceptance](docs/development/completion-record.md)
+- [Adoption guide](docs/usage/adopt-repo-canon.md)
 - [Complete adoption evidence](docs/development/adoption-evidence.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
