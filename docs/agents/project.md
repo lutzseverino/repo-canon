@@ -16,8 +16,9 @@ Before claiming source acceptance or preparing publication, read
 bytes and links the distinct review, validation, skill, operation, and adoption
 evidence. Refresh affected evidence when those bytes change.
 
-Implement the assigned GitHub issue and verify its blockers. Specification #1
-records the accepted conventions and original implementation contract.
+When implementing an assigned GitHub issue, verify its blockers and follow its
+contract. Specification #1 records the accepted conventions and original
+implementation contract.
 
 Preserve pinned upstream skill contents and their notices. The root MIT License
 covers Repo Canon's original material; third-party material retains its own
