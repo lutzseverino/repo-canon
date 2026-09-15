@@ -2,8 +2,9 @@
 
 Status: policy decisions settled; shared contribution and agent workflow
 material reviewed. The complete source profile is authored and structurally
-validated with public CLI 1.2.1. Complete adoption evidence remains outstanding,
-so this repository is not yet an adoption-ready release.
+valid, and now declares public CLI 1.2.2 as its final validation baseline.
+Publication-dependent validation and complete adoption evidence remain
+outstanding, so this repository is not yet an adoption-ready release.
 
 ## Confirmed preferences
 
@@ -183,7 +184,7 @@ so this repository is not yet an adoption-ready release.
 ## Source profile
 
 The complete `repo-standards/v2` source is `standards.yaml`, with one
-`complete` profile and exact CLI compatibility `1.2.1`. The concise
+`complete` profile and exact CLI compatibility `1.2.2`. The concise
 policy-to-declaration, material, operation, ownership, and prerequisite mapping
 is maintained in
 [the source profile record](docs/development/source-profile.md). Contextual
@@ -198,8 +199,8 @@ guidance and resolves to individual adopter-reviewed paths.
 
 The [compatibility audit](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface and retains the
-historical v1 findings. Use installed CLI 1.2.1 as the initial validation
-baseline; claim only compatibility demonstrated against the final source.
+historical CLI findings. Use installed public CLI 1.2.2 as the final validation
+baseline; claim only compatibility demonstrated against the final source bytes.
 
 ## Bootstrap and specification refresh
 

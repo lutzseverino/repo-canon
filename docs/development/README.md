@@ -54,11 +54,12 @@ defines the complete source profile.
 The required product scope capability is delivered and accepted. Pull request
 metadata validation, issue contract validation, Repository README checking,
 GitHub label setup, PR integration setup, and their CI suites are implemented.
-Public CLI 1.2.1 with Node.js 24 validates the complete profile, and the source
-declares that exact compatibility. The earlier CLI 1.1.0 experiments remain
-historical evidence. Operation fixtures, the pinned skill inventory, and the
-engineering, productivity, and planning skill exercises remain separate from
-source validation. Complete Repo Canon adoption is still outstanding.
+The source declares public CLI 1.2.2 as its exact final validation baseline.
+The successful CLI 1.2.1 local validation and earlier CLI 1.1.0 experiments
+remain historical evidence. Operation fixtures, the pinned skill inventory,
+and the engineering, productivity, and planning skill exercises remain separate
+from source validation. Publication-dependent final validation and complete Repo
+Canon adoption are still outstanding.
 
 ## Working locally
 

@@ -1,7 +1,7 @@
 # Complete adoption evidence
 
 Issue [#16](https://github.com/lutzseverino/repo-canon/issues/16) requires the
-installed public Repository Standards CLI 1.2.1 under Node.js 24 to adopt the
+installed public Repository Standards CLI 1.2.2 under Node.js 24 to adopt the
 same final `complete` profile in distinct real Git repositories. The evidence
 must cover discovery, confirmed concrete scope, contextual work, operation
 execution, assessment, completion, amendments, retained re-adoption, unsafe and
@@ -11,8 +11,9 @@ This document distinguishes the prepared local exercise from the final evidence.
 The fixture preparation described below does not inspect or adopt a source,
 contact GitHub, or establish remote configuration.
 
-Status: blocked during public source acquisition. Issue #16 remains open and no
-complete-adoption or remote-readback acceptance is claimed.
+Status: final public CLI validation and adoption are pending verified CLI 1.2.2
+publication. Issue #16 remains open and no complete-adoption or remote-readback
+acceptance is claimed.
 
 ## Prepared repository matrix
 
@@ -73,11 +74,11 @@ and local links.
 
 ## Public-source and remote boundary
 
-CLI 1.2.1 initial inspection accepts a public GitHub standards source at a stable
-SemVer tag; it does not accept a local directory or untagged branch. Repo Canon
-has no tag or release, and issue #16 authorizes neither one. A temporary public
-source and an explicitly authorized disposable adoption remote are therefore
-required before the prepared repositories can produce the requested evidence.
+The final CLI 1.2.2 run must inspect a public GitHub standards source at a stable
+SemVer tag. Repo Canon has no tag or release, and issue #16 authorizes neither
+one. A temporary public source and an explicitly authorized disposable adoption
+remote are therefore required before the prepared repositories can produce the
+requested evidence.
 
 The approved temporary names were
 `lutzseverino/repo-canon-source-evidence-16` and
@@ -90,6 +91,11 @@ to that whole-source-reviewed commit. The adopter remote received one fixture
 commit and was intended to receive the 12 canonical labels, a required
 `PR metadata` ruleset, and the configured squash-only merge defaults during
 adoption. Acquisition failed before those operations ran.
+
+The same authorized repository names may be recreated for the final run. Because
+the manifest and resulting source bytes now pin CLI 1.2.2, the recreated source
+will use a newly reviewed snapshot tagged `v0.0.2`; it will not recreate or move
+the previously observed `v0.0.1` tag.
 
 Before that explicit authorization, source validation and fixture preparation
 were local preparation only. The authorized attempt below still does not satisfy

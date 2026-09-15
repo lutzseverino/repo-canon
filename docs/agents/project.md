@@ -14,7 +14,7 @@ Use GitHub specification #1 and its existing implementation tickets as the
 contracts. Repository Standards has delivered and accepted the required scope
 capability. Before authoring declarations or adoption exercises, read
 `docs/development/adoption-compatibility.md` for the supported v2 interface,
-the CLI 1.2.1 validation baseline, and the separate preparation/setup routes.
+the CLI 1.2.2 validation baseline, and the separate preparation/setup routes.
 Preserve the full accepted policy and verify each ticket's remaining blockers
 before implementation.
 

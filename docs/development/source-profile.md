@@ -2,7 +2,7 @@
 
 `standards.yaml` defines one complete `repo-standards/v2` profile named
 `complete`. The source identity is `repo-canon`, and its compatibility contract
-is the exact public CLI version `requires.repo-standards: "1.2.1"`. The profile
+is the exact public CLI version `requires.repo-standards: "1.2.2"`. The profile
 does not imply a release or successful adoption.
 
 ## Policy and ownership map
@@ -50,14 +50,14 @@ profile without filtering:
 cli_prefix="$(mktemp -d)"
 npm install --prefix "$cli_prefix" --ignore-scripts \
   --registry=https://registry.npmjs.org \
-  @lutzseverino/repo-standards@1.2.1
+  @lutzseverino/repo-standards@1.2.2
 "$cli_prefix/node_modules/.bin/repo-standards" --version
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
 
 For development, run the focused fixture related to a changed operation, then
 the repository checks. The CI workflow repeats the complete test suite and
-installs public CLI 1.2.1 outside the checkout to validate every profile:
+installs public CLI 1.2.2 outside the checkout to validate every profile:
 
 ```sh
 node --test test/repository-readme-check.test.mjs
@@ -76,6 +76,11 @@ reported source identity was `repo-canon` using `repo-standards/v2` and exact
 compatibility `1.2.1`. The resolved counts matched the inventory above, and the
 CLI reported discovery required for `documentation`,
 `github-repository-configuration`, and `project-readmes`.
+
+That result is retained historical evidence for the earlier source bytes. The
+final manifest, install command, and CI validation pin CLI 1.2.2. Final source
+validation and adoption evidence must identify the reviewed bytes used by that
+public CLI run.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
