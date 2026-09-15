@@ -90,6 +90,45 @@ the local adoption reports and content hashes. Both repositories, their tags,
 branches, settings, and labels would be deleted after the reviewed evidence is
 committed here.
 
-Until that explicit authorization exists, source validation and the fixture
-preparation remain local preparation only. They do not satisfy the adoption or
-remote-readback acceptance criteria.
+Before that explicit authorization, source validation and fixture preparation
+were local preparation only. The authorized attempt below still does not satisfy
+the adoption or remote-readback acceptance criteria because acquisition failed.
+
+## Observed public acquisition blocker
+
+The owner authorized the temporary repositories on 2026-09-15. The source
+remote received the whole-source-reviewed commit
+`662fdfa88db1833d76a6a4d403a6f567d22b08d9` at `v0.0.1`, and the adopter remote
+received the prepared monorepo's two commits. Repo Canon itself received no tag
+or release.
+
+Installed public package `@lutzseverino/repo-standards@1.2.1` under Node.js
+24.21.0 then ran:
+
+```sh
+repo-standards inspect \
+  --source https://github.com/lutzseverino/repo-canon-source-evidence-16 \
+  --standards-version v0.0.1 --profile complete \
+  --project /tmp/repo-canon-adoption-run/prepared-monorepo --json
+```
+
+It returned the retained
+[SOURCE_UNAVAILABLE report](adoption-acquisition-failure.json) after GitHub
+responded with HTTP 403 for a source blob. The public acquisition implementation
+uses unauthenticated GitHub REST requests and exposes no supported authentication
+option. It first requests repository metadata, the tag reference, the commit,
+and the recursive tree, then requests every tree blob separately. The reviewed
+source commit contains 188 files (`git ls-tree -r --name-only 662fdfa | wc -l`),
+so one fresh acquisition needs about 192 core API requests. GitHub reported the
+unauthenticated core limit as 60 requests per hour, with all 60 consumed. The CLI
+does not retain a partial source snapshot, so waiting for a reset cannot let a
+later invocation continue at blob 61.
+
+No supported public route can acquire this complete source through CLI 1.2.1.
+No preload, proxy, modified package, partial profile, or reduced skill snapshot
+was substituted. Consequently no inspection identity, scope proposal, confirmed
+start, operation execution, contextual assessment, complete adoption, or live
+configuration readback was produced. The temporary adopter's only repository
+setting changed before inspection was its default branch, from the empty-repo
+placeholder `master` to its pushed fixture branch `main`; the authored adoption
+operations did not run.
