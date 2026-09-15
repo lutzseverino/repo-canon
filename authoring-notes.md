@@ -4,7 +4,9 @@ Status: policy decisions settled; shared contribution and agent workflow
 material reviewed. The complete source profile is authored and structurally
 valid with public CLI 1.2.2 as its exact validation baseline. Complete adoption,
 scope-protection, preservation, and authorized remote-readback evidence is
-recorded. Repo Canon itself remains untagged and unreleased.
+recorded. The owner selected `v0.1.0` for the first permanent release;
+[release delivery](docs/development/first-release.md) covers publication and
+the separate real-adoption boundary.
 
 ## Confirmed preferences
 

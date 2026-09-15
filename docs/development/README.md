@@ -64,8 +64,9 @@ recorded in [the adoption evidence](adoption-evidence.md). The
 separate evidence classes and final accepted identity at `e63f0d`. Issue
 [#46](https://github.com/lutzseverino/repo-canon/issues/46) reviewed the
 integrated #44 and #45 architecture work, recomputed the 115-file closure, and
-completed the affected public adoption refresh. Repo Canon remains untagged and
-unreleased; stable publication remains the prerequisite for adopter use.
+completed the affected public adoption refresh. The first permanent selection
+is `v0.1.0`; [release delivery](first-release.md) covers its publication and
+real adoption. Adopters verify the published release before inspection.
 
 ## Working locally
 

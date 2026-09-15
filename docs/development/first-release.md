@@ -32,7 +32,7 @@ and all 25 pinned regular Matt Pocock author skills with their notices.
 
 Use public Repository Standards CLI **1.2.2**; compatibility is pinned to that
 exact version. The source has 52 declarations and five operations. The
-[acceptance record](completion-record.md) distinguishes material review,
+[acceptance record](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/development/completion-record.md) distinguishes material review,
 whole-source validation, operation fixtures, skill exercises and public
 adoption evidence.
 
@@ -40,12 +40,12 @@ This is the initial standards baseline; there is no earlier published Repo
 Canon version to migrate from. First adoption can require documentation moves,
 exact-file replacements, and workflow changes. Preserve project guidance in a
 separate reviewed preparation change, inspect all replacements and concrete
-scope, then confirm adoption. See [Adopt Repo Canon](../usage/adopt-repo-canon.md).
+scope, then confirm adoption. See [Adopt Repo Canon](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/usage/adopt-repo-canon.md).
 
 Version 0.1.0 denotes initial development. Features and breaking standards
 changes advance the minor number during 0.x; compatible fixes advance patch.
 Future release notes identify breaking requirements and migration explicitly.
-See [Release versioning](../usage/versioning.md).
+See [Release versioning](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/usage/versioning.md).
 
 ## Delivery boundary
 
