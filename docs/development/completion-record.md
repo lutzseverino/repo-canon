@@ -3,33 +3,33 @@
 Repo Canon's `complete` profile has satisfied the implementation and evidence
 requirements in specification [#1](https://github.com/lutzseverino/repo-canon/issues/1).
 This is source acceptance, not a Repo Canon release. The accepted selected and
-transitive source is the 114-file closure at commit
-`eb98da8af94e25cc66a7bd0bf5424604d5e3b7ec`; it resolves one profile with 51
+transitive source is the 115-file closure at commit
+`e63f0d1438eb89c3df51a827ec169a8f5c489ded`; it resolves one profile with 52
 declarations, including five operations and 25 author skills. Public Repository
 Standards CLI 1.2.2 validated and adopted those exact bytes from temporary tag
-`v0.0.3`.
+`v0.0.4`.
 
-That acceptance remains historical evidence for exact commit `eb98da8` and its
-114-file closure. The rendered-Markdown refactor changes selected and
-transitive bytes and adds installed and retained runtime wiring; it does not
-inherit the old whole-source or adoption claim. Issue
-[#46](https://github.com/lutzseverino/repo-canon/issues/46) is the pending native
-child that will review the integrated architecture changes, recompute the full
-closure, and refresh affected public adoption evidence. This record must not be
-read as final acceptance of the changed source until #46 completes.
+The earlier acceptance remains historical evidence for exact commit `eb98da8`
+and its 114-file closure. Issue
+[#46](https://github.com/lutzseverino/repo-canon/issues/46) separately reviewed
+the rendered-Markdown refactor's final installed and retained resource graph,
+recomputed the source closure, and refreshed the affected public adoption and
+live workflow evidence.
 
-The count corrects the earlier 115-file accounting, which included contextual
-adopter target `README.md` even though that file is not a source input. The
-[machine-readable closure comparison](source-closure.json) enumerates every
-source path, role, mode, Git blob, and SHA-256. No selected material was removed.
+The historical `v0.0.3` record's initial 115-file accounting was incorrect
+because it included contextual adopter target `README.md`; the corrected count
+for that closure is 114. The current closure independently reaches 115 because
+#45 added `operations/lib/local-markdown-links.mjs`. It still excludes the
+contextual README. The [machine-readable closure comparison](source-closure.json)
+enumerates every source path, role, mode, Git blob, and SHA-256. No selected
+material was removed.
 
-The accepted `c0d57fa` source remains the historical `v0.0.2` baseline. Relative
-to it, only `.github/scripts/validate-pr-metadata.mjs` changes in the final
-closure; all other 113 files are byte-and-mode identical. Later fixture,
-provenance, validation-tooling, and acceptance-record changes are outside the
-closure. Any future selected or transitive byte change creates a new source
-identity and must repeat whole-source review, all-profile CLI validation, and
-the evidence affected by that change.
+Relative to accepted `eb98da8`/`v0.0.3`, seven selected paths changed and
+`operations/lib/local-markdown-links.mjs` was added. The other 107 files are
+byte-and-mode identical, and no selected path was removed. The fixture-authoring
+refactor in #44 remains outside the closure. Any future selected or transitive
+byte change creates a new source identity and must repeat whole-source review,
+all-profile CLI validation, and the evidence affected by that change.
 
 ## Evidence classes
 
@@ -39,19 +39,19 @@ stand in for another.
 | Evidence class | Accepted evidence | What it establishes |
 | --- | --- | --- |
 | Material review | [Shared material review](shared-material-review.md) and [upstream compatibility](upstream-compatibility.md) | The shared files, public templates, full promoted skill directories, native workflows, and ownership boundaries match the accepted design. |
-| Whole-source review | [Complete profile integration PR #31](https://github.com/lutzseverino/repo-canon/pull/31), the whole-source audits at `51fbed5`, [metadata correction PR #39](https://github.com/lutzseverino/repo-canon/pull/39), and the [exact closure comparison](source-closure.json) | The profile, every reference, ownership, retained operation resource, notice, and policy mapping form one coherent source. The final refresh changes only the selected PR metadata validator relative to accepted `c0d57fa`. |
-| Source validation | [Source profile](source-profile.md#validation-boundary) and the retained [machine-readable acceptance record](adoption-acceptance.json) | Installed public CLI 1.2.2 on Node.js 24.21.0 returned `valid: true`, no errors, one `complete` profile, and 51 declarations for exact commit `eb98da8`. Source validation does not execute operations or inspect an adopter. |
+| Whole-source review | [Complete profile integration PR #31](https://github.com/lutzseverino/repo-canon/pull/31), the whole-source audits at `51fbed5`, [metadata correction PR #39](https://github.com/lutzseverino/repo-canon/pull/39), [rendered-Markdown refactor PR #48](https://github.com/lutzseverino/repo-canon/pull/48), and the [exact closure comparison](source-closure.json) | The profile, every reference, ownership, retained operation resource, notice, and policy mapping form one coherent 115-file source. Independent Standards and Spec reviews approved exact `e63f0d` before temporary publication. |
+| Source validation | [Source profile](source-profile.md#validation-boundary) and the retained [machine-readable acceptance record](adoption-acceptance.json) | Installed public CLI 1.2.2 on Node.js 24.21.0 returned `valid: true`, no errors, one `complete` profile, and 52 declarations for exact commit `e63f0d`. Source validation does not execute operations or inspect an adopter. |
 | Operation fixtures | The five records in [operation evidence](#operation-evidence) | Each public operation's results, error boundary, prerequisites, preservation, and relevant repeat behavior were exercised without treating a local GitHub fixture as live remote state. |
 | Skill content review | [Upstream compatibility](upstream-compatibility.md#snapshot-review-and-verification) | All 25 promoted directories and referenced resources match upstream commit `3cca18b368ae95cdbdebbff572ccafa662551015`, with no local edits or missing regular skills. |
 | Skill runtime exercise | The three records in [skill evidence](#skill-evidence) | Every included skill performed a relevant bounded exercise. The records preserve harness inputs, observed outcomes, corrections, artifacts, and limitations separately from inventory review. |
 | Local adoption exercise | [Local scope and lifecycle executions](adoption-evidence.md#local-scope-and-lifecycle-executions) | Real temporary Git repositories exercised initial adoption, active amendment, re-adoption, empty and unresolved scope, retroactive-write rejection, protected targets, stale evidence, preservation, and failure incompletion. Generated `gh` state remains fixture evidence. |
 | Public package execution | [Final public CLI and source identity](adoption-evidence.md#final-public-cli-and-source-identity) | The run used the public npm 1.2.2 package at its retained registry URL and integrity, without a product checkout, preload, proxy, or modified transport. |
-| Live remote evidence | [Public adoption and live readback](adoption-evidence.md#public-adoption-and-live-readback) and [corrected default-branch readback](adoption-evidence.md#corrected-default-branch-readback) | An authorized disposable public adopter completed `v0.0.3` adoption and same-pin re-adoption. After correcting the first default-branch readback, final `main` contained the workflow, validator, and durable state; its active protection blocked direct push and a fresh pull request passed the required check against that exact base. |
+| Live remote evidence | [Final v0.0.4 public adoption and protected-main readback](adoption-evidence.md#final-v004-public-adoption-and-protected-main-readback) | An authorized disposable public adopter completed full `v0.0.4` adoption. A separate final-state incarnation completed two same-pin re-adoptions, including unchanged repetition; protected `main` blocked direct push, integrated both durable states through passing required-check PRs, and passed fresh PR and issue workflow probes against its exact final SHA. |
 | Historical evidence | [CLI 1.1.0 compatibility audit](adoption-compatibility.md#historical-cli-110-scope-audit), [CLI 1.2.1 acquisition failure](adoption-evidence.md#observed-public-acquisition-blocker), and the retained `v0.0.2` matrix in the [acceptance record](adoption-acceptance.json) | These records explain earlier constraints and retain unaffected scope/lifecycle evidence without representing it as rerun against `v0.0.3`. |
 
 The public source and adopter used for live evidence were temporary. The
 [cleanup records](adoption-evidence.md#final-temporary-repository-cleanup)
-confirm that both repositories, their tags, branches, rules, and settings were
+confirm that both repositories, their tag, branches, rules, and settings were
 deleted after the evidence was retained.
 
 ## Parent requirement accounting
@@ -119,14 +119,17 @@ and made fixture source-input provenance complete. Issue #41 made the repository
 syntax check pass every matched JavaScript filename robustly. All three fixes
 were independently reviewed and passed focused tests, Codex review, and CI.
 
-Only #36 changes the selected source. The [closure comparison](source-closure.json)
-proves the other 113 selected files unchanged from `c0d57fa`. A prepublication
-Terra high review found and corrected the historical 115-file accounting error,
-then approved exact commit `eb98da8` for temporary `v0.0.3` publication with no
-remaining material findings. The public run renewed acquisition, validator,
-contextual assessment, preservation, live setup, workflow, and re-adoption
-evidence. The unaffected local scope and lifecycle matrix remains explicitly
-historical rather than being described as rerun.
+Issue #44 later consolidated fixture authoring outside the selected closure.
+Issue #45 shared rendered Markdown interpretation across trusted validators and
+documentation checks. The [closure comparison](source-closure.json) enumerates
+the resulting 115 files: seven changed, one added, 107 byte-and-mode identical,
+and none removed relative to `eb98da8`. Independent Terra high Standards and
+Spec reviews approved exact `e63f0d` and its final installation/resource graph
+before temporary `v0.0.4` publication. The public run renewed acquisition, all
+five operation outcomes, contextual assessment, preservation, live setup,
+validator workflows, and same-pin re-adoption evidence. The unaffected local
+scope and lifecycle matrix remains explicitly historical rather than being
+described as rerun.
 
 Final Codex review found that the first live readback restored a prepared default
 branch without the trusted workflow, leaving its required check unusable. Before
@@ -136,21 +139,27 @@ reviewed `v0.0.3` source was recreated without changing its object or closure.
 The corrected run completed same-pin re-adoption from adopted `main`, proved the
 rule blocked direct push, integrated durable state through a passing required
 check, and passed a fresh workflow probe whose base SHA equals final `main`.
-Authenticated readback then confirmed the protected default branch contained
-the expected workflow, validator, state, tree, labels, and settings before both
-temporary repositories were deleted again.
+Issue #46 did not repeat that failed transition. Its reviewed sequence first
+completed full adoption in one adopter incarnation, then recreated the adopter
+with that accepted commit already on `main`. Both durable same-pin readoption
+states entered protected `main` through passing required-check pull requests.
+The second run returned both fixes unchanged, a direct push was rejected, and
+fresh PR metadata and issue-contract workflow probes passed against the same
+final main SHA. Authenticated readback confirmed the expected workflows,
+validators, operation resources, state, tree, labels, ruleset, and settings
+before both temporary repositories were deleted.
 
 ## Publication prerequisite
 
 Repo Canon has no tag or release, so there is currently no permanent source
 version for an adopter to select. Stable use requires an owner-authorized Repo
 Canon publication whose SemVer tag resolves to a commit with the accepted
-114-file source closure. Publishing that tag or release and adopting it in a
+115-file source closure. Publishing that tag or release and adopting it in a
 production repository are separate actions and were not authorized by ticket
 #17.
 
 If publication preparation leaves the selected closure byte-identical to
-`eb98da8af94e25cc66a7bd0bf5424604d5e3b7ec`, the accepted source identity and
+`e63f0d1438eb89c3df51a827ec169a8f5c489ded`, the accepted source identity and
 evidence remain applicable. If any selected or transitive byte changes, review
 and validate the new closure and repeat affected evidence before calling that
 version adoption-ready. The [usage guide](../usage/adopt-repo-canon.md) starts
