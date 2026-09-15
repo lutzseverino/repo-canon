@@ -134,7 +134,7 @@ setting changed before inspection was its default branch, from the empty-repo
 placeholder `master` to its pushed fixture branch `main`; the authored adoption
 operations did not run.
 
-## Temporary repository cleanup blocker
+## Temporary repository cleanup
 
 Cleanup was attempted with the authorized commands:
 
@@ -143,10 +143,12 @@ gh repo delete lutzseverino/repo-canon-source-evidence-16 --yes
 gh repo delete lutzseverino/repo-canon-adopter-evidence-16 --yes
 ```
 
-Both calls returned HTTP 403 because the active GitHub CLI credential has
-`gist`, `read:org`, `repo`, and `workflow` scopes but lacks the separately
-required `delete_repo` scope. No credential value is retained here. The two
-temporary public repositories still exist; an authorized user must either run
-`gh auth refresh -h github.com -s delete_repo` before repeating the commands or
-delete both repositories manually. Endpoint unavailability has therefore not
-been presented as deletion evidence.
+The first calls returned HTTP 403 because the active GitHub CLI credential lacked
+the separately required `delete_repo` scope. After the authorized credential was
+refreshed, the same two commands succeeded. No credential value is retained
+here. An authenticated owner-repository listing returned no entries matching
+either exact name, and authenticated requests to each former repository endpoint
+returned HTTP 404. Together these checks distinguish completed deletion from a
+transient unauthenticated lookup failure. Deleting the repositories removed the
+temporary source tag, fixture branch, default-branch setting, and default remote
+labels with them.
