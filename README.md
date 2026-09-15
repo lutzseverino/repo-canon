@@ -7,10 +7,10 @@
   </p>
 </div>
 
-The complete source profile, automation, pinned skill collection, and adoption
-evidence are implemented and accepted. Repo Canon remains untagged and
-unreleased; stable source publication is the remaining prerequisite before
-adopters can select it from this repository.
+The [source acceptance record](docs/development/completion-record.md) identifies
+the reviewed source bytes, supporting evidence, and publication prerequisite.
+Use the [adoption guide](docs/usage/adopt-repo-canon.md) after that prerequisite
+is satisfied for an owner-published version.
 
 ## Documentation
 

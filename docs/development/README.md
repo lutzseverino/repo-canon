@@ -59,12 +59,11 @@ from source validation. Final source validation, complete adoption,
 scope-protection, preservation, and authorized remote-readback evidence are
 recorded in [the adoption evidence](adoption-evidence.md). The
 [complete source acceptance record](completion-record.md) accounts for the
-separate evidence classes and the historical accepted identity at `eb98da8`.
-Architecture work in #44 and #45 follows that snapshot. Issue
-[#46](https://github.com/lutzseverino/repo-canon/issues/46) owns the pending
-whole-source review, recomputed closure, and affected adoption refresh for the
-integrated bytes. Repo Canon remains untagged and unreleased; stable publication
-follows acceptance of the eventual source identity.
+separate evidence classes and final accepted identity at `e63f0d`. Issue
+[#46](https://github.com/lutzseverino/repo-canon/issues/46) reviewed the
+integrated #44 and #45 architecture work, recomputed the 115-file closure, and
+completed the affected public adoption refresh. Repo Canon remains untagged and
+unreleased; stable publication remains the prerequisite for adopter use.
 
 ## Working locally
 

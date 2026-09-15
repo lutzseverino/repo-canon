@@ -2,26 +2,31 @@
 
 Issue [#16](https://github.com/lutzseverino/repo-canon/issues/16) established the
 complete Repository Standards CLI 1.2.2 adoption matrix. Issue
-[#38](https://github.com/lutzseverino/repo-canon/issues/38) refreshes the
-source-dependent evidence after the hidden-HTML PR metadata correction. It
-retains unaffected scope and lifecycle results as historical evidence and
-renews public acquisition, exact installation, contextual work, assessment,
-preservation, re-adoption, and authorized remote readback for `v0.0.3`.
+[#38](https://github.com/lutzseverino/repo-canon/issues/38) refreshed affected
+evidence for `v0.0.3`. Issue
+[#46](https://github.com/lutzseverino/repo-canon/issues/46) now binds final
+architecture-refactor bytes to public acquisition, full adoption, unchanged
+same-pin repetition, protected integration, both trusted workflows, and
+authorized remote readback under temporary `v0.0.4`. Unaffected scope and
+lifecycle results remain clearly labeled historical evidence.
 
 This document distinguishes the prepared local exercise from the final evidence.
 The fixture preparation described below does not inspect or adopt a source,
 contact GitHub, or establish remote configuration.
 
-Status: installed public CLI 1.2.2 validated exact source commit `eb98da8` and
-completed public-target adoption and same-pin re-adoption from temporary
-`v0.0.3`. A correction run then retained that adopted state on the protected
-default `main` branch through the required check and passed a new public
-`PR metadata` probe against that exact revision. Authenticated readback confirmed
-the installed validator bytes, all 12 canonical labels, the usable required-check
-ruleset, squash settings, and remote content. The local Git matrix completed
-under historical `v0.0.2`; its unchanged cases were not rerun. The retained
-[machine-readable record](adoption-acceptance.json) binds the identities and
-outcomes. Repo Canon itself remains untagged and unreleased.
+Status: installed public CLI 1.2.2 validated exact source commit `e63f0d` and
+completed public-target adoption from temporary `v0.0.4`. A separate final-state
+adopter incarnation completed two same-pin re-adoptions. The second returned
+both fixes unchanged and all three checks passed. Protected final `main` rejected
+direct push, integrated durable state through passing required-check pull
+requests, and passed fresh PR metadata and issue-contract workflow probes at the
+same final SHA. Authenticated readback confirmed 98 exact baselines, 26 skill
+directories, all affected runtime blobs, all 12 canonical labels, the unrelated
+adopter label, the active ruleset, squash settings, and remote content. The
+local Git matrix completed under historical `v0.0.2`; its unchanged cases were
+not rerun. The retained [machine-readable record](adoption-acceptance.json)
+binds the identities and outcomes. Repo Canon itself remains untagged and
+unreleased.
 
 ## Prepared repository matrix
 
@@ -124,6 +129,15 @@ later records were intentionally excluded, so the published source bytes did
 not drift after review. The adopter received the freshly prepared two-commit
 repository before any CLI write.
 
+Issue #46 reused those names after authenticated and public checks confirmed
+their absence. The source remote received exact reviewed commit
+`e63f0d1438eb89c3df51a827ec169a8f5c489ded` at direct temporary tag `v0.0.4`.
+Its complete tree and all 115 closure modes and blobs matched the independent
+prepublication review record. The source stayed immutable while the adopter was
+created in two explicitly separate incarnations under the reviewed no-bypass
+sequence described below. Evidence commits in Repo Canon were not added to that
+temporary tag.
+
 Before explicit authorization, source validation and fixture preparation were
 local preparation only. The historical attempt below also did not satisfy
 adoption or remote-readback acceptance because acquisition failed.
@@ -141,11 +155,19 @@ No source checkout, preload, proxy, or altered transport replaced that package.
 The retained installation manifest and lock both pin `1.2.2` exactly. Applying
 the documented `npm install --save-exact` retention form after the evidence run
 left the already installed package version, tarball URL, and integrity unchanged.
-The CLI returned `valid: true` with no errors for exact reviewed source commit
-`eb98da8af94e25cc66a7bd0bf5424604d5e3b7ec`. It resolved one `complete`
-profile with 51 declarations and exact compatibility 1.2.2. The first public
-inspection independently reacquired temporary `v0.0.3`, validated it, and
+The final CLI returned `valid: true` with no errors for exact reviewed source
+commit `e63f0d1438eb89c3df51a827ec169a8f5c489ded`. It resolved one `complete`
+profile with 52 declarations and exact compatibility 1.2.2. The first public
+inspection independently reacquired temporary `v0.0.4`, validated it, and
 reported that same commit in the selection.
+
+Independent GPT 5.6 Terra high Standards and Spec reviews verified the complete
+115-file final closure, installation and retained-resource graph, policy
+preservation, and pinned upstream skill and notice bytes before publication.
+Both approved exact `e63f0d` with no material findings. A separate pre-execution
+review rejected a proposed default-branch transition that would have moved
+`~DEFAULT_BRANCH` protection away from `main`; its targeted rereview approved
+the two-incarnation sequence actually executed below.
 
 An independent exact-head GPT 5.6 Terra high review first found the historical
 closure-count error. After correction it approved `eb98da8` for immutable
@@ -164,7 +186,56 @@ guidance but is not a standards source input. The retained
 all referenced and recursively selected files, and confirms that no source
 material was removed by the correction.
 
-## Public adoption and live readback
+## Final v0.0.4 public adoption and protected-main readback
+
+The first adopter incarnation started at freshly prepared commit
+`b5de0bd7e8ce789aa00241a45e8dfdbba127c891`. Public acquisition resolved
+temporary `v0.0.4` to exact `e63f0d`, and the evidence-bound full-scope
+inspection was
+`sha256:36d21af879c56c26aca9007a589cddb3f1ef388492242642b601ad9fe00e677e`.
+Confirmed run `3bb79b71-5952-4d2b-8f32-1a11d47008d9` installed the complete
+selection, configured live labels and pull request integration, completed the
+contextual documentation and both arbitrary-layout Project READMEs, and passed
+all three checks. Its five operation outcomes were retained individually. All
+98 exact baselines, 26 installed skill directories, unrelated content,
+executable modes, and migration bytes passed preservation comparison. The
+accepted adopted commit was
+`a491c4e42e24b200e8b400994e5f200003daed74` with tree
+`1dc68606260320eb51e55fba7aa65683eaf6f106`.
+
+That first adopter was deleted after its evidence was retained. The same
+authorized name was recreated as a separate repository with the accepted
+adopted commit directly on default `main`, so the branch already contained both
+trusted workflows, their validators and runtime dependencies, and durable
+adoption state. No continuity between the two adopter repositories is claimed.
+The first same-pin re-adoption completed after one supported `resume --retry`:
+GitHub's immediate squash-setting readback initially lagged the successful
+mutation, and retry observed both fixes unchanged. Its durable state entered
+protected `main` through pull request #1 after `PR metadata` passed; the merge
+tree matched the state branch tree.
+
+A second same-pin re-adoption used inspection
+`sha256:67108f92a512f3f9162c83939270c40fb3bd29886688a87f5f71ecae1beb175b`
+and run `148b7352-d121-49a7-b38b-155a48ec5e65`. Both live fixes returned
+`unchanged`, all three checks passed, and renewed preservation passed. The active
+ruleset rejected a direct push to `main`. Pull request #2 then passed the
+required check and squash-merged the durable state without bypass; its source
+and merged trees were identical.
+
+Final default `main` was
+`b15ef9910421344631cb7ed96842e307a089810d`, tree
+`4599034106eb458a5415e347e13a0f1c630a1f6e`. A fresh unmerged pull request
+probe passed `PR metadata` against that exact base. A real issue-event probe
+then ran the installed issue-contract workflow from the same SHA and passed
+after the fixture issue received its required `bug` and `needs-triage` labels;
+the preceding incomplete-label failure remains in the record. Authenticated
+readback confirmed default `main`, an active `~DEFAULT_BRANCH` rule requiring
+`PR metadata`, squash-only title/body integration, all 12 canonical labels plus
+`adopter-owned`, the complete nontruncated tree, and every affected validator,
+operation, renderer, and local-link resource blob. A fresh public clone returned
+the same status and preservation results.
+
+## Historical v0.0.3 public adoption and live readback
 
 The refreshed public adopter started at prepared commit
 `0e22a9ce16d310594cf6f6506e867ba854110837`. Its parent creates the fixture;
@@ -233,7 +304,7 @@ or validator capable of emitting the required check. The adoption, same-pin
 re-adoption, content, and preservation evidence above remain valid, while this
 first live default-branch and probe state is superseded by the correction below.
 
-## Corrected default-branch readback
+### Historical corrected default-branch readback
 
 The authorized source repository was recreated with the same direct `v0.0.3`
 tag pointing to the same reviewed `eb98da8` commit. The source identity and
@@ -292,11 +363,13 @@ generated `gh` executable and JSON state are
 author-operation fixtures. Their remote-operation outcomes are local fixture
 evidence and are not represented as GitHub state.
 
-Issue #38 did not rerun these cases. The closure comparison proves that all
-guidance, discovery, operation scripts and resources, skills, and exact files
-relevant to them are unchanged. Only the separately renewed validator bytes
-differ, so the scope and lifecycle outcomes remain applicable without being
-misrepresented as `v0.0.3` executions.
+Issues #38 and #46 did not rerun these cases. The closure comparison proves that
+all scope/lifecycle guidance, discovery, skills, and exact files relevant to
+them are unchanged. The three documentation operation scripts and their shared
+rendering resources changed in #45, whose focused parity fixtures cover their
+accepted behavior; issue #46 reran all three operations during full adoption
+and both same-pin runs. The remaining scope and lifecycle outcomes therefore
+remain applicable without being misrepresented as `v0.0.4` executions.
 
 | Case | Retained result |
 | --- | --- |
@@ -370,7 +443,7 @@ transient unauthenticated lookup failure. Deleting the repositories removed the
 temporary source tag, fixture branch, default-branch setting, and default remote
 labels with them.
 
-## Final temporary repository cleanup
+## Historical v0.0.3 final cleanup
 
 After the first refreshed source, adoption, re-adoption, public workflow,
 configuration, content, and status readbacks were retained, the same authorized
@@ -388,3 +461,22 @@ Deletion removed temporary tag `v0.0.3`, the adopter branches and pull requests,
 labels, ruleset, settings, and workflow history with their repositories. The
 earlier `v0.0.1`, `v0.0.2`, and first `v0.0.3` cleanup records remain historical
 in the machine record.
+
+## Final temporary repository cleanup
+
+For `v0.0.4`, the initial adopter incarnation was deleted after its complete
+adoption, configuration, content, and preservation evidence had been retained.
+Authenticated API returned HTTP 404, public Git reported repository-not-found,
+and the owner listing retained only the still-active source. The adopter was
+then recreated for the reviewed protected-main sequence.
+
+After the unchanged second re-adoption, protected integration, PR and issue
+workflow probes, complete authenticated readback, and fresh public clone were
+retained, the owner deleted both final temporary repositories. The authenticated
+owner listing omitted both exact names, authenticated API returned HTTP 404 for
+each, and public `git ls-remote` reported repository-not-found for each. These
+checks distinguish completed deletion from anonymous unavailability. Deletion
+removed temporary tag `v0.0.4`, all adopter branches and pull requests, the
+fixture issue, labels, ruleset, settings, and workflow history. The retained
+source commit, closure identities, CLI outputs, and readbacks remain in the
+machine record independently of those deleted remotes.

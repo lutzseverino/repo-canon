@@ -90,11 +90,12 @@ The accepted `eb98da8` result remains evidence for those exact 114 source files
 and 51 declarations. The rendered-Markdown refactor changes selected and
 transitive source bytes, adds the exact `rendered-markdown-runtime`
 declaration, and adds the retained local-link resource. Issue
-[#46](https://github.com/lutzseverino/repo-canon/issues/46) owns the final
-whole-source review, recomputed closure, public acquisition, and refreshed
-adoption evidence for the changed source. Until that work completes, local
-validation of this manifest does not extend the older final-acceptance claim to
-the new bytes.
+[#46](https://github.com/lutzseverino/repo-canon/issues/46) completed final
+whole-source review, recomputed closure, public acquisition, full adoption, and
+same-pin re-adoption for the changed source. Public CLI 1.2.2 returned
+`valid: true`, no errors, one `complete` profile, and 52 declarations for exact
+commit `e63f0d1438eb89c3df51a827ec169a8f5c489ded`; temporary `v0.0.4` resolved
+directly to that commit.
 
 Relative to accepted `eb98da8`, this refactor changes seven existing source
 files and adds one. Every entry has regular-file mode `100644`; no source path
@@ -113,8 +114,11 @@ is removed, and the selected/transitive path set grows from 114 to 115:
 
 The manifest resolves 52 declarations, including 23 exact files, and retains
 three checks, two fixes, three repository declarations, one contextual file,
-and 25 skill declarations. Issue #46 will replace this bounded delta with the
-final machine-readable whole-source closure and reviewed acceptance identity.
+and 25 skill declarations. The final
+[machine-readable closure](source-closure.json) records all 115 paths, roles,
+modes, Git blobs, and SHA-256 identities. The
+[adoption record](adoption-evidence.md) binds the reviewed source to public
+installation, operation, preservation, workflow, and cleanup outcomes.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
