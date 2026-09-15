@@ -37,7 +37,7 @@ stand in for another.
 | Skill runtime exercise | The three records in [skill evidence](#skill-evidence) | Every included skill performed a relevant bounded exercise. The records preserve harness inputs, observed outcomes, corrections, artifacts, and limitations separately from inventory review. |
 | Local adoption exercise | [Local scope and lifecycle executions](adoption-evidence.md#local-scope-and-lifecycle-executions) | Real temporary Git repositories exercised initial adoption, active amendment, re-adoption, empty and unresolved scope, retroactive-write rejection, protected targets, stale evidence, preservation, and failure incompletion. Generated `gh` state remains fixture evidence. |
 | Public package execution | [Final public CLI and source identity](adoption-evidence.md#final-public-cli-and-source-identity) | The run used the public npm 1.2.2 package at its retained registry URL and integrity, without a product checkout, preload, proxy, or modified transport. |
-| Live remote evidence | [Public adoption and live readback](adoption-evidence.md#public-adoption-and-live-readback) | An authorized disposable public adopter completed `v0.0.3` adoption and same-pin re-adoption. Authenticated readback confirmed content, labels, the active required check, a passing public workflow run, and squash settings; both setup fixes returned `unchanged` on repetition. |
+| Live remote evidence | [Public adoption and live readback](adoption-evidence.md#public-adoption-and-live-readback) and [corrected default-branch readback](adoption-evidence.md#corrected-default-branch-readback) | An authorized disposable public adopter completed `v0.0.3` adoption and same-pin re-adoption. After correcting the first default-branch readback, final `main` contained the workflow, validator, and durable state; its active protection blocked direct push and a fresh pull request passed the required check against that exact base. |
 | Historical evidence | [CLI 1.1.0 compatibility audit](adoption-compatibility.md#historical-cli-110-scope-audit), [CLI 1.2.1 acquisition failure](adoption-evidence.md#observed-public-acquisition-blocker), and the retained `v0.0.2` matrix in the [acceptance record](adoption-acceptance.json) | These records explain earlier constraints and retain unaffected scope/lifecycle evidence without representing it as rerun against `v0.0.3`. |
 
 The public source and adopter used for live evidence were temporary. The
@@ -118,6 +118,18 @@ remaining material findings. The public run renewed acquisition, validator,
 contextual assessment, preservation, live setup, workflow, and re-adoption
 evidence. The unaffected local scope and lifecycle matrix remains explicitly
 historical rather than being described as rerun.
+
+Final Codex review found that the first live readback restored a prepared default
+branch without the trusted workflow, leaving its required check unusable. Before
+the correction ran, targeted GPT 5.6 Terra high review approved the intended
+default-branch, workflow, ruleset, integration, and probe sequence. The same
+reviewed `v0.0.3` source was recreated without changing its object or closure.
+The corrected run completed same-pin re-adoption from adopted `main`, proved the
+rule blocked direct push, integrated durable state through a passing required
+check, and passed a fresh workflow probe whose base SHA equals final `main`.
+Authenticated readback then confirmed the protected default branch contained
+the expected workflow, validator, state, tree, labels, and settings before both
+temporary repositories were deleted again.
 
 ## Publication prerequisite
 

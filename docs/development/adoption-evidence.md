@@ -14,9 +14,11 @@ contact GitHub, or establish remote configuration.
 
 Status: installed public CLI 1.2.2 validated exact source commit `eb98da8` and
 completed public-target adoption and same-pin re-adoption from temporary
-`v0.0.3`. Authenticated readback confirmed the installed validator bytes, all
-12 canonical labels, required-check ruleset, passing public `PR metadata`
-workflow, squash settings, and remote content. The local Git matrix completed
+`v0.0.3`. A correction run then retained that adopted state on the protected
+default `main` branch through the required check and passed a new public
+`PR metadata` probe against that exact revision. Authenticated readback confirmed
+the installed validator bytes, all 12 canonical labels, the usable required-check
+ruleset, squash settings, and remote content. The local Git matrix completed
 under historical `v0.0.2`; its unchanged cases were not rerun. The retained
 [machine-readable record](adoption-acceptance.json) binds the identities and
 outcomes. Repo Canon itself remains untagged and unreleased.
@@ -224,9 +226,60 @@ visible content beside hidden decoys. To exercise the trusted workflow from an
 adopted base revision, the adopted branch was temporarily made the disposable
 repository's default, a probe pull request targeted it, and public run
 `34939963073` completed `PR metadata` successfully. The default was restored to
-`main` before final readback. The active ruleset again targeted
-`~DEFAULT_BRANCH`, required `PR metadata`, and the final merge settings remained
-squash-only with pull request title and body defaults.
+the prepared `main` before readback. Codex review correctly found that this made
+the resulting protection unusable: prepared `main` did not contain the workflow
+or validator capable of emitting the required check. The adoption, same-pin
+re-adoption, content, and preservation evidence above remain valid, while this
+first live default-branch and probe state is superseded by the correction below.
+
+## Corrected default-branch readback
+
+The authorized source repository was recreated with the same direct `v0.0.3`
+tag pointing to the same reviewed `eb98da8` commit. The source identity and
+114-file closure did not change. The authorized adopter was recreated with
+accepted adopter commit `b9b24c28ee22a73ef9e86a96e6efe1e1bbdd6860` as
+`main`, so its default branch already contained the trusted workflow and
+validator. An independent GPT 5.6 Terra high review approved this final
+default-branch, ruleset, integration, and probe sequence before it ran.
+
+Installed public CLI 1.2.2 performed a fresh same-pin re-adoption. The initial
+inspection identity was
+`sha256:b0b779dea442fab4c1a1991081db5f149b3c1a46f6897d82a1335d3a66c94215`;
+the evidence-bound scope inspection was
+`sha256:341360b9c5990f8f4729172d08ab4e71ffe60cefd144c9527778b28e4a471eaa`.
+Confirmed run `0ea8e9ac-12f5-4d1f-98a9-64841369972a` used selection
+`sha256:c4b6de44ba6034fbcf381333e94d333e04d6856fd6743bd00ae75ed68532c9bc`.
+Both remote fixes returned `changed` because the repository itself was fresh,
+and readback confirmed the 12 canonical labels, unrelated `adopter-owned`
+label, required-check ruleset, and squash-only settings. The corrected
+assessment used the current run, selection, and after-fixes identity. All three
+checks passed; final status retained two completion points, 97 exact baselines,
+and all 26 installed skill directories. The first assessment submission, which
+still named the earlier run, was rejected and remains in the raw history.
+
+A direct attempt to push the completed state to protected `main` was rejected
+because `PR metadata` was expected. State pull request #1 initially failed when
+its `Small correction` field did not meet the validator's narrow exception
+contract. After that field linked issue #38, public run `34942792057` passed.
+The pull request was squash-merged as
+`d218ed5ee5e42904d15cf36e9d84b722759b0f12`; its tree
+`8da04b66e845fe46e9d9f1ff9aaaec997e1ab7b9` exactly matched the completed
+state branch. This shows the configured protection both blocked a direct push
+and permitted integration through its required check.
+
+A fresh probe pull request #2 then targeted `main` at exact base
+`d218ed5ee5e42904d15cf36e9d84b722759b0f12`. Public run `34942910631`, job
+`104295488560`, completed `PR metadata` successfully. Final authenticated
+readback showed default `main` protected by active ruleset
+`Repo Canon required PR checks` for `~DEFAULT_BRANCH`, requiring `PR metadata`;
+squash-only integration with pull request title and body defaults; all canonical
+and unrelated labels; workflow blob
+`86a4dbc735fe071419210bd2e3aa65d38ce5d6aa`, validator blob
+`80d99daf01b9313fa985170e23a07964ef6b8f0f`, and durable-state blob
+`776518ca6a5f06dbce4adb987e4a4a1215f9610e`. The complete recursive tree had
+388 entries and was not truncated. A fresh local clone matched final `main`,
+all preservation comparisons still passed, and the deleted legacy guide stayed
+absent.
 
 ## Local scope and lifecycle executions
 
@@ -318,15 +371,19 @@ labels with them.
 
 ## Final temporary repository cleanup
 
-After the refreshed source, adoption, re-adoption, public workflow,
+After the first refreshed source, adoption, re-adoption, public workflow,
 configuration, content, and status readbacks were retained, the same authorized
-deletion commands again removed both public repositories. The active GitHub CLI
-account was the owner and had the `delete_repo` scope. An authenticated
-owner-repository listing omitted both exact names, and authenticated requests to
-each exact repository endpoint returned HTTP 404. Public `git ls-remote` also
-reported repository-not-found for both URLs. These checks distinguish completed
-deletion from anonymous unavailability. The cleanup removed temporary tag
-`v0.0.3`, adopter branches `adopt/repo-canon-v3` and
-`evidence/pr-metadata-check-v3`, both disposable pull requests, labels, ruleset,
-settings, and workflow history with their repositories. The earlier `v0.0.1`
-and `v0.0.2` cleanup records remain historical in the machine record.
+deletion commands removed both public repositories. Codex then identified the
+superseded default-branch state described above. The repositories were recreated
+under the same authorization, with the exact same `v0.0.3` object, and deleted
+again after the corrected readoption, integration, probe, and final readback.
+
+For the final cleanup, the active GitHub CLI account was the owner and had the
+`delete_repo` scope. An authenticated owner-repository listing omitted both exact
+names, and authenticated requests to each exact repository endpoint returned
+HTTP 404. Public `git ls-remote` also reported repository-not-found for both
+URLs. These checks distinguish completed deletion from anonymous unavailability.
+Deletion removed temporary tag `v0.0.3`, the adopter branches and pull requests,
+labels, ruleset, settings, and workflow history with their repositories. The
+earlier `v0.0.1`, `v0.0.2`, and first `v0.0.3` cleanup records remain historical
+in the machine record.
