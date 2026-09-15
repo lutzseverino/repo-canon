@@ -31,12 +31,13 @@ harness prerequisite and is recorded here from the actual sessions; it is not
 a generic CI or fixture-generation dependency.
 
 The current manifest keeps the source `HEAD` and adds SHA-256 for the builder,
-each copied Repo Canon guidance file, and every linked skill directory,
-including support skills outside the nine exercised targets. This records the
-bytes actually consumed even when an input differs from `HEAD`. Every fixture
-also sets repository-local `commit.gpgsign=false`; the focused test makes an
-ordinary later commit with hostile global signing and an unusable signer while
-leaving that global configuration unchanged.
+shared fixture-authoring module, each copied Repo Canon guidance file, and every
+linked skill directory, including support skills outside the nine exercised
+targets. This records the bytes actually consumed even when an input differs
+from `HEAD`. Every fixture also sets repository-local
+`commit.gpgsign=false`; the focused test makes an ordinary later commit with
+hostile global signing and an unusable signer while leaving that global
+configuration unchanged.
 
 An initial fixture at Repo Canon commit `54847136799062de3faf31b3354b2bbace7618d7`
 was rejected after PR review found two harness defects: fixture generation

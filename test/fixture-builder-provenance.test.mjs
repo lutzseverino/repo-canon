@@ -62,17 +62,20 @@ test('every builder identifies dirty source bytes independently of source HEAD',
 
   const dirtySharedPath = 'AGENTS.md';
   const dirtyHelperPath = 'scripts/support/fake-gh-adoption.mjs';
+  const dirtyAuthoringPath = 'scripts/support/fixture-authoring.mjs';
   const dirtyEngineeringSkill = 'vendor/mattpocock-skills/skills/engineering/tdd';
   const dirtyProductivitySkill = 'vendor/mattpocock-skills/skills/productivity/grilling';
   const committedEngineeringSkillSha256 = sha256Directory(join(source, dirtyEngineeringSkill));
   const committedProductivitySkillSha256 = sha256Directory(join(source, dirtyProductivitySkill));
   appendFileSync(join(source, dirtySharedPath), '\n<!-- uncommitted provenance test -->\n');
   appendFileSync(join(source, dirtyHelperPath), '\n// uncommitted provenance test\n');
+  appendFileSync(join(source, dirtyAuthoringPath), '\n// uncommitted provenance test\n');
   appendFileSync(join(source, dirtyEngineeringSkill, 'SKILL.md'), '\n<!-- uncommitted provenance test -->\n');
   appendFileSync(join(source, dirtyProductivitySkill, 'SKILL.md'), '\n<!-- uncommitted provenance test -->\n');
   const dirtySharedSha256 = sha256(readFileSync(join(source, dirtySharedPath)));
   const committedSharedSha256 = sha256(execFileSync('git', ['show', `HEAD:${dirtySharedPath}`], { cwd: source }));
   const dirtyHelperSha256 = sha256(readFileSync(join(source, dirtyHelperPath)));
+  const dirtyAuthoringSha256 = sha256(readFileSync(join(source, dirtyAuthoringPath)));
   const dirtyEngineeringSkillSha256 = sha256Directory(join(source, dirtyEngineeringSkill));
   const dirtyProductivitySkillSha256 = sha256Directory(join(source, dirtyProductivitySkill));
   assert.notEqual(dirtySharedSha256, committedSharedSha256);
@@ -87,6 +90,7 @@ test('every builder identifies dirty source bytes independently of source HEAD',
   ));
   assert.equal(engineering.source.worktreeCommit, sourceHead);
   assert.equal(engineering.source.inputFiles[dirtySharedPath].sha256, dirtySharedSha256);
+  assert.equal(engineering.source.inputFiles[dirtyAuthoringPath].sha256, dirtyAuthoringSha256);
   assert.equal(engineering.skills.tdd.sha256, dirtyEngineeringSkillSha256);
 
   const productivityRoot = join(parent, 'productivity');
@@ -97,6 +101,7 @@ test('every builder identifies dirty source bytes independently of source HEAD',
   ));
   assert.equal(productivity.source.worktreeCommit, sourceHead);
   assert.equal(productivity.source.inputFiles[dirtySharedPath].sha256, dirtySharedSha256);
+  assert.equal(productivity.source.inputFiles[dirtyAuthoringPath].sha256, dirtyAuthoringSha256);
   assert.equal(productivity.source.skills.grilling.sha256, dirtyProductivitySkillSha256);
 
   const planningRoot = join(parent, 'planning');
@@ -108,6 +113,7 @@ test('every builder identifies dirty source bytes independently of source HEAD',
   const planning = JSON.parse(readFileSync(join(planningRoot, 'manifest.json'), 'utf8'));
   assert.equal(planning.source.repositoryHead, sourceHead);
   assert.equal(planning.source.inputFiles[dirtySharedPath].sha256, dirtySharedSha256);
+  assert.equal(planning.source.inputFiles[dirtyAuthoringPath].sha256, dirtyAuthoringSha256);
   assert.equal(planning.source.linkedSkillDirectories.tdd.sha256, dirtyEngineeringSkillSha256);
   assert.equal(planning.source.linkedSkillDirectories.grilling.sha256, dirtyProductivitySkillSha256);
 
@@ -119,4 +125,5 @@ test('every builder identifies dirty source bytes independently of source HEAD',
   const adoption = JSON.parse(readFileSync(join(adoptionRoot, 'plan.json'), 'utf8'));
   assert.equal(adoption.createdWith.sourceHead, sourceHead);
   assert.equal(adoption.createdWith.inputFiles[dirtyHelperPath].sha256, dirtyHelperSha256);
+  assert.equal(adoption.createdWith.inputFiles[dirtyAuthoringPath].sha256, dirtyAuthoringSha256);
 });
