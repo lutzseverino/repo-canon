@@ -6,8 +6,10 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
+- [Complete source acceptance](completion-record.md): final source identity,
+  parent requirement accounting, evidence classes, and publication prerequisite.
 - [Complete adoption evidence](adoption-evidence.md): disposable repository
-  matrix, evidence boundary, and the temporary remote prerequisite.
+  matrix, public-package execution, authorized remote readback, and cleanup.
 - [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
   identity and permission prerequisites, protocol outcomes, and fixture coverage.
 - [GitHub PR integration setup](github-pr-integration-setup.md): required-check
@@ -60,8 +62,11 @@ remain historical evidence. Operation fixtures, the pinned skill inventory,
 and the engineering, productivity, and planning skill exercises remain separate
 from source validation. Final source validation, complete adoption,
 scope-protection, preservation, and authorized remote-readback evidence are
-recorded in [the adoption evidence](adoption-evidence.md). Repo Canon remains
-untagged and unreleased.
+recorded in [the adoption evidence](adoption-evidence.md). The
+[complete source acceptance record](completion-record.md) accounts for the
+separate evidence classes and final source identity. Repo Canon remains untagged
+and unreleased; stable publication is the remaining prerequisite before the
+accepted source can be selected from this repository.
 
 ## Working locally
 
