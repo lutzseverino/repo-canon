@@ -68,13 +68,20 @@ compatibility `1.2.1`. The resolved counts matched the inventory above, and the
 CLI reported discovery required for `documentation`,
 `github-repository-configuration`, and `project-readmes`.
 
-That result is retained historical evidence for the earlier source bytes. The
-final manifest, install command, and CI validation pin CLI 1.2.2. Public CLI
-1.2.2 under Node.js 24.21.0 returned `valid: true` with no errors for the exact
-reviewed snapshot `c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef`. The immutable
-temporary `v0.0.2` source tag and every adoption selection resolved to that same
-commit. [The adoption record](adoption-evidence.md) preserves the installed npm
-integrity, source identity, public and local execution boundaries, and outcomes.
+That result is retained historical evidence for the earlier source bytes. Public
+CLI 1.2.2 under Node.js 24.21.0 later returned `valid: true` with no errors for
+the accepted `c0d57fa` snapshot at temporary `v0.0.2`.
+
+After the hidden-HTML correction, the same installed public CLI and Node.js
+version returned `valid: true`, no errors, one `complete` profile, and 51
+declarations for exact reviewed commit
+`eb98da8af94e25cc66a7bd0bf5424604d5e3b7ec`. Public acquisition from the new
+immutable temporary tag `v0.0.3` resolved to that commit. The
+[source closure record](source-closure.json) enumerates all 114 inputs and proves
+that the corrected validator is the only selected byte change from `c0d57fa`.
+[The adoption record](adoption-evidence.md) preserves the installed npm
+integrity, source identity, public and historical execution boundaries, and
+outcomes.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
