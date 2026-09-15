@@ -32,6 +32,15 @@ links in rendered `Parent` and `Blocked by` section content are used
 when native relationships are absent or the native dependency endpoint is
 unavailable. An open blocker does not make a complete contract invalid.
 
+Rendered visibility, text, links, heading provenance, and outermost section
+regions come from the shared pure interpreted-document runtime installed at
+`operations/lib/rendered-markdown.mjs`. Issue policy remains in the validator:
+contract-source selection and exact revision bytes still use the original
+Markdown, Agent Brief syntax still uses source tokens, and relationship
+evidence remains prose-only. HTML `title` content stays non-rendered for issue
+contracts. Parse5's fragment handling continues to expose text from a bare
+`head` wrapper as body text, preserving that separate existing edge behavior.
+
 Triaged bug and feature requests must carry exactly one category (`bug` or
 `enhancement`) and one workflow state. Direct specifications and implementation
 tickets do not need intake categories or an Agent Brief. Wayfinder planning
@@ -118,7 +127,9 @@ npm run test:issue-contracts
 ```
 
 The fixtures invoke the same executable boundary as GitHub Actions against a
-local HTTP server. They exercise the four public forms, native contracts,
+local HTTP server. They also execute the validator from an installed layout
+containing only the validator, shared runtime, and declared parser resources.
+They exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, repeat-safe feedback,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized

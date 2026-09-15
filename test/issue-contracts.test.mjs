@@ -373,6 +373,7 @@ test("required sections use rendered visible content", async (context) => {
   const examples = [
     { name: "empty HTML", value: "<br><br>", valid: false },
     { name: "hidden HTML", value: "<span hidden>Secret text.</span><title>Secret title.</title>", valid: false },
+    { name: "fragment head wrapper", value: "<head>Add caching.</head>", valid: true },
     { name: "HTML text", value: "<p>Add caching.</p>", valid: true },
     { name: "code example", value: "```js\ncache.enable();\n```", valid: true },
   ];

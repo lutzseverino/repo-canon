@@ -256,7 +256,7 @@ Closes #36
   assert.equal(result.status, 0, result.stderr);
 });
 
-test("preserves visible title-element text in pull request sections", () => {
+test("preserves visible title and fragment-head text in pull request sections", () => {
   const result = runEvent({
     body: `## Summary
 
@@ -264,7 +264,7 @@ test("preserves visible title-element text in pull request sections", () => {
 
 ## Validation
 
-<title>The focused validator tests passed.</title>
+<head>The focused validator tests passed.</head>
 
 ## Related issue
 

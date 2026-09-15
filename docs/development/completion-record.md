@@ -9,6 +9,15 @@ declarations, including five operations and 25 author skills. Public Repository
 Standards CLI 1.2.2 validated and adopted those exact bytes from temporary tag
 `v0.0.3`.
 
+That acceptance remains historical evidence for exact commit `eb98da8` and its
+114-file closure. The rendered-Markdown refactor changes selected and
+transitive bytes and adds installed and retained runtime wiring; it does not
+inherit the old whole-source or adoption claim. Issue
+[#46](https://github.com/lutzseverino/repo-canon/issues/46) is the pending native
+child that will review the integrated architecture changes, recompute the full
+closure, and refresh affected public adoption evidence. This record must not be
+read as final acceptance of the changed source until #46 completes.
+
 The count corrects the earlier 115-file accounting, which included contextual
 adopter target `README.md` even though that file is not a source input. The
 [machine-readable closure comparison](source-closure.json) enumerates every
