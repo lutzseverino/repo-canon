@@ -1,0 +1,43 @@
+{
+  "format": "repo-canon/first-release/v1",
+  "source": {
+    "repository": "https://github.com/lutzseverino/repo-canon",
+    "version": "v0.1.0",
+    "commit": "639af070ddeef2d82c96b8427a805da0e1bf8ba9"
+  },
+  "release": {
+    "isDraft": false,
+    "isPrerelease": false,
+    "publishedAt": "2026-09-15T17:55:56Z",
+    "tagName": "v0.1.0",
+    "targetCommitish": "main",
+    "url": "https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.0"
+  },
+  "annotatedTagObject": "5922e2d826c284101e92a88d1635ff60b652ad39",
+  "acceptedClosure": {
+    "reference": "docs/development/source-closure.json",
+    "commit": "e63f0d1438eb89c3df51a827ec169a8f5c489ded",
+    "files": 115,
+    "allBytesModesAndBlobsMatch": true
+  },
+  "preparationPullRequest": "https://github.com/lutzseverino/repo-canon/pull/51",
+  "cli": {
+    "package": "@lutzseverino/repo-standards",
+    "version": "1.2.2",
+    "resolved": "https://registry.npmjs.org/@lutzseverino/repo-standards/-/repo-standards-1.2.2.tgz",
+    "integrity": "sha512-K5YejetLhzigwCrbCgwz7i/Jm7FkyZbkBu9A25+hNq3IbU2UASu2cC6Uh6bh8CCO/wl6YeDU3pO/F5ZPX4e3gw==",
+    "runtime": "v24.21.0"
+  },
+  "sourceValidation": {
+    "valid": true,
+    "profiles": [
+      "complete"
+    ],
+    "declarations": 52
+  },
+  "publicAcquisition": {
+    "verified": true,
+    "profile": "complete",
+    "inspectedSourceCommit": "639af070ddeef2d82c96b8427a805da0e1bf8ba9"
+  }
+}
