@@ -53,8 +53,8 @@ and inspect the prepared commit afresh.
 
 ## Inspect the published source
 
-Replace `<published-semver-tag>` only after Repo Canon has a permanent published
-tag. Run the first inspection from the adopting repository:
+Set `source_tag` to Repo Canon's permanent published SemVer tag. Run the first
+inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
