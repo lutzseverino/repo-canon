@@ -45,15 +45,6 @@ const recognizedSections = new Set([
   "impact",
   "migration",
 ]);
-const inlineContainers = new Set([
-  "del",
-  "em",
-  "heading",
-  "link",
-  "paragraph",
-  "strong",
-  "text",
-]);
 const issueUrl = /https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*\b/i;
 
 const blockElements = new Set([
@@ -92,6 +83,14 @@ const blockElements = new Set([
 const codeElements = new Set(["code", "kbd", "pre"]);
 const hiddenElements = new Set(["script", "style", "template"]);
 
+function attribute(node, name) {
+  return node.attrs?.find((candidate) => candidate.name === name)?.value ?? null;
+}
+
+function isHidden(node) {
+  return hiddenElements.has(node.nodeName) || attribute(node, "hidden") !== null;
+}
+
 function parsedHtml(value, includeCode = true) {
   const links = [];
   let text = "";
@@ -111,17 +110,20 @@ function parsedHtml(value, includeCode = true) {
       continue;
     }
     if (
-      hiddenElements.has(node.nodeName) ||
+      isHidden(node) ||
       (!includeCode && codeElements.has(node.nodeName))
     ) {
       continue;
     }
 
     if (node.nodeName === "a") {
-      const href = node.attrs?.find((attribute) => attribute.name === "href")?.value;
+      const href = attribute(node, "href");
       if (href) {
         links.push(href);
       }
+    }
+    if (node.nodeName === "img") {
+      text += attribute(node, "alt") ?? "";
     }
     if (node.nodeName === "br") {
       text += "\n";
@@ -138,57 +140,12 @@ function parsedHtml(value, includeCode = true) {
   return { links, text };
 }
 
-function decodedText(value) {
-  return parsedHtml(value).text;
-}
-
-function tokenText(token, includeCode) {
-  if (token.type === "code" || token.type === "codespan") {
-    return includeCode ? token.text : "";
-  }
-  if (token.type === "html") {
-    return parsedHtml(token.text, includeCode).text;
-  }
-  if (token.type === "image") {
-    return decodedText(token.text ?? "");
-  }
-  if (token.type === "br") {
-    return "\n";
-  }
-  if (["checkbox", "def", "hr", "space"].includes(token.type)) {
-    return "";
-  }
-  if (!includeCode && token.type === "text" && token.escaped) {
-    return "";
-  }
-  if (token.type === "list") {
-    return token.items
-      .map((item) => renderedTokenList(item.tokens, includeCode))
-      .join("\n");
-  }
-  if (token.type === "table") {
-    const cells = [
-      ...token.header,
-      ...token.rows.flat(),
-    ];
-    return cells
-      .map((cell) => renderedInlineTokens(cell.tokens, includeCode))
-      .join("\n");
-  }
-  if (Array.isArray(token.tokens)) {
-    return inlineContainers.has(token.type)
-      ? renderedInlineTokens(token.tokens, includeCode)
-      : renderedTokenList(token.tokens, includeCode);
-  }
-  return typeof token.text === "string" ? decodedText(token.text) : "";
-}
-
 function renderedInlineTokens(tokens, includeCode) {
-  return tokens.map((token) => tokenText(token, includeCode)).join("");
+  return parsedHtml(marked.Parser.parseInline(tokens), includeCode).text;
 }
 
 function renderedTokenList(tokens, includeCode = true) {
-  return tokens.map((token) => tokenText(token, includeCode)).join("\n");
+  return parsedHtml(marked.parser(tokens), includeCode).text;
 }
 
 function normalizedRenderedText(tokens, includeCode = true) {
@@ -214,7 +171,10 @@ function isMeaningful(text) {
 }
 
 function headingName(token) {
-  return normalizedRenderedText(token.tokens)
+  return renderedInlineTokens(token.tokens, true)
+    .replace(/[\t\f\v ]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .trim()
     .replace(/:\s*$/, "")
     .trim()
     .toLowerCase();
@@ -266,7 +226,12 @@ function requiredSection(sections, name, errors) {
 }
 
 function hasIssueReference(tokens) {
-  const content = normalizedRenderedText(tokens, false);
+  const rendered = parsedHtml(marked.parser(tokens), false);
+  const content = rendered.text
+    .replace(/[\t\f\v ]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
   if (
     issueUrl.test(content) ||
     /\b[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#[1-9]\d*\b/.test(content) ||
@@ -275,20 +240,7 @@ function hasIssueReference(tokens) {
     return true;
   }
 
-  let found = false;
-  marked.walkTokens(tokens, (token) => {
-    if (token.type === "link" && issueUrl.test(token.href)) {
-      found = true;
-    }
-    if (
-      token.type === "html" &&
-      !token.inRawBlock &&
-      parsedHtml(token.text, false).links.some((href) => issueUrl.test(href))
-    ) {
-      found = true;
-    }
-  });
-  return found;
+  return rendered.links.some((href) => issueUrl.test(href));
 }
 
 function hasSmallCorrectionReason(tokens) {

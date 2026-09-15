@@ -183,6 +183,57 @@ Closes #6
   }
 });
 
+test("rejects required pull request metadata hidden from rendered HTML", () => {
+  const result = runEvent({
+    body: `## Summary
+
+<span hidden>Correct the metadata validator behavior.</span>
+
+## Validation
+
+<span hidden>The focused validator tests passed.</span>
+
+## Related issue
+
+<span hidden><a href="https://github.com/lutzseverino/repo-canon/issues/36">Closes #36</a></span>
+`,
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Replace the Summary placeholder/);
+  assert.match(result.stderr, /Replace the Validation placeholder/);
+  assert.match(result.stderr, /Link a related GitHub issue/);
+});
+
+test("accepts visible metadata alongside hidden HTML", () => {
+  const result = runEvent({
+    title: "fix(metadata)!: reject hidden pull request content",
+    body: `## Summary
+
+<span hidden>Ignore this decoy.</span> Reject hidden pull request metadata.
+
+## Validation
+
+<span hidden>Ignore this decoy.</span> \`node --test test/pr-metadata.test.mjs\` passed.
+
+## Related issue
+
+<span hidden><a href="https://github.com/example/example/issues/999">Ignore this link</a></span>
+Closes #36
+
+## Impact
+
+<span hidden>Ignore this decoy.</span> Previously accepted descriptions will fail validation.
+
+## Migration
+
+<span hidden>Ignore this decoy.</span> Move required metadata into visible content.
+`,
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("ignores headings inside fenced Markdown examples", () => {
   const onlyExample = runEvent({
     body: `\`\`\`markdown
@@ -385,7 +436,7 @@ Migration: read the replacement response field before upgrading.
   const valid = runEvent({ title: "feat(api)!: remove legacy response", body });
   assert.equal(valid.status, 0, valid.stderr);
 
-  const hidden = runEvent({
+  const hiddenComment = runEvent({
     title: "feat(api)!: remove legacy response",
     body: `${validBody()}
 <!--
@@ -394,9 +445,22 @@ Migration: clients must use the replacement response field.
 -->
 `,
   });
-  assert.equal(hidden.status, 1);
-  assert.match(hidden.stderr, /under an Impact/);
-  assert.match(hidden.stderr, /under a Migration/);
+  assert.equal(hiddenComment.status, 1);
+  assert.match(hiddenComment.stderr, /under an Impact/);
+  assert.match(hiddenComment.stderr, /under a Migration/);
+
+  const hiddenAttribute = runEvent({
+    title: "feat(api)!: remove legacy response",
+    body: `${validBody()}
+<span hidden>
+Impact: old clients stop working after this change.
+Migration: clients must use the replacement response field.
+</span>
+`,
+  });
+  assert.equal(hiddenAttribute.status, 1);
+  assert.match(hiddenAttribute.stderr, /under an Impact/);
+  assert.match(hiddenAttribute.stderr, /under a Migration/);
 
   const fenced = runEvent({
     title: "feat(api)!: remove legacy response",

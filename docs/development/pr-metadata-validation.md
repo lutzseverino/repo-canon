@@ -8,15 +8,17 @@ The description must contain exactly one meaningful `Summary`, `Validation`, and
 `Related issue` Markdown section. Heading level, emphasis, trailing colons, and
 letter casing do not affect recognition. HTML comments, placeholders such as
 `TODO`, `TBD`, `N/A`, `Not applicable`, and `None`, rendered-empty HTML, and
-punctuation alone do not count as content. Headings inside fenced code examples
-do not define sections. Code contents can describe Validation evidence, but fence
+content inside HTML elements with the `hidden` attribute do not count as content.
+Punctuation alone does not count either. Headings inside fenced code examples do
+not define sections. Code contents can describe Validation evidence, but fence
 delimiters and language info do not count as content. `Limits` remains optional.
 
 `Related issue` accepts a GitHub issue URL, `owner/repository#123`, or `#123`.
 An eligible typo, broken link, or formatting correction can instead use
 `Small correction: reason`, where the reason contains meaningful text.
 References in code examples, HTML comments, and unrelated HTML attributes do not
-count. A GitHub issue URL used as a Markdown or HTML link destination does count.
+count. References inside HTML elements with the `hidden` attribute do not count.
+A GitHub issue URL used as a visible Markdown or HTML link destination does count.
 
 Titles use `type(scope): description`, with an optional scope and an optional
 `!` immediately before the colon. The allowed lowercase types are `feat`,
@@ -25,8 +27,9 @@ Titles use `type(scope): description`, with an optional scope and an optional
 period; a concise one-word description is valid. When `!` is present, the body
 must explain both `Impact` and `Migration` under headings or labeled lines. An
 explicit `BREAKING CHANGE:` footer also requires `!` in the title. Reviewers
-remain responsible for title semantics and type accuracy, the truth of
-validation claims, and whether a change is breaking.
+remain responsible for title semantics and type accuracy, the truth of validation
+claims, and whether a change is breaking. Hidden HTML cannot supply the required
+impact or migration explanations.
 
 The workflow uses `pull_request_target` so GitHub loads its definition from the
 base repository. It checks out the pull request's base commit explicitly, does
