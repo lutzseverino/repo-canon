@@ -130,12 +130,19 @@ compatibility 1.2.2.
 
 An independent exact-head review approved commit
 `c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef` for immutable temporary tag
-`v0.0.2`. Its selected and transitive closure contains 115 files. Relative to
+`v0.0.2`. Its selected and transitive closure contains 114 files. Relative to
 the earlier whole-source-reviewed commit, the only selected byte change is the
 manifest's required CLI pin from 1.2.1 to 1.2.2; the other 106 changed paths are
 outside that closure. Later evidence-only commits do not change the reviewed
 snapshot or the tag. Public Git and authenticated API readback both resolved
 the tag directly to the approved commit.
+
+The 114-file count corrects an earlier evidence-accounting error: the previous
+115 count included contextual adopter target `README.md`, which is governed by
+guidance but is not a standards source input. The retained
+[closure comparison](source-closure.json) counts `standards.yaml`, enumerates
+all referenced and recursively selected files, and confirms that no source
+material was removed by the correction.
 
 ## Public adoption and live readback
 

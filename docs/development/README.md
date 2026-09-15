@@ -30,6 +30,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   scope, structural outcomes, prerequisites, and focused fixture commands.
 - [Standards source profile](source-profile.md): complete profile ownership,
   declarations, prerequisites, validation, and evidence boundaries.
+- [Source closure comparison](source-closure.json): reproducible path, mode,
+  Git blob, and SHA-256 accounting for the reviewed source refresh.
 - [Engineering skill exercises](engineering-skill-exercises.md): scenarios,
   runtime evidence, harness provenance, and limitations for nine skills.
 - [Productivity skill exercises](productivity-skill-exercises.md): runtime

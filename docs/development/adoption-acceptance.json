@@ -39,7 +39,7 @@
       "declarations": 51
     },
     "transitiveReview": {
-      "closureFiles": 115,
+      "closureFiles": 114,
       "onlySelectedChangeFrom662fdfa": "standards.yaml requires.repo-standards 1.2.1 -> 1.2.2",
       "reviewedHead": "c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef"
     }

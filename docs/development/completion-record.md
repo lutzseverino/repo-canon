@@ -3,14 +3,19 @@
 Repo Canon's `complete` profile has satisfied the implementation and evidence
 requirements in specification [#1](https://github.com/lutzseverino/repo-canon/issues/1).
 This is source acceptance, not a Repo Canon release. The accepted selected and
-transitive source is the 115-file closure at commit
+transitive source is the 114-file closure at commit
 `c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef`; it resolves one profile with 51
 declarations, including five operations and 25 author skills. Public Repository
 Standards CLI 1.2.2 validated and adopted those exact bytes.
 
+The count corrects the earlier 115-file accounting, which included contextual
+adopter target `README.md` even though that file is not a source input. The
+[machine-readable closure comparison](source-closure.json) enumerates every
+source path, role, mode, Git blob, and SHA-256. No selected material was removed.
+
 Ticket #17 changes the repository README and usage/development records only.
 Those files are outside the selected closure and do not change what an adopter
-receives. Any future change to one of the 115 selected or transitive files
+receives. Any future change to one of the 114 selected or transitive files
 creates a new source identity and must repeat whole-source review, all-profile
 CLI validation, and any operation, skill, or adoption evidence affected by the
 change.
@@ -97,7 +102,7 @@ exercise and adoption evidence.
 Repo Canon has no tag or release, so there is currently no permanent source
 version for an adopter to select. Stable use requires an owner-authorized Repo
 Canon publication whose SemVer tag resolves to a commit with the accepted
-115-file source closure. Publishing that tag or release and adopting it in a
+114-file source closure. Publishing that tag or release and adopting it in a
 production repository are separate actions and were not authorized by ticket
 #17.
 
