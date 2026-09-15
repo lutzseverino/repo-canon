@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { fixture, invokeCheck, snapshot } from './helpers/operation.mjs';
+import { fixture, invokeCheck, retainedCheck, snapshot } from './helpers/operation.mjs';
 
 const script = fileURLToPath(new URL('../operations/check-documentation.mjs', import.meta.url));
 
@@ -35,6 +35,21 @@ Install Node.js 24, then run \`npm test\` from the repository root.
     status: 'passed',
     message: 'Documentation navigation is valid; content placement and usefulness still require maintainer or agent review.',
   });
+});
+
+test('runs from its declared retained source layout', t => {
+  const retainedScript = retainedCheck(t, 'operations/check-documentation.mjs');
+  const project = fixture({
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+  });
+  t.after(project.close);
+  const outcome = invokeCheck(retainedScript, project.root, {
+    operation: { declaration: 'documentation', phase: 'checks', id: 'navigation' },
+    allowedTargets: { paths: ['docs/README.md', 'docs/development/README.md'], directories: [] },
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed');
 });
 
 test('reports the missing mandatory guide and indexes for populated documentation directories', t => {

@@ -1,7 +1,26 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
+
+const sourceRoot = new URL('../..', import.meta.url).pathname;
+
+export function retainedCheck(t, scriptPath) {
+  const root = mkdtempSync(join(tmpdir(), 'repo-canon-retained-check-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  for (const path of [
+    scriptPath,
+    'operations/lib/rendered-markdown.mjs',
+    'operations/lib/local-markdown-links.mjs',
+    'vendor/marked',
+    'vendor/parse5',
+  ]) {
+    const destination = join(root, path);
+    mkdirSync(dirname(destination), { recursive: true });
+    cpSync(join(sourceRoot, path), destination, { recursive: true });
+  }
+  return join(root, scriptPath);
+}
 
 export function fixture(files) {
   const root = mkdtempSync(join(tmpdir(), 'repo-canon-operation-'));

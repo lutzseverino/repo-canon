@@ -48,10 +48,10 @@ contribution guidance, shared agent configuration, GitHub templates, and
 contextual source guidance have completed material review. `standards.yaml`
 defines the complete source profile.
 
-The required product scope capability is delivered and accepted. Pull request
+The required product scope capability is delivered. Pull request
 metadata validation, issue contract validation, Repository README checking,
 GitHub label setup, PR integration setup, and their CI suites are implemented.
-The source declares public CLI 1.2.2 as its exact final validation baseline.
+The source declares public CLI 1.2.2 as its exact validation baseline.
 The successful CLI 1.2.1 local validation and earlier CLI 1.1.0 experiments
 remain historical evidence. Operation fixtures, the pinned skill inventory,
 and the engineering, productivity, and planning skill exercises remain separate
@@ -59,9 +59,12 @@ from source validation. Final source validation, complete adoption,
 scope-protection, preservation, and authorized remote-readback evidence are
 recorded in [the adoption evidence](adoption-evidence.md). The
 [complete source acceptance record](completion-record.md) accounts for the
-separate evidence classes and final source identity. Repo Canon remains untagged
-and unreleased; stable publication is the remaining prerequisite before the
-accepted source can be selected from this repository.
+separate evidence classes and the historical accepted identity at `eb98da8`.
+Architecture work in #44 and #45 follows that snapshot. Issue
+[#46](https://github.com/lutzseverino/repo-canon/issues/46) owns the pending
+whole-source review, recomputed closure, and affected adoption refresh for the
+integrated bytes. Repo Canon remains untagged and unreleased; stable publication
+follows acceptance of the eventual source identity.
 
 ## Working locally
 

@@ -31,6 +31,16 @@ remain responsible for title semantics and type accuracy, the truth of validatio
 claims, and whether a change is breaking. Hidden HTML cannot supply the required
 impact or migration explanations.
 
+The validator consumes the shared pure rendered-Markdown document installed at
+`operations/lib/rendered-markdown.mjs`. That module owns visibility, rendered
+text and links, heading provenance, and section regions. PR policy remains in
+the validator: recognized section names use rendered Markdown headings,
+matching-section nesting and duplicate rules remain PR-specific, visible code
+can supply Validation evidence, and code cannot supply relationship or
+small-correction evidence. HTML `title` content remains visible for PR metadata,
+and parse5's fragment handling continues to expose text from a bare `head`
+wrapper as body text.
+
 The workflow uses `pull_request_target` so GitHub loads its definition from the
 base repository. It checks out the pull request's base commit explicitly, does
 not persist credentials, and only grants `contents: read` to its token. The
@@ -50,15 +60,16 @@ check.
 Run the executable checks with Node.js 24:
 
 ```sh
+node --test test/pr-metadata.test.mjs
 npm run check
-npm test
 ```
 
-The project has no compilation step or external package dependencies. CI runs
-the complete syntax check and Node test suite for pull requests and pushes to
-`main`.
+The focused fixtures include an installed-layout execution containing only the
+validator, shared runtime, and declared parser resources. The project has no
+compilation step or external package dependencies. CI runs the complete Node
+test suite for pull requests and pushes to `main`.
 
-The validator reads Markdown structure with the repository's pinned
-[Marked lexer](../../vendor/marked/README.md) and reads rendered HTML content and
-link attributes with the pinned [parse5 bundle](../../vendor/parse5/README.md).
-Their source and license notices live beside the vendored ESM files.
+The shared runtime reads Markdown structure with the repository's pinned
+[Marked lexer](../../vendor/marked/README.md) and rendered HTML content and link
+attributes with the pinned [parse5 bundle](../../vendor/parse5/README.md). Their
+source and license notices live beside the vendored ESM files.

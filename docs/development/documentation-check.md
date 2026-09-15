@@ -25,8 +25,11 @@ Both operations render each Markdown file once with the retained, pinned Marked
 and inspect that shared rendered representation. Hidden content and code examples
 therefore cannot supply titles or navigable links, while Markdown, HTML, entity
 references, and GFM tables receive the same link treatment. Final source
-declarations must retain `operations/lib/rendered-markdown.mjs` and the Marked
-and parse5 resources and notices alongside each operation that imports them.
+declarations retain `operations/lib/rendered-markdown.mjs`, the mechanically
+separated `operations/lib/local-markdown-links.mjs`, and the Marked and parse5
+resources and notices alongside each operation. The shared document owns
+rendered structure; Project README title policy, documentation scope, and local
+path containment and symlink policy remain in their existing modules.
 
 ## Outcomes and limits
 
@@ -62,4 +65,6 @@ node --test test/project-readme-check.test.mjs test/documentation-check.test.mjs
 
 Each fixture invokes the scripts with a `repo-standards/operation/v1` request,
 asserts the `repo-standards/result/v1` outcome or process error, and compares a
-complete before-and-after snapshot of the temporary Git repository.
+complete before-and-after snapshot of the temporary Git repository. Each
+operation also runs from a retained tree containing only its declared script
+and resources.

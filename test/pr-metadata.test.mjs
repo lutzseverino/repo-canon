@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -24,7 +24,7 @@ Closes #6
 ${extra}`;
 }
 
-function runEvent({ action = "opened", title = "feat(metadata): validate pull requests", body = validBody(), pullRequest = {} } = {}) {
+function runEvent({ action = "opened", title = "feat(metadata): validate pull requests", body = validBody(), pullRequest = {}, validatorPath = validator } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-pr-metadata-"));
   const eventPath = join(directory, "event.json");
   const summaryPath = join(directory, "summary.md");
@@ -32,7 +32,7 @@ function runEvent({ action = "opened", title = "feat(metadata): validate pull re
     eventPath,
     JSON.stringify({ action, pull_request: { title, body, ...pullRequest } }),
   );
-  const result = spawnSync(process.execPath, [validator, eventPath], {
+  const result = spawnSync(process.execPath, [validatorPath, eventPath], {
     cwd: repositoryRoot,
     encoding: "utf8",
     env: { ...process.env, GITHUB_STEP_SUMMARY: summaryPath },
@@ -40,6 +40,22 @@ function runEvent({ action = "opened", title = "feat(metadata): validate pull re
   const summary = existsSync(summaryPath) ? readFileSync(summaryPath, "utf8") : "";
   rmSync(directory, { recursive: true, force: true });
   return { ...result, summary };
+}
+
+function installedValidator(t) {
+  const root = mkdtempSync(join(tmpdir(), "repo-canon-pr-installed-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  for (const path of [
+    ".github/scripts/validate-pr-metadata.mjs",
+    "operations/lib/rendered-markdown.mjs",
+    "vendor/marked",
+    "vendor/parse5",
+  ]) {
+    const destination = join(root, path);
+    mkdirSync(dirname(destination), { recursive: true });
+    cpSync(join(repositoryRoot, path), destination, { recursive: true });
+  }
+  return join(root, ".github/scripts/validate-pr-metadata.mjs");
 }
 
 test("accepts valid metadata for every configured pull request update", () => {
@@ -68,6 +84,12 @@ test("accepts valid metadata for every configured pull request update", () => {
     assert.equal(invalid.status, 1, action);
     assert.match(invalid.stderr, /Add a Summary section/);
   }
+});
+
+test("runs from the exact installed workflow layout", (t) => {
+  const result = runEvent({ validatorPath: installedValidator(t) });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /validation passed/);
 });
 
 test("accepts harmless heading casing and formatting variations", () => {
@@ -228,6 +250,25 @@ Closes #36
 ## Migration
 
 <span hidden>Ignore this decoy.</span> Move required metadata into visible content.
+`,
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("preserves visible title and fragment-head text in pull request sections", () => {
+  const result = runEvent({
+    body: `## Summary
+
+<title>Correct the metadata validator behavior.</title>
+
+## Validation
+
+<head>The focused validator tests passed.</head>
+
+## Related issue
+
+Closes #45
 `,
   });
 

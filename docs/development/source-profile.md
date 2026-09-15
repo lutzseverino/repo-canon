@@ -13,6 +13,7 @@ does not imply a release or successful adoption.
 | Issue and pull request intake | `bug-report-template`, `feature-request-template`, `implementation-ticket-template`, `specification-template`, `pull-request-template` | `.github` templates | Exact files |
 | Trusted issue contract validation | `issue-contract-workflow`, `issue-contract-validator` | Default-branch workflow and validator | Exact files |
 | Trusted pull request metadata validation | `pr-metadata-workflow`, `pr-metadata-validator` | Base-revision workflow and validator | Exact files |
+| Shared rendered Markdown interpretation | `rendered-markdown-runtime` | Pure interpreted-document runtime used by both trusted validators and all three documentation checks | Exact file; also retained operation resource |
 | Rendered Markdown dependencies | `marked-*`, `parse5-*` | Marked 18.0.13 and parse5 8.0.1 bundles, provenance, and license notices | Exact files; also retained operation resources |
 | Repository README | `repository-readme` | `guidance/repository-readme.md`; `repository-readme-structure` check | Project-owned contextual `README.md` |
 | Maintained Project READMEs | `project-readmes` | Separate assessment and discovery guidance; `project-readme-structure` check | Project-owned paths confirmed through v2 discovery |
@@ -20,18 +21,20 @@ does not imply a release or successful adoption.
 | GitHub labels, required check, and squash settings | `github-repository-configuration` | Separate guidance and intentionally empty project-content discovery; repeat-safe `canonical-labels` and `pull-request-integration` fixes | Remote settings; no project-content paths |
 | Pinned regular skills | `skill-*` (25 declarations) | Full directories under `vendor/mattpocock-skills`, pinned at `3cca18b368ae95cdbdebbff572ccafa662551015`; upstream notice retained by the configuration operation | Exact whole skill directories |
 
-The resolved profile contains 51 declarations: 22 exact files, one contextual
+The resolved profile contains 52 declarations: 23 exact files, one contextual
 file, three repository declarations, and 25 exact skill directories. It has
 three checks and two fixes. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
 trees, globs, or adopter-specific paths embedded in this source.
 
-The operation resources retain the shared rendered-Markdown module, complete
-Marked and parse5 directories with their notices, the shared GitHub operation
-module, Repo Canon's MIT license and third-party notice, and the upstream skill
-license. Workflow-installed parser files are also exact declarations because
-the trusted issue and pull request validators import them from the adopting
-repository.
+The documentation operation resources retain the shared rendered-Markdown
+module, the separate local-link module, and complete Marked and parse5
+directories with their notices. Other operation resources retain the shared
+GitHub operation module, Repo Canon's MIT license and third-party notice, and
+the upstream skill license. The rendered-Markdown runtime and parser files are
+also exact declarations because both trusted workflow validators import them
+from the adopting repository. Each executable therefore resolves the same
+relative import layout after installation or resource retention.
 
 ## Executable prerequisites
 
@@ -82,6 +85,36 @@ that the corrected validator is the only selected byte change from `c0d57fa`.
 [The adoption record](adoption-evidence.md) preserves the installed npm
 integrity, source identity, public and historical execution boundaries, and
 outcomes.
+
+The accepted `eb98da8` result remains evidence for those exact 114 source files
+and 51 declarations. The rendered-Markdown refactor changes selected and
+transitive source bytes, adds the exact `rendered-markdown-runtime`
+declaration, and adds the retained local-link resource. Issue
+[#46](https://github.com/lutzseverino/repo-canon/issues/46) owns the final
+whole-source review, recomputed closure, public acquisition, and refreshed
+adoption evidence for the changed source. Until that work completes, local
+validation of this manifest does not extend the older final-acceptance claim to
+the new bytes.
+
+Relative to accepted `eb98da8`, this refactor changes seven existing source
+files and adds one. Every entry has regular-file mode `100644`; no source path
+is removed, and the selected/transitive path set grows from 114 to 115:
+
+| Source path | Delta | Declaration or resource ownership |
+| --- | --- | --- |
+| `standards.yaml` | Changed | Source manifest |
+| `.github/scripts/validate-pr-metadata.mjs` | Changed | Exact `pr-metadata-validator` |
+| `scripts/validate-issue-contract.mjs` | Changed | Exact `issue-contract-validator` |
+| `operations/check-documentation.mjs` | Changed | `documentation-navigation` operation script |
+| `operations/check-project-readmes.mjs` | Changed | `project-readme-structure` operation script |
+| `operations/check-repository-readme.mjs` | Changed | `repository-readme-structure` operation script |
+| `operations/lib/rendered-markdown.mjs` | Changed | Exact `rendered-markdown-runtime`; retained by all three checks |
+| `operations/lib/local-markdown-links.mjs` | Added | Retained by all three checks |
+
+The manifest resolves 52 declarations, including 23 exact files, and retains
+three checks, two fixes, three repository declarations, one contextual file,
+and 25 skill declarations. Issue #46 will replace this bounded delta with the
+final machine-readable whole-source closure and reviewed acceptance identity.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
