@@ -96,6 +96,26 @@ adoption evidence for the changed source. Until that work completes, local
 validation of this manifest does not extend the older final-acceptance claim to
 the new bytes.
 
+Relative to accepted `eb98da8`, this refactor changes seven existing source
+files and adds one. Every entry has regular-file mode `100644`; no source path
+is removed, and the selected/transitive path set grows from 114 to 115:
+
+| Source path | Delta | Declaration or resource ownership |
+| --- | --- | --- |
+| `standards.yaml` | Changed | Source manifest |
+| `.github/scripts/validate-pr-metadata.mjs` | Changed | Exact `pr-metadata-validator` |
+| `scripts/validate-issue-contract.mjs` | Changed | Exact `issue-contract-validator` |
+| `operations/check-documentation.mjs` | Changed | `documentation-navigation` operation script |
+| `operations/check-project-readmes.mjs` | Changed | `project-readme-structure` operation script |
+| `operations/check-repository-readme.mjs` | Changed | `repository-readme-structure` operation script |
+| `operations/lib/rendered-markdown.mjs` | Changed | Exact `rendered-markdown-runtime`; retained by all three checks |
+| `operations/lib/local-markdown-links.mjs` | Added | Retained by all three checks |
+
+The manifest resolves 52 declarations, including 23 exact files, and retains
+three checks, two fixes, three repository declarations, one contextual file,
+and 25 skill declarations. Issue #46 will replace this bounded delta with the
+final machine-readable whole-source closure and reviewed acceptance identity.
+
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
 operation or prerequisite and cannot establish semantic coverage or safe scope

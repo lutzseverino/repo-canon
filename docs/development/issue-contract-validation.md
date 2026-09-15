@@ -39,7 +39,9 @@ contract-source selection and exact revision bytes still use the original
 Markdown, Agent Brief syntax still uses source tokens, and relationship
 evidence remains prose-only. HTML `title` content stays non-rendered for issue
 contracts. Parse5's fragment handling continues to expose text from a bare
-`head` wrapper as body text, preserving that separate existing edge behavior.
+`head` wrapper as body text. Keyboard-input text remains visible relationship
+evidence, while image alt text does not establish a relationship. These retain
+the issue-specific edge behavior.
 
 Triaged bug and feature requests must carry exactly one category (`bug` or
 `enhancement`) and one workflow state. Direct specifications and implementation

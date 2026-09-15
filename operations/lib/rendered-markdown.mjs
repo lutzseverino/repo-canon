@@ -7,7 +7,7 @@ const blockElements = new Set([
   'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header',
   'hgroup', 'hr', 'li', 'main', 'nav', 'ol', 'p', 'pre', 'section', 'table', 'ul',
 ]);
-const codeElements = new Set(['code', 'kbd', 'pre']);
+const codeElements = new Set(['code', 'pre']);
 const renderedElementsWithoutText = new Set([
   'audio', 'canvas', 'embed', 'hr', 'iframe', 'img', 'input', 'math', 'object', 'picture', 'svg', 'video',
 ]);
@@ -109,35 +109,51 @@ function renderedContent(fragment, isHidden, markdownHeadingMarker) {
   return {
     elements,
     hasContent: elements.length > 0,
-    text({ includeCode = true, blockBreaks = false } = {}) {
+    text({
+      includeCode = true,
+      includeKeyboardInput = includeCode,
+      includeImageAlt = true,
+      includeLinkTargets = false,
+      blockBreaks = false,
+    } = {}) {
       const links = [];
+      const fragments = [];
       let text = '';
+      const append = value => {
+        if (includeLinkTargets) fragments.push(value);
+        else text += value;
+      };
       const stack = [{ node: fragment, closing: false }];
       while (stack.length) {
         const { node, closing } = stack.pop();
         if (closing) {
-          text += '\n';
+          append('\n');
           continue;
         }
         if (node.nodeName === '#comment') continue;
         if (node.nodeName === '#text') {
-          text += node.value;
+          append(node.value);
           continue;
         }
-        if (isHidden(node) || (!includeCode && codeElements.has(node.tagName))) continue;
+        if (isHidden(node)
+            || (!includeCode && codeElements.has(node.tagName))
+            || (!includeKeyboardInput && node.tagName === 'kbd')) continue;
         if (node.tagName === 'a') {
           const href = attribute(node, 'href');
-          if (href) links.push(href);
+          if (href) {
+            links.push(href);
+            if (includeLinkTargets) fragments.push(href);
+          }
         }
-        if (node.tagName === 'img') text += attribute(node, 'alt') ?? '';
-        if (blockBreaks && node.tagName === 'br') text += '\n';
+        if (includeImageAlt && node.tagName === 'img') append(attribute(node, 'alt') ?? '');
+        if (blockBreaks && node.tagName === 'br') append('\n');
         if (blockBreaks && blockElements.has(node.tagName)) stack.push({ node, closing: true });
         const children = node.childNodes ?? [];
         for (let index = children.length - 1; index >= 0; index -= 1) {
           stack.push({ node: children[index], closing: false });
         }
       }
-      return { text, links };
+      return { text: includeLinkTargets ? fragments.join('\n') : text, links };
     },
   };
 }

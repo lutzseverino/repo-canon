@@ -771,18 +771,20 @@ test("explicit parent and blocker links are read when native relationships are a
   const result = await exercise({
     issue: {
       number: 42,
-      body: "## Parent\n\n#7\n\n## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nhttps://github.com/example/repository/issues/41",
+      body: "## Parent\n\n[Parent](#7) and #8\n\n## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nhttps://github.com/example/repository/issues/41",
       labels: [],
       state: "open",
     },
     relatedIssues: {
       "/repos/example/repository/issues/7": { number: 7, state: "open", labels: [] },
+      "/repos/example/repository/issues/8": { number: 8, state: "open", labels: [] },
       "/repos/example/repository/issues/41": { number: 41, state: "open", labels: [] },
     },
   });
 
   assert.equal(result.code, 0, result.stderr);
   assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/7"));
+  assert.ok(!result.requests.some(({ url }) => url === "/repos/example/repository/issues/8"));
   assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/41"));
 });
 
@@ -790,7 +792,7 @@ test("explicit blocker links are used when the native dependency endpoint is una
   const result = await exercise({
     issue: {
       number: 42,
-      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n```md\n#999\n```\n\n    #998\n\n`#997`\n\n<code>#996</code>\n\n<span hidden>#995 <a href=\"https://github.com/example/repository/issues/44\">Hidden blocker</a></span>\n\n| Blocker |\n| --- |\n| [Issue](https://github.com/example/repository/issues/41) |\n\n<a href=\"https://github.com/example/repository/issues/43\">Another blocker</a>",
+      body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n```md\n#999\n```\n\n    #998\n\n`#997`\n\n<code>#996</code>\n\n<kbd>#993</kbd>\n\n![#994](proof.png)\n\n<span hidden>#995 <a href=\"https://github.com/example/repository/issues/44\">Hidden blocker</a></span>\n\n| Blocker |\n| --- |\n| [Issue](https://github.com/example/repository/issues/41) |\n\n<a href=\"https://github.com/example/repository/issues/43\">Another blocker</a>",
       labels: [],
       state: "open",
     },
@@ -798,14 +800,16 @@ test("explicit blocker links are used when the native dependency endpoint is una
     relatedIssues: {
       "/repos/example/repository/issues/41": { number: 41, state: "open", labels: [] },
       "/repos/example/repository/issues/43": { number: 43, state: "open", labels: [] },
+      "/repos/example/repository/issues/993": { number: 993, state: "open", labels: [] },
     },
   });
 
   assert.equal(result.code, 0, result.stderr);
   assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/41"));
   assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/43"));
+  assert.ok(result.requests.some(({ url }) => url === "/repos/example/repository/issues/993"));
   assert.ok(!result.requests.some(({ url }) => url === "/repos/example/repository/issues/999"));
-  assert.ok(!result.requests.some(({ url }) => ["/repos/example/repository/issues/998", "/repos/example/repository/issues/997", "/repos/example/repository/issues/996", "/repos/example/repository/issues/995", "/repos/example/repository/issues/44"].includes(url)));
+  assert.ok(!result.requests.some(({ url }) => ["/repos/example/repository/issues/998", "/repos/example/repository/issues/997", "/repos/example/repository/issues/996", "/repos/example/repository/issues/995", "/repos/example/repository/issues/994", "/repos/example/repository/issues/44"].includes(url)));
 });
 
 test("an unresolvable blocker link removes readiness with actionable feedback", async () => {

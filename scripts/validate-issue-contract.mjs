@@ -270,8 +270,12 @@ function issueReferences(value = "") {
 }
 
 function markdownReferenceText(markdown) {
-  const rendered = issueMarkdown(markdown).content.text({ includeCode: false });
-  return [rendered.text, ...rendered.links].join("\n");
+  return issueMarkdown(markdown).content.text({
+    includeCode: false,
+    includeKeyboardInput: true,
+    includeImageAlt: false,
+    includeLinkTargets: true,
+  }).text;
 }
 
 function markdownVisibleText(markdown) {
