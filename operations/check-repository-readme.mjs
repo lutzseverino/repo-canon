@@ -1,6 +1,7 @@
 import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { renderedMarkdown, resolvedLocalPath } from './lib/rendered-markdown.mjs';
+import { interpretMarkdown } from './lib/rendered-markdown.mjs';
+import { resolvedLocalPath } from './lib/local-markdown-links.mjs';
 
 const resultFormat = 'repo-standards/result/v1';
 const recognizedSections = [
@@ -64,14 +65,10 @@ function rootLicense(projectRoot) {
   return { path };
 }
 
-function sectionEvents(events, allHeadings, name) {
+function sectionElements(allHeadings, name) {
   const index = allHeadings.findIndex(heading => heading.folded === name.toLocaleLowerCase('en-US'));
   if (index < 0) return null;
-  const start = events.indexOf(allHeadings[index]) + 1;
-  const end = events.findIndex((event, eventIndex) => eventIndex >= start
-    && event.type === 'heading' && event.level <= allHeadings[index].level);
-  return events.slice(start, end < 0 ? events.length : end)
-    .filter(event => !event.insideHeading);
+  return allHeadings[index].body.elements;
 }
 
 function singleLink(events) {
@@ -84,9 +81,9 @@ function linksTo(events, target) {
     && event.text && resolvedLocalPath('README.md', event.target) === target);
 }
 
-function checkNavigationLink(projectRoot, events, allHeadings, section, target, corrections) {
+function checkNavigationLink(projectRoot, allHeadings, section, target, corrections) {
   if (!lstatIsFile(join(projectRoot, target))) return;
-  const body = sectionEvents(events, allHeadings, section);
+  const body = sectionElements(allHeadings, section);
   if (body === null) corrections.push(`Add a ${section} section linking to ${target}.`);
   else if (!linksTo(body, target)) corrections.push(`Link the ${section} section to ${target}.`);
 }
@@ -94,8 +91,8 @@ function checkNavigationLink(projectRoot, events, allHeadings, section, target, 
 function checkStructure(projectRoot, markdown, license) {
   if (markdown === null) return ['Create the root README.md.'];
   const corrections = [];
-  const events = renderedMarkdown(markdown);
-  const parsedHeadings = events.filter(event => event.type === 'heading');
+  const document = interpretMarkdown(markdown);
+  const parsedHeadings = document.headings;
   const title = parsedHeadings.find(heading => heading.level === 1) ?? null;
   if (!title?.centered) {
     corrections.push('Center the Repository README title in a nonempty HTML h1 or a centered block.');
@@ -122,10 +119,10 @@ function checkStructure(projectRoot, markdown, license) {
     corrections.push(`Move Installation before ${allHeadings[0].name}; it is the first section when present.`);
   }
 
-  checkNavigationLink(projectRoot, events, allHeadings, 'Contributing', 'CONTRIBUTING.md', corrections);
-  checkNavigationLink(projectRoot, events, allHeadings, 'Documentation', 'docs/README.md', corrections);
+  checkNavigationLink(projectRoot, allHeadings, 'Contributing', 'CONTRIBUTING.md', corrections);
+  checkNavigationLink(projectRoot, allHeadings, 'Documentation', 'docs/README.md', corrections);
 
-  const licenseBody = sectionEvents(events, allHeadings, 'License');
+  const licenseBody = sectionElements(allHeadings, 'License');
   if (license && licenseBody === null) {
     corrections.push(`Add a License section containing only [actual license name](${license.path}).`);
   } else if (license) {

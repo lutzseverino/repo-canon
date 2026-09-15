@@ -1,6 +1,7 @@
 import { lstatSync, readFileSync } from 'node:fs';
 import { isAbsolute, posix, sep } from 'node:path';
-import { brokenLocalLinks, localPathExists, renderedMarkdown } from './lib/rendered-markdown.mjs';
+import { interpretMarkdown } from './lib/rendered-markdown.mjs';
+import { brokenLocalLinks, localPathExists } from './lib/local-markdown-links.mjs';
 
 const resultFormat = 'repo-standards/result/v1';
 
@@ -59,14 +60,14 @@ function validate(projectRoot, paths) {
       continue;
     }
     const absolute = `${projectRoot}${sep}${path.split('/').join(sep)}`;
-    const events = renderedMarkdown(readFileSync(absolute, 'utf8'));
-    const renderedHeadings = events.filter(event => event.type === 'heading');
+    const document = interpretMarkdown(readFileSync(absolute, 'utf8'));
+    const renderedHeadings = document.headings;
     const headings = renderedHeadings.filter(event => event.level === 1);
     if (headings.length !== 1 || headings[0].centered || headings[0].source !== 'markdown'
         || renderedHeadings[0] !== headings[0]) {
       corrections.push(`Give ${path} one non-centered level-one title as its first heading.`);
     }
-    for (const link of brokenLocalLinks(projectRoot, path, events)) {
+    for (const link of brokenLocalLinks(projectRoot, path, document.content.elements)) {
       corrections.push(`${path} links to missing ${link.target}.`);
     }
   }

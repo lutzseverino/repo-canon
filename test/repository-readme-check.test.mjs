@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { invokeCheck, fixture, snapshot } from './helpers/operation.mjs';
+import { invokeCheck, fixture, retainedCheck, snapshot } from './helpers/operation.mjs';
 
 const script = fileURLToPath(new URL('../operations/check-repository-readme.mjs', import.meta.url));
 
@@ -73,6 +73,18 @@ See [the contribution guide](<CONTRIBUTING.md>).
     status: 'passed',
     message: 'Repository README structure is valid; factual content still requires maintainer or agent review.',
   });
+});
+
+test('runs from its declared retained source layout', t => {
+  const retainedScript = retainedCheck(t, 'operations/check-repository-readme.mjs');
+  const project = fixture({
+    'README.md': '<h1 align="center">Harbor</h1>\n\n## License\n\n[MIT License](LICENSE)\n',
+    'LICENSE': mit,
+  });
+  t.after(project.close);
+  const outcome = invokeCheck(retainedScript, project.root);
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed');
 });
 
 test('allows omitted recognized sections and useful interleaved sections', t => {

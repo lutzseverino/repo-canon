@@ -1,6 +1,7 @@
 import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { isAbsolute, posix, sep } from 'node:path';
-import { brokenLocalLinks, renderedMarkdown } from './lib/rendered-markdown.mjs';
+import { interpretMarkdown } from './lib/rendered-markdown.mjs';
+import { brokenLocalLinks } from './lib/local-markdown-links.mjs';
 
 const resultFormat = 'repo-standards/result/v1';
 const rootDocumentation = 'docs';
@@ -123,7 +124,7 @@ function validate(projectRoot, allowedPaths) {
   const guide = fileContent(projectRoot, developmentGuide);
   if (guide === null) {
     corrections.push(`Create ${developmentGuide} with the project's prerequisites, setup, development commands, and required validation.`);
-  } else if (renderedMarkdown(guide).length === 0) {
+  } else if (!interpretMarkdown(guide).content.hasContent) {
     corrections.push(`Populate ${developmentGuide} with the project's prerequisites, setup, development commands, and required validation.`);
   }
   if (!allowedPaths.includes(developmentGuide)) {
@@ -136,7 +137,7 @@ function validate(projectRoot, allowedPaths) {
     const index = fileContent(projectRoot, indexPath);
     if (index === null) {
       corrections.push(`Create ${indexPath} to map the documentation categories and their placement rules.`);
-    } else if (renderedMarkdown(index).length === 0) {
+    } else if (!interpretMarkdown(index).content.hasContent) {
       corrections.push(`Populate ${indexPath} with the documentation map and placement rules.`);
     }
     if (!allowedPaths.includes(indexPath)) {
@@ -154,7 +155,7 @@ function validate(projectRoot, allowedPaths) {
       const directoryIndex = `${directory}/README.md`;
       const content = fileContent(projectRoot, directoryIndex);
       if (content === null) corrections.push(`Create ${directoryIndex} to explain this documentation directory and link its useful contents.`);
-      else if (renderedMarkdown(content).length === 0) corrections.push(`Populate ${directoryIndex} with the directory purpose and links to useful contents.`);
+      else if (!interpretMarkdown(content).content.hasContent) corrections.push(`Populate ${directoryIndex} with the directory purpose and links to useful contents.`);
     }
     for (const path of allowedPaths) {
       if (!path.startsWith(`${root}/`) || posix.basename(path) !== 'README.md') continue;
@@ -172,8 +173,8 @@ function validate(projectRoot, allowedPaths) {
     }
   }
   for (const path of [...markdownFiles].sort()) {
-    const events = renderedMarkdown(fileContent(projectRoot, path));
-    for (const link of brokenLocalLinks(projectRoot, path, events)) {
+    const document = interpretMarkdown(fileContent(projectRoot, path));
+    for (const link of brokenLocalLinks(projectRoot, path, document.content.elements)) {
       corrections.push(`${path} links to missing ${link.target}.`);
     }
   }

@@ -2,8 +2,8 @@
 
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { lexer, marked } from "../vendor/marked/marked.esm.js";
-import { parseFragment } from "../vendor/parse5/parse5.esm.js";
+import { lexer } from "../vendor/marked/marked.esm.js";
+import { interpretMarkdown } from "../operations/lib/rendered-markdown.mjs";
 
 const feedbackMarker = "<!-- repo-canon:issue-contract-feedback -->";
 const feedbackStatePrefix = "<!-- repo-canon:issue-contract-state ";
@@ -12,7 +12,7 @@ const workflowLabels = new Set(["needs-triage", "needs-info", "ready-for-agent",
 const categoryLabels = new Set(["bug", "enhancement"]);
 const childLabels = new Set(["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"]);
 const agentBriefHeadingNames = new Set(["agent brief"]);
-const nonRenderedElements = new Set(["head", "script", "style", "template", "title"]);
+const issueNonRenderedElements = ["head", "title"];
 const contractSectionNames = new Set([
   "acceptance criteria",
   "actual behavior",
@@ -270,48 +270,16 @@ function issueReferences(value = "") {
 }
 
 function markdownReferenceText(markdown) {
-  const fragments = [];
-
-  function visit(node) {
-    if (node.nodeName === "#text") {
-      fragments.push(node.value);
-      return;
-    }
-    if (isHidden(node) || ["code", "pre"].includes(node.tagName)) return;
-    const href = node.tagName === "a" ? attribute(node, "href") : null;
-    if (href) fragments.push(href);
-    for (const child of node.childNodes ?? []) visit(child);
-  }
-
-  visit(renderedMarkdownFragment(markdown));
-  return fragments.join("\n");
+  const rendered = issueMarkdown(markdown).content.text({ includeCode: false });
+  return [rendered.text, ...rendered.links].join("\n");
 }
 
 function markdownVisibleText(markdown) {
-  return htmlVisibleText(renderedMarkdownFragment(markdown));
+  return issueMarkdown(markdown).content.text().text;
 }
 
-function renderedMarkdownFragment(markdown) {
-  return parseFragment(marked.parse(markdown));
-}
-
-function htmlVisibleText(fragment) {
-  function textContent(node) {
-    if (node.nodeName === "#text") return node.value;
-    if (isHidden(node)) return "";
-    if (node.tagName === "img") return attribute(node, "alt") ?? "";
-    return (node.childNodes ?? []).map(textContent).join("");
-  }
-
-  return textContent(fragment);
-}
-
-function attribute(node, name) {
-  return node.attrs?.find((candidate) => candidate.name === name)?.value ?? null;
-}
-
-function isHidden(node) {
-  return nonRenderedElements.has(node.tagName) || attribute(node, "hidden") !== null;
+function issueMarkdown(markdown) {
+  return interpretMarkdown(markdown, { additionalNonRenderedElements: issueNonRenderedElements });
 }
 
 function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
@@ -418,42 +386,20 @@ function outcome(kind, errors, labels, triaged, contract = null) {
 
 function parseSections(markdown, acceptedNames = contractSectionNames) {
   markdown = normalizeMarkdown(markdown);
-  const markdownHeadings = findMarkdownHeadings(markdown);
-  const headings = contractHeadings(markdownHeadings, acceptedNames);
+  const occurrences = issueMarkdown(markdown).sections(acceptedNames, {
+    hierarchy: "outermost",
+    nameSource: "markdown",
+  });
   const sections = new Map();
-  for (const heading of headings) {
-    const name = normalize(heading.name);
-    const start = heading.index + heading.length;
-    const nextPeer = markdownHeadings.find((candidate) => candidate.index > heading.index && candidate.level <= heading.level);
-    const end = nextPeer?.index ?? markdown.length;
-    sections.set(name, markdown.slice(start, end).trim());
+  for (const [name, matches] of occurrences) {
+    sections.set(name, matches.at(-1).source);
   }
   return sections;
 }
 
-function contractHeadings(markdownHeadings, acceptedNames) {
-  const headings = [];
-  const hierarchy = [];
-  for (const heading of markdownHeadings) {
-    while (hierarchy.length > 0 && heading.level <= hierarchy.at(-1).level) hierarchy.pop();
-    const insideContractSection = hierarchy.some((entry) => entry.contractSection);
-    const contractSection = Boolean(acceptedNames?.has(normalize(heading.name))) && !insideContractSection;
-    if (contractSection) headings.push(heading);
-    hierarchy.push({ level: heading.level, contractSection });
-  }
-  return headings;
-}
-
 function findMarkdownHeadings(markdown, acceptedNames = null) {
   markdown = normalizeMarkdown(markdown);
-  return markdownTokenSpans(markdown)
-    .filter(({ token }) => token.type === "heading")
-    .map(({ token, index }) => ({
-      index,
-      length: token.raw.length,
-      level: token.depth,
-      name: markdownInlineText(token.tokens),
-    }))
+  return issueMarkdown(markdown).markdownHeadings
     .filter(({ name }) => !acceptedNames || acceptedNames.has(normalize(name)));
 }
 

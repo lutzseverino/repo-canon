@@ -3,7 +3,7 @@ import { mkdirSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { fixture, invokeCheck, snapshot } from './helpers/operation.mjs';
+import { fixture, invokeCheck, retainedCheck, snapshot } from './helpers/operation.mjs';
 
 const script = fileURLToPath(new URL('../operations/check-project-readmes.mjs', import.meta.url));
 
@@ -42,6 +42,18 @@ Shared setup lives in [the development guide](../../docs/development/README.md).
     status: 'passed',
     message: 'Project README structure is valid for 1 concrete target; purpose, commands, configuration, and documentation still require maintainer or agent review.',
   });
+});
+
+test('runs from its declared retained source layout', t => {
+  const retainedScript = retainedCheck(t, 'operations/check-project-readmes.mjs');
+  const project = fixture({ 'packages/parser/README.md': '# Parser\n' });
+  t.after(project.close);
+  const outcome = invokeCheck(retainedScript, project.root, {
+    operation: { declaration: 'project-readmes', phase: 'checks', id: 'structure' },
+    allowedTargets: { paths: ['packages/parser/README.md'], directories: [] },
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed');
 });
 
 test('reports missing Project READMEs and centered or absent titles', t => {

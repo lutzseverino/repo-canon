@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import { appendFileSync, readFileSync } from "node:fs";
-import { marked } from "../../vendor/marked/marked.esm.js";
-import { parseFragment } from "../../vendor/parse5/parse5.esm.js";
+import { interpretMarkdown } from "../../operations/lib/rendered-markdown.mjs";
 
 const allowedTypes = [
   "feat",
@@ -47,109 +46,8 @@ const recognizedSections = new Set([
 ]);
 const issueUrl = /https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*\b/i;
 
-const blockElements = new Set([
-  "address",
-  "article",
-  "aside",
-  "blockquote",
-  "details",
-  "dialog",
-  "div",
-  "dl",
-  "fieldset",
-  "figcaption",
-  "figure",
-  "footer",
-  "form",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "header",
-  "hgroup",
-  "hr",
-  "li",
-  "main",
-  "nav",
-  "ol",
-  "p",
-  "pre",
-  "section",
-  "table",
-  "ul",
-]);
-const codeElements = new Set(["code", "kbd", "pre"]);
-const hiddenElements = new Set(["script", "style", "template"]);
-
-function attribute(node, name) {
-  return node.attrs?.find((candidate) => candidate.name === name)?.value ?? null;
-}
-
-function isHidden(node) {
-  return hiddenElements.has(node.nodeName) || attribute(node, "hidden") !== null;
-}
-
-function parsedHtml(value, includeCode = true) {
-  const links = [];
-  let text = "";
-  const stack = [{ node: parseFragment(value), closing: false }];
-
-  while (stack.length) {
-    const { node, closing } = stack.pop();
-    if (closing) {
-      text += "\n";
-      continue;
-    }
-    if (node.nodeName === "#comment") {
-      continue;
-    }
-    if (node.nodeName === "#text") {
-      text += node.value;
-      continue;
-    }
-    if (
-      isHidden(node) ||
-      (!includeCode && codeElements.has(node.nodeName))
-    ) {
-      continue;
-    }
-
-    if (node.nodeName === "a") {
-      const href = attribute(node, "href");
-      if (href) {
-        links.push(href);
-      }
-    }
-    if (node.nodeName === "img") {
-      text += attribute(node, "alt") ?? "";
-    }
-    if (node.nodeName === "br") {
-      text += "\n";
-    }
-
-    if (blockElements.has(node.nodeName)) {
-      stack.push({ node, closing: true });
-    }
-    const children = node.childNodes ?? [];
-    for (let index = children.length - 1; index >= 0; index -= 1) {
-      stack.push({ node: children[index], closing: false });
-    }
-  }
-  return { links, text };
-}
-
-function renderedInlineTokens(tokens, includeCode) {
-  return parsedHtml(marked.Parser.parseInline(tokens), includeCode).text;
-}
-
-function renderedTokenList(tokens, includeCode = true) {
-  return parsedHtml(marked.parser(tokens), includeCode).text;
-}
-
-function normalizedRenderedText(tokens, includeCode = true) {
-  return renderedTokenList(tokens, includeCode)
+function normalizedRenderedText(content, includeCode = true) {
+  return content.text({ includeCode, blockBreaks: true }).text
     .replace(/[\t\f\v ]+/g, " ")
     .replace(/ *\n */g, "\n")
     .replace(/\n{2,}/g, "\n")
@@ -170,45 +68,6 @@ function isMeaningful(text) {
   return words.length >= 2;
 }
 
-function headingName(token) {
-  return renderedInlineTokens(token.tokens, true)
-    .replace(/[\t\f\v ]+/g, " ")
-    .replace(/ *\n */g, "\n")
-    .trim()
-    .replace(/:\s*$/, "")
-    .trim()
-    .toLowerCase();
-}
-
-function parseSections(tokens) {
-  const sections = new Map();
-  let current;
-
-  for (const token of tokens) {
-    if (token.type === "heading") {
-      const name = headingName(token);
-      if (!recognizedSections.has(name)) {
-        if (!current || token.depth <= current.level) {
-          current = undefined;
-        }
-        continue;
-      }
-
-      current = { level: token.depth, name };
-      const values = sections.get(name) ?? [];
-      values.push([]);
-      sections.set(name, values);
-      continue;
-    }
-
-    if (current) {
-      sections.get(current.name).at(-1).push(token);
-    }
-  }
-
-  return sections;
-}
-
 function requiredSection(sections, name, errors) {
   const matches = sections.get(name) ?? [];
   const displayName =
@@ -222,20 +81,20 @@ function requiredSection(sections, name, errors) {
   if (matches.length > 1) {
     errors.push(`Keep exactly one ${displayName} section.`);
   }
-  return matches[0];
+  return matches[0].content;
 }
 
-function hasIssueReference(tokens) {
-  const rendered = parsedHtml(marked.parser(tokens), false);
-  const content = rendered.text
+function hasIssueReference(content) {
+  const rendered = content.text({ includeCode: false, blockBreaks: true });
+  const text = rendered.text
     .replace(/[\t\f\v ]+/g, " ")
     .replace(/ *\n */g, "\n")
     .replace(/\n{2,}/g, "\n")
     .trim();
   if (
-    issueUrl.test(content) ||
-    /\b[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#[1-9]\d*\b/.test(content) ||
-    /(^|[^A-Za-z0-9_])#[1-9]\d*\b/.test(content)
+    issueUrl.test(text) ||
+    /\b[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#[1-9]\d*\b/.test(text) ||
+    /(^|[^A-Za-z0-9_])#[1-9]\d*\b/.test(text)
   ) {
     return true;
   }
@@ -243,9 +102,9 @@ function hasIssueReference(tokens) {
   return rendered.links.some((href) => issueUrl.test(href));
 }
 
-function hasSmallCorrectionReason(tokens) {
-  const content = normalizedRenderedText(tokens, false);
-  const marker = content.match(/(?:^|\n)Small correction\s*:\s*([\s\S]*)$/i);
+function hasSmallCorrectionReason(content) {
+  const rendered = normalizedRenderedText(content, false);
+  const marker = rendered.match(/(?:^|\n)Small correction\s*:\s*([\s\S]*)$/i);
   if (!marker || !isMeaningful(marker[1])) {
     return false;
   }
@@ -254,23 +113,23 @@ function hasSmallCorrectionReason(tokens) {
   );
 }
 
-function inlineExplanation(tokens, label) {
-  const content = normalizedRenderedText(tokens, false);
-  const match = content.match(
+function inlineExplanation(content, label) {
+  const text = normalizedRenderedText(content, false);
+  const match = text.match(
     new RegExp(`(?:^|\\n)(?:[-+]\\s*)?${label}\\s*:\\s*([^\\n]+)`, "i"),
   );
   return match ? isMeaningful(match[1]) : false;
 }
 
-function hasExplanation(sections, bodyTokens, label) {
-  const section = sections.get(label)?.[0] ?? [];
+function hasExplanation(sections, bodyContent, label) {
+  const section = sections.get(label)?.[0]?.content ?? null;
   return (
-    isMeaningful(normalizedRenderedText(section)) ||
-    inlineExplanation(bodyTokens, label)
+    (section !== null && isMeaningful(normalizedRenderedText(section))) ||
+    inlineExplanation(bodyContent, label)
   );
 }
 
-function validateTitle(title, bodyTokens, sections, errors) {
+function validateTitle(title, bodyContent, sections, errors) {
   const titleMatch = title.match(
     /^(?<type>[A-Za-z]+)(?<scope>\([^()\r\n]+\))?(?<breaking>!)?: (?<description>[^\r\n]+)$/,
   );
@@ -298,16 +157,16 @@ function validateTitle(title, bodyTokens, sections, errors) {
     errors.push("Remove the trailing period from the title description.");
   }
 
-  const structuralBody = normalizedRenderedText(bodyTokens, false);
+  const structuralBody = normalizedRenderedText(bodyContent, false);
   const hasBreakingFooter = /^BREAKING[ -]CHANGE\s*:/im.test(structuralBody);
   if (hasBreakingFooter && !breaking) {
     errors.push("Add ! before the title colon when the body declares a breaking change.");
   }
   if (breaking) {
-    if (!hasExplanation(sections, bodyTokens, "impact")) {
+    if (!hasExplanation(sections, bodyContent, "impact")) {
       errors.push("Explain the breaking change under an Impact heading or Impact: label.");
     }
-    if (!hasExplanation(sections, bodyTokens, "migration")) {
+    if (!hasExplanation(sections, bodyContent, "migration")) {
       errors.push("Explain migration under a Migration heading or Migration: label.");
     }
   }
@@ -342,8 +201,12 @@ function main() {
 
   const body = typeof pullRequest.body === "string" ? pullRequest.body : "";
   const errors = [];
-  const bodyTokens = marked.lexer(body);
-  const sections = parseSections(bodyTokens);
+  const document = interpretMarkdown(body);
+  const sections = document.sections(recognizedSections, {
+    hierarchy: "matching",
+    nameSource: "rendered",
+    stripTrailingColon: true,
+  });
   const summary = requiredSection(sections, "summary", errors);
   const validation = requiredSection(sections, "validation", errors);
   const relatedIssue = requiredSection(sections, "related issue", errors);
@@ -364,7 +227,7 @@ function main() {
     );
   }
 
-  validateTitle(pullRequest.title, bodyTokens, sections, errors);
+  validateTitle(pullRequest.title, document.content, sections, errors);
   writeSummary(errors);
 
   if (errors.length) {
