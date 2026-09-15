@@ -60,7 +60,7 @@ check.
 Run the executable checks with Node.js 24:
 
 ```sh
-npm run test:pr-metadata
+node --test test/pr-metadata.test.mjs
 npm run check
 ```
 
