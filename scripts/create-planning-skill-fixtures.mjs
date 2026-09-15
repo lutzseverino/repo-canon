@@ -16,7 +16,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const scriptPath = fileURLToPath(import.meta.url);
 const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
+const scriptSourcePath = 'scripts/create-planning-skill-fixtures.mjs';
 const skillsRoot = join(sourceRoot, 'vendor/mattpocock-skills/skills');
 const upstreamCommit = '3cca18b368ae95cdbdebbff572ccafa662551015';
 const skillNames = [
@@ -29,6 +31,22 @@ const skillNames = [
   'implement',
   'prototype',
   'wizard',
+];
+const linkedSkillNames = [
+  ...skillNames,
+  'code-review',
+  'domain-modeling',
+  'grilling',
+  'research',
+  'tdd',
+];
+const sharedSourceFiles = [
+  'AGENTS.md',
+  'CONTRIBUTING.md',
+  'docs/agents/README.md',
+  'docs/agents/domain.md',
+  'docs/agents/issue-tracker.md',
+  'docs/agents/triage-labels.md',
 ];
 
 function argument(name) {
@@ -78,6 +96,10 @@ function hashDirectory(root) {
   return digest.digest('hex');
 }
 
+function hashFile(path) {
+  return createHash('sha256').update(readFileSync(path)).digest('hex');
+}
+
 function createRepository(name, skills, { agents, context }) {
   const root = join(fixtureRoot, name);
   mkdirSync(root, { recursive: true });
@@ -96,6 +118,7 @@ function createRepository(name, skills, { agents, context }) {
   git(root, ['init', '--quiet', '--initial-branch=main']);
   git(root, ['config', 'user.name', 'Repo Canon Exercise']);
   git(root, ['config', 'user.email', 'exercise@example.invalid']);
+  git(root, ['config', 'commit.gpgsign', 'false']);
   return root;
 }
 
@@ -272,9 +295,18 @@ jobs:
 const manifest = {
   source: {
     repositoryHead: git(sourceRoot, ['rev-parse', 'HEAD']),
+    fixtureBuilderSha256: hashFile(scriptPath),
     upstreamCommit,
     node: process.version,
     git: execFileSync('git', ['--version'], { encoding: 'utf8' }).trim(),
+    directoryHashSerialization: 'repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1',
+    inputFiles: Object.fromEntries([scriptSourcePath, ...sharedSourceFiles].map(path => [path, {
+      sha256: hashFile(join(sourceRoot, path)),
+    }])),
+    linkedSkillDirectories: Object.fromEntries(linkedSkillNames.map(name => [name, {
+      path: skillPath(name),
+      sha256: hashDirectory(skillPath(name)),
+    }])),
   },
   skills: skillNames.map((name) => ({ name, sha256: hashDirectory(skillPath(name)) })),
   repositories,

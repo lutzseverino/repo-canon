@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   chmodSync,
   cpSync,
@@ -15,6 +16,10 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const sourceInputFiles = [
+  'scripts/prepare-adoption-fixtures.mjs',
+  'scripts/support/fake-gh-adoption.mjs',
+];
 const requestedOutput = process.argv[2];
 const outputRoot = requestedOutput
   ? resolve(requestedOutput)
@@ -30,6 +35,10 @@ function git(root, ...args) {
   return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim();
 }
 
+function hashFile(path) {
+  return createHash('sha256').update(readFileSync(path)).digest('hex');
+}
+
 function initialize(name, files, remote = `repo-canon-fixtures/${name}`) {
   const root = join(outputRoot, name);
   mkdirSync(root, { recursive: true });
@@ -37,6 +46,7 @@ function initialize(name, files, remote = `repo-canon-fixtures/${name}`) {
   git(root, 'init', '--initial-branch=main');
   git(root, 'config', 'user.name', 'Repo Canon evidence');
   git(root, 'config', 'user.email', 'evidence@example.invalid');
+  git(root, 'config', 'commit.gpgsign', 'false');
   git(root, 'remote', 'add', 'origin', `https://github.com/${remote}.git`);
   git(root, 'add', '--all');
   git(root, 'commit', '--no-gpg-sign', '-m', 'chore: create disposable adoption fixture');
@@ -152,6 +162,9 @@ const plan = {
   createdWith: {
     node: process.version,
     sourceHead: git(repositoryRoot, 'rev-parse', 'HEAD'),
+    inputFiles: Object.fromEntries(sourceInputFiles.map(path => [path, {
+      sha256: hashFile(join(repositoryRoot, path)),
+    }])),
   },
   root: realpathSync(outputRoot),
   fixtureEnvironment: {

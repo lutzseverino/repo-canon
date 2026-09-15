@@ -43,16 +43,18 @@ scenario-specific guidance used by every authoritative session. The resulting
 runtime builder had SHA-256
 `bdad304ebd987297f1d7c3b6604c71808db49d9cc2ca09afbabe900a38fcf478`.
 
-The current builder retains that scenario-guidance correction and adds
+The builder at commit `9da5c9478f397b30a3ef82a70ea8b5f652f3c12b` retained that
+scenario-guidance correction and added
 manifest self-identification, optional-remote handling, ADR directory indexes,
 and unsigned disposable commits that do not inherit host signing policy. Its
 SHA-256 is
 `baf0f2849ab61b2abe69ee053b417f883f826ee593549e618ba813e41a676777`.
 Applying the [retained reverse patch](engineering-skill-runtime-builder.patch)
-to the current builder reconstructs the exact runtime bytes:
+to that historical builder reconstructs the exact runtime bytes:
 
 ```bash
-cp scripts/create-engineering-skill-fixtures.mjs /tmp/runtime-builder.mjs
+git show 9da5c9478f397b30a3ef82a70ea8b5f652f3c12b:scripts/create-engineering-skill-fixtures.mjs \
+  > /tmp/runtime-builder.mjs
 patch /tmp/runtime-builder.mjs \
   < docs/development/engineering-skill-runtime-builder.patch
 sha256sum /tmp/runtime-builder.mjs
@@ -60,6 +62,15 @@ sha256sum /tmp/runtime-builder.mjs
 
 The additional retained harness behavior does not alter the skill bytes or the
 substantive scenario source used during the exercises.
+
+The current manifest keeps the source `HEAD` as repository context and records
+SHA-256 for the builder and every copied shared-guidance file. It identifies
+skill digests as
+`repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1`: traverse
+directories depth first, sort each directory's entries with JavaScript
+`localeCompare`, and append each slash-normalized relative path, NUL, file
+bytes, and NUL to the SHA-256 stream. These current provenance fields identify
+uncommitted source-input bytes without changing the historical hashes above.
 
 ## Exercised skill identity
 
@@ -231,10 +242,13 @@ npm run test:engineering-skill-fixtures
 
 The command prints a versioned JSON manifest containing the temporary root,
 repository paths and fixed points, optional source remote, Repo Canon worktree
-commit, builder digest, pinned upstream commit, and every complete-directory
-skill digest. Supplying
+commit, builder and copied-file digests, pinned upstream commit, the named
+directory serialization, and every complete-directory skill digest. Supplying
 `--root <unused-path>` creates the same repositories at a chosen location.
 The fixture test verifies the shared guidance, scenario-specific project
 guidance, domain and development context, ADR indexes, skill symlinks and
 digests, an actual unresolved Git merge, a source without an `origin` remote,
-and a host that requires commit signing with an unusable signing program.
+and a host that requires commit signing with an unusable signing program. Each
+fixture sets `commit.gpgsign=false` in repository-local configuration; the test
+also creates an ordinary later commit without a signing override and leaves the
+host's global configuration unchanged.

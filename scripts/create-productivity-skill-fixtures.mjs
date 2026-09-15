@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 const scriptPath = fileURLToPath(import.meta.url);
 const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
+const scriptSourcePath = 'scripts/create-productivity-skill-fixtures.mjs';
 const skillsRoot = join(sourceRoot, 'vendor/mattpocock-skills/skills/productivity');
 const skillNames = [
   'grill-me',
@@ -78,6 +79,10 @@ function hashDirectory(root) {
   }
   visit(root);
   return digest.digest('hex');
+}
+
+function hashFile(path) {
+  return createHash('sha256').update(readFileSync(path)).digest('hex');
 }
 
 function createRepository(name, skills, { context, project, development, files = {} }) {
@@ -174,8 +179,12 @@ const manifest = {
   root: fixtureRoot,
   source: {
     worktreeCommit: git(sourceRoot, ['rev-parse', 'HEAD']),
-    builderSha256: createHash('sha256').update(readFileSync(scriptPath)).digest('hex'),
+    builderSha256: hashFile(scriptPath),
     upstreamCommit: '3cca18b368ae95cdbdebbff572ccafa662551015',
+    directoryHashSerialization: 'repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1',
+    inputFiles: Object.fromEntries([scriptSourcePath, ...sharedFiles].map(path => [path, {
+      sha256: hashFile(join(sourceRoot, path)),
+    }])),
     skills: Object.fromEntries(skillNames.map((name) => [name, {
       path: join(skillsRoot, name),
       sha256: hashDirectory(join(skillsRoot, name)),

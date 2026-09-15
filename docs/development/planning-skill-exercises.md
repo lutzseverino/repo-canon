@@ -30,6 +30,14 @@ The builder itself requires only Node.js 24 and Git. Codex is an exercise
 harness prerequisite and is recorded here from the actual sessions; it is not
 a generic CI or fixture-generation dependency.
 
+The current manifest keeps the source `HEAD` and adds SHA-256 for the builder,
+each copied Repo Canon guidance file, and every linked skill directory,
+including support skills outside the nine exercised targets. This records the
+bytes actually consumed even when an input differs from `HEAD`. Every fixture
+also sets repository-local `commit.gpgsign=false`; the focused test makes an
+ordinary later commit with hostile global signing and an unusable signer while
+leaving that global configuration unchanged.
+
 An initial fixture at Repo Canon commit `54847136799062de3faf31b3354b2bbace7618d7`
 was rejected after PR review found two harness defects: fixture generation
 called a particular installed Codex CLI, and the planning repository's
@@ -55,9 +63,10 @@ the correction.
 ## Exercised source identity
 
 The vendored source is mattpocock/skills commit
-`3cca18b368ae95cdbdebbff572ccafa662551015`. Each digest covers the complete
-skill directory using the same sorted path, NUL, bytes, NUL algorithm as the
-existing inventory and engineering runtime records.
+`3cca18b368ae95cdbdebbff572ccafa662551015`. Each manifest and table digest
+uses `repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1`:
+depth-first traversal, JavaScript `localeCompare` ordering within each
+directory, then slash-normalized relative path, NUL, file bytes, and NUL.
 
 | Skill | Complete-directory SHA-256 |
 | --- | --- |
@@ -77,6 +86,16 @@ exercise verified the managed-update boundary below, and a Node-and-Git test
 reproduces its candidate-only mutation, digest, difference, source-invariance,
 and cleanup checks without requiring Codex. No exercise modified a vendored
 file, and adopting contributors received no independent updater or write route.
+
+The retained managed-update comparison uses a distinct serialization,
+`repo-canon/directory-sha256/flat-c-byte-path-nul-bytes-nul/v1`: enumerate all
+regular files, sort complete relative paths bytewise under `LC_ALL=C`, then
+append the same path, NUL, bytes, NUL records. Its historical
+`570d12b3caf6c468d77e0aba8602efc7a5346697a77cb5372f623cf67247784b`
+and
+`13af6e0225c89e4b44d4476b4ca87681219f9d5a49566c5f2d3df173f766ee6d`
+values remain evidence in that format; they are not normalized to the
+recursive manifest format.
 
 ## Observed outcomes
 

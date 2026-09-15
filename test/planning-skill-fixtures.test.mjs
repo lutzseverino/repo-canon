@@ -70,6 +70,38 @@ test('planning and adoption fixture builder creates runnable bounded scenarios',
       'triage-wayfinder',
     ]);
     assert.equal(manifest.source.upstreamCommit, '3cca18b368ae95cdbdebbff572ccafa662551015');
+    assert.match(manifest.source.fixtureBuilderSha256, /^[a-f0-9]{64}$/);
+    assert.equal(
+      manifest.source.directoryHashSerialization,
+      'repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1',
+    );
+    for (const path of [
+      'AGENTS.md',
+      'CONTRIBUTING.md',
+      'docs/agents/README.md',
+      'docs/agents/domain.md',
+      'docs/agents/issue-tracker.md',
+      'docs/agents/triage-labels.md',
+      'scripts/create-planning-skill-fixtures.mjs',
+    ]) {
+      assert.match(manifest.source.inputFiles[path].sha256, /^[a-f0-9]{64}$/);
+    }
+    assert.deepEqual(Object.keys(manifest.source.linkedSkillDirectories).sort(), [
+      'code-review',
+      'domain-modeling',
+      'grill-with-docs',
+      'grilling',
+      'implement',
+      'prototype',
+      'research',
+      'setup-matt-pocock-skills',
+      'tdd',
+      'to-spec',
+      'to-tickets',
+      'triage',
+      'wayfinder',
+      'wizard',
+    ]);
     assert.deepEqual(manifest.skills.map(({ name }) => name), [
       'setup-matt-pocock-skills',
       'grill-with-docs',
@@ -85,9 +117,15 @@ test('planning and adoption fixture builder creates runnable bounded scenarios',
       assert.match(skill.sha256, /^[a-f0-9]{64}$/);
     }
     for (const repository of Object.values(manifest.repositories)) {
+      assert.equal(execFileSync('git', ['config', '--local', '--get', 'commit.gpgsign'], {
+        cwd: repository.path,
+        encoding: 'utf8',
+      }).trim(), 'false');
       for (const skill of readdirSync(join(repository.path, '.agents', 'skills'))) {
         const target = realpathSync(join(repository.path, '.agents', 'skills', skill));
         assert.equal(statSync(target).isDirectory(), true);
+        assert.equal(manifest.source.linkedSkillDirectories[skill].path, target);
+        assert.match(manifest.source.linkedSkillDirectories[skill].sha256, /^[a-f0-9]{64}$/);
       }
     }
 
@@ -117,6 +155,33 @@ test('planning and adoption fixture builder creates runnable bounded scenarios',
   } finally {
     rmSync(parent, { recursive: true, force: true });
   }
+});
+
+test('planning builder supports later ordinary commits under hostile host signing', (t) => {
+  const parent = mkdtempSync(join(tmpdir(), 'repo-canon-planning-signing-test-'));
+  t.after(() => rmSync(parent, { recursive: true, force: true }));
+  const target = join(parent, 'fixtures');
+  const globalGitConfig = join(parent, 'gitconfig');
+  const globalGitConfigBytes = '[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = /bin/false\n';
+  writeFileSync(globalGitConfig, globalGitConfigBytes);
+  execFileSync(process.execPath, ['scripts/create-planning-skill-fixtures.mjs', '--root', target], {
+    cwd: root,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig },
+    stdio: 'pipe',
+  });
+  const manifest = JSON.parse(readFileSync(join(target, 'manifest.json'), 'utf8'));
+  const repository = manifest.repositories.delivery.path;
+
+  writeFileSync(join(repository, 'later-agent-work.md'), '# Later agent work\n');
+  execFileSync('git', ['add', 'later-agent-work.md'], {
+    cwd: repository,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig },
+  });
+  execFileSync('git', ['commit', '--quiet', '-m', 'test: record later agent work'], {
+    cwd: repository,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig },
+  });
+  assert.equal(readFileSync(globalGitConfig, 'utf8'), globalGitConfigBytes);
 });
 
 test('retained planning artifacts preserve native formats and runtime outputs', () => {

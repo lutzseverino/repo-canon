@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 
 const scriptPath = fileURLToPath(import.meta.url);
 const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
+const scriptSourcePath = 'scripts/create-engineering-skill-fixtures.mjs';
 const skillsRoot = join(sourceRoot, 'vendor/mattpocock-skills/skills/engineering');
 const skillNames = [
   'ask-matt',
@@ -96,6 +97,10 @@ function hashDirectory(root) {
   return digest.digest('hex');
 }
 
+function hashFile(path) {
+  return createHash('sha256').update(readFileSync(path)).digest('hex');
+}
+
 function createRepository(name, skills, { context, development }) {
   const root = join(fixtureRoot, name);
   mkdirSync(root, { recursive: true });
@@ -114,6 +119,7 @@ function createRepository(name, skills, { context, development }) {
   git(root, ['init', '--quiet', '--initial-branch=main']);
   git(root, ['config', 'user.name', 'Repo Canon Exercise']);
   git(root, ['config', 'user.email', 'exercise@example.invalid']);
+  git(root, ['config', 'commit.gpgsign', 'false']);
   return root;
 }
 
@@ -232,8 +238,12 @@ process.stdout.write(`${JSON.stringify({
   source: {
     repository: gitOptional(sourceRoot, ['config', '--get', 'remote.origin.url']),
     worktreeCommit: git(sourceRoot, ['rev-parse', 'HEAD']),
-    fixtureBuilderSha256: createHash('sha256').update(readFileSync(scriptPath)).digest('hex'),
+    fixtureBuilderSha256: hashFile(scriptPath),
     pinnedUpstreamCommit: '3cca18b368ae95cdbdebbff572ccafa662551015',
+    directoryHashSerialization: 'repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1',
+    inputFiles: Object.fromEntries([scriptSourcePath, ...sharedFiles].map(path => [path, {
+      sha256: hashFile(join(sourceRoot, path)),
+    }])),
   },
   skills,
   repositories,
