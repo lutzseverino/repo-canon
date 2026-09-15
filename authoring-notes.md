@@ -191,12 +191,6 @@ is maintained in
 Project README and documentation scope uses separate assessment and discovery
 guidance and resolves to individual adopter-reviewed paths.
 
-## Remaining authoring work
-
-- Exercise installation and licensing edge cases and preservation of existing
-  repository information against the agreed guidance.
-- Remaining skill exercises and complete adoption evidence.
-
 The [compatibility audit](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface and retains the
 historical CLI findings. Use installed public CLI 1.2.2 as the final validation
