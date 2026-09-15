@@ -11,7 +11,9 @@
     "prepare:adoption-fixtures": "node scripts/prepare-adoption-fixtures.mjs",
     "test": "node --test test/*.test.mjs",
     "test:engineering-skill-fixtures": "node --test test/engineering-skill-fixtures.test.mjs",
+    "test:planning-skill-fixtures": "node --test test/planning-skill-fixtures.test.mjs",
     "test:github-pr-integration": "node --test test/github-pr-integration-setup.test.mjs",
-    "test:issue-contracts": "node --test test/issue-contracts.test.mjs"
+    "test:issue-contracts": "node --test test/issue-contracts.test.mjs",
+    "test:productivity-skill-fixtures": "node --test test/productivity-skill-fixtures.test.mjs"
   }
 }
