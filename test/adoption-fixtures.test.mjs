@@ -32,6 +32,7 @@ test('prepares clean real Git repositories for the adoption evidence matrix', t 
   for (const path of [
     'scripts/prepare-adoption-fixtures.mjs',
     'scripts/support/fake-gh-adoption.mjs',
+    'scripts/support/fixture-authoring.mjs',
   ]) {
     assert.equal(
       plan.createdWith.inputFiles[path].sha256,
@@ -54,6 +55,9 @@ test('prepares clean real Git repositories for the adoption evidence matrix', t 
     assert.equal(remoteState.labels[0].name, 'adopter-owned');
     assert.equal(remoteState.rulesets[0].name, 'Adopter release policy');
     assert.equal(git(join(output, name), 'config', '--local', '--get', 'commit.gpgsign'), 'false');
+    assert.equal(git(join(output, name), 'config', '--local', '--get', 'user.name'), 'Repo Canon evidence');
+    assert.equal(git(join(output, name), 'config', '--local', '--get', 'user.email'), 'evidence@example.invalid');
+    assert.equal(git(join(output, name), 'branch', '--show-current'), 'main');
   }
 
   const laterRepository = join(output, 'amendment-success');

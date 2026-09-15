@@ -83,6 +83,7 @@ test('planning and adoption fixture builder creates runnable bounded scenarios',
       'docs/agents/issue-tracker.md',
       'docs/agents/triage-labels.md',
       'scripts/create-planning-skill-fixtures.mjs',
+      'scripts/support/fixture-authoring.mjs',
     ]) {
       assert.match(manifest.source.inputFiles[path].sha256, /^[a-f0-9]{64}$/);
     }
@@ -121,6 +122,19 @@ test('planning and adoption fixture builder creates runnable bounded scenarios',
         cwd: repository.path,
         encoding: 'utf8',
       }).trim(), 'false');
+      assert.equal(execFileSync('git', ['config', '--local', '--get', 'user.name'], {
+        cwd: repository.path,
+        encoding: 'utf8',
+      }).trim(), 'Repo Canon Exercise');
+      assert.equal(execFileSync('git', ['config', '--local', '--get', 'user.email'], {
+        cwd: repository.path,
+        encoding: 'utf8',
+      }).trim(), 'exercise@example.invalid');
+      assert.equal(execFileSync('git', ['branch', '--show-current'], {
+        cwd: repository.path,
+        encoding: 'utf8',
+      }).trim(), 'main');
+      assert.equal(execFileSync('git', ['remote'], { cwd: repository.path, encoding: 'utf8' }), '');
       for (const skill of readdirSync(join(repository.path, '.agents', 'skills'))) {
         const target = realpathSync(join(repository.path, '.agents', 'skills', skill));
         assert.equal(statSync(target).isDirectory(), true);

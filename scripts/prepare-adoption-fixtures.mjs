@@ -1,12 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import {
   chmodSync,
   cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   realpathSync,
   symlinkSync,
   writeFileSync,
@@ -14,10 +12,15 @@ import {
 import { dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import {
+  commitFixture,
+  identifyFixtureSource,
+  initializeFixtureRepository,
+} from './support/fixture-authoring.mjs';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const scriptSourcePath = 'scripts/prepare-adoption-fixtures.mjs';
 const sourceInputFiles = [
-  'scripts/prepare-adoption-fixtures.mjs',
   'scripts/support/fake-gh-adoption.mjs',
 ];
 const requestedOutput = process.argv[2];
@@ -35,21 +38,15 @@ function git(root, ...args) {
   return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim();
 }
 
-function hashFile(path) {
-  return createHash('sha256').update(readFileSync(path)).digest('hex');
-}
-
 function initialize(name, files, remote = `repo-canon-fixtures/${name}`) {
   const root = join(outputRoot, name);
   mkdirSync(root, { recursive: true });
   for (const [path, content] of Object.entries(files)) write(root, path, content);
-  git(root, 'init', '--initial-branch=main');
-  git(root, 'config', 'user.name', 'Repo Canon evidence');
-  git(root, 'config', 'user.email', 'evidence@example.invalid');
-  git(root, 'config', 'commit.gpgsign', 'false');
-  git(root, 'remote', 'add', 'origin', `https://github.com/${remote}.git`);
-  git(root, 'add', '--all');
-  git(root, 'commit', '--no-gpg-sign', '-m', 'chore: create disposable adoption fixture');
+  initializeFixtureRepository(root, {
+    author: { name: 'Repo Canon evidence', email: 'evidence@example.invalid' },
+    remote: `https://github.com/${remote}.git`,
+  });
+  commitFixture(root, 'chore: create disposable adoption fixture');
   return root;
 }
 
@@ -82,8 +79,7 @@ const prepared = initialize('prepared-monorepo', {
 });
 
 write(prepared, 'docs/agents/project.md', '# Project agent guidance\n\nRun Cargo commands from `engines/meteor`. Never edit `dist/generated` by hand.\n');
-git(prepared, 'add', 'docs/agents/project.md');
-git(prepared, 'commit', '--no-gpg-sign', '-m', 'docs: preserve project agent guidance');
+commitFixture(prepared, 'docs: preserve project agent guidance');
 
 const lifecycleFiles = {
   'CONTRIBUTING.md': '# Contributing\n\nRun checks before submitting work.\n',
@@ -118,8 +114,7 @@ const protection = initialize('protection', {
   'outside.md': '# Outside\n',
 });
 symlinkSync('../outside.md', join(protection, 'docs', 'linked.md'));
-git(protection, 'add', 'docs/linked.md');
-git(protection, 'commit', '--no-gpg-sign', '-m', 'test: add unsafe symlink candidate');
+commitFixture(protection, 'test: add unsafe symlink candidate');
 
 const fixtureGh = join(outputRoot, 'bin', 'gh');
 mkdirSync(dirname(fixtureGh), { recursive: true });
@@ -157,14 +152,18 @@ for (const name of fixtureNames) {
   }, null, 2)}\n`);
 }
 
+const provenance = identifyFixtureSource({
+  sourceRoot: repositoryRoot,
+  builderPath: scriptSourcePath,
+  files: sourceInputFiles,
+});
+
 const plan = {
   format: 'repo-canon/adoption-fixture-plan/v1',
   createdWith: {
     node: process.version,
-    sourceHead: git(repositoryRoot, 'rev-parse', 'HEAD'),
-    inputFiles: Object.fromEntries(sourceInputFiles.map(path => [path, {
-      sha256: hashFile(join(repositoryRoot, path)),
-    }])),
+    sourceHead: provenance.head,
+    inputFiles: provenance.inputFiles,
   },
   root: realpathSync(outputRoot),
   fixtureEnvironment: {

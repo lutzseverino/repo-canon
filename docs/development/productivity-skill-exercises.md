@@ -218,9 +218,9 @@ not statistically establish reliability or probe the synchronization branch.
   `repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1`:
   depth-first traversal, JavaScript `localeCompare` ordering within each
   directory, then slash-normalized relative path, NUL, file bytes, and NUL.
-  The current manifest also records SHA-256 for its builder and every copied
-  shared-guidance file alongside the source `HEAD`, so dirty source inputs have
-  their actual byte identity.
+  The current manifest also records SHA-256 for its builder, the shared
+  fixture-authoring module, and every copied shared-guidance file alongside the
+  source `HEAD`, so dirty source inputs have their actual byte identity.
 - The fresh repositories had no remotes. Repository-local signing was disabled
   to make fixture commits deterministic in environments with global signing.
 - Sessions used danger-full-access only inside identified disposable local
