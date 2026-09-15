@@ -59,6 +59,7 @@ test('builds scenario-specific repositories using every pinned productivity skil
     'docs/agents/issue-tracker.md',
     'docs/agents/triage-labels.md',
     'scripts/create-productivity-skill-fixtures.mjs',
+    'scripts/support/fixture-authoring.mjs',
   ]) {
     assert.match(manifest.source.inputFiles[path].sha256, /^[a-f0-9]{64}$/);
   }
@@ -72,6 +73,10 @@ test('builds scenario-specific repositories using every pinned productivity skil
     assert.equal(execFileSync('git', ['status', '--short'], { cwd: repository.path, encoding: 'utf8' }), '');
     assert.equal(readFileSync(join(repository.path, 'AGENTS.md'), 'utf8'), readFileSync(join(sourceRoot, 'AGENTS.md'), 'utf8'));
     assert.equal(execFileSync('git', ['config', '--get', 'commit.gpgsign'], { cwd: repository.path, encoding: 'utf8' }).trim(), 'false');
+    assert.equal(execFileSync('git', ['config', '--get', 'user.name'], { cwd: repository.path, encoding: 'utf8' }).trim(), 'Repo Canon Exercise');
+    assert.equal(execFileSync('git', ['config', '--get', 'user.email'], { cwd: repository.path, encoding: 'utf8' }).trim(), 'exercise@example.invalid');
+    assert.equal(execFileSync('git', ['branch', '--show-current'], { cwd: repository.path, encoding: 'utf8' }).trim(), 'main');
+    assert.equal(execFileSync('git', ['remote'], { cwd: repository.path, encoding: 'utf8' }), '');
     assert.ok(readFileSync(join(repository.path, 'docs/agents/project.md'), 'utf8').includes('disposable'));
     assert.ok(readFileSync(join(repository.path, 'CONTEXT.md'), 'utf8').includes('## Language'));
     assert.ok(readFileSync(join(repository.path, 'docs/development/README.md'), 'utf8').startsWith('# Development'));

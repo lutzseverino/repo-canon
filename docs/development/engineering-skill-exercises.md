@@ -64,8 +64,8 @@ The additional retained harness behavior does not alter the skill bytes or the
 substantive scenario source used during the exercises.
 
 The current manifest keeps the source `HEAD` as repository context and records
-SHA-256 for the builder and every copied shared-guidance file. It identifies
-skill digests as
+SHA-256 for the builder, shared fixture-authoring module, and every copied
+shared-guidance file. It identifies skill digests as
 `repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1`: traverse
 directories depth first, sort each directory's entries with JavaScript
 `localeCompare`, and append each slash-normalized relative path, NUL, file

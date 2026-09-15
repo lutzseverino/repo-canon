@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 
-import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import {
   cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
-  readdirSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  commitFixture,
+  identifyFixtureSource,
+  initializeFixtureRepository,
+} from './support/fixture-authoring.mjs';
 
-const scriptPath = fileURLToPath(import.meta.url);
 const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
 const scriptSourcePath = 'scripts/create-productivity-skill-fixtures.mjs';
 const skillsRoot = join(sourceRoot, 'vendor/mattpocock-skills/skills/productivity');
@@ -58,33 +58,6 @@ function write(root, path, content) {
   writeFileSync(target, content);
 }
 
-function git(root, args) {
-  return execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
-}
-
-function hashDirectory(root) {
-  const digest = createHash('sha256');
-  function visit(directory) {
-    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-      const absolute = join(directory, entry.name);
-      const path = relative(root, absolute).replaceAll('\\', '/');
-      if (entry.isDirectory()) visit(absolute);
-      else {
-        digest.update(path);
-        digest.update('\0');
-        digest.update(readFileSync(absolute));
-        digest.update('\0');
-      }
-    }
-  }
-  visit(root);
-  return digest.digest('hex');
-}
-
-function hashFile(path) {
-  return createHash('sha256').update(readFileSync(path)).digest('hex');
-}
-
 function createRepository(name, skills, { context, project, development, files = {} }) {
   const root = join(fixtureRoot, name);
   mkdirSync(root, { recursive: true });
@@ -95,13 +68,10 @@ function createRepository(name, skills, { context, project, development, files =
   for (const [path, content] of Object.entries(files)) write(root, path, content);
   mkdirSync(join(root, '.agents/skills'), { recursive: true });
   for (const skill of skills) symlinkSync(join(skillsRoot, skill), join(root, '.agents/skills', skill), 'dir');
-  git(root, ['init', '--quiet', '--initial-branch=main']);
-  git(root, ['config', 'user.name', 'Repo Canon Exercise']);
-  git(root, ['config', 'user.email', 'exercise@example.invalid']);
-  git(root, ['config', 'commit.gpgsign', 'false']);
-  git(root, ['add', '--all']);
-  git(root, ['commit', '--quiet', '-m', `chore: establish ${name} exercise`]);
-  return { path: root, skills, head: git(root, ['rev-parse', 'HEAD']) };
+  initializeFixtureRepository(root, {
+    author: { name: 'Repo Canon Exercise', email: 'exercise@example.invalid' },
+  });
+  return { path: root, skills, head: commitFixture(root, `chore: establish ${name} exercise`) };
 }
 
 const repositories = {};
@@ -174,21 +144,23 @@ repositories['writing-for-agents'] = createRepository('writing-for-agents', ['wr
   },
 });
 
+const provenance = identifyFixtureSource({
+  sourceRoot,
+  builderPath: scriptSourcePath,
+  files: sharedFiles,
+  directories: Object.fromEntries(skillNames.map(name => [name, join(skillsRoot, name)])),
+});
+
 const manifest = {
   format: 'repo-canon/productivity-skill-fixtures/v1',
   root: fixtureRoot,
   source: {
-    worktreeCommit: git(sourceRoot, ['rev-parse', 'HEAD']),
-    builderSha256: hashFile(scriptPath),
+    worktreeCommit: provenance.head,
+    builderSha256: provenance.inputFiles[scriptSourcePath].sha256,
     upstreamCommit: '3cca18b368ae95cdbdebbff572ccafa662551015',
-    directoryHashSerialization: 'repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1',
-    inputFiles: Object.fromEntries([scriptSourcePath, ...sharedFiles].map(path => [path, {
-      sha256: hashFile(join(sourceRoot, path)),
-    }])),
-    skills: Object.fromEntries(skillNames.map((name) => [name, {
-      path: join(skillsRoot, name),
-      sha256: hashDirectory(join(skillsRoot, name)),
-    }])),
+    directoryHashSerialization: provenance.directoryHashSerialization,
+    inputFiles: provenance.inputFiles,
+    skills: provenance.directories,
   },
   repositories,
 };
