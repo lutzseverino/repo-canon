@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { lstatSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
@@ -14,10 +14,14 @@ function git(root, ...args) {
 test('prepares clean real Git repositories for the adoption evidence matrix', t => {
   const parent = mkdtempSync(join(tmpdir(), 'repo-canon-fixture-test-'));
   const output = join(parent, 'fixtures');
+  const globalGitConfig = join(parent, 'gitconfig');
   t.after(() => rmSync(parent, { recursive: true, force: true }));
+
+  writeFileSync(globalGitConfig, '[commit]\n\tgpgSign = true\n');
 
   execFileSync('node', ['scripts/prepare-adoption-fixtures.mjs', output], {
     cwd: repositoryRoot,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig },
     stdio: 'pipe',
   });
   const plan = JSON.parse(readFileSync(join(output, 'plan.json'), 'utf8'));

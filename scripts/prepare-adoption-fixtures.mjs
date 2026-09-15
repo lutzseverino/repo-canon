@@ -39,7 +39,7 @@ function initialize(name, files, remote = `repo-canon-fixtures/${name}`) {
   git(root, 'config', 'user.email', 'evidence@example.invalid');
   git(root, 'remote', 'add', 'origin', `https://github.com/${remote}.git`);
   git(root, 'add', '--all');
-  git(root, 'commit', '-m', 'chore: create disposable adoption fixture');
+  git(root, 'commit', '--no-gpg-sign', '-m', 'chore: create disposable adoption fixture');
   return root;
 }
 
@@ -73,7 +73,7 @@ const prepared = initialize('prepared-monorepo', {
 
 write(prepared, 'docs/agents/project.md', '# Project agent guidance\n\nRun Cargo commands from `engines/meteor`. Never edit `dist/generated` by hand.\n');
 git(prepared, 'add', 'docs/agents/project.md');
-git(prepared, 'commit', '-m', 'docs: preserve project agent guidance');
+git(prepared, 'commit', '--no-gpg-sign', '-m', 'docs: preserve project agent guidance');
 
 const lifecycleFiles = {
   'CONTRIBUTING.md': '# Contributing\n\nRun checks before submitting work.\n',
@@ -109,7 +109,7 @@ const protection = initialize('protection', {
 });
 symlinkSync('../outside.md', join(protection, 'docs', 'linked.md'));
 git(protection, 'add', 'docs/linked.md');
-git(protection, 'commit', '-m', 'test: add unsafe symlink candidate');
+git(protection, 'commit', '--no-gpg-sign', '-m', 'test: add unsafe symlink candidate');
 
 const fixtureGh = join(outputRoot, 'bin', 'gh');
 mkdirSync(dirname(fixtureGh), { recursive: true });

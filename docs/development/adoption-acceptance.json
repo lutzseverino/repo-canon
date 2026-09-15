@@ -9,10 +9,16 @@
       "resolved": "https://registry.npmjs.org/@lutzseverino/repo-standards/-/repo-standards-1.2.2.tgz"
     },
     "installation": {
+      "command": "npm install --save-exact @lutzseverino/repo-standards@1.2.2",
       "packageJson": {
         "dependencies": {
-          "@lutzseverino/repo-standards": "^1.2.2"
+          "@lutzseverino/repo-standards": "1.2.2"
         }
+      },
+      "packageLock": {
+        "version": "1.2.2",
+        "resolved": "https://registry.npmjs.org/@lutzseverino/repo-standards/-/repo-standards-1.2.2.tgz",
+        "integrity": "sha512-K5YejetLhzigwCrbCgwz7i/Jm7FkyZbkBu9A25+hNq3IbU2UASu2cC6Uh6bh8CCO/wl6YeDU3pO/F5ZPX4e3gw=="
       }
     }
   },
@@ -380,14 +386,1815 @@
         "changedPaths": [
           "docs/agents/project.md"
         ],
-        "agentGuidanceSha256": "b56bf22a1dc40775aabb5a00472303899cddb7fba3b10bf4209bfd912ff720d8",
-        "projectGuidanceSha256": "46642495d14c5791e8c97edffa8e78087b813c81e0b68948fddd06493bc3eecd",
         "preservedStatements": [
           "Run Cargo commands from `engines/meteor`.",
           "Never edit `dist/generated` by hand."
         ],
         "agentContainsBoth": true,
-        "projectContainsBoth": true
+        "projectContainsBoth": true,
+        "byteHashes": {
+          "commit": "c324a94653284a71abb662c2591b4eb6b5ef2579",
+          "hashKind": "SHA-256 of complete Git blob content bytes",
+          "files": [
+            {
+              "path": "AGENTS.md",
+              "bytes": 109,
+              "sha256": "18384eefce811255f04ed4f307eb50bb112a46c1d950e91fc5fa99f294e68f6c"
+            },
+            {
+              "path": "docs/agents/project.md",
+              "bytes": 105,
+              "sha256": "a93cf04dc5a474408790ad7b1d719aa498e4194f29bd161250573684b90b3a00"
+            }
+          ]
+        },
+        "historicalNormalizedTextSha256": {
+          "AGENTS": "b56bf22a1dc40775aabb5a00472303899cddb7fba3b10bf4209bfd912ff720d8",
+          "projectGuidance": "46642495d14c5791e8c97edffa8e78087b813c81e0b68948fddd06493bc3eecd"
+        }
+      }
+    },
+    "confirmedScope": {
+      "format": "repo-standards/scope/v1",
+      "request": "sha256:9906a2e7702d8f8e08bf50de1a74d84464960402113ec65864db83c0894292ce",
+      "declarations": [
+        {
+          "id": "documentation",
+          "paths": [
+            "HANDBOOK.md",
+            "docs/README.md",
+            "docs/agents/project.md",
+            "docs/development/README.md",
+            "docs/usage/README.md",
+            "docs/usage/operate.md",
+            "old-guides/operate.md"
+          ],
+          "coverage": "The existing docs root, prepared project guidance, legacy operating source, categorized destination and index, and root link repair cover every useful documentation change. Exact docs/agents siblings remain outside contextual scope.",
+          "evidence": [
+            {
+              "kind": "directory",
+              "path": ".",
+              "identity": "sha256:df87a450e249490ff55d310a546521df86d52c6d02de29bd6af538402e827293"
+            },
+            {
+              "kind": "directory",
+              "path": "docs",
+              "identity": "sha256:8213867b5ac0f688730d6298e05e6638718b67940931b2d980cfba02f017c930"
+            },
+            {
+              "kind": "directory",
+              "path": "docs/usage",
+              "identity": "sha256:02a7ceac85c9b15dfee6464f9c414e6c6c9497ac61f2c348aace6f1a3e087773"
+            },
+            {
+              "kind": "file",
+              "path": "docs/agents/project.md",
+              "identity": "sha256:92d6d9f4fa8af935907be605529df216334918980cc8ebc5624f8149434eb9a4"
+            },
+            {
+              "kind": "file",
+              "path": "old-guides/operate.md",
+              "identity": "sha256:25c170e96875031c5dc854484f6bbf8b72d1d3407af1969695d5357390813afe"
+            }
+          ],
+          "candidates": [
+            {
+              "path": "HANDBOOK.md",
+              "decision": "include",
+              "reason": "Its legacy operating-guide link must be repaired after the separately authorized move.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "HANDBOOK.md",
+                  "identity": "sha256:a36ed10be9599d473161b76c1de58ee2eb47001e057f77747325a850df73f9fe"
+                }
+              ]
+            },
+            {
+              "path": "docs/README.md",
+              "decision": "include",
+              "reason": "The documentation map must link the introduced usage category.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "docs/README.md",
+                  "identity": "sha256:f8afc011ffc7f2441d5eea0b7849f6954769b76fb11eccb225e4f1e69916d682"
+                }
+              ]
+            },
+            {
+              "path": "docs/agents/project.md",
+              "decision": "include",
+              "reason": "The separate preparation commit preserved useful repository-specific instructions here; adoption must review and retain them.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "docs/agents/project.md",
+                  "identity": "sha256:92d6d9f4fa8af935907be605529df216334918980cc8ebc5624f8149434eb9a4"
+                }
+              ]
+            },
+            {
+              "path": "docs/development/README.md",
+              "decision": "include",
+              "reason": "This is the required project-owned development entry point and its commands remain useful.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "docs/development/README.md",
+                  "identity": "sha256:aec49dcbfe27a57ac7e501830da472a9e9e8186f7e8845d40460ce348ecba0e1"
+                }
+              ]
+            },
+            {
+              "path": "docs/usage/README.md",
+              "decision": "include",
+              "reason": "The populated usage category needs an index linking its operating guide and preserved quick reference.",
+              "evidence": [
+                {
+                  "kind": "directory",
+                  "path": "docs/usage",
+                  "identity": "sha256:02a7ceac85c9b15dfee6464f9c414e6c6c9497ac61f2c348aace6f1a3e087773"
+                },
+                {
+                  "kind": "file",
+                  "path": "docs/usage/quick-reference.md",
+                  "identity": "sha256:a90331c9190d80f85daab55d02984f39dfaa2952b738582b96862c2ce5106e2b"
+                },
+                {
+                  "kind": "absence",
+                  "path": "docs/usage/README.md"
+                }
+              ]
+            },
+            {
+              "path": "docs/usage/operate.md",
+              "decision": "include",
+              "reason": "This is the categorized destination for the complete legacy operating guide.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "old-guides/operate.md",
+                  "identity": "sha256:25c170e96875031c5dc854484f6bbf8b72d1d3407af1969695d5357390813afe"
+                },
+                {
+                  "kind": "absence",
+                  "path": "docs/usage/operate.md"
+                }
+              ]
+            },
+            {
+              "path": "old-guides/operate.md",
+              "decision": "include",
+              "reason": "The migration must separately authorize deletion of the old source after preserving its complete content.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "old-guides/operate.md",
+                  "identity": "sha256:25c170e96875031c5dc854484f6bbf8b72d1d3407af1969695d5357390813afe"
+                }
+              ]
+            },
+            {
+              "path": "docs/usage/quick-reference.md",
+              "decision": "exclude",
+              "reason": "This useful document is already categorized correctly and must remain unchanged.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "docs/usage/quick-reference.md",
+                  "identity": "sha256:a90331c9190d80f85daab55d02984f39dfaa2952b738582b96862c2ce5106e2b"
+                }
+              ]
+            },
+            {
+              "path": "dist/generated/README.md",
+              "decision": "exclude",
+              "reason": "The file identifies itself as generated output and must remain unchanged.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "dist/generated/README.md",
+                  "identity": "sha256:f9e158ef23ad51de1170a7a3c32198bcfda7552341f12408e7e3f1bae0c660e0"
+                }
+              ]
+            }
+          ],
+          "unresolved": []
+        },
+        {
+          "id": "github-repository-configuration",
+          "paths": [],
+          "coverage": "This declaration governs remote settings only and intentionally has no project-content paths.",
+          "evidence": [
+            {
+              "kind": "directory",
+              "path": ".",
+              "identity": "sha256:df87a450e249490ff55d310a546521df86d52c6d02de29bd6af538402e827293"
+            }
+          ],
+          "candidates": [],
+          "unresolved": []
+        },
+        {
+          "id": "project-readmes",
+          "paths": [
+            "engines/meteor/README.md",
+            "packages/auth/README.md"
+          ],
+          "coverage": "The Cargo engine and private Node package are the only independently maintained nested Projects. Generated, fixture and organizational candidates are excluded by explicit evidence.",
+          "evidence": [
+            {
+              "kind": "directory",
+              "path": ".",
+              "identity": "sha256:df87a450e249490ff55d310a546521df86d52c6d02de29bd6af538402e827293"
+            },
+            {
+              "kind": "directory",
+              "path": "engines/meteor",
+              "identity": "sha256:919b65e6cea03938bf3905e38b9bf3aa501b92f1d33ab53ec7f4db7b8fb6491d"
+            },
+            {
+              "kind": "directory",
+              "path": "packages/auth",
+              "identity": "sha256:14c74a7e98e9229a5c76aee3f11b53d9cee2c9bc65283879aa51bd44654e12e4"
+            }
+          ],
+          "candidates": [
+            {
+              "path": "engines/meteor/README.md",
+              "decision": "include",
+              "reason": "The versioned Cargo package, owner metadata, maintained source and operating guide establish a Project whose README is absent.",
+              "evidence": [
+                {
+                  "kind": "directory",
+                  "path": "engines/meteor",
+                  "identity": "sha256:919b65e6cea03938bf3905e38b9bf3aa501b92f1d33ab53ec7f4db7b8fb6491d"
+                },
+                {
+                  "kind": "file",
+                  "path": "engines/meteor/Cargo.toml",
+                  "identity": "sha256:4e40aee9077c6383ee12a699d8a3c871d1a90e8201e0d97a803fa4cff9ef8692"
+                },
+                {
+                  "kind": "file",
+                  "path": "engines/meteor/src/lib.rs",
+                  "identity": "sha256:3984a18094759cfabdc53a0b88c559b72b0b6b9a7e4cefc111891a98402506bb"
+                },
+                {
+                  "kind": "absence",
+                  "path": "engines/meteor/README.md"
+                }
+              ]
+            },
+            {
+              "path": "packages/auth/README.md",
+              "decision": "include",
+              "reason": "The private package has its own test command, ownership metadata and maintained source, so the internal Project needs a README.",
+              "evidence": [
+                {
+                  "kind": "directory",
+                  "path": "packages/auth",
+                  "identity": "sha256:14c74a7e98e9229a5c76aee3f11b53d9cee2c9bc65283879aa51bd44654e12e4"
+                },
+                {
+                  "kind": "file",
+                  "path": "packages/auth/package.json",
+                  "identity": "sha256:8e16aa3ee4bfd240a39fdc276f5fef09df740de8a28080eb57838a02fe2868e8"
+                },
+                {
+                  "kind": "file",
+                  "path": "packages/auth/src/index.mjs",
+                  "identity": "sha256:d27cd9c522dbb96f66229f9440d360b40f3046df3058067f01d3bdf5a8c6b0f8"
+                },
+                {
+                  "kind": "absence",
+                  "path": "packages/auth/README.md"
+                }
+              ]
+            },
+            {
+              "path": "dist/generated/README.md",
+              "decision": "exclude",
+              "reason": "The file says the release build generates it and forbids manual edits.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "dist/generated/README.md",
+                  "identity": "sha256:f9e158ef23ad51de1170a7a3c32198bcfda7552341f12408e7e3f1bae0c660e0"
+                }
+              ]
+            },
+            {
+              "path": "groups/platform.md",
+              "decision": "exclude",
+              "reason": "The file explicitly describes an organizational index rather than a maintained Project.",
+              "evidence": [
+                {
+                  "kind": "file",
+                  "path": "groups/platform.md",
+                  "identity": "sha256:48f6fea95756be2670bb07b591be50647d2fca0fcccc0d49e70cbfb4c5591c80"
+                }
+              ]
+            },
+            {
+              "path": "specimens/fake",
+              "decision": "exclude",
+              "reason": "The private manifest is fixture data without commands, ownership or maintained source.",
+              "evidence": [
+                {
+                  "kind": "directory",
+                  "path": "specimens/fake",
+                  "identity": "sha256:25009e34290474dede8143ebd667e97624c2c5f83a8d5ab712ee7912ebc02afa"
+                },
+                {
+                  "kind": "file",
+                  "path": "specimens/fake/package.json",
+                  "identity": "sha256:029d4312ebb40c039b1cdfbc3be891bf3265218bea1c3b1dee456b9f0c3bbb8f"
+                }
+              ]
+            }
+          ],
+          "unresolved": []
+        }
+      ]
+    },
+    "contextualAssessment": {
+      "format": "repo-standards/assessment/v2",
+      "run": "fbb9b578-26b6-4eba-abf3-a54f815f91cc",
+      "selection": "sha256:23911a96d040246fc27fde7a5880c6b337caf9f134feabab1a4b366dd567b18b",
+      "snapshot": "sha256:a4bce2c8385ccbc24add8d2d2a4058bfd0714f4864d2d3f8a782e8e8e6b41b48",
+      "scope": {
+        "inspection": "sha256:cc33add75ae086a3780f75ea98eb9c063801f9dfe696e44a9a6d59984529b248",
+        "afterFixes": "sha256:4c9cc756587ea3b5d19ae23ec54d6025d7490fdf42b852d99864d8871d53dc28"
+      },
+      "declarations": [
+        {
+          "id": "documentation",
+          "status": "satisfied",
+          "explanation": "The documentation now has a complete map, populated usage index, preserved operating content, current development commands, and repaired navigation.",
+          "changedPaths": [
+            "HANDBOOK.md",
+            "docs/README.md",
+            "docs/development/README.md",
+            "docs/usage/README.md",
+            "docs/usage/operate.md",
+            "old-guides/operate.md"
+          ],
+          "evidence": [
+            "The new docs/usage/operate.md is byte-identical to the deleted old-guides/operate.md, preserving the telemetry recovery instruction.",
+            "HANDBOOK.md and docs/README.md link the categorized destination and both populated documentation categories.",
+            "docs/development/README.md records the Node.js 24 and Rust project commands; docs/agents/project.md remains unchanged with its useful repository constraints."
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "The confirmed paths cover the legacy source, destination, indices, project guidance review, development guide, and affected handbook link.",
+              "evidence": [
+                "Reviewed every documentation candidate and confirmed the exact shared agent files and quick reference remain excluded and unchanged."
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "The completed migration and navigation still fit the confirmed documentation paths with no newly discovered documentation work.",
+              "evidence": [
+                "Rechecked the current docs tree, handbook link, preserved project guidance, and excluded generated and exact shared files."
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "github-repository-configuration",
+          "status": "satisfied",
+          "explanation": "The confirmed declaration intentionally owns no project content; its serial fix operations completed and read back the authorized remote settings.",
+          "changedPaths": [],
+          "evidence": [
+            "Operation results report all 12 canonical labels while preserving unrelated labels.",
+            "Operation results report the required PR metadata ruleset and squash-only title/body settings after live readback."
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "The remote-only declaration correctly has an empty project-content scope.",
+              "evidence": [
+                "Reviewed the unambiguous authorized GitHub origin and the empty candidate list before contextual work."
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "No project-content path is needed for the remote settings declaration.",
+              "evidence": [
+                "Current project changes contain no file attributed to GitHub repository configuration."
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "project-readmes",
+          "status": "satisfied",
+          "explanation": "Both maintained nested projects now have developer-facing README files grounded in their manifests and source.",
+          "changedPaths": [
+            "engines/meteor/README.md",
+            "packages/auth/README.md"
+          ],
+          "evidence": [
+            "The Meteor README states the Rust library purpose, cargo test working directory, configuration, and operating/development links.",
+            "The authentication README states the private package purpose, Node.js 24 test command, configuration, and shared development link.",
+            "The generated output, organizational group, and fixture-only package remain excluded and unchanged."
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "The Cargo engine and private authentication package are the only maintained nested projects evidenced by commands, ownership, and source.",
+              "evidence": [
+                "Reviewed both manifests and maintained source plus the explicit generated, organizational, and specimen exclusions."
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "The two introduced READMEs cover every current maintained nested project and no new project appeared.",
+              "evidence": [
+                "Rechecked the current tree, both project manifests, and the unchanged excluded candidates."
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "repository-readme",
+          "status": "satisfied",
+          "explanation": "The root README now introduces the disposable Rust and Node.js workspace, shows verified technology badges, gives representative commands, and retains required navigation.",
+          "changedPaths": [
+            "README.md"
+          ],
+          "evidence": [
+            "Cargo.toml and the Rust source support the Rust badge and cargo test command.",
+            "The private package manifest supports the Node.js test command, and docs/development/README.md records Node.js 24.",
+            "Documentation, Contributing, and MIT License links point to existing repository files."
+          ]
+        }
+      ]
+    },
+    "fullPreservation": {
+      "format": "repo-canon/adoption-preservation/v1",
+      "head": "c324a94653284a71abb662c2591b4eb6b5ef2579",
+      "index": "0bb9f13a524433f5563acb0aeb241a9d01081d74",
+      "headTree": "0bb9f13a524433f5563acb0aeb241a9d01081d74",
+      "headAndIndexUnchanged": true,
+      "exactBaselines": {
+        "count": 97,
+        "allMatch": true,
+        "files": [
+          {
+            "path": "docs/agents/README.md",
+            "expected": {
+              "sha256": "1534d7dacd63d91988a97b2e2928a683ddbf5177a663b75ed438e83d3c5c4836",
+              "executable": false
+            },
+            "current": {
+              "sha256": "1534d7dacd63d91988a97b2e2928a683ddbf5177a663b75ed438e83d3c5c4836",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "AGENTS.md",
+            "expected": {
+              "sha256": "a499fe96728a4cea5f3a802817533f95d7976b18b5500d9a338f70eaba3c3d36",
+              "executable": false
+            },
+            "current": {
+              "sha256": "a499fe96728a4cea5f3a802817533f95d7976b18b5500d9a338f70eaba3c3d36",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".github/ISSUE_TEMPLATE/bug-report.yml",
+            "expected": {
+              "sha256": "5fca3bab67073fdb827cd5eb88d9c413ac1e1df2891a85c7938420dcb1e3dfed",
+              "executable": false
+            },
+            "current": {
+              "sha256": "5fca3bab67073fdb827cd5eb88d9c413ac1e1df2891a85c7938420dcb1e3dfed",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "CONTRIBUTING.md",
+            "expected": {
+              "sha256": "480248d917dbdd2434bbf50b912431f30c0cae8040410ec9c2e9dca2fd02864d",
+              "executable": false
+            },
+            "current": {
+              "sha256": "480248d917dbdd2434bbf50b912431f30c0cae8040410ec9c2e9dca2fd02864d",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "docs/agents/domain.md",
+            "expected": {
+              "sha256": "390126b01bf22d1123f1284b58f517245b99a78add65744ced714d4210b707e1",
+              "executable": false
+            },
+            "current": {
+              "sha256": "390126b01bf22d1123f1284b58f517245b99a78add65744ced714d4210b707e1",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".github/ISSUE_TEMPLATE/feature-request.yml",
+            "expected": {
+              "sha256": "d3df4f5c27dd7b7a22d0baec1a52a1dc3301c002549f8634392a3abd26566505",
+              "executable": false
+            },
+            "current": {
+              "sha256": "d3df4f5c27dd7b7a22d0baec1a52a1dc3301c002549f8634392a3abd26566505",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".github/ISSUE_TEMPLATE/implementation-ticket.yml",
+            "expected": {
+              "sha256": "d452da0ad9e39173f681b699d3848a00ab3466b55be508cc3f36d7731083bff6",
+              "executable": false
+            },
+            "current": {
+              "sha256": "d452da0ad9e39173f681b699d3848a00ab3466b55be508cc3f36d7731083bff6",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "scripts/validate-issue-contract.mjs",
+            "expected": {
+              "sha256": "47765c32ee00e9b5de8b13ac37095ad88f0b01d8c33ee8abfbd743285e3f3126",
+              "executable": false
+            },
+            "current": {
+              "sha256": "47765c32ee00e9b5de8b13ac37095ad88f0b01d8c33ee8abfbd743285e3f3126",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".github/workflows/issue-contracts.yml",
+            "expected": {
+              "sha256": "04049fba29d7d328031eb57bfed6bb23cc50fb4df52a4ea10255186b3e594102",
+              "executable": false
+            },
+            "current": {
+              "sha256": "04049fba29d7d328031eb57bfed6bb23cc50fb4df52a4ea10255186b3e594102",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "docs/agents/issue-tracker.md",
+            "expected": {
+              "sha256": "271efd20f6315874241ae11d67ea0a9eb4766dd2e9c8c77cd4ecb8fbf66b6da7",
+              "executable": false
+            },
+            "current": {
+              "sha256": "271efd20f6315874241ae11d67ea0a9eb4766dd2e9c8c77cd4ecb8fbf66b6da7",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "vendor/marked/LICENSE",
+            "expected": {
+              "sha256": "8e3a3f82f59a60958f56ca08f445647c32a4733dc7ca6c2c46f6eb898471ab9c",
+              "executable": false
+            },
+            "current": {
+              "sha256": "8e3a3f82f59a60958f56ca08f445647c32a4733dc7ca6c2c46f6eb898471ab9c",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "vendor/marked/marked.esm.js",
+            "expected": {
+              "sha256": "2e70fea3ee49f98ab67ee395e5af51cc6bee4fafed15910da9ccb7f650df8014",
+              "executable": false
+            },
+            "current": {
+              "sha256": "2e70fea3ee49f98ab67ee395e5af51cc6bee4fafed15910da9ccb7f650df8014",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "vendor/marked/README.md",
+            "expected": {
+              "sha256": "c1f9e95c649e297b482a842c72814efa04b0277f1a3a3c181e637d949b5bedc7",
+              "executable": false
+            },
+            "current": {
+              "sha256": "c1f9e95c649e297b482a842c72814efa04b0277f1a3a3c181e637d949b5bedc7",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "vendor/parse5/LICENSE.entities",
+            "expected": {
+              "sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164",
+              "executable": false
+            },
+            "current": {
+              "sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "vendor/parse5/LICENSE.parse5",
+            "expected": {
+              "sha256": "8c535800331e1e4439835555b3f9edc7fe9dee2fab0d8bbbd5a982e8b8343d4d",
+              "executable": false
+            },
+            "current": {
+              "sha256": "8c535800331e1e4439835555b3f9edc7fe9dee2fab0d8bbbd5a982e8b8343d4d",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "vendor/parse5/parse5.esm.js",
+            "expected": {
+              "sha256": "bdf861eb0bce411afe5fcc312c770c3fe18dac9b5296771d40217d52a6ae7a93",
+              "executable": false
+            },
+            "current": {
+              "sha256": "bdf861eb0bce411afe5fcc312c770c3fe18dac9b5296771d40217d52a6ae7a93",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "vendor/parse5/README.md",
+            "expected": {
+              "sha256": "8f285afdb9d5eca93648d2ffbea58ea0cea94485f18c3eec6f5825ef1e0446bf",
+              "executable": false
+            },
+            "current": {
+              "sha256": "8f285afdb9d5eca93648d2ffbea58ea0cea94485f18c3eec6f5825ef1e0446bf",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".github/scripts/validate-pr-metadata.mjs",
+            "expected": {
+              "sha256": "1a749746127e09908cd2ea7c6f07bd5b5167b405d955ad47cf8ce16ce59259f2",
+              "executable": false
+            },
+            "current": {
+              "sha256": "1a749746127e09908cd2ea7c6f07bd5b5167b405d955ad47cf8ce16ce59259f2",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".github/workflows/pr-metadata.yml",
+            "expected": {
+              "sha256": "2e5feda40238c5631f11d9a20de6d6d2380e50026aaff13e9b62c83b0f297b8c",
+              "executable": false
+            },
+            "current": {
+              "sha256": "2e5feda40238c5631f11d9a20de6d6d2380e50026aaff13e9b62c83b0f297b8c",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".github/PULL_REQUEST_TEMPLATE.md",
+            "expected": {
+              "sha256": "3da5d642dd01ec874d4a855d608c21f42d082fcd8a05bf66b11e823ded57f1ae",
+              "executable": false
+            },
+            "current": {
+              "sha256": "3da5d642dd01ec874d4a855d608c21f42d082fcd8a05bf66b11e823ded57f1ae",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/ask-matt/PHASE-BOUNDARIES.md",
+            "expected": {
+              "sha256": "a8aa20158609ef39e2b308b6ba0660c91066838d07a867202e63a7744a88a3ed",
+              "executable": false
+            },
+            "current": {
+              "sha256": "a8aa20158609ef39e2b308b6ba0660c91066838d07a867202e63a7744a88a3ed",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/ask-matt/SKILL.md",
+            "expected": {
+              "sha256": "b25d86fb36b1d294eeead5d7db529f86135f9671f2afcd607579a63bb2213769",
+              "executable": false
+            },
+            "current": {
+              "sha256": "b25d86fb36b1d294eeead5d7db529f86135f9671f2afcd607579a63bb2213769",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/ask-matt/agents/openai.yaml",
+            "expected": {
+              "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c",
+              "executable": false
+            },
+            "current": {
+              "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/code-review/SKILL.md",
+            "expected": {
+              "sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50",
+              "executable": false
+            },
+            "current": {
+              "sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/code-review/agents/openai.yaml",
+            "expected": {
+              "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352",
+              "executable": false
+            },
+            "current": {
+              "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/codebase-design/DEEPENING.md",
+            "expected": {
+              "sha256": "f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1",
+              "executable": false
+            },
+            "current": {
+              "sha256": "f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/codebase-design/DESIGN-IT-TWICE.md",
+            "expected": {
+              "sha256": "8e740bf98446dbd4dfdc132ac4346d9a7eedaf93de6a495889171cf7f99f16bd",
+              "executable": false
+            },
+            "current": {
+              "sha256": "8e740bf98446dbd4dfdc132ac4346d9a7eedaf93de6a495889171cf7f99f16bd",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/codebase-design/SKILL.md",
+            "expected": {
+              "sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+              "executable": false
+            },
+            "current": {
+              "sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/codebase-design/agents/openai.yaml",
+            "expected": {
+              "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
+              "executable": false
+            },
+            "current": {
+              "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/diagnosing-bugs/SKILL.md",
+            "expected": {
+              "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84",
+              "executable": false
+            },
+            "current": {
+              "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/diagnosing-bugs/agents/openai.yaml",
+            "expected": {
+              "sha256": "3e430dbe4334a87597488c060cb3dc3786bb00c9182877d6f5ec41f62490e90b",
+              "executable": false
+            },
+            "current": {
+              "sha256": "3e430dbe4334a87597488c060cb3dc3786bb00c9182877d6f5ec41f62490e90b",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/diagnosing-bugs/scripts/hitl-loop.template.sh",
+            "expected": {
+              "sha256": "35103539fc36873eea36074769ad454f9379d6fc8b2dc0e26ce987fd3bfe5503",
+              "executable": false
+            },
+            "current": {
+              "sha256": "35103539fc36873eea36074769ad454f9379d6fc8b2dc0e26ce987fd3bfe5503",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/domain-modeling/ADR-FORMAT.md",
+            "expected": {
+              "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0",
+              "executable": false
+            },
+            "current": {
+              "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/domain-modeling/CONTEXT-FORMAT.md",
+            "expected": {
+              "sha256": "17ab16ce783e4d2801ee52fd9acdf550cbf44de65ae76797a93943bbedf22a13",
+              "executable": false
+            },
+            "current": {
+              "sha256": "17ab16ce783e4d2801ee52fd9acdf550cbf44de65ae76797a93943bbedf22a13",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/domain-modeling/SKILL.md",
+            "expected": {
+              "sha256": "327a2b50620e2fd70abc6893cd6965e76b20f8d0adb0dc2c8d5eb3845efb643e",
+              "executable": false
+            },
+            "current": {
+              "sha256": "327a2b50620e2fd70abc6893cd6965e76b20f8d0adb0dc2c8d5eb3845efb643e",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/domain-modeling/agents/openai.yaml",
+            "expected": {
+              "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b",
+              "executable": false
+            },
+            "current": {
+              "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/grill-me/SKILL.md",
+            "expected": {
+              "sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637",
+              "executable": false
+            },
+            "current": {
+              "sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/grill-me/agents/openai.yaml",
+            "expected": {
+              "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b",
+              "executable": false
+            },
+            "current": {
+              "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/grill-with-docs/SKILL.md",
+            "expected": {
+              "sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
+              "executable": false
+            },
+            "current": {
+              "sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/grill-with-docs/agents/openai.yaml",
+            "expected": {
+              "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9",
+              "executable": false
+            },
+            "current": {
+              "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/grilling/SKILL.md",
+            "expected": {
+              "sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2",
+              "executable": false
+            },
+            "current": {
+              "sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/grilling/agents/openai.yaml",
+            "expected": {
+              "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b",
+              "executable": false
+            },
+            "current": {
+              "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/handoff/SKILL.md",
+            "expected": {
+              "sha256": "7c62de979fdc7ac32fb5ddb2146156c917f80ee070d30fadc9d40343c4b6ed25",
+              "executable": false
+            },
+            "current": {
+              "sha256": "7c62de979fdc7ac32fb5ddb2146156c917f80ee070d30fadc9d40343c4b6ed25",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/handoff/agents/openai.yaml",
+            "expected": {
+              "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28",
+              "executable": false
+            },
+            "current": {
+              "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/implement/SKILL.md",
+            "expected": {
+              "sha256": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3",
+              "executable": false
+            },
+            "current": {
+              "sha256": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/implement/agents/openai.yaml",
+            "expected": {
+              "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc",
+              "executable": false
+            },
+            "current": {
+              "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/improve-codebase-architecture/HTML-REPORT.md",
+            "expected": {
+              "sha256": "581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528",
+              "executable": false
+            },
+            "current": {
+              "sha256": "581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/improve-codebase-architecture/SKILL.md",
+            "expected": {
+              "sha256": "d1ac25511a936ff4250a48dbcefda363837d6bb9321b3cba73df99fa37270a75",
+              "executable": false
+            },
+            "current": {
+              "sha256": "d1ac25511a936ff4250a48dbcefda363837d6bb9321b3cba73df99fa37270a75",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/improve-codebase-architecture/agents/openai.yaml",
+            "expected": {
+              "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1",
+              "executable": false
+            },
+            "current": {
+              "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/prototype/LOGIC.md",
+            "expected": {
+              "sha256": "f61c7d249e786a79ef289018901c348271e1798dd0b0bc5607b5c6f4d4a01ab9",
+              "executable": false
+            },
+            "current": {
+              "sha256": "f61c7d249e786a79ef289018901c348271e1798dd0b0bc5607b5c6f4d4a01ab9",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/prototype/SKILL.md",
+            "expected": {
+              "sha256": "714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3",
+              "executable": false
+            },
+            "current": {
+              "sha256": "714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/prototype/UI.md",
+            "expected": {
+              "sha256": "723211e878acbc7b6ff09755263f3295cde724ba902ff0064da41eed51d45ad3",
+              "executable": false
+            },
+            "current": {
+              "sha256": "723211e878acbc7b6ff09755263f3295cde724ba902ff0064da41eed51d45ad3",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/prototype/agents/openai.yaml",
+            "expected": {
+              "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc",
+              "executable": false
+            },
+            "current": {
+              "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/research/SKILL.md",
+            "expected": {
+              "sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4",
+              "executable": false
+            },
+            "current": {
+              "sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/research/agents/openai.yaml",
+            "expected": {
+              "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d",
+              "executable": false
+            },
+            "current": {
+              "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/resolving-merge-conflicts/SKILL.md",
+            "expected": {
+              "sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0",
+              "executable": false
+            },
+            "current": {
+              "sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/resolving-merge-conflicts/agents/openai.yaml",
+            "expected": {
+              "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf",
+              "executable": false
+            },
+            "current": {
+              "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/setup-matt-pocock-skills/SKILL.md",
+            "expected": {
+              "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec",
+              "executable": false
+            },
+            "current": {
+              "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/setup-matt-pocock-skills/agents/openai.yaml",
+            "expected": {
+              "sha256": "9527de0110541c45712319025155aeab8dc7d77c6ed6e5e83271bab1851ab939",
+              "executable": false
+            },
+            "current": {
+              "sha256": "9527de0110541c45712319025155aeab8dc7d77c6ed6e5e83271bab1851ab939",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/setup-matt-pocock-skills/domain.md",
+            "expected": {
+              "sha256": "edc6d6131fdffc4b7135704f5262124fc43355c95f61b7399dc5a4db643e28ca",
+              "executable": false
+            },
+            "current": {
+              "sha256": "edc6d6131fdffc4b7135704f5262124fc43355c95f61b7399dc5a4db643e28ca",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/setup-matt-pocock-skills/issue-tracker-github.md",
+            "expected": {
+              "sha256": "afd6852a80185217bd28aa5cbe456bef1e85be25be7bd1fba382d5b8ee428325",
+              "executable": false
+            },
+            "current": {
+              "sha256": "afd6852a80185217bd28aa5cbe456bef1e85be25be7bd1fba382d5b8ee428325",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/setup-matt-pocock-skills/issue-tracker-gitlab.md",
+            "expected": {
+              "sha256": "ea175f73d193b3f55819c0ed9bbccf6ee0e70ad8f928e3d7607596c53380acd6",
+              "executable": false
+            },
+            "current": {
+              "sha256": "ea175f73d193b3f55819c0ed9bbccf6ee0e70ad8f928e3d7607596c53380acd6",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/setup-matt-pocock-skills/issue-tracker-local.md",
+            "expected": {
+              "sha256": "7dcda20a2eb4bdc89b95d1143423c0691309921cadae3132e6424f371030506e",
+              "executable": false
+            },
+            "current": {
+              "sha256": "7dcda20a2eb4bdc89b95d1143423c0691309921cadae3132e6424f371030506e",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/setup-matt-pocock-skills/triage-labels.md",
+            "expected": {
+              "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d",
+              "executable": false
+            },
+            "current": {
+              "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/tdd/SKILL.md",
+            "expected": {
+              "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927",
+              "executable": false
+            },
+            "current": {
+              "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/tdd/agents/openai.yaml",
+            "expected": {
+              "sha256": "ea6f01cf1b8c06a4b0f5b649d74b1b8ce8685e72af1b38d70d877693e092af0b",
+              "executable": false
+            },
+            "current": {
+              "sha256": "ea6f01cf1b8c06a4b0f5b649d74b1b8ce8685e72af1b38d70d877693e092af0b",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/tdd/mocking.md",
+            "expected": {
+              "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
+              "executable": false
+            },
+            "current": {
+              "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/tdd/tests.md",
+            "expected": {
+              "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a",
+              "executable": false
+            },
+            "current": {
+              "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/teach/GLOSSARY-FORMAT.md",
+            "expected": {
+              "sha256": "9b99859ec28437668130d8f2ce5a342938970f8a1ed4fd38c3eab4f4b5fff210",
+              "executable": false
+            },
+            "current": {
+              "sha256": "9b99859ec28437668130d8f2ce5a342938970f8a1ed4fd38c3eab4f4b5fff210",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/teach/LEARNING-RECORD-FORMAT.md",
+            "expected": {
+              "sha256": "701fa34b6748aa89e6c960ffb815257f481a7d77fb2900f9028f7edf3fdd6052",
+              "executable": false
+            },
+            "current": {
+              "sha256": "701fa34b6748aa89e6c960ffb815257f481a7d77fb2900f9028f7edf3fdd6052",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/teach/MISSION-FORMAT.md",
+            "expected": {
+              "sha256": "8cacbb3c0644d3ae0ea4965564797099401a6930a23f7cf462918576587f2418",
+              "executable": false
+            },
+            "current": {
+              "sha256": "8cacbb3c0644d3ae0ea4965564797099401a6930a23f7cf462918576587f2418",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/teach/RESOURCES-FORMAT.md",
+            "expected": {
+              "sha256": "e9cacf34026e11a8d1c8f9de88abe5bcbf654f4ebdb25cae8c0de0d5f48f44ec",
+              "executable": false
+            },
+            "current": {
+              "sha256": "e9cacf34026e11a8d1c8f9de88abe5bcbf654f4ebdb25cae8c0de0d5f48f44ec",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/teach/SKILL.md",
+            "expected": {
+              "sha256": "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43",
+              "executable": false
+            },
+            "current": {
+              "sha256": "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/teach/agents/openai.yaml",
+            "expected": {
+              "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f",
+              "executable": false
+            },
+            "current": {
+              "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/to-questionnaire/SKILL.md",
+            "expected": {
+              "sha256": "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b",
+              "executable": false
+            },
+            "current": {
+              "sha256": "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/to-questionnaire/agents/openai.yaml",
+            "expected": {
+              "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2",
+              "executable": false
+            },
+            "current": {
+              "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/to-spec/SKILL.md",
+            "expected": {
+              "sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088",
+              "executable": false
+            },
+            "current": {
+              "sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/to-spec/agents/openai.yaml",
+            "expected": {
+              "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb",
+              "executable": false
+            },
+            "current": {
+              "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/to-tickets/SKILL.md",
+            "expected": {
+              "sha256": "5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae",
+              "executable": false
+            },
+            "current": {
+              "sha256": "5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/to-tickets/agents/openai.yaml",
+            "expected": {
+              "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090",
+              "executable": false
+            },
+            "current": {
+              "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/triage/AGENT-BRIEF.md",
+            "expected": {
+              "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f",
+              "executable": false
+            },
+            "current": {
+              "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/triage/OUT-OF-SCOPE.md",
+            "expected": {
+              "sha256": "1fbf9b432130c6380aa65813b55553cfda150309b27c595e183f8e335b8a190d",
+              "executable": false
+            },
+            "current": {
+              "sha256": "1fbf9b432130c6380aa65813b55553cfda150309b27c595e183f8e335b8a190d",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/triage/SKILL.md",
+            "expected": {
+              "sha256": "623a2ed692bdc77d2090e2a3dea3b627dd722ad3bbaca0be83aada75292c8fc4",
+              "executable": false
+            },
+            "current": {
+              "sha256": "623a2ed692bdc77d2090e2a3dea3b627dd722ad3bbaca0be83aada75292c8fc4",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/triage/agents/openai.yaml",
+            "expected": {
+              "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c",
+              "executable": false
+            },
+            "current": {
+              "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/wait-what/SKILL.md",
+            "expected": {
+              "sha256": "e3f44e3ccbc0e7b62f20ba70b295fc9c9f4aa3f96c77168faee1c71bacbf4215",
+              "executable": false
+            },
+            "current": {
+              "sha256": "e3f44e3ccbc0e7b62f20ba70b295fc9c9f4aa3f96c77168faee1c71bacbf4215",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/wait-what/agents/openai.yaml",
+            "expected": {
+              "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999",
+              "executable": false
+            },
+            "current": {
+              "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/wayfinder/SKILL.md",
+            "expected": {
+              "sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1",
+              "executable": false
+            },
+            "current": {
+              "sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/wayfinder/agents/openai.yaml",
+            "expected": {
+              "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073",
+              "executable": false
+            },
+            "current": {
+              "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/wizard/SKILL.md",
+            "expected": {
+              "sha256": "bdf31d48211ea559878f95a4f344aeabf8d85897488ba564382bab0b000daac1",
+              "executable": false
+            },
+            "current": {
+              "sha256": "bdf31d48211ea559878f95a4f344aeabf8d85897488ba564382bab0b000daac1",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/wizard/agents/openai.yaml",
+            "expected": {
+              "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83",
+              "executable": false
+            },
+            "current": {
+              "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/wizard/template.sh",
+            "expected": {
+              "sha256": "33cbe9dfb1d0e9185b60248a52aabed14bc64785a00cac695e302e739dd6c153",
+              "executable": false
+            },
+            "current": {
+              "sha256": "33cbe9dfb1d0e9185b60248a52aabed14bc64785a00cac695e302e739dd6c153",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/writing-for-agents/SKILL-MECHANICS.md",
+            "expected": {
+              "sha256": "c768e6307c7c10728c401c213f2c4ba71c542127eeb7ad2956aabd15a0fa0059",
+              "executable": false
+            },
+            "current": {
+              "sha256": "c768e6307c7c10728c401c213f2c4ba71c542127eeb7ad2956aabd15a0fa0059",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/writing-for-agents/SKILL.md",
+            "expected": {
+              "sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a",
+              "executable": false
+            },
+            "current": {
+              "sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/writing-for-agents/agents/openai.yaml",
+            "expected": {
+              "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b",
+              "executable": false
+            },
+            "current": {
+              "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".github/ISSUE_TEMPLATE/specification.yml",
+            "expected": {
+              "sha256": "77b6359750ff03695a1dc19ee121e664787f4a6954cd9847277ab40fb6b22dfd",
+              "executable": false
+            },
+            "current": {
+              "sha256": "77b6359750ff03695a1dc19ee121e664787f4a6954cd9847277ab40fb6b22dfd",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": "docs/agents/triage-labels.md",
+            "expected": {
+              "sha256": "b2c6c2b88086dd20b3db8d010a9ec0d9daa9fef4abce8cfe1845883b2547d1af",
+              "executable": false
+            },
+            "current": {
+              "sha256": "b2c6c2b88086dd20b3db8d010a9ec0d9daa9fef4abce8cfe1845883b2547d1af",
+              "executable": false
+            },
+            "match": true
+          },
+          {
+            "path": ".agents/skills/adopt-standards/SKILL.md",
+            "expected": {
+              "sha256": "6508d7acca0ced142bb198b85b8fd194d71901b35bb865f21e4ea9c3ea52fd54",
+              "executable": false
+            },
+            "current": {
+              "sha256": "6508d7acca0ced142bb198b85b8fd194d71901b35bb865f21e4ea9c3ea52fd54",
+              "executable": false
+            },
+            "match": true
+          }
+        ]
+      },
+      "skills": {
+        "count": 26,
+        "inventories": {
+          ".agents/skills/ask-matt": [
+            "PHASE-BOUNDARIES.md",
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/code-review": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/codebase-design": [
+            "DEEPENING.md",
+            "DESIGN-IT-TWICE.md",
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/diagnosing-bugs": [
+            "SKILL.md",
+            "agents/openai.yaml",
+            "scripts/hitl-loop.template.sh"
+          ],
+          ".agents/skills/domain-modeling": [
+            "ADR-FORMAT.md",
+            "CONTEXT-FORMAT.md",
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/grill-me": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/grill-with-docs": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/grilling": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/handoff": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/implement": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/improve-codebase-architecture": [
+            "HTML-REPORT.md",
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/prototype": [
+            "LOGIC.md",
+            "SKILL.md",
+            "UI.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/research": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/resolving-merge-conflicts": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/setup-matt-pocock-skills": [
+            "SKILL.md",
+            "agents/openai.yaml",
+            "domain.md",
+            "issue-tracker-github.md",
+            "issue-tracker-gitlab.md",
+            "issue-tracker-local.md",
+            "triage-labels.md"
+          ],
+          ".agents/skills/tdd": [
+            "SKILL.md",
+            "agents/openai.yaml",
+            "mocking.md",
+            "tests.md"
+          ],
+          ".agents/skills/teach": [
+            "GLOSSARY-FORMAT.md",
+            "LEARNING-RECORD-FORMAT.md",
+            "MISSION-FORMAT.md",
+            "RESOURCES-FORMAT.md",
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/to-questionnaire": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/to-spec": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/to-tickets": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/triage": [
+            "AGENT-BRIEF.md",
+            "OUT-OF-SCOPE.md",
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/wait-what": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/wayfinder": [
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/wizard": [
+            "SKILL.md",
+            "agents/openai.yaml",
+            "template.sh"
+          ],
+          ".agents/skills/writing-for-agents": [
+            "SKILL-MECHANICS.md",
+            "SKILL.md",
+            "agents/openai.yaml"
+          ],
+          ".agents/skills/adopt-standards": [
+            "SKILL.md"
+          ]
+        }
+      },
+      "unchanged": {
+        "allMatch": true,
+        "files": [
+          {
+            "path": "LICENSE",
+            "headSha256": "2f280834e83aeb550b95a94da9e8241b7143add1234ff0b2f8413c4eae0deb24",
+            "currentSha256": "2f280834e83aeb550b95a94da9e8241b7143add1234ff0b2f8413c4eae0deb24",
+            "match": true
+          },
+          {
+            "path": "docs/agents/project.md",
+            "headSha256": "a93cf04dc5a474408790ad7b1d719aa498e4194f29bd161250573684b90b3a00",
+            "currentSha256": "a93cf04dc5a474408790ad7b1d719aa498e4194f29bd161250573684b90b3a00",
+            "match": true
+          },
+          {
+            "path": "docs/usage/quick-reference.md",
+            "headSha256": "addb0038aefb575abbb3495e93fe9921429ebb7e6a1b63fd977fb90756b20230",
+            "currentSha256": "addb0038aefb575abbb3495e93fe9921429ebb7e6a1b63fd977fb90756b20230",
+            "match": true
+          },
+          {
+            "path": "dist/generated/README.md",
+            "headSha256": "b9d73e6daeeaf1c137e7d3465531a7e0e98bacdecd3c934994a7dcc61fa1f802",
+            "currentSha256": "b9d73e6daeeaf1c137e7d3465531a7e0e98bacdecd3c934994a7dcc61fa1f802",
+            "match": true
+          },
+          {
+            "path": "groups/platform.md",
+            "headSha256": "e47ce0c249f75da6c7cf1f14ef2e7257ccd5b342987209442559944c6ad12e17",
+            "currentSha256": "e47ce0c249f75da6c7cf1f14ef2e7257ccd5b342987209442559944c6ad12e17",
+            "match": true
+          },
+          {
+            "path": "specimens/fake/package.json",
+            "headSha256": "7875bd600b1dee4a3f3ffab1b3dfa63375eb66033371b944868bac1242c4c1b3",
+            "currentSha256": "7875bd600b1dee4a3f3ffab1b3dfa63375eb66033371b944868bac1242c4c1b3",
+            "match": true
+          }
+        ]
+      },
+      "migration": {
+        "source": "old-guides/operate.md",
+        "destination": "docs/usage/operate.md",
+        "sourceSha256": "32f753555f85841804e84784da1b05c1ca5ca381321449450774cb18eec08dfb",
+        "destinationSha256": "32f753555f85841804e84784da1b05c1ca5ca381321449450774cb18eec08dfb",
+        "byteIdentical": true
       }
     },
     "contentReadback": {

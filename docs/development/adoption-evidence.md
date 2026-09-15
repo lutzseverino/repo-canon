@@ -115,6 +115,9 @@ sha512-K5YejetLhzigwCrbCgwz7i/Jm7FkyZbkBu9A25+hNq3IbU2UASu2cC6Uh6bh8CCO/wl6YeDU3
 ```
 
 No source checkout, preload, proxy, or altered transport replaced that package.
+The retained installation manifest and lock both pin `1.2.2` exactly. Applying
+the documented `npm install --save-exact` retention form after the evidence run
+left the already installed package version, tarball URL, and integrity unchanged.
 The CLI returned `valid: true` with no errors for the exact reviewed source
 snapshot. It resolved one `complete` profile with 51 declarations and exact
 compatibility 1.2.2.
