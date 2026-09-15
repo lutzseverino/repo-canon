@@ -1,20 +1,25 @@
 # Complete adoption evidence
 
-Issue [#16](https://github.com/lutzseverino/repo-canon/issues/16) requires the
-installed public Repository Standards CLI 1.2.2 under Node.js 24 to adopt the
-same final `complete` profile in distinct real Git repositories. The evidence
-must cover discovery, confirmed concrete scope, contextual work, operation
-execution, assessment, completion, amendments, retained re-adoption, unsafe and
-stale rejections, preservation, and actual authorized remote readback.
+Issue [#16](https://github.com/lutzseverino/repo-canon/issues/16) established the
+complete Repository Standards CLI 1.2.2 adoption matrix. Issue
+[#38](https://github.com/lutzseverino/repo-canon/issues/38) refreshes the
+source-dependent evidence after the hidden-HTML PR metadata correction. It
+retains unaffected scope and lifecycle results as historical evidence and
+renews public acquisition, exact installation, contextual work, assessment,
+preservation, re-adoption, and authorized remote readback for `v0.0.3`.
 
 This document distinguishes the prepared local exercise from the final evidence.
 The fixture preparation described below does not inspect or adopt a source,
 contact GitHub, or establish remote configuration.
 
-Status: installed public CLI 1.2.2 validated the final reviewed source and
-completed the public-target adoption and repeat adoption. The local Git matrix
-completed the amendment, re-adoption, empty-scope, retroactive-write, reserved,
-exact, symlink, and stale-scope cases. The retained
+Status: installed public CLI 1.2.2 validated exact source commit `eb98da8` and
+completed public-target adoption and same-pin re-adoption from temporary
+`v0.0.3`. A correction run then retained that adopted state on the protected
+default `main` branch through the required check and passed a new public
+`PR metadata` probe against that exact revision. Authenticated readback confirmed
+the installed validator bytes, all 12 canonical labels, the usable required-check
+ruleset, squash settings, and remote content. The local Git matrix completed
+under historical `v0.0.2`; its unchanged cases were not rerun. The retained
 [machine-readable record](adoption-acceptance.json) binds the identities and
 outcomes. Repo Canon itself remains untagged and unreleased.
 
@@ -34,11 +39,10 @@ the copied fake-`gh` implementation, so their exact bytes remain identifiable
 when the source worktree is dirty. Each generated repository sets
 `commit.gpgsign=false` locally. The fixture test creates a later ordinary commit
 under hostile global signing with an unusable signer and verifies that the
-global configuration is unchanged.
-The generated `bin/gh` and per-repository JSON files under `remote-state` form a
-local remote-state fixture for author-operation exercises. `plan.json` records
-the required `PATH` directory and each repository's `FAKE_GH_STATE` path. Using
-them is never remote evidence.
+global configuration is unchanged. The generated `bin/gh` and per-repository
+JSON files under `remote-state` form a local remote-state fixture for
+author-operation exercises. `plan.json` records the required `PATH` directory
+and each repository's `FAKE_GH_STATE` path. Using them is never remote evidence.
 
 For a local CLI run, select the repository's values without modifying the state
 file:
@@ -72,14 +76,17 @@ directory evidence reference that the bound inspection did not observe.
 | `empty-and-unresolved` | Project README and remote-configuration declarations use explained empty path lists; a separate proposal with an unresolved question must be inspectable but ineligible to start. |
 | `protection` | Scope proposals target `.git`, `.repo-standards`, exact `AGENTS.md`, and a symbolic link. Each case must be rejected without writes. A changed repository after first inspection separately proves stale request and evidence rejection. |
 
-The successful Project README work produced plain first headings and retained
-the commands, ownership, and documentation links supported by each manifest.
-The documentation migration preserved the complete operating guide bytes at
-its new destination, deleted the separately authorized source, added the
-required index, and repaired `HANDBOOK.md`. Final comparisons covered every
+The refreshed preparation command and signing fixture passed again at
+`eb98da8`. The successful Project README work produced plain first headings and
+retained the commands, ownership, and documentation links supported by each
+manifest. The documentation migration preserved the complete operating guide
+bytes at its new destination, deleted the separately authorized source, added
+the required index, and repaired `HANDBOOK.md`. Final comparisons covered every
 tracked and untracked output, all exact files and skill inventories, executable
-bits, reserved product state, Git HEAD/index, excluded candidates, unrelated content,
-and local links.
+bits, reserved product state, Git HEAD/index, excluded candidates, unrelated
+content, and local links. The amendment, re-adoption, empty/unresolved,
+retroactive, reserved, exact, symlink, and stale cases below remain the
+previously accepted matrix; this refresh does not claim to have rerun them.
 
 ## Public-source and remote boundary
 
@@ -107,6 +114,15 @@ the newly reviewed snapshot `c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef`
 tagged `v0.0.2`. It did not recreate or move the previously observed `v0.0.1`
 tag.
 
+Issue #38 reused the same authorized names only after both repositories had
+been verified deleted. The source remote received exact reviewed commit
+`eb98da8af94e25cc66a7bd0bf5424604d5e3b7ec` at the new immutable temporary tag
+`v0.0.3`. Public Git, authenticated tag, commit, and tree readback all resolved
+that tag directly to the reviewed object. Evidence-only commit `226b448` and
+later records were intentionally excluded, so the published source bytes did
+not drift after review. The adopter received the freshly prepared two-commit
+repository before any CLI write.
+
 Before explicit authorization, source validation and fixture preparation were
 local preparation only. The historical attempt below also did not satisfy
 adoption or remote-readback acceptance because acquisition failed.
@@ -124,31 +140,42 @@ No source checkout, preload, proxy, or altered transport replaced that package.
 The retained installation manifest and lock both pin `1.2.2` exactly. Applying
 the documented `npm install --save-exact` retention form after the evidence run
 left the already installed package version, tarball URL, and integrity unchanged.
-The CLI returned `valid: true` with no errors for the exact reviewed source
-snapshot. It resolved one `complete` profile with 51 declarations and exact
-compatibility 1.2.2.
+The CLI returned `valid: true` with no errors for exact reviewed source commit
+`eb98da8af94e25cc66a7bd0bf5424604d5e3b7ec`. It resolved one `complete`
+profile with 51 declarations and exact compatibility 1.2.2. The first public
+inspection independently reacquired temporary `v0.0.3`, validated it, and
+reported that same commit in the selection.
 
-An independent exact-head review approved commit
-`c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef` for immutable temporary tag
-`v0.0.2`. Its selected and transitive closure contains 115 files. Relative to
-the earlier whole-source-reviewed commit, the only selected byte change is the
-manifest's required CLI pin from 1.2.1 to 1.2.2; the other 106 changed paths are
-outside that closure. Later evidence-only commits do not change the reviewed
-snapshot or the tag. Public Git and authenticated API readback both resolved
-the tag directly to the approved commit.
+An independent exact-head GPT 5.6 Terra high review first found the historical
+closure-count error. After correction it approved `eb98da8` for immutable
+temporary tag `v0.0.3` with no remaining material findings. Relative to accepted
+`c0d57fa`, the only changed selected path is
+`.github/scripts/validate-pr-metadata.mjs`, whose SHA-256 changed from
+`1a749746127e09908cd2ea7c6f07bd5b5167b405d955ad47cf8ce16ce59259f2`
+to `6896831ef69cf8594437abfd0566e395171b04653a8b67a0012309d155d2c38a`.
+The other 113 paths are byte-and-mode identical. Later evidence commits do not
+change the reviewed snapshot or tag.
+
+The 114-file count corrects an earlier evidence-accounting error: the previous
+115 count included contextual adopter target `README.md`, which is governed by
+guidance but is not a standards source input. The retained
+[closure comparison](source-closure.json) counts `standards.yaml`, enumerates
+all referenced and recursively selected files, and confirms that no source
+material was removed by the correction.
 
 ## Public adoption and live readback
 
-The public adopter started at prepared commit
-`c324a94653284a71abb662c2591b4eb6b5ef2579`. Its parent creates the fixture;
+The refreshed public adopter started at prepared commit
+`0e22a9ce16d310594cf6f6506e867ba854110837`. Its parent creates the fixture;
 that commit adds only `docs/agents/project.md`, preserving both useful statements
-from the original `AGENTS.md`. The fresh initial inspection bound that prepared
-HEAD and produced discovery request
-`sha256:9906a2e7702d8f8e08bf50de1a74d84464960402113ec65864db83c0894292ce`.
+from the original `AGENTS.md`. The builder record binds exact source-input hashes
+and locally disables inherited commit signing. The fresh initial inspection
+bound that prepared HEAD and produced discovery request
+`sha256:0fda7af65eff4b3fc8103fa7433e8c1fb21d6ac4d6bd2866ef916534048b6bdb`.
 The evidence-backed proposal covered every Project, false positive,
 documentation source, destination, index, and link repair. `inspect --scope`
 returned confirmable identity
-`sha256:cc33add75ae086a3780f75ea98eb9c063801f9dfe696e44a9a6d59984529b248`;
+`sha256:a63cf0156466e6dff86d3b9ea5066ac332a68f10577f0389f5d6a16c1d9ae4c8`;
 confirmed `start --scope` used that same proposal and identity.
 
 Start installed the entire selection and ran both authorized GitHub fixes before
@@ -161,8 +188,8 @@ changed the merge defaults. Authenticated readback confirmed:
   `~DEFAULT_BRANCH` and requires `PR metadata`;
 - squash merge is enabled while merge commits and rebase merge are disabled;
 - squash commits take the pull request title and body; and
-- the final 19-label inventory contains every canonical label and every
-  unrelated starting label.
+- the final 20-label inventory contains every canonical label and the
+  deliberately unrelated `adopter-owned` label.
 
 The contextual work created both unfamiliar-layout Project READMEs, added and
 linked the usage index, moved the complete Meteor operating guide, repaired the
@@ -180,24 +207,95 @@ or intentionally unchanged files matched their prepared bytes. The moved guide's
 source bytes before deletion and destination bytes are identical, with SHA-256
 `32f753555f85841804e84784da1b05c1ca5ca381321449450774cb18eec08dfb`.
 
-The completed adoption was committed locally and pushed to an ordinary branch
-of the disposable public repository. A deliberate retained `inspect --readopt`
-then recomputed discovery with the same package, source tag, commit, and profile.
+The completed adoption was committed locally and pushed to
+`adopt/repo-canon-v3` in the disposable public repository. A deliberate retained
+`inspect --readopt` then recomputed discovery with the same package, source tag,
+commit, and profile. Its confirmed inspection was
+`sha256:b2a67d86ad9cc57a13fd20c153e4700535c1124e9692b8078b4fea6007ffa649`.
 Confirmed `start --readopt` ran both live fixes again; each returned `unchanged`
 after readback. Renewed contextual assessment and all checks completed, and the
 final status retained the earlier completion in history. Authenticated recursive
 tree readback of the public branch was complete rather than truncated. Its
-durable state, both Project READMEs, and moved guide blob IDs matched the local
-committed blobs, while the deleted legacy guide path was absent.
+durable state, corrected validator, both Project READMEs, and moved guide blob
+IDs matched local commit `b9b24c28ee22a73ef9e86a96e6efe1e1bbdd6860`, while the deleted legacy guide
+path was absent.
+
+Two focused invocations of the exact installed validator rejected a body whose
+Summary, Validation, and issue link existed only in hidden elements, and accepted
+visible content beside hidden decoys. To exercise the trusted workflow from an
+adopted base revision, the adopted branch was temporarily made the disposable
+repository's default, a probe pull request targeted it, and public run
+`34939963073` completed `PR metadata` successfully. The default was restored to
+the prepared `main` before readback. Codex review correctly found that this made
+the resulting protection unusable: prepared `main` did not contain the workflow
+or validator capable of emitting the required check. The adoption, same-pin
+re-adoption, content, and preservation evidence above remain valid, while this
+first live default-branch and probe state is superseded by the correction below.
+
+## Corrected default-branch readback
+
+The authorized source repository was recreated with the same direct `v0.0.3`
+tag pointing to the same reviewed `eb98da8` commit. The source identity and
+114-file closure did not change. The authorized adopter was recreated with
+accepted adopter commit `b9b24c28ee22a73ef9e86a96e6efe1e1bbdd6860` as
+`main`, so its default branch already contained the trusted workflow and
+validator. An independent GPT 5.6 Terra high review approved this final
+default-branch, ruleset, integration, and probe sequence before it ran.
+
+Installed public CLI 1.2.2 performed a fresh same-pin re-adoption. The initial
+inspection identity was
+`sha256:b0b779dea442fab4c1a1991081db5f149b3c1a46f6897d82a1335d3a66c94215`;
+the evidence-bound scope inspection was
+`sha256:341360b9c5990f8f4729172d08ab4e71ffe60cefd144c9527778b28e4a471eaa`.
+Confirmed run `0ea8e9ac-12f5-4d1f-98a9-64841369972a` used selection
+`sha256:c4b6de44ba6034fbcf381333e94d333e04d6856fd6743bd00ae75ed68532c9bc`.
+Both remote fixes returned `changed` because the repository itself was fresh,
+and readback confirmed the 12 canonical labels, unrelated `adopter-owned`
+label, required-check ruleset, and squash-only settings. The corrected
+assessment used the current run, selection, and after-fixes identity. All three
+checks passed; final status retained two completion points, 97 exact baselines,
+and all 26 installed skill directories. The first assessment submission, which
+still named the earlier run, was rejected and remains in the raw history.
+
+A direct attempt to push the completed state to protected `main` was rejected
+because `PR metadata` was expected. State pull request #1 initially failed when
+its `Small correction` field did not meet the validator's narrow exception
+contract. After that field linked issue #38, public run `34942792057` passed.
+The pull request was squash-merged as
+`d218ed5ee5e42904d15cf36e9d84b722759b0f12`; its tree
+`8da04b66e845fe46e9d9f1ff9aaaec997e1ab7b9` exactly matched the completed
+state branch. This shows the configured protection both blocked a direct push
+and permitted integration through its required check.
+
+A fresh probe pull request #2 then targeted `main` at exact base
+`d218ed5ee5e42904d15cf36e9d84b722759b0f12`. Public run `34942910631`, job
+`104295488560`, completed `PR metadata` successfully. Final authenticated
+readback showed default `main` protected by active ruleset
+`Repo Canon required PR checks` for `~DEFAULT_BRANCH`, requiring `PR metadata`;
+squash-only integration with pull request title and body defaults; all canonical
+and unrelated labels; workflow blob
+`86a4dbc735fe071419210bd2e3aa65d38ce5d6aa`, validator blob
+`80d99daf01b9313fa985170e23a07964ef6b8f0f`, and durable-state blob
+`776518ca6a5f06dbce4adb987e4a4a1215f9610e`. The complete recursive tree had
+388 entries and was not truncated. A fresh local clone matched final `main`,
+all preservation comparisons still passed, and the deleted legacy guide stayed
+absent.
 
 ## Local scope and lifecycle executions
 
-The remaining cases used distinct real local Git repositories from the prepared
-matrix, the same installed public CLI and public `v0.0.2` source selection for
-each initial acquisition, and the supported retained source for later amendment
-or re-adoption commands. Their generated `gh` executable and JSON state are
+The remaining cases are retained historical executions from distinct real local
+Git repositories in the prepared matrix. They used installed public CLI 1.2.2
+and public `v0.0.2` source selection for each initial acquisition, plus the
+supported retained source for later amendment or re-adoption commands. Their
+generated `gh` executable and JSON state are
 author-operation fixtures. Their remote-operation outcomes are local fixture
 evidence and are not represented as GitHub state.
+
+Issue #38 did not rerun these cases. The closure comparison proves that all
+guidance, discovery, operation scripts and resources, skills, and exact files
+relevant to them are unchanged. Only the separately renewed validator bytes
+differ, so the scope and lifecycle outcomes remain applicable without being
+misrepresented as `v0.0.3` executions.
 
 | Case | Retained result |
 | --- | --- |
@@ -273,12 +371,19 @@ labels with them.
 
 ## Final temporary repository cleanup
 
-After the final source, adoption, repeated-operation, configuration, content,
-and status readbacks were retained, the same authorized deletion commands
-removed both recreated public repositories. The active GitHub CLI account was
-the owner and had the `delete_repo` scope. An authenticated owner-repository
-listing omitted both exact names, and authenticated requests to each exact
-repository endpoint returned HTTP 404. Public `git ls-remote` also reported
-repository-not-found for both URLs. These checks distinguish completed deletion
-from anonymous unavailability. The cleanup removed temporary tag `v0.0.2`, both
-adopter branches, the disposable pull request, labels, ruleset, and settings.
+After the first refreshed source, adoption, re-adoption, public workflow,
+configuration, content, and status readbacks were retained, the same authorized
+deletion commands removed both public repositories. Codex then identified the
+superseded default-branch state described above. The repositories were recreated
+under the same authorization, with the exact same `v0.0.3` object, and deleted
+again after the corrected readoption, integration, probe, and final readback.
+
+For the final cleanup, the active GitHub CLI account was the owner and had the
+`delete_repo` scope. An authenticated owner-repository listing omitted both exact
+names, and authenticated requests to each exact repository endpoint returned
+HTTP 404. Public `git ls-remote` also reported repository-not-found for both
+URLs. These checks distinguish completed deletion from anonymous unavailability.
+Deletion removed temporary tag `v0.0.3`, the adopter branches and pull requests,
+labels, ruleset, settings, and workflow history with their repositories. The
+earlier `v0.0.1`, `v0.0.2`, and first `v0.0.3` cleanup records remain historical
+in the machine record.
