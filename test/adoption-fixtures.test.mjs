@@ -3,6 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 
 const repositoryRoot = new URL('..', import.meta.url).pathname;
@@ -17,7 +18,8 @@ test('prepares clean real Git repositories for the adoption evidence matrix', t 
   const globalGitConfig = join(parent, 'gitconfig');
   t.after(() => rmSync(parent, { recursive: true, force: true }));
 
-  writeFileSync(globalGitConfig, '[commit]\n\tgpgSign = true\n');
+  const globalGitConfigBytes = '[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = /bin/false\n';
+  writeFileSync(globalGitConfig, globalGitConfigBytes);
 
   execFileSync('node', ['scripts/prepare-adoption-fixtures.mjs', output], {
     cwd: repositoryRoot,
@@ -27,6 +29,15 @@ test('prepares clean real Git repositories for the adoption evidence matrix', t 
   const plan = JSON.parse(readFileSync(join(output, 'plan.json'), 'utf8'));
 
   assert.equal(plan.format, 'repo-canon/adoption-fixture-plan/v1');
+  for (const path of [
+    'scripts/prepare-adoption-fixtures.mjs',
+    'scripts/support/fake-gh-adoption.mjs',
+  ]) {
+    assert.equal(
+      plan.createdWith.inputFiles[path].sha256,
+      createHash('sha256').update(readFileSync(join(repositoryRoot, path))).digest('hex'),
+    );
+  }
   assert.deepEqual(Object.keys(plan.repositories).sort(), [
     'amendment-success',
     'empty-and-unresolved',
@@ -42,7 +53,18 @@ test('prepares clean real Git repositories for the adoption evidence matrix', t 
     assert.equal(remoteState.repo, `repo-canon-fixtures/${name}`);
     assert.equal(remoteState.labels[0].name, 'adopter-owned');
     assert.equal(remoteState.rulesets[0].name, 'Adopter release policy');
+    assert.equal(git(join(output, name), 'config', '--local', '--get', 'commit.gpgsign'), 'false');
   }
+
+  const laterRepository = join(output, 'amendment-success');
+  writeFileSync(join(laterRepository, 'later-agent-work.md'), '# Later agent work\n');
+  execFileSync('git', ['-C', laterRepository, 'add', 'later-agent-work.md'], {
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig },
+  });
+  execFileSync('git', ['-C', laterRepository, 'commit', '--quiet', '-m', 'test: record later agent work'], {
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig },
+  });
+  assert.equal(readFileSync(globalGitConfig, 'utf8'), globalGitConfigBytes);
 
   const prepared = join(output, 'prepared-monorepo');
   assert.deepEqual(git(prepared, 'log', '--format=%s').split('\n'), [

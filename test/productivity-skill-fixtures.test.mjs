@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -29,13 +29,14 @@ function runShellGuard(guard, cwd, baseline, candidate) {
   });
 }
 
-function build(t) {
+function build(t, env = process.env) {
   const parent = mkdtempSync(join(tmpdir(), 'repo-canon-productivity-test-'));
   t.after(() => rmSync(parent, { recursive: true, force: true }));
   const root = join(parent, 'fixtures');
   const output = execFileSync(process.execPath, [builder, '--root', root], {
     cwd: sourceRoot,
     encoding: 'utf8',
+    env,
   });
   return JSON.parse(output);
 }
@@ -46,6 +47,21 @@ test('builds scenario-specific repositories using every pinned productivity skil
   assert.equal(manifest.source.upstreamCommit, '3cca18b368ae95cdbdebbff572ccafa662551015');
   assert.match(manifest.source.worktreeCommit, /^[0-9a-f]{40}$/);
   assert.match(manifest.source.builderSha256, /^[0-9a-f]{64}$/);
+  assert.equal(
+    manifest.source.directoryHashSerialization,
+    'repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1',
+  );
+  for (const path of [
+    'AGENTS.md',
+    'CONTRIBUTING.md',
+    'docs/agents/README.md',
+    'docs/agents/domain.md',
+    'docs/agents/issue-tracker.md',
+    'docs/agents/triage-labels.md',
+    'scripts/create-productivity-skill-fixtures.mjs',
+  ]) {
+    assert.match(manifest.source.inputFiles[path].sha256, /^[a-f0-9]{64}$/);
+  }
   assert.deepEqual(Object.keys(manifest.source.skills), [
     'grill-me', 'grilling', 'handoff', 'teach', 'to-questionnaire', 'wait-what', 'writing-for-agents',
   ]);
@@ -68,6 +84,27 @@ test('builds scenario-specific repositories using every pinned productivity skil
     }
   }
   assert.deepEqual([...exercised].sort(), Object.keys(manifest.source.skills).sort());
+});
+
+test('later ordinary commits use local signing policy under hostile host configuration', (t) => {
+  const parent = mkdtempSync(join(tmpdir(), 'repo-canon-productivity-signing-test-'));
+  t.after(() => rmSync(parent, { recursive: true, force: true }));
+  const globalGitConfig = join(parent, 'gitconfig');
+  const globalGitConfigBytes = '[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = /bin/false\n';
+  writeFileSync(globalGitConfig, globalGitConfigBytes);
+  const manifest = build(t, { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig });
+  const repository = manifest.repositories.teach.path;
+
+  writeFileSync(join(repository, 'later-agent-work.md'), '# Later agent work\n');
+  execFileSync('git', ['add', 'later-agent-work.md'], {
+    cwd: repository,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig },
+  });
+  execFileSync('git', ['commit', '--quiet', '-m', 'test: record later agent work'], {
+    cwd: repository,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig },
+  });
+  assert.equal(readFileSync(globalGitConfig, 'utf8'), globalGitConfigBytes);
 });
 
 test('fixtures expose the prerequisites each skill must actually use', (t) => {

@@ -26,6 +26,21 @@ test('creates disposable engineering-skill repositories with their runtime prere
   assert.ok(manifest.source.repository === null || typeof manifest.source.repository === 'string');
   assert.match(manifest.source.worktreeCommit, /^[a-f0-9]{40}$/);
   assert.match(manifest.source.fixtureBuilderSha256, /^[a-f0-9]{64}$/);
+  assert.equal(
+    manifest.source.directoryHashSerialization,
+    'repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1',
+  );
+  for (const path of [
+    'AGENTS.md',
+    'CONTRIBUTING.md',
+    'docs/agents/README.md',
+    'docs/agents/domain.md',
+    'docs/agents/issue-tracker.md',
+    'docs/agents/triage-labels.md',
+    'scripts/create-engineering-skill-fixtures.mjs',
+  ]) {
+    assert.match(manifest.source.inputFiles[path].sha256, /^[a-f0-9]{64}$/);
+  }
   assert.deepEqual(Object.keys(manifest.skills).sort(), [
     'ask-matt',
     'code-review',
@@ -64,6 +79,10 @@ test('creates disposable engineering-skill repositories with their runtime prere
     assert.match(readFileSync(join(repository.path, 'docs/agents/project.md'), 'utf8'), /disposable local repository/);
     assert.match(readFileSync(join(repository.path, 'CONTEXT.md'), 'utf8'), /## Language/);
     assert.match(readFileSync(join(repository.path, 'docs/development/README.md'), 'utf8'), /npm test/);
+    assert.equal(execFileSync('git', ['config', '--local', '--get', 'commit.gpgsign'], {
+      cwd: repository.path,
+      encoding: 'utf8',
+    }).trim(), 'false');
     if (['architecture', 'debugging', 'modeling-research'].includes(name)) {
       assert.match(readFileSync(join(repository.path, 'docs/adr/README.md'), 'utf8'), /Architecture decisions/);
     }
@@ -92,6 +111,9 @@ test('creates disposable engineering-skill repositories with their runtime prere
   mkdirSync(shimDirectory);
   writeFileSync(gitShim, `#!/bin/sh\nif [ "$1" = config ] && [ "$2" = --get ] && [ "$3" = remote.origin.url ]; then\n  exit 1\nfi\nexec "${actualGit}" "$@"\n`);
   chmodSync(gitShim, 0o755);
+  const hostileGlobalConfig = join(parent, 'hostile-global-gitconfig');
+  const hostileGlobalConfigBytes = '[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = /bin/false\n';
+  writeFileSync(hostileGlobalConfig, hostileGlobalConfigBytes);
   const remoteLessRoot = join(parent, 'remote-less-fixtures');
   const remoteLess = spawnSync(process.execPath, [script, '--root', remoteLessRoot], {
     cwd: repositoryRoot,
@@ -99,15 +121,21 @@ test('creates disposable engineering-skill repositories with their runtime prere
     env: {
       ...process.env,
       PATH: `${shimDirectory}:${process.env.PATH}`,
-      GIT_CONFIG_COUNT: '3',
-      GIT_CONFIG_KEY_0: 'commit.gpgSign',
-      GIT_CONFIG_VALUE_0: 'true',
-      GIT_CONFIG_KEY_1: 'gpg.program',
-      GIT_CONFIG_VALUE_1: '/bin/false',
-      GIT_CONFIG_KEY_2: 'gpg.format',
-      GIT_CONFIG_VALUE_2: 'openpgp',
+      GIT_CONFIG_GLOBAL: hostileGlobalConfig,
     },
   });
   assert.equal(remoteLess.status, 0, remoteLess.stderr);
-  assert.equal(JSON.parse(remoteLess.stdout).source.repository, null);
+  const remoteLessManifest = JSON.parse(remoteLess.stdout);
+  assert.equal(remoteLessManifest.source.repository, null);
+  const laterRepository = remoteLessManifest.repositories.architecture.path;
+  writeFileSync(join(laterRepository, 'later-agent-work.md'), '# Later agent work\n');
+  execFileSync('git', ['add', 'later-agent-work.md'], {
+    cwd: laterRepository,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: hostileGlobalConfig },
+  });
+  execFileSync('git', ['commit', '--quiet', '-m', 'test: record later agent work'], {
+    cwd: laterRepository,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: hostileGlobalConfig },
+  });
+  assert.equal(readFileSync(hostileGlobalConfig, 'utf8'), hostileGlobalConfigBytes);
 });

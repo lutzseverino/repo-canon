@@ -13,6 +13,8 @@ The exact exercised upstream identity is commit
 records builder SHA-256
 `5ac890b4e46ae9865eb3b74f54b3d937857aaec88ba78a1018bab4b848037834`
 at Repo Canon commit `3fe2736e39a33a753f13116c1e1224b866c954fb`.
+That digest identifies the historical exercise builder; later provenance
+fields do not relabel it as the current builder.
 
 ## Exercise correction and boundaries
 
@@ -212,6 +214,13 @@ not statistically establish reliability or probe the synchronization branch.
   `wait-what` `3f2e7e2ce8820380c08df1d6f2d8dc6aaefe5c2857d00a7190990c62d4039316`,
   and `writing-for-agents`
   `0071124a923559493bc8924a90fb87bceb048d31ad2ce785fa4281d7c506bfa7`.
+- Those skill values use
+  `repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1`:
+  depth-first traversal, JavaScript `localeCompare` ordering within each
+  directory, then slash-normalized relative path, NUL, file bytes, and NUL.
+  The current manifest also records SHA-256 for its builder and every copied
+  shared-guidance file alongside the source `HEAD`, so dirty source inputs have
+  their actual byte identity.
 - The fresh repositories had no remotes. Repository-local signing was disabled
   to make fixture commits deterministic in environments with global signing.
 - Sessions used danger-full-access only inside identified disposable local
@@ -234,4 +243,5 @@ the temporary root, repository heads, scenario-to-skill mapping, source
 identities, and complete-directory hashes. `--root <unused-path>` creates the
 same repositories at a chosen location. The focused test verifies exact shared
 guidance, scenario prerequisites, intact skill links, disabled local signing,
-clean initial Git state, retained runtime outputs, and the teaching loop.
+clean initial Git state, an ordinary later commit under hostile global signing,
+retained runtime outputs, and the teaching loop.

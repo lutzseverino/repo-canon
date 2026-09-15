@@ -29,6 +29,12 @@ npm run prepare:adoption-fixtures -- /tmp/repo-canon-adoption-fixtures
 The command refuses to overwrite an existing output path. It creates ordinary
 Git worktrees with committed content, unambiguous GitHub-shaped remotes, and a
 `plan.json` inventory that binds each fixture HEAD and expected evidence paths.
+The inventory retains the source `HEAD` and records SHA-256 for the builder and
+the copied fake-`gh` implementation, so their exact bytes remain identifiable
+when the source worktree is dirty. Each generated repository sets
+`commit.gpgsign=false` locally. The fixture test creates a later ordinary commit
+under hostile global signing with an unusable signer and verifies that the
+global configuration is unchanged.
 The generated `bin/gh` and per-repository JSON files under `remote-state` form a
 local remote-state fixture for author-operation exercises. `plan.json` records
 the required `PATH` directory and each repository's `FAKE_GH_STATE` path. Using
