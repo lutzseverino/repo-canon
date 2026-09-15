@@ -85,17 +85,18 @@ The approved temporary names were
 `lutzseverino/repo-canon-adopter-evidence-16`. The source remote received
 the reviewed source-integration commit
 `662fdfa88db1833d76a6a4d403a6f567d22b08d9` and temporary tag `v0.0.1`; no
-release was created. Issue #16 changes only unreferenced evidence tooling,
-tests, and documentation, so every selected manifest input remains byte-identical
-to that whole-source-reviewed commit. The adopter remote received one fixture
-commit and was intended to receive the 12 canonical labels, a required
-`PR metadata` ruleset, and the configured squash-only merge defaults during
-adoption. Acquisition failed before those operations ran.
+release was created. The issue #16 changes present at that attempt affected only
+unreferenced evidence tooling, tests, and documentation, so every selected
+manifest input in `v0.0.1` remained byte-identical to that whole-source-reviewed
+commit. The adopter remote received one fixture commit and was intended to
+receive the 12 canonical labels, a required `PR metadata` ruleset, and the
+configured squash-only merge defaults during adoption. Acquisition failed
+before those operations ran.
 
 The same authorized repository names may be recreated for the final run. Because
-the manifest and resulting source bytes now pin CLI 1.2.2, the recreated source
-will use a newly reviewed snapshot tagged `v0.0.2`; it will not recreate or move
-the previously observed `v0.0.1` tag.
+the selected manifest now intentionally differs by pinning CLI 1.2.2, the
+recreated source will use a newly reviewed snapshot tagged `v0.0.2`; it will not
+recreate or move the previously observed `v0.0.1` tag.
 
 Before that explicit authorization, source validation and fixture preparation
 were local preparation only. The authorized attempt below still does not satisfy
