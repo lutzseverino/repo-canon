@@ -151,12 +151,15 @@ before both temporary repositories were deleted.
 
 ## Publication prerequisite
 
-Repo Canon has no tag or release, so there is currently no permanent source
-version for an adopter to select. Stable use requires an owner-authorized Repo
-Canon publication whose SemVer tag resolves to a commit with the accepted
-115-file source closure. Publishing that tag or release and adopting it in a
-production repository are separate actions and were not authorized by ticket
-#17.
+The owner selected **v0.1.0** as the first permanent source version in
+[release issue #50](https://github.com/lutzseverino/repo-canon/issues/50).
+Its tag must retain the accepted 115-file source closure. Verify the ordinary
+[published GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.0)
+before adoption; [first release delivery](first-release.md) records the
+publication procedure and separate real-adoption boundary. The temporary
+acceptance work and ticket #17 did not publish a permanent version. The owner
+subsequently authorized publication and real adoption through the
+[First release interview](../../authoring-notes.md#first-release-interview).
 
 If publication preparation leaves the selected closure byte-identical to
 `e63f0d1438eb89c3df51a827ec169a8f5c489ded`, the accepted source identity and

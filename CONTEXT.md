@@ -30,3 +30,23 @@ explicitly authorized triaging agent considers sufficiently specified for work.
 It does not itself dispatch implementation, and revisions to an agent brief
 invalidate its readiness.
 _Avoid_: Passing structural validation, automatic dispatch
+
+**Source acceptance**:
+The reviewed conclusion that a specific version of the standards source meets
+its agreed requirements and has the required supporting evidence.
+_Avoid_: Publication, successful adoption in every repository
+
+**Source publication**:
+Making an accepted standards source available as a permanent version that
+adopting maintainers can select.
+_Avoid_: Source acceptance, adoption
+
+**Adoption**:
+Applying a selected standards source to a repository within its confirmed
+scope and satisfying the source's requirements there.
+_Avoid_: Publication, copying shared files
+
+**Breaking standards change**:
+A change that makes a previously conforming repository require new mandatory
+migration work or an incompatible workflow change to remain conforming.
+_Avoid_: Only changes that break the adopting application's runtime

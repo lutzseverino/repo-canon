@@ -25,8 +25,9 @@ directories, all affected runtime blobs, all 12 canonical labels, the unrelated
 adopter label, the active ruleset, squash settings, and remote content. The
 local Git matrix completed under historical `v0.0.2`; its unchanged cases were
 not rerun. The retained [machine-readable record](adoption-acceptance.json)
-binds the identities and outcomes. Repo Canon itself remains untagged and
-unreleased.
+binds the identities and outcomes. These temporary exercises preceded Repo
+Canon publication. [First release delivery](first-release.md) covers the
+permanent `v0.1.0` selection and separate real adoption.
 
 ## Prepared repository matrix
 
@@ -97,7 +98,7 @@ previously accepted matrix; this refresh does not claim to have rerun them.
 ## Public-source and remote boundary
 
 The final CLI 1.2.2 run inspected a public GitHub standards source at a stable
-SemVer tag. Repo Canon has no tag or release, and issue #16 authorized neither
+SemVer tag. At the time of issue #16, Repo Canon had no tag or release; that issue authorized neither
 one. The owner instead authorized one temporary public source and one disposable
 public adoption remote, followed by their deletion after evidence retention.
 

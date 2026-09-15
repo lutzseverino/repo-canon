@@ -4,6 +4,8 @@ This directory explains development decisions, validation, and maintenance of
 the standards source. Keep end-user instructions under `docs/usage`, durable
 decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
+- [First release](first-release.md): publication procedure, immutable source verification,
+  release notes, and coordinated real-adoption boundary.
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
 - [Complete source acceptance](completion-record.md): final source identity,
@@ -62,8 +64,9 @@ recorded in [the adoption evidence](adoption-evidence.md). The
 separate evidence classes and final accepted identity at `e63f0d`. Issue
 [#46](https://github.com/lutzseverino/repo-canon/issues/46) reviewed the
 integrated #44 and #45 architecture work, recomputed the 115-file closure, and
-completed the affected public adoption refresh. Repo Canon remains untagged and
-unreleased; stable publication remains the prerequisite for adopter use.
+completed the affected public adoption refresh. The first permanent selection
+is `v0.1.0`; [release delivery](first-release.md) covers its publication and
+real adoption. Adopters verify the published release before inspection.
 
 ## Working locally
 

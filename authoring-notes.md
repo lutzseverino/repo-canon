@@ -4,7 +4,9 @@ Status: policy decisions settled; shared contribution and agent workflow
 material reviewed. The complete source profile is authored and structurally
 valid with public CLI 1.2.2 as its exact validation baseline. Complete adoption,
 scope-protection, preservation, and authorized remote-readback evidence is
-recorded. Repo Canon itself remains untagged and unreleased.
+recorded. The owner selected `v0.1.0` for the first permanent release;
+[release delivery](docs/development/first-release.md) covers publication and
+the separate real-adoption boundary.
 
 ## Confirmed preferences
 
@@ -225,3 +227,37 @@ material; third-party material retains its accompanying licenses and notices.
 Author a separate local standards source. Repository provisioning, publication,
 and adoption are separate workflows. Do not change the Repository Standards
 product contracts to implement these personal preferences.
+
+## First release interview
+
+The owner confirmed the consolidated release plan below at the end of the
+interview. Implementation is the next session's work.
+
+- The work should finish with a published, verified source version and one
+  successful real repository adoption. Publication and adoption remain separate
+  steps.
+- `repo-standards` is the agreed first adopter of the existing `complete`
+  profile. The owner accepts the identified documentation migration effort,
+  including packaging, skill references, links, tests, and compatibility.
+  Preserve its project-specific requirements during preparation and adoption.
+  Initial inspection found no need for another profile; the mention of `cardo`
+  does not establish that it needs a different profile.
+- The owner asked about issue comments out of curiosity. Keep the existing
+  issue-contract feedback behavior; no comment-related change is requested.
+- Use SemVer for Repo Canon releases, following the observed release practice
+  of `repo-standards`. The owner chose the adoption product as the deciding
+  precedent. The [versioning decision](docs/adr/0003-follow-product-release-versioning.md)
+  records that rationale and its evidence.
+- Publish the first version as `v0.1.0`. Consider a stable `1.0.0` baseline after
+  gaining experience from the real `repo-standards` adoption.
+- Judge compatibility from the adopter's perspective. New mandatory migration
+  work and incompatible workflow requirements are breaking standards changes;
+  a newly required README section that makes a previously conforming repository
+  fail is one example.
+- During `0.x`, features and breaking changes advance the middle number;
+  compatible fixes advance the last number. Release notes explicitly identify
+  breaking changes because a middle-number bump can also contain compatible
+  features. The [versioning guide](docs/usage/versioning.md) records these rules.
+- Finish the first adoption with its reviewed changes merged into
+  `repo-standards` and its packaged output validated. Publishing a new
+  `repo-standards` package belongs to that product's separate release workflow.

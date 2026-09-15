@@ -7,10 +7,18 @@
   </p>
 </div>
 
+## Usage
+
+Select [v0.1.0](https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.0)
+with public Repository Standards CLI **1.2.2** and the `complete` profile.
+Follow the [adoption guide](docs/usage/adopt-repo-canon.md) for preparation,
+inspection, scope confirmation, and adoption. Verify that the release is
+published before starting; its initial-development version is an ordinary
+GitHub release.
+
 The [source acceptance record](docs/development/completion-record.md) identifies
-the reviewed source bytes, supporting evidence, and publication prerequisite.
-Use the [adoption guide](docs/usage/adopt-repo-canon.md) after that prerequisite
-is satisfied for an owner-published version.
+the reviewed bytes and evidence. [Release versioning](docs/usage/versioning.md)
+explains compatibility and migration expectations.
 
 ## Documentation
 
