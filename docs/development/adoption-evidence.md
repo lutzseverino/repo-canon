@@ -11,6 +11,9 @@ This document distinguishes the prepared local exercise from the final evidence.
 The fixture preparation described below does not inspect or adopt a source,
 contact GitHub, or establish remote configuration.
 
+Status: blocked during public source acquisition. Issue #16 remains open and no
+complete-adoption or remote-readback acceptance is claimed.
+
 ## Prepared repository matrix
 
 Run the preparation command from a clean Repo Canon checkout with Node.js 24:
@@ -76,19 +79,17 @@ has no tag or release, and issue #16 authorizes neither one. A temporary public
 source and an explicitly authorized disposable adoption remote are therefore
 required before the prepared repositories can produce the requested evidence.
 
-The proposed temporary names are
+The approved temporary names were
 `lutzseverino/repo-canon-source-evidence-16` and
-`lutzseverino/repo-canon-adopter-evidence-16`. The source remote would receive
+`lutzseverino/repo-canon-adopter-evidence-16`. The source remote received
 the reviewed source-integration commit
 `662fdfa88db1833d76a6a4d403a6f567d22b08d9` and temporary tag `v0.0.1`; no
-release would be created. Issue #16 changes only unreferenced evidence tooling,
+release was created. Issue #16 changes only unreferenced evidence tooling,
 tests, and documentation, so every selected manifest input remains byte-identical
-to that whole-source-reviewed commit. The adopter remote would receive one fixture
-commit, the 12 canonical labels, a required `PR metadata` ruleset, and the
-configured squash-only merge defaults. Full API readback would be retained with
-the local adoption reports and content hashes. Both repositories, their tags,
-branches, settings, and labels would be deleted after the reviewed evidence is
-committed here.
+to that whole-source-reviewed commit. The adopter remote received one fixture
+commit and was intended to receive the 12 canonical labels, a required
+`PR metadata` ruleset, and the configured squash-only merge defaults during
+adoption. Acquisition failed before those operations ran.
 
 Before that explicit authorization, source validation and fixture preparation
 were local preparation only. The authorized attempt below still does not satisfy
@@ -132,3 +133,20 @@ configuration readback was produced. The temporary adopter's only repository
 setting changed before inspection was its default branch, from the empty-repo
 placeholder `master` to its pushed fixture branch `main`; the authored adoption
 operations did not run.
+
+## Temporary repository cleanup blocker
+
+Cleanup was attempted with the authorized commands:
+
+```sh
+gh repo delete lutzseverino/repo-canon-source-evidence-16 --yes
+gh repo delete lutzseverino/repo-canon-adopter-evidence-16 --yes
+```
+
+Both calls returned HTTP 403 because the active GitHub CLI credential has
+`gist`, `read:org`, `repo`, and `workflow` scopes but lacks the separately
+required `delete_repo` scope. No credential value is retained here. The two
+temporary public repositories still exist; an authorized user must either run
+`gh auth refresh -h github.com -s delete_repo` before repeating the commands or
+delete both repositories manually. Endpoint unavailability has therefore not
+been presented as deletion evidence.
