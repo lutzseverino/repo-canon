@@ -1,10 +1,10 @@
 # Adopt Repo Canon
 
-Repo Canon supplies one `complete` Repository Standards v2 profile. The profile
-has completed source review, public CLI 1.2.2 validation, operation and skill
-exercises, and disposable adoption with authorized GitHub readback. Repo Canon
-itself remains untagged and unreleased, so the commands below become usable with
-this repository after an owner publishes a stable SemVer tag.
+Repo Canon is designed to supply one `complete` Repository Standards v2 profile.
+Before using the commands below, check the
+[source acceptance record](../development/completion-record.md) for the current
+reviewed bytes, supporting evidence, and publication prerequisite. Select only
+an owner-published stable SemVer tag covered by that record.
 
 Source authoring, publication, and adoption are separate stages:
 
@@ -13,15 +13,12 @@ Source authoring, publication, and adoption are separate stages:
    and the [source profile](../development/source-profile.md) gives exact public
    CLI validation.
 2. The owner publishes a stable Repo Canon source version after confirming that
-   its selected and transitive bytes have accepted evidence. This repository
-   has not performed that step.
+   its selected and transitive bytes have accepted evidence. The source
+   acceptance record states whether that prerequisite is satisfied.
 3. An adopting maintainer inspects the published version, confirms its complete
    project-specific scope, and then starts adoption. Adoption writes project
    content and can change GitHub settings, so review the inspection before
    confirmation.
-
-The [complete source acceptance record](../development/completion-record.md)
-identifies the accepted bytes and the evidence that publication may rely on.
 
 ## Prerequisites
 
