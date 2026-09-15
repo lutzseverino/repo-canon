@@ -47,6 +47,7 @@ test('prepares clean real Git repositories for the adoption evidence matrix', t 
   ]);
   const originalAgents = readFileSync(join(prepared, 'AGENTS.md'), 'utf8');
   const preservedAgents = readFileSync(join(prepared, 'docs/agents/project.md'), 'utf8');
+  assert.match(readFileSync(join(prepared, 'docs/usage/quick-reference.md'), 'utf8'), /Archive telemetry/);
   for (const expected of plan.expectations['prepared-monorepo'].preservedAgentText) {
     assert.match(originalAgents, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     assert.match(preservedAgents, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));

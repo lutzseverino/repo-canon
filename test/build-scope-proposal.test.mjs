@@ -24,6 +24,13 @@ test('keeps every adoption scope template structurally complete', () => {
       assert.ok(Array.isArray(declaration.paths), `${name}:${declaration.id}`);
       assert.ok(Array.isArray(declaration.candidates), `${name}:${declaration.id}`);
       assert.ok(Array.isArray(declaration.unresolved), `${name}:${declaration.id}`);
+      for (const candidate of declaration.candidates) {
+        const hasAbsence = candidate.evidence.some(item => item.kind === 'absence');
+        if (hasAbsence && candidate.path.endsWith('README.md')) {
+          assert.ok(candidate.evidence.some(item => item.kind !== 'absence'),
+            `${name}:${declaration.id}:${candidate.path} requires positive ownership evidence`);
+        }
+      }
     }
   }
 });
