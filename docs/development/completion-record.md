@@ -8,11 +8,12 @@ transitive source is the 115-file closure at commit
 declarations, including five operations and 25 author skills. Public Repository
 Standards CLI 1.2.2 validated and adopted those exact bytes.
 
-Documentation and evidence changes after that commit are outside the selected
-closure. They do not change what an adopter receives. Any future change to one
-of the 115 selected or transitive files creates a new source identity and must
-repeat whole-source review, all-profile CLI validation, and any operation,
-skill, or adoption evidence affected by the change.
+Ticket #17 changes the repository README and usage/development records only.
+Those files are outside the selected closure and do not change what an adopter
+receives. Any future change to one of the 115 selected or transitive files
+creates a new source identity and must repeat whole-source review, all-profile
+CLI validation, and any operation, skill, or adoption evidence affected by the
+change.
 
 ## Evidence classes
 
@@ -86,9 +87,10 @@ These groups account for every author skill declared by the profile:
 | Productivity | 7 | `grill-me`, `grilling`, `handoff`, `teach`, `to-questionnaire`, `wait-what`, `writing-for-agents` | [Productivity skill exercises](productivity-skill-exercises.md) |
 | Planning and delivery | 9 | `setup-matt-pocock-skills`, `grill-with-docs`, `to-spec`, `to-tickets`, `triage`, `wayfinder`, `implement`, `prototype`, `wizard` | [Planning and adoption-preparation skill exercises](planning-skill-exercises.md) |
 
-The product-owned `adopt-standards` system skill is installed by the CLI and is
-outside the 25 author-skill declarations. Its separate preparation behavior
-was exercised and then used in complete adoption.
+The product-owned `adopt-standards` system skill is outside the 25 author-skill
+declarations. The CLI installed it as the 26th skill directory in the public
+adoption; the separate AGENTS preparation route is recorded in the planning
+exercise and adoption evidence.
 
 ## Publication prerequisite
 
