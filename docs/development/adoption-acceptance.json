@@ -1,0 +1,827 @@
+{
+  "format": "repo-canon/adoption-acceptance/v1",
+  "environment": {
+    "node": "v24.21.0",
+    "cli": {
+      "package": "@lutzseverino/repo-standards",
+      "version": "1.2.2",
+      "integrity": "sha512-K5YejetLhzigwCrbCgwz7i/Jm7FkyZbkBu9A25+hNq3IbU2UASu2cC6Uh6bh8CCO/wl6YeDU3pO/F5ZPX4e3gw==",
+      "resolved": "https://registry.npmjs.org/@lutzseverino/repo-standards/-/repo-standards-1.2.2.tgz"
+    },
+    "installation": {
+      "packageJson": {
+        "dependencies": {
+          "@lutzseverino/repo-standards": "^1.2.2"
+        }
+      }
+    }
+  },
+  "source": {
+    "tag": "v0.0.2",
+    "commit": "c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef",
+    "tagObjectType": "commit",
+    "validation": {
+      "valid": true,
+      "name": "repo-canon",
+      "format": "repo-standards/v2",
+      "requires": {
+        "repo-standards": "1.2.2"
+      },
+      "profiles": [
+        "complete"
+      ],
+      "declarations": 51
+    },
+    "transitiveReview": {
+      "closureFiles": 115,
+      "onlySelectedChangeFrom662fdfa": "standards.yaml requires.repo-standards 1.2.1 -> 1.2.2",
+      "reviewedHead": "c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef"
+    }
+  },
+  "publicAdoption": {
+    "repository": "lutzseverino/repo-canon-adopter-evidence-16",
+    "inspection": {
+      "identity": "sha256:cc33add75ae086a3780f75ea98eb9c063801f9dfe696e44a9a6d59984529b248",
+      "selection": {
+        "cli": {
+          "package": "@lutzseverino/repo-standards",
+          "version": "1.2.2"
+        },
+        "standards": {
+          "repository": "https://github.com/lutzseverino/repo-canon-source-evidence-16",
+          "version": "v0.0.2",
+          "commit": "c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef"
+        },
+        "profile": "complete"
+      },
+      "declarations": 51,
+      "exact": 47,
+      "operations": 5,
+      "guidance": 4
+    },
+    "initial": {
+      "outcome": "complete",
+      "phase": "complete",
+      "reason": "Exact installation, fixes, contextual assessment where required, checks, runtime, retained inputs and durable state verified.",
+      "operations": [
+        {
+          "declaration": "github-repository-configuration",
+          "id": "canonical-labels",
+          "status": "changed",
+          "message": "GitHub label setup changed lutzseverino/repo-canon-adopter-evidence-16: created 9 labels and updated wontfix. Readback confirmed all 12 canonical labels; unrelated labels were preserved."
+        },
+        {
+          "declaration": "github-repository-configuration",
+          "id": "pull-request-integration",
+          "status": "changed",
+          "message": "GitHub PR integration setup changed lutzseverino/repo-canon-adopter-evidence-16: created required-check ruleset and updated squash merge settings. Final readback confirmed PR metadata, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved."
+        },
+        {
+          "declaration": "documentation",
+          "id": "documentation-navigation",
+          "status": "passed",
+          "message": "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review."
+        },
+        {
+          "declaration": "project-readmes",
+          "id": "project-readme-structure",
+          "status": "passed",
+          "message": "Project README structure is valid for 2 concrete targets; purpose, commands, configuration, and documentation still require maintainer or agent review."
+        },
+        {
+          "declaration": "repository-readme",
+          "id": "repository-readme-structure",
+          "status": "passed",
+          "message": "Repository README structure is valid; factual content still requires maintainer or agent review."
+        }
+      ],
+      "checks": [
+        {
+          "declaration": "documentation",
+          "id": "documentation-navigation",
+          "status": "passed",
+          "message": "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review."
+        },
+        {
+          "declaration": "project-readmes",
+          "id": "project-readme-structure",
+          "status": "passed",
+          "message": "Project README structure is valid for 2 concrete targets; purpose, commands, configuration, and documentation still require maintainer or agent review."
+        },
+        {
+          "declaration": "repository-readme",
+          "id": "repository-readme-structure",
+          "status": "passed",
+          "message": "Repository README structure is valid; factual content still requires maintainer or agent review."
+        }
+      ]
+    },
+    "repeat": {
+      "outcome": "complete",
+      "phase": "complete",
+      "reason": "Exact installation, fixes, contextual assessment where required, checks, runtime, retained inputs and durable state verified.",
+      "operations": [
+        {
+          "declaration": "github-repository-configuration",
+          "id": "canonical-labels",
+          "status": "unchanged",
+          "message": "GitHub labels already match the canonical configuration for lutzseverino/repo-canon-adopter-evidence-16."
+        },
+        {
+          "declaration": "github-repository-configuration",
+          "id": "pull-request-integration",
+          "status": "unchanged",
+          "message": "GitHub PR integration already matches the canonical configuration for lutzseverino/repo-canon-adopter-evidence-16."
+        }
+      ],
+      "checks": [
+        {
+          "declaration": "documentation",
+          "id": "documentation-navigation",
+          "status": "passed",
+          "message": "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review."
+        },
+        {
+          "declaration": "project-readmes",
+          "id": "project-readme-structure",
+          "status": "passed",
+          "message": "Project README structure is valid for 2 concrete targets; purpose, commands, configuration, and documentation still require maintainer or agent review."
+        },
+        {
+          "declaration": "repository-readme",
+          "id": "repository-readme-structure",
+          "status": "passed",
+          "message": "Repository README structure is valid; factual content still requires maintainer or agent review."
+        }
+      ],
+      "status": {
+        "format": "repo-standards/status/v4",
+        "selection": {
+          "cli": {
+            "package": "@lutzseverino/repo-standards",
+            "version": "1.2.2"
+          },
+          "standards": {
+            "repository": "https://github.com/lutzseverino/repo-canon-source-evidence-16",
+            "version": "v0.0.2",
+            "commit": "c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef"
+          },
+          "profile": "complete"
+        },
+        "lastComplete": {
+          "run": "999a21ee-418e-45a0-b5aa-0a5959b69ac6",
+          "inspection": "sha256:cde0c334c9ef6a6040c6812b709800c9666111376d5da861286b7d826ac907f2",
+          "completedAt": "2026-09-15T03:43:58.199Z",
+          "head": "baee2f8469c1201a81bd70364a018cf2b2f05c44"
+        },
+        "priorComplete": {
+          "run": "fbb9b578-26b6-4eba-abf3-a54f815f91cc",
+          "inspection": "sha256:cc33add75ae086a3780f75ea98eb9c063801f9dfe696e44a9a6d59984529b248",
+          "completedAt": "2026-09-15T03:39:18.200Z",
+          "head": "c324a94653284a71abb662c2591b4eb6b5ef2579"
+        },
+        "baselines": 97,
+        "skills": 26
+      }
+    },
+    "preservation": {
+      "headAndIndexUnchanged": true,
+      "exactBaselines": 97,
+      "allExactMatch": true,
+      "skillDirectories": 26,
+      "unchangedFiles": [
+        {
+          "path": "LICENSE",
+          "headSha256": "2f280834e83aeb550b95a94da9e8241b7143add1234ff0b2f8413c4eae0deb24",
+          "currentSha256": "2f280834e83aeb550b95a94da9e8241b7143add1234ff0b2f8413c4eae0deb24",
+          "match": true
+        },
+        {
+          "path": "docs/agents/project.md",
+          "headSha256": "a93cf04dc5a474408790ad7b1d719aa498e4194f29bd161250573684b90b3a00",
+          "currentSha256": "a93cf04dc5a474408790ad7b1d719aa498e4194f29bd161250573684b90b3a00",
+          "match": true
+        },
+        {
+          "path": "docs/usage/quick-reference.md",
+          "headSha256": "addb0038aefb575abbb3495e93fe9921429ebb7e6a1b63fd977fb90756b20230",
+          "currentSha256": "addb0038aefb575abbb3495e93fe9921429ebb7e6a1b63fd977fb90756b20230",
+          "match": true
+        },
+        {
+          "path": "dist/generated/README.md",
+          "headSha256": "b9d73e6daeeaf1c137e7d3465531a7e0e98bacdecd3c934994a7dcc61fa1f802",
+          "currentSha256": "b9d73e6daeeaf1c137e7d3465531a7e0e98bacdecd3c934994a7dcc61fa1f802",
+          "match": true
+        },
+        {
+          "path": "groups/platform.md",
+          "headSha256": "e47ce0c249f75da6c7cf1f14ef2e7257ccd5b342987209442559944c6ad12e17",
+          "currentSha256": "e47ce0c249f75da6c7cf1f14ef2e7257ccd5b342987209442559944c6ad12e17",
+          "match": true
+        },
+        {
+          "path": "specimens/fake/package.json",
+          "headSha256": "7875bd600b1dee4a3f3ffab1b3dfa63375eb66033371b944868bac1242c4c1b3",
+          "currentSha256": "7875bd600b1dee4a3f3ffab1b3dfa63375eb66033371b944868bac1242c4c1b3",
+          "match": true
+        }
+      ],
+      "migration": {
+        "source": "old-guides/operate.md",
+        "destination": "docs/usage/operate.md",
+        "sourceSha256": "32f753555f85841804e84784da1b05c1ca5ca381321449450774cb18eec08dfb",
+        "destinationSha256": "32f753555f85841804e84784da1b05c1ca5ca381321449450774cb18eec08dfb",
+        "byteIdentical": true
+      }
+    },
+    "remote": {
+      "settings": {
+        "allow_squash_merge": true,
+        "allow_merge_commit": false,
+        "allow_rebase_merge": false,
+        "squash_merge_commit_title": "PR_TITLE",
+        "squash_merge_commit_message": "PR_BODY"
+      },
+      "labels": [
+        {
+          "name": "accessibility",
+          "color": "f143ab",
+          "description": "Barrier affecting people with disabilities"
+        },
+        {
+          "name": "bug",
+          "color": "d73a4a",
+          "description": "Something isn't working"
+        },
+        {
+          "name": "documentation",
+          "color": "0075ca",
+          "description": "Improvements or additions to documentation"
+        },
+        {
+          "name": "duplicate",
+          "color": "cfd3d7",
+          "description": "This issue or pull request already exists"
+        },
+        {
+          "name": "enhancement",
+          "color": "a2eeef",
+          "description": "New feature or request"
+        },
+        {
+          "name": "good first issue",
+          "color": "7057ff",
+          "description": "Good for newcomers"
+        },
+        {
+          "name": "help wanted",
+          "color": "008672",
+          "description": "Extra attention is needed"
+        },
+        {
+          "name": "invalid",
+          "color": "e4e669",
+          "description": "This doesn't seem right"
+        },
+        {
+          "name": "needs-info",
+          "color": "d4c5f9",
+          "description": "Waiting for information needed to evaluate the request"
+        },
+        {
+          "name": "needs-triage",
+          "color": "fbca04",
+          "description": "Requires review or renewed review"
+        },
+        {
+          "name": "question",
+          "color": "d876e3",
+          "description": "Further information is requested"
+        },
+        {
+          "name": "ready-for-agent",
+          "color": "0e8a16",
+          "description": "Reviewed and sufficiently specified for agent implementation"
+        },
+        {
+          "name": "ready-for-human",
+          "color": "1d76db",
+          "description": "Reviewed and requires human implementation"
+        },
+        {
+          "name": "wayfinder:grilling",
+          "color": "bfd4f2",
+          "description": "Design decision requiring discussion"
+        },
+        {
+          "name": "wayfinder:map",
+          "color": "5319e7",
+          "description": "Planning map for related work"
+        },
+        {
+          "name": "wayfinder:prototype",
+          "color": "bfd4f2",
+          "description": "Prototype question in a planning map"
+        },
+        {
+          "name": "wayfinder:research",
+          "color": "bfd4f2",
+          "description": "Research question in a planning map"
+        },
+        {
+          "name": "wayfinder:task",
+          "color": "bfd4f2",
+          "description": "Task in a planning map"
+        },
+        {
+          "name": "wontfix",
+          "color": "ffffff",
+          "description": "Will not be actioned"
+        }
+      ],
+      "ruleset": {
+        "name": "Repo Canon required PR checks",
+        "target": "branch",
+        "enforcement": "active",
+        "conditions": {
+          "ref_name": {
+            "exclude": [],
+            "include": [
+              "~DEFAULT_BRANCH"
+            ]
+          }
+        },
+        "rules": [
+          {
+            "type": "required_status_checks",
+            "parameters": {
+              "strict_required_status_checks_policy": false,
+              "do_not_enforce_on_create": false,
+              "required_status_checks": [
+                {
+                  "context": "PR metadata"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "preparation": {
+      "inspectionHead": "c324a94653284a71abb662c2591b4eb6b5ef2579",
+      "commits": [
+        "c324a94653284a71abb662c2591b4eb6b5ef2579\tdocs: preserve project agent guidance"
+      ],
+      "preparation": {
+        "commit": "c324a94653284a71abb662c2591b4eb6b5ef2579",
+        "parent": "53506c0d558ed02a7dfeda64a03c29a2c09f8466",
+        "subject": "docs: preserve project agent guidance",
+        "changedPaths": [
+          "docs/agents/project.md"
+        ],
+        "agentGuidanceSha256": "b56bf22a1dc40775aabb5a00472303899cddb7fba3b10bf4209bfd912ff720d8",
+        "projectGuidanceSha256": "46642495d14c5791e8c97edffa8e78087b813c81e0b68948fddd06493bc3eecd",
+        "preservedStatements": [
+          "Run Cargo commands from `engines/meteor`.",
+          "Never edit `dist/generated` by hand."
+        ],
+        "agentContainsBoth": true,
+        "projectContainsBoth": true
+      }
+    },
+    "contentReadback": {
+      "branch": "adopt/repo-canon",
+      "commit": "d27204c3ad086d20f0b00557eab408407ff1c40a",
+      "treeEntries": 388,
+      "truncated": false,
+      "entries": [
+        {
+          "path": ".repo-standards/state.json",
+          "remoteBlob": "6358c1dab258d61451d36f15ceef3cfd19144f9e",
+          "localBlob": "6358c1dab258d61451d36f15ceef3cfd19144f9e",
+          "match": true
+        },
+        {
+          "path": "engines/meteor/README.md",
+          "remoteBlob": "acd549d6c64f56b4bd388e944887f2e9e3b09a49",
+          "localBlob": "acd549d6c64f56b4bd388e944887f2e9e3b09a49",
+          "match": true
+        },
+        {
+          "path": "packages/auth/README.md",
+          "remoteBlob": "b3924bed69da641d5a89780c027079d842d3388d",
+          "localBlob": "b3924bed69da641d5a89780c027079d842d3388d",
+          "match": true
+        },
+        {
+          "path": "docs/usage/operate.md",
+          "remoteBlob": "66965f0a7d79415c7fc4c67f64f14be5600d80ba",
+          "localBlob": "66965f0a7d79415c7fc4c67f64f14be5600d80ba",
+          "match": true
+        }
+      ],
+      "removedSourceAbsent": true
+    },
+    "finalLiveReadback": {
+      "owner": "lutzseverino",
+      "source": {
+        "name": "lutzseverino/repo-canon-source-evidence-16",
+        "private": false,
+        "tagCommit": "c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef"
+      },
+      "adopter": {
+        "name": "lutzseverino/repo-canon-adopter-evidence-16",
+        "private": false,
+        "settings": {
+          "allow_squash_merge": true,
+          "allow_merge_commit": false,
+          "allow_rebase_merge": false,
+          "squash_merge_commit_title": "PR_TITLE",
+          "squash_merge_commit_message": "PR_BODY"
+        },
+        "labelCount": 19,
+        "rulesets": [
+          {
+            "id": 23403979,
+            "name": "Repo Canon required PR checks",
+            "enforcement": "active"
+          }
+        ],
+        "branch": {
+          "name": "adopt/repo-canon",
+          "sha": "d27204c3ad086d20f0b00557eab408407ff1c40a"
+        }
+      }
+    }
+  },
+  "localExercises": {
+    "amendment": {
+      "inspection": "sha256:79d3bfe02c126aa6d311a77fbc840ab2d5082e07538d55cac635452857220cb6",
+      "outcome": "complete",
+      "added": [
+        "extensions/bridge/README.md"
+      ],
+      "fixReplay": [
+        "unchanged",
+        "unchanged"
+      ],
+      "completed": {
+        "phase": "complete",
+        "outcome": "complete",
+        "reason": "Exact installation, fixes, contextual assessment where required, checks, runtime, retained inputs and durable state verified.",
+        "inspection": "sha256:79d3bfe02c126aa6d311a77fbc840ab2d5082e07538d55cac635452857220cb6",
+        "operations": [
+          {
+            "declaration": "github-repository-configuration",
+            "id": "canonical-labels",
+            "phase": "fixes",
+            "status": "changed"
+          },
+          {
+            "declaration": "github-repository-configuration",
+            "id": "pull-request-integration",
+            "phase": "fixes",
+            "status": "changed"
+          },
+          {
+            "declaration": "github-repository-configuration",
+            "id": "canonical-labels",
+            "phase": "fixes",
+            "status": "unchanged"
+          },
+          {
+            "declaration": "github-repository-configuration",
+            "id": "pull-request-integration",
+            "phase": "fixes",
+            "status": "unchanged"
+          },
+          {
+            "declaration": "documentation",
+            "id": "documentation-navigation",
+            "phase": "checks",
+            "status": "passed"
+          },
+          {
+            "declaration": "project-readmes",
+            "id": "project-readme-structure",
+            "phase": "checks",
+            "status": "passed"
+          },
+          {
+            "declaration": "repository-readme",
+            "id": "repository-readme-structure",
+            "phase": "checks",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    "retroactiveWrite": {
+      "initialScope": [
+        {
+          "id": "documentation",
+          "paths": [
+            "docs/README.md",
+            "docs/development/README.md"
+          ]
+        },
+        {
+          "id": "github-repository-configuration",
+          "paths": []
+        },
+        {
+          "id": "project-readmes",
+          "paths": []
+        }
+      ],
+      "start": {
+        "phase": "contextual",
+        "outcome": "incomplete",
+        "reason": "CONTEXTUAL_REQUIRED: Exact installation and fixes succeeded; contextual guidance requires agent work and assessment before checks can run.",
+        "inspection": "sha256:8b4c2bc51a6a78fadaa1c35bc885fa077ac951deeb5dbd6492c44aa7dc17f2d7",
+        "operations": [
+          {
+            "declaration": "github-repository-configuration",
+            "id": "canonical-labels",
+            "phase": "fixes",
+            "status": "changed"
+          },
+          {
+            "declaration": "github-repository-configuration",
+            "id": "pull-request-integration",
+            "phase": "fixes",
+            "status": "changed"
+          }
+        ]
+      },
+      "amendmentInspection": {
+        "valid": false,
+        "errors": [
+          {
+            "code": "ASSESSMENT_SCOPE",
+            "message": "Agent work changed paths outside its authorized agent scope: extensions/bridge/README.md. Work and interval evidence are preserved; abandon and reconcile before a new adoption."
+          }
+        ]
+      },
+      "finalStatus": {
+        "format": "repo-standards/status/v2",
+        "selection": {
+          "cli": {
+            "package": "@lutzseverino/repo-standards",
+            "version": "1.2.2"
+          },
+          "standards": {
+            "repository": "https://github.com/lutzseverino/repo-canon-source-evidence-16",
+            "version": "v0.0.2",
+            "commit": "c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef"
+          },
+          "profile": "complete"
+        },
+        "lastComplete": null,
+        "priorComplete": null,
+        "active": {
+          "phase": "contextual",
+          "outcome": "incomplete",
+          "reason": "CONTEXTUAL_REQUIRED: Exact installation and fixes succeeded; contextual guidance requires agent work and assessment before checks can run."
+        },
+        "checks": []
+      },
+      "preservation": {
+        "head": "31020bb627a19b8c23d7fbb9b3160ef7a00d7516",
+        "index": "6538b89c5eaed9f4400dfd3fe93ce03642a210e1",
+        "headTree": "6538b89c5eaed9f4400dfd3fe93ce03642a210e1",
+        "status": "M CONTRIBUTING.md\n?? .agents/\n?? .github/\n?? .repo-standards/\n?? AGENTS.md\n?? docs/agents/\n?? extensions/bridge/README.md\n?? scripts/\n?? vendor/",
+        "bridgeSha256": "d1d9ada9a545c6c80cc292953370bb31f89fca4d97bedb9db091089de7ddb03d",
+        "headAndIndexUnchanged": true
+      }
+    },
+    "readoption": {
+      "initial": {
+        "phase": "complete",
+        "outcome": "complete",
+        "reason": "Exact installation, fixes, contextual assessment where required, checks, runtime, retained inputs and durable state verified.",
+        "inspection": "sha256:0a4cd7bd7d56094db60f3b36559866544773f26e6d416a705f06a1183a099cc6",
+        "operations": [
+          {
+            "declaration": "github-repository-configuration",
+            "id": "canonical-labels",
+            "phase": "fixes",
+            "status": "changed"
+          },
+          {
+            "declaration": "github-repository-configuration",
+            "id": "pull-request-integration",
+            "phase": "fixes",
+            "status": "changed"
+          },
+          {
+            "declaration": "documentation",
+            "id": "documentation-navigation",
+            "phase": "checks",
+            "status": "passed"
+          },
+          {
+            "declaration": "project-readmes",
+            "id": "project-readme-structure",
+            "phase": "checks",
+            "status": "passed"
+          },
+          {
+            "declaration": "repository-readme",
+            "id": "repository-readme-structure",
+            "phase": "checks",
+            "status": "passed"
+          }
+        ]
+      },
+      "completed": {
+        "phase": "complete",
+        "outcome": "complete",
+        "reason": "Exact installation, fixes, contextual assessment where required, checks, runtime, retained inputs and durable state verified.",
+        "inspection": "sha256:e108520508037d9de1b3aaf168a607643b3201c1ba35b1ffa38b45566beda0ab",
+        "operations": [
+          {
+            "declaration": "github-repository-configuration",
+            "id": "canonical-labels",
+            "phase": "fixes",
+            "status": "unchanged"
+          },
+          {
+            "declaration": "github-repository-configuration",
+            "id": "pull-request-integration",
+            "phase": "fixes",
+            "status": "unchanged"
+          },
+          {
+            "declaration": "documentation",
+            "id": "documentation-navigation",
+            "phase": "checks",
+            "status": "passed"
+          },
+          {
+            "declaration": "project-readmes",
+            "id": "project-readme-structure",
+            "phase": "checks",
+            "status": "passed"
+          },
+          {
+            "declaration": "repository-readme",
+            "id": "repository-readme-structure",
+            "phase": "checks",
+            "status": "passed"
+          }
+        ]
+      },
+      "activeScope": [
+        {
+          "id": "documentation",
+          "paths": [
+            "docs/README.md",
+            "docs/development/README.md"
+          ]
+        },
+        {
+          "id": "github-repository-configuration",
+          "paths": []
+        },
+        {
+          "id": "project-readmes",
+          "paths": [
+            "satellites/relay/README.md"
+          ]
+        }
+      ],
+      "status": {
+        "format": "repo-standards/status/v4",
+        "selection": {
+          "cli": {
+            "package": "@lutzseverino/repo-standards",
+            "version": "1.2.2"
+          },
+          "standards": {
+            "repository": "https://github.com/lutzseverino/repo-canon-source-evidence-16",
+            "version": "v0.0.2",
+            "commit": "c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef"
+          },
+          "profile": "complete"
+        },
+        "lastComplete": {
+          "run": "b874249f-da8d-4dba-bdf1-0a183ac5314b",
+          "inspection": "sha256:e108520508037d9de1b3aaf168a607643b3201c1ba35b1ffa38b45566beda0ab",
+          "completedAt": "2026-09-15T04:38:15.587Z",
+          "head": "d2db8137c42d89dee4c582feb7adddd02f16a6ac"
+        },
+        "priorComplete": null,
+        "active": null,
+        "checks": [
+          {
+            "declaration": "documentation",
+            "id": "documentation-navigation",
+            "status": "passed"
+          },
+          {
+            "declaration": "project-readmes",
+            "id": "project-readme-structure",
+            "status": "passed"
+          },
+          {
+            "declaration": "repository-readme",
+            "id": "repository-readme-structure",
+            "status": "passed"
+          }
+        ]
+      },
+      "retiredBridge": {
+        "beforeSha256": "f7854cf11bf23987f7ec710c6647042fde9207d4b2b03fd6aeebe9f827d97072",
+        "afterSha256": "f7854cf11bf23987f7ec710c6647042fde9207d4b2b03fd6aeebe9f827d97072",
+        "unchanged": true
+      },
+      "workingTreeAfterCompletion": " M .repo-standards/inputs/resolved.json\n M .repo-standards/inputs/scope-history.json\n M .repo-standards/lock.json\n M .repo-standards/runtime/package-lock.json\n M .repo-standards/state.json\n?? satellites/relay/README.md"
+    },
+    "emptyAndUnresolved": {
+      "unresolved": {
+        "identity": "sha256:836c46bdeec37f41c7787c82d0cc8441dc502f40829b89acd6d44b7b5b79e928",
+        "eligible": false,
+        "blockers": [
+          {
+            "code": "UNRESOLVED_SCOPE",
+            "message": "Resolve the reported discovery questions and inspect a revised proposal."
+          }
+        ]
+      },
+      "empty": {
+        "inspection": "sha256:5410e7552a1b3d2c79c9439b717eff5f5f50e9c2ed471f961448a3a84984a022",
+        "outcome": "pending confirmed start after anonymous source quota reset"
+      }
+    },
+    "protection": {
+      "rejections": {
+        "git": {
+          "valid": false,
+          "errors": [
+            {
+              "code": "RESERVED_TARGET",
+              "message": "Target overlaps product-owned state, a system skill, or Git metadata."
+            }
+          ]
+        },
+        "reserved": {
+          "valid": false,
+          "errors": [
+            {
+              "code": "RESERVED_TARGET",
+              "message": "Target overlaps product-owned state, a system skill, or Git metadata."
+            }
+          ]
+        },
+        "exact": {
+          "valid": false,
+          "errors": [
+            {
+              "code": "TARGET_OVERLAP",
+              "message": "Profile scope: target AGENTS.md overlaps AGENTS.md (agent-guidance)."
+            }
+          ]
+        },
+        "symlink": {
+          "valid": false,
+          "errors": [
+            {
+              "code": "UNSAFE_TARGET",
+              "message": "Discovered targets must be individual regular files or absent files: docs/linked.md."
+            }
+          ]
+        },
+        "stale": {
+          "valid": false,
+          "errors": [
+            {
+              "code": "STALE_SCOPE",
+              "message": "Scope proposal does not match this discovery request. Inspect again and review fresh evidence."
+            }
+          ]
+        }
+      },
+      "after": {
+        "head": "ea4cdc8896e7f941ddd39a9cadfdd59462c366a2",
+        "index": "b33c080747e0006c31e344183c8e1307a0de626e",
+        "headTree": "b33c080747e0006c31e344183c8e1307a0de626e",
+        "status": "",
+        "protected": {
+          "gitConfigSha256": "1d4a77e962fc92430b948edc7bb84256baaf2db58d585ce8cbee336c936ee2c1",
+          "agentsSha256": "a3b8d628839dee30bebcc9077df678159c1daff1f1d45ce974a5186c216c91ae",
+          "outsideSha256": "d72d2d4beaf8f2dbec4e6eff9a09901af762d3c5987ea3a2da3deef7122f7f2b",
+          "linked": {
+            "symbolicLink": true,
+            "target": "../outside.md"
+          },
+          "reservedEscapeExists": false
+        }
+      }
+    }
+  },
+  "cleanup": null,
+  "historicalFailure": "docs/development/adoption-acquisition-failure.json",
+  "status": "pending empty-scope completion and final temporary-repository cleanup"
+}

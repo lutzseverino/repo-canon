@@ -11,9 +11,13 @@ This document distinguishes the prepared local exercise from the final evidence.
 The fixture preparation described below does not inspect or adopt a source,
 contact GitHub, or establish remote configuration.
 
-Status: final public CLI validation and adoption are pending verified CLI 1.2.2
-publication. Issue #16 remains open and no complete-adoption or remote-readback
-acceptance is claimed.
+Status: installed public CLI 1.2.2 validated the final reviewed source and
+completed the public-target adoption and repeat adoption. The local Git matrix
+completed amendment, re-adoption, retroactive-write, reserved, exact, symlink,
+stale-scope, and unresolved-scope outcomes. Empty scope is confirmable; its
+confirmed start is waiting for the recorded anonymous source-quota reset. The
+retained [machine-readable record](adoption-acceptance.json) binds completed and
+pending outcomes. Repo Canon itself remains untagged and unreleased.
 
 ## Prepared repository matrix
 
@@ -63,22 +67,21 @@ directory evidence reference that the bound inspection did not observe.
 | `empty-and-unresolved` | Project README and remote-configuration declarations use explained empty path lists; a separate proposal with an unresolved question must be inspectable but ineligible to start. |
 | `protection` | Scope proposals target `.git`, `.repo-standards`, exact `AGENTS.md`, and a symbolic link. Each case must be rejected without writes. A changed repository after first inspection separately proves stale request and evidence rejection. |
 
-The successful Project README work will produce plain first headings and retain
+The successful Project README work produced plain first headings and retained
 the commands, ownership, and documentation links supported by each manifest.
-The documentation migration will preserve the complete operating guide bytes at
-its new destination, delete the separately authorized source, add the required
-index, and repair `HANDBOOK.md`. Final comparisons will cover every tracked and
-untracked output, all exact files and skill inventories, executable bits,
-reserved product state, Git HEAD/index, excluded candidates, unrelated content,
+The documentation migration preserved the complete operating guide bytes at
+its new destination, deleted the separately authorized source, added the
+required index, and repaired `HANDBOOK.md`. Final comparisons covered every
+tracked and untracked output, all exact files and skill inventories, executable
+bits, reserved product state, Git HEAD/index, excluded candidates, unrelated content,
 and local links.
 
 ## Public-source and remote boundary
 
-The final CLI 1.2.2 run must inspect a public GitHub standards source at a stable
-SemVer tag. Repo Canon has no tag or release, and issue #16 authorizes neither
-one. A temporary public source and an explicitly authorized disposable adoption
-remote are therefore required before the prepared repositories can produce the
-requested evidence.
+The final CLI 1.2.2 run inspected a public GitHub standards source at a stable
+SemVer tag. Repo Canon has no tag or release, and issue #16 authorized neither
+one. The owner instead authorized one temporary public source and one disposable
+public adoption remote, followed by their deletion after evidence retention.
 
 The approved temporary names were
 `lutzseverino/repo-canon-source-evidence-16` and
@@ -93,14 +96,114 @@ receive the 12 canonical labels, a required `PR metadata` ruleset, and the
 configured squash-only merge defaults during adoption. Acquisition failed
 before those operations ran.
 
-The same authorized repository names may be recreated for the final run. Because
-the selected manifest now intentionally differs by pinning CLI 1.2.2, the
-recreated source will use a newly reviewed snapshot tagged `v0.0.2`; it will not
-recreate or move the previously observed `v0.0.1` tag.
+The same authorized names were recreated for the final run. Because the selected
+manifest intentionally differs by pinning CLI 1.2.2, the recreated source used
+the newly reviewed snapshot `c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef`
+tagged `v0.0.2`. It did not recreate or move the previously observed `v0.0.1`
+tag.
 
-Before that explicit authorization, source validation and fixture preparation
-were local preparation only. The authorized attempt below still does not satisfy
-the adoption or remote-readback acceptance criteria because acquisition failed.
+Before explicit authorization, source validation and fixture preparation were
+local preparation only. The historical attempt below also did not satisfy
+adoption or remote-readback acceptance because acquisition failed.
+
+## Final public CLI and source identity
+
+Node.js 24.21.0 installed the public npm package
+`@lutzseverino/repo-standards@1.2.2` from `registry.npmjs.org` with integrity:
+
+```text
+sha512-K5YejetLhzigwCrbCgwz7i/Jm7FkyZbkBu9A25+hNq3IbU2UASu2cC6Uh6bh8CCO/wl6YeDU3pO/F5ZPX4e3gw==
+```
+
+No source checkout, preload, proxy, or altered transport replaced that package.
+The CLI returned `valid: true` with no errors for the exact reviewed source
+snapshot. It resolved one `complete` profile with 51 declarations and exact
+compatibility 1.2.2.
+
+An independent exact-head review approved commit
+`c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef` for immutable temporary tag
+`v0.0.2`. Its selected and transitive closure contains 115 files. Relative to
+the earlier whole-source-reviewed commit, the only selected byte change is the
+manifest's required CLI pin from 1.2.1 to 1.2.2; the other 106 changed paths are
+outside that closure. Later evidence-only commits do not change the reviewed
+snapshot or the tag. Public Git and authenticated API readback both resolved
+the tag directly to the approved commit.
+
+## Public adoption and live readback
+
+The public adopter started at prepared commit
+`c324a94653284a71abb662c2591b4eb6b5ef2579`. Its parent creates the fixture;
+that commit adds only `docs/agents/project.md`, preserving both useful statements
+from the original `AGENTS.md`. The fresh initial inspection bound that prepared
+HEAD and produced discovery request
+`sha256:9906a2e7702d8f8e08bf50de1a74d84464960402113ec65864db83c0894292ce`.
+The evidence-backed proposal covered every Project, false positive,
+documentation source, destination, index, and link repair. `inspect --scope`
+returned confirmable identity
+`sha256:cc33add75ae086a3780f75ea98eb9c063801f9dfe696e44a9a6d59984529b248`;
+confirmed `start --scope` used that same proposal and identity.
+
+Start installed the entire selection and ran both authorized GitHub fixes before
+the contextual handoff. Label setup created nine missing labels, corrected
+`wontfix`, read back all 12 canonical labels, and preserved the unrelated
+defaults. PR integration created the default-branch required-check ruleset and
+changed the merge defaults. Authenticated readback confirmed:
+
+- the active `Repo Canon required PR checks` ruleset applies to
+  `~DEFAULT_BRANCH` and requires `PR metadata`;
+- squash merge is enabled while merge commits and rebase merge are disabled;
+- squash commits take the pull request title and body; and
+- the final 19-label inventory contains every canonical label and every
+  unrelated starting label.
+
+The contextual work created both unfamiliar-layout Project READMEs, added and
+linked the usage index, moved the complete Meteor operating guide, repaired the
+handbook link, and retained the prepared project guidance. The submitted
+`repo-standards/assessment/v2` reviewed scope both after fixes and against the
+current project. The adoption completed with all three structural checks passed
+and no uncertainty. The installed `status/v4` record reads back 97 exact
+baselines, all 26 installed skill directories including the reserved system
+skill, the complete assessment, operation history, checks, source selection,
+and both completion points.
+
+Before the adoption commit, Git HEAD and index still matched the prepared HEAD.
+All 97 exact baselines matched current bytes and executable modes. Six excluded
+or intentionally unchanged files matched their prepared bytes. The moved guide's
+source bytes before deletion and destination bytes are identical, with SHA-256
+`32f753555f85841804e84784da1b05c1ca5ca381321449450774cb18eec08dfb`.
+
+The completed adoption was committed locally and pushed to an ordinary branch
+of the disposable public repository. A deliberate retained `inspect --readopt`
+then recomputed discovery with the same package, source tag, commit, and profile.
+Confirmed `start --readopt` ran both live fixes again; each returned `unchanged`
+after readback. Renewed contextual assessment and all checks completed, and the
+final status retained the earlier completion in history. Authenticated recursive
+tree readback of the public branch was complete rather than truncated. Its
+durable state, both Project READMEs, and moved guide blob IDs matched the local
+committed blobs, while the deleted legacy guide path was absent.
+
+## Local scope and lifecycle executions
+
+The remaining cases used distinct real local Git repositories from the prepared
+matrix, the same installed public CLI and public `v0.0.2` source selection for
+each initial acquisition, and the supported retained source for later amendment
+or re-adoption commands. Their generated `gh` executable and JSON state are
+author-operation fixtures. Their remote-operation outcomes are local fixture
+evidence and are not represented as GitHub state.
+
+| Case | Retained result |
+| --- | --- |
+| Active amendment | Initial scope deliberately excluded Bridge. `inspect --amend-scope` proposed only `extensions/bridge/README.md`; the confirmed identity added it while retaining prior ownership, replayed both fixes as `unchanged`, required renewed assessment, reran all checks, and completed. |
+| Retroactive write | Writing the Bridge README before requesting amendment remained an out-of-scope observation. `inspect --amend-scope` rejected the interval immediately with `ASSESSMENT_SCOPE`, before it could offer a new proposal or confirmation; the active run stayed incomplete without changing HEAD or index. |
+| Re-adoption | Initial adoption included and completed the Bridge Project. After a committed repository change introduced Relay and explicitly retired Bridge, retained `inspect --readopt` used unchanged pins and fresh discovery. Confirmed re-adoption added only `satellites/relay/README.md`; the retired Bridge README remained ordinary project content. Renewed assessment and checks completed. |
+| Empty and unresolved | The explained empty `project-readmes` and remote-content scopes produced a confirmable inspection; its confirmed start is pending the source-quota reset. A separate proposal with an unresolved Project question was inspectable but ineligible to start. |
+| Protected targets | Separate proposals for `.git/config`, `.repo-standards/escape.md`, exact-owned `AGENTS.md`, and the `docs/linked.md` symbolic link were rejected. Each inspection left repository HEAD, index, status, protected bytes, and link identity unchanged. |
+| Stale scope | After initial discovery, a tracked documentation edit invalidated the old evidence-bound proposal. Inspection rejected it as stale, performed no adoption write, and the fixture was restored to its original clean tree. |
+
+These failure outcomes are inspection or active-run incompletions. They are not
+listed as completed adoptions. Exact file installation through the explicit
+targets remained unchanged in the successful lifecycle repositories, while
+discovery governed only the repository-owned paths in their reviewed proposals.
 
 ## Observed public acquisition blocker
 
@@ -141,7 +244,7 @@ setting changed before inspection was its default branch, from the empty-repo
 placeholder `master` to its pushed fixture branch `main`; the authored adoption
 operations did not run.
 
-## Temporary repository cleanup
+## Historical temporary repository cleanup
 
 Cleanup was attempted with the authorized commands:
 
@@ -159,3 +262,11 @@ returned HTTP 404. Together these checks distinguish completed deletion from a
 transient unauthenticated lookup failure. Deleting the repositories removed the
 temporary source tag, fixture branch, default-branch setting, and default remote
 labels with them.
+
+## Final temporary repository cleanup
+
+Final deletion remains pending until the empty-scope success completes. The
+retained pre-deletion readback binds the source tag, adopter branch, labels,
+ruleset, and settings. The already authorized cleanup will then delete both
+exact repositories and retain authenticated owner-list omission, authenticated
+HTTP 404, and public `git ls-remote` failure evidence.
