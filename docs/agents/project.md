@@ -1,26 +1,25 @@
 # Repo Canon project guidance
 
-Repo Canon authors a standards source for the separate Repository Standards
-product. Use the confirmed preferences in `authoring-notes.md` and review the
-draft contents in `design-review.md` before changing the intended standards.
+Repo Canon supplies conventions through a standards source for the separate
+Repository Standards product.
 
-The repository is a work in progress. Root contribution and agent configuration
-files are the selected conventions; `drafts/` retains the interview's design
-material. Read current files before promoting or revising a draft. The pinned
-skill directories, automation, and complete source profile are implemented.
-Complete adoption verification is recorded in
-`docs/development/adoption-evidence.md`.
+Before changing a convention, read `authoring-notes.md` for the confirmed
+preferences and `design-review.md` for their rationale and reviewed material.
+Compare drafts with their current source files before editing either.
 
-Use GitHub specification #1 and its existing implementation tickets as the
-contracts. Repository Standards has delivered and accepted the required scope
-capability. Before authoring declarations or adoption exercises, read
-`docs/development/adoption-compatibility.md` for the supported v2 interface,
-the CLI 1.2.2 validation baseline, and the separate preparation/setup routes.
-Preserve the full accepted policy and verify each ticket's remaining blockers
-before implementation.
+Before changing declarations or preparing adoption, read
+`docs/development/adoption-compatibility.md` for the supported interface and
+preparation steps. Use `docs/development/README.md` for validation commands.
 
-Use `docs/development/README.md` for the current validation requirements. The
-root MIT License, with `Copyright (c) 2026 Jasper Lutz Severino`, covers Repo
-Canon's original material. Third-party material retains its accompanying
-licenses and notices. Source validation and whole-source review evidence are
-recorded separately from adoption acceptance.
+Before claiming source acceptance or preparing publication, read
+`docs/development/completion-record.md`. It identifies the reviewed source
+bytes and links the distinct review, validation, skill, operation, and adoption
+evidence. Refresh affected evidence when those bytes change.
+
+When implementing an assigned GitHub issue, verify its blockers and follow its
+contract. Specification #1 records the accepted conventions and original
+implementation contract.
+
+Preserve pinned upstream skill contents and their notices. The root MIT License
+covers Repo Canon's original material; third-party material retains its own
+licenses and notices.

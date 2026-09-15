@@ -55,18 +55,9 @@ npm install --prefix "$cli_prefix" --ignore-scripts \
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
 
-For development, run the focused fixture related to a changed operation, then
-the repository checks. The CI workflow repeats the complete test suite and
-installs public CLI 1.2.2 outside the checkout to validate every profile:
-
-```sh
-node --test test/repository-readme-check.test.mjs
-node --test test/project-readme-check.test.mjs test/documentation-check.test.mjs
-npm run test:issue-contracts
-npm run check
-npm test
-git diff --check
-```
+Follow the [development guide](README.md#current-validation) for focused local
+checks and PR validation. CI installs the same public CLI outside the checkout
+and validates every profile.
 
 ## Validation boundary
 

@@ -30,15 +30,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   scope, structural outcomes, prerequisites, and focused fixture commands.
 - [Standards source profile](source-profile.md): complete profile ownership,
   declarations, prerequisites, validation, and evidence boundaries.
-- [Engineering skill exercises](engineering-skill-exercises.md): disposable
-  repositories and runtime evidence for the remaining engineering skills.
-  The [curated transcript](engineering-skill-runtime-transcript.md),
-  [architecture report](engineering-skill-architecture-report.html), and
-  [research result](engineering-skill-research-result.md) retain the observed
-  session outputs; the [runtime-builder patch](engineering-skill-runtime-builder.patch)
-  preserves exact harness provenance, and the
-  [visual-inspection record](engineering-skill-architecture-visual-inspection.md)
-  records the browser-render review.
+- [Engineering skill exercises](engineering-skill-exercises.md): scenarios,
+  runtime evidence, harness provenance, and limitations for nine skills.
 - [Productivity skill exercises](productivity-skill-exercises.md): runtime
   scenarios, outcomes, retained artifacts, prerequisites, and limitations.
 - [Planning skill exercises](planning-skill-exercises.md): runtime evidence,
@@ -70,18 +63,20 @@ accepted source can be selected from this repository.
 
 ## Working locally
 
-Clone the repository with Git. Markdown and YAML files can be edited directly;
-the metadata validator has no external package dependencies. Validation and the
-current external Repository Standards CLI require Node.js 24 and npm; GitHub
-planning uses authenticated `gh` access.
+Clone the repository with Git and use Node.js 24 and npm. The source needs no
+package installation, typecheck, or build step; parser dependencies are
+vendored. GitHub planning uses authenticated `gh` access. For source validation,
+install the public Repository Standards CLI outside the checkout using the
+[source profile instructions](source-profile.md#executable-prerequisites).
 
 ## Current validation
 
-Review Markdown file links, issue-form fields, and consistency with the confirmed
-preferences. Run `git diff --check`, `npm run check`, and `npm test` before
-requesting review. Use Node.js 24; the project has no package dependencies,
-typecheck, or build step. Run a single fixture with
-`node --test test/<name>.test.mjs` while developing.
+Run focused tests for the changed behavior, `npm run check`, and
+`git diff --check` before opening a PR. Review affected links, issue-form fields,
+and consistency with the confirmed preferences. A single fixture runs with
+`node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
+CI runs the full `npm test` suite and all-profile source validation. Complete
+independent reviews and require passing checks before merging.
 
 The Node test suite exercises executable operation fixtures, including
 disposable remote-label and PR-integration state with interruption recovery,
