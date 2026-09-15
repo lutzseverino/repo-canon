@@ -6,6 +6,29 @@ and [Repository Standards #69](https://github.com/lutzseverino/repo-standards/is
 track this coordinated delivery. The confirmed policy is in the
 [First release interview](../../authoring-notes.md#first-release-interview).
 
+## Verified publication
+
+[Repo Canon v0.1.0](https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.0)
+was published on 2026-09-15 as an ordinary release (`draft: false`,
+`prerelease: false`). Its annotated tag resolves to reviewed main commit
+`639af070ddeef2d82c96b8427a805da0e1bf8ba9`, integrated through
+[PR #51](https://github.com/lutzseverino/repo-canon/pull/51).
+
+Every one of the 115 accepted source inputs matched its recorded SHA-256,
+Git blob and mode at that commit. Public CLI 1.2.2 validated all profiles and
+acquired the permanent pin, reporting that exact commit and the `complete`
+profile. [The publication record](first-release-publication.json) retains the
+tag object, npm package integrity, release readback, and acquisition result.
+The repository has the `repo-standards` discovery topic; search indexing is
+separate from the verified direct acquisition.
+
+Preparation passed 252 tests, public source validation, and final PR checks.
+Independent Standards and Spec reviews found no remaining findings. Both Codex
+review findings were corrected and independently re-reviewed before integration:
+release status now distinguishes historical temporary evidence, and release
+notes use absolute tag-pinned URLs. Real adoption remains tracked separately in
+[Repository Standards #69](https://github.com/lutzseverino/repo-standards/issues/69).
+
 ## Publication procedure
 
 Release preparation preserves the 115 selected and transitive source inputs in
