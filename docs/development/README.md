@@ -4,6 +4,8 @@ This directory explains development decisions, validation, and maintenance of
 the standards source. Keep end-user instructions under `docs/usage`, durable
 decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
+- [First release](first-release.md): publication procedure, immutable source verification,
+  release notes, and coordinated real-adoption boundary.
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
 - [Complete source acceptance](completion-record.md): final source identity,
