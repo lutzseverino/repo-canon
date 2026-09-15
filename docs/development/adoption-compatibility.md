@@ -6,14 +6,17 @@ delivery [#50](https://github.com/lutzseverino/repo-standards/issues/50) are
 closed. The owner's [acceptance reconciliation](https://github.com/lutzseverino/repo-standards/issues/41#issuecomment-5664401656)
 records completed macOS public verification and distinguishes the broader
 1.2.0 agent evidence from the 1.2.1 patch evidence. This satisfies Repo Canon's
-product dependency; Repo Canon's own source and adoption remain unverified.
+product dependency. Repo Canon's final CLI 1.2.2 source validation and adoption
+evidence are recorded separately in [the adoption record](adoption-evidence.md).
 
 ## Supported source and discovery route
 
-Use `repo-standards/v2` and the installed public CLI 1.2.1 with Node.js 24 as the
-initial validation baseline. Declare only compatibility actually validated
-against the final source bytes; the intended initial `requires.repo-standards`
-value is the exact version `1.2.1`. Format version and CLI version are distinct.
+Use `repo-standards/v2` and the installed public CLI 1.2.2 with Node.js 24 as the
+final validation and adoption baseline. Declare only compatibility actually
+validated against the final source bytes; `requires.repo-standards` is the exact
+version `1.2.2`. Format version and CLI version are distinct. The successful
+1.2.1 local source validation and failed public acquisition remain historical
+evidence rather than the final baseline.
 
 | Accepted requirement | Supported mapping |
 | --- | --- |
@@ -33,14 +36,15 @@ discovered targets. Empty scope retains its declaration and operations;
 unresolved coverage blocks start. Changed evidence requires fresh inspection
 and review, and writes outside confirmed scope remain invalid.
 
-Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v1.2.1/docs/author-format.md),
-[inspection](https://github.com/lutzseverino/repo-standards/blob/v1.2.1/docs/inspection.md),
-and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v1.2.1/docs/script-protocol.md)
+Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/author-format.md),
+[inspection](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/inspection.md),
+and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/script-protocol.md)
 contracts when implementing. Discovery supplies scope resolution; the separate
 AGENTS preparation and authored GitHub setup routes below remain necessary.
-Final validation, every operation and all 25 skill exercises, whole-source
-review, and complete adoption with authorized remote readback remain Repo
-Canon acceptance requirements.
+Repo Canon acceptance combines final validation, operation and skill exercises,
+whole-source review, and complete adoption with authorized remote readback. The
+development records now supply those evidence classes while keeping their
+boundaries explicit.
 
 ## Historical CLI 1.1.0 scope audit
 
@@ -95,8 +99,8 @@ block preparation. Projects with no useful existing instructions receive no
 empty project guidance file. Integrated preparation support is not required
 for the selected workflow.
 
-Sources: [inspection](https://github.com/lutzseverino/repo-standards/blob/v1.2.1/docs/inspection.md),
-[adoption sequence](https://github.com/lutzseverino/repo-standards/blob/v1.2.1/src/adoption.ts).
+Sources: [inspection](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/inspection.md),
+[adoption sequence](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/src/adoption.ts).
 
 ## GitHub repository settings
 
@@ -113,5 +117,5 @@ They must not imply remote freshness or rollback guarantees from local
 inspection. They run during adoption; authoring exercises use disposable
 fixtures and do not mutate live GitHub settings.
 
-Sources: [script protocol](https://github.com/lutzseverino/repo-standards/blob/v1.2.1/docs/script-protocol.md),
-[architecture](https://github.com/lutzseverino/repo-standards/blob/v1.2.1/docs/architecture.md).
+Sources: [script protocol](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/script-protocol.md),
+[architecture](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/architecture.md).

@@ -2,7 +2,7 @@
 
 `standards.yaml` defines one complete `repo-standards/v2` profile named
 `complete`. The source identity is `repo-canon`, and its compatibility contract
-is the exact public CLI version `requires.repo-standards: "1.2.1"`. The profile
+is the exact public CLI version `requires.repo-standards: "1.2.2"`. The profile
 does not imply a release or successful adoption.
 
 ## Policy and ownership map
@@ -50,14 +50,14 @@ profile without filtering:
 cli_prefix="$(mktemp -d)"
 npm install --prefix "$cli_prefix" --ignore-scripts \
   --registry=https://registry.npmjs.org \
-  @lutzseverino/repo-standards@1.2.1
+  @lutzseverino/repo-standards@1.2.2
 "$cli_prefix/node_modules/.bin/repo-standards" --version
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
 
 For development, run the focused fixture related to a changed operation, then
 the repository checks. The CI workflow repeats the complete test suite and
-installs public CLI 1.2.1 outside the checkout to validate every profile:
+installs public CLI 1.2.2 outside the checkout to validate every profile:
 
 ```sh
 node --test test/repository-readme-check.test.mjs
@@ -77,10 +77,19 @@ compatibility `1.2.1`. The resolved counts matched the inventory above, and the
 CLI reported discovery required for `documentation`,
 `github-repository-configuration`, and `project-readmes`.
 
+That result is retained historical evidence for the earlier source bytes. The
+final manifest, install command, and CI validation pin CLI 1.2.2. Public CLI
+1.2.2 under Node.js 24.21.0 returned `valid: true` with no errors for the exact
+reviewed snapshot `c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef`. The immutable
+temporary `v0.0.2` source tag and every adoption selection resolved to that same
+commit. [The adoption record](adoption-evidence.md) preserves the installed npm
+integrity, source identity, public and local execution boundaries, and outcomes.
+
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
 operation or prerequisite and cannot establish semantic coverage or safe scope
 in an adopting repository. The existing operation fixtures and skill inventory
-review remain separate evidence. Source preparation, a confirmed v2 inspection,
-operation execution during adoption, authorized remote readback, complete
-adoption, publication, and release remain separate work.
+review remain separate evidence. The confirmed v2 inspections, operation
+execution, contextual assessments, authorized remote readback, and complete
+adoptions are separately recorded. Repo Canon source publication and release
+remain separate work.

@@ -1,0 +1,9 @@
+{
+  "valid": false,
+  "errors": [
+    {
+      "code": "SOURCE_UNAVAILABLE",
+      "message": "Public GitHub returned HTTP 403 for /repos/lutzseverino/repo-canon-source-evidence-16/git/blobs/2509ec23b68a8921a29170a769894e26652c4b6e. Check the public repository, version tag, and API rate limit."
+    }
+  ]
+}

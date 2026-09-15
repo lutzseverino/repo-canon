@@ -6,6 +6,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
+- [Complete adoption evidence](adoption-evidence.md): disposable repository
+  matrix, evidence boundary, and the temporary remote prerequisite.
 - [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
   identity and permission prerequisites, protocol outcomes, and fixture coverage.
 - [GitHub PR integration setup](github-pr-integration-setup.md): required-check
@@ -52,11 +54,14 @@ defines the complete source profile.
 The required product scope capability is delivered and accepted. Pull request
 metadata validation, issue contract validation, Repository README checking,
 GitHub label setup, PR integration setup, and their CI suites are implemented.
-Public CLI 1.2.1 with Node.js 24 validates the complete profile, and the source
-declares that exact compatibility. The earlier CLI 1.1.0 experiments remain
-historical evidence. Operation fixtures, the pinned skill inventory, and the
-engineering, productivity, and planning skill exercises remain separate from
-source validation. Complete Repo Canon adoption is still outstanding.
+The source declares public CLI 1.2.2 as its exact final validation baseline.
+The successful CLI 1.2.1 local validation and earlier CLI 1.1.0 experiments
+remain historical evidence. Operation fixtures, the pinned skill inventory,
+and the engineering, productivity, and planning skill exercises remain separate
+from source validation. Final source validation, complete adoption,
+scope-protection, preservation, and authorized remote-readback evidence are
+recorded in [the adoption evidence](adoption-evidence.md). Repo Canon remains
+untagged and unreleased.
 
 ## Working locally
 
@@ -85,8 +90,8 @@ contact GitHub or establish live remote setup. Run
 draft issue forms were parsed as YAML and checked for basic field structure and
 duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
 The public source-validation command and its evidence boundary are recorded in
-[the source profile](source-profile.md). Adoption evidence remains separate
-from these checks.
+[the source profile](source-profile.md). Complete adoption remains a separate
+evidence class recorded in [the adoption evidence](adoption-evidence.md).
 
 Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
 disposable local repositories used for the seven productivity skill exercises.

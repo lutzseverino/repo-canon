@@ -2,8 +2,9 @@
 
 Status: policy decisions settled; shared contribution and agent workflow
 material reviewed. The complete source profile is authored and structurally
-validated with public CLI 1.2.1. Complete adoption evidence remains outstanding,
-so this repository is not yet an adoption-ready release.
+valid with public CLI 1.2.2 as its exact validation baseline. Complete adoption,
+scope-protection, preservation, and authorized remote-readback evidence is
+recorded. Repo Canon itself remains untagged and unreleased.
 
 ## Confirmed preferences
 
@@ -183,23 +184,17 @@ so this repository is not yet an adoption-ready release.
 ## Source profile
 
 The complete `repo-standards/v2` source is `standards.yaml`, with one
-`complete` profile and exact CLI compatibility `1.2.1`. The concise
+`complete` profile and exact CLI compatibility `1.2.2`. The concise
 policy-to-declaration, material, operation, ownership, and prerequisite mapping
 is maintained in
 [the source profile record](docs/development/source-profile.md). Contextual
 Project README and documentation scope uses separate assessment and discovery
 guidance and resolves to individual adopter-reviewed paths.
 
-## Remaining authoring work
-
-- Exercise installation and licensing edge cases and preservation of existing
-  repository information against the agreed guidance.
-- Remaining skill exercises and complete adoption evidence.
-
 The [compatibility audit](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface and retains the
-historical v1 findings. Use installed CLI 1.2.1 as the initial validation
-baseline; claim only compatibility demonstrated against the final source.
+historical CLI findings. Use installed public CLI 1.2.2 as the final validation
+baseline; claim only compatibility demonstrated against the final source bytes.
 
 ## Bootstrap and specification refresh
 

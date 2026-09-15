@@ -1,0 +1,35 @@
+{
+  "format": "repo-canon/scope-template/v1",
+  "declarations": [
+    {
+      "id": "documentation",
+      "paths": ["docs/README.md", "docs/development/README.md"],
+      "coverage": "The existing documentation map and development guide remain complete and unchanged.",
+      "evidence": [{"kind":"directory","path":"docs"}],
+      "candidates": [
+        {"path":"docs/README.md","decision":"include","reason":"The existing documentation map establishes the docs root.","evidence":[{"kind":"file","path":"docs/README.md"}]},
+        {"path":"docs/development/README.md","decision":"include","reason":"The existing development guide is the required project-owned entry point.","evidence":[{"kind":"file","path":"docs/development/README.md"}]}
+      ],
+      "unresolved": []
+    },
+    {
+      "id": "github-repository-configuration",
+      "paths": [],
+      "coverage": "This declaration governs remote settings only and intentionally has no project-content paths.",
+      "evidence": [{"kind":"directory","path":"."}],
+      "candidates": [],
+      "unresolved": []
+    },
+    {
+      "id": "project-readmes",
+      "paths": ["extensions/bridge/README.md"],
+      "coverage": "Deeper review connects Bridge's command to its maintained source, so its missing README is the sole addition; the fixture remains excluded.",
+      "evidence": [{"kind":"directory","path":"."},{"kind":"directory","path":"extensions/bridge"},{"kind":"file","path":"extensions/bridge/package.json"},{"kind":"file","path":"extensions/bridge/src/index.mjs"}],
+      "candidates": [
+        {"path":"extensions/bridge/README.md","decision":"include","reason":"The private package has its own check command and maintained source, establishing a Project whose README is absent.","evidence":[{"kind":"directory","path":"extensions/bridge"},{"kind":"file","path":"extensions/bridge/package.json"},{"kind":"file","path":"extensions/bridge/src/index.mjs"},{"kind":"absence","path":"extensions/bridge/README.md"}]},
+        {"path":"fixtures/bridge","decision":"exclude","reason":"This manifest is fixture data without commands or maintained source.","evidence":[{"kind":"directory","path":"fixtures/bridge"},{"kind":"file","path":"fixtures/bridge/package.json"}]}
+      ],
+      "unresolved": []
+    }
+  ]
+}
