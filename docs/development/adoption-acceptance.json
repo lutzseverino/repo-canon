@@ -752,7 +752,104 @@
       },
       "empty": {
         "inspection": "sha256:5410e7552a1b3d2c79c9439b717eff5f5f50e9c2ed471f961448a3a84984a022",
-        "outcome": "pending confirmed start after anonymous source quota reset"
+        "declarations": [
+          {
+            "id": "documentation",
+            "paths": [
+              "docs/README.md",
+              "docs/development/README.md"
+            ],
+            "unresolved": []
+          },
+          {
+            "id": "github-repository-configuration",
+            "paths": [],
+            "unresolved": []
+          },
+          {
+            "id": "project-readmes",
+            "paths": [],
+            "unresolved": []
+          }
+        ],
+        "completed": {
+          "phase": "complete",
+          "outcome": "complete",
+          "reason": "Exact installation, fixes, contextual assessment where required, checks, runtime, retained inputs and durable state verified.",
+          "inspection": "sha256:5410e7552a1b3d2c79c9439b717eff5f5f50e9c2ed471f961448a3a84984a022",
+          "operations": [
+            {
+              "declaration": "github-repository-configuration",
+              "id": "canonical-labels",
+              "phase": "fixes",
+              "status": "changed"
+            },
+            {
+              "declaration": "github-repository-configuration",
+              "id": "pull-request-integration",
+              "phase": "fixes",
+              "status": "changed"
+            },
+            {
+              "declaration": "documentation",
+              "id": "documentation-navigation",
+              "phase": "checks",
+              "status": "passed"
+            },
+            {
+              "declaration": "project-readmes",
+              "id": "project-readme-structure",
+              "phase": "checks",
+              "status": "passed"
+            },
+            {
+              "declaration": "repository-readme",
+              "id": "repository-readme-structure",
+              "phase": "checks",
+              "status": "passed"
+            }
+          ]
+        },
+        "status": {
+          "format": "repo-standards/status/v4",
+          "selection": {
+            "cli": {
+              "package": "@lutzseverino/repo-standards",
+              "version": "1.2.2"
+            },
+            "standards": {
+              "repository": "https://github.com/lutzseverino/repo-canon-source-evidence-16",
+              "version": "v0.0.2",
+              "commit": "c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef"
+            },
+            "profile": "complete"
+          },
+          "lastComplete": {
+            "run": "0cb4d433-c0cf-4533-bd0f-516bbd077884",
+            "inspection": "sha256:5410e7552a1b3d2c79c9439b717eff5f5f50e9c2ed471f961448a3a84984a022",
+            "completedAt": "2026-09-15T05:33:56.864Z",
+            "head": "dda80fdb2e2207797b61891632ab92d8f0c31b55"
+          },
+          "priorComplete": null,
+          "active": null,
+          "checks": [
+            {
+              "declaration": "documentation",
+              "id": "documentation-navigation",
+              "status": "passed"
+            },
+            {
+              "declaration": "project-readmes",
+              "id": "project-readme-structure",
+              "status": "passed"
+            },
+            {
+              "declaration": "repository-readme",
+              "id": "repository-readme-structure",
+              "status": "passed"
+            }
+          ]
+        }
       }
     },
     "protection": {
@@ -821,7 +918,36 @@
       }
     }
   },
-  "cleanup": null,
+  "cleanup": {
+    "owner": "lutzseverino",
+    "authorization": "explicit owner authorization for exact temporary repositories and cleanup",
+    "repositories": {
+      "source": {
+        "name": "lutzseverino/repo-canon-source-evidence-16",
+        "accountListingOmitted": true,
+        "authenticatedApi": {
+          "exit": 1,
+          "http404": true
+        },
+        "publicGit": {
+          "exit": 128,
+          "unavailable": true
+        }
+      },
+      "adopter": {
+        "name": "lutzseverino/repo-canon-adopter-evidence-16",
+        "accountListingOmitted": true,
+        "authenticatedApi": {
+          "exit": 1,
+          "http404": true
+        },
+        "publicGit": {
+          "exit": 128,
+          "unavailable": true
+        }
+      }
+    }
+  },
   "historicalFailure": "docs/development/adoption-acquisition-failure.json",
-  "status": "pending empty-scope completion and final temporary-repository cleanup"
+  "status": "complete"
 }

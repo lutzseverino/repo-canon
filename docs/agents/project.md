@@ -8,7 +8,8 @@ The repository is a work in progress. Root contribution and agent configuration
 files are the selected conventions; `drafts/` retains the interview's design
 material. Read current files before promoting or revising a draft. The pinned
 skill directories, automation, and complete source profile are implemented.
-Complete adoption verification remains outstanding.
+Complete adoption verification is recorded in
+`docs/development/adoption-evidence.md`.
 
 Use GitHub specification #1 and its existing implementation tickets as the
 contracts. Repository Standards has delivered and accepted the required scope

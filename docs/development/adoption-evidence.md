@@ -13,11 +13,10 @@ contact GitHub, or establish remote configuration.
 
 Status: installed public CLI 1.2.2 validated the final reviewed source and
 completed the public-target adoption and repeat adoption. The local Git matrix
-completed amendment, re-adoption, retroactive-write, reserved, exact, symlink,
-stale-scope, and unresolved-scope outcomes. Empty scope is confirmable; its
-confirmed start is waiting for the recorded anonymous source-quota reset. The
-retained [machine-readable record](adoption-acceptance.json) binds completed and
-pending outcomes. Repo Canon itself remains untagged and unreleased.
+completed the amendment, re-adoption, empty-scope, retroactive-write, reserved,
+exact, symlink, and stale-scope cases. The retained
+[machine-readable record](adoption-acceptance.json) binds the identities and
+outcomes. Repo Canon itself remains untagged and unreleased.
 
 ## Prepared repository matrix
 
@@ -196,7 +195,7 @@ evidence and are not represented as GitHub state.
 | Active amendment | Initial scope deliberately excluded Bridge. `inspect --amend-scope` proposed only `extensions/bridge/README.md`; the confirmed identity added it while retaining prior ownership, replayed both fixes as `unchanged`, required renewed assessment, reran all checks, and completed. |
 | Retroactive write | Writing the Bridge README before requesting amendment remained an out-of-scope observation. `inspect --amend-scope` rejected the interval immediately with `ASSESSMENT_SCOPE`, before it could offer a new proposal or confirmation; the active run stayed incomplete without changing HEAD or index. |
 | Re-adoption | Initial adoption included and completed the Bridge Project. After a committed repository change introduced Relay and explicitly retired Bridge, retained `inspect --readopt` used unchanged pins and fresh discovery. Confirmed re-adoption added only `satellites/relay/README.md`; the retired Bridge README remained ordinary project content. Renewed assessment and checks completed. |
-| Empty and unresolved | The explained empty `project-readmes` and remote-content scopes produced a confirmable inspection; its confirmed start is pending the source-quota reset. A separate proposal with an unresolved Project question was inspectable but ineligible to start. |
+| Empty and unresolved | The explained empty `project-readmes` and remote-content scopes produced a confirmable inspection and complete adoption. A separate proposal with an unresolved Project question was inspectable but ineligible to start. |
 | Protected targets | Separate proposals for `.git/config`, `.repo-standards/escape.md`, exact-owned `AGENTS.md`, and the `docs/linked.md` symbolic link were rejected. Each inspection left repository HEAD, index, status, protected bytes, and link identity unchanged. |
 | Stale scope | After initial discovery, a tracked documentation edit invalidated the old evidence-bound proposal. Inspection rejected it as stale, performed no adoption write, and the fixture was restored to its original clean tree. |
 
@@ -265,8 +264,12 @@ labels with them.
 
 ## Final temporary repository cleanup
 
-Final deletion remains pending until the empty-scope success completes. The
-retained pre-deletion readback binds the source tag, adopter branch, labels,
-ruleset, and settings. The already authorized cleanup will then delete both
-exact repositories and retain authenticated owner-list omission, authenticated
-HTTP 404, and public `git ls-remote` failure evidence.
+After the final source, adoption, repeated-operation, configuration, content,
+and status readbacks were retained, the same authorized deletion commands
+removed both recreated public repositories. The active GitHub CLI account was
+the owner and had the `delete_repo` scope. An authenticated owner-repository
+listing omitted both exact names, and authenticated requests to each exact
+repository endpoint returned HTTP 404. Public `git ls-remote` also reported
+repository-not-found for both URLs. These checks distinguish completed deletion
+from anonymous unavailability. The cleanup removed temporary tag `v0.0.2`, both
+adopter branches, the disposable pull request, labels, ruleset, and settings.

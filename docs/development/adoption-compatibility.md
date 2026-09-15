@@ -6,7 +6,8 @@ delivery [#50](https://github.com/lutzseverino/repo-standards/issues/50) are
 closed. The owner's [acceptance reconciliation](https://github.com/lutzseverino/repo-standards/issues/41#issuecomment-5664401656)
 records completed macOS public verification and distinguishes the broader
 1.2.0 agent evidence from the 1.2.1 patch evidence. This satisfies Repo Canon's
-product dependency; Repo Canon's own source and adoption remain unverified.
+product dependency. Repo Canon's final CLI 1.2.2 source validation and adoption
+evidence are recorded separately in [the adoption record](adoption-evidence.md).
 
 ## Supported source and discovery route
 
@@ -40,9 +41,10 @@ Use the versioned [author format](https://github.com/lutzseverino/repo-standards
 and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/script-protocol.md)
 contracts when implementing. Discovery supplies scope resolution; the separate
 AGENTS preparation and authored GitHub setup routes below remain necessary.
-Final validation, every operation and all 25 skill exercises, whole-source
-review, and complete adoption with authorized remote readback remain Repo
-Canon acceptance requirements.
+Repo Canon acceptance combines final validation, operation and skill exercises,
+whole-source review, and complete adoption with authorized remote readback. The
+development records now supply those evidence classes while keeping their
+boundaries explicit.
 
 ## Historical CLI 1.1.0 scope audit
 

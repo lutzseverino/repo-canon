@@ -7,10 +7,9 @@
   </p>
 </div>
 
-Work in progress. The complete source profile, automation, and pinned skill
-collection are implemented and structurally validated. Remaining skill
-exercises and complete adoption are still outstanding. There is no
-adoption-ready release yet.
+Work in progress. The complete source profile, automation, pinned skill
+collection, exercises, and complete adoption evidence are implemented and
+validated. Repo Canon remains untagged and unreleased.
 
 ## Documentation
 
@@ -19,6 +18,7 @@ adoption-ready release yet.
 - [Documentation index](docs/README.md)
 - [Adoption compatibility](docs/development/adoption-compatibility.md)
 - [Complete source profile](docs/development/source-profile.md)
+- [Complete adoption evidence](docs/development/adoption-evidence.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
 ## Contributing

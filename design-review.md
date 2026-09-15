@@ -1,6 +1,6 @@
 # Repo Canon design review
 
-The author preferences are settled in [authoring notes](authoring-notes.md). This document presents the complete reviewed design material. The shared contribution and agent workflow material has completed content review, and the contextual guidance has been promoted into the complete source profile. The profile and automation are implemented and structurally validated; complete adoption evidence remains separate.
+The author preferences are settled in [authoring notes](authoring-notes.md). This document presents the complete reviewed design material. The shared contribution and agent workflow material has completed content review, and the contextual guidance has been promoted into the complete source profile. The profile and automation are implemented and structurally validated; [complete adoption evidence](docs/development/adoption-evidence.md) is recorded separately.
 
 The required product support is delivered and accepted. Use the [compatibility mapping](docs/development/adoption-compatibility.md) for the v2 interface and validation baseline; the [original scope proposal](docs/development/scope-capability-specification.md) remains historical context. The [upstream compatibility notes](docs/development/upstream-compatibility.md) identify the native workflows to preserve.
 

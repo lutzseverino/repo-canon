@@ -78,14 +78,18 @@ CLI reported discovery required for `documentation`,
 `github-repository-configuration`, and `project-readmes`.
 
 That result is retained historical evidence for the earlier source bytes. The
-final manifest, install command, and CI validation pin CLI 1.2.2. Final source
-validation and adoption evidence must identify the reviewed bytes used by that
-public CLI run.
+final manifest, install command, and CI validation pin CLI 1.2.2. Public CLI
+1.2.2 under Node.js 24.21.0 returned `valid: true` with no errors for the exact
+reviewed snapshot `c0d57fadaee738b65d0ff12ecd9f8ec5df86c7ef`. The immutable
+temporary `v0.0.2` source tag and every adoption selection resolved to that same
+commit. [The adoption record](adoption-evidence.md) preserves the installed npm
+integrity, source identity, public and local execution boundaries, and outcomes.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
 operation or prerequisite and cannot establish semantic coverage or safe scope
 in an adopting repository. The existing operation fixtures and skill inventory
-review remain separate evidence. Source preparation, a confirmed v2 inspection,
-operation execution during adoption, authorized remote readback, complete
-adoption, publication, and release remain separate work.
+review remain separate evidence. The confirmed v2 inspections, operation
+execution, contextual assessments, authorized remote readback, and complete
+adoptions are separately recorded. Repo Canon source publication and release
+remain separate work.
