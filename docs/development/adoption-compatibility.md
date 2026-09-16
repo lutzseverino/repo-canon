@@ -7,7 +7,8 @@ closed. The owner's [acceptance reconciliation](https://github.com/lutzseverino/
 records completed macOS public verification and distinguishes the broader
 1.2.0 agent evidence from the 1.2.1 patch evidence. This satisfies Repo Canon's
 product dependency. Repo Canon's final CLI 1.2.2 source validation and adoption
-evidence are recorded separately in [the adoption record](adoption-evidence.md).
+evidence are recorded separately in [the adoption record](adoption-evidence.md),
+and the merged real adoption in [first real adoption](real-adoption.md).
 
 ## Supported source and discovery route
 

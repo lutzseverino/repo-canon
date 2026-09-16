@@ -139,4 +139,6 @@ in an adopting repository. The existing operation fixtures and skill inventory
 review remain separate evidence. The confirmed v2 inspections, operation
 execution, contextual assessments, authorized remote readback, and complete
 adoptions are separately recorded. Repo Canon source publication and release
-remain separate work.
+are separate work, recorded in [first release](first-release.md) and
+[release v0.1.1](release-v0-1-1.md); the merged Repository Standards adoption of
+those published pins is recorded in [first real adoption](real-adoption.md).

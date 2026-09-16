@@ -19,6 +19,10 @@ GitHub release.
 The [source acceptance record](docs/development/completion-record.md) identifies
 the reviewed bytes and evidence. [Release versioning](docs/usage/versioning.md)
 explains compatibility and migration expectations.
+[Repository Standards](https://github.com/lutzseverino/repo-standards) adopted
+this profile from the published pins; the
+[first real adoption](docs/development/real-adoption.md) records that delivery
+and what it surfaced.
 
 ## Documentation
 
@@ -30,6 +34,7 @@ explains compatibility and migration expectations.
 - [Complete source acceptance](docs/development/completion-record.md)
 - [Adoption guide](docs/usage/adopt-repo-canon.md)
 - [Complete adoption evidence](docs/development/adoption-evidence.md)
+- [First real adoption](docs/development/real-adoption.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
 ## Contributing

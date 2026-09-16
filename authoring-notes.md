@@ -5,8 +5,10 @@ material reviewed. The complete source profile is authored and structurally
 valid with public CLI 1.2.2 as its exact validation baseline. Complete adoption,
 scope-protection, preservation, and authorized remote-readback evidence is
 recorded. The owner selected `v0.1.0` for the first permanent release;
-[release delivery](docs/development/first-release.md) covers publication and
-the separate real-adoption boundary.
+[release delivery](docs/development/first-release.md) covers its publication and
+[release v0.1.1](docs/development/release-v0-1-1.md) the current patch release.
+The separate real adoption is complete and merged, recorded in
+[first real adoption](docs/development/real-adoption.md).
 
 ## Confirmed preferences
 
@@ -231,7 +233,13 @@ product contracts to implement these personal preferences.
 ## First release interview
 
 The owner confirmed the consolidated release plan below at the end of the
-interview. Implementation is the next session's work.
+interview. It is delivered: `v0.1.0` and the `v0.1.1` patch are published and
+verified, and `repo-standards` completed and merged its adoption of the
+`complete` profile from those public pins. The
+[first release](docs/development/first-release.md),
+[release v0.1.1](docs/development/release-v0-1-1.md), and
+[first real adoption](docs/development/real-adoption.md) records hold the
+evidence.
 
 - The work should finish with a published, verified source version and one
   successful real repository adoption. Publication and adoption remain separate

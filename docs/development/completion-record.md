@@ -180,10 +180,13 @@ The owner selected **v0.1.0** as the first permanent source version in
 Its tag must retain the accepted 115-file source closure. Verify the ordinary
 [published GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.0)
 before adoption; [first release delivery](first-release.md) records the
-publication procedure and separate real-adoption boundary. The temporary
+publication procedure and its separate real-adoption boundary. The temporary
 acceptance work and ticket #17 did not publish a permanent version. The owner
 subsequently authorized publication and real adoption through the
 [First release interview](../../authoring-notes.md#first-release-interview).
+Both are complete: Repository Standards merged its adoption of the `complete`
+profile from these public pins, recorded in
+[first real adoption](real-adoption.md).
 
 The owner then authorized the `v0.1.1` patch release so that the adopter-facing
 workflow defect in [#55](https://github.com/lutzseverino/repo-canon/issues/55)

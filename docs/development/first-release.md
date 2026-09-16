@@ -30,8 +30,9 @@ Preparation passed 252 tests, public source validation, and final PR checks.
 Independent Standards and Spec reviews found no remaining findings. Both Codex
 review findings were corrected and independently re-reviewed before integration:
 release status now distinguishes historical temporary evidence, and release
-notes use absolute tag-pinned URLs. Real adoption remains tracked separately in
-[Repository Standards #69](https://github.com/lutzseverino/repo-standards/issues/69).
+notes use absolute tag-pinned URLs. Real adoption is recorded separately in
+[first real adoption](real-adoption.md); Repository Standards completed a
+`v0.1.0` adoption from this published pin and then re-adopted `v0.1.1`.
 
 ## Publication procedure
 
@@ -78,9 +79,12 @@ See [Release versioning](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/
 
 ## Delivery boundary
 
-Publication verification and the real adopter's completion record follow the
-release preparation. Finish with reviewed adoption merged into `repo-standards`
-and its packaged output validated, including compatibility for all nine
-previously published documentation paths. A new product package publication is
-outside this delivery. The earlier disposable adoption evidence remains
-separate from this first real adoption.
+Publication verification and the real adopter's completion record followed this
+release preparation. Both are complete: Repository Standards merged its reviewed
+adoption and validated its packaged output, including compatibility for all nine
+previously published documentation paths.
+[First real adoption](real-adoption.md) records that completion, the `v0.1.1`
+re-adoption that supersedes the `v0.1.0` run, and the defects the adoption
+surfaced. No new product package was published, which stays outside this
+delivery. The earlier disposable adoption evidence remains separate from this
+first real adoption.
