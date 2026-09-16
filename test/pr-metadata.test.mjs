@@ -591,3 +591,12 @@ test("trusted workflow checks out the base revision and never names the head rev
   assert.doesNotMatch(workflow, /pull_request\.head\.(?:sha|ref)/);
   assert.doesNotMatch(workflow, /(?:issues|pull-requests):\s*write/);
 });
+
+test("trusted workflow installs no dependencies and caches no package manager", () => {
+  const workflow = readFileSync(
+    join(repositoryRoot, ".github/workflows/pr-metadata.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /package-manager-cache: false/);
+  assert.doesNotMatch(workflow, /npm (?:ci|install)/);
+});

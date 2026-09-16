@@ -31,6 +31,15 @@ refactor in #44 remains outside the closure. Any future selected or transitive
 byte change creates a new source identity and must repeat whole-source review,
 all-profile CLI validation, and the evidence affected by that change.
 
+That acceptance describes published `v0.1.0`. The corrected
+`pr-metadata-workflow` in [#55](https://github.com/lutzseverino/repo-canon/issues/55)
+changes the exact bytes of `.github/workflows/pr-metadata.yml`, so it creates a
+new source identity that does not inherit the `e63f0d1` whole-source or adoption
+claim. Issue [#56](https://github.com/lutzseverino/repo-canon/issues/56) owns the
+recomputed closure, the all-profile validation of the new commit, and the
+`v0.1.1` publication. Until that refresh completes, read this record as
+acceptance of `e63f0d1` and `v0.1.0` only.
+
 ## Evidence classes
 
 Each claim below is supported by its own evidence. Passing one class does not
