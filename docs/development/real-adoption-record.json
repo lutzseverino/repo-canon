@@ -1,0 +1,412 @@
+{
+  "format": "repo-canon/real-adoption/v1",
+  "status": "complete",
+  "adopter": {
+    "repository": "https://github.com/lutzseverino/repo-standards",
+    "issue": "https://github.com/lutzseverino/repo-standards/issues/69",
+    "pullRequest": "https://github.com/lutzseverino/repo-standards/pull/71",
+    "merge": {
+      "method": "squash",
+      "commit": "5f4d308696f4d37fe6ce8e33aeb4fdec474c3590",
+      "mergedAt": "2026-09-16T14:36:07Z",
+      "baseBranch": "main",
+      "previousMain": "b18fef940aeefd142ab6410bf536d5005503a97b",
+      "reviewedHead": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d",
+      "tree": "182152013fa6c38c652555c33fdd2278d90a492d",
+      "treeMatchesReviewedHead": true,
+      "squashedCommits": [
+        {
+          "commit": "3a0aeed761ed318caf92e1e4a23b4248b5f5fce9",
+          "subject": "docs: make acceptance links migration-safe"
+        },
+        {
+          "commit": "fe49e06ee01a1aa3b54eca2d5416d151e2413740",
+          "subject": "chore: adopt the Repo Canon v0.1.0 complete standards profile"
+        },
+        {
+          "commit": "07055c1c836af7a0960e8a89e084ba1dfc27913a",
+          "subject": "test: check local links in every packaged document"
+        },
+        {
+          "commit": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d",
+          "subject": "chore: update the standards pin to Repo Canon v0.1.1"
+        }
+      ]
+    }
+  },
+  "cli": {
+    "package": "@lutzseverino/repo-standards",
+    "version": "1.2.2"
+  },
+  "profile": "complete",
+  "runs": [
+    {
+      "role": "current",
+      "standards": {
+        "repository": "https://github.com/lutzseverino/repo-canon",
+        "version": "v0.1.1",
+        "commit": "0f313ef435c715889303ec1157f1006bee1fb9f4"
+      },
+      "run": "913f6556-330a-4139-96dd-96c2e8598d46",
+      "inspection": "sha256:dd4129e2e9e4f750b56e8e73e135c728726ac1cf9782ee8e66ee1072a6d39c3a",
+      "selection": "sha256:72208d014eb46b8958d855599c8d94a4f82d0cf3c0fa5ec79828c92fb0691277",
+      "scopeRequest": "sha256:fa498ad4b976f67e185508da5f39863e0e863340f7bca23c5c2ef8f367f96367",
+      "afterFixesSnapshot": "sha256:406ca05a2143c486d931cb0d910433b395cbfcbc23fc09637f45857ad8d7aa7f",
+      "assessedSnapshot": "sha256:406ca05a2143c486d931cb0d910433b395cbfcbc23fc09637f45857ad8d7aa7f",
+      "outcome": "complete",
+      "completedAt": "2026-09-16T14:13:38.632Z",
+      "head": "07055c1c836af7a0960e8a89e084ba1dfc27913a",
+      "exactDeclarations": {
+        "total": 48,
+        "match": 47,
+        "replace": 1,
+        "replaced": ".github/workflows/pr-metadata.yml"
+      },
+      "observedChangedPaths": 0,
+      "scopeViolations": 0,
+      "boundaryChanges": 0,
+      "confirmedScopePaths": {
+        "documentation": 38,
+        "github-repository-configuration": 0,
+        "project-readmes": 0
+      },
+      "operations": {
+        "canonical-labels": "unchanged",
+        "pull-request-integration": "unchanged",
+        "documentation-navigation": "passed",
+        "project-readme-structure": "passed",
+        "repository-readme-structure": "passed"
+      }
+    },
+    {
+      "role": "historical",
+      "standards": {
+        "repository": "https://github.com/lutzseverino/repo-canon",
+        "version": "v0.1.0",
+        "commit": "639af070ddeef2d82c96b8427a805da0e1bf8ba9"
+      },
+      "run": "0b76fcf9-2bd9-42f6-a312-94b54e181504",
+      "inspection": "sha256:4ef78c2b40da290f419ba9174284d519c7113ce0ef6b6d3408cbc02e609f957c",
+      "selection": "sha256:b3e36979bcc5f90448942ace875a93e8acdee5c4b543a1fd6da3db115555f28e",
+      "afterFixesSnapshot": "sha256:d1498add4b9fcaaebd37ab19efa4e3caf963f747dab80d1ca69219eade19d1c5",
+      "assessedSnapshot": "sha256:7327e653d5a495c1aa7036f16db65ab3aed7bd5db281e99e155aec981a421dc5",
+      "outcome": "complete",
+      "completedAt": "2026-09-16T11:43:18.534Z",
+      "head": "3a0aeed761ed318caf92e1e4a23b4248b5f5fce9",
+      "observedChangedPaths": 49,
+      "scopeViolations": 0,
+      "boundaryChanges": 0,
+      "confirmedScopePaths": {
+        "documentation": 54,
+        "github-repository-configuration": 0,
+        "project-readmes": 0
+      },
+      "operations": {
+        "canonical-labels": "unchanged",
+        "pull-request-integration": "unchanged",
+        "documentation-navigation": "passed",
+        "project-readme-structure": "passed",
+        "repository-readme-structure": "passed"
+      },
+      "supersededBy": "913f6556-330a-4139-96dd-96c2e8598d46"
+    },
+    {
+      "role": "abandoned",
+      "run": "f3172c5f-80c8-43b7-a6d2-e3edce0ccdbb",
+      "outcome": "incomplete",
+      "phase": "checks",
+      "reason": "ABANDONED: OPERATION_BLOCKED: Operation documentation/documentation-navigation is blocked: Documentation root selection is ambiguous: Cannot determine whether acceptance is a documentation root from the confirmed paths; include its root README and at least one confirmed category README under usage, development, adr, or agents, or remove the unrelated index from this declaration.",
+      "resolution": "scope correction in the later confirmed proposal; no source change",
+      "retainedInAdopterStatus": true
+    }
+  ],
+  "continuousIntegration": {
+    "workflow": "Validate",
+    "reviewedHeads": [
+      {
+        "head": "07055c1c836af7a0960e8a89e084ba1dfc27913a",
+        "runs": [
+          "35092790141",
+          "35092783704"
+        ],
+        "conclusion": "success",
+        "jobs": 4
+      },
+      {
+        "head": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d",
+        "runs": [
+          "35107162388",
+          "35107158781"
+        ],
+        "jobIds": [
+          "104831265121",
+          "104831265599",
+          "104831250514",
+          "104831250127"
+        ],
+        "conclusion": "success",
+        "jobs": 4
+      }
+    ],
+    "postMerge": {
+      "head": "5f4d308696f4d37fe6ce8e33aeb4fdec474c3590",
+      "run": "35109649363",
+      "conclusion": "success",
+      "jobIds": [
+        "104839713574",
+        "104839713743"
+      ]
+    }
+  },
+  "requiredCheckBypass": {
+    "check": "PR metadata",
+    "checkPassed": false,
+    "failedRuns": [
+      {
+        "run": "35094939087",
+        "head": "07055c1c836af7a0960e8a89e084ba1dfc27913a"
+      },
+      {
+        "run": "35107160368",
+        "head": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d"
+      },
+      {
+        "run": "35109540653",
+        "head": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d"
+      },
+      {
+        "run": "35109576546",
+        "head": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d"
+      }
+    ],
+    "failedStep": "Use Node.js 24",
+    "skippedStep": "Validate title and description",
+    "cause": "the check runs under pull_request_target, so GitHub loads the workflow definition from the adopter's base branch, which still carried the defective v0.1.0 workflow this pull request replaces",
+    "localValidatorVerification": "PR metadata validation passed.; exit 0 for the pull request's final title and body",
+    "authorization": "one-time maintainer-authorized ruleset bypass for this merge only",
+    "ruleset": {
+      "id": 23476826,
+      "name": "Repo Canon required PR checks",
+      "target": "branch",
+      "condition": "~DEFAULT_BRANCH",
+      "before": {
+        "enforcement": "active",
+        "bypassActors": [],
+        "currentUserCanBypass": "never",
+        "requiredStatusChecks": [
+          "PR metadata"
+        ]
+      },
+      "duringBypass": {
+        "enforcement": "active",
+        "bypassActors": [
+          {
+            "actor_id": 5,
+            "actor_type": "RepositoryRole",
+            "bypass_mode": "always"
+          }
+        ],
+        "requiredStatusChecks": [
+          "PR metadata"
+        ]
+      },
+      "after": {
+        "enforcement": "active",
+        "bypassActors": [],
+        "currentUserCanBypass": "never",
+        "requiredStatusChecks": [
+          "PR metadata"
+        ]
+      },
+      "differencesAfterRestore": [
+        "updated_at"
+      ]
+    }
+  },
+  "packagedValidation": {
+    "artifactsPackagedAt": "07055c1c836af7a0960e8a89e084ba1dfc27913a",
+    "documentLevelRevalidatedAt": "5f4d308696f4d37fe6ce8e33aeb4fdec474c3590",
+    "packagedOutputUnchangedBetweenHeads": {
+      "intervalCommit": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d",
+      "changedPaths": [
+        ".github/workflows/pr-metadata.yml",
+        ".repo-standards/inputs/resolved.json",
+        ".repo-standards/inputs/scope-history.json",
+        ".repo-standards/inputs/source/.github/workflows/pr-metadata.yml",
+        ".repo-standards/lock.json",
+        ".repo-standards/selection.yaml",
+        ".repo-standards/state.json"
+      ],
+      "packagedPaths": [
+        "dist",
+        "bootstrap",
+        "skills",
+        "examples",
+        "docs",
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "CONTEXT.md"
+      ],
+      "noChangedPathIsPackaged": true
+    },
+    "tarball": {
+      "name": "lutzseverino-repo-standards-1.2.2.tgz",
+      "sha256": "30999c1f12d117cce4cd6cf9826d83dbf5304349f161de2519b592fde99ddbdf",
+      "integrity": "sha512-QV9SascgH8Ori5BUPVnCPF7Jz1NrAqWcWUGONeRCHg0boFsMkSgIvUQc0WTUH7IE25kOQYsQK7K4tRK1DMg1ww=="
+    },
+    "bootstrapSha256": "8f593d792119f9e9a623b20c1e2d680f7a0e641c54819367c7ebe2fca575c46a",
+    "installedCliVersion": "1.2.2",
+    "systemSkills": [
+      "skills/adopt-standards",
+      "skills/author-standards"
+    ],
+    "packagedDocuments": 38,
+    "markdownFilesInPackage": 57,
+    "brokenLocalLinks": 0,
+    "legacyDocumentationPaths": [
+      {
+        "path": "docs/installation.md",
+        "bytes": 7403
+      },
+      {
+        "path": "docs/release.md",
+        "bytes": 16037
+      },
+      {
+        "path": "docs/inspection.md",
+        "bytes": 27340
+      },
+      {
+        "path": "docs/adoption.md",
+        "bytes": 25661
+      },
+      {
+        "path": "docs/assessment-protocol.md",
+        "bytes": 12563
+      },
+      {
+        "path": "docs/authoring.md",
+        "bytes": 10017
+      },
+      {
+        "path": "docs/author-format.md",
+        "bytes": 16479
+      },
+      {
+        "path": "docs/discovery.md",
+        "bytes": 3953
+      },
+      {
+        "path": "docs/script-protocol.md",
+        "bytes": 12822
+      }
+    ],
+    "legacyHeadingMismatches": 0,
+    "packagedExampleSourceValidation": {
+      "examples/alice": "valid",
+      "examples/mira": "valid"
+    },
+    "repositoryMarkdownSweep": {
+      "files": 312,
+      "linksBrokenByMigration": 0,
+      "preexistingBrokenLinks": 9,
+      "preexistingLocations": [
+        "acceptance/results/2026-09-12",
+        "acceptance/results/2026-09-14"
+      ],
+      "source": "adopter completion record; no separately retained raw log"
+    },
+    "newPackagePublication": false,
+    "productVersionBump": false
+  },
+  "remoteReadback": {
+    "defaultBranch": "main",
+    "mainCommit": "5f4d308696f4d37fe6ce8e33aeb4fdec474c3590",
+    "selection": {
+      "cli": "1.2.2",
+      "repository": "https://github.com/lutzseverino/repo-canon",
+      "version": "v0.1.1",
+      "commit": "0f313ef435c715889303ec1157f1006bee1fb9f4",
+      "profile": "complete"
+    },
+    "status": {
+      "active": null,
+      "lastCompleteInspection": "sha256:dd4129e2e9e4f750b56e8e73e135c728726ac1cf9782ee8e66ee1072a6d39c3a",
+      "checks": {
+        "documentation-navigation": "passed",
+        "project-readme-structure": "passed",
+        "repository-readme-structure": "passed"
+      },
+      "abandonedRunsRetained": 1
+    },
+    "mergeSettings": {
+      "allow_squash_merge": true,
+      "allow_merge_commit": false,
+      "allow_rebase_merge": false,
+      "squash_merge_commit_title": "PR_TITLE",
+      "squash_merge_commit_message": "PR_BODY",
+      "delete_branch_on_merge": false,
+      "default_branch": "main"
+    },
+    "labels": {
+      "total": 19,
+      "canonicalPresent": 12,
+      "unrelatedPreserved": true
+    },
+    "workflows": [
+      "issue-contracts.yml",
+      "pr-metadata.yml",
+      "release.yml",
+      "validate.yml"
+    ],
+    "installedPrMetadataWorkflowSha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82"
+  },
+  "surfacedDefects": [
+    {
+      "id": "https://github.com/lutzseverino/repo-canon/issues/55",
+      "summary": "the installed PR metadata workflow enabled package-manager caching and failed for a non-npm adopter",
+      "state": "fixed",
+      "fixedIn": "v0.1.1",
+      "pullRequest": "https://github.com/lutzseverino/repo-canon/pull/53"
+    },
+    {
+      "id": "bootstrapping consequence of the caching defect",
+      "summary": "the PR metadata check runs under pull_request_target from the adopter's base branch, so an adopter carrying the defective workflow cannot land its fix through a normally gated pull request",
+      "state": "disclosed",
+      "mitigatedFrom": "v0.1.1"
+    },
+    {
+      "id": "https://github.com/lutzseverino/repo-canon/issues/54",
+      "summary": "approved specifications and implementation tickets keep needs-triage",
+      "state": "open",
+      "presentIn": "v0.1.1"
+    }
+  ],
+  "observations": [
+    {
+      "id": "durable-run-state-size",
+      "summary": "a completed adoption commits multi-megabyte durable run state into the adopting repository; .repo-standards/state.json and .repo-standards/inputs/scope-history.json dominate the merge diff"
+    }
+  ],
+  "reviews": {
+    "gates": "independent Sonnet 5 high-reasoning Standards and Spec reviews",
+    "codex": {
+      "available": false,
+      "reviewed": [
+        "fe49e06ee01a1aa3b54eca2d5416d151e2413740",
+        "07055c1c836af7a0960e8a89e084ba1dfc27913a"
+      ],
+      "note": "unavailable for the later phases, including the v0.1.1 head; not a merge gate"
+    }
+  },
+  "repoCanonTagsUnchanged": {
+    "v0.1.0": {
+      "tagObject": "5922e2d826c284101e92a88d1635ff60b652ad39",
+      "commit": "639af070ddeef2d82c96b8427a805da0e1bf8ba9"
+    },
+    "v0.1.1": {
+      "tagObject": "164a354adc371f7a4bb0cf4a703d2476bb831d34",
+      "commit": "0f313ef435c715889303ec1157f1006bee1fb9f4"
+    }
+  }
+}

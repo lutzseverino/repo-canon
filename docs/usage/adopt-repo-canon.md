@@ -18,7 +18,10 @@ Source authoring, publication, and adoption are separate stages:
 3. An adopting maintainer inspects the published version, confirms its complete
    project-specific scope, and then starts adoption. Adoption writes project
    content and can change GitHub settings, so review the inspection before
-   confirmation.
+   confirmation. The
+   [first real adoption](../development/real-adoption.md) records how one
+   repository completed these stages, including the migration effort and the
+   defects it surfaced.
 
 ## Prerequisites
 

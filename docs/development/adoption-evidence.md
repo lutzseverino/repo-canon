@@ -26,8 +26,11 @@ adopter label, the active ruleset, squash settings, and remote content. The
 local Git matrix completed under historical `v0.0.2`; its unchanged cases were
 not rerun. The retained [machine-readable record](adoption-acceptance.json)
 binds the identities and outcomes. These temporary exercises preceded Repo
-Canon publication. [First release delivery](first-release.md) covers the
-permanent `v0.1.0` selection and separate real adoption.
+Canon publication and are historical evidence for disposable repositories only.
+[First release delivery](first-release.md) covers the permanent `v0.1.0`
+selection, [release v0.1.1](release-v0-1-1.md) covers the current release, and
+[first real adoption](real-adoption.md) covers the merged Repository Standards
+adoption of those published pins.
 
 ## Prepared repository matrix
 
