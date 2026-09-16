@@ -26,6 +26,12 @@ source path, role, mode, Git blob, and SHA-256 for accepted `v0.1.0` and
 `v0.1.1`. Its earlier `v0.0.3` to `v0.0.4` comparison is retained at the
 [v0.1.0 tag](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/development/source-closure.json).
 
+The comparison record is `repo-canon/source-closure-comparison/v3`. Both of its
+sides are now permanent releases rather than temporary evidence tags, so the
+baseline names the `release` it published and the reviewed side names the
+`selectedRelease` it is prepared for. Publication is recorded separately, in
+[Release v0.1.1](release-v0-1-1.md).
+
 Relative to accepted `eb98da8`/`v0.0.3`, seven selected paths changed for
 `e63f0d1` and `operations/lib/local-markdown-links.mjs` was added. The other 107
 files were byte-and-mode identical, and no selected path was removed. The
