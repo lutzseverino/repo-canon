@@ -7,6 +7,29 @@ The [first release](first-release.md) records the publication procedure, the
 covers only what the patch changes. The bump convention is in
 [Release versioning](../usage/versioning.md).
 
+## Verified publication
+
+[Repo Canon v0.1.1](https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.1)
+was published on 2026-09-16 as an ordinary release (`draft: false`,
+`prerelease: false`). Its annotated tag resolves to reviewed main commit
+`0f313ef435c715889303ec1157f1006bee1fb9f4`, integrated through
+[PR #57](https://github.com/lutzseverino/repo-canon/pull/57).
+
+Every one of the 115 accepted source inputs matched its recorded SHA-256, Git
+blob, and mode at that commit, so the tag carries the identity reviewed at
+`8369d82`. Public CLI 1.2.2 validated all profiles and acquired the permanent
+pin, reporting that exact commit, the `complete` profile, and 52 declarations.
+The acquired `pr-metadata-workflow` bytes are the corrected workflow.
+[The publication record](release-v0-1-1-publication.json) retains the tag
+object, npm package integrity, release readback, and acquisition result.
+
+`v0.1.0` is untouched: its annotated tag still resolves to `639af07`, and its
+release remains an ordinary published release. Preparation passed 253 tests,
+public source validation, and final PR checks. Independent Standards and Spec
+reviews of the correction and of this release preparation found no remaining
+findings; the Spec review independently re-enumerated the closure and verified
+every recorded mode, Git blob, and SHA-256 against Git.
+
 ## Corrected failure
 
 The shipped workflow pins `actions/setup-node` v5, which enables
