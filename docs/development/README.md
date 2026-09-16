@@ -6,8 +6,9 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
 - [First release](first-release.md): publication procedure, immutable source verification,
   release notes, and coordinated real-adoption boundary.
-- [Release v0.1.1](release-v0-1-1.md): the corrected workflow failure, refreshed
-  source identity, patch release notes, and evidence boundary.
+- [Release v0.1.1](release-v0-1-1.md): verified publication, the corrected
+  workflow failure, refreshed source identity, patch release notes, and
+  evidence boundary.
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
 - [Complete source acceptance](completion-record.md): final source identity,

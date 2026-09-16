@@ -47,7 +47,7 @@ changed the exact bytes of `.github/workflows/pr-metadata.yml` through
 [PR #53](https://github.com/lutzseverino/repo-canon/pull/53), creating a new
 source identity that does not inherit the `e63f0d1` whole-source or adoption
 claim. The current accepted source is the 115-file closure at commit
-`8369d823edb035c55a79f88d657db5a29efca2ce`, selected for release as `v0.1.1`.
+`8369d823edb035c55a79f88d657db5a29efca2ce`, published as `v0.1.1`.
 It resolves the same single profile, 52 declarations, five operations, and 25
 author skills, and public CLI 1.2.2 returned `valid: true` with no errors for
 those exact bytes. Exactly one path differs from `v0.1.0`; the other 114 are

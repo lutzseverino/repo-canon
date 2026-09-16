@@ -2,10 +2,10 @@
 
 Repo Canon **v0.1.1** is a patch release that corrects the standards-owned
 `PR metadata validation` workflow. It carries no other selected source change.
-The [first release](first-release.md) records the publication procedure, the
-`v0.1.0` baseline, and the coordinated real-adoption boundary; this record
-covers only what the patch changes. The bump convention is in
-[Release versioning](../usage/versioning.md).
+It is published and verified below. The [first release](first-release.md)
+records the publication procedure, the `v0.1.0` baseline, and the coordinated
+real-adoption boundary; this record covers only what the patch changes. The
+bump convention is in [Release versioning](../usage/versioning.md).
 
 ## Verified publication
 
@@ -39,8 +39,8 @@ that declares a package manager other than npm failed the `Use Node.js 24` step
 with `Unable to locate executable file: pnpm`, because hosted runners do not
 preinstall it, and the `PR metadata` check never ran.
 [Repository Standards run 35094939087](https://github.com/lutzseverino/repo-standards/actions/runs/35094939087)
-recorded that failure during the first real adoption of `v0.1.0`. The job installs no
-dependencies, so the cache had no purpose;
+recorded that failure during the first real adoption of `v0.1.0`. The job
+installs no dependencies, so the cache had no purpose;
 [PR #53](https://github.com/lutzseverino/repo-canon/pull/53) disables it with
 `package-manager-cache: false`.
 
