@@ -219,13 +219,36 @@
         ]
       },
       "differencesAfterRestore": [
-        "updated_at",
-        "_links"
+        "updated_at"
       ]
     }
   },
   "packagedValidation": {
-    "from": "5f4d308696f4d37fe6ce8e33aeb4fdec474c3590",
+    "artifactsPackagedAt": "07055c1c836af7a0960e8a89e084ba1dfc27913a",
+    "documentLevelRevalidatedAt": "5f4d308696f4d37fe6ce8e33aeb4fdec474c3590",
+    "packagedOutputUnchangedBetweenHeads": {
+      "intervalCommit": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d",
+      "changedPaths": [
+        ".github/workflows/pr-metadata.yml",
+        ".repo-standards/inputs/resolved.json",
+        ".repo-standards/inputs/scope-history.json",
+        ".repo-standards/inputs/source/.github/workflows/pr-metadata.yml",
+        ".repo-standards/lock.json",
+        ".repo-standards/selection.yaml",
+        ".repo-standards/state.json"
+      ],
+      "packagedPaths": [
+        "dist",
+        "bootstrap",
+        "skills",
+        "examples",
+        "docs",
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "CONTEXT.md"
+      ],
+      "noChangedPathIsPackaged": true
+    },
     "tarball": {
       "name": "lutzseverino-repo-standards-1.2.2.tgz",
       "sha256": "30999c1f12d117cce4cd6cf9826d83dbf5304349f161de2519b592fde99ddbdf",
@@ -290,7 +313,8 @@
       "preexistingLocations": [
         "acceptance/results/2026-09-12",
         "acceptance/results/2026-09-14"
-      ]
+      ],
+      "source": "adopter completion record; no separately retained raw log"
     },
     "newPackagePublication": false,
     "productVersionBump": false

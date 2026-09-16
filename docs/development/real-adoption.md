@@ -178,8 +178,8 @@ sequence and its readbacks were:
 3. The pull request was squash-merged with an administrative merge, producing
    `5f4d308`.
 4. The bypass actor was removed immediately. A field-by-field comparison with
-   the pre-bypass readback shows no difference apart from `updated_at` and
-   `_links`: `bypass_actors: []`, `current_user_can_bypass: "never"`,
+   the pre-bypass readback shows `updated_at` as the only difference:
+   `bypass_actors: []`, `current_user_can_bypass: "never"`,
    `enforcement: active`, and the required `PR metadata` context intact.
 
 Merged `main` now carries the corrected workflow, so the next pull request's
@@ -188,8 +188,19 @@ bypass, not as a passing required check.
 
 ## Packaged-output validation
 
-Validation ran from detached merged `main` at `5f4d308`. The product's release
-packaging produced `lutzseverino-repo-standards-1.2.2.tgz` with SHA-256
+The document-level validation was rerun from merged `main` at `5f4d308` and
+confirmed 38 packaged documents under `docs/`, 57 Markdown files in the whole
+package, zero broken local links, and no heading mismatch between a legacy path
+and its canonical categorized copy.
+
+The artifact-level validation below was performed at head `07055c1`, before the
+final pin-update commit. It still describes the merged package: `9fd15a3`
+changed only `.github/workflows/pr-metadata.yml` and `.repo-standards/`
+files, and the product packages only `dist`, `bootstrap`, `skills`, `examples`,
+`docs`, `AGENTS.md`, `CONTRIBUTING.md`, and `CONTEXT.md`, so no packaged path
+differs between the two heads.
+
+That packaging produced `lutzseverino-repo-standards-1.2.2.tgz` with SHA-256
 `30999c1f12d117cce4cd6cf9826d83dbf5304349f161de2519b592fde99ddbdf` and integrity
 
 ```text
@@ -206,7 +217,8 @@ that tarball into a temporary prefix confirmed:
   are packaged, including the `cli.md`, `operations.md`, `profiles.md`, and
   `revision.md` references.
 - The package contains 38 categorized Markdown documents under `docs/` out of 57
-  Markdown files, with **zero broken local links** across all 38.
+  Markdown files, with **zero broken local links** across all 38. This is the
+  part reconfirmed from merged `main`.
 - All **nine previously published documentation paths** are present, non-empty,
   and have headings identical to their canonical categorized copies:
   `docs/installation.md` (7,403 B), `docs/release.md` (16,037 B),
@@ -220,7 +232,9 @@ that tarball into a temporary prefix confirmed:
   migration. Nine broken links remain in the
   `acceptance/results/2026-09-12` and `acceptance/results/2026-09-14`
   transcripts; they point into the synthetic projects those runs describe and
-  predate this work.
+  predate this work. This sweep is reported by the adopter's completion record
+  and has no separately retained raw log, unlike the packaging and
+  document-level results above.
 
 No new Repository Standards package was published and no product version was
 bumped; the adopter stays at `1.2.2`.
