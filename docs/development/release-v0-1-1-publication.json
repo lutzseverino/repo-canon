@@ -1,0 +1,51 @@
+{
+  "format": "repo-canon/release-publication/v1",
+  "source": {
+    "repository": "https://github.com/lutzseverino/repo-canon",
+    "version": "v0.1.1",
+    "commit": "0f313ef435c715889303ec1157f1006bee1fb9f4"
+  },
+  "release": {
+    "isDraft": false,
+    "isPrerelease": false,
+    "publishedAt": "2026-09-16T13:56:44Z",
+    "tagName": "v0.1.1",
+    "targetCommitish": "main",
+    "url": "https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.1"
+  },
+  "annotatedTagObject": "164a354adc371f7a4bb0cf4a703d2476bb831d34",
+  "acceptedClosure": {
+    "reference": "docs/development/source-closure.json",
+    "commit": "8369d823edb035c55a79f88d657db5a29efca2ce",
+    "files": 115,
+    "allBytesModesAndBlobsMatch": true
+  },
+  "correctionPullRequest": "https://github.com/lutzseverino/repo-canon/pull/53",
+  "preparationPullRequest": "https://github.com/lutzseverino/repo-canon/pull/57",
+  "cli": {
+    "package": "@lutzseverino/repo-standards",
+    "version": "1.2.2",
+    "resolved": "https://registry.npmjs.org/@lutzseverino/repo-standards/-/repo-standards-1.2.2.tgz",
+    "integrity": "sha512-K5YejetLhzigwCrbCgwz7i/Jm7FkyZbkBu9A25+hNq3IbU2UASu2cC6Uh6bh8CCO/wl6YeDU3pO/F5ZPX4e3gw==",
+    "runtime": "v24.21.0"
+  },
+  "sourceValidation": {
+    "valid": true,
+    "profiles": [
+      "complete"
+    ],
+    "declarations": 52
+  },
+  "publicAcquisition": {
+    "verified": true,
+    "profile": "complete",
+    "inspectedSourceCommit": "0f313ef435c715889303ec1157f1006bee1fb9f4",
+    "correctedWorkflowSha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82"
+  },
+  "priorRelease": {
+    "version": "v0.1.0",
+    "annotatedTagObject": "5922e2d826c284101e92a88d1635ff60b652ad39",
+    "commit": "639af070ddeef2d82c96b8427a805da0e1bf8ba9",
+    "unchanged": true
+  }
+}

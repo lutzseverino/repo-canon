@@ -125,8 +125,8 @@ The accepted `e63f0d1` identity and its 115 source files were published as
 then changed the bytes of the exact `pr-metadata-workflow` declaration, and with
 them the source identity. The same installed public CLI and Node.js version
 returned `valid: true`, no errors, one `complete` profile, and 52 declarations
-for exact commit `8369d823edb035c55a79f88d657db5a29efca2ce`, selected for
-release as `v0.1.1`. `.github/workflows/pr-metadata.yml` is the only selected
+for exact commit `8369d823edb035c55a79f88d657db5a29efca2ce`, published as
+`v0.1.1`. `.github/workflows/pr-metadata.yml` is the only selected
 path that differs from `v0.1.0`; its mode stays `100644`, and the declaration
 set, counts, operations, and skills are unchanged. The refreshed
 [machine-readable closure](source-closure.json) records both identities, and
