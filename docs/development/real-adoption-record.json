@@ -162,9 +162,22 @@
     "check": "PR metadata",
     "checkPassed": false,
     "failedRuns": [
-      "35107160368",
-      "35109540653",
-      "35109576546"
+      {
+        "run": "35094939087",
+        "head": "07055c1c836af7a0960e8a89e084ba1dfc27913a"
+      },
+      {
+        "run": "35107160368",
+        "head": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d"
+      },
+      {
+        "run": "35109540653",
+        "head": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d"
+      },
+      {
+        "run": "35109576546",
+        "head": "9fd15a3a7a0c5e314d1b4b5172f9e0f17e77e51d"
+      }
     ],
     "failedStep": "Use Node.js 24",
     "skippedStep": "Validate title and description",
@@ -228,15 +241,42 @@
     "markdownFilesInPackage": 57,
     "brokenLocalLinks": 0,
     "legacyDocumentationPaths": [
-      { "path": "docs/installation.md", "bytes": 7403 },
-      { "path": "docs/release.md", "bytes": 16037 },
-      { "path": "docs/inspection.md", "bytes": 27340 },
-      { "path": "docs/adoption.md", "bytes": 25661 },
-      { "path": "docs/assessment-protocol.md", "bytes": 12563 },
-      { "path": "docs/authoring.md", "bytes": 10017 },
-      { "path": "docs/author-format.md", "bytes": 16479 },
-      { "path": "docs/discovery.md", "bytes": 3953 },
-      { "path": "docs/script-protocol.md", "bytes": 12822 }
+      {
+        "path": "docs/installation.md",
+        "bytes": 7403
+      },
+      {
+        "path": "docs/release.md",
+        "bytes": 16037
+      },
+      {
+        "path": "docs/inspection.md",
+        "bytes": 27340
+      },
+      {
+        "path": "docs/adoption.md",
+        "bytes": 25661
+      },
+      {
+        "path": "docs/assessment-protocol.md",
+        "bytes": 12563
+      },
+      {
+        "path": "docs/authoring.md",
+        "bytes": 10017
+      },
+      {
+        "path": "docs/author-format.md",
+        "bytes": 16479
+      },
+      {
+        "path": "docs/discovery.md",
+        "bytes": 3953
+      },
+      {
+        "path": "docs/script-protocol.md",
+        "bytes": 12822
+      }
     ],
     "legacyHeadingMismatches": 0,
     "packagedExampleSourceValidation": {

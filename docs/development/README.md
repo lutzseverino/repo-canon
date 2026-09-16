@@ -5,7 +5,7 @@ the standards source. Keep end-user instructions under `docs/usage`, durable
 decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
 - [First release](first-release.md): publication procedure, immutable source verification,
-  release notes, and coordinated real-adoption boundary.
+  release notes, and the delivery boundary that real adoption completed.
 - [Release v0.1.1](release-v0-1-1.md): verified publication, the corrected
   workflow failure, refreshed source identity, patch release notes, and
   evidence boundary.

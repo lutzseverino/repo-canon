@@ -155,8 +155,9 @@ succeeded on both `ubuntu-latest` (job `104839713574`) and `macos-latest`
 (job `104839713743`).
 
 The required `PR metadata` check **failed on every head of the pull request and
-was not satisfied**. Runs `35107160368`, `35109540653`, and `35109576546` all
-failed identically at `Use Node.js 24`, with `Validate title and description`
+was not satisfied**. Run `35094939087` failed on head `07055c1`, and runs
+`35107160368`, `35109540653`, and `35109576546` failed identically on the final
+head `9fd15a3`, each at `Use Node.js 24` with `Validate title and description`
 skipped, for the base-branch reason described above. The check's contract was
 verified separately instead: running the exact installed validator against pull
 request #71's final title and body printed `PR metadata validation passed.` and

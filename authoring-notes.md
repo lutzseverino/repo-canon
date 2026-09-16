@@ -5,8 +5,9 @@ material reviewed. The complete source profile is authored and structurally
 valid with public CLI 1.2.2 as its exact validation baseline. Complete adoption,
 scope-protection, preservation, and authorized remote-readback evidence is
 recorded. The owner selected `v0.1.0` for the first permanent release;
-[release delivery](docs/development/first-release.md) covers its publication and
-[release v0.1.1](docs/development/release-v0-1-1.md) the current patch release.
+[release delivery](docs/development/first-release.md) covers its publication,
+and [release v0.1.1](docs/development/release-v0-1-1.md) covers the current
+patch release.
 The separate real adoption is complete and merged, recorded in
 [first real adoption](docs/development/real-adoption.md).
 

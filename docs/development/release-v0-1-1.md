@@ -3,9 +3,10 @@
 Repo Canon **v0.1.1** is a patch release that corrects the standards-owned
 `PR metadata validation` workflow. It carries no other selected source change.
 It is published and verified below. The [first release](first-release.md)
-records the publication procedure, the `v0.1.0` baseline, and the coordinated
-real-adoption boundary; this record covers only what the patch changes. The
-bump convention is in [Release versioning](../usage/versioning.md).
+records the publication procedure and the `v0.1.0` baseline, and
+[first real adoption](real-adoption.md) records the completed adoption of both
+pins; this record covers only what the patch changes. The bump convention is in
+[Release versioning](../usage/versioning.md).
 
 ## Verified publication
 
