@@ -9,6 +9,15 @@ declarations, including five operations and 25 author skills. Public Repository
 Standards CLI 1.2.2 validated and adopted those exact bytes from temporary tag
 `v0.0.4`.
 
+That acceptance describes published `v0.1.0`. The corrected
+`pr-metadata-workflow` in [#55](https://github.com/lutzseverino/repo-canon/issues/55)
+changes the exact bytes of `.github/workflows/pr-metadata.yml`, so it creates a
+new source identity that does not inherit the `e63f0d1` whole-source or adoption
+claim. Issue [#56](https://github.com/lutzseverino/repo-canon/issues/56) owns the
+recomputed closure, the all-profile validation of the new commit, and the
+`v0.1.1` publication. Until that refresh completes, read this record as
+acceptance of `e63f0d1` and `v0.1.0` only.
+
 The earlier acceptance remains historical evidence for exact commit `eb98da8`
 and its 114-file closure. Issue
 [#46](https://github.com/lutzseverino/repo-canon/issues/46) separately reviewed

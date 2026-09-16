@@ -120,6 +120,14 @@ modes, Git blobs, and SHA-256 identities. The
 [adoption record](adoption-evidence.md) binds the reviewed source to public
 installation, operation, preservation, workflow, and cleanup outcomes.
 
+The accepted `e63f0d1` identity and its 115 source files were published as
+`v0.1.0`. The workflow correction in [#55](https://github.com/lutzseverino/repo-canon/issues/55)
+changes the bytes of the exact `pr-metadata-workflow` declaration and therefore
+the source identity. Issue [#56](https://github.com/lutzseverino/repo-canon/issues/56)
+owns the recomputed closure, the public CLI 1.2.2 result for the new commit, and
+the `v0.1.1` publication. The declaration set, counts, operations, and skills are
+unchanged by that correction.
+
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
 operation or prerequisite and cannot establish semantic coverage or safe scope
