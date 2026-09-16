@@ -51,6 +51,11 @@ inert. The workflow has no issue or pull-request write permission and does not
 label, convert, or otherwise send external pull requests into feature-request
 triage.
 
+The validator has no package dependencies, so the job installs none and
+disables the Node.js setup action's automatic package-manager cache. A
+repository whose `package.json` selects a package manager other than npm
+therefore does not need that package manager installed on the runner.
+
 Repository setup can require the `PR metadata` check alongside existing checks.
 The setup operator needs permission to edit the target branch rule or ruleset;
 the workflow itself does not need that permission. Let the check run once before
