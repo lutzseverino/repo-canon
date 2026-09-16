@@ -1,5 +1,9 @@
 # First release
 
+This record covers the `v0.1.0` publication. The later patch release is recorded
+in [Release v0.1.1](release-v0-1-1.md); `v0.1.0` keeps its original tag target,
+release, and contents.
+
 The owner approved publication of **v0.1.0** and real adoption of its `complete`
 profile in Repository Standards. [Repo Canon #50](https://github.com/lutzseverino/repo-canon/issues/50)
 and [Repository Standards #69](https://github.com/lutzseverino/repo-standards/issues/69)
@@ -31,11 +35,13 @@ notes use absolute tag-pinned URLs. Real adoption remains tracked separately in
 
 ## Publication procedure
 
-Release preparation preserves the 115 selected and transitive source inputs in
-[source-closure.json](source-closure.json), accepted at
-`e63f0d1438eb89c3df51a827ec169a8f5c489ded`. Compare each path's SHA-256, Git blob,
-and file mode before publication. Changes outside that closure do not invalidate
-its accepted evidence; source changes require the refresh described in
+Release preparation preserved the 115 selected and transitive source inputs
+accepted at `e63f0d1438eb89c3df51a827ec169a8f5c489ded`. The
+[comparison retained at this tag](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/development/source-closure.json)
+records those bytes; the [current comparison](source-closure.json) records the
+later `v0.1.1` identity. Compare each path's SHA-256, Git blob, and file mode
+before publication. Changes outside that closure do not invalidate its accepted
+evidence; source changes require the refresh described in
 [complete source acceptance](completion-record.md).
 
 Run `npm run check`, `npm test`, `git diff --check`, and public CLI 1.2.2

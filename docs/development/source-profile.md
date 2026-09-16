@@ -122,16 +122,15 @@ installation, operation, preservation, workflow, and cleanup outcomes.
 
 The accepted `e63f0d1` identity and its 115 source files were published as
 `v0.1.0`. The workflow correction in [#55](https://github.com/lutzseverino/repo-canon/issues/55)
-changes the bytes of the exact `pr-metadata-workflow` declaration and therefore
-the source identity. Issue [#56](https://github.com/lutzseverino/repo-canon/issues/56)
-owns the recomputed closure, the public CLI 1.2.2 result for the new commit, and
-the `v0.1.1` publication. That correction changes one selected path and
-adds or removes none; its mode stays `100644`, and the declaration set, counts,
-operations, and skills are unchanged:
-
-| Source path | Delta | Declaration or resource ownership |
-| --- | --- | --- |
-| `.github/workflows/pr-metadata.yml` | Changed | Exact `pr-metadata-workflow` |
+then changed the bytes of the exact `pr-metadata-workflow` declaration, and with
+them the source identity. The same installed public CLI and Node.js version
+returned `valid: true`, no errors, one `complete` profile, and 52 declarations
+for exact commit `8369d823edb035c55a79f88d657db5a29efca2ce`, selected for
+release as `v0.1.1`. `.github/workflows/pr-metadata.yml` is the only selected
+path that differs from `v0.1.0`; its mode stays `100644`, and the declaration
+set, counts, operations, and skills are unchanged. The refreshed
+[machine-readable closure](source-closure.json) records both identities, and
+[Release v0.1.1](release-v0-1-1.md) records the publication.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no

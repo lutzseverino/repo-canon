@@ -20,25 +20,40 @@ The historical `v0.0.3` record's initial 115-file accounting was incorrect
 because it included contextual adopter target `README.md`; the corrected count
 for that closure is 114. The current closure independently reaches 115 because
 #45 added `operations/lib/local-markdown-links.mjs`. It still excludes the
-contextual README. The [machine-readable closure comparison](source-closure.json)
-enumerates every source path, role, mode, Git blob, and SHA-256. No selected
-material was removed.
+contextual README. No selected material was removed. The
+[machine-readable closure comparison](source-closure.json) enumerates every
+source path, role, mode, Git blob, and SHA-256 for accepted `v0.1.0` and
+`v0.1.1`. Its earlier `v0.0.3` to `v0.0.4` comparison is retained at the
+[v0.1.0 tag](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/development/source-closure.json).
 
-Relative to accepted `eb98da8`/`v0.0.3`, seven selected paths changed and
-`operations/lib/local-markdown-links.mjs` was added. The other 107 files are
-byte-and-mode identical, and no selected path was removed. The fixture-authoring
-refactor in #44 remains outside the closure. Any future selected or transitive
-byte change creates a new source identity and must repeat whole-source review,
-all-profile CLI validation, and the evidence affected by that change.
+The comparison record is `repo-canon/source-closure-comparison/v3`. Both of its
+sides are now permanent releases rather than temporary evidence tags, so the
+baseline names the `release` it published and the reviewed side names the
+`selectedRelease` it is prepared for. Publication is recorded separately, in
+[Release v0.1.1](release-v0-1-1.md).
+
+Relative to accepted `eb98da8`/`v0.0.3`, seven selected paths changed for
+`e63f0d1` and `operations/lib/local-markdown-links.mjs` was added. The other 107
+files were byte-and-mode identical, and no selected path was removed. The
+fixture-authoring refactor in #44 remains outside the closure. The
+[source profile](source-profile.md#validation-boundary) retains that delta. Any
+future selected or transitive byte change creates a new source identity and
+must repeat whole-source review, all-profile CLI validation, and the evidence
+affected by that change.
 
 That acceptance describes published `v0.1.0`. The corrected
 `pr-metadata-workflow` in [#55](https://github.com/lutzseverino/repo-canon/issues/55)
-changes the exact bytes of `.github/workflows/pr-metadata.yml`, so it creates a
-new source identity that does not inherit the `e63f0d1` whole-source or adoption
-claim. Issue [#56](https://github.com/lutzseverino/repo-canon/issues/56) owns the
-recomputed closure, the all-profile validation of the new commit, and the
-`v0.1.1` publication. Until that refresh completes, read this record as
-acceptance of `e63f0d1` and `v0.1.0` only.
+changed the exact bytes of `.github/workflows/pr-metadata.yml` through
+[PR #53](https://github.com/lutzseverino/repo-canon/pull/53), creating a new
+source identity that does not inherit the `e63f0d1` whole-source or adoption
+claim. The current accepted source is the 115-file closure at commit
+`8369d823edb035c55a79f88d657db5a29efca2ce`, selected for release as `v0.1.1`.
+It resolves the same single profile, 52 declarations, five operations, and 25
+author skills, and public CLI 1.2.2 returned `valid: true` with no errors for
+those exact bytes. Exactly one path differs from `v0.1.0`; the other 114 are
+byte-and-mode identical, and none were added or removed.
+[Release v0.1.1](release-v0-1-1.md) records the corrected failure, the
+publication procedure, and the evidence that change does and does not renew.
 
 ## Evidence classes
 
@@ -48,8 +63,8 @@ stand in for another.
 | Evidence class | Accepted evidence | What it establishes |
 | --- | --- | --- |
 | Material review | [Shared material review](shared-material-review.md) and [upstream compatibility](upstream-compatibility.md) | The shared files, public templates, full promoted skill directories, native workflows, and ownership boundaries match the accepted design. |
-| Whole-source review | [Complete profile integration PR #31](https://github.com/lutzseverino/repo-canon/pull/31), the whole-source audits at `51fbed5`, [metadata correction PR #39](https://github.com/lutzseverino/repo-canon/pull/39), [rendered-Markdown refactor PR #48](https://github.com/lutzseverino/repo-canon/pull/48), and the [exact closure comparison](source-closure.json) | The profile, every reference, ownership, retained operation resource, notice, and policy mapping form one coherent 115-file source. Independent Standards and Spec reviews approved exact `e63f0d` before temporary publication. |
-| Source validation | [Source profile](source-profile.md#validation-boundary) and the retained [machine-readable acceptance record](adoption-acceptance.json) | Installed public CLI 1.2.2 on Node.js 24.21.0 returned `valid: true`, no errors, one `complete` profile, and 52 declarations for exact commit `e63f0d`. Source validation does not execute operations or inspect an adopter. |
+| Whole-source review | [Complete profile integration PR #31](https://github.com/lutzseverino/repo-canon/pull/31), the whole-source audits at `51fbed5`, [metadata correction PR #39](https://github.com/lutzseverino/repo-canon/pull/39), [rendered-Markdown refactor PR #48](https://github.com/lutzseverino/repo-canon/pull/48), [workflow correction PR #53](https://github.com/lutzseverino/repo-canon/pull/53), and the [exact closure comparison](source-closure.json) | The profile, every reference, ownership, retained operation resource, notice, and policy mapping form one coherent 115-file source. Independent Standards and Spec reviews approved exact `e63f0d` before temporary publication and the workflow correction at `8369d82` before the `v0.1.1` release. |
+| Source validation | [Source profile](source-profile.md#validation-boundary) and the retained [machine-readable acceptance record](adoption-acceptance.json) | Installed public CLI 1.2.2 on Node.js 24.21.0 returned `valid: true`, no errors, one `complete` profile, and 52 declarations for exact commit `e63f0d` and again for exact commit `8369d82`. Source validation does not execute operations or inspect an adopter. |
 | Operation fixtures | The five records in [operation evidence](#operation-evidence) | Each public operation's results, error boundary, prerequisites, preservation, and relevant repeat behavior were exercised without treating a local GitHub fixture as live remote state. |
 | Skill content review | [Upstream compatibility](upstream-compatibility.md#snapshot-review-and-verification) | All 25 promoted directories and referenced resources match upstream commit `3cca18b368ae95cdbdebbff572ccafa662551015`, with no local edits or missing regular skills. |
 | Skill runtime exercise | The three records in [skill evidence](#skill-evidence) | Every included skill performed a relevant bounded exercise. The records preserve harness inputs, observed outcomes, corrections, artifacts, and limitations separately from inventory review. |
@@ -170,10 +185,16 @@ acceptance work and ticket #17 did not publish a permanent version. The owner
 subsequently authorized publication and real adoption through the
 [First release interview](../../authoring-notes.md#first-release-interview).
 
-If publication preparation leaves the selected closure byte-identical to
-`e63f0d1438eb89c3df51a827ec169a8f5c489ded`, the accepted source identity and
-evidence remain applicable. If any selected or transitive byte changes, review
-and validate the new closure and repeat affected evidence before calling that
-version adoption-ready. The [usage guide](../usage/adopt-repo-canon.md) starts
-at the publication boundary and gives the supported inspection and adoption
-commands.
+The owner then authorized the `v0.1.1` patch release so that the adopter-facing
+workflow defect in [#55](https://github.com/lutzseverino/repo-canon/issues/55)
+reaches adopters; [#56](https://github.com/lutzseverino/repo-canon/issues/56)
+carries that refresh and publication, recorded in
+[Release v0.1.1](release-v0-1-1.md). `v0.1.0` keeps its original target,
+release, and contents.
+
+If publication preparation leaves the selected closure byte-identical to the
+accepted commit, the accepted source identity and evidence remain applicable. If
+any selected or transitive byte changes, review and validate the new closure and
+repeat affected evidence before calling that version adoption-ready. The
+[usage guide](../usage/adopt-repo-canon.md) starts at the publication boundary
+and gives the supported inspection and adoption commands.

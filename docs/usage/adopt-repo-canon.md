@@ -50,13 +50,13 @@ and inspect the prepared commit afresh.
 
 ## Inspect the published source
 
-Use the first release, `v0.1.0`, after verifying its [GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.0).
+Use the current release, `v0.1.1`, after verifying its [GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.1).
 Set `source_tag` to that permanent published SemVer tag. Run the first
 inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.1.0
+source_tag=v0.1.1
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \

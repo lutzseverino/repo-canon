@@ -6,6 +6,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
 - [First release](first-release.md): publication procedure, immutable source verification,
   release notes, and coordinated real-adoption boundary.
+- [Release v0.1.1](release-v0-1-1.md): the corrected workflow failure, refreshed
+  source identity, patch release notes, and evidence boundary.
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
 - [Complete source acceptance](completion-record.md): final source identity,
@@ -61,12 +63,14 @@ from source validation. Final source validation, complete adoption,
 scope-protection, preservation, and authorized remote-readback evidence are
 recorded in [the adoption evidence](adoption-evidence.md). The
 [complete source acceptance record](completion-record.md) accounts for the
-separate evidence classes and final accepted identity at `e63f0d`. Issue
+separate evidence classes and the accepted identity at `8369d82`. Issue
 [#46](https://github.com/lutzseverino/repo-canon/issues/46) reviewed the
 integrated #44 and #45 architecture work, recomputed the 115-file closure, and
 completed the affected public adoption refresh. The first permanent selection
 is `v0.1.0`; [release delivery](first-release.md) covers its publication and
-real adoption. Adopters verify the published release before inspection.
+real adoption. The `v0.1.1` patch corrected the installed PR metadata workflow
+and refreshed the accepted identity; [release v0.1.1](release-v0-1-1.md) covers
+it. Adopters verify the published release before inspection.
 
 ## Working locally
 

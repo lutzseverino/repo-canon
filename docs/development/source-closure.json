@@ -1,13 +1,13 @@
 {
-  "format": "repo-canon/source-closure-comparison/v2",
+  "format": "repo-canon/source-closure-comparison/v3",
   "baseline": {
-    "commit": "eb98da8af94e25cc66a7bd0bf5424604d5e3b7ec",
-    "temporaryTag": "v0.0.3",
-    "files": 114
+    "commit": "639af070ddeef2d82c96b8427a805da0e1bf8ba9",
+    "release": "v0.1.0",
+    "files": 115
   },
   "reviewed": {
-    "commit": "e63f0d1438eb89c3df51a827ec169a8f5c489ded",
-    "temporaryTag": "v0.0.4",
+    "commit": "8369d823edb035c55a79f88d657db5a29efca2ce",
+    "selectedRelease": "v0.1.1",
     "files": 115
   },
   "enumeration": {
@@ -35,87 +35,17 @@
   "summary": {
     "files": 115,
     "manifestIncluded": true,
-    "unchanged": 107,
+    "unchanged": 114,
     "changed": [
       {
-        "path": ".github/scripts/validate-pr-metadata.mjs",
+        "path": ".github/workflows/pr-metadata.yml",
         "change": "changed",
         "baselineMode": "100644",
-        "baselineBlob": "80d99daf01b9313fa985170e23a07964ef6b8f0f",
-        "baselineSha256": "6896831ef69cf8594437abfd0566e395171b04653a8b67a0012309d155d2c38a",
+        "baselineBlob": "86a4dbc735fe071419210bd2e3aa65d38ce5d6aa",
+        "baselineSha256": "2e5feda40238c5631f11d9a20de6d6d2380e50026aaff13e9b62c83b0f297b8c",
         "reviewedMode": "100644",
-        "reviewedBlob": "a5aa05fa1c947f149845613ee3f773e06792426e",
-        "reviewedSha256": "7217d4dbb66a2b2afea67c2d15bf6c83c539b7fa03b8c5d6c68262f002900f7d"
-      },
-      {
-        "path": "operations/check-documentation.mjs",
-        "change": "changed",
-        "baselineMode": "100644",
-        "baselineBlob": "d9d86428135c1454d0c4b4d6fdc95698909b2423",
-        "baselineSha256": "a302793d4d4d875457e7a5f5e1369277be8dbff8fa84d65dabe7f89f03f459ea",
-        "reviewedMode": "100644",
-        "reviewedBlob": "2e1af076f0b8de7baa68b894ee626418833f3315",
-        "reviewedSha256": "4edbbb74c8219ab806015c30bbd0ba947a96d293e4a6dcf87d046c39aab78acb"
-      },
-      {
-        "path": "operations/check-project-readmes.mjs",
-        "change": "changed",
-        "baselineMode": "100644",
-        "baselineBlob": "76f9cbe1f8decd89ea58a3cf53aa6620808ca7c1",
-        "baselineSha256": "2b6e579cda58325259eefde21346440fb2567390a61f7b9d0654e1af3efd8299",
-        "reviewedMode": "100644",
-        "reviewedBlob": "c780f0caeef2a9217f538985d9a3b695189e1f15",
-        "reviewedSha256": "77609ccf56ba3bd76ec67e1c1d3e6d203922539d9987143b354e9a268e12b113"
-      },
-      {
-        "path": "operations/check-repository-readme.mjs",
-        "change": "changed",
-        "baselineMode": "100644",
-        "baselineBlob": "7b476cba690c4c9fa0cceeaf470a6ac7f32a9e71",
-        "baselineSha256": "3aed17e687a80e0ec9aef6fc6085d158a1ffe1c0e3fa9a0a82ae1ab7fc9601dd",
-        "reviewedMode": "100644",
-        "reviewedBlob": "6740f036e6e2596847f621cdb42af8e1c109bdd6",
-        "reviewedSha256": "b7b98dab2da9eb27a7919a2d3597a475ddd5d0d71841c6439230b589f9124133"
-      },
-      {
-        "path": "operations/lib/local-markdown-links.mjs",
-        "change": "added",
-        "baselineMode": null,
-        "baselineBlob": null,
-        "baselineSha256": null,
-        "reviewedMode": "100644",
-        "reviewedBlob": "145e2fbbd3600396f18dc086638fa25f1777b074",
-        "reviewedSha256": "ca4be6c2c72863c34775fdd19298eae571d6f29d2753eddb66b56cd8c331316c"
-      },
-      {
-        "path": "operations/lib/rendered-markdown.mjs",
-        "change": "changed",
-        "baselineMode": "100644",
-        "baselineBlob": "90099ea01fe7b51d820cda3fc9dd8f1d7baed392",
-        "baselineSha256": "bf383d2523637224d5b4ca9a1ce9889c9a7e3aa41b247e4c5547b8a11309e9f1",
-        "reviewedMode": "100644",
-        "reviewedBlob": "6622f537315dafeb5256a4f9d700ede78322920a",
-        "reviewedSha256": "c9c1f2586caf75d467fcfdd862388707816b99f7765d781b1b181306e06529ac"
-      },
-      {
-        "path": "scripts/validate-issue-contract.mjs",
-        "change": "changed",
-        "baselineMode": "100644",
-        "baselineBlob": "5ede054199b72dddc42a3e0638f7be698bf8d0a0",
-        "baselineSha256": "47765c32ee00e9b5de8b13ac37095ad88f0b01d8c33ee8abfbd743285e3f3126",
-        "reviewedMode": "100644",
-        "reviewedBlob": "5017c1f0706115b8b720b2e62895dab72c597a82",
-        "reviewedSha256": "725d76e0e5d1cc42bf9a115753184291bcab9a836781e0bdb418ef08e967ca35"
-      },
-      {
-        "path": "standards.yaml",
-        "change": "changed",
-        "baselineMode": "100644",
-        "baselineBlob": "27753eca3b2de14ec4d29b298a3c8659cacc2792",
-        "baselineSha256": "af302689d23ac83b5e241e210f2b1d15f7c9b032572783658f17aac40178992a",
-        "reviewedMode": "100644",
-        "reviewedBlob": "2a347cef9bc08a2862166e657c5de826b3815d2e",
-        "reviewedSha256": "859ed44932d4a80c51c0c82457083abb712f80aeabf3a954dd96694ea54caee8"
+        "reviewedBlob": "e1922527422c3e28ae0ae5a169c155a501866653",
+        "reviewedSha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82"
       }
     ],
     "removed": []
@@ -218,16 +148,16 @@
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "80d99daf01b9313fa985170e23a07964ef6b8f0f",
-        "sha256": "6896831ef69cf8594437abfd0566e395171b04653a8b67a0012309d155d2c38a"
+        "blob": "a5aa05fa1c947f149845613ee3f773e06792426e",
+        "sha256": "7217d4dbb66a2b2afea67c2d15bf6c83c539b7fa03b8c5d6c68262f002900f7d"
       },
       "reviewed": {
         "mode": "100644",
         "blob": "a5aa05fa1c947f149845613ee3f773e06792426e",
         "sha256": "7217d4dbb66a2b2afea67c2d15bf6c83c539b7fa03b8c5d6c68262f002900f7d"
       },
-      "change": "changed",
-      "byteAndModeIdentical": false
+      "change": "unchanged",
+      "byteAndModeIdentical": true
     },
     {
       "path": ".github/workflows/issue-contracts.yml",
@@ -259,11 +189,11 @@
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "86a4dbc735fe071419210bd2e3aa65d38ce5d6aa",
-        "sha256": "2e5feda40238c5631f11d9a20de6d6d2380e50026aaff13e9b62c83b0f297b8c"
+        "blob": "e1922527422c3e28ae0ae5a169c155a501866653",
+        "sha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82"
       },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
+      "change": "changed",
+      "byteAndModeIdentical": false
     },
     {
       "path": "AGENTS.md",
@@ -297,6 +227,42 @@
         "mode": "100644",
         "blob": "7f5ed390c2a4bec1783fa315ac6ff1d231eb50b0",
         "sha256": "480248d917dbdd2434bbf50b912431f30c0cae8040410ec9c2e9dca2fd02864d"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
+      "path": "LICENSE",
+      "roles": [
+        "operation:canonical-labels:resource"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "3036702ca77745099942b206433467c6177d3d8d",
+        "sha256": "c5bc99cbf0340755fec02d57c955e76b591ce83e5b4cb323a54038f4cd4152b4"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "3036702ca77745099942b206433467c6177d3d8d",
+        "sha256": "c5bc99cbf0340755fec02d57c955e76b591ce83e5b4cb323a54038f4cd4152b4"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "roles": [
+        "operation:canonical-labels:resource"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "29d9485b01146f96cf55b6520d1df14edaf0f7c1",
+        "sha256": "3faff9a73c0c355330d526f0a0b1573a7d5334fd749ce4d3a1c227eb766d8e5a"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "29d9485b01146f96cf55b6520d1df14edaf0f7c1",
+        "sha256": "3faff9a73c0c355330d526f0a0b1573a7d5334fd749ce4d3a1c227eb766d8e5a"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -356,6 +322,24 @@
       "byteAndModeIdentical": true
     },
     {
+      "path": "docs/agents/README.md",
+      "roles": [
+        "declaration:agent-configuration-index:exact"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "411c00e8df97eb26cdedaea92bf3afc45999c43d",
+        "sha256": "1534d7dacd63d91988a97b2e2928a683ddbf5177a663b75ed438e83d3c5c4836"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "411c00e8df97eb26cdedaea92bf3afc45999c43d",
+        "sha256": "1534d7dacd63d91988a97b2e2928a683ddbf5177a663b75ed438e83d3c5c4836"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
       "path": "docs/agents/domain.md",
       "roles": [
         "declaration:domain-configuration:exact"
@@ -387,24 +371,6 @@
         "mode": "100644",
         "blob": "31046208b50ddb30fecf4cac00d3d3be763d3454",
         "sha256": "271efd20f6315874241ae11d67ea0a9eb4766dd2e9c8c77cd4ecb8fbf66b6da7"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
-      "path": "docs/agents/README.md",
-      "roles": [
-        "declaration:agent-configuration-index:exact"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "411c00e8df97eb26cdedaea92bf3afc45999c43d",
-        "sha256": "1534d7dacd63d91988a97b2e2928a683ddbf5177a663b75ed438e83d3c5c4836"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "411c00e8df97eb26cdedaea92bf3afc45999c43d",
-        "sha256": "1534d7dacd63d91988a97b2e2928a683ddbf5177a663b75ed438e83d3c5c4836"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -500,40 +466,22 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "LICENSE",
-      "roles": [
-        "operation:canonical-labels:resource"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "3036702ca77745099942b206433467c6177d3d8d",
-        "sha256": "c5bc99cbf0340755fec02d57c955e76b591ce83e5b4cb323a54038f4cd4152b4"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "3036702ca77745099942b206433467c6177d3d8d",
-        "sha256": "c5bc99cbf0340755fec02d57c955e76b591ce83e5b4cb323a54038f4cd4152b4"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
       "path": "operations/check-documentation.mjs",
       "roles": [
         "operation:documentation-navigation:script"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "d9d86428135c1454d0c4b4d6fdc95698909b2423",
-        "sha256": "a302793d4d4d875457e7a5f5e1369277be8dbff8fa84d65dabe7f89f03f459ea"
+        "blob": "2e1af076f0b8de7baa68b894ee626418833f3315",
+        "sha256": "4edbbb74c8219ab806015c30bbd0ba947a96d293e4a6dcf87d046c39aab78acb"
       },
       "reviewed": {
         "mode": "100644",
         "blob": "2e1af076f0b8de7baa68b894ee626418833f3315",
         "sha256": "4edbbb74c8219ab806015c30bbd0ba947a96d293e4a6dcf87d046c39aab78acb"
       },
-      "change": "changed",
-      "byteAndModeIdentical": false
+      "change": "unchanged",
+      "byteAndModeIdentical": true
     },
     {
       "path": "operations/check-project-readmes.mjs",
@@ -542,16 +490,16 @@
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "76f9cbe1f8decd89ea58a3cf53aa6620808ca7c1",
-        "sha256": "2b6e579cda58325259eefde21346440fb2567390a61f7b9d0654e1af3efd8299"
+        "blob": "c780f0caeef2a9217f538985d9a3b695189e1f15",
+        "sha256": "77609ccf56ba3bd76ec67e1c1d3e6d203922539d9987143b354e9a268e12b113"
       },
       "reviewed": {
         "mode": "100644",
         "blob": "c780f0caeef2a9217f538985d9a3b695189e1f15",
         "sha256": "77609ccf56ba3bd76ec67e1c1d3e6d203922539d9987143b354e9a268e12b113"
       },
-      "change": "changed",
-      "byteAndModeIdentical": false
+      "change": "unchanged",
+      "byteAndModeIdentical": true
     },
     {
       "path": "operations/check-repository-readme.mjs",
@@ -560,16 +508,16 @@
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "7b476cba690c4c9fa0cceeaf470a6ac7f32a9e71",
-        "sha256": "3aed17e687a80e0ec9aef6fc6085d158a1ffe1c0e3fa9a0a82ae1ab7fc9601dd"
+        "blob": "6740f036e6e2596847f621cdb42af8e1c109bdd6",
+        "sha256": "b7b98dab2da9eb27a7919a2d3597a475ddd5d0d71841c6439230b589f9124133"
       },
       "reviewed": {
         "mode": "100644",
         "blob": "6740f036e6e2596847f621cdb42af8e1c109bdd6",
         "sha256": "b7b98dab2da9eb27a7919a2d3597a475ddd5d0d71841c6439230b589f9124133"
       },
-      "change": "changed",
-      "byteAndModeIdentical": false
+      "change": "unchanged",
+      "byteAndModeIdentical": true
     },
     {
       "path": "operations/lib/github-operation.mjs",
@@ -597,14 +545,18 @@
         "operation:project-readme-structure:resource",
         "operation:repository-readme-structure:resource"
       ],
-      "baseline": null,
+      "baseline": {
+        "mode": "100644",
+        "blob": "145e2fbbd3600396f18dc086638fa25f1777b074",
+        "sha256": "ca4be6c2c72863c34775fdd19298eae571d6f29d2753eddb66b56cd8c331316c"
+      },
       "reviewed": {
         "mode": "100644",
         "blob": "145e2fbbd3600396f18dc086638fa25f1777b074",
         "sha256": "ca4be6c2c72863c34775fdd19298eae571d6f29d2753eddb66b56cd8c331316c"
       },
-      "change": "added",
-      "byteAndModeIdentical": false
+      "change": "unchanged",
+      "byteAndModeIdentical": true
     },
     {
       "path": "operations/lib/rendered-markdown.mjs",
@@ -616,16 +568,16 @@
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "90099ea01fe7b51d820cda3fc9dd8f1d7baed392",
-        "sha256": "bf383d2523637224d5b4ca9a1ce9889c9a7e3aa41b247e4c5547b8a11309e9f1"
+        "blob": "6622f537315dafeb5256a4f9d700ede78322920a",
+        "sha256": "c9c1f2586caf75d467fcfdd862388707816b99f7765d781b1b181306e06529ac"
       },
       "reviewed": {
         "mode": "100644",
         "blob": "6622f537315dafeb5256a4f9d700ede78322920a",
         "sha256": "c9c1f2586caf75d467fcfdd862388707816b99f7765d781b1b181306e06529ac"
       },
-      "change": "changed",
-      "byteAndModeIdentical": false
+      "change": "unchanged",
+      "byteAndModeIdentical": true
     },
     {
       "path": "operations/setup-github-labels.mjs",
@@ -670,16 +622,16 @@
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "5ede054199b72dddc42a3e0638f7be698bf8d0a0",
-        "sha256": "47765c32ee00e9b5de8b13ac37095ad88f0b01d8c33ee8abfbd743285e3f3126"
+        "blob": "5017c1f0706115b8b720b2e62895dab72c597a82",
+        "sha256": "725d76e0e5d1cc42bf9a115753184291bcab9a836781e0bdb418ef08e967ca35"
       },
       "reviewed": {
         "mode": "100644",
         "blob": "5017c1f0706115b8b720b2e62895dab72c597a82",
         "sha256": "725d76e0e5d1cc42bf9a115753184291bcab9a836781e0bdb418ef08e967ca35"
       },
-      "change": "changed",
-      "byteAndModeIdentical": false
+      "change": "unchanged",
+      "byteAndModeIdentical": true
     },
     {
       "path": "standards.yaml",
@@ -688,31 +640,13 @@
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "27753eca3b2de14ec4d29b298a3c8659cacc2792",
-        "sha256": "af302689d23ac83b5e241e210f2b1d15f7c9b032572783658f17aac40178992a"
+        "blob": "2a347cef9bc08a2862166e657c5de826b3815d2e",
+        "sha256": "859ed44932d4a80c51c0c82457083abb712f80aeabf3a954dd96694ea54caee8"
       },
       "reviewed": {
         "mode": "100644",
         "blob": "2a347cef9bc08a2862166e657c5de826b3815d2e",
         "sha256": "859ed44932d4a80c51c0c82457083abb712f80aeabf3a954dd96694ea54caee8"
-      },
-      "change": "changed",
-      "byteAndModeIdentical": false
-    },
-    {
-      "path": "THIRD_PARTY_NOTICES.md",
-      "roles": [
-        "operation:canonical-labels:resource"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "29d9485b01146f96cf55b6520d1df14edaf0f7c1",
-        "sha256": "3faff9a73c0c355330d526f0a0b1573a7d5334fd749ce4d3a1c227eb766d8e5a"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "29d9485b01146f96cf55b6520d1df14edaf0f7c1",
-        "sha256": "3faff9a73c0c355330d526f0a0b1573a7d5334fd749ce4d3a1c227eb766d8e5a"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -739,27 +673,6 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/marked/marked.esm.js",
-      "roles": [
-        "declaration:marked-parser:exact",
-        "operation:documentation-navigation:resource",
-        "operation:project-readme-structure:resource",
-        "operation:repository-readme-structure:resource"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "6ee4141594f62cdb27da05dcbf6c51a1581a0f70",
-        "sha256": "2e70fea3ee49f98ab67ee395e5af51cc6bee4fafed15910da9ccb7f650df8014"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "6ee4141594f62cdb27da05dcbf6c51a1581a0f70",
-        "sha256": "2e70fea3ee49f98ab67ee395e5af51cc6bee4fafed15910da9ccb7f650df8014"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
       "path": "vendor/marked/README.md",
       "roles": [
         "declaration:marked-provenance:exact",
@@ -781,6 +694,27 @@
       "byteAndModeIdentical": true
     },
     {
+      "path": "vendor/marked/marked.esm.js",
+      "roles": [
+        "declaration:marked-parser:exact",
+        "operation:documentation-navigation:resource",
+        "operation:project-readme-structure:resource",
+        "operation:repository-readme-structure:resource"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "6ee4141594f62cdb27da05dcbf6c51a1581a0f70",
+        "sha256": "2e70fea3ee49f98ab67ee395e5af51cc6bee4fafed15910da9ccb7f650df8014"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "6ee4141594f62cdb27da05dcbf6c51a1581a0f70",
+        "sha256": "2e70fea3ee49f98ab67ee395e5af51cc6bee4fafed15910da9ccb7f650df8014"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
       "path": "vendor/mattpocock-skills/LICENSE",
       "roles": [
         "operation:canonical-labels:resource"
@@ -794,24 +728,6 @@
         "mode": "100644",
         "blob": "f1dd2c09108dde1a5f56097cee8461b3ea834499",
         "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
-      "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/agents/openai.yaml",
-      "roles": [
-        "declaration:skill-ask-matt:skill"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "5c60d51b5b1248d7210bff8c6b42a5a06524b8a4",
-        "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "5c60d51b5b1248d7210bff8c6b42a5a06524b8a4",
-        "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -853,19 +769,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/code-review/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/agents/openai.yaml",
       "roles": [
-        "declaration:skill-code-review:skill"
+        "declaration:skill-ask-matt:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "9076774ba327f49068db9273feceda03bfe940fa",
-        "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352"
+        "blob": "5c60d51b5b1248d7210bff8c6b42a5a06524b8a4",
+        "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "9076774ba327f49068db9273feceda03bfe940fa",
-        "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352"
+        "blob": "5c60d51b5b1248d7210bff8c6b42a5a06524b8a4",
+        "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -889,19 +805,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/code-review/agents/openai.yaml",
       "roles": [
-        "declaration:skill-codebase-design:skill"
+        "declaration:skill-code-review:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "3180715edb37f6e96bec42f92f00169faa8886ef",
-        "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f"
+        "blob": "9076774ba327f49068db9273feceda03bfe940fa",
+        "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "3180715edb37f6e96bec42f92f00169faa8886ef",
-        "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f"
+        "blob": "9076774ba327f49068db9273feceda03bfe940fa",
+        "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -961,6 +877,42 @@
       "byteAndModeIdentical": true
     },
     {
+      "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/agents/openai.yaml",
+      "roles": [
+        "declaration:skill-codebase-design:skill"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "3180715edb37f6e96bec42f92f00169faa8886ef",
+        "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "3180715edb37f6e96bec42f92f00169faa8886ef",
+        "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
+      "path": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md",
+      "roles": [
+        "declaration:skill-diagnosing-bugs:skill"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "061c25a524acaa93d4534e9e08a793c0a5fe45fd",
+        "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "061c25a524acaa93d4534e9e08a793c0a5fe45fd",
+        "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
       "path": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/agents/openai.yaml",
       "roles": [
         "declaration:skill-diagnosing-bugs:skill"
@@ -997,24 +949,6 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md",
-      "roles": [
-        "declaration:skill-diagnosing-bugs:skill"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "061c25a524acaa93d4534e9e08a793c0a5fe45fd",
-        "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "061c25a524acaa93d4534e9e08a793c0a5fe45fd",
-        "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
       "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md",
       "roles": [
         "declaration:skill-domain-modeling:skill"
@@ -1028,24 +962,6 @@
         "mode": "100644",
         "blob": "d7e61f30a9fd8ca70d9ee68f019c2a9ebf2d13f7",
         "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
-      "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/agents/openai.yaml",
-      "roles": [
-        "declaration:skill-domain-modeling:skill"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "7f1522d2f11506ee205275ab7c282aa52366ecf6",
-        "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "7f1522d2f11506ee205275ab7c282aa52366ecf6",
-        "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1087,19 +1003,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/grill-with-docs/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/agents/openai.yaml",
       "roles": [
-        "declaration:skill-grill-with-docs:skill"
+        "declaration:skill-domain-modeling:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "5dbe2780a51be3e9b118bd7758a73e54a9384e11",
-        "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9"
+        "blob": "7f1522d2f11506ee205275ab7c282aa52366ecf6",
+        "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "5dbe2780a51be3e9b118bd7758a73e54a9384e11",
-        "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9"
+        "blob": "7f1522d2f11506ee205275ab7c282aa52366ecf6",
+        "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1123,19 +1039,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/implement/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/grill-with-docs/agents/openai.yaml",
       "roles": [
-        "declaration:skill-implement:skill"
+        "declaration:skill-grill-with-docs:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "f8794dc153b409052a9167baf10858cf01b36175",
-        "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc"
+        "blob": "5dbe2780a51be3e9b118bd7758a73e54a9384e11",
+        "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "f8794dc153b409052a9167baf10858cf01b36175",
-        "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc"
+        "blob": "5dbe2780a51be3e9b118bd7758a73e54a9384e11",
+        "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1159,19 +1075,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/implement/agents/openai.yaml",
       "roles": [
-        "declaration:skill-improve-codebase-architecture:skill"
+        "declaration:skill-implement:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "706fdca096da5937fe57875a9154017d50668c42",
-        "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1"
+        "blob": "f8794dc153b409052a9167baf10858cf01b36175",
+        "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "706fdca096da5937fe57875a9154017d50668c42",
-        "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1"
+        "blob": "f8794dc153b409052a9167baf10858cf01b36175",
+        "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1213,19 +1129,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/prototype/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/agents/openai.yaml",
       "roles": [
-        "declaration:skill-prototype:skill"
+        "declaration:skill-improve-codebase-architecture:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "1618b147965bc729b7bf3e8da5f130132067aadc",
-        "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc"
+        "blob": "706fdca096da5937fe57875a9154017d50668c42",
+        "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "1618b147965bc729b7bf3e8da5f130132067aadc",
-        "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc"
+        "blob": "706fdca096da5937fe57875a9154017d50668c42",
+        "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1285,19 +1201,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/research/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/prototype/agents/openai.yaml",
       "roles": [
-        "declaration:skill-research:skill"
+        "declaration:skill-prototype:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "e18b96ca0ccc1003889d5d6991386207c2454bc2",
-        "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d"
+        "blob": "1618b147965bc729b7bf3e8da5f130132067aadc",
+        "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "e18b96ca0ccc1003889d5d6991386207c2454bc2",
-        "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d"
+        "blob": "1618b147965bc729b7bf3e8da5f130132067aadc",
+        "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1321,19 +1237,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/research/agents/openai.yaml",
       "roles": [
-        "declaration:skill-resolving-merge-conflicts:skill"
+        "declaration:skill-research:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "331ffb9d38937877f51a5f867a66dc61eee259ae",
-        "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf"
+        "blob": "e18b96ca0ccc1003889d5d6991386207c2454bc2",
+        "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "331ffb9d38937877f51a5f867a66dc61eee259ae",
-        "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf"
+        "blob": "e18b96ca0ccc1003889d5d6991386207c2454bc2",
+        "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1352,6 +1268,42 @@
         "mode": "100644",
         "blob": "bfb7e5606e231e6808979f623fce76a9aad4b71c",
         "sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
+      "path": "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/agents/openai.yaml",
+      "roles": [
+        "declaration:skill-resolving-merge-conflicts:skill"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "331ffb9d38937877f51a5f867a66dc61eee259ae",
+        "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "331ffb9d38937877f51a5f867a66dc61eee259ae",
+        "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
+      "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md",
+      "roles": [
+        "declaration:skill-setup-matt-pocock-skills:skill"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "7f6f576e2e54e0d287cbb9731ebe0343f54e50cf",
+        "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "7f6f576e2e54e0d287cbb9731ebe0343f54e50cf",
+        "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1447,24 +1399,6 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md",
-      "roles": [
-        "declaration:skill-setup-matt-pocock-skills:skill"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "7f6f576e2e54e0d287cbb9731ebe0343f54e50cf",
-        "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "7f6f576e2e54e0d287cbb9731ebe0343f54e50cf",
-        "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
       "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md",
       "roles": [
         "declaration:skill-setup-matt-pocock-skills:skill"
@@ -1478,6 +1412,24 @@
         "mode": "100644",
         "blob": "b716855d485f3865f9dfde2a82141721f065b2e7",
         "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
+      "path": "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md",
+      "roles": [
+        "declaration:skill-tdd:skill"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "8fc086710806190ee7c4baa32089cb877a75736a",
+        "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "8fc086710806190ee7c4baa32089cb877a75736a",
+        "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1519,24 +1471,6 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md",
-      "roles": [
-        "declaration:skill-tdd:skill"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "8fc086710806190ee7c4baa32089cb877a75736a",
-        "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "8fc086710806190ee7c4baa32089cb877a75736a",
-        "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
       "path": "vendor/mattpocock-skills/skills/engineering/tdd/tests.md",
       "roles": [
         "declaration:skill-tdd:skill"
@@ -1550,24 +1484,6 @@
         "mode": "100644",
         "blob": "7ab86479f925a1f9e8ba680af33cb3b12e015381",
         "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
-      "path": "vendor/mattpocock-skills/skills/engineering/to-spec/agents/openai.yaml",
-      "roles": [
-        "declaration:skill-to-spec:skill"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "549e6f76f020a1b9ba65f52ccda336566ee6222a",
-        "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "549e6f76f020a1b9ba65f52ccda336566ee6222a",
-        "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1591,19 +1507,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/to-tickets/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/to-spec/agents/openai.yaml",
       "roles": [
-        "declaration:skill-to-tickets:skill"
+        "declaration:skill-to-spec:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "24605a5db64e4fc750b999aa94aea126bee814ee",
-        "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090"
+        "blob": "549e6f76f020a1b9ba65f52ccda336566ee6222a",
+        "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "24605a5db64e4fc750b999aa94aea126bee814ee",
-        "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090"
+        "blob": "549e6f76f020a1b9ba65f52ccda336566ee6222a",
+        "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1627,6 +1543,24 @@
       "byteAndModeIdentical": true
     },
     {
+      "path": "vendor/mattpocock-skills/skills/engineering/to-tickets/agents/openai.yaml",
+      "roles": [
+        "declaration:skill-to-tickets:skill"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "24605a5db64e4fc750b999aa94aea126bee814ee",
+        "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "24605a5db64e4fc750b999aa94aea126bee814ee",
+        "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
       "path": "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md",
       "roles": [
         "declaration:skill-triage:skill"
@@ -1640,24 +1574,6 @@
         "mode": "100644",
         "blob": "1462fcd9e8cc21921158c296149dc05d9be39d20",
         "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
-      "path": "vendor/mattpocock-skills/skills/engineering/triage/agents/openai.yaml",
-      "roles": [
-        "declaration:skill-triage:skill"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "acb366cf0f2527e8925ff1223b77610ac0b1be4c",
-        "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "acb366cf0f2527e8925ff1223b77610ac0b1be4c",
-        "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1699,19 +1615,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/wayfinder/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/triage/agents/openai.yaml",
       "roles": [
-        "declaration:skill-wayfinder:skill"
+        "declaration:skill-triage:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "b37544751e0570f9df8de6c02aef238de8c3e1e0",
-        "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073"
+        "blob": "acb366cf0f2527e8925ff1223b77610ac0b1be4c",
+        "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "b37544751e0570f9df8de6c02aef238de8c3e1e0",
-        "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073"
+        "blob": "acb366cf0f2527e8925ff1223b77610ac0b1be4c",
+        "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1735,19 +1651,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/engineering/wizard/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/engineering/wayfinder/agents/openai.yaml",
       "roles": [
-        "declaration:skill-wizard:skill"
+        "declaration:skill-wayfinder:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "b601bdf3a321e7d32d5714681540b811287d3988",
-        "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83"
+        "blob": "b37544751e0570f9df8de6c02aef238de8c3e1e0",
+        "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "b601bdf3a321e7d32d5714681540b811287d3988",
-        "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83"
+        "blob": "b37544751e0570f9df8de6c02aef238de8c3e1e0",
+        "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1771,6 +1687,24 @@
       "byteAndModeIdentical": true
     },
     {
+      "path": "vendor/mattpocock-skills/skills/engineering/wizard/agents/openai.yaml",
+      "roles": [
+        "declaration:skill-wizard:skill"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "b601bdf3a321e7d32d5714681540b811287d3988",
+        "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "b601bdf3a321e7d32d5714681540b811287d3988",
+        "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
       "path": "vendor/mattpocock-skills/skills/engineering/wizard/template.sh",
       "roles": [
         "declaration:skill-wizard:skill"
@@ -1784,24 +1718,6 @@
         "mode": "100644",
         "blob": "1b3cdf40ad4923a9845fd682653d8cc4510f516e",
         "sha256": "33cbe9dfb1d0e9185b60248a52aabed14bc64785a00cac695e302e739dd6c153"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
-      "path": "vendor/mattpocock-skills/skills/productivity/grill-me/agents/openai.yaml",
-      "roles": [
-        "declaration:skill-grill-me:skill"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "4d6fb0c746c5d21364dce5d0cf8c51eab9712e7b",
-        "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "4d6fb0c746c5d21364dce5d0cf8c51eab9712e7b",
-        "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1825,19 +1741,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/productivity/grilling/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/productivity/grill-me/agents/openai.yaml",
       "roles": [
-        "declaration:skill-grilling:skill"
+        "declaration:skill-grill-me:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "ddbdb96139c0c1dfe6bca698f39d0465674b8a39",
-        "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b"
+        "blob": "4d6fb0c746c5d21364dce5d0cf8c51eab9712e7b",
+        "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "ddbdb96139c0c1dfe6bca698f39d0465674b8a39",
-        "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b"
+        "blob": "4d6fb0c746c5d21364dce5d0cf8c51eab9712e7b",
+        "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1861,19 +1777,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/productivity/handoff/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/productivity/grilling/agents/openai.yaml",
       "roles": [
-        "declaration:skill-handoff:skill"
+        "declaration:skill-grilling:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "6e1d8da121beceddc2f9ec7fa8714c1d914dd11a",
-        "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28"
+        "blob": "ddbdb96139c0c1dfe6bca698f39d0465674b8a39",
+        "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "6e1d8da121beceddc2f9ec7fa8714c1d914dd11a",
-        "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28"
+        "blob": "ddbdb96139c0c1dfe6bca698f39d0465674b8a39",
+        "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -1897,19 +1813,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/productivity/teach/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/productivity/handoff/agents/openai.yaml",
       "roles": [
-        "declaration:skill-teach:skill"
+        "declaration:skill-handoff:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "3452a850e3b0c1f0a3d41b2bfd45164d2d38d7f6",
-        "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f"
+        "blob": "6e1d8da121beceddc2f9ec7fa8714c1d914dd11a",
+        "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "3452a850e3b0c1f0a3d41b2bfd45164d2d38d7f6",
-        "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f"
+        "blob": "6e1d8da121beceddc2f9ec7fa8714c1d914dd11a",
+        "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -2005,19 +1921,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/productivity/to-questionnaire/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/productivity/teach/agents/openai.yaml",
       "roles": [
-        "declaration:skill-to-questionnaire:skill"
+        "declaration:skill-teach:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "a58d14765beb4acb4c9708b516310558e1308a22",
-        "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2"
+        "blob": "3452a850e3b0c1f0a3d41b2bfd45164d2d38d7f6",
+        "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "a58d14765beb4acb4c9708b516310558e1308a22",
-        "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2"
+        "blob": "3452a850e3b0c1f0a3d41b2bfd45164d2d38d7f6",
+        "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -2041,19 +1957,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/productivity/wait-what/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/productivity/to-questionnaire/agents/openai.yaml",
       "roles": [
-        "declaration:skill-wait-what:skill"
+        "declaration:skill-to-questionnaire:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "6f7a9c33f99ec4ba70d986d6fc0de06c8b811bc3",
-        "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999"
+        "blob": "a58d14765beb4acb4c9708b516310558e1308a22",
+        "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "6f7a9c33f99ec4ba70d986d6fc0de06c8b811bc3",
-        "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999"
+        "blob": "a58d14765beb4acb4c9708b516310558e1308a22",
+        "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -2077,19 +1993,19 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/agents/openai.yaml",
+      "path": "vendor/mattpocock-skills/skills/productivity/wait-what/agents/openai.yaml",
       "roles": [
-        "declaration:skill-writing-for-agents:skill"
+        "declaration:skill-wait-what:skill"
       ],
       "baseline": {
         "mode": "100644",
-        "blob": "079c933b75743dec18b5d0c01006def20b6aad26",
-        "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b"
+        "blob": "6f7a9c33f99ec4ba70d986d6fc0de06c8b811bc3",
+        "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "079c933b75743dec18b5d0c01006def20b6aad26",
-        "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b"
+        "blob": "6f7a9c33f99ec4ba70d986d6fc0de06c8b811bc3",
+        "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -2126,6 +2042,24 @@
         "mode": "100644",
         "blob": "a37608daf6e835e767deecfb498facecaaba82ba",
         "sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
+      "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/agents/openai.yaml",
+      "roles": [
+        "declaration:skill-writing-for-agents:skill"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "079c933b75743dec18b5d0c01006def20b6aad26",
+        "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "079c933b75743dec18b5d0c01006def20b6aad26",
+        "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
@@ -2173,27 +2107,6 @@
       "byteAndModeIdentical": true
     },
     {
-      "path": "vendor/parse5/parse5.esm.js",
-      "roles": [
-        "declaration:parse5-parser:exact",
-        "operation:documentation-navigation:resource",
-        "operation:project-readme-structure:resource",
-        "operation:repository-readme-structure:resource"
-      ],
-      "baseline": {
-        "mode": "100644",
-        "blob": "153bf3fabcc05a163e4d13400a5ac5bc3d615b3f",
-        "sha256": "bdf861eb0bce411afe5fcc312c770c3fe18dac9b5296771d40217d52a6ae7a93"
-      },
-      "reviewed": {
-        "mode": "100644",
-        "blob": "153bf3fabcc05a163e4d13400a5ac5bc3d615b3f",
-        "sha256": "bdf861eb0bce411afe5fcc312c770c3fe18dac9b5296771d40217d52a6ae7a93"
-      },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
-    },
-    {
       "path": "vendor/parse5/README.md",
       "roles": [
         "declaration:parse5-provenance:exact",
@@ -2210,6 +2123,27 @@
         "mode": "100644",
         "blob": "e7e7e14efd98e2d57c3464f4aadbe20c3444d4b3",
         "sha256": "8f285afdb9d5eca93648d2ffbea58ea0cea94485f18c3eec6f5825ef1e0446bf"
+      },
+      "change": "unchanged",
+      "byteAndModeIdentical": true
+    },
+    {
+      "path": "vendor/parse5/parse5.esm.js",
+      "roles": [
+        "declaration:parse5-parser:exact",
+        "operation:documentation-navigation:resource",
+        "operation:project-readme-structure:resource",
+        "operation:repository-readme-structure:resource"
+      ],
+      "baseline": {
+        "mode": "100644",
+        "blob": "153bf3fabcc05a163e4d13400a5ac5bc3d615b3f",
+        "sha256": "bdf861eb0bce411afe5fcc312c770c3fe18dac9b5296771d40217d52a6ae7a93"
+      },
+      "reviewed": {
+        "mode": "100644",
+        "blob": "153bf3fabcc05a163e4d13400a5ac5bc3d615b3f",
+        "sha256": "bdf861eb0bce411afe5fcc312c770c3fe18dac9b5296771d40217d52a6ae7a93"
       },
       "change": "unchanged",
       "byteAndModeIdentical": true
