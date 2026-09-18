@@ -2,12 +2,12 @@
 
 Repo Canon **v0.2.0** raises the exact required Repository Standards CLI version
 from 1.2.2 to 1.3.0. It carries no other selected source change. It is published
-and verified below. Requiring a
-newer CLI is mandatory migration work for adopters, so this is a breaking
-standards change with an explicit note, and under the confirmed `0.x` convention
-it advances the minor number. The [first release](first-release.md) records the
-publication procedure and the `v0.1.0` baseline, and
-[Release v0.1.1](release-v0-1-1.md) records the patch that preceded this one;
+and verified below. Requiring a newer CLI is mandatory migration work for
+adopters, so this is a breaking standards change with an explicit note, and
+under the confirmed `0.x` convention it advances the minor number. The
+[first release](first-release.md) records the publication procedure and the
+`v0.1.0` baseline, and [Release v0.1.1](release-v0-1-1.md) records the patch
+that preceded this one;
 this record covers only what the minor release changes. The bump convention is
 in [Release versioning](../usage/versioning.md).
 
@@ -42,7 +42,10 @@ A read-only bootstrap inspection of this repository at the tagged commit,
 through public CLI 1.3.0 installed outside the checkout, returns a
 `repo-standards/inspection/v2` report with identity
 `sha256:684e74a00fe4377a1c11da6a8d075fcb4f230ca41d0deffe75c04bf2ad3c7f1d` for
-selected `v0.2.0` and the `complete` profile. The same CLI against published
+selected `v0.2.0` and the `complete` profile. An inspection identity covers the
+inspected project as well as the selection, so it reproduces only for this
+project root; the report's resolved selection, declarations, and manifest are
+the portable part. The same CLI against published
 `v0.1.1` returns `INCOMPATIBLE_CLI`, which is the requirement working as
 described. That inspection is evidence that the published bytes are readable by
 the CLI they require; it is not adoption, which is separate work.
