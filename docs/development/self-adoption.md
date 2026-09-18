@@ -62,9 +62,11 @@ immediately before `start`.
 
 ## Confirmed scope
 
-The proposal was built from the real inspection's 398 discovery-evidence
-entries, bound to discovery request `sha256:4a2f6cb3…`, and prepared outside the
-project.
+The proposal was built from the real inspection's discovery evidence, 398
+entries covering 304 files and 94 directory inventories, bound to discovery
+request `sha256:4a2f6cb3…`, and prepared outside the project. Every count in
+this section describes the inspected commit `5a03353`; this record's own files
+did not exist yet and are therefore outside the confirmed paths.
 
 The `documentation` declaration confirmed 126 paths: every Markdown document in
 the `docs` tree except the four exact-owned shared agent configuration files,
@@ -89,7 +91,7 @@ Exclusions, each recorded with its reason:
 | `vendor/` | Vendored third-party material that must stay byte-identical to its upstream releases. |
 | `operations/`, `scripts/`, `test/` | Declared source operations, maintenance tooling, and fixtures. |
 | `THIRD_PARTY_NOTICES.md`, `LICENSE`, `standards.yaml`, `package.json` | Legal notices, licensing, the manifest, and project configuration. |
-| 15 non-Markdown artifacts under `docs/` | Retained evidence records that must not be rewritten; the documents linking them stay in scope. |
+| The 15 non-Markdown artifacts then under `docs/` | Retained evidence records that must not be rewritten; the documents linking them stay in scope. |
 
 `github-repository-configuration` and `project-readmes` confirmed empty
 project-content scope with explanations: the first changes only remote settings
@@ -97,11 +99,15 @@ through its authored fixes, and this repository is a single standards source
 with one root manifest and no nested Project. No declaration left an unresolved
 question.
 
-`CONTEXT.md` was the one membership question decided explicitly. The
-documentation guidance governs where domain glossaries live, and scope that
-omits a file grants no authority to maintain it, so the glossary belongs in the
-declaration that governs it. The repository conformance test's documentation
-declaration was widened to match the confirmed scope in the same change.
+`CONTEXT.md` was the one membership decision put to the maintainer explicitly.
+The proposal itself left nothing unresolved: it already carried the glossary as
+an included candidate, because the documentation guidance governs where domain
+glossaries live and scope that omits a file grants no authority to maintain it,
+so the glossary belongs in the declaration that governs it. The maintainer was
+asked to sign that inclusion off by name anyway, since it widened what the
+repository had treated as its documentation scope until then. The repository
+conformance test's documentation declaration was widened to match the confirmed
+scope in the same change.
 
 ## Operation results
 
@@ -128,8 +134,9 @@ created, all of them author skills installed as copies under `.agents/skills/`
 `.agents/` or the tracked parts of `.repo-standards/` is a symlink;
 [ADR 0001](../adr/0001-manage-shared-skills-through-standards-releases.md) and
 ADR 0004 explain why these copies of source-owned files exist and must not be
-removed as duplicates. Durable state under `.repo-standards/` adds about 1.3 MB
-of tracked content, the compact format that CLI 1.3.0 introduced.
+removed as duplicates. Durable state under `.repo-standards/` adds 1,184,911
+bytes of tracked content, roughly 1.2 MB in the compact format that CLI 1.3.0
+introduced.
 
 `start` completed installation and both fixes and handed off with
 `CONTEXTUAL_REQUIRED`. After the contextual work below, `resume --json`
@@ -194,9 +201,18 @@ installed. The centered title, description, and badges were preserved.
   conformance test's documentation declaration did not cover `CONTEXT.md`, and
   the confirmed scope had to decide the glossary explicitly. Test and confirmed
   scope now agree.
-- **Compact durable state is real.** Completed adoption added about 1.3 MB of
-  tracked state, against the roughly 26 MB that CLI 1.2.2 would have committed
-  and that blocked this work until the compact evidence release.
+- **Compact durable state is real.** Completed adoption added 1,184,911 bytes of
+  tracked state, roughly 1.2 MB, against the roughly 26 MB that CLI 1.2.2 would
+  have committed and that blocked this work until the compact evidence release.
+- **One retained evidence statement is inaccurate.** The contextual assessment
+  this run submitted, now retained in `.repo-standards/state.json`, says "the
+  eight nested directories under `docs/development`" where the tree has ten,
+  each with the README the guidance requires. The substantive claim holds and
+  the checks that enforce it passed; the count in the submitted evidence is
+  simply wrong, and a completed run's assessment cannot be rewritten without
+  adopting again, so the error is recorded here instead. Assessment evidence is
+  agent judgment that the CLI checks structurally, not for semantic truth, and
+  this is what that limitation looks like in practice.
 
 ## Evidence boundary
 

@@ -129,8 +129,8 @@ disposable local repositories used for the seven productivity skill exercises.
 This repository takes the same path every adopter takes, so the suite also runs
 the three shipped checks against this repository's own root through the
 operation request helper, with the documentation tree, the repository-root
-glossary `CONTEXT.md`, and the two root decision records as the confirmed
-documentation scope that [self-adoption](self-adoption.md) confirmed. The same fixture fails if any
+glossary `CONTEXT.md`, and the two root decision records as the documentation
+scope that [self-adoption](self-adoption.md) confirmed. The same fixture fails if any
 tracked file reaches the CLI's 8 MiB per-file observation limit, which would
 make the repository uninspectable before any report. Run it alone with
 `node --test test/repository-conformance.test.mjs`. It needs no separate CI

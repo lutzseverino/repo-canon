@@ -157,7 +157,8 @@
     "No required-check ruleset existed on this repository before adoption, so the PR metadata requirement the source imposes on adopters was not enforced here.",
     "The Repository README check passes on structure alone and could not see that the section named Usage was really the installation path.",
     "The repository conformance test's documentation declaration did not cover CONTEXT.md, so the glossary sat outside the declaration that governs it until this change.",
-    "Completed adoption adds about 1.3 MB of tracked durable state in the compact format, against the roughly 26 MB CLI 1.2.2 would have committed."
+    "Completed adoption adds 1,184,911 bytes of tracked durable state, roughly 1.2 MB, in the compact format, against the roughly 26 MB CLI 1.2.2 would have committed.",
+    "The contextual assessment retained in .repo-standards/state.json says the eight nested directories under docs/development where the tree has ten, each with the README the guidance requires; a completed run's assessment cannot be corrected without adopting again."
   ],
   "boundary": "Self-adoption complements adoption by other repositories and cannot find what only a different repository reveals. It renews no source validation, publishes nothing, and asserts no continuing compliance after later edits.",
   "evidenceRetention": "The external inspection reports, scope proposal, and run reports were stored outside the repository during the delivery and were lost when the host's temporary storage was cleared. Every value in this record was read back from the retained durable state under .repo-standards/ after the run."
