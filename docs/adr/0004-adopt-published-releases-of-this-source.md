@@ -5,8 +5,8 @@ CLI, pinned to a published Repo Canon release and the `complete` profile, never
 by reading its working tree. This keeps the source repository on the exact path
 every adopter takes, so its own adoption exercises the real acquisition,
 discovery, fixes, and checks against the bytes adopters receive; a working-tree
-route would need product support that does not exist and would prove nothing
-about a published version. The cost is carrying installed copies of files the
+route would prove nothing about a published version, and the product offers no
+such route in any case. The cost is carrying installed copies of files the
 source already owns, and being ahead of its own pin between a source change and
 the next release.
 
