@@ -26,15 +26,15 @@ source path, role, mode, Git blob, and SHA-256 for accepted `v0.1.0` and
 `v0.1.1`. Its earlier `v0.0.3` to `v0.0.4` comparison is retained at the
 [v0.1.0 tag](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/development/source-closure.json).
 
-The comparison record is `repo-canon/source-closure-comparison/v4`. Both of its
-sides are permanent releases rather than temporary evidence tags, so the
-baseline names the `release` it published and the reviewed side names the
-`selectedRelease` it is prepared for. The `v4` shape allows the reviewed
-`commit` to be `null` while a release pull request is open, because the reviewed
-identity is the closure's 115 blob and SHA-256 entries rather than a commit that
-does not exist until integration. The record's `reviewedCommitPolicy` states
-that rule, and the verified publication fills the commit in and confirms every
-entry at it. Publication is recorded separately, in
+The comparison record is `repo-canon/source-closure-comparison/v4`. Neither side
+is a temporary evidence tag, so the baseline names the permanent `release` it
+published and the reviewed side names the `selectedRelease` it is prepared for,
+which becomes permanent only once that release is published. The `v4` shape
+allows the reviewed `commit` to be `null` while a release pull request is open,
+because the reviewed identity is the closure's 115 blob and SHA-256 entries
+rather than a commit that does not exist until integration. The record's
+`reviewedCommitPolicy` states that rule, and the verified publication fills the
+commit in and confirms every entry at it. Publication is recorded separately, in
 [Release v0.1.1](release-v0-1-1.md) and [Release v0.2.0](release-v0-2-0.md).
 
 Relative to accepted `eb98da8`/`v0.0.3`, seven selected paths changed for
@@ -67,10 +67,11 @@ fix for [lutzseverino/repo-standards#77](https://github.com/lutzseverino/repo-st
 The manifest is a selected input, so those bytes create a new source identity.
 The current accepted source is the 115-file closure, selected for release as
 `v0.2.0`, whose only change from published `v0.1.1` at
-`0f313ef435c715889303ec1157f1006bee1fb9f4` is that one line; the other 114 inputs are byte-and-mode identical, and none were added or
-removed. It resolves the same single profile, 52 declarations, five operations,
-and 25 author skills, and installed public CLI 1.3.0 returned `valid: true` with
-no errors for those exact bytes. Public CLI 1.2.2 cannot read this source at
+`0f313ef435c715889303ec1157f1006bee1fb9f4` is that one line; the other 114
+inputs are byte-and-mode identical, and none were added or removed. It resolves
+the same single profile, 52 declarations, five operations, and 25 author skills,
+and installed public CLI 1.3.0 returned `valid: true` with no errors for those
+exact bytes. Public CLI 1.2.2 cannot read this source at
 all: it returns `INCOMPATIBLE_CLI`, which is why the release carries a breaking
 standards change. [Release v0.2.0](release-v0-2-0.md) records the requirement,
 its impact and migration, the publication procedure, and the evidence that

@@ -77,10 +77,11 @@ completed the affected public adoption refresh. The first permanent selection
 is `v0.1.0`; [release delivery](first-release.md) covers its verified
 publication. The `v0.1.1` patch corrected the installed PR metadata workflow
 and refreshed the accepted identity at `8369d82`;
-[release v0.1.1](release-v0-1-1.md) covers it. `v0.2.0` then moved the exact
+[release v0.1.1](release-v0-1-1.md) covers it. `v0.2.0` then moves the exact
 required CLI version from 1.2.2 to 1.3.0, a breaking standards change and the
 only selected byte change since `v0.1.1`;
-[release v0.2.0](release-v0-2-0.md) covers it, and it is the current release.
+[release v0.2.0](release-v0-2-0.md) covers it and is selected for publication.
+`v0.1.1` stays the current release until that publication is verified.
 Repository Standards completed and merged the first real adoption from the
 `v0.1.x` public pins; [first real adoption](real-adoption.md) records it,
 including the defects it surfaced. Adopters verify the published release before

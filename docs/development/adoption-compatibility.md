@@ -103,8 +103,8 @@ block preparation. Projects with no useful existing instructions receive no
 empty project guidance file. Integrated preparation support is not required
 for the selected workflow.
 
-Sources: [inspection](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/inspection.md),
-[adoption sequence](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/src/adoption.ts).
+Sources: [inspection](https://github.com/lutzseverino/repo-standards/blob/v1.3.0/docs/usage/inspection.md),
+[adoption sequence](https://github.com/lutzseverino/repo-standards/blob/v1.3.0/src/adoption.ts).
 
 ## GitHub repository settings
 
@@ -121,5 +121,5 @@ They must not imply remote freshness or rollback guarantees from local
 inspection. They run during adoption; authoring exercises use disposable
 fixtures and do not mutate live GitHub settings.
 
-Sources: [script protocol](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/script-protocol.md),
-[architecture](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/architecture.md).
+Sources: [script protocol](https://github.com/lutzseverino/repo-standards/blob/v1.3.0/docs/usage/script-protocol.md),
+[architecture](https://github.com/lutzseverino/repo-standards/blob/v1.3.0/docs/development/architecture.md).
