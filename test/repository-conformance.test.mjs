@@ -8,11 +8,23 @@ import { invokeCheck } from './helpers/operation.mjs';
 
 // This repository is an adopter of its own published standards, so the three
 // shipped checks run against the real tree on every pull request instead of
-// against fixtures only. The confirmed documentation scope is the documentation
-// tree plus the two root decision records; the review drafts, the source-side
+// against fixtures only. The documentation paths below are the scope this
+// repository expects to confirm when it self-adopts: the documentation tree,
+// the authoring notes, and the design review. The review drafts, the source-side
 // guidance, the discovery instructions, and the vendored material stay out.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const rootDecisionRecords = ['authoring-notes.md', 'design-review.md'];
+
+// `discovery/documentation.md` keeps the exact-owned shared agent configuration
+// outside documentation scope, and `standards.yaml` declares each of those files
+// separately. The check still reads every Markdown file under `docs`, so leaving
+// them out of this declaration does not reduce what it validates.
+const exactOwnedAgentConfiguration = [
+  'docs/agents/README.md',
+  'docs/agents/domain.md',
+  'docs/agents/issue-tracker.md',
+  'docs/agents/triage-labels.md',
+];
 
 // The CLI's discovery observation refuses any file larger than this, which would
 // reject the whole inspection before it reports anything.
@@ -30,7 +42,8 @@ function operation(name) {
 
 function documentationScope() {
   const documentation = trackedFiles()
-    .filter(path => path.startsWith('docs/') && path.toLocaleLowerCase('en-US').endsWith('.md'));
+    .filter(path => path.startsWith('docs/') && path.toLocaleLowerCase('en-US').endsWith('.md'))
+    .filter(path => !exactOwnedAgentConfiguration.includes(path));
   return [...documentation, ...rootDecisionRecords].sort();
 }
 

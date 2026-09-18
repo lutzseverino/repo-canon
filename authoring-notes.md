@@ -181,8 +181,8 @@ The separate real adoption is complete and merged, recorded in
 - The `drafts/` review copies retain the shared contribution and agent
   configuration material as it stood at the design review. They are historical
   review material, not current sources, and are not re-synced when a final file
-  changes. The four public forms preserve optional answers and the native planning
-  formats; the PR template preserves the agreed small-correction and
+  changes. The four public forms preserve optional answers and the native
+  planning formats; the PR template preserves the agreed small-correction and
   conditional Limits behavior. The material review and separate committed
   preparation exercises are recorded in
   `docs/development/shared-material-review.md`.
