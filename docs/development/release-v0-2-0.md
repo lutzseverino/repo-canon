@@ -1,15 +1,14 @@
 # Release v0.2.0
 
-Repo Canon **v0.2.0** raises the exact required Repository Standards CLI version
-from 1.2.2 to 1.3.0. It carries no other selected source change. It is published
-and verified below. Requiring a newer CLI is mandatory migration work for
-adopters, so this is a breaking standards change with an explicit note, and
+Repo Canon **v0.2.0** raises the exact required Repository Standards CLI
+version from 1.2.2 to 1.3.0. It carries no other selected source change. It is
+published and verified below. Requiring a newer CLI is mandatory migration work
+for adopters, so this is a breaking standards change with an explicit note, and
 under the confirmed `0.x` convention it advances the minor number. The
 [first release](first-release.md) records the publication procedure and the
 `v0.1.0` baseline, and [Release v0.1.1](release-v0-1-1.md) records the patch
-that preceded this one;
-this record covers only what the minor release changes. The bump convention is
-in [Release versioning](../usage/versioning.md).
+that preceded this one; this record covers only what the minor release changes.
+The bump convention is in [Release versioning](../usage/versioning.md).
 
 ## Verified publication
 
