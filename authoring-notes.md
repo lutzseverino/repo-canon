@@ -178,10 +178,11 @@ The separate real adoption is complete and merged, recorded in
   approved-revision selector, or revision invalidation mechanism. The accepted
   readiness rule above is this standards source's convention and belongs in
   its configuration and automation, preserving upstream skill content.
-- The reviewed shared contribution and agent configuration files are
-  byte-identical between their final locations and `drafts/` review copies.
-  The four public forms preserve optional answers and the native planning
-  formats; the PR template preserves the agreed small-correction and
+- The `drafts/` review copies retain the shared contribution and agent
+  configuration material as it stood at the design review. They are historical
+  review material, not current sources, and are not re-synced when a final file
+  changes. The four public forms preserve optional answers and the native
+  planning formats; the PR template preserves the agreed small-correction and
   conditional Limits behavior. The material review and separate committed
   preparation exercises are recorded in
   `docs/development/shared-material-review.md`.

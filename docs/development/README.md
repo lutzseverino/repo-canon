@@ -113,3 +113,12 @@ evidence class recorded in [the adoption evidence](adoption-evidence.md).
 
 Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
 disposable local repositories used for the seven productivity skill exercises.
+
+This repository takes the same path every adopter takes, so the suite also runs
+the three shipped checks against this repository's own root through the
+operation request helper, with the documentation tree and the two root decision
+records as the confirmed documentation scope. The same fixture fails if any
+tracked file reaches the CLI's 8 MiB per-file observation limit, which would
+make the repository uninspectable before any report. Run it alone with
+`node --test test/repository-conformance.test.mjs`. It needs no separate CI
+step: `npm test` already runs it on every pull request.
