@@ -1,5 +1,13 @@
 # Release v0.2.0
 
+This record covers the `v0.2.0` publication as it happened, including the
+exactness of its requirement and the breaking-change note that exactness
+justified. That exactness was a choice, and it was reversed in
+[Release v0.2.1](release-v0-2-1.md), which states the same 1.3.0 baseline as the
+open-ended minimum `>=1.3.0` and explains why raising a required CLI version is
+not a breaking standards change. `v0.2.0` keeps its original tag target,
+release, and contents.
+
 Repo Canon **v0.2.0** raises the exact required Repository Standards CLI
 version from 1.2.2 to 1.3.0. It carries no other selected source change. It is
 published and verified below. Requiring a newer CLI is mandatory migration work
@@ -69,6 +77,15 @@ breaking part: a repository conforming to `v0.1.1` must install the newer CLI
 before it can select `v0.2.0`. Nothing else in the source moved, so no
 declaration, target, guidance, discovery instruction, operation, check, fix,
 skill, or check name changes, and no repository content has to be rewritten.
+
+That last reading is the one this release got wrong.
+[Release v0.2.1](release-v0-2-1.md) reverses both halves of that reading: the
+requirement becomes the open-ended minimum `>=1.3.0`, and a required-CLI change
+is classified as a non-breaking `chore`, because it leaves every adopter's
+conformance and workflow intact, which is the test
+[ADR 0003](../adr/0003-follow-product-release-versioning.md) actually states.
+The exactness also stranded adopters in the other direction, which is why it was
+reversed. The notes below are the published `v0.2.0` notes and are not edited.
 
 This release is the third step of the
 [self-adoption specification](https://github.com/lutzseverino/repo-canon/issues/60);

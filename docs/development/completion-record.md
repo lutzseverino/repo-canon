@@ -22,9 +22,14 @@ for that closure is 114. The current closure independently reaches 115 because
 #45 added `operations/lib/local-markdown-links.mjs`. It still excludes the
 contextual README. No selected material was removed. The
 [machine-readable closure comparison](source-closure.json) enumerates every
-source path, role, mode, Git blob, and SHA-256 for accepted `v0.1.0` and
-`v0.1.1`. Its earlier `v0.0.3` to `v0.0.4` comparison is retained at the
-[v0.1.0 tag](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/development/source-closure.json).
+source path, role, mode, Git blob, and SHA-256 for published `v0.2.0` and the
+identity selected for `v0.2.1`. Its earlier comparisons stay readable at the
+tags that published them: `v0.0.3` to `v0.0.4` at the
+[v0.1.0 tag](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/development/source-closure.json),
+`v0.1.0` to `v0.1.1` at the
+[v0.1.1 tag](https://github.com/lutzseverino/repo-canon/blob/v0.1.1/docs/development/source-closure.json),
+and `v0.1.1` to `v0.2.0` at the
+[v0.2.0 tag](https://github.com/lutzseverino/repo-canon/blob/v0.2.0/docs/development/source-closure.json).
 
 The comparison record is `repo-canon/source-closure-comparison/v4`. Neither side
 is a temporary evidence tag, so the baseline names the permanent `release` it
@@ -35,7 +40,8 @@ because the reviewed identity is the closure's 115 blob and SHA-256 entries
 rather than a commit that does not exist until integration. The record's
 `reviewedCommitPolicy` states that rule, and the verified publication fills the
 commit in and confirms every entry at it. Publication is recorded separately, in
-[Release v0.1.1](release-v0-1-1.md) and [Release v0.2.0](release-v0-2-0.md).
+[Release v0.1.1](release-v0-1-1.md), [Release v0.2.0](release-v0-2-0.md), and
+[Release v0.2.1](release-v0-2-1.md).
 
 Relative to accepted `eb98da8`/`v0.0.3`, seven selected paths changed for
 `e63f0d1` and `operations/lib/local-markdown-links.mjs` was added. The other 107
@@ -51,7 +57,7 @@ That acceptance describes published `v0.1.0`. The corrected
 changed the exact bytes of `.github/workflows/pr-metadata.yml` through
 [PR #53](https://github.com/lutzseverino/repo-canon/pull/53), creating a new
 source identity that does not inherit the `e63f0d1` whole-source or adoption
-claim. The current accepted source is the 115-file closure at commit
+claim. That change produced the 115-file closure at commit
 `8369d823edb035c55a79f88d657db5a29efca2ce`, published as `v0.1.1`.
 It resolves the same single profile, 52 declarations, five operations, and 25
 author skills, and public CLI 1.2.2 returned `valid: true` with no errors for
@@ -65,18 +71,29 @@ CLI version in `standards.yaml` from `1.2.2` to `1.3.0`, the Repository
 Standards release that ships compact work and scope evidence together with the
 fix for [lutzseverino/repo-standards#77](https://github.com/lutzseverino/repo-standards/issues/77).
 The manifest is a selected input, so those bytes create a new source identity.
-The current accepted source is the 115-file closure, published as `v0.2.0` at
-commit `79ff51198465248df67c6e1d6a66c95e2f964df5`, whose only change from
+`v0.2.0` is the 115-file closure published at commit
+`79ff51198465248df67c6e1d6a66c95e2f964df5`, whose only change from
 published `v0.1.1` at
 `0f313ef435c715889303ec1157f1006bee1fb9f4` is that one line; the other 114
 inputs are byte-and-mode identical, and none were added or removed. It resolves
 the same single profile, 52 declarations, five operations, and 25 author skills,
 and installed public CLI 1.3.0 returned `valid: true` with no errors for those
-exact bytes. Public CLI 1.2.2 cannot read this source at
-all: it returns `INCOMPATIBLE_CLI`, which is why the release carries a breaking
-standards change. [Release v0.2.0](release-v0-2-0.md) records the requirement,
-its impact and migration, the publication procedure, and the evidence that
-change does and does not renew.
+exact bytes. Public CLI 1.2.2 cannot read that source at
+all: it returns `INCOMPATIBLE_CLI`. [Release v0.2.0](release-v0-2-0.md) records
+the requirement, the publication procedure, and the evidence that change does
+and does not renew.
+
+The current accepted source restates that same requirement as the open-ended
+minimum `>=1.3.0` and is selected for `v0.2.1`. `standards.yaml` is again the
+only changed path: the other 114 inputs are byte-and-mode identical to published
+`v0.2.0`, and none were added or removed. It resolves the same single profile,
+52 declarations, five operations, and 25 author skills, and installed public CLI
+1.3.0 on Node.js 24.21.0 returned `valid: true`, no errors, and one `complete`
+profile for those exact bytes. The requirement gates which CLI versions may
+select this source and is not re-validated afterwards, so an exact requirement
+strands adopters in both directions; the minimum removes that without changing
+any adopter's conformance or workflow, which is why it is not a breaking
+standards change. [Release v0.2.1](release-v0-2-1.md) records it.
 
 ## Evidence classes
 
@@ -227,6 +244,14 @@ required-CLI change and its publication, recorded in
 [Release v0.2.0](release-v0-2-0.md). `v0.1.0` and `v0.1.1` keep their original
 targets, releases, and contents; an adopter that stays on public CLI 1.2.2 keeps
 selecting `v0.1.1`.
+
+`v0.2.1` restates the same 1.3.0 baseline as an open-ended minimum, so that a
+pinned CLI is not stranded by a later standards version and a later CLI is not
+stranded by the retained one;
+[#69](https://github.com/lutzseverino/repo-canon/issues/69) carries the change.
+It is prepared here and published once the owner authorizes the patch tag.
+`v0.1.0`, `v0.1.1`, and `v0.2.0` keep their original targets, releases, and
+contents.
 
 If publication preparation leaves the selected closure byte-identical to the
 accepted commit, the accepted source identity and evidence remain applicable. If

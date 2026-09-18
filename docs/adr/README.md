@@ -8,3 +8,4 @@ brief records explaining the decision and its reason.
 - [Squash reviewed changes into the default branch](0002-squash-reviewed-changes.md)
 - [Follow the product's release versioning convention](0003-follow-product-release-versioning.md)
 - [Adopt published releases of this source](0004-adopt-published-releases-of-this-source.md)
+- [Require an open-ended minimum CLI version](0005-require-an-open-ended-minimum-cli-version.md)

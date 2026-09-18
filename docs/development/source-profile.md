@@ -2,7 +2,9 @@
 
 `standards.yaml` defines one complete `repo-standards/v2` profile named
 `complete`. The source identity is `repo-canon`, and its compatibility contract
-is the exact public CLI version `requires.repo-standards: "1.3.0"`. The profile
+is the open-ended minimum `requires.repo-standards: ">=1.3.0"`. Public CLI 1.3.0
+is the oldest version this source was validated against; the range gates which
+CLI versions may select it and is never re-validated afterwards. The profile
 does not imply a release or successful adoption.
 
 ## Policy and ownership map
@@ -45,9 +47,9 @@ GitHub CLI 2.57.0 or newer, one unambiguous github.com remote, authenticated
 access, and the required repository permissions before mutation. Marked and
 parse5 are retained resources, so adopters do not install parser packages.
 
-Source maintainers need Node.js 24, npm, Git, and the exact public Repository
-Standards CLI. Install the CLI outside this repository and validate every
-profile without filtering:
+Source maintainers need Node.js 24, npm, Git, and a pinned public Repository
+Standards CLI that satisfies the requirement. Install the CLI outside this
+repository and validate every profile without filtering:
 
 ```sh
 cli_prefix="$(mktemp -d)"
@@ -133,18 +135,28 @@ set, counts, operations, and skills are unchanged. The refreshed
 [Release v0.1.1](release-v0-1-1.md) records the publication.
 
 The `v0.1.1` identity required public CLI 1.2.2. Requiring the compact evidence
-format moves that exact requirement to 1.3.0, which is the only selected byte
-change for `v0.2.0`: `standards.yaml` line 5 reads
-`repo-standards: "1.3.0"`, and the other 114 inputs are byte-and-mode identical
-to the published `v0.1.1` commit `0f313ef435c715889303ec1157f1006bee1fb9f4`.
-Installed public CLI 1.3.0 under Node.js 24.21.0 returned `valid: true`, no
-errors, one `complete` profile, and 52 declarations for those bytes; installed
-public CLI 1.2.2 returns `INCOMPATIBLE_CLI` for them, which is the breaking
-standards change this release announces. The refreshed
-[closure comparison](source-closure.json) records both sides, and
-[Release v0.2.0](release-v0-2-0.md) records the verified publication at commit
-`79ff51198465248df67c6e1d6a66c95e2f964df5`. Local validation and CI therefore
-install `@lutzseverino/repo-standards@1.3.0`.
+format moved that requirement to 1.3.0, the only selected byte change for
+`v0.2.0`: `standards.yaml` line 5 read `repo-standards: "1.3.0"`, and the other
+114 inputs were byte-and-mode identical to the published `v0.1.1` commit
+`0f313ef435c715889303ec1157f1006bee1fb9f4`. Installed public CLI 1.3.0 under
+Node.js 24.21.0 returned `valid: true`, no errors, one `complete` profile, and
+52 declarations for those bytes; installed public CLI 1.2.2 returns
+`INCOMPATIBLE_CLI` for them. [Release v0.2.0](release-v0-2-0.md) records the
+verified publication at commit `79ff51198465248df67c6e1d6a66c95e2f964df5`.
+
+`v0.2.1` keeps 1.3.0 as the validated baseline and states the requirement as
+the open-ended minimum `repo-standards: ">=1.3.0"`. That is again the only
+selected byte change: the other 114 inputs are byte-and-mode identical to the
+published `v0.2.0` commit `79ff51198465248df67c6e1d6a66c95e2f964df5`. Installed
+public CLI 1.3.0 under Node.js 24.21.0 returned `valid: true`, no errors, one
+`complete` profile, and 52 declarations for those bytes. Raising the minimum
+later changes no adopter's conformance or workflow, which is the test in
+[ADR 0003](../adr/0003-follow-product-release-versioning.md), so it is not a
+breaking standards change and a release does not announce it as one. The
+refreshed [closure comparison](source-closure.json) records both sides, and
+[Release v0.2.1](release-v0-2-1.md) records this release. Local validation and
+CI therefore install `@lutzseverino/repo-standards@1.3.0`, the oldest version
+the requirement admits.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no

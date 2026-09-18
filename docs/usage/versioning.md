@@ -18,6 +18,30 @@ Release notes identify breaking requirements and explain their migration.
 Published source versions retain their original contents; corrections receive
 a new version.
 
+## The required CLI version
+
+`standards.yaml` declares `requires.repo-standards` as an open-ended minimum.
+It names the oldest public Repository Standards CLI this source was validated
+against; the [source profile](../development/source-profile.md) records the
+current value, and the
+[requirement decision](../adr/0005-require-an-open-ended-minimum-cli-version.md)
+records why the form was chosen. Repository Standards evaluates that
+requirement only when an adopter selects a standards version, and never
+re-validates it afterwards. An
+exact or upper-bounded requirement would strand established adopters in both
+directions: their pinned CLI could not select the next standards version, and a
+newer CLI could not update the standards version they retain. The trade-off of
+an open-ended minimum is that an adopter can run a CLI this source was never
+tested against; the `repo-standards/v2` format version carries that
+compatibility promise instead.
+
+Raising the minimum is a compatible change committed as a `chore` and published
+as a patch release, not a breaking standards change. It leaves every adopting
+repository conforming, its workflow unchanged, and its files untouched, which is
+the test above; an adopter that does not update its CLI keeps the standards
+version it already selected. Release notes still name the new minimum and why it
+moved.
+
 ## Before 1.0
 
 Versions beginning with `0` indicate initial development. Repo Canon uses the
@@ -26,6 +50,7 @@ following bump convention during this period:
 | Change | Example next version |
 | --- | --- |
 | Compatible fix | `0.1.0` to `0.1.1` |
+| Raised required CLI version | `0.1.0` to `0.1.1` |
 | Compatible feature | `0.1.0` to `0.2.0` |
 | Breaking standards change | `0.1.0` to `0.2.0` |
 
