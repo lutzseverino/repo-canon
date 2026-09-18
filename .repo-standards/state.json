@@ -1,0 +1,1542 @@
+{
+  "format": "repo-standards/state/v5",
+  "history": [],
+  "observations": [
+    {
+      "phase": "fixes",
+      "scope": {
+        "github-repository-configuration": {
+          "paths": [],
+          "directories": []
+        }
+      },
+      "operation": {
+        "phase": "fixes",
+        "declaration": "github-repository-configuration",
+        "id": "canonical-labels"
+      },
+      "operationIndex": 0,
+      "before": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
+      "after": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
+      "changes": {},
+      "boundaryChanges": {},
+      "violations": []
+    },
+    {
+      "phase": "fixes",
+      "scope": {
+        "github-repository-configuration": {
+          "paths": [],
+          "directories": []
+        }
+      },
+      "operation": {
+        "phase": "fixes",
+        "declaration": "github-repository-configuration",
+        "id": "pull-request-integration"
+      },
+      "operationIndex": 1,
+      "before": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
+      "after": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
+      "changes": {},
+      "boundaryChanges": {},
+      "violations": []
+    },
+    {
+      "phase": "agent",
+      "scope": {
+        "documentation": {
+          "paths": [
+            "CONTEXT.md",
+            "authoring-notes.md",
+            "design-review.md",
+            "docs/README.md",
+            "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
+            "docs/adr/0002-squash-reviewed-changes.md",
+            "docs/adr/0003-follow-product-release-versioning.md",
+            "docs/adr/0004-adopt-published-releases-of-this-source.md",
+            "docs/adr/README.md",
+            "docs/agents/project.md",
+            "docs/development/README.md",
+            "docs/development/adoption-compatibility.md",
+            "docs/development/adoption-evidence.md",
+            "docs/development/completion-record.md",
+            "docs/development/documentation-check.md",
+            "docs/development/engineering-skill-architecture-visual-inspection.md",
+            "docs/development/engineering-skill-exercises.md",
+            "docs/development/engineering-skill-research-result.md",
+            "docs/development/engineering-skill-runtime-transcript.md",
+            "docs/development/engineering-skill-session-finals/README.md",
+            "docs/development/engineering-skill-session-finals/ask-matt.md",
+            "docs/development/engineering-skill-session-finals/code-review.md",
+            "docs/development/engineering-skill-session-finals/codebase-design.md",
+            "docs/development/engineering-skill-session-finals/diagnosing-bugs-completion.md",
+            "docs/development/engineering-skill-session-finals/diagnosing-bugs-initial.md",
+            "docs/development/engineering-skill-session-finals/domain-modeling.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-blocked.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-completion.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture.md",
+            "docs/development/engineering-skill-session-finals/research.md",
+            "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-completion.md",
+            "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-initial.md",
+            "docs/development/engineering-skill-session-finals/tdd-completion.md",
+            "docs/development/engineering-skill-session-finals/tdd-initial.md",
+            "docs/development/first-release.md",
+            "docs/development/github-label-setup.md",
+            "docs/development/github-pr-integration-setup.md",
+            "docs/development/issue-contract-validation.md",
+            "docs/development/planning-skill-artifacts/README.md",
+            "docs/development/planning-skill-artifacts/adoption-inspection.md",
+            "docs/development/planning-skill-artifacts/delivery-schedule-cancellation-verdict.md",
+            "docs/development/planning-skill-artifacts/intake-batch-spec.md",
+            "docs/development/planning-skill-artifacts/intake-batch-ticket-01.md",
+            "docs/development/planning-skill-artifacts/intake-batch-ticket-02.md",
+            "docs/development/planning-skill-artifacts/managed-skill-update-boundary.md",
+            "docs/development/planning-skill-artifacts/receipt-export-triage.md",
+            "docs/development/planning-skill-artifacts/retry-map.md",
+            "docs/development/planning-skill-artifacts/retry-window-ticket.md",
+            "docs/development/planning-skill-exercises.md",
+            "docs/development/planning-skill-session-finals/README.md",
+            "docs/development/planning-skill-session-finals/adoption-preparation.md",
+            "docs/development/planning-skill-session-finals/grill-completion.md",
+            "docs/development/planning-skill-session-finals/grill-initial.md",
+            "docs/development/planning-skill-session-finals/implement-review-blocked.md",
+            "docs/development/planning-skill-session-finals/implement-review-completion.md",
+            "docs/development/planning-skill-session-finals/implement.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update-correction.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update-portable.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update.md",
+            "docs/development/planning-skill-session-finals/prototype.md",
+            "docs/development/planning-skill-session-finals/setup.md",
+            "docs/development/planning-skill-session-finals/to-spec.md",
+            "docs/development/planning-skill-session-finals/to-tickets.md",
+            "docs/development/planning-skill-session-finals/triage-invalidation.md",
+            "docs/development/planning-skill-session-finals/triage-ready.md",
+            "docs/development/planning-skill-session-finals/triage-renewal.md",
+            "docs/development/planning-skill-session-finals/wayfinder.md",
+            "docs/development/planning-skill-session-finals/wizard.md",
+            "docs/development/pr-metadata-validation.md",
+            "docs/development/productivity-skill-exercises.md",
+            "docs/development/productivity-skill-runtime-transcript.md",
+            "docs/development/productivity-skill-runtime/README.md",
+            "docs/development/productivity-skill-runtime/event-retention-questionnaire.md",
+            "docs/development/productivity-skill-runtime/handoff.md",
+            "docs/development/productivity-skill-runtime/teach/GLOSSARY.md",
+            "docs/development/productivity-skill-runtime/teach/MISSION.md",
+            "docs/development/productivity-skill-runtime/teach/NOTES.md",
+            "docs/development/productivity-skill-runtime/teach/README.md",
+            "docs/development/productivity-skill-runtime/teach/RESOURCES.md",
+            "docs/development/productivity-skill-runtime/teach/assets/README.md",
+            "docs/development/productivity-skill-runtime/teach/learning-records/0001-release-ancestry-guard.md",
+            "docs/development/productivity-skill-runtime/teach/learning-records/README.md",
+            "docs/development/productivity-skill-runtime/teach/lessons/README.md",
+            "docs/development/productivity-skill-runtime/teach/reference/README.md",
+            "docs/development/productivity-skill-runtime/writing-for-agents-project.md",
+            "docs/development/productivity-skill-session-finals/README.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-3.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-4.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-5.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-6.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-3.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-4.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-5.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-handoff-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-feedback.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-real-git-verification.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-review-correction.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-safe-failure-correction.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-before.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-change-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-final.md",
+            "docs/development/real-adoption.md",
+            "docs/development/release-v0-1-1.md",
+            "docs/development/release-v0-2-0.md",
+            "docs/development/repository-readme-check.md",
+            "docs/development/scope-capability-specification.md",
+            "docs/development/shared-material-review.md",
+            "docs/development/source-profile.md",
+            "docs/development/upstream-compatibility.md",
+            "docs/usage/README.md",
+            "docs/usage/adopt-repo-canon.md",
+            "docs/usage/prepare-agent-guidance.md",
+            "docs/usage/versioning.md"
+          ],
+          "directories": []
+        },
+        "github-repository-configuration": {
+          "paths": [],
+          "directories": []
+        },
+        "project-readmes": {
+          "paths": [],
+          "directories": []
+        },
+        "repository-readme": {
+          "paths": [
+            "README.md"
+          ],
+          "directories": []
+        }
+      },
+      "before": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
+      "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "changes": {
+        "README.md": {
+          "before": {
+            "type": "file",
+            "sha256": "f57b61986f0be9db3d5839b1e7c1675cb0f2d2533ba2d468f9ccd87a5d622ce5",
+            "executable": false
+          },
+          "after": {
+            "type": "file",
+            "sha256": "8c31187d70410b8bc822b50ee56951c3bf3e9ad3eda15c4eae459c93380b49de",
+            "executable": false
+          }
+        }
+      },
+      "boundaryChanges": {},
+      "violations": []
+    },
+    {
+      "phase": "agent",
+      "scope": {
+        "documentation": {
+          "paths": [
+            "CONTEXT.md",
+            "authoring-notes.md",
+            "design-review.md",
+            "docs/README.md",
+            "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
+            "docs/adr/0002-squash-reviewed-changes.md",
+            "docs/adr/0003-follow-product-release-versioning.md",
+            "docs/adr/0004-adopt-published-releases-of-this-source.md",
+            "docs/adr/README.md",
+            "docs/agents/project.md",
+            "docs/development/README.md",
+            "docs/development/adoption-compatibility.md",
+            "docs/development/adoption-evidence.md",
+            "docs/development/completion-record.md",
+            "docs/development/documentation-check.md",
+            "docs/development/engineering-skill-architecture-visual-inspection.md",
+            "docs/development/engineering-skill-exercises.md",
+            "docs/development/engineering-skill-research-result.md",
+            "docs/development/engineering-skill-runtime-transcript.md",
+            "docs/development/engineering-skill-session-finals/README.md",
+            "docs/development/engineering-skill-session-finals/ask-matt.md",
+            "docs/development/engineering-skill-session-finals/code-review.md",
+            "docs/development/engineering-skill-session-finals/codebase-design.md",
+            "docs/development/engineering-skill-session-finals/diagnosing-bugs-completion.md",
+            "docs/development/engineering-skill-session-finals/diagnosing-bugs-initial.md",
+            "docs/development/engineering-skill-session-finals/domain-modeling.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-blocked.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-completion.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture.md",
+            "docs/development/engineering-skill-session-finals/research.md",
+            "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-completion.md",
+            "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-initial.md",
+            "docs/development/engineering-skill-session-finals/tdd-completion.md",
+            "docs/development/engineering-skill-session-finals/tdd-initial.md",
+            "docs/development/first-release.md",
+            "docs/development/github-label-setup.md",
+            "docs/development/github-pr-integration-setup.md",
+            "docs/development/issue-contract-validation.md",
+            "docs/development/planning-skill-artifacts/README.md",
+            "docs/development/planning-skill-artifacts/adoption-inspection.md",
+            "docs/development/planning-skill-artifacts/delivery-schedule-cancellation-verdict.md",
+            "docs/development/planning-skill-artifacts/intake-batch-spec.md",
+            "docs/development/planning-skill-artifacts/intake-batch-ticket-01.md",
+            "docs/development/planning-skill-artifacts/intake-batch-ticket-02.md",
+            "docs/development/planning-skill-artifacts/managed-skill-update-boundary.md",
+            "docs/development/planning-skill-artifacts/receipt-export-triage.md",
+            "docs/development/planning-skill-artifacts/retry-map.md",
+            "docs/development/planning-skill-artifacts/retry-window-ticket.md",
+            "docs/development/planning-skill-exercises.md",
+            "docs/development/planning-skill-session-finals/README.md",
+            "docs/development/planning-skill-session-finals/adoption-preparation.md",
+            "docs/development/planning-skill-session-finals/grill-completion.md",
+            "docs/development/planning-skill-session-finals/grill-initial.md",
+            "docs/development/planning-skill-session-finals/implement-review-blocked.md",
+            "docs/development/planning-skill-session-finals/implement-review-completion.md",
+            "docs/development/planning-skill-session-finals/implement.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update-correction.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update-portable.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update.md",
+            "docs/development/planning-skill-session-finals/prototype.md",
+            "docs/development/planning-skill-session-finals/setup.md",
+            "docs/development/planning-skill-session-finals/to-spec.md",
+            "docs/development/planning-skill-session-finals/to-tickets.md",
+            "docs/development/planning-skill-session-finals/triage-invalidation.md",
+            "docs/development/planning-skill-session-finals/triage-ready.md",
+            "docs/development/planning-skill-session-finals/triage-renewal.md",
+            "docs/development/planning-skill-session-finals/wayfinder.md",
+            "docs/development/planning-skill-session-finals/wizard.md",
+            "docs/development/pr-metadata-validation.md",
+            "docs/development/productivity-skill-exercises.md",
+            "docs/development/productivity-skill-runtime-transcript.md",
+            "docs/development/productivity-skill-runtime/README.md",
+            "docs/development/productivity-skill-runtime/event-retention-questionnaire.md",
+            "docs/development/productivity-skill-runtime/handoff.md",
+            "docs/development/productivity-skill-runtime/teach/GLOSSARY.md",
+            "docs/development/productivity-skill-runtime/teach/MISSION.md",
+            "docs/development/productivity-skill-runtime/teach/NOTES.md",
+            "docs/development/productivity-skill-runtime/teach/README.md",
+            "docs/development/productivity-skill-runtime/teach/RESOURCES.md",
+            "docs/development/productivity-skill-runtime/teach/assets/README.md",
+            "docs/development/productivity-skill-runtime/teach/learning-records/0001-release-ancestry-guard.md",
+            "docs/development/productivity-skill-runtime/teach/learning-records/README.md",
+            "docs/development/productivity-skill-runtime/teach/lessons/README.md",
+            "docs/development/productivity-skill-runtime/teach/reference/README.md",
+            "docs/development/productivity-skill-runtime/writing-for-agents-project.md",
+            "docs/development/productivity-skill-session-finals/README.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-3.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-4.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-5.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-6.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-3.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-4.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-5.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-handoff-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-feedback.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-real-git-verification.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-review-correction.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-safe-failure-correction.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-before.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-change-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-final.md",
+            "docs/development/real-adoption.md",
+            "docs/development/release-v0-1-1.md",
+            "docs/development/release-v0-2-0.md",
+            "docs/development/repository-readme-check.md",
+            "docs/development/scope-capability-specification.md",
+            "docs/development/shared-material-review.md",
+            "docs/development/source-profile.md",
+            "docs/development/upstream-compatibility.md",
+            "docs/usage/README.md",
+            "docs/usage/adopt-repo-canon.md",
+            "docs/usage/prepare-agent-guidance.md",
+            "docs/usage/versioning.md"
+          ],
+          "directories": []
+        },
+        "github-repository-configuration": {
+          "paths": [],
+          "directories": []
+        },
+        "project-readmes": {
+          "paths": [],
+          "directories": []
+        },
+        "repository-readme": {
+          "paths": [
+            "README.md"
+          ],
+          "directories": []
+        }
+      },
+      "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "changes": {},
+      "boundaryChanges": {},
+      "violations": []
+    },
+    {
+      "phase": "checks",
+      "scope": {
+        "documentation": {
+          "paths": [
+            "CONTEXT.md",
+            "authoring-notes.md",
+            "design-review.md",
+            "docs/README.md",
+            "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
+            "docs/adr/0002-squash-reviewed-changes.md",
+            "docs/adr/0003-follow-product-release-versioning.md",
+            "docs/adr/0004-adopt-published-releases-of-this-source.md",
+            "docs/adr/README.md",
+            "docs/agents/project.md",
+            "docs/development/README.md",
+            "docs/development/adoption-compatibility.md",
+            "docs/development/adoption-evidence.md",
+            "docs/development/completion-record.md",
+            "docs/development/documentation-check.md",
+            "docs/development/engineering-skill-architecture-visual-inspection.md",
+            "docs/development/engineering-skill-exercises.md",
+            "docs/development/engineering-skill-research-result.md",
+            "docs/development/engineering-skill-runtime-transcript.md",
+            "docs/development/engineering-skill-session-finals/README.md",
+            "docs/development/engineering-skill-session-finals/ask-matt.md",
+            "docs/development/engineering-skill-session-finals/code-review.md",
+            "docs/development/engineering-skill-session-finals/codebase-design.md",
+            "docs/development/engineering-skill-session-finals/diagnosing-bugs-completion.md",
+            "docs/development/engineering-skill-session-finals/diagnosing-bugs-initial.md",
+            "docs/development/engineering-skill-session-finals/domain-modeling.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-blocked.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-completion.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture.md",
+            "docs/development/engineering-skill-session-finals/research.md",
+            "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-completion.md",
+            "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-initial.md",
+            "docs/development/engineering-skill-session-finals/tdd-completion.md",
+            "docs/development/engineering-skill-session-finals/tdd-initial.md",
+            "docs/development/first-release.md",
+            "docs/development/github-label-setup.md",
+            "docs/development/github-pr-integration-setup.md",
+            "docs/development/issue-contract-validation.md",
+            "docs/development/planning-skill-artifacts/README.md",
+            "docs/development/planning-skill-artifacts/adoption-inspection.md",
+            "docs/development/planning-skill-artifacts/delivery-schedule-cancellation-verdict.md",
+            "docs/development/planning-skill-artifacts/intake-batch-spec.md",
+            "docs/development/planning-skill-artifacts/intake-batch-ticket-01.md",
+            "docs/development/planning-skill-artifacts/intake-batch-ticket-02.md",
+            "docs/development/planning-skill-artifacts/managed-skill-update-boundary.md",
+            "docs/development/planning-skill-artifacts/receipt-export-triage.md",
+            "docs/development/planning-skill-artifacts/retry-map.md",
+            "docs/development/planning-skill-artifacts/retry-window-ticket.md",
+            "docs/development/planning-skill-exercises.md",
+            "docs/development/planning-skill-session-finals/README.md",
+            "docs/development/planning-skill-session-finals/adoption-preparation.md",
+            "docs/development/planning-skill-session-finals/grill-completion.md",
+            "docs/development/planning-skill-session-finals/grill-initial.md",
+            "docs/development/planning-skill-session-finals/implement-review-blocked.md",
+            "docs/development/planning-skill-session-finals/implement-review-completion.md",
+            "docs/development/planning-skill-session-finals/implement.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update-correction.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update-portable.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update.md",
+            "docs/development/planning-skill-session-finals/prototype.md",
+            "docs/development/planning-skill-session-finals/setup.md",
+            "docs/development/planning-skill-session-finals/to-spec.md",
+            "docs/development/planning-skill-session-finals/to-tickets.md",
+            "docs/development/planning-skill-session-finals/triage-invalidation.md",
+            "docs/development/planning-skill-session-finals/triage-ready.md",
+            "docs/development/planning-skill-session-finals/triage-renewal.md",
+            "docs/development/planning-skill-session-finals/wayfinder.md",
+            "docs/development/planning-skill-session-finals/wizard.md",
+            "docs/development/pr-metadata-validation.md",
+            "docs/development/productivity-skill-exercises.md",
+            "docs/development/productivity-skill-runtime-transcript.md",
+            "docs/development/productivity-skill-runtime/README.md",
+            "docs/development/productivity-skill-runtime/event-retention-questionnaire.md",
+            "docs/development/productivity-skill-runtime/handoff.md",
+            "docs/development/productivity-skill-runtime/teach/GLOSSARY.md",
+            "docs/development/productivity-skill-runtime/teach/MISSION.md",
+            "docs/development/productivity-skill-runtime/teach/NOTES.md",
+            "docs/development/productivity-skill-runtime/teach/README.md",
+            "docs/development/productivity-skill-runtime/teach/RESOURCES.md",
+            "docs/development/productivity-skill-runtime/teach/assets/README.md",
+            "docs/development/productivity-skill-runtime/teach/learning-records/0001-release-ancestry-guard.md",
+            "docs/development/productivity-skill-runtime/teach/learning-records/README.md",
+            "docs/development/productivity-skill-runtime/teach/lessons/README.md",
+            "docs/development/productivity-skill-runtime/teach/reference/README.md",
+            "docs/development/productivity-skill-runtime/writing-for-agents-project.md",
+            "docs/development/productivity-skill-session-finals/README.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-3.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-4.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-5.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-6.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-3.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-4.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-5.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-handoff-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-feedback.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-real-git-verification.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-review-correction.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-safe-failure-correction.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-before.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-change-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-final.md",
+            "docs/development/real-adoption.md",
+            "docs/development/release-v0-1-1.md",
+            "docs/development/release-v0-2-0.md",
+            "docs/development/repository-readme-check.md",
+            "docs/development/scope-capability-specification.md",
+            "docs/development/shared-material-review.md",
+            "docs/development/source-profile.md",
+            "docs/development/upstream-compatibility.md",
+            "docs/usage/README.md",
+            "docs/usage/adopt-repo-canon.md",
+            "docs/usage/prepare-agent-guidance.md",
+            "docs/usage/versioning.md"
+          ],
+          "directories": []
+        }
+      },
+      "operation": {
+        "phase": "checks",
+        "declaration": "documentation",
+        "id": "documentation-navigation"
+      },
+      "operationIndex": 2,
+      "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "changes": {},
+      "boundaryChanges": {},
+      "violations": []
+    },
+    {
+      "phase": "checks",
+      "scope": {
+        "project-readmes": {
+          "paths": [],
+          "directories": []
+        }
+      },
+      "operation": {
+        "phase": "checks",
+        "declaration": "project-readmes",
+        "id": "project-readme-structure"
+      },
+      "operationIndex": 3,
+      "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "changes": {},
+      "boundaryChanges": {},
+      "violations": []
+    },
+    {
+      "phase": "checks",
+      "scope": {
+        "repository-readme": {
+          "paths": [
+            "README.md"
+          ],
+          "directories": []
+        }
+      },
+      "operation": {
+        "phase": "checks",
+        "declaration": "repository-readme",
+        "id": "repository-readme-structure"
+      },
+      "operationIndex": 4,
+      "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "changes": {},
+      "boundaryChanges": {},
+      "violations": []
+    },
+    {
+      "phase": "agent",
+      "scope": {
+        "documentation": {
+          "paths": [
+            "CONTEXT.md",
+            "authoring-notes.md",
+            "design-review.md",
+            "docs/README.md",
+            "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
+            "docs/adr/0002-squash-reviewed-changes.md",
+            "docs/adr/0003-follow-product-release-versioning.md",
+            "docs/adr/0004-adopt-published-releases-of-this-source.md",
+            "docs/adr/README.md",
+            "docs/agents/project.md",
+            "docs/development/README.md",
+            "docs/development/adoption-compatibility.md",
+            "docs/development/adoption-evidence.md",
+            "docs/development/completion-record.md",
+            "docs/development/documentation-check.md",
+            "docs/development/engineering-skill-architecture-visual-inspection.md",
+            "docs/development/engineering-skill-exercises.md",
+            "docs/development/engineering-skill-research-result.md",
+            "docs/development/engineering-skill-runtime-transcript.md",
+            "docs/development/engineering-skill-session-finals/README.md",
+            "docs/development/engineering-skill-session-finals/ask-matt.md",
+            "docs/development/engineering-skill-session-finals/code-review.md",
+            "docs/development/engineering-skill-session-finals/codebase-design.md",
+            "docs/development/engineering-skill-session-finals/diagnosing-bugs-completion.md",
+            "docs/development/engineering-skill-session-finals/diagnosing-bugs-initial.md",
+            "docs/development/engineering-skill-session-finals/domain-modeling.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-blocked.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-completion.md",
+            "docs/development/engineering-skill-session-finals/improve-codebase-architecture.md",
+            "docs/development/engineering-skill-session-finals/research.md",
+            "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-completion.md",
+            "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-initial.md",
+            "docs/development/engineering-skill-session-finals/tdd-completion.md",
+            "docs/development/engineering-skill-session-finals/tdd-initial.md",
+            "docs/development/first-release.md",
+            "docs/development/github-label-setup.md",
+            "docs/development/github-pr-integration-setup.md",
+            "docs/development/issue-contract-validation.md",
+            "docs/development/planning-skill-artifacts/README.md",
+            "docs/development/planning-skill-artifacts/adoption-inspection.md",
+            "docs/development/planning-skill-artifacts/delivery-schedule-cancellation-verdict.md",
+            "docs/development/planning-skill-artifacts/intake-batch-spec.md",
+            "docs/development/planning-skill-artifacts/intake-batch-ticket-01.md",
+            "docs/development/planning-skill-artifacts/intake-batch-ticket-02.md",
+            "docs/development/planning-skill-artifacts/managed-skill-update-boundary.md",
+            "docs/development/planning-skill-artifacts/receipt-export-triage.md",
+            "docs/development/planning-skill-artifacts/retry-map.md",
+            "docs/development/planning-skill-artifacts/retry-window-ticket.md",
+            "docs/development/planning-skill-exercises.md",
+            "docs/development/planning-skill-session-finals/README.md",
+            "docs/development/planning-skill-session-finals/adoption-preparation.md",
+            "docs/development/planning-skill-session-finals/grill-completion.md",
+            "docs/development/planning-skill-session-finals/grill-initial.md",
+            "docs/development/planning-skill-session-finals/implement-review-blocked.md",
+            "docs/development/planning-skill-session-finals/implement-review-completion.md",
+            "docs/development/planning-skill-session-finals/implement.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update-correction.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update-portable.md",
+            "docs/development/planning-skill-session-finals/managed-skill-update.md",
+            "docs/development/planning-skill-session-finals/prototype.md",
+            "docs/development/planning-skill-session-finals/setup.md",
+            "docs/development/planning-skill-session-finals/to-spec.md",
+            "docs/development/planning-skill-session-finals/to-tickets.md",
+            "docs/development/planning-skill-session-finals/triage-invalidation.md",
+            "docs/development/planning-skill-session-finals/triage-ready.md",
+            "docs/development/planning-skill-session-finals/triage-renewal.md",
+            "docs/development/planning-skill-session-finals/wayfinder.md",
+            "docs/development/planning-skill-session-finals/wizard.md",
+            "docs/development/pr-metadata-validation.md",
+            "docs/development/productivity-skill-exercises.md",
+            "docs/development/productivity-skill-runtime-transcript.md",
+            "docs/development/productivity-skill-runtime/README.md",
+            "docs/development/productivity-skill-runtime/event-retention-questionnaire.md",
+            "docs/development/productivity-skill-runtime/handoff.md",
+            "docs/development/productivity-skill-runtime/teach/GLOSSARY.md",
+            "docs/development/productivity-skill-runtime/teach/MISSION.md",
+            "docs/development/productivity-skill-runtime/teach/NOTES.md",
+            "docs/development/productivity-skill-runtime/teach/README.md",
+            "docs/development/productivity-skill-runtime/teach/RESOURCES.md",
+            "docs/development/productivity-skill-runtime/teach/assets/README.md",
+            "docs/development/productivity-skill-runtime/teach/learning-records/0001-release-ancestry-guard.md",
+            "docs/development/productivity-skill-runtime/teach/learning-records/README.md",
+            "docs/development/productivity-skill-runtime/teach/lessons/README.md",
+            "docs/development/productivity-skill-runtime/teach/reference/README.md",
+            "docs/development/productivity-skill-runtime/writing-for-agents-project.md",
+            "docs/development/productivity-skill-session-finals/README.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-3.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-4.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-5.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-6.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-3.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-4.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-5.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-handoff-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-feedback.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-real-git-verification.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-review-correction.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-1.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-2.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-teach-safe-failure-correction.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-before.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-change-final.md",
+            "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-final.md",
+            "docs/development/real-adoption.md",
+            "docs/development/release-v0-1-1.md",
+            "docs/development/release-v0-2-0.md",
+            "docs/development/repository-readme-check.md",
+            "docs/development/scope-capability-specification.md",
+            "docs/development/shared-material-review.md",
+            "docs/development/source-profile.md",
+            "docs/development/upstream-compatibility.md",
+            "docs/usage/README.md",
+            "docs/usage/adopt-repo-canon.md",
+            "docs/usage/prepare-agent-guidance.md",
+            "docs/usage/versioning.md"
+          ],
+          "directories": []
+        },
+        "github-repository-configuration": {
+          "paths": [],
+          "directories": []
+        },
+        "project-readmes": {
+          "paths": [],
+          "directories": []
+        },
+        "repository-readme": {
+          "paths": [
+            "README.md"
+          ],
+          "directories": []
+        }
+      },
+      "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
+      "changes": {},
+      "boundaryChanges": {},
+      "violations": []
+    }
+  ],
+  "operations": [
+    {
+      "operation": {
+        "declaration": "github-repository-configuration",
+        "phase": "fixes",
+        "id": "canonical-labels"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v1",
+        "status": "changed",
+        "message": "GitHub label setup changed lutzseverino/repo-canon: updated 3 labels. Readback confirmed all 12 canonical labels; unrelated labels were preserved."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/0.stdout",
+      "stderr": ".repo-standards/local/operations/0.stderr"
+    },
+    {
+      "operation": {
+        "declaration": "github-repository-configuration",
+        "phase": "fixes",
+        "id": "pull-request-integration"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v1",
+        "status": "changed",
+        "message": "GitHub PR integration setup changed lutzseverino/repo-canon: created required-check ruleset. Final readback confirmed PR metadata, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/1.stdout",
+      "stderr": ".repo-standards/local/operations/1.stderr"
+    },
+    {
+      "operation": {
+        "declaration": "documentation",
+        "phase": "checks",
+        "id": "documentation-navigation"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v1",
+        "status": "passed",
+        "message": "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/2.stdout",
+      "stderr": ".repo-standards/local/operations/2.stderr"
+    },
+    {
+      "operation": {
+        "declaration": "project-readmes",
+        "phase": "checks",
+        "id": "project-readme-structure"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v1",
+        "status": "passed",
+        "message": "Project README structure is valid for 0 concrete targets; purpose, commands, configuration, and documentation still require maintainer or agent review."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/3.stdout",
+      "stderr": ".repo-standards/local/operations/3.stderr"
+    },
+    {
+      "operation": {
+        "declaration": "repository-readme",
+        "phase": "checks",
+        "id": "repository-readme-structure"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v1",
+        "status": "passed",
+        "message": "Repository README structure is valid; factual content still requires maintainer or agent review."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/4.stdout",
+      "stderr": ".repo-standards/local/operations/4.stderr"
+    }
+  ],
+  "retryHistory": [],
+  "lastComplete": {
+    "run": "baaed5f0-ce1d-4e35-87fa-59c246269b00",
+    "inspection": "sha256:ead33120407cce9fabf34f821f2517b1be1f0886a3e3a408fd99876ef2c50172",
+    "completedAt": "2026-09-18T13:46:19.466Z",
+    "head": "5a03353d95f327b67673e6285c991a4a244b179e"
+  },
+  "baselines": {
+    "docs/agents/README.md": {
+      "sha256": "1534d7dacd63d91988a97b2e2928a683ddbf5177a663b75ed438e83d3c5c4836",
+      "executable": false
+    },
+    "AGENTS.md": {
+      "sha256": "a499fe96728a4cea5f3a802817533f95d7976b18b5500d9a338f70eaba3c3d36",
+      "executable": false
+    },
+    ".github/ISSUE_TEMPLATE/bug-report.yml": {
+      "sha256": "5fca3bab67073fdb827cd5eb88d9c413ac1e1df2891a85c7938420dcb1e3dfed",
+      "executable": false
+    },
+    "CONTRIBUTING.md": {
+      "sha256": "480248d917dbdd2434bbf50b912431f30c0cae8040410ec9c2e9dca2fd02864d",
+      "executable": false
+    },
+    "docs/agents/domain.md": {
+      "sha256": "390126b01bf22d1123f1284b58f517245b99a78add65744ced714d4210b707e1",
+      "executable": false
+    },
+    ".github/ISSUE_TEMPLATE/feature-request.yml": {
+      "sha256": "d3df4f5c27dd7b7a22d0baec1a52a1dc3301c002549f8634392a3abd26566505",
+      "executable": false
+    },
+    ".github/ISSUE_TEMPLATE/implementation-ticket.yml": {
+      "sha256": "d452da0ad9e39173f681b699d3848a00ab3466b55be508cc3f36d7731083bff6",
+      "executable": false
+    },
+    "scripts/validate-issue-contract.mjs": {
+      "sha256": "725d76e0e5d1cc42bf9a115753184291bcab9a836781e0bdb418ef08e967ca35",
+      "executable": false
+    },
+    ".github/workflows/issue-contracts.yml": {
+      "sha256": "04049fba29d7d328031eb57bfed6bb23cc50fb4df52a4ea10255186b3e594102",
+      "executable": false
+    },
+    "docs/agents/issue-tracker.md": {
+      "sha256": "271efd20f6315874241ae11d67ea0a9eb4766dd2e9c8c77cd4ecb8fbf66b6da7",
+      "executable": false
+    },
+    "vendor/marked/LICENSE": {
+      "sha256": "8e3a3f82f59a60958f56ca08f445647c32a4733dc7ca6c2c46f6eb898471ab9c",
+      "executable": false
+    },
+    "vendor/marked/marked.esm.js": {
+      "sha256": "2e70fea3ee49f98ab67ee395e5af51cc6bee4fafed15910da9ccb7f650df8014",
+      "executable": false
+    },
+    "vendor/marked/README.md": {
+      "sha256": "c1f9e95c649e297b482a842c72814efa04b0277f1a3a3c181e637d949b5bedc7",
+      "executable": false
+    },
+    "vendor/parse5/LICENSE.entities": {
+      "sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164",
+      "executable": false
+    },
+    "vendor/parse5/LICENSE.parse5": {
+      "sha256": "8c535800331e1e4439835555b3f9edc7fe9dee2fab0d8bbbd5a982e8b8343d4d",
+      "executable": false
+    },
+    "vendor/parse5/parse5.esm.js": {
+      "sha256": "bdf861eb0bce411afe5fcc312c770c3fe18dac9b5296771d40217d52a6ae7a93",
+      "executable": false
+    },
+    "vendor/parse5/README.md": {
+      "sha256": "8f285afdb9d5eca93648d2ffbea58ea0cea94485f18c3eec6f5825ef1e0446bf",
+      "executable": false
+    },
+    ".github/scripts/validate-pr-metadata.mjs": {
+      "sha256": "7217d4dbb66a2b2afea67c2d15bf6c83c539b7fa03b8c5d6c68262f002900f7d",
+      "executable": false
+    },
+    ".github/workflows/pr-metadata.yml": {
+      "sha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82",
+      "executable": false
+    },
+    ".github/PULL_REQUEST_TEMPLATE.md": {
+      "sha256": "3da5d642dd01ec874d4a855d608c21f42d082fcd8a05bf66b11e823ded57f1ae",
+      "executable": false
+    },
+    "operations/lib/rendered-markdown.mjs": {
+      "sha256": "c9c1f2586caf75d467fcfdd862388707816b99f7765d781b1b181306e06529ac",
+      "executable": false
+    },
+    ".agents/skills/ask-matt/PHASE-BOUNDARIES.md": {
+      "sha256": "a8aa20158609ef39e2b308b6ba0660c91066838d07a867202e63a7744a88a3ed",
+      "executable": false
+    },
+    ".agents/skills/ask-matt/SKILL.md": {
+      "sha256": "b25d86fb36b1d294eeead5d7db529f86135f9671f2afcd607579a63bb2213769",
+      "executable": false
+    },
+    ".agents/skills/ask-matt/agents/openai.yaml": {
+      "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c",
+      "executable": false
+    },
+    ".agents/skills/code-review/SKILL.md": {
+      "sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50",
+      "executable": false
+    },
+    ".agents/skills/code-review/agents/openai.yaml": {
+      "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352",
+      "executable": false
+    },
+    ".agents/skills/codebase-design/DEEPENING.md": {
+      "sha256": "f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1",
+      "executable": false
+    },
+    ".agents/skills/codebase-design/DESIGN-IT-TWICE.md": {
+      "sha256": "8e740bf98446dbd4dfdc132ac4346d9a7eedaf93de6a495889171cf7f99f16bd",
+      "executable": false
+    },
+    ".agents/skills/codebase-design/SKILL.md": {
+      "sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+      "executable": false
+    },
+    ".agents/skills/codebase-design/agents/openai.yaml": {
+      "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
+      "executable": false
+    },
+    ".agents/skills/diagnosing-bugs/SKILL.md": {
+      "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84",
+      "executable": false
+    },
+    ".agents/skills/diagnosing-bugs/agents/openai.yaml": {
+      "sha256": "3e430dbe4334a87597488c060cb3dc3786bb00c9182877d6f5ec41f62490e90b",
+      "executable": false
+    },
+    ".agents/skills/diagnosing-bugs/scripts/hitl-loop.template.sh": {
+      "sha256": "35103539fc36873eea36074769ad454f9379d6fc8b2dc0e26ce987fd3bfe5503",
+      "executable": false
+    },
+    ".agents/skills/domain-modeling/ADR-FORMAT.md": {
+      "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0",
+      "executable": false
+    },
+    ".agents/skills/domain-modeling/CONTEXT-FORMAT.md": {
+      "sha256": "17ab16ce783e4d2801ee52fd9acdf550cbf44de65ae76797a93943bbedf22a13",
+      "executable": false
+    },
+    ".agents/skills/domain-modeling/SKILL.md": {
+      "sha256": "327a2b50620e2fd70abc6893cd6965e76b20f8d0adb0dc2c8d5eb3845efb643e",
+      "executable": false
+    },
+    ".agents/skills/domain-modeling/agents/openai.yaml": {
+      "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b",
+      "executable": false
+    },
+    ".agents/skills/grill-me/SKILL.md": {
+      "sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637",
+      "executable": false
+    },
+    ".agents/skills/grill-me/agents/openai.yaml": {
+      "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b",
+      "executable": false
+    },
+    ".agents/skills/grill-with-docs/SKILL.md": {
+      "sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
+      "executable": false
+    },
+    ".agents/skills/grill-with-docs/agents/openai.yaml": {
+      "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9",
+      "executable": false
+    },
+    ".agents/skills/grilling/SKILL.md": {
+      "sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2",
+      "executable": false
+    },
+    ".agents/skills/grilling/agents/openai.yaml": {
+      "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b",
+      "executable": false
+    },
+    ".agents/skills/handoff/SKILL.md": {
+      "sha256": "7c62de979fdc7ac32fb5ddb2146156c917f80ee070d30fadc9d40343c4b6ed25",
+      "executable": false
+    },
+    ".agents/skills/handoff/agents/openai.yaml": {
+      "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28",
+      "executable": false
+    },
+    ".agents/skills/implement/SKILL.md": {
+      "sha256": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3",
+      "executable": false
+    },
+    ".agents/skills/implement/agents/openai.yaml": {
+      "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc",
+      "executable": false
+    },
+    ".agents/skills/improve-codebase-architecture/HTML-REPORT.md": {
+      "sha256": "581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528",
+      "executable": false
+    },
+    ".agents/skills/improve-codebase-architecture/SKILL.md": {
+      "sha256": "d1ac25511a936ff4250a48dbcefda363837d6bb9321b3cba73df99fa37270a75",
+      "executable": false
+    },
+    ".agents/skills/improve-codebase-architecture/agents/openai.yaml": {
+      "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1",
+      "executable": false
+    },
+    ".agents/skills/prototype/LOGIC.md": {
+      "sha256": "f61c7d249e786a79ef289018901c348271e1798dd0b0bc5607b5c6f4d4a01ab9",
+      "executable": false
+    },
+    ".agents/skills/prototype/SKILL.md": {
+      "sha256": "714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3",
+      "executable": false
+    },
+    ".agents/skills/prototype/UI.md": {
+      "sha256": "723211e878acbc7b6ff09755263f3295cde724ba902ff0064da41eed51d45ad3",
+      "executable": false
+    },
+    ".agents/skills/prototype/agents/openai.yaml": {
+      "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc",
+      "executable": false
+    },
+    ".agents/skills/research/SKILL.md": {
+      "sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4",
+      "executable": false
+    },
+    ".agents/skills/research/agents/openai.yaml": {
+      "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d",
+      "executable": false
+    },
+    ".agents/skills/resolving-merge-conflicts/SKILL.md": {
+      "sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0",
+      "executable": false
+    },
+    ".agents/skills/resolving-merge-conflicts/agents/openai.yaml": {
+      "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf",
+      "executable": false
+    },
+    ".agents/skills/setup-matt-pocock-skills/SKILL.md": {
+      "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec",
+      "executable": false
+    },
+    ".agents/skills/setup-matt-pocock-skills/agents/openai.yaml": {
+      "sha256": "9527de0110541c45712319025155aeab8dc7d77c6ed6e5e83271bab1851ab939",
+      "executable": false
+    },
+    ".agents/skills/setup-matt-pocock-skills/domain.md": {
+      "sha256": "edc6d6131fdffc4b7135704f5262124fc43355c95f61b7399dc5a4db643e28ca",
+      "executable": false
+    },
+    ".agents/skills/setup-matt-pocock-skills/issue-tracker-github.md": {
+      "sha256": "afd6852a80185217bd28aa5cbe456bef1e85be25be7bd1fba382d5b8ee428325",
+      "executable": false
+    },
+    ".agents/skills/setup-matt-pocock-skills/issue-tracker-gitlab.md": {
+      "sha256": "ea175f73d193b3f55819c0ed9bbccf6ee0e70ad8f928e3d7607596c53380acd6",
+      "executable": false
+    },
+    ".agents/skills/setup-matt-pocock-skills/issue-tracker-local.md": {
+      "sha256": "7dcda20a2eb4bdc89b95d1143423c0691309921cadae3132e6424f371030506e",
+      "executable": false
+    },
+    ".agents/skills/setup-matt-pocock-skills/triage-labels.md": {
+      "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d",
+      "executable": false
+    },
+    ".agents/skills/tdd/SKILL.md": {
+      "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927",
+      "executable": false
+    },
+    ".agents/skills/tdd/agents/openai.yaml": {
+      "sha256": "ea6f01cf1b8c06a4b0f5b649d74b1b8ce8685e72af1b38d70d877693e092af0b",
+      "executable": false
+    },
+    ".agents/skills/tdd/mocking.md": {
+      "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
+      "executable": false
+    },
+    ".agents/skills/tdd/tests.md": {
+      "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a",
+      "executable": false
+    },
+    ".agents/skills/teach/GLOSSARY-FORMAT.md": {
+      "sha256": "9b99859ec28437668130d8f2ce5a342938970f8a1ed4fd38c3eab4f4b5fff210",
+      "executable": false
+    },
+    ".agents/skills/teach/LEARNING-RECORD-FORMAT.md": {
+      "sha256": "701fa34b6748aa89e6c960ffb815257f481a7d77fb2900f9028f7edf3fdd6052",
+      "executable": false
+    },
+    ".agents/skills/teach/MISSION-FORMAT.md": {
+      "sha256": "8cacbb3c0644d3ae0ea4965564797099401a6930a23f7cf462918576587f2418",
+      "executable": false
+    },
+    ".agents/skills/teach/RESOURCES-FORMAT.md": {
+      "sha256": "e9cacf34026e11a8d1c8f9de88abe5bcbf654f4ebdb25cae8c0de0d5f48f44ec",
+      "executable": false
+    },
+    ".agents/skills/teach/SKILL.md": {
+      "sha256": "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43",
+      "executable": false
+    },
+    ".agents/skills/teach/agents/openai.yaml": {
+      "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f",
+      "executable": false
+    },
+    ".agents/skills/to-questionnaire/SKILL.md": {
+      "sha256": "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b",
+      "executable": false
+    },
+    ".agents/skills/to-questionnaire/agents/openai.yaml": {
+      "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2",
+      "executable": false
+    },
+    ".agents/skills/to-spec/SKILL.md": {
+      "sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088",
+      "executable": false
+    },
+    ".agents/skills/to-spec/agents/openai.yaml": {
+      "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb",
+      "executable": false
+    },
+    ".agents/skills/to-tickets/SKILL.md": {
+      "sha256": "5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae",
+      "executable": false
+    },
+    ".agents/skills/to-tickets/agents/openai.yaml": {
+      "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090",
+      "executable": false
+    },
+    ".agents/skills/triage/AGENT-BRIEF.md": {
+      "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f",
+      "executable": false
+    },
+    ".agents/skills/triage/OUT-OF-SCOPE.md": {
+      "sha256": "1fbf9b432130c6380aa65813b55553cfda150309b27c595e183f8e335b8a190d",
+      "executable": false
+    },
+    ".agents/skills/triage/SKILL.md": {
+      "sha256": "623a2ed692bdc77d2090e2a3dea3b627dd722ad3bbaca0be83aada75292c8fc4",
+      "executable": false
+    },
+    ".agents/skills/triage/agents/openai.yaml": {
+      "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c",
+      "executable": false
+    },
+    ".agents/skills/wait-what/SKILL.md": {
+      "sha256": "e3f44e3ccbc0e7b62f20ba70b295fc9c9f4aa3f96c77168faee1c71bacbf4215",
+      "executable": false
+    },
+    ".agents/skills/wait-what/agents/openai.yaml": {
+      "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999",
+      "executable": false
+    },
+    ".agents/skills/wayfinder/SKILL.md": {
+      "sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1",
+      "executable": false
+    },
+    ".agents/skills/wayfinder/agents/openai.yaml": {
+      "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073",
+      "executable": false
+    },
+    ".agents/skills/wizard/SKILL.md": {
+      "sha256": "bdf31d48211ea559878f95a4f344aeabf8d85897488ba564382bab0b000daac1",
+      "executable": false
+    },
+    ".agents/skills/wizard/agents/openai.yaml": {
+      "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83",
+      "executable": false
+    },
+    ".agents/skills/wizard/template.sh": {
+      "sha256": "33cbe9dfb1d0e9185b60248a52aabed14bc64785a00cac695e302e739dd6c153",
+      "executable": false
+    },
+    ".agents/skills/writing-for-agents/SKILL-MECHANICS.md": {
+      "sha256": "c768e6307c7c10728c401c213f2c4ba71c542127eeb7ad2956aabd15a0fa0059",
+      "executable": false
+    },
+    ".agents/skills/writing-for-agents/SKILL.md": {
+      "sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a",
+      "executable": false
+    },
+    ".agents/skills/writing-for-agents/agents/openai.yaml": {
+      "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b",
+      "executable": false
+    },
+    ".github/ISSUE_TEMPLATE/specification.yml": {
+      "sha256": "77b6359750ff03695a1dc19ee121e664787f4a6954cd9847277ab40fb6b22dfd",
+      "executable": false
+    },
+    "docs/agents/triage-labels.md": {
+      "sha256": "b2c6c2b88086dd20b3db8d010a9ec0d9daa9fef4abce8cfe1845883b2547d1af",
+      "executable": false
+    },
+    ".agents/skills/adopt-standards/SKILL.md": {
+      "sha256": "6508d7acca0ced142bb198b85b8fd194d71901b35bb865f21e4ea9c3ea52fd54",
+      "executable": false
+    }
+  },
+  "skills": {
+    ".agents/skills/ask-matt": [
+      "PHASE-BOUNDARIES.md",
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/code-review": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/codebase-design": [
+      "DEEPENING.md",
+      "DESIGN-IT-TWICE.md",
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/diagnosing-bugs": [
+      "SKILL.md",
+      "agents/openai.yaml",
+      "scripts/hitl-loop.template.sh"
+    ],
+    ".agents/skills/domain-modeling": [
+      "ADR-FORMAT.md",
+      "CONTEXT-FORMAT.md",
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/grill-me": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/grill-with-docs": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/grilling": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/handoff": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/implement": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/improve-codebase-architecture": [
+      "HTML-REPORT.md",
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/prototype": [
+      "LOGIC.md",
+      "SKILL.md",
+      "UI.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/research": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/resolving-merge-conflicts": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/setup-matt-pocock-skills": [
+      "SKILL.md",
+      "agents/openai.yaml",
+      "domain.md",
+      "issue-tracker-github.md",
+      "issue-tracker-gitlab.md",
+      "issue-tracker-local.md",
+      "triage-labels.md"
+    ],
+    ".agents/skills/tdd": [
+      "SKILL.md",
+      "agents/openai.yaml",
+      "mocking.md",
+      "tests.md"
+    ],
+    ".agents/skills/teach": [
+      "GLOSSARY-FORMAT.md",
+      "LEARNING-RECORD-FORMAT.md",
+      "MISSION-FORMAT.md",
+      "RESOURCES-FORMAT.md",
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/to-questionnaire": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/to-spec": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/to-tickets": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/triage": [
+      "AGENT-BRIEF.md",
+      "OUT-OF-SCOPE.md",
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/wait-what": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/wayfinder": [
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/wizard": [
+      "SKILL.md",
+      "agents/openai.yaml",
+      "template.sh"
+    ],
+    ".agents/skills/writing-for-agents": [
+      "SKILL-MECHANICS.md",
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/adopt-standards": [
+      "SKILL.md"
+    ]
+  },
+  "checks": [
+    {
+      "operation": {
+        "declaration": "documentation",
+        "phase": "checks",
+        "id": "documentation-navigation"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v1",
+        "status": "passed",
+        "message": "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/2.stdout",
+      "stderr": ".repo-standards/local/operations/2.stderr"
+    },
+    {
+      "operation": {
+        "declaration": "project-readmes",
+        "phase": "checks",
+        "id": "project-readme-structure"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v1",
+        "status": "passed",
+        "message": "Project README structure is valid for 0 concrete targets; purpose, commands, configuration, and documentation still require maintainer or agent review."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/3.stdout",
+      "stderr": ".repo-standards/local/operations/3.stderr"
+    },
+    {
+      "operation": {
+        "declaration": "repository-readme",
+        "phase": "checks",
+        "id": "repository-readme-structure"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v1",
+        "status": "passed",
+        "message": "Repository README structure is valid; factual content still requires maintainer or agent review."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/4.stdout",
+      "stderr": ".repo-standards/local/operations/4.stderr"
+    }
+  ],
+  "assessments": [
+    {
+      "format": "repo-standards/assessment/v2",
+      "run": "baaed5f0-ce1d-4e35-87fa-59c246269b00",
+      "selection": "sha256:8f22ef9f166d4cb75331fe1ea9b127a1818ec5ba7938703aadffe2d1f6483eb9",
+      "snapshot": "sha256:91537700c31f5b108c1f922ccda5726546acb3c5a1a7b1c7168cfca25feb5997",
+      "scope": {
+        "inspection": "sha256:ead33120407cce9fabf34f821f2517b1be1f0886a3e3a408fd99876ef2c50172",
+        "afterFixes": "sha256:c79fdf00c9aaf53faaa8dd23e6662a41243f6a61f9a7fcddd302ec115f413072"
+      },
+      "declarations": [
+        {
+          "id": "documentation",
+          "status": "satisfied",
+          "explanation": "The confirmed documentation tree already follows the guidance and needed no contextual change. docs/README.md maps the usage, development, and adr categories and states the placement rules; each populated directory has a README, including the eight nested directories under docs/development; docs/development/README.md carries the real prerequisites, setup, commands, and required validation that CONTRIBUTING.md points to; the domain glossary sits at the repository root in CONTEXT.md as the guidance requires, with no CONTEXT-MAP.md because this repository has one domain context; and docs/agents/project.md holds the repository-specific agent constraints while the four exact-owned docs/agents files stay outside this scope. No document was moved, so no link repair was due, and the two decision records authoring-notes.md and design-review.md remain linked from the documentation they explain.",
+          "changedPaths": [],
+          "evidence": [
+            "docs/README.md lists the usage, development, adr, and agents categories with their placement rules, and every category README it names exists.",
+            "docs/development/README.md states the Node.js 24 and npm prerequisites, the working-locally steps, and the required validation commands npm run check, git diff --check, and npm test that CONTRIBUTING.md defers to.",
+            "CONTEXT.md defines the repository's terms, including Self-adoption, at the repository root, and no second domain context exists that would justify a CONTEXT-MAP.md.",
+            "docs/agents/project.md records this repository's own constraints, and the shared docs/agents README, domain, issue-tracker, and triage-labels files are exact-owned and were reinstalled byte for byte by this run.",
+            "The documentation-navigation check over these 126 paths reports passed, and the repository's own conformance test runs the same check against this tree on every pull request."
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "Re-evaluating the discovery criteria against the post-fix project found no new documentation candidate. The two fixes changed only remote GitHub state, and installation wrote only exact targets under .agents/skills plus generated state under .repo-standards, neither of which is documentation this declaration governs.",
+              "evidence": [
+                "The post-fix tracked tree is identical to the inspected tree; the only new project content is .agents/skills and .repo-standards, which are author-owned installed material and product state.",
+                "Every Markdown file under docs except the four exact-owned agent configuration files is in the confirmed paths, together with CONTEXT.md, authoring-notes.md, and design-review.md."
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "At the refreshed snapshot the documentation tree is still exactly what the proposal covers. The only contextual edit in this run was README.md, which the repository-readme declaration governs, so no documentation candidate was added, removed, or moved.",
+              "evidence": [
+                "git status reports no modified or new file under docs, and no document was created, deleted, or renamed during contextual work.",
+                "The excluded candidates are unchanged: the review drafts, the source-side guidance and discovery instructions, the vendored material, the exact-owned shared files, and the retained non-Markdown artifacts under docs."
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "github-repository-configuration",
+          "status": "satisfied",
+          "explanation": "This declaration changes only remote GitHub configuration through its two authored fixes, so its project-content scope is intentionally empty and no file was edited for it. Both fixes ran and reported changed: canonical-labels updated the three canonical label descriptions that had drifted from the shipped bytes and preserved the unrelated labels, and pull-request-integration created the required-check ruleset on the default branch and confirmed squash-only integration with pull request title subjects and body messages.",
+          "changedPaths": [],
+          "evidence": [
+            "The canonical-labels result reads: GitHub label setup changed lutzseverino/repo-canon: updated 3 labels. Readback confirmed all 12 canonical labels; unrelated labels were preserved.",
+            "The pull-request-integration result reads: GitHub PR integration setup changed lutzseverino/repo-canon: created required-check ruleset. Final readback confirmed PR metadata, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved.",
+            "An independent readback of repos/lutzseverino/repo-canon/rulesets shows ruleset 23659277 active for ~DEFAULT_BRANCH requiring the PR metadata context, with bypass_actors empty and current_user_can_bypass never.",
+            "The repository has exactly one github.com remote, https://github.com/lutzseverino/repo-canon, which is the repository this adoption configures."
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "The empty project-content scope remained correct after the fixes: the declaration's authored operations act on remote settings only, and neither fix wrote project content.",
+              "evidence": [
+                "Both fix results describe remote label and ruleset changes and name no project path.",
+                "No file in the working tree changed during the fixes phase other than the exact installation this declaration does not own."
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "At the refreshed snapshot the declaration still needs no project-content path; nothing in the repository represents its remote configuration.",
+              "evidence": [
+                "The repository holds no settings file, ruleset definition, or label manifest that would be a candidate for this declaration.",
+                "The contextual edit in this run was README.md alone, which belongs to the repository-readme declaration."
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "project-readmes",
+          "status": "satisfied",
+          "explanation": "This repository is a single standards source with one root manifest and one set of development commands, so it contains no nested Project and no non-root Project README is due. The nested directories are vendored third-party material, declared source content executed by the CLI, tests and fixtures, retained documentation, or purely organizational, and none of them has its own responsibility and development commands.",
+          "changedPaths": [],
+          "evidence": [
+            "package.json at the repository root declares every command the repository runs, including the named test groups, and no nested manifest or workspace configuration exists.",
+            "vendor/marked, vendor/parse5, and vendor/mattpocock-skills are copied upstream releases retained for provenance, which THIRD_PARTY_NOTICES.md and the provenance READMEs record.",
+            "operations, scripts, and test hold declared operation scripts, maintenance tooling, and fixtures that the root manifest drives rather than independently maintained Projects.",
+            "The Project README check reports passed for zero concrete targets, which matches the explained empty scope."
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "The post-fix project introduced no Project. Installation added author-owned skills under .agents/skills and product state under .repo-standards, neither of which is a maintained Project with its own commands.",
+              "evidence": [
+                "The installed skills are documents and resources owned by the standards source, with no manifest, build, or test command of their own.",
+                ".repo-standards holds generated selection, lock, state, inputs, and runtime manifests that the product owns."
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "At the refreshed snapshot the repository still has no nested Project, so the empty scope remains complete.",
+              "evidence": [
+                "No directory gained a manifest, entry point, or command set during contextual work.",
+                "The only contextual edit was README.md, the Repository README, which is not a Project README."
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "repository-readme",
+          "status": "satisfied",
+          "explanation": "README.md now follows the Repository README guidance for someone discovering this repository. The centered title, one-sentence description, and the Markdown and YAML badges are preserved and still accurate for a source made of Markdown documents and standards.yaml. The former Usage section was really the installation path, so it is now Installation and comes first: it gives the shortest working user path, installing the exact public CLI 1.3.0 that v0.2.0 requires outside the adopting project, and it distinguishes that user installation from contributor setup by pointing at the adoption guide for the remaining prerequisites. Usage now carries one representative example, the read-only inspection of v0.2.0 with the complete profile, and keeps the facts that were in the old section: verify the published release, and select only bytes the source acceptance record covers. A short Features list states what adopting applies, Documentation links the documentation index and the durable records, and Contributing and License are unchanged in the required relative order.",
+          "changedPaths": [
+            "README.md"
+          ],
+          "evidence": [
+            "Installation is the first section and names CLI 1.3.0, which standards.yaml requires as the exact repo-standards version for this release.",
+            "The installation command matches the prerequisites section of docs/usage/adopt-repo-canon.md, which installs the same exact version in a directory outside the adopting project.",
+            "The Usage example matches the inspection command in the same guide, including the source, standards version, profile, and project flags.",
+            "The Features list is drawn from the resolved profile this run installed: 23 exact files that already matched, 25 installed skills under .agents/skills, the canonical-labels and pull-request-integration fixes, and the three read-only checks.",
+            "The Documentation section links docs/README.md, Contributing links CONTRIBUTING.md, and License contains only the MIT License link to the root LICENSE file, and the repository-readme-structure check reports passed.",
+            "The document is about 340 words, close to the guidance's roughly 300-word target, with detail left in the linked documents."
+          ]
+        }
+      ]
+    }
+  ]
+}

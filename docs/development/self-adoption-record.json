@@ -1,0 +1,164 @@
+{
+  "format": "repo-canon/self-adoption/v1",
+  "status": "complete",
+  "repository": "https://github.com/lutzseverino/repo-canon",
+  "specification": "https://github.com/lutzseverino/repo-canon/issues/60",
+  "ticket": "https://github.com/lutzseverino/repo-canon/issues/63",
+  "decision": "https://github.com/lutzseverino/repo-canon/blob/main/docs/adr/0004-adopt-published-releases-of-this-source.md",
+  "cli": {
+    "package": "@lutzseverino/repo-standards",
+    "version": "1.3.0",
+    "integrity": "sha512-9YMmxfIVkTYXSVODNe5C/mwIbLBO+2d++3jw/JXkb1nyQ4p37C6H3/SLg+ZKT3I9qy6p0iJkmiSf9M5P1dqfWg==",
+    "installedOutsideProject": true
+  },
+  "standards": {
+    "repository": "https://github.com/lutzseverino/repo-canon",
+    "version": "v0.2.0",
+    "commit": "79ff51198465248df67c6e1d6a66c95e2f964df5"
+  },
+  "profile": "complete",
+  "confirmation": {
+    "confirmedBy": "lutzseverino",
+    "confirmedAt": "2026-09-18T13:41Z",
+    "inspection": "sha256:ead33120407cce9fabf34f821f2517b1be1f0886a3e3a408fd99876ef2c50172",
+    "statement": "maintainer lutzseverino confirmed inspection identity sha256:ead33120… and the disclosed operations before `start`, with the label-drift outcome acknowledged",
+    "acknowledged": [
+      "pull-request-integration creates the required-check ruleset on the default branch with no bypass actors",
+      "canonical-labels reports changed because three canonical label descriptions had drifted from the shipped bytes",
+      "CONTEXT.md is included in the confirmed documentation scope"
+    ]
+  },
+  "run": {
+    "id": "baaed5f0-ce1d-4e35-87fa-59c246269b00",
+    "inspection": "sha256:ead33120407cce9fabf34f821f2517b1be1f0886a3e3a408fd99876ef2c50172",
+    "discoveryRequest": "sha256:4a2f6cb3a83d666a5fb411608efbce33d8d6ae328ee73371927996f79cbaaa42",
+    "selection": "sha256:8f22ef9f166d4cb75331fe1ea9b127a1818ec5ba7938703aadffe2d1f6483eb9",
+    "afterFixesSnapshot": "sha256:c79fdf00c9aaf53faaa8dd23e6662a41243f6a61f9a7fcddd302ec115f413072",
+    "assessedSnapshot": "sha256:91537700c31f5b108c1f922ccda5726546acb3c5a1a7b1c7168cfca25feb5997",
+    "outcome": "complete",
+    "outcomeReportFormat": "repo-standards/run/v2",
+    "completedAt": "2026-09-18T13:46:19.466Z",
+    "head": "5a03353d95f327b67673e6285c991a4a244b179e",
+    "statusFormat": "repo-standards/status/v5",
+    "statusActive": null,
+    "scopeViolations": 0,
+    "boundaryChanges": 0,
+    "observedAgentChangedPaths": ["README.md"]
+  },
+  "exactDeclarations": {
+    "total": 48,
+    "match": 23,
+    "create": 25,
+    "createdFiles": 74,
+    "installedSkills": 26,
+    "installedSkillsAreCopies": true
+  },
+  "confirmedScopePaths": {
+    "documentation": 126,
+    "github-repository-configuration": 0,
+    "project-readmes": 0
+  },
+  "scopeDecisions": {
+    "included": [
+      "Every Markdown document in the docs tree except the four exact-owned shared agent configuration files",
+      "docs/agents/project.md, the project-specific agent guidance",
+      "CONTEXT.md, the repository-root domain glossary the documentation guidance governs",
+      "authoring-notes.md and design-review.md, the two root decision records the documentation links"
+    ],
+    "excluded": [
+      {
+        "candidate": "README.md",
+        "reason": "The repository-readme declaration's own contextual target."
+      },
+      {
+        "candidate": "docs/agents/README.md, docs/agents/domain.md, docs/agents/issue-tracker.md, docs/agents/triage-labels.md",
+        "reason": "Exact-owned shared agent configuration the discovery guidance keeps outside documentation scope."
+      },
+      {
+        "candidate": "AGENTS.md, CONTRIBUTING.md",
+        "reason": "Exact-owned shared guidance replaced byte for byte by the source."
+      },
+      {
+        "candidate": ".github",
+        "reason": "Exact-owned templates and workflows plus the repository's own automation."
+      },
+      {
+        "candidate": "drafts",
+        "reason": "Review drafts retained as the reviewed material as of the design review, deliberately not re-synced."
+      },
+      {
+        "candidate": "guidance, discovery",
+        "reason": "Source-side guidance and discovery instructions shipped to adopters, not this repository's documentation."
+      },
+      {
+        "candidate": "vendor",
+        "reason": "Vendored third-party material that must stay byte-identical to its upstream releases."
+      },
+      {
+        "candidate": "operations, scripts, test",
+        "reason": "Declared source operations, maintenance tooling, and fixtures."
+      },
+      {
+        "candidate": "THIRD_PARTY_NOTICES.md, LICENSE, standards.yaml, package.json",
+        "reason": "Legal notices, licensing, the standards manifest, and project configuration."
+      },
+      {
+        "candidate": "15 non-Markdown artifacts under docs",
+        "reason": "Retained evidence records that must not be rewritten; the documents linking them stay in scope."
+      }
+    ],
+    "moves": 0,
+    "linkRepairs": 0,
+    "unresolvedQuestions": 0
+  },
+  "operations": {
+    "canonical-labels": "changed",
+    "pull-request-integration": "changed",
+    "documentation-navigation": "passed",
+    "project-readme-structure": "passed",
+    "repository-readme-structure": "passed"
+  },
+  "operationDetail": {
+    "canonical-labels": {
+      "message": "GitHub label setup changed lutzseverino/repo-canon: updated 3 labels. Readback confirmed all 12 canonical labels; unrelated labels were preserved.",
+      "updatedLabels": ["ready-for-agent", "ready-for-human", "wontfix"]
+    },
+    "pull-request-integration": {
+      "message": "GitHub PR integration setup changed lutzseverino/repo-canon: created required-check ruleset. Final readback confirmed PR metadata, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved.",
+      "ruleset": {
+        "id": 23659277,
+        "name": "Repo Canon required PR checks",
+        "target": "branch",
+        "enforcement": "active",
+        "condition": "~DEFAULT_BRANCH",
+        "requiredStatusChecks": ["PR metadata"],
+        "bypassActors": [],
+        "currentUserCanBypass": "never"
+      }
+    }
+  },
+  "assessment": {
+    "format": "repo-standards/assessment/v2",
+    "declarations": {
+      "documentation": "satisfied",
+      "github-repository-configuration": "satisfied",
+      "project-readmes": "satisfied",
+      "repository-readme": "satisfied"
+    },
+    "scopeValidity": {
+      "documentation": { "afterFixes": "valid", "current": "valid" },
+      "github-repository-configuration": { "afterFixes": "valid", "current": "valid" },
+      "project-readmes": { "afterFixes": "valid", "current": "valid" }
+    },
+    "contextualChangedPaths": ["README.md"]
+  },
+  "surfaced": [
+    "Three canonical label descriptions on this repository had drifted from the bytes the source ships, so canonical-labels reported changed rather than unchanged.",
+    "No required-check ruleset existed on this repository before adoption, so the PR metadata requirement the source imposes on adopters was not enforced here.",
+    "The Repository README check passes on structure alone and could not see that the section named Usage was really the installation path.",
+    "The repository conformance test's documentation declaration did not cover CONTEXT.md, so the glossary sat outside the declaration that governs it until this change.",
+    "Completed adoption adds about 1.3 MB of tracked durable state in the compact format, against the roughly 26 MB CLI 1.2.2 would have committed."
+  ],
+  "boundary": "Self-adoption complements adoption by other repositories and cannot find what only a different repository reveals. It renews no source validation, publishes nothing, and asserts no continuing compliance after later edits.",
+  "evidenceRetention": "The external inspection reports, scope proposal, and run reports were stored outside the repository during the delivery and were lost when the host's temporary storage was cleared. Every value in this record was read back from the retained durable state under .repo-standards/ after the run."
+}

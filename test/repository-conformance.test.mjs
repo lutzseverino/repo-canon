@@ -8,12 +8,13 @@ import { invokeCheck } from './helpers/operation.mjs';
 
 // This repository is an adopter of its own published standards, so the three
 // shipped checks run against the real tree on every pull request instead of
-// against fixtures only. The documentation paths below are the scope this
-// repository expects to confirm when it self-adopts: the documentation tree,
-// the authoring notes, and the design review. The review drafts, the source-side
-// guidance, the discovery instructions, and the vendored material stay out.
+// against fixtures only. The documentation paths below are the scope the
+// completed self-adoption of v0.2.0 confirmed: the documentation tree, the
+// repository-root glossary, the authoring notes, and the design review. The
+// review drafts, the source-side guidance, the discovery instructions, and the
+// vendored material stay out.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const rootDecisionRecords = ['authoring-notes.md', 'design-review.md'];
+const rootDocuments = ['CONTEXT.md', 'authoring-notes.md', 'design-review.md'];
 
 // `discovery/documentation.md` keeps the exact-owned shared agent configuration
 // outside documentation scope, and `standards.yaml` declares each of those files
@@ -44,7 +45,7 @@ function documentationScope() {
   const documentation = trackedFiles()
     .filter(path => path.startsWith('docs/') && path.toLocaleLowerCase('en-US').endsWith('.md'))
     .filter(path => !exactOwnedAgentConfiguration.includes(path));
-  return [...documentation, ...rootDecisionRecords].sort();
+  return [...documentation, ...rootDocuments].sort();
 }
 
 test('the repository passes the documentation navigation check at its root', () => {

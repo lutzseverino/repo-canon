@@ -1,0 +1,663 @@
+{
+  "description": "The complete Repo Canon standards profile",
+  "declarations": [
+    {
+      "id": "agent-configuration-index",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "docs/agents/README.md",
+      "exact": "docs/agents/README.md"
+    },
+    {
+      "id": "agent-guidance",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "AGENTS.md",
+      "exact": "AGENTS.md"
+    },
+    {
+      "id": "bug-report-template",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".github/ISSUE_TEMPLATE/bug-report.yml",
+      "exact": ".github/ISSUE_TEMPLATE/bug-report.yml"
+    },
+    {
+      "id": "contribution-guidance",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "CONTRIBUTING.md",
+      "exact": "CONTRIBUTING.md"
+    },
+    {
+      "id": "documentation",
+      "checks": [
+        {
+          "id": "documentation-navigation",
+          "run": {
+            "executable": "node",
+            "script": "operations/check-documentation.mjs",
+            "resources": [
+              "operations/lib/rendered-markdown.mjs",
+              "operations/lib/local-markdown-links.mjs",
+              "vendor/marked",
+              "vendor/parse5"
+            ],
+            "arguments": []
+          },
+          "prerequisite": {
+            "version-arguments": [
+              "--version"
+            ],
+            "version": ">=24.0.0 <25.0.0"
+          },
+          "timeout-seconds": 30
+        }
+      ],
+      "fixes": [],
+      "kind": "repository",
+      "guidance": "guidance/documentation.md",
+      "targets": {
+        "paths": [
+          "CONTEXT.md",
+          "authoring-notes.md",
+          "design-review.md",
+          "docs/README.md",
+          "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
+          "docs/adr/0002-squash-reviewed-changes.md",
+          "docs/adr/0003-follow-product-release-versioning.md",
+          "docs/adr/0004-adopt-published-releases-of-this-source.md",
+          "docs/adr/README.md",
+          "docs/agents/project.md",
+          "docs/development/README.md",
+          "docs/development/adoption-compatibility.md",
+          "docs/development/adoption-evidence.md",
+          "docs/development/completion-record.md",
+          "docs/development/documentation-check.md",
+          "docs/development/engineering-skill-architecture-visual-inspection.md",
+          "docs/development/engineering-skill-exercises.md",
+          "docs/development/engineering-skill-research-result.md",
+          "docs/development/engineering-skill-runtime-transcript.md",
+          "docs/development/engineering-skill-session-finals/README.md",
+          "docs/development/engineering-skill-session-finals/ask-matt.md",
+          "docs/development/engineering-skill-session-finals/code-review.md",
+          "docs/development/engineering-skill-session-finals/codebase-design.md",
+          "docs/development/engineering-skill-session-finals/diagnosing-bugs-completion.md",
+          "docs/development/engineering-skill-session-finals/diagnosing-bugs-initial.md",
+          "docs/development/engineering-skill-session-finals/domain-modeling.md",
+          "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-blocked.md",
+          "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-completion.md",
+          "docs/development/engineering-skill-session-finals/improve-codebase-architecture.md",
+          "docs/development/engineering-skill-session-finals/research.md",
+          "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-completion.md",
+          "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-initial.md",
+          "docs/development/engineering-skill-session-finals/tdd-completion.md",
+          "docs/development/engineering-skill-session-finals/tdd-initial.md",
+          "docs/development/first-release.md",
+          "docs/development/github-label-setup.md",
+          "docs/development/github-pr-integration-setup.md",
+          "docs/development/issue-contract-validation.md",
+          "docs/development/planning-skill-artifacts/README.md",
+          "docs/development/planning-skill-artifacts/adoption-inspection.md",
+          "docs/development/planning-skill-artifacts/delivery-schedule-cancellation-verdict.md",
+          "docs/development/planning-skill-artifacts/intake-batch-spec.md",
+          "docs/development/planning-skill-artifacts/intake-batch-ticket-01.md",
+          "docs/development/planning-skill-artifacts/intake-batch-ticket-02.md",
+          "docs/development/planning-skill-artifacts/managed-skill-update-boundary.md",
+          "docs/development/planning-skill-artifacts/receipt-export-triage.md",
+          "docs/development/planning-skill-artifacts/retry-map.md",
+          "docs/development/planning-skill-artifacts/retry-window-ticket.md",
+          "docs/development/planning-skill-exercises.md",
+          "docs/development/planning-skill-session-finals/README.md",
+          "docs/development/planning-skill-session-finals/adoption-preparation.md",
+          "docs/development/planning-skill-session-finals/grill-completion.md",
+          "docs/development/planning-skill-session-finals/grill-initial.md",
+          "docs/development/planning-skill-session-finals/implement-review-blocked.md",
+          "docs/development/planning-skill-session-finals/implement-review-completion.md",
+          "docs/development/planning-skill-session-finals/implement.md",
+          "docs/development/planning-skill-session-finals/managed-skill-update-correction.md",
+          "docs/development/planning-skill-session-finals/managed-skill-update-portable.md",
+          "docs/development/planning-skill-session-finals/managed-skill-update.md",
+          "docs/development/planning-skill-session-finals/prototype.md",
+          "docs/development/planning-skill-session-finals/setup.md",
+          "docs/development/planning-skill-session-finals/to-spec.md",
+          "docs/development/planning-skill-session-finals/to-tickets.md",
+          "docs/development/planning-skill-session-finals/triage-invalidation.md",
+          "docs/development/planning-skill-session-finals/triage-ready.md",
+          "docs/development/planning-skill-session-finals/triage-renewal.md",
+          "docs/development/planning-skill-session-finals/wayfinder.md",
+          "docs/development/planning-skill-session-finals/wizard.md",
+          "docs/development/pr-metadata-validation.md",
+          "docs/development/productivity-skill-exercises.md",
+          "docs/development/productivity-skill-runtime-transcript.md",
+          "docs/development/productivity-skill-runtime/README.md",
+          "docs/development/productivity-skill-runtime/event-retention-questionnaire.md",
+          "docs/development/productivity-skill-runtime/handoff.md",
+          "docs/development/productivity-skill-runtime/teach/GLOSSARY.md",
+          "docs/development/productivity-skill-runtime/teach/MISSION.md",
+          "docs/development/productivity-skill-runtime/teach/NOTES.md",
+          "docs/development/productivity-skill-runtime/teach/README.md",
+          "docs/development/productivity-skill-runtime/teach/RESOURCES.md",
+          "docs/development/productivity-skill-runtime/teach/assets/README.md",
+          "docs/development/productivity-skill-runtime/teach/learning-records/0001-release-ancestry-guard.md",
+          "docs/development/productivity-skill-runtime/teach/learning-records/README.md",
+          "docs/development/productivity-skill-runtime/teach/lessons/README.md",
+          "docs/development/productivity-skill-runtime/teach/reference/README.md",
+          "docs/development/productivity-skill-runtime/writing-for-agents-project.md",
+          "docs/development/productivity-skill-session-finals/README.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-final.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-1.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-2.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-3.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-4.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-5.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-6.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-final.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-1.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-2.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-3.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-4.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-5.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-handoff-final.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-final.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-1.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-2.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-teach-feedback.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-teach-real-git-verification.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-teach-review-correction.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-1.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-2.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-teach-safe-failure-correction.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-before.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-final.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-writing-final.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-change-final.md",
+          "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-final.md",
+          "docs/development/real-adoption.md",
+          "docs/development/release-v0-1-1.md",
+          "docs/development/release-v0-2-0.md",
+          "docs/development/repository-readme-check.md",
+          "docs/development/scope-capability-specification.md",
+          "docs/development/shared-material-review.md",
+          "docs/development/source-profile.md",
+          "docs/development/upstream-compatibility.md",
+          "docs/usage/README.md",
+          "docs/usage/adopt-repo-canon.md",
+          "docs/usage/prepare-agent-guidance.md",
+          "docs/usage/versioning.md"
+        ],
+        "directories": []
+      }
+    },
+    {
+      "id": "domain-configuration",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "docs/agents/domain.md",
+      "exact": "docs/agents/domain.md"
+    },
+    {
+      "id": "feature-request-template",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".github/ISSUE_TEMPLATE/feature-request.yml",
+      "exact": ".github/ISSUE_TEMPLATE/feature-request.yml"
+    },
+    {
+      "id": "github-repository-configuration",
+      "checks": [],
+      "fixes": [
+        {
+          "id": "canonical-labels",
+          "run": {
+            "executable": "node",
+            "script": "operations/setup-github-labels.mjs",
+            "resources": [
+              "operations/lib/github-operation.mjs",
+              "LICENSE",
+              "THIRD_PARTY_NOTICES.md",
+              "vendor/mattpocock-skills/LICENSE"
+            ],
+            "arguments": []
+          },
+          "prerequisite": {
+            "version-arguments": [
+              "--version"
+            ],
+            "version": ">=24.0.0 <25.0.0"
+          },
+          "timeout-seconds": 30
+        },
+        {
+          "id": "pull-request-integration",
+          "run": {
+            "executable": "node",
+            "script": "operations/setup-github-pr-integration.mjs",
+            "resources": [
+              "operations/lib/github-operation.mjs"
+            ],
+            "arguments": []
+          },
+          "prerequisite": {
+            "version-arguments": [
+              "--version"
+            ],
+            "version": ">=24.0.0 <25.0.0"
+          },
+          "timeout-seconds": 30
+        }
+      ],
+      "kind": "repository",
+      "guidance": "guidance/github-repository-configuration.md",
+      "targets": {
+        "paths": [],
+        "directories": []
+      }
+    },
+    {
+      "id": "implementation-ticket-template",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".github/ISSUE_TEMPLATE/implementation-ticket.yml",
+      "exact": ".github/ISSUE_TEMPLATE/implementation-ticket.yml"
+    },
+    {
+      "id": "issue-contract-validator",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "scripts/validate-issue-contract.mjs",
+      "exact": "scripts/validate-issue-contract.mjs"
+    },
+    {
+      "id": "issue-contract-workflow",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".github/workflows/issue-contracts.yml",
+      "exact": ".github/workflows/issue-contracts.yml"
+    },
+    {
+      "id": "issue-tracker-configuration",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "docs/agents/issue-tracker.md",
+      "exact": "docs/agents/issue-tracker.md"
+    },
+    {
+      "id": "marked-license",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "vendor/marked/LICENSE",
+      "exact": "vendor/marked/LICENSE"
+    },
+    {
+      "id": "marked-parser",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "vendor/marked/marked.esm.js",
+      "exact": "vendor/marked/marked.esm.js"
+    },
+    {
+      "id": "marked-provenance",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "vendor/marked/README.md",
+      "exact": "vendor/marked/README.md"
+    },
+    {
+      "id": "parse5-entities-license",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "vendor/parse5/LICENSE.entities",
+      "exact": "vendor/parse5/LICENSE.entities"
+    },
+    {
+      "id": "parse5-license",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "vendor/parse5/LICENSE.parse5",
+      "exact": "vendor/parse5/LICENSE.parse5"
+    },
+    {
+      "id": "parse5-parser",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "vendor/parse5/parse5.esm.js",
+      "exact": "vendor/parse5/parse5.esm.js"
+    },
+    {
+      "id": "parse5-provenance",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "vendor/parse5/README.md",
+      "exact": "vendor/parse5/README.md"
+    },
+    {
+      "id": "pr-metadata-validator",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".github/scripts/validate-pr-metadata.mjs",
+      "exact": ".github/scripts/validate-pr-metadata.mjs"
+    },
+    {
+      "id": "pr-metadata-workflow",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".github/workflows/pr-metadata.yml",
+      "exact": ".github/workflows/pr-metadata.yml"
+    },
+    {
+      "id": "project-readmes",
+      "checks": [
+        {
+          "id": "project-readme-structure",
+          "run": {
+            "executable": "node",
+            "script": "operations/check-project-readmes.mjs",
+            "resources": [
+              "operations/lib/rendered-markdown.mjs",
+              "operations/lib/local-markdown-links.mjs",
+              "vendor/marked",
+              "vendor/parse5"
+            ],
+            "arguments": []
+          },
+          "prerequisite": {
+            "version-arguments": [
+              "--version"
+            ],
+            "version": ">=24.0.0 <25.0.0"
+          },
+          "timeout-seconds": 30
+        }
+      ],
+      "fixes": [],
+      "kind": "repository",
+      "guidance": "guidance/project-readmes.md",
+      "targets": {
+        "paths": [],
+        "directories": []
+      }
+    },
+    {
+      "id": "pull-request-template",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".github/PULL_REQUEST_TEMPLATE.md",
+      "exact": ".github/PULL_REQUEST_TEMPLATE.md"
+    },
+    {
+      "id": "rendered-markdown-runtime",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "operations/lib/rendered-markdown.mjs",
+      "exact": "operations/lib/rendered-markdown.mjs"
+    },
+    {
+      "id": "repository-readme",
+      "checks": [
+        {
+          "id": "repository-readme-structure",
+          "run": {
+            "executable": "node",
+            "script": "operations/check-repository-readme.mjs",
+            "resources": [
+              "operations/lib/rendered-markdown.mjs",
+              "operations/lib/local-markdown-links.mjs",
+              "vendor/marked",
+              "vendor/parse5"
+            ],
+            "arguments": []
+          },
+          "prerequisite": {
+            "version-arguments": [
+              "--version"
+            ],
+            "version": ">=24.0.0 <25.0.0"
+          },
+          "timeout-seconds": 30
+        }
+      ],
+      "fixes": [],
+      "kind": "file",
+      "target": "README.md",
+      "guidance": "guidance/repository-readme.md"
+    },
+    {
+      "id": "skill-ask-matt",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "ask-matt",
+      "source": "vendor/mattpocock-skills/skills/engineering/ask-matt"
+    },
+    {
+      "id": "skill-code-review",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "code-review",
+      "source": "vendor/mattpocock-skills/skills/engineering/code-review"
+    },
+    {
+      "id": "skill-codebase-design",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "codebase-design",
+      "source": "vendor/mattpocock-skills/skills/engineering/codebase-design"
+    },
+    {
+      "id": "skill-diagnosing-bugs",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "diagnosing-bugs",
+      "source": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs"
+    },
+    {
+      "id": "skill-domain-modeling",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "domain-modeling",
+      "source": "vendor/mattpocock-skills/skills/engineering/domain-modeling"
+    },
+    {
+      "id": "skill-grill-me",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "grill-me",
+      "source": "vendor/mattpocock-skills/skills/productivity/grill-me"
+    },
+    {
+      "id": "skill-grill-with-docs",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "grill-with-docs",
+      "source": "vendor/mattpocock-skills/skills/engineering/grill-with-docs"
+    },
+    {
+      "id": "skill-grilling",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "grilling",
+      "source": "vendor/mattpocock-skills/skills/productivity/grilling"
+    },
+    {
+      "id": "skill-handoff",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "handoff",
+      "source": "vendor/mattpocock-skills/skills/productivity/handoff"
+    },
+    {
+      "id": "skill-implement",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "implement",
+      "source": "vendor/mattpocock-skills/skills/engineering/implement"
+    },
+    {
+      "id": "skill-improve-codebase-architecture",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "improve-codebase-architecture",
+      "source": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture"
+    },
+    {
+      "id": "skill-prototype",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "prototype",
+      "source": "vendor/mattpocock-skills/skills/engineering/prototype"
+    },
+    {
+      "id": "skill-research",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "research",
+      "source": "vendor/mattpocock-skills/skills/engineering/research"
+    },
+    {
+      "id": "skill-resolving-merge-conflicts",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "resolving-merge-conflicts",
+      "source": "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts"
+    },
+    {
+      "id": "skill-setup-matt-pocock-skills",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "setup-matt-pocock-skills",
+      "source": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills"
+    },
+    {
+      "id": "skill-tdd",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "tdd",
+      "source": "vendor/mattpocock-skills/skills/engineering/tdd"
+    },
+    {
+      "id": "skill-teach",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "teach",
+      "source": "vendor/mattpocock-skills/skills/productivity/teach"
+    },
+    {
+      "id": "skill-to-questionnaire",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "to-questionnaire",
+      "source": "vendor/mattpocock-skills/skills/productivity/to-questionnaire"
+    },
+    {
+      "id": "skill-to-spec",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "to-spec",
+      "source": "vendor/mattpocock-skills/skills/engineering/to-spec"
+    },
+    {
+      "id": "skill-to-tickets",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "to-tickets",
+      "source": "vendor/mattpocock-skills/skills/engineering/to-tickets"
+    },
+    {
+      "id": "skill-triage",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "triage",
+      "source": "vendor/mattpocock-skills/skills/engineering/triage"
+    },
+    {
+      "id": "skill-wait-what",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "wait-what",
+      "source": "vendor/mattpocock-skills/skills/productivity/wait-what"
+    },
+    {
+      "id": "skill-wayfinder",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "wayfinder",
+      "source": "vendor/mattpocock-skills/skills/engineering/wayfinder"
+    },
+    {
+      "id": "skill-wizard",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "wizard",
+      "source": "vendor/mattpocock-skills/skills/engineering/wizard"
+    },
+    {
+      "id": "skill-writing-for-agents",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "writing-for-agents",
+      "source": "vendor/mattpocock-skills/skills/productivity/writing-for-agents"
+    },
+    {
+      "id": "specification-template",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".github/ISSUE_TEMPLATE/specification.yml",
+      "exact": ".github/ISSUE_TEMPLATE/specification.yml"
+    },
+    {
+      "id": "triage-label-configuration",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "docs/agents/triage-labels.md",
+      "exact": "docs/agents/triage-labels.md"
+    }
+  ]
+}
