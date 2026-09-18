@@ -50,3 +50,8 @@ _Avoid_: Publication, copying shared files
 A change that makes a previously conforming repository require new mandatory
 migration work or an incompatible workflow change to remain conforming.
 _Avoid_: Only changes that break the adopting application's runtime
+
+**Self-adoption**:
+Adoption of a published Repo Canon release by the Repo Canon repository itself,
+through the same public CLI and profile every adopter uses.
+_Avoid_: Adopting the working tree, dogfooding, source validation
