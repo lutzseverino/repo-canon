@@ -1,0 +1,68 @@
+{
+  "format": "repo-canon/release-publication/v1",
+  "source": {
+    "repository": "https://github.com/lutzseverino/repo-canon",
+    "version": "v0.2.0",
+    "commit": "79ff51198465248df67c6e1d6a66c95e2f964df5"
+  },
+  "release": {
+    "isDraft": false,
+    "isPrerelease": false,
+    "publishedAt": "2026-09-18T12:58:49Z",
+    "tagName": "v0.2.0",
+    "targetCommitish": "main",
+    "url": "https://github.com/lutzseverino/repo-canon/releases/tag/v0.2.0"
+  },
+  "annotatedTagObject": "45a13beb3291d5f36143788828234f497a37a16a",
+  "acceptedClosure": {
+    "reference": "docs/development/source-closure.json",
+    "commit": "79ff51198465248df67c6e1d6a66c95e2f964df5",
+    "files": 115,
+    "allBytesModesAndBlobsMatch": true
+  },
+  "releasePullRequest": "https://github.com/lutzseverino/repo-canon/pull/66",
+  "requiredCliChange": {
+    "from": "1.2.2",
+    "to": "1.3.0",
+    "breakingStandardsChange": true,
+    "selectedPathsChanged": [
+      "standards.yaml"
+    ]
+  },
+  "cli": {
+    "package": "@lutzseverino/repo-standards",
+    "version": "1.3.0",
+    "resolved": "https://registry.npmjs.org/@lutzseverino/repo-standards/-/repo-standards-1.3.0.tgz",
+    "integrity": "sha512-9YMmxfIVkTYXSVODNe5C/mwIbLBO+2d++3jw/JXkb1nyQ4p37C6H3/SLg+ZKT3I9qy6p0iJkmiSf9M5P1dqfWg==",
+    "runtime": "v24.21.0"
+  },
+  "sourceValidation": {
+    "valid": true,
+    "profiles": [
+      "complete"
+    ],
+    "declarations": 52
+  },
+  "publicAcquisition": {
+    "verified": true,
+    "profile": "complete",
+    "inspectedSourceCommit": "79ff51198465248df67c6e1d6a66c95e2f964df5",
+    "reportFormat": "repo-standards/inspection/v2",
+    "requiredCli": "1.3.0",
+    "incompatibleWithCli": "1.2.2"
+  },
+  "priorReleases": [
+    {
+      "version": "v0.1.0",
+      "annotatedTagObject": "5922e2d826c284101e92a88d1635ff60b652ad39",
+      "commit": "639af070ddeef2d82c96b8427a805da0e1bf8ba9",
+      "unchanged": true
+    },
+    {
+      "version": "v0.1.1",
+      "annotatedTagObject": "164a354adc371f7a4bb0cf4a703d2476bb831d34",
+      "commit": "0f313ef435c715889303ec1157f1006bee1fb9f4",
+      "unchanged": true
+    }
+  ]
+}

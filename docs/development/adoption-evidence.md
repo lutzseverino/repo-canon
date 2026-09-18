@@ -33,7 +33,8 @@ stays inspectable. The record's `compaction` block states that rule and the
 identity of the bytes it replaced. These temporary exercises preceded Repo
 Canon publication and are historical evidence for disposable repositories only.
 [First release delivery](first-release.md) covers the permanent `v0.1.0`
-selection, [release v0.1.1](release-v0-1-1.md) covers the current release, and
+selection, [release v0.1.1](release-v0-1-1.md) covers the patch release,
+[release v0.2.0](release-v0-2-0.md) covers the current release, and
 [first real adoption](real-adoption.md) covers the merged Repository Standards
 adoption of those published pins.
 
