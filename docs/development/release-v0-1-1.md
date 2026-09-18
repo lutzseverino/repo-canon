@@ -1,5 +1,10 @@
 # Release v0.1.1
 
+This record covers the `v0.1.1` publication. The later minor release is recorded
+in [Release v0.2.0](release-v0-2-0.md), which requires a newer CLI; `v0.1.1`
+keeps its original tag target, release, and contents, and stays selectable by
+adopters that remain on public CLI 1.2.2.
+
 Repo Canon **v0.1.1** is a patch release that corrects the standards-owned
 `PR metadata validation` workflow. It carries no other selected source change.
 It is published and verified below. The [first release](first-release.md)

@@ -26,14 +26,14 @@ Source authoring, publication, and adoption are separate stages:
 ## Prerequisites
 
 Use macOS or Linux with Node.js 24, npm, and Git. Install the exact public CLI
-1.2.2 in a persistent directory outside the adopting project so inspection,
+1.3.0 in a persistent directory outside the adopting project so inspection,
 start, and recovery use the same executable:
 
 ```sh
-adoption_cli="$HOME/.local/share/repo-standards/cli-1.2.2"
+adoption_cli="$HOME/.local/share/repo-standards/cli-1.3.0"
 mkdir -p "$adoption_cli"
 npm install --prefix "$adoption_cli" --ignore-scripts --save-exact \
-  --no-audit --no-fund @lutzseverino/repo-standards@1.2.2
+  --no-audit --no-fund @lutzseverino/repo-standards@1.3.0
 repo_standards="$adoption_cli/node_modules/.bin/repo-standards"
 "$repo_standards" --version
 ```
@@ -53,13 +53,13 @@ and inspect the prepared commit afresh.
 
 ## Inspect the published source
 
-Use the current release, `v0.1.1`, after verifying its [GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.1).
+Use the current release, `v0.2.0`, after verifying its [GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.2.0).
 Set `source_tag` to that permanent published SemVer tag. Run the first
 inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.1.1
+source_tag=v0.2.0
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
@@ -82,7 +82,7 @@ discovered directory trees, globs, or repository-root scope. The
 [adoption evidence](../development/adoption-evidence.md#prepared-repository-matrix)
 contains representative reviewed proposals and the source-backed builder used
 for the disposable matrix. The public CLI's
-[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/inspection.md)
+[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v1.3.0/docs/usage/inspection.md)
 defines the proposal fields and evidence binding.
 
 Bind the proposal to the initial discovery evidence, then request the complete

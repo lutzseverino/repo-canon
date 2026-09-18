@@ -2,7 +2,7 @@
 
 `standards.yaml` defines one complete `repo-standards/v2` profile named
 `complete`. The source identity is `repo-canon`, and its compatibility contract
-is the exact public CLI version `requires.repo-standards: "1.2.2"`. The profile
+is the exact public CLI version `requires.repo-standards: "1.3.0"`. The profile
 does not imply a release or successful adoption.
 
 ## Policy and ownership map
@@ -53,7 +53,7 @@ profile without filtering:
 cli_prefix="$(mktemp -d)"
 npm install --prefix "$cli_prefix" --ignore-scripts \
   --registry=https://registry.npmjs.org \
-  @lutzseverino/repo-standards@1.2.2
+  @lutzseverino/repo-standards@1.3.0
 "$cli_prefix/node_modules/.bin/repo-standards" --version
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
@@ -132,6 +132,20 @@ set, counts, operations, and skills are unchanged. The refreshed
 [machine-readable closure](source-closure.json) records both identities, and
 [Release v0.1.1](release-v0-1-1.md) records the publication.
 
+The `v0.1.1` identity required public CLI 1.2.2. Requiring the compact evidence
+format moves that exact requirement to 1.3.0, which is the only selected byte
+change for `v0.2.0`: `standards.yaml` line 5 reads
+`repo-standards: "1.3.0"`, and the other 114 inputs are byte-and-mode identical
+to the published `v0.1.1` commit `0f313ef435c715889303ec1157f1006bee1fb9f4`.
+Installed public CLI 1.3.0 under Node.js 24.21.0 returned `valid: true`, no
+errors, one `complete` profile, and 52 declarations for those bytes; installed
+public CLI 1.2.2 returns `INCOMPATIBLE_CLI` for them, which is the breaking
+standards change this release announces. The refreshed
+[closure comparison](source-closure.json) records both sides, and
+[Release v0.2.0](release-v0-2-0.md) records the release, which is selected for
+publication as `v0.2.0`. Local validation and CI therefore install
+`@lutzseverino/repo-standards@1.3.0`.
+
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
 operation or prerequisite and cannot establish semantic coverage or safe scope
@@ -139,6 +153,8 @@ in an adopting repository. The existing operation fixtures and skill inventory
 review remain separate evidence. The confirmed v2 inspections, operation
 execution, contextual assessments, authorized remote readback, and complete
 adoptions are separately recorded. Repo Canon source publication and release
-are separate work, recorded in [first release](first-release.md) and
-[release v0.1.1](release-v0-1-1.md); the merged Repository Standards adoption of
-those published pins is recorded in [first real adoption](real-adoption.md).
+are separate work, recorded in [first release](first-release.md),
+[release v0.1.1](release-v0-1-1.md), and
+[release v0.2.0](release-v0-2-0.md); the merged Repository Standards adoption of
+the `v0.1.x` published pins is recorded in
+[first real adoption](real-adoption.md).

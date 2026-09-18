@@ -9,8 +9,8 @@
 
 ## Usage
 
-Select [v0.1.1](https://github.com/lutzseverino/repo-canon/releases/tag/v0.1.1)
-with public Repository Standards CLI **1.2.2** and the `complete` profile.
+Select [v0.2.0](https://github.com/lutzseverino/repo-canon/releases/tag/v0.2.0)
+with public Repository Standards CLI **1.3.0** and the `complete` profile.
 Follow the [adoption guide](docs/usage/adopt-repo-canon.md) for preparation,
 inspection, scope confirmation, and adoption. Verify that the release is
 published before starting; its initial-development version is an ordinary

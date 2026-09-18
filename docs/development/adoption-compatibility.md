@@ -12,12 +12,15 @@ and the merged real adoption in [first real adoption](real-adoption.md).
 
 ## Supported source and discovery route
 
-Use `repo-standards/v2` and the installed public CLI 1.2.2 with Node.js 24 as the
-final validation and adoption baseline. Declare only compatibility actually
-validated against the final source bytes; `requires.repo-standards` is the exact
-version `1.2.2`. Format version and CLI version are distinct. The successful
-1.2.1 local source validation and failed public acquisition remain historical
-evidence rather than the final baseline.
+Use `repo-standards/v2` and the installed public CLI 1.3.0 with Node.js 24 as the
+current validation and adoption baseline. Declare only compatibility actually
+validated against the released source bytes; `requires.repo-standards` is the
+exact version `1.3.0`, raised from `1.2.2` by
+[release v0.2.0](release-v0-2-0.md) so that adopters record compact work and
+scope evidence. Format version and CLI version are distinct. The successful
+1.2.1 local source validation and failed public acquisition, and the 1.2.2
+validation and adoption evidence for `v0.1.0` and `v0.1.1`, remain historical
+evidence rather than the current baseline.
 
 | Accepted requirement | Supported mapping |
 | --- | --- |
@@ -37,9 +40,9 @@ discovered targets. Empty scope retains its declaration and operations;
 unresolved coverage blocks start. Changed evidence requires fresh inspection
 and review, and writes outside confirmed scope remain invalid.
 
-Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/author-format.md),
-[inspection](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/inspection.md),
-and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v1.2.2/docs/script-protocol.md)
+Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v1.3.0/docs/usage/author-format.md),
+[inspection](https://github.com/lutzseverino/repo-standards/blob/v1.3.0/docs/usage/inspection.md),
+and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v1.3.0/docs/usage/script-protocol.md)
 contracts when implementing. Discovery supplies scope resolution; the separate
 AGENTS preparation and authored GitHub setup routes below remain necessary.
 Repo Canon acceptance combines final validation, operation and skill exercises,
