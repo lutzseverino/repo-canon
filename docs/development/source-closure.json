@@ -1,17 +1,18 @@
 {
-  "format": "repo-canon/source-closure-comparison/v3",
+  "format": "repo-canon/source-closure-comparison/v4",
   "baseline": {
-    "commit": "639af070ddeef2d82c96b8427a805da0e1bf8ba9",
-    "release": "v0.1.0",
+    "commit": "0f313ef435c715889303ec1157f1006bee1fb9f4",
+    "release": "v0.1.1",
     "files": 115
   },
   "reviewed": {
-    "commit": "8369d823edb035c55a79f88d657db5a29efca2ce",
-    "selectedRelease": "v0.1.1",
+    "commit": null,
+    "selectedRelease": "v0.2.0",
     "files": 115
   },
+  "reviewedCommitPolicy": "The reviewed commit is null while the release pull request is open, because the reviewed identity is the per-path Git blob and SHA-256 record below rather than a commit that does not exist until integration. The verified publication record names the integrated commit and confirms every entry at it.",
   "enumeration": {
-    "source": "public CLI 1.2.2 all-profile source validation resolved declarations",
+    "source": "public CLI 1.3.0 all-profile source validation resolved declarations",
     "includes": [
       "standards.yaml",
       "exact files",
@@ -38,14 +39,14 @@
     "unchanged": 114,
     "changed": [
       {
-        "path": ".github/workflows/pr-metadata.yml",
+        "path": "standards.yaml",
         "change": "changed",
         "baselineMode": "100644",
-        "baselineBlob": "86a4dbc735fe071419210bd2e3aa65d38ce5d6aa",
-        "baselineSha256": "2e5feda40238c5631f11d9a20de6d6d2380e50026aaff13e9b62c83b0f297b8c",
+        "baselineBlob": "2a347cef9bc08a2862166e657c5de826b3815d2e",
+        "baselineSha256": "859ed44932d4a80c51c0c82457083abb712f80aeabf3a954dd96694ea54caee8",
         "reviewedMode": "100644",
-        "reviewedBlob": "e1922527422c3e28ae0ae5a169c155a501866653",
-        "reviewedSha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82"
+        "reviewedBlob": "95168944ee3eb917314994603ceca778f9c83315",
+        "reviewedSha256": "0503a48e4ab780eae6fd85cf3d43d989a7b75ff9cf4abf65818c519670646898"
       }
     ],
     "removed": []
@@ -56,6 +57,7 @@
       "roles": [
         "declaration:bug-report-template:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "0329eb2c4de77fdae08bd265ce1498de2604c09a",
@@ -66,7 +68,6 @@
         "blob": "0329eb2c4de77fdae08bd265ce1498de2604c09a",
         "sha256": "5fca3bab67073fdb827cd5eb88d9c413ac1e1df2891a85c7938420dcb1e3dfed"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -74,6 +75,7 @@
       "roles": [
         "declaration:feature-request-template:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "e886c4c87d0828789fb0122f0d1952f223e0c7d7",
@@ -84,7 +86,6 @@
         "blob": "e886c4c87d0828789fb0122f0d1952f223e0c7d7",
         "sha256": "d3df4f5c27dd7b7a22d0baec1a52a1dc3301c002549f8634392a3abd26566505"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -92,6 +93,7 @@
       "roles": [
         "declaration:implementation-ticket-template:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "5cef8e3c46c1394a49bd3284e762400754d88bb0",
@@ -102,7 +104,6 @@
         "blob": "5cef8e3c46c1394a49bd3284e762400754d88bb0",
         "sha256": "d452da0ad9e39173f681b699d3848a00ab3466b55be508cc3f36d7731083bff6"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -110,6 +111,7 @@
       "roles": [
         "declaration:specification-template:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "7cc23125c6f36a4da87d9b65d905a7099d7bb3a8",
@@ -120,7 +122,6 @@
         "blob": "7cc23125c6f36a4da87d9b65d905a7099d7bb3a8",
         "sha256": "77b6359750ff03695a1dc19ee121e664787f4a6954cd9847277ab40fb6b22dfd"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -128,6 +129,7 @@
       "roles": [
         "declaration:pull-request-template:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "a8203c75b5061b85d10e9a20a48eb819db1e7118",
@@ -138,7 +140,6 @@
         "blob": "a8203c75b5061b85d10e9a20a48eb819db1e7118",
         "sha256": "3da5d642dd01ec874d4a855d608c21f42d082fcd8a05bf66b11e823ded57f1ae"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -146,6 +147,7 @@
       "roles": [
         "declaration:pr-metadata-validator:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "a5aa05fa1c947f149845613ee3f773e06792426e",
@@ -156,7 +158,6 @@
         "blob": "a5aa05fa1c947f149845613ee3f773e06792426e",
         "sha256": "7217d4dbb66a2b2afea67c2d15bf6c83c539b7fa03b8c5d6c68262f002900f7d"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -164,6 +165,7 @@
       "roles": [
         "declaration:issue-contract-workflow:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "5cf7ffea07fab9608837ee51153f96f66efa1f57",
@@ -174,7 +176,6 @@
         "blob": "5cf7ffea07fab9608837ee51153f96f66efa1f57",
         "sha256": "04049fba29d7d328031eb57bfed6bb23cc50fb4df52a4ea10255186b3e594102"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -182,24 +183,25 @@
       "roles": [
         "declaration:pr-metadata-workflow:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
-        "blob": "86a4dbc735fe071419210bd2e3aa65d38ce5d6aa",
-        "sha256": "2e5feda40238c5631f11d9a20de6d6d2380e50026aaff13e9b62c83b0f297b8c"
+        "blob": "e1922527422c3e28ae0ae5a169c155a501866653",
+        "sha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82"
       },
       "reviewed": {
         "mode": "100644",
         "blob": "e1922527422c3e28ae0ae5a169c155a501866653",
         "sha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82"
       },
-      "change": "changed",
-      "byteAndModeIdentical": false
+      "byteAndModeIdentical": true
     },
     {
       "path": "AGENTS.md",
       "roles": [
         "declaration:agent-guidance:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "f488864ec0f24378295f4b84bc682cb7dce03dcf",
@@ -210,7 +212,6 @@
         "blob": "f488864ec0f24378295f4b84bc682cb7dce03dcf",
         "sha256": "a499fe96728a4cea5f3a802817533f95d7976b18b5500d9a338f70eaba3c3d36"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -218,6 +219,7 @@
       "roles": [
         "declaration:contribution-guidance:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "7f5ed390c2a4bec1783fa315ac6ff1d231eb50b0",
@@ -228,7 +230,6 @@
         "blob": "7f5ed390c2a4bec1783fa315ac6ff1d231eb50b0",
         "sha256": "480248d917dbdd2434bbf50b912431f30c0cae8040410ec9c2e9dca2fd02864d"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -236,6 +237,7 @@
       "roles": [
         "operation:canonical-labels:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "3036702ca77745099942b206433467c6177d3d8d",
@@ -246,7 +248,6 @@
         "blob": "3036702ca77745099942b206433467c6177d3d8d",
         "sha256": "c5bc99cbf0340755fec02d57c955e76b591ce83e5b4cb323a54038f4cd4152b4"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -254,6 +255,7 @@
       "roles": [
         "operation:canonical-labels:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "29d9485b01146f96cf55b6520d1df14edaf0f7c1",
@@ -264,7 +266,6 @@
         "blob": "29d9485b01146f96cf55b6520d1df14edaf0f7c1",
         "sha256": "3faff9a73c0c355330d526f0a0b1573a7d5334fd749ce4d3a1c227eb766d8e5a"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -272,6 +273,7 @@
       "roles": [
         "declaration:documentation:discovery"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "e7a0ebe49a61e7e45d15510cca27880e8b0cfc6b",
@@ -282,7 +284,6 @@
         "blob": "e7a0ebe49a61e7e45d15510cca27880e8b0cfc6b",
         "sha256": "74b7b915fb88ed169e8e0c205982800fd041a6638809dd0a5729ce3c4896d277"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -290,6 +291,7 @@
       "roles": [
         "declaration:github-repository-configuration:discovery"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "090195cc033a430257b745867ac95f5bc2d9606d",
@@ -300,7 +302,6 @@
         "blob": "090195cc033a430257b745867ac95f5bc2d9606d",
         "sha256": "c232de0d6768454aabfefc94de051ed0ab69fe510ce7562d095e689332c4fc54"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -308,6 +309,7 @@
       "roles": [
         "declaration:project-readmes:discovery"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "16608aebaaad1510c6300f59cc70ed708d911d26",
@@ -318,7 +320,6 @@
         "blob": "16608aebaaad1510c6300f59cc70ed708d911d26",
         "sha256": "c068552ee8940410259b79b73fa69dc76550caaac3491486c3eef5007cbcafb6"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -326,6 +327,7 @@
       "roles": [
         "declaration:agent-configuration-index:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "411c00e8df97eb26cdedaea92bf3afc45999c43d",
@@ -336,7 +338,6 @@
         "blob": "411c00e8df97eb26cdedaea92bf3afc45999c43d",
         "sha256": "1534d7dacd63d91988a97b2e2928a683ddbf5177a663b75ed438e83d3c5c4836"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -344,6 +345,7 @@
       "roles": [
         "declaration:domain-configuration:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "62703c9a56f46fa489f5af2b2a86612274e70b6e",
@@ -354,7 +356,6 @@
         "blob": "62703c9a56f46fa489f5af2b2a86612274e70b6e",
         "sha256": "390126b01bf22d1123f1284b58f517245b99a78add65744ced714d4210b707e1"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -362,6 +363,7 @@
       "roles": [
         "declaration:issue-tracker-configuration:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "31046208b50ddb30fecf4cac00d3d3be763d3454",
@@ -372,7 +374,6 @@
         "blob": "31046208b50ddb30fecf4cac00d3d3be763d3454",
         "sha256": "271efd20f6315874241ae11d67ea0a9eb4766dd2e9c8c77cd4ecb8fbf66b6da7"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -380,6 +381,7 @@
       "roles": [
         "declaration:triage-label-configuration:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "623707b8e68434ad46f79f371b2b60a0b4bb55cc",
@@ -390,7 +392,6 @@
         "blob": "623707b8e68434ad46f79f371b2b60a0b4bb55cc",
         "sha256": "b2c6c2b88086dd20b3db8d010a9ec0d9daa9fef4abce8cfe1845883b2547d1af"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -398,6 +399,7 @@
       "roles": [
         "declaration:documentation:guidance"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "c72f0dd95a6878d48f523c84ca545d238d7857cc",
@@ -408,7 +410,6 @@
         "blob": "c72f0dd95a6878d48f523c84ca545d238d7857cc",
         "sha256": "4e009a7baab4df3847e6cca47e11c88d6e9979ff3696600c0b4c4427e8724546"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -416,6 +417,7 @@
       "roles": [
         "declaration:github-repository-configuration:guidance"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "4a4c461374bd2959b1ed43765363a26143bce2b6",
@@ -426,7 +428,6 @@
         "blob": "4a4c461374bd2959b1ed43765363a26143bce2b6",
         "sha256": "cafbb76d990bdc5fb5876946c4aa2225e4be67f55e3e5afac29269fa2c646c34"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -434,6 +435,7 @@
       "roles": [
         "declaration:project-readmes:guidance"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "31f2ef053c7f9be61d14be8a01017596186426dd",
@@ -444,7 +446,6 @@
         "blob": "31f2ef053c7f9be61d14be8a01017596186426dd",
         "sha256": "115472e3b1065b72bb73662060c0aeb9c7ba71e371cf5b09db5a5224c6140749"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -452,6 +453,7 @@
       "roles": [
         "declaration:repository-readme:guidance"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "0ebfc65112ccf3eb0168575a215341e8aad22955",
@@ -462,7 +464,6 @@
         "blob": "0ebfc65112ccf3eb0168575a215341e8aad22955",
         "sha256": "923ba54cb741dbb1fe41506d1846d12002f60e0505edf2649748b26cefa4db3a"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -470,6 +471,7 @@
       "roles": [
         "operation:documentation-navigation:script"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "2e1af076f0b8de7baa68b894ee626418833f3315",
@@ -480,7 +482,6 @@
         "blob": "2e1af076f0b8de7baa68b894ee626418833f3315",
         "sha256": "4edbbb74c8219ab806015c30bbd0ba947a96d293e4a6dcf87d046c39aab78acb"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -488,6 +489,7 @@
       "roles": [
         "operation:project-readme-structure:script"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "c780f0caeef2a9217f538985d9a3b695189e1f15",
@@ -498,7 +500,6 @@
         "blob": "c780f0caeef2a9217f538985d9a3b695189e1f15",
         "sha256": "77609ccf56ba3bd76ec67e1c1d3e6d203922539d9987143b354e9a268e12b113"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -506,6 +507,7 @@
       "roles": [
         "operation:repository-readme-structure:script"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "6740f036e6e2596847f621cdb42af8e1c109bdd6",
@@ -516,7 +518,6 @@
         "blob": "6740f036e6e2596847f621cdb42af8e1c109bdd6",
         "sha256": "b7b98dab2da9eb27a7919a2d3597a475ddd5d0d71841c6439230b589f9124133"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -525,6 +526,7 @@
         "operation:canonical-labels:resource",
         "operation:pull-request-integration:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "f3aee962855c02eca4d0723df0f8faf8453d1791",
@@ -535,7 +537,6 @@
         "blob": "f3aee962855c02eca4d0723df0f8faf8453d1791",
         "sha256": "e3ab9ad479fb741b90c7372a71a8f3da650c374820e9346b340ad850625affa9"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -545,6 +546,7 @@
         "operation:project-readme-structure:resource",
         "operation:repository-readme-structure:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "145e2fbbd3600396f18dc086638fa25f1777b074",
@@ -555,17 +557,17 @@
         "blob": "145e2fbbd3600396f18dc086638fa25f1777b074",
         "sha256": "ca4be6c2c72863c34775fdd19298eae571d6f29d2753eddb66b56cd8c331316c"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
       "path": "operations/lib/rendered-markdown.mjs",
       "roles": [
-        "declaration:rendered-markdown-runtime:exact",
         "operation:documentation-navigation:resource",
         "operation:project-readme-structure:resource",
+        "declaration:rendered-markdown-runtime:exact",
         "operation:repository-readme-structure:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "6622f537315dafeb5256a4f9d700ede78322920a",
@@ -576,7 +578,6 @@
         "blob": "6622f537315dafeb5256a4f9d700ede78322920a",
         "sha256": "c9c1f2586caf75d467fcfdd862388707816b99f7765d781b1b181306e06529ac"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -584,6 +585,7 @@
       "roles": [
         "operation:canonical-labels:script"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "6c582d335354142d43e15b14c64266bfc526b741",
@@ -594,7 +596,6 @@
         "blob": "6c582d335354142d43e15b14c64266bfc526b741",
         "sha256": "587c0eff5bf3a2c822ce974bec0a72967a7c2608c81f67e8735dec9a1beb6525"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -602,6 +603,7 @@
       "roles": [
         "operation:pull-request-integration:script"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "68f2d3aef1343d2f63ce35ff89544fcbc9fda6b4",
@@ -612,7 +614,6 @@
         "blob": "68f2d3aef1343d2f63ce35ff89544fcbc9fda6b4",
         "sha256": "812a63d62b3c06c791b19d1943f2113f5eed3b9247ff52571384efce4394c7c0"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -620,6 +621,7 @@
       "roles": [
         "declaration:issue-contract-validator:exact"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "5017c1f0706115b8b720b2e62895dab72c597a82",
@@ -630,7 +632,6 @@
         "blob": "5017c1f0706115b8b720b2e62895dab72c597a82",
         "sha256": "725d76e0e5d1cc42bf9a115753184291bcab9a836781e0bdb418ef08e967ca35"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -638,6 +639,7 @@
       "roles": [
         "manifest"
       ],
+      "change": "changed",
       "baseline": {
         "mode": "100644",
         "blob": "2a347cef9bc08a2862166e657c5de826b3815d2e",
@@ -645,20 +647,20 @@
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "2a347cef9bc08a2862166e657c5de826b3815d2e",
-        "sha256": "859ed44932d4a80c51c0c82457083abb712f80aeabf3a954dd96694ea54caee8"
+        "blob": "95168944ee3eb917314994603ceca778f9c83315",
+        "sha256": "0503a48e4ab780eae6fd85cf3d43d989a7b75ff9cf4abf65818c519670646898"
       },
-      "change": "unchanged",
-      "byteAndModeIdentical": true
+      "byteAndModeIdentical": false
     },
     {
       "path": "vendor/marked/LICENSE",
       "roles": [
-        "declaration:marked-license:exact",
         "operation:documentation-navigation:resource",
+        "declaration:marked-license:exact",
         "operation:project-readme-structure:resource",
         "operation:repository-readme-structure:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "4bd2d4a084987ab634893a29f72ff6d1a67bf658",
@@ -669,17 +671,17 @@
         "blob": "4bd2d4a084987ab634893a29f72ff6d1a67bf658",
         "sha256": "8e3a3f82f59a60958f56ca08f445647c32a4733dc7ca6c2c46f6eb898471ab9c"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
       "path": "vendor/marked/README.md",
       "roles": [
-        "declaration:marked-provenance:exact",
         "operation:documentation-navigation:resource",
+        "declaration:marked-provenance:exact",
         "operation:project-readme-structure:resource",
         "operation:repository-readme-structure:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "ae143a15277b5a061c0ce2a89b5a6112c2e115e2",
@@ -690,17 +692,17 @@
         "blob": "ae143a15277b5a061c0ce2a89b5a6112c2e115e2",
         "sha256": "c1f9e95c649e297b482a842c72814efa04b0277f1a3a3c181e637d949b5bedc7"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
       "path": "vendor/marked/marked.esm.js",
       "roles": [
-        "declaration:marked-parser:exact",
         "operation:documentation-navigation:resource",
+        "declaration:marked-parser:exact",
         "operation:project-readme-structure:resource",
         "operation:repository-readme-structure:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "6ee4141594f62cdb27da05dcbf6c51a1581a0f70",
@@ -711,7 +713,6 @@
         "blob": "6ee4141594f62cdb27da05dcbf6c51a1581a0f70",
         "sha256": "2e70fea3ee49f98ab67ee395e5af51cc6bee4fafed15910da9ccb7f650df8014"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -719,6 +720,7 @@
       "roles": [
         "operation:canonical-labels:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "f1dd2c09108dde1a5f56097cee8461b3ea834499",
@@ -729,7 +731,6 @@
         "blob": "f1dd2c09108dde1a5f56097cee8461b3ea834499",
         "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -737,6 +738,7 @@
       "roles": [
         "declaration:skill-ask-matt:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "fb58ef9febcfd558cdb4517e370f19034869ba26",
@@ -747,7 +749,6 @@
         "blob": "fb58ef9febcfd558cdb4517e370f19034869ba26",
         "sha256": "a8aa20158609ef39e2b308b6ba0660c91066838d07a867202e63a7744a88a3ed"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -755,6 +756,7 @@
       "roles": [
         "declaration:skill-ask-matt:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "ae8eb9b211972d9ae584b41d0f1439c644494fc7",
@@ -765,7 +767,6 @@
         "blob": "ae8eb9b211972d9ae584b41d0f1439c644494fc7",
         "sha256": "b25d86fb36b1d294eeead5d7db529f86135f9671f2afcd607579a63bb2213769"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -773,6 +774,7 @@
       "roles": [
         "declaration:skill-ask-matt:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "5c60d51b5b1248d7210bff8c6b42a5a06524b8a4",
@@ -783,7 +785,6 @@
         "blob": "5c60d51b5b1248d7210bff8c6b42a5a06524b8a4",
         "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -791,6 +792,7 @@
       "roles": [
         "declaration:skill-code-review:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "e28d7acbf7b3bb4d7817b7eb5d9c105af03f6ec4",
@@ -801,7 +803,6 @@
         "blob": "e28d7acbf7b3bb4d7817b7eb5d9c105af03f6ec4",
         "sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -809,6 +810,7 @@
       "roles": [
         "declaration:skill-code-review:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "9076774ba327f49068db9273feceda03bfe940fa",
@@ -819,7 +821,6 @@
         "blob": "9076774ba327f49068db9273feceda03bfe940fa",
         "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -827,6 +828,7 @@
       "roles": [
         "declaration:skill-codebase-design:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "cd94075cfd754d147555c5d747a16431ed4c7dd8",
@@ -837,7 +839,6 @@
         "blob": "cd94075cfd754d147555c5d747a16431ed4c7dd8",
         "sha256": "f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -845,6 +846,7 @@
       "roles": [
         "declaration:skill-codebase-design:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "7edc861a31b1b219b933af18079f66b564c5de67",
@@ -855,7 +857,6 @@
         "blob": "7edc861a31b1b219b933af18079f66b564c5de67",
         "sha256": "8e740bf98446dbd4dfdc132ac4346d9a7eedaf93de6a495889171cf7f99f16bd"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -863,6 +864,7 @@
       "roles": [
         "declaration:skill-codebase-design:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "3f63c8146dd2604b419c929e9876b90c30d410e9",
@@ -873,7 +875,6 @@
         "blob": "3f63c8146dd2604b419c929e9876b90c30d410e9",
         "sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -881,6 +882,7 @@
       "roles": [
         "declaration:skill-codebase-design:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "3180715edb37f6e96bec42f92f00169faa8886ef",
@@ -891,7 +893,6 @@
         "blob": "3180715edb37f6e96bec42f92f00169faa8886ef",
         "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -899,6 +900,7 @@
       "roles": [
         "declaration:skill-diagnosing-bugs:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "061c25a524acaa93d4534e9e08a793c0a5fe45fd",
@@ -909,7 +911,6 @@
         "blob": "061c25a524acaa93d4534e9e08a793c0a5fe45fd",
         "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -917,6 +918,7 @@
       "roles": [
         "declaration:skill-diagnosing-bugs:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "a13a755a77634ce61a649a3a0d905a66d3865b35",
@@ -927,7 +929,6 @@
         "blob": "a13a755a77634ce61a649a3a0d905a66d3865b35",
         "sha256": "3e430dbe4334a87597488c060cb3dc3786bb00c9182877d6f5ec41f62490e90b"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -935,6 +936,7 @@
       "roles": [
         "declaration:skill-diagnosing-bugs:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "243198464a8401a7ba1d63b3708fa43c3d067665",
@@ -945,7 +947,6 @@
         "blob": "243198464a8401a7ba1d63b3708fa43c3d067665",
         "sha256": "35103539fc36873eea36074769ad454f9379d6fc8b2dc0e26ce987fd3bfe5503"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -953,6 +954,7 @@
       "roles": [
         "declaration:skill-domain-modeling:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "d7e61f30a9fd8ca70d9ee68f019c2a9ebf2d13f7",
@@ -963,7 +965,6 @@
         "blob": "d7e61f30a9fd8ca70d9ee68f019c2a9ebf2d13f7",
         "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -971,6 +972,7 @@
       "roles": [
         "declaration:skill-domain-modeling:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "79bbb32f6fda55758b377c980f72a6cb2b8c670e",
@@ -981,7 +983,6 @@
         "blob": "79bbb32f6fda55758b377c980f72a6cb2b8c670e",
         "sha256": "17ab16ce783e4d2801ee52fd9acdf550cbf44de65ae76797a93943bbedf22a13"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -989,6 +990,7 @@
       "roles": [
         "declaration:skill-domain-modeling:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "9b97707e19ef1f590aada356f2b3f6bb881f91be",
@@ -999,7 +1001,6 @@
         "blob": "9b97707e19ef1f590aada356f2b3f6bb881f91be",
         "sha256": "327a2b50620e2fd70abc6893cd6965e76b20f8d0adb0dc2c8d5eb3845efb643e"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1007,6 +1008,7 @@
       "roles": [
         "declaration:skill-domain-modeling:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "7f1522d2f11506ee205275ab7c282aa52366ecf6",
@@ -1017,7 +1019,6 @@
         "blob": "7f1522d2f11506ee205275ab7c282aa52366ecf6",
         "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1025,6 +1026,7 @@
       "roles": [
         "declaration:skill-grill-with-docs:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "62b9efb6f991d1b229adee7506962f13ced0c499",
@@ -1035,7 +1037,6 @@
         "blob": "62b9efb6f991d1b229adee7506962f13ced0c499",
         "sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1043,6 +1044,7 @@
       "roles": [
         "declaration:skill-grill-with-docs:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "5dbe2780a51be3e9b118bd7758a73e54a9384e11",
@@ -1053,7 +1055,6 @@
         "blob": "5dbe2780a51be3e9b118bd7758a73e54a9384e11",
         "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1061,6 +1062,7 @@
       "roles": [
         "declaration:skill-implement:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "7a0b11f5f4fe9505ea5c7983c3083ba1bf754f69",
@@ -1071,7 +1073,6 @@
         "blob": "7a0b11f5f4fe9505ea5c7983c3083ba1bf754f69",
         "sha256": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1079,6 +1080,7 @@
       "roles": [
         "declaration:skill-implement:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "f8794dc153b409052a9167baf10858cf01b36175",
@@ -1089,7 +1091,6 @@
         "blob": "f8794dc153b409052a9167baf10858cf01b36175",
         "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1097,6 +1098,7 @@
       "roles": [
         "declaration:skill-improve-codebase-architecture:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "e39e8255b8797cf8257d014fb6658fb533f3a399",
@@ -1107,7 +1109,6 @@
         "blob": "e39e8255b8797cf8257d014fb6658fb533f3a399",
         "sha256": "581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1115,6 +1116,7 @@
       "roles": [
         "declaration:skill-improve-codebase-architecture:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "a578dd0a34ad0a8886abe7e7642b100106ba86d6",
@@ -1125,7 +1127,6 @@
         "blob": "a578dd0a34ad0a8886abe7e7642b100106ba86d6",
         "sha256": "d1ac25511a936ff4250a48dbcefda363837d6bb9321b3cba73df99fa37270a75"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1133,6 +1134,7 @@
       "roles": [
         "declaration:skill-improve-codebase-architecture:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "706fdca096da5937fe57875a9154017d50668c42",
@@ -1143,7 +1145,6 @@
         "blob": "706fdca096da5937fe57875a9154017d50668c42",
         "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1151,6 +1152,7 @@
       "roles": [
         "declaration:skill-prototype:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "32be86a0a5d9928db84b3988e55f9debe476ab40",
@@ -1161,7 +1163,6 @@
         "blob": "32be86a0a5d9928db84b3988e55f9debe476ab40",
         "sha256": "f61c7d249e786a79ef289018901c348271e1798dd0b0bc5607b5c6f4d4a01ab9"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1169,6 +1170,7 @@
       "roles": [
         "declaration:skill-prototype:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "a0044501fe0d385b4d8575b610188ede9b236ccf",
@@ -1179,7 +1181,6 @@
         "blob": "a0044501fe0d385b4d8575b610188ede9b236ccf",
         "sha256": "714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1187,6 +1188,7 @@
       "roles": [
         "declaration:skill-prototype:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "3977951663490882c2632b40695d9f59a2fe2408",
@@ -1197,7 +1199,6 @@
         "blob": "3977951663490882c2632b40695d9f59a2fe2408",
         "sha256": "723211e878acbc7b6ff09755263f3295cde724ba902ff0064da41eed51d45ad3"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1205,6 +1206,7 @@
       "roles": [
         "declaration:skill-prototype:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "1618b147965bc729b7bf3e8da5f130132067aadc",
@@ -1215,7 +1217,6 @@
         "blob": "1618b147965bc729b7bf3e8da5f130132067aadc",
         "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1223,6 +1224,7 @@
       "roles": [
         "declaration:skill-research:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "fecee97e9457ba039678d2fcf1b1bc9fca78307d",
@@ -1233,7 +1235,6 @@
         "blob": "fecee97e9457ba039678d2fcf1b1bc9fca78307d",
         "sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1241,6 +1242,7 @@
       "roles": [
         "declaration:skill-research:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "e18b96ca0ccc1003889d5d6991386207c2454bc2",
@@ -1251,7 +1253,6 @@
         "blob": "e18b96ca0ccc1003889d5d6991386207c2454bc2",
         "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1259,6 +1260,7 @@
       "roles": [
         "declaration:skill-resolving-merge-conflicts:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "bfb7e5606e231e6808979f623fce76a9aad4b71c",
@@ -1269,7 +1271,6 @@
         "blob": "bfb7e5606e231e6808979f623fce76a9aad4b71c",
         "sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1277,6 +1278,7 @@
       "roles": [
         "declaration:skill-resolving-merge-conflicts:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "331ffb9d38937877f51a5f867a66dc61eee259ae",
@@ -1287,7 +1289,6 @@
         "blob": "331ffb9d38937877f51a5f867a66dc61eee259ae",
         "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1295,6 +1296,7 @@
       "roles": [
         "declaration:skill-setup-matt-pocock-skills:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "7f6f576e2e54e0d287cbb9731ebe0343f54e50cf",
@@ -1305,7 +1307,6 @@
         "blob": "7f6f576e2e54e0d287cbb9731ebe0343f54e50cf",
         "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1313,6 +1314,7 @@
       "roles": [
         "declaration:skill-setup-matt-pocock-skills:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "65a0da8128c98051183235e490767a8065310868",
@@ -1323,7 +1325,6 @@
         "blob": "65a0da8128c98051183235e490767a8065310868",
         "sha256": "9527de0110541c45712319025155aeab8dc7d77c6ed6e5e83271bab1851ab939"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1331,6 +1332,7 @@
       "roles": [
         "declaration:skill-setup-matt-pocock-skills:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "35249041162b1eed5b873d97fc430fb3e4adb18f",
@@ -1341,7 +1343,6 @@
         "blob": "35249041162b1eed5b873d97fc430fb3e4adb18f",
         "sha256": "edc6d6131fdffc4b7135704f5262124fc43355c95f61b7399dc5a4db643e28ca"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1349,6 +1350,7 @@
       "roles": [
         "declaration:skill-setup-matt-pocock-skills:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "b258aeb3c44420a2464b72ba228b77b4b3abbaea",
@@ -1359,7 +1361,6 @@
         "blob": "b258aeb3c44420a2464b72ba228b77b4b3abbaea",
         "sha256": "afd6852a80185217bd28aa5cbe456bef1e85be25be7bd1fba382d5b8ee428325"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1367,6 +1368,7 @@
       "roles": [
         "declaration:skill-setup-matt-pocock-skills:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "251035a6d74b4af8d68f066b8d7f1cef90904570",
@@ -1377,7 +1379,6 @@
         "blob": "251035a6d74b4af8d68f066b8d7f1cef90904570",
         "sha256": "ea175f73d193b3f55819c0ed9bbccf6ee0e70ad8f928e3d7607596c53380acd6"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1385,6 +1386,7 @@
       "roles": [
         "declaration:skill-setup-matt-pocock-skills:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "0209a19af92c9c485cf3acc3d9e253171517ea17",
@@ -1395,7 +1397,6 @@
         "blob": "0209a19af92c9c485cf3acc3d9e253171517ea17",
         "sha256": "7dcda20a2eb4bdc89b95d1143423c0691309921cadae3132e6424f371030506e"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1403,6 +1404,7 @@
       "roles": [
         "declaration:skill-setup-matt-pocock-skills:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "b716855d485f3865f9dfde2a82141721f065b2e7",
@@ -1413,7 +1415,6 @@
         "blob": "b716855d485f3865f9dfde2a82141721f065b2e7",
         "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1421,6 +1422,7 @@
       "roles": [
         "declaration:skill-tdd:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "8fc086710806190ee7c4baa32089cb877a75736a",
@@ -1431,7 +1433,6 @@
         "blob": "8fc086710806190ee7c4baa32089cb877a75736a",
         "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1439,6 +1440,7 @@
       "roles": [
         "declaration:skill-tdd:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "651b838a7663e027b1b8884491e867f26bb9a021",
@@ -1449,7 +1451,6 @@
         "blob": "651b838a7663e027b1b8884491e867f26bb9a021",
         "sha256": "ea6f01cf1b8c06a4b0f5b649d74b1b8ce8685e72af1b38d70d877693e092af0b"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1457,6 +1458,7 @@
       "roles": [
         "declaration:skill-tdd:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "71cbfee674d93244ce81d1830b930ca9a69200bd",
@@ -1467,7 +1469,6 @@
         "blob": "71cbfee674d93244ce81d1830b930ca9a69200bd",
         "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1475,6 +1476,7 @@
       "roles": [
         "declaration:skill-tdd:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "7ab86479f925a1f9e8ba680af33cb3b12e015381",
@@ -1485,7 +1487,6 @@
         "blob": "7ab86479f925a1f9e8ba680af33cb3b12e015381",
         "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1493,6 +1494,7 @@
       "roles": [
         "declaration:skill-to-spec:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "3f52599ae2a4347aee5a07432c2707518e691a7f",
@@ -1503,7 +1505,6 @@
         "blob": "3f52599ae2a4347aee5a07432c2707518e691a7f",
         "sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1511,6 +1512,7 @@
       "roles": [
         "declaration:skill-to-spec:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "549e6f76f020a1b9ba65f52ccda336566ee6222a",
@@ -1521,7 +1523,6 @@
         "blob": "549e6f76f020a1b9ba65f52ccda336566ee6222a",
         "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1529,6 +1530,7 @@
       "roles": [
         "declaration:skill-to-tickets:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "e868c831fcfb1e124e010bcdf84a429ec879160f",
@@ -1539,7 +1541,6 @@
         "blob": "e868c831fcfb1e124e010bcdf84a429ec879160f",
         "sha256": "5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1547,6 +1548,7 @@
       "roles": [
         "declaration:skill-to-tickets:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "24605a5db64e4fc750b999aa94aea126bee814ee",
@@ -1557,7 +1559,6 @@
         "blob": "24605a5db64e4fc750b999aa94aea126bee814ee",
         "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1565,6 +1566,7 @@
       "roles": [
         "declaration:skill-triage:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "1462fcd9e8cc21921158c296149dc05d9be39d20",
@@ -1575,7 +1577,6 @@
         "blob": "1462fcd9e8cc21921158c296149dc05d9be39d20",
         "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1583,6 +1584,7 @@
       "roles": [
         "declaration:skill-triage:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "c9fba2f77ee0619975ec8488c0d4861a0c7e3151",
@@ -1593,7 +1595,6 @@
         "blob": "c9fba2f77ee0619975ec8488c0d4861a0c7e3151",
         "sha256": "1fbf9b432130c6380aa65813b55553cfda150309b27c595e183f8e335b8a190d"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1601,6 +1602,7 @@
       "roles": [
         "declaration:skill-triage:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "37ddea1e3dcf8fb5be5b92e4e45f2c34b8e61d3e",
@@ -1611,7 +1613,6 @@
         "blob": "37ddea1e3dcf8fb5be5b92e4e45f2c34b8e61d3e",
         "sha256": "623a2ed692bdc77d2090e2a3dea3b627dd722ad3bbaca0be83aada75292c8fc4"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1619,6 +1620,7 @@
       "roles": [
         "declaration:skill-triage:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "acb366cf0f2527e8925ff1223b77610ac0b1be4c",
@@ -1629,7 +1631,6 @@
         "blob": "acb366cf0f2527e8925ff1223b77610ac0b1be4c",
         "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1637,6 +1638,7 @@
       "roles": [
         "declaration:skill-wayfinder:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "812805b760baf328db0ebdef6f3807e381f97016",
@@ -1647,7 +1649,6 @@
         "blob": "812805b760baf328db0ebdef6f3807e381f97016",
         "sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1655,6 +1656,7 @@
       "roles": [
         "declaration:skill-wayfinder:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "b37544751e0570f9df8de6c02aef238de8c3e1e0",
@@ -1665,7 +1667,6 @@
         "blob": "b37544751e0570f9df8de6c02aef238de8c3e1e0",
         "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1673,6 +1674,7 @@
       "roles": [
         "declaration:skill-wizard:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "c4294ad8298b9b95fc727496b1b802b1f7363fba",
@@ -1683,7 +1685,6 @@
         "blob": "c4294ad8298b9b95fc727496b1b802b1f7363fba",
         "sha256": "bdf31d48211ea559878f95a4f344aeabf8d85897488ba564382bab0b000daac1"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1691,6 +1692,7 @@
       "roles": [
         "declaration:skill-wizard:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "b601bdf3a321e7d32d5714681540b811287d3988",
@@ -1701,7 +1703,6 @@
         "blob": "b601bdf3a321e7d32d5714681540b811287d3988",
         "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1709,6 +1710,7 @@
       "roles": [
         "declaration:skill-wizard:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "1b3cdf40ad4923a9845fd682653d8cc4510f516e",
@@ -1719,7 +1721,6 @@
         "blob": "1b3cdf40ad4923a9845fd682653d8cc4510f516e",
         "sha256": "33cbe9dfb1d0e9185b60248a52aabed14bc64785a00cac695e302e739dd6c153"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1727,6 +1728,7 @@
       "roles": [
         "declaration:skill-grill-me:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "3947ff9c4ad980d14fc07fccbf659d47c114e81d",
@@ -1737,7 +1739,6 @@
         "blob": "3947ff9c4ad980d14fc07fccbf659d47c114e81d",
         "sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1745,6 +1746,7 @@
       "roles": [
         "declaration:skill-grill-me:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "4d6fb0c746c5d21364dce5d0cf8c51eab9712e7b",
@@ -1755,7 +1757,6 @@
         "blob": "4d6fb0c746c5d21364dce5d0cf8c51eab9712e7b",
         "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1763,6 +1764,7 @@
       "roles": [
         "declaration:skill-grilling:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "8ca78c6d8f901aab0c5a1f896034b70e666ff2a3",
@@ -1773,7 +1775,6 @@
         "blob": "8ca78c6d8f901aab0c5a1f896034b70e666ff2a3",
         "sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1781,6 +1782,7 @@
       "roles": [
         "declaration:skill-grilling:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "ddbdb96139c0c1dfe6bca698f39d0465674b8a39",
@@ -1791,7 +1793,6 @@
         "blob": "ddbdb96139c0c1dfe6bca698f39d0465674b8a39",
         "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1799,6 +1800,7 @@
       "roles": [
         "declaration:skill-handoff:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "2eb98a51b97bb5bac461a26ad14828eeac827909",
@@ -1809,7 +1811,6 @@
         "blob": "2eb98a51b97bb5bac461a26ad14828eeac827909",
         "sha256": "7c62de979fdc7ac32fb5ddb2146156c917f80ee070d30fadc9d40343c4b6ed25"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1817,6 +1818,7 @@
       "roles": [
         "declaration:skill-handoff:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "6e1d8da121beceddc2f9ec7fa8714c1d914dd11a",
@@ -1827,7 +1829,6 @@
         "blob": "6e1d8da121beceddc2f9ec7fa8714c1d914dd11a",
         "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1835,6 +1836,7 @@
       "roles": [
         "declaration:skill-teach:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "fdd7e366ad9760588b28981e42b3d3b561e56aca",
@@ -1845,7 +1847,6 @@
         "blob": "fdd7e366ad9760588b28981e42b3d3b561e56aca",
         "sha256": "9b99859ec28437668130d8f2ce5a342938970f8a1ed4fd38c3eab4f4b5fff210"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1853,6 +1854,7 @@
       "roles": [
         "declaration:skill-teach:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "953c61422776b47612c3c945920358ad7b5daee7",
@@ -1863,7 +1865,6 @@
         "blob": "953c61422776b47612c3c945920358ad7b5daee7",
         "sha256": "701fa34b6748aa89e6c960ffb815257f481a7d77fb2900f9028f7edf3fdd6052"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1871,6 +1872,7 @@
       "roles": [
         "declaration:skill-teach:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "45250bb1bad70988bf381625931df64645e10246",
@@ -1881,7 +1883,6 @@
         "blob": "45250bb1bad70988bf381625931df64645e10246",
         "sha256": "8cacbb3c0644d3ae0ea4965564797099401a6930a23f7cf462918576587f2418"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1889,6 +1890,7 @@
       "roles": [
         "declaration:skill-teach:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "18b588c8b6f96a50ae2352f264928c643d2782e4",
@@ -1899,7 +1901,6 @@
         "blob": "18b588c8b6f96a50ae2352f264928c643d2782e4",
         "sha256": "e9cacf34026e11a8d1c8f9de88abe5bcbf654f4ebdb25cae8c0de0d5f48f44ec"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1907,6 +1908,7 @@
       "roles": [
         "declaration:skill-teach:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "c679eeccd48ca720c8196e5d9a9e58223abf213b",
@@ -1917,7 +1919,6 @@
         "blob": "c679eeccd48ca720c8196e5d9a9e58223abf213b",
         "sha256": "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1925,6 +1926,7 @@
       "roles": [
         "declaration:skill-teach:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "3452a850e3b0c1f0a3d41b2bfd45164d2d38d7f6",
@@ -1935,7 +1937,6 @@
         "blob": "3452a850e3b0c1f0a3d41b2bfd45164d2d38d7f6",
         "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1943,6 +1944,7 @@
       "roles": [
         "declaration:skill-to-questionnaire:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "dadd0c00d6a350acaa15bb9ca1b96b20ead684ca",
@@ -1953,7 +1955,6 @@
         "blob": "dadd0c00d6a350acaa15bb9ca1b96b20ead684ca",
         "sha256": "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1961,6 +1962,7 @@
       "roles": [
         "declaration:skill-to-questionnaire:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "a58d14765beb4acb4c9708b516310558e1308a22",
@@ -1971,7 +1973,6 @@
         "blob": "a58d14765beb4acb4c9708b516310558e1308a22",
         "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1979,6 +1980,7 @@
       "roles": [
         "declaration:skill-wait-what:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "f8854f1b4527bca90378baf5430557172136a1bf",
@@ -1989,7 +1991,6 @@
         "blob": "f8854f1b4527bca90378baf5430557172136a1bf",
         "sha256": "e3f44e3ccbc0e7b62f20ba70b295fc9c9f4aa3f96c77168faee1c71bacbf4215"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -1997,6 +1998,7 @@
       "roles": [
         "declaration:skill-wait-what:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "6f7a9c33f99ec4ba70d986d6fc0de06c8b811bc3",
@@ -2007,7 +2009,6 @@
         "blob": "6f7a9c33f99ec4ba70d986d6fc0de06c8b811bc3",
         "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -2015,6 +2016,7 @@
       "roles": [
         "declaration:skill-writing-for-agents:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "9cdbdb22aadc438755392216e75ad9a14cc9832e",
@@ -2025,7 +2027,6 @@
         "blob": "9cdbdb22aadc438755392216e75ad9a14cc9832e",
         "sha256": "c768e6307c7c10728c401c213f2c4ba71c542127eeb7ad2956aabd15a0fa0059"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -2033,6 +2034,7 @@
       "roles": [
         "declaration:skill-writing-for-agents:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "a37608daf6e835e767deecfb498facecaaba82ba",
@@ -2043,7 +2045,6 @@
         "blob": "a37608daf6e835e767deecfb498facecaaba82ba",
         "sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
@@ -2051,6 +2052,7 @@
       "roles": [
         "declaration:skill-writing-for-agents:skill"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "079c933b75743dec18b5d0c01006def20b6aad26",
@@ -2061,17 +2063,17 @@
         "blob": "079c933b75743dec18b5d0c01006def20b6aad26",
         "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
       "path": "vendor/parse5/LICENSE.entities",
       "roles": [
-        "declaration:parse5-entities-license:exact",
         "operation:documentation-navigation:resource",
+        "declaration:parse5-entities-license:exact",
         "operation:project-readme-structure:resource",
         "operation:repository-readme-structure:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "c464f863ea2b18a15ca3883bc5d98065ed5d039a",
@@ -2082,17 +2084,17 @@
         "blob": "c464f863ea2b18a15ca3883bc5d98065ed5d039a",
         "sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
       "path": "vendor/parse5/LICENSE.parse5",
       "roles": [
-        "declaration:parse5-license:exact",
         "operation:documentation-navigation:resource",
+        "declaration:parse5-license:exact",
         "operation:project-readme-structure:resource",
         "operation:repository-readme-structure:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "f3265d4b88f7aac271ec21679195adff8446855e",
@@ -2103,17 +2105,17 @@
         "blob": "f3265d4b88f7aac271ec21679195adff8446855e",
         "sha256": "8c535800331e1e4439835555b3f9edc7fe9dee2fab0d8bbbd5a982e8b8343d4d"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
       "path": "vendor/parse5/README.md",
       "roles": [
-        "declaration:parse5-provenance:exact",
         "operation:documentation-navigation:resource",
+        "declaration:parse5-provenance:exact",
         "operation:project-readme-structure:resource",
         "operation:repository-readme-structure:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "e7e7e14efd98e2d57c3464f4aadbe20c3444d4b3",
@@ -2124,17 +2126,17 @@
         "blob": "e7e7e14efd98e2d57c3464f4aadbe20c3444d4b3",
         "sha256": "8f285afdb9d5eca93648d2ffbea58ea0cea94485f18c3eec6f5825ef1e0446bf"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     },
     {
       "path": "vendor/parse5/parse5.esm.js",
       "roles": [
-        "declaration:parse5-parser:exact",
         "operation:documentation-navigation:resource",
+        "declaration:parse5-parser:exact",
         "operation:project-readme-structure:resource",
         "operation:repository-readme-structure:resource"
       ],
+      "change": "unchanged",
       "baseline": {
         "mode": "100644",
         "blob": "153bf3fabcc05a163e4d13400a5ac5bc3d615b3f",
@@ -2145,7 +2147,6 @@
         "blob": "153bf3fabcc05a163e4d13400a5ac5bc3d615b3f",
         "sha256": "bdf861eb0bce411afe5fcc312c770c3fe18dac9b5296771d40217d52a6ae7a93"
       },
-      "change": "unchanged",
       "byteAndModeIdentical": true
     }
   ]
