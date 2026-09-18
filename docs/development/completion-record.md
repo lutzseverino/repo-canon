@@ -65,8 +65,9 @@ CLI version in `standards.yaml` from `1.2.2` to `1.3.0`, the Repository
 Standards release that ships compact work and scope evidence together with the
 fix for [lutzseverino/repo-standards#77](https://github.com/lutzseverino/repo-standards/issues/77).
 The manifest is a selected input, so those bytes create a new source identity.
-The current accepted source is the 115-file closure, selected for release as
-`v0.2.0`, whose only change from published `v0.1.1` at
+The current accepted source is the 115-file closure, published as `v0.2.0` at
+commit `79ff51198465248df67c6e1d6a66c95e2f964df5`, whose only change from
+published `v0.1.1` at
 `0f313ef435c715889303ec1157f1006bee1fb9f4` is that one line; the other 114
 inputs are byte-and-mode identical, and none were added or removed. It resolves
 the same single profile, 52 declarations, five operations, and 25 author skills,

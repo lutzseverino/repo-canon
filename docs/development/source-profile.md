@@ -142,9 +142,9 @@ errors, one `complete` profile, and 52 declarations for those bytes; installed
 public CLI 1.2.2 returns `INCOMPATIBLE_CLI` for them, which is the breaking
 standards change this release announces. The refreshed
 [closure comparison](source-closure.json) records both sides, and
-[Release v0.2.0](release-v0-2-0.md) records the release, which is selected for
-publication as `v0.2.0`. Local validation and CI therefore install
-`@lutzseverino/repo-standards@1.3.0`.
+[Release v0.2.0](release-v0-2-0.md) records the verified publication at commit
+`79ff51198465248df67c6e1d6a66c95e2f964df5`. Local validation and CI therefore
+install `@lutzseverino/repo-standards@1.3.0`.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no

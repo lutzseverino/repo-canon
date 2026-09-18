@@ -9,9 +9,9 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 - [Release v0.1.1](release-v0-1-1.md): verified publication, the corrected
   workflow failure, refreshed source identity, patch release notes, and
   evidence boundary.
-- [Release v0.2.0](release-v0-2-0.md): the breaking required-CLI change, its
-  impact and migration, refreshed source identity, minor release notes, and
-  evidence boundary.
+- [Release v0.2.0](release-v0-2-0.md): verified publication, the breaking
+  required-CLI change, its impact and migration, refreshed source identity,
+  minor release notes, and evidence boundary.
 - [First real adoption](real-adoption.md): the merged Repository Standards
   adoption, its run identities, the surfaced defects, the authorized required-check
   bypass, packaged-output validation, and remote readback.
@@ -80,8 +80,9 @@ and refreshed the accepted identity at `8369d82`;
 [release v0.1.1](release-v0-1-1.md) covers it. `v0.2.0` then moves the exact
 required CLI version from 1.2.2 to 1.3.0, a breaking standards change and the
 only selected byte change since `v0.1.1`;
-[release v0.2.0](release-v0-2-0.md) covers it and is selected for publication.
-`v0.1.1` stays the current release until that publication is verified.
+[release v0.2.0](release-v0-2-0.md) covers it, and it is the current release.
+`v0.1.1` stays published and selectable for adopters that remain on public CLI
+1.2.2.
 Repository Standards completed and merged the first real adoption from the
 `v0.1.x` public pins; [first real adoption](real-adoption.md) records it,
 including the defects it surfaced. Adopters verify the published release before
