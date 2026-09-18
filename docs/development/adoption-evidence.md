@@ -25,7 +25,12 @@ directories, all affected runtime blobs, all 12 canonical labels, the unrelated
 adopter label, the active ruleset, squash settings, and remote content. The
 local Git matrix completed under historical `v0.0.2`; its unchanged cases were
 not rerun. The retained [machine-readable record](adoption-acceptance.json)
-binds the identities and outcomes. These temporary exercises preceded Repo
+binds the identities and outcomes. It keeps every run identity, outcome, and
+summary; each work interval's full before and after observation maps were
+replaced by their observation identities and the delta between them, so the
+record stays within the CLI's per-file observation limit and this repository
+stays inspectable. The record's `compaction` block states that rule and the
+identity of the bytes it replaced. These temporary exercises preceded Repo
 Canon publication and are historical evidence for disposable repositories only.
 [First release delivery](first-release.md) covers the permanent `v0.1.0`
 selection, [release v0.1.1](release-v0-1-1.md) covers the current release, and

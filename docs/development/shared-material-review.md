@@ -16,7 +16,7 @@ The review covered these exact-owned files and their copies under `drafts/`:
   issue forms; and
 - `.github/PULL_REQUEST_TEMPLATE.md`.
 
-The final exact files and review copies are byte-identical. Project-owned
+The final exact files and review copies were byte-identical at that review. Project-owned
 `docs/agents/project.md` and `docs/development/README.md` remain outside that
 set. The shared material keeps the small-correction exception, Conventional
 Commit and squash rules, full Agent Brief convention, contract revision

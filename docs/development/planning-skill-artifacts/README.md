@@ -1,9 +1,13 @@
 # Planning skill runtime artifacts
 
-These files are byte-identical copies of reviewable outputs from the
-authoritative disposable repositories. They preserve the result without
-turning scenario-specific plans, tracker records, prototype code, or setup
-instructions into Repo Canon product behavior.
+These files are copies of reviewable outputs from the authoritative disposable
+repositories. They preserve the result without turning scenario-specific plans,
+tracker records, prototype code, or setup instructions into Repo Canon product
+behavior. Each copy is byte-identical to the fixture output except the Wayfinder
+map: its two decision links name tracker files that only ever existed in the
+disposable repository, so they are kept as plain text and this repository's
+documentation-navigation check passes. The SHA-256 column identifies the
+retained copy.
 
 | Artifact | Source fixture revision | SHA-256 |
 | --- | --- | --- |
@@ -13,7 +17,7 @@ instructions into Repo Canon product behavior.
 | [Public endpoint ticket](intake-batch-ticket-01.md) | `373c1e11b9982e04352d80baa43fae4fe2b56627` | `ca2c9146707d4b56a1094a7dbe9e14557a0888df34e6756823b83a9e45472500` |
 | [Atomic conflict ticket](intake-batch-ticket-02.md) | `373c1e11b9982e04352d80baa43fae4fe2b56627` | `fcf557833708ceb15a21ebb3a867940671a89e111778ba23f5d5634a1f7fd303` |
 | [Triaged request](receipt-export-triage.md) | `0760a3c0e5d7c52a042bb59d416c1311f443d8c6` | `c0cfaae823ee685d1ff583ff29f16795fdf76cfbd5f96303561e04974318010f` |
-| [Wayfinder map](retry-map.md) | `7f081ec55b712ab90d2e9d1b8ac995dab35b5f20` | `f168ef3ebb3ff1af7193d9b0d445f021852a6fac214c38bcf54e667f9cb3e496` |
+| [Wayfinder map](retry-map.md), links plain | `7f081ec55b712ab90d2e9d1b8ac995dab35b5f20` | `9192a96367601a77f96222070d1711ecbfc9d930daeceb3aebb2398fa62125d6` |
 | [Wayfinder ticket](retry-window-ticket.md) | `7f081ec55b712ab90d2e9d1b8ac995dab35b5f20` | `1c9ed323827f4439ffbe099b5c846c7f53f88886798db52a6c7fdd102ee019ea` |
 | [Logic prototype](delivery-schedule-cancellation-prototype.html) | `3f9ea86d00c1dd5b01df327dd2bc27417357b913` | `7ff30e9a7d100a0e7137a6221c10e10975443e033eb5cafa3175ac4573dd7be4` |
 | [Prototype verdict](delivery-schedule-cancellation-verdict.md) | `3f9ea86d00c1dd5b01df327dd2bc27417357b913` | `d8b0205a88ee0261b19ce85cee756444f48ed8cc78d80679a6459306b8e9f06c` |

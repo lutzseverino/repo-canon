@@ -228,7 +228,7 @@ test('retained planning artifacts preserve native formats and runtime outputs', 
   assert.match(triage, /renewed semantic review/i);
 
   const map = readFileSync(join(artifacts, 'retry-map.md'), 'utf8');
-  assert.match(map, /\[Choose the default Retry window\]/);
+  assert.match(map, /^- Choose the default Retry window: /m);
   assert.doesNotMatch(map, /Whether Retry windows differ by carrier after a default is chosen/);
   assert.match(readFileSync(join(artifacts, 'retry-window-ticket.md'), 'utf8'), /^Status: resolved$/m);
 
