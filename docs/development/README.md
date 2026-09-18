@@ -15,6 +15,9 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 - [First real adoption](real-adoption.md): the merged Repository Standards
   adoption, its run identities, the surfaced defects, the authorized required-check
   bypass, packaged-output validation, and remote readback.
+- [Self-adoption of v0.2.0](self-adoption.md): this repository's own adoption of
+  its published release, the confirmed inspection identity and scope, the
+  operation results, and what self-adoption could and could not surface.
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
 - [Complete source acceptance](completion-record.md): final source identity,
@@ -125,8 +128,9 @@ disposable local repositories used for the seven productivity skill exercises.
 
 This repository takes the same path every adopter takes, so the suite also runs
 the three shipped checks against this repository's own root through the
-operation request helper, with the documentation tree and the two root decision
-records as the confirmed documentation scope. The same fixture fails if any
+operation request helper, with the documentation tree, the repository-root
+glossary `CONTEXT.md`, and the two root decision records as the documentation
+scope that [self-adoption](self-adoption.md) confirmed. The same fixture fails if any
 tracked file reaches the CLI's 8 MiB per-file observation limit, which would
 make the repository uninspectable before any report. Run it alone with
 `node --test test/repository-conformance.test.mjs`. It needs no separate CI
