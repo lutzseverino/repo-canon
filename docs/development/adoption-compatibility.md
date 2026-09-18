@@ -13,11 +13,14 @@ and the merged real adoption in [first real adoption](real-adoption.md).
 ## Supported source and discovery route
 
 Use `repo-standards/v2` and the installed public CLI 1.3.0 with Node.js 24 as the
-current validation and adoption baseline. Declare only compatibility actually
-validated against the released source bytes; `requires.repo-standards` is the
-exact version `1.3.0`, raised from `1.2.2` by
-[release v0.2.0](release-v0-2-0.md) so that adopters record compact work and
-scope evidence. Format version and CLI version are distinct. The successful
+current validation and adoption baseline. Declare a minimum that was actually
+validated against the released source bytes: `requires.repo-standards` is the
+open-ended minimum `>=1.3.0`. [Release v0.2.0](release-v0-2-0.md) raised that
+floor from 1.2.2 so that adopters record compact work and scope evidence, and
+[release v0.2.1](release-v0-2-1.md) stated it as a minimum rather than an exact
+version, because the requirement gates selection only and an exact one strands
+adopters. Format version and CLI version are distinct, and the format version
+carries compatibility with CLI releases above the floor. The successful
 1.2.1 local source validation and failed public acquisition, and the 1.2.2
 validation and adoption evidence for `v0.1.0` and `v0.1.1`, remain historical
 evidence rather than the current baseline.

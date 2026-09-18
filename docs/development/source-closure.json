@@ -1,13 +1,13 @@
 {
   "format": "repo-canon/source-closure-comparison/v4",
   "baseline": {
-    "commit": "0f313ef435c715889303ec1157f1006bee1fb9f4",
-    "release": "v0.1.1",
+    "commit": "79ff51198465248df67c6e1d6a66c95e2f964df5",
+    "release": "v0.2.0",
     "files": 115
   },
   "reviewed": {
-    "commit": "79ff51198465248df67c6e1d6a66c95e2f964df5",
-    "selectedRelease": "v0.2.0",
+    "commit": null,
+    "selectedRelease": "v0.2.1",
     "files": 115
   },
   "reviewedCommitPolicy": "The reviewed commit is null while the release pull request is open, because the reviewed identity is the per-path Git blob and SHA-256 record below rather than a commit that does not exist until integration. The verified publication record names the integrated commit and confirms every entry at it.",
@@ -42,11 +42,11 @@
         "path": "standards.yaml",
         "change": "changed",
         "baselineMode": "100644",
-        "baselineBlob": "2a347cef9bc08a2862166e657c5de826b3815d2e",
-        "baselineSha256": "859ed44932d4a80c51c0c82457083abb712f80aeabf3a954dd96694ea54caee8",
+        "baselineBlob": "95168944ee3eb917314994603ceca778f9c83315",
+        "baselineSha256": "0503a48e4ab780eae6fd85cf3d43d989a7b75ff9cf4abf65818c519670646898",
         "reviewedMode": "100644",
-        "reviewedBlob": "95168944ee3eb917314994603ceca778f9c83315",
-        "reviewedSha256": "0503a48e4ab780eae6fd85cf3d43d989a7b75ff9cf4abf65818c519670646898"
+        "reviewedBlob": "c50c427c9294bae93bc5f2cd9d7183b6d3aa5a45",
+        "reviewedSha256": "6af2f5a223f7c9b0e7473d1f94309bad4c237ce9fd09e84a89958fce55b7645d"
       }
     ],
     "removed": []
@@ -642,13 +642,13 @@
       "change": "changed",
       "baseline": {
         "mode": "100644",
-        "blob": "2a347cef9bc08a2862166e657c5de826b3815d2e",
-        "sha256": "859ed44932d4a80c51c0c82457083abb712f80aeabf3a954dd96694ea54caee8"
+        "blob": "95168944ee3eb917314994603ceca778f9c83315",
+        "sha256": "0503a48e4ab780eae6fd85cf3d43d989a7b75ff9cf4abf65818c519670646898"
       },
       "reviewed": {
         "mode": "100644",
-        "blob": "95168944ee3eb917314994603ceca778f9c83315",
-        "sha256": "0503a48e4ab780eae6fd85cf3d43d989a7b75ff9cf4abf65818c519670646898"
+        "blob": "c50c427c9294bae93bc5f2cd9d7183b6d3aa5a45",
+        "sha256": "6af2f5a223f7c9b0e7473d1f94309bad4c237ce9fd09e84a89958fce55b7645d"
       },
       "byteAndModeIdentical": false
     },

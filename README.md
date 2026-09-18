@@ -10,10 +10,10 @@
 ## Installation
 
 Repo Canon is a standards source rather than a package, so adopting maintainers
-install the public Repository Standards CLI that applies it. `v0.2.0` requires
-exactly CLI **1.3.0**. On macOS or Linux with Node.js 24, npm, and Git, install
-it outside the adopting project and keep it there for inspection, adoption, and
-recovery:
+install the public Repository Standards CLI that applies it. `v0.2.1` requires
+CLI **1.3.0** or newer, the version it was validated against. On macOS or Linux
+with Node.js 24, npm, and Git, install it outside the adopting project and keep
+it there for inspection, adoption, and recovery:
 
 ```sh
 cli="$HOME/.local/share/repo-standards/cli-1.3.0"
@@ -41,14 +41,14 @@ need.
 
 ## Usage
 
-Select [v0.2.0](https://github.com/lutzseverino/repo-canon/releases/tag/v0.2.0)
+Select [v0.2.1](https://github.com/lutzseverino/repo-canon/releases/tag/v0.2.1)
 with the `complete` profile and inspect it from the adopting repository. The
 report is read-only and authorizes nothing:
 
 ```sh
 "$cli/node_modules/.bin/repo-standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
-  --standards-version v0.2.0 --profile complete \
+  --standards-version v0.2.1 --profile complete \
   --project /path/to/adopting-project --json
 ```
 
