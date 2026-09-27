@@ -75,7 +75,7 @@ first that applies:
 - `chore` when it only raises the required CLI version.
 
 Before requesting review, run the checks the
-[development guide](README.md#current-validation) requires and the all-profile
+[development guide](README.md#setup-and-validation) requires and the all-profile
 `source validate`.
 
 The pull request body carries the review and validation summary:

@@ -69,7 +69,7 @@ npm install --prefix "$cli_prefix" --ignore-scripts \
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
 
-Follow the [development guide](README.md#current-validation) for focused local
+Follow the [development guide](README.md#setup-and-validation) for focused local
 checks and PR validation. CI installs the same public CLI outside the checkout
 and validates every profile.
 

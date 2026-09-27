@@ -1,34 +1,9 @@
 # Development
 
-This directory explains development decisions, validation, and maintenance of
-the standards source. Keep end-user instructions under `docs/usage`, durable
-decisions under `docs/adr`, and agent configuration under `docs/agents`.
+This directory explains how to set up, validate, release, and maintain the
+Repo Canon standards source.
 
-- [Release procedure](release.md): released bytes, the reviewed diff, the rule
-  for changed selected bytes, the single release pull request, release notes,
-  and publication and verification.
-- [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
-  validation baseline, and preparation requirements.
-- [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
-  identity and permission prerequisites, protocol outcomes, and fixture coverage.
-- [GitHub PR integration setup](github-pr-integration-setup.md): required-check
-  enforcement, squash-only merge defaults, preservation, and recovery behavior.
-- [Pull request metadata validation](pr-metadata-validation.md): trusted check
-  behavior, stable identity, permissions, and local verification.
-- [Issue contract validation](issue-contract-validation.md): supported issue
-  shapes, feedback behavior, workflow permissions, and runnable fixtures.
-- [Upstream compatibility](upstream-compatibility.md): the regular skill
-  inventory and native issue formats that automation must respect.
-- [Repository README check](repository-readme-check.md): operation protocol,
-  outcomes, prerequisites, and focused fixture command.
-- [Documentation and Project README checks](documentation-check.md): concrete
-  scope, structural outcomes, prerequisites, and focused fixture commands.
-- [Standards source profile](source-profile.md): complete profile ownership,
-  declarations, prerequisites, validation, and evidence boundaries.
-- [Skill exercises](skill-exercises.md): fixture builders, the common harness,
-  and the scenario prerequisites for exercising the pinned skills.
-
-## Working locally
+## Setup and validation
 
 Clone the repository with Git and use Node.js 24 and npm. The source needs no
 package installation, typecheck, or build step; parser dependencies are
@@ -36,8 +11,6 @@ vendored. GitHub planning uses authenticated `gh` access. For source validation,
 install public Repository Standards CLI 2.0.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
-
-## Current validation
 
 Run focused tests for the changed behavior, `npm run check`, and
 `git diff --check` before opening a PR. Review affected links, issue-form fields,
@@ -66,9 +39,39 @@ the harness that exercises the skills.
 This repository takes the same path every adopter takes, so the suite also runs
 the three shipped checks against this repository's own root through the
 operation request helper, with the documentation tree, the repository-root
-glossary `CONTEXT.md`, and the [authoring notes](../../authoring-notes.md) as
-its documentation scope. The same fixture fails if any tracked file reaches the
-CLI's 8 MiB per-file observation limit, which would make the repository
-uninspectable before any report. Run it alone with
+glossary [`CONTEXT.md`](../../CONTEXT.md), and the
+[authoring notes](../../authoring-notes.md) as its documentation scope. The
+same fixture fails if any tracked file reaches the CLI's 8 MiB per-file
+observation limit, which would make the repository uninspectable before any
+report. Run it alone with
 `node --test test/repository-conformance.test.mjs`. It needs no separate CI
 step: `npm test` already runs it on every pull request.
+
+## Documents
+
+- [Release procedure](release.md): released bytes, the reviewed diff, the rule
+  for changed selected bytes, the single release pull request, release notes,
+  and publication and verification.
+- [Adoption compatibility](adoption-compatibility.md): the supported v2
+  mapping, validation baseline, adoption preparation requirements, and the
+  route for GitHub repository settings.
+- [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
+  identity and permission prerequisites, protocol outcomes, and fixture coverage.
+- [GitHub PR integration setup](github-pr-integration-setup.md): required-check
+  enforcement, squash-only merge defaults, preservation, and recovery behavior.
+- [Pull request metadata validation](pr-metadata-validation.md): trusted check
+  behavior, stable identity, permissions, and local verification.
+- [Issue contract validation](issue-contract-validation.md): supported issue
+  shapes, feedback behavior, workflow permissions, and runnable fixtures.
+- [Matt Pocock workflow compatibility](upstream-compatibility.md): the pinned
+  skill snapshot, its review and update steps, the native issue formats that
+  automation must respect, and how shared instructions and configuration adapt
+  upstream setup.
+- [Repository README check](repository-readme-check.md): operation protocol,
+  outcomes, prerequisites, and focused fixture command.
+- [Documentation and Project README checks](documentation-check.md): concrete
+  scope, structural outcomes, prerequisites, and focused fixture commands.
+- [Standards source profile](source-profile.md): complete profile ownership,
+  declarations, executable prerequisites, and the validation boundary.
+- [Skill exercises](skill-exercises.md): the procedure, fixture builders,
+  common harness, and scenarios for exercising the pinned skills.
