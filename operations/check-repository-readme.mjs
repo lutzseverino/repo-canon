@@ -75,17 +75,18 @@ function singleLink(events) {
   return events.length === 1 && events[0].type === 'link' ? events[0] : null;
 }
 
-function linksTo(events, target) {
-  if (events === null) return false;
-  return events.some(event => event.type === 'link'
-    && event.text && resolvedLocalPath('README.md', event.target) === target);
-}
-
-function checkNavigationLink(projectRoot, allHeadings, section, target, corrections) {
-  if (!lstatIsFile(join(projectRoot, target))) return;
+function checkPointerSection(projectRoot, allHeadings, section, target, corrections) {
   const body = sectionElements(allHeadings, section);
-  if (body === null) corrections.push(`Add a ${section} section linking to ${target}.`);
-  else if (!linksTo(body, target)) corrections.push(`Link the ${section} section to ${target}.`);
+  if (body === null) {
+    if (lstatIsFile(join(projectRoot, target))) corrections.push(`Add a ${section} section containing only a link to ${target}.`);
+    return;
+  }
+  const link = singleLink(body);
+  if (!link || resolvedLocalPath('README.md', link.target) !== target) {
+    corrections.push(`Make the ${section} section contain only a link to ${target}.`);
+  } else if (!link.text) {
+    corrections.push(`Name the ${section} link.`);
+  }
 }
 
 function checkStructure(projectRoot, markdown, license) {
@@ -119,8 +120,8 @@ function checkStructure(projectRoot, markdown, license) {
     corrections.push(`Move Installation before ${allHeadings[0].name}; it is the first section when present.`);
   }
 
-  checkNavigationLink(projectRoot, allHeadings, 'Contributing', 'CONTRIBUTING.md', corrections);
-  checkNavigationLink(projectRoot, allHeadings, 'Documentation', 'docs/README.md', corrections);
+  checkPointerSection(projectRoot, allHeadings, 'Contributing', 'CONTRIBUTING.md', corrections);
+  checkPointerSection(projectRoot, allHeadings, 'Documentation', 'docs/README.md', corrections);
 
   const licenseBody = sectionElements(allHeadings, 'License');
   if (license && licenseBody === null) {

@@ -86,10 +86,13 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
       return;
     }
     if (node.tagName === 'a') {
-      elements.push({ type: 'link', text: renderedText(node, isHidden).trim(), target: attribute(node, 'href') ?? '' });
-      if (containsHeading(node, isHidden)) {
-        for (const child of node.childNodes ?? []) visit(child, centered);
+      const link = { type: 'link', text: renderedText(node, isHidden).trim(), target: attribute(node, 'href') ?? '' };
+      if (!containsHeading(node, isHidden)) {
+        elements.push(link);
+        return;
       }
+      elements.push({ ...link, wrapsHeading: true });
+      for (const child of node.childNodes ?? []) visit(child, centered);
       return;
     }
     if (node.tagName === 'img') {
@@ -275,7 +278,7 @@ export function interpretMarkdown(markdown, { additionalNonRenderedElements = []
     ));
     const bodyElements = content.elements
       .slice(index + 1, end < 0 ? content.elements.length : end)
-      .filter(candidate => !candidate.insideHeading);
+      .filter(candidate => !candidate.insideHeading && !candidate.wrapsHeading);
     return [{ ...element, body: { elements: bodyElements } }];
   });
   const markdownHeadings = markdownTokenSpans(normalizedMarkdown, tokens)
