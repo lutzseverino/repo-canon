@@ -155,6 +155,11 @@ function feedbackState({ status, revision: contractRevision, label = null, revie
 
 function fixtureIssueEvents({ comments, event, issue }) {
   const values = [];
+  const priorStates = (issue.labels ?? []).map((candidate) => candidate.name ?? candidate)
+    .filter((name) => ["needs-triage", "needs-info", "wontfix"].includes(name) && !(event.action === "labeled" && event.label?.name === name));
+  for (const [index, name] of priorStates.entries()) {
+    values.push({ id: 50 + index, event: "labeled", label: { name }, actor: { login: "reporter" }, created_at: "2026-09-14T16:00:00Z" });
+  }
   const feedback = comments.find((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.includes("repo-canon:issue-contract-state"));
   const encoded = feedback?.body.match(/<!-- repo-canon:issue-contract-state (\{.*\}) -->/)?.[1];
   const recorded = encoded ? JSON.parse(encoded) : null;
@@ -1099,6 +1104,46 @@ test("a workflow state labeled after the review survives a lagging event timelin
       assert.equal(result.code, 0, result.stderr);
       assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/needs-info")));
       assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+    });
+  }
+});
+
+test("a workflow state the timeline has not recorded supersedes the review in another event's run", async (context) => {
+  for (const [name, stateEvents] of [
+    ["never recorded", []],
+    ["re-applied after a recorded removal", [
+      { id: 99, event: "labeled", label: { name: "wontfix" }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:00:00Z" },
+      { id: 100, event: "unlabeled", label: { name: "wontfix" }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:30:00Z" },
+    ]],
+  ]) {
+    await context.test(name, async () => {
+      const issue = {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+        labels: [{ name: "ready-for-agent" }, { name: "wontfix" }],
+        state: "open",
+      };
+      const comments = [{
+        id: 13,
+        body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+        user: { login: "github-actions[bot]" },
+      }];
+      const result = await exercise({
+        issue,
+        comments,
+        issueEvents: [
+          ...stateEvents,
+          { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+        ],
+        permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+        event: { action: "reopened", issue: { number: 42 } },
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      const removed = result.requests
+        .filter(({ method, url }) => method === "DELETE" && url.includes("/labels/"))
+        .map(({ url }) => decodeURIComponent(url.split("/labels/")[1]));
+      assert.deepEqual(removed, ["ready-for-agent"]);
     });
   }
 });

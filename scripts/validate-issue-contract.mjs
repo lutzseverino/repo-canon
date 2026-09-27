@@ -842,9 +842,10 @@ async function returnToReview(apiClient, number, labels) {
 }
 
 // A non-readiness state labeled strictly after the review supersedes it; states
-// labeled before or in the same second as the review are replaced by it. When
-// the timeline has not yet recorded the triggering label event, the event's
-// label supersedes unless its payload time proves it was not later.
+// labeled before or in the same second as the review are replaced by it. A
+// present state whose application the timeline has not recorded also
+// supersedes, unless it is the triggering label with a payload time no later
+// than the review or a label the issue was opened with.
 function stateAppliedAfterReview(labels, reviewEventId, issueEvents, issue, currentEvent) {
   const opening = String(reviewEventId).startsWith("opened:");
   const reviewIndex = opening ? -1 : issueEvents.findIndex(({ id }) => String(id) === String(reviewEventId));
@@ -859,8 +860,13 @@ function stateAppliedAfterReview(labels, reviewEventId, issueEvents, issue, curr
     if (recordedLater && (!latest || labeledIndex > latest.index)) latest = { label, index: labeledIndex };
     const triggering = currentEvent.action === "labeled" && currentEvent.label?.name === label;
     const payloadAt = currentEvent.issue?.updated_at;
-    const unrecorded = triggering && !recordedLater && (!reviewKnown || !payloadAt || payloadAt > reviewedAt);
-    if (unrecorded) return label;
+    if (triggering) {
+      if (!recordedLater && (!reviewKnown || !payloadAt || payloadAt > reviewedAt)) return label;
+      continue;
+    }
+    const latestChange = issueEvents.findLast((candidate) => ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label);
+    const openedWith = currentEvent.action === "opened" && (currentEvent.issue?.labels ?? []).some((candidate) => labelName(candidate) === label);
+    if (!openedWith && latestChange?.event !== "labeled") return label;
   }
   return latest?.label ?? null;
 }
