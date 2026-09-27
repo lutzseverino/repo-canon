@@ -39,8 +39,8 @@ or infer a license for the project.
 Report evidence for descriptions, commands, technology choices, badges, and
 links. The read-only structural check covers title centering, section order,
 the required Contributing and Documentation sections when their targets exist,
-link-only Contributing, Documentation, and License sections, and consistency
-between a single root license file and the License section. It does not
-establish factual accuracy, badge choice, command behavior, Features wording,
-license correctness, or prose quality, and it does not enforce the approximate
-word-count guidance.
+Contributing, Documentation, and License sections holding only their link as a
+plain paragraph, and consistency between a single root license file and the
+License section. It does not establish factual accuracy, badge choice, command
+behavior, Features wording, license correctness, or prose quality, and it does
+not enforce the approximate word-count guidance.

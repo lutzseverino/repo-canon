@@ -62,9 +62,9 @@ The fixtures cover all recognized sections, omitted and interleaved sections,
 Markdown and HTML heading forms, nested centering, hidden examples, missing,
 link-only, and extra-content Contributing and Documentation sections, pointer
 links hidden in code, resolving elsewhere, or wrapped in lists, quotations,
-tables, or images, links wrapping the next heading, malformed titles and
-license links,
-missing and ambiguous licensing, invalid protocol input, and byte-for-byte
-preservation of the disposable project. One fixture executes the operation from
-a retained layout containing only its declared script and resources, so an
-import cannot succeed accidentally through the source checkout.
+tables, or images, links wrapping the next heading, named anchors and hidden
+media around pointer links, malformed titles and license links, missing and
+ambiguous licensing, invalid protocol input, and byte-for-byte preservation of
+the disposable project. One fixture executes the operation from a retained
+layout containing only its declared script and resources, so an import cannot
+succeed accidentally through the source checkout.

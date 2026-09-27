@@ -40,7 +40,7 @@ requires exactly CLI 1.3.0, so adopting it needs that CLI version instead.
 - Copy twenty-five engineering and productivity skills into `.agents/skills/`.
 - Set up triage labels, squash-only merging, and a required `PR metadata` check.
 - Check the Repository README, Project READMEs, and documentation navigation.
-- Guide agents on the documentation tree, Project READMEs, and Repository README.
+- Guide agents on the documentation tree, Project READMEs, and the Repository README.
 
 ## Usage
 
