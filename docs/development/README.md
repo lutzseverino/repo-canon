@@ -40,9 +40,10 @@ This repository takes the same path every adopter takes, so the suite also runs
 the three shipped checks against this repository's own root through the
 operation request helper, with the documentation tree, the repository-root
 glossary [`CONTEXT.md`](../../CONTEXT.md), and the
-[authoring notes](../../authoring-notes.md) as its documentation scope. The same fixture fails if any tracked file reaches the
-CLI's 8 MiB per-file observation limit, which would make the repository
-uninspectable before any report. Run it alone with
+[authoring notes](../../authoring-notes.md) as its documentation scope. The
+same fixture fails if any tracked file reaches the CLI's 8 MiB per-file
+observation limit, which would make the repository uninspectable before any
+report. Run it alone with
 `node --test test/repository-conformance.test.mjs`. It needs no separate CI
 step: `npm test` already runs it on every pull request.
 
@@ -52,7 +53,8 @@ step: `npm test` already runs it on every pull request.
   for changed selected bytes, the single release pull request, release notes,
   and publication and verification.
 - [Adoption compatibility](adoption-compatibility.md): the supported v2
-  mapping, validation baseline, and adoption preparation requirements.
+  mapping, validation baseline, adoption preparation requirements, and the
+  route for GitHub repository settings.
 - [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
   identity and permission prerequisites, protocol outcomes, and fixture coverage.
 - [GitHub PR integration setup](github-pr-integration-setup.md): required-check
@@ -62,8 +64,9 @@ step: `npm test` already runs it on every pull request.
 - [Issue contract validation](issue-contract-validation.md): supported issue
   shapes, feedback behavior, workflow permissions, and runnable fixtures.
 - [Matt Pocock workflow compatibility](upstream-compatibility.md): the pinned
-  skill snapshot, its review and update steps, and the native issue formats
-  that automation must respect.
+  skill snapshot, its review and update steps, the native issue formats that
+  automation must respect, and how shared instructions and configuration adapt
+  upstream setup.
 - [Repository README check](repository-readme-check.md): operation protocol,
   outcomes, prerequisites, and focused fixture command.
 - [Documentation and Project README checks](documentation-check.md): concrete
