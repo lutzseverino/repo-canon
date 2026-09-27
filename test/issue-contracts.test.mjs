@@ -490,6 +490,7 @@ test("Wayfinder planning labels cannot preserve an unreviewed readiness state", 
   assert.equal(result.code, 1);
   assert.match(result.stderr, /Wayfinder planning issues/i);
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
   const feedback = result.requests.find(({ method, url }) => method === "POST" && url.endsWith("/comments"));
   assert.match(JSON.parse(feedback.body).body, /eligibility uses open state, assignment, and blockers/i);
 });
@@ -893,6 +894,155 @@ test("an authorized maintainer can bind a direct contract readiness label to the
   assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.includes("/labels/ready")));
 });
 
+test("an accepted review of a direct contract replaces every superseded workflow state", async (context) => {
+  const specificationBody = "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\nA user gets a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.\n\n## Further Notes\n\nNone.";
+  const ticketBody = "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.";
+  for (const [kind, body, readinessLabel] of [
+    ["specification", specificationBody, "ready-for-agent"],
+    ["implementation ticket", ticketBody, "ready-for-human"],
+  ]) {
+    await context.test(kind, async () => {
+      const issue = {
+        number: 42,
+        node_id: "ISSUE_42",
+        body,
+        labels: [{ name: "needs-triage" }, { name: "needs-info" }, { name: readinessLabel }],
+        state: "open",
+        updated_at: "2026-09-14T17:00:00Z",
+      };
+      const result = await exercise({
+        issue,
+        comments: [{ id: 13, body: feedbackState({ status: "awaiting-review", revision: bodyRevision(issue, null, kind), kind }), user: { login: "github-actions[bot]" } }],
+        event: {
+          action: "labeled",
+          issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+          label: { name: readinessLabel },
+          sender: { login: "maintainer" },
+        },
+        permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.match(result.stdout, new RegExp(`valid ${kind} with ${readinessLabel} bound`, "i"));
+      const removed = result.requests
+        .filter(({ method, url }) => method === "DELETE" && url.includes("/labels/"))
+        .map(({ url }) => decodeURIComponent(url.split("/labels/")[1]))
+        .sort();
+      assert.deepEqual(removed, ["needs-info", "needs-triage"]);
+      assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+    });
+  }
+});
+
+test("an authorized native issue creation with needs-triage keeps only its readiness state", async () => {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
+    state: "open",
+    created_at: "2026-09-14T17:00:00Z",
+    updated_at: "2026-09-14T17:00:00Z",
+  };
+  const result = await exercise({
+    issue,
+    issueEvents: [],
+    event: {
+      action: "opened",
+      issue: { number: 42, body: issue.body, labels: issue.labels, created_at: issue.created_at, updated_at: issue.updated_at },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /valid implementation ticket with ready-for-agent bound/i);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/needs-triage")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("a repeated event removes needs-triage left beside an approved direct contract", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
+    state: "open",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+    event: { action: "reopened", issue: { number: 42 } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/needs-triage")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "PATCH" && url.includes("/comments/")));
+});
+
+test("removing readiness returns a direct contract to review", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [],
+    state: "open",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    event: {
+      action: "unlabeled",
+      issue: { number: 42, body: issue.body },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  const added = result.requests.filter(({ method, url }) => method === "POST" && url.endsWith("/labels"));
+  assert.deepEqual(added.map(({ body }) => JSON.parse(body).labels), [["needs-triage"]]);
+  const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
+  assert.match(JSON.parse(update.body).body, /awaiting review/i);
+});
+
+test("removing readiness keeps a direct contract's remaining workflow state", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "needs-info" }],
+    state: "open",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    event: {
+      action: "unlabeled",
+      issue: { number: 42, body: issue.body },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+});
+
 test("an authorized native issue creation preserves its reviewed readiness", async () => {
   const issue = {
     number: 42,
@@ -1247,6 +1397,7 @@ test("direct body edits invalidate an approval even when the visible bytes are r
 
   assert.equal(result.code, 1);
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.ok(result.requests.some(({ method, url, body }) => method === "POST" && url.endsWith("/labels") && JSON.parse(body).labels.includes("needs-triage")));
   const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
   assert.match(JSON.parse(update.body).body, /fresh authorized review/i);
 });
@@ -1761,7 +1912,7 @@ test("a repeated Agent Brief readiness event preserves its active approval", asy
   assert.ok(!result.requests.some(({ method, url }) => method === "PATCH" && url.includes("/comments/")));
 });
 
-test("an invalid direct contract loses readiness without acquiring intake labels", async () => {
+test("an invalid direct contract loses readiness and returns to review without a category", async () => {
   const result = await exercise({
     issue: {
       number: 42,
@@ -1773,7 +1924,8 @@ test("an invalid direct contract loses readiness without acquiring intake labels
 
   assert.equal(result.code, 1);
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/ready-for-agent")));
-  assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+  const added = result.requests.filter(({ method, url }) => method === "POST" && url.endsWith("/labels"));
+  assert.deepEqual(added.map(({ body }) => JSON.parse(body).labels), [["needs-triage"]]);
 });
 
 test("event payload content cannot override re-fetched authoritative state", async () => {
