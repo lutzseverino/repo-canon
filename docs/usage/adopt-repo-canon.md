@@ -24,12 +24,10 @@ Source authoring, publication, and adoption are separate stages:
 
 ## Prerequisites
 
-Use macOS or Linux with Node.js 24, npm, and Git. The source requires public CLI
-2.0.0 or newer; 2.0.0 is the version it was validated against. Until a release
-requiring CLI 2.0.0 is published, the latest release, `v0.2.0`, requires exactly
-CLI 1.3.0; to adopt `v0.2.0`, install CLI 1.3.0 instead. Install a pinned CLI in
-a persistent directory outside the adopting repository so inspection, start, and
-recovery use the same executable:
+Use macOS or Linux with Node.js 24, npm, and Git. `v0.3.0` requires public CLI
+2.0.0 or newer; 2.0.0 is the version it was validated against. Install a pinned
+CLI in a persistent directory outside the adopting repository so inspection,
+start, and recovery use the same executable:
 
 ```sh
 adoption_cli="$HOME/.local/share/repo-standards/cli-2.0.0"
@@ -55,13 +53,13 @@ and inspect the prepared commit afresh.
 
 ## Inspect the published source
 
-Use the [latest published release](https://github.com/lutzseverino/repo-canon/releases/latest)
-after verifying its GitHub release. Set `source_tag` to that permanent published
-SemVer tag. Run the first inspection from the adopting repository:
+This guide selects `v0.3.0`. Verify its
+[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.3.0)
+first. Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=REPLACE_WITH_PUBLISHED_TAG
+source_tag=v0.3.0
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
