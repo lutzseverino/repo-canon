@@ -21,9 +21,9 @@ two adopting repositories had already diverged under that freedom.
   artifacts expire, so no conclusion may rest on an artifact alone.
 - Records already committed are removed from the tree. Git history retains them,
   and a maintained document that still needs one cites a commit permalink.
-  Files that tests pin remain as test fixtures. Earlier releases keep their
-  records with them; the published `v0.2.0` release keeps the exact requirement
-  and breaking-change note that
+  Files that tests pin remain as test fixtures. Published releases and their
+  notes stay as published; the `v0.2.0` release keeps the exact requirement and
+  breaking-change note that
   [ADR 0005](0005-require-an-open-ended-minimum-cli-version.md) leaves
   unrewritten.
 - This is a breaking standards change: it adds migration work for any adopting

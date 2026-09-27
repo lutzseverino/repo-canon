@@ -8,20 +8,23 @@ their rationale. They stay beside `standards.yaml`, the source they explain.
 Repo Canon owns a file only when every adopting repository should hold the
 same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
 and pull request templates, the shared agent configuration under `docs/agents`,
-the trusted validation workflows with their scripts, and the pinned skills. It
-is installed identically in every adopting repository and changes only through
-a Repo Canon release.
+the trusted validation workflows with their scripts, the vendored
+rendered-Markdown runtime and parsers with their notices, and the pinned skills
+with their upstream license notice. It is installed identically in every
+adopting repository and changes only through a Repo Canon release.
 
 `guidance/` and `discovery/` are source-side instructions for the agent that
 adopts Repo Canon. They are not installed as documents of the adopting
 repository; the CLI only retains them with the other source inputs.
 
 READMEs, development documentation, glossaries, and project-specific agent
-guidance belong to the project, because they describe that project.
-Repo Canon shapes them through contextual guidance and checks. Discovery
-proposes their concrete paths, including Project READMEs at arbitrary locations
-and documentation moves, and the maintainer confirms the complete inspection
-before adoption writes any of them.
+guidance belong to the adopting repository, because they describe it and its
+projects. Repo Canon shapes them through contextual guidance and checks. The
+Repository README has the fixed target `README.md`. Discovery proposes the
+concrete paths of Project READMEs at arbitrary locations and of documentation
+files, glossaries, and indexes, including documentation moves and link repairs.
+The maintainer confirms the complete inspection before adoption writes any of
+them.
 
 ## Confirmed preferences
 
