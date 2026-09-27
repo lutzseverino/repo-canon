@@ -2189,6 +2189,24 @@ test("an invalid direct contract loses readiness and returns to review without a
   assert.deepEqual(added.map(({ body }) => JSON.parse(body).labels), [["needs-triage"]]);
 });
 
+test("an approved direct contract edited into no recognizable contract returns to review", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "Caching notes without any contract headings.",
+      labels: [{ name: "ready-for-agent" }],
+      state: "open",
+    },
+    bodyLastEditedAt: "2026-09-14T17:02:00Z",
+    event: { action: "edited", issue: { number: 42 } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  const added = result.requests.filter(({ method, url }) => method === "POST" && url.endsWith("/labels"));
+  assert.deepEqual(added.map(({ body }) => JSON.parse(body).labels), [["needs-triage"]]);
+});
+
 test("event payload content cannot override re-fetched authoritative state", async () => {
   const result = await exercise({
     issue: {

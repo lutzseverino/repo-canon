@@ -114,9 +114,11 @@ readiness-label event also fails its label check and loses readiness. A
 repeated event on an approved specification or ticket removes a state left from
 before its review. Removing readiness, or losing it to invalidation, returns
 such a contract to `needs-triage` unless another non-readiness workflow state
-remains. Wayfinder maps and children reject readiness labels because their
-native eligibility uses open state, assignment, and blockers instead of the
-readiness workflow, and the validator never adds a workflow state to them.
+remains. An unrecognized issue that loses readiness, such as a contract edited
+until no contract heading remains, returns to `needs-triage` the same way.
+Wayfinder maps and children reject readiness labels because their native
+eligibility uses open state, assignment, and blockers instead of the readiness
+workflow, and the validator never adds a workflow state to them.
 
 Incomplete, edited, replaced, stale, unauthorized, or multiply-ready contracts
 lose `ready-for-agent` and `ready-for-human`. Corrections update the same comment

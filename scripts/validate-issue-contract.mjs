@@ -377,7 +377,7 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   }
 
   errors.push("Use one supported issue contract: a public form, native specification or ticket, triaged Agent Brief, Wayfinder map, or labeled Wayfinder child.");
-  return outcome("issue contract", errors, labels, false);
+  return outcome("issue contract", errors, labels, true);
 }
 
 function identifyContract(sections) {
@@ -399,8 +399,8 @@ function identifyContract(sections) {
   return null;
 }
 
-// Triaged requests and direct specifications and tickets carry one workflow
-// state; Wayfinder issues and unrecognized issues never gain one.
+// Triaged requests, direct specifications and tickets, and unrecognized issues
+// that lose readiness carry one workflow state; Wayfinder issues never gain one.
 function outcome(kind, errors, labels, usesWorkflowState, contract = null) {
   return { valid: errors.length === 0, kind, errors: [...new Set(errors)], labels, usesWorkflowState, contract };
 }
