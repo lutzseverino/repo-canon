@@ -14,10 +14,11 @@ reports as `update: available`, with the pinned and newest versions; `unknown`
 means no answer.
 
 Propose each available update as separate work: an exact update as its own
-small pull request, and a contextual update as a ticket. The update's
-inspection reports its class as `updateClass`; until an inspection has run,
-propose a ticket. The `adopt-standards` skill performs the update. Continue the
-current work as planned either way, and keep update changes out of its branch.
+small pull request, and a contextual update as a ticket. The class is the
+`updateClass` of the update's complete inspection, including any scope
+proposal; until one reports `exact`, treat the update as contextual. The
+`adopt-standards` skill performs the update. Continue the current work as
+planned either way, and keep update changes out of its branch.
 
 ## Agent skills
 
