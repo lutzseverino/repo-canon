@@ -9,3 +9,4 @@ brief records explaining the decision and its reason.
 - [Follow the product's release versioning convention](0003-follow-product-release-versioning.md)
 - [Adopt published releases of this source](0004-adopt-published-releases-of-this-source.md)
 - [Require an open-ended minimum CLI version](0005-require-an-open-ended-minimum-cli-version.md)
+- [Keep point-in-time records with the event they record](0006-keep-point-in-time-records-with-their-event.md)

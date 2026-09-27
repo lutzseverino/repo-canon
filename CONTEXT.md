@@ -46,6 +46,15 @@ Applying a selected standards source to a repository within its confirmed
 scope and satisfying the source's requirements there.
 _Avoid_: Publication, copying shared files
 
+**Adopting repository**:
+A repository that applies a selected Repo Canon release through adoption.
+_Avoid_: Adopting project, because a Project is a component within a repository
+
+**Point-in-time record**:
+An account of one release, adoption, validation run, or exercise, kept with the
+pull request, release, or CI run it records rather than in documentation.
+_Avoid_: Evidence directory, documentation evidence, acceptance results
+
 **Breaking standards change**:
 A change that makes a previously conforming repository require new mandatory
 migration work or an incompatible workflow change to remain conforming.
@@ -53,5 +62,6 @@ _Avoid_: Only changes that break the adopting application's runtime
 
 **Self-adoption**:
 Adoption of a published Repo Canon release by the Repo Canon repository itself,
-through the same public CLI and profile every adopter uses.
-_Avoid_: Adopting the working tree, dogfooding, source validation
+through the same public CLI and profile every adopter uses, including every
+later update to a newer release.
+_Avoid_: Re-adoption, adopting the working tree, dogfooding, source validation
