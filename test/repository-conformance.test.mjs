@@ -8,13 +8,12 @@ import { invokeCheck } from './helpers/operation.mjs';
 
 // This repository is an adopter of its own published standards, so the three
 // shipped checks run against the real tree on every pull request instead of
-// against fixtures only. The documentation paths below are the scope the
-// completed self-adoption of v0.2.0 confirmed: the documentation tree, the
-// repository-root glossary, the authoring notes, and the design review. The
-// review drafts, the source-side guidance, the discovery instructions, and the
-// vendored material stay out.
+// against fixtures only. The documentation paths below are the repository's
+// documentation scope: the documentation tree, the repository-root glossary,
+// and the authoring notes. The source-side guidance, the discovery
+// instructions, and the vendored material stay out.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const rootDocuments = ['CONTEXT.md', 'authoring-notes.md', 'design-review.md'];
+const rootDocuments = ['CONTEXT.md', 'authoring-notes.md'];
 
 // `discovery/documentation.md` keeps the exact-owned shared agent configuration
 // outside documentation scope, and `standards.yaml` declares each of those files

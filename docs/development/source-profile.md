@@ -75,104 +75,19 @@ and validates every profile.
 
 ## Validation boundary
 
-On 2026-09-14, public CLI 1.2.1 under Node.js 24 validated the complete local
-source with `valid: true`, no errors, and the single `complete` profile. The
-reported source identity was `repo-canon` using `repo-standards/v2` and exact
-compatibility `1.2.1`. The resolved counts matched the inventory of that time,
-and the CLI reported discovery required for `documentation`,
-`github-repository-configuration`, and `project-readmes`.
-
-That result is retained historical evidence for the earlier source bytes. Public
-CLI 1.2.2 under Node.js 24.21.0 later returned `valid: true` with no errors for
-the accepted `c0d57fa` snapshot at temporary `v0.0.2`.
-
-After the hidden-HTML correction, the same installed public CLI and Node.js
-version returned `valid: true`, no errors, one `complete` profile, and 51
-declarations for exact reviewed commit
-`eb98da8af94e25cc66a7bd0bf5424604d5e3b7ec`. Public acquisition from the new
-immutable temporary tag `v0.0.3` resolved to that commit. The
-[source closure record](https://github.com/lutzseverino/repo-canon/blob/d8b357268286ded1423f0d2350eb3b7f74293bf6/docs/development/source-closure.json) enumerates all 114 inputs and proves
-that the corrected validator is the only selected byte change from `c0d57fa`.
-[The adoption record](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/adoption-evidence.md) preserves the installed npm
-integrity, source identity, public and historical execution boundaries, and
-outcomes.
-
-The accepted `eb98da8` result remains evidence for those exact 114 source files
-and 51 declarations. The rendered-Markdown refactor changes selected and
-transitive source bytes, adds the exact `rendered-markdown-runtime`
-declaration, and adds the retained local-link resource. Issue
-[#46](https://github.com/lutzseverino/repo-canon/issues/46) completed final
-whole-source review, recomputed closure, public acquisition, full adoption, and
-same-pin re-adoption for the changed source. Public CLI 1.2.2 returned
-`valid: true`, no errors, one `complete` profile, and 52 declarations for exact
-commit `e63f0d1438eb89c3df51a827ec169a8f5c489ded`; temporary `v0.0.4` resolved
-directly to that commit.
-
-Relative to accepted `eb98da8`, this refactor changes seven existing source
-files and adds one. Every entry has regular-file mode `100644`; no source path
-is removed, and the selected/transitive path set grows from 114 to 115:
-
-| Source path | Delta | Declaration or resource ownership |
-| --- | --- | --- |
-| `standards.yaml` | Changed | Source manifest |
-| `.github/scripts/validate-pr-metadata.mjs` | Changed | Exact `pr-metadata-validator` |
-| `scripts/validate-issue-contract.mjs` | Changed | Exact `issue-contract-validator` |
-| `operations/check-documentation.mjs` | Changed | `documentation-navigation` operation script |
-| `operations/check-project-readmes.mjs` | Changed | `project-readme-structure` operation script |
-| `operations/check-repository-readme.mjs` | Changed | `repository-readme-structure` operation script |
-| `operations/lib/rendered-markdown.mjs` | Changed | Exact `rendered-markdown-runtime`; retained by all three checks |
-| `operations/lib/local-markdown-links.mjs` | Added | Retained by all three checks |
-
-The manifest resolves 52 declarations, including 23 exact files, and retains
-three checks, two fixes, three repository declarations, one contextual file,
-and 25 skill declarations. The final
-[machine-readable closure](https://github.com/lutzseverino/repo-canon/blob/639af070ddeef2d82c96b8427a805da0e1bf8ba9/docs/development/source-closure.json) records all 115 paths, roles,
-modes, Git blobs, and SHA-256 identities. The
-[adoption record](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/adoption-evidence.md) binds the reviewed source to public
-installation, operation, preservation, workflow, and cleanup outcomes.
-
-The accepted `e63f0d1` identity and its 115 source files were published as
-`v0.1.0`. The workflow correction in [#55](https://github.com/lutzseverino/repo-canon/issues/55)
-then changed the bytes of the exact `pr-metadata-workflow` declaration, and with
-them the source identity. The same installed public CLI and Node.js version
-returned `valid: true`, no errors, one `complete` profile, and 52 declarations
-for exact commit `8369d823edb035c55a79f88d657db5a29efca2ce`, published as
-`v0.1.1`. `.github/workflows/pr-metadata.yml` is the only selected
-path that differs from `v0.1.0`; its mode stays `100644`, and the declaration
-set, counts, operations, and skills are unchanged. The refreshed
-[machine-readable closure](https://github.com/lutzseverino/repo-canon/blob/0f313ef435c715889303ec1157f1006bee1fb9f4/docs/development/source-closure.json) records both identities, and
-[Release v0.1.1](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-1-1.md) records the publication.
-
-The `v0.1.1` identity required public CLI 1.2.2. Requiring the compact evidence
-format moved that requirement to 1.3.0, the only selected byte change for
-`v0.2.0`: `standards.yaml` line 5 read `repo-standards: "1.3.0"`, and the other
-114 inputs were byte-and-mode identical to the published `v0.1.1` commit
-`0f313ef435c715889303ec1157f1006bee1fb9f4`. Installed public CLI 1.3.0 under
-Node.js 24.21.0 returned `valid: true`, no errors, one `complete` profile, and
-52 declarations for those bytes; installed public CLI 1.2.2 returns
-`INCOMPATIBLE_CLI` for them. [Release v0.2.0](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-2-0.md) records the
-verified publication at commit `79ff51198465248df67c6e1d6a66c95e2f964df5`.
-
-After `v0.2.0`, the requirement became the open-ended minimum
-`repo-standards: ">=2.0.0"`, so that adopters on public CLI 2.0.0 can select the
-next release. Installed public CLI 2.0.0 under Node.js 24.21.0 returned
-`valid: true`, no errors, one `complete` profile, and 53 declarations for the
-source with that requirement, matching the inventory above. Raising the
-minimum changes no adopter's conformance or workflow, which is the test in
-[ADR 0003](../adr/0003-follow-product-release-versioning.md), so it is not a
-breaking standards change;
+Installed public CLI 2.0.0 under Node.js 24 returns `valid: true`, no errors,
+one `complete` profile, and 53 declarations for the source, matching the
+inventory above. Local validation and CI install `@lutzseverino/repo-standards@2.0.0`,
+the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
-the requirement is a minimum. Local validation and CI therefore install
-`@lutzseverino/repo-standards@2.0.0`, the oldest version the requirement admits.
+the requirement is a minimum.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
 operation or prerequisite and cannot establish semantic coverage or safe scope
-in an adopting repository. The existing operation fixtures and skill inventory
-review remain separate evidence. The confirmed v2 inspections, operation
-execution, contextual assessments, authorized remote readback, and complete
-adoptions are separately recorded. Repo Canon source publication is separate
-work that follows the [release procedure](release.md), and each
+in an adopting repository. Operation fixtures, the skill inventory review, and
+the confirmed inspections, operation results, and contextual assessments of an
+adoption establish those separately. Source publication follows the
+[release procedure](release.md), and each
 [published release](https://github.com/lutzseverino/repo-canon/releases) carries
-its notes; the merged Repository Standards adoption of the `v0.1.x` published
-pins is recorded in [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md).
+its notes.

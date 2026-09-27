@@ -39,9 +39,8 @@ Concrete local links from `SKILL.md` files resolve within their complete skill
 directories. The skills invoke only other selected regular skills. References
 to subagents, context controls, browsers, issue-tracker clients, and similar
 harness facilities describe runtime prerequisites; they are not missing source
-dependencies. This inventory and content review does not exercise any skill.
-Tickets #11, #12, and #13 record the separate runtime exercises and their
-available or unavailable prerequisites.
+dependencies. This inventory and content review does not exercise any skill;
+the [skill exercise procedure](skill-exercises.md) does.
 
 Standards maintainers can reproduce the byte comparison from the repository
 root. These commands intentionally verify content and do not run the skills:
@@ -167,7 +166,8 @@ Sources: [to-spec](https://github.com/mattpocock/skills/blob/3cca18b368ae95cdbde
 Upstream setup provides a reusable Agent skills section, not the complete
 shared AGENTS.md chosen here. It ordinarily preserves surrounding repository
 instructions. The author's whole-file ownership choice therefore uses the
-separate preparation workflow recorded in the adoption compatibility audit.
+separate preparation workflow described in
+[adoption compatibility](adoption-compatibility.md#preserving-project-instructions-before-replacement).
 
 The GitHub seed infers repository identity from remotes. Domain conventions
 support lazy glossaries and ADRs, including multiple contexts. Triage supplies

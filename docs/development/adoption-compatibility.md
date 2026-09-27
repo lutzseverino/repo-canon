@@ -1,31 +1,20 @@
 # Adoption compatibility
 
-The required scope capability is delivered in Repository Standards 1.2.1.
-Product [#41](https://github.com/lutzseverino/repo-standards/issues/41) and
-delivery [#50](https://github.com/lutzseverino/repo-standards/issues/50) are
-closed. The owner's [acceptance reconciliation](https://github.com/lutzseverino/repo-standards/issues/41#issuecomment-5664401656)
-records completed macOS public verification and distinguishes the broader
-1.2.0 agent evidence from the 1.2.1 patch evidence. This satisfies Repo Canon's
-product dependency. Repo Canon's final CLI 1.2.2 source validation and adoption
-evidence are recorded separately in [the adoption record](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/adoption-evidence.md),
-and the merged real adoption in [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md).
+This document maps Repo Canon's accepted requirements to the Repository
+Standards interface that supports them, and records the routes chosen where the
+product leaves a gap.
 
 ## Supported source and discovery route
 
 Use `repo-standards/v2` and the installed public CLI 2.0.0 with Node.js 24 as the
 current validation and adoption baseline. Declare a minimum that was actually
 validated against the released source bytes: `requires.repo-standards` is the
-open-ended minimum `>=2.0.0`. [Release v0.2.0](https://github.com/lutzseverino/repo-canon/releases/tag/v0.2.0) raised the
-floor from 1.2.2 to 1.3.0 so that adopters record compact work and scope
-evidence. [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md)
-states the requirement as a minimum rather than an exact version, because the
-requirement gates selection only and an exact one strands adopters, and the
-floor moved to 2.0.0 so that adopters on that CLI can select the next release.
-Format version and CLI version are distinct, and the format version carries
-compatibility with CLI releases above the floor. The successful
-1.2.1 local source validation and failed public acquisition, and the 1.2.2
-validation and adoption evidence for `v0.1.0` and `v0.1.1`, remain historical
-evidence rather than the current baseline.
+open-ended minimum `>=2.0.0`.
+[ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) states the
+requirement as a minimum rather than an exact version, because the requirement
+gates selection only and an exact one strands adopters. Format version and CLI
+version are distinct, and the format version carries compatibility with CLI
+releases above the floor.
 
 | Accepted requirement | Supported mapping |
 | --- | --- |
@@ -50,48 +39,7 @@ Use the versioned [author format](https://github.com/lutzseverino/repo-standards
 and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/script-protocol.md)
 contracts when implementing. Discovery supplies scope resolution; the separate
 AGENTS preparation and authored GitHub setup routes below remain necessary.
-Repo Canon acceptance through `v0.2.0` combined final validation, operation and
-skill exercises, whole-source review, and complete adoption with authorized
-remote readback. The [release procedure](release.md) states what each later
-release requires.
-
-## Historical CLI 1.1.0 scope audit
-
-The following findings describe the original `repo-standards/v1` audit. The v2
-route above resolves the missing capability; these v1 limitations remain
-useful regression context rather than an outstanding product dependency.
-
-The format accepts only explicit, disjoint paths and directory trees. It
-rejects globs, repository-root targets, overlapping targets, and ancestors of
-reserved product storage. Contextual assessment also rejects changed paths
-outside the selected scope.
-
-The confirmed requirement to find maintained project READMEs in arbitrary
-monorepo layouts cannot be represented by one location-independent source.
-Hardcoding common folders would change that requirement. This was the
-product capability gap that prompted the v2 work.
-
-Documentation migration has a related limitation. A contextual
-`docs` directory can cover old categories and new destinations if no other
-declaration owns a descendant. The shared files under `docs/agents` are
-exact-owned, so that parent scope conflicts with them. Naming only the new
-categories cannot authorize moving files from arbitrary old locations. Exact
-ownership of these setup files is an accepted preference.
-
-Required outcomes recorded for the scope capability:
-
-- Inspect maintained project README targets in unfamiliar layouts, excluding
-  fixtures, generated content, and organizational directories.
-- Present concrete write scope before confirmation; changes affecting its
-  resolution invalidate the previous confirmation.
-- Account for source and destination paths during documentation moves while
-  protecting exact content, reserved state, exclusions, symlinks, and unrelated
-  project content.
-- Preserve current behavior for selections that do not request the capability.
-
-Historical sources: [author format](https://github.com/lutzseverino/repo-standards/blob/v1.1.0/docs/author-format.md),
-[path validation](https://github.com/lutzseverino/repo-standards/blob/v1.1.0/src/paths.ts),
-[contextual assessment](https://github.com/lutzseverino/repo-standards/blob/v1.1.0/src/assessment.ts).
+The [release procedure](release.md) states what each release requires.
 
 ## Preserving project instructions before replacement
 

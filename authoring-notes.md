@@ -1,25 +1,32 @@
 # Repo Canon authoring notes
 
-Status: policy decisions settled; shared contribution and agent workflow
-material reviewed. The complete source profile is authored and structurally
-valid with public CLI 2.0.0 as its validation baseline and required minimum.
-Complete adoption, scope-protection, preservation, and authorized
-remote-readback evidence is recorded. The owner selected `v0.1.0` for the first
-permanent release;
-[release delivery](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/first-release.md) covers its publication,
-[release v0.1.1](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-1-1.md) covers the patch release,
-and [release v0.2.0](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-2-0.md) covers the current
-release, which requires public CLI 1.3.0. Later releases follow the
-[release procedure](docs/development/release.md). The source now states its
-requirement as the open-ended minimum `>=2.0.0`.
-The separate real adoption is complete and merged, recorded in
-[first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md).
+These notes are the one home for Repo Canon's confirmed authoring decisions and
+their rationale. They stay beside `standards.yaml`, the source they explain.
+
+## Ownership
+
+Repo Canon owns a file only when every adopting repository should hold the
+same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
+and pull request templates, the shared agent configuration under `docs/agents`,
+the trusted validation workflows with their scripts, and the pinned skills. It
+is installed identically in every adopting repository and changes only through
+a Repo Canon release.
+
+`guidance/` and `discovery/` are source-side instructions for the agent that
+adopts Repo Canon. They are not installed as documents of the adopting
+repository; the CLI only retains them with the other source inputs.
+
+READMEs, development documentation, glossaries, and project-specific agent
+guidance belong to the project, because they describe that project.
+Repo Canon shapes them through contextual guidance and checks. Discovery
+proposes their concrete paths, including Project READMEs at arbitrary locations
+and documentation moves, and the maintainer confirms the complete inspection
+before adoption writes any of them.
 
 ## Confirmed preferences
 
 - Name: repo-canon (Repo Canon), distinct from the repo-standards product.
-  The GitHub identity is lutzseverino/repo-canon. Repository creation is a
-  work-in-progress bootstrap, separate from a published standards release.
+  The GitHub identity is lutzseverino/repo-canon.
 - Scope: express the author's preferred standards for any repository whose
   maintainers choose to adopt them, including collaborative repositories and
   repositories maintained by others. Start with one complete profile; no
@@ -77,13 +84,12 @@ The separate real adoption is complete and merged, recorded in
   distributes changes through standards releases. Keep upstream skill content
   intact and express repository conventions through configuration.
 - Omit contributor-facing instructions for updating the managed skill
-  collection. Contributors to an adopting project do not maintain the
+  collection. Contributors to an adopting repository do not maintain the
   standards source.
 - Automate objective issue/PR requirements. Failed PR validation should block
   merging; incomplete issues should receive actionable feedback and remain
   unready. Agents assess content meaning. Automation identifies missing
-  information rather than inventing it. Concrete behavior, permissions, and
-  fixture exercises are implemented; remote execution remains separate.
+  information rather than inventing it.
 - Behavior changes and substantive work require an issue. Small corrections
   such as typos, broken links, and formatting may explain their purpose in the
   PR alone. Larger work can use a parent specification and implementation
@@ -95,16 +101,13 @@ The separate real adoption is complete and merged, recorded in
 - Monorepo documentation policy remains independent of directory names. Use
   the delivered v2 discovery interface for arbitrary Project README targets;
   demonstrate complete coverage before claiming monorepo adoption support.
-  The original v1 capability gap remains historical evidence in the
-  compatibility audit.
 - CONTRIBUTING.md states contributor-facing requirements for getting a change
   accepted: issue expectations, development setup, validation, and PR/review
   expectations. Agent implementation procedures belong in skills. The file
   should be repository-agnostic exact content, copied identically between
-  adopting projects. The concrete draft is drafts/CONTRIBUTING.md; its fixed
-  link to docs/development/README.md delegates project-specific setup and
-  required checks to a project-owned development entry point, required in
-  every adopting repository. The complete draft received author acceptance.
+  adopting repositories. Its fixed link to docs/development/README.md delegates
+  project-specific setup and required checks to a project-owned development
+  entry point, required in every adopting repository.
 - Provide Bug report (reproduction and expected/actual behavior), Feature
   request (problem and desired outcome), Implementation ticket (scope,
   acceptance, blockers, optional parent), and Specification issue templates.
@@ -124,10 +127,9 @@ The separate real adoption is complete and merged, recorded in
   configuration under docs/agents, infers repository identity from Git remotes,
   uses CONTEXT.md and docs/adr, and includes the approved brief convention.
   Use upstream's standard triage and planning labels; external PR triage is
-  off. AGENTS.md is an identical standards-owned pointer file, accepted in full
-  as drafts/AGENTS.md. Preserve and reconcile existing project-specific
-  instructions in optional docs/agents/project.md before replacing the original
-  file. This supersedes the earlier contextual AGENTS choice. Create the
+  off. AGENTS.md is an identical standards-owned pointer file. Preserve and
+  reconcile existing project-specific instructions in optional
+  docs/agents/project.md before replacing the original file. Create the
   project guidance document only when it has useful content. AGENTS.md also
   carries the shared available-updates guidance: an agent may run `outdated` at
   the start of work and mentions any available update; an exact update is
@@ -178,8 +180,7 @@ The separate real adoption is complete and merged, recorded in
   between working branches. GitHub squash defaults remain editable at merge
   time; configuration and title checks are not an immutable final-message
   guarantee.
-- These title and commit rules extend the shared CONTRIBUTING.md draft. The
-  revised complete file is included in the final design review.
+- These title and commit rules are part of the shared CONTRIBUTING.md.
 - The shared tracker, domain, and triage-label configuration files are
   standards-owned exact content, identical between adopting repositories.
   Project-specific guidance remains separate. Reorganize existing docs using
@@ -210,53 +211,27 @@ The separate real adoption is complete and merged, recorded in
   approved-revision selector, or revision invalidation mechanism. The accepted
   readiness rule above is this standards source's convention and belongs in
   its configuration and automation, preserving upstream skill content.
-- The `drafts/` review copies retain the shared contribution and agent
-  configuration material as it stood at the design review. They are historical
-  review material, not current sources, and are not re-synced when a final file
-  changes. The four public forms preserve optional answers and the native
-  planning formats; the PR template preserves the agreed small-correction and
-  conditional Limits behavior. The material review and separate committed
-  preparation exercises are recorded in the
-  [shared material review](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/shared-material-review.md).
 
 ## Source profile
 
 The complete `repo-standards/v2` source is `standards.yaml`, with one
 `complete` profile and the open-ended CLI compatibility minimum `>=2.0.0`. The
 concise policy-to-declaration, material, operation, ownership, and prerequisite
-mapping is maintained in
-[the source profile record](docs/development/source-profile.md). Contextual
-Project README and documentation scope uses separate assessment and discovery
-guidance and resolves to individual adopter-reviewed paths.
+mapping is maintained in [the source profile](docs/development/source-profile.md).
+Contextual Project README and documentation scope uses separate assessment and
+discovery guidance and resolves to individual adopter-reviewed paths.
 
-The [compatibility audit](docs/development/adoption-compatibility.md) maps the
-accepted requirements to the delivered product interface and retains the
-historical CLI findings. Use installed public CLI 2.0.0 as the current
-validation baseline; claim only compatibility demonstrated against the released
-source bytes.
+[Adoption compatibility](docs/development/adoption-compatibility.md) maps the
+accepted requirements to the delivered product interface. Use installed public
+CLI 2.0.0 as the current validation baseline; claim only compatibility
+demonstrated against the released source bytes.
 
-## Bootstrap and specification refresh
+## License
 
-The user chose to bootstrap Repo Canon as a work in progress while product
-support developed separately, with complete adoption required before treating
-a release as adoption-ready. GitHub specification
-[#1](https://github.com/lutzseverino/repo-canon/issues/1) and implementation
-tickets #2–17 now carry the implementation contracts.
-
-The 2026-09-14 refresh preserves the full accepted vision and reconciles those
-existing contracts with the delivered and accepted product scope capability.
-Amend the parent before reconciling affected children and native relationships;
-retain their substantive source, operation, skill, and adoption requirements.
-Implementation follows verified remaining blockers. Product acceptance does
-not establish Repo Canon completion or publish an adoptable source.
-
-The author selected the MIT License for Repo Canon's original material during
-the 2026-09-14 specification-refresh interview. Preserve required upstream
-notices; this choice does not replace third-party licenses or choose an
-adopting repository's license. The author confirmed
-`Copyright (c) 2026 Jasper Lutz Severino` for the notice. Ticket
-[#14](https://github.com/lutzseverino/repo-canon/issues/14) applies the selected
-license and verifies attribution. The root license covers original Repo Canon
+The author selected the MIT License for Repo Canon's original material, with
+the notice `Copyright (c) 2026 Jasper Lutz Severino`. Preserve required
+upstream notices; this choice does not replace third-party licenses or choose
+an adopting repository's license. The root license covers original Repo Canon
 material; third-party material retains its accompanying licenses and notices.
 
 ## Delivery boundary
@@ -265,34 +240,14 @@ Author a separate local standards source. Repository provisioning, publication,
 and adoption are separate workflows. Do not change the Repository Standards
 product contracts to implement these personal preferences.
 
-## First release interview
+## Release versioning
 
-The owner confirmed the consolidated release plan below at the end of the
-interview. It is delivered: `v0.1.0` and the `v0.1.1` patch are published and
-verified, and `repo-standards` completed and merged its adoption of the
-`complete` profile from those public pins. The
-[first release](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/first-release.md),
-[release v0.1.1](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-1-1.md), and
-[first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md) records hold the
-evidence.
-
-- The work should finish with a published, verified source version and one
-  successful real repository adoption. Publication and adoption remain separate
-  steps.
-- `repo-standards` is the agreed first adopter of the existing `complete`
-  profile. The owner accepts the identified documentation migration effort,
-  including packaging, skill references, links, tests, and compatibility.
-  Preserve its project-specific requirements during preparation and adoption.
-  Initial inspection found no need for another profile; the mention of `cardo`
-  does not establish that it needs a different profile.
-- The owner asked about issue comments out of curiosity. Keep the existing
-  issue-contract feedback behavior; no comment-related change is requested.
 - Use SemVer for Repo Canon releases, following the observed release practice
   of `repo-standards`. The owner chose the adoption product as the deciding
   precedent. The [versioning decision](docs/adr/0003-follow-product-release-versioning.md)
   records that rationale and its evidence.
-- Publish the first version as `v0.1.0`. Consider a stable `1.0.0` baseline after
-  gaining experience from the real `repo-standards` adoption.
+- Consider a stable `1.0.0` baseline after gaining experience from real
+  adoptions.
 - Judge compatibility from the adopter's perspective. New mandatory migration
   work and incompatible workflow requirements are breaking standards changes;
   a newly required README section that makes a previously conforming repository
@@ -301,6 +256,3 @@ evidence.
   compatible fixes advance the last number. Release notes explicitly identify
   breaking changes because a middle-number bump can also contain compatible
   features. The [versioning guide](docs/usage/versioning.md) records these rules.
-- Finish the first adoption with its reviewed changes merged into
-  `repo-standards` and its packaged output validated. Publishing a new
-  `repo-standards` package belongs to that product's separate release workflow.
