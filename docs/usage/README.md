@@ -8,7 +8,3 @@ This directory explains how maintainers prepare for and use Repo Canon.
   changes, and selecting an adoptable release.
 - [Prepare existing agent guidance](prepare-agent-guidance.md): preserve useful
   project instructions before Repo Canon installs its shared `AGENTS.md`.
-
-Before selecting a source version, read the notes of its
-[published release](https://github.com/lutzseverino/repo-canon/releases) for its
-changes, required CLI version, and any migration.

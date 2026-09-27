@@ -23,4 +23,5 @@ contract.
 
 Preserve pinned upstream skill contents and their notices. The root MIT License
 covers Repo Canon's original material; third-party material retains its own
-licenses and notices.
+licenses and notices, which the
+[third-party notices](../../THIRD_PARTY_NOTICES.md) identify.
