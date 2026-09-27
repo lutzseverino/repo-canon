@@ -157,8 +157,8 @@ After `v0.2.0`, the requirement became the open-ended minimum
 `repo-standards: ">=2.0.0"`, so that adopters on public CLI 2.0.0 can select the
 next release. Installed public CLI 2.0.0 under Node.js 24.21.0 returned
 `valid: true`, no errors, one `complete` profile, and 53 declarations for the
-source with that requirement, matching the inventory above. Raising the minimum changes no adopter's
-conformance or workflow, which is the test in
+source with that requirement, matching the inventory above. Raising the
+minimum changes no adopter's conformance or workflow, which is the test in
 [ADR 0003](../adr/0003-follow-product-release-versioning.md), so it is not a
 breaking standards change;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
