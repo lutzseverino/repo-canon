@@ -20,7 +20,10 @@ function actionPins(workflow, action) {
 
 test("every shared workflow pins the same checkout and setup-node versions", () => {
   const paths = sharedWorkflows();
-  for (const expected of [".github/workflows/issue-contracts.yml", ".github/workflows/pr-metadata.yml"]) {
+  for (const expected of [
+    ".github/workflows/issue-contracts.yml",
+    ".github/workflows/pr-metadata.yml",
+  ]) {
     assert.ok(paths.includes(expected), `standards.yaml declares ${expected}`);
   }
 

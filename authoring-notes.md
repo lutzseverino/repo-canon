@@ -132,7 +132,8 @@ The separate real adoption is complete and merged, recorded in
   the start of work and mentions any available update; an exact update is
   proposed as its own small PR and a contextual update as a ticket, neither
   blocking nor joining current work, and the product's adoption skill performs
-  it.
+  it. The class is known only from the update's complete inspection, so the
+  agent classifies an update when the maintainer takes it up, on its own branch.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
   changes. PRs require nonempty Summary and Validation plus an issue reference
   or an explicit small-correction explanation; leftover placeholders fail.

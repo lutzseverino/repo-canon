@@ -10,15 +10,14 @@ For setup and validation commands, read `docs/development/README.md`.
 At the start of work, when the pinned CLI is installed, you may run
 `.repo-standards/runtime/node_modules/.bin/repo-standards outdated --json`. It
 changes nothing except an ignored cache. Mention to the maintainer each pin it
-reports as `update: available`, with the pinned and newest versions; `unknown`
-means no answer.
+reports as `update: available`, with the pinned and newest versions.
 
-Propose each available update as separate work: an exact update as its own
-small pull request, and a contextual update as a ticket. The class is the
-`updateClass` of the update's complete inspection, including any scope
-proposal; until one reports `exact`, treat the update as contextual. The
-`adopt-standards` skill performs the update. Continue the current work as
-planned either way, and keep update changes out of its branch.
+Propose each available update as separate work. When the maintainer takes one
+up, run it with the `adopt-standards` skill on its own branch; its complete
+inspection, including any scope proposal, reports the class as `updateClass`.
+Deliver an `exact` update as its own small pull request, and propose a
+`contextual` update as a ticket. Continue the current work as planned either
+way, and keep update changes out of its branch.
 
 ## Agent skills
 
