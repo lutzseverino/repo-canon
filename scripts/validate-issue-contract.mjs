@@ -126,10 +126,10 @@ if (!readiness.valid) {
 }
 
 const supersedingState = readiness.approved && result.usesWorkflowState
-  ? stateAppliedAfterReview(result.labels, readiness.reviewEventId, issueEvents, issue)
+  ? stateAppliedAfterReview(result.labels, readiness.reviewEventId, issueEvents, issue, event)
   : null;
 if (supersedingState) {
-  await removeReadiness(api, issueNumber, result.labels);
+  await replaceWorkflowState(api, issueNumber, result.labels, supersedingState);
   await maintainFeedback(
     api,
     issueNumber,
@@ -842,19 +842,27 @@ async function returnToReview(apiClient, number, labels) {
 }
 
 // A non-readiness state labeled strictly after the review supersedes it; states
-// labeled before or in the same second as the review are replaced by it.
-function stateAppliedAfterReview(labels, reviewEventId, issueEvents, issue) {
+// labeled before or in the same second as the review are replaced by it. When
+// the timeline has not yet recorded the triggering label event, the event's
+// label supersedes unless its payload time proves it was not later.
+function stateAppliedAfterReview(labels, reviewEventId, issueEvents, issue, currentEvent) {
   const opening = String(reviewEventId).startsWith("opened:");
   const reviewIndex = opening ? -1 : issueEvents.findIndex(({ id }) => String(id) === String(reviewEventId));
   const reviewedAt = opening ? issue.created_at : issueEvents[reviewIndex]?.created_at;
-  if (!reviewedAt || (!opening && reviewIndex < 0)) return null;
+  const reviewKnown = Boolean(reviewedAt) && (opening || reviewIndex >= 0);
+  let latest = null;
   for (const label of labels) {
     if (!workflowLabels.has(label) || readyLabels.has(label)) continue;
     const labeledIndex = issueEvents.findLastIndex((candidate) => candidate.event === "labeled" && candidate.label?.name === label);
     const labeledAt = issueEvents[labeledIndex]?.created_at;
-    if (labeledIndex > reviewIndex && labeledAt && labeledAt > reviewedAt) return label;
+    const recordedLater = reviewKnown && labeledIndex > reviewIndex && labeledAt && labeledAt > reviewedAt;
+    if (recordedLater && (!latest || labeledIndex > latest.index)) latest = { label, index: labeledIndex };
+    const triggering = currentEvent.action === "labeled" && currentEvent.label?.name === label;
+    const payloadAt = currentEvent.issue?.updated_at;
+    const unrecorded = triggering && !recordedLater && (!reviewKnown || !payloadAt || payloadAt > reviewedAt);
+    if (unrecorded) return label;
   }
-  return null;
+  return latest?.label ?? null;
 }
 
 async function replaceWorkflowState(apiClient, number, labels, readinessLabel) {

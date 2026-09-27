@@ -103,8 +103,11 @@ of a triaged request, specification, or implementation ticket replaces every
 non-readiness workflow state labeled before or in the same second as the review,
 such as a form label applied at creation, so the issue keeps exactly one
 workflow state. A non-readiness state labeled in a strictly later second
-supersedes the review instead: the validator removes readiness, keeps that
-state, and publishes the revision as awaiting review. A triaged request that
+supersedes the review instead: the validator keeps the latest such state as the
+only workflow state, removes readiness and every other state, and publishes the
+revision as awaiting review. If the event timeline has not yet recorded the
+label that triggered the run, that label supersedes the review unless the
+event's payload time is no later than the review. A triaged request that
 carries two workflow states outside a readiness-label event also fails its label
 check and loses readiness. A repeated event on an approved specification or
 ticket removes a state left from before its review. Removing readiness, or
