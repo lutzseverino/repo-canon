@@ -51,10 +51,21 @@ The separate real adoption is complete and merged, recorded in
   integrating), docs/development (building, testing, architecture,
   maintenance), docs/adr (consequential decisions), and docs/agents (agent
   workflow configuration). Create categories when they have content. Every
-  documentation directory has a short README explaining its purpose and
-  linking useful contents; docs/README.md supplies the documentation map and
-  placement rules. Durable research belongs under its relevant usage or
+  documentation directory has a README index: a one-sentence purpose, then one
+  `[Title](path): description` item per entry. docs/README.md maps the
+  categories, and docs/development/README.md gives its purpose, then Setup and
+  validation, then its index. Every document is listed in exactly one index,
+  its directory's README; other documents link to that index or cite a
+  document in context. Durable research belongs under its relevant usage or
   development topic. CONTEXT.md remains the root glossary.
+- Documentation holds maintained material only. Point-in-time records stay with
+  the pull request, release, or CI run they record, as
+  [ADR 0006](docs/adr/0006-keep-point-in-time-records-with-their-event.md)
+  decides, and superseded documents are deleted rather than kept under a
+  historical label. Documentation discovery proposes every existing
+  documentation file, glossary, and index; other files enter the scope only for
+  link repairs. These rules stay contextual; the documentation check keeps its
+  mechanical scope.
 - Include all regular Matt Pocock skills. Upstream's promoted set at commit
   `3cca18b368ae95cdbdebbff572ccafa662551015` consists of 18 engineering and seven
   productivity skills, matching its plugin manifest. Experimental skills are
