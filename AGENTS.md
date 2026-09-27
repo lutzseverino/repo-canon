@@ -13,11 +13,12 @@ changes nothing except an ignored cache. Mention to the maintainer each pin it
 reports as `update: available`, with the pinned and newest versions.
 
 Propose each available update as separate work. When the maintainer takes one
-up, run it with the `adopt-standards` skill on its own branch; its complete
-inspection, including any scope proposal, reports the class as `updateClass`.
-Deliver an `exact` update as its own small pull request, and propose a
-`contextual` update as a ticket. Continue the current work as planned either
-way, and keep update changes out of its branch.
+up, inspect it with the `adopt-standards` skill; its complete inspection,
+including any scope proposal, reports the class as `updateClass`. Carry an
+`exact` update on through the skill as its own small pull request. Stop a
+`contextual` update at inspection and propose it as a ticket. Continue the
+current work as planned either way, and keep update changes out of the current
+work's branch.
 
 ## Agent skills
 
