@@ -51,8 +51,8 @@ A repository that applies a selected Repo Canon release through adoption.
 _Avoid_: Adopting project, because a Project is a component within a repository
 
 **Point-in-time record**:
-An account of one release, adoption, validation run, or exercise, kept with the
-pull request, release, or CI run it records rather than in documentation.
+An account of one release, adoption, validation run, or exercise as it stood
+when that event happened, which is not kept current afterward.
 _Avoid_: Evidence directory, documentation evidence, acceptance results
 
 **Breaking standards change**:

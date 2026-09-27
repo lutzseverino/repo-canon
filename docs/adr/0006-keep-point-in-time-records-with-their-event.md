@@ -15,9 +15,10 @@ two adopting repositories had already diverged under that freedom.
 
 ## Consequences
 
-- Records depend on GitHub for permanence. Release assets are permanent and bound
-  to their tag; CI artifacts expire, so no conclusion may rest on an artifact
-  alone.
+- Records depend on GitHub and the repository's maintainers for permanence.
+  Anyone with write access can edit release notes or delete a release; only an
+  immutable release also locks its assets and tag against replacement. CI
+  artifacts expire, so no conclusion may rest on an artifact alone.
 - Records already committed are removed from the tree. Git history retains them,
   and a maintained document that still needs one cites a commit permalink.
   Files that tests pin remain as test fixtures.
