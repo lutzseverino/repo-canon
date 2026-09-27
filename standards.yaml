@@ -122,6 +122,11 @@ defaults:
       target: vendor/marked/README.md
       exact: vendor/marked/README.md
 
+    mattpocock-skills-license:
+      kind: file
+      target: .agents/skills/LICENSE.mattpocock-skills
+      exact: vendor/mattpocock-skills/LICENSE
+
     parse5-entities-license:
       kind: file
       target: vendor/parse5/LICENSE.entities

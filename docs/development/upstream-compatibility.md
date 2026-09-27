@@ -4,8 +4,9 @@ The managed snapshot is mattpocock/skills commit
 `3cca18b368ae95cdbdebbff572ccafa662551015`. Its promoted plugin set contains 25
 regular skills. Their complete directories are vendored under
 `vendor/mattpocock-skills/skills`, with the upstream MIT notice retained at
-`vendor/mattpocock-skills/LICENSE`. Repo Canon configuration adapts conventions
-without editing upstream skill content.
+`vendor/mattpocock-skills/LICENSE` and installed beside the copied skills as
+`.agents/skills/LICENSE.mattpocock-skills`. Repo Canon configuration adapts
+conventions without editing upstream skill content.
 
 ## Included skills
 
