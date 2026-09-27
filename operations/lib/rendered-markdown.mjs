@@ -40,8 +40,7 @@ function containsHeading(node, isHidden) {
 }
 
 function containsMedia(node, isHidden) {
-  if (isHidden(node)) return false;
-  return (node.childNodes ?? []).some(child => (
+  return (node.childNodes ?? []).some(child => !isHidden(child) && (
     renderedElementsWithoutText.has(child.tagName) || containsMedia(child, isHidden)
   ));
 }
@@ -118,11 +117,13 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
       for (const child of node.childNodes ?? []) visitTargets(child);
       return;
     }
-    if (node.tagName === 'a') {
+    // An anchor without href, such as a named target, is not a hyperlink; only
+    // its rendered children count as content.
+    if (node.tagName === 'a' && attribute(node, 'href') !== null) {
       const link = {
         type: 'link',
         text: renderedText(node, isHidden).trim(),
-        target: attribute(node, 'href') ?? '',
+        target: attribute(node, 'href'),
         blocks,
         containsMedia: containsMedia(node, isHidden),
       };

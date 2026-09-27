@@ -507,6 +507,23 @@ A queue inspector.
   assert.equal(outcome.result.status, 'passed', outcome.result.message);
 });
 
+test('ignores named anchors and hidden media around pointer links', async t => {
+  for (const example of [
+    { name: 'a named anchor before the next heading', contributing: '[Contribution guidelines](CONTRIBUTING.md)\n\n<a id="license"></a>\n' },
+    { name: 'a named anchor after the link', contributing: '[Contribution guidelines](CONTRIBUTING.md) <a name="contributing"></a>\n' },
+    { name: 'a hidden image inside the link', contributing: '<a href="CONTRIBUTING.md">Contribution guidelines<img hidden src="badge.svg"></a>\n' },
+  ]) await t.test(example.name, st => {
+    const outcome = check(st, {
+      'README.md': `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## Contributing\n\n${example.contributing}\n## License\n\n[MIT License](LICENSE) <a id="end"></a>\n`,
+      'LICENSE': mit,
+      'CONTRIBUTING.md': '# Contributing\n',
+    });
+
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'passed', outcome.result.message);
+  });
+});
+
 test('requires pointer sections whose targets exist', t => {
   const outcome = check(t, {
     'README.md': `<h1 align="center">Harbor</h1>

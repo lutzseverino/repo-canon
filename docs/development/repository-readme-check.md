@@ -40,7 +40,8 @@ list, quotation, or table or wrapping an image each fail with a correction to
 make the section contain only that link, and a link without a label fails with
 a correction to name it. The License section uses the same plain-link rule. The
 link-only rule applies even when the target is absent; the correction then
-also offers creating the target or removing the section. HTML comments are not
+also offers creating the target or removing the section. HTML comments, hidden
+elements, and anchors without an `href`, such as named targets, are not
 rendered content, and a link wrapping the next section's heading belongs to
 that heading rather than to the preceding section, including the empty anchor
 that HTML parsing leaves behind when a Markdown paragraph opens that link.
