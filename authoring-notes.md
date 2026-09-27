@@ -111,7 +111,9 @@ The separate real adoption is complete and merged, recorded in
 - PRs use Summary, Validation, and Related issue, with Limits only when
   relevant. Summary explains the problem and resulting change; Validation
   records what actually ran and its outcome. Small corrections can omit an
-  issue link under the agreed exception.
+  issue link under the agreed exception. A PR body keeps the template's
+  sections in order and adds other material as subsections; the metadata
+  validator does not check order.
 - The latest agent brief is the candidate implementation contract. A
   maintainer or explicitly authorized triaging agent marks it ready after
   review. Editing or replacing the brief removes readiness and requires
@@ -125,7 +127,14 @@ The separate real adoption is complete and merged, recorded in
   as drafts/AGENTS.md. Preserve and reconcile existing project-specific
   instructions in optional docs/agents/project.md before replacing the original
   file. This supersedes the earlier contextual AGENTS choice. Create the
-  project guidance document only when it has useful content.
+  project guidance document only when it has useful content. AGENTS.md also
+  carries the shared available-updates guidance: an agent may run `outdated` at
+  the start of work and mentions any available update; an exact update is
+  proposed as its own small PR and a contextual update as a ticket, neither
+  blocking nor joining current work, and the product's adoption skill performs
+  it. The class is known only from the update's complete inspection, so the
+  agent inspects an update when the maintainer takes it up, continues an exact
+  one as its own PR, and stops a contextual one at inspection for a ticket.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
   changes. PRs require nonempty Summary and Validation plus an issue reference
   or an explicit small-correction explanation; leftover placeholders fail.

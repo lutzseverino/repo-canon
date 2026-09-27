@@ -12,6 +12,9 @@ content inside HTML elements with the `hidden` attribute do not count as content
 Punctuation alone does not count either. Headings inside fenced code examples do
 not define sections. Code contents can describe Validation evidence, but fence
 delimiters and language info do not count as content. `Limits` remains optional.
+Section order and subsections follow the shared
+[issue-tracker guidance](../agents/issue-tracker.md#pull-requests) and are
+reviewed rather than checked.
 
 `Related issue` accepts a GitHub issue URL, `owner/repository#123`, or `#123`.
 An eligible typo, broken link, or formatting correction can instead use
