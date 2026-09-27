@@ -27,11 +27,10 @@ source was validated against, public CLI 2.0.0. The
 the [requirement decision](../adr/0005-require-an-open-ended-minimum-cli-version.md)
 records why the form was chosen. Repository Standards evaluates that
 requirement only when an adopter selects a standards version, and never
-re-validates it afterwards, so a CLI update that keeps the retained standards
-version succeeds even when the retained range excludes the new CLI. An exact or
-upper-bounded requirement would instead stop an adopter's pinned or newer CLI
-from selecting the next standards version whenever that CLI falls outside the
-range. The trade-off of
+re-validates it afterwards, so a CLI update from retained inputs, without
+source flags, succeeds even when the retained range excludes the new CLI. An
+exact or upper-bounded requirement would instead stop a newer CLI outside the
+range from selecting the next standards version. The trade-off of
 an open-ended minimum is that an adopter can run a CLI this source was never
 tested against; the `repo-standards/v2` format version carries that
 compatibility promise instead.
