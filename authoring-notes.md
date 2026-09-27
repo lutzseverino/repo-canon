@@ -54,10 +54,11 @@ The separate real adoption is complete and merged, recorded in
   documentation directory has a README index: a one-sentence purpose, then one
   `[Title](path): description` item per entry. docs/README.md maps the
   categories, and docs/development/README.md gives its purpose, then Setup and
-  validation, then its index. Every document is listed in exactly one index,
-  its directory's README; other documents link to that index or cite a
-  document in context. Durable research belongs under its relevant usage or
-  development topic. CONTEXT.md remains the root glossary.
+  validation, then its index. Every document is listed in exactly one index:
+  its directory's README, or for a directory README, its parent's. Other
+  documents link to that index or cite a document in context; the exact shared
+  agents index stays as installed. Durable research belongs under its relevant
+  usage or development topic. CONTEXT.md remains the root glossary.
 - Documentation holds maintained material only. Point-in-time records stay with
   the pull request, release, or CI run they record, as
   [ADR 0006](docs/adr/0006-keep-point-in-time-records-with-their-event.md)

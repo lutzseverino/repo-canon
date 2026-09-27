@@ -21,7 +21,7 @@ document under a documentation root is listed in exactly one index: its
 directory's README, or for a directory README, its parent's. Other documents
 link to that index or cite a document in context, and never repeat the list.
 The exact shared `docs/agents/README.md` stays as installed; it cites the
-optional `docs/agents/project.md` in context.
+optional `docs/agents/project.md` in context instead of listing it.
 
 The root `docs/development/README.md` is required because the shared
 `CONTRIBUTING.md` links to it. It gives its purpose, then a Setup and
@@ -35,9 +35,10 @@ exercise as it stood when that event happened, stays with the pull request,
 release, or CI run it records: an adoption or update pull request carries the
 tool's summary, a release carries its notes and any machine-readable records as
 release assets, and bulk raw output remains a CI artifact. CI artifacts expire,
-so no conclusion rests on an artifact alone. There is no evidence documentation
-category. Maintained documents cite a record by its identity, such as a tag, run
-ID, or commit permalink. Remove records already committed to the documentation;
+so base each conclusion on a lasting record, such as a pull request summary or
+a release asset. There is no evidence documentation category. Maintained
+documents cite a record by its identity, such as a tag, run ID, or commit
+permalink. Remove records already committed to the documentation;
 Git history retains them, and a maintained document that still needs one cites
 its commit permalink.
 
