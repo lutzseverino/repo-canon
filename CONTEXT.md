@@ -48,7 +48,7 @@ _Avoid_: Publication, copying shared files
 
 **Adopting repository**:
 A repository that applies a selected Repo Canon release through adoption.
-_Avoid_: Adopting project, because a Project is a component within a repository
+_Avoid_: Adopting project
 
 **Point-in-time record**:
 An account of one release, adoption, validation run, or exercise as it stood
