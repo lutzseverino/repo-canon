@@ -26,9 +26,10 @@ Source authoring, publication, and adoption are separate stages:
 ## Prerequisites
 
 Use macOS or Linux with Node.js 24, npm, and Git. The source requires public CLI
-2.0.0 or newer; 2.0.0 is the version it was validated against. Install a pinned
-CLI in a persistent directory outside the adopting project so inspection, start,
-and recovery use the same executable:
+2.0.0 or newer; 2.0.0 is the version it was validated against. Until a release
+requiring CLI 2.0.0 is published, the latest release, `v0.2.0`, requires exactly
+CLI 1.3.0. Install a pinned CLI in a persistent directory outside the adopting
+project so inspection, start, and recovery use the same executable:
 
 ```sh
 adoption_cli="$HOME/.local/share/repo-standards/cli-2.0.0"
@@ -151,8 +152,10 @@ rollback or freshness guarantee.
 A run's confirmed scope never changes while the run is active, and
 `resume --retry` repeats work under it without widening it. When contextual
 work needs a file outside the confirmed scope, or a confirmed path is mistaken,
-do not write that file. Correcting the scope means abandoning the run and
-adopting again:
+do not write that file. Submit the blocked scope review in the assessment
+instead; the run stays incomplete with `SCOPE_INCOMPLETE`, and the additional
+paths it reports grant no authority. Correcting the scope means abandoning the
+run and adopting again:
 
 1. Preserve the work worth keeping.
 2. Abandon the run with `abandon --project "$project_root" --json`. Its changes

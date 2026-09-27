@@ -5,8 +5,8 @@ exactness of its requirement and the breaking-change note that exactness
 justified. That exactness was a choice, and
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) reversed
 it: the requirement is an open-ended minimum, and raising a required CLI
-version is not a breaking standards change. `v0.2.0` keeps its original tag target,
-release, and contents.
+version is not a breaking standards change. `v0.2.0` keeps its original tag
+target, release, and contents.
 
 Repo Canon **v0.2.0** raises the exact required Repository Standards CLI
 version from 1.2.2 to 1.3.0. It carries no other selected source change. It is
@@ -81,9 +81,8 @@ skill, or check name changes, and no repository content has to be rewritten.
 That last reading is the one this release got wrong.
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) reverses
 both halves of that reading: the requirement becomes an open-ended minimum, and
-a required-CLI change
-is classified as a non-breaking `chore`, because it leaves every adopter's
-conformance and workflow intact, which is the test
+a required-CLI change is classified as a non-breaking `chore`, because it leaves
+every adopter's conformance and workflow intact, which is the test
 [ADR 0003](../adr/0003-follow-product-release-versioning.md) actually states.
 The exactness also stranded adopters in the other direction, which is why it was
 reversed. The notes below are the published `v0.2.0` notes and are not edited.

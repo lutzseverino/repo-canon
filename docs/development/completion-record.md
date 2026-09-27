@@ -24,8 +24,7 @@ contextual README. No selected material was removed. The
 [machine-readable closure comparison](source-closure.json) enumerates every
 source path, role, mode, Git blob, and SHA-256 for published `v0.2.0` and a
 later reviewed identity prepared for a patch release that was never published.
-Its earlier comparisons stay readable at the
-tags that published them: `v0.0.3` to `v0.0.4` at the
+Its earlier comparisons stay readable at the tags that published them: `v0.0.3` to `v0.0.4` at the
 [v0.1.0 tag](https://github.com/lutzseverino/repo-canon/blob/v0.1.0/docs/development/source-closure.json),
 `v0.1.0` to `v0.1.1` at the
 [v0.1.1 tag](https://github.com/lutzseverino/repo-canon/blob/v0.1.1/docs/development/source-closure.json),

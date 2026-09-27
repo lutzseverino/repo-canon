@@ -7,7 +7,7 @@
   },
   "reviewed": {
     "commit": null,
-    "selectedRelease": "v0.2.1",
+    "selectedRelease": null,
     "files": 115
   },
   "reviewedCommitPolicy": "The reviewed commit is null while the release pull request is open, because the reviewed identity is the per-path Git blob and SHA-256 record below rather than a commit that does not exist until integration. The verified publication record names the integrated commit and confirms every entry at it.",

@@ -193,7 +193,7 @@ The separate real adoption is complete and merged, recorded in
 ## Source profile
 
 The complete `repo-standards/v2` source is `standards.yaml`, with one
-`complete` profile and the open-ended CLI compatibility minimum `>=1.3.0`. The
+`complete` profile and the open-ended CLI compatibility minimum `>=2.0.0`. The
 concise policy-to-declaration, material, operation, ownership, and prerequisite
 mapping is maintained in
 [the source profile record](docs/development/source-profile.md). Contextual
@@ -202,7 +202,7 @@ guidance and resolves to individual adopter-reviewed paths.
 
 The [compatibility audit](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface and retains the
-historical CLI findings. Use installed public CLI 1.3.0 as the current
+historical CLI findings. Use installed public CLI 2.0.0 as the current
 validation baseline; claim only compatibility demonstrated against the released
 source bytes.
 

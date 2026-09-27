@@ -17,8 +17,9 @@ Raising the minimum is therefore not a breaking standards change.
 [ADR 0003](0003-follow-product-release-versioning.md) tests compatibility
 against the adopting repository's conformance and workflow, and neither moves:
 an adopter that does not update its CLI keeps the standards version it already
-selected, conforming exactly as before. Such a change is committed as a `chore`
-and published as a patch release.
+selected, conforming exactly as before. On its own, such a change is committed
+as a `chore` and published as a patch release; a release that also carries
+breaking changes is versioned for those.
 
 ## Consequences
 

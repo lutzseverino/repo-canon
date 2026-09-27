@@ -22,6 +22,9 @@ npm install --prefix "$cli" --ignore-scripts --save-exact \
 "$cli/node_modules/.bin/repo-standards" --version
 ```
 
+Until a release requiring CLI 2.0.0 is published, the latest release, `v0.2.0`,
+requires exactly CLI 1.3.0.
+
 The [adoption guide](docs/usage/adopt-repo-canon.md) lists the remaining
 prerequisites, including the authenticated `gh` access the two GitHub fixes
 need.

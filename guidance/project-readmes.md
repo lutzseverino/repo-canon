@@ -20,7 +20,8 @@ Use the associated v2 discovery guidance to identify individual existing or
 intended Project README paths. Review the evidence, candidate decisions,
 unresolved questions, coverage rationale, and concrete paths in the complete
 inspection before confirmation. A confirmed scope does not change during a
-run. When a run finds a Project outside its scope, abandon the run and adopt
-again with a fresh discovery proposal before editing that README; after a
-complete adoption, the next update's fresh discovery covers it. Existing scope
+run. When a run finds a Project outside its scope, do not write its README:
+submit the blocked scope review, abandon the run, and adopt again with a fresh
+discovery proposal that includes it. After a complete adoption, the next
+update's fresh discovery covers it. Existing scope
 does not establish coverage or authority for an unrepresented Project.
