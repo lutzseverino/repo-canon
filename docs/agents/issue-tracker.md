@@ -52,11 +52,13 @@ must currently have the repository `admin`, `maintain`, or `triage` role. The
 triage role is the explicit authorization for a triaging agent. Names, author
 associations, bot identity, headings, preambles, and structural success do not
 grant authority. On a triaged request, specification, or implementation ticket,
-apply the new readiness label directly; the workflow removes every other
-workflow state after it verifies the review. When such a contract loses
-readiness, the workflow returns it to `needs-triage` unless another workflow
-state remains. Wayfinder planning issues do not use readiness labels; their
-eligibility continues to use open state, assignment, and blockers.
+apply the new readiness label directly; after the workflow verifies the
+review, it removes every non-readiness workflow state applied before it. A
+workflow state applied later supersedes the review, and the workflow removes
+readiness instead. When such a contract loses readiness, the workflow returns
+it to `needs-triage` unless another non-readiness workflow state remains.
+Wayfinder planning issues do not use readiness labels; their eligibility
+continues to use open state, assignment, and blockers.
 
 Incomplete or changed contracts lose readiness. Automation maintains one
 actionable feedback comment and returns corrected work to review rather than

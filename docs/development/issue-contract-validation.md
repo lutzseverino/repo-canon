@@ -100,13 +100,19 @@ The event actor is authorized only when GitHub reports the repository `admin`,
 a triaging agent. A `write` role, `author_association`, login shape, bot identity,
 heading, preamble, or structural pass supplies no authority. An accepted review
 of a triaged request, specification, or implementation ticket replaces every
-other workflow state with the chosen readiness label, so the issue keeps exactly
-one. A repeated event on an approved contract removes any workflow state left
-beside its readiness label. Removing readiness, or losing it to invalidation,
-returns such a contract to `needs-triage` unless it already has another
-non-readiness state. Wayfinder maps and children reject readiness labels because
-their native eligibility uses open state, assignment, and blockers instead of
-the readiness workflow, and the validator never adds a workflow state to them.
+non-readiness workflow state labeled before or in the same second as the review,
+such as a form label applied at creation, so the issue keeps exactly one
+workflow state. A non-readiness state labeled in a strictly later second
+supersedes the review instead: the validator removes readiness, keeps that
+state, and publishes the revision as awaiting review. A triaged request that
+carries two workflow states outside a readiness-label event also fails its label
+check and loses readiness. A repeated event on an approved specification or
+ticket removes a state left from before its review. Removing readiness, or
+losing it to invalidation, returns such a contract to `needs-triage` unless
+another non-readiness workflow state remains. Wayfinder maps and children
+reject readiness labels because their native eligibility uses open state,
+assignment, and blockers instead of the readiness workflow, and the validator
+never adds a workflow state to them.
 
 Incomplete, edited, replaced, stale, unauthorized, or multiply-ready contracts
 lose `ready-for-agent` and `ready-for-human`. Corrections update the same comment
@@ -138,8 +144,9 @@ local HTTP server. They also execute the validator from an installed layout
 containing only the validator, shared runtime, and declared parser resources.
 They exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
-labels, placeholder failures, readiness removal, workflow-state replacement
-and return to review for triaged and direct contracts, repeat-safe feedback,
+labels, placeholder failures, readiness removal, workflow-state replacement,
+superseding states, and return to review for triaged and direct contracts,
+repeat-safe feedback,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized
 actors, stale and repeated events, native creation, readiness removal and re-add
 ordering across paginated issue events, contract edits, pull request
