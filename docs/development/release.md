@@ -110,7 +110,8 @@ explain its migration in two parts, each starting with its `Impact:` or
   workflow changes, and what stays conforming on the earlier release.
 - Migration: the ordered steps an adopting repository takes, what each step
   changes, and how the adopter confirms the result. When both the CLI and the
-  standards version move, update one pin at a time, and say which release an
+  standards version move, one confirmed run can move both pins: the candidate
+  CLI selects the new standards version that requires it. Say which release an
   adopter that cannot migrate stays on.
 
 ## Publish and verify
