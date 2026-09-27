@@ -23,19 +23,25 @@ The separate real adoption is complete and merged, recorded in
   maintainers choose to adopt them, including collaborative repositories and
   repositories maintained by others. Start with one complete profile; no
   ownership-based differences have been requested.
-- Repository README: centered title, one-sentence description, and technology
-  badges for major languages, frameworks, and runtimes rather than every
-  development dependency.
+- Repository README: centered title, a one-sentence description of what the
+  project is, and badges for the languages and runtimes a user or contributor
+  needs rather than file formats or every development dependency. A runtime
+  badge carries the required major version.
 - Recognized README sections have this relative order: Installation, Features,
   Usage, Configuration, Documentation, Contributing, License. Installation is
   the first section when applicable. Omit inapplicable sections; place useful
   project-specific sections appropriately between recognized sections.
 - Keep READMEs concise, aiming for roughly 300 prose words without a hard limit.
   Give the shortest working installation path and one representative usage
-  example; link detailed explanations elsewhere.
-- Contributing sections link to CONTRIBUTING.md. The License section contains
-  only a link using the actual license name and the repository LICENSE file.
-  This standard does not choose the project's license.
+  example; link detailed explanations elsewhere. A project used through another
+  tool shows in Installation how to install that tool and point it at the
+  project. Install commands carry no version numbers. Each Features item is one
+  line starting with a verb.
+- The Contributing, Documentation, and License sections each contain only their
+  link, to CONTRIBUTING.md, docs/README.md, and the repository LICENSE file.
+  The Documentation section applies when documentation exists. The License link
+  uses the actual license name. This standard does not choose the project's
+  license.
 - Each maintained monorepo app, service, library, or tool with its own
   responsibility and development commands has a project README, including
   internal packages. Fixtures, generated code, and organizational directories
@@ -122,7 +128,8 @@ The separate real adoption is complete and merged, recorded in
   code. Remote settings need actual provisioning; copied configuration is not
   evidence that those settings exist.
 - Read-only documentation checks cover the centered root title, recognized
-  section order, license-link format, required development guide, documentation
+  section order, link-only Contributing, Documentation, and License sections,
+  the license-link format, required development guide, documentation
   categories, directory READMEs, and local file-link targets. Findings identify
   specific corrections. Agents assess factual descriptions, technology badges,
   commands, and meaningful placement. Approximate length remains guidance;

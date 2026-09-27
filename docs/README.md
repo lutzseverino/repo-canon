@@ -15,3 +15,5 @@ useful contents.
 Place durable research findings with their usage or development topic. The
 [root glossary](../CONTEXT.md) defines the domain language; the
 [authoring notes](../authoring-notes.md) track this source's design interview.
+The [third-party notices](../THIRD_PARTY_NOTICES.md) identify redistributed
+material and its licenses.
