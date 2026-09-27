@@ -155,6 +155,11 @@ function feedbackState({ status, revision: contractRevision, label = null, revie
 
 function fixtureIssueEvents({ comments, event, issue }) {
   const values = [];
+  const priorStates = (issue.labels ?? []).map((candidate) => candidate.name ?? candidate)
+    .filter((name) => ["needs-triage", "needs-info", "wontfix"].includes(name) && !(event.action === "labeled" && event.label?.name === name));
+  for (const [index, name] of priorStates.entries()) {
+    values.push({ id: 50 + index, event: "labeled", label: { name }, actor: { login: "reporter" }, created_at: "2026-09-14T16:00:00Z" });
+  }
   const feedback = comments.find((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.includes("repo-canon:issue-contract-state"));
   const encoded = feedback?.body.match(/<!-- repo-canon:issue-contract-state (\{.*\}) -->/)?.[1];
   const recorded = encoded ? JSON.parse(encoded) : null;
@@ -490,6 +495,7 @@ test("Wayfinder planning labels cannot preserve an unreviewed readiness state", 
   assert.equal(result.code, 1);
   assert.match(result.stderr, /Wayfinder planning issues/i);
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
   const feedback = result.requests.find(({ method, url }) => method === "POST" && url.endsWith("/comments"));
   assert.match(JSON.parse(feedback.body).body, /eligibility uses open state, assignment, and blockers/i);
 });
@@ -893,6 +899,411 @@ test("an authorized maintainer can bind a direct contract readiness label to the
   assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.includes("/labels/ready")));
 });
 
+test("an accepted review of a direct contract replaces every superseded workflow state", async (context) => {
+  const specificationBody = "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\nA user gets a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.\n\n## Further Notes\n\nNone.";
+  const ticketBody = "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.";
+  for (const [kind, body, readinessLabel] of [
+    ["specification", specificationBody, "ready-for-agent"],
+    ["implementation ticket", ticketBody, "ready-for-human"],
+  ]) {
+    await context.test(kind, async () => {
+      const issue = {
+        number: 42,
+        node_id: "ISSUE_42",
+        body,
+        labels: [{ name: "needs-triage" }, { name: "needs-info" }, { name: readinessLabel }],
+        state: "open",
+        updated_at: "2026-09-14T17:00:00Z",
+      };
+      const result = await exercise({
+        issue,
+        comments: [{ id: 13, body: feedbackState({ status: "awaiting-review", revision: bodyRevision(issue, null, kind), kind }), user: { login: "github-actions[bot]" } }],
+        event: {
+          action: "labeled",
+          issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
+          label: { name: readinessLabel },
+          sender: { login: "maintainer" },
+        },
+        permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.match(result.stdout, new RegExp(`valid ${kind} with ${readinessLabel} bound`, "i"));
+      const removed = result.requests
+        .filter(({ method, url }) => method === "DELETE" && url.includes("/labels/"))
+        .map(({ url }) => decodeURIComponent(url.split("/labels/")[1]))
+        .sort();
+      assert.deepEqual(removed, ["needs-info", "needs-triage"]);
+      assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+    });
+  }
+});
+
+test("an authorized native issue creation with needs-triage keeps only its readiness state", async () => {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
+    state: "open",
+    created_at: "2026-09-14T17:00:00Z",
+    updated_at: "2026-09-14T17:00:00Z",
+  };
+  const result = await exercise({
+    issue,
+    issueEvents: [],
+    event: {
+      action: "opened",
+      issue: { number: 42, body: issue.body, labels: issue.labels, created_at: issue.created_at, updated_at: issue.updated_at },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /valid implementation ticket with ready-for-agent bound/i);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/needs-triage")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("a repeated event removes needs-triage left beside an approved direct contract", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
+    state: "open",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+    event: { action: "reopened", issue: { number: 42 } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/needs-triage")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "PATCH" && url.includes("/comments/")));
+});
+
+test("a workflow state applied after a direct contract's review supersedes its readiness", async (context) => {
+  for (const state of ["wontfix", "needs-info", "needs-triage"]) {
+    await context.test(state, async () => {
+      const issue = {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+        labels: [{ name: "ready-for-agent" }, { name: state }],
+        state: "open",
+      };
+      const comments = [{
+        id: 13,
+        body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+        user: { login: "github-actions[bot]" },
+      }];
+      const result = await exercise({
+        issue,
+        comments,
+        issueEvents: [
+          { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+          { id: 102, event: "labeled", label: { name: state }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:05:00Z" },
+        ],
+        permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+        event: {
+          action: "labeled",
+          issue: { number: 42, body: issue.body },
+          label: { name: state },
+          sender: { login: "maintainer" },
+        },
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      const removed = result.requests
+        .filter(({ method, url }) => method === "DELETE" && url.includes("/labels/"))
+        .map(({ url }) => decodeURIComponent(url.split("/labels/")[1]));
+      assert.deepEqual(removed, ["ready-for-agent"]);
+      assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+      const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
+      assert.match(JSON.parse(update.body).body, /awaiting review/i);
+      assert.match(JSON.parse(update.body).body, new RegExp(`\`${state}\``));
+    });
+  }
+});
+
+test("a superseding workflow state becomes the only workflow state", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }, { name: "wontfix" }],
+    state: "open",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    issueEvents: [
+      { id: 100, event: "labeled", label: { name: "needs-triage" }, actor: { login: "reporter" }, created_at: "2026-09-14T16:59:00Z" },
+      { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+      { id: 102, event: "labeled", label: { name: "wontfix" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:05:00Z" },
+    ],
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: "2026-09-14T17:05:00Z" },
+      label: { name: "wontfix" },
+      sender: { login: "maintainer" },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  const removed = result.requests
+    .filter(({ method, url }) => method === "DELETE" && url.includes("/labels/"))
+    .map(({ url }) => decodeURIComponent(url.split("/labels/")[1]))
+    .sort();
+  assert.deepEqual(removed, ["needs-triage", "ready-for-agent"]);
+  assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+});
+
+test("a workflow state labeled after the review survives a lagging event timeline", async (context) => {
+  for (const [name, updatedAt] of [["with a later payload time", "2026-09-14T17:05:00Z"], ["without a payload time", undefined]]) {
+    await context.test(name, async () => {
+      const issue = {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+        labels: [{ name: "ready-for-agent" }, { name: "needs-info" }],
+        state: "open",
+      };
+      const comments = [{
+        id: 13,
+        body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+        user: { login: "github-actions[bot]" },
+      }];
+      const result = await exercise({
+        issue,
+        comments,
+        issueEvents: [
+          { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+        ],
+        permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+        event: {
+          action: "labeled",
+          issue: { number: 42, body: issue.body, updated_at: updatedAt },
+          label: { name: "needs-info" },
+          sender: { login: "maintainer" },
+        },
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/needs-info")));
+      assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+    });
+  }
+});
+
+test("a workflow state the timeline has not recorded supersedes the review in another event's run", async (context) => {
+  for (const [name, stateEvents] of [
+    ["never recorded", []],
+    ["re-applied after a recorded removal", [
+      { id: 99, event: "labeled", label: { name: "wontfix" }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:00:00Z" },
+      { id: 100, event: "unlabeled", label: { name: "wontfix" }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:30:00Z" },
+    ]],
+  ]) {
+    await context.test(name, async () => {
+      const issue = {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+        labels: [{ name: "ready-for-agent" }, { name: "wontfix" }],
+        state: "open",
+      };
+      const comments = [{
+        id: 13,
+        body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+        user: { login: "github-actions[bot]" },
+      }];
+      const result = await exercise({
+        issue,
+        comments,
+        issueEvents: [
+          ...stateEvents,
+          { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+        ],
+        permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+        event: { action: "reopened", issue: { number: 42 } },
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      const removed = result.requests
+        .filter(({ method, url }) => method === "DELETE" && url.includes("/labels/"))
+        .map(({ url }) => decodeURIComponent(url.split("/labels/")[1]));
+      assert.deepEqual(removed, ["ready-for-agent"]);
+    });
+  }
+});
+
+test("a workflow state applied after a triaged review is not removed by a delayed readiness event", async () => {
+  const brief = { id: 12, node_id: "COMMENT_12", body: completeAgentBrief, updated_at: "2026-09-14T16:58:00Z", user: { login: "triager" } };
+  const contractRevision = briefRevision(brief);
+  const comments = [brief, {
+    id: 13,
+    body: feedbackState({ status: "approved", revision: contractRevision, label: "ready-for-agent", reviewer: "triager", kind: "triaged Agent Brief" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const issue = {
+    number: 42,
+    body: "Intake context.",
+    labels: [{ name: "enhancement" }, { name: "ready-for-agent" }, { name: "wontfix" }],
+    state: "open",
+  };
+  const result = await exercise({
+    issue,
+    comments,
+    issueEvents: [
+      { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "triager" }, created_at: "2026-09-14T17:00:00Z" },
+      { id: 102, event: "labeled", label: { name: "wontfix" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:05:00Z" },
+    ],
+    permissions: { triager: { permission: "read", role_name: "triage" } },
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body },
+      label: { name: "ready-for-agent" },
+      sender: { login: "triager" },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/wontfix")));
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("a workflow state labeled in the same second as the review is replaced", async () => {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
+    state: "open",
+    created_at: "2026-09-14T17:00:00Z",
+    updated_at: "2026-09-14T17:00:00Z",
+  };
+  const result = await exercise({
+    issue,
+    issueEvents: [
+      { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+      { id: 102, event: "labeled", label: { name: "needs-triage" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+    ],
+    event: {
+      action: "opened",
+      issue: { number: 42, body: issue.body, labels: issue.labels, created_at: issue.created_at, updated_at: issue.updated_at },
+      sender: { login: "maintainer" },
+    },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /valid implementation ticket with ready-for-agent bound/i);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/needs-triage")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("a creation-time workflow label event is replaced by the same-second review", async () => {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
+    state: "open",
+    created_at: "2026-09-14T17:00:00Z",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    issueEvents: [
+      { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+    ],
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+    event: {
+      action: "labeled",
+      issue: { number: 42, body: issue.body, updated_at: "2026-09-14T17:00:00Z" },
+      label: { name: "needs-triage" },
+      sender: { login: "maintainer" },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/needs-triage")));
+  assert.ok(!result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+});
+
+test("removing readiness returns a direct contract to review", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [],
+    state: "open",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    event: {
+      action: "unlabeled",
+      issue: { number: 42, body: issue.body },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  const added = result.requests.filter(({ method, url }) => method === "POST" && url.endsWith("/labels"));
+  assert.deepEqual(added.map(({ body }) => JSON.parse(body).labels), [["needs-triage"]]);
+  const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
+  assert.match(JSON.parse(update.body).body, /awaiting review/i);
+});
+
+test("removing readiness keeps a direct contract's remaining workflow state", async () => {
+  const issue = {
+    number: 42,
+    body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+    labels: [{ name: "needs-info" }],
+    state: "open",
+  };
+  const comments = [{
+    id: 13,
+    body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+    user: { login: "github-actions[bot]" },
+  }];
+  const result = await exercise({
+    issue,
+    comments,
+    event: {
+      action: "unlabeled",
+      issue: { number: 42, body: issue.body },
+      label: { name: "ready-for-agent" },
+      sender: { login: "maintainer" },
+    },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+});
+
 test("an authorized native issue creation preserves its reviewed readiness", async () => {
   const issue = {
     number: 42,
@@ -1247,6 +1658,7 @@ test("direct body edits invalidate an approval even when the visible bytes are r
 
   assert.equal(result.code, 1);
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  assert.ok(result.requests.some(({ method, url, body }) => method === "POST" && url.endsWith("/labels") && JSON.parse(body).labels.includes("needs-triage")));
   const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
   assert.match(JSON.parse(update.body).body, /fresh authorized review/i);
 });
@@ -1761,7 +2173,7 @@ test("a repeated Agent Brief readiness event preserves its active approval", asy
   assert.ok(!result.requests.some(({ method, url }) => method === "PATCH" && url.includes("/comments/")));
 });
 
-test("an invalid direct contract loses readiness without acquiring intake labels", async () => {
+test("an invalid direct contract loses readiness and returns to review without a category", async () => {
   const result = await exercise({
     issue: {
       number: 42,
@@ -1773,7 +2185,26 @@ test("an invalid direct contract loses readiness without acquiring intake labels
 
   assert.equal(result.code, 1);
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/ready-for-agent")));
-  assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+  const added = result.requests.filter(({ method, url }) => method === "POST" && url.endsWith("/labels"));
+  assert.deepEqual(added.map(({ body }) => JSON.parse(body).labels), [["needs-triage"]]);
+});
+
+test("an approved direct contract edited into no recognizable contract returns to review", async () => {
+  const result = await exercise({
+    issue: {
+      number: 42,
+      body: "Caching notes without any contract headings.",
+      labels: [{ name: "ready-for-agent" }],
+      state: "open",
+    },
+    bodyLastEditedAt: "2026-09-14T17:02:00Z",
+    event: { action: "edited", issue: { number: 42 } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
+  const added = result.requests.filter(({ method, url }) => method === "POST" && url.endsWith("/labels"));
+  assert.deepEqual(added.map(({ body }) => JSON.parse(body).labels), [["needs-triage"]]);
 });
 
 test("event payload content cannot override re-fetched authoritative state", async () => {
