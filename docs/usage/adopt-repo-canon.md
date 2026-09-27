@@ -28,8 +28,9 @@ Source authoring, publication, and adoption are separate stages:
 Use macOS or Linux with Node.js 24, npm, and Git. The source requires public CLI
 2.0.0 or newer; 2.0.0 is the version it was validated against. Until a release
 requiring CLI 2.0.0 is published, the latest release, `v0.2.0`, requires exactly
-CLI 1.3.0. Install a pinned CLI in a persistent directory outside the adopting
-project so inspection, start, and recovery use the same executable:
+CLI 1.3.0; to adopt `v0.2.0`, install CLI 1.3.0 instead. Install a pinned CLI in
+a persistent directory outside the adopting repository so inspection, start, and
+recovery use the same executable:
 
 ```sh
 adoption_cli="$HOME/.local/share/repo-standards/cli-2.0.0"

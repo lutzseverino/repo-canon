@@ -35,6 +35,6 @@ coverage, and concrete paths in the full inspection before confirming any
 write. Keep exact shared agent configuration outside this scope. Scope that
 omits a file grants no authority to change it, and a confirmed scope does not
 change during a run. When a run needs a file outside its scope, do not write
-it: submit the blocked scope review, abandon the run, and adopt again with a
-fresh discovery proposal that includes it. After a complete adoption, the next
-update's fresh discovery covers it.
+that file: submit the blocked scope review, abandon the run, resolve its
+changes, and adopt again with a fresh discovery proposal that includes the
+file. After a complete adoption, the next update's fresh discovery covers it.

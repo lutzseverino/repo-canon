@@ -12,8 +12,8 @@
 Repo Canon is a standards source rather than a package, so adopting maintainers
 install the public Repository Standards CLI that applies it. Repo Canon
 requires CLI **2.0.0** or newer, the version it was validated against. On macOS
-or Linux with Node.js 24, npm, and Git, install it outside the adopting project
-and keep it there for inspection, adoption, and recovery:
+or Linux with Node.js 24, npm, and Git, install it outside the adopting
+repository and keep it there for inspection, adoption, and recovery:
 
 ```sh
 cli="$HOME/.local/share/repo-standards/cli-2.0.0"
@@ -23,7 +23,7 @@ npm install --prefix "$cli" --ignore-scripts --save-exact \
 ```
 
 Until a release requiring CLI 2.0.0 is published, the latest release, `v0.2.0`,
-requires exactly CLI 1.3.0.
+requires exactly CLI 1.3.0; to adopt `v0.2.0`, install CLI 1.3.0 instead.
 
 The [adoption guide](docs/usage/adopt-repo-canon.md) lists the remaining
 prerequisites, including the authenticated `gh` access the two GitHub fixes
