@@ -17,9 +17,11 @@ starts with a one-sentence purpose, followed by one `[Title](path): description`
 list item per entry: each other document in the directory and each
 subdirectory's README. The root documentation README's entries are the category
 READMEs, and their descriptions state what belongs in each category. Every
-document is listed in exactly one index, its directory's README. Other
-documents link to that index or cite a document in context, and never repeat
-the list.
+document under a documentation root is listed in exactly one index: its
+directory's README, or for a directory README, its parent's. Other documents
+link to that index or cite a document in context, and never repeat the list.
+The exact shared `docs/agents/README.md` stays as installed; it cites the
+optional `docs/agents/project.md` in context.
 
 The root `docs/development/README.md` is required because the shared
 `CONTRIBUTING.md` links to it. It gives its purpose, then a Setup and
@@ -32,11 +34,12 @@ point-in-time record, an account of one release, adoption, validation run, or
 exercise as it stood when that event happened, stays with the pull request,
 release, or CI run it records: an adoption or update pull request carries the
 tool's summary, a release carries its notes and any machine-readable records as
-release assets, and bulk raw output remains a CI artifact. There is no evidence
-documentation category. Maintained documents cite a record by its identity,
-such as a tag, run ID, or commit permalink. Remove records already committed to
-the documentation; Git history retains them, and a maintained document that
-still needs one cites its commit permalink.
+release assets, and bulk raw output remains a CI artifact. CI artifacts expire,
+so no conclusion rests on an artifact alone. There is no evidence documentation
+category. Maintained documents cite a record by its identity, such as a tag, run
+ID, or commit permalink. Remove records already committed to the documentation;
+Git history retains them, and a maintained document that still needs one cites
+its commit permalink.
 
 Preserve useful, current documentation when reorganizing it. Update affected
 links and account for both old and new paths. Delete a superseded maintained
