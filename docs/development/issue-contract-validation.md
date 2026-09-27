@@ -115,7 +115,9 @@ The workflow needs `contents: read` to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access
 must expose collaborator roles, and `GITHUB_GRAPHQL_URL` must be available for
 direct-body edit revisions; both are standard GitHub Actions facilities. Node.js
-24 is the runtime.
+24 is the runtime. The validator has no package dependencies, so the job installs
+none and disables the Node.js setup action's automatic package-manager cache. It
+pins the same checkout and Node.js setup actions as the PR metadata workflow.
 GitHub Actions does not expose issue-dependency changes as an `issues` workflow
 activity type, so the validator observes the latest relationships on each
 supported issue or comment event.

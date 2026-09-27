@@ -88,7 +88,10 @@ not replace the formats of the installed planning workflow.
 they do not automatically enter issue triage as feature requests.
 
 Keep PRs focused, report actual validation, and link their implementation issue
-or explain an eligible small correction. Mark breaking changes with `!` in the
-title and explain impact and migration in the body. Squash into the default
+or explain an eligible small correction. Keep the PR template's sections in the
+template's order, with Limits last when relevant. Put any other material, such
+as scope, impact, or migration, in subsections of the section it belongs to.
+Mark breaking changes with `!` in the title and explain impact and migration in
+the body. Squash into the default
 branch using the PR title and description, preserving those explanations and
 issue references.
