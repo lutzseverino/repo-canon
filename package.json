@@ -7,8 +7,6 @@
   },
   "scripts": {
     "check": "for file in operations/*.mjs operations/lib/*.mjs scripts/*.mjs scripts/support/*.mjs .github/scripts/*.mjs test/*.test.mjs test/helpers/*.mjs test/fixtures/*.mjs; do node --check \"$file\" || exit 1; done",
-    "build:scope-proposal": "node scripts/build-scope-proposal.mjs",
-    "prepare:adoption-fixtures": "node scripts/prepare-adoption-fixtures.mjs",
     "test": "node --test test/*.test.mjs",
     "test:engineering-skill-fixtures": "node --test test/engineering-skill-fixtures.test.mjs",
     "test:planning-skill-fixtures": "node --test test/planning-skill-fixtures.test.mjs",

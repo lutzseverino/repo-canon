@@ -7,15 +7,15 @@ closed. The owner's [acceptance reconciliation](https://github.com/lutzseverino/
 records completed macOS public verification and distinguishes the broader
 1.2.0 agent evidence from the 1.2.1 patch evidence. This satisfies Repo Canon's
 product dependency. Repo Canon's final CLI 1.2.2 source validation and adoption
-evidence are recorded separately in [the adoption record](adoption-evidence.md),
-and the merged real adoption in [first real adoption](real-adoption.md).
+evidence are recorded separately in [the adoption record](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/adoption-evidence.md),
+and the merged real adoption in [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md).
 
 ## Supported source and discovery route
 
 Use `repo-standards/v2` and the installed public CLI 2.0.0 with Node.js 24 as the
 current validation and adoption baseline. Declare a minimum that was actually
 validated against the released source bytes: `requires.repo-standards` is the
-open-ended minimum `>=2.0.0`. [Release v0.2.0](release-v0-2-0.md) raised the
+open-ended minimum `>=2.0.0`. [Release v0.2.0](https://github.com/lutzseverino/repo-canon/releases/tag/v0.2.0) raised the
 floor from 1.2.2 to 1.3.0 so that adopters record compact work and scope
 evidence. [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md)
 states the requirement as a minimum rather than an exact version, because the
@@ -51,9 +51,8 @@ and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v2.
 contracts when implementing. Discovery supplies scope resolution; the separate
 AGENTS preparation and authored GitHub setup routes below remain necessary.
 Repo Canon acceptance combines final validation, operation and skill exercises,
-whole-source review, and complete adoption with authorized remote readback. The
-development records now supply those evidence classes while keeping their
-boundaries explicit.
+whole-source review, and complete adoption with authorized remote readback.
+The [release procedure](release.md) states what each release requires.
 
 ## Historical CLI 1.1.0 scope audit
 

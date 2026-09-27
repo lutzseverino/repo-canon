@@ -131,8 +131,9 @@ rg -n '3cca18b368ae95cdbdebbff572ccafa662551015|all 25|25 (managed|promoted|regu
 ```
 
 Rerun the byte comparison with the proposed commit, review all resource
-references and runtime prerequisites, and record skill exercises separately.
-Release review then decides whether to distribute the new snapshot.
+references and runtime prerequisites, and exercise the changed skills through
+the [skill exercise procedure](skill-exercises.md). Release review then decides
+whether to distribute the new snapshot.
 
 ## Native issue shapes
 

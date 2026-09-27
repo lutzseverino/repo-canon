@@ -13,11 +13,11 @@ Before changing declarations or preparing adoption, read
 supported interface and preparation steps. Use the
 [development guide](../development/README.md) for validation commands.
 
-Before claiming source acceptance or preparing publication, read
-[complete source acceptance](../development/completion-record.md). It identifies
-the reviewed source bytes and links the distinct review, validation, skill,
-operation, and adoption evidence. Refresh affected evidence when those bytes
-change.
+Before preparing a release, read the
+[release procedure](../development/release.md). It identifies the released
+source bytes and the reviewed diff. When selected bytes change, it requires
+whole-source review, validation of every profile, and refreshed fixture
+results.
 
 When implementing an assigned GitHub issue, verify its blockers and follow its
 contract. Specification #1 records the accepted conventions and original

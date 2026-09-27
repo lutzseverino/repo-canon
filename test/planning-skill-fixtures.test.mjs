@@ -19,10 +19,6 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
-function sha256(path) {
-  return createHash('sha256').update(readFileSync(path)).digest('hex');
-}
-
 function sha256Directory(path) {
   const files = [];
   function visit(directory) {
@@ -62,6 +58,10 @@ test('planning and adoption fixture builder creates runnable bounded scenarios',
     const manifest = JSON.parse(readFileSync(join(target, 'manifest.json'), 'utf8'));
 
     assert.match(output, /Created planning-skill fixtures/);
+    assert.doesNotMatch(
+      readFileSync(join(root, 'scripts', 'create-planning-skill-fixtures.mjs'), 'utf8'),
+      /execFileSync\(['"]codex['"]/,
+    );
     assert.deepEqual(Object.keys(manifest.repositories).sort(), [
       'adoption-preparation',
       'delivery',
@@ -196,72 +196,6 @@ test('planning builder supports later ordinary commits under hostile host signin
     env: { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig },
   });
   assert.equal(readFileSync(globalGitConfig, 'utf8'), globalGitConfigBytes);
-});
-
-test('retained planning artifacts preserve native formats and runtime outputs', () => {
-  const artifacts = join(root, 'docs', 'development', 'planning-skill-artifacts');
-  const specification = readFileSync(join(artifacts, 'intake-batch-spec.md'), 'utf8');
-  for (const heading of [
-    'Problem Statement',
-    'Solution',
-    'User Stories',
-    'Implementation Decisions',
-    'Testing Decisions',
-    'Out of Scope',
-    'Further Notes',
-  ]) {
-    assert.match(specification, new RegExp(`^## ${heading}$`, 'm'));
-  }
-  assert.doesNotMatch(specification, /Agent Brief|Category: (?:bug|enhancement)/);
-
-  const firstTicket = readFileSync(join(artifacts, 'intake-batch-ticket-01.md'), 'utf8');
-  const secondTicket = readFileSync(join(artifacts, 'intake-batch-ticket-02.md'), 'utf8');
-  assert.match(firstTicket, /\*\*Status:\*\* ready-for-agent/);
-  assert.match(firstTicket, /None \(can start immediately\)/);
-  assert.match(secondTicket, /\*\*Status:\*\* ready-for-agent/);
-  assert.match(secondTicket, /Blocked by.*01:/s);
-
-  const triage = readFileSync(join(artifacts, 'receipt-export-triage.md'), 'utf8');
-  assert.equal(triage.match(/^## Agent Brief$/gm)?.length, 1);
-  assert.match(triage, /^Status: ready-for-agent$/m);
-  assert.match(triage, /This changes the\s+candidate contract/);
-  assert.match(triage, /renewed semantic review/i);
-
-  const map = readFileSync(join(artifacts, 'retry-map.md'), 'utf8');
-  assert.match(map, /^- Choose the default Retry window: /m);
-  assert.doesNotMatch(map, /Whether Retry windows differ by carrier after a default is chosen/);
-  assert.match(readFileSync(join(artifacts, 'retry-window-ticket.md'), 'utf8'), /^Status: resolved$/m);
-
-  const managedUpdate = readFileSync(join(artifacts, 'managed-skill-update-boundary.md'), 'utf8');
-  assert.match(managedUpdate, /Source-digest equality required \| passed \(exact equality\)/);
-  assert.match(managedUpdate, /`diff -ru` candidate comparison \| detected the single added/);
-  assert.match(managedUpdate, /adopting-repository contributors do not update those files/);
-
-  const prototype = readFileSync(join(artifacts, 'delivery-schedule-cancellation-prototype.html'), 'utf8');
-  assert.match(prototype, /Guided walkthroughs/);
-  assert.match(prototype, /const transition = \(state, action\) =>/);
-  assert.match(prototype, /cancellation.*dispatch/is);
-
-  const template = readFileSync(join(root, 'vendor', 'mattpocock-skills', 'skills', 'engineering', 'wizard', 'template.sh'), 'utf8');
-  const wizardPath = join(artifacts, 'setup-parcel-sandbox.sh');
-  const wizard = readFileSync(wizardPath, 'utf8');
-  const stagesMarker = /# ─+\n# STAGES:/;
-  assert.equal(wizard.split(stagesMarker)[0], template.split(stagesMarker)[0]);
-  assert.match(wizard, /set_var PARCEL_API_URL/);
-  assert.match(wizard, /set_secret PARCEL_API_TOKEN/);
-  execFileSync('bash', ['-n', wizardPath]);
-
-  assert.equal(
-    sha256(join(artifacts, 'delivery-schedule-cancellation-prototype.html')),
-    '7ff30e9a7d100a0e7137a6221c10e10975443e033eb5cafa3175ac4573dd7be4',
-  );
-  assert.equal(
-    sha256(wizardPath),
-    '6e00e8e83d01fb8393b60e88bf4b567aaee8d65b5827a8476bd829e00620f76d',
-  );
-
-  const builder = readFileSync(join(root, 'scripts', 'create-planning-skill-fixtures.mjs'), 'utf8');
-  assert.doesNotMatch(builder, /execFileSync\(['"]codex['"]/);
 });
 
 test('managed update evidence is reproducible with fixture prerequisites', () => {

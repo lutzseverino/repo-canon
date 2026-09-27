@@ -19,4 +19,4 @@ the next release.
   Conformance evidence describes the pinned release only.
 - Self-adoption complements adoption by other repositories; it cannot surface
   what only a different repository reveals, as the
-  [first real adoption](../development/real-adoption.md) did.
+  [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md) did.

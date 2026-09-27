@@ -61,20 +61,17 @@ test('every builder identifies dirty source bytes independently of source HEAD',
   const sourceHead = git(source, 'rev-parse', 'HEAD');
 
   const dirtySharedPath = 'AGENTS.md';
-  const dirtyHelperPath = 'scripts/support/fake-gh-adoption.mjs';
   const dirtyAuthoringPath = 'scripts/support/fixture-authoring.mjs';
   const dirtyEngineeringSkill = 'vendor/mattpocock-skills/skills/engineering/tdd';
   const dirtyProductivitySkill = 'vendor/mattpocock-skills/skills/productivity/grilling';
   const committedEngineeringSkillSha256 = sha256Directory(join(source, dirtyEngineeringSkill));
   const committedProductivitySkillSha256 = sha256Directory(join(source, dirtyProductivitySkill));
   appendFileSync(join(source, dirtySharedPath), '\n<!-- uncommitted provenance test -->\n');
-  appendFileSync(join(source, dirtyHelperPath), '\n// uncommitted provenance test\n');
   appendFileSync(join(source, dirtyAuthoringPath), '\n// uncommitted provenance test\n');
   appendFileSync(join(source, dirtyEngineeringSkill, 'SKILL.md'), '\n<!-- uncommitted provenance test -->\n');
   appendFileSync(join(source, dirtyProductivitySkill, 'SKILL.md'), '\n<!-- uncommitted provenance test -->\n');
   const dirtySharedSha256 = sha256(readFileSync(join(source, dirtySharedPath)));
   const committedSharedSha256 = sha256(execFileSync('git', ['show', `HEAD:${dirtySharedPath}`], { cwd: source }));
-  const dirtyHelperSha256 = sha256(readFileSync(join(source, dirtyHelperPath)));
   const dirtyAuthoringSha256 = sha256(readFileSync(join(source, dirtyAuthoringPath)));
   const dirtyEngineeringSkillSha256 = sha256Directory(join(source, dirtyEngineeringSkill));
   const dirtyProductivitySkillSha256 = sha256Directory(join(source, dirtyProductivitySkill));
@@ -117,13 +114,4 @@ test('every builder identifies dirty source bytes independently of source HEAD',
   assert.equal(planning.source.linkedSkillDirectories.tdd.sha256, dirtyEngineeringSkillSha256);
   assert.equal(planning.source.linkedSkillDirectories.grilling.sha256, dirtyProductivitySkillSha256);
 
-  const adoptionRoot = join(parent, 'adoption');
-  execFileSync(process.execPath, [join(source, 'scripts/prepare-adoption-fixtures.mjs'), adoptionRoot], {
-    cwd: source,
-    stdio: 'pipe',
-  });
-  const adoption = JSON.parse(readFileSync(join(adoptionRoot, 'plan.json'), 'utf8'));
-  assert.equal(adoption.createdWith.sourceHead, sourceHead);
-  assert.equal(adoption.createdWith.inputFiles[dirtyHelperPath].sha256, dirtyHelperSha256);
-  assert.equal(adoption.createdWith.inputFiles[dirtyAuthoringPath].sha256, dirtyAuthoringSha256);
 });

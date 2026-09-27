@@ -91,9 +91,9 @@ version returned `valid: true`, no errors, one `complete` profile, and 51
 declarations for exact reviewed commit
 `eb98da8af94e25cc66a7bd0bf5424604d5e3b7ec`. Public acquisition from the new
 immutable temporary tag `v0.0.3` resolved to that commit. The
-[source closure record](source-closure.json) enumerates all 114 inputs and proves
+[source closure record](https://github.com/lutzseverino/repo-canon/blob/d8b357268286ded1423f0d2350eb3b7f74293bf6/docs/development/source-closure.json) enumerates all 114 inputs and proves
 that the corrected validator is the only selected byte change from `c0d57fa`.
-[The adoption record](adoption-evidence.md) preserves the installed npm
+[The adoption record](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/adoption-evidence.md) preserves the installed npm
 integrity, source identity, public and historical execution boundaries, and
 outcomes.
 
@@ -126,9 +126,9 @@ is removed, and the selected/transitive path set grows from 114 to 115:
 The manifest resolves 52 declarations, including 23 exact files, and retains
 three checks, two fixes, three repository declarations, one contextual file,
 and 25 skill declarations. The final
-[machine-readable closure](source-closure.json) records all 115 paths, roles,
+[machine-readable closure](https://github.com/lutzseverino/repo-canon/blob/639af070ddeef2d82c96b8427a805da0e1bf8ba9/docs/development/source-closure.json) records all 115 paths, roles,
 modes, Git blobs, and SHA-256 identities. The
-[adoption record](adoption-evidence.md) binds the reviewed source to public
+[adoption record](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/adoption-evidence.md) binds the reviewed source to public
 installation, operation, preservation, workflow, and cleanup outcomes.
 
 The accepted `e63f0d1` identity and its 115 source files were published as
@@ -140,8 +140,8 @@ for exact commit `8369d823edb035c55a79f88d657db5a29efca2ce`, published as
 `v0.1.1`. `.github/workflows/pr-metadata.yml` is the only selected
 path that differs from `v0.1.0`; its mode stays `100644`, and the declaration
 set, counts, operations, and skills are unchanged. The refreshed
-[machine-readable closure](source-closure.json) records both identities, and
-[Release v0.1.1](release-v0-1-1.md) records the publication.
+[machine-readable closure](https://github.com/lutzseverino/repo-canon/blob/0f313ef435c715889303ec1157f1006bee1fb9f4/docs/development/source-closure.json) records both identities, and
+[Release v0.1.1](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-1-1.md) records the publication.
 
 The `v0.1.1` identity required public CLI 1.2.2. Requiring the compact evidence
 format moved that requirement to 1.3.0, the only selected byte change for
@@ -150,7 +150,7 @@ format moved that requirement to 1.3.0, the only selected byte change for
 `0f313ef435c715889303ec1157f1006bee1fb9f4`. Installed public CLI 1.3.0 under
 Node.js 24.21.0 returned `valid: true`, no errors, one `complete` profile, and
 52 declarations for those bytes; installed public CLI 1.2.2 returns
-`INCOMPATIBLE_CLI` for them. [Release v0.2.0](release-v0-2-0.md) records the
+`INCOMPATIBLE_CLI` for them. [Release v0.2.0](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-2-0.md) records the
 verified publication at commit `79ff51198465248df67c6e1d6a66c95e2f964df5`.
 
 After `v0.2.0`, the requirement became the open-ended minimum
@@ -171,9 +171,8 @@ operation or prerequisite and cannot establish semantic coverage or safe scope
 in an adopting repository. The existing operation fixtures and skill inventory
 review remain separate evidence. The confirmed v2 inspections, operation
 execution, contextual assessments, authorized remote readback, and complete
-adoptions are separately recorded. Repo Canon source publication and release
-are separate work, recorded in [first release](first-release.md),
-[release v0.1.1](release-v0-1-1.md), and
-[release v0.2.0](release-v0-2-0.md); the merged Repository Standards adoption of
-the `v0.1.x` published pins is recorded in
-[first real adoption](real-adoption.md).
+adoptions are separately recorded. Repo Canon source publication is separate
+work that follows the [release procedure](release.md), and each
+[published release](https://github.com/lutzseverino/repo-canon/releases) carries
+its notes; the merged Repository Standards adoption of the `v0.1.x` published
+pins is recorded in [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md).

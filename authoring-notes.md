@@ -6,13 +6,14 @@ valid with public CLI 2.0.0 as its validation baseline and required minimum.
 Complete adoption, scope-protection, preservation, and authorized
 remote-readback evidence is recorded. The owner selected `v0.1.0` for the first
 permanent release;
-[release delivery](docs/development/first-release.md) covers its publication,
-[release v0.1.1](docs/development/release-v0-1-1.md) covers the patch release,
-and [release v0.2.0](docs/development/release-v0-2-0.md) covers the current
-release, which requires public CLI 1.3.0. The source now states its
+[release delivery](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/first-release.md) covers its publication,
+[release v0.1.1](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-1-1.md) covers the patch release,
+and [release v0.2.0](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-2-0.md) covers the current
+release, which requires public CLI 1.3.0. Later releases follow the
+[release procedure](docs/development/release.md). The source now states its
 requirement as the open-ended minimum `>=2.0.0`.
 The separate real adoption is complete and merged, recorded in
-[first real adoption](docs/development/real-adoption.md).
+[first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md).
 
 ## Confirmed preferences
 
@@ -215,8 +216,8 @@ The separate real adoption is complete and merged, recorded in
   changes. The four public forms preserve optional answers and the native
   planning formats; the PR template preserves the agreed small-correction and
   conditional Limits behavior. The material review and separate committed
-  preparation exercises are recorded in
-  `docs/development/shared-material-review.md`.
+  preparation exercises are recorded in the
+  [shared material review](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/shared-material-review.md).
 
 ## Source profile
 
@@ -270,9 +271,9 @@ The owner confirmed the consolidated release plan below at the end of the
 interview. It is delivered: `v0.1.0` and the `v0.1.1` patch are published and
 verified, and `repo-standards` completed and merged its adoption of the
 `complete` profile from those public pins. The
-[first release](docs/development/first-release.md),
-[release v0.1.1](docs/development/release-v0-1-1.md), and
-[first real adoption](docs/development/real-adoption.md) records hold the
+[first release](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/first-release.md),
+[release v0.1.1](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-1-1.md), and
+[first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md) records hold the
 evidence.
 
 - The work should finish with a published, verified source version and one
