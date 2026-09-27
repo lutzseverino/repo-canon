@@ -21,13 +21,22 @@ does not imply a release or successful adoption.
 | Maintained Project READMEs | `project-readmes` | Separate assessment and discovery guidance; `project-readme-structure` check | Project-owned paths confirmed through v2 discovery |
 | Documentation, glossaries, and project agent guidance | `documentation` | Separate assessment and discovery guidance; `documentation-navigation` check | Project-owned individual source, destination, index, glossary, and link-repair paths confirmed through v2 discovery |
 | GitHub labels, required check, and squash settings | `github-repository-configuration` | Separate guidance and intentionally empty project-content discovery; repeat-safe `canonical-labels` and `pull-request-integration` fixes | Remote settings; no project-content paths |
-| Pinned regular skills | `skill-*` (25 declarations) | Full directories under `vendor/mattpocock-skills`, pinned at `3cca18b368ae95cdbdebbff572ccafa662551015`; upstream notice retained by the configuration operation | Exact whole skill directories |
+| Pinned regular skills | `skill-*` (25 declarations) | Full directories under `vendor/mattpocock-skills`, pinned at `3cca18b368ae95cdbdebbff572ccafa662551015`; upstream notice retained by the configuration operation and installed by `mattpocock-skills-license` | Exact whole skill directories |
+| Upstream skill license notice | `mattpocock-skills-license` | `vendor/mattpocock-skills/LICENSE`, installed at `.agents/skills/LICENSE.mattpocock-skills` beside the copied skills | Exact file outside every skill directory |
 
-The resolved profile contains 52 declarations: 23 exact files, one contextual
+The resolved profile contains 53 declarations: 24 exact files, one contextual
 file, three repository declarations, and 25 exact skill directories. It has
 three checks and two fixes. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
 trees, globs, or adopter-specific paths embedded in this source.
+
+Each skill declaration owns its whole `.agents/skills/<name>` directory by its
+complete inventory, so the upstream license notice cannot be installed inside a
+skill directory. The exact `mattpocock-skills-license` declaration installs the
+vendored upstream `LICENSE` byte for byte as the sibling file
+`.agents/skills/LICENSE.mattpocock-skills`, whose name identifies the upstream
+project. Skill names are lower-case kebab-case, so that name never collides
+with a skill directory.
 
 The documentation operation resources retain the shared rendered-Markdown
 module, the separate local-link module, and complete Marked and parse5
@@ -69,8 +78,8 @@ and validates every profile.
 On 2026-09-14, public CLI 1.2.1 under Node.js 24 validated the complete local
 source with `valid: true`, no errors, and the single `complete` profile. The
 reported source identity was `repo-canon` using `repo-standards/v2` and exact
-compatibility `1.2.1`. The resolved counts matched the inventory above, and the
-CLI reported discovery required for `documentation`,
+compatibility `1.2.1`. The resolved counts matched the inventory of that time,
+and the CLI reported discovery required for `documentation`,
 `github-repository-configuration`, and `project-readmes`.
 
 That result is retained historical evidence for the earlier source bytes. Public
