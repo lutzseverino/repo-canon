@@ -49,8 +49,7 @@ is a Project, whether discovery covered every Project or migration path, or
 whether purpose, commands, configuration, content placement, and linked material
 are useful or factually correct. Review the discovery proposal and those semantic
 questions during the complete inspection. Scope-independent fixtures exercise
-only the operation behavior; #15 wires discovery and retained resources into the
-complete source, and #16 supplies complete adoption evidence.
+only the operation behavior, not discovery or adoption.
 
 ## Prerequisites and validation
 
