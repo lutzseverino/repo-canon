@@ -50,9 +50,10 @@ Use the versioned [author format](https://github.com/lutzseverino/repo-standards
 and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/script-protocol.md)
 contracts when implementing. Discovery supplies scope resolution; the separate
 AGENTS preparation and authored GitHub setup routes below remain necessary.
-Repo Canon acceptance combines final validation, operation and skill exercises,
-whole-source review, and complete adoption with authorized remote readback.
-The [release procedure](release.md) states what each release requires.
+Repo Canon acceptance through `v0.2.0` combined final validation, operation and
+skill exercises, whole-source review, and complete adoption with authorized
+remote readback. The [release procedure](release.md) states what each later
+release requires.
 
 ## Historical CLI 1.1.0 scope audit
 

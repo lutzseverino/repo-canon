@@ -17,7 +17,7 @@ separate closure file records them. The reviewed diff is the diff from the
 previous release tag over the source inputs. List the inputs with the public CLI
 at the required minimum version, installed outside the checkout as the
 [source profile](source-profile.md#executable-prerequisites) describes, and
-show the diff:
+show the diff. The listing also needs `jq`:
 
 ```sh
 previous_tag=REPLACE_WITH_PREVIOUS_RELEASE_TAG
@@ -30,33 +30,38 @@ inputs=$(jq -r '["standards.yaml"] + [.profiles[].declarations[]
 git diff --stat "$previous_tag" HEAD -- $inputs
 ```
 
-The list comes from the release candidate. An input that the candidate no
-longer selects leaves the list, and its removal shows in the diff of
-`standards.yaml`; review the removed paths too.
+The command reads the resolved declarations that `source validate --json`
+reports under each profile. The list comes from the release candidate. An input
+that the candidate no longer selects leaves the list, and its removal shows in
+the diff of `standards.yaml`; review the removed paths too.
 
 ## When selected bytes change
 
 Any change to a source input creates a new source identity. When the reviewed
 diff is not empty, the release requires all of the following:
 
-- Whole-source review. Independent Standards and Spec reviews cover the whole
-  source, not only the diff: the profile, every reference, ownership, retained
-  operation resources, notices, and the policy each declaration carries.
+- Whole-source review. Independent reviews, one against the repository's
+  standards and one against the release's issue, cover the whole source, not
+  only the diff: the profile, every reference, ownership, retained operation
+  resources, notices, and the policy each declaration carries.
 - Validation of every profile. The public CLI at the required minimum version
   runs `source validate` without filtering and returns `valid: true` with no
   errors.
 - Refreshed fixture results. A changed operation or operation resource has its
   operation fixtures updated and passing. A changed vendored skill is exercised
-  again through the [skill exercise procedure](skill-exercises.md).
+  again through the [skill exercise procedure](skill-exercises.md). The skill
+  fixture builders copy the shared guidance, so a change to it keeps their
+  tests passing.
 
 Changes outside the source inputs do not require this, because they do not
 change what adopters receive.
 
 ## Prepare the release pull request
 
-Each release is one pull request into `main`. It carries the release's
-remaining changes, and nothing is committed for the release after it merges.
-Title it `chore: release vX.Y.Z`.
+Each release is one pull request into `main`, and nothing is committed for the
+release after it merges. It carries the changes the release itself needs, such
+as documents that name the latest release or its required CLI version, and
+it closes the issue that plans the release. Title it `chore: release vX.Y.Z`.
 
 Before requesting review, run the checks the
 [development guide](README.md#current-validation) requires and the all-profile

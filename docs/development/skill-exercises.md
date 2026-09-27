@@ -73,9 +73,9 @@ an unresolved Git merge. The scenarios supply a domain glossary, applicable
 ADRs with their indexes, contributor commands, source, tests, requests, and
 specifications.
 
-The research exercise needs web search. Opening the architecture report needs a
-browser; in a headless harness, render it with a local headless browser and
-inspect the result.
+The research exercise needs web search, such as Codex CLI's `--search` option.
+Opening the architecture report needs a browser; in a headless harness, render
+it with a local headless browser and inspect the result.
 
 The test verifies the shared and scenario guidance, domain and development
 context, ADR indexes, skill links and digests, the unresolved merge, a build
@@ -97,11 +97,12 @@ live in `docs/agents/project.md`; the `writing-for-agents` exercise edits that
 file.
 
 Several skills need a participant. Supply the participant's turns as explicit
-controlled inputs, and do not present them as a real user, approver, learner,
-or recipient. Both grilling skills must delegate repository fact-finding to a
+controlled inputs, and do not present them as a real user, approver, learner, or
+recipient. Both grilling skills must delegate repository fact-finding to a
 read-only sub-agent; facts gathered by the primary agent do not exercise them.
 The `handoff` repository contains an ignored fake secret that the handoff must
-not read or copy.
+not read or copy. The `teach` exercise needs web access to fetch its official
+sources.
 
 The test verifies the exact shared guidance, the scenario prerequisites, intact
 skill links, disabled local signing, a clean initial Git state, and an ordinary
