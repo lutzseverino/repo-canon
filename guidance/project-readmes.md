@@ -19,7 +19,8 @@ decide Project membership or establish semantic accuracy.
 Use the associated v2 discovery guidance to identify individual existing or
 intended Project README paths. Review the evidence, candidate decisions,
 unresolved questions, coverage rationale, and concrete paths in the complete
-inspection before confirmation. A newly found Project requires a confirmed
-additions-only scope amendment before editing its README; after a complete
-adoption, use fresh discovery during deliberate re-adoption. Existing scope
+inspection before confirmation. A confirmed scope does not change during a
+run. When a run finds a Project outside its scope, abandon the run and adopt
+again with a fresh discovery proposal before editing that README; after a
+complete adoption, the next update's fresh discovery covers it. Existing scope
 does not establish coverage or authority for an unrepresented Project.

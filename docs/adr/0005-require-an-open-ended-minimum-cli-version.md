@@ -1,7 +1,7 @@
 # Require an open-ended minimum CLI version
 
 `standards.yaml` declares `requires.repo-standards` as an open-ended minimum,
-currently `>=1.3.0`, naming the oldest public Repository Standards CLI this
+currently `>=2.0.0`, naming the oldest public Repository Standards CLI this
 source was validated against. Repository Standards evaluates that requirement
 only when an adopter selects a standards version and never re-validates it
 afterwards, so an exact or upper-bounded requirement strands established
@@ -24,9 +24,9 @@ and published as a patch release.
 
 - [Release versioning](../usage/versioning.md#the-required-cli-version) states
   the requirement's form and bump class for adopters.
-- [Release v0.2.0](../development/release-v0-2-0.md) keeps its published record
-  and its breaking-change note, with a note that both were reversed by
-  [Release v0.2.1](../development/release-v0-2-1.md).
+- The published [`v0.2.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.2.0)
+  keeps its exact requirement and its breaking-change note; this decision
+  reverses that classification for later releases rather than rewriting it.
 - Widening never lowers the floor. A CLI below the declared minimum is rejected
   exactly as before; what the minimum newly admits is CLI releases above it,
   which this source was not validated against.

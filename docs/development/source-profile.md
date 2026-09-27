@@ -2,7 +2,7 @@
 
 `standards.yaml` defines one complete `repo-standards/v2` profile named
 `complete`. The source identity is `repo-canon`, and its compatibility contract
-is the open-ended minimum `requires.repo-standards: ">=1.3.0"`. Public CLI 1.3.0
+is the open-ended minimum `requires.repo-standards: ">=2.0.0"`. Public CLI 2.0.0
 is the oldest version this source was validated against; the range gates which
 CLI versions may select it and is never re-validated afterwards. The profile
 does not imply a release or successful adoption.
@@ -64,7 +64,7 @@ repository and validate every profile without filtering:
 cli_prefix="$(mktemp -d)"
 npm install --prefix "$cli_prefix" --ignore-scripts \
   --registry=https://registry.npmjs.org \
-  @lutzseverino/repo-standards@1.3.0
+  @lutzseverino/repo-standards@2.0.0
 "$cli_prefix/node_modules/.bin/repo-standards" --version
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
@@ -153,19 +153,17 @@ Node.js 24.21.0 returned `valid: true`, no errors, one `complete` profile, and
 `INCOMPATIBLE_CLI` for them. [Release v0.2.0](release-v0-2-0.md) records the
 verified publication at commit `79ff51198465248df67c6e1d6a66c95e2f964df5`.
 
-`v0.2.1` keeps 1.3.0 as the validated baseline and states the requirement as
-the open-ended minimum `repo-standards: ">=1.3.0"`. That is again the only
-selected byte change: the other 114 inputs are byte-and-mode identical to the
-published `v0.2.0` commit `79ff51198465248df67c6e1d6a66c95e2f964df5`. Installed
-public CLI 1.3.0 under Node.js 24.21.0 returned `valid: true`, no errors, one
-`complete` profile, and 52 declarations for those bytes. Raising the minimum
-later changes no adopter's conformance or workflow, which is the test in
+After `v0.2.0`, the requirement became the open-ended minimum
+`repo-standards: ">=2.0.0"`, so that adopters on public CLI 2.0.0 can select the
+next release. Installed public CLI 2.0.0 under Node.js 24.21.0 returned
+`valid: true`, no errors, one `complete` profile, and 52 declarations for the
+source with that requirement. Raising the minimum changes no adopter's
+conformance or workflow, which is the test in
 [ADR 0003](../adr/0003-follow-product-release-versioning.md), so it is not a
-breaking standards change and a release does not announce it as one. The
-refreshed [closure comparison](source-closure.json) records both sides, and
-[Release v0.2.1](release-v0-2-1.md) records this release. Local validation and
-CI therefore install `@lutzseverino/repo-standards@1.3.0`, the oldest version
-the requirement admits.
+breaking standards change;
+[ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
+the requirement is a minimum. Local validation and CI therefore install
+`@lutzseverino/repo-standards@2.0.0`, the oldest version the requirement admits.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no

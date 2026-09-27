@@ -26,15 +26,15 @@ Source authoring, publication, and adoption are separate stages:
 ## Prerequisites
 
 Use macOS or Linux with Node.js 24, npm, and Git. The source requires public CLI
-1.3.0 or newer; 1.3.0 is the version it was validated against. Install a pinned
+2.0.0 or newer; 2.0.0 is the version it was validated against. Install a pinned
 CLI in a persistent directory outside the adopting project so inspection, start,
 and recovery use the same executable:
 
 ```sh
-adoption_cli="$HOME/.local/share/repo-standards/cli-1.3.0"
+adoption_cli="$HOME/.local/share/repo-standards/cli-2.0.0"
 mkdir -p "$adoption_cli"
 npm install --prefix "$adoption_cli" --ignore-scripts --save-exact \
-  --no-audit --no-fund @lutzseverino/repo-standards@1.3.0
+  --no-audit --no-fund @lutzseverino/repo-standards@2.0.0
 repo_standards="$adoption_cli/node_modules/.bin/repo-standards"
 "$repo_standards" --version
 ```
@@ -54,13 +54,13 @@ and inspect the prepared commit afresh.
 
 ## Inspect the published source
 
-Use the current release, `v0.2.1`, after verifying its [GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.2.1).
-Set `source_tag` to that permanent published SemVer tag. Run the first
-inspection from the adopting repository:
+Use the [latest published release](https://github.com/lutzseverino/repo-canon/releases/latest)
+after verifying its GitHub release. Set `source_tag` to that permanent published
+SemVer tag. Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.2.1
+source_tag=REPLACE_WITH_PUBLISHED_TAG
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
@@ -83,7 +83,7 @@ discovered directory trees, globs, or repository-root scope. The
 [adoption evidence](../development/adoption-evidence.md#prepared-repository-matrix)
 contains representative reviewed proposals and the source-backed builder used
 for the disposable matrix. The public CLI's
-[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v1.3.0/docs/usage/inspection.md)
+[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/inspection.md)
 defines the proposal fields and evidence binding.
 
 Bind the proposal to the initial discovery evidence, then request the complete
@@ -146,8 +146,25 @@ outputs through the project's normal workflow. Remote readback is point-in-time
 evidence; the fixes provide repeatability and preservation, without a remote
 rollback or freshness guarantee.
 
-For additions discovered during an active run, inspect and confirm an
-additions-only amendment before writing them. After a completed adoption, use
-the pinned CLI's explicit `inspect --readopt` and `start --readopt` route for a
-fresh same-pin adoption. The [compatibility guide](../development/adoption-compatibility.md)
-records those supported lifecycle boundaries.
+## Correct a confirmed scope
+
+A run's confirmed scope never changes while the run is active, and
+`resume --retry` repeats work under it without widening it. When contextual
+work needs a file outside the confirmed scope, or a confirmed path is mistaken,
+do not write that file. Correcting the scope means abandoning the run and
+adopting again:
+
+1. Preserve the work worth keeping.
+2. Abandon the run with `abandon --project "$project_root" --json`. Its changes
+   and report are retained.
+3. Resolve those changes through the project's normal workflow: commit or
+   discard contextual work on project-owned files, and restore what the run
+   installed to its committed state. The next start requires a clean, committed
+   project.
+4. Inspect again with a new discovery proposal, obtain explicit confirmation of
+   the new inspection, and start it with the same proposal.
+
+After a complete adoption, every later update inspects with a fresh discovery
+proposal, so it is where the scope changes. The CLI's
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/adoption.md#correct-a-confirmed-scope)
+describes these steps in full.

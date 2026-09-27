@@ -12,14 +12,15 @@ and the merged real adoption in [first real adoption](real-adoption.md).
 
 ## Supported source and discovery route
 
-Use `repo-standards/v2` and the installed public CLI 1.3.0 with Node.js 24 as the
+Use `repo-standards/v2` and the installed public CLI 2.0.0 with Node.js 24 as the
 current validation and adoption baseline. Declare a minimum that was actually
 validated against the released source bytes: `requires.repo-standards` is the
-open-ended minimum `>=1.3.0`. [Release v0.2.0](release-v0-2-0.md) raised that
-floor from 1.2.2 so that adopters record compact work and scope evidence, and
-[release v0.2.1](release-v0-2-1.md) stated it as a minimum rather than an exact
-version, because the requirement gates selection only and an exact one strands
-adopters. Format version and CLI version are distinct, and the format version
+open-ended minimum `>=2.0.0`. [Release v0.2.0](release-v0-2-0.md) raised the
+floor from 1.2.2 to 1.3.0 so that adopters record compact work and scope
+evidence. [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md)
+states the requirement as a minimum rather than an exact version, because the
+requirement gates selection only and an exact one strands adopters, and the
+floor moved to 2.0.0 so that adopters on that CLI can select the next release. Format version and CLI version are distinct, and the format version
 carries compatibility with CLI releases above the floor. The successful
 1.2.1 local source validation and failed public acquisition, and the 1.2.2
 validation and adoption evidence for `v0.1.0` and `v0.1.1`, remain historical
@@ -32,8 +33,8 @@ evidence rather than the current baseline.
 | Project READMEs at arbitrary locations, including missing files | Repository declarations with separate `guidance` and `discovery` references; an agent resolves membership from repository evidence. |
 | Documentation reorganization around exact shared files | Individual contextual source, destination, directory-index introduction, and link-repair paths; exact files remain outside contextual scope. |
 | Scope review before adoption | First `inspect` returns discovery evidence; `inspect --scope` validates a `repo-standards/scope/v1` proposal. Confirm the complete inspection and pass the same proposal to `start --scope`. |
-| Files discovered during an active adoption | Preview with `inspect --amend-scope`, then confirm through `resume --amend-scope`. Amendments retain existing ownership and only add paths; fixes replay and assessment/checks must be renewed. |
-| Scope changes after complete adoption | Deliberate retained `inspect --readopt` and confirmed `start --readopt` with fresh discovery and unchanged pins. Removed paths leave governance without deleting content. |
+| Files discovered during an active adoption | A confirmed scope never changes during a run. Abandon the run, resolve its changes, and adopt again with a fresh proposal and a newly confirmed inspection. |
+| Scope changes after complete adoption | Every later update, including one with unchanged pins, inspects with a fresh proposal and a newly confirmed inspection. Removed paths leave governance without deleting content. |
 
 Scope proposals list individual files with evidence, candidate decisions,
 coverage rationale, and any unresolved questions. Missing READMEs require
