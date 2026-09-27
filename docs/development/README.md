@@ -12,9 +12,6 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
 - [Release v0.2.0](release-v0-2-0.md): verified publication, the breaking
   required-CLI change, its impact and migration, refreshed source identity,
   minor release notes, and evidence boundary.
-- [Release v0.2.1](release-v0-2-1.md): the open-ended required-CLI minimum, why
-  an exact requirement strands adopters, refreshed source identity, publication
-  procedure, patch release notes, and evidence boundary.
 - [First real adoption](real-adoption.md): the merged Repository Standards
   adoption, its run identities, the surfaced defects, the authorized required-check
   bypass, packaged-output validation, and remote readback.
@@ -68,8 +65,8 @@ defines the complete source profile.
 The required product scope capability is delivered. Pull request
 metadata validation, issue contract validation, Repository README checking,
 GitHub label setup, PR integration setup, and their CI suites are implemented.
-The source declares public CLI 1.3.0 as its validation baseline and required
-minimum.
+The source declares public CLI 2.0.0 as its validation baseline and the
+open-ended required minimum `>=2.0.0`.
 The successful CLI 1.2.1 local validation and earlier CLI 1.1.0 experiments
 remain historical evidence. Operation fixtures, the pinned skill inventory,
 and the engineering, productivity, and planning skill exercises remain separate
@@ -89,9 +86,10 @@ required CLI version from 1.2.2 to 1.3.0, a breaking standards change and the
 only selected byte change since `v0.1.1`;
 [release v0.2.0](release-v0-2-0.md) covers it, and it is the current release.
 `v0.1.1` stays published and selectable for adopters that remain on public CLI
-1.2.2. `v0.2.1` restates that requirement as the open-ended minimum `>=1.3.0`,
-a compatible change and the only selected byte change since `v0.2.0`;
-[release v0.2.1](release-v0-2-1.md) covers it and is prepared for publication.
+1.2.2. The source now states its requirement as the open-ended minimum
+`>=2.0.0`, so that adopters on public CLI 2.0.0 can select the next release;
+[ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
+the requirement is a minimum rather than an exact version.
 Repository Standards completed and merged the first real adoption from the
 `v0.1.x` public pins; [first real adoption](real-adoption.md) records it,
 including the defects it surfaced. Adopters verify the published release before
@@ -102,8 +100,9 @@ inspection.
 Clone the repository with Git and use Node.js 24 and npm. The source needs no
 package installation, typecheck, or build step; parser dependencies are
 vendored. GitHub planning uses authenticated `gh` access. For source validation,
-install the public Repository Standards CLI outside the checkout using the
-[source profile instructions](source-profile.md#executable-prerequisites).
+install public Repository Standards CLI 2.0.0 outside the checkout using the
+[source profile instructions](source-profile.md#executable-prerequisites); CI
+validates with the same version.
 
 ## Current validation
 

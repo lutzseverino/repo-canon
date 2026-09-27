@@ -20,11 +20,11 @@ a new version.
 
 ## The required CLI version
 
-`standards.yaml` declares `requires.repo-standards` as an open-ended minimum.
-It names the oldest public Repository Standards CLI this source was validated
-against; the [source profile](../development/source-profile.md) records the
-current value, and the
-[requirement decision](../adr/0005-require-an-open-ended-minimum-cli-version.md)
+`standards.yaml` declares `requires.repo-standards` as an open-ended minimum,
+currently `>=2.0.0`. It names the oldest public Repository Standards CLI this
+source was validated against, public CLI 2.0.0. The
+[source profile](../development/source-profile.md) records that validation, and
+the [requirement decision](../adr/0005-require-an-open-ended-minimum-cli-version.md)
 records why the form was chosen. Repository Standards evaluates that
 requirement only when an adopter selects a standards version, and never
 re-validates it afterwards. An
@@ -35,12 +35,13 @@ an open-ended minimum is that an adopter can run a CLI this source was never
 tested against; the `repo-standards/v2` format version carries that
 compatibility promise instead.
 
-Raising the minimum is a compatible change committed as a `chore` and published
-as a patch release, not a breaking standards change. It leaves every adopting
-repository conforming, its workflow unchanged, and its files untouched, which is
-the test above; an adopter that does not update its CLI keeps the standards
-version it already selected. Release notes still name the new minimum and why it
-moved.
+Raising the minimum is a compatible change, not a breaking standards change. It
+leaves every adopting repository conforming, its workflow unchanged, and its
+files untouched, which is the test above; an adopter that does not update its
+CLI keeps the standards version it already selected. On its own, the change is
+committed as a `chore` and published as a patch release; a release that also
+carries breaking changes is versioned for those. Release notes still name the
+new minimum and why it moved.
 
 ## Before 1.0
 

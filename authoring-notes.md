@@ -2,16 +2,15 @@
 
 Status: policy decisions settled; shared contribution and agent workflow
 material reviewed. The complete source profile is authored and structurally
-valid with public CLI 1.3.0 as its validation baseline and required minimum.
+valid with public CLI 2.0.0 as its validation baseline and required minimum.
 Complete adoption, scope-protection, preservation, and authorized
 remote-readback evidence is recorded. The owner selected `v0.1.0` for the first
 permanent release;
 [release delivery](docs/development/first-release.md) covers its publication,
 [release v0.1.1](docs/development/release-v0-1-1.md) covers the patch release,
 and [release v0.2.0](docs/development/release-v0-2-0.md) covers the current
-release, which requires public CLI 1.3.0.
-[Release v0.2.1](docs/development/release-v0-2-1.md) restates that requirement
-as the open-ended minimum `>=1.3.0` and is prepared for publication.
+release, which requires public CLI 1.3.0. The source now states its
+requirement as the open-ended minimum `>=2.0.0`.
 The separate real adoption is complete and merged, recorded in
 [first real adoption](docs/development/real-adoption.md).
 
@@ -194,7 +193,7 @@ The separate real adoption is complete and merged, recorded in
 ## Source profile
 
 The complete `repo-standards/v2` source is `standards.yaml`, with one
-`complete` profile and the open-ended CLI compatibility minimum `>=1.3.0`. The
+`complete` profile and the open-ended CLI compatibility minimum `>=2.0.0`. The
 concise policy-to-declaration, material, operation, ownership, and prerequisite
 mapping is maintained in
 [the source profile record](docs/development/source-profile.md). Contextual
@@ -203,7 +202,7 @@ guidance and resolves to individual adopter-reviewed paths.
 
 The [compatibility audit](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface and retains the
-historical CLI findings. Use installed public CLI 1.3.0 as the current
+historical CLI findings. Use installed public CLI 2.0.0 as the current
 validation baseline; claim only compatibility demonstrated against the released
 source bytes.
 
