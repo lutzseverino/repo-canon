@@ -1,10 +1,9 @@
 # Adopt Repo Canon
 
 Repo Canon is designed to supply one `complete` Repository Standards v2 profile.
-Before using the commands below, check the
-[source acceptance record](../development/completion-record.md) for the current
-reviewed bytes, supporting evidence, and publication prerequisite. Select only
-an owner-published stable SemVer tag covered by that record.
+Before using the commands below, read the notes of the
+[published release](https://github.com/lutzseverino/repo-canon/releases) you
+select. Select only an owner-published stable SemVer tag.
 
 Source authoring, publication, and adoption are separate stages:
 
@@ -12,14 +11,14 @@ Source authoring, publication, and adoption are separate stages:
    [development guide](../development/README.md) gives the repository checks,
    and the [source profile](../development/source-profile.md) gives exact public
    CLI validation.
-2. The owner publishes a stable Repo Canon source version after confirming that
-   its selected and transitive bytes have accepted evidence. The source
-   acceptance record states whether that prerequisite is satisfied.
+2. The owner publishes a stable Repo Canon source version through the
+   [release procedure](../development/release.md), which reviews and validates
+   its source inputs before publication.
 3. An adopting maintainer inspects the published version, confirms its complete
    project-specific scope, and then starts adoption. Adoption writes project
    content and can change GitHub settings, so review the inspection before
    confirmation. The
-   [first real adoption](../development/real-adoption.md) records how one
+   [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md) records how one
    repository completed these stages, including the migration effort and the
    defects it surfaced.
 
@@ -81,10 +80,7 @@ Review the repository evidence and prepare a `repo-standards/scope/v1` proposal
 that accounts for every candidate, source and destination of a documentation
 move, directory index, and link repair. Record exclusions and reasons, and
 resolve every question. Use individual paths; the interface does not accept
-discovered directory trees, globs, or repository-root scope. The
-[adoption evidence](../development/adoption-evidence.md#prepared-repository-matrix)
-contains representative reviewed proposals and the source-backed builder used
-for the disposable matrix. The public CLI's
+discovered directory trees, globs, or repository-root scope. The public CLI's
 [inspection contract](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/inspection.md)
 defines the proposal fields and evidence binding.
 

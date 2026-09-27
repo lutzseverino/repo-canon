@@ -4,26 +4,11 @@ This directory explains development decisions, validation, and maintenance of
 the standards source. Keep end-user instructions under `docs/usage`, durable
 decisions under `docs/adr`, and agent configuration under `docs/agents`.
 
-- [First release](first-release.md): publication procedure, immutable source verification,
-  release notes, and the delivery boundary that real adoption completed.
-- [Release v0.1.1](release-v0-1-1.md): verified publication, the corrected
-  workflow failure, refreshed source identity, patch release notes, and
-  evidence boundary.
-- [Release v0.2.0](release-v0-2-0.md): verified publication, the breaking
-  required-CLI change, its impact and migration, refreshed source identity,
-  minor release notes, and evidence boundary.
-- [First real adoption](real-adoption.md): the merged Repository Standards
-  adoption, its run identities, the surfaced defects, the authorized required-check
-  bypass, packaged-output validation, and remote readback.
-- [Self-adoption of v0.2.0](self-adoption.md): this repository's own adoption of
-  its published release, the confirmed inspection identity and scope, the
-  operation results, and what self-adoption could and could not surface.
+- [Release procedure](release.md): released bytes, the reviewed diff, the rule
+  for changed selected bytes, the single release pull request, release notes,
+  and publication and verification.
 - [Adoption compatibility](adoption-compatibility.md): supported v2 mapping,
   validation baseline, preparation requirements, and historical v1 limits.
-- [Complete source acceptance](completion-record.md): final source identity,
-  parent requirement accounting, evidence classes, and publication prerequisite.
-- [Complete adoption evidence](adoption-evidence.md): disposable repository
-  matrix, public-package execution, authorized remote readback, and cleanup.
 - [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
   identity and permission prerequisites, protocol outcomes, and fixture coverage.
 - [GitHub PR integration setup](github-pr-integration-setup.md): required-check
@@ -32,8 +17,6 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   behavior, stable identity, permissions, and local verification.
 - [Historical scope proposal](scope-capability-specification.md): the original
   product requirement, superseded by the delivered product contract.
-- [Shared material review](shared-material-review.md): finalized contribution,
-  agent workflow, template, and preparation evidence.
 - [Issue contract validation](issue-contract-validation.md): supported issue
   shapes, feedback behavior, workflow permissions, and runnable fixtures.
 - [Upstream compatibility](upstream-compatibility.md): the regular skill
@@ -44,15 +27,8 @@ decisions under `docs/adr`, and agent configuration under `docs/agents`.
   scope, structural outcomes, prerequisites, and focused fixture commands.
 - [Standards source profile](source-profile.md): complete profile ownership,
   declarations, prerequisites, validation, and evidence boundaries.
-- [Source closure comparison](source-closure.json): reproducible path, mode,
-  Git blob, and SHA-256 accounting for the reviewed source refresh.
-- [Engineering skill exercises](engineering-skill-exercises.md): scenarios,
-  runtime evidence, harness provenance, and limitations for nine skills.
-- [Productivity skill exercises](productivity-skill-exercises.md): runtime
-  scenarios, outcomes, retained artifacts, prerequisites, and limitations.
-- [Planning skill exercises](planning-skill-exercises.md): runtime evidence,
-  native artifacts, and limitations for the planning, delivery, and
-  adoption-preparation skills.
+- [Skill exercises](skill-exercises.md): fixture builders, the common harness,
+  and the scenario prerequisites for exercising the pinned skills.
 
 ## Authoring status
 
@@ -72,28 +48,28 @@ remain historical evidence. Operation fixtures, the pinned skill inventory,
 and the engineering, productivity, and planning skill exercises remain separate
 from source validation. Final source validation, complete adoption,
 scope-protection, preservation, and authorized remote-readback evidence are
-recorded in [the adoption evidence](adoption-evidence.md). The
-[complete source acceptance record](completion-record.md) accounts for the
-separate evidence classes and the current accepted identity. Issue
+recorded in [the adoption evidence](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/adoption-evidence.md). The
+[complete source acceptance record](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/completion-record.md) accounted for the
+separate evidence classes and the accepted identity through `v0.2.0`. Issue
 [#46](https://github.com/lutzseverino/repo-canon/issues/46) reviewed the
 integrated #44 and #45 architecture work, recomputed the 115-file closure, and
 completed the affected public adoption refresh. The first permanent selection
-is `v0.1.0`; [release delivery](first-release.md) covers its verified
+is `v0.1.0`; [release delivery](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/first-release.md) covers its verified
 publication. The `v0.1.1` patch corrected the installed PR metadata workflow
 and refreshed the accepted identity at `8369d82`;
-[release v0.1.1](release-v0-1-1.md) covers it. `v0.2.0` then moves the exact
+[release v0.1.1](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-1-1.md) covers it. `v0.2.0` then moves the exact
 required CLI version from 1.2.2 to 1.3.0, a breaking standards change and the
 only selected byte change since `v0.1.1`;
-[release v0.2.0](release-v0-2-0.md) covers it, and it is the current release.
+[release v0.2.0](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/release-v0-2-0.md) covers it, and it is the current release.
 `v0.1.1` stays published and selectable for adopters that remain on public CLI
 1.2.2. The source now states its requirement as the open-ended minimum
 `>=2.0.0`, so that adopters on public CLI 2.0.0 can select the next release;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
 the requirement is a minimum rather than an exact version.
 Repository Standards completed and merged the first real adoption from the
-`v0.1.x` public pins; [first real adoption](real-adoption.md) records it,
+`v0.1.x` public pins; [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md) records it,
 including the defects it surfaced. Adopters verify the published release before
-inspection.
+inspection. Later releases follow the [release procedure](release.md).
 
 ## Working locally
 
@@ -126,16 +102,18 @@ draft issue forms were parsed as YAML and checked for basic field structure and
 duplicate IDs during bootstrap; no GitHub submission behavior was exercised.
 The public source-validation command and its evidence boundary are recorded in
 [the source profile](source-profile.md). Complete adoption remains a separate
-evidence class recorded in [the adoption evidence](adoption-evidence.md).
+evidence class recorded in [the adoption evidence](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/adoption-evidence.md).
 
 Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
 disposable local repositories used for the seven productivity skill exercises.
+[Skill exercises](skill-exercises.md) describes all three fixture builders and
+the harness that exercises the skills.
 
 This repository takes the same path every adopter takes, so the suite also runs
 the three shipped checks against this repository's own root through the
 operation request helper, with the documentation tree, the repository-root
 glossary `CONTEXT.md`, and the two root decision records as the documentation
-scope that [self-adoption](self-adoption.md) confirmed. The same fixture fails if any
+scope that [self-adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/self-adoption.md) confirmed. The same fixture fails if any
 tracked file reaches the CLI's 8 MiB per-file observation limit, which would
 make the repository uninspectable before any report. Run it alone with
 `node --test test/repository-conformance.test.mjs`. It needs no separate CI
