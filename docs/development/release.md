@@ -64,13 +64,14 @@ as documents that name the latest release or its required CLI version, and
 it closes the issue that plans the release.
 
 Title it `<type>: release vX.Y.Z`. The type follows the release's
-classification under [release versioning](../usage/versioning.md):
+classification under [release versioning](../usage/versioning.md). Use the
+first that applies:
 
 - `feat!` when the release carries a breaking standards change. As with every
   breaking change, the body explains its impact and migration, which the draft
   release notes do.
-- `feat` when its most significant change is a compatible feature.
-- `fix` when it carries only compatible fixes.
+- `feat` when it carries a compatible feature.
+- `fix` when it carries a compatible fix.
 - `chore` when it only raises the required CLI version.
 
 Before requesting review, run the checks the
@@ -102,7 +103,8 @@ in the release pull request so that they are reviewed with it.
   so that the links keep describing the released bytes.
 
 Mark each breaking standards change with **Breaking standards change.** and
-explain its migration in two parts:
+explain its migration in two parts, each starting with its `Impact:` or
+`Migration:` label, which the pull request metadata check looks for:
 
 - Impact: which previously conforming repositories stop conforming, or which
   workflow changes, and what stays conforming on the earlier release.
