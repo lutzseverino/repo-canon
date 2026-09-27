@@ -33,14 +33,17 @@ The result statuses have distinct meanings:
 The Contributing and Documentation sections are pointer sections to
 `CONTRIBUTING.md` and `docs/README.md`. When the target file exists, a missing
 section fails with a correction to add it. A present section fails unless its
-rendered content is exactly one link resolving to its target; a fragment or
-query on that link is accepted. Surrounding prose, another link, a list of
-documents, an image, a table, or a subsection each fail with a correction to
+rendered content is exactly one plain link resolving to its target; a fragment
+or query on that link, and emphasis inside its label, are accepted. Surrounding
+prose, another link, a list of documents, a subsection, or a link inside a
+list, quotation, or table or wrapping an image each fail with a correction to
 make the section contain only that link, and a link without a label fails with
-a correction to name it. The link-only rule applies even when the target is
-absent, because the correction names the one link the section may hold. HTML
-comments are not rendered content, and a link wrapping the next section's
-heading belongs to that heading rather than to the preceding section.
+a correction to name it. The License section uses the same plain-link rule. The
+link-only rule applies even when the target is absent; the correction then
+also offers creating the target or removing the section. HTML comments are not
+rendered content, and a link wrapping the next section's heading belongs to
+that heading rather than to the preceding section, including the empty anchor
+that HTML parsing leaves behind when a Markdown paragraph opens that link.
 
 For the License check, the root `LICENSE` file must exist and contain content,
 and the README section must contain only a link with a nonempty label targeting
@@ -57,7 +60,9 @@ node --test test/repository-readme-check.test.mjs
 The fixtures cover all recognized sections, omitted and interleaved sections,
 Markdown and HTML heading forms, nested centering, hidden examples, missing,
 link-only, and extra-content Contributing and Documentation sections, pointer
-links hidden in code or resolving elsewhere, malformed titles and license links,
+links hidden in code, resolving elsewhere, or wrapped in lists, quotations,
+tables, or images, links wrapping the next heading, malformed titles and
+license links,
 missing and ambiguous licensing, invalid protocol input, and byte-for-byte
 preservation of the disposable project. One fixture executes the operation from
 a retained layout containing only its declared script and resources, so an

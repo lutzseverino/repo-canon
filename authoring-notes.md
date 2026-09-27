@@ -38,9 +38,10 @@ The separate real adoption is complete and merged, recorded in
   project. Install commands carry no version numbers. Each Features item is one
   line starting with a verb.
 - The Contributing, Documentation, and License sections each contain only their
-  link, to CONTRIBUTING.md, docs/README.md, and the repository LICENSE file. The
-  License link uses the actual license name. This standard does not choose the
-  project's license.
+  link, to CONTRIBUTING.md, docs/README.md, and the repository LICENSE file.
+  The Documentation section applies when documentation exists. The License link
+  uses the actual license name. This standard does not choose the project's
+  license.
 - Each maintained monorepo app, service, library, or tool with its own
   responsibility and development commands has a project README, including
   internal packages. Fixtures, generated code, and organizational directories

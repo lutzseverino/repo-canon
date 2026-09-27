@@ -39,6 +39,39 @@ function containsHeading(node, isHidden) {
   ));
 }
 
+function containsMedia(node, isHidden) {
+  if (isHidden(node)) return false;
+  return (node.childNodes ?? []).some(child => (
+    renderedElementsWithoutText.has(child.tagName) || containsMedia(child, isHidden)
+  ));
+}
+
+// An anchor opened in a paragraph and closed after a heading is split by HTML
+// parsing into an empty anchor followed by one that wraps or sits inside the
+// heading. The empty remainder belongs to that heading, not to the section
+// before it.
+function followingHeadingLinks(elements, index) {
+  const next = elements[index + 1];
+  if (next?.wrapsHeading) return [next];
+  if (next?.type !== 'heading') return [];
+  const links = [];
+  for (const candidate of elements.slice(index + 2)) {
+    if (!candidate.insideHeading) break;
+    if (candidate.type === 'link') links.push(candidate);
+  }
+  return links;
+}
+
+function attachSplitHeadingAnchors(elements) {
+  elements.forEach((element, index) => {
+    if (element.type !== 'link' || element.text || element.containsMedia) return;
+    if (followingHeadingLinks(elements, index).some(link => link.target === element.target)) {
+      element.wrapsHeading = true;
+    }
+  });
+  return elements;
+}
+
 function semanticElements(fragment, isHidden, markdownHeadingMarker) {
   const elements = [];
   const visitTargets = node => {
@@ -61,7 +94,7 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
     }
     for (const child of node.childNodes ?? []) visitTargets(child);
   };
-  const visit = (node, centered = false) => {
+  const visit = (node, centered = false, blocks = []) => {
     if (isHidden(node)) return;
     if (node.nodeName === '#text') {
       if (node.value.trim()) elements.push({ type: 'text', text: node.value });
@@ -86,13 +119,19 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
       return;
     }
     if (node.tagName === 'a') {
-      const link = { type: 'link', text: renderedText(node, isHidden).trim(), target: attribute(node, 'href') ?? '' };
+      const link = {
+        type: 'link',
+        text: renderedText(node, isHidden).trim(),
+        target: attribute(node, 'href') ?? '',
+        blocks,
+        containsMedia: containsMedia(node, isHidden),
+      };
       if (!containsHeading(node, isHidden)) {
         elements.push(link);
         return;
       }
       elements.push({ ...link, wrapsHeading: true });
-      for (const child of node.childNodes ?? []) visit(child, centered);
+      for (const child of node.childNodes ?? []) visit(child, centered, blocks);
       return;
     }
     if (node.tagName === 'img') {
@@ -101,10 +140,11 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
     }
     if (renderedElementsWithoutText.has(node.tagName)) elements.push({ type: 'content' });
     const insideCenter = centered || (node.tagName === 'div' && ownCenter);
-    for (const child of node.childNodes ?? []) visit(child, insideCenter);
+    const insideBlocks = blockElements.has(node.tagName) ? [...blocks, node.tagName] : blocks;
+    for (const child of node.childNodes ?? []) visit(child, insideCenter, insideBlocks);
   };
   visit(fragment);
-  return elements;
+  return attachSplitHeadingAnchors(elements);
 }
 
 function renderedContent(fragment, isHidden, markdownHeadingMarker) {

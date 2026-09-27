@@ -451,8 +451,60 @@ Pull requests are welcome.
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, 'failed');
-  assert.match(outcome.result.message, /Make the Documentation section contain only a link to docs\/README\.md/);
-  assert.match(outcome.result.message, /Make the Contributing section contain only a link to CONTRIBUTING\.md/);
+  assert.match(outcome.result.message, /Make the Documentation section contain only a link to docs\/README\.md and create docs\/README\.md, or remove the section/);
+  assert.match(outcome.result.message, /Make the Contributing section contain only a link to CONTRIBUTING\.md and create CONTRIBUTING\.md, or remove the section/);
+});
+
+test('rejects pointer links wrapped in lists, quotations, tables, or images', async t => {
+  const pointers = [
+    { section: 'Contributing', target: 'CONTRIBUTING.md', diagnostic: /Make the Contributing section contain only a link to CONTRIBUTING\.md\./ },
+    { section: 'Documentation', target: 'docs/README.md', diagnostic: /Make the Documentation section contain only a link to docs\/README\.md\./ },
+    { section: 'License', target: 'LICENSE', diagnostic: /Make the License section contain only the license link/ },
+  ];
+  const wrappers = [
+    { name: 'a one-item list', body: target => `- [Guide](${target})\n` },
+    { name: 'a quotation', body: target => `> [Guide](${target})\n` },
+    { name: 'a one-cell table', body: target => `| [Guide](${target}) |\n| --- |\n` },
+    { name: 'a linked image', body: target => `[![Guide](guide.svg)](${target})\n` },
+    { name: 'an HTML list', body: target => `<ul><li><a href="${target}">Guide</a></li></ul>\n` },
+  ];
+  for (const { section, target, diagnostic } of pointers) {
+    for (const wrapper of wrappers) await t.test(`${section} in ${wrapper.name}`, st => {
+      const license = section === 'License' ? '' : '## License\n\n[MIT License](LICENSE)\n';
+      const outcome = check(st, {
+        'README.md': `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## ${section}\n\n${wrapper.body(target)}\n${license}`,
+        'LICENSE': mit,
+        'CONTRIBUTING.md': '# Contributing\n',
+        'docs/README.md': '# Documentation\n',
+      });
+
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, 'failed');
+      assert.match(outcome.result.message, diagnostic);
+    });
+  }
+});
+
+test('assigns an anchor split around the next heading to that heading', t => {
+  const outcome = check(t, {
+    'README.md': `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+## Contributing
+
+[Contribution guidelines](CONTRIBUTING.md)
+
+<a href="#license"><h2>License</h2></a>
+
+[MIT License](LICENSE)
+`,
+    'LICENSE': mit,
+    'CONTRIBUTING.md': '# Contributing\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed', outcome.result.message);
 });
 
 test('requires pointer sections whose targets exist', t => {
@@ -489,7 +541,7 @@ A queue inspector.
 
 <h2>Contributing</h2>
 
-<p><a href="CONTRIBUTING.md">Contribution guidelines</a></p>
+<div><p><a href="CONTRIBUTING.md">Contribution <strong>guidelines</strong></a></p></div>
 
 ## License
 

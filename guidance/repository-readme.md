@@ -27,10 +27,11 @@ explanations to the appropriate documentation category and link them from the
 README.
 
 The Contributing, Documentation, and License sections are pointers. Each
-contains only its link and nothing else: no surrounding prose, additional
-links, lists, or images. The Contributing section links to `CONTRIBUTING.md`.
-When documentation exists, the Documentation section links to `docs/README.md`,
-which lists the documents. The License section links to the root `LICENSE`
+contains only its link, as a plain paragraph, and nothing else: no surrounding
+prose, additional links, lists, quotations, tables, or images. The Contributing
+section links to `CONTRIBUTING.md`. When documentation exists, the
+Documentation section links to `docs/README.md`, which lists the documents;
+otherwise omit the section. The License section links to the root `LICENSE`
 file, and its label is the actual repository license name. If the repository
 has no clear, single license, ask the maintainer to identify it; never select
 or infer a license for the project.

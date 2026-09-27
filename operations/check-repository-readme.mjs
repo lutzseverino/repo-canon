@@ -71,8 +71,14 @@ function sectionElements(allHeadings, name) {
   return allHeadings[index].body.elements;
 }
 
+// A pointer section renders exactly one link as a plain paragraph: not inside a
+// list, quotation, table, or other block, and not wrapping an image.
+const plainLinkBlocks = new Set(['p', 'div']);
+
 function singleLink(events) {
-  return events.length === 1 && events[0].type === 'link' ? events[0] : null;
+  if (events.length !== 1 || events[0].type !== 'link') return null;
+  const [link] = events;
+  return !link.containsMedia && link.blocks.every(block => plainLinkBlocks.has(block)) ? link : null;
 }
 
 function checkPointerSection(projectRoot, allHeadings, section, target, corrections) {
@@ -83,7 +89,9 @@ function checkPointerSection(projectRoot, allHeadings, section, target, correcti
   }
   const link = singleLink(body);
   if (!link || resolvedLocalPath('README.md', link.target) !== target) {
-    corrections.push(`Make the ${section} section contain only a link to ${target}.`);
+    corrections.push(lstatIsFile(join(projectRoot, target))
+      ? `Make the ${section} section contain only a link to ${target}.`
+      : `Make the ${section} section contain only a link to ${target} and create ${target}, or remove the section.`);
   } else if (!link.text) {
     corrections.push(`Name the ${section} link.`);
   }
