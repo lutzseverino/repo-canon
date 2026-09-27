@@ -14,7 +14,18 @@ or consequential decisions are resolved. A monorepo does not by itself imply
 multiple domain contexts.
 
 Documentation categories are `usage`, `development`, `adr`, and `agents` under
-each applicable documentation root. Create a directory when it has content and
-include a short README describing its purpose and linking useful contents.
-Keep durable research with its usage or development topic. Glossaries remain
-outside `docs`, at the repository or context root.
+each applicable documentation root. Create a directory when it has content.
+Every documentation directory has a README index: a one-sentence purpose, then
+one `[Title](path): description` item per entry. List each document in exactly
+one index: its directory's README, or for a directory README, its parent's.
+Other documents link to that index or cite a document in context. The installed
+`docs/agents/README.md` stays as is and cites `docs/agents/project.md` in
+context. `docs/development/README.md` gives its purpose, then Setup and
+validation, then its index. Keep durable research with its usage or development
+topic. Glossaries remain outside `docs`, at the repository or context root.
+
+Documentation holds maintained material only. A point-in-time record, such as
+an account of one release, adoption, or validation run, stays with the pull
+request, release, or CI run it records, and documents cite it by identity, such
+as a tag, run ID, or commit permalink. Delete a superseded document and repair
+the links to it.
