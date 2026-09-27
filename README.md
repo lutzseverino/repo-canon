@@ -18,20 +18,15 @@ repo-standards --version
 ```
 
 Point the CLI at Repo Canon from the adopting repository by selecting the
-[latest published release](https://github.com/lutzseverino/repo-canon/releases/latest)
-and the `complete` profile, with `tag` set to its version. The report is
-read-only and authorizes nothing:
+[`v0.3.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.3.0)
+and the `complete` profile. The report is read-only and authorizes nothing:
 
 ```sh
-tag=REPLACE_WITH_PUBLISHED_TAG
 repo-standards inspect \
   --source https://github.com/lutzseverino/repo-canon \
-  --standards-version "$tag" --profile complete \
+  --standards-version v0.3.0 --profile complete \
   --project /path/to/adopting-project --json
 ```
-
-Until a release requiring CLI 2.0.0 is published, the latest release, `v0.2.0`,
-requires exactly CLI 1.3.0, so adopting it needs that CLI version instead.
 
 ## Features
 
