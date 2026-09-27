@@ -61,7 +61,17 @@ change what adopters receive.
 Each release is one pull request into `main`, and nothing is committed for the
 release after it merges. It carries the changes the release itself needs, such
 as documents that name the latest release or its required CLI version, and
-it closes the issue that plans the release. Title it `chore: release vX.Y.Z`.
+it closes the issue that plans the release.
+
+Title it `<type>: release vX.Y.Z`. The type follows the release's
+classification under [release versioning](../usage/versioning.md):
+
+- `feat!` when the release carries a breaking standards change. As with every
+  breaking change, the body explains its impact and migration, which the draft
+  release notes do.
+- `feat` when its most significant change is a compatible feature.
+- `fix` when it carries only compatible fixes.
+- `chore` when it only raises the required CLI version.
 
 Before requesting review, run the checks the
 [development guide](README.md#current-validation) requires and the all-profile
