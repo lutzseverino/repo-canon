@@ -48,213 +48,175 @@ const contractFields = new Map([
 const wayfinderMapFields = new Set(["destination", "notes", "decisions so far", "not yet specified", "out of scope"]);
 const wayfinderChildFields = new Set(["parent", "question"]);
 
-const environment = process.env;
-const event = JSON.parse(await readFile(required("GITHUB_EVENT_PATH"), "utf8"));
+// The decision reads one snapshot, which the adapter below fetches in full
+// before deciding:
+// - `repository`: the `owner/name` that `#123` references resolve against;
+// - `event`: the workflow event payload;
+// - `issue`, `comments`: the re-fetched issue and its complete discussion,
+//   which also holds the previous feedback comment;
+// - `blockedBy`, `parent`: the native blockers (empty when the dependency
+//   endpoint is unavailable) and the native parent, or `null`;
+// - `relatedIssues`: the issues that explicit `Parent` and `Blocked by`
+//   references resolve to, keyed by API path, `null` when unresolved;
+// - `bodyRevision`: the direct body's `{ id, lastEditedAt }` edit revision;
+// - `issueEvents`: the complete authoritative issue-event timeline;
+// - `permissions`: each looked-up login's repository `{ role }`, `null` when
+//   GitHub reports none, with an `error` when the lookup failed.
+// The last three are read only for a structurally complete contract, and
+// `bodyRevision` only for a direct-body contract. Permissions cover every actor
+// on a readiness-label event, the recorded reviewer, and an opening sender.
 
-if (event.issue?.pull_request) {
-  console.log("Skipped pull request discussion; issue contract validation handles issues only.");
-  process.exit(0);
-}
+// Decides one issue event from its snapshot without network or file access.
+// Returns the labels to remove and add, the feedback comment write (`null` for
+// none, a `null` `commentId` to create it), and the exit code with its message.
+export function decideIssueContract(snapshot) {
+  const { event, comments } = snapshot;
+  const result = assessStructure(snapshot);
 
-const issueNumber = event.issue?.number;
-if (!Number.isInteger(issueNumber)) throw new Error("The event does not identify an issue number.");
-
-const api = createApi({
-  baseUrl: required("GITHUB_API_URL"),
-  graphqlUrl: required("GITHUB_GRAPHQL_URL"),
-  repository: required("GITHUB_REPOSITORY"),
-  token: required("GITHUB_TOKEN"),
-});
-
-const issue = await api.getIssue(issueNumber);
-if (issue.pull_request) {
-  console.log("Skipped pull request discussion; issue contract validation handles issues only.");
-  process.exit(0);
-}
-
-const comments = await api.listComments(issueNumber);
-const blockedBy = await api.listBlockedBy(issueNumber);
-const relationships = await readRelationships(api, issue, blockedBy);
-const authoritativeLabels = new Set((issue.labels ?? []).map(labelName));
-const transitionLabel = readyLabels.has(event.label?.name) ? event.label.name : null;
-const validationIssue = transitionLabel && ["labeled", "unlabeled"].includes(event.action)
-  ? {
-      ...issue,
-      labels: (issue.labels ?? []).filter((label) => {
-        const name = labelName(label);
-        if (!workflowLabels.has(name)) return true;
-        return event.action === "labeled" ? name === transitionLabel : name === "needs-triage";
-      }).concat(event.action === "unlabeled" ? [{ name: "needs-triage" }] : []),
-    }
-  : issue;
-const result = validate({
-  issue: validationIssue,
-  comments,
-  blockedBy: relationships.blockedBy,
-  parent: relationships.parent,
-  relationshipErrors: relationships.errors,
-});
-result.labels = authoritativeLabels;
-
-if (!result.valid) {
-  await removeReadiness(api, issueNumber, result.labels);
-  if (result.usesWorkflowState) await returnToReview(api, issueNumber, result.labels);
-  await maintainFeedback(api, issueNumber, comments, invalidFeedback(result.errors));
-  console.error(result.errors.join("\n"));
-  process.exit(1);
-}
-
-const previousFeedback = findFeedback(comments);
-if (!result.contract) {
-  if (previousFeedback) {
-    await maintainFeedback(api, issueNumber, comments, resolvedFeedback(result.kind));
+  if (!result.valid) {
+    return decision({
+      exitCode: 1,
+      message: result.errors.join("\n"),
+      removeLabels: readinessLabels(result.labels),
+      addLabels: result.usesWorkflowState ? reviewReturnLabels(result.labels) : [],
+      feedback: feedbackChange(comments, invalidFeedback(result.errors)),
+    });
   }
-  console.log(`Valid ${result.kind}.`);
-  process.exit(0);
+
+  const previousFeedback = findFeedback(comments);
+  if (!result.contract) {
+    return decision({
+      exitCode: 0,
+      message: `Valid ${result.kind}.`,
+      feedback: previousFeedback ? feedbackChange(comments, resolvedFeedback(result.kind)) : null,
+    });
+  }
+
+  const contract = contractRevision(snapshot, result);
+  const revision = contract.revision;
+  const timeline = issueTimeline(snapshot);
+  const readiness = assessReadiness({ snapshot, result, timeline, previousFeedback, revision, openingEligible: contract.openingEligible });
+  if (!readiness.valid) {
+    return decision({
+      exitCode: 1,
+      message: readiness.error,
+      removeLabels: readinessLabels(result.labels),
+      addLabels: result.usesWorkflowState ? reviewReturnLabels(result.labels) : [],
+      feedback: feedbackChange(comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, readiness.error)),
+    });
+  }
+
+  const supersedingState = readiness.approved && result.usesWorkflowState
+    ? stateAppliedAfterReview(result.labels, readiness.reviewEventId, timeline, event)
+    : null;
+  if (supersedingState) {
+    return decision({
+      exitCode: 0,
+      message: `Valid ${result.kind}; \`${supersedingState}\` superseded ${readiness.label}.`,
+      removeLabels: replacedWorkflowStates(result.labels, supersedingState),
+      feedback: feedbackChange(
+        comments,
+        awaitingReviewFeedback(result.kind, revision, readiness.reviewEventId, readiness.sourceInvalidation, `\`${supersedingState}\` was applied after the review and supersedes its readiness.`),
+      ),
+    });
+  }
+
+  let removeLabels = [];
+  let addLabels = [];
+  if (readiness.approved && result.usesWorkflowState) {
+    removeLabels = replacedWorkflowStates(result.labels, readiness.label);
+  } else if (event.action === "unlabeled" && readinessTransitionLabel(event) && result.usesWorkflowState) {
+    const remainingStates = [...result.labels].filter((label) => workflowLabels.has(label));
+    if (remainingStates.length === 0) addLabels = ["needs-triage"];
+  }
+
+  return decision({
+    exitCode: 0,
+    message: `Valid ${result.kind}${readiness.approved ? ` with ${readiness.label} bound to ${revision}` : "; awaiting authorized review"}.`,
+    removeLabels,
+    addLabels,
+    feedback: feedbackChange(
+      comments,
+      readiness.approved
+        ? approvedFeedback(result.kind, revision, readiness.label, readiness.reviewer, readiness.reviewEventId, readiness.sourceInvalidation)
+        : awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation),
+    ),
+  });
 }
 
-const contract = await contractRevision(api, issue, result);
-const revision = contract.revision;
-const issueEvents = await api.listEvents(issueNumber);
-const readiness = await assessReadiness({ api, event, issue, result, issueEvents, previousFeedback, revision, openingEligible: contract.openingEligible });
-if (!readiness.valid) {
-  await removeReadiness(api, issueNumber, result.labels);
-  if (result.usesWorkflowState) await returnToReview(api, issueNumber, result.labels);
-  await maintainFeedback(api, issueNumber, comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, readiness.error));
-  console.error(readiness.error);
-  process.exit(1);
+function decision({ exitCode, message, removeLabels = [], addLabels = [], feedback = null }) {
+  return { exitCode, message, removeLabels, addLabels, feedback };
 }
 
-const supersedingState = readiness.approved && result.usesWorkflowState
-  ? stateAppliedAfterReview(result.labels, readiness.reviewEventId, issueEvents, issue, event)
-  : null;
-if (supersedingState) {
-  await replaceWorkflowState(api, issueNumber, result.labels, supersedingState);
-  await maintainFeedback(
-    api,
-    issueNumber,
+// Validates the structure against the authoritative labels. A readiness-label
+// event validates the labels as that transition left them.
+function assessStructure(snapshot) {
+  const { event, issue, comments } = snapshot;
+  const relationships = resolveRelationships(snapshot);
+  const transitionLabel = readinessTransitionLabel(event);
+  const validationIssue = transitionLabel && ["labeled", "unlabeled"].includes(event.action)
+    ? {
+        ...issue,
+        labels: (issue.labels ?? []).filter((label) => {
+          const name = labelName(label);
+          if (!workflowLabels.has(name)) return true;
+          return event.action === "labeled" ? name === transitionLabel : name === "needs-triage";
+        }).concat(event.action === "unlabeled" ? [{ name: "needs-triage" }] : []),
+      }
+    : issue;
+  const result = validate({
+    issue: validationIssue,
     comments,
-    awaitingReviewFeedback(result.kind, revision, readiness.reviewEventId, readiness.sourceInvalidation, `\`${supersedingState}\` was applied after the review and supersedes its readiness.`),
-  );
-  console.log(`Valid ${result.kind}; \`${supersedingState}\` superseded ${readiness.label}.`);
-  process.exit(0);
+    blockedBy: relationships.blockedBy,
+    parent: relationships.parent,
+    relationshipErrors: relationships.errors,
+  });
+  result.labels = new Set((issue.labels ?? []).map(labelName));
+  return result;
 }
 
-if (readiness.approved && result.usesWorkflowState) {
-  await replaceWorkflowState(api, issueNumber, result.labels, readiness.label);
-} else if (event.action === "unlabeled" && transitionLabel && result.usesWorkflowState) {
-  const remainingStates = [...result.labels].filter((label) => workflowLabels.has(label));
-  if (remainingStates.length === 0) await api.addLabels(issueNumber, ["needs-triage"]);
+function readinessTransitionLabel(event) {
+  return readyLabels.has(event.label?.name) ? event.label.name : null;
 }
 
-await maintainFeedback(
-  api,
-  issueNumber,
-  comments,
-  readiness.approved
-    ? approvedFeedback(result.kind, revision, readiness.label, readiness.reviewer, readiness.reviewEventId, readiness.sourceInvalidation)
-    : awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation),
-);
-console.log(`Valid ${result.kind}${readiness.approved ? ` with ${readiness.label} bound to ${revision}` : "; awaiting authorized review"}.`);
-
-function required(name) {
-  const value = environment[name];
-  if (!value) throw new Error(`${name} is required.`);
-  return value;
+// The selected contract whose revision, timeline, and reviewer permissions the
+// decision needs, or null when the structure alone decides.
+function revisionContract(snapshot) {
+  const result = assessStructure(snapshot);
+  return result.valid && result.contract ? result.contract : null;
 }
 
-function createApi({ baseUrl, graphqlUrl, repository, token }) {
-  const issuePath = `/repos/${repository}/issues`;
-
-  async function requestResponse(path, { allowNotFound = false, ...options } = {}) {
-    const response = await fetch(path.startsWith("http") ? path : `${baseUrl}${path}`, {
-      ...options,
-      headers: {
-        accept: "application/vnd.github+json",
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-        "x-github-api-version": "2022-11-28",
-        ...options.headers,
-      },
-    });
-    if (allowNotFound && response.status === 404) return { data: null, link: null };
-    if (!response.ok) {
-      throw new Error(`GitHub API ${options.method ?? "GET"} ${path} returned ${response.status}: ${await response.text()}`);
-    }
-    return {
-      data: response.status === 204 ? null : await response.json(),
-      link: response.headers.get("link"),
-    };
-  }
-
-  async function request(path, options = {}) {
-    return (await requestResponse(path, options)).data;
-  }
-
-  async function paginate(path, options = {}) {
-    const values = [];
-    let next = path;
-    while (next) {
-      const response = await requestResponse(next, options);
-      if (!response.data) break;
-      values.push(...response.data);
-      next = response.link?.match(/<([^>]+)>;\s*rel="next"/)?.[1] ?? null;
-    }
-    return values;
-  }
-
-  async function graphql(query, variables) {
-    const response = await request(graphqlUrl, {
-      method: "POST",
-      body: JSON.stringify({ query, variables }),
-    });
-    if (response.errors?.length) {
-      throw new Error(`GitHub GraphQL returned errors: ${response.errors.map(({ message }) => message).join("; ")}`);
-    }
-    return response.data;
-  }
-
+// The explicit references the adapter looks up: the first `Parent` reference
+// when no native parent exists, and each `Blocked by` reference that no native
+// blocker already supplies.
+function relationshipLookups({ repository, issue, parent: nativeParent, blockedBy: nativeBlockedBy }) {
+  const sections = parseSections(issue.body ?? "");
+  const parentReference = firstIssueReference(sections.get("parent"), repository);
+  const knownReferences = new Set(nativeBlockedBy.map((blocker) => issueReferenceFor(blocker)).filter(Boolean));
   return {
-    getIssue: (number) => request(`${issuePath}/${number}`),
-    getParent: (number) => request(`${issuePath}/${number}/parent`, { allowNotFound: true }),
-    getOptionalUrl: (url) => request(url, { allowNotFound: true }),
-    getPermission: (login) => request(`/repos/${repository}/collaborators/${encodeURIComponent(login)}/permission`, { allowNotFound: true }),
-    getIssueBodyRevision: async (number) => {
-      const [owner, name] = repository.split("/");
-      const data = await graphql(
-        "query IssueBodyRevision($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) { issue(number: $number) { id lastEditedAt } } }",
-        { owner, name, number },
-      );
-      if (!data?.repository?.issue) throw new Error(`GitHub GraphQL did not return issue #${number}.`);
-      return data.repository.issue;
-    },
-    listComments: (number) => paginate(`${issuePath}/${number}/comments?per_page=100`),
-    listEvents: (number) => paginate(`${issuePath}/${number}/events?per_page=100`),
-    listBlockedBy: (number) => paginate(`${issuePath}/${number}/dependencies/blocked_by?per_page=100`, { allowNotFound: true }),
-    removeLabel: (number, label) => request(`${issuePath}/${number}/labels/${encodeURIComponent(label)}`, { method: "DELETE" }),
-    addLabels: (number, labels) => request(`${issuePath}/${number}/labels`, { method: "POST", body: JSON.stringify({ labels }) }),
-    createComment: (number, body) => request(`${issuePath}/${number}/comments`, { method: "POST", body: JSON.stringify({ body }) }),
-    updateComment: (id, body) => request(`${issuePath}/comments/${id}`, { method: "PATCH", body: JSON.stringify({ body }) }),
+    parentReference,
+    parent: !nativeParent && parentReference ? parentReference : null,
+    blockers: issueReferences(sections.get("blocked by"), repository).filter((reference) => !knownReferences.has(reference)),
   };
 }
 
-async function readRelationships(apiClient, issue, nativeBlockedBy) {
-  const sections = parseSections(issue.body ?? "");
+function resolveRelationships(snapshot) {
+  const lookups = relationshipLookups(snapshot);
   const errors = [];
-  const nativeParent = await apiClient.getParent(issue.number);
-  const parentReference = firstIssueReference(sections.get("parent"));
-  const fallbackParent = !nativeParent && parentReference ? await apiClient.getOptionalUrl(parentReference) : null;
-  const parent = nativeParent ?? fallbackParent;
-  if (parentReference && !parent) errors.push(`Could not resolve the \`Parent\` issue reference ${parentReference}.`);
-  const blockedBy = [...nativeBlockedBy];
-  const knownReferences = new Set(nativeBlockedBy.map((blocker) => issueReferenceFor(blocker)).filter(Boolean));
-  for (const reference of issueReferences(sections.get("blocked by"))) {
-    if (knownReferences.has(reference)) continue;
-    const blocker = await apiClient.getOptionalUrl(reference);
+  const fallbackParent = lookups.parent ? relatedIssue(snapshot, lookups.parent) : null;
+  const parent = snapshot.parent ?? fallbackParent;
+  if (lookups.parentReference && !parent) errors.push(`Could not resolve the \`Parent\` issue reference ${lookups.parentReference}.`);
+  const blockedBy = [...snapshot.blockedBy];
+  for (const reference of lookups.blockers) {
+    const blocker = relatedIssue(snapshot, reference);
     if (blocker) blockedBy.push(blocker);
     else errors.push(`Could not resolve the \`Blocked by\` issue reference ${reference}.`);
   }
   return { parent, blockedBy, errors };
+}
+
+function relatedIssue({ relatedIssues = {} }, reference) {
+  return Object.hasOwn(relatedIssues, reference) ? relatedIssues[reference] : null;
 }
 
 function issueReferenceFor(issue) {
@@ -263,14 +225,13 @@ function issueReferenceFor(issue) {
   return match ? `/repos/${match[1]}/${match[2]}/issues/${match[3]}` : null;
 }
 
-function firstIssueReference(value) {
-  return issueReferences(value)[0] ?? null;
+function firstIssueReference(value, repository) {
+  return issueReferences(value, repository)[0] ?? null;
 }
 
-function issueReferences(value = "") {
+function issueReferences(value = "", repository) {
   const references = [];
   const seen = new Set();
-  const repository = required("GITHUB_REPOSITORY");
   const expression = /https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/issues\/(\d+)|(?:^|[\s(])#(\d+)\b/gim;
   for (const match of markdownReferenceText(value).matchAll(expression)) {
     const reference = match[4]
@@ -599,13 +560,13 @@ function agentBriefHeading(body) {
   return findMarkdownHeadings(body, agentBriefHeadingNames)[0] ?? null;
 }
 
-async function contractRevision(apiClient, issue, result) {
+function contractRevision({ bodyRevision }, result) {
   let source;
   let openingEligible = false;
   if (result.contract.type === "issue-body") {
-    const metadata = await apiClient.getIssueBodyRevision(issue.number);
-    source = { type: "issue-body", id: metadata.id, editedAt: metadata.lastEditedAt ?? null };
-    openingEligible = metadata.lastEditedAt == null;
+    if (!bodyRevision) throw new Error("The snapshot does not include the issue-body revision metadata.");
+    source = { type: "issue-body", id: bodyRevision.id, editedAt: bodyRevision.lastEditedAt ?? null };
+    openingEligible = bodyRevision.lastEditedAt == null;
   } else {
     const comment = result.contract.comment;
     source = {
@@ -623,16 +584,17 @@ async function contractRevision(apiClient, issue, result) {
   return { revision: `sha256:${createHash("sha256").update(value).digest("hex")}`, openingEligible };
 }
 
-async function assessReadiness({ api: apiClient, event: currentEvent, issue, result, issueEvents, previousFeedback, revision, openingEligible }) {
+function assessReadiness({ snapshot, result, timeline, previousFeedback, revision, openingEligible }) {
+  const { event: currentEvent, issue, permissions } = snapshot;
   const currentReadyLabels = [...result.labels].filter((label) => readyLabels.has(label));
-  const latestEvent = latestReadinessEvent(issueEvents);
+  const latestEvent = timeline.latestReadinessTransition();
   const observedEventId = latestEvent?.id == null ? null : String(latestEvent.id);
   if (currentReadyLabels.length > 1) {
     return { valid: false, observedEventId, error: "Apply only one readiness label to an implementation contract." };
   }
 
   const recorded = feedbackState(previousFeedback?.body);
-  const deletedBrief = supersedingDeletedBrief(currentEvent, result);
+  const deletedBrief = supersedingDeletedBrief(currentEvent, result, timeline);
   const sourceInvalidation = deletedBrief ?? recorded?.sourceInvalidation ?? null;
   if (deletedBrief && recorded?.sourceInvalidation !== deletedBrief) {
     return {
@@ -642,7 +604,7 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
       error: "Deleting a newer Agent Brief invalidated the restored contract source. Review the published revision again.",
     };
   }
-  const openingEvent = openingLabelEvent(currentEvent, issue, result, currentReadyLabels[0], issueEvents, latestEvent, openingEligible);
+  const openingEvent = openingLabelEvent(currentEvent, issue, result, currentReadyLabels[0], timeline, openingEligible);
   const labelEvent = openingEvent ?? (
     currentReadyLabels.length === 1
       && latestEvent?.event === "labeled"
@@ -650,7 +612,7 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
       ? latestEvent
       : null
   );
-  if (currentReadyLabels.length === 1 && await activeApproval(apiClient, recorded, revision, currentReadyLabels[0], latestEvent, issue)) {
+  if (currentReadyLabels.length === 1 && activeApproval(permissions, recorded, revision, currentReadyLabels[0], timeline)) {
     return {
       valid: true,
       approved: true,
@@ -661,10 +623,10 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
     };
   }
 
-  const grant = readinessGrant(recorded, previousFeedback, revision, currentReadyLabels, labelEvent, issueEvents);
+  const grant = readinessGrant(recorded, previousFeedback, revision, currentReadyLabels, labelEvent, timeline);
   if (grant.candidate) {
     if (!grant.valid) return { valid: false, error: grant.error, observedEventId, sourceInvalidation };
-    const authority = await reviewerAuthority(apiClient, grant.reviewer);
+    const authority = reviewerAuthority(permissions, grant.reviewer);
     if (!authority.authorized) {
       return {
         valid: false,
@@ -697,7 +659,7 @@ async function assessReadiness({ api: apiClient, event: currentEvent, issue, res
   };
 }
 
-function readinessGrant(recorded, previousFeedback, revision, currentReadyLabels, labelEvent, issueEvents) {
+function readinessGrant(recorded, previousFeedback, revision, currentReadyLabels, labelEvent, timeline) {
   if (currentReadyLabels.length !== 1) return { candidate: false };
   const label = currentReadyLabels[0];
   if (!labelEvent || labelEvent.id == null || labelEvent.event !== "labeled") {
@@ -709,13 +671,11 @@ function readinessGrant(recorded, previousFeedback, revision, currentReadyLabels
   const openingReview = labelEvent.opening === true;
   const followsApprovedRevision = recorded?.status === "approved"
     && recorded.revision === revision
-    && reviewEventFollows(recorded.reviewEventId, reviewEventId, issueEvents);
+    && timeline.follows(reviewEventId, recorded.reviewEventId);
   const followsAwaitingRevision = recorded?.status === "awaiting-review"
     && recorded.revision === revision
-    && previousFeedback?.updated_at
-    && labelEvent.created_at
-    && previousFeedback.updated_at < labelEvent.created_at
-    && reviewEventFollows(recorded.observedEventId, reviewEventId, issueEvents);
+    && timeline.noticePrecedes(previousFeedback, labelEvent)
+    && timeline.follows(reviewEventId, recorded.observedEventId);
   const followsRevisionNotice = followsApprovedRevision || followsAwaitingRevision;
   if (!openingReview && !followsRevisionNotice) {
     return {
@@ -727,96 +687,64 @@ function readinessGrant(recorded, previousFeedback, revision, currentReadyLabels
   return { candidate: true, valid: true, label, reviewer, reviewEventId };
 }
 
-function reviewEventFollows(previousEventId, reviewEventId, issueEvents) {
-  if (previousEventId == null) return true;
-  if (String(previousEventId).startsWith("opened:")) return true;
-  const previousIndex = issueEvents.findIndex(({ id }) => String(id) === String(previousEventId));
-  const reviewIndex = issueEvents.findIndex(({ id }) => String(id) === reviewEventId);
-  return previousIndex >= 0 && reviewIndex > previousIndex;
-}
-
-async function activeApproval(apiClient, recorded, revision, label, latestEvent, issue) {
-  const eventIsCurrent = latestEvent?.event === "labeled"
-    && latestEvent.label?.name === label
-    && String(latestEvent.id) === recorded?.reviewEventId;
-  const openingIsCurrent = !latestEvent && recorded?.reviewEventId === openingReviewId(issue);
+function activeApproval(permissions, recorded, revision, label, timeline) {
   if (recorded?.status !== "approved"
     || recorded.revision !== revision
     || recorded.label !== label
     || !recorded.reviewer
     || !recorded.reviewEventId
-    || (!eventIsCurrent && !openingIsCurrent)) {
+    || !timeline.isCurrentReview(recorded.reviewEventId, label)) {
     return false;
   }
-  return (await reviewerAuthority(apiClient, recorded.reviewer)).authorized;
+  return reviewerAuthority(permissions, recorded.reviewer).authorized;
 }
 
-function latestReadinessEvent(issueEvents) {
-  return [...issueEvents].reverse().find((candidate) => {
-    return ["labeled", "unlabeled"].includes(candidate.event) && readyLabels.has(candidate.label?.name);
-  }) ?? null;
-}
-
-function openingLabelEvent(currentEvent, issue, result, label, issueEvents, latestEvent, openingEligible) {
+function openingLabelEvent(currentEvent, issue, result, label, timeline, openingEligible) {
   const openingReadyLabels = currentEvent.issue?.labels?.map(labelName).filter((name) => readyLabels.has(name)) ?? [];
-  const firstEvent = issueEvents.find((candidate) => {
-    return ["labeled", "unlabeled"].includes(candidate.event) && readyLabels.has(candidate.label?.name);
-  }) ?? null;
   if (currentEvent.action !== "opened"
     || result.contract.type !== "issue-body"
     || !openingEligible
     || !label
     || currentEvent.issue?.body !== issue.body
     || openingReadyLabels.length !== 1
-    || openingReadyLabels[0] !== label
-    || (latestEvent && String(firstEvent?.id) !== String(latestEvent.id))
-    || (latestEvent && (
-      latestEvent.event !== "labeled"
-      || latestEvent.label?.name !== label
-      || latestEvent.actor?.login !== currentEvent.sender?.login
-    ))) {
+    || openingReadyLabels[0] !== label) {
     return null;
   }
-  return {
-    id: latestEvent?.id ?? openingReviewId(issue),
-    event: "labeled",
-    label: { name: label },
-    actor: currentEvent.sender,
-    opening: true,
-  };
+  return timeline.creationReview(label);
 }
 
 function openingReviewId(issue) {
   return `opened:${issue.node_id ?? issue.id ?? issue.number}:${issue.created_at ?? "unknown"}`;
 }
 
-function supersedingDeletedBrief(currentEvent, result) {
+function supersedingDeletedBrief(currentEvent, result, timeline) {
   if (currentEvent.action !== "deleted"
     || result.contract.type !== "comment"
     || !agentBriefHeading(currentEvent.comment?.body ?? "")) {
     return null;
   }
   const deleted = currentEvent.comment;
-  const selected = result.contract.comment;
-  const deletedAt = deleted.created_at ?? "";
-  const selectedAt = selected.created_at ?? "";
-  let isNewer = deletedAt > selectedAt;
-  if (deletedAt === selectedAt && deleted.id != null && selected.id != null) {
-    isNewer = BigInt(deleted.id) > BigInt(selected.id);
-  }
-  return isNewer ? `deleted-comment:${deleted.node_id ?? deleted.id}` : null;
+  return timeline.commentFollows(deleted, result.contract.comment) ? `deleted-comment:${deleted.node_id ?? deleted.id}` : null;
 }
 
-async function reviewerAuthority(apiClient, login) {
-  let permission;
-  try {
-    permission = await apiClient.getPermission(login);
-  } catch (error) {
-    return { authorized: false, error: error.message };
+function reviewerAuthority(permissions = {}, login) {
+  const permission = Object.hasOwn(permissions, login) ? permissions[login] : null;
+  if (permission?.error) return { authorized: false, error: permission.error };
+  return { authorized: ["admin", "maintain", "triage"].includes(permission?.role) };
+}
+
+// Every login whose repository role a decision can consult: each actor on a
+// readiness-label event, the reviewer recorded in the feedback, and the sender
+// of an opening event.
+function reviewerLogins({ event, comments, issueEvents }) {
+  const logins = new Set();
+  for (const candidate of issueEvents) {
+    if (isReadinessTransition(candidate) && candidate.actor?.login) logins.add(candidate.actor.login);
   }
-  if (!permission) return { authorized: false };
-  const role = permission.role_name ?? permission.permission;
-  return { authorized: ["admin", "maintain", "triage"].includes(role) };
+  const recordedReviewer = feedbackState(findFeedback(comments)?.body)?.reviewer;
+  if (recordedReviewer) logins.add(recordedReviewer);
+  if (event.action === "opened" && event.sender?.login) logins.add(event.sender.login);
+  return [...logins];
 }
 
 function feedbackState(body = "") {
@@ -829,16 +757,14 @@ function feedbackState(body = "") {
   }
 }
 
-async function removeReadiness(apiClient, number, labels) {
-  for (const label of labels) {
-    if (readyLabels.has(label)) await apiClient.removeLabel(number, label);
-  }
+function readinessLabels(labels) {
+  return [...labels].filter((label) => readyLabels.has(label));
 }
 
-async function returnToReview(apiClient, number, labels) {
+function reviewReturnLabels(labels) {
   const hadReadiness = [...labels].some((label) => readyLabels.has(label));
   const remainingStates = [...labels].filter((label) => workflowLabels.has(label) && !readyLabels.has(label));
-  if (hadReadiness && remainingStates.length === 0) await apiClient.addLabels(number, ["needs-triage"]);
+  return hadReadiness && remainingStates.length === 0 ? ["needs-triage"] : [];
 }
 
 // A non-readiness state labeled after the review in the timeline supersedes it,
@@ -850,44 +776,174 @@ async function returnToReview(apiClient, number, labels) {
 // issue's creation, or a label the issue was opened with. A triggering label
 // recorded before the review supersedes only without a payload time or with one
 // in a strictly later second than the review.
-function stateAppliedAfterReview(labels, reviewEventId, issueEvents, issue, currentEvent) {
-  const opening = String(reviewEventId).startsWith("opened:");
-  const reviewIndex = opening ? -1 : issueEvents.findIndex(({ id }) => String(id) === String(reviewEventId));
-  const reviewedAt = opening ? issue.created_at : issueEvents[reviewIndex]?.created_at;
-  const reviewKnown = Boolean(reviewedAt) && (opening || reviewIndex >= 0);
-  const notBeforeReview = (time) => time >= reviewedAt && time !== issue.created_at;
-  let latest = null;
+function stateAppliedAfterReview(labels, reviewEventId, timeline, currentEvent) {
+  const appliedLater = [];
   for (const label of labels) {
     if (!workflowLabels.has(label) || readyLabels.has(label)) continue;
-    const labeledIndex = issueEvents.findLastIndex((candidate) => candidate.event === "labeled" && candidate.label?.name === label);
-    const labeledAt = issueEvents[labeledIndex]?.created_at;
-    const recordedLater = reviewKnown && labeledIndex > reviewIndex && labeledAt && notBeforeReview(labeledAt);
-    if (recordedLater && (!latest || labeledIndex > latest.index)) latest = { label, index: labeledIndex };
-    const latestChange = issueEvents.findLast((candidate) => ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label);
-    const recorded = latestChange?.event === "labeled";
+    const recordedLater = timeline.appliedAfterReview(label, reviewEventId);
+    if (recordedLater) appliedLater.push(label);
+    const recorded = timeline.latestChangeIsApplication(label);
     const triggering = currentEvent.action === "labeled" && currentEvent.label?.name === label;
-    const payloadAt = currentEvent.issue?.updated_at;
     if (triggering) {
-      const payloadSupersedes = !payloadAt || (recorded ? payloadAt > reviewedAt : notBeforeReview(payloadAt));
-      if (!recordedLater && (!reviewKnown || payloadSupersedes)) return label;
+      if (!recordedLater && timeline.triggerFollowsReview(reviewEventId, recorded)) return label;
       continue;
     }
-    const openedWith = currentEvent.action === "opened" && (currentEvent.issue?.labels ?? []).some((candidate) => labelName(candidate) === label);
-    if (!openedWith && !recorded) return label;
+    if (!timeline.openedWith(label) && !recorded) return label;
   }
-  return latest?.label ?? null;
+  return timeline.latestApplied(appliedLater);
 }
 
-async function replaceWorkflowState(apiClient, number, labels, readinessLabel) {
-  for (const label of labels) {
-    if (workflowLabels.has(label) && label !== readinessLabel) await apiClient.removeLabel(number, label);
-  }
+function replacedWorkflowStates(labels, keptLabel) {
+  return [...labels].filter((label) => workflowLabels.has(label) && label !== keptLabel);
 }
 
-async function maintainFeedback(apiClient, number, comments, body) {
+function isReadinessTransition(candidate) {
+  return ["labeled", "unlabeled"].includes(candidate.event) && readyLabels.has(candidate.label?.name);
+}
+
+// The one owner of every "did A happen after B" question. It orders events by
+// position in the authoritative timeline, with the creation snapshot (an
+// `opened:` review ID) at position zero and the Nth event at position N.
+// Timestamps decide only where this reproduces the rules above: the revision
+// notice's strict barrier, a state's application time relative to the review,
+// the issue's creation second, and a triggering payload's time. Discussion
+// comments have no timeline position and are ordered by creation time, then ID.
+function issueTimeline({ event, issue, issueEvents }) {
+  if (!Array.isArray(issueEvents)) throw new Error("The snapshot does not include the issue-event timeline.");
+  const openingId = openingReviewId(issue);
+
+  function position(eventId) {
+    if (eventId == null) return null;
+    if (String(eventId).startsWith("opened:")) return 0;
+    const index = issueEvents.findIndex(({ id }) => String(id) === String(eventId));
+    return index < 0 ? null : index + 1;
+  }
+
+  function review(reviewEventId) {
+    const reviewPosition = position(reviewEventId);
+    const at = reviewPosition === 0 ? issue.created_at : issueEvents[reviewPosition - 1]?.created_at;
+    return { position: reviewPosition, at, known: reviewPosition !== null && Boolean(at) };
+  }
+
+  function lastApplication(label) {
+    const index = issueEvents.findLastIndex((candidate) => candidate.event === "labeled" && candidate.label?.name === label);
+    return index < 0 ? null : { position: index + 1, at: issueEvents[index].created_at };
+  }
+
+  // Not before the review, and not in the issue's creation second.
+  function notBefore(time, reviewAt) {
+    return time >= reviewAt && time !== issue.created_at;
+  }
+
+  function latestReadinessTransition() {
+    return issueEvents.findLast(isReadinessTransition) ?? null;
+  }
+
+  return {
+    latestReadinessTransition,
+
+    // Whether a review event follows an earlier barrier. No barrier, or the
+    // creation snapshot, precedes every review.
+    follows(laterEventId, earlierEventId) {
+      if (earlierEventId == null) return true;
+      const earlier = position(earlierEventId);
+      if (earlier === 0) return true;
+      const later = position(laterEventId);
+      return earlier !== null && later !== null && later > earlier;
+    },
+
+    // Whether the revision notice was updated in a strictly earlier second
+    // than the readiness label event.
+    noticePrecedes(notice, labelEvent) {
+      return Boolean(notice?.updated_at && labelEvent.created_at && notice.updated_at < labelEvent.created_at);
+    },
+
+    // Whether a recorded review is still the latest readiness transition, or
+    // the creation snapshot when the timeline has none.
+    isCurrentReview(reviewEventId, label) {
+      const latest = latestReadinessTransition();
+      if (latest) return latest.event === "labeled" && latest.label?.name === label && String(latest.id) === reviewEventId;
+      return reviewEventId === openingId;
+    },
+
+    // The review supplied by the creation snapshot: no readiness transition
+    // yet, or one that is both the first and the latest and applied the same
+    // label by the opening sender.
+    creationReview(label) {
+      const latest = latestReadinessTransition();
+      const first = issueEvents.find(isReadinessTransition) ?? null;
+      if (latest && String(first?.id) !== String(latest.id)) return null;
+      if (latest && (
+        latest.event !== "labeled"
+        || latest.label?.name !== label
+        || latest.actor?.login !== event.sender?.login
+      )) {
+        return null;
+      }
+      return {
+        id: latest?.id ?? openingId,
+        event: "labeled",
+        label: { name: label },
+        actor: event.sender,
+        opening: true,
+      };
+    },
+
+    // Whether the label's latest application follows the review in the
+    // timeline and is not before it or in the issue's creation second.
+    appliedAfterReview(label, reviewEventId) {
+      const reviewPoint = review(reviewEventId);
+      const application = lastApplication(label);
+      return Boolean(reviewPoint.known
+        && application
+        && application.position > reviewPoint.position
+        && application.at
+        && notBefore(application.at, reviewPoint.at));
+    },
+
+    latestChangeIsApplication(label) {
+      const latestChange = issueEvents.findLast((candidate) => ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label);
+      return latestChange?.event === "labeled";
+    },
+
+    // Whether the triggering label's payload time places it after the review.
+    triggerFollowsReview(reviewEventId, recorded) {
+      const reviewPoint = review(reviewEventId);
+      if (!reviewPoint.known) return true;
+      const payloadAt = event.issue?.updated_at;
+      return !payloadAt || (recorded ? payloadAt > reviewPoint.at : notBefore(payloadAt, reviewPoint.at));
+    },
+
+    openedWith(label) {
+      return event.action === "opened" && (event.issue?.labels ?? []).some((candidate) => labelName(candidate) === label);
+    },
+
+    // The label whose latest application is latest in the timeline.
+    latestApplied(labels) {
+      let latest = null;
+      for (const label of labels) {
+        const applied = lastApplication(label);
+        if (!latest || applied.position > latest.position) latest = { label, position: applied.position };
+      }
+      return latest?.label ?? null;
+    },
+
+    commentFollows(later, earlier) {
+      const laterAt = later.created_at ?? "";
+      const earlierAt = earlier.created_at ?? "";
+      let isNewer = laterAt > earlierAt;
+      if (laterAt === earlierAt && later.id != null && earlier.id != null) {
+        isNewer = BigInt(later.id) > BigInt(earlier.id);
+      }
+      return isNewer;
+    },
+  };
+}
+
+function feedbackChange(comments, body) {
   const existing = findFeedback(comments);
-  if (!existing) return apiClient.createComment(number, body);
-  if (existing.body !== body) return apiClient.updateComment(existing.id, body);
+  if (!existing) return { commentId: null, body };
+  return existing.body === body ? null : { commentId: existing.id, body };
 }
 
 function findFeedback(comments) {
@@ -911,4 +967,157 @@ function approvedFeedback(kind, revision, label, reviewer, reviewEventId, source
 
 function resolvedFeedback(kind) {
   return `${feedbackMarker}\n## Issue contract structure corrected\n\nThe ${kind} now has the required structure. A fresh authorized review is still required before restoring readiness.`;
+}
+
+// The GitHub adapter runs only when the workflow executes this file. It reads
+// the event, fetches the complete snapshot, decides, and applies the writes.
+if (import.meta.main) await runIssueContractValidation(process.env);
+
+async function runIssueContractValidation(environment) {
+  const required = (name) => {
+    const value = environment[name];
+    if (!value) throw new Error(`${name} is required.`);
+    return value;
+  };
+  const event = JSON.parse(await readFile(required("GITHUB_EVENT_PATH"), "utf8"));
+
+  if (event.issue?.pull_request) {
+    console.log("Skipped pull request discussion; issue contract validation handles issues only.");
+    return;
+  }
+
+  const issueNumber = event.issue?.number;
+  if (!Number.isInteger(issueNumber)) throw new Error("The event does not identify an issue number.");
+
+  const repository = required("GITHUB_REPOSITORY");
+  const api = createApi({
+    baseUrl: required("GITHUB_API_URL"),
+    graphqlUrl: required("GITHUB_GRAPHQL_URL"),
+    repository,
+    token: required("GITHUB_TOKEN"),
+  });
+
+  const issue = await api.getIssue(issueNumber);
+  if (issue.pull_request) {
+    console.log("Skipped pull request discussion; issue contract validation handles issues only.");
+    return;
+  }
+
+  const snapshot = {
+    repository,
+    event,
+    issue,
+    comments: await api.listComments(issueNumber),
+    blockedBy: await api.listBlockedBy(issueNumber),
+    parent: await api.getParent(issueNumber),
+    relatedIssues: {},
+    bodyRevision: null,
+    issueEvents: null,
+    permissions: {},
+  };
+  const lookups = relationshipLookups(snapshot);
+  for (const reference of [lookups.parent, ...lookups.blockers].filter(Boolean)) {
+    snapshot.relatedIssues[reference] = await api.getOptionalUrl(reference);
+  }
+  const contract = revisionContract(snapshot);
+  if (contract) {
+    if (contract.type === "issue-body") snapshot.bodyRevision = await api.getIssueBodyRevision(issueNumber);
+    snapshot.issueEvents = await api.listEvents(issueNumber);
+    for (const login of reviewerLogins(snapshot)) snapshot.permissions[login] = await readPermission(api, login);
+  }
+
+  const outcome = decideIssueContract(snapshot);
+  const { feedback } = outcome;
+  for (const label of outcome.removeLabels) await api.removeLabel(issueNumber, label);
+  if (outcome.addLabels.length > 0) await api.addLabels(issueNumber, outcome.addLabels);
+  if (feedback && feedback.commentId == null) await api.createComment(issueNumber, feedback.body);
+  else if (feedback) await api.updateComment(feedback.commentId, feedback.body);
+  if (outcome.exitCode === 0) console.log(outcome.message);
+  else console.error(outcome.message);
+  process.exitCode = outcome.exitCode;
+}
+
+// A failed lookup is recorded for its login and never grants authority.
+async function readPermission(apiClient, login) {
+  try {
+    const permission = await apiClient.getPermission(login);
+    return permission ? { role: permission.role_name ?? permission.permission } : null;
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+function createApi({ baseUrl, graphqlUrl, repository, token }) {
+  const issuePath = `/repos/${repository}/issues`;
+
+  async function requestResponse(path, { allowNotFound = false, ...options } = {}) {
+    const response = await fetch(path.startsWith("http") ? path : `${baseUrl}${path}`, {
+      ...options,
+      headers: {
+        accept: "application/vnd.github+json",
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        "x-github-api-version": "2022-11-28",
+        ...options.headers,
+      },
+    });
+    if (allowNotFound && response.status === 404) return { data: null, link: null };
+    if (!response.ok) {
+      throw new Error(`GitHub API ${options.method ?? "GET"} ${path} returned ${response.status}: ${await response.text()}`);
+    }
+    return {
+      data: response.status === 204 ? null : await response.json(),
+      link: response.headers.get("link"),
+    };
+  }
+
+  async function request(path, options = {}) {
+    return (await requestResponse(path, options)).data;
+  }
+
+  async function paginate(path, options = {}) {
+    const values = [];
+    let next = path;
+    while (next) {
+      const response = await requestResponse(next, options);
+      if (!response.data) break;
+      values.push(...response.data);
+      next = response.link?.match(/<([^>]+)>;\s*rel="next"/)?.[1] ?? null;
+    }
+    return values;
+  }
+
+  async function graphql(query, variables) {
+    const response = await request(graphqlUrl, {
+      method: "POST",
+      body: JSON.stringify({ query, variables }),
+    });
+    if (response.errors?.length) {
+      throw new Error(`GitHub GraphQL returned errors: ${response.errors.map(({ message }) => message).join("; ")}`);
+    }
+    return response.data;
+  }
+
+  return {
+    getIssue: (number) => request(`${issuePath}/${number}`),
+    getParent: (number) => request(`${issuePath}/${number}/parent`, { allowNotFound: true }),
+    getOptionalUrl: (url) => request(url, { allowNotFound: true }),
+    getPermission: (login) => request(`/repos/${repository}/collaborators/${encodeURIComponent(login)}/permission`, { allowNotFound: true }),
+    getIssueBodyRevision: async (number) => {
+      const [owner, name] = repository.split("/");
+      const data = await graphql(
+        "query IssueBodyRevision($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) { issue(number: $number) { id lastEditedAt } } }",
+        { owner, name, number },
+      );
+      if (!data?.repository?.issue) throw new Error(`GitHub GraphQL did not return issue #${number}.`);
+      return data.repository.issue;
+    },
+    listComments: (number) => paginate(`${issuePath}/${number}/comments?per_page=100`),
+    listEvents: (number) => paginate(`${issuePath}/${number}/events?per_page=100`),
+    listBlockedBy: (number) => paginate(`${issuePath}/${number}/dependencies/blocked_by?per_page=100`, { allowNotFound: true }),
+    removeLabel: (number, label) => request(`${issuePath}/${number}/labels/${encodeURIComponent(label)}`, { method: "DELETE" }),
+    addLabels: (number, labels) => request(`${issuePath}/${number}/labels`, { method: "POST", body: JSON.stringify({ labels }) }),
+    createComment: (number, body) => request(`${issuePath}/${number}/comments`, { method: "POST", body: JSON.stringify({ body }) }),
+    updateComment: (id, body) => request(`${issuePath}/comments/${id}`, { method: "PATCH", body: JSON.stringify({ body }) }),
+  };
 }
