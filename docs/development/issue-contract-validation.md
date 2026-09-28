@@ -149,7 +149,8 @@ The workflow needs `contents: read` to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access
 must expose collaborator roles, and `GITHUB_GRAPHQL_URL` must be available for
 direct-body edit revisions; both are standard GitHub Actions facilities. Node.js
-24 is the runtime; the adapter's `import.meta.main` check needs 24.2 or later.
+24 is the runtime. The adapter's `import.meta.main` check needs 24.2 or later,
+and the validator fails on an earlier release rather than skipping the check.
 The validator has no package dependencies, so the job installs
 none and disables the Node.js setup action's automatic package-manager cache. It
 pins the same checkout and Node.js setup actions as the PR metadata workflow.

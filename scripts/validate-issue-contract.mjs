@@ -727,8 +727,8 @@ function supersedingDeletedBrief(currentEvent, result, timeline) {
   return timeline.commentFollows(deleted, result.contract.comment) ? `deleted-comment:${deleted.node_id ?? deleted.id}` : null;
 }
 
-function reviewerAuthority(permissions = {}, login) {
-  const permission = Object.hasOwn(permissions, login) ? permissions[login] : null;
+function reviewerAuthority(permissions, login) {
+  const permission = permissions && Object.hasOwn(permissions, login) ? permissions[login] : null;
   if (permission?.error) return { authorized: false, error: permission.error };
   return { authorized: ["admin", "maintain", "triage"].includes(permission?.role) };
 }
@@ -785,7 +785,7 @@ function stateAppliedAfterReview(labels, reviewEventId, timeline, currentEvent) 
     const recorded = timeline.latestChangeIsApplication(label);
     const triggering = currentEvent.action === "labeled" && currentEvent.label?.name === label;
     if (triggering) {
-      if (!recordedLater && timeline.triggerFollowsReview(reviewEventId, recorded)) return label;
+      if (!recordedLater && timeline.triggerFollowsReview(label, reviewEventId)) return label;
       continue;
     }
     if (!timeline.openedWith(label) && !recorded) return label;
@@ -801,13 +801,15 @@ function isReadinessTransition(candidate) {
   return ["labeled", "unlabeled"].includes(candidate.event) && readyLabels.has(candidate.label?.name);
 }
 
-// The one owner of every "did A happen after B" question. It orders events by
-// position in the authoritative timeline, with the creation snapshot (an
-// `opened:` review ID) at position zero and the Nth event at position N.
-// Timestamps decide only where this reproduces the rules above: the revision
-// notice's strict barrier, a state's application time relative to the review,
-// the issue's creation second, and a triggering payload's time. Discussion
-// comments have no timeline position and are ordered by creation time, then ID.
+// The one owner of every "did A happen after B" question, including which
+// transition is latest and what the creation snapshot holds. It orders events
+// by position in the authoritative timeline, with the creation snapshot (an
+// `opened:` review ID and the labels the issue was opened with) at position
+// zero and the Nth event at position N. Timestamps decide only where this
+// reproduces the rules above: the revision notice's strict barrier, a state's
+// application time relative to the review, the issue's creation second, and a
+// triggering payload's time. Discussion comments have no timeline position and
+// are ordered by creation time, then ID.
 function issueTimeline({ event, issue, issueEvents }) {
   if (!Array.isArray(issueEvents)) throw new Error("The snapshot does not include the issue-event timeline.");
   const openingId = openingReviewId(issue);
@@ -837,6 +839,12 @@ function issueTimeline({ event, issue, issueEvents }) {
 
   function latestReadinessTransition() {
     return issueEvents.findLast(isReadinessTransition) ?? null;
+  }
+
+  // Whether the label's latest recorded change is its application.
+  function latestChangeIsApplication(label) {
+    const latestChange = issueEvents.findLast((candidate) => ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label);
+    return latestChange?.event === "labeled";
   }
 
   return {
@@ -901,17 +909,16 @@ function issueTimeline({ event, issue, issueEvents }) {
         && notBefore(application.at, reviewPoint.at));
     },
 
-    latestChangeIsApplication(label) {
-      const latestChange = issueEvents.findLast((candidate) => ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label);
-      return latestChange?.event === "labeled";
-    },
+    latestChangeIsApplication,
 
-    // Whether the triggering label's payload time places it after the review.
-    triggerFollowsReview(reviewEventId, recorded) {
+    // Whether the triggering label's payload time places it after the review:
+    // in a strictly later second when its application is recorded.
+    triggerFollowsReview(label, reviewEventId) {
       const reviewPoint = review(reviewEventId);
       if (!reviewPoint.known) return true;
       const payloadAt = event.issue?.updated_at;
-      return !payloadAt || (recorded ? payloadAt > reviewPoint.at : notBefore(payloadAt, reviewPoint.at));
+      if (!payloadAt) return true;
+      return latestChangeIsApplication(label) ? payloadAt > reviewPoint.at : notBefore(payloadAt, reviewPoint.at);
     },
 
     openedWith(label) {
@@ -971,6 +978,9 @@ function resolvedFeedback(kind) {
 
 // The GitHub adapter runs only when the workflow executes this file. It reads
 // the event, fetches the complete snapshot, decides, and applies the writes.
+// Runtimes before Node.js 24.2 lack `import.meta.main` and would skip the
+// adapter silently, so they fail instead of passing the check.
+if (import.meta.main === undefined) throw new Error("The issue-contract validator requires Node.js 24.2 or later.");
 if (import.meta.main) await runIssueContractValidation(process.env);
 
 async function runIssueContractValidation(environment) {
