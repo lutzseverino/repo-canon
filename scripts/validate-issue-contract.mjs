@@ -841,32 +841,39 @@ async function returnToReview(apiClient, number, labels) {
   if (hadReadiness && remainingStates.length === 0) await apiClient.addLabels(number, ["needs-triage"]);
 }
 
-// A non-readiness state labeled strictly after the review supersedes it; states
-// labeled before or in the same second as the review are replaced by it. A
-// present state whose application the timeline has not recorded also
-// supersedes, unless it is the triggering label with a payload time no later
-// than the review or a label the issue was opened with.
+// A non-readiness state labeled after the review in the timeline supersedes it,
+// even in the same second; states labeled before the review, or with the issue
+// at its creation second, are replaced by it. Equal timestamps are ordered by
+// the timeline; a strictly later timestamp still supersedes. A present state
+// whose latest recorded change is not its application also supersedes, unless
+// it is the triggering label with a payload time before the review or at the
+// issue's creation, or a label the issue was opened with. A triggering label
+// recorded before the review supersedes only without a payload time or with one
+// in a strictly later second than the review.
 function stateAppliedAfterReview(labels, reviewEventId, issueEvents, issue, currentEvent) {
   const opening = String(reviewEventId).startsWith("opened:");
   const reviewIndex = opening ? -1 : issueEvents.findIndex(({ id }) => String(id) === String(reviewEventId));
   const reviewedAt = opening ? issue.created_at : issueEvents[reviewIndex]?.created_at;
   const reviewKnown = Boolean(reviewedAt) && (opening || reviewIndex >= 0);
+  const notBeforeReview = (time) => time >= reviewedAt && time !== issue.created_at;
   let latest = null;
   for (const label of labels) {
     if (!workflowLabels.has(label) || readyLabels.has(label)) continue;
     const labeledIndex = issueEvents.findLastIndex((candidate) => candidate.event === "labeled" && candidate.label?.name === label);
     const labeledAt = issueEvents[labeledIndex]?.created_at;
-    const recordedLater = reviewKnown && labeledIndex > reviewIndex && labeledAt && labeledAt > reviewedAt;
+    const recordedLater = reviewKnown && labeledIndex > reviewIndex && labeledAt && notBeforeReview(labeledAt);
     if (recordedLater && (!latest || labeledIndex > latest.index)) latest = { label, index: labeledIndex };
+    const latestChange = issueEvents.findLast((candidate) => ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label);
+    const recorded = latestChange?.event === "labeled";
     const triggering = currentEvent.action === "labeled" && currentEvent.label?.name === label;
     const payloadAt = currentEvent.issue?.updated_at;
     if (triggering) {
-      if (!recordedLater && (!reviewKnown || !payloadAt || payloadAt > reviewedAt)) return label;
+      const payloadSupersedes = !payloadAt || (recorded ? payloadAt > reviewedAt : notBeforeReview(payloadAt));
+      if (!recordedLater && (!reviewKnown || payloadSupersedes)) return label;
       continue;
     }
-    const latestChange = issueEvents.findLast((candidate) => ["labeled", "unlabeled"].includes(candidate.event) && candidate.label?.name === label);
     const openedWith = currentEvent.action === "opened" && (currentEvent.issue?.labels ?? []).some((candidate) => labelName(candidate) === label);
-    if (!openedWith && latestChange?.event !== "labeled") return label;
+    if (!openedWith && !recorded) return label;
   }
   return latest?.label ?? null;
 }

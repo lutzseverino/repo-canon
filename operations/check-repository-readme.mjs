@@ -71,15 +71,14 @@ function sectionElements(allHeadings, name) {
   return allHeadings[index].body.elements;
 }
 
-// A pointer section renders exactly one link as a plain paragraph, optionally
-// inside a div: not inside a list, quotation, table, or other block, and not
-// wrapping an image.
-const plainLinkBlocks = new Set(['p', 'div']);
-
+// A pointer section renders exactly one link inside a paragraph, which may be
+// wrapped in divs: not outside a paragraph, not inside a list, quotation,
+// table, or other block, and not wrapping an image.
 function singleLink(events) {
   if (events.length !== 1 || events[0].type !== 'link') return null;
   const [link] = events;
-  return !link.containsMedia && link.blocks.every(block => plainLinkBlocks.has(block)) ? link : null;
+  const inParagraph = link.blocks.at(-1) === 'p' && link.blocks.slice(0, -1).every(block => block === 'div');
+  return !link.containsMedia && inParagraph ? link : null;
 }
 
 function checkPointerSection(projectRoot, allHeadings, section, target, corrections) {
