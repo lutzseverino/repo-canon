@@ -74,7 +74,7 @@ export function decideIssueContract(snapshot) {
   const result = assessStructure(snapshot);
 
   if (!result.valid) {
-    return decision({
+    return issueDecision({
       exitCode: 1,
       message: result.errors.join("\n"),
       removeLabels: readinessLabels(result.labels),
@@ -85,7 +85,7 @@ export function decideIssueContract(snapshot) {
 
   const previousFeedback = findFeedback(comments);
   if (!result.contract) {
-    return decision({
+    return issueDecision({
       exitCode: 0,
       message: `Valid ${result.kind}.`,
       feedback: previousFeedback ? feedbackChange(comments, resolvedFeedback(result.kind)) : null,
@@ -97,7 +97,7 @@ export function decideIssueContract(snapshot) {
   const timeline = issueTimeline(snapshot);
   const readiness = assessReadiness({ snapshot, result, timeline, previousFeedback, revision, openingEligible: contract.openingEligible });
   if (!readiness.valid) {
-    return decision({
+    return issueDecision({
       exitCode: 1,
       message: readiness.error,
       removeLabels: readinessLabels(result.labels),
@@ -110,7 +110,7 @@ export function decideIssueContract(snapshot) {
     ? stateAppliedAfterReview(result.labels, readiness.reviewEventId, timeline, event)
     : null;
   if (supersedingState) {
-    return decision({
+    return issueDecision({
       exitCode: 0,
       message: `Valid ${result.kind}; \`${supersedingState}\` superseded ${readiness.label}.`,
       removeLabels: replacedWorkflowStates(result.labels, supersedingState),
@@ -130,7 +130,7 @@ export function decideIssueContract(snapshot) {
     if (remainingStates.length === 0) addLabels = ["needs-triage"];
   }
 
-  return decision({
+  return issueDecision({
     exitCode: 0,
     message: `Valid ${result.kind}${readiness.approved ? ` with ${readiness.label} bound to ${revision}` : "; awaiting authorized review"}.`,
     removeLabels,
@@ -144,7 +144,7 @@ export function decideIssueContract(snapshot) {
   });
 }
 
-function decision({ exitCode, message, removeLabels = [], addLabels = [], feedback = null }) {
+function issueDecision({ exitCode, message, removeLabels = [], addLabels = [], feedback = null }) {
   return { exitCode, message, removeLabels, addLabels, feedback };
 }
 
@@ -1026,15 +1026,15 @@ async function runIssueContractValidation(environment) {
     for (const login of reviewerLogins(snapshot)) snapshot.permissions[login] = await readPermission(api, login);
   }
 
-  const outcome = decideIssueContract(snapshot);
-  const { feedback } = outcome;
-  for (const label of outcome.removeLabels) await api.removeLabel(issueNumber, label);
-  if (outcome.addLabels.length > 0) await api.addLabels(issueNumber, outcome.addLabels);
+  const decision = decideIssueContract(snapshot);
+  const { feedback } = decision;
+  for (const label of decision.removeLabels) await api.removeLabel(issueNumber, label);
+  if (decision.addLabels.length > 0) await api.addLabels(issueNumber, decision.addLabels);
   if (feedback && feedback.commentId == null) await api.createComment(issueNumber, feedback.body);
   else if (feedback) await api.updateComment(feedback.commentId, feedback.body);
-  if (outcome.exitCode === 0) console.log(outcome.message);
-  else console.error(outcome.message);
-  process.exitCode = outcome.exitCode;
+  if (decision.exitCode === 0) console.log(decision.message);
+  else console.error(decision.message);
+  process.exitCode = decision.exitCode;
 }
 
 // A failed lookup is recorded for its login and never grants authority.
