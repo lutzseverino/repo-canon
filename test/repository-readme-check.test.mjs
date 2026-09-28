@@ -512,11 +512,11 @@ test('rejects pointer links rendered outside a paragraph', async t => {
   }
 });
 
-test('passes pointer links in a paragraph, optionally inside a centred div', async t => {
+test('passes pointer links in a paragraph, optionally inside a centered div', async t => {
   for (const example of [
     { name: 'a Markdown paragraph', body: target => `[Guide](${target})\n` },
     { name: 'an HTML paragraph', body: target => `<p><a href="${target}">Guide</a></p>\n` },
-    { name: 'a centred div around a paragraph', body: target => `<div align="center"><p><a href="${target}">Guide</a></p></div>\n` },
+    { name: 'a centered div around a paragraph', body: target => `<div align="center"><p><a href="${target}">Guide</a></p></div>\n` },
   ]) await t.test(example.name, st => {
     const outcome = check(st, {
       'README.md': `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## Documentation\n\n${example.body('docs/README.md')}\n## Contributing\n\n${example.body('CONTRIBUTING.md')}\n## License\n\n${example.body('LICENSE')}`,

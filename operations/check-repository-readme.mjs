@@ -77,8 +77,8 @@ function sectionElements(allHeadings, name) {
 function singleLink(events) {
   if (events.length !== 1 || events[0].type !== 'link') return null;
   const [link] = events;
-  const paragraph = link.blocks.at(-1) === 'p' && link.blocks.slice(0, -1).every(block => block === 'div');
-  return !link.containsMedia && paragraph ? link : null;
+  const inParagraph = link.blocks.at(-1) === 'p' && link.blocks.slice(0, -1).every(block => block === 'div');
+  return !link.containsMedia && inParagraph ? link : null;
 }
 
 function checkPointerSection(projectRoot, allHeadings, section, target, corrections) {

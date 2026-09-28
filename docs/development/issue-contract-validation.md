@@ -107,17 +107,19 @@ whose application carries the issue's creation timestamp. A non-readiness state
 labeled after the review in the timeline supersedes the review instead, even
 when both events share a second: the validator keeps the latest such state as
 the only workflow state, removes readiness and every other state, and publishes
-the revision as awaiting review. A present state whose application the event
-timeline has not yet recorded also supersedes the review, so a lagging timeline
-cannot delete a newly applied state. The exceptions are a label the issue was
-opened with and a label that triggered the run with a payload time before the
-review or at the issue's creation. A triaged request that carries two workflow
-states outside a readiness-label event also fails its label check and loses
-readiness. A repeated event on an approved specification or ticket removes a
-state left from before its review. Removing readiness, or losing it to
-invalidation, returns such a contract to `needs-triage` unless another
-non-readiness workflow state remains. An unrecognized issue that loses readiness, such as a contract edited
-until no contract heading remains, returns to `needs-triage` the same way.
+the revision as awaiting review. A present state whose latest recorded change
+in the event timeline is not its application also supersedes the review, so a
+lagging timeline cannot delete a newly applied state. The exceptions are a label
+the issue was opened with and a label that triggered the run with a payload time
+before the review or at the issue's creation. When the timeline records the
+triggering label's application, timeline order alone decides. A triaged request
+that carries two workflow states outside a readiness-label event also fails its
+label check and loses readiness. A repeated event on an approved specification
+or ticket removes a state left from before its review. Removing readiness, or
+losing it to invalidation, returns such a contract to `needs-triage` unless
+another non-readiness workflow state remains. An unrecognized issue that loses
+readiness, such as a contract edited until no contract heading remains, returns
+to `needs-triage` the same way.
 Wayfinder maps and children reject readiness labels because their native
 eligibility uses open state, assignment, and blockers instead of the readiness
 workflow, and the validator never adds a workflow state to them.

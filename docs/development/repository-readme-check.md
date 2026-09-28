@@ -34,7 +34,7 @@ The Contributing and Documentation sections are pointer sections to
 `CONTRIBUTING.md` and `docs/README.md`. When the target file exists, a missing
 section fails with a correction to add it. A present section fails unless its
 rendered content is exactly one plain link resolving to its target, inside a
-paragraph that may be wrapped in a `div`; a fragment or query on that link, and
+paragraph that may be wrapped in `div`s; a fragment or query on that link, and
 emphasis inside its label, are accepted. Surrounding prose, another link, a list
 of documents, a subsection, or a link outside a paragraph, inside a list,
 quotation, or table, or wrapping an image each fail with a correction to
