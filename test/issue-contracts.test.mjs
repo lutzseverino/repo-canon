@@ -1272,14 +1272,17 @@ test("a workflow state recorded before the review in the same second is replaced
 });
 
 test("a triggering workflow state is ordered by its latest recorded change", async (context) => {
-  for (const [name, stateEvents, superseded] of [
+  for (const [name, stateEvents, payloadAt, superseded] of [
     ["re-applied in the review's second after a recorded removal", [
       { id: 99, event: "labeled", label: { name: "needs-info" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
       { id: 100, event: "unlabeled", label: { name: "needs-info" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
-    ], true],
-    ["recorded before the review with a delayed later payload", [
+    ], "2026-09-14T17:00:00Z", true],
+    ["recorded before the review with a delayed payload in the review's second", [
       { id: 100, event: "labeled", label: { name: "needs-info" }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:59:59Z" },
-    ], false],
+    ], "2026-09-14T17:00:00Z", false],
+    ["re-applied after an unrecorded removal with a strictly later payload", [
+      { id: 100, event: "labeled", label: { name: "needs-info" }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:00:00Z" },
+    ], "2026-09-14T17:00:04Z", true],
   ]) {
     await context.test(name, async () => {
       const issue = {
@@ -1287,7 +1290,7 @@ test("a triggering workflow state is ordered by its latest recorded change", asy
         body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
         labels: [{ name: "ready-for-agent" }, { name: "needs-info" }],
         state: "open",
-        created_at: "2026-09-14T16:00:00Z",
+        created_at: "2026-09-14T15:00:00Z",
       };
       const comments = [{
         id: 13,
@@ -1304,7 +1307,7 @@ test("a triggering workflow state is ordered by its latest recorded change", asy
         permissions: { maintainer: { permission: "admin", role_name: "admin" } },
         event: {
           action: "labeled",
-          issue: { number: 42, body: issue.body, updated_at: "2026-09-14T17:00:00Z" },
+          issue: { number: 42, body: issue.body, updated_at: payloadAt },
           label: { name: "needs-info" },
           sender: { login: "maintainer" },
         },
@@ -1314,7 +1317,18 @@ test("a triggering workflow state is ordered by its latest recorded change", asy
       const removed = result.requests
         .filter(({ method, url }) => method === "DELETE" && url.includes("/labels/"))
         .map(({ url }) => decodeURIComponent(url.split("/labels/")[1]));
-      assert.deepEqual(removed, [superseded ? "ready-for-agent" : "needs-info"]);
+      const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
+      if (superseded) {
+        assert.match(result.stdout, /`needs-info` superseded ready-for-agent/);
+        assert.deepEqual(removed, ["ready-for-agent"]);
+        assert.match(JSON.parse(update.body).body, /awaiting review/i);
+        assert.match(JSON.parse(update.body).body, /`needs-info` was applied after the review and supersedes its readiness/);
+      } else {
+        assert.match(result.stdout, /valid implementation ticket with ready-for-agent bound/i);
+        assert.deepEqual(removed, ["needs-info"]);
+        assert.equal(update, undefined, "the approved feedback binding ready-for-agent is kept");
+        assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/comments")));
+      }
     });
   }
 });
