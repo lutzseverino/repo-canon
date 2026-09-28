@@ -3,15 +3,17 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { versionDisagreements } from '../scripts/release/named-versions.mjs';
+import {
+  adoptionGuidePath as adoptionGuide,
+  ciWorkflowPath as ciWorkflow,
+  readmePath as readme,
+  standardsPath as standards,
+  versionDisagreements,
+} from '../scripts/release/named-versions.mjs';
 
 // The documents that name versions, read from the working tree only: this test
 // needs no network access and no tags.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const readme = 'README.md';
-const adoptionGuide = 'docs/usage/adopt-repo-canon.md';
-const ciWorkflow = '.github/workflows/ci.yml';
-const standards = 'standards.yaml';
 
 function workingTree() {
   const files = new Map();
@@ -84,6 +86,15 @@ test('a requirement without an open-ended minimum fails the agreement', () => {
   const files = workingTree();
   const changed = new Map(files).set(standards, files.get(standards).replace(/">=(\d+\.\d+\.\d+)"/, '"$1"'));
   assert.match(versionDisagreements(reader(changed)).join('\n'), /open-ended minimum/);
+});
+
+test('the floor is read from any line of the requires block', () => {
+  const files = workingTree();
+  const changed = new Map(files).set(standards, files.get(standards).replace(
+    /^requires:\n/m,
+    'requires:\n  another-tool: ">=9.9.9"\n',
+  ));
+  assert.deepEqual(versionDisagreements(reader(changed)), []);
 });
 
 test('other tools named with versions are not taken for the CLI', () => {

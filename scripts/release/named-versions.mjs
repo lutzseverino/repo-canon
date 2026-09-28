@@ -4,7 +4,8 @@
 // Every version in these files is classified, so a new mention is checked
 // rather than skipped. A `v`-prefixed version names a Repo Canon release,
 // except in a link to the CLI's own documentation. Any other version names the
-// CLI, except one that follows the name of another tool.
+// CLI, except one that follows the name of another tool. A version of a tool not
+// yet named in `otherTool` therefore fails as a CLI version until it is added.
 
 export const readmePath = 'README.md';
 export const adoptionGuidePath = 'docs/usage/adopt-repo-canon.md';
@@ -14,7 +15,8 @@ export const standardsPath = 'standards.yaml';
 const versionPattern = /(?<![\w.])(v?)(\d+\.\d+\.\d+)(?!\.?\d)/g;
 const cliDocumentationLink = /github\.com\/lutzseverino\/repo-standards\/(?:blob|tree)\/$/;
 const otherTool = /(?:\bGit|\bGitHub CLI)\s+$/;
-const requiresFloor = /^requires:[ \t]*\r?\n[ \t]+repo-standards:[ \t]*(["']?)>=[ \t]*(\d+\.\d+\.\d+)\1[ \t]*$/m;
+const requiresBlock = /^requires:[ \t]*\r?\n((?:[ \t]+\S.*(?:\r?\n|$))+)/m;
+const requiresFloor = /^[ \t]+repo-standards:[ \t]*(["']?)>=[ \t]*(\d+\.\d+\.\d+)\1[ \t]*\r?$/m;
 
 // Returns each named version with its kind, `repo-canon` or `cli`, and line.
 export function namedVersions(path, text) {
@@ -31,7 +33,8 @@ export function namedVersions(path, text) {
 
 // Returns the CLI version floor of an open-ended `requires` minimum, or null.
 export function cliFloor(standardsText) {
-  return standardsText.match(requiresFloor)?.[2] ?? null;
+  const requires = standardsText.match(requiresBlock)?.[1] ?? '';
+  return requires.match(requiresFloor)?.[2] ?? null;
 }
 
 function location(mention) {

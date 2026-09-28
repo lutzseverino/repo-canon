@@ -31,7 +31,7 @@ npm run release:inputs -- "$previous_tag"
 of every profile select. The list comes from the release candidate, so commit
 the candidate first. The script also lists the inputs that the previous tag
 selected and the candidate no longer does, and includes them in the diff stat;
-review those removed paths too. It changes no repository or GitHub state.
+review those removed paths too.
 
 ## When selected bytes change
 

@@ -157,7 +157,7 @@ test('release:inputs lists the inputs, the dropped inputs, and the diff stat fro
 
   assert.equal(status, 0, output);
   for (const path of ['check.mjs', 'guidance.md', 'kept.md', 'lib', 'skill', 'standards.yaml']) {
-    assert.match(output, new RegExp(`^  ${path.replace('.', '\\.')}$`, 'm'));
+    assert.match(output, new RegExp(`^  ${path.replaceAll('.', '\\.')}$`, 'm'));
   }
   assert.match(output, /no longer selects[^\n]*\n  dropped\.md$/m);
   assert.match(output, /lib\/support\.mjs \| 2 \+-/);
@@ -189,6 +189,10 @@ test('release:inputs fails clearly for a missing tag or CLI', t => {
   const noArgument = repository.run('inputs.mjs', []);
   assert.notEqual(noArgument.status, 0);
   assert.match(noArgument.output, /Usage: npm run release:inputs -- <previous-tag>/);
+
+  const emptyArgument = repository.run('inputs.mjs', ['']);
+  assert.notEqual(emptyArgument.status, 0);
+  assert.match(emptyArgument.output, /Usage: npm run release:inputs -- <previous-tag>/);
 });
 
 test('release:inputs fails with the CLI errors when a commit does not validate', t => {

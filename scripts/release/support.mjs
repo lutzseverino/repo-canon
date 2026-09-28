@@ -18,7 +18,7 @@ export function fail(message) {
 export async function runScript(name, usage, arity, body) {
   const args = process.argv.slice(2);
   try {
-    if (args.length !== arity) fail(`Usage: ${usage}`);
+    if (args.length !== arity || args.includes('')) fail(`Usage: ${usage}`);
     await body(...args);
   } catch (error) {
     if (!(error instanceof ReleaseCheckFailure)) throw error;
@@ -47,16 +47,18 @@ export function git(args) {
   return child.stdout;
 }
 
-export function resolveCommit(revision) {
+function commitOf(revision, missing) {
   const child = run('git', ['rev-parse', '--verify', '--quiet', '--end-of-options', `${revision}^{commit}`]);
-  if (child.status !== 0) fail(`${revision} does not name a commit in this repository; fetch it first.`);
+  if (child.status !== 0) fail(missing);
   return child.stdout.trim();
 }
 
+export function resolveCommit(revision) {
+  return commitOf(revision, `${revision} does not name a commit in this repository; fetch it first.`);
+}
+
 export function resolveTag(tag) {
-  const child = run('git', ['rev-parse', '--verify', '--quiet', '--end-of-options', `refs/tags/${tag}^{commit}`]);
-  if (child.status !== 0) fail(`${tag} is not a tag in this repository; fetch the release tags first.`);
-  return child.stdout.trim();
+  return commitOf(`refs/tags/${tag}`, `${tag} is not a tag in this repository; fetch the release tags first.`);
 }
 
 // Returns a reader of the files at a commit, for checks of its documents.

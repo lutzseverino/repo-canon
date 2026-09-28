@@ -65,11 +65,11 @@ function checkInspection(version, releaseCommit, read) {
   if (child.status !== 0) {
     return { failures: [`the inspection of ${version} failed: ${(child.stderr || child.stdout).trim()}`] };
   }
-  const report = parseJson(child.stdout, `the inspection output for ${version}`);
-  const selection = report.selection ?? {};
+  const inspection = parseJson(child.stdout, `the inspection output for ${version}`);
+  const selection = inspection.selection ?? {};
   const cliVersion = selection.cli?.version;
   const resolvedCommit = selection.standards?.commit;
-  const declarations = report.sourceResolved?.declarations?.length ?? 0;
+  const declarations = inspection.sourceResolved?.declarations?.length ?? 0;
   const failures = [];
   if (cliVersion !== floor) {
     failures.push(`the inspection used CLI ${cliVersion}, not the required minimum ${floor}; `
