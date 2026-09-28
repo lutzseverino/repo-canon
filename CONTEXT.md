@@ -19,8 +19,10 @@ The developer-facing introduction to one project within a monorepo.
 _Avoid_: Repository README when referring to a component document
 
 **Documentation root**:
-A directory, the repository's `docs` or a project's own, whose README index maps
-its documentation categories.
+A directory designated to hold categorized documentation: the repository's
+`docs`, or another directory, such as a project's own, that the confirmed
+documentation scope identifies as a root. Its documentation index must map its
+documentation categories.
 _Avoid_: Docs folder, documentation directory when referring to the root
 
 **Documentation category**:
@@ -29,8 +31,8 @@ under a documentation root.
 _Avoid_: Section, documentation type
 
 **Documentation index**:
-The README of a documentation directory, which states the directory's purpose and
-lists its entries.
+The README of a documentation directory, which must state the directory's
+purpose and list its entries.
 _Avoid_: Table of contents, listing page
 
 **Implementation contract**:
