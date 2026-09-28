@@ -1073,7 +1073,7 @@ test("a superseding workflow state becomes the only workflow state", async () =>
 });
 
 test("a workflow state labeled after the review survives a lagging event timeline", async (context) => {
-  for (const [name, updatedAt] of [["with a later payload time", "2026-09-14T17:05:00Z"], ["without a payload time", undefined]]) {
+  for (const [name, updatedAt] of [["with a later payload time", "2026-09-14T17:05:00Z"], ["with a payload time in the review's second", "2026-09-14T17:00:00Z"], ["without a payload time", undefined]]) {
     await context.test(name, async () => {
       const issue = {
         number: 42,
@@ -1183,7 +1183,95 @@ test("a workflow state applied after a triaged review is not removed by a delaye
   assert.ok(result.requests.some(({ method, url }) => method === "DELETE" && url.endsWith("/labels/ready-for-agent")));
 });
 
-test("a workflow state labeled in the same second as the review is replaced", async () => {
+test("a workflow state recorded after the review in the same second supersedes it", async (context) => {
+  for (const state of ["needs-info", "wontfix"]) {
+    for (const trigger of [state, "ready-for-agent"]) {
+      await context.test(`${state} in the run for ${trigger}`, async () => {
+        const issue = {
+          number: 42,
+          body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+          labels: [{ name: "ready-for-agent" }, { name: state }],
+          state: "open",
+          created_at: "2026-09-14T16:00:00Z",
+        };
+        const comments = [{
+          id: 13,
+          body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+          user: { login: "github-actions[bot]" },
+        }];
+        const result = await exercise({
+          issue,
+          comments,
+          issueEvents: [
+            { id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+            { id: 102, event: "labeled", label: { name: state }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+          ],
+          permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+          event: {
+            action: "labeled",
+            issue: { number: 42, body: issue.body, updated_at: "2026-09-14T17:00:00Z" },
+            label: { name: trigger },
+            sender: { login: "maintainer" },
+          },
+        });
+
+        assert.equal(result.code, 0, result.stderr);
+        assert.match(result.stdout, new RegExp(`\`${state}\` superseded ready-for-agent`));
+        const removed = result.requests
+          .filter(({ method, url }) => method === "DELETE" && url.includes("/labels/"))
+          .map(({ url }) => decodeURIComponent(url.split("/labels/")[1]));
+        assert.deepEqual(removed, ["ready-for-agent"]);
+        assert.ok(!result.requests.some(({ method, url }) => method === "POST" && url.endsWith("/labels")));
+        const update = result.requests.find(({ method, url }) => method === "PATCH" && url.endsWith("/comments/13"));
+        assert.match(JSON.parse(update.body).body, /awaiting review/i);
+        assert.match(JSON.parse(update.body).body, new RegExp(`\`${state}\` was applied after the review and supersedes its readiness`));
+      });
+    }
+  }
+});
+
+test("a workflow state recorded before the review in the same second is replaced", async (context) => {
+  for (const trigger of ["needs-info", "ready-for-agent"]) {
+    await context.test(`in the run for ${trigger}`, async () => {
+      const issue = {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+        labels: [{ name: "needs-info" }, { name: "ready-for-agent" }],
+        state: "open",
+        created_at: "2026-09-14T16:00:00Z",
+      };
+      const comments = [{
+        id: 13,
+        body: feedbackState({ status: "approved", revision: bodyRevision(issue), label: "ready-for-agent", reviewer: "maintainer" }),
+        user: { login: "github-actions[bot]" },
+      }];
+      const result = await exercise({
+        issue,
+        comments,
+        issueEvents: [
+          { id: 101, event: "labeled", label: { name: "needs-info" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+          { id: 102, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "maintainer" }, created_at: "2026-09-14T17:00:00Z" },
+        ],
+        permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+        event: {
+          action: "labeled",
+          issue: { number: 42, body: issue.body, updated_at: "2026-09-14T17:00:00Z" },
+          label: { name: trigger },
+          sender: { login: "maintainer" },
+        },
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.match(result.stdout, /valid implementation ticket with ready-for-agent bound/i);
+      const removed = result.requests
+        .filter(({ method, url }) => method === "DELETE" && url.includes("/labels/"))
+        .map(({ url }) => decodeURIComponent(url.split("/labels/")[1]));
+      assert.deepEqual(removed, ["needs-info"]);
+    });
+  }
+});
+
+test("a workflow state labeled with the issue at creation is replaced by the same-second review", async () => {
   const issue = {
     number: 42,
     node_id: "ISSUE_42",
