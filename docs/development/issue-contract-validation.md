@@ -6,6 +6,14 @@ created, edited, or deleted issue comments. Pull request comments are ignored.
 The workflow checks out the default branch explicitly and treats issue and
 comment Markdown only as data.
 
+The validator is one file. It exports `decideIssueContract`, a synchronous
+decision that reads one snapshot and returns the label changes, the feedback
+comment write, and the exit status, with no network or file access. Its GitHub
+adapter runs only when the workflow executes the file: it fetches the complete
+snapshot before deciding, then applies the returned writes. One timeline helper
+inside the decision answers every question about whether one event or comment
+came after another.
+
 The validator recognizes these contracts:
 
 - bug and feature request forms, including optional unanswered fields;
@@ -79,6 +87,9 @@ The feedback comment's authoritative `updated_at` must strictly precede the
 review label event; a same-second attempt is rejected and must be reapplied.
 The validator re-fetches the issue, complete discussion, complete issue-event
 timeline, relationships, and direct-body edit revision before every decision.
+It also reads the repository role of every actor on a readiness-label event, of
+the recorded reviewer, and of an opening event's sender. A failed role lookup is
+recorded for that login and counts as unauthorized.
 It binds approval to the actor and ID of the latest transition for the current
 readiness label. A removal therefore invalidates the old event even if another
 label is added before its workflow runs. A delayed removal or repeated webhook
@@ -138,7 +149,8 @@ The workflow needs `contents: read` to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access
 must expose collaborator roles, and `GITHUB_GRAPHQL_URL` must be available for
 direct-body edit revisions; both are standard GitHub Actions facilities. Node.js
-24 is the runtime. The validator has no package dependencies, so the job installs
+24 is the runtime; the adapter's `import.meta.main` check needs 24.2 or later.
+The validator has no package dependencies, so the job installs
 none and disables the Node.js setup action's automatic package-manager cache. It
 pins the same checkout and Node.js setup actions as the PR metadata workflow.
 GitHub Actions does not expose issue-dependency changes as an `issues` workflow
@@ -153,10 +165,14 @@ Run the issue-contract scenarios locally with:
 npm run test:issue-contracts
 ```
 
-The fixtures invoke the same executable boundary as GitHub Actions against a
-local HTTP server. They also execute the validator from an installed layout
+Most fixtures are snapshot tables that call `decideIssueContract` directly with
+the snapshot the adapter would fetch, and assert the exact exit status, label
+changes, and feedback write. A few adapter fixtures invoke the same executable
+boundary as GitHub Actions against a local HTTP server. They cover event parsing,
+pagination, the role lookups, the order of writes, the exit status, and
+unavailable endpoints. One also executes the validator from an installed layout
 containing only the validator, shared runtime, and declared parser resources.
-They exercise the four public forms, native contracts,
+Together they exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, workflow-state replacement,
 superseding states, and return to review for triaged and direct contracts,
