@@ -33,10 +33,11 @@ The result statuses have distinct meanings:
 The Contributing and Documentation sections are pointer sections to
 `CONTRIBUTING.md` and `docs/README.md`. When the target file exists, a missing
 section fails with a correction to add it. A present section fails unless its
-rendered content is exactly one plain link resolving to its target; a fragment
-or query on that link, and emphasis inside its label, are accepted. Surrounding
-prose, another link, a list of documents, a subsection, or a link inside a
-list, quotation, or table or wrapping an image each fail with a correction to
+rendered content is exactly one plain link resolving to its target, inside a
+paragraph that may be wrapped in a `div`; a fragment or query on that link, and
+emphasis inside its label, are accepted. Surrounding prose, another link, a list
+of documents, a subsection, or a link outside a paragraph, inside a list,
+quotation, or table, or wrapping an image each fail with a correction to
 make the section contain only that link, and a link without a label fails with
 a correction to name it. The License section uses the same plain-link rule. The
 link-only rule applies even when the target is absent; the correction then
@@ -61,10 +62,11 @@ node --test test/repository-readme-check.test.mjs
 The fixtures cover all recognized sections, omitted and interleaved sections,
 Markdown and HTML heading forms, nested centering, hidden examples, missing,
 link-only, and extra-content Contributing and Documentation sections, pointer
-links hidden in code, resolving elsewhere, or wrapped in lists, quotations,
-tables, or images, links wrapping the next heading, named anchors and hidden
-media around pointer links, malformed titles and license links, missing and
-ambiguous licensing, invalid protocol input, and byte-for-byte preservation of
-the disposable project. One fixture executes the operation from a retained
-layout containing only its declared script and resources, so an import cannot
-succeed accidentally through the source checkout.
+links hidden in code, resolving elsewhere, outside a paragraph, or wrapped in
+lists, quotations, tables, or images, links wrapping the next heading, named
+anchors and hidden media around pointer links, malformed titles and license
+links, missing and ambiguous licensing, invalid protocol input, and
+byte-for-byte preservation of the disposable project. One fixture executes
+the operation from a retained layout containing only its declared script and
+resources, so an import cannot succeed accidentally through the source
+checkout.

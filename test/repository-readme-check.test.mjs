@@ -485,6 +485,51 @@ test('rejects pointer links wrapped in lists, quotations, tables, or images', as
   }
 });
 
+test('rejects pointer links rendered outside a paragraph', async t => {
+  const pointers = [
+    { section: 'Contributing', target: 'CONTRIBUTING.md', diagnostic: /Make the Contributing section contain only a link to CONTRIBUTING\.md\./ },
+    { section: 'Documentation', target: 'docs/README.md', diagnostic: /Make the Documentation section contain only a link to docs\/README\.md\./ },
+    { section: 'License', target: 'LICENSE', diagnostic: /Make the License section contain only the license link/ },
+  ];
+  const wrappers = [
+    { name: 'a div without a paragraph', body: target => `<div><a href="${target}">Guide</a></div>\n` },
+    { name: 'a bare HTML block', body: target => `<a href="${target}">\nGuide\n</a>\n` },
+  ];
+  for (const { section, target, diagnostic } of pointers) {
+    for (const wrapper of wrappers) await t.test(`${section} in ${wrapper.name}`, st => {
+      const license = section === 'License' ? '' : '## License\n\n[MIT License](LICENSE)\n';
+      const outcome = check(st, {
+        'README.md': `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## ${section}\n\n${wrapper.body(target)}\n${license}`,
+        'LICENSE': mit,
+        'CONTRIBUTING.md': '# Contributing\n',
+        'docs/README.md': '# Documentation\n',
+      });
+
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, 'failed');
+      assert.match(outcome.result.message, diagnostic);
+    });
+  }
+});
+
+test('passes pointer links in a paragraph, optionally inside a centred div', async t => {
+  for (const example of [
+    { name: 'a Markdown paragraph', body: target => `[Guide](${target})\n` },
+    { name: 'an HTML paragraph', body: target => `<p><a href="${target}">Guide</a></p>\n` },
+    { name: 'a centred div around a paragraph', body: target => `<div align="center"><p><a href="${target}">Guide</a></p></div>\n` },
+  ]) await t.test(example.name, st => {
+    const outcome = check(st, {
+      'README.md': `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## Documentation\n\n${example.body('docs/README.md')}\n## Contributing\n\n${example.body('CONTRIBUTING.md')}\n## License\n\n${example.body('LICENSE')}`,
+      'LICENSE': mit,
+      'CONTRIBUTING.md': '# Contributing\n',
+      'docs/README.md': '# Documentation\n',
+    });
+
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, 'passed', outcome.result.message);
+  });
+});
+
 test('assigns an anchor split around the next heading to that heading', t => {
   const outcome = check(t, {
     'README.md': `<h1 align="center">Harbor</h1>
