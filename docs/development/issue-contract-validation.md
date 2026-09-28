@@ -112,9 +112,9 @@ in the event timeline is not its application also supersedes the review, so a
 lagging timeline cannot delete a newly applied state. The exceptions are a label
 the issue was opened with and a label that triggered the run with a payload time
 before the review or at the issue's creation. A triggering label whose recorded
-application precedes the review supersedes it only when the run's payload time
-falls in a strictly later second than the review, as when the timeline has not
-yet recorded a removal and re-application. Equal timestamps are ordered by the
+application precedes the review supersedes it only when the run has no payload
+time or its payload time falls in a strictly later second than the review, as
+when the timeline has not yet recorded a removal and re-application. Equal timestamps are ordered by the
 timeline; a strictly later timestamp still supersedes. A triaged request that
 carries two workflow states outside a readiness-label event also fails its label
 check and loses readiness. A repeated event on an approved specification

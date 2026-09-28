@@ -1283,6 +1283,9 @@ test("a triggering workflow state is ordered by its latest recorded change", asy
     ["re-applied after an unrecorded removal with a strictly later payload", [
       { id: 100, event: "labeled", label: { name: "needs-info" }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:00:00Z" },
     ], "2026-09-14T17:00:04Z", true],
+    ["recorded before the review without a payload time", [
+      { id: 100, event: "labeled", label: { name: "needs-info" }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:59:59Z" },
+    ], undefined, true],
   ]) {
     await context.test(name, async () => {
       const issue = {

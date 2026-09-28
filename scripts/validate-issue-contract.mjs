@@ -848,8 +848,8 @@ async function returnToReview(apiClient, number, labels) {
 // whose latest recorded change is not its application also supersedes, unless
 // it is the triggering label with a payload time before the review or at the
 // issue's creation, or a label the issue was opened with. A triggering label
-// recorded before the review supersedes only with a payload time in a strictly
-// later second than the review.
+// recorded before the review supersedes only without a payload time or with one
+// in a strictly later second than the review.
 function stateAppliedAfterReview(labels, reviewEventId, issueEvents, issue, currentEvent) {
   const opening = String(reviewEventId).startsWith("opened:");
   const reviewIndex = opening ? -1 : issueEvents.findIndex(({ id }) => String(id) === String(reviewEventId));
@@ -868,7 +868,7 @@ function stateAppliedAfterReview(labels, reviewEventId, issueEvents, issue, curr
     const triggering = currentEvent.action === "labeled" && currentEvent.label?.name === label;
     const payloadAt = currentEvent.issue?.updated_at;
     if (triggering) {
-      const payloadLater = recorded ? payloadAt > reviewedAt : !payloadAt || notBeforeReview(payloadAt);
+      const payloadLater = !payloadAt || (recorded ? payloadAt > reviewedAt : notBeforeReview(payloadAt));
       if (!recordedLater && (!reviewKnown || payloadLater)) return label;
       continue;
     }
