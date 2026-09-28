@@ -14,26 +14,24 @@ not inputs either.
 
 The commit of the annotated release tag identifies the released bytes. No
 separate closure file records them. The reviewed diff is the diff from the
-previous release tag over the source inputs. List the inputs with the public CLI
-at the required minimum version, installed outside the checkout as the
+previous release tag over the source inputs. Install the public CLI at the
+required minimum version outside the checkout, as the
 [source profile](source-profile.md#executable-prerequisites) describes, and
-show the diff. The listing also needs `jq`:
+point `REPO_STANDARDS_PREFIX` at its prefix. With the release tags fetched,
+list the inputs and show the diff from the previous release tag:
 
 ```sh
-previous_tag=REPLACE_WITH_PREVIOUS_RELEASE_TAG
-"$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json \
-  > "$cli_prefix/validation.json"
-inputs=$(jq -r '["standards.yaml"] + [.profiles[].declarations[]
-  | (.exact, .guidance, .discovery, .source,
-     ((.checks + .fixes)[].run | .script, .resources[]))]
-  | map(select(. != null)) | unique[]' "$cli_prefix/validation.json")
-git diff --stat "$previous_tag" HEAD -- $inputs
+export REPO_STANDARDS_PREFIX="$cli_prefix"
+previous_tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD)
+npm run release:inputs -- "$previous_tag"
 ```
 
-The command reads the resolved declarations that `source validate --json`
-reports under each profile. The list comes from the release candidate. An input
-that the candidate no longer selects leaves the list, and its removal shows in
-the diff of `standards.yaml`; review the removed paths too.
+`release:inputs` validates the checked-out commit and the previous tag with
+`source validate --json`, then lists the paths that the resolved declarations
+of every profile select. The list comes from the release candidate, so commit
+the candidate first. The script also lists the inputs that the previous tag
+selected and the candidate no longer does, and includes them in the diff stat;
+review those removed paths too. It changes no repository or GitHub state.
 
 ## When selected bytes change
 
@@ -61,7 +59,11 @@ change what adopters receive.
 Each release is one pull request into `main`, and nothing is committed for the
 release after it merges. It carries the changes the release itself needs, such
 as documents that name the latest release or its required CLI version, and
-it closes the issue that plans the release.
+it closes the issue that plans the release. The version-agreement test in
+`npm test` fails until the Repository README and the
+[adoption guide](../usage/adopt-repo-canon.md) name one Repo Canon version, and
+until the CLI version they and CI name equals the floor of the `requires`
+minimum in `standards.yaml`.
 
 Title it `<type>: release vX.Y.Z`. The type follows the release's
 classification under [release versioning](../usage/versioning.md). Use the
@@ -81,7 +83,8 @@ Before requesting review, run the checks the
 The pull request body carries the review and validation summary:
 
 - the release version and the previous release tag;
-- the reviewed diff, as the changed source input paths from the previous tag;
+- the reviewed diff, as the changed source input paths from the previous tag
+  that `release:inputs` reports;
 - the outcomes of the whole-source review, or that the diff is empty;
 - the CLI version and result of `source validate`, with the profile and
   declaration counts;
@@ -116,39 +119,59 @@ explain its migration in two parts, each starting with its `Impact:` or
 
 ## Publish and verify
 
-After the pull request merges, publish from its merge commit on `main`, with
-`inputs` listed as in [the reviewed diff](#released-bytes-and-reviewed-diff):
+After the pull request merges, publish from its merge commit on `main`. In an
+up-to-date checkout of `main`, with `REPO_STANDARDS_PREFIX` set as for
+[the reviewed diff](#released-bytes-and-reviewed-diff), set `version` to the
+release tag, such as `v1.2.3`, and `pull_request` to the release pull request's
+number. Read the reviewed head and the merge commit from the pull request, and
+fetch them:
 
 ```sh
-version=vX.Y.Z
-reviewed_head=REPLACE_WITH_REVIEWED_PULL_REQUEST_HEAD
-release_commit=REPLACE_WITH_MERGE_COMMIT
+reviewed_head=$(gh pr view "$pull_request" --json headRefOid --template '{{.headRefOid}}')
+release_commit=$(gh pr view "$pull_request" --json mergeCommit --template '{{.mergeCommit.oid}}')
 git fetch origin main "$reviewed_head"
-git diff --quiet "$reviewed_head" "$release_commit" -- $inputs
-git tag --annotate "$version" "$release_commit" --message "Repo Canon $version"
-git push origin "$version"
-gh release create "$version" --verify-tag --title "$version" \
-  --notes-file /path/to/release-notes.md
 ```
 
-The `git diff --quiet` step confirms that the merge commit carries exactly the
-reviewed inputs; if it fails, another change reached them, and the release needs
-review again. Publish an ordinary release; a draft or prerelease cannot be
-selected for adoption.
+Then confirm the merge commit and publish. Each command runs only when the one
+before it succeeds:
 
-Then verify the publication:
+```sh
+npm run release:check-merge -- "$reviewed_head" "$release_commit" &&
+  git tag --annotate "$version" "$release_commit" --message "Repo Canon $version" &&
+  git push origin "$version" &&
+  gh release create "$version" --verify-tag --title "$version" \
+    --notes-file /path/to/release-notes.md
+```
 
-1. `git ls-remote origin "refs/tags/$version^{}"` reports the release commit.
-2. `gh release view "$version" --json isDraft,isPrerelease` reports `false` for
-   both.
+`release:check-merge` confirms that the merge commit carries exactly the
+reviewed inputs, over the inputs either commit selects. If it fails, another
+change reached them, and the release needs review again. Publish an ordinary
+release; a draft or prerelease cannot be selected for adoption.
+
+Then verify the publication, and only when it verifies, replace the notes with
+the version that carries the verification paragraph:
+
+```sh
+npm run release:verify -- "$version" "$release_commit" &&
+  gh release edit "$version" --notes-file /path/to/verified-release-notes.md
+```
+
+`release:verify` reports each of its checks and fails if any fails:
+
+1. The annotated tag on `origin` peels to the release commit.
+2. The GitHub release is neither a draft nor a prerelease.
 3. In a disposable Git repository, the public CLI at the required minimum
    version inspects the release with the `complete` profile, as
    [Adopt Repo Canon](../usage/adopt-repo-canon.md#inspect-the-published-source)
    describes. The report resolves the release commit and profile.
+4. The Repository README and the adoption guide at the release commit name the
+   version being verified.
 
-Append a short verification paragraph to the release notes. It names the
-release commit and the release pull request, confirms the tag and release
-state, and reports the CLI version and inspection result.
+The verification paragraph appended to the release notes names the release
+commit and the release pull request, confirms the tag and release state, and
+reports the CLI version and inspection result that `release:verify` prints.
+The release scripts change no repository or GitHub state; the tag, the release,
+and its notes are published only by the commands written out above.
 
 A published tag is never moved, deleted, or retargeted. A correction receives
 a new version. Earlier releases keep their notes.
