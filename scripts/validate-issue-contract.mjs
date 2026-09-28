@@ -841,10 +841,10 @@ async function returnToReview(apiClient, number, labels) {
   if (hadReadiness && remainingStates.length === 0) await apiClient.addLabels(number, ["needs-triage"]);
 }
 
-// Equal timestamps are ordered by the timeline; a strictly later timestamp still
-// supersedes. A non-readiness state labeled after the review in the timeline
-// supersedes it, even in the same second; states labeled before the review, or
-// with the issue at its creation second, are replaced by it. A present state
+// A non-readiness state labeled after the review in the timeline supersedes it,
+// even in the same second; states labeled before the review, or with the issue
+// at its creation second, are replaced by it. Equal timestamps are ordered by
+// the timeline; a strictly later timestamp still supersedes. A present state
 // whose latest recorded change is not its application also supersedes, unless
 // it is the triggering label with a payload time before the review or at the
 // issue's creation, or a label the issue was opened with. A triggering label
@@ -868,8 +868,8 @@ function stateAppliedAfterReview(labels, reviewEventId, issueEvents, issue, curr
     const triggering = currentEvent.action === "labeled" && currentEvent.label?.name === label;
     const payloadAt = currentEvent.issue?.updated_at;
     if (triggering) {
-      const payloadLater = !payloadAt || (recorded ? payloadAt > reviewedAt : notBeforeReview(payloadAt));
-      if (!recordedLater && (!reviewKnown || payloadLater)) return label;
+      const payloadSupersedes = !payloadAt || (recorded ? payloadAt > reviewedAt : notBeforeReview(payloadAt));
+      if (!recordedLater && (!reviewKnown || payloadSupersedes)) return label;
       continue;
     }
     const openedWith = currentEvent.action === "opened" && (currentEvent.issue?.labels ?? []).some((candidate) => labelName(candidate) === label);
