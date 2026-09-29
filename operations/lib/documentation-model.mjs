@@ -62,20 +62,20 @@ function inferredRoots(confirmedPaths) {
     if (segments.length > 0) candidates.add(segments.join('/'));
   }
 
-  const categorized = [...candidates].filter(candidate => (
+  const candidatesWithCategories = [...candidates].filter(candidate => (
     candidate === repositoryDocumentationRoot
     || [...documentationCategories].some(category => (
       confirmedPaths.includes(`${candidate}/${category}/README.md`)
     ))
   ));
-  const roots = categorized.filter(candidate => (
-    !categorized.some(other => isInside(candidate, other))
+  const roots = candidatesWithCategories.filter(candidate => (
+    !candidatesWithCategories.some(other => isInside(candidate, other))
   ));
   return {
     roots: roots.sort(),
-    categorized: categorized.sort(),
+    candidatesWithCategories: candidatesWithCategories.sort(),
     ambiguous: [...candidates]
-      .filter(candidate => !categorized.includes(candidate)
+      .filter(candidate => !candidatesWithCategories.includes(candidate)
         && !roots.some(root => isInside(candidate, root)))
       .sort(),
   };
@@ -149,14 +149,14 @@ export function documentationModel(projectRoot, confirmedPaths) {
   const roots = inference.roots.map(path => {
     const tree = documentationTree(projectRoot, path);
     const [rootDirectory, ...directories] = tree.directories;
-    const categorizedDirectories = inference.categorized.filter(candidate => (
+    const candidatesInRoot = inference.candidatesWithCategories.filter(candidate => (
       candidate === path || isInside(candidate, path)
     ));
     const confirmedIndexes = new Set(confirmedPaths.filter(confirmedPath => (
       confirmedPath.endsWith('/README.md')
-      && categorizedDirectories.some(directory => (
-        isInside(confirmedPath, directory)
-        && documentationCategories.has(confirmedPath.slice(directory.length + 1).split('/')[0])
+      && candidatesInRoot.some(candidate => (
+        isInside(confirmedPath, candidate)
+        && documentationCategories.has(confirmedPath.slice(candidate.length + 1).split('/')[0])
       ))
     )));
     for (const document of tree.markdownFiles) documents.add(document);
