@@ -73,6 +73,9 @@ function attachSplitHeadingAnchors(elements) {
 
 function semanticElements(fragment, isHidden, markdownHeadingMarker) {
   const elements = [];
+  // Each visited node's half-open range of the elements it produced, so that a
+  // section can tell which blocks hold its content.
+  const spans = new Map();
   const visitTargets = node => {
     if (isHidden(node)) return;
     if (node.tagName === 'a') {
@@ -93,7 +96,12 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
     }
     for (const child of node.childNodes ?? []) visitTargets(child);
   };
-  const visit = (node, centered = false, blocks = []) => {
+  const visit = (node, centered = false) => {
+    const first = elements.length;
+    visitNode(node, centered);
+    spans.set(node, [first, elements.length]);
+  };
+  const visitNode = (node, centered) => {
     if (isHidden(node)) return;
     if (node.nodeName === '#text') {
       if (node.value.trim()) elements.push({ type: 'text', text: node.value });
@@ -124,7 +132,6 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
         type: 'link',
         text: renderedText(node, isHidden).trim(),
         target: attribute(node, 'href'),
-        blocks,
         containsMedia: containsMedia(node, isHidden),
       };
       if (!containsHeading(node, isHidden)) {
@@ -132,7 +139,7 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
         return;
       }
       elements.push({ ...link, wrapsHeading: true });
-      for (const child of node.childNodes ?? []) visit(child, centered, blocks);
+      for (const child of node.childNodes ?? []) visit(child, centered);
       return;
     }
     if (node.tagName === 'img') {
@@ -141,17 +148,51 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
     }
     if (renderedElementsWithoutText.has(node.tagName)) elements.push({ type: 'content' });
     const insideCenter = centered || (node.tagName === 'div' && ownCenter);
-    const insideBlocks = blockElements.has(node.tagName) ? [...blocks, node.tagName] : blocks;
-    for (const child of node.childNodes ?? []) visit(child, insideCenter, insideBlocks);
+    for (const child of node.childNodes ?? []) visit(child, insideCenter);
   };
   visit(fragment);
-  return attachSplitHeadingAnchors(elements);
+  return { elements: attachSplitHeadingAnchors(elements), spans };
 }
 
-function renderedContent(fragment, isHidden, markdownHeadingMarker) {
-  const elements = semanticElements(fragment, isHidden, markdownHeadingMarker);
+// The blocks of a view, which keeps some of the elements from start to end. A
+// block belongs to the view when it holds one of those elements, and lists them
+// as its links. Its text is what renders between start and end, so a block that
+// also holds a heading or another section keeps only the view's part.
+function viewBlocks(fragment, { elements, spans }, isHidden, start, end, keep) {
+  const kept = new Set(elements.slice(start, end).filter(keep));
+  const keptWithin = ([first, last]) => elements.slice(first, last).filter(element => kept.has(element));
+  const text = node => {
+    const span = spans.get(node);
+    if (!span) return '';
+    if (span[0] >= start && span[1] <= end) return renderedText(node, isHidden);
+    if (span[1] <= start || span[0] >= end) return '';
+    return (node.childNodes ?? []).map(text).join('');
+  };
+  const blocks = node => (node.childNodes ?? []).flatMap(child => {
+    const span = spans.get(child);
+    const held = span ? keptWithin(span) : [];
+    if (held.length === 0) return [];
+    if (!blockElements.has(child.tagName)) return blocks(child);
+    return [{
+      tag: child.tagName,
+      text: text(child).trim(),
+      links: held.filter(element => element.type === 'link'),
+      blocks: blocks(child),
+    }];
+  });
+  return blocks(fragment);
+}
+
+function renderedDocument(fragment, isHidden, markdownHeadingMarker) {
+  const semantics = semanticElements(fragment, isHidden, markdownHeadingMarker);
+  const blocksBetween = (start, end, keep) => viewBlocks(fragment, semantics, isHidden, start, end, keep);
+  return { content: renderedContent(fragment, isHidden, semantics, blocksBetween), blocksBetween };
+}
+
+function renderedContent(fragment, isHidden, { elements }, blocksBetween) {
   return {
     elements,
+    blocks: blocksBetween(0, elements.length, () => true),
     hasContent: elements.length > 0,
     text({
       includeCode = true,
@@ -202,7 +243,7 @@ function renderedContent(fragment, isHidden, markdownHeadingMarker) {
   };
 }
 
-function markdownInlineText(tokens) {
+export function markdownInlineText(tokens) {
   return (tokens ?? []).map(token => {
     if (token.type === 'html') return '';
     if (token.type === 'codespan') return token.text;
@@ -217,7 +258,7 @@ function normalizedHeadingName(value, stripTrailingColon) {
   return normalized.toLocaleLowerCase('en-US');
 }
 
-function markdownTokenSpans(markdown, tokens) {
+export function markdownTokenSpans(markdown, tokens) {
   let cursor = 0;
   return tokens.map(token => {
     const index = markdown.indexOf(token.raw, cursor);
@@ -230,7 +271,7 @@ function markdownTokenSpans(markdown, tokens) {
 function headingName(token, nameSource, isHidden) {
   if (nameSource === 'markdown') return markdownInlineText(token.tokens);
   const fragment = parseFragment(marked.Parser.parseInline(token.tokens));
-  return renderedContent(fragment, isHidden, null).text({ blockBreaks: true }).text;
+  return renderedDocument(fragment, isHidden, null).content.text({ blockBreaks: true }).text;
 }
 
 function sectionMap(markdown, tokens, names, options, renderTokens, renderMarkdown, isHidden) {
@@ -302,25 +343,26 @@ export function interpretMarkdown(markdown, { additionalNonRenderedElements = []
   const normalizedMarkdown = markdown.replace(/\r\n?/g, '\n');
   const tokens = marked.lexer(normalizedMarkdown);
   const isHidden = visibility(additionalNonRenderedElements);
-  const renderTokens = selectedTokens => {
+  const renderDocument = selectedTokens => {
     const marker = randomUUID();
     const renderer = new Renderer();
     renderer.heading = function ({ depth, tokens: headingTokens }) {
       return `<h${depth} data-repo-canon-markdown-heading="${marker}">${this.parser.parseInline(headingTokens)}</h${depth}>`;
     };
-    return renderedContent(parseFragment(marked.parser(selectedTokens, { renderer })), isHidden, marker);
+    return renderedDocument(parseFragment(marked.parser(selectedTokens, { renderer })), isHidden, marker);
   };
+  const renderTokens = selectedTokens => renderDocument(selectedTokens).content;
   const renderMarkdown = source => renderTokens(marked.lexer(source));
-  const content = renderTokens(tokens);
+  const { content, blocksBetween } = renderDocument(tokens);
+  const inBody = candidate => !candidate.insideHeading && !candidate.wrapsHeading;
   const headings = content.elements.flatMap((element, index) => {
     if (element.type !== 'heading') return [];
-    const end = content.elements.findIndex((candidate, candidateIndex) => (
+    const next = content.elements.findIndex((candidate, candidateIndex) => (
       candidateIndex > index && candidate.type === 'heading' && candidate.level <= element.level
     ));
-    const bodyElements = content.elements
-      .slice(index + 1, end < 0 ? content.elements.length : end)
-      .filter(candidate => !candidate.insideHeading && !candidate.wrapsHeading);
-    return [{ ...element, body: { elements: bodyElements } }];
+    const end = next < 0 ? content.elements.length : next;
+    const bodyElements = content.elements.slice(index + 1, end).filter(inBody);
+    return [{ ...element, body: { elements: bodyElements, blocks: blocksBetween(index + 1, end, inBody) } }];
   });
   const markdownHeadings = markdownTokenSpans(normalizedMarkdown, tokens)
     .filter(({ token }) => token.type === 'heading')
