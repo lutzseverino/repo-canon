@@ -11,8 +11,14 @@ decision that reads one snapshot and returns the label changes, the feedback
 comment write, and the exit status, with no network or file access. Its GitHub
 adapter runs only when the workflow executes the file: it fetches the complete
 snapshot before deciding, then applies the returned writes. One timeline helper
-inside the decision answers every question about whether one event or comment
-came after another.
+inside the decision answers every question about whether one issue event came
+after another, and it orders events by one rule: the timeline's order decides
+when GitHub has recorded both events. Timestamps are used only for what has no
+timeline position (the feedback comment, Agent Brief comments, and a label
+change the timeline has not recorded yet) and to recognize labels applied at
+creation. Agent Brief comments are ordered among themselves by comment ID: the
+latest Agent Brief is the Brief comment with the highest comment ID, for both
+the contract lookup and a deleted Brief.
 
 The validator recognizes these contracts:
 
@@ -104,10 +110,12 @@ readiness label. A removal therefore invalidates the old event even if another
 label is added before its workflow runs. A delayed removal or repeated webhook
 cannot overwrite a genuinely newer approval. The recorded transition barrier
 and position in the authoritative timeline establish that the selected label
-event follows the exact revision. Stale webhook payloads cannot supply the actor
-or restore an older association.
-If deleting a newer Agent Brief reveals an older previously approved Brief, the
-deletion event is recorded as a source invalidation. The restored source needs a
+event follows the exact revision. The only opening barrier is this issue's own
+opening, and an event the timeline has not recorded follows no barrier. Stale
+webhook payloads cannot supply the actor or restore an older association.
+If deleting a newer Agent Brief, one with a higher comment ID, reveals an older
+previously approved Brief, the deletion event is recorded as a source
+invalidation. The restored source needs a
 new revision notice and review; replaying that deletion after renewed approval
 does not revoke it again, and deleting an older superseded Brief does not affect
 the current source.
@@ -124,8 +132,8 @@ non-readiness workflow state labeled before it in the event timeline or applied
 with the issue at creation, such as a form label, so the issue keeps exactly one
 workflow state. A label applied at creation is one the issue was opened with or
 whose application carries the issue's creation timestamp. A non-readiness state
-labeled after the review in the timeline supersedes the review instead, even
-when both events share a second: the validator keeps the latest such state as
+labeled after the review in the timeline supersedes the review instead,
+whatever its timestamp: the validator keeps the latest such state as
 the only workflow state, removes readiness and every other state, and publishes
 the revision as awaiting review. A present state whose latest recorded change
 in the event timeline is not its application also supersedes the review, so a
@@ -134,9 +142,8 @@ the issue was opened with and a label that triggered the run with a payload time
 before the review or at the issue's creation. A triggering label whose recorded
 application precedes the review supersedes it only when the run has no payload
 time or its payload time falls in a strictly later second than the review, as
-when the timeline has not yet recorded a removal and re-application. Equal
-timestamps are ordered by the timeline; a strictly later timestamp still
-supersedes. A triaged request that carries two workflow states outside a
+when the timeline has not yet recorded a removal and re-application. A triaged
+request that carries two workflow states outside a
 readiness-label event also fails its label check and loses readiness. A
 repeated event on an approved specification or ticket removes a state left from
 before its review. Removing readiness, or
@@ -195,8 +202,8 @@ repeat-safe feedback,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized
 actors, stale and repeated events, native creation in either run order,
 readiness removal and re-add
-ordering across paginated issue events, contract edits, pull request
-exclusion, and hostile Markdown that must remain inert. The `CI`
-workflow runs the complete repository test suite with `npm test`. These fixtures
-exercise the authorization mechanism but do not claim that a reviewer made a
-sound semantic judgment.
+ordering across paginated issue events, the one timeline ordering rule,
+contract edits, pull request exclusion, and hostile Markdown that must remain
+inert. The `CI` workflow runs the complete repository test suite with
+`npm test`. These fixtures exercise the authorization mechanism but do not
+claim that a reviewer made a sound semantic judgment.
