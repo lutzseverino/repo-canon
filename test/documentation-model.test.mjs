@@ -154,6 +154,21 @@ test('reports a root without a directory as having a missing index and no direct
   assert.deepEqual(built.links, []);
 });
 
+test('treats a root that is a file or a symbolic link as having no directory', t => {
+  const project = fixture({ docs: '# Not a directory\n', 'handbook/usage/README.md': '# Usage\n' });
+  t.after(project.close);
+  mkdirSync(join(project.root, 'packages/app'), { recursive: true });
+  symlinkSync(join(project.root, 'handbook'), join(project.root, 'packages/app/handbook'));
+  const built = documentationModel(project.root, ['docs/README.md', 'packages/app/handbook/usage/README.md']);
+
+  assert.deepEqual(built.roots.map(({ path, index, strayEntries, directories }) => (
+    { path, index: index.state, strayEntries, directories }
+  )), [
+    { path: 'docs', index: 'missing', strayEntries: [], directories: [] },
+    { path: 'packages/app/handbook', index: 'missing', strayEntries: [], directories: [] },
+  ]);
+});
+
 test('lists stray top-level entries outside the documentation categories', t => {
   const project = fixture({
     'docs/README.md': '# Documentation\n',

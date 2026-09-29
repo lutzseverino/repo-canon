@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, readFileSync } from 'node:fs';
+import { chmodSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
@@ -321,6 +321,44 @@ test('fails the run with the read error for a document that exists but cannot be
       assert.ok(outcome.stderr.includes(absolute), `${unreadable}: ${outcome.stderr}`);
     } finally {
       chmodSync(absolute, 0o644);
+    }
+    assert.deepEqual(snapshot(project.root), before, 'the check must not change project content');
+  }
+});
+
+test('fails the run with the read error for a directory that exists but cannot be listed', t => {
+  const files = {
+    'docs/README.md': '# Documentation\n\n[Usage](usage/README.md)\n',
+    'docs/development/README.md': '# Development\n',
+    'docs/usage/README.md': '# Usage\n\n[Guide](guide.md)\n',
+    'docs/usage/guide.md': '# Guide\n',
+  };
+  // An unreadable directory under the documentation root, then an unreadable
+  // documentation root.
+  for (const unreadable of ['docs/usage', 'docs']) {
+    const project = fixture(files);
+    t.after(project.close);
+    const before = snapshot(project.root);
+    const absolute = join(project.root, unreadable);
+    chmodSync(absolute, 0o000);
+    try {
+      try {
+        readdirSync(absolute);
+        t.skip('this user can list a directory without read permission');
+        return;
+      } catch {
+        // The directory exists but cannot be listed, as intended.
+      }
+      const outcome = invokeCheck(script, project.root, {
+        operation: { declaration: 'documentation', phase: 'checks', id: 'navigation' },
+        allowedTargets: { paths: Object.keys(files), directories: [] },
+      });
+      assert.equal(outcome.status, 1, unreadable);
+      assert.equal(outcome.stdout, '', unreadable);
+      assert.equal(outcome.result, null, unreadable);
+      assert.ok(outcome.stderr.includes(absolute), `${unreadable}: ${outcome.stderr}`);
+    } finally {
+      chmodSync(absolute, 0o755);
     }
     assert.deepEqual(snapshot(project.root), before, 'the check must not change project content');
   }

@@ -32,14 +32,21 @@ function fileContent(projectRoot, path) {
   return isFile(projectRoot, path) ? readFileSync(absolutePath(projectRoot, path), 'utf8') : null;
 }
 
-function directoryEntries(projectRoot, path) {
+function isDirectory(projectRoot, path) {
   try {
-    const absolute = absolutePath(projectRoot, path);
-    if (!lstatSync(absolute).isDirectory()) return null;
-    return readdirSync(absolute, { withFileTypes: true });
+    return lstatSync(absolutePath(projectRoot, path)).isDirectory();
   } catch {
-    return null;
+    return false;
   }
+}
+
+// The entries of a directory, or null when no directory exists at the path. A
+// directory that exists but cannot be listed throws Node's read error naming
+// its path, which the check reports as a process error.
+function directoryEntries(projectRoot, path) {
+  return isDirectory(projectRoot, path)
+    ? readdirSync(absolutePath(projectRoot, path), { withFileTypes: true })
+    : null;
 }
 
 function isInside(path, directory) {
