@@ -1010,7 +1010,8 @@ decisionTable("an authorized review binds readiness to the exact revision", [
       name: `write access, a readiness label, and bot identity do not establish review authority: ${example.name}`,
       snapshot: {
         issue,
-        // The revision notice precedes the label by a second, so only the role check can reject the review.
+        // The revision notice precedes the label by a second, so only the
+        // role check can reject the review.
         comments: [{ ...awaitingTicketFeedback(issue), updated_at: "2026-09-14T16:59:59Z" }],
         event: labeledBy(example.login, "ready-for-agent", issue),
         permissions: { [example.login]: example.permission },
