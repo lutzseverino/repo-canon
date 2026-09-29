@@ -803,13 +803,14 @@ function isReadinessTransition(candidate) {
 
 // The one owner of every "did A happen after B" question about issue events,
 // including which transition is latest and what the creation snapshot holds.
-// The timeline's order decides when GitHub has recorded both events: the
-// creation snapshot (this issue's own `opened:` review ID and the labels it was
-// opened with) is at position zero and the Nth event at position N.
-// Timestamps are used only for what has no timeline position, the revision
-// notice and a triggering label change the timeline has not recorded yet, and
-// to recognise labels applied at creation. Agent Brief comments have no
-// timeline position either; `latestAgentBrief` orders them by comment ID.
+// It follows the one ordering rule: the timeline's order decides when GitHub
+// has recorded both events. Timestamps are used only for what has no timeline
+// position (the feedback comment, Agent Brief comments, and a label change the
+// timeline has not recorded yet) and to recognize labels applied at creation.
+// The creation snapshot (this issue's own `opened:` review ID and the labels it
+// was opened with) is at position zero and the Nth event at position N. Agent
+// Brief comments are ordered among themselves by comment ID, in
+// `latestAgentBrief`.
 function issueTimeline({ event, issue, issueEvents }) {
   if (!Array.isArray(issueEvents)) throw new Error("The snapshot does not include the issue-event timeline.");
   const openingId = openingReviewId(issue);
