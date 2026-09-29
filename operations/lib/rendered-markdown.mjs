@@ -161,10 +161,11 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
 // another section keeps only this section's part.
 function sectionBlocks({ fragment, elements, spans, isHidden }, { start, end, keep }) {
   const keptBefore = [0];
-  elements.forEach((element, index) => {
-    keptBefore.push(keptBefore[index] + (index >= start && index < end && keep(element) ? 1 : 0));
-  });
-  const holdsKept = ([first, last]) => keptBefore[last] > keptBefore[first];
+  for (let index = start; index < end; index += 1) {
+    keptBefore.push(keptBefore.at(-1) + (keep(elements[index]) ? 1 : 0));
+  }
+  const keptUntil = index => keptBefore[Math.min(Math.max(index, start), end) - start];
+  const holdsKept = ([first, last]) => keptUntil(last) > keptUntil(first);
   const text = node => {
     const span = spans.get(node);
     if (!span) return '';
@@ -268,10 +269,14 @@ function normalizedHeadingName(value, stripTrailingColon) {
   return normalized.toLocaleLowerCase('en-US');
 }
 
-export function markdownTokenSpans(markdown, tokens = marked.lexer(markdown)) {
+// Marked normalizes line endings in each token's raw text, so tokens are
+// located in the Markdown with normalized line endings, and each index refers
+// to that text.
+export function markdownTokenSpans(markdown, tokens) {
+  const source = markdown.replace(/\r\n?/g, '\n');
   let cursor = 0;
-  return tokens.map(token => {
-    const index = markdown.indexOf(token.raw, cursor);
+  return (tokens ?? marked.lexer(source)).map(token => {
+    const index = source.indexOf(token.raw, cursor);
     if (index === -1) throw new Error(`Could not locate parsed Markdown token after offset ${cursor}.`);
     cursor = index + token.raw.length;
     return { token, index };

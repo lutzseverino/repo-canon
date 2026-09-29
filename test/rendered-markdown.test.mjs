@@ -134,5 +134,7 @@ test('exports the Markdown token-span and inline-text helpers', () => {
     ['paragraph', 9],
   ]);
   assert.equal(markdownInlineText(spans[2].token.tokens), 'Some bold code html.');
+  assert.deepEqual(markdownTokenSpans(markdown.replace(/\n/g, '\r\n')).map(({ index }) => index), [0, 7, 9],
+    'indexes refer to the Markdown with normalized line endings');
   assert.throws(() => markdownTokenSpans('abc', [{ raw: 'xyz' }]), /Could not locate parsed Markdown token after offset 0/);
 });

@@ -538,6 +538,8 @@ test('judges pointer links by every block around them, including blocks shared w
     { name: 'a div around the heading and link', layout: (name, link) => `<div>\n\n## ${name}\n\n${link}\n\n</div>\n`, status: 'passed' },
     { name: 'a quotation around the heading and link', layout: (name, link) => `> ## ${name}\n>\n> ${link}\n`, status: 'failed' },
     { name: 'details around the heading and link', layout: (name, link) => `<details open>\n\n## ${name}\n\n${link}\n\n</details>\n`, status: 'failed' },
+    { name: 'a list nested in a paragraph through a button', layout: (name, link) => `## ${name}\n\n<p><button><ul><li>\n\n${link}\n\n</li></ul></button></p>\n`, status: 'failed' },
+    { name: 'a quotation nested in a paragraph through a marquee', layout: (name, link) => `## ${name}\n\n<p><marquee><blockquote>\n\n${link}\n\n</blockquote></marquee></p>\n`, status: 'failed' },
   ]) await t.test(example.name, st => {
     const outcome = check(st, {
       'README.md': `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n${pointers

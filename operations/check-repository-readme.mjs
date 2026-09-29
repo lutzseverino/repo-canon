@@ -74,13 +74,15 @@ function sectionBody(allHeadings, name) {
 // A pointer section renders exactly one link, not wrapping an image. Every
 // block the section keeps therefore holds that link, and they must be one
 // paragraph, which may be wrapped in divs: the link is not outside a paragraph
-// or inside a list, quotation, table, or other block.
+// or inside a list, quotation, table, or other block. HTML parsing can nest a
+// block inside a paragraph, for example through a button, so the paragraph
+// must hold no block of its own.
 function singleLink(body) {
   if (body.elements.length !== 1 || body.elements[0].type !== 'link') return null;
   const [link] = body.elements;
   let blocks = body.blocks;
   while (blocks.length === 1 && blocks[0].tag === 'div') blocks = blocks[0].blocks;
-  const inParagraph = blocks.length === 1 && blocks[0].tag === 'p';
+  const inParagraph = blocks.length === 1 && blocks[0].tag === 'p' && blocks[0].blocks.length === 0;
   return !link.containsMedia && inParagraph ? link : null;
 }
 
