@@ -1002,14 +1002,26 @@ decisionTable("an authorized review binds readiness to the exact revision", [
     expected: { exitCode: 1, remove: ["ready-for-agent"], add: ["needs-triage"], feedback: 13 },
   },
   ...[
-    { name: "write collaborator", login: "writer", permission: role("write") },
-    { name: "unprivileged bot", login: "automation[bot]", permission: role("none") },
+    { name: "write collaborator", login: "writer", permission: role("write"), rejection: /@writer is not authorized to grant readiness/ },
+    { name: "unprivileged bot", login: "automation[bot]", permission: role("none"), rejection: /@automation\[bot\] is not authorized to grant readiness/ },
   ].map((example) => {
     const issue = { number: 42, body: ticketBody, labels: [{ name: "ready-for-agent" }], state: "open", updated_at: "2026-09-14T17:00:00Z" };
     return {
       name: `write access, a readiness label, and bot identity do not establish review authority: ${example.name}`,
-      snapshot: { issue, event: labeledBy(example.login, "ready-for-agent", issue), permissions: { [example.login]: example.permission } },
-      expected: { exitCode: 1, remove: ["ready-for-agent"], add: ["needs-triage"], feedback: "create" },
+      snapshot: {
+        issue,
+        // The revision notice precedes the label by a second, so only the role check can reject the review.
+        comments: [{ ...awaitingTicketFeedback(issue), updated_at: "2026-09-14T16:59:59Z" }],
+        event: labeledBy(example.login, "ready-for-agent", issue),
+        permissions: { [example.login]: example.permission },
+      },
+      expected: {
+        exitCode: 1,
+        remove: ["ready-for-agent"],
+        add: ["needs-triage"],
+        feedback: 13,
+        feedbackBody: example.rejection,
+      },
     };
   }),
   {
