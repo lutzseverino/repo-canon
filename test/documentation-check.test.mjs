@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, readFileSync, readdirSync } from 'node:fs';
+import { chmodSync, lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
@@ -335,6 +335,9 @@ test('fails the run with the read error for a directory that exists but cannot b
     'docs/usage/examples/README.md': '# Examples\n',
     'packages/app/handbook/README.md': '# Handbook\n\n[Usage](usage/README.md)\n',
     'packages/app/handbook/usage/README.md': '# Usage\n',
+    'docs/adr/README.md': '# Decisions\n',
+    'docs/adr/first.md': '# First\n',
+    'notes/legacy.md': '# Legacy\n',
   };
   for (const { restricted, mode, unreadable } of [
     // A directory under a documentation root.
@@ -345,6 +348,11 @@ test('fails the run with the read error for a directory that exists but cannot b
     { restricted: 'docs/usage', mode: 0o444, unreadable: 'docs/usage/examples' },
     // A documentation root inside a directory that cannot be searched.
     { restricted: 'packages', mode: 0o000, unreadable: 'packages/app/handbook' },
+    // An index inside a directory that can be listed but not searched.
+    { restricted: 'docs/adr', mode: 0o444, unreadable: 'docs/adr/README.md' },
+    // A confirmed document inside a directory that can be listed but not
+    // searched.
+    { restricted: 'notes', mode: 0o444, unreadable: 'notes/legacy.md' },
   ]) {
     const project = fixture(files);
     t.after(project.close);
@@ -353,11 +361,12 @@ test('fails the run with the read error for a directory that exists but cannot b
     chmodSync(join(project.root, restricted), mode);
     try {
       try {
-        readdirSync(absolute);
-        t.skip('this user can list a directory without permission');
+        if (mode === 0o000) readdirSync(absolute);
+        else lstatSync(absolute);
+        t.skip('this user can inspect a path without permission');
         return;
       } catch {
-        // The directory exists but cannot be listed, as intended.
+        // The path exists but cannot be inspected, as intended.
       }
       const outcome = invokeCheck(script, project.root, {
         operation: { declaration: 'documentation', phase: 'checks', id: 'navigation' },

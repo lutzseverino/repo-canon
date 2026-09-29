@@ -17,12 +17,29 @@ function absolutePath(projectRoot, path) {
   return `${projectRoot}${sep}${path.split('/').join(sep)}`;
 }
 
-function isFile(projectRoot, path) {
+// The errors that show no entry can exist at a path: it is absent, lies below
+// a file or a symbolic link loop, or is too long.
+const noEntryErrors = new Set(['ENOENT', 'ENOTDIR', 'ELOOP', 'ENAMETOOLONG']);
+
+// The entry at a path, or null when no entry can exist there. Any other
+// failure to inspect the path, such as inside a directory that cannot be
+// searched, throws Node's error naming the path, which the check reports as a
+// process error.
+function entryAt(projectRoot, path) {
   try {
-    return lstatSync(absolutePath(projectRoot, path)).isFile();
-  } catch {
-    return false;
+    return lstatSync(absolutePath(projectRoot, path));
+  } catch (error) {
+    if (noEntryErrors.has(error.code)) return null;
+    throw error;
   }
+}
+
+function isFile(projectRoot, path) {
+  return entryAt(projectRoot, path)?.isFile() ?? false;
+}
+
+function isDirectory(projectRoot, path) {
+  return entryAt(projectRoot, path)?.isDirectory() ?? false;
 }
 
 // The content of a file, or null when no file exists at the path. A file that
@@ -30,22 +47,6 @@ function isFile(projectRoot, path) {
 // the check reports as a process error.
 function fileContent(projectRoot, path) {
   return isFile(projectRoot, path) ? readFileSync(absolutePath(projectRoot, path), 'utf8') : null;
-}
-
-// The errors that show no entry can exist at a path: it is absent, lies below
-// a file or a symbolic link loop, or is too long.
-const noEntryErrors = new Set(['ENOENT', 'ENOTDIR', 'ELOOP', 'ENAMETOOLONG']);
-
-// Whether a directory exists at the path. Any failure to inspect a path that
-// may exist throws Node's error naming the path, which the check reports as a
-// process error.
-function isDirectory(projectRoot, path) {
-  try {
-    return lstatSync(absolutePath(projectRoot, path)).isDirectory();
-  } catch (error) {
-    if (noEntryErrors.has(error.code)) return false;
-    throw error;
-  }
 }
 
 function isInside(path, directory) {
