@@ -42,9 +42,16 @@ function directoryEntries(projectRoot, path) {
   }
 }
 
-// A confirmed `<dir>/<category>/README.md` marks `<dir>` as a root, even when
-// `<dir>` lies inside another root. Any other confirmed README names a
-// candidate root, which is ambiguous unless a root contains it.
+function isInside(path, directory) {
+  return path.startsWith(`${directory}/`);
+}
+
+// A confirmed `<dir>/<category>/README.md` names `<dir>` as a candidate root
+// with categories, and any other confirmed README names a candidate root.
+// A documentation root never lies inside another: `docs` and the outermost
+// candidates with categories are the roots, and a candidate with categories
+// inside a root is an ordinary directory of that root. A candidate without
+// categories is ambiguous unless a root contains it.
 function inferredRoots(confirmedPaths) {
   const candidates = new Set([repositoryDocumentationRoot]);
   for (const path of confirmedPaths) {
@@ -55,20 +62,21 @@ function inferredRoots(confirmedPaths) {
     if (segments.length > 0) candidates.add(segments.join('/'));
   }
 
-  const roots = new Set([repositoryDocumentationRoot]);
-  for (const candidate of candidates) {
-    if ([...documentationCategories].some(category => (
+  const categorized = [...candidates].filter(candidate => (
+    candidate === repositoryDocumentationRoot
+    || [...documentationCategories].some(category => (
       confirmedPaths.includes(`${candidate}/${category}/README.md`)
-    ))) roots.add(candidate);
-  }
-
-  const containedIndex = candidate => [...roots].some(root => (
-    candidate !== root && candidate.startsWith(`${root}/`)
+    ))
+  ));
+  const roots = categorized.filter(candidate => (
+    !categorized.some(other => isInside(candidate, other))
   ));
   return {
-    roots: [...roots].sort(),
+    roots: roots.sort(),
+    categorized: categorized.sort(),
     ambiguous: [...candidates]
-      .filter(candidate => !roots.has(candidate) && !containedIndex(candidate))
+      .filter(candidate => !categorized.includes(candidate)
+        && !roots.some(root => isInside(candidate, root)))
       .sort(),
   };
 }
@@ -118,7 +126,8 @@ function documentLinks(projectRoot, source) {
 // - `roots`: each documentation root, sorted, with its `index`, its
 //   `strayEntries` outside the documentation categories, its `directories`
 //   below it in walk order with their `index`, and its `confirmedIndexes`
-//   under a documentation category;
+//   under a documentation category of the root or of a directory inside it
+//   that a confirmed category index names;
 // - `ambiguousRoots`: candidate roots the confirmed paths cannot resolve;
 // - `developmentGuide`: the index of `docs/development`;
 // - `documents`: the Markdown files under each root and the confirmed
@@ -140,10 +149,15 @@ export function documentationModel(projectRoot, confirmedPaths) {
   const roots = inference.roots.map(path => {
     const tree = documentationTree(projectRoot, path);
     const [rootDirectory, ...directories] = tree.directories;
+    const categorizedDirectories = inference.categorized.filter(candidate => (
+      candidate === path || isInside(candidate, path)
+    ));
     const confirmedIndexes = new Set(confirmedPaths.filter(confirmedPath => (
-      confirmedPath.startsWith(`${path}/`)
-      && confirmedPath.endsWith('/README.md')
-      && documentationCategories.has(confirmedPath.slice(path.length + 1).split('/')[0])
+      confirmedPath.endsWith('/README.md')
+      && categorizedDirectories.some(directory => (
+        isInside(confirmedPath, directory)
+        && documentationCategories.has(confirmedPath.slice(directory.length + 1).split('/')[0])
+      ))
     )));
     for (const document of tree.markdownFiles) documents.add(document);
     return {

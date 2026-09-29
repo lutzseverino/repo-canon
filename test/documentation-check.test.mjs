@@ -199,6 +199,30 @@ test('does not confuse a nested folder named docs with a documentation root', t 
   assert.equal(outcome.result.status, 'passed');
 });
 
+test('treats a confirmed category index inside a documentation root as an ordinary directory index', t => {
+  const files = {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': '# Development\n',
+    'docs/usage/README.md': '# Usage\n',
+    'docs/usage/guides/README.md': '# Guides\n',
+    'docs/usage/guides/intro.md': '# Intro\n',
+    'docs/usage/guides/adr/README.md': '# Decisions\n',
+  };
+  const outcome = check(t, files);
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed', outcome.result.message);
+
+  const { 'docs/usage/guides/README.md': _guidesIndex, ...withoutGuidesIndex } = files;
+  const missingIndex = check(t, withoutGuidesIndex);
+  assert.equal(missingIndex.status, 0, missingIndex.stderr);
+  assert.equal(missingIndex.result.status, 'failed');
+  assert.equal(
+    missingIndex.result.message,
+    'Documentation navigation needs correction: Create docs/usage/guides/README.md to explain this documentation directory and link its useful contents.',
+  );
+});
+
 test('blocks when confirmed paths cannot identify whether an index starts a documentation root', t => {
   const outcome = check(t, {
     'docs/README.md': '# Documentation\n',
