@@ -154,15 +154,20 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
   return { elements: attachSplitHeadingAnchors(elements), spans };
 }
 
-// The blocks of a section, which keeps some of a rendered document's elements
-// from start to end. A block belongs to the section when it holds one of those
-// elements, and lists the links among them at any depth. Its text is what
-// renders between start and end, so a block that also holds a heading or
-// another section keeps only this section's part.
-function sectionBlocks({ fragment, elements, spans, isHidden }, { start, end, keep }) {
+// A heading's section holds the elements from start to end that belong to no
+// heading, the same elements as its body.
+function inSectionBody(element) {
+  return !element.insideHeading && !element.wrapsHeading;
+}
+
+// The blocks of a heading's section. A block belongs to the section when it
+// holds one of the section's elements, and lists the links among them at any
+// depth. Its text is what renders between start and end, so a block that also
+// holds a heading or another section keeps only this section's part.
+function sectionBlocks({ fragment, elements, spans, isHidden }, start, end) {
   const keptBefore = [0];
   for (let index = start; index < end; index += 1) {
-    keptBefore.push(keptBefore.at(-1) + (keep(elements[index]) ? 1 : 0));
+    keptBefore.push(keptBefore.at(-1) + (inSectionBody(elements[index]) ? 1 : 0));
   }
   const keptUntil = index => keptBefore[Math.min(Math.max(index, start), end) - start];
   const holdsKept = ([first, last]) => keptUntil(last) > keptUntil(first);
@@ -181,27 +186,21 @@ function sectionBlocks({ fragment, elements, spans, isHidden }, { start, end, ke
       tag: child.tagName,
       text: text(child).trim(),
       links: elements.slice(Math.max(span[0], start), Math.min(span[1], end))
-        .filter(element => element.type === 'link' && keep(element)),
+        .filter(element => element.type === 'link' && inSectionBody(element)),
       blocks: blocks(child),
     }];
   });
   return blocks(fragment);
 }
 
-// The fragment and element spans behind each rendered content, kept private so
-// that interpretMarkdown can give each heading's section its blocks.
-const renderedDocuments = new WeakMap();
+// A rendered fragment with its elements and each visited node's span of them.
+function renderedFragment(fragment, isHidden, markdownHeadingMarker) {
+  return { fragment, isHidden, ...semanticElements(fragment, isHidden, markdownHeadingMarker) };
+}
 
-function renderedContent(fragment, isHidden, markdownHeadingMarker) {
-  const document = { fragment, isHidden, ...semanticElements(fragment, isHidden, markdownHeadingMarker) };
-  const { elements } = document;
-  let blocks;
-  const content = {
+function renderedContent({ fragment, isHidden, elements }) {
+  return {
     elements,
-    get blocks() {
-      blocks ??= sectionBlocks(document, { start: 0, end: elements.length, keep: () => true });
-      return blocks;
-    },
     hasContent: elements.length > 0,
     text({
       includeCode = true,
@@ -250,8 +249,6 @@ function renderedContent(fragment, isHidden, markdownHeadingMarker) {
       return { text: includeLinkTargets ? fragments.join('\n') : text, links };
     },
   };
-  renderedDocuments.set(content, document);
-  return content;
 }
 
 export function markdownInlineText(tokens) {
@@ -286,7 +283,7 @@ export function markdownTokenSpans(markdown, tokens) {
 function headingName(token, nameSource, isHidden) {
   if (nameSource === 'markdown') return markdownInlineText(token.tokens);
   const fragment = parseFragment(marked.Parser.parseInline(token.tokens));
-  return renderedContent(fragment, isHidden, null).text({ blockBreaks: true }).text;
+  return renderedContent(renderedFragment(fragment, isHidden, null)).text({ blockBreaks: true }).text;
 }
 
 function sectionMap(markdown, tokens, names, options, renderTokens, renderMarkdown, isHidden) {
@@ -358,18 +355,18 @@ export function interpretMarkdown(markdown, { additionalNonRenderedElements = []
   const normalizedMarkdown = markdown.replace(/\r\n?/g, '\n');
   const tokens = marked.lexer(normalizedMarkdown);
   const isHidden = visibility(additionalNonRenderedElements);
-  const renderTokens = selectedTokens => {
+  const renderFragment = selectedTokens => {
     const marker = randomUUID();
     const renderer = new Renderer();
     renderer.heading = function ({ depth, tokens: headingTokens }) {
       return `<h${depth} data-repo-canon-markdown-heading="${marker}">${this.parser.parseInline(headingTokens)}</h${depth}>`;
     };
-    return renderedContent(parseFragment(marked.parser(selectedTokens, { renderer })), isHidden, marker);
+    return renderedFragment(parseFragment(marked.parser(selectedTokens, { renderer })), isHidden, marker);
   };
+  const renderTokens = selectedTokens => renderedContent(renderFragment(selectedTokens));
   const renderMarkdown = source => renderTokens(marked.lexer(source));
-  const content = renderTokens(tokens);
-  const document = renderedDocuments.get(content);
-  const inBody = candidate => !candidate.insideHeading && !candidate.wrapsHeading;
+  const rendered = renderFragment(tokens);
+  const content = renderedContent(rendered);
   const headings = content.elements.flatMap((element, index) => {
     if (element.type !== 'heading') return [];
     const next = content.elements.findIndex((candidate, candidateIndex) => (
@@ -380,9 +377,9 @@ export function interpretMarkdown(markdown, { additionalNonRenderedElements = []
     return [{
       ...element,
       body: {
-        elements: content.elements.slice(index + 1, end).filter(inBody),
+        elements: content.elements.slice(index + 1, end).filter(inSectionBody),
         get blocks() {
-          blocks ??= sectionBlocks(document, { start: index + 1, end, keep: inBody });
+          blocks ??= sectionBlocks(rendered, index + 1, end);
           return blocks;
         },
       },

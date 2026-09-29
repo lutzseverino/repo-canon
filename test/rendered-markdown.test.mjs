@@ -16,7 +16,7 @@ function section(document, name) {
   return document.headings.find(heading => heading.folded === name).body;
 }
 
-test('each section exposes its ordered top-level blocks', () => {
+test('each heading section exposes its ordered top-level blocks', () => {
   const document = interpretMarkdown(`# Harbor
 
 ## Usage
@@ -107,21 +107,15 @@ test('section blocks omit hidden and empty blocks and heading-owned links', () =
   ]);
 });
 
-test('rendered content and selected sections expose their top-level blocks', () => {
-  const document = interpretMarkdown('Intro.\n\n## Summary\n\n> Quoted [link](a.md).\n');
+test('section blocks include a non-div block the section shares with its heading', () => {
+  const document = interpretMarkdown('> ## Summary\n>\n> Quoted [link](a.md).\n');
 
-  assert.deepEqual(shape(document.content.blocks), [
-    { tag: 'p', text: 'Intro.', links: [], blocks: [] },
-    { tag: 'h2', text: 'Summary', links: [], blocks: [] },
-    {
-      tag: 'blockquote',
-      text: 'Quoted link.',
-      links: ['a.md'],
-      blocks: [{ tag: 'p', text: 'Quoted link.', links: ['a.md'], blocks: [] }],
-    },
-  ]);
-  const [summary] = document.sections(['summary']).get('summary');
-  assert.deepEqual(shape(summary.content.blocks), shape(document.content.blocks.slice(2)));
+  assert.deepEqual(shape(section(document, 'summary').blocks), [{
+    tag: 'blockquote',
+    text: 'Quoted link.',
+    links: ['a.md'],
+    blocks: [{ tag: 'p', text: 'Quoted link.', links: ['a.md'], blocks: [] }],
+  }]);
 });
 
 test('exports the Markdown token-span and inline-text helpers', () => {

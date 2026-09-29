@@ -28,10 +28,10 @@ references, and GFM tables receive the same link treatment. Final source
 declarations retain `operations/lib/rendered-markdown.mjs`, the mechanically
 separated `operations/lib/local-markdown-links.mjs`, and the Marked and parse5
 resources and notices alongside each operation. The shared document owns
-rendered structure, including each section's ordered top-level blocks with their
-tag, rendered text, links at any depth, and nested blocks; Project README title
-policy, documentation scope, and local path containment and symlink policy
-remain in their existing modules.
+rendered structure, including the ordered top-level blocks of each heading's
+section with their tag, rendered text, links at any depth, and nested blocks;
+Project README title policy, documentation scope, and local path containment
+and symlink policy remain in their existing modules.
 
 ## Outcomes and limits
 
@@ -64,8 +64,8 @@ repository root:
 node --test test/project-readme-check.test.mjs test/documentation-check.test.mjs
 ```
 
-The shared runtime's section blocks and exported Markdown helpers have their own
-fixtures in `test/rendered-markdown.test.mjs`.
+The shared runtime's heading-section blocks and exported Markdown helpers have
+their own fixtures in `test/rendered-markdown.test.mjs`.
 
 Each fixture invokes the scripts with a `repo-standards/operation/v1` request,
 asserts the `repo-standards/result/v1` outcome or process error, and compares a
