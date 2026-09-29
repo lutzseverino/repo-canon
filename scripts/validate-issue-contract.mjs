@@ -586,8 +586,8 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
       error: "Deleting a newer Agent Brief invalidated the restored contract source. Review the published revision again.",
     };
   }
-  const openingEvent = openingLabelEvent(currentEvent, issue, result, currentReadyLabels[0], timeline, openingEligible);
-  const labelEvent = openingEvent ?? (
+  const creationEvent = creationLabelEvent(currentEvent, issue, result, currentReadyLabels[0], timeline, openingEligible);
+  const labelEvent = creationEvent ?? (
     currentReadyLabels.length === 1
       && latestEvent?.event === "labeled"
       && latestEvent.label?.name === currentReadyLabels[0]
@@ -684,8 +684,9 @@ function activeApproval(permissions, recorded, revision, label, timeline) {
 // The creation snapshot's review of an unedited direct contract, for either the
 // `opened` run or a `labeled` run, whichever arrives first. The opening payload
 // shows the one readiness label the issue was created with. A `labeled` run has
-// no such payload, so the timeline must show the issue's author applying it.
-function openingLabelEvent(currentEvent, issue, result, label, timeline, openingEligible) {
+// no such payload, so the timeline must show the opener, the issue's author,
+// applying it.
+function creationLabelEvent(currentEvent, issue, result, label, timeline, openingEligible) {
   if (result.contract.type !== "issue-body" || !openingEligible || !label) return null;
   if (currentEvent.action === "labeled") {
     return issue.user?.login ? timeline.creationReview(label, issue.user, { openingPayload: false }) : null;
