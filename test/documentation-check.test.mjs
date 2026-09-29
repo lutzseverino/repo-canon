@@ -333,14 +333,18 @@ test('fails the run with the read error for a directory that exists but cannot b
     'docs/usage/README.md': '# Usage\n\n[Guide](guide.md)\n',
     'docs/usage/guide.md': '# Guide\n',
     'docs/usage/examples/README.md': '# Examples\n',
+    'packages/app/handbook/README.md': '# Handbook\n\n[Usage](usage/README.md)\n',
+    'packages/app/handbook/usage/README.md': '# Usage\n',
   };
-  // Each case restricts one directory and expects the read error for another:
-  // a directory under the documentation root, the documentation root, and a
-  // directory inside one that can be listed but not searched.
-  for (const [restricted, mode, unreadable] of [
-    ['docs/usage', 0o000, 'docs/usage'],
-    ['docs', 0o000, 'docs'],
-    ['docs/usage', 0o444, 'docs/usage/examples'],
+  for (const { restricted, mode, unreadable } of [
+    // A directory under a documentation root.
+    { restricted: 'docs/usage', mode: 0o000, unreadable: 'docs/usage' },
+    // A documentation root.
+    { restricted: 'docs', mode: 0o000, unreadable: 'docs' },
+    // A directory inside one that can be listed but not searched.
+    { restricted: 'docs/usage', mode: 0o444, unreadable: 'docs/usage/examples' },
+    // A documentation root inside a directory that cannot be searched.
+    { restricted: 'packages', mode: 0o000, unreadable: 'packages/app/handbook' },
   ]) {
     const project = fixture(files);
     t.after(project.close);

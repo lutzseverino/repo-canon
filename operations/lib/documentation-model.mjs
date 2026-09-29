@@ -32,11 +32,15 @@ function fileContent(projectRoot, path) {
   return isFile(projectRoot, path) ? readFileSync(absolutePath(projectRoot, path), 'utf8') : null;
 }
 
+// Whether a directory exists at the path. A path that is absent, or lies below
+// a file, has none; any other failure to inspect it throws Node's error naming
+// its path, which the check reports as a process error.
 function isDirectory(projectRoot, path) {
   try {
     return lstatSync(absolutePath(projectRoot, path)).isDirectory();
-  } catch {
-    return false;
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return false;
+    throw error;
   }
 }
 

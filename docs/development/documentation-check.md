@@ -66,14 +66,15 @@ document the documentation check reads, including a documentation index.
 Node's read error names its path on stderr, the exit status is 1, and no result
 object is written. A missing index is one that is absent, never one that cannot
 be read. A documentation root, or a directory under one, that exists but
-cannot be listed ends the documentation check the same way, with Node's read
-error naming the directory. A missing directory is one that is absent, never
-one that cannot be listed. The documentation check returns `blocked` when
-confirmed root-index and category paths cannot distinguish an arbitrary
-documentation root from an ordinary nested directory; the discovery proposal
-must resolve that scope question. Repository Standards reports a missing or
-incompatible runtime while probing prerequisites before invoking either check,
-and reports an unexpected process or protocol failure as an execution error.
+cannot be listed, including one inside a directory that cannot be searched,
+ends the documentation check the same way, with Node's read error naming the
+directory. A missing directory is one that is absent, never one that cannot be
+listed. The documentation check returns `blocked` when confirmed root-index and
+category paths cannot distinguish an arbitrary documentation root from an
+ordinary nested directory; the discovery proposal must resolve that scope
+question. Repository Standards reports a missing or incompatible runtime while
+probing prerequisites before invoking either check, and reports an unexpected
+process or protocol failure as an execution error.
 
 The checks never edit project content. They do not establish whether a component
 is a Project, whether discovery covered every Project or migration path, or
