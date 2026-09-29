@@ -71,11 +71,11 @@ function attachSplitHeadingAnchors(elements) {
   return elements;
 }
 
-function semanticElements(fragment, isHidden, markdownHeadingMarker) {
+// When given spans, records each visited node's half-open range of the
+// elements it produced, so that a heading's section can tell which blocks hold
+// its content.
+function semanticElements(fragment, isHidden, markdownHeadingMarker, spans = null) {
   const elements = [];
-  // Each visited node's half-open range of the elements it produced, so that a
-  // section can tell which blocks hold its content.
-  const spans = new Map();
   const visitTargets = node => {
     if (isHidden(node)) return;
     if (node.tagName === 'a') {
@@ -99,7 +99,7 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
   const visit = (node, centered = false) => {
     const first = elements.length;
     visitNode(node, centered);
-    spans.set(node, [first, elements.length]);
+    spans?.set(node, [first, elements.length]);
   };
   const visitNode = (node, centered) => {
     if (isHidden(node)) return;
@@ -151,11 +151,10 @@ function semanticElements(fragment, isHidden, markdownHeadingMarker) {
     for (const child of node.childNodes ?? []) visit(child, insideCenter);
   };
   visit(fragment);
-  return { elements: attachSplitHeadingAnchors(elements), spans };
+  return attachSplitHeadingAnchors(elements);
 }
 
-// A heading's section holds the elements from start to end that belong to no
-// heading, the same elements as its body.
+// An element belongs to a heading's section body when it belongs to no heading.
 function inSectionBody(element) {
   return !element.insideHeading && !element.wrapsHeading;
 }
@@ -165,12 +164,12 @@ function inSectionBody(element) {
 // depth. Its text is what renders between start and end, so a block that also
 // holds a heading or another section keeps only this section's part.
 function sectionBlocks({ fragment, elements, spans, isHidden }, start, end) {
-  const keptBefore = [0];
+  const bodyBefore = [0];
   for (let index = start; index < end; index += 1) {
-    keptBefore.push(keptBefore.at(-1) + (inSectionBody(elements[index]) ? 1 : 0));
+    bodyBefore.push(bodyBefore.at(-1) + (inSectionBody(elements[index]) ? 1 : 0));
   }
-  const keptUntil = index => keptBefore[Math.min(Math.max(index, start), end) - start];
-  const holdsKept = ([first, last]) => keptUntil(last) > keptUntil(first);
+  const bodyUntil = index => bodyBefore[Math.min(Math.max(index, start), end) - start];
+  const holdsBody = ([first, last]) => bodyUntil(last) > bodyUntil(first);
   const text = node => {
     const span = spans.get(node);
     if (!span) return '';
@@ -180,7 +179,7 @@ function sectionBlocks({ fragment, elements, spans, isHidden }, start, end) {
   };
   const blocks = node => (node.childNodes ?? []).flatMap(child => {
     const span = spans.get(child);
-    if (!span || !holdsKept(span)) return [];
+    if (!span || !holdsBody(span)) return [];
     if (!blockElements.has(child.tagName)) return blocks(child);
     return [{
       tag: child.tagName,
@@ -193,12 +192,8 @@ function sectionBlocks({ fragment, elements, spans, isHidden }, start, end) {
   return blocks(fragment);
 }
 
-// A rendered fragment with its elements and each visited node's span of them.
-function renderedFragment(fragment, isHidden, markdownHeadingMarker) {
-  return { fragment, isHidden, ...semanticElements(fragment, isHidden, markdownHeadingMarker) };
-}
-
-function renderedContent({ fragment, isHidden, elements }) {
+function renderedContent(fragment, isHidden, markdownHeadingMarker, spans = null) {
+  const elements = semanticElements(fragment, isHidden, markdownHeadingMarker, spans);
   return {
     elements,
     hasContent: elements.length > 0,
@@ -283,7 +278,7 @@ export function markdownTokenSpans(markdown, tokens) {
 function headingName(token, nameSource, isHidden) {
   if (nameSource === 'markdown') return markdownInlineText(token.tokens);
   const fragment = parseFragment(marked.Parser.parseInline(token.tokens));
-  return renderedContent(renderedFragment(fragment, isHidden, null)).text({ blockBreaks: true }).text;
+  return renderedContent(fragment, isHidden, null).text({ blockBreaks: true }).text;
 }
 
 function sectionMap(markdown, tokens, names, options, renderTokens, renderMarkdown, isHidden) {
@@ -317,7 +312,7 @@ function sectionMap(markdown, tokens, names, options, renderTokens, renderMarkdo
     for (const occurrences of sections.values()) {
       for (const section of occurrences) {
         section.source = section.tokens.map(token => token.raw).join('');
-        section.content = renderTokens(section.tokens);
+        section.content = renderTokens(section.tokens).content;
         delete section.tokens;
       }
     }
@@ -355,18 +350,19 @@ export function interpretMarkdown(markdown, { additionalNonRenderedElements = []
   const normalizedMarkdown = markdown.replace(/\r\n?/g, '\n');
   const tokens = marked.lexer(normalizedMarkdown);
   const isHidden = visibility(additionalNonRenderedElements);
-  const renderFragment = selectedTokens => {
+  const renderTokens = (selectedTokens, spans = null) => {
     const marker = randomUUID();
     const renderer = new Renderer();
     renderer.heading = function ({ depth, tokens: headingTokens }) {
       return `<h${depth} data-repo-canon-markdown-heading="${marker}">${this.parser.parseInline(headingTokens)}</h${depth}>`;
     };
-    return renderedFragment(parseFragment(marked.parser(selectedTokens, { renderer })), isHidden, marker);
+    const fragment = parseFragment(marked.parser(selectedTokens, { renderer }));
+    return { fragment, content: renderedContent(fragment, isHidden, marker, spans) };
   };
-  const renderTokens = selectedTokens => renderedContent(renderFragment(selectedTokens));
-  const renderMarkdown = source => renderTokens(marked.lexer(source));
-  const rendered = renderFragment(tokens);
-  const content = renderedContent(rendered);
+  const renderMarkdown = source => renderTokens(marked.lexer(source)).content;
+  const spans = new Map();
+  const { fragment, content } = renderTokens(tokens, spans);
+  const rendered = { fragment, elements: content.elements, spans, isHidden };
   const headings = content.elements.flatMap((element, index) => {
     if (element.type !== 'heading') return [];
     const next = content.elements.findIndex((candidate, candidateIndex) => (
