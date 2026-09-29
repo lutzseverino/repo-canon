@@ -65,8 +65,14 @@ cannot be read ends either check the same way: a Project README target, or any
 document the documentation check reads, including a documentation index.
 Node's read error names its path on stderr, the exit status is 1, and no result
 object is written. A missing index is one that is absent, never one that cannot
-be read. The documentation check returns `blocked` when confirmed root-index
-and category paths cannot distinguish an arbitrary documentation root from an
+be read. A documentation root, or a directory under one, that exists but
+cannot be listed, including one inside a directory that cannot be searched,
+ends the documentation check the same way, with Node's error naming the
+directory. So does a document or index that the documentation check looks up
+inside a directory that cannot be searched, with Node's error naming the file.
+A missing directory is one that is absent, never one that cannot be listed.
+The documentation check returns `blocked` when confirmed root-index and
+category paths cannot distinguish an arbitrary documentation root from an
 ordinary nested directory; the discovery proposal must resolve that scope
 question. Repository Standards reports a missing or incompatible runtime while
 probing prerequisites before invoking either check, and reports an unexpected
