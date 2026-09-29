@@ -1,7 +1,7 @@
 import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { sep } from 'node:path';
 import { interpretMarkdown } from './rendered-markdown.mjs';
-import { localPathExists, resolvedLocalPath } from './local-markdown-links.mjs';
+import { localLinks } from './local-markdown-links.mjs';
 
 // The structure of a repository's documentation: its documentation roots and
 // categories, its directories and their documentation indexes, its documents,
@@ -17,13 +17,19 @@ function absolutePath(projectRoot, path) {
   return `${projectRoot}${sep}${path.split('/').join(sep)}`;
 }
 
-function fileContent(projectRoot, path) {
+function isFile(projectRoot, path) {
   try {
-    const absolute = absolutePath(projectRoot, path);
-    return lstatSync(absolute).isFile() ? readFileSync(absolute, 'utf8') : null;
+    return lstatSync(absolutePath(projectRoot, path)).isFile();
   } catch {
-    return null;
+    return false;
   }
+}
+
+// The content of a file, or null when no file exists at the path. A file that
+// exists but cannot be read throws Node's read error naming its path, which
+// the check reports as a process error.
+function fileContent(projectRoot, path) {
+  return isFile(projectRoot, path) ? readFileSync(absolutePath(projectRoot, path), 'utf8') : null;
 }
 
 function directoryEntries(projectRoot, path) {
@@ -95,26 +101,16 @@ function isStrayEntry(entry) {
     && !(entry.isDirectory() && documentationCategories.has(entry.name));
 }
 
-// Every rendered link or image with a local target. `path` is the target's
-// repository-relative path, or null when the target leaves the project, which
-// makes the link broken. External and absolute targets are not local links. A
-// document that cannot be read throws here, which the check reports as a
-// process error.
-function localLinks(projectRoot, source) {
+// Every rendered local link of a document. `path` is null when the target
+// leaves the project, which makes the link broken.
+function documentLinks(projectRoot, source) {
   const document = interpretMarkdown(fileContent(projectRoot, source));
-  const links = [];
-  for (const element of document.content.elements) {
-    if (!['link', 'image'].includes(element.type)) continue;
-    const path = resolvedLocalPath(source, element.target);
-    if (path === null) continue;
-    links.push({
-      source,
-      target: element.target,
-      path: path ?? null,
-      broken: path === undefined || !localPathExists(projectRoot, path),
-    });
-  }
-  return links;
+  return localLinks(projectRoot, source, document.content.elements).map(link => ({
+    source,
+    target: link.target,
+    path: link.path ?? null,
+    broken: link.broken,
+  }));
 }
 
 // Builds the model from the project root and the confirmed paths:
@@ -164,7 +160,7 @@ export function documentationModel(projectRoot, confirmedPaths) {
     };
   });
   for (const path of confirmedPaths) {
-    if (isMarkdownPath(path) && fileContent(projectRoot, path) !== null) documents.add(path);
+    if (isMarkdownPath(path) && isFile(projectRoot, path)) documents.add(path);
   }
   const sortedDocuments = [...documents].sort();
 
@@ -173,6 +169,6 @@ export function documentationModel(projectRoot, confirmedPaths) {
     ambiguousRoots: inference.ambiguous,
     developmentGuide: index(developmentGuide),
     documents: sortedDocuments,
-    links: sortedDocuments.flatMap(source => localLinks(projectRoot, source)),
+    links: sortedDocuments.flatMap(source => documentLinks(projectRoot, source)),
   };
 }

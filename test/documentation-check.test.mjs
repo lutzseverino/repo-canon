@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { chmodSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { fixture, invokeCheck, retainedCheck, snapshot } from './helpers/operation.mjs';
@@ -260,5 +262,42 @@ test('treats malformed public-protocol input as a process error', t => {
     assert.notEqual(directoryAsPath.status, 0, path);
     assert.equal(directoryAsPath.stdout, '');
     assert.match(directoryAsPath.stderr, /individual repository-relative file paths/);
+  }
+});
+
+test('fails the run with the read error for a document that exists but cannot be read', t => {
+  const files = {
+    'docs/README.md': '# Documentation\n\n[Usage](usage/README.md)\n',
+    'docs/development/README.md': '# Development\n',
+    'docs/usage/README.md': '# Usage\n\n[Guide](guide.md)\n',
+    'docs/usage/guide.md': '# Guide\n',
+    'legacy-notes.md': '# Legacy notes\n',
+  };
+  for (const unreadable of ['docs/usage/guide.md', 'docs/usage/README.md', 'legacy-notes.md']) {
+    const project = fixture(files);
+    t.after(project.close);
+    const before = snapshot(project.root);
+    const absolute = join(project.root, unreadable);
+    chmodSync(absolute, 0o000);
+    try {
+      try {
+        readFileSync(absolute);
+        t.skip('this user can read a file without read permission');
+        return;
+      } catch {
+        // The document exists but cannot be read, as intended.
+      }
+      const outcome = invokeCheck(script, project.root, {
+        operation: { declaration: 'documentation', phase: 'checks', id: 'navigation' },
+        allowedTargets: { paths: Object.keys(files), directories: [] },
+      });
+      assert.equal(outcome.status, 1, unreadable);
+      assert.equal(outcome.stdout, '', unreadable);
+      assert.equal(outcome.result, null, unreadable);
+      assert.ok(outcome.stderr.includes(absolute), `${unreadable}: ${outcome.stderr}`);
+    } finally {
+      chmodSync(absolute, 0o644);
+    }
+    assert.deepEqual(snapshot(project.root), before, 'the check must not change project content');
   }
 });
