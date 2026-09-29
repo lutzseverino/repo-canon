@@ -32,14 +32,18 @@ function fileContent(projectRoot, path) {
   return isFile(projectRoot, path) ? readFileSync(absolutePath(projectRoot, path), 'utf8') : null;
 }
 
-// Whether a directory exists at the path. A path that is absent, or lies below
-// a file, has none; any other failure to inspect it throws Node's error naming
-// its path, which the check reports as a process error.
+// The errors that show no entry can exist at a path: it is absent, lies below
+// a file or a symbolic link loop, or is too long.
+const noEntryErrors = new Set(['ENOENT', 'ENOTDIR', 'ELOOP', 'ENAMETOOLONG']);
+
+// Whether a directory exists at the path. Any failure to inspect a path that
+// may exist throws Node's error naming the path, which the check reports as a
+// process error.
 function isDirectory(projectRoot, path) {
   try {
     return lstatSync(absolutePath(projectRoot, path)).isDirectory();
   } catch (error) {
-    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return false;
+    if (noEntryErrors.has(error.code)) return false;
     throw error;
   }
 }
