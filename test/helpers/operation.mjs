@@ -11,8 +11,10 @@ function declaredResources(scriptPath) {
   const lines = readFileSync(join(sourceRoot, 'standards.yaml'), 'utf8').split('\n');
   const scriptLine = lines.findIndex(line => line.trim() === `script: ${scriptPath}`);
   if (scriptLine === -1) throw new Error(`standards.yaml declares no operation script ${scriptPath}.`);
+  if (lines[scriptLine + 1]?.trim() !== 'resources:') {
+    throw new Error(`standards.yaml declares no resources list directly after ${scriptPath}.`);
+  }
   const resources = [];
-  if (lines[scriptLine + 1]?.trim() !== 'resources:') return resources;
   for (const line of lines.slice(scriptLine + 2)) {
     const item = /^\s+- (\S+)$/.exec(line);
     if (item === null) break;

@@ -49,10 +49,10 @@ function absolutePath(projectRoot, path) {
   return `${projectRoot}${sep}${path.split('/').join(sep)}`;
 }
 
-// Projects the documentation model onto today's corrections, in order: the
+// Projects the documentation model onto its corrections, in order: the
 // development guide, then each root's index, stray entries, directory indexes
 // and confirmed category indexes, then broken links.
-function corrections(model) {
+function navigationCorrections(model) {
   const corrections = [];
   const guide = model.developmentGuide;
   if (guide.state === 'missing') {
@@ -82,9 +82,9 @@ function corrections(model) {
       if (directoryIndex.state === 'missing') corrections.push(`Create ${directoryIndex.path} to explain this documentation directory and link its useful contents.`);
       else if (directoryIndex.state === 'empty') corrections.push(`Populate ${directoryIndex.path} with the directory purpose and links to useful contents.`);
     }
-    for (const categoryIndex of root.confirmedIndexes) {
-      if (categoryIndex.state === 'missing') {
-        corrections.push(`Create ${categoryIndex.path} to explain this documentation directory and link its useful contents.`);
+    for (const confirmedIndex of root.confirmedIndexes) {
+      if (confirmedIndex.state === 'missing') {
+        corrections.push(`Create ${confirmedIndex.path} to explain this documentation directory and link its useful contents.`);
       }
     }
   }
@@ -101,21 +101,21 @@ function result(status, message) {
 try {
   const request = readRequest();
   const model = documentationModel(request.projectRoot, request.allowedTargets.paths);
-  const validation = { corrections: corrections(model), ambiguous: model.ambiguousRoots };
-  if (validation.ambiguous.length > 0) {
-    const ambiguity = validation.ambiguous.map(root => (
+  const corrections = navigationCorrections(model);
+  if (model.ambiguousRoots.length > 0) {
+    const ambiguity = model.ambiguousRoots.map(root => (
       `Cannot determine whether ${root} is a documentation root from the confirmed paths; include its root README and at least one confirmed category README under usage, development, adr, or agents, or remove the unrelated index from this declaration.`
     )).join(' ');
-    const corrections = validation.corrections.length > 0
-      ? ` Other documentation corrections: ${validation.corrections.join(' ')}`
+    const otherCorrections = corrections.length > 0
+      ? ` Other documentation corrections: ${corrections.join(' ')}`
       : '';
-    result('blocked', `Documentation root selection is ambiguous: ${ambiguity}${corrections}`);
+    result('blocked', `Documentation root selection is ambiguous: ${ambiguity}${otherCorrections}`);
   } else {
     result(
-      validation.corrections.length === 0 ? 'passed' : 'failed',
-      validation.corrections.length === 0
+      corrections.length === 0 ? 'passed' : 'failed',
+      corrections.length === 0
         ? 'Documentation navigation is valid; content placement and usefulness still require maintainer or agent review.'
-        : `Documentation navigation needs correction: ${validation.corrections.join(' ')}`,
+        : `Documentation navigation needs correction: ${corrections.join(' ')}`,
     );
   }
 } catch (error) {

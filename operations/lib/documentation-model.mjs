@@ -67,6 +67,10 @@ function inferredRoots(confirmedPaths) {
   };
 }
 
+function isMarkdownPath(path) {
+  return path.toLocaleLowerCase('en-US').endsWith('.md');
+}
+
 // Walks a root depth first. The first directory is the root itself when it
 // exists as a directory.
 function documentationTree(projectRoot, root) {
@@ -79,7 +83,7 @@ function documentationTree(projectRoot, root) {
     for (const entry of entries) {
       const child = `${path}/${entry.name}`;
       if (entry.isDirectory()) visit(child);
-      else if (entry.isFile() && entry.name.toLocaleLowerCase('en-US').endsWith('.md')) markdownFiles.push(child);
+      else if (entry.isFile() && isMarkdownPath(entry.name)) markdownFiles.push(child);
     }
   };
   visit(root);
@@ -91,13 +95,11 @@ function isStrayEntry(entry) {
     && !(entry.isDirectory() && documentationCategories.has(entry.name));
 }
 
-function isMarkdownPath(path) {
-  return path.toLocaleLowerCase('en-US').endsWith('.md');
-}
-
-// Every rendered link or image whose target resolves inside the project. A
-// target that leaves the project has no path and is broken. A document that
-// cannot be read throws here, which the check reports as a process error.
+// Every rendered link or image with a local target. `path` is the target's
+// repository-relative path, or null when the target leaves the project, which
+// makes the link broken. External and absolute targets are not local links. A
+// document that cannot be read throws here, which the check reports as a
+// process error.
 function localLinks(projectRoot, source) {
   const document = interpretMarkdown(fileContent(projectRoot, source));
   const links = [];
