@@ -486,8 +486,16 @@ function requireAgentBriefForReadiness(labels, errors) {
   }
 }
 
+// The one definition of the newest Agent Brief: the Brief comment with the
+// highest comment ID. Comments have no timeline position, and their IDs
+// increase in creation order. Both the contract lookup and the deleted-Brief
+// check use it.
 function latestAgentBrief(comments) {
-  return [...comments].reverse().find((comment) => agentBriefHeading(comment.body ?? ""));
+  let latest = null;
+  for (const comment of comments) {
+    if (agentBriefHeading(comment.body ?? "") && (!latest || BigInt(comment.id) > BigInt(latest.id))) latest = comment;
+  }
+  return latest;
 }
 
 function validateAgentBrief(body, labels, errors) {
@@ -576,7 +584,7 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
   }
 
   const recorded = feedbackState(previousFeedback?.body);
-  const deletedBrief = supersedingDeletedBrief(currentEvent, result, timeline);
+  const deletedBrief = supersedingDeletedBrief(currentEvent, result);
   const sourceInvalidation = deletedBrief ?? recorded?.sourceInvalidation ?? null;
   if (deletedBrief && recorded?.sourceInvalidation !== deletedBrief) {
     return {
@@ -708,14 +716,14 @@ function openingReviewId(issue) {
   return `opened:${issue.node_id ?? issue.id ?? issue.number}:${issue.created_at ?? "unknown"}`;
 }
 
-function supersedingDeletedBrief(currentEvent, result, timeline) {
+function supersedingDeletedBrief(currentEvent, result) {
   if (currentEvent.action !== "deleted"
     || result.contract.type !== "comment"
     || !agentBriefHeading(currentEvent.comment?.body ?? "")) {
     return null;
   }
   const deleted = currentEvent.comment;
-  return timeline.commentFollows(deleted, result.contract.comment) ? `deleted-comment:${deleted.node_id ?? deleted.id}` : null;
+  return latestAgentBrief([result.contract.comment, deleted]) === deleted ? `deleted-comment:${deleted.node_id ?? deleted.id}` : null;
 }
 
 function reviewerAuthority(permissions, login) {
@@ -761,12 +769,11 @@ function reviewReturnLabels(labels) {
 }
 
 // A non-readiness state labeled after the review in the timeline supersedes it,
-// even in the same second; states labeled before the review, or with the issue
-// at its creation second, are replaced by it. Equal timestamps are ordered by
-// the timeline; a strictly later timestamp still supersedes. A present state
-// whose latest recorded change is not its application also supersedes, unless
-// it is the triggering label with a payload time before the review or at the
-// issue's creation, or a label the issue was opened with. A triggering label
+// whatever its timestamp; states labeled before the review, or with the issue
+// at its creation second, are replaced by it. A present state whose latest
+// recorded change is not its application also supersedes, unless it is the
+// triggering label with a payload time before the review or at the issue's
+// creation, or a label the issue was opened with. A triggering label
 // recorded before the review supersedes only without a payload time or with one
 // in a strictly later second than the review.
 function stateAppliedAfterReview(labels, reviewEventId, timeline, currentEvent) {
@@ -794,22 +801,22 @@ function isReadinessTransition(candidate) {
   return ["labeled", "unlabeled"].includes(candidate.event) && readyLabels.has(candidate.label?.name);
 }
 
-// The one owner of every "did A happen after B" question, including which
-// transition is latest and what the creation snapshot holds. It orders events
-// by position in the authoritative timeline, with the creation snapshot (an
-// `opened:` review ID and the labels the issue was opened with) at position
-// zero and the Nth event at position N. Timestamps decide only where this
-// reproduces the rules above: the revision notice's strict barrier, a state's
-// application time relative to the review, the issue's creation second, and a
-// triggering payload's time. Discussion comments have no timeline position and
-// are ordered by creation time, then ID.
+// The one owner of every "did A happen after B" question about issue events,
+// including which transition is latest and what the creation snapshot holds.
+// The timeline's order decides when GitHub has recorded both events: the
+// creation snapshot (this issue's own `opened:` review ID and the labels it was
+// opened with) is at position zero and the Nth event at position N.
+// Timestamps are used only for what has no timeline position, the revision
+// notice and a triggering label change the timeline has not recorded yet, and
+// to recognise labels applied at creation. Agent Brief comments have no
+// timeline position either; `latestAgentBrief` orders them by comment ID.
 function issueTimeline({ event, issue, issueEvents }) {
   if (!Array.isArray(issueEvents)) throw new Error("The snapshot does not include the issue-event timeline.");
   const openingId = openingReviewId(issue);
 
   function position(eventId) {
     if (eventId == null) return null;
-    if (String(eventId).startsWith("opened:")) return 0;
+    if (String(eventId) === openingId) return 0;
     const index = issueEvents.findIndex(({ id }) => String(id) === String(eventId));
     return index < 0 ? null : index + 1;
   }
@@ -825,9 +832,15 @@ function issueTimeline({ event, issue, issueEvents }) {
     return index < 0 ? null : { position: index + 1, at: issueEvents[index].created_at };
   }
 
+  // Whether a label change carries the issue's creation timestamp, so the
+  // label was applied with the issue at its creation.
+  function atCreation(time) {
+    return Boolean(time) && time === issue.created_at;
+  }
+
   // Not before the review, and not in the issue's creation second.
   function notBefore(time, reviewAt) {
-    return time >= reviewAt && time !== issue.created_at;
+    return time >= reviewAt && !atCreation(time);
   }
 
   function latestReadinessTransition() {
@@ -843,12 +856,13 @@ function issueTimeline({ event, issue, issueEvents }) {
   return {
     latestReadinessTransition,
 
-    // Whether a review event follows an earlier barrier. No barrier, or the
-    // creation snapshot, precedes every review.
+    // Whether a review event follows an earlier barrier in the timeline. No
+    // barrier precedes every review. This issue's own opening is the only
+    // `opened:` barrier, and an event the timeline has not recorded follows
+    // no barrier.
     follows(laterEventId, earlierEventId) {
       if (earlierEventId == null) return true;
       const earlier = position(earlierEventId);
-      if (earlier === 0) return true;
       const later = position(laterEventId);
       return earlier !== null && later !== null && later > earlier;
     },
@@ -895,15 +909,15 @@ function issueTimeline({ event, issue, issueEvents }) {
     },
 
     // Whether the label's latest application follows the review in the
-    // timeline and is not before it or in the issue's creation second.
+    // timeline, whatever its timestamp, and was not applied with the issue at
+    // its creation.
     appliedAfterReview(label, reviewEventId) {
-      const reviewPoint = review(reviewEventId);
+      const reviewPosition = position(reviewEventId);
       const application = lastApplication(label);
-      return Boolean(reviewPoint.known
-        && application
-        && application.position > reviewPoint.position
-        && application.at
-        && notBefore(application.at, reviewPoint.at));
+      return reviewPosition !== null
+        && application !== null
+        && application.position > reviewPosition
+        && !atCreation(application.at);
     },
 
     latestChangeIsApplication,
@@ -930,16 +944,6 @@ function issueTimeline({ event, issue, issueEvents }) {
         if (!latest || applied.position > latest.position) latest = { label, position: applied.position };
       }
       return latest?.label ?? null;
-    },
-
-    commentFollows(later, earlier) {
-      const laterAt = later.created_at ?? "";
-      const earlierAt = earlier.created_at ?? "";
-      let isNewer = laterAt > earlierAt;
-      if (laterAt === earlierAt && later.id != null && earlier.id != null) {
-        isNewer = BigInt(later.id) > BigInt(earlier.id);
-      }
-      return isNewer;
     },
   };
 }

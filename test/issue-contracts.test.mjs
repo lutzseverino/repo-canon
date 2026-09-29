@@ -1716,6 +1716,108 @@ decisionTable("the timeline helper keeps its strict boundaries", [
   },
 ]);
 
+// An Agent Brief of issue 42 created at `createdAt` by `triager`.
+const agentBrief = (id, createdAt, body = completeAgentBrief) => ({
+  id,
+  node_id: `COMMENT_${id}`,
+  body,
+  created_at: createdAt,
+  updated_at: createdAt,
+  user: { login: "triager" },
+});
+
+// A triaged request whose current Brief, comment 20, was approved by event
+// 101, seen by the run for deleting `deleted`.
+function deletedBriefSnapshot(deleted) {
+  const current = agentBrief(20, "2026-09-14T17:00:00Z");
+  return {
+    issue: { number: 42, body: "Intake context.", labels: [{ name: "enhancement" }, { name: "ready-for-agent" }], state: "open" },
+    comments: [current, { id: 30, body: feedbackState({ status: "approved", revision: briefRevision(current), label: "ready-for-agent", reviewer: "triager", kind: "triaged Agent Brief" }), user: bot }],
+    issueEvents: [{ id: 101, event: "labeled", label: { name: "ready-for-agent" }, actor: { login: "triager" }, created_at: "2026-09-14T17:10:00Z" }],
+    event: { action: "deleted", issue: { number: 42, body: "Intake context." }, comment: deleted },
+    permissions: { triager: role("triage") },
+  };
+}
+
+// A direct ticket opened at 16:00:00 whose feedback records `barrier` as its
+// latest review or observed transition, seen by the run for readiness applied
+// at 17:00:00 as `issueEvents` record it.
+const ownOpening = "opened:ISSUE_42:2026-09-14T16:00:00Z";
+const otherOpening = "opened:ISSUE_99:2026-09-14T16:00:00Z";
+function openingBarrierSnapshot({ status, barrier, issueEvents = [readinessReview] }) {
+  const issue = { number: 42, node_id: "ISSUE_42", body: ticketBody, labels: [{ name: "ready-for-agent" }], state: "open", created_at: "2026-09-14T16:00:00Z", updated_at: "2026-09-14T17:00:00Z" };
+  return {
+    issue,
+    comments: [status === "approved"
+      ? approvedTicketFeedback(issue, { reviewEventId: barrier })
+      : awaitingTicketFeedback(issue, { observedEventId: barrier })],
+    issueEvents,
+    event: labeledBy("maintainer", "ready-for-agent", issue),
+    permissions: { maintainer: role("admin") },
+  };
+}
+
+decisionTable("issue-contract events are ordered by one timeline rule", [
+  ...["needs-info", "wontfix"].flatMap((state) => [state, "ready-for-agent"].map((trigger) => ({
+    name: `a workflow state recorded after the review with an earlier timestamp supersedes it: ${state} in the run for ${trigger}`,
+    snapshot: supersessionSnapshot({
+      labels: ["ready-for-agent", state],
+      created_at: "2026-09-14T16:00:00Z",
+      issueEvents: [readinessReview, { id: 102, event: "labeled", label: { name: state }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:59:59Z" }],
+      event: labeledBy("maintainer", trigger, { body: ticketBody, updated_at: "2026-09-14T16:59:59Z" }),
+    }),
+    expected: supersededBy(state),
+  }))),
+  {
+    name: "a workflow state recorded after the review with an earlier timestamp supersedes it in another event's run",
+    snapshot: supersessionSnapshot({
+      labels: ["ready-for-agent", "wontfix"],
+      created_at: "2026-09-14T16:00:00Z",
+      issueEvents: [readinessReview, { id: 102, event: "labeled", label: { name: "wontfix" }, actor: { login: "maintainer" }, created_at: "2026-09-14T16:59:59Z" }],
+      event: { action: "reopened", issue: { number: 42 } },
+    }),
+    expected: supersededBy("wontfix"),
+  },
+  {
+    name: "the newest Agent Brief is the highest comment ID, even when a lower ID was created later",
+    snapshot: {
+      issue: { number: 42, body: "Intake context.", labels: [{ name: "enhancement" }, { name: "needs-triage" }], state: "open" },
+      comments: [
+        agentBrief(20, "2026-09-14T17:00:00Z"),
+        agentBrief(12, "2026-09-14T17:05:00Z", completeAgentBrief.replace("**Summary:** Make search fast", "**Summary:** _No response_")),
+      ],
+    },
+    expected: { exitCode: 0, feedback: "create", message: /valid triaged Agent Brief/i },
+  },
+  {
+    name: "deleting a Brief with a lower comment ID keeps the newest Brief's approval, even when it was created later",
+    snapshot: deletedBriefSnapshot(agentBrief(12, "2026-09-14T17:05:00Z")),
+    expected: { exitCode: 0, message: /valid triaged Agent Brief with ready-for-agent bound/i },
+  },
+  {
+    name: "deleting a Brief with a higher comment ID invalidates the restored source, even when it was created earlier",
+    snapshot: deletedBriefSnapshot(agentBrief(25, "2026-09-14T16:55:00Z")),
+    expected: { exitCode: 1, remove: ["ready-for-agent"], add: ["needs-triage"], feedback: 30, feedbackBody: /"sourceInvalidation":"deleted-comment:COMMENT_25"/ },
+  },
+  ...["awaiting-review", "approved"].flatMap((status) => [
+    {
+      name: `a readiness event follows this issue's own opening barrier: ${status}`,
+      snapshot: openingBarrierSnapshot({ status, barrier: ownOpening }),
+      expected: { exitCode: 0, feedback: 13, message: /valid implementation ticket with ready-for-agent bound/i, feedbackBody: /"reviewEventId":"101"/ },
+    },
+    {
+      name: `another issue's opening barrier is not followed by a readiness event: ${status}`,
+      snapshot: openingBarrierSnapshot({ status, barrier: otherOpening }),
+      expected: { exitCode: 1, remove: ["ready-for-agent"], add: ["needs-triage"], feedback: 13, message: /wait for the validator to publish/i },
+    },
+  ]),
+  {
+    name: "a readiness label event missing from the timeline does not follow the opening barrier",
+    snapshot: openingBarrierSnapshot({ status: "awaiting-review", barrier: ownOpening, issueEvents: [] }),
+    expected: { exitCode: 1, remove: ["ready-for-agent"], add: ["needs-triage"], feedback: 13, message: /timeline does not contain the current readiness label event/i },
+  },
+]);
+
 async function exercise({
   issue,
   comments = [],
