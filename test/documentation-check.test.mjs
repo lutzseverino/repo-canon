@@ -332,19 +332,25 @@ test('fails the run with the read error for a directory that exists but cannot b
     'docs/development/README.md': '# Development\n',
     'docs/usage/README.md': '# Usage\n\n[Guide](guide.md)\n',
     'docs/usage/guide.md': '# Guide\n',
+    'docs/usage/examples/README.md': '# Examples\n',
   };
-  // An unreadable directory under the documentation root, then an unreadable
-  // documentation root.
-  for (const unreadable of ['docs/usage', 'docs']) {
+  // Each case restricts one directory and expects the read error for another:
+  // a directory under the documentation root, the documentation root, and a
+  // directory inside one that can be listed but not searched.
+  for (const [restricted, mode, unreadable] of [
+    ['docs/usage', 0o000, 'docs/usage'],
+    ['docs', 0o000, 'docs'],
+    ['docs/usage', 0o444, 'docs/usage/examples'],
+  ]) {
     const project = fixture(files);
     t.after(project.close);
     const before = snapshot(project.root);
     const absolute = join(project.root, unreadable);
-    chmodSync(absolute, 0o000);
+    chmodSync(join(project.root, restricted), mode);
     try {
       try {
         readdirSync(absolute);
-        t.skip('this user can list a directory without read permission');
+        t.skip('this user can list a directory without permission');
         return;
       } catch {
         // The directory exists but cannot be listed, as intended.
@@ -358,7 +364,7 @@ test('fails the run with the read error for a directory that exists but cannot b
       assert.equal(outcome.result, null, unreadable);
       assert.ok(outcome.stderr.includes(absolute), `${unreadable}: ${outcome.stderr}`);
     } finally {
-      chmodSync(absolute, 0o755);
+      chmodSync(join(project.root, restricted), 0o755);
     }
     assert.deepEqual(snapshot(project.root), before, 'the check must not change project content');
   }

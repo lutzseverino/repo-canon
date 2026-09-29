@@ -40,15 +40,6 @@ function isDirectory(projectRoot, path) {
   }
 }
 
-// The entries of a directory, or null when no directory exists at the path. A
-// directory that exists but cannot be listed throws Node's read error naming
-// its path, which the check reports as a process error.
-function directoryEntries(projectRoot, path) {
-  return isDirectory(projectRoot, path)
-    ? readdirSync(absolutePath(projectRoot, path), { withFileTypes: true })
-    : null;
-}
-
 function isInside(path, directory) {
   return path.startsWith(`${directory}/`);
 }
@@ -93,13 +84,14 @@ function isMarkdownPath(path) {
 }
 
 // Walks a root depth first. The first directory is the root itself when it
-// exists as a directory.
+// exists as a directory; every directory below it exists because its parent
+// lists it. A directory that exists but cannot be listed throws Node's read
+// error naming its path, which the check reports as a process error.
 function documentationTree(projectRoot, root) {
   const directories = [];
   const markdownFiles = [];
   const visit = path => {
-    const entries = directoryEntries(projectRoot, path);
-    if (entries === null) return;
+    const entries = readdirSync(absolutePath(projectRoot, path), { withFileTypes: true });
     directories.push({ path, entries });
     for (const entry of entries) {
       const child = `${path}/${entry.name}`;
@@ -107,7 +99,7 @@ function documentationTree(projectRoot, root) {
       else if (entry.isFile() && isMarkdownPath(entry.name)) markdownFiles.push(child);
     }
   };
-  visit(root);
+  if (isDirectory(projectRoot, root)) visit(root);
   return { directories, markdownFiles };
 }
 
