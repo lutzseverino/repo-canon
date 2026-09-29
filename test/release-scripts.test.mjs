@@ -238,13 +238,25 @@ test('release:check-merge fails clearly for a commit that is not present', t => 
   assert.match(output, /f{40} does not name a commit in this repository; fetch it first/);
 });
 
-function publishedRelease(t) {
+// The development and authoring documents, each naming the CLI version given.
+function developmentDocuments(cliVersion) {
+  return {
+    'docs/development/README.md': `Install public Repository Standards CLI ${cliVersion}.\n`,
+    'docs/development/source-profile.md': `Install \`@lutzseverino/repo-standards@${cliVersion}\` with Git 2.18.0.\n`,
+    'authoring-notes.md': `Use installed public CLI ${cliVersion} as the current validation baseline.\n`,
+  };
+}
+
+// A published v1.0.0 release; `documents` replaces files of its commit.
+function publishedRelease(t, documents = {}) {
   const repository = fixture(t);
   const releaseCommit = repository.commit({
     'declarations.json': previousDeclarations,
     'README.md': 'Select the [`v1.0.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v1.0.0).\n',
     'docs/usage/adopt-repo-canon.md': 'This guide selects `v1.0.0` with public CLI 2.0.0.\n',
     'standards.yaml': 'format: repo-standards/v2\nrequires:\n  repo-standards: ">=2.0.0"\n',
+    ...developmentDocuments('2.0.0'),
+    ...documents,
   }, 'release');
   repository.git('tag', '--annotate', 'v1.0.0', '--message', 'Repo Canon v1.0.0');
   repository.git('tag', '--annotate', 'v1.0.1', '--message', 'Repo Canon v1.0.1');
@@ -307,6 +319,17 @@ test('release:verify fails when the documents name another version', t => {
 
   assert.notEqual(status, 0);
   assert.match(output, /fail: README\.md:1 names Repo Canon v1\.0\.0, not v1\.0\.1\./);
+});
+
+test('release:verify fails when a development or authoring document names another CLI version', t => {
+  const { 'docs/development/source-profile.md': sourceProfile } = developmentDocuments('2.1.0');
+  const { run, releaseCommit, environment } = publishedRelease(t, { 'docs/development/source-profile.md': sourceProfile });
+
+  const { status, output } = run('verify.mjs', ['v1.0.0', releaseCommit], environment);
+
+  assert.notEqual(status, 0);
+  assert.match(output, /pass: CLI 2\.0\.0 inspected v1\.0\.0/);
+  assert.match(output, /fail: docs\/development\/source-profile\.md:1 names CLI 2\.1\.0, not the standards\.yaml floor 2\.0\.0\./);
 });
 
 test('release:verify fails an inspection that does not resolve the release commit or uses another CLI', t => {

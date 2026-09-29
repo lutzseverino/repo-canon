@@ -4,9 +4,15 @@
 // release commit, its GitHub release is an ordinary release, the public CLI at
 // the required minimum version inspects it in a disposable repository and
 // resolves the release commit and profile, and the documents at the release
-// commit name the version being verified.
+// commit name the version being verified and the required minimum CLI version.
 
-import { cliFloor, repoCanonVersionMismatches, standardsPath } from './named-versions.mjs';
+import {
+  cliFloor,
+  cliVersionMismatches,
+  developmentDocumentPaths,
+  repoCanonVersionMismatches,
+  standardsPath,
+} from './named-versions.mjs';
 import {
   ReleaseCheckFailure,
   fail,
@@ -92,9 +98,15 @@ function checkInspection(version, releaseCommit, read) {
 }
 
 function checkDocuments(version, read) {
-  const failures = repoCanonVersionMismatches(read, version);
+  const failures = [
+    ...repoCanonVersionMismatches(read, version),
+    ...cliVersionMismatches(read, developmentDocumentPaths),
+  ];
   if (failures.length > 0) return { failures };
-  return { pass: `the documents name ${version} at the release commit.` };
+  return {
+    pass: `the documents name ${version} at the release commit, and every CLI version the development `
+      + `and authoring documents name is the required minimum ${cliFloor(read(standardsPath))}.`,
+  };
 }
 
 // Reports one check's outcome and returns whether it passed. A check that
