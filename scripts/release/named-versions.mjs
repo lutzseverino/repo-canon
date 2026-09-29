@@ -74,24 +74,26 @@ export function repoCanonVersionMismatches(read, expected) {
   return problems;
 }
 
+const missingFloor = `${standardsPath} does not declare requires.repo-standards as an open-ended minimum such as ">=2.0.0".`;
+
+function cliMentionsIn(read, path) {
+  return namedVersions(path, read(path)).filter(mention => mention.kind === 'cli');
+}
+
+function floorMismatches(mentions, floor) {
+  return mentions
+    .filter(mention => mention.version !== floor)
+    .map(mention => `${location(mention)} names CLI ${mention.version}, not the ${standardsPath} floor ${floor}.`);
+}
+
 // Reports every CLI version named in the documents at `paths` that is not the
 // floor of the `requires` minimum in `standards.yaml`, and a `standards.yaml`
 // that declares no such floor. `read(path)` returns the text of a repository
 // file.
 export function cliVersionMismatches(read, paths) {
   const floor = cliFloor(read(standardsPath));
-  if (floor === null) {
-    return [`${standardsPath} does not declare requires.repo-standards as an open-ended minimum such as ">=2.0.0".`];
-  }
-  const problems = [];
-  for (const path of paths) {
-    for (const mention of namedVersions(path, read(path)).filter(named => named.kind === 'cli')) {
-      if (mention.version !== floor) {
-        problems.push(`${location(mention)} names CLI ${mention.version}, not the ${standardsPath} floor ${floor}.`);
-      }
-    }
-  }
-  return problems;
+  if (floor === null) return [missingFloor];
+  return paths.flatMap(path => floorMismatches(cliMentionsIn(read, path), floor));
 }
 
 // Reports every disagreement between the named versions. `read(path)` returns
@@ -110,13 +112,17 @@ export function versionDisagreements(read) {
     problems.push(`The documents name more than one Repo Canon version: ${named.join('; ')}.`);
   }
 
-  if (cliFloor(read(standardsPath)) !== null) {
-    for (const path of [adoptionGuidePath, ciWorkflowPath]) {
-      if (!namedVersions(path, read(path)).some(mention => mention.kind === 'cli')) {
-        problems.push(`${path} names no CLI version.`);
-      }
-    }
+  const floor = cliFloor(read(standardsPath));
+  if (floor === null) {
+    problems.push(missingFloor);
+    return problems;
   }
-  problems.push(...cliVersionMismatches(read, [readmePath, adoptionGuidePath, ciWorkflowPath, ...developmentDocumentPaths]));
+  for (const path of [readmePath, adoptionGuidePath, ciWorkflowPath, ...developmentDocumentPaths]) {
+    const cliMentions = cliMentionsIn(read, path);
+    if ((path === adoptionGuidePath || path === ciWorkflowPath) && cliMentions.length === 0) {
+      problems.push(`${path} names no CLI version.`);
+    }
+    problems.push(...floorMismatches(cliMentions, floor));
+  }
   return problems;
 }
