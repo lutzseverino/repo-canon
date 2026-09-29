@@ -390,7 +390,7 @@ function findMarkdownHeadings(markdown, acceptedNames = null) {
 function briefFieldMatches(markdown) {
   markdown = normalizeMarkdown(markdown);
   const matches = [];
-  for (const { token, index } of markdownTokenSpans(markdown, lexer(markdown))) {
+  for (const { token, index } of markdownTokenSpans(markdown)) {
     if (token.type !== "paragraph") continue;
     let cursor = index;
     let lineStart = true;

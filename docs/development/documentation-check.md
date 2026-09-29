@@ -29,9 +29,9 @@ declarations retain `operations/lib/rendered-markdown.mjs`, the mechanically
 separated `operations/lib/local-markdown-links.mjs`, and the Marked and parse5
 resources and notices alongside each operation. The shared document owns
 rendered structure, including each section's ordered top-level blocks with their
-tag, rendered text, links, and nested blocks; Project README title policy,
-documentation scope, and local path containment and symlink policy remain in
-their existing modules.
+tag, rendered text, links at any depth, and nested blocks; Project README title
+policy, documentation scope, and local path containment and symlink policy
+remain in their existing modules.
 
 ## Outcomes and limits
 

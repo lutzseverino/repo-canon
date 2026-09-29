@@ -80,7 +80,7 @@ function singleLink(body) {
   const [link] = body.elements;
   let blocks = body.blocks;
   while (blocks.length === 1 && blocks[0].tag === 'div') blocks = blocks[0].blocks;
-  const inParagraph = blocks.length === 1 && blocks[0].tag === 'p' && blocks[0].blocks.length === 0;
+  const inParagraph = blocks.length === 1 && blocks[0].tag === 'p';
   return !link.containsMedia && inParagraph ? link : null;
 }
 
