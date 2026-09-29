@@ -62,7 +62,9 @@ as documents that name the latest release or its required CLI version, and
 it closes the issue that plans the release. The version-agreement test in
 `npm test` fails until the Repository README and the
 [adoption guide](../usage/adopt-repo-canon.md) name one Repo Canon version, and
-until the CLI version they and CI name equals the floor of the `requires`
+until the CLI version named in them, CI, the [development guide](README.md), the
+[source profile](source-profile.md), and the
+[authoring notes](../../authoring-notes.md) equals the floor of the `requires`
 minimum in `standards.yaml`.
 
 Title it `<type>: release vX.Y.Z`. The type follows the release's
@@ -165,7 +167,9 @@ npm run release:verify -- "$version" "$release_commit" &&
    [Adopt Repo Canon](../usage/adopt-repo-canon.md#inspect-the-published-source)
    describes. The report resolves the release commit and profile.
 4. The Repository README and the adoption guide at the release commit name the
-   version being verified.
+   version being verified, and every CLI version that the development guide,
+   the source profile, and the authoring notes there name is the required
+   minimum.
 
 The verification paragraph appended to the release notes names the release
 commit and the release pull request, confirms the tag and release state, and
