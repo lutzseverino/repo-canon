@@ -38,6 +38,7 @@ defaults:
             resources:
               - operations/lib/rendered-markdown.mjs
               - operations/lib/local-markdown-links.mjs
+              - operations/lib/documentation-model.mjs
               - vendor/marked
               - vendor/parse5
             arguments: []
