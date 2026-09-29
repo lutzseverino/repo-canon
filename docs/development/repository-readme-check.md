@@ -63,7 +63,8 @@ The fixtures cover all recognized sections, omitted and interleaved sections,
 Markdown and HTML heading forms, nested centering, hidden examples, missing,
 link-only, and extra-content Contributing and Documentation sections, pointer
 links hidden in code, resolving elsewhere, outside a paragraph, or wrapped in
-lists, quotations, tables, or images, links wrapping the next heading, named
+lists, quotations, tables, or images, pointer links sharing a div, quotation,
+or `details` block with their heading, links wrapping the next heading, named
 anchors and hidden media around pointer links, malformed titles and license
 links, missing and ambiguous licensing, invalid protocol input, and
 byte-for-byte preservation of the disposable project. One fixture executes

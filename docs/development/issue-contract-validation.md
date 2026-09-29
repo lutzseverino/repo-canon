@@ -42,7 +42,8 @@ unavailable. An open blocker does not make a complete contract invalid.
 
 Rendered visibility, text, links, heading provenance, and outermost section
 regions come from the shared pure interpreted-document runtime installed at
-`operations/lib/rendered-markdown.mjs`. Issue policy remains in the validator:
+`operations/lib/rendered-markdown.mjs`, as do the token-span and inline-text
+helpers the validator imports. Issue policy remains in the validator:
 contract-source selection and exact revision bytes still use the original
 Markdown, Agent Brief syntax still uses source tokens, and relationship
 evidence remains prose-only. HTML `title` content stays non-rendered for issue

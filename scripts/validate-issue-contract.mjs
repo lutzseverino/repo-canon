@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { lexer } from "../vendor/marked/marked.esm.js";
-import { interpretMarkdown } from "../operations/lib/rendered-markdown.mjs";
+import { interpretMarkdown, markdownInlineText, markdownTokenSpans } from "../operations/lib/rendered-markdown.mjs";
 
 const feedbackMarker = "<!-- repo-canon:issue-contract-feedback -->";
 const feedbackStatePrefix = "<!-- repo-canon:issue-contract-state ";
@@ -385,26 +385,6 @@ function findMarkdownHeadings(markdown, acceptedNames = null) {
   markdown = normalizeMarkdown(markdown);
   return issueMarkdown(markdown).markdownHeadings
     .filter(({ name }) => !acceptedNames || acceptedNames.has(normalize(name)));
-}
-
-function markdownTokenSpans(markdown) {
-  markdown = normalizeMarkdown(markdown);
-  let cursor = 0;
-  return lexer(markdown).map((token) => {
-    const index = markdown.indexOf(token.raw, cursor);
-    if (index === -1) throw new Error(`Could not locate parsed Markdown token after offset ${cursor}.`);
-    cursor = index + token.raw.length;
-    return { token, index };
-  });
-}
-
-function markdownInlineText(tokens) {
-  return (tokens ?? []).map((token) => {
-    if (token.type === "html") return "";
-    if (token.type === "codespan") return token.text;
-    if (token.tokens) return markdownInlineText(token.tokens);
-    return typeof token.text === "string" ? token.text : "";
-  }).join("");
 }
 
 function briefFieldMatches(markdown) {

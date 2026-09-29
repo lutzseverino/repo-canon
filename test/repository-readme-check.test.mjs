@@ -530,6 +530,66 @@ test('passes pointer links in a paragraph, optionally inside a centered div', as
   });
 });
 
+test('judges pointer links by every block around them, including blocks shared with the heading', async t => {
+  const pointers = [['Documentation', 'docs/README.md'], ['Contributing', 'CONTRIBUTING.md'], ['License', 'LICENSE']];
+  for (const example of [
+    { name: 'a plain div around a paragraph', layout: (name, link) => `## ${name}\n\n<div>\n\n${link}\n\n</div>\n`, status: 'passed' },
+    { name: 'nested divs around a paragraph', layout: (name, link) => `## ${name}\n\n<div><div align="center">\n\n${link}\n\n</div></div>\n`, status: 'passed' },
+    { name: 'a div around the heading and link', layout: (name, link) => `<div>\n\n## ${name}\n\n${link}\n\n</div>\n`, status: 'passed' },
+    { name: 'a quotation around the heading and link', layout: (name, link) => `> ## ${name}\n>\n> ${link}\n`, status: 'failed' },
+    { name: 'details around the heading and link', layout: (name, link) => `<details open>\n\n## ${name}\n\n${link}\n\n</details>\n`, status: 'failed' },
+    { name: 'a list nested in a paragraph through a button', layout: (name, link) => `## ${name}\n\n<p><button><ul><li>\n\n${link}\n\n</li></ul></button></p>\n`, status: 'failed' },
+    { name: 'a quotation nested in a paragraph through a marquee', layout: (name, link) => `## ${name}\n\n<p><marquee><blockquote>\n\n${link}\n\n</blockquote></marquee></p>\n`, status: 'failed' },
+  ]) await t.test(example.name, st => {
+    const outcome = check(st, {
+      'README.md': `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n${pointers
+        .map(([name, target]) => example.layout(name, `[Guide](${target})`)).join('\n')}`,
+      'LICENSE': mit,
+      'CONTRIBUTING.md': '# Contributing\n',
+      'docs/README.md': '# Documentation\n',
+    });
+
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, example.status, outcome.result.message);
+    if (example.status === 'failed') {
+      assert.match(outcome.result.message, /Make the Documentation section contain only a link to docs\/README\.md\./);
+      assert.match(outcome.result.message, /Make the Contributing section contain only a link to CONTRIBUTING\.md\./);
+      assert.match(outcome.result.message, /Make the License section contain only the license link/);
+    }
+  });
+});
+
+test('a div shared by several sections holds each pointer link for its own section', t => {
+  const outcome = check(t, {
+    'README.md': `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+<div>
+
+## Documentation
+
+[Documentation](docs/README.md)
+
+## Contributing
+
+[Contribution guidelines](CONTRIBUTING.md)
+
+## License
+
+[MIT License](LICENSE)
+
+</div>
+`,
+    'LICENSE': mit,
+    'CONTRIBUTING.md': '# Contributing\n',
+    'docs/README.md': '# Documentation\n',
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, 'passed', outcome.result.message);
+});
+
 test('assigns an anchor split around the next heading to that heading', t => {
   const outcome = check(t, {
     'README.md': `<h1 align="center">Harbor</h1>
