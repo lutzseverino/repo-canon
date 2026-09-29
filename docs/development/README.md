@@ -51,7 +51,7 @@ step: `npm test` already runs it on every pull request.
 
 - [Release procedure](release.md): released bytes, the reviewed diff, the rule
   for changed selected bytes, the single release pull request, release notes,
-  and publication and verification.
+  and publication and verification, with the read-only release scripts.
 - [Adoption compatibility](adoption-compatibility.md): the supported v2
   mapping, validation baseline, adoption preparation requirements, and the
   route for GitHub repository settings.
