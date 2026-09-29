@@ -5,6 +5,7 @@ import { access, cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "no
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 import test from "node:test";
 import { decideIssueContract } from "../scripts/validate-issue-contract.mjs";
 
@@ -1694,11 +1695,12 @@ function json(response, status, value, headers = {}) {
 }
 
 function runValidator(environment, validatorPath = validator, nodeArguments = []) {
+  return runNode([...nodeArguments, validatorPath], { cwd: repositoryRoot, env: { ...process.env, ...environment } });
+}
+
+function runNode(nodeArguments, options) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [...nodeArguments, validatorPath], {
-      cwd: repositoryRoot,
-      env: { ...process.env, ...environment },
-    });
+    const child = spawn(process.execPath, nodeArguments, options);
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (chunk) => (stdout += chunk));
@@ -1931,7 +1933,10 @@ test("the adapter treats unavailable endpoints as absent and records a failed pe
 });
 
 // Hides `import.meta.main` from the validator, as on Node.js releases before
-// 24.2, so the adapter must fall back to comparing the resolved script path.
+// 24.2, so the adapter must fall back to comparing the resolved script paths.
+// It reports on stderr that it applied, so a test cannot pass through the real
+// `import.meta.main` unnoticed.
+const hiddenImportMetaMain = "import.meta.main hidden from the validator";
 const withoutImportMetaMain = `import { registerHooks } from "node:module";
 registerHooks({
   load(url, context, nextLoad) {
@@ -1939,20 +1944,22 @@ registerHooks({
     if (!url.endsWith("/scripts/validate-issue-contract.mjs")) return result;
     const source = String(result.source);
     if (!source.includes("import.meta.main")) throw new Error("The validator no longer reads import.meta.main.");
+    process.stderr.write("${hiddenImportMetaMain}\\n");
     return { ...result, source: source.replaceAll("import.meta.main", "undefined") };
   },
 });
 `;
 
 // Imports the validator and prints its exports and every file-system or
-// network call made from the validator's own code, excluding module loading.
+// network call made from repository code (the validator, the shared runtime,
+// or the vendored parsers) while it loads, excluding the module loader's reads.
 const importProbe = `import fs from "node:fs";
 import fsp from "node:fs/promises";
 import { syncBuiltinESMExports } from "node:module";
-const target = process.argv[2];
+const [validatorUrl, repositoryUrl] = process.argv.slice(2);
 const calls = [];
 const record = (label) => {
-  if ((new Error().stack ?? "").includes(target)) calls.push(label);
+  if ((new Error().stack ?? "").includes(repositoryUrl)) calls.push(label);
 };
 const wrap = (object, name, label) => {
   const original = object[name];
@@ -1971,7 +1978,7 @@ globalThis.fetch = (...args) => {
   record("fetch");
   return originalFetch(...args);
 };
-const validatorModule = await import(target);
+const validatorModule = await import(validatorUrl);
 console.log(JSON.stringify({ exports: Object.keys(validatorModule), calls }));
 `;
 
@@ -1983,50 +1990,46 @@ async function scratchFiles(t, files) {
 }
 
 async function probeImport(root, nodeArguments = []) {
-  const environment = { ...process.env };
-  for (const name of Object.keys(environment)) if (name.startsWith("GITHUB_")) delete environment[name];
-  const result = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [...nodeArguments, join(root, "probe.mjs"), validator], { cwd: root, env: environment });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (chunk) => (stdout += chunk));
-    child.stderr.on("data", (chunk) => (stderr += chunk));
-    child.on("error", reject);
-    child.on("close", (code) => resolve({ code, stdout, stderr }));
-  });
+  const env = { ...process.env };
+  for (const name of Object.keys(env)) if (name.startsWith("GITHUB_")) delete env[name];
+  const result = await runNode(
+    [...nodeArguments, join(root, "probe.mjs"), pathToFileURL(validator).href, pathToFileURL(repositoryRoot).href],
+    { cwd: root, env },
+  );
   assert.equal(result.code, 0, result.stderr);
-  return JSON.parse(result.stdout);
+  return { ...JSON.parse(result.stdout), stderr: result.stderr };
 }
 
-test("importing the validator performs no I/O and runs no adapter", async (context) => {
-  await context.test("with import.meta.main", async (t) => {
+test("the adapter runs only when the validator is executed directly", async (context) => {
+  await context.test("an import on a release with import.meta.main makes no I/O", async (t) => {
     const root = await scratchFiles(t, { "probe.mjs": importProbe });
-    assert.deepEqual(await probeImport(root), { exports: ["decideIssueContract"], calls: [] });
+    const { stderr, ...probe } = await probeImport(root);
+    assert.deepEqual(probe, { exports: ["decideIssueContract"], calls: [] });
+    assert.equal(stderr, "");
   });
 
-  await context.test("on a release without import.meta.main", async (t) => {
+  await context.test("an import on a release without import.meta.main only resolves the compared paths", async (t) => {
     const root = await scratchFiles(t, { "probe.mjs": importProbe, "hook.mjs": withoutImportMetaMain });
-    // The fallback resolves the two paths it compares, and nothing else.
-    assert.deepEqual(await probeImport(root, ["--import", join(root, "hook.mjs")]), {
-      exports: ["decideIssueContract"],
-      calls: ["fs.realpathSync", "fs.realpathSync"],
+    const { stderr, ...probe } = await probeImport(root, ["--import", join(root, "hook.mjs")]);
+    assert.match(stderr, new RegExp(hiddenImportMetaMain));
+    assert.deepEqual(probe, { exports: ["decideIssueContract"], calls: ["fs.realpathSync", "fs.realpathSync"] });
+  });
+
+  await context.test("execution through a symlink on a release without import.meta.main", async (t) => {
+    const root = await scratchFiles(t, { "hook.mjs": withoutImportMetaMain });
+    const linked = join(root, "validate-issue-contract.mjs");
+    await symlink(validator, linked);
+    const result = await exercise({
+      validatorPath: linked,
+      nodeArguments: ["--import", join(root, "hook.mjs")],
+      issue: { number: 42, body: bugBody, labels: [{ name: "bug" }, { name: "needs-triage" }], state: "open" },
     });
-  });
-});
 
-test("the adapter runs when executed through a symlink on a release without import.meta.main", async (t) => {
-  const root = await scratchFiles(t, { "hook.mjs": withoutImportMetaMain });
-  const linked = join(root, "validate-issue-contract.mjs");
-  await symlink(validator, linked);
-  const result = await exercise({
-    validatorPath: linked,
-    nodeArguments: ["--import", join(root, "hook.mjs")],
-    issue: { number: 42, body: bugBody, labels: [{ name: "bug" }, { name: "needs-triage" }], state: "open" },
+    assert.equal(result.code, 0, result.stderr);
+    assert.match(result.stderr, new RegExp(hiddenImportMetaMain));
+    assert.match(result.stdout, /valid bug report/i);
+    assert.ok(requested(result, "GET", "/repos/example/repository/issues/42"));
   });
-
-  assert.equal(result.code, 0, result.stderr);
-  assert.match(result.stdout, /valid bug report/i);
-  assert.ok(requested(result, "GET", "/repos/example/repository/issues/42"));
 });
 
 test("the workflow covers issue and comment changes using default-branch code", async () => {

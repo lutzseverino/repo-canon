@@ -986,15 +986,12 @@ function resolvedFeedback(kind) {
 if (import.meta.main ?? executedAsScript(import.meta.url)) await runIssueContractValidation(process.env);
 
 // Whether the process was started with this module as its script, following
-// symlinks on both paths.
+// symlinks on both paths. A path that cannot be resolved fails the run rather
+// than skipping the adapter.
 function executedAsScript(moduleUrl) {
   const script = process.argv[1];
   if (!script) return false;
-  try {
-    return realpathSync(script) === realpathSync(fileURLToPath(moduleUrl));
-  } catch {
-    return false;
-  }
+  return realpathSync(script) === realpathSync(fileURLToPath(moduleUrl));
 }
 
 async function runIssueContractValidation(environment) {

@@ -151,10 +151,10 @@ must expose collaborator roles, and `GITHUB_GRAPHQL_URL` must be available for
 direct-body edit revisions; both are standard GitHub Actions facilities. Node.js
 24 is the runtime. The adapter recognizes that the workflow executed the file
 through `import.meta.main`; on 24 releases before 24.2, which lack it, it
-compares the resolved script path with the validator's own path instead.
-The validator has no package dependencies, so the job installs
-none and disables the Node.js setup action's automatic package-manager cache. It
-pins the same checkout and Node.js setup actions as the PR metadata workflow.
+compares the resolved script path with the validator's own path instead. The
+validator has no package dependencies, so the job installs none and disables
+the Node.js setup action's automatic package-manager cache. It pins the same
+checkout and Node.js setup actions as the PR metadata workflow.
 GitHub Actions does not expose issue-dependency changes as an `issues` workflow
 activity type, so the validator observes the latest relationships on each
 supported issue or comment event.
@@ -172,10 +172,12 @@ the snapshot the adapter would fetch, and assert the exact exit status, label
 changes, and feedback write. A few adapter fixtures invoke the same executable
 boundary as GitHub Actions against a local HTTP server. They cover event parsing,
 pagination, the role lookups, the order of writes, the exit status, unavailable
-endpoints, and the path fallback for releases without `import.meta.main`. Others
-show that importing the validator performs no I/O and runs no adapter. One also
-executes the validator from an installed layout
-containing only the validator, shared runtime, and declared parser resources.
+endpoints, and the path fallback for releases without `import.meta.main`. They
+also show that importing the validator runs no adapter and, where
+`import.meta.main` exists, makes no file-system or network call; without it, an
+import only resolves the two compared paths. One executes the validator from an
+installed layout containing only the validator, shared runtime, and declared
+parser resources.
 Together they exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, workflow-state replacement,
