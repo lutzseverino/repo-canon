@@ -18,6 +18,27 @@ _Avoid_: Any directory, fixture, generated output
 The developer-facing introduction to one project within a monorepo.
 _Avoid_: Repository README when referring to a component document
 
+**Documentation root**:
+A directory designated to hold categorized documentation: the repository's
+`docs`, or another directory, such as a project's own, that the confirmed
+documentation scope identifies as a root. Its documentation index must map its
+documentation categories.
+_Avoid_: Docs folder, documentation directory when referring to the root
+
+**Documentation category**:
+One of the fixed top-level groupings under a documentation root: `usage`,
+`development`, `adr`, or `agents`. Each is created as a directory when it has
+content; the repository's `docs` always has `development`, whose README is the
+development guide.
+_Avoid_: Section, documentation type
+
+**Documentation index**:
+The README of a documentation root or of a directory under it, which must state
+the directory's purpose and list its entries. The installed
+`docs/agents/README.md` cites the optional `docs/agents/project.md` in context
+rather than listing it.
+_Avoid_: Table of contents, listing page
+
 **Implementation contract**:
 The agreed scope and acceptance criteria for a change, recorded in an approved
 agent-brief comment for a triaged request or in a directly authored specification
