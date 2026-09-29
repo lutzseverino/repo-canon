@@ -312,7 +312,7 @@ function sectionMap(markdown, tokens, names, options, renderTokens, renderMarkdo
     for (const occurrences of sections.values()) {
       for (const section of occurrences) {
         section.source = section.tokens.map(token => token.raw).join('');
-        section.content = renderTokens(section.tokens).content;
+        section.content = renderTokens(section.tokens);
         delete section.tokens;
       }
     }
@@ -350,18 +350,22 @@ export function interpretMarkdown(markdown, { additionalNonRenderedElements = []
   const normalizedMarkdown = markdown.replace(/\r\n?/g, '\n');
   const tokens = marked.lexer(normalizedMarkdown);
   const isHidden = visibility(additionalNonRenderedElements);
-  const renderTokens = (selectedTokens, spans = null) => {
+  const parseTokens = selectedTokens => {
     const marker = randomUUID();
     const renderer = new Renderer();
     renderer.heading = function ({ depth, tokens: headingTokens }) {
       return `<h${depth} data-repo-canon-markdown-heading="${marker}">${this.parser.parseInline(headingTokens)}</h${depth}>`;
     };
-    const fragment = parseFragment(marked.parser(selectedTokens, { renderer }));
-    return { fragment, content: renderedContent(fragment, isHidden, marker, spans) };
+    return { fragment: parseFragment(marked.parser(selectedTokens, { renderer })), marker };
   };
-  const renderMarkdown = source => renderTokens(marked.lexer(source)).content;
+  const renderTokens = selectedTokens => {
+    const { fragment, marker } = parseTokens(selectedTokens);
+    return renderedContent(fragment, isHidden, marker);
+  };
+  const renderMarkdown = source => renderTokens(marked.lexer(source));
+  const { fragment, marker } = parseTokens(tokens);
   const spans = new Map();
-  const { fragment, content } = renderTokens(tokens, spans);
+  const content = renderedContent(fragment, isHidden, marker, spans);
   const rendered = { fragment, elements: content.elements, spans, isHidden };
   const headings = content.elements.flatMap((element, index) => {
     if (element.type !== 'heading') return [];
