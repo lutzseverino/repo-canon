@@ -586,8 +586,8 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
       error: "Deleting a newer Agent Brief invalidated the restored contract source. Review the published revision again.",
     };
   }
-  const openingEvent = openingLabelEvent(currentEvent, issue, result, currentReadyLabels[0], timeline, openingEligible);
-  const labelEvent = openingEvent ?? (
+  const creationEvent = creationLabelEvent(currentEvent, issue, result, currentReadyLabels[0], timeline, openingEligible, permissions);
+  const labelEvent = creationEvent ?? (
     currentReadyLabels.length === 1
       && latestEvent?.event === "labeled"
       && latestEvent.label?.name === currentReadyLabels[0]
@@ -681,18 +681,27 @@ function activeApproval(permissions, recorded, revision, label, timeline) {
   return reviewerAuthority(permissions, recorded.reviewer).authorized;
 }
 
-function openingLabelEvent(currentEvent, issue, result, label, timeline, openingEligible) {
+// The creation snapshot's review of an unedited direct contract, for either the
+// `opened` run or a `labeled` run, whichever arrives first. The opening payload
+// shows the one readiness label the issue was created with. A `labeled` run has
+// no such payload, so the timeline must show the opener, the issue's author,
+// applying it, and the opener must currently hold an authorizing role.
+// Otherwise the run is decided as any later review.
+function creationLabelEvent(currentEvent, issue, result, label, timeline, openingEligible, permissions) {
+  if (result.contract.type !== "issue-body" || !openingEligible || !label) return null;
+  if (currentEvent.action === "labeled") {
+    const opener = issue.user?.login;
+    if (!opener || !reviewerAuthority(permissions, opener).authorized) return null;
+    return timeline.creationReview(label, issue.user, { openingPayload: false });
+  }
   const openingReadyLabels = currentEvent.issue?.labels?.map(labelName).filter((name) => readyLabels.has(name)) ?? [];
   if (currentEvent.action !== "opened"
-    || result.contract.type !== "issue-body"
-    || !openingEligible
-    || !label
     || currentEvent.issue?.body !== issue.body
     || openingReadyLabels.length !== 1
     || openingReadyLabels[0] !== label) {
     return null;
   }
-  return timeline.creationReview(label);
+  return timeline.creationReview(label, currentEvent.sender, { openingPayload: true });
 }
 
 function openingReviewId(issue) {
@@ -717,7 +726,9 @@ function reviewerAuthority(permissions, login) {
 
 // Every login whose repository role a decision can consult: each actor on a
 // readiness-label event, the reviewer recorded in the feedback, and the sender
-// of an opening event.
+// of an opening event. A `labeled` run reviews from the creation snapshot only
+// when the opener is that label event's actor, so the opener's role is read
+// whenever it can decide the outcome.
 function reviewerLogins({ event, comments, issueEvents }) {
   const logins = new Set();
   for (const candidate of issueEvents) {
@@ -856,25 +867,29 @@ function issueTimeline({ event, issue, issueEvents }) {
       return reviewEventId === openingId;
     },
 
-    // The review supplied by the creation snapshot: no readiness transition
-    // yet, or one that is both the first and the latest and applied the same
-    // label by the opening sender.
-    creationReview(label) {
+    // The review supplied by the creation snapshot: a readiness transition
+    // that is both the first and the latest and applied the same label by the
+    // opener. With an opening payload that carries the label, the timeline may
+    // not have recorded that transition yet. Without one, the transition must
+    // be recorded in the issue's creation second.
+    creationReview(label, opener, { openingPayload }) {
       const latest = latestReadinessTransition();
       const first = issueEvents.find(isReadinessTransition) ?? null;
+      if (!latest && !openingPayload) return null;
       if (latest && String(first?.id) !== String(latest.id)) return null;
       if (latest && (
         latest.event !== "labeled"
         || latest.label?.name !== label
-        || latest.actor?.login !== event.sender?.login
+        || latest.actor?.login !== opener?.login
       )) {
         return null;
       }
+      if (!openingPayload && latest.created_at !== issue.created_at) return null;
       return {
         id: latest?.id ?? openingId,
         event: "labeled",
         label: { name: label },
-        actor: event.sender,
+        actor: opener,
         opening: true,
       };
     },

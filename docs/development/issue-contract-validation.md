@@ -78,8 +78,15 @@ Brief revision bytes. An explicit relationship link inside a direct ticket body
 is part of those exact bytes. Closing or replacing a native relationship alone
 does not silently redefine the reviewed source revision.
 
-For an unedited direct specification or ticket, an authoritative `opened` event
-carrying exactly one readiness label can supply the initial review snapshot.
+An unedited direct specification or ticket created with exactly one readiness
+label can take its initial review from its creation snapshot, whichever of its
+`opened` and `labeled` workflow runs arrives first. That label's application
+must be both the first and the latest readiness transition, applied by the
+issue's opener. The `opened` run reads the label from its payload. A `labeled`
+run needs the timeline to record the opener applying it in the issue's creation
+second, and the opener to hold an authorizing role; otherwise it is decided as
+any later review. Once the timeline holds the creation label event, either run records it
+as the review, so both orders end with the same labels and recorded review.
 Every later review, and every Agent Brief review, starts after the validator
 publishes the exact revision in its feedback comment; the reviewer then applies
 a readiness label. This notice-first sequence avoids relying on GitHub's
@@ -89,8 +96,9 @@ review label event; a same-second attempt is rejected and must be reapplied.
 The validator re-fetches the issue, complete discussion, complete issue-event
 timeline, relationships, and direct-body edit revision before every decision.
 It also reads the repository role of every actor on a readiness-label event, of
-the recorded reviewer, and of an opening event's sender. A failed role lookup is
-recorded for that login and counts as unauthorized.
+the recorded reviewer, and of an opening event's sender. On a `labeled` run, the
+opener's role is the one read for the creation label event's actor. A failed
+role lookup is recorded for that login and counts as unauthorized.
 It binds approval to the actor and ID of the latest transition for the current
 readiness label. A removal therefore invalidates the old event even if another
 label is added before its workflow runs. A delayed removal or repeated webhook
@@ -185,7 +193,8 @@ labels, placeholder failures, readiness removal, workflow-state replacement,
 superseding states, and return to review for triaged and direct contracts,
 repeat-safe feedback,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized
-actors, stale and repeated events, native creation, readiness removal and re-add
+actors, stale and repeated events, native creation in either run order,
+readiness removal and re-add
 ordering across paginated issue events, contract edits, pull request
 exclusion, and hostile Markdown that must remain inert. The `CI`
 workflow runs the complete repository test suite with `npm test`. These fixtures

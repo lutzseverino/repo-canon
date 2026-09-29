@@ -1111,6 +1111,131 @@ decisionTable("an authorized review binds readiness to the exact revision", [
   },
 ]);
 
+// The readiness label event of an issue created at 17:00:00 with that label by
+// `maintainer`, recorded as issue event 101 in the creation second.
+const creationTime = "2026-09-14T17:00:00Z";
+const creationLabel = (overrides = {}) => ({
+  id: 101,
+  event: "labeled",
+  label: { name: "ready-for-agent" },
+  actor: { login: "maintainer" },
+  created_at: creationTime,
+  ...overrides,
+});
+
+// An unedited direct ticket that `opener` created with `labels`, seen by the
+// `opened` run or by the `labeled` run in which `labeler` applied `trigger`.
+function createdWithReadiness({
+  run,
+  opener = "maintainer",
+  labeler = opener,
+  labels = ["ready-for-agent"],
+  trigger = "ready-for-agent",
+  comments = [],
+  issueEvents = [creationLabel()],
+  permissions = { [opener]: role("admin") },
+  bodyLastEditedAt = null,
+}) {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: ticketBody,
+    labels: labels.map((name) => ({ name })),
+    state: "open",
+    user: { login: opener },
+    created_at: creationTime,
+    updated_at: creationTime,
+  };
+  const event = run === "opened"
+    ? { action: "opened", issue: { number: 42, body: issue.body, labels: issue.labels, created_at: creationTime, updated_at: creationTime }, sender: { login: opener } }
+    : labeledBy(labeler, trigger, issue);
+  return { issue, comments, issueEvents, event, permissions, bodyLastEditedAt };
+}
+
+const lostCreationReadiness = (message, remove = ["ready-for-agent"]) => ({ exitCode: 1, remove, add: ["needs-triage"], feedback: "create", message });
+
+decisionTable("a readiness label applied at creation is reviewed whichever run arrives first", [
+  ...[["labeled", "opened"], ["opened", "labeled"]].map((order) => ({
+    name: `an authorized opener keeps the label when the ${order[0]} run arrives first`,
+    run: () => {
+      const comments = [];
+      const first = decideIssueContract(snapshotFor(createdWithReadiness({ run: order[0], comments })));
+      assertDecision(first, {
+        exitCode: 0,
+        feedback: "create",
+        message: /valid implementation ticket with ready-for-agent bound/i,
+        feedbackBody: [/reviewed by @maintainer/i, /"reviewEventId":"101"/],
+      });
+      applyFeedback(comments, first);
+      const second = decideIssueContract(snapshotFor(createdWithReadiness({ run: order[1], comments })));
+      assertDecision(second, { exitCode: 0, message: /valid implementation ticket with ready-for-agent bound/i });
+      const { issue } = createdWithReadiness({ run: order[0] });
+      assert.equal(comments[0].body, approvedTicketFeedback(issue, { reviewEventId: "101" }).body);
+    },
+  })),
+  {
+    name: "the labeled run for a workflow state created beside readiness keeps only the readiness state",
+    snapshot: createdWithReadiness({
+      run: "labeled",
+      labels: ["needs-triage", "ready-for-agent"],
+      trigger: "needs-triage",
+      issueEvents: [creationLabel(), creationLabel({ id: 102, label: { name: "needs-triage" } })],
+    }),
+    expected: { exitCode: 0, remove: ["needs-triage"], feedback: "create", feedbackBody: /"reviewEventId":"101"/ },
+  },
+  {
+    name: "an unauthorized opener loses readiness when the labeled run arrives first",
+    snapshot: createdWithReadiness({ run: "labeled", opener: "reporter", issueEvents: [creationLabel({ actor: { login: "reporter" } })], permissions: { reporter: role("write") } }),
+    expected: lostCreationReadiness(/wait for the validator to publish/i),
+  },
+  {
+    name: "an edited body loses readiness when the labeled run arrives first",
+    snapshot: createdWithReadiness({ run: "labeled", bodyLastEditedAt: "2026-09-14T17:00:30Z" }),
+    expected: lostCreationReadiness(/wait for the validator to publish/i),
+  },
+  {
+    name: "two readiness labels lose readiness when the labeled run arrives first",
+    snapshot: createdWithReadiness({
+      run: "labeled",
+      labels: ["ready-for-agent", "ready-for-human"],
+      issueEvents: [creationLabel(), creationLabel({ id: 102, label: { name: "ready-for-human" } })],
+    }),
+    expected: lostCreationReadiness(/only one readiness label/i, ["ready-for-agent", "ready-for-human"]),
+  },
+  {
+    name: "a later re-add without a revision notice loses readiness",
+    snapshot: createdWithReadiness({
+      run: "labeled",
+      issueEvents: [
+        creationLabel(),
+        creationLabel({ id: 102, event: "unlabeled", created_at: "2026-09-14T17:01:00Z" }),
+        creationLabel({ id: 103, created_at: "2026-09-14T17:02:00Z" }),
+      ],
+    }),
+    expected: lostCreationReadiness(/wait for the validator to publish/i),
+  },
+  {
+    name: "a label the opener applied after the creation second loses readiness",
+    snapshot: createdWithReadiness({ run: "labeled", issueEvents: [creationLabel({ created_at: "2026-09-14T17:00:01Z" })] }),
+    expected: lostCreationReadiness(/wait for the validator to publish/i),
+  },
+  {
+    name: "a label the timeline has not recorded loses readiness when the labeled run arrives first",
+    snapshot: createdWithReadiness({ run: "labeled", issueEvents: [] }),
+    expected: lostCreationReadiness(/timeline does not contain the current readiness label event/i),
+  },
+  {
+    name: "a label another actor applied in the creation second loses readiness",
+    snapshot: createdWithReadiness({
+      run: "labeled",
+      labeler: "triager",
+      issueEvents: [creationLabel({ actor: { login: "triager" } })],
+      permissions: { maintainer: role("admin"), triager: role("triage") },
+    }),
+    expected: lostCreationReadiness(/wait for the validator to publish/i),
+  },
+]);
+
 // An approved direct ticket whose review is event 101 at 17:00:00.
 function supersessionSnapshot({ labels, issueEvents, event, created_at: createdAt }) {
   const issue = { number: 42, body: ticketBody, labels: labels.map((name) => ({ name })), state: "open", ...(createdAt ? { created_at: createdAt } : {}) };
@@ -1853,6 +1978,19 @@ test("the adapter reads every page and the role of each login a decision can con
     assert.equal(result.code, 0, result.stderr);
     assert.match(result.stdout, /valid specification with ready-for-agent bound/i);
     assert.deepEqual(permissionLookups(result), ["maintainer"]);
+  });
+
+  await context.test("the opener of an issue created with readiness when the labeled run arrives first", async () => {
+    const { issue, event, issueEvents } = createdWithReadiness({ run: "labeled" });
+    const result = await exercise({ issue, issueEvents, event, permissions: { maintainer: { permission: "admin", role_name: "admin" } } });
+
+    assert.equal(result.code, 0, result.stderr);
+    assert.match(result.stdout, /valid implementation ticket with ready-for-agent bound/i);
+    assert.deepEqual(permissionLookups(result), ["maintainer"]);
+    const [write, ...otherWrites] = writes(result);
+    assert.deepEqual(otherWrites, []);
+    assert.deepEqual(write.slice(0, 2), ["POST", "/repos/example/repository/issues/42/comments"]);
+    assert.match(write[2].body, /"reviewEventId":"101"/);
   });
 });
 
