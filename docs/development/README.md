@@ -5,11 +5,10 @@ Repo Canon standards source.
 
 ## Setup and validation
 
-Clone the repository with Git and use Node.js 24.2 or a later 24 release and
-npm. The source needs no package installation, typecheck, or build step; parser
-dependencies are vendored. GitHub planning uses authenticated `gh` access. For
-source validation, install public Repository Standards CLI 2.0.0 outside the
-checkout using the
+Clone the repository with Git and use Node.js 24 and npm. The source needs no
+package installation, typecheck, or build step; parser dependencies are
+vendored. GitHub planning uses authenticated `gh` access. For source validation,
+install public Repository Standards CLI 2.0.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 

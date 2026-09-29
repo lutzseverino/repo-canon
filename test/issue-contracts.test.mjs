@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { access, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -1591,6 +1591,7 @@ async function exercise({
   issueEvents,
   issueEventPages,
   validatorPath = validator,
+  nodeArguments = [],
 }) {
   const requests = [];
   for (const comment of [...comments, ...(commentPages?.flat() ?? [])]) {
@@ -1679,7 +1680,7 @@ async function exercise({
       GITHUB_EVENT_PATH: eventPath,
       GITHUB_REPOSITORY: repository,
       GITHUB_TOKEN: "fixture-token",
-    }, validatorPath);
+    }, validatorPath, nodeArguments);
     return { ...result, requests };
   } finally {
     await new Promise((resolve) => server.close(resolve));
@@ -1692,9 +1693,9 @@ function json(response, status, value, headers = {}) {
   response.end(JSON.stringify(value));
 }
 
-function runValidator(environment, validatorPath = validator) {
+function runValidator(environment, validatorPath = validator, nodeArguments = []) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [validatorPath], {
+    const child = spawn(process.execPath, [...nodeArguments, validatorPath], {
       cwd: repositoryRoot,
       env: { ...process.env, ...environment },
     });
@@ -1927,6 +1928,105 @@ test("the adapter treats unavailable endpoints as absent and records a failed pe
     assert.match(result.stderr, /could not verify @maintainer's review authority: GitHub API GET .*\/permission returned 403/i);
     assert.ok(requested(result, "DELETE", "/repos/example/repository/issues/42/labels/ready-for-agent"));
   });
+});
+
+// Hides `import.meta.main` from the validator, as on Node.js releases before
+// 24.2, so the adapter must fall back to comparing the resolved script path.
+const withoutImportMetaMain = `import { registerHooks } from "node:module";
+registerHooks({
+  load(url, context, nextLoad) {
+    const result = nextLoad(url, context);
+    if (!url.endsWith("/scripts/validate-issue-contract.mjs")) return result;
+    const source = String(result.source);
+    if (!source.includes("import.meta.main")) throw new Error("The validator no longer reads import.meta.main.");
+    return { ...result, source: source.replaceAll("import.meta.main", "undefined") };
+  },
+});
+`;
+
+// Imports the validator and prints its exports and every file-system or
+// network call made from the validator's own code, excluding module loading.
+const importProbe = `import fs from "node:fs";
+import fsp from "node:fs/promises";
+import { syncBuiltinESMExports } from "node:module";
+const target = process.argv[2];
+const calls = [];
+const record = (label) => {
+  if ((new Error().stack ?? "").includes(target)) calls.push(label);
+};
+const wrap = (object, name, label) => {
+  const original = object[name];
+  const descriptor = Object.getOwnPropertyDescriptor(object, name);
+  if (typeof original !== "function" || (!descriptor?.writable && !descriptor?.set)) return;
+  object[name] = function (...args) {
+    record(label + "." + name);
+    return original.apply(this, args);
+  };
+};
+for (const name of Object.keys(fs)) wrap(fs, name, "fs");
+for (const name of Object.keys(fsp)) wrap(fsp, name, "fs.promises");
+syncBuiltinESMExports();
+const originalFetch = globalThis.fetch;
+globalThis.fetch = (...args) => {
+  record("fetch");
+  return originalFetch(...args);
+};
+const validatorModule = await import(target);
+console.log(JSON.stringify({ exports: Object.keys(validatorModule), calls }));
+`;
+
+async function scratchFiles(t, files) {
+  const root = await mkdtemp(join(tmpdir(), "repo-canon-issue-adapter-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  for (const [name, content] of Object.entries(files)) await writeFile(join(root, name), content);
+  return root;
+}
+
+async function probeImport(root, nodeArguments = []) {
+  const environment = { ...process.env };
+  for (const name of Object.keys(environment)) if (name.startsWith("GITHUB_")) delete environment[name];
+  const result = await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [...nodeArguments, join(root, "probe.mjs"), validator], { cwd: root, env: environment });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => (stdout += chunk));
+    child.stderr.on("data", (chunk) => (stderr += chunk));
+    child.on("error", reject);
+    child.on("close", (code) => resolve({ code, stdout, stderr }));
+  });
+  assert.equal(result.code, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}
+
+test("importing the validator performs no I/O and runs no adapter", async (context) => {
+  await context.test("with import.meta.main", async (t) => {
+    const root = await scratchFiles(t, { "probe.mjs": importProbe });
+    assert.deepEqual(await probeImport(root), { exports: ["decideIssueContract"], calls: [] });
+  });
+
+  await context.test("on a release without import.meta.main", async (t) => {
+    const root = await scratchFiles(t, { "probe.mjs": importProbe, "hook.mjs": withoutImportMetaMain });
+    // The fallback resolves the two paths it compares, and nothing else.
+    assert.deepEqual(await probeImport(root, ["--import", join(root, "hook.mjs")]), {
+      exports: ["decideIssueContract"],
+      calls: ["fs.realpathSync", "fs.realpathSync"],
+    });
+  });
+});
+
+test("the adapter runs when executed through a symlink on a release without import.meta.main", async (t) => {
+  const root = await scratchFiles(t, { "hook.mjs": withoutImportMetaMain });
+  const linked = join(root, "validate-issue-contract.mjs");
+  await symlink(validator, linked);
+  const result = await exercise({
+    validatorPath: linked,
+    nodeArguments: ["--import", join(root, "hook.mjs")],
+    issue: { number: 42, body: bugBody, labels: [{ name: "bug" }, { name: "needs-triage" }], state: "open" },
+  });
+
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /valid bug report/i);
+  assert.ok(requested(result, "GET", "/repos/example/repository/issues/42"));
 });
 
 test("the workflow covers issue and comment changes using default-branch code", async () => {

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
+import { realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { lexer } from "../vendor/marked/marked.esm.js";
 import { interpretMarkdown } from "../operations/lib/rendered-markdown.mjs";
 
@@ -978,10 +980,22 @@ function resolvedFeedback(kind) {
 
 // The GitHub adapter runs only when the workflow executes this file. It reads
 // the event, fetches the complete snapshot, decides, and applies the writes.
-// Runtimes before Node.js 24.2 lack `import.meta.main` and would skip the
-// adapter silently, so they fail instead of passing the check.
-if (import.meta.main === undefined) throw new Error("The issue-contract validator requires Node.js 24.2 or later.");
-if (import.meta.main) await runIssueContractValidation(process.env);
+// Node.js 24.2 and later report that as `import.meta.main`. Earlier 24
+// releases lack it, so there the adapter compares the resolved script path with
+// this module's path; that is the only file-system read an import can make.
+if (import.meta.main ?? executedAsScript(import.meta.url)) await runIssueContractValidation(process.env);
+
+// Whether the process was started with this module as its script, following
+// symlinks on both paths.
+function executedAsScript(moduleUrl) {
+  const script = process.argv[1];
+  if (!script) return false;
+  try {
+    return realpathSync(script) === realpathSync(fileURLToPath(moduleUrl));
+  } catch {
+    return false;
+  }
+}
 
 async function runIssueContractValidation(environment) {
   const required = (name) => {

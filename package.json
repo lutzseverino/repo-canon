@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=24.2 <25"
+    "node": ">=24 <25"
   },
   "scripts": {
     "check": "for file in operations/*.mjs operations/lib/*.mjs scripts/*.mjs scripts/release/*.mjs scripts/support/*.mjs .github/scripts/*.mjs test/*.test.mjs test/helpers/*.mjs test/fixtures/*.mjs; do node --check \"$file\" || exit 1; done",
