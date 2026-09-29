@@ -40,8 +40,8 @@ _Avoid_: Table of contents, listing page
 
 **Implementation contract**:
 The agreed scope and acceptance criteria for a change, recorded in an approved
-agent-brief comment for a triaged request or in a directly authored specification
-or implementation ticket.
+agent-brief comment for a triaged request or in a directly authored
+specification or implementation ticket.
 _Avoid_: Intake report, any comment, inferred scope
 
 **Readiness**:
