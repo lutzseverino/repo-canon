@@ -14,6 +14,17 @@ through the Repository Standards public operation protocol:
   validates rendered local links in those trees and selected migration or
   link-repair files.
 
+The documentation operation reads the repository only through the
+documentation model in `operations/lib/documentation-model.mjs`. Given the
+project root and the confirmed paths, the model returns the documentation roots
+and the ambiguous candidate roots; each root's documentation index, its stray
+top-level entries outside the documentation categories, its directories with
+their index paths and states (missing, empty, or present), and its confirmed
+category indexes; the development guide; the documents; and every rendered
+local link, marked broken or intact. It records structure only; the check
+projects it onto the corrections, so a new documentation rule reads the model
+rather than walking the tree again.
+
 The Project README operation accepts individual non-root `README.md` paths.
 The documentation operation accepts individual repository-relative file paths
 and requires both root documentation files in its concrete scope. Neither
@@ -27,11 +38,13 @@ therefore cannot supply titles or navigable links, while Markdown, HTML, entity
 references, and GFM tables receive the same link treatment. Final source
 declarations retain `operations/lib/rendered-markdown.mjs`, the mechanically
 separated `operations/lib/local-markdown-links.mjs`, and the Marked and parse5
-resources and notices alongside each operation. The shared document owns
+resources and notices alongside each operation, and the documentation model
+alongside the documentation operation. The shared document owns
 rendered structure, including the ordered top-level blocks of each heading's
 section with their tag, rendered text, links at any depth, and nested blocks;
-Project README title policy, documentation scope, and local path containment
-and symlink policy remain in their existing modules.
+Project README title policy remains in its operation, documentation roots and
+indexes in the documentation model, and local path containment and symlink
+policy in the local-link module.
 
 ## Outcomes and limits
 
@@ -61,14 +74,16 @@ builds are retained source resources. Run the focused fixture suites from the
 repository root:
 
 ```sh
-node --test test/project-readme-check.test.mjs test/documentation-check.test.mjs
+node --test test/project-readme-check.test.mjs test/documentation-check.test.mjs test/documentation-model.test.mjs
 ```
 
 The shared runtime's heading-section blocks and exported Markdown helpers have
-their own fixtures in `test/rendered-markdown.test.mjs`.
+their own fixtures in `test/rendered-markdown.test.mjs`. The documentation
+model's root inference, ambiguity, index states, stray entries, documents, and
+link resolution have theirs in `test/documentation-model.test.mjs`.
 
-Each fixture invokes the scripts with a `repo-standards/operation/v1` request,
-asserts the `repo-standards/result/v1` outcome or process error, and compares a
-complete before-and-after snapshot of the temporary Git repository. Each
-operation also runs from a retained tree containing only its declared script
-and resources.
+Each check fixture invokes the scripts with a `repo-standards/operation/v1`
+request, asserts the `repo-standards/result/v1` outcome or process error, and
+compares a complete before-and-after snapshot of the temporary Git repository.
+Each operation also runs from a retained tree containing only its script and
+the resources that `standards.yaml` declares for it.

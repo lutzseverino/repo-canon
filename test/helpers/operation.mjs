@@ -5,16 +5,30 @@ import { dirname, join, relative } from 'node:path';
 
 const sourceRoot = new URL('../..', import.meta.url).pathname;
 
+// The resources that `standards.yaml` declares for an operation script, read
+// from the `resources` list directly after its `script` line.
+function declaredResources(scriptPath) {
+  const lines = readFileSync(join(sourceRoot, 'standards.yaml'), 'utf8').split('\n');
+  const scriptLine = lines.findIndex(line => line.trim() === `script: ${scriptPath}`);
+  if (scriptLine === -1) throw new Error(`standards.yaml declares no operation script ${scriptPath}.`);
+  if (lines[scriptLine + 1]?.trim() !== 'resources:') {
+    throw new Error(`standards.yaml declares no resources list directly after ${scriptPath}.`);
+  }
+  const resources = [];
+  for (const line of lines.slice(scriptLine + 2)) {
+    const item = /^\s+- (\S+)$/.exec(line);
+    if (item === null) break;
+    resources.push(item[1]);
+  }
+  return resources;
+}
+
+// Copies an operation script and only its declared resources into a fresh
+// tree, as the CLI retains them.
 export function retainedCheck(t, scriptPath) {
   const root = mkdtempSync(join(tmpdir(), 'repo-canon-retained-check-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  for (const path of [
-    scriptPath,
-    'operations/lib/rendered-markdown.mjs',
-    'operations/lib/local-markdown-links.mjs',
-    'vendor/marked',
-    'vendor/parse5',
-  ]) {
+  for (const path of [scriptPath, ...declaredResources(scriptPath)]) {
     const destination = join(root, path);
     mkdirSync(dirname(destination), { recursive: true });
     cpSync(join(sourceRoot, path), destination, { recursive: true });
