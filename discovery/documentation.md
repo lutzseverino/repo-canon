@@ -27,7 +27,9 @@ agents category when that root has content. This lets the read-only operation
 distinguish a root at an arbitrary location from an ordinary nested directory
 index. If the confirmed individual paths cannot make that distinction, leave
 the root question unresolved rather than guessing that structural coverage is
-complete.
+complete. A documentation root never lies inside another: a category-named
+directory deeper inside a root is an ordinary directory, and its `README.md` is
+a directory index, not a root to confirm.
 
 Do not propose directory trees or globs. Keep the exact-owned shared files
 `docs/agents/README.md`, `docs/agents/domain.md`,

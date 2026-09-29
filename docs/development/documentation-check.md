@@ -25,6 +25,13 @@ local link, marked broken or intact. It records structure only; the check
 projects it onto the corrections, so a new documentation rule reads the model
 rather than walking the tree again.
 
+A documentation root never lies inside another. A confirmed
+`<dir>/<category>/README.md` makes `<dir>` a root only when `<dir>` is not
+inside another root, so when candidate roots nest, the outermost wins. Inside a
+root, that README is an ordinary directory's documentation index: `<dir>` gets
+no root-index or stray-entry corrections, and a missing confirmed index under
+its category is still reported as a confirmed category index of the root.
+
 The Project README operation accepts individual non-root `README.md` paths.
 The documentation operation accepts individual repository-relative file paths
 and requires both root documentation files in its concrete scope. Neither

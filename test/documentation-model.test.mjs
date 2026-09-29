@@ -35,7 +35,7 @@ test('infers documentation roots from confirmed category indexes', t => {
   assert.deepEqual(repositoryLevelIndexes.ambiguousRoots, []);
 });
 
-test('a confirmed category index inside a documentation root marks a nested root', t => {
+test('a confirmed category index inside a documentation root does not start a nested root', t => {
   const built = model(t, {
     'docs/README.md': '# Documentation\n',
     'docs/usage/README.md': '# Usage\n',
@@ -44,10 +44,49 @@ test('a confirmed category index inside a documentation root marks a nested root
     'docs/usage/guides/adr/README.md': '# Decisions\n',
   });
 
-  assert.deepEqual(rootPaths(built), ['docs', 'docs/usage/guides']);
+  assert.deepEqual(rootPaths(built), ['docs']);
   assert.deepEqual(built.ambiguousRoots, []);
-  const nested = built.roots.find(root => root.path === 'docs/usage/guides');
-  assert.deepEqual(nested.strayEntries, ['docs/usage/guides/intro.md']);
+  const [root] = built.roots;
+  assert.deepEqual(root.strayEntries, []);
+  assert.deepEqual(root.directories, [
+    { path: 'docs/usage', index: { path: 'docs/usage/README.md', state: 'present', confirmed: true } },
+    { path: 'docs/usage/guides', index: { path: 'docs/usage/guides/README.md', state: 'present', confirmed: true } },
+    { path: 'docs/usage/guides/adr', index: { path: 'docs/usage/guides/adr/README.md', state: 'present', confirmed: true } },
+  ], 'the nested candidate and its category are ordinary directories of the root');
+  assert.deepEqual(root.confirmedIndexes.map(index => index.path), [
+    'docs/usage/README.md',
+    'docs/usage/guides/README.md',
+    'docs/usage/guides/adr/README.md',
+  ]);
+});
+
+test('the outermost of nested candidate roots is the documentation root', t => {
+  const built = model(t, {}, [
+    'packages/app/handbook/README.md',
+    'packages/app/handbook/usage/README.md',
+    'packages/app/handbook/usage/guides/README.md',
+    'packages/app/handbook/usage/guides/adr/README.md',
+    'packages/app/handbook/usage/guides/adr/tools/development/README.md',
+    'packages/app/handbook/api/agents/README.md',
+    'docs/api/development/README.md',
+    'services/api/usage/README.md',
+    'services/other/README.md',
+  ]);
+
+  assert.deepEqual(rootPaths(built), ['docs', 'packages/app/handbook', 'services/api']);
+  assert.deepEqual(built.ambiguousRoots, ['services/other'], 'a candidate outside every root stays ambiguous');
+  const handbook = built.roots.find(root => root.path === 'packages/app/handbook');
+  assert.deepEqual(handbook.index, { path: 'packages/app/handbook/README.md', state: 'missing', confirmed: true });
+  assert.deepEqual(handbook.confirmedIndexes.map(index => index.path), [
+    'packages/app/handbook/usage/README.md',
+    'packages/app/handbook/usage/guides/README.md',
+    'packages/app/handbook/usage/guides/adr/README.md',
+    'packages/app/handbook/usage/guides/adr/tools/development/README.md',
+    'packages/app/handbook/api/agents/README.md',
+  ], 'a confirmed category index of a nested candidate stays a confirmed index of the root');
+  const [docs] = built.roots;
+  assert.deepEqual(docs.index, { path: 'docs/README.md', state: 'missing', confirmed: false });
+  assert.deepEqual(docs.confirmedIndexes.map(index => index.path), ['docs/api/development/README.md']);
 });
 
 test('reports candidate roots that the confirmed paths cannot resolve as ambiguous', t => {

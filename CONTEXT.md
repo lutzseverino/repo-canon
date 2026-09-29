@@ -21,8 +21,8 @@ _Avoid_: Repository README when referring to a component document
 **Documentation root**:
 A directory designated to hold categorized documentation: the repository's
 `docs`, or another directory, such as a project's own, that the confirmed
-documentation scope identifies as a root. Its documentation index must map its
-documentation categories.
+documentation scope identifies as a root. A documentation root never lies
+inside another. Its documentation index must map its documentation categories.
 _Avoid_: Docs folder, documentation directory when referring to the root
 
 **Documentation category**:
