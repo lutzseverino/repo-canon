@@ -28,8 +28,7 @@ _Avoid_: Docs folder, documentation directory when referring to the root
 **Documentation category**:
 One of the fixed top-level groupings under a documentation root: `usage`,
 `development`, `adr`, or `agents`. Each is created as a directory when it has
-content; the repository's `docs` always has `development`, whose README is the
-development guide.
+content.
 _Avoid_: Section, documentation type
 
 **Documentation index**:
