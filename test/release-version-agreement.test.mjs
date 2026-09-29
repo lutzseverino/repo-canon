@@ -55,7 +55,8 @@ function oneOccurrenceChanged(text, literal, replacement) {
   return variants;
 }
 
-// The offsets of every version in a text, found independently of the checker.
+// The offsets of every version in a text, found by the test itself rather than
+// by the checker's classifier.
 function versionOffsets(text) {
   return [...text.matchAll(/(?<![\w.])v?\d+\.\d+\.\d+(?!\.?\d)/g)].map(match => match.index);
 }

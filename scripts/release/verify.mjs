@@ -4,7 +4,8 @@
 // release commit, its GitHub release is an ordinary release, the public CLI at
 // the required minimum version inspects it in a disposable repository and
 // resolves the release commit and profile, and the documents at the release
-// commit name the version being verified and the required minimum CLI version.
+// commit name the version being verified. Every CLI version that the
+// development and authoring documents there name is the required minimum.
 
 import {
   cliFloor,

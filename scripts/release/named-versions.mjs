@@ -2,12 +2,11 @@
 // maintained documents and CI name, and reports where they disagree.
 //
 // Every version in these files is classified, so a new mention is checked
-// rather than skipped. A `v`-prefixed version names a Repo Canon release,
-// except in a link to the CLI's own documentation, and so does a version that
-// follows `stable`. Any other version names the CLI, except one that follows
-// the name of another tool or sits in a Node.js version constraint. A version
-// of a tool not yet named in `otherTool` therefore fails as a CLI version until
-// it is added.
+// rather than skipped. A `v`-prefixed version, or one that follows `stable`,
+// names a Repo Canon release, except in a link to the CLI's own documentation.
+// Any other version names the CLI, except one that follows the name of another
+// tool or sits in a Node.js version constraint. A version of a tool not yet
+// named in `otherTool` therefore fails as a CLI version until it is added.
 
 export const readmePath = 'README.md';
 export const adoptionGuidePath = 'docs/usage/adopt-repo-canon.md';

@@ -167,8 +167,9 @@ npm run release:verify -- "$version" "$release_commit" &&
    [Adopt Repo Canon](../usage/adopt-repo-canon.md#inspect-the-published-source)
    describes. The report resolves the release commit and profile.
 4. The Repository README and the adoption guide at the release commit name the
-   version being verified, and the development guide, the source profile, and
-   the authoring notes there name the required minimum CLI version.
+   version being verified, and every CLI version that the development guide,
+   the source profile, and the authoring notes there name is the required
+   minimum.
 
 The verification paragraph appended to the release notes names the release
 commit and the release pull request, confirms the tag and release state, and
