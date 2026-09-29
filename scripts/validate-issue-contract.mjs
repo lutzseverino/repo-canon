@@ -586,7 +586,7 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
       error: "Deleting a newer Agent Brief invalidated the restored contract source. Review the published revision again.",
     };
   }
-  const creationEvent = creationLabelEvent(currentEvent, issue, result, currentReadyLabels[0], timeline, openingEligible);
+  const creationEvent = creationLabelEvent(currentEvent, issue, result, currentReadyLabels[0], timeline, openingEligible, permissions);
   const labelEvent = creationEvent ?? (
     currentReadyLabels.length === 1
       && latestEvent?.event === "labeled"
@@ -685,11 +685,14 @@ function activeApproval(permissions, recorded, revision, label, timeline) {
 // `opened` run or a `labeled` run, whichever arrives first. The opening payload
 // shows the one readiness label the issue was created with. A `labeled` run has
 // no such payload, so the timeline must show the opener, the issue's author,
-// applying it.
-function creationLabelEvent(currentEvent, issue, result, label, timeline, openingEligible) {
+// applying it, and the opener must currently hold an authorizing role.
+// Otherwise the run is decided as any later review.
+function creationLabelEvent(currentEvent, issue, result, label, timeline, openingEligible, permissions) {
   if (result.contract.type !== "issue-body" || !openingEligible || !label) return null;
   if (currentEvent.action === "labeled") {
-    return issue.user?.login ? timeline.creationReview(label, issue.user, { openingPayload: false }) : null;
+    const opener = issue.user?.login;
+    if (!opener || !reviewerAuthority(permissions, opener).authorized) return null;
+    return timeline.creationReview(label, issue.user, { openingPayload: false });
   }
   const openingReadyLabels = currentEvent.issue?.labels?.map(labelName).filter((name) => readyLabels.has(name)) ?? [];
   if (currentEvent.action !== "opened"
@@ -724,7 +727,8 @@ function reviewerAuthority(permissions, login) {
 // Every login whose repository role a decision can consult: each actor on a
 // readiness-label event, the reviewer recorded in the feedback, and the sender
 // of an opening event. A `labeled` run reviews from the creation snapshot only
-// when the opener is that label event's actor, so its role is already read.
+// when the opener is that label event's actor, so the opener's role is read
+// whenever it can decide the outcome.
 function reviewerLogins({ event, comments, issueEvents }) {
   const logins = new Set();
   for (const candidate of issueEvents) {

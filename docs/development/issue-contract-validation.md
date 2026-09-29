@@ -84,7 +84,8 @@ label can take its initial review from its creation snapshot, whichever of its
 must be both the first and the latest readiness transition, applied by the
 issue's opener. The `opened` run reads the label from its payload. A `labeled`
 run needs the timeline to record the opener applying it in the issue's creation
-second. Once the timeline holds the creation label event, either run records it
+second, and the opener to hold an authorizing role; otherwise it is decided as
+any later review. Once the timeline holds the creation label event, either run records it
 as the review, so both orders end with the same labels and recorded review.
 Every later review, and every Agent Brief review, starts after the validator
 publishes the exact revision in its feedback comment; the reviewer then applies

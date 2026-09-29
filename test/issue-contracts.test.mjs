@@ -1186,7 +1186,7 @@ decisionTable("a readiness label applied at creation is reviewed whichever run a
   {
     name: "an unauthorized opener loses readiness when the labeled run arrives first",
     snapshot: createdWithReadiness({ run: "labeled", opener: "reporter", issueEvents: [creationLabel({ actor: { login: "reporter" } })], permissions: { reporter: role("write") } }),
-    expected: lostCreationReadiness(/@reporter is not authorized/),
+    expected: lostCreationReadiness(/wait for the validator to publish/i),
   },
   {
     name: "an edited body loses readiness when the labeled run arrives first",
