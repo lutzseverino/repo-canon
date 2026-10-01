@@ -2,11 +2,9 @@
 
 Inspect every existing documentation root, documentation link, domain glossary,
 context map, and project-specific agent guidance. Identify the individual files
-needed to categorize documentation under usage, development, adr, and agents;
-give each populated documentation directory its README index; keep the root
-documentation map and the required `docs/development/README.md`; delete
-point-in-time records and superseded documents other than ADRs; preserve useful
-material; and repair links affected by any move or deletion.
+needed to meet the documentation rules in the `CONTRIBUTING.md` this source
+installs and its documentation guidance, `guidance/documentation.md`, preserving
+useful material and repairing links affected by any move or deletion.
 
 Propose every existing documentation file, glossary, and index, whether or not
 it needs work, so that later documentation work stays inside the confirmed
@@ -17,9 +15,7 @@ category. Add each intended new path: a move destination, a missing directory
 README, and `docs/agents/project.md` when repository-specific constraints
 require it. Other files enter the scope only for link repairs, when a link in
 them to documentation needs repair. For a missing file, provide absence
-evidence plus positive evidence for its owning topic or Project. Record each
-relevant candidate as included or excluded with a reason, explain complete
-coverage, and disclose unresolved questions.
+evidence plus positive evidence for its owning topic or Project.
 
 Represent each applicable documentation root with its root `README.md` path and
 the `README.md` path of at least one directly nested usage, development, adr, or

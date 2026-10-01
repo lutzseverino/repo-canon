@@ -16,8 +16,7 @@ Run focused tests for the changed behavior, `npm run check`, and
 `git diff --check` before opening a PR. Review affected links, issue-form fields,
 and consistency with the confirmed preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
-CI runs the full `npm test` suite and all-profile source validation. Complete
-independent reviews and require passing checks before merging.
+CI runs the full `npm test` suite and all-profile source validation.
 
 The Node test suite exercises executable operation fixtures, including
 disposable remote-label and PR-integration state with interruption recovery,

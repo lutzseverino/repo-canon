@@ -9,17 +9,10 @@ their rationale.
 
 Before changing declarations or preparing adoption, read
 [adoption compatibility](../development/adoption-compatibility.md) for the
-supported interface and preparation steps. Use the
-[development guide](../development/README.md) for validation commands.
+supported interface and preparation steps.
 
 Before preparing a release, read the
-[release procedure](../development/release.md). It identifies the released
-source bytes and the reviewed diff. When selected bytes change, it requires
-whole-source review, validation of every profile, and refreshed fixture
-results.
-
-When implementing an assigned GitHub issue, verify its blockers and follow its
-contract.
+[release procedure](../development/release.md).
 
 Preserve pinned upstream skill contents and their notices. The root MIT License
 covers Repo Canon's original material; third-party material retains its own

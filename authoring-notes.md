@@ -28,57 +28,28 @@ them.
 
 ## Confirmed preferences
 
+Preferences that a shipped file states are cited here by their home rather than
+repeated.
+
 - Name: repo-canon (Repo Canon), distinct from the repo-standards product.
   The GitHub identity is lutzseverino/repo-canon.
 - Scope: express the author's preferred standards for any repository whose
   maintainers choose to adopt them, including collaborative repositories and
   repositories maintained by others. Start with one complete profile; no
   ownership-based differences have been requested.
-- Repository README: centered title, a one-sentence description of what the
-  project is, and badges for the languages and runtimes a user or contributor
-  needs rather than file formats or every development dependency. A runtime
-  badge carries the required major version.
-- Recognized README sections have this relative order: Installation, Features,
-  Usage, Configuration, Documentation, Contributing, License. Installation is
-  the first section when applicable. Omit inapplicable sections; place useful
-  project-specific sections appropriately between recognized sections.
-- Keep READMEs concise, aiming for roughly 300 prose words without a hard limit.
-  Give the shortest working installation path and one representative usage
-  example; link detailed explanations elsewhere. A project used through another
-  tool shows in Installation how to install that tool and point it at the
-  project. Install commands carry no version numbers. Each Features item is one
-  line starting with a verb.
-- The Contributing, Documentation, and License sections each contain only their
-  link, to CONTRIBUTING.md, docs/README.md, and the repository LICENSE file.
-  The Documentation section applies when documentation exists. The License link
-  uses the actual license name. This standard does not choose the project's
-  license.
-- Each maintained monorepo app, service, library, or tool with its own
-  responsibility and development commands has a project README, including
-  internal packages. Fixtures, generated code, and organizational directories
-  do not qualify. Project READMEs use a plain title and describe purpose,
-  commands, important configuration, and relevant documentation.
-- Documentation is fully categorized under docs/usage (using, configuring,
-  integrating), docs/development (building, testing, architecture,
-  maintenance), docs/adr (consequential decisions), and docs/agents (agent
-  workflow configuration). Create categories when they have content. Every
-  documentation directory has a README index: a one-sentence purpose, then one
-  `[Title](path): description` item per entry. docs/README.md maps the
-  categories, and docs/development/README.md gives its purpose, then Setup and
-  validation, then its index. Every document is listed in exactly one index:
-  its directory's README, or for a directory README, its parent's. Other
-  documents link to that index or cite a document in context; the exact shared
-  agents index stays as installed. Durable research belongs under its relevant
-  usage or development topic. CONTEXT.md remains the root glossary.
-- Documentation holds maintained material only. Point-in-time records stay with
-  the pull request, release, or CI run they record, as
-  [ADR 0006](docs/adr/0006-keep-point-in-time-records-with-their-event.md)
-  decides, and superseded documents other than ADRs are deleted rather than
-  kept under a historical label, as
-  [ADR 0007](docs/adr/0007-keep-superseded-adrs.md) decides. Documentation
-  discovery proposes every existing documentation file, glossary, and index;
-  other files enter the scope only for link repairs. These rules stay
-  contextual; the documentation check keeps its mechanical scope.
+- The Repository README's title, description, badges, section order, length,
+  examples, Features items, and pointer sections are stated in the
+  [Repository README guidance](guidance/repository-readme.md).
+- Project membership and Project README content are stated in the
+  [Project README guidance](guidance/project-readmes.md).
+- The documentation rules are stated in
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#documentation), with the adoption steps in
+  the [documentation guidance](guidance/documentation.md) and the scope in the
+  [documentation discovery guidance](discovery/documentation.md).
+  [ADR 0006](docs/adr/0006-keep-point-in-time-records-with-their-event.md) and
+  [ADR 0007](docs/adr/0007-keep-superseded-adrs.md) record the decisions on
+  point-in-time records and superseded ADRs. These rules stay contextual; the
+  documentation check keeps its mechanical scope.
 - Include all regular Matt Pocock skills. Upstream's promoted set at commit
   `3cca18b368ae95cdbdebbff572ccafa662551015` consists of 18 engineering and seven
   productivity skills, matching its plugin manifest. Experimental skills are
@@ -94,112 +65,88 @@ them.
   merging; incomplete issues should receive actionable feedback and remain
   unready. Agents assess content meaning. Automation identifies missing
   information rather than inventing it.
-- Behavior changes and substantive work require an issue. Small corrections
-  such as typos, broken links, and formatting may explain their purpose in the
-  PR alone. Larger work can use a parent specification and implementation
-  tickets; straightforward bugs do not require that hierarchy.
-- A triaged request's approved agent-brief comment is its implementation
-  contract. Directly authored specifications and tickets use their issue
-  bodies. Agents read the full issue and blockers, clarify contradictions,
-  and validate the applicable contract rather than only the intake body.
+- When an issue is required and when a small correction needs none are stated
+  in [`CONTRIBUTING.md`](CONTRIBUTING.md#issues). Larger work can use a parent
+  specification and implementation tickets; straightforward bugs do not require
+  that hierarchy.
+- Implementation contracts, and what an agent reads before implementing one,
+  are stated in
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#implementation-contracts).
 - Monorepo documentation policy remains independent of directory names. Use
   the delivered v2 discovery interface for arbitrary Project README targets;
   demonstrate complete coverage before claiming monorepo adoption support.
-- CONTRIBUTING.md states contributor-facing requirements for getting a change
-  accepted: issue expectations, development setup, validation, and PR/review
-  expectations. Agent implementation procedures belong in skills. The file
-  should be repository-agnostic exact content, copied identically between
-  adopting repositories. Its fixed link to docs/development/README.md delegates
-  project-specific setup and required checks to a project-owned development
-  entry point, required in every adopting repository.
-- Provide Bug report (reproduction and expected/actual behavior), Feature
-  request (problem and desired outcome), Implementation ticket (scope,
-  acceptance, blockers, optional parent), and Specification issue templates.
-  Intake reporters do not need to provide implementation plans.
-- PRs use Summary, Validation, and Related issue, with Limits only when
-  relevant. Summary explains the problem and resulting change; Validation
-  records what actually ran and its outcome. Small corrections can omit an
-  issue link under the agreed exception. A PR body keeps the template's
-  sections in order and adds other material as subsections; the metadata
-  validator does not check order.
-- The latest agent brief is the candidate implementation contract. A
-  maintainer or explicitly authorized triaging agent marks it ready after
-  review. Editing or replacing the brief removes readiness and requires
-  review again. Structural automation may remove readiness for missing
-  requirements; passing checks never grants readiness by itself.
+- CONTRIBUTING.md is the one home of Repo Canon's own rules: issues and
+  implementation contracts, readiness, development setup, validation, pull
+  requests, titles and commits, and documentation. Every other file cites it
+  rather than repeating a rule. Agent implementation procedures belong in
+  skills, and no file Repo Canon authors restates or cites them; AGENTS.md only
+  names the Repository Standards adoption skill. CONTRIBUTING.md should be repository-agnostic exact content, copied
+  identically between adopting repositories. Its fixed link to
+  docs/development/README.md delegates project-specific setup and required
+  checks to a project-owned development entry point, required in every
+  adopting repository.
+- The issue templates under [`.github/ISSUE_TEMPLATE`](.github/ISSUE_TEMPLATE)
+  provide the Bug report, Feature request, Implementation ticket, and
+  Specification fields. Intake reporters do not need to provide implementation
+  plans.
+- Pull request descriptions follow the
+  [pull request template](.github/PULL_REQUEST_TEMPLATE.md) and the pull request
+  rules in [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests), including the
+  small-correction exemption and the adoption record accepted as an update pull
+  request's description.
+  [Pull request metadata validation](docs/development/pr-metadata-validation.md)
+  states what the check enforces.
+- The readiness rules are stated in
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#readiness), and the mechanism that
+  enforces them in
+  [issue contract validation](docs/development/issue-contract-validation.md).
 - Initial agent setup uses shared GitHub tracker, domain, and label
   configuration under docs/agents, infers repository identity from Git remotes,
-  uses CONTEXT.md and docs/adr, and includes the approved brief convention.
-  Use upstream's standard triage and planning labels; external PR triage is
-  off. AGENTS.md is an identical standards-owned pointer file. Preserve and
-  reconcile existing project-specific instructions in optional
-  docs/agents/project.md before replacing the original file. Create the
-  project guidance document only when it has useful content. AGENTS.md also
-  carries the shared available-updates guidance: an agent may run `outdated` at
-  the start of work and mentions any available update; an exact update is
-  proposed as its own small PR and a contextual update as a ticket, neither
-  blocking nor joining current work, and the product's adoption skill performs
-  it. The class is known only from the update's complete inspection, so the
-  agent inspects an update when the maintainer takes it up, continues an exact
-  one as its own PR, and stops a contextual one at inspection for a ticket.
+  and uses CONTEXT.md and docs/adr. Use upstream's standard triage and planning
+  labels; external PR triage is off. AGENTS.md is an identical standards-owned
+  pointer file, and its Available updates section is the home of the shared
+  available-updates guidance. Create the optional project guidance document,
+  docs/agents/project.md, only when it has useful content.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
-  changes. PRs require nonempty Summary and Validation plus an issue reference
-  or an explicit small-correction explanation; leftover placeholders fail.
-  Issues require their template fields and applicable implementation contract
-  before readiness. Invalid or changed contracts lose readiness and receive
-  one maintained feedback comment. Corrections return to review; automation
-  never grants readiness. PR validation is a required merge check alongside
-  the adopting repository's own checks.
+  changes, and PR validation is a required merge check alongside the adopting
+  repository's own checks.
+  [Pull request metadata validation](docs/development/pr-metadata-validation.md)
+  and [issue contract validation](docs/development/issue-contract-validation.md)
+  state what each check requires and how a contract loses readiness. Automation
+  never grants readiness.
 - Accepted automation prerequisites are GitHub Actions, permission to update
   issue labels/comments, and repository-setup permission for labels and branch
   rules. Metadata validation runs trusted code without executing PR-supplied
   code. Remote settings need actual provisioning; copied configuration is not
   evidence that those settings exist.
-- Read-only documentation checks cover the centered root title, recognized
-  section order, link-only Contributing, Documentation, and License sections,
-  the license-link format, required development guide, documentation
-  categories, directory READMEs, and local file-link targets. Findings identify
-  specific corrections. Agents assess factual descriptions, technology badges,
-  commands, and meaningful placement. Approximate length remains guidance;
-  missing or ambiguous licensing requires maintainer clarification. Confirmed
-  scope and repository evidence establish monorepo coverage; standalone
-  documentation checks do not establish complete adoption.
-- Issue titles use concise sentence case and domain terminology. Bugs name
-  observable failures; features name desired capabilities; implementation
-  tickets name concrete actions; specifications name the capability being
-  specified. Avoid redundant type prefixes, issue numbers, and trailing
-  periods. Roughly 72 characters is guidance, not a hard limit.
-- PR titles and final commits on the default branch use Conventional Commits.
-  Types are lowercase feat, fix, docs, refactor, perf, test, build, ci, style,
-  chore, and revert. Optional scopes name stable components or projects.
-  Descriptions state concise actions without trailing periods, preserving
-  proper names and identifiers. Style means formatting changes. Breaking
-  changes require ! and a body explanation of impact and migration.
-- Squash-merge PRs into the default branch. Use the PR title as the squash
-  subject and the PR description as its body, preserving issue references and
-  breaking-change explanations. Prefer Conventional Commits during development
-  but permit temporary work-in-progress commits. Require PR-title validation
-  before merging; semantic type accuracy remains a review responsibility.
-  This does not prohibit local merge/rebase operations or govern integration
-  between working branches. GitHub squash defaults remain editable at merge
-  time; configuration and title checks are not an immutable final-message
-  guarantee.
-- These title and commit rules are part of the shared CONTRIBUTING.md.
+- The Repository README, Project README, and documentation guidance each state
+  what their read-only check covers, and the findings identify specific
+  corrections. Agents assess factual descriptions, technology badges,
+  commands, and meaningful placement. Confirmed scope and repository evidence
+  establish monorepo coverage; standalone documentation checks do not establish
+  complete adoption.
+- Issue titles, pull request titles, commits, and squash merges follow
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#titles-and-commits) and its issue and pull
+  request rules, and [ADR 0002](docs/adr/0002-squash-reviewed-changes.md)
+  records the squash decision. Require PR-title validation before merging;
+  semantic type accuracy remains a review responsibility. This does not
+  prohibit local merge/rebase operations or govern integration between working
+  branches. GitHub squash defaults remain editable at merge time; configuration
+  and title checks are not an immutable final-message guarantee.
 - The shared tracker, domain, and triage-label configuration files are
   standards-owned exact content, identical between adopting repositories.
-  Project-specific guidance remains separate. Reorganize existing docs using
-  confirmed individual contextual file paths while preserving exact files.
+  Project-specific guidance remains separate.
 - When an existing AGENTS.md contains useful project-specific instructions,
   preserve and reconcile them into docs/agents/project.md in a separate
   preparation change, committed through the project's normal workflow before
   a fresh inspection and adoption. This is the chosen existing-tool route;
   integrated preparation support is not required for this standards source.
 - Adoption uses repeat-safe authored operations to configure GitHub labels,
-  required checks, and squash defaults. They verify repository identity,
-  preserve unrelated settings, apply the agreed configuration, and read it
-  back. Repetition with matching settings is unchanged. Missing authenticated
-  access or required permissions leaves setup explicitly incomplete. These
-  operations do not create a built-in GitHub governance subsystem.
+  required checks, and squash defaults, as the
+  [GitHub repository configuration guidance](guidance/github-repository-configuration.md)
+  describes. Missing authenticated access or required permissions leaves setup
+  explicitly incomplete. These operations do not create a built-in GitHub
+  governance subsystem.
 
 ## Verified upstream facts
 
@@ -212,9 +159,9 @@ them.
   without repository-name substitution. Git remotes supply repository identity.
   The seeds do not provision remote labels or repository branch rules.
 - Upstream recognizes an Agent Brief heading but provides no approval marker,
-  approved-revision selector, or revision invalidation mechanism. The accepted
-  readiness rule above is this standards source's convention and belongs in
-  its configuration and automation, preserving upstream skill content.
+  approved-revision selector, or revision invalidation mechanism. Repo Canon's
+  readiness rules are its own convention and live in `CONTRIBUTING.md` and its
+  automation, preserving upstream skill content.
 
 ## Source profile
 

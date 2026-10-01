@@ -38,10 +38,7 @@ review those removed paths too.
 Any change to a source input creates a new source identity. When the reviewed
 diff is not empty, the release requires all of the following:
 
-- Whole-source review. Independent reviews, one against the repository's
-  standards and one against the release's issue, cover the whole source, not
-  only the diff: the profile, every reference, ownership, retained operation
-  resources, notices, and the policy each declaration carries.
+- Whole-source review. Review covers the whole source, not only the diff.
 - Validation of every profile. The public CLI at the required minimum version
   runs `source validate` without filtering and returns `valid: true` with no
   errors.
@@ -92,9 +89,6 @@ The pull request body carries the review and validation summary:
   declaration counts;
 - the test results, and any refreshed fixture results; and
 - the draft release notes.
-
-Integrate the pull request only after its reviews are resolved and its required
-checks pass.
 
 ## Write the release notes
 

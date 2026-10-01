@@ -144,25 +144,7 @@ rollback or freshness guarantee.
 
 ## Correct a confirmed scope
 
-A run's confirmed scope never changes while the run is active, and
-`resume --retry` repeats work under it without widening it. When contextual
-work needs a file outside the confirmed scope, or a confirmed path is mistaken,
-do not write that file. Submit the blocked scope review in the assessment
-instead; the run stays incomplete with `SCOPE_INCOMPLETE`, and the additional
-paths it reports grant no authority. Correcting the scope means abandoning the
-run and adopting again:
-
-1. Preserve the work worth keeping.
-2. Abandon the run with `abandon --project "$project_root" --json`. Its changes
-   and report are retained.
-3. Resolve those changes through the project's normal workflow: commit or
-   discard contextual work on project-owned files, and restore what the run
-   installed to its committed state. The next start requires a clean, committed
-   project.
-4. Inspect again with a new discovery proposal, obtain explicit confirmation of
-   the new inspection, and start it with the same proposal.
-
-After a complete adoption, every later update inspects with a fresh discovery
-proposal, so it is where the scope changes. The CLI's
+When contextual work needs a file outside the confirmed scope, or a confirmed
+path is mistaken, correct the scope as the CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/adoption.md#correct-a-confirmed-scope)
-describes these steps in full.
+describes.
