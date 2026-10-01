@@ -169,8 +169,7 @@ workflow, and the validator never adds a workflow state to them.
 Incomplete, edited, replaced, stale, unauthorized, or multiply-ready contracts
 lose `ready-for-agent` and `ready-for-human`. Corrections update the same comment
 with a new revision and require fresh review. Structural success never grants
-readiness, readiness never dispatches work, and an open blocker still prevents
-implementation even when the ticket remains sufficiently specified.
+readiness, and readiness never dispatches work.
 
 The workflow needs `contents: read` to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access

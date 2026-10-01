@@ -22,20 +22,17 @@ _Avoid_: Repository README when referring to a component document
 A directory designated to hold categorized documentation: the repository's
 `docs`, or another directory, such as a project's own, that the confirmed
 documentation scope identifies as a root. A documentation root never lies
-inside another. Its documentation index must map its documentation categories.
+inside another.
 _Avoid_: Docs folder, documentation directory when referring to the root
 
 **Documentation category**:
 One of the fixed top-level groupings under a documentation root: `usage`,
-`development`, `adr`, or `agents`. Each is created as a directory when it has
-content.
+`development`, `adr`, or `agents`.
 _Avoid_: Section, documentation type
 
 **Documentation index**:
-The README of a documentation root or of a directory under it, which must state
-the directory's purpose and list its entries. The installed
-`docs/agents/README.md` cites the optional `docs/agents/project.md` in context
-rather than listing it.
+The README of a documentation root or of a directory under it, which states the
+directory's purpose and lists its entries.
 _Avoid_: Table of contents, listing page
 
 **Skill setup file**:
@@ -44,16 +41,15 @@ installed unchanged from the upstream setup seeds.
 _Avoid_: Agent docs, tracker guidance
 
 **Implementation contract**:
-The agreed scope and acceptance criteria for a change, recorded in an approved
+The agreed scope and acceptance criteria for a change, recorded in the latest
 agent-brief comment for a triaged request or in a directly authored
 specification or implementation ticket.
 _Avoid_: Intake report, any comment, inferred scope
 
 **Readiness**:
-The reviewed state of an implementation contract that a maintainer or an
-explicitly authorized triaging agent considers sufficiently specified for work.
-It does not itself dispatch implementation, and revisions to an agent brief
-invalidate its readiness.
+The reviewed state of an implementation contract that an authorized reviewer
+considers sufficiently specified for work.
+It does not itself dispatch implementation.
 _Avoid_: Passing structural validation, automatic dispatch
 
 **Source acceptance**:

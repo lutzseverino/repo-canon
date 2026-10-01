@@ -39,9 +39,6 @@ repo_standards="$adoption_cli/node_modules/.bin/repo-standards"
 ```
 
 The CLI runtime stays outside the project. Retain it until adoption completes.
-Before starting, read the packaged
-`skills/adopt-standards/SKILL.md`; after installation, use the matching
-repository-local skill for later maintenance.
 
 Repo Canon's two setup fixes also require Git 2.18.0 or newer, GitHub CLI 2.57.0
 or newer, an unambiguous `github.com` remote, an authenticated `gh` account, and
@@ -74,11 +71,8 @@ state, and discovery evidence. It does not authorize a write. Repo Canon uses
 discovery for Project READMEs, documentation paths, and the intentionally empty
 project-content scope of remote configuration.
 
-Review the repository evidence and prepare a `repo-standards/scope/v1` proposal
-that accounts for every candidate, source and destination of a documentation
-move, directory index, and link repair. Record exclusions and reasons, and
-resolve every question. Use individual paths; the interface does not accept
-discovered directory trees, globs, or repository-root scope. The public CLI's
+Prepare a `repo-standards/scope/v1` proposal from the repository evidence and
+Repo Canon's discovery guidance. The public CLI's
 [inspection contract](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/inspection.md)
 defines the proposal fields and evidence binding.
 
@@ -144,25 +138,7 @@ rollback or freshness guarantee.
 
 ## Correct a confirmed scope
 
-A run's confirmed scope never changes while the run is active, and
-`resume --retry` repeats work under it without widening it. When contextual
-work needs a file outside the confirmed scope, or a confirmed path is mistaken,
-do not write that file. Submit the blocked scope review in the assessment
-instead; the run stays incomplete with `SCOPE_INCOMPLETE`, and the additional
-paths it reports grant no authority. Correcting the scope means abandoning the
-run and adopting again:
-
-1. Preserve the work worth keeping.
-2. Abandon the run with `abandon --project "$project_root" --json`. Its changes
-   and report are retained.
-3. Resolve those changes through the project's normal workflow: commit or
-   discard contextual work on project-owned files, and restore what the run
-   installed to its committed state. The next start requires a clean, committed
-   project.
-4. Inspect again with a new discovery proposal, obtain explicit confirmation of
-   the new inspection, and start it with the same proposal.
-
-After a complete adoption, every later update inspects with a fresh discovery
-proposal, so it is where the scope changes. The CLI's
+When contextual work needs a file outside the confirmed scope, or a confirmed
+path is mistaken, correct the scope as the CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/adoption.md#correct-a-confirmed-scope)
-describes these steps in full.
+describes.
