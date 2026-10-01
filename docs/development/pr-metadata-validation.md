@@ -7,9 +7,9 @@ for review. Its stable check-run name is `PR metadata`.
 Unless it is an adoption record, described below, the description must contain
 exactly one meaningful `Summary`, `Validation`, and `Related issue` Markdown
 section. Heading level, emphasis, trailing colons, and letter casing do not
-affect recognition. HTML comments, placeholders such as
-`TODO`, `TBD`, `N/A`, `Not applicable`, and `None`, rendered-empty HTML, and
-content inside HTML elements with the `hidden` attribute do not count as content.
+affect recognition. HTML comments, placeholders such as `TODO`, `TBD`, `N/A`,
+`Not applicable`, and `None`, rendered-empty HTML, and content inside HTML
+elements with the `hidden` attribute do not count as content.
 Punctuation alone does not count either. Headings inside fenced code examples do
 not define sections. Code contents can describe Validation evidence, but fence
 delimiters and language info do not count as content. `Limits` remains optional.
@@ -21,8 +21,9 @@ rather than checked.
 A small correction can instead use `Small correction: reason` with any
 meaningful reason: visible text outside code, from the marker to the end of
 the section, that holds at least two words, each a run of letters or numbers,
-and is not a placeholder. Summary and Validation use the same rule. An empty
-reason, a placeholder such as `TODO` or `N/A`, or a one-word reason fails.
+and is not a placeholder. Summary and Validation apply the same word and
+placeholder test, but their code contents count. An empty reason, a placeholder
+such as `TODO` or `N/A`, a one-word reason, or a reason only in code fails.
 Whether the correction is small enough is for reviewers to judge; the check does
 not restrict the reason to particular kinds of correction.
 References in code examples, HTML comments, and unrelated HTML attributes do not
@@ -33,9 +34,9 @@ A body whose first line, after any blank lines, is exactly
 `# Repository Standards adoption record`, apart from trailing spaces or tabs, is
 a Repository Standards adoption record, a complete body for an adoption or
 update pull request. It needs no Summary, Validation, or Related issue section,
-and the title rules below still apply. The heading counts only as that exact first
-line: text, an HTML comment, or a code fence before it, indentation, another
-heading level, or other wording makes the body an ordinary description,
+and the title rules below still apply. The heading counts only as that exact
+first line: text, an HTML comment, or a code fence before it, indentation,
+another heading level, or other wording makes the body an ordinary description,
 validated as above.
 
 Titles use `type(scope): description`, with an optional scope and an optional

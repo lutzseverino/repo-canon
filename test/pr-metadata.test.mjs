@@ -124,7 +124,7 @@ test("accepts any meaningful small-correction reason", () => {
   }
 });
 
-test("rejects an empty or placeholder small-correction reason", () => {
+test("rejects a small-correction reason that is not meaningful", () => {
   for (const relatedIssue of [
     "Small correction:",
     "Small correction:   ",
@@ -206,6 +206,12 @@ test("still validates the title of an adoption record body", () => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Conventional Commit title/);
   assert.doesNotMatch(result.stderr, /Add a Summary section/);
+
+  const breaking = runEvent({ title: "chore!: update Repo Canon to v0.4.0", body: adoptionRecord() });
+  assert.equal(breaking.status, 1);
+  assert.match(breaking.stderr, /under an Impact/);
+  assert.match(breaking.stderr, /under a Migration/);
+  assert.doesNotMatch(breaking.stderr, /Add a Summary section/);
 });
 
 test("validates a body whose record heading is not its first content as an ordinary body", () => {
