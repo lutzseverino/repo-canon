@@ -1125,11 +1125,14 @@ const creationLabel = (overrides = {}) => ({
 
 // An unedited direct ticket that `opener` created with `labels`, seen by the
 // `opened` run or by the `labeled` run in which `labeler` applied `trigger`.
+// `currentLabels` are the labels the run re-fetches, when an earlier run
+// changed them.
 function createdWithReadiness({
   run,
   opener = "maintainer",
   labeler = opener,
   labels = ["ready-for-agent"],
+  currentLabels = labels,
   trigger = "ready-for-agent",
   comments = [],
   issueEvents = [creationLabel()],
@@ -1140,17 +1143,59 @@ function createdWithReadiness({
     number: 42,
     node_id: "ISSUE_42",
     body: ticketBody,
-    labels: labels.map((name) => ({ name })),
+    labels: currentLabels.map((name) => ({ name })),
     state: "open",
     user: { login: opener },
     created_at: creationTime,
     updated_at: creationTime,
   };
+  const createdLabels = labels.map((name) => ({ name }));
   const event = run === "opened"
-    ? { action: "opened", issue: { number: 42, body: issue.body, labels: issue.labels, created_at: creationTime, updated_at: creationTime }, sender: { login: opener } }
+    ? { action: "opened", issue: { number: 42, body: issue.body, labels: createdLabels, created_at: creationTime, updated_at: creationTime }, sender: { login: opener } }
     : labeledBy(labeler, trigger, issue);
   return { issue, comments, issueEvents, event, permissions, bodyLastEditedAt };
 }
+
+// Records a run's label changes as the validator's later timeline events.
+function applyLabelChanges(state, removeLabels, addLabels) {
+  const changes = [
+    ...removeLabels.map((name) => ["unlabeled", name]),
+    ...addLabels.map((name) => ["labeled", name]),
+  ];
+  for (const [action, name] of changes) {
+    state.issueEvents.push({ id: 200 + state.issueEvents.length, event: action, label: { name }, actor: bot, created_at: "2026-09-14T17:00:05Z" });
+  }
+  state.labels = state.labels.filter((name) => !removeLabels.includes(name)).concat(addLabels);
+}
+
+// Decides the `opened` and `labeled` runs of an issue that `opener` created
+// with readiness, in `order`. Each run sees the labels, timeline, and feedback
+// the previous run left, as the per-issue concurrency group serializes them.
+function decideCreationRuns(order, { opener = "maintainer", permissions = { [opener]: role("admin") } } = {}) {
+  const comments = [];
+  const state = { labels: ["ready-for-agent"], issueEvents: [creationLabel({ actor: { login: opener } })] };
+  const decisions = order.map((run) => {
+    const decision = decideIssueContract(snapshotFor(createdWithReadiness({
+      run,
+      opener,
+      currentLabels: state.labels,
+      comments,
+      issueEvents: [...state.issueEvents],
+      permissions,
+    })));
+    applyFeedback(comments, decision);
+    applyLabelChanges(state, decision.removeLabels, decision.addLabels);
+    return decision;
+  });
+  return { decisions, comments, labels: state.labels };
+}
+
+const runOrders = [["labeled", "opened"], ["opened", "labeled"]];
+const unauthorizedOpeners = [
+  { name: "an opener with the write role", permission: role("write"), rejection: /@reporter is not authorized to grant readiness/ },
+  { name: "an opener without a repository role", permission: null, rejection: /@reporter is not authorized to grant readiness/ },
+  { name: "an opener whose role lookup fails", permission: { error: "GitHub API GET /repos/example/repository/collaborators/reporter/permission returned 403: Resource not accessible by integration" }, rejection: /Could not verify @reporter's review authority/ },
+];
 
 const lostCreationReadiness = (message, remove = ["ready-for-agent"]) => ({ exitCode: 1, remove, add: ["needs-triage"], feedback: "create", message });
 
@@ -1183,11 +1228,30 @@ decisionTable("a readiness label applied at creation is reviewed whichever run a
     }),
     expected: { exitCode: 0, remove: ["needs-triage"], feedback: "create", feedbackBody: /"reviewEventId":"101"/ },
   },
-  {
-    name: "an unauthorized opener loses readiness when the labeled run arrives first",
-    snapshot: createdWithReadiness({ run: "labeled", opener: "reporter", issueEvents: [creationLabel({ actor: { login: "reporter" } })], permissions: { reporter: role("write") } }),
-    expected: lostCreationReadiness(/wait for the validator to publish/i),
-  },
+  ...unauthorizedOpeners.flatMap((opener) => runOrders.map((order) => ({
+    name: `${opener.name} is rejected as unauthorized when the ${order[0]} run arrives first`,
+    run: () => {
+      const { decisions: [first, second], comments, labels } = decideCreationRuns(order, { opener: "reporter", permissions: { reporter: opener.permission } });
+      assertDecision(first, {
+        ...lostCreationReadiness(opener.rejection),
+        notMessage: /wait for the validator to publish/i,
+        feedbackBody: [opener.rejection, /"observedEventId":"101"/],
+      });
+      assertDecision(second, { exitCode: 0, feedback: 99, message: /awaiting authorized review/i, feedbackBody: /awaiting review/i });
+      assert.deepEqual(labels, ["needs-triage"]);
+      assert.equal(comments.length, 1);
+    },
+  }))),
+  ...[
+    { name: "an authorized opener", options: {} },
+    ...unauthorizedOpeners.map((opener) => ({ name: opener.name, options: { opener: "reporter", permissions: { reporter: opener.permission } } })),
+  ].map(({ name, options }) => ({
+    name: `${name} gets the same decisions, feedback, and labels in either run order`,
+    run: () => {
+      const [labeledFirst, openedFirst] = runOrders.map((order) => decideCreationRuns(order, options));
+      assert.deepEqual(labeledFirst, openedFirst);
+    },
+  })),
   {
     name: "an edited body loses readiness when the labeled run arrives first",
     snapshot: createdWithReadiness({ run: "labeled", bodyLastEditedAt: "2026-09-14T17:00:30Z" }),
@@ -1222,6 +1286,11 @@ decisionTable("a readiness label applied at creation is reviewed whichever run a
   {
     name: "a label the timeline has not recorded loses readiness when the labeled run arrives first",
     snapshot: createdWithReadiness({ run: "labeled", issueEvents: [] }),
+    expected: lostCreationReadiness(/timeline does not contain the current readiness label event/i),
+  },
+  {
+    name: "a label the timeline has not recorded loses readiness whatever the opener's role",
+    snapshot: createdWithReadiness({ run: "labeled", opener: "reporter", issueEvents: [], permissions: { reporter: role("write") } }),
     expected: lostCreationReadiness(/timeline does not contain the current readiness label event/i),
   },
   {
@@ -2093,6 +2162,71 @@ test("the adapter reads every page and the role of each login a decision can con
     assert.deepEqual(otherWrites, []);
     assert.deepEqual(write.slice(0, 2), ["POST", "/repos/example/repository/issues/42/comments"]);
     assert.match(write[2].body, /"reviewEventId":"101"/);
+  });
+});
+
+// Runs the `opened` and `labeled` runs of an issue that `opener` created with
+// readiness through the adapter, in `order`. Each run sees the labels,
+// timeline, and feedback comment the previous run's writes left.
+async function exerciseCreationRuns(order, { opener, permission }) {
+  const comments = [];
+  const state = { labels: ["ready-for-agent"], issueEvents: [creationLabel({ actor: { login: opener } })] };
+  const runs = [];
+  for (const run of order) {
+    const { issue, event } = createdWithReadiness({ run, opener, currentLabels: state.labels });
+    const result = await exercise({ issue, comments, issueEvents: [...state.issueEvents], event, permissions: { [opener]: permission } });
+    const applied = writes(result);
+    applyLabelChanges(
+      state,
+      applied.filter(([method]) => method === "DELETE").map(([, url]) => decodeURIComponent(url.split("/labels/")[1])),
+      applied.filter(([method, url]) => method === "POST" && url.endsWith("/labels")).flatMap(([, , body]) => body.labels),
+    );
+    runs.push({ code: result.code, stdout: result.stdout, stderr: result.stderr, writes: applied, permissionLookups: permissionLookups(result) });
+  }
+  return { runs, comments, labels: state.labels };
+}
+
+test("an issue created with readiness ends the same through the adapter whichever run arrives first", async (context) => {
+  await context.test("an authorized opener keeps readiness", async () => {
+    const outcomes = [];
+    for (const order of runOrders) {
+      const outcome = await exerciseCreationRuns(order, { opener: "maintainer", permission: { permission: "admin", role_name: "admin" } });
+      const [first, second] = outcome.runs;
+      assert.equal(first.code, 0, first.stderr);
+      assert.match(first.stdout, /valid implementation ticket with ready-for-agent bound/i);
+      assert.deepEqual(first.writes.map(([method, url]) => [method, url]), [["POST", "/repos/example/repository/issues/42/comments"]]);
+      assert.equal(second.code, 0, second.stderr);
+      assert.deepEqual(second.writes, []);
+      assert.deepEqual(outcome.labels, ["ready-for-agent"]);
+      const { issue } = createdWithReadiness({ run: order[0] });
+      assert.equal(outcome.comments.length, 1);
+      assert.equal(outcome.comments[0].body, approvedTicketFeedback(issue, { reviewEventId: "101" }).body);
+      outcomes.push(outcome);
+    }
+    assert.deepEqual(outcomes[0], outcomes[1]);
+  });
+
+  await context.test("an opener without an authorizing role is told so", async () => {
+    const outcomes = [];
+    for (const order of runOrders) {
+      const outcome = await exerciseCreationRuns(order, { opener: "reporter", permission: { permission: "write", role_name: "write" } });
+      const [first, second] = outcome.runs;
+      assert.equal(first.code, 1);
+      assert.match(first.stderr, /@reporter is not authorized to grant readiness/);
+      assert.equal(first.writes.length, 3);
+      assert.deepEqual(first.writes.slice(0, 2), [
+        ["DELETE", "/repos/example/repository/issues/42/labels/ready-for-agent", null],
+        ["POST", "/repos/example/repository/issues/42/labels", { labels: ["needs-triage"] }],
+      ]);
+      assert.deepEqual(first.writes[2].slice(0, 2), ["POST", "/repos/example/repository/issues/42/comments"]);
+      assert.match(first.writes[2][2].body, /@reporter is not authorized to grant readiness/);
+      assert.doesNotMatch(first.writes[2][2].body, /wait for the validator to publish/i);
+      assert.equal(second.code, 0, second.stderr);
+      assert.deepEqual(second.writes.map(([method, url]) => [method, url]), [["PATCH", "/repos/example/repository/issues/comments/99"]]);
+      assert.deepEqual(outcome.labels, ["needs-triage"]);
+      outcomes.push(outcome);
+    }
+    assert.deepEqual(outcomes[0], outcomes[1]);
   });
 });
 
