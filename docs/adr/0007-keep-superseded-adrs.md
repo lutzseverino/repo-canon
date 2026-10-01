@@ -1,13 +1,14 @@
 # Keep superseded ADRs
 
 An ADR is never deleted. When a later ADR supersedes it, the older ADR stays
-with a status line that names and links the ADR superseding it; every other
-superseded document is still deleted and its links repaired. Deleting
-superseded documents keeps documentation to maintained material, but applied
-to ADRs it deleted an adopting repository's decision record and lost the
-reasoning behind a reversal, which is what an ADR exists to keep. A superseded
-ADR is therefore maintained material: its status line stays current, and it is
-not a point-in-time record under
+with a status line under its title that names and links the ADR superseding it;
+every other superseded document is still deleted and its links repaired.
+Deleting superseded documents keeps documentation to maintained material, but
+applied to ADRs it deleted an adopting repository's decision record and lost the
+reasoning behind a reversal, which is what an ADR exists to keep, as the
+[specification](https://github.com/lutzseverino/repo-canon/issues/122) for
+`v0.4.0` records. A superseded ADR is therefore maintained material: its status
+line stays current, and it is not a point-in-time record under
 [ADR 0006](0006-keep-point-in-time-records-with-their-event.md). Two
 alternatives were rejected: relying on Git history, because a deleted ADR no
 longer appears in the index and a reader of the superseding ADR cannot find
@@ -20,5 +21,5 @@ keeps them under exactly the historical label the documentation rules forbid.
   superseded ADRs.
 - The [contribution guide](../../CONTRIBUTING.md#documentation) states the rule
   and its exception to deleting superseded documents.
-- It adds no migration work. A repository that already deleted a superseded ADR
-  still conforms; Git history retains the deleted record.
+- It adds no migration work. A repository that deleted a superseded ADR before
+  this decision needs no restoration; Git history retains the deleted record.

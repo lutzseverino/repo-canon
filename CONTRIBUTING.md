@@ -2,12 +2,12 @@
 
 ## Issues
 
-Use an issue for behavior changes and substantive work; small corrections are
-the exception that [pull requests](#pull-requests) describe. Agree on the scope
-and acceptance criteria before implementation. Open issues with the
-repository's issue templates. Specifications and implementation tickets live in
-the issue tracker; repository documents keep durable domain language,
-decisions, usage guidance, and development knowledge.
+Use an issue for behavior changes and substantive work. Small corrections need
+no issue; see [pull requests](#pull-requests). Agree on the scope and acceptance
+criteria before implementation. Open issues with the repository's issue
+templates. Specifications and implementation tickets live in the issue tracker;
+repository documents keep durable domain language, decisions, usage guidance,
+and development knowledge.
 
 Use short, descriptive issue titles in sentence case and the project's
 terminology. Name the observed failure for bugs, the desired capability for
@@ -29,10 +29,10 @@ only after its blockers are closed.
 ## Readiness
 
 Applying `ready-for-agent` or `ready-for-human` is the review action and needs
-the repository `admin`, `maintain`, or `triage` role. After revising a
-contract, wait for the workflow's revision notice before applying readiness.
-Editing a contract removes its readiness. A specification or ticket can be
-ready while its blockers are open.
+the repository `admin`, `maintain`, or `triage` role. After revising a contract
+or posting an Agent Brief, wait for the issue-contract workflow's revision
+notice before applying readiness. Editing a contract removes its readiness. A
+specification or ticket can be ready while its blockers are open.
 
 ## Development setup
 
@@ -102,5 +102,5 @@ an ADR rather than keeping it under a historical label, and repair the links to
 it.
 
 An ADR is never deleted. When a later ADR supersedes it, keep it and add a
-status line that names and links the superseding ADR. A superseded ADR is
-maintained material, not a point-in-time record.
+status line under its title that names and links the superseding ADR. A
+superseded ADR is maintained material, not a point-in-time record.

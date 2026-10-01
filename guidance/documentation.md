@@ -43,11 +43,10 @@ Git history retains them, and a maintained document that still needs one cites
 its commit permalink.
 
 Preserve useful, current documentation when reorganizing it. Update affected
-links and account for both old and new paths. Delete a superseded maintained
-document other than an ADR rather than keeping it under a historical label, and
-repair the links to it; keep a superseded ADR, marked with the ADR that
-supersedes it. Preserve exact shared agent configuration. Project-specific agent
-constraints belong in optional `docs/agents/project.md`.
+links and account for both old and new paths. Handle superseded documents,
+including ADRs, as the documentation rules in `CONTRIBUTING.md` state, and
+repair the links to deleted ones. Preserve exact shared agent configuration.
+Project-specific agent constraints belong in optional `docs/agents/project.md`.
 
 Assess documents against their actual audience and topic. Mechanical checks
 cover categories, directory READMEs, required entry points, and local link
