@@ -90,14 +90,14 @@ label can take its initial review from its creation snapshot, whichever of its
 must be both the first and the latest readiness transition, applied by the
 issue's opener. The `opened` run reads the label from its payload. A `labeled`
 run needs the timeline to record the opener applying it in the issue's creation
-second; otherwise it is decided as any later review. Either run checks the
-opener's role as the reviewer's, so an opener without an authorizing role gets
-the same "not authorized" feedback whichever run arrives first. Once the
-timeline holds the creation label event, either run records it as the review,
-so both orders end with the same labels and recorded review.
+second; otherwise it is decided as any later review. Either run then checks the
+opener's role as it checks any reviewer's, so an opener without an authorizing
+role gets the same "not authorized" feedback whichever run arrives first. Once
+the timeline holds the creation label event, either run records it as the
+review, so both orders end with the same labels and recorded review.
 
-One race remains and is accepted: a `labeled` run that arrives before the
-timeline records the creation label event cannot recognize the creation review.
+A residual race is accepted: a `labeled` run that arrives before the timeline
+records the creation label event cannot recognize the creation review.
 It removes readiness and reports that the timeline does not contain the
 readiness label event, whatever the opener's role, and the later `opened` run
 finds no readiness label to review. The remedy is to reapply the label: an

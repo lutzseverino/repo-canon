@@ -1168,12 +1168,16 @@ function applyLabelChanges(state, removeLabels, addLabels) {
   state.labels = state.labels.filter((name) => !removeLabels.includes(name)).concat(addLabels);
 }
 
+// The labels and timeline of an issue that `opener` created with readiness,
+// before any validator run.
+const creationState = (opener) => ({ labels: ["ready-for-agent"], issueEvents: [creationLabel({ actor: { login: opener } })] });
+
 // Decides the `opened` and `labeled` runs of an issue that `opener` created
 // with readiness, in `order`. Each run sees the labels, timeline, and feedback
 // the previous run left, as the per-issue concurrency group serializes them.
 function decideCreationRuns(order, { opener = "maintainer", permissions = { [opener]: role("admin") } } = {}) {
   const comments = [];
-  const state = { labels: ["ready-for-agent"], issueEvents: [creationLabel({ actor: { login: opener } })] };
+  const state = creationState(opener);
   const decisions = order.map((run) => {
     const decision = decideIssueContract(snapshotFor(createdWithReadiness({
       run,
@@ -1191,9 +1195,10 @@ function decideCreationRuns(order, { opener = "maintainer", permissions = { [ope
 }
 
 const runOrders = [["labeled", "opened"], ["opened", "labeled"]];
+const notAuthorized = /@reporter is not authorized to grant readiness/;
 const unauthorizedOpeners = [
-  { name: "an opener with the write role", permission: role("write"), rejection: /@reporter is not authorized to grant readiness/ },
-  { name: "an opener without a repository role", permission: null, rejection: /@reporter is not authorized to grant readiness/ },
+  { name: "an opener with the write role", permission: role("write"), rejection: notAuthorized },
+  { name: "an opener without a repository role", permission: null, rejection: notAuthorized },
   { name: "an opener whose role lookup fails", permission: { error: "GitHub API GET /repos/example/repository/collaborators/reporter/permission returned 403: Resource not accessible by integration" }, rejection: /Could not verify @reporter's review authority/ },
 ];
 
@@ -2170,7 +2175,7 @@ test("the adapter reads every page and the role of each login a decision can con
 // timeline, and feedback comment the previous run's writes left.
 async function exerciseCreationRuns(order, { opener, permission }) {
   const comments = [];
-  const state = { labels: ["ready-for-agent"], issueEvents: [creationLabel({ actor: { login: opener } })] };
+  const state = creationState(opener);
   const runs = [];
   for (const run of order) {
     const { issue, event } = createdWithReadiness({ run, opener, currentLabels: state.labels });
@@ -2212,14 +2217,14 @@ test("an issue created with readiness ends the same through the adapter whicheve
       const outcome = await exerciseCreationRuns(order, { opener: "reporter", permission: { permission: "write", role_name: "write" } });
       const [first, second] = outcome.runs;
       assert.equal(first.code, 1);
-      assert.match(first.stderr, /@reporter is not authorized to grant readiness/);
+      assert.match(first.stderr, notAuthorized);
       assert.equal(first.writes.length, 3);
       assert.deepEqual(first.writes.slice(0, 2), [
         ["DELETE", "/repos/example/repository/issues/42/labels/ready-for-agent", null],
         ["POST", "/repos/example/repository/issues/42/labels", { labels: ["needs-triage"] }],
       ]);
       assert.deepEqual(first.writes[2].slice(0, 2), ["POST", "/repos/example/repository/issues/42/comments"]);
-      assert.match(first.writes[2][2].body, /@reporter is not authorized to grant readiness/);
+      assert.match(first.writes[2][2].body, notAuthorized);
       assert.doesNotMatch(first.writes[2][2].body, /wait for the validator to publish/i);
       assert.equal(second.code, 0, second.stderr);
       assert.deepEqual(second.writes.map(([method, url]) => [method, url]), [["PATCH", "/repos/example/repository/issues/comments/99"]]);

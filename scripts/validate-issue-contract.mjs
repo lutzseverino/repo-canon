@@ -694,8 +694,9 @@ function activeApproval(permissions, recorded, revision, label, timeline) {
 // shows the one readiness label the issue was created with. A `labeled` run has
 // no such payload, so the timeline must show the opener, the issue's author,
 // applying it in the issue's creation second. Otherwise the run is decided as
-// any later review. Either run checks the opener's role as the reviewer's, so an
-// opener without an authorizing role gets the same rejection in either order.
+// any later review. Either run then checks the opener's role as it checks any
+// reviewer's, so an opener without an authorizing role gets the same rejection
+// in either order.
 function creationLabelEvent(currentEvent, issue, result, label, timeline, openingEligible) {
   if (result.contract.type !== "issue-body" || !openingEligible || !label) return null;
   if (currentEvent.action === "labeled") {
