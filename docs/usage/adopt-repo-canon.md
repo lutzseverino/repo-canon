@@ -39,9 +39,6 @@ repo_standards="$adoption_cli/node_modules/.bin/repo-standards"
 ```
 
 The CLI runtime stays outside the project. Retain it until adoption completes.
-Before starting, read the packaged
-`skills/adopt-standards/SKILL.md`; after installation, use the matching
-repository-local skill for later maintenance.
 
 Repo Canon's two setup fixes also require Git 2.18.0 or newer, GitHub CLI 2.57.0
 or newer, an unambiguous `github.com` remote, an authenticated `gh` account, and
@@ -74,11 +71,8 @@ state, and discovery evidence. It does not authorize a write. Repo Canon uses
 discovery for Project READMEs, documentation paths, and the intentionally empty
 project-content scope of remote configuration.
 
-Review the repository evidence and prepare a `repo-standards/scope/v1` proposal
-that accounts for every candidate, source and destination of a documentation
-move, directory index, and link repair. Record exclusions and reasons, and
-resolve every question. Use individual paths; the interface does not accept
-discovered directory trees, globs, or repository-root scope. The public CLI's
+Prepare a `repo-standards/scope/v1` proposal from the repository evidence and
+Repo Canon's discovery guidance. The public CLI's
 [inspection contract](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/inspection.md)
 defines the proposal fields and evidence binding.
 

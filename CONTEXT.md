@@ -41,14 +41,14 @@ installed unchanged from the upstream setup seeds.
 _Avoid_: Agent docs, tracker guidance
 
 **Implementation contract**:
-The agreed scope and acceptance criteria for a change, recorded in an approved
+The agreed scope and acceptance criteria for a change, recorded in the latest
 agent-brief comment for a triaged request or in a directly authored
 specification or implementation ticket.
 _Avoid_: Intake report, any comment, inferred scope
 
 **Readiness**:
-The reviewed state of an implementation contract that a maintainer or an
-explicitly authorized triaging agent considers sufficiently specified for work.
+The reviewed state of an implementation contract that an authorized reviewer
+considers sufficiently specified for work.
 It does not itself dispatch implementation.
 _Avoid_: Passing structural validation, automatic dispatch
 

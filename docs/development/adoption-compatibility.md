@@ -23,16 +23,12 @@ releases above the floor.
 | Project READMEs at arbitrary locations, including missing files | Repository declarations with separate `guidance` and `discovery` references; an agent resolves membership from repository evidence. |
 | Documentation reorganization around exact shared files | Individual contextual source, destination, directory-index introduction, and link-repair paths; exact files remain outside contextual scope. |
 | Scope review before adoption | First `inspect` returns discovery evidence; `inspect --scope` validates a `repo-standards/scope/v1` proposal. Confirm the complete inspection and pass the same proposal to `start --scope`. |
-| Files discovered during an active adoption | A confirmed scope never changes during a run. Abandon the run, resolve its changes, and adopt again with a fresh proposal and a newly confirmed inspection. |
+| Files discovered during an active adoption | A confirmed scope never changes during a run; the CLI's [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/adoption.md#correct-a-confirmed-scope) describes correcting it. |
 | Scope changes after complete adoption | Every later update, including one with unchanged pins, inspects with a fresh proposal and a newly confirmed inspection. Removed paths leave governance without deleting content. |
 
-Scope proposals list individual files with evidence, candidate decisions,
-coverage rationale, and any unresolved questions. Missing READMEs require
-absence evidence and positive evidence of a maintained Project. Directory
-trees, globs, root write scope, and subtraction of exact descendants are not
-discovered targets. Empty scope retains its declaration and operations;
-unresolved coverage blocks start. Changed evidence requires fresh inspection
-and review, and writes outside confirmed scope remain invalid.
+The inspection contract below defines scope proposals. Directory trees, globs,
+root write scope, and subtraction of exact descendants are not discovered
+targets, and an empty scope retains its declaration and operations.
 
 Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/author-format.md),
 [inspection](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/inspection.md),

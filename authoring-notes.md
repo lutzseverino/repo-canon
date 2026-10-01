@@ -61,26 +61,28 @@ repeated.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the
   standards source.
-- Automate objective issue/PR requirements. Failed PR validation should block
-  merging; incomplete issues should receive actionable feedback and remain
-  unready. Agents assess content meaning. Automation identifies missing
-  information rather than inventing it.
-- When an issue is required and when a small correction needs none are stated
-  in [`CONTRIBUTING.md`](CONTRIBUTING.md#issues). Larger work can use a parent
-  specification and implementation tickets; straightforward bugs do not require
-  that hierarchy.
+- Automate objective issue/PR requirements. Incomplete issues should receive
+  actionable feedback and remain unready. Agents assess content meaning.
+  Automation identifies missing information rather than inventing it.
+- When an issue is required is stated in
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#issues). The small-correction exemption is
+  stated in its [pull request rules](CONTRIBUTING.md#pull-requests), and
+  [pull request metadata validation](docs/development/pr-metadata-validation.md)
+  states what the check accepts. Larger work can use a parent specification and
+  implementation tickets; straightforward bugs do not require that hierarchy.
 - Implementation contracts, and what an agent reads before implementing one,
   are stated in
   [`CONTRIBUTING.md`](CONTRIBUTING.md#implementation-contracts).
 - Monorepo documentation policy remains independent of directory names. Use
   the delivered v2 discovery interface for arbitrary Project README targets;
   demonstrate complete coverage before claiming monorepo adoption support.
-- CONTRIBUTING.md is the one home of Repo Canon's own rules: issues and
-  implementation contracts, readiness, development setup, validation, pull
+- CONTRIBUTING.md is the one home of Repo Canon's contribution rules: issues
+  and implementation contracts, readiness, development setup, validation, pull
   requests, titles and commits, and documentation. Every other file cites it
-  rather than repeating a rule. Agent implementation procedures belong in
-  skills, and no file Repo Canon authors restates or cites them; AGENTS.md only
-  names the Repository Standards adoption skill. CONTRIBUTING.md should be repository-agnostic exact content, copied
+  rather than repeating one of them. Agent implementation procedures belong in
+  skills. Files Repo Canon authors do not restate or cite them; the skill setup
+  files may, and AGENTS.md may name the Repository Standards adoption skill.
+  CONTRIBUTING.md should be repository-agnostic exact content, copied
   identically between adopting repositories. Its fixed link to
   docs/development/README.md delegates project-specific setup and required
   checks to a project-owned development entry point, required in every
@@ -100,16 +102,18 @@ repeated.
   [`CONTRIBUTING.md`](CONTRIBUTING.md#readiness), and the mechanism that
   enforces them in
   [issue contract validation](docs/development/issue-contract-validation.md).
-- Initial agent setup uses shared GitHub tracker, domain, and label
-  configuration under docs/agents, infers repository identity from Git remotes,
-  and uses CONTEXT.md and docs/adr. Use upstream's standard triage and planning
-  labels; external PR triage is off. AGENTS.md is an identical standards-owned
-  pointer file, and its Available updates section is the home of the shared
-  available-updates guidance. Create the optional project guidance document,
-  docs/agents/project.md, only when it has useful content.
+- The shared tracker, domain, and triage-label configuration files under
+  docs/agents are standards-owned exact content, identical between adopting
+  repositories, and state the tracker, label, and domain conventions they
+  configure. Project-specific guidance remains separate. AGENTS.md is an
+  identical standards-owned pointer file, and its Available updates section is
+  the home of the shared available-updates guidance. Create the optional
+  project guidance document, docs/agents/project.md, only when it has useful
+  content.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
-  changes, and PR validation is a required merge check alongside the adopting
-  repository's own checks.
+  changes. The
+  [GitHub repository configuration guidance](guidance/github-repository-configuration.md)
+  makes PR validation a required merge check.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   and [issue contract validation](docs/development/issue-contract-validation.md)
   state what each check requires and how a contract loses readiness. Automation
@@ -128,14 +132,10 @@ repeated.
 - Issue titles, pull request titles, commits, and squash merges follow
   [`CONTRIBUTING.md`](CONTRIBUTING.md#titles-and-commits) and its issue and pull
   request rules, and [ADR 0002](docs/adr/0002-squash-reviewed-changes.md)
-  records the squash decision. Require PR-title validation before merging;
-  semantic type accuracy remains a review responsibility. This does not
-  prohibit local merge/rebase operations or govern integration between working
-  branches. GitHub squash defaults remain editable at merge time; configuration
-  and title checks are not an immutable final-message guarantee.
-- The shared tracker, domain, and triage-label configuration files are
-  standards-owned exact content, identical between adopting repositories.
-  Project-specific guidance remains separate.
+  records the squash decision. This does not prohibit local merge/rebase
+  operations or govern integration between working branches. GitHub squash
+  defaults remain editable at merge time; configuration and title checks are not
+  an immutable final-message guarantee.
 - When an existing AGENTS.md contains useful project-specific instructions,
   preserve and reconcile them into docs/agents/project.md in a separate
   preparation change, committed through the project's normal workflow before
@@ -144,9 +144,8 @@ repeated.
 - Adoption uses repeat-safe authored operations to configure GitHub labels,
   required checks, and squash defaults, as the
   [GitHub repository configuration guidance](guidance/github-repository-configuration.md)
-  describes. Missing authenticated access or required permissions leaves setup
-  explicitly incomplete. These operations do not create a built-in GitHub
-  governance subsystem.
+  describes. These operations do not create a built-in GitHub governance
+  subsystem.
 
 ## Verified upstream facts
 

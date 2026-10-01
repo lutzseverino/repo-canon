@@ -16,13 +16,14 @@ links to it. Its Setup and validation section states the project's real
 prerequisites, setup, development commands, and required validation, or links
 the development documents that contain them.
 
-For point-in-time records, an adoption or update pull request carries the
-tool's summary, a release carries its notes and any machine-readable records as
-release assets, and bulk raw output remains a CI artifact. CI artifacts expire,
-so base each conclusion on a lasting record, such as a pull request summary or
-a release asset. There is no evidence documentation category. Remove records
-already committed to the documentation; Git history retains them, and a
-maintained document that still needs one cites its commit permalink.
+Point-in-time records stay with their event, as `CONTRIBUTING.md` states: an
+adoption or update pull request carries the tool's summary, a release carries
+its notes and any machine-readable records as release assets, and bulk raw
+output remains a CI artifact. CI artifacts expire, so base each conclusion on a
+lasting record, such as a pull request summary or a release asset. There is no
+evidence documentation category. Remove records already committed to the
+documentation; Git history retains them, and a maintained document that still
+needs one cites its commit permalink.
 
 Preserve useful, current documentation when reorganizing it. Update affected
 links and account for both old and new paths. Preserve exact shared agent

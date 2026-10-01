@@ -38,7 +38,8 @@ review those removed paths too.
 Any change to a source input creates a new source identity. When the reviewed
 diff is not empty, the release requires all of the following:
 
-- Whole-source review. Review covers the whole source, not only the diff.
+- Whole-source review. Review covers the whole source, every source input, not
+  only the diff.
 - Validation of every profile. The public CLI at the required minimum version
   runs `source validate` without filtering and returns `valid: true` with no
   errors.
