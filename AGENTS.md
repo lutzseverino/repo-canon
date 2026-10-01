@@ -31,14 +31,15 @@ changes out of the current work's branch.
 
 ### Issue tracker
 
-Before working with issues, specifications, tickets, or pull requests, read
-`docs/agents/issue-tracker.md`.
+Issues, specifications, and tickets live in GitHub Issues, worked with the `gh`
+CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-Before triaging work or changing readiness, read `docs/agents/triage-labels.md`.
+The five canonical triage roles use their default label strings. See
+`docs/agents/triage-labels.md`.
 
 ### Domain docs
 
-Before exploring or changing code, domain terminology, or architecture, read
-`docs/agents/domain.md`.
+Single-context by default: a root `CONTEXT.md` and `docs/adr/`; a root
+`CONTEXT-MAP.md` makes it multi-context. See `docs/agents/domain.md`.

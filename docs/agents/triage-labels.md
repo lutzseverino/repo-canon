@@ -1,19 +1,15 @@
-# Triage labels
+# Triage Labels
 
-Use the following shared workflow-state names.
+The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker.
 
-| State | Meaning |
-| --- | --- |
-| `needs-triage` | Requires review or renewed review |
-| `needs-info` | Waiting for information needed to evaluate the request |
-| `ready-for-agent` | Reviewed and sufficiently specified for agent implementation |
-| `ready-for-human` | Reviewed and requires human implementation |
-| `wontfix` | Will not be actioned |
+| Label in mattpocock/skills | Label in our tracker | Meaning                                  |
+| -------------------------- | -------------------- | ---------------------------------------- |
+| `needs-triage`             | `needs-triage`       | Maintainer needs to evaluate this issue  |
+| `needs-info`               | `needs-info`         | Waiting on reporter for more information |
+| `ready-for-agent`          | `ready-for-agent`    | Fully specified, ready for an AFK agent  |
+| `ready-for-human`          | `ready-for-human`    | Requires human implementation            |
+| `wontfix`                  | `wontfix`            | Will not be actioned                     |
 
-Triage assigns one category, `bug` or `enhancement`, and one workflow state to
-a triaged request.
+When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
-Wayfinder uses `wayfinder:map` for its planning issue and `wayfinder:research`,
-`wayfinder:prototype`, `wayfinder:grilling`, or `wayfinder:task` for child issues.
-
-The readiness rules are in `CONTRIBUTING.md`.
+Edit the right-hand column to match whatever vocabulary you actually use.

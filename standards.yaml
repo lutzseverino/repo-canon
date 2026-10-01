@@ -50,7 +50,7 @@ defaults:
     domain-configuration:
       kind: file
       target: docs/agents/domain.md
-      exact: docs/agents/domain.md
+      exact: vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md
 
     feature-request-template:
       kind: file
@@ -106,7 +106,7 @@ defaults:
     issue-tracker-configuration:
       kind: file
       target: docs/agents/issue-tracker.md
-      exact: docs/agents/issue-tracker.md
+      exact: vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md
 
     marked-license:
       kind: file
@@ -341,7 +341,7 @@ defaults:
     triage-label-configuration:
       kind: file
       target: docs/agents/triage-labels.md
-      exact: docs/agents/triage-labels.md
+      exact: vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md
 
 profiles:
   complete:

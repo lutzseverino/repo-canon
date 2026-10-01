@@ -38,6 +38,11 @@ the directory's purpose and list its entries. The installed
 rather than listing it.
 _Avoid_: Table of contents, listing page
 
+**Skill setup file**:
+A file the installed skills read as their per-repository configuration,
+installed unchanged from the upstream setup seeds.
+_Avoid_: Agent docs, tracker guidance
+
 **Implementation contract**:
 The agreed scope and acceptance criteria for a change, recorded in an approved
 agent-brief comment for a triaged request or in a directly authored
