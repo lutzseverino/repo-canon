@@ -19,8 +19,9 @@ rather than checked.
 
 `Related issue` accepts a GitHub issue URL, `owner/repository#123`, or `#123`.
 A small correction can instead use `Small correction: reason` with any
-meaningful reason: one with at least two words of letters or numbers that is not
-a placeholder, the same rule that applies to Summary and Validation. An empty
+meaningful reason: visible text outside code, from the marker to the end of
+the section, that holds at least two words, each a run of letters or numbers,
+and is not a placeholder. Summary and Validation use the same rule. An empty
 reason, a placeholder such as `TODO` or `N/A`, or a one-word reason fails.
 Whether the correction is small enough is for reviewers to judge; the check does
 not restrict the reason to particular kinds of correction.
