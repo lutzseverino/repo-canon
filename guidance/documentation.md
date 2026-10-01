@@ -16,7 +16,7 @@ links to it. Its Setup and validation section states the project's real
 prerequisites, setup, development commands, and required validation, or links
 the development documents that contain them.
 
-Point-in-time records stay with their event, as `CONTRIBUTING.md` states: an
+Point-in-time records stay with their event, as `CONTRIBUTING.md` states. An
 adoption or update pull request carries the tool's summary, a release carries
 its notes and any machine-readable records as release assets, and bulk raw
 output remains a CI artifact. CI artifacts expire, so base each conclusion on a

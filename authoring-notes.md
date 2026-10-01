@@ -7,10 +7,10 @@ their rationale. They stay beside `standards.yaml`, the source they explain.
 
 Repo Canon owns a file only when every adopting repository should hold the
 same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
-and pull request templates, the shared agent configuration under `docs/agents`,
-the trusted validation workflows with their scripts, the vendored
-rendered-Markdown runtime and parsers with their notices, and the pinned skills
-with their upstream license notice. It is installed identically in every
+and pull request templates, the skill setup files under `docs/agents`, the
+trusted validation workflows with their scripts, the vendored rendered-Markdown
+runtime and parsers with their notices, and the pinned skills with their
+upstream license notice. It is installed identically in every
 adopting repository and changes only through a Repo Canon release.
 
 `guidance/` and `discovery/` are source-side instructions for the agent that
@@ -57,7 +57,8 @@ repeated.
   outside the regular set. No additional regular-skill exclusions are agreed.
 - The standards source manages reviewed, pinned upstream skill snapshots and
   distributes changes through standards releases. Keep upstream skill content
-  intact and express repository conventions through configuration.
+  intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and its
+  guidance, not in the skills or their setup files.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the
   standards source.
@@ -102,10 +103,10 @@ repeated.
   [`CONTRIBUTING.md`](CONTRIBUTING.md#readiness), and the mechanism that
   enforces them in
   [issue contract validation](docs/development/issue-contract-validation.md).
-- The shared tracker, domain, and triage-label configuration files under
-  docs/agents are standards-owned exact content, identical between adopting
-  repositories, and state the tracker, label, and domain conventions they
-  configure. Project-specific guidance remains separate. AGENTS.md is an
+- The skill setup files under docs/agents are installed verbatim from the
+  vendored upstream setup seeds, and Repo Canon writes nothing into them, as
+  [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
+  decides. Project-specific guidance remains separate. AGENTS.md is an
   identical standards-owned pointer file, and its Available updates section is
   the home of the shared available-updates guidance. Create the optional
   project guidance document, docs/agents/project.md, only when it has useful
@@ -116,8 +117,7 @@ repeated.
   makes PR validation a required merge check.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   and [issue contract validation](docs/development/issue-contract-validation.md)
-  state what each check requires and how a contract loses readiness. Automation
-  never grants readiness.
+  state what each check requires and how a contract loses readiness.
 - Accepted automation prerequisites are GitHub Actions, permission to update
   issue labels/comments, and repository-setup permission for labels and branch
   rules. Metadata validation runs trusted code without executing PR-supplied
