@@ -24,3 +24,6 @@ involve real alternatives.
 - [Keep superseded ADRs](0007-keep-superseded-adrs.md): a superseded ADR stays,
   marked with the ADR that supersedes it, while other superseded documents are
   deleted.
+- [Install skill setup files verbatim from upstream seeds](0008-install-skill-setup-files-verbatim-from-upstream-seeds.md):
+  the issue tracker, triage label, and domain configurations are the vendored
+  upstream setup seeds, installed byte for byte.

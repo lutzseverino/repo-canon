@@ -11,7 +11,7 @@ does not imply a release or successful adoption.
 
 | Policy or material | Declaration IDs | Source material and operations | Ownership |
 | --- | --- | --- | --- |
-| Shared contribution and agent workflow | `agent-guidance`, `contribution-guidance`, `agent-configuration-index`, `domain-configuration`, `issue-tracker-configuration`, `triage-label-configuration` | Root guidance and `docs/agents` shared configuration | Exact files |
+| Shared contribution and agent workflow | `agent-guidance`, `contribution-guidance`, `agent-configuration-index`, `domain-configuration`, `issue-tracker-configuration`, `triage-label-configuration` | Root guidance, the `docs/agents` index, and the vendored upstream setup seeds for GitHub, installed as the skill setup files | Exact files |
 | Issue and pull request intake | `bug-report-template`, `feature-request-template`, `implementation-ticket-template`, `specification-template`, `pull-request-template` | `.github` templates | Exact files |
 | Trusted issue contract validation | `issue-contract-workflow`, `issue-contract-validator` | Default-branch workflow and validator | Exact files |
 | Trusted pull request metadata validation | `pr-metadata-workflow`, `pr-metadata-validator` | Base-revision workflow and validator | Exact files |
