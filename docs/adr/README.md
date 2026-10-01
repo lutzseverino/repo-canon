@@ -21,3 +21,6 @@ involve real alternatives.
 - [Keep point-in-time records with the event they record](0006-keep-point-in-time-records-with-their-event.md):
   documentation holds maintained material only, and records stay with their
   pull request, release, or CI run.
+- [Keep superseded ADRs](0007-keep-superseded-adrs.md): a superseded ADR stays,
+  marked with the ADR that supersedes it, while other superseded documents are
+  deleted.

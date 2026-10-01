@@ -5,8 +5,8 @@ context map, and project-specific agent guidance. Identify the individual files
 needed to categorize documentation under usage, development, adr, and agents;
 give each populated documentation directory its README index; keep the root
 documentation map and the required `docs/development/README.md`; delete
-superseded documents and point-in-time records; preserve useful material; and
-repair links affected by any move or deletion.
+point-in-time records and superseded documents other than ADRs; preserve useful
+material; and repair links affected by any move or deletion.
 
 Propose every existing documentation file, glossary, and index, whether or not
 it needs work, so that later documentation work stays inside the confirmed
