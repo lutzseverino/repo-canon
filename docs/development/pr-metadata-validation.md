@@ -4,9 +4,10 @@ The `PR metadata validation` workflow checks a pull request title and descriptio
 whenever the request is opened, edited, synchronized, reopened, or marked ready
 for review. Its stable check-run name is `PR metadata`.
 
-The description must contain exactly one meaningful `Summary`, `Validation`, and
-`Related issue` Markdown section. Heading level, emphasis, trailing colons, and
-letter casing do not affect recognition. HTML comments, placeholders such as
+Unless it is an adoption record, described below, the description must contain
+exactly one meaningful `Summary`, `Validation`, and `Related issue` Markdown
+section. Heading level, emphasis, trailing colons, and letter casing do not
+affect recognition. HTML comments, placeholders such as
 `TODO`, `TBD`, `N/A`, `Not applicable`, and `None`, rendered-empty HTML, and
 content inside HTML elements with the `hidden` attribute do not count as content.
 Punctuation alone does not count either. Headings inside fenced code examples do
@@ -17,11 +18,24 @@ Section order and subsections follow the
 rather than checked.
 
 `Related issue` accepts a GitHub issue URL, `owner/repository#123`, or `#123`.
-An eligible typo, broken link, or formatting correction can instead use
-`Small correction: reason`, where the reason contains meaningful text.
+A small correction can instead use `Small correction: reason` with any
+meaningful reason: one with at least two words of letters or numbers that is not
+a placeholder, the same rule that applies to Summary and Validation. An empty
+reason, a placeholder such as `TODO` or `N/A`, or a one-word reason fails.
+Whether the correction is small enough is for reviewers to judge; the check does
+not restrict the reason to particular kinds of correction.
 References in code examples, HTML comments, and unrelated HTML attributes do not
 count. References inside HTML elements with the `hidden` attribute do not count.
 A GitHub issue URL used as a visible Markdown or HTML link destination does count.
+
+A body whose first line, after any blank lines, is exactly
+`# Repository Standards adoption record`, apart from trailing spaces or tabs, is
+a Repository Standards adoption record, a complete body for an adoption or
+update pull request. It needs no Summary, Validation, or Related issue section,
+and the title rules below still apply. The heading counts only as that exact first
+line: text, an HTML comment, or a code fence before it, indentation, another
+heading level, or other wording makes the body an ordinary description,
+validated as above.
 
 Titles use `type(scope): description`, with an optional scope and an optional
 `!` immediately before the colon. The allowed lowercase types are `feat`,
