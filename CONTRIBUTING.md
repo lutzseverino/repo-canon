@@ -75,7 +75,7 @@ Keep the pull request template's sections in the template's order, adding
 Limits last when relevant. Put any other material, such as scope, impact, or
 migration, in a subsection of the section it belongs to. An adoption or update
 pull request may instead use the Repository Standards adoption record as its
-entire description, starting with the record's
+description, starting with the record's
 `# Repository Standards adoption record` heading.
 
 Address review feedback and ensure required checks pass before merging.
