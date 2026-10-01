@@ -90,9 +90,20 @@ label can take its initial review from its creation snapshot, whichever of its
 must be both the first and the latest readiness transition, applied by the
 issue's opener. The `opened` run reads the label from its payload. A `labeled`
 run needs the timeline to record the opener applying it in the issue's creation
-second, and the opener to hold an authorizing role; otherwise it is decided as
-any later review. Once the timeline holds the creation label event, either run records it
-as the review, so both orders end with the same labels and recorded review.
+second; otherwise it is decided as any later review. Either run then checks the
+opener's role as it checks any reviewer's, so an opener without an authorizing
+role gets the same "not authorized" feedback whichever run arrives first. Once
+the timeline holds the creation label event, either run records it as the
+review, so both orders end with the same labels and recorded review.
+
+A residual race is accepted: a `labeled` run that arrives before the timeline
+records the creation label event cannot recognize the creation review.
+It removes readiness and reports that the timeline does not contain the
+readiness label event, whatever the opener's role, and the later `opened` run
+finds no readiness label to review. The remedy is to reapply the label: an
+authorized reviewer applies it again after the revision notice, and the
+validator decides it as any later review.
+
 Every later review, and every Agent Brief review, starts after the validator
 publishes the exact revision in its feedback comment; the reviewer then applies
 a readiness label. This notice-first sequence avoids relying on GitHub's
@@ -200,7 +211,8 @@ labels, placeholder failures, readiness removal, workflow-state replacement,
 superseding states, and return to review for triaged and direct contracts,
 repeat-safe feedback,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized
-actors, stale and repeated events, native creation in either run order,
+actors, stale and repeated events, native creation by authorized and
+unauthorized openers in either run order,
 readiness removal and re-add
 ordering across paginated issue events, the one timeline ordering rule,
 contract edits, pull request exclusion, and hostile Markdown that must remain

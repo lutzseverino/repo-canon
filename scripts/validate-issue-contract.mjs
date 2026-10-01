@@ -594,7 +594,7 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
       error: "Deleting a newer Agent Brief invalidated the restored contract source. Review the published revision again.",
     };
   }
-  const creationEvent = creationLabelEvent(currentEvent, issue, result, currentReadyLabels[0], timeline, openingEligible, permissions);
+  const creationEvent = creationLabelEvent(currentEvent, issue, result, currentReadyLabels[0], timeline, openingEligible);
   const labelEvent = creationEvent ?? (
     currentReadyLabels.length === 1
       && latestEvent?.event === "labeled"
@@ -693,13 +693,14 @@ function activeApproval(permissions, recorded, revision, label, timeline) {
 // `opened` run or a `labeled` run, whichever arrives first. The opening payload
 // shows the one readiness label the issue was created with. A `labeled` run has
 // no such payload, so the timeline must show the opener, the issue's author,
-// applying it, and the opener must currently hold an authorizing role.
-// Otherwise the run is decided as any later review.
-function creationLabelEvent(currentEvent, issue, result, label, timeline, openingEligible, permissions) {
+// applying it in the issue's creation second. Otherwise the run is decided as
+// any later review. Either run then checks the opener's role as it checks any
+// reviewer's, so an opener without an authorizing role gets the same rejection
+// in either order.
+function creationLabelEvent(currentEvent, issue, result, label, timeline, openingEligible) {
   if (result.contract.type !== "issue-body" || !openingEligible || !label) return null;
   if (currentEvent.action === "labeled") {
-    const opener = issue.user?.login;
-    if (!opener || !reviewerAuthority(permissions, opener).authorized) return null;
+    if (!issue.user?.login) return null;
     return timeline.creationReview(label, issue.user, { openingPayload: false });
   }
   const openingReadyLabels = currentEvent.issue?.labels?.map(labelName).filter((name) => readyLabels.has(name)) ?? [];
