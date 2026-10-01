@@ -109,28 +109,133 @@ Small correction: fix a typo in contributor-facing text.
   assert.equal(result.status, 0, result.stderr);
 });
 
-test("limits the small-correction exception to eligible categories", () => {
+test("accepts any meaningful small-correction reason", () => {
   for (const reason of [
     "fix a typo in contributor-facing text",
-    "repair a broken Markdown link in the guide",
-    "correct formatting in the example table",
+    "clarify an ambiguous sentence in the release procedure",
+    "reword the readiness rule so it reads as one instruction",
+    "add a new authorization system",
   ]) {
-    const eligible = runEvent({
-      title: "docs: fix contributor guidance",
+    const result = runEvent({
+      title: "docs: correct contributor guidance",
       body: validBody().replace("Closes #6", `Small correction: ${reason}.`),
     });
-    assert.equal(eligible.status, 0, `${reason}: ${eligible.stderr}`);
+    assert.equal(result.status, 0, `${reason}: ${result.stderr}`);
+  }
+});
+
+test("rejects a small-correction reason that is not meaningful", () => {
+  for (const relatedIssue of [
+    "Small correction:",
+    "Small correction:   ",
+    "Small correction: TODO",
+    "Small correction: N/A.",
+    "Small correction: None",
+    "Small correction: TBD: explain later",
+    "Small correction: typo",
+    "Small correction: <!-- explain the correction -->",
+    "Small correction: <span hidden>fix a typo in the guide</span>",
+    "Small correction: `fix a typo in the guide`",
+  ]) {
+    const result = runEvent({
+      title: "docs: correct contributor guidance",
+      body: validBody().replace("Closes #6", relatedIssue),
+    });
+    assert.equal(result.status, 1, relatedIssue);
+    assert.match(result.stderr, /Link a related GitHub issue/, relatedIssue);
+  }
+});
+
+function adoptionRecord() {
+  return `# Repository Standards adoption record
+
+## Selection
+
+| Component | Value |
+| --- | --- |
+| CLI | \`4.0.0\` |
+| Standards source | \`https://github.com/lutzseverino/repo-canon\` |
+| Standards version | \`v0.4.0\` |
+| Standards commit | \`0123456789abcdef0123456789abcdef01234567\` |
+| Profile | \`node\` |
+
+## Operations
+
+| Phase | Declaration | Operation | Result | Message |
+| --- | --- | --- | --- | --- |
+| verification | \`documentation\` | \`documentation-navigation\` | passed | Documentation navigation is complete. |
+
+## Changed paths
+
+| Path | Phase | Operation |
+| --- | --- | --- |
+| \`.github/scripts/validate-pr-metadata.mjs\` | installation | none |
+
+## Scope changes
+
+No scope changes.
+
+## Identities
+
+| Record | Value |
+| --- | --- |
+| Run | \`run-1\` |
+| Inspection | \`sha256:abc\` |
+| HEAD at start | \`0123456789abcdef0123456789abcdef01234567\` |
+| Completed at | 2026-10-01T00:00:00.000Z |
+`;
+}
+
+test("accepts a body that is exactly an adoption record", () => {
+  const record = adoptionRecord();
+  for (const [variant, body] of [
+    ["record", record],
+    ["CRLF record", record.replace(/\n/g, "\r\n")],
+    ["record after blank lines", `\n \t\n${record}`],
+    ["record heading with trailing spaces", record.replace("record\n", "record \t\n")],
+  ]) {
+    const result = runEvent({ title: "chore: update Repo Canon to v0.4.0", body });
+    assert.equal(result.status, 0, `${variant}: ${result.stderr}`);
+    assert.match(result.stdout, /validation passed/, variant);
+    assert.match(result.summary, /adoption record/, variant);
+  }
+});
+
+test("still validates the title of an adoption record body", () => {
+  const result = runEvent({ title: "Update Repo Canon", body: adoptionRecord() });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Conventional Commit title/);
+  assert.doesNotMatch(result.stderr, /Add a Summary section/);
+
+  const breaking = runEvent({ title: "chore!: update Repo Canon to v0.4.0", body: adoptionRecord() });
+  assert.equal(breaking.status, 1);
+  assert.match(breaking.stderr, /under an Impact/);
+  assert.match(breaking.stderr, /under a Migration/);
+  assert.doesNotMatch(breaking.stderr, /Add a Summary section/);
+});
+
+test("validates a body whose record heading is not its first content as an ordinary body", () => {
+  const record = adoptionRecord();
+  for (const [variant, body] of [
+    ["text before the record", `Update Repo Canon.\n\n${record}`],
+    ["comment before the record", `<!-- adoption -->\n${record}`],
+    ["hidden text before the record", `<span hidden>adoption</span>\n\n${record}`],
+    ["record in a code fence", `\`\`\`markdown\n${record}\`\`\`\n`],
+    ["indented record heading", `  ${record}`],
+    ["non-breaking space before the record", `\u00a0\n${record}`],
+    ["second-level record heading", `#${record}`],
+    ["differently cased record heading", record.replace("adoption record", "Adoption Record")],
+    ["longer record heading", record.replace("adoption record", "adoption record draft")],
+  ]) {
+    const result = runEvent({ title: "chore: update Repo Canon to v0.4.0", body });
+    assert.equal(result.status, 1, variant);
+    assert.match(result.stderr, /Add a Summary section/, variant);
+    assert.match(result.stderr, /Add a Validation section/, variant);
+    assert.match(result.stderr, /Add a Related issue section/, variant);
   }
 
-  const substantive = runEvent({
-    title: "feat: add authorization system",
-    body: validBody().replace(
-      "Closes #6",
-      "Small correction: add a new authorization system.",
-    ),
-  });
-  assert.equal(substantive.status, 1);
-  assert.match(substantive.stderr, /Link a related GitHub issue/);
+  const ordinary = runEvent({ body: `${validBody()}\n${record}` });
+  assert.equal(ordinary.status, 0, ordinary.stderr);
 });
 
 test("accepts every allowed lowercase Conventional Commit type", () => {

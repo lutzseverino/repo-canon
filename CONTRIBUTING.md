@@ -68,11 +68,15 @@ work-in-progress commits are allowed.
 Keep each pull request focused. Describe the problem and resulting change,
 report the checks you ran and their outcomes, and link the relevant issue.
 Small corrections, such as typos, broken links, and formatting, need no issue:
-write `Small correction:` and its reason instead of the link.
+write `Small correction:` and its reason instead of the link. Reviewers judge
+whether a correction is small.
 
 Keep the pull request template's sections in the template's order, adding
 Limits last when relevant. Put any other material, such as scope, impact, or
-migration, in a subsection of the section it belongs to.
+migration, in a subsection of the section it belongs to. An adoption or update
+pull request may instead use the Repository Standards adoption record as its
+description, starting with the record's
+`# Repository Standards adoption record` heading.
 
 Address review feedback and ensure required checks pass before merging.
 Squash-merge pull requests into the default branch, using the PR title as the
