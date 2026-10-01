@@ -57,8 +57,8 @@ repeated.
   outside the regular set. No additional regular-skill exclusions are agreed.
 - The standards source manages reviewed, pinned upstream skill snapshots and
   distributes changes through standards releases. Keep upstream skill content
-  intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and its
-  guidance, not in the skills or their setup files.
+  intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
+  guidance files, not in the skills or their setup files.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the
   standards source.
