@@ -11,8 +11,8 @@ request, and documentation rules, as the
 [`v0.4.0` specification](https://github.com/lutzseverino/repo-canon/issues/122)
 records. The rewrite dropped the issue tracker's "Wayfinding operations"
 section, which the wayfinder skill reads, and spread each rule across several
-files. Two alternatives were rejected: keeping Repo Canon-authored files that
-restore the sections the skills read, because every upstream snapshot would
+files. Two alternatives were rejected: keeping files that Repo Canon writes and
+adding back the sections the skills read, because every upstream snapshot would
 need a manual comparison to find sections the skills newly expect; and
 customizing the seeds for Repo Canon, because any edit makes the files diverge
 from the snapshot the skills were written against.
