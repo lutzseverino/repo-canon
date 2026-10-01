@@ -44,8 +44,9 @@ its commit permalink.
 
 Preserve useful, current documentation when reorganizing it. Update affected
 links and account for both old and new paths. Delete a superseded maintained
-document rather than keeping it under a historical label, and repair the links
-to it. Preserve exact shared agent configuration. Project-specific agent
+document other than an ADR rather than keeping it under a historical label, and
+repair the links to it; keep a superseded ADR, marked with the ADR that
+supersedes it. Preserve exact shared agent configuration. Project-specific agent
 constraints belong in optional `docs/agents/project.md`.
 
 Assess documents against their actual audience and topic. Mechanical checks

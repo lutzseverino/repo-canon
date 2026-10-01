@@ -2,8 +2,8 @@
 
 This directory configures the shared agent workflows.
 
-- [Issue tracker](issue-tracker.md): GitHub operations, implementation
-  contracts, and brief readiness.
+- [Issue tracker](issue-tracker.md): GitHub operations, dependencies, and
+  planning.
 - [Triage labels](triage-labels.md): workflow states, issue categories, and
   planning labels.
 - [Domain documentation](domain.md): glossaries and architecture decisions.
