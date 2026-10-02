@@ -24,7 +24,7 @@ Source authoring, publication, and adoption are separate stages:
 
 ## Prerequisites
 
-Use macOS or Linux with Node.js 24, npm, and Git. `v0.4.0` requires public CLI
+Use macOS or Linux with Node.js 24, npm, and Git. `v0.4.1` requires public CLI
 4.0.0 or newer; 4.0.0 is the version it was validated against. Install a pinned
 CLI in a persistent directory outside the adopting repository so inspection,
 start, and recovery use the same executable:
@@ -54,13 +54,13 @@ describes.
 
 ## Inspect the published source
 
-This guide selects `v0.4.0`. Verify its
-[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.4.0)
+This guide selects `v0.4.1`. Verify its
+[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.4.1)
 first. Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.4.0
+source_tag=v0.4.1
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
