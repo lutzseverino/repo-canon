@@ -21,8 +21,8 @@ a new version.
 ## The required CLI version
 
 `standards.yaml` declares `requires.repo-standards` as an open-ended minimum,
-currently `>=2.0.0`. It names the oldest public Repository Standards CLI this
-source was validated against, public CLI 2.0.0. The
+currently `>=4.0.0`. It names the oldest public Repository Standards CLI this
+source was validated against, public CLI 4.0.0. The
 [source profile](../development/source-profile.md) records that validation, and
 the [requirement decision](../adr/0005-require-an-open-ended-minimum-cli-version.md)
 records why the form was chosen. Repository Standards evaluates that

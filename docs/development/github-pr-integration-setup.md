@@ -62,7 +62,7 @@ enterprise server.
 ## Results and recovery
 
 The operation implements the public
-[`repo-standards/operation/v1`](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/script-protocol.md)
+[`repo-standards/operation/v1`](https://github.com/lutzseverino/repo-standards/blob/v4.0.0/docs/usage/script-protocol.md)
 boundary with an empty project-content target scope. It returns `changed` only
 after a final readback confirms required-check enforcement and every merge
 setting. It returns `unchanged` when the first read already matches.

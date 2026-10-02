@@ -24,16 +24,16 @@ Source authoring, publication, and adoption are separate stages:
 
 ## Prerequisites
 
-Use macOS or Linux with Node.js 24, npm, and Git. `v0.3.1` requires public CLI
-2.0.0 or newer; 2.0.0 is the version it was validated against. Install a pinned
+Use macOS or Linux with Node.js 24, npm, and Git. `v0.4.0` requires public CLI
+4.0.0 or newer; 4.0.0 is the version it was validated against. Install a pinned
 CLI in a persistent directory outside the adopting repository so inspection,
 start, and recovery use the same executable:
 
 ```sh
-adoption_cli="$HOME/.local/share/repo-standards/cli-2.0.0"
+adoption_cli="$HOME/.local/share/repo-standards/cli-4.0.0"
 mkdir -p "$adoption_cli"
 npm install --prefix "$adoption_cli" --ignore-scripts --save-exact \
-  --no-audit --no-fund @lutzseverino/repo-standards@2.0.0
+  --no-audit --no-fund @lutzseverino/repo-standards@4.0.0
 repo_standards="$adoption_cli/node_modules/.bin/repo-standards"
 "$repo_standards" --version
 ```
@@ -46,17 +46,21 @@ write access for labels plus admin access for required checks and merge
 settings. Keep the repository clean and committed. If useful existing
 `AGENTS.md` instructions need to survive replacement, follow
 [Prepare existing agent guidance](prepare-agent-guidance.md), commit that change,
-and inspect the prepared commit afresh.
+and inspect the prepared commit afresh. Records that a CLI before 4.0.0 wrote
+under `.repo-standards` use retired formats, which 4.0.0 does not read. A
+repository that has them adopts fresh, as the CLI's
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v4.0.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
+describes.
 
 ## Inspect the published source
 
-This guide selects `v0.3.1`. Verify its
-[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.3.1)
+This guide selects `v0.4.0`. Verify its
+[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.4.0)
 first. Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.3.1
+source_tag=v0.4.0
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
@@ -71,13 +75,14 @@ state, and discovery evidence. It does not authorize a write. Repo Canon uses
 discovery for Project READMEs, documentation paths, and the intentionally empty
 project-content scope of remote configuration.
 
-Prepare a `repo-standards/scope/v1` proposal from the repository evidence and
-Repo Canon's discovery guidance. The public CLI's
-[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/inspection.md)
-defines the proposal fields and evidence binding.
+Prepare a `repo-standards/scope/v2` proposal from the repository evidence and
+Repo Canon's discovery guidance. For the `documentation` declaration, that
+guidance has the agent run the documentation scope drafter shipped with the
+selected source and decide only its unresolved questions. The public CLI's
+[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v4.0.0/docs/usage/inspection.md#discover-contextual-file-scope)
+defines the proposal fields; the CLI derives the evidence binding.
 
-Bind the proposal to the initial discovery evidence, then request the complete
-inspection:
+Request the complete inspection with the proposal:
 
 ```sh
 "$repo_standards" inspect \
@@ -89,9 +94,10 @@ inspection:
   --json > /tmp/repo-canon-complete-inspection.json
 ```
 
-Read the full report, including resolved scope, exact replacements, repository
-state, prerequisite status, and every operation. A changed project or proposal
-changes the inspection identity and requires another review.
+Read the full report, including resolved scope, exact replacements and the
+edits they discard, repository state, prerequisite status, and every operation.
+A changed project or proposal changes the inspection identity and requires
+another review.
 
 ## Confirm and complete adoption
 
@@ -119,7 +125,7 @@ after reviewing its retained effects.
 
 For contextual work, follow the returned request within the confirmed paths,
 refresh the observation with `resume`, and submit the required
-`repo-standards/assessment/v2` file:
+`repo-standards/assessment/v3` file:
 
 ```sh
 "$repo_standards" resume --project "$project_root" --json
@@ -140,5 +146,5 @@ rollback or freshness guarantee.
 
 When contextual work needs a file outside the confirmed scope, or a confirmed
 path is mistaken, correct the scope as the CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v2.0.0/docs/usage/adoption.md#correct-a-confirmed-scope)
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v4.0.0/docs/usage/adoption.md#correct-a-confirmed-scope)
 describes.
