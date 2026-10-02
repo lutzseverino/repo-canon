@@ -266,7 +266,9 @@ const questions = {
   special: (path, root) => `${code(path)} under the documentation root ${code(root)} is a symbolic link or special file, which the scope cannot hold. Should it be replaced with a regular file or removed?`,
   glossary: path => `Is ${code(path)} a domain glossary or context map of this repository? Include it if it is.`,
   ambiguous: root => `The documentation check cannot tell that ${code(root)} is a documentation root without a ${series(documentationCategories, 'or')} directory index. Which category will hold its documents? Include that category's ${code(directoryIndex)}.`,
-  blocked: (path, root) => `${code(path)} ${path === root ? 'must be the directory of the documentation root' : `under the documentation root ${code(root)} must be a file, the directory's index`}, but it is not. Should it be removed or renamed?`,
+  notDirectory: directory => `${code(directory)} must be a directory to hold its documentation index, but it is not. Should it be removed or renamed?`,
+  notIndex: path => `${code(path)} must be a file, the documentation index of its directory, but it is a directory. Should it be removed or renamed?`,
+  strayOwned: (entry, root) => `${code(entry)} lies directly under the documentation root ${code(root)}, outside the ${series(documentationCategories)} categories, but its files belong to other declarations or to Repository Standards, so this scope cannot move it. Is ${code(root)} a documentation root after all?`,
   unsupported: (index, directory) => `Repository Standards accepts the new ${code(index)} only with evidence inside ${code(directory)}, where Git keeps no file yet. Should that directory's first content be committed in a separate reviewed change before drafting again?`,
 };
 
@@ -275,11 +277,12 @@ function coverage(roots) {
   return `Drafted from the repository tree by ${code('discovery/draft-documentation-scope.mjs')}: every file Git keeps under the documentation ${plural ? 'roots' : 'root'} ${series(roots.map(code))}, a new index for each of ${plural ? 'their' : 'its'} directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each ${directoryIndex} outside the documentation roots. Link-repair files and move destinations enter when the work needs them.`;
 }
 
-// A draft in progress: its candidates by path, the new indexes among them,
-// its questions about one path, each asked once, and its other questions.
+// A draft in progress: its candidates by path, the new indexes among them by
+// their directory, its questions about one path, each asked once, and its
+// other questions.
 class Draft {
   candidates = new Map();
-  createdIndexes = new Set();
+  createdIndexes = new Map();
   unresolved = new Map();
   otherQuestions = [];
 
@@ -303,6 +306,14 @@ class Draft {
     return [...this.candidates.values()].filter(candidate => candidate.decision === 'include').map(candidate => candidate.path);
   }
 
+  // A new index that cites nothing lacks the evidence Repository Standards
+  // requires; a question says what it needs.
+  evidenceQuestions() {
+    return [...this.createdIndexes]
+      .filter(([path]) => this.candidates.get(path)?.evidence.length === 0)
+      .map(([path, directory]) => questions.unsupported(path, directory));
+  }
+
   proposal(roots) {
     return {
       format: proposalFormat,
@@ -310,7 +321,7 @@ class Draft {
         id: declarationId,
         coverage: coverage(roots),
         candidates: [...this.candidates.values()].sort(byPath),
-        unresolved: [...this.unresolved.values(), ...this.otherQuestions].sort(),
+        unresolved: [...this.unresolved.values(), ...this.otherQuestions, ...this.evidenceQuestions()].sort(),
       }],
     };
   }
@@ -318,19 +329,21 @@ class Draft {
 
 // A new index for a directory. It cites its directory, which Repository
 // Standards requires to hold a file for a missing README; without one, the
-// index is still drafted and a question says what it needs.
+// index is still drafted, citing nothing. A directory path that is not a
+// directory cannot hold an index, which is a question.
 function createIndex(draft, context, directory, root) {
   const path = `${directory}/${directoryIndex}`;
   if (context.owner(path) || draft.candidates.has(path)) return;
   const entry = entryAt(context.projectRoot, directory);
-  if (entry && !entry.isDirectory()) return;
+  if (entry && !entry.isDirectory()) {
+    draft.ask(directory, questions.notDirectory(directory));
+    return;
+  }
   let reason = reasons.directoryIndex(directory);
   if (path === developmentGuide) reason = reasons.developmentGuide;
   else if (directory === root) reason = reasons.rootIndex(root);
-  const supported = context.kept.directories.has(directory);
-  draft.include(path, reason, supported ? [directory] : []);
-  draft.createdIndexes.add(path);
-  if (!supported) draft.otherQuestions.push(questions.unsupported(path, directory));
+  draft.include(path, reason, context.kept.directories.has(directory) ? [directory] : []);
+  draft.createdIndexes.set(path, directory);
 }
 
 // Every entry under a root, by the tree walk the check uses.
@@ -352,7 +365,8 @@ function draftRoot(draft, context, root) {
       skipped.push(directory);
       continue;
     }
-    if (directory !== root && !kept.directories.has(directory)) {
+    if (directory !== root && !kept.directories.has(directory)
+        && !reservedPaths.some(reserved => isInside(reserved, directory))) {
       draft.ask(directory, questions.unkept(directory, root));
       skipped.push(directory);
       continue;
@@ -363,7 +377,7 @@ function draftRoot(draft, context, root) {
       if (entry.name === directoryIndex) indexed = true;
       if (entry.isDirectory()) {
         if (entry.name === directoryIndex) {
-          draft.ask(path, questions.blocked(path, root));
+          draft.ask(path, questions.notIndex(path));
           skipped.push(path);
         }
         continue;
@@ -381,9 +395,7 @@ function draftRoot(draft, context, root) {
     }
     if (!indexed) createIndex(draft, context, directory, root);
   }
-  if (directories.length > 0) return;
-  if (entryAt(context.projectRoot, root)) draft.ask(root, questions.blocked(root, root));
-  else createIndex(draft, context, root, root);
+  if (directories.length === 0) createIndex(draft, context, root, root);
 }
 
 // The repository root's glossary and context map are decided, and so is each
@@ -416,10 +428,12 @@ function draftGlossaries(draft, context, roots, model) {
 // it as candidate roots; only the decided roots are asked about.
 function askStrayEntries(draft, model, roots) {
   for (const root of model.roots.filter(candidate => roots.includes(candidate.path))) {
+    const included = draft.included();
     for (const entry of root.strayEntries) {
       if (draft.isAsked(entry)) continue;
-      draft.ask(entry, questions.stray(entry, root.path));
-      for (const path of draft.createdIndexes) {
+      const moves = included.some(path => isWithin(path, entry) && !draft.createdIndexes.has(path));
+      draft.ask(entry, moves ? questions.stray(entry, root.path) : questions.strayOwned(entry, root.path));
+      for (const path of draft.createdIndexes.keys()) {
         if (isInside(path, entry)) draft.candidates.delete(path);
       }
     }

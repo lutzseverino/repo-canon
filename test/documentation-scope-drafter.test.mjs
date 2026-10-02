@@ -451,16 +451,29 @@ test('excludes each file of an owned directory under a decided root', t => {
       evidence: ['.agents/usage/README.md'],
     },
   ]);
-  assert.deepEqual(entry.unresolved, [
-    '`.agents/skills` lies directly under the documentation root `.agents`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; its current files are already included.',
-  ]);
+  const ownedOnly = '`.agents/skills` lies directly under the documentation root `.agents`, outside the usage, development, adr, and agents categories, but its files belong to other declarations or to Repository Standards, so this scope cannot move it. Is `.agents` a documentation root after all?';
+  assert.deepEqual(entry.unresolved, [ownedOnly]);
+
+  const reservedOnly = drafted(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': developmentGuide,
+    '.agents/usage/README.md': '# Usage\n',
+    '.agents/skills/adopt-standards/SKILL.md': '# Adopt\n',
+  }, ['--root', '.agents']);
+  assert.deepEqual(reservedOnly.entry.unresolved, [ownedOnly], 'a directory of reserved paths is not asked to be removed');
 });
 
 test('asks about entries that block a root or an index, and survives a dirty working tree', t => {
+  const fileGuide = drafted(t, { 'docs/README.md': '# Documentation\n', 'docs/development': 'Not a directory.\n' });
+  assert.deepEqual(included(fileGuide.entry), ['docs/README.md', 'docs/development']);
+  assert.deepEqual(fileGuide.entry.unresolved, [
+    '`docs/development` must be a directory to hold its documentation index, but it is not. Should it be removed or renamed?',
+  ]);
+
   const fileDocs = drafted(t, { 'docs': 'Not a directory.\n' });
   assert.deepEqual(fileDocs.entry.candidates, []);
   assert.deepEqual(fileDocs.entry.unresolved, [
-    '`docs` must be the directory of the documentation root, but it is not. Should it be removed or renamed?',
+    '`docs` must be a directory to hold its documentation index, but it is not. Should it be removed or renamed?',
   ]);
 
   const directoryIndex = drafted(t, {
@@ -470,7 +483,7 @@ test('asks about entries that block a root or an index, and survives a dirty wor
   });
   assert.deepEqual(included(directoryIndex.entry), ['docs/README.md', 'docs/development/README.md']);
   assert.deepEqual(directoryIndex.entry.unresolved, [
-    '`docs/usage/README.md` under the documentation root `docs` must be a file, the directory\'s index, but it is not. Should it be removed or renamed?',
+    '`docs/usage/README.md` must be a file, the documentation index of its directory, but it is a directory. Should it be removed or renamed?',
   ]);
 
   const outside = mkdtempSync(join(tmpdir(), 'repo-canon-outside-'));
