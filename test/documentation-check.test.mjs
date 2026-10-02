@@ -528,11 +528,10 @@ This directory explains how to use the project.
 test('the one index per document rule passes each document listed once in its own index', t => {
   passes(check(t, {
     ...usageIndexed,
-    'docs/usage/README.md': index('Usage', 'This directory explains how to use the project.', [
+    'docs/usage/README.md': `${index('Usage', 'This directory explains how to use the project.', [
       ['Install', 'install.md', 'prerequisites and installation.'],
       ['Guides', 'guides/README.md', 'step-by-step guides.'],
-      ['Back to the documentation map', '../README.md', 'every category.'],
-    ]),
+    ])}\nSee the [documentation map](../README.md) for every category.\n`,
     'docs/usage/install.md': '# Install\n\nSee the [guides](guides/README.md) and [first run](guides/first-run.md).\n',
     'docs/usage/guides/README.md': index('Guides', 'This directory holds step-by-step guides.', [
       ['First run', 'first-run.md', 'running the project once.'],
@@ -561,6 +560,21 @@ test('the one index per document rule fails a document listed in no index, twice
   assert.match(message, /docs\/usage\/guides\/README\.md breaks the one index per document rule: list it in docs\/usage\/README\.md\./,
     'a directory README is listed in its parent index');
   assert.match(message, /docs\/usage\/guides\/first-run\.md breaks the one index per document rule: list it only in docs\/usage\/guides\/README\.md; remove it from docs\/usage\/README\.md\./);
+});
+
+test('the one index per document rule fails a listed root index and a listing across roots', t => {
+  const files = {
+    ...usageIndexed,
+    'docs/usage/README.md': index('Usage', 'This directory explains how to use the project.', [
+      ['Documentation map', '../README.md', 'every category.'],
+      ['App usage', '../../packages/app/handbook/usage/', 'using the app.'],
+    ]),
+    'packages/app/handbook/README.md': index('Handbook', 'This directory maps the app handbook.', [
+      ['Usage', 'usage/README.md', 'using the app.'],
+    ]),
+    'packages/app/handbook/usage/README.md': index('Usage', 'This directory explains how to use the app.'),
+  };
+  assert.equal(failures(check(t, files)), 'Documentation navigation needs correction: docs/README.md breaks the one index per document rule: a root\'s own index is listed in no index; remove it from docs/usage/README.md. packages/app/handbook/usage/README.md breaks the one index per document rule: list it only in packages/app/handbook/README.md; remove it from docs/usage/README.md.');
 });
 
 test('the one index per document rule accepts the installed agents index citing the project guidance in context', t => {

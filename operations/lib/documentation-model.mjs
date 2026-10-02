@@ -338,9 +338,10 @@ export function documentationModel(projectRoot, confirmedPaths, {
   const inference = inferredRoots(confirmedPaths);
   const documents = new Set();
   const members = [];
-  const indexes = [];
+  const directoryPaths = new Set();
   const roots = inference.roots.map(path => {
     const tree = documentationTree(projectRoot, path);
+    for (const directory of tree.directories) directoryPaths.add(directory.path);
     const [rootDirectory, ...directories] = tree.directories;
     const candidatesInRoot = inference.candidatesWithCategories.filter(candidate => (
       candidate === path || isInside(candidate, path)
@@ -371,13 +372,14 @@ export function documentationModel(projectRoot, confirmedPaths, {
       })),
       confirmedIndexes: [...confirmedIndexes].map(index),
     };
-    const directoryPaths = new Set(tree.directories.map(directory => directory.path));
-    for (const { state, path: indexPath } of [root.index, ...root.directories.map(directory => directory.index)]) {
-      if (state !== 'present') continue;
-      indexes.push(indexStructure(indexPath, render(indexPath), directoryPaths, indexPath === developmentGuide));
-    }
     return root;
   });
+  // Every directory of every root is known before any index is read, so a
+  // link to a directory in another root lists that directory's README.
+  const indexes = roots
+    .flatMap(root => [root.index, ...root.directories.map(directory => directory.index)])
+    .filter(({ state }) => state === 'present')
+    .map(({ path }) => indexStructure(path, render(path), directoryPaths, path === developmentGuide));
   for (const path of confirmedPaths) {
     if (isMarkdownPath(path) && isFile(projectRoot, path)) documents.add(path);
   }
@@ -453,8 +455,13 @@ export function documentationRuleViolations(model) {
     }
   }
   for (const member of model.members) {
-    if (member.index === null) continue;
     const listing = listings.get(member.path) ?? [];
+    if (member.index === null) {
+      for (const other of new Set(listing)) {
+        violation(documentationRules.oneIndex, member.path, `a root's own index is listed in no index; remove it from ${other}.`);
+      }
+      continue;
+    }
     const citedInContext = member.path === projectGuidance && member.index === agentsIndex
       && citesInContext(indexes.get(agentsIndex), projectGuidance);
     const ownListings = listing.filter(path => path === member.index).length;

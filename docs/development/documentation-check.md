@@ -80,14 +80,15 @@ and by path within each rule. The model reads each rule mechanically:
   an entry, well formed when it opens with a titled link to another local path,
   followed by a colon, a space, and a description. Other prose may follow the
   purpose.
-- One index per document: this applies to each Markdown document under a root
-  except the root's own index. The first link of an index item lists its path,
-  even when the item is malformed; a link to a directory lists its README, and
-  a link into the index itself lists nothing. Links outside index items, such
-  as a citation in context, list nothing. The agents index,
+- One index per document: each Markdown document under a root is listed by
+  exactly one index item, in its index, except the root's own index, which no
+  index item may list. The first link of an index item lists its path, even when
+  the item is malformed; a link to a directory, in any root, lists its README,
+  and a link into the index itself lists nothing. Links outside index items,
+  such as a citation in context, list nothing. The agents index,
   `docs/agents/README.md`, may cite the optional `docs/agents/project.md` in
-  context instead of listing it: a link outside its entries, or text outside
-  its title and entries that names the file by `project.md`, `./project.md`, or
+  context instead of listing it: a link outside its entries, or text outside its
+  title and entries that names the file by `project.md`, `./project.md`, or
   `docs/agents/project.md`, as the installed agents index does. Any other index
   still must not list it. A document whose index is missing or empty gets only
   the correction to create or populate that index.
