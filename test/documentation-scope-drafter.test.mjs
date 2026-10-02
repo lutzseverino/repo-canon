@@ -722,7 +722,8 @@ test('reads the declarations that the selected profile resolves to', t => {
   const project = fixture(files);
   t.after(project.close);
   const sourceDrafter = copiedDrafter(t);
-  writeFileSync(join(dirname(dirname(sourceDrafter)), 'standards.yaml'), `${header}
+  writeFileSync(join(dirname(dirname(sourceDrafter)), 'standards.yaml'), `---
+${header}
 defaults:
   declarations:
     documentation:
@@ -831,6 +832,12 @@ test('fails without a manifest it can read, naming the manifests it tried', t =>
     [withDefaults('    guide:\n      kind: file\n      "target": docs/usage/guide.md\n'), 'has a line under defaults.declarations.guide that the drafter cannot read'],
     [withDefaults('    guide:\n      kind: file\n      target : docs/usage/guide.md\n'), 'has a line under defaults.declarations.guide that the drafter cannot read'],
     [withDefaults('    guide:\n      kind: file\n      ? target\n      : docs/usage/guide.md\n'), 'has a line under defaults.declarations.guide that the drafter cannot read'],
+    [`${header}"defaults":\n  declarations:\n    guide:\n      kind: file\n      target: docs/usage/guide.md\nprofiles:\n  complete:\n    description: Complete\n    declarations:\n${documentationDeclaration(6)}\n`,
+      'has a line at its top level that the drafter cannot read: "defaults":'],
+    [`${header}defaults: {declarations: {guide: {kind: file, target: docs/usage/guide.md}}}\nprofiles:\n  complete:\n    description: Complete\n    declarations:\n${documentationDeclaration(6)}\n`,
+      'writes defaults in a form the drafter cannot read'],
+    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete: {description: Complete, declarations: {guide: {kind: file, target: docs/usage/guide.md}}}\n`,
+      'writes profiles.complete in a form the drafter cannot read'],
     [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete:\n    description: Complete\n    "declarations":\n      guide:\n        kind: file\n        target: docs/usage/guide.md\n`,
       'has a line under profiles.complete that the drafter cannot read'],
   ]) {

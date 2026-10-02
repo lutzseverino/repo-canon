@@ -155,9 +155,11 @@ function readManifest() {
 }
 
 // Whether a manifest key path holds declarations or a declaration's fields:
-// `defaults`, `profiles`, a profile, a declarations mapping, or a declaration.
+// the top level, `defaults`, `profiles`, a profile, a declarations mapping,
+// or a declaration.
 function holdsDeclarations(keyPath) {
   const [section, , declarations] = keyPath;
+  if (keyPath.length === 0) return true;
   if (section === 'defaults') return keyPath.length <= 3;
   if (section !== 'profiles') return false;
   return keyPath.length <= 2 || (declarations === 'declarations' && keyPath.length <= 4);
@@ -202,12 +204,14 @@ function manifestDeclarations() {
     readField = null;
     const entry = /^( *)([A-Za-z0-9._-]+):(?:\s+(\S.*?))?\s*$/.exec(line);
     if (!entry) {
-      // A line that is not a plain key is a sequence item or continues a value
-      // above it. Directly under a declaration, the declarations, or what
-      // holds them, only a key in another form can be neither.
+      // A line that is not a plain key is a sequence item, a document marker
+      // or directive, or continues a value above it. At the top level or
+      // directly under a declaration, the declarations, or what holds them,
+      // only a key in another form can be none of these.
       const parent = keys.filter(key => key.indent < indent).map(({ key }) => key);
-      if (!line.trimStart().startsWith('-') && holdsDeclarations(parent)) {
-        fail(`${manifest} has a line under ${parent.join('.')} that the drafter cannot read: ${line.trim()}`);
+      if (!/^\s*-|^\.\.\.|^%/.test(line) && holdsDeclarations(parent)) {
+        const where = parent.length > 0 ? `under ${parent.join('.')}` : 'at its top level';
+        fail(`${manifest} has a line ${where} that the drafter cannot read: ${line.trim()}`);
       }
       continue;
     }
@@ -228,6 +232,10 @@ function manifestDeclarations() {
         declarationPath = keyPath.slice(3);
       }
     }
+    // `defaults`, `profiles`, and each profile hold their mappings below them.
+    const container = keyPath.length === 1 ? ['defaults', 'profiles'].includes(keyPath[0])
+      : keyPath.length === 2 && keyPath[0] === 'profiles';
+    if (container && value !== undefined) fail(`${manifest} writes ${keyPath.join('.')} in a form the drafter cannot read.`);
     if (!declarations) continue;
     const [id, field, ...deeper] = declarationPath;
     if (id === undefined) {
