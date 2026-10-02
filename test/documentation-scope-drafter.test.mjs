@@ -703,7 +703,7 @@ test('reads the declarations that the selected profile resolves to', t => {
     'docs/README.md': '# Documentation\n',
     'docs/development/README.md': developmentGuide,
     'docs/usage/README.md': '# Usage\n',
-    'docs/usage/added.md': '# Added\n',
+    "docs/usage/added's.md": '# Added\n',
     'docs/usage/dropped.md': '# Dropped\n',
     'docs/usage/kept.md': '# Kept\n',
     'docs/usage/replaced.md': '# Replaced\n',
@@ -712,7 +712,7 @@ test('reads the declarations that the selected profile resolves to', t => {
     underDocs('docs/README.md'),
     underDocs('docs/development/README.md'),
     underDocs('docs/usage/README.md'),
-    owned('docs/usage/added.md', 'added-guide'),
+    owned("docs/usage/added's.md", 'added-guide'),
     underDocs('docs/usage/dropped.md'),
     underDocs('docs/usage/kept.md'),
     owned('docs/usage/replaced.md', 'usage-guide'),
@@ -748,7 +748,7 @@ profiles:
       dropped-guide: {exclude: true} # no longer installed
       added-guide:
         kind: file
-        target: docs/usage/added.md
+        target: 'docs/usage/added''s.md'
         exact: added.md
 `);
   const fromSource = draft(project.root, [], sourceDrafter);
@@ -766,7 +766,7 @@ profiles:
         checks: []
         fixes: []
         kind: file
-        target: docs/usage/added.md
+        target: docs/usage/added's.md
         exact: added.md
 ${documentationDeclaration(6)}
       usage-guide:
@@ -806,6 +806,10 @@ test('fails without a manifest it can read, naming the manifests it tried', t =>
       'declares guide in a form the drafter cannot read'],
     [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete:\n    description: Complete\n    declarations: []\n`,
       'lists its declarations in a form the drafter cannot read'],
+    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n    guide:\n      kind: file\n      target: "docs/usage/guide\\x2emd"\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
+      'declares guide in a form the drafter cannot read'],
+    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n    guide:\n      kind: file\n      target: 'docs/usage/guide.md'#unspaced\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
+      'declares guide in a form the drafter cannot read'],
     [`${header}defaults:\n  declarations: {}\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
       'declares no documentation repository declaration'],
   ]) {

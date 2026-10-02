@@ -152,12 +152,16 @@ function readManifest() {
   return fail(`Cannot read a standards manifest at ${tried.join(' or ')}; run the drafter from the standards source at the selected commit, or from the retained inputs of an adopting repository.`);
 }
 
-// A scalar value without its quotes or trailing comment, or undefined for
-// none.
+// A scalar value without its quotes or trailing comment, undefined for none,
+// or null for a quoted value the drafter does not decode: one with a
+// backslash escape or with text after its closing quote.
 function scalar(value) {
   if (value === undefined || value.startsWith('#')) return undefined;
-  const quoted = /^(["'])(.*?)\1(?:\s+#.*)?$/.exec(value);
-  return quoted ? quoted[2] : value.replace(/\s+#.*$/, '');
+  if (!/^["']/.test(value)) return value.replace(/\s+#.*$/, '');
+  const single = /^'((?:[^']|'')*)'(?:\s+#.*)?$/.exec(value);
+  if (single) return single[1].replaceAll("''", "'");
+  const double = /^"([^"\\]*)"(?:\s+#.*)?$/.exec(value);
+  return double ? double[1] : null;
 }
 
 // The declarations the manifest's one profile resolves to, with the fields
@@ -206,6 +210,7 @@ function manifestDeclarations() {
       else if (/^\{\s*exclude:\s*true\s*\}$/.test(value)) declarations.set(id, { id, exclude: true });
       else fail(`${manifest} declares ${id} in a form the drafter cannot read.`);
     } else if (deeper.length === 0 && value !== undefined && ['kind', 'target', 'name', 'exclude'].includes(field)) {
+      if (value === null) fail(`${manifest} declares ${id} in a form the drafter cannot read.`);
       const declaration = declarations.get(id);
       if (field === 'exclude') declaration.exclude = value === 'true';
       else declaration[field] = value;

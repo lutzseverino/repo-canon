@@ -90,9 +90,11 @@ profile's declaration replaces the default of its ID, adds a new one, or, with
 `exclude: true`, removes it. The retained manifest holds what the source's
 resolves to, so both runs draft the same scope for the same selection. The
 drafter reads the manifest's block mappings by indentation rather than as YAML
-in full. It fails rather than guess when the manifest has more or fewer than
-one profile, when its declarations or one of them take a form it cannot read,
-or when it has no `documentation` repository declaration.
+in full: it drops quotes and trailing comments and decodes a doubled single
+quote. It fails rather than guess when the manifest has more or fewer than one
+profile, when its declarations or one of them take a form it cannot read, such
+as a double-quoted value with a backslash escape, or when it has no
+`documentation` repository declaration.
 
 A file declaration owns its target and a skill its `.agents/skills/<name>`
 directory. The repository declarations with discovery own paths that only their
