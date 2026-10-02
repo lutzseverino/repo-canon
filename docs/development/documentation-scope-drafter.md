@@ -96,10 +96,10 @@ profile, when its declarations or one of them take a form it cannot read, or
 when it has no `documentation` repository declaration. Every key from the top
 level down to a declaration's fields must be plain, such as `target:` rather
 than `"target":` or `? target`, and `defaults`, `profiles`, and each profile
-are block mappings. A `kind`, `target`, `name`, or `exclude` field must hold a
-single-line value on its own line, plain or quoted; forms such as a missing
-value, a block scalar, an anchor, alias, or tag, a flow collection, or a
-double-quoted value with a backslash escape fail.
+are block mappings without an anchor or tag. A `kind`, `target`, `name`, or
+`exclude` field must hold a single-line value on its own line, plain or quoted;
+forms such as a missing value, a block scalar, an anchor, alias, or tag, a flow
+collection, or a double-quoted value with a backslash escape fail.
 
 A file declaration owns its target and a skill its `.agents/skills/<name>`
 directory. The repository declarations with discovery own paths that only their
