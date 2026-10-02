@@ -25,6 +25,8 @@ import {
 const usage = 'Usage: node discovery/draft-documentation-scope.mjs [--project <path>] [--root <path>]...';
 const proposalFormat = 'repo-standards/scope/v2';
 const declarationId = 'documentation';
+// The declaration fields that decide its targets.
+const targetFields = ['kind', 'target', 'name', 'exclude'];
 const glossary = 'CONTEXT.md';
 const contextMap = 'CONTEXT-MAP.md';
 const directoryIndex = 'README.md';
@@ -173,17 +175,24 @@ function scalar(value) {
 // profile's resolved declarations. The manifest's block mappings are read by
 // indentation, and only the key paths below matter:
 // `defaults.declarations.<id>.<field>` and
-// `profiles.<profile>.declarations.<id>.<field>`.
+// `profiles.<profile>.declarations.<id>.<field>`. A field that decides a
+// target holds a single-line value on its own line, plain or quoted; any other
+// form fails rather than being misread.
 function manifestDeclarations() {
   const { path: manifest, text } = readManifest();
+  const unreadable = id => fail(`${manifest} declares ${id} in a form the drafter cannot read.`);
   const defaults = new Map();
   const profiles = new Map();
   const keys = [];
+  // The field read on the previous line, which no deeper line may continue.
+  let readField = null;
   for (const line of text.split('\n')) {
     if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
+    const indent = line.length - line.trimStart().length;
+    if (readField && indent > readField.indent) unreadable(readField.id);
+    readField = null;
     const entry = /^( *)([A-Za-z0-9._-]+):(?:\s+(\S.*?))?\s*$/.exec(line);
     if (!entry) continue;
-    const indent = entry[1].length;
     while (keys.length > 0 && keys.at(-1).indent >= indent) keys.pop();
     keys.push({ indent, key: entry[2] });
     const value = scalar(entry[3]);
@@ -208,9 +217,12 @@ function manifestDeclarations() {
     } else if (field === undefined) {
       if (value === undefined) declarations.set(id, { id });
       else if (/^\{\s*exclude:\s*true\s*\}$/.test(value)) declarations.set(id, { id, exclude: true });
-      else fail(`${manifest} declares ${id} in a form the drafter cannot read.`);
-    } else if (deeper.length === 0 && value !== undefined && ['kind', 'target', 'name', 'exclude'].includes(field)) {
-      if (value === null) fail(`${manifest} declares ${id} in a form the drafter cannot read.`);
+      else unreadable(id);
+    } else if (deeper.length === 0 && targetFields.includes(field)) {
+      // A missing value, a block scalar, an anchor, alias, or tag, a flow
+      // collection, or a quoted value the drafter does not decode.
+      if (value == null || /^[-?:,[\]{}&*!|>%@`]/.test(entry[3])) unreadable(id);
+      readField = { indent, id };
       const declaration = declarations.get(id);
       if (field === 'exclude') declaration.exclude = value === 'true';
       else declaration[field] = value;

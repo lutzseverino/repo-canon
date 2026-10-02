@@ -799,27 +799,32 @@ test('fails without a manifest it can read, naming the manifests it tried', t =>
   assert.equal(outsideInputs.status, 1);
   assert.ok(outsideInputs.stderr.includes(`Cannot read a standards manifest at ${besideSource};`), outsideInputs.stderr);
 
+  const withDefaults = declarations => `${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n${declarations}profiles:\n  complete:\n    description: Complete\n    declarations: {}\n`;
+  const unreadable = 'declares guide in a form the drafter cannot read';
   for (const [manifest, message] of [
     [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n  minimal:\n    description: Minimal\n    declarations: {}\n`,
       'declares 2 profiles'],
-    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n    guide: {kind: file, target: docs/usage/guide.md}\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
-      'declares guide in a form the drafter cannot read'],
     [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete:\n    description: Complete\n    declarations: []\n`,
       'lists its declarations in a form the drafter cannot read'],
-    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n    guide:\n      kind: file\n      target: "docs/usage/guide\\x2emd"\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
-      'declares guide in a form the drafter cannot read'],
-    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n    guide:\n      kind: file\n      target: 'docs/usage/guide.md'#unspaced\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
-      'declares guide in a form the drafter cannot read'],
-    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n    guide:\n      kind: file\n      target: "docs/usage/guide.md\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
-      'declares guide in a form the drafter cannot read'],
     [`${header}defaults:\n  declarations: {}\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
       'declares no documentation repository declaration'],
+    // Forms of a declaration, or of a field that decides its targets, that
+    // the drafter does not read.
+    [withDefaults('    guide: {kind: file, target: docs/usage/guide.md}\n'), unreadable],
+    [withDefaults('    guide: &guide\n      kind: file\n      target: docs/usage/guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: "docs/usage/guide\\x2emd"\n'), unreadable],
+    [withDefaults("    guide:\n      kind: file\n      target: 'docs/usage/guide.md'#unspaced\n"), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: "docs/usage/guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: >-\n        docs/usage/guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target:\n        docs/usage/guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: docs/usage/\n        guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: *guide\n'), unreadable],
   ]) {
     writeFileSync(besideSource, manifest);
     const outcome = draft(project.root, [], sourceDrafter);
-    assert.equal(outcome.status, 1, message);
+    assert.equal(outcome.status, 1, manifest);
     assert.equal(outcome.stdout, '');
-    assert.ok(outcome.stderr.includes(`${besideSource} ${message}`), outcome.stderr);
+    assert.ok(outcome.stderr.includes(`${besideSource} ${message}`), `${manifest}\n${outcome.stderr}`);
   }
 });
 

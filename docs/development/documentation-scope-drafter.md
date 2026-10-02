@@ -92,9 +92,11 @@ resolves to, so both runs draft the same scope for the same selection. The
 drafter reads the manifest's block mappings by indentation rather than as YAML
 in full: it drops quotes and trailing comments and decodes a doubled single
 quote. It fails rather than guess when the manifest has more or fewer than one
-profile, when its declarations or one of them take a form it cannot read, such
-as a double-quoted value with a backslash escape, or when it has no
-`documentation` repository declaration.
+profile, when its declarations or one of them take a form it cannot read, or
+when it has no `documentation` repository declaration. A `kind`, `target`,
+`name`, or `exclude` field must hold a single-line value on its own line, plain
+or quoted; a block scalar, an anchor, alias, or tag, a flow collection, or a
+double-quoted value with a backslash escape is a form it cannot read.
 
 A file declaration owns its target and a skill its `.agents/skills/<name>`
 directory. The repository declarations with discovery own paths that only their
