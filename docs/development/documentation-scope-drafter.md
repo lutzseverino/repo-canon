@@ -14,11 +14,12 @@ node discovery/draft-documentation-scope.mjs [--project <path>] [--root <path>].
 ```
 
 The agent runs it with Node.js 24 from the standards source at the selected
-commit. `--project` names the adopting repository and defaults to the current
-directory. Each `--root` names a directory that the maintainer decided is a
-documentation root, besides `docs`, which always is one; it must be an existing
-repository-relative directory outside `docs`, outside every other root, and
-outside the paths Repository Standards reserves.
+commit. `--project` names a path in the adopting repository and defaults to the
+current directory; like Repository Standards, the drafter drafts the top level
+of the Git working tree that holds it. Each `--root` names a directory that the
+agent decided is a documentation root, besides `docs`, which always is one. It
+must be a repository-relative directory that holds a file Git keeps, outside
+`docs`, every other root, and the paths Repository Standards reserves.
 
 The drafter reads the repository and writes nothing to it. On success it writes
 a Repository Standards 4.0.0 scope proposal, format `repo-standards/scope/v2`,
@@ -38,7 +39,7 @@ reads: its tree walk (`documentationTree`), its root inference
 (`inferredRoots`), the model itself for each root's stray entries, ambiguous
 roots, and local links, the targets that declarations own
 (`declarationTargets`), and the shared repository root, development guide, and
-category names. Its candidates are:
+category names, and the test for a Markdown document. Its candidates are:
 
 - each file Git keeps under a documentation root, included;
 - the index of a root or of a directory under one when the directory has none,
@@ -46,25 +47,17 @@ category names. Its candidates are:
 - `CONTEXT.md` and `CONTEXT-MAP.md` at the repository root, and each
   `CONTEXT.md` that the root context map links to, or whose directory it links
   to, included;
-- each file under a root that another declaration owns, excluded.
+- each file under a root that another declaration owns, excluded;
+- each `README.md` outside the roots, excluded, because the documentation check
+  reads every README in the confirmed scope as a documentation root's index.
 
-The unresolved questions are the cases no rule decides:
-
-- a directory outside the roots whose `usage`, `development`, `adr`, or `agents`
-  directories hold Markdown documents, which may be a documentation root;
-- Markdown files outside the roots, grouped by their top-level directory, which
-  may be documentation to cover or move;
-- a file or directory directly under a root outside the categories, whose
-  destination category is the maintainer's;
-- a decided root without a category, which the check would find ambiguous;
-- another `CONTEXT.md` or `CONTEXT-MAP.md`;
-- a file under a root that Git ignores, a directory under a root without a file
-  that Git keeps, and a symbolic link or special file under a root.
-
-A `README.md` outside the roots is neither a candidate nor a question: the
-documentation check reads every README in the confirmed scope as a root's
-index. A stray directory's missing indexes are not drafted, because its
-contents move.
+Every other case is an unresolved question, one kind for each case that the
+[discovery guidance](../../discovery/documentation.md) leaves to the agent.
+Candidate roots are directories outside the roots whose `usage`, `development`,
+`adr`, or `agents` directories hold Markdown documents; a candidate inside
+another is asked about only if the outer one is not a root. Markdown files
+outside the roots are asked about in one question per top-level directory. A
+stray directory's missing indexes are not drafted, because its contents move.
 
 ## Other declarations' targets
 
@@ -88,9 +81,11 @@ every evidence path is one the CLI's discovery observation holds. An existing
 file cites itself. A missing index cites its directory when that directory holds
 a file that Git keeps, and cites nothing otherwise. Repository Standards
 requires a missing `README.md` to cite a file or nonempty directory within its
-own directory, so it rejects a draft whose missing index has no such evidence,
-such as `docs/README.md` in a repository without `docs`. Creating content in
-that directory first gives the index its evidence.
+own directory, so it rejects an index without that evidence, such as
+`docs/README.md` in a repository without `docs`. The drafter still drafts the
+index, which the rules require, and asks whether to commit the directory's
+first content in a separate reviewed change, which gives the index its
+evidence.
 
 ## Retention
 
@@ -100,9 +95,8 @@ with the release, and a changed drafter changes the documentation declaration
 in an update's class. The CLI never runs it: the agent does, so the drafter is
 not an author-executed discovery hook, which Repository Standards
 [ADR 0003](https://github.com/lutzseverino/repo-standards/blob/4c8ed008e596222318aa0610f8a63fe5cc25c99c/docs/adr/0003-use-agent-discovery-with-confirmed-concrete-scope.md)
-rules out. Public CLI 2.0.0 `source validate` accepts the
-resource, and the check's retained source layout holds every module the drafter
-imports.
+rules out. Source validation accepts it as an ordinary resource, and the
+check's retained source layout holds every module the drafter imports.
 
 ## Limits
 

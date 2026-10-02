@@ -110,7 +110,8 @@ export function inferredRoots(confirmedPaths) {
   };
 }
 
-function isMarkdownPath(path) {
+// Whether a path is a Markdown document, which the documentation rules read.
+export function isMarkdownPath(path) {
   return path.toLocaleLowerCase('en-US').endsWith('.md');
 }
 

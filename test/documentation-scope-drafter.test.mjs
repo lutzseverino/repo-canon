@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { copyFileSync, lstatSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -118,10 +118,17 @@ This directory explains how to build and validate the project.
 Install Node.js 24, then run \`npm test\` from the repository root.
 `;
 
-const coverage = roots => `Drafted from the repository tree by \`discovery/draft-documentation-scope.mjs\`: every file Git keeps under the documentation ${roots.includes(' and ') ? 'roots' : 'root'} ${roots}, a new index for each of ${roots.includes(' and ') ? 'their' : 'its'} directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and README.md files outside the documentation roots are left to the Project README scope. Link-repair files and move destinations enter when the work needs them.`;
+const coverage = roots => `Drafted from the repository tree by \`discovery/draft-documentation-scope.mjs\`: every file Git keeps under the documentation ${roots.includes(' and ') ? 'roots' : 'root'} ${roots}, a new index for each of ${roots.includes(' and ') ? 'their' : 'its'} directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them.`;
 
 const underDocs = path => ({ path, decision: 'include', reason: 'A file under the documentation root `docs`.', evidence: [path] });
 const owned = (path, id) => ({ path, decision: 'exclude', reason: `Owned by the \`${id}\` declaration.`, evidence: [path] });
+const outsideIndex = path => ({
+  path,
+  decision: 'exclude',
+  reason: 'A README.md outside the documentation roots, which the documentation check would read as a documentation root\'s index.',
+  evidence: [path],
+});
+const unsupported = (path, directory) => `Repository Standards accepts the new \`${path}\` only with evidence inside \`${directory}\`, where Git keeps no file yet. Should that directory's first content be committed in a separate reviewed change before drafting again?`;
 
 // A repository that follows every documentation rule, with the installed
 // agent configuration, a domain glossary, a Project README, and ignored
@@ -180,6 +187,7 @@ test('drafts the expected scope of a conforming repository', t => {
         underDocs('docs/usage/README.md'),
         underDocs('docs/usage/install.md'),
         underDocs('docs/usage/overview.svg'),
+        outsideIndex('packages/widget/README.md'),
       ],
       unresolved: [],
     }],
@@ -232,10 +240,12 @@ test('drafts new indexes, the development guide, and context glossaries the rule
     contextGlossary('src/billing/CONTEXT.md'),
     contextGlossary('src/ordering/CONTEXT.md'),
   ]);
-  assert.deepEqual(proposal.declarations[0].unresolved, []);
+  assert.deepEqual(proposal.declarations[0].unresolved, [
+    unsupported('docs/development/README.md', 'docs/development'),
+  ]);
 });
 
-test('drafts the root index of a repository without documentation', t => {
+test('drafts the root indexes of a repository without documentation and asks for their evidence', t => {
   const { entry } = drafted(t, { 'README.md': '# Widget\n' });
 
   assert.deepEqual(entry.candidates, [
@@ -247,7 +257,10 @@ test('drafts the root index of a repository without documentation', t => {
       evidence: [],
     },
   ]);
-  assert.deepEqual(entry.unresolved, []);
+  assert.deepEqual(entry.unresolved, [
+    unsupported('docs/README.md', 'docs'),
+    unsupported('docs/development/README.md', 'docs/development'),
+  ]);
 });
 
 test('leaves the cases no rule decides as unresolved questions', t => {
@@ -277,11 +290,13 @@ test('leaves the cases no rule decides as unresolved questions', t => {
     underDocs('docs/overview.md'),
     { path: 'docs/usage/README.md', decision: 'include', reason: 'The index of the documentation directory `docs/usage`, to create.', evidence: ['docs/usage'] },
     underDocs('docs/usage/install.md'),
+    outsideIndex('packages/app/README.md'),
   ]);
   assert.deepEqual(entry.unresolved, [
-    'Git ignores `docs/usage/draft.md` under the documentation root `docs`, but the documentation check reads it. Should it be removed, moved outside the root, or kept by Git and drafted again?',
+    'Git ignores `docs/usage/draft.md`, which lies under the documentation root `docs`. Should it be removed, moved outside the root, or kept by Git and drafted again?',
     'Is `packages/app/docs` a documentation root? Its `packages/app/docs/adr` and `packages/app/docs/usage` directories hold Markdown documents. If it is, draft again with `--root packages/app/docs`.',
     'Is `src/legacy/CONTEXT.md` a domain glossary or context map of this repository? Include it if it is.',
+    unsupported('docs/development/README.md', 'docs/development'),
     'Which of these Markdown files at the repository root are documentation this scope must cover, such as a document to move into a documentation category: `notes.md`? Include each one, with its destination when it moves.',
     'Which of these Markdown files under `guides` are documentation this scope must cover, such as a document to move into a documentation category: `guides/setup.md`? Include each one, with its destination when it moves.',
     'Which of these Markdown files under `packages` are documentation this scope must cover, such as a document to move into a documentation category: `packages/app/docs/adr/0001-start.md` and `packages/app/docs/usage/guide.md`? Include each one, with its destination when it moves.',
@@ -322,6 +337,7 @@ test('drafts a documentation root the maintainer decided on', t => {
 
   assert.equal(entry.coverage, coverage('`docs` and `packages/app/docs`'));
   assert.deepEqual(entry.candidates.filter(candidate => candidate.path.startsWith('packages/')), [
+    outsideIndex('packages/app/README.md'),
     {
       path: 'packages/app/docs/README.md',
       decision: 'include',
@@ -414,19 +430,56 @@ test('over conforming repositories the drafted scope passes the documentation ch
   assert.equal(outcome.result.status, 'passed', outcome.result.message);
 });
 
+test('asks about every ignored file under a root and qualifies nested candidate roots', t => {
+  const { entry } = drafted(t, {
+    '.gitignore': '*.png\n',
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': developmentGuide,
+    'docs/usage/README.md': '# Usage\n',
+    'docs/usage/diagram.png': 'png\n',
+    'pkg/a/docs/usage/guide.md': '# Guide\n',
+    'pkg/a/docs/usage/agents/notes.md': '# Notes\n',
+  });
+
+  assert.deepEqual(entry.unresolved.filter(question => !question.startsWith('Which of these')), [
+    'Git ignores `docs/usage/diagram.png`, which lies under the documentation root `docs`. Should it be removed, moved outside the root, or kept by Git and drafted again?',
+    'Is `pkg/a/docs/usage` a documentation root, if `pkg/a/docs` is not? Its `pkg/a/docs/usage/agents` directory holds Markdown documents. If it is, draft again with `--root pkg/a/docs/usage`.',
+    'Is `pkg/a/docs` a documentation root? Its `pkg/a/docs/usage` directory holds Markdown documents. If it is, draft again with `--root pkg/a/docs`.',
+  ]);
+});
+
+test('drafts the Git working tree that holds the project, as Repository Standards inspects it', t => {
+  const project = fixture(conforming);
+  t.after(project.close);
+  const fromRoot = draft(project.root);
+  const fromSubdirectory = draft(join(project.root, 'packages/widget'));
+  assert.equal(fromSubdirectory.status, 0, fromSubdirectory.stderr);
+  assert.equal(fromSubdirectory.stdout, fromRoot.stdout);
+});
+
 test('rejects invalid arguments, roots, and projects with a process error', t => {
   const project = fixture({
+    '.gitignore': 'vendor/\n',
     'docs/README.md': '# Documentation\n',
     'packages/app/docs/usage/guide.md': '# Guide\n',
     'packages/app/docs/usage/more/notes.md': '# Notes\n',
+    'vendor/lib/docs/usage/guide.md': '# Guide\n',
   });
   t.after(project.close);
+  const outside = mkdtempSync(join(tmpdir(), 'repo-canon-outside-'));
+  t.after(() => rmSync(outside, { recursive: true, force: true }));
+  mkdirSync(join(outside, 'handbook'));
+  writeFileSync(join(outside, 'handbook/notes.md'), '# Notes\n');
+  symlinkSync(outside, join(project.root, 'link'));
   for (const [args, message] of [
     [['--root', 'docs'], /--root docs cannot be used: docs is always a documentation root/],
     [['--root', 'docs/usage'], /--root docs\/usage cannot be used/],
     [['--root', '../outside'], /--root \.\.\/outside must be a repository-relative directory path/],
     [['--root', '/absolute'], /must be a repository-relative directory path/],
-    [['--root', 'packages/missing'], /--root packages\/missing is not a directory in the project/],
+    [['--root', 'packages/missing'], /--root packages\/missing is not a directory that holds a file Git keeps/],
+    [['--root', 'link/handbook'], /--root link\/handbook is not a directory that holds a file Git keeps/],
+    [['--root', '.git'], /--root \.git is not a directory that holds a file Git keeps/],
+    [['--root', 'vendor/lib/docs'], /--root vendor\/lib\/docs is not a directory that holds a file Git keeps/],
     [['--root', 'packages/app/docs', '--root', 'packages/app/docs/usage'], /--root packages\/app\/docs\/usage lies inside --root packages\/app\/docs/],
     [['--root', '.repo-standards'], /reserves/],
     [['--root'], /--root needs a path/],
@@ -442,7 +495,7 @@ test('rejects invalid arguments, roots, and projects with a process error', t =>
   t.after(() => rmSync(notGit, { recursive: true, force: true }));
   const outcome = draft(notGit);
   assert.equal(outcome.status, 1);
-  assert.match(outcome.stderr, /Cannot list the files Git keeps/);
+  assert.match(outcome.stderr, /Cannot find the Git working tree/);
 });
 
 test('runs from the source with the retained resources of the documentation declaration', t => {

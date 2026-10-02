@@ -10,16 +10,15 @@ node discovery/draft-documentation-scope.mjs --project /path/to/adopting-reposit
 ```
 
 It reads the repository without changing it and writes a Repository Standards
-scope proposal whose one entry is the `documentation` declaration's. The
+scope proposal whose one entry is the `documentation` declaration's; the
+entries of the other discovery declarations join it in the proposal. The
 documentation rules in the `CONTRIBUTING.md` this source installs decide its
 candidates: every file Git keeps under each documentation root, the index of
 each root and of each directory under one, the development guide, the
 repository root's glossary and context map, and each context glossary that
 context map lists. Paths other declarations own, and paths Repository Standards
-reserves, stay out. A missing index cites its directory as evidence, so
-Repository Standards rejects one whose directory holds no file yet, such as
-`docs/README.md` in a repository without `docs`; commit content to that
-directory first and draft again.
+reserves, stay out, and so does every `README.md` outside the roots, which the
+documentation check would read as a root's index.
 
 Decide only the cases in its unresolved questions, and remove each question once
 it is decided:
@@ -28,21 +27,23 @@ it is decided:
   again with `--root <directory>`. `docs` is always a root, and a documentation
   root never lies inside another.
 - Whether a Markdown file outside the documentation roots is documentation that
-  the scope must cover, such as a document to move into a category. A
-  `README.md` outside the roots stays out: the documentation check reads every
-  README in this scope as a root's index.
+  the scope must cover, such as a document to move into a category.
 - Which category a file or directory directly under a root moves to, and which
   category holds the documents of a root that has none.
 - Whether another `CONTEXT.md` or `CONTEXT-MAP.md` is a glossary or context map
   of this repository.
 - What becomes of a file under a root that Git ignores, a directory under a root
   without a file that Git keeps, or a symbolic link under a root.
+- Whether to commit the first content of a documentation directory that has
+  none, in a separate reviewed change, so that its new index has the evidence
+  Repository Standards requires.
 
 Then add each intended new path that the work needs and the draft cannot know: a
 move destination, with the index of any new directory; `docs/agents/project.md`
 when repository-specific constraints require it; and a file whose link to
-documentation needs repair. A move requires authority for its source,
-destination, and affected link repairs.
+documentation needs repair. Keep all declarations' paths disjoint: a Project
+README under a documentation root belongs to one declaration only. A move
+requires authority for its source, destination, and affected link repairs.
 
 The draft does not confirm membership: the maintainer confirms the
 documentation scope with the complete inspection.
