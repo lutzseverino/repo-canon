@@ -154,6 +154,15 @@ function readManifest() {
   return fail(`Cannot read a standards manifest at ${tried.join(' or ')}; run the drafter from the standards source at the selected commit, or from the retained inputs of an adopting repository.`);
 }
 
+// Whether a manifest key path holds declarations or a declaration's fields:
+// `defaults`, `profiles`, a profile, a declarations mapping, or a declaration.
+function holdsDeclarations(keyPath) {
+  const [section, , declarations] = keyPath;
+  if (section === 'defaults') return keyPath.length <= 3;
+  if (section !== 'profiles') return false;
+  return keyPath.length <= 2 || (declarations === 'declarations' && keyPath.length <= 4);
+}
+
 // A scalar value without its quotes or trailing comment, undefined for none,
 // or null for a quoted value the drafter does not decode: one with a
 // backslash escape, without a closing quote, or with text after it.
@@ -192,7 +201,16 @@ function manifestDeclarations() {
     if (readField && indent > readField.indent) unreadable(readField.id);
     readField = null;
     const entry = /^( *)([A-Za-z0-9._-]+):(?:\s+(\S.*?))?\s*$/.exec(line);
-    if (!entry) continue;
+    if (!entry) {
+      // A line that is not a plain key is a sequence item or continues a value
+      // above it. Directly under a declaration, the declarations, or what
+      // holds them, only a key in another form can be neither.
+      const parent = keys.filter(key => key.indent < indent).map(({ key }) => key);
+      if (!line.trimStart().startsWith('-') && holdsDeclarations(parent)) {
+        fail(`${manifest} has a line under ${parent.join('.')} that the drafter cannot read: ${line.trim()}`);
+      }
+      continue;
+    }
     while (keys.length > 0 && keys.at(-1).indent >= indent) keys.pop();
     keys.push({ indent, key: entry[2] });
     const value = scalar(entry[3]);

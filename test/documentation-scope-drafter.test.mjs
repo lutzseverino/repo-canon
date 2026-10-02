@@ -725,7 +725,16 @@ test('reads the declarations that the selected profile resolves to', t => {
   writeFileSync(join(dirname(dirname(sourceDrafter)), 'standards.yaml'), `${header}
 defaults:
   declarations:
-${documentationDeclaration(4)}
+    documentation:
+      kind: repository
+      discovery: discovery/documentation.md
+      checks:
+      - id: documentation-navigation
+        run:
+          executable: node
+          script: operations/check-documentation.mjs
+          resources:
+          - operations/lib/documentation-model.mjs
 
     usage-guide:
       kind: file
@@ -819,6 +828,11 @@ test('fails without a manifest it can read, naming the manifests it tried', t =>
     [withDefaults('    guide:\n      kind: file\n      target:\n        docs/usage/guide.md\n'), unreadable],
     [withDefaults('    guide:\n      kind: file\n      target: docs/usage/\n        guide.md\n'), unreadable],
     [withDefaults('    guide:\n      kind: file\n      target: *guide\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      "target": docs/usage/guide.md\n'), 'has a line under defaults.declarations.guide that the drafter cannot read'],
+    [withDefaults('    guide:\n      kind: file\n      target : docs/usage/guide.md\n'), 'has a line under defaults.declarations.guide that the drafter cannot read'],
+    [withDefaults('    guide:\n      kind: file\n      ? target\n      : docs/usage/guide.md\n'), 'has a line under defaults.declarations.guide that the drafter cannot read'],
+    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete:\n    description: Complete\n    "declarations":\n      guide:\n        kind: file\n        target: docs/usage/guide.md\n`,
+      'has a line under profiles.complete that the drafter cannot read'],
   ]) {
     writeFileSync(besideSource, manifest);
     const outcome = draft(project.root, [], sourceDrafter);
