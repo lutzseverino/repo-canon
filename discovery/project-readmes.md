@@ -8,6 +8,6 @@ alone do not establish membership.
 
 Propose one individual non-root `README.md` path for every Project. Include an
 existing README when present. For a missing README, include its intended path
-with absence evidence and positive evidence for the Project. Do not propose
-directory trees, globs, the root README, exact-owned files, or paths owned by
-another declaration.
+with evidence paths that establish the Project; the CLI observes the absence.
+Do not propose directory trees, globs, the root README, exact-owned files, or
+paths owned by another declaration.

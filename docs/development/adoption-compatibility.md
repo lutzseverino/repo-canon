@@ -6,10 +6,10 @@ product leaves a gap.
 
 ## Supported source and discovery route
 
-Use `repo-standards/v2` and the installed public CLI 4.0.0 with Node.js 24 as the
-current validation and adoption baseline. Declare a minimum that was actually
-validated against the released source bytes: `requires.repo-standards` is the
-open-ended minimum `>=4.0.0`.
+Use `repo-standards/v2` and the installed public CLI 4.0.0 with Node.js 24 as
+the current validation and adoption baseline. Declare a minimum that was
+actually validated against the released source bytes: `requires.repo-standards`
+is the open-ended minimum `>=4.0.0`.
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) states the
 requirement as a minimum rather than an exact version, because the requirement
 gates selection only and an exact one strands adopters. Format version and CLI

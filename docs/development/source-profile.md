@@ -79,8 +79,8 @@ and validates every profile.
 
 Installed public CLI 4.0.0 under Node.js 24 returns `valid: true`, no errors,
 one `complete` profile, and 53 declarations for the source, matching the
-inventory above. Local validation and CI install `@lutzseverino/repo-standards@4.0.0`,
-the oldest version the requirement admits;
+inventory above. Local validation and CI install
+`@lutzseverino/repo-standards@4.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
 the requirement is a minimum.
 
