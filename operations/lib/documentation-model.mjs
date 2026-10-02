@@ -374,8 +374,8 @@ export function documentationModel(projectRoot, confirmedPaths, {
     };
     return root;
   });
-  // Every directory of every root is known before any index is read, so a
-  // link to a directory in another root lists that directory's README.
+  // Every directory of every root is known before any index's items are
+  // resolved, so a link to a directory in another root lists its README.
   const indexes = roots
     .flatMap(root => [root.index, ...root.directories.map(directory => directory.index)])
     .filter(({ state }) => state === 'present')
@@ -458,7 +458,7 @@ export function documentationRuleViolations(model) {
     const listing = listings.get(member.path) ?? [];
     if (member.index === null) {
       for (const other of new Set(listing)) {
-        violation(documentationRules.oneIndex, member.path, `a root's own index is listed in no index; remove it from ${other}.`);
+        violation(documentationRules.oneIndex, member.path, `remove it from ${other}; a root's own index is listed in no index.`);
       }
       continue;
     }

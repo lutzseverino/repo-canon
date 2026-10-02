@@ -574,7 +574,7 @@ test('the one index per document rule fails a listed root index and a listing ac
     ]),
     'packages/app/handbook/usage/README.md': index('Usage', 'This directory explains how to use the app.'),
   };
-  assert.equal(failures(check(t, files)), 'Documentation navigation needs correction: docs/README.md breaks the one index per document rule: a root\'s own index is listed in no index; remove it from docs/usage/README.md. packages/app/handbook/usage/README.md breaks the one index per document rule: list it only in packages/app/handbook/README.md; remove it from docs/usage/README.md.');
+  assert.equal(failures(check(t, files)), 'Documentation navigation needs correction: docs/README.md breaks the one index per document rule: remove it from docs/usage/README.md; a root\'s own index is listed in no index. packages/app/handbook/usage/README.md breaks the one index per document rule: list it only in packages/app/handbook/README.md; remove it from docs/usage/README.md.');
 });
 
 test('the one index per document rule accepts the installed agents index citing the project guidance in context', t => {
