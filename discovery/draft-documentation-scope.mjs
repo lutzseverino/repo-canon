@@ -154,7 +154,7 @@ function readManifest() {
 
 // A scalar value without its quotes or trailing comment, undefined for none,
 // or null for a quoted value the drafter does not decode: one with a
-// backslash escape or with text after its closing quote.
+// backslash escape, without a closing quote, or with text after it.
 function scalar(value) {
   if (value === undefined || value.startsWith('#')) return undefined;
   if (!/^["']/.test(value)) return value.replace(/\s+#.*$/, '');

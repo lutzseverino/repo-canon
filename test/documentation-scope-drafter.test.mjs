@@ -748,7 +748,7 @@ profiles:
       dropped-guide: {exclude: true} # no longer installed
       added-guide:
         kind: file
-        target: 'docs/usage/added''s.md'
+        target: 'docs/usage/added''s.md' # added
         exact: added.md
 `);
   const fromSource = draft(project.root, [], sourceDrafter);
@@ -809,6 +809,8 @@ test('fails without a manifest it can read, naming the manifests it tried', t =>
     [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n    guide:\n      kind: file\n      target: "docs/usage/guide\\x2emd"\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
       'declares guide in a form the drafter cannot read'],
     [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n    guide:\n      kind: file\n      target: 'docs/usage/guide.md'#unspaced\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
+      'declares guide in a form the drafter cannot read'],
+    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n    guide:\n      kind: file\n      target: "docs/usage/guide.md\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
       'declares guide in a form the drafter cannot read'],
     [`${header}defaults:\n  declarations: {}\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
       'declares no documentation repository declaration'],
