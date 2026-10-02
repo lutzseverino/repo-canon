@@ -19,7 +19,8 @@ current directory; like Repository Standards, the drafter drafts the top level
 of the Git working tree that holds it. Each `--root` names a directory that the
 agent decided is a documentation root, besides `docs`, which always is one. It
 must be a repository-relative directory that holds a file Git keeps, outside
-`docs`, every other root, and the paths Repository Standards reserves.
+`docs`, every other root, and the paths Repository Standards reserves, and no
+other declaration may own it or its `README.md`.
 
 The drafter reads the repository and writes nothing to it. On success it writes
 a Repository Standards 4.0.0 scope proposal, format `repo-standards/scope/v2`,
@@ -56,8 +57,11 @@ Every other case is an unresolved question, one kind for each case that the
 Candidate roots are directories outside the roots whose `usage`, `development`,
 `adr`, or `agents` directories hold Markdown documents; a candidate inside
 another is asked about only if the outer one is not a root. Markdown files
-outside the roots are asked about in one question per top-level directory. A
-stray directory's missing indexes are not drafted, because its contents move.
+outside the roots are asked about in one question per top-level directory,
+which also covers the documents of a candidate root that is not one. A decided
+root without a category is asked about, but not the directories inside it,
+which the check then also reads as candidate roots. A stray directory's missing
+indexes are not drafted, because its contents move.
 
 ## Other declarations' targets
 

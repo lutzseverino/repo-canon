@@ -199,8 +199,9 @@ function keptTree(projectRoot) {
 // The documentation roots: `docs`, which always is one, and each directory the
 // agent decided is one. A decided root is a repository-relative directory that
 // holds a file Git keeps, outside `docs`, the reserved paths, and every other
-// root, since a documentation root never lies inside another.
-function decidedRoots(values, kept) {
+// root, since a documentation root never lies inside another. No other
+// declaration may own it or its index, which names it as a root.
+function decidedRoots(values, kept, owner) {
   const roots = [];
   for (const value of values) {
     const path = value.replace(/\/+$/, '');
@@ -213,6 +214,8 @@ function decidedRoots(values, kept) {
     }
     if (isReserved(path)) fail(`--root ${value} lies in a path Repository Standards reserves.`);
     if (!kept.directories.has(path)) fail(`--root ${value} is not a directory that holds a file Git keeps.`);
+    const declaration = owner(path) ?? owner(`${path}/${directoryIndex}`);
+    if (declaration) fail(`--root ${value} cannot be used: the ${declaration} declaration owns it or its ${directoryIndex}.`);
     if (!roots.includes(path)) roots.push(path);
   }
   for (const root of roots) {
@@ -367,11 +370,12 @@ function draftGlossaries(draft, context, roots, model) {
   }
 }
 
-// Top-level entries outside the categories move into one; the destination is
-// the maintainer's. Their files are already included as move sources, and a
-// moved directory needs no new index where it is now. A decided root without a
-// category is ambiguous to the check.
-function askStrayEntries(draft, model) {
+// Top-level entries outside the categories move into one; no rule decides
+// which. Their files are already included as move sources, and a moved
+// directory needs no new index where it is now. A decided root without a
+// category is ambiguous to the check, which then also reads the indexes inside
+// it as candidate roots; only the decided root is asked about.
+function askStrayEntries(draft, model, roots) {
   for (const root of model.roots) {
     for (const entry of root.strayEntries) {
       if (draft.isAsked(entry)) continue;
@@ -381,7 +385,9 @@ function askStrayEntries(draft, model) {
       }
     }
   }
-  for (const root of model.ambiguousRoots) draft.ask(root, questions.ambiguous(root));
+  for (const root of model.ambiguousRoots.filter(candidate => roots.includes(candidate))) {
+    draft.ask(root, questions.ambiguous(root));
+  }
 }
 
 // A directory outside the roots whose category-named directories hold
@@ -427,7 +433,7 @@ function draftDocumentationScope(project, rootArguments) {
   const { declaredTargets, owner } = ownership(sourceDeclarations());
   const kept = keptTree(projectRoot);
   const context = { projectRoot, kept, owner };
-  const roots = decidedRoots(rootArguments, kept);
+  const roots = decidedRoots(rootArguments, kept, owner);
   const draft = new Draft();
 
   for (const root of roots) draftRoot(draft, context, root);
@@ -441,7 +447,7 @@ function draftDocumentationScope(project, rootArguments) {
 
   const model = documentationModel(projectRoot, draft.included(), { declaredTargets });
   draftGlossaries(draft, context, roots, model);
-  askStrayEntries(draft, model);
+  askStrayEntries(draft, model, roots);
   askCandidateRoots(draft, context, roots);
   draftOutsideRoots(draft, context, roots);
   return draft.proposal(roots);

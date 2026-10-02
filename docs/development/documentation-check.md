@@ -59,10 +59,10 @@ shared document owns rendered structure, including the ordered top-level
 blocks of the document and of each heading's section with their tag, rendered
 text, links at any depth, and nested blocks; Project README title policy
 remains in its operation, documentation roots, indexes, and rules in the
-documentation model, and local path containment and symlink
-policy in the local-link module. That module's one local-link helper selects
-each rendered link or image with a local target and marks it broken or intact;
-the documentation model and the Project README check both build on it.
+documentation model, and local path containment and symlink policy in the
+local-link module. That module's one local-link helper selects each rendered
+link or image with a local target and marks it broken or intact; the
+documentation model and the Project README check both build on it.
 
 ## Documentation rules
 

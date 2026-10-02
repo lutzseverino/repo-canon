@@ -325,7 +325,7 @@ test('asks about a stray directory and a symbolic link under a root without draf
   ]);
 });
 
-test('drafts a documentation root the maintainer decided on', t => {
+test('drafts a documentation root the agent decided on', t => {
   const files = {
     'docs/README.md': '# Documentation\n',
     'docs/development/README.md': developmentGuide,
@@ -371,12 +371,15 @@ test('asks for a category when a decided root has none', t => {
     'docs/README.md': '# Documentation\n',
     'docs/development/README.md': developmentGuide,
     'packages/app/handbook/notes.md': '# Notes\n',
+    'packages/app/handbook/guides/first-run.md': '# First run\n',
   }, ['--root', 'packages/app/handbook']);
 
   assert.deepEqual(included(entry), [
     'docs/README.md',
     'docs/development/README.md',
     'packages/app/handbook/README.md',
+    'packages/app/handbook/guides/README.md',
+    'packages/app/handbook/guides/first-run.md',
     'packages/app/handbook/notes.md',
   ]);
   assert.deepEqual(entry.unresolved, [
@@ -459,11 +462,13 @@ test('drafts the Git working tree that holds the project, as Repository Standard
 
 test('rejects invalid arguments, roots, and projects with a process error', t => {
   const project = fixture({
-    '.gitignore': 'vendor/\n',
+    '.gitignore': 'vendor/lib/\n',
     'docs/README.md': '# Documentation\n',
     'packages/app/docs/usage/guide.md': '# Guide\n',
     'packages/app/docs/usage/more/notes.md': '# Notes\n',
     'vendor/lib/docs/usage/guide.md': '# Guide\n',
+    'vendor/marked/README.md': '# Marked\n',
+    'vendor/marked/notes.md': '# Notes\n',
   });
   t.after(project.close);
   const outside = mkdtempSync(join(tmpdir(), 'repo-canon-outside-'));
@@ -482,6 +487,7 @@ test('rejects invalid arguments, roots, and projects with a process error', t =>
     [['--root', 'vendor/lib/docs'], /--root vendor\/lib\/docs is not a directory that holds a file Git keeps/],
     [['--root', 'packages/app/docs', '--root', 'packages/app/docs/usage'], /--root packages\/app\/docs\/usage lies inside --root packages\/app\/docs/],
     [['--root', '.repo-standards'], /reserves/],
+    [['--root', 'vendor/marked'], /--root vendor\/marked cannot be used: the marked-provenance declaration owns it or its README\.md/],
     [['--root'], /--root needs a path/],
     [['--scope', 'x'], /Unknown argument --scope/],
   ]) {

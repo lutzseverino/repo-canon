@@ -18,7 +18,8 @@ each root and of each directory under one, the development guide, the
 repository root's glossary and context map, and each context glossary that
 context map lists. Paths other declarations own, and paths Repository Standards
 reserves, stay out, and so does every `README.md` outside the roots, which the
-documentation check would read as a root's index.
+documentation check would read as a root's index; such a README cannot enter
+this scope, even as a move source.
 
 Decide only the cases in its unresolved questions, and remove each question once
 it is decided:
@@ -34,9 +35,9 @@ it is decided:
   of this repository.
 - What becomes of a file under a root that Git ignores, a directory under a root
   without a file that Git keeps, or a symbolic link under a root.
-- Whether to commit the first content of a documentation directory that has
-  none, in a separate reviewed change, so that its new index has the evidence
-  Repository Standards requires.
+- Whether to commit the first content of a documentation root or of a directory
+  under one that has none, in a separate reviewed change, so that its new index
+  has the evidence Repository Standards requires.
 
 Then add each intended new path that the work needs and the draft cannot know: a
 move destination, with the index of any new directory; `docs/agents/project.md`
