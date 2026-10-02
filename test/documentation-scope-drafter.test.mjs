@@ -402,11 +402,46 @@ test('leaves out the paths that other declarations and Repository Standards own'
     '.agents/skills/adopt-standards/SKILL.md': '# Adopt\n',
     '.repo-standards/inputs/source/docs/usage/guide.md': '# Guide\n',
     'vendor/marked/README.md': '# Marked\n',
+    'vendor/marked/usage/README.md': '# Usage\n',
   });
 
   assert.deepEqual(included(entry), ['docs/README.md', 'docs/development/README.md']);
+  assert.deepEqual(entry.candidates.filter(candidate => candidate.decision === 'exclude'), [
+    outsideIndex('vendor/marked/usage/README.md'),
+  ]);
   assert.deepEqual(entry.unresolved, [
     'Which of these Markdown files at the repository root are documentation this scope must cover, such as a document to move into a documentation category: `THIRD_PARTY_NOTICES.md`? Include each one, with its destination when it moves.',
+  ]);
+});
+
+test('excludes each file of an owned directory under a decided root', t => {
+  const { entry } = drafted(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': developmentGuide,
+    '.agents/usage/README.md': '# Usage\n',
+    '.agents/skills/tdd/SKILL.md': '# TDD\n',
+    '.agents/skills/tdd/tests.md': '# Tests\n',
+    '.agents/skills/adopt-standards/SKILL.md': '# Adopt\n',
+  }, ['--root', '.agents']);
+
+  assert.deepEqual(entry.candidates.filter(candidate => candidate.path.startsWith('.agents/')), [
+    {
+      path: '.agents/README.md',
+      decision: 'include',
+      reason: 'The index of the documentation root `.agents`, to create.',
+      evidence: ['.agents'],
+    },
+    owned('.agents/skills/tdd/SKILL.md', 'skill-tdd'),
+    owned('.agents/skills/tdd/tests.md', 'skill-tdd'),
+    {
+      path: '.agents/usage/README.md',
+      decision: 'include',
+      reason: 'A file under the documentation root `.agents`.',
+      evidence: ['.agents/usage/README.md'],
+    },
+  ]);
+  assert.deepEqual(entry.unresolved, [
+    '`.agents/skills` lies directly under the documentation root `.agents`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; its current files are already included.',
   ]);
 });
 

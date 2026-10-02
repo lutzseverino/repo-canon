@@ -55,8 +55,9 @@ category names, and the test for a Markdown document. Its candidates are:
 Every other case is an unresolved question, one kind for each case that the
 [discovery guidance](../../discovery/documentation.md) leaves to the agent.
 Candidate roots are directories outside the roots whose `usage`, `development`,
-`adr`, or `agents` directories hold Markdown documents; a candidate inside
-another is asked about only if the outer one is not a root. Markdown files
+`adr`, or `agents` directories hold Markdown documents, and that no other
+declaration owns, nor their `README.md`; a candidate inside another is asked
+about only if the outer one is not a root. Markdown files
 outside the roots are asked about in one question per top-level directory,
 which also covers the documents of a candidate root that is not one. A decided
 root without a category is asked about, but not the directories inside it,

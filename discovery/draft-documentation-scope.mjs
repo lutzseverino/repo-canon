@@ -317,7 +317,15 @@ function draftRoot(draft, context, root) {
   const skipped = [];
   for (const { path: directory, entries } of directories) {
     if (skipped.some(other => isInside(directory, other))) continue;
-    if (directory !== root && owner(directory)) {
+    if (directory !== root && isReserved(directory)) {
+      skipped.push(directory);
+      continue;
+    }
+    const directoryOwner = directory === root ? null : owner(directory);
+    if (directoryOwner) {
+      for (const path of kept.files) {
+        if (isInside(path, directory)) draft.exclude(path, reasons.owned(directoryOwner));
+      }
       skipped.push(directory);
       continue;
     }
@@ -391,8 +399,9 @@ function askStrayEntries(draft, model, roots) {
 }
 
 // A directory outside the roots whose category-named directories hold
-// Markdown documents may be a documentation root; no rule decides it. A
-// candidate inside another can be a root only if the outer one is not.
+// Markdown documents may be a documentation root; no rule decides it, unless
+// another declaration owns it or its index. A candidate inside another can be
+// a root only if the outer one is not.
 function askCandidateRoots(draft, context, roots) {
   const { kept, owner } = context;
   const categoryDirectories = [...kept.directories]
@@ -401,7 +410,8 @@ function askCandidateRoots(draft, context, roots) {
     .filter(directory => [...kept.files].some(path => isInside(path, directory) && isMarkdownPath(path)));
   const { candidatesWithCategories } = inferredRoots(categoryDirectories.map(directory => `${directory}/${directoryIndex}`));
   const candidates = candidatesWithCategories
-    .filter(candidate => !roots.some(root => isWithin(candidate, root) || isInside(root, candidate)));
+    .filter(candidate => !roots.some(root => isWithin(candidate, root) || isInside(root, candidate)))
+    .filter(candidate => !owner(candidate) && !owner(`${candidate}/${directoryIndex}`));
   for (const candidate of candidates) {
     const directories = categoryDirectories.filter(directory => parentOf(directory) === candidate).sort();
     const outer = candidates.filter(other => isInside(candidate, other));
