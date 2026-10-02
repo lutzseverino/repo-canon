@@ -74,7 +74,7 @@ indexes are not drafted, because its contents move.
 
 The drafter runs outside the CLI, so no operation request lists the other
 active declarations. It reads them from the manifest of the standards it ships
-with, taking each declaration's `kind`, `target`, and `name`:
+with, taking each declaration's `kind`, `target`, `name`, and `exclude`:
 
 - From the source, it reads `standards.yaml` beside it at the selected commit,
   whose one `complete` profile selects every default declaration unchanged.
