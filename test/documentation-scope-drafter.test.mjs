@@ -32,10 +32,21 @@ function drafted(t, files, args = [], prepare = () => {}) {
   return { root: project.root, proposal: outcome.proposal, entry: outcome.proposal.declarations[0] };
 }
 
+// A regular file reached through real directories only, as the CLI observes it.
+function isObservedFile(root, path) {
+  const segments = path.split('/');
+  try {
+    return segments.slice(0, -1).every((_, index) => lstatSync(join(root, ...segments.slice(0, index + 1))).isDirectory())
+      && lstatSync(join(root, path)).isFile();
+  } catch {
+    return false;
+  }
+}
+
 function keptFiles(root) {
   return execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: root, encoding: 'utf8' })
     .split('\0')
-    .filter(path => path && lstatSync(join(root, path), { throwIfNoEntry: false })?.isFile());
+    .filter(path => path && isObservedFile(root, path));
 }
 
 // The Repository Standards 4.0.0 scope proposal (`repo-standards/scope/v2`):
@@ -443,6 +454,53 @@ test('excludes each file of an owned directory under a decided root', t => {
   assert.deepEqual(entry.unresolved, [
     '`.agents/skills` lies directly under the documentation root `.agents`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; its current files are already included.',
   ]);
+});
+
+test('asks about entries that block a root or an index, and survives a dirty working tree', t => {
+  const fileDocs = drafted(t, { 'docs': 'Not a directory.\n' });
+  assert.deepEqual(fileDocs.entry.candidates, []);
+  assert.deepEqual(fileDocs.entry.unresolved, [
+    '`docs` must be the directory of the documentation root, but it is not. Should it be removed or renamed?',
+  ]);
+
+  const directoryIndex = drafted(t, {
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': developmentGuide,
+    'docs/usage/README.md/notes.md': '# Notes\n',
+  });
+  assert.deepEqual(included(directoryIndex.entry), ['docs/README.md', 'docs/development/README.md']);
+  assert.deepEqual(directoryIndex.entry.unresolved, [
+    '`docs/usage/README.md` under the documentation root `docs` must be a file, the directory\'s index, but it is not. Should it be removed or renamed?',
+  ]);
+
+  const outside = mkdtempSync(join(tmpdir(), 'repo-canon-outside-'));
+  t.after(() => rmSync(outside, { recursive: true, force: true }));
+  mkdirSync(join(outside, 'usage'));
+  writeFileSync(join(outside, 'usage/guide.md'), '# Guide\n');
+  const dirty = fixture({
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': developmentGuide,
+    'docs/usage/guide.md': '# Guide\n',
+    'handbook/usage/guide.md': '# Guide\n',
+  });
+  t.after(dirty.close);
+  execFileSync('git', ['add', '--all'], { cwd: dirty.root });
+  rmSync(join(dirty.root, 'docs/usage'), { recursive: true });
+  writeFileSync(join(dirty.root, 'docs/usage'), 'Now a file.\n');
+  rmSync(join(dirty.root, 'handbook'), { recursive: true });
+  symlinkSync(outside, join(dirty.root, 'handbook'));
+
+  const outcome = draft(dirty.root);
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assertScopeProposal(outcome.proposal, dirty.root);
+  const [entry] = outcome.proposal.declarations;
+  assert.deepEqual(included(entry), ['docs/README.md', 'docs/development/README.md', 'docs/usage']);
+  assert.deepEqual(entry.unresolved, [
+    '`docs/usage` lies directly under the documentation root `docs`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; its current files are already included.',
+  ]);
+  const throughLink = draft(dirty.root, ['--root', 'handbook']);
+  assert.equal(throughLink.status, 1);
+  assert.match(throughLink.stderr, /--root handbook is not a directory that holds a file Git keeps/);
 });
 
 test('over conforming repositories the drafted scope passes the documentation check', t => {

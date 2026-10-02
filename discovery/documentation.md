@@ -34,7 +34,8 @@ it is decided:
 - Whether another `CONTEXT.md` or `CONTEXT-MAP.md` is a glossary or context map
   of this repository.
 - What becomes of a file under a root that Git ignores, a directory under a root
-  without a file that Git keeps, or a symbolic link under a root.
+  without a file that Git keeps, a symbolic link under a root, or an entry that
+  blocks a root or an index, such as a file named `docs`.
 - Whether to commit the first content of a documentation root or of a directory
   under one that has none, in a separate reviewed change, so that its new index
   has the evidence Repository Standards requires.

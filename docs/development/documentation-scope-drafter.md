@@ -83,7 +83,10 @@ the retained inputs, the agent runs the drafter from the source, never from
 
 The drafter cites only files that Git keeps, which it lists with
 `git ls-files --cached --others --exclude-standard`, and their directories, so
-every evidence path is one the CLI's discovery observation holds. An existing
+every evidence path is one the CLI's discovery observation holds. A listed path
+that no longer reaches a regular file through real directories, such as one
+whose directory the working tree replaced with a file or a symbolic link, is
+not kept. An existing
 file cites itself. A missing index cites its directory when that directory holds
 a file that Git keeps, and cites nothing otherwise. Repository Standards
 requires a missing `README.md` to cite a file or nonempty directory within its

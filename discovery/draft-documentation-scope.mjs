@@ -95,8 +95,19 @@ function absolutePath(projectRoot, path) {
   return `${projectRoot}${sep}${path.split('/').join(sep)}`;
 }
 
+// The errors that show no entry can exist at a path, as the documentation model
+// reads them: it is absent, lies below a file or a symbolic link loop, or is
+// too long.
+const noEntryErrors = new Set(['ENOENT', 'ENOTDIR', 'ELOOP', 'ENAMETOOLONG']);
+
+// The entry at a path, or null when no entry can exist there.
 function entryAt(projectRoot, path) {
-  return lstatSync(absolutePath(projectRoot, path), { throwIfNoEntry: false }) ?? null;
+  try {
+    return lstatSync(absolutePath(projectRoot, path));
+  } catch (error) {
+    if (noEntryErrors.has(error.code)) return null;
+    throw error;
+  }
 }
 
 function git(directory, args) {
@@ -181,13 +192,22 @@ function ownership(declarations) {
 }
 
 // The regular files Git keeps: tracked and untracked files that no ignore rule
-// excludes, outside the reserved paths. These, and their directories, are the
-// paths the CLI's discovery observation offers as evidence.
+// excludes, outside the reserved paths, reached through real directories only.
+// These, and their directories, are the paths the CLI's discovery observation
+// offers as evidence.
 function keptTree(projectRoot) {
+  const realDirectories = new Map();
+  const isRealDirectory = directory => {
+    if (!realDirectories.has(directory)) {
+      realDirectories.set(directory, entryAt(projectRoot, directory)?.isDirectory() === true
+        && (parentOf(directory) === '' || isRealDirectory(parentOf(directory))));
+    }
+    return realDirectories.get(directory);
+  };
   const files = new Set();
   for (const path of git(projectRoot, ['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0')) {
     if (!path || isReserved(path)) continue;
-    if (entryAt(projectRoot, path)?.isFile()) files.add(path);
+    if ((parentOf(path) === '' || isRealDirectory(parentOf(path))) && entryAt(projectRoot, path)?.isFile()) files.add(path);
   }
   const directories = new Set();
   for (const path of files) {
@@ -246,6 +266,7 @@ const questions = {
   special: (path, root) => `${code(path)} under the documentation root ${code(root)} is a symbolic link or special file, which the scope cannot hold. Should it be replaced with a regular file or removed?`,
   glossary: path => `Is ${code(path)} a domain glossary or context map of this repository? Include it if it is.`,
   ambiguous: root => `The documentation check cannot tell that ${code(root)} is a documentation root without a ${series(documentationCategories, 'or')} directory index. Which category will hold its documents? Include that category's ${code(directoryIndex)}.`,
+  blocked: (path, root) => `${code(path)} ${path === root ? 'must be the directory of the documentation root' : `under the documentation root ${code(root)} must be a file, the directory's index`}, but it is not. Should it be removed or renamed?`,
   unsupported: (index, directory) => `Repository Standards accepts the new ${code(index)} only with evidence inside ${code(directory)}, where Git keeps no file yet. Should that directory's first content be committed in a separate reviewed change before drafting again?`,
 };
 
@@ -301,6 +322,8 @@ class Draft {
 function createIndex(draft, context, directory, root) {
   const path = `${directory}/${directoryIndex}`;
   if (context.owner(path) || draft.candidates.has(path)) return;
+  const entry = entryAt(context.projectRoot, directory);
+  if (entry && !entry.isDirectory()) return;
   let reason = reasons.directoryIndex(directory);
   if (path === developmentGuide) reason = reasons.developmentGuide;
   else if (directory === root) reason = reasons.rootIndex(root);
@@ -316,7 +339,7 @@ function draftRoot(draft, context, root) {
   const { directories } = documentationTree(context.projectRoot, root);
   const skipped = [];
   for (const { path: directory, entries } of directories) {
-    if (skipped.some(other => isInside(directory, other))) continue;
+    if (skipped.some(other => isWithin(directory, other))) continue;
     if (directory !== root && isReserved(directory)) {
       skipped.push(directory);
       continue;
@@ -336,9 +359,15 @@ function draftRoot(draft, context, root) {
     }
     let indexed = false;
     for (const entry of entries) {
-      if (entry.isDirectory()) continue;
       const path = `${directory}/${entry.name}`;
       if (entry.name === directoryIndex) indexed = true;
+      if (entry.isDirectory()) {
+        if (entry.name === directoryIndex) {
+          draft.ask(path, questions.blocked(path, root));
+          skipped.push(path);
+        }
+        continue;
+      }
       const declaration = owner(path);
       if (declaration) {
         if (kept.files.has(path)) draft.exclude(path, reasons.owned(declaration));
@@ -352,7 +381,9 @@ function draftRoot(draft, context, root) {
     }
     if (!indexed) createIndex(draft, context, directory, root);
   }
-  if (directories.length === 0) createIndex(draft, context, root, root);
+  if (directories.length > 0) return;
+  if (entryAt(context.projectRoot, root)) draft.ask(root, questions.blocked(root, root));
+  else createIndex(draft, context, root, root);
 }
 
 // The repository root's glossary and context map are decided, and so is each
