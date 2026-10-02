@@ -562,6 +562,17 @@ test('the one index per document rule fails a document listed in no index, twice
   assert.match(message, /docs\/usage\/guides\/first-run\.md breaks the one index per document rule: list it only in docs\/usage\/guides\/README\.md; remove it from docs\/usage\/README\.md\./);
 });
 
+test('the one index per document rule fails a listing in another index even when the own index is missing', t => {
+  const message = failures(check(t, {
+    ...usageIndexed,
+    'docs/usage/README.md': index('Usage', 'This directory explains how to use the project.', [
+      ['Note', 'guides/note.md', 'a note.'],
+    ]),
+    'docs/usage/guides/note.md': '# Note\n',
+  }));
+  assert.equal(message, 'Documentation navigation needs correction: Create docs/usage/guides/README.md to explain this documentation directory and link its useful contents. docs/usage/guides/note.md breaks the one index per document rule: list it only in docs/usage/guides/README.md; remove it from docs/usage/README.md.');
+});
+
 test('the one index per document rule fails a listed root index and a listing across roots', t => {
   const files = {
     ...usageIndexed,
@@ -616,6 +627,7 @@ test('the one index per document rule accepts the installed agents index citing 
 
   for (const notCiting of [
     'See `templates/project.md` for a template.',
+    'The project.md.bak file was removed.',
     '# project.md\n\nThis directory holds the agent configuration.',
   ]) {
     const agentsIndexText = notCiting.startsWith('#')

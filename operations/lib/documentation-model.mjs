@@ -404,7 +404,7 @@ function citesInContext(structure, document) {
   const escaped = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const relative = document.slice(structure.path.lastIndexOf('/') + 1);
   const named = new RegExp(
-    `(^|[^\\w./-])((\\./)?${escaped(relative)}|${escaped(document)})(?![\\w/-])`,
+    `(^|[^\\w./-])((\\./)?${escaped(relative)}|${escaped(document)})(?![\\w/-]|\\.\\w)`,
   );
   return structure.context.paths.includes(document) || named.test(structure.context.text);
 }
@@ -417,8 +417,9 @@ function itemLabel(item) {
 // The violations of the documentation rules in a model, as
 // `{ rule, path, correction }`, grouped by rule in the order of
 // `documentationRules` and by path within each rule. A document whose index
-// is missing or empty gets no one-index violation for it; the structural
-// correction to create or populate that index covers it.
+// is missing or empty gets no violation asking to list it there; the
+// structural correction to create or populate that index covers it. A listing
+// of it in another index is still a violation.
 export function documentationRuleViolations(model) {
   const violations = [];
   const violation = (rule, path, correction) => violations.push({ rule, path, correction });

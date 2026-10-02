@@ -90,8 +90,9 @@ and by path within each rule. The model reads each rule mechanically:
   context instead of listing it: a link outside its entries, or text outside its
   title and entries that names the file by `project.md`, `./project.md`, or
   `docs/agents/project.md`, as the installed agents index does. Any other index
-  still must not list it. A document whose index is missing or empty gets only
-  the correction to create or populate that index.
+  still must not list it. A document whose index is missing or empty gets the
+  correction to create or populate that index instead of one to list it there; a
+  listing of it in another index still fails.
 - Development guide order: `docs/development/README.md` has a Setup and
   validation heading as its first section after the title; a leading Setup and
   validation heading is that section, not the title. Its index is the
