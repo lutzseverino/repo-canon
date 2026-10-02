@@ -46,11 +46,15 @@ function reader(files) {
   return path => files.get(path);
 }
 
-// Each variant changes exactly one occurrence of a literal version string.
+// Each variant changes exactly one occurrence of a literal version string. An
+// occurrence inside a longer version, such as `4.0.0` in `24.0.0`, is not one.
 function oneOccurrenceChanged(text, literal, replacement) {
   const variants = [];
   for (let index = text.indexOf(literal); index !== -1; index = text.indexOf(literal, index + 1)) {
-    variants.push(text.slice(0, index) + replacement + text.slice(index + literal.length));
+    const end = index + literal.length;
+    const bounded = /(?:^|[^\w.])v?$/.test(text.slice(0, index)) && !/^\.?\d/.test(text.slice(end));
+    if (!bounded) continue;
+    variants.push(text.slice(0, index) + replacement + text.slice(end));
   }
   return variants;
 }

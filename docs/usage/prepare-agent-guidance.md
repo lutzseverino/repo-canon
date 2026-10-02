@@ -20,9 +20,10 @@ Classify each instruction before editing:
   or agent workflow. Resolve the contradiction with the maintainer before
   preparing for adoption; do not choose one instruction silently.
 
-Inspect the proposed exact files together with the current files. They are at
-the same paths in the selected Repo Canon release, and an adoption inspection
-presents the exact proposed content before any write.
+Inspect the proposed exact files together with the current files. `AGENTS.md`
+and `docs/agents/README.md` are at the same paths in the selected Repo Canon
+release, and the other three are its vendored upstream setup seeds. An adoption
+inspection presents the exact proposed content before any write.
 
 ## Reconcile and commit
 

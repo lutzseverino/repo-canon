@@ -13,8 +13,8 @@ the next release.
 ## Consequences
 
 - `.agents/skills/` and `.repo-standards/inputs/source/` duplicate `vendor/`
-  and other source files. They match the pinned release, not `HEAD`, and the
-  CLI guards them against edits.
+  and other source files. They match the pinned release, not `HEAD`; an
+  update replaces an edited copy and lists the edit it discards.
 - Between a change and the next release the source is ahead of its own pin.
   Conformance evidence describes the pinned release only.
 - Self-adoption complements adoption by other repositories; it cannot surface
