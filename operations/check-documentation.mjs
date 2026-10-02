@@ -1,6 +1,10 @@
 import { lstatSync, readFileSync } from 'node:fs';
 import { isAbsolute, posix, sep } from 'node:path';
-import { documentationModel } from './lib/documentation-model.mjs';
+import {
+  declarationTargets,
+  documentationModel,
+  documentationRuleViolations,
+} from './lib/documentation-model.mjs';
 
 const resultFormat = 'repo-standards/result/v1';
 
@@ -51,7 +55,8 @@ function absolutePath(projectRoot, path) {
 
 // Projects the documentation model onto its corrections, in order: the
 // development guide, then each root's index, stray entries, directory indexes
-// and confirmed category indexes, then broken links.
+// and confirmed category indexes, then broken links, then each documentation
+// rule violation, naming its file and its rule.
 function navigationCorrections(model) {
   const corrections = [];
   const guide = model.developmentGuide;
@@ -91,6 +96,9 @@ function navigationCorrections(model) {
   for (const link of model.links) {
     if (link.broken) corrections.push(`${link.source} links to missing ${link.target}.`);
   }
+  for (const { rule, path, correction } of documentationRuleViolations(model)) {
+    corrections.push(`${path} breaks the ${rule} rule: ${correction}`);
+  }
   return [...new Set(corrections)];
 }
 
@@ -100,7 +108,9 @@ function result(status, message) {
 
 try {
   const request = readRequest();
-  const model = documentationModel(request.projectRoot, request.allowedTargets.paths);
+  const model = documentationModel(request.projectRoot, request.allowedTargets.paths, {
+    declaredTargets: declarationTargets(request.declarations),
+  });
   const corrections = navigationCorrections(model);
   if (model.ambiguousRoots.length > 0) {
     const ambiguity = model.ambiguousRoots.map(root => (

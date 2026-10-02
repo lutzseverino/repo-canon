@@ -2,7 +2,13 @@ import assert from 'node:assert/strict';
 import { mkdirSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { documentationModel } from '../operations/lib/documentation-model.mjs';
+import {
+  declarationTargets,
+  documentationModel,
+  documentationRuleViolations,
+  documentationRules,
+  documentIndex,
+} from '../operations/lib/documentation-model.mjs';
 import { fixture } from './helpers/operation.mjs';
 
 function model(t, files, paths = Object.keys(files)) {
@@ -262,5 +268,130 @@ test('resolves each rendered local link and marks it broken or intact', t => {
     { source: 'docs/README.md', target: '../../outside.md', path: null, broken: true },
     { source: 'docs/README.md', target: '#usage', path: 'docs/README.md', broken: false },
     { source: 'docs/usage/README.md', target: '../README.md', path: 'docs/README.md', broken: false },
+  ]);
+});
+
+test('derives the targets that declarations own as the CLI derives allowed targets', () => {
+  assert.deepEqual(declarationTargets([
+    { id: 'agents-index', kind: 'file', target: 'docs/agents/README.md', exact: 'docs/agents/README.md' },
+    { id: 'readme', kind: 'file', target: 'README.md', guidance: 'guidance/repository-readme.md' },
+    { id: 'documentation', kind: 'repository', guidance: 'g.md', targets: { paths: ['docs/README.md', 7], directories: ['docs/generated'] } },
+    { id: 'skill-tdd', kind: 'skill', name: 'tdd', source: 'vendor/tdd' },
+    { id: 'unknown', kind: 'other', target: 'ignored.md' },
+    null,
+  ]), {
+    paths: ['README.md', 'docs/README.md', 'docs/agents/README.md'],
+    directories: ['.agents/skills/tdd', 'docs/generated'],
+  });
+  assert.deepEqual(declarationTargets(undefined), { paths: [], directories: [] });
+});
+
+test('names the index that lists each document under a documentation root', () => {
+  assert.equal(documentIndex('docs', 'docs/README.md'), null, 'a root index is listed in no index');
+  assert.equal(documentIndex('docs', 'docs/usage/README.md'), 'docs/README.md');
+  assert.equal(documentIndex('docs', 'docs/usage/install.md'), 'docs/usage/README.md');
+  assert.equal(documentIndex('docs', 'docs/usage/guides/README.md'), 'docs/usage/README.md');
+  assert.equal(documentIndex('packages/app/handbook', 'packages/app/handbook/README.md'), null);
+  assert.equal(documentIndex('packages/app/handbook', 'packages/app/handbook/adr/0001-start.md'), 'packages/app/handbook/adr/README.md');
+});
+
+test('records each document under a root with its index and scope membership', t => {
+  const project = fixture({
+    'docs/README.md': '# Documentation\n',
+    'docs/usage/README.md': '# Usage\n',
+    'docs/usage/install.md': '# Install\n',
+    'docs/agents/README.md': '# Agents\n',
+    'docs/agents/generated/notes.md': '# Notes\n',
+    'legacy-notes.md': '# Legacy\n',
+  });
+  t.after(project.close);
+  const built = documentationModel(project.root, ['docs/README.md', 'docs/usage/README.md', 'legacy-notes.md'], {
+    declaredTargets: { paths: ['docs/agents/README.md'], directories: ['docs/agents/generated'] },
+  });
+
+  assert.deepEqual(built.members, [
+    { path: 'docs/README.md', root: 'docs', index: null, scope: 'confirmed' },
+    { path: 'docs/agents/README.md', root: 'docs', index: 'docs/README.md', scope: 'declared' },
+    { path: 'docs/agents/generated/notes.md', root: 'docs', index: 'docs/agents/generated/README.md', scope: 'declared' },
+    { path: 'docs/usage/README.md', root: 'docs', index: 'docs/README.md', scope: 'confirmed' },
+    { path: 'docs/usage/install.md', root: 'docs', index: 'docs/usage/README.md', scope: null },
+  ], 'confirmed files outside a root are documents but not members');
+});
+
+test('records each present index purpose and items', t => {
+  const built = model(t, {
+    'docs/README.md': `# Documentation
+
+This directory maps the documentation. It has two sentences.
+
+- [Usage](usage/): using the project.
+- [Guide](usage/guide.md?plain=1#top)
+- See [Usage](usage/README.md): again.
+- [Website](https://example.com): external.
+`,
+    'docs/usage/README.md': '<!-- Nothing rendered. -->\n',
+    'docs/usage/guide.md': '# Guide\n',
+    'docs/development/README.md': `# Development
+
+This directory explains development.
+
+- [Early](early.md): before the section.
+
+## Setup and validation
+
+- [Inside](inside.md): inside the section.
+
+## Documents
+
+- [Late](late.md): after the section.
+`,
+  });
+
+  assert.deepEqual(built.indexes, [
+    {
+      path: 'docs/README.md',
+      purpose: { text: 'This directory maps the documentation. It has two sentences.', oneSentence: false },
+      items: [
+        { text: 'Usage: using the project.', target: 'usage/', path: 'docs/usage/README.md', wellFormed: true },
+        { text: 'Guide', target: 'usage/guide.md?plain=1#top', path: 'docs/usage/guide.md', wellFormed: false },
+        { text: 'See Usage: again.', target: 'usage/README.md', path: 'docs/usage/README.md', wellFormed: false },
+        { text: 'Website: external.', target: 'https://example.com', path: null, wellFormed: false },
+      ],
+      context: { text: 'This directory maps the documentation. It has two sentences.', paths: [] },
+    },
+    {
+      path: 'docs/development/README.md',
+      purpose: { text: 'This directory explains development.', oneSentence: true },
+      setupAndValidation: 'first',
+      itemsBeforeIndex: [
+        { text: 'Early: before the section.', target: 'early.md', path: 'docs/development/early.md', wellFormed: true },
+        { text: 'Inside: inside the section.', target: 'inside.md', path: 'docs/development/inside.md', wellFormed: true },
+      ],
+      items: [
+        { text: 'Late: after the section.', target: 'late.md', path: 'docs/development/late.md', wellFormed: true },
+      ],
+      context: {
+        text: 'This directory explains development.\nEarly: before the section.\nSetup and validation\nInside: inside the section.\nDocuments',
+        paths: ['docs/development/early.md', 'docs/development/inside.md'],
+      },
+    },
+  ], 'an empty index records no structure');
+});
+
+test('reports documentation rule violations by rule, then by path', t => {
+  const built = model(t, {
+    'docs/README.md': '# Documentation\n\nThis directory maps the documentation.\n',
+    'docs/development/README.md': '# Development\n\nThis directory explains development.\n',
+    'docs/usage/README.md': '# Usage\n',
+    'docs/usage/install.md': '# Install\n',
+  }, ['docs/README.md', 'docs/development/README.md', 'docs/usage/README.md']);
+
+  assert.deepEqual(documentationRuleViolations(built), [
+    { rule: documentationRules.indexEntryForm, path: 'docs/usage/README.md', correction: 'start it with a one-sentence purpose after its title.' },
+    { rule: documentationRules.oneIndex, path: 'docs/development/README.md', correction: 'list it in docs/README.md.' },
+    { rule: documentationRules.oneIndex, path: 'docs/usage/README.md', correction: 'list it in docs/README.md.' },
+    { rule: documentationRules.oneIndex, path: 'docs/usage/install.md', correction: 'list it in docs/usage/README.md.' },
+    { rule: documentationRules.developmentGuideOrder, path: 'docs/development/README.md', correction: 'give its purpose, then a Setup and validation section, then its index.' },
+    { rule: documentationRules.scopeCoverage, path: 'docs/usage/install.md', correction: 'include it in the confirmed documentation scope.' },
   ]);
 });

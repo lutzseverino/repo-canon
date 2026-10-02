@@ -27,3 +27,6 @@ involve real alternatives.
 - [Install skill setup files verbatim from upstream seeds](0008-install-skill-setup-files-verbatim-from-upstream-seeds.md):
   the issue tracker, triage label, and domain configurations are the vendored
   upstream setup seeds, installed byte for byte.
+- [Enforce documentation rules as checks](0009-enforce-documentation-rules-as-checks.md):
+  the documentation check enforces the index entry form, one index per
+  document, the development guide's order, and scope coverage.

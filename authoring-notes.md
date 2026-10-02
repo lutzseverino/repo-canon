@@ -48,8 +48,11 @@ repeated.
   [documentation discovery guidance](discovery/documentation.md).
   [ADR 0006](docs/adr/0006-keep-point-in-time-records-with-their-event.md) and
   [ADR 0007](docs/adr/0007-keep-superseded-adrs.md) record the decisions on
-  point-in-time records and superseded ADRs. These rules stay contextual; the
-  documentation check keeps its mechanical scope.
+  point-in-time records and superseded ADRs.
+  [ADR 0009](docs/adr/0009-enforce-documentation-rules-as-checks.md) makes the
+  documentation check enforce the index entry form, one index per document,
+  the development guide's order, and scope coverage, with each check defined
+  once in the shared documentation model.
 - Include all regular Matt Pocock skills. Upstream's promoted set at commit
   `3cca18b368ae95cdbdebbff572ccafa662551015` consists of 18 engineering and seven
   productivity skills, matching its plugin manifest. Experimental skills are

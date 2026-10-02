@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { lstatSync } from 'node:fs';
+import { lstatSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
@@ -26,6 +26,17 @@ const exactOwnedAgentConfiguration = [
   'docs/agents/triage-labels.md',
 ];
 
+// The CLI passes every active declaration to each operation. The documentation
+// check counts a document that another declaration owns, such as the exact-owned
+// agent configuration, as covered by scope, so the file declarations of
+// `standards.yaml` are passed here as the CLI would.
+function fileDeclarations() {
+  return readFileSync(join(root, 'standards.yaml'), 'utf8').split('\n').flatMap(line => {
+    const target = /^\s+target: (\S+)$/.exec(line);
+    return target ? [{ kind: 'file', target: target[1], checks: [], fixes: [] }] : [];
+  });
+}
+
 // The CLI's discovery observation refuses any file larger than this, which would
 // reject the whole inspection before it reports anything.
 const observationFileLimit = 8 * 1024 * 1024;
@@ -50,6 +61,7 @@ function documentationScope() {
 test('the repository passes the documentation navigation check at its root', () => {
   const outcome = invokeCheck(operation('check-documentation.mjs'), root, {
     operation: { declaration: 'documentation', phase: 'checks', id: 'documentation-navigation' },
+    declarations: fileDeclarations(),
     allowedTargets: { paths: documentationScope(), directories: [] },
   });
 
