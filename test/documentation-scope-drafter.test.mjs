@@ -625,14 +625,19 @@ test('rejects invalid arguments, roots, and projects with a process error', t =>
   assert.match(outcome.stderr, /Cannot find the Git working tree/);
 });
 
+// A copy of the drafter with the documentation check's resources, outside any
+// retained inputs, where it reads the `standards.yaml` beside it.
+function copiedDrafter(t) {
+  return join(dirname(dirname(retainedCheck(t, 'operations/check-documentation.mjs'))), drafterPath);
+}
+
 // The documentation check's resources, which hold the drafter, as Repository
-// Standards 4.0.0 retains them in an adopted repository: under
+// Standards 4.0.0 retains them in an adopting repository: under
 // `.repo-standards/inputs/source`, beside the manifest it resolved to the
 // selected profile, `.repo-standards/inputs/standards.yaml`.
 function retainInputs(t, root, manifest) {
-  const resources = dirname(dirname(retainedCheck(t, 'operations/check-documentation.mjs')));
   const inputs = join(root, '.repo-standards/inputs');
-  cpSync(resources, join(inputs, 'source'), { recursive: true });
+  cpSync(dirname(dirname(copiedDrafter(t))), join(inputs, 'source'), { recursive: true });
   if (manifest !== undefined) writeFileSync(join(inputs, 'standards.yaml'), manifest);
   return join(inputs, 'source', drafterPath);
 }
@@ -650,7 +655,7 @@ function resolvedManifest() {
   return `${head}defaults:\n  declarations: {}\nprofiles:\n  complete:\n    description: ${description}\n    declarations:\n${nested}\n`;
 }
 
-test('runs from the retained inputs of an adopted repository as from the source', t => {
+test('runs from the retained inputs of an adopting repository as from the source', t => {
   const project = fixture(conforming);
   t.after(project.close);
   const retainedDrafter = retainInputs(t, project.root, resolvedManifest());
@@ -716,8 +721,7 @@ test('reads the declarations that the selected profile resolves to', t => {
   // A source whose profile replaces, excludes, and adds to its defaults.
   const project = fixture(files);
   t.after(project.close);
-  const sourceDrafter = retainedCheck(t, 'operations/check-documentation.mjs')
-    .replace(/operations\/check-documentation\.mjs$/, drafterPath);
+  const sourceDrafter = copiedDrafter(t);
   writeFileSync(join(dirname(dirname(sourceDrafter)), 'standards.yaml'), `${header}
 defaults:
   declarations:
@@ -725,7 +729,7 @@ ${documentationDeclaration(4)}
 
     usage-guide:
       kind: file
-      target: docs/usage/kept.md
+      target: docs/usage/kept.md # the usage guide
       exact: kept.md
 
     dropped-guide:
@@ -739,9 +743,9 @@ profiles:
     declarations:
       usage-guide:
         kind: file
-        target: "docs/usage/replaced.md"
+        target: "docs/usage/replaced.md" # replaces the usage guide
         exact: replaced.md
-      dropped-guide: {exclude: true}
+      dropped-guide: {exclude: true} # no longer installed
       added-guide:
         kind: file
         target: docs/usage/added.md
@@ -789,8 +793,7 @@ test('fails without a manifest it can read, naming the manifests it tried', t =>
   assert.equal(withoutManifest.stdout, '');
   assert.ok(withoutManifest.stderr.includes(`Cannot read a standards manifest at ${sourceManifest} or ${retainedManifest}`), withoutManifest.stderr);
 
-  const sourceDrafter = retainedCheck(t, 'operations/check-documentation.mjs')
-    .replace(/operations\/check-documentation\.mjs$/, drafterPath);
+  const sourceDrafter = copiedDrafter(t);
   const besideSource = join(dirname(dirname(sourceDrafter)), 'standards.yaml');
   const outsideInputs = draft(project.root, [], sourceDrafter);
   assert.equal(outsideInputs.status, 1);

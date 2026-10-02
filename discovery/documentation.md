@@ -12,8 +12,8 @@ node discovery/draft-documentation-scope.mjs --project /path/to/adopting-reposit
 When the selected source is unavailable, as in an update that keeps the
 standards the adopting repository retains, run the drafter retained with them
 instead, from the adopting repository's root. It reads the other declarations
-from the manifest that Repository Standards retains with it, resolved to the
-selected profile, and drafts the same scope as the source:
+from the manifest that Repository Standards retains with those standards,
+resolved to the selected profile, and drafts the same scope as the source:
 
 ```sh
 node .repo-standards/inputs/source/discovery/draft-documentation-scope.mjs \

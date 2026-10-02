@@ -80,9 +80,10 @@ with, taking each declaration's `kind`, `target`, and `name`:
   whose one `complete` profile selects every default declaration unchanged.
 - From the retained inputs, where no `standards.yaml` lies beside it in
   `.repo-standards/inputs/source`, it reads
-  `.repo-standards/inputs/standards.yaml`. Repository Standards retains that
-  manifest resolved to the selected profile: its defaults are empty and the
-  profile holds every resolved declaration.
+  `.repo-standards/inputs/standards.yaml`, the manifest Repository Standards
+  retains normalized to the selected profile alone. Repository Standards 4.0.0
+  writes it with empty defaults and every resolved declaration under that
+  profile.
 
 Either way it resolves the declarations as Repository Standards does: a
 profile's declaration replaces the default of its ID, adds a new one, or, with
@@ -146,7 +147,7 @@ node --test test/documentation-scope-drafter.test.mjs
 They run the drafter as a process over fixture repositories and compare the
 whole proposal, check its shape against the `repo-standards/scope/v2` rules,
 cover the unresolved questions and process errors, run it from the retained
-inputs of an adopted fixture repository and compare its proposal with the
+inputs of an adopting fixture repository and compare its proposal with the
 source's, resolve a profile's declarations from both manifest forms, and show
 that the drafted scope of a conforming fixture, and of this repository, passes
 the documentation check.

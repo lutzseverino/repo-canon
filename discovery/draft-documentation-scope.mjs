@@ -16,7 +16,7 @@ import {
 // Drafts the documentation scope of a repository from its tree, as a
 // Repository Standards scope proposal for the `documentation` declaration.
 // The agent runs it from the standards source at the selected commit, or from
-// the inputs an adopted repository retains when that source is unavailable;
+// the inputs an adopting repository retains when that source is unavailable;
 // the CLI never runs it. It decides only what the documentation rules decide,
 // through the documentation model the check uses, and lists every other case
 // as an unresolved question. It reads the project and writes the proposal to
@@ -35,7 +35,7 @@ const reservedPaths = ['.repo-standards', '.agents/skills/adopt-standards', '.ag
 
 // The other declarations' targets come from the source manifest beside this
 // script, the one the selected commit ships. Without it, a drafter that an
-// adopted repository retains under `.repo-standards/inputs/source` reads the
+// adopting repository retains under `.repo-standards/inputs/source` reads the
 // manifest Repository Standards retains beside those inputs, resolved to the
 // selected profile.
 const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -149,11 +149,15 @@ function readManifest() {
       if (error.code !== 'ENOENT') break;
     }
   }
-  return fail(`Cannot read a standards manifest at ${tried.join(' or ')}; run the drafter from the standards source at the selected commit, or from the retained inputs of an adopted repository.`);
+  return fail(`Cannot read a standards manifest at ${tried.join(' or ')}; run the drafter from the standards source at the selected commit, or from the retained inputs of an adopting repository.`);
 }
 
-function unquoted(value) {
-  return value.replace(/^(["'])(.*)\1$/, '$2');
+// A scalar value without its quotes or trailing comment, or undefined for
+// none.
+function scalar(value) {
+  if (value === undefined || value.startsWith('#')) return undefined;
+  const quoted = /^(["'])(.*?)\1(?:\s+#.*)?$/.exec(value);
+  return quoted ? quoted[2] : value.replace(/\s+#.*$/, '');
 }
 
 // The declarations the manifest's one profile resolves to, with the fields
@@ -162,11 +166,11 @@ function unquoted(value) {
 // `exclude: true`, removes it. The source's one profile selects every default
 // declaration unchanged; the retained manifest has empty defaults and the
 // selected profile's resolved declarations. The manifest's block mappings are
-// read by indentation, and only the paths below matter:
+// read by indentation, and only the key paths below matter:
 // `defaults.declarations.<id>.<field>` and
 // `profiles.<profile>.declarations.<id>.<field>`.
 function manifestDeclarations() {
-  const { path, text } = readManifest();
+  const { path: manifest, text } = readManifest();
   const defaults = new Map();
   const profiles = new Map();
   const keys = [];
@@ -177,35 +181,37 @@ function manifestDeclarations() {
     const indent = entry[1].length;
     while (keys.length > 0 && keys.at(-1).indent >= indent) keys.pop();
     keys.push({ indent, key: entry[2] });
-    const value = entry[3];
-    const at = keys.map(({ key }) => key);
+    const value = scalar(entry[3]);
+    const keyPath = keys.map(({ key }) => key);
+    // The declarations this line belongs to, and its key path below them.
     let declarations = null;
-    let field = null;
-    if (at[0] === 'defaults' && at[1] === 'declarations') {
+    let declarationPath = null;
+    if (keyPath[0] === 'defaults' && keyPath[1] === 'declarations') {
       declarations = defaults;
-      field = at.slice(2);
-    } else if (at[0] === 'profiles' && at.length > 1) {
-      if (!profiles.has(at[1])) profiles.set(at[1], new Map());
-      if (at[2] === 'declarations') {
-        declarations = profiles.get(at[1]);
-        field = at.slice(3);
+      declarationPath = keyPath.slice(2);
+    } else if (keyPath[0] === 'profiles' && keyPath.length > 1) {
+      if (!profiles.has(keyPath[1])) profiles.set(keyPath[1], new Map());
+      if (keyPath[2] === 'declarations') {
+        declarations = profiles.get(keyPath[1]);
+        declarationPath = keyPath.slice(3);
       }
     }
     if (!declarations) continue;
-    if (field.length === 0) {
-      if (value !== undefined && value !== '{}') fail(`${path} lists its declarations in a form the drafter cannot read.`);
-    } else if (field.length === 1) {
-      if (value === undefined) declarations.set(field[0], { id: field[0] });
-      else if (/^\{\s*exclude:\s*true\s*\}$/.test(value)) declarations.set(field[0], { id: field[0], exclude: true });
-      else fail(`${path} declares ${field[0]} in a form the drafter cannot read.`);
-    } else if (field.length === 2 && value !== undefined && ['kind', 'target', 'name', 'exclude'].includes(field[1])) {
-      const declaration = declarations.get(field[0]);
-      if (field[1] === 'exclude') declaration.exclude = unquoted(value) === 'true';
-      else declaration[field[1]] = unquoted(value);
+    const [id, field, ...deeper] = declarationPath;
+    if (id === undefined) {
+      if (value !== undefined && value !== '{}') fail(`${manifest} lists its declarations in a form the drafter cannot read.`);
+    } else if (field === undefined) {
+      if (value === undefined) declarations.set(id, { id });
+      else if (/^\{\s*exclude:\s*true\s*\}$/.test(value)) declarations.set(id, { id, exclude: true });
+      else fail(`${manifest} declares ${id} in a form the drafter cannot read.`);
+    } else if (deeper.length === 0 && value !== undefined && ['kind', 'target', 'name', 'exclude'].includes(field)) {
+      const declaration = declarations.get(id);
+      if (field === 'exclude') declaration.exclude = value === 'true';
+      else declaration[field] = value;
     }
   }
   if (profiles.size !== 1) {
-    fail(`${path} declares ${profiles.size} profiles; the drafter reads a manifest with one profile.`);
+    fail(`${manifest} declares ${profiles.size} profiles; the drafter reads a manifest with one profile.`);
   }
   const resolved = new Map(defaults);
   for (const [id, declaration] of [...profiles.values()][0]) {
@@ -214,7 +220,7 @@ function manifestDeclarations() {
   }
   const declarations = [...resolved.values()];
   if (!declarations.some(candidate => candidate.id === declarationId && candidate.kind === 'repository')) {
-    fail(`${path} declares no ${declarationId} repository declaration.`);
+    fail(`${manifest} declares no ${declarationId} repository declaration.`);
   }
   return declarations;
 }
