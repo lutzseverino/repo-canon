@@ -1,6 +1,6 @@
 import { lstatSync, readFileSync } from 'node:fs';
 import { isAbsolute, posix, sep } from 'node:path';
-import { documentationModel } from './lib/documentation-model.mjs';
+import { documentationModel, documentationRuleViolations } from './lib/documentation-model.mjs';
 
 const resultFormat = 'repo-standards/result/v1';
 
@@ -49,9 +49,33 @@ function absolutePath(projectRoot, path) {
   return `${projectRoot}${sep}${path.split('/').join(sep)}`;
 }
 
+// The targets the request's active declarations own, as the CLI derives each
+// declaration's allowed targets: a file declaration's target, a repository
+// declaration's confirmed paths and directories, and a skill's installed
+// directory. A document under a documentation root that another declaration
+// owns, such as an installed exact file, cannot also be in the documentation
+// scope, so it counts as covered.
+function declaredTargets(declarations) {
+  const paths = new Set();
+  const directories = new Set();
+  const strings = values => (Array.isArray(values) ? values.filter(value => typeof value === 'string') : []);
+  for (const declaration of Array.isArray(declarations) ? declarations : []) {
+    if (declaration?.kind === 'file' && typeof declaration.target === 'string') {
+      paths.add(declaration.target);
+    } else if (declaration?.kind === 'repository') {
+      for (const path of strings(declaration.targets?.paths)) paths.add(path);
+      for (const directory of strings(declaration.targets?.directories)) directories.add(directory);
+    } else if (declaration?.kind === 'skill' && typeof declaration.name === 'string') {
+      directories.add(`.agents/skills/${declaration.name}`);
+    }
+  }
+  return { paths: [...paths], directories: [...directories] };
+}
+
 // Projects the documentation model onto its corrections, in order: the
 // development guide, then each root's index, stray entries, directory indexes
-// and confirmed category indexes, then broken links.
+// and confirmed category indexes, then broken links, then each documentation
+// rule violation, naming its file and its rule.
 function navigationCorrections(model) {
   const corrections = [];
   const guide = model.developmentGuide;
@@ -91,6 +115,9 @@ function navigationCorrections(model) {
   for (const link of model.links) {
     if (link.broken) corrections.push(`${link.source} links to missing ${link.target}.`);
   }
+  for (const { rule, path, correction } of documentationRuleViolations(model)) {
+    corrections.push(`${path} breaks the ${rule} rule: ${correction}`);
+  }
   return [...new Set(corrections)];
 }
 
@@ -100,7 +127,9 @@ function result(status, message) {
 
 try {
   const request = readRequest();
-  const model = documentationModel(request.projectRoot, request.allowedTargets.paths);
+  const model = documentationModel(request.projectRoot, request.allowedTargets.paths, {
+    declaredTargets: declaredTargets(request.declarations),
+  });
   const corrections = navigationCorrections(model);
   if (model.ambiguousRoots.length > 0) {
     const ambiguity = model.ambiguousRoots.map(root => (

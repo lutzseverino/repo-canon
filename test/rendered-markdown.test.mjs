@@ -58,6 +58,34 @@ Read [the guide](guide.md) first.
   assert.deepEqual(section(document, 'license').blocks, []);
 });
 
+test('the document exposes its ordered top-level blocks, headings included', () => {
+  const document = interpretMarkdown(`<!-- A comment. -->
+
+# [Harbor](README.md)
+
+Harbor routes [messages](usage/messages.md).
+
+<p hidden>Hidden</p>
+
+## Usage
+
+- [Queues](queues.md): durable queues.
+`);
+
+  assert.deepEqual(shape(document.blocks), [
+    { tag: 'h1', text: 'Harbor', links: [], blocks: [] },
+    { tag: 'p', text: 'Harbor routes messages.', links: ['usage/messages.md'], blocks: [] },
+    { tag: 'h2', text: 'Usage', links: [], blocks: [] },
+    {
+      tag: 'ul',
+      text: 'Queues: durable queues.',
+      links: ['queues.md'],
+      blocks: [{ tag: 'li', text: 'Queues: durable queues.', links: ['queues.md'], blocks: [] }],
+    },
+  ]);
+  assert.deepEqual(interpretMarkdown('<!-- Nothing rendered. -->\n').blocks, []);
+});
+
 test('section blocks hold only the section content of a block they share', () => {
   const document = interpretMarkdown(`<div>
 

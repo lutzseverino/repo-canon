@@ -10,20 +10,26 @@ through the Repository Standards public operation protocol:
   `docs/development/README.md`, derives every context-local documentation root
   from confirmed root-index and category paths, rejects populated top-level
   documentation outside the four recognized categories at each root, checks
-  that every existing documentation directory has a nonempty `README.md`, and
+  that every existing documentation directory has a nonempty `README.md`,
   validates rendered local links in those trees and selected migration or
-  link-repair files.
+  link-repair files, and enforces the four
+  [documentation rules](#documentation-rules).
 
 The documentation operation reads the repository only through the
 documentation model in `operations/lib/documentation-model.mjs`. Given the
-project root and the confirmed paths, the model returns the documentation roots
-and the ambiguous candidate roots; each root's documentation index, its stray
-top-level entries outside the documentation categories, its directories with
-their index paths and states (missing, empty, or present), and its confirmed
-category indexes; the development guide; the documents; and every rendered
-local link, marked broken or intact. It records structure only; the check
-projects it onto the corrections, so a new documentation rule reads the model
-rather than walking the tree again.
+project root, the confirmed paths, and the paths other declarations own, the
+model returns the documentation roots and the ambiguous candidate roots; each
+root's documentation index, its stray top-level entries outside the
+documentation categories, its directories with their index paths and states
+(missing, empty, or present), and its confirmed category indexes; the
+development guide; the documents; each document under a root with the index
+that lists it and its scope membership; the purpose and items of each present
+index; and every rendered local link, marked broken or intact. The model also
+defines the documentation rules over that structure, and the check projects the
+structure and the rule violations onto its corrections, so a new documentation
+rule reads the model rather than walking the tree again. The model exports the
+root inference, the tree walk, and the index that lists a document, so that a
+tool drafting a documentation scope uses the same definitions as the check.
 
 A documentation root never lies inside another. A confirmed
 `<dir>/<category>/README.md` makes `<dir>` a root only when `<dir>` is not
@@ -47,13 +53,61 @@ declarations retain `operations/lib/rendered-markdown.mjs`, the mechanically
 separated `operations/lib/local-markdown-links.mjs`, and the Marked and parse5
 resources and notices alongside each operation, and the documentation model
 alongside the documentation operation. The shared document owns
-rendered structure, including the ordered top-level blocks of each heading's
-section with their tag, rendered text, links at any depth, and nested blocks;
-Project README title policy remains in its operation, documentation roots and
-indexes in the documentation model, and local path containment and symlink
+rendered structure, including the ordered top-level blocks of the document and
+of each heading's section with their tag, rendered text, links at any depth,
+and nested blocks; Project README title policy remains in its operation,
+documentation roots, indexes, and rules in the documentation model, and local
+path containment and symlink
 policy in the local-link module. That module's one local-link helper selects
 each rendered link or image with a local target and marks it broken or intact;
 the documentation model and the Project README check both build on it.
+
+## Documentation rules
+
+The model defines four of the
+[documentation rules](../../CONTRIBUTING.md#documentation) as checks, and each
+failure names the file and the rule it breaks, in the form
+`<file> breaks the <rule> rule: <correction>`. The check reports these failures
+after its other corrections, grouped by rule in the order below and by path
+within each rule.
+
+- Index entry form: every present documentation index, at a root or in a
+  directory under one, starts with a one-sentence purpose, the first paragraph
+  after its title. The purpose ends a sentence, and no sentence ends inside it
+  before a capitalized word. Each item of a top-level list after the purpose is
+  one `[Title](path): description` entry: it opens with a titled link to a local
+  path, followed by a colon, a space, and a description. Other prose may follow
+  the purpose.
+- One index per document: each Markdown document under a root is listed by
+  exactly one item, in its index, which is its directory's README, or for a
+  directory README, its parent's. A root's own index is listed in no index. A
+  link to a directory lists its README, and a document is listed by the first
+  link of an item, even a malformed one. Links outside index items, such as a
+  citation in context, list nothing. The installed agents index,
+  `docs/agents/README.md`, cites the optional `docs/agents/project.md` in
+  context instead of listing it, so that document needs no item; any other
+  index still must not list it. A document whose index is missing or empty gets
+  only the correction to create or populate that index.
+- Development guide order: `docs/development/README.md` gives its purpose, then
+  a Setup and validation section, then its index. Its index is the items after
+  that section ends. A well-formed item before the end of that section that
+  lists one of its entries breaks the order; other lists inside the section,
+  such as setup steps, do not. Other roots' development indexes follow only the
+  index entry form.
+- Scope coverage: every Markdown document under a root is in the confirmed
+  documentation scope, unless another active declaration owns it. The check
+  reads each active declaration's targets from the request's `declarations`
+  field the same way the CLI derives allowed targets: a file declaration's
+  target, a repository declaration's confirmed paths and directories, and a
+  skill's `.agents/skills/<name>` directory. Repository Standards rejects a path
+  that two declarations own, so the installed exact files under `docs/agents`
+  can never be in the documentation scope and are covered by their own
+  declarations. Other files under a root, such as images, belong in the
+  confirmed scope by the discovery guidance but are not checked.
+
+These rules make a repository that passed earlier releases fail when it does
+not follow them, as
+[ADR 0009](../adr/0009-enforce-documentation-rules-as-checks.md) records.
 
 ## Outcomes and limits
 
@@ -96,10 +150,12 @@ repository root:
 node --test test/project-readme-check.test.mjs test/documentation-check.test.mjs test/documentation-model.test.mjs
 ```
 
-The shared runtime's heading-section blocks and exported Markdown helpers have
-their own fixtures in `test/rendered-markdown.test.mjs`. The documentation
-model's root inference, ambiguity, index states, stray entries, documents, and
-link resolution have theirs in `test/documentation-model.test.mjs`.
+The shared runtime's document and heading-section blocks and exported Markdown
+helpers have their own fixtures in `test/rendered-markdown.test.mjs`. The
+documentation model's root inference, ambiguity, index states, stray entries,
+documents, members, index structure, rule violations, and link resolution have
+theirs in `test/documentation-model.test.mjs`. Each documentation rule has
+passing and failing fixture repositories in `test/documentation-check.test.mjs`.
 
 Each check fixture invokes the scripts with a `repo-standards/operation/v1`
 request, asserts the `repo-standards/result/v1` outcome or process error, and

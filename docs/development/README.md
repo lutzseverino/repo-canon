@@ -39,7 +39,8 @@ This repository takes the same path every adopter takes, so the suite also runs
 the three shipped checks against this repository's own root through the
 operation request helper, with the documentation tree, the repository-root
 glossary [`CONTEXT.md`](../../CONTEXT.md), and the
-[authoring notes](../../authoring-notes.md) as its documentation scope. The
+[authoring notes](../../authoring-notes.md) as its documentation scope, and
+the file declarations of `standards.yaml` as the other active declarations. The
 same fixture fails if any tracked file reaches the CLI's 8 MiB per-file
 observation limit, which would make the repository uninspectable before any
 report. Run it alone with

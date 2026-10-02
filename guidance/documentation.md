@@ -31,6 +31,8 @@ configuration. Project-specific agent constraints belong in optional
 `docs/agents/project.md`.
 
 Assess documents against their actual audience and topic. Mechanical checks
-cover categories, directory READMEs, required entry points, and local link
-targets. They do not prove correctness or usefulness, and they do not check
-index format, that each document has one index, or where records are kept.
+cover categories, directory READMEs, required entry points, local link targets,
+the index entry form, one index per document, the development guide's order,
+and that every Markdown document under a documentation root is in the confirmed
+scope. They do not prove correctness or usefulness, and they do not check where
+records are kept.

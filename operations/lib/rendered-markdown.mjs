@@ -394,10 +394,17 @@ export function interpretMarkdown(markdown, { additionalNonRenderedElements = []
       name: markdownInlineText(token.tokens),
     }));
 
+  let documentBlocks;
   return {
     content,
     headings,
     markdownHeadings,
+    // The document's ordered top-level blocks, headings included, in the same
+    // shape as a heading section's blocks.
+    get blocks() {
+      documentBlocks ??= sectionBlocks(rendered, 0, content.elements.length);
+      return documentBlocks;
+    },
     sections(names, {
       hierarchy = 'outermost',
       nameSource = 'markdown',
