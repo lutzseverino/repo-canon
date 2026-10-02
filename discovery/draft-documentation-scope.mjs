@@ -260,7 +260,7 @@ const reasons = {
 const questions = {
   root: (candidate, directories, outer) => `Is ${code(candidate)} a documentation root${outer.length > 0 ? `, if ${series(outer.map(code), 'or')} is not` : ''}? Its ${series(directories.map(code))} ${directories.length === 1 ? 'directory holds' : 'directories hold'} Markdown documents. If it is, draft again with ${code(`--root ${candidate}`)}.`,
   outside: (group, files) => `Which of these Markdown files ${group === '.' ? 'at the repository root' : `under ${code(group)}`} are documentation this scope must cover, such as a document to move into a documentation category: ${series(files.map(code))}? Include each one, with its destination when it moves.`,
-  stray: (entry, root) => `${code(entry)} lies directly under the documentation root ${code(root)}, outside the ${series(documentationCategories)} categories. Which category does it move to? Include each destination path and any new directory's index; its current files are already included.`,
+  stray: (entry, root) => `${code(entry)} lies directly under the documentation root ${code(root)}, outside the ${series(documentationCategories)} categories. Which category does it move to? Include each destination path and any new directory's index; the files Git keeps in it are already included.`,
   unkept: (directory, root) => `${code(directory)} under the documentation root ${code(root)} holds no file that Git keeps, but the documentation check reads it. Should it be removed, or kept by Git and drafted again?`,
   ignored: (path, root) => `Git ignores ${code(path)}, which lies under the documentation root ${code(root)}. Should it be removed, moved outside the root, or kept by Git and drafted again?`,
   special: (path, root) => `${code(path)} under the documentation root ${code(root)} is a symbolic link or special file, which the scope cannot hold. Should it be replaced with a regular file or removed?`,
@@ -366,7 +366,7 @@ function draftRoot(draft, context, root) {
       continue;
     }
     if (directory !== root && !kept.directories.has(directory)
-        && !reservedPaths.some(reserved => isInside(reserved, directory))) {
+        && !reservedPaths.some(reserved => isInside(reserved, directory) && entryAt(context.projectRoot, reserved))) {
       draft.ask(directory, questions.unkept(directory, root));
       skipped.push(directory);
       continue;
@@ -423,16 +423,22 @@ function draftGlossaries(draft, context, roots, model) {
 
 // Top-level entries outside the categories move into one; no rule decides
 // which. Their files are already included as move sources, and a moved
-// directory needs no new index where it is now. A decided root without a
-// category is ambiguous to the check, which then also reads the indexes inside
-// it as candidate roots; only the decided roots are asked about.
-function askStrayEntries(draft, model, roots) {
+// directory needs no new index where it is now. An entry with nothing to move
+// but files of other declarations or Repository Standards cannot move in this
+// scope. A decided root without a category is ambiguous to the check, which
+// then also reads the indexes inside it as candidate roots; only the decided
+// roots are asked about.
+function askStrayEntries(draft, context, model, roots) {
+  const holdsOthersFiles = entry => [...context.kept.files].some(path => isWithin(path, entry) && context.owner(path))
+    || reservedPaths.some(reserved => isWithin(reserved, entry) && entryAt(context.projectRoot, reserved));
   for (const root of model.roots.filter(candidate => roots.includes(candidate.path))) {
     const included = draft.included();
     for (const entry of root.strayEntries) {
       if (draft.isAsked(entry)) continue;
       const moves = included.some(path => isWithin(path, entry) && !draft.createdIndexes.has(path));
-      draft.ask(entry, moves ? questions.stray(entry, root.path) : questions.strayOwned(entry, root.path));
+      draft.ask(entry, !moves && holdsOthersFiles(entry)
+        ? questions.strayOwned(entry, root.path)
+        : questions.stray(entry, root.path));
       for (const path of draft.createdIndexes.keys()) {
         if (isInside(path, entry)) draft.candidates.delete(path);
       }
@@ -502,7 +508,7 @@ function draftDocumentationScope(project, rootArguments) {
 
   const model = documentationModel(projectRoot, draft.included(), { declaredTargets });
   draftGlossaries(draft, context, roots, model);
-  askStrayEntries(draft, model, roots);
+  askStrayEntries(draft, context, model, roots);
   askCandidateRoots(draft, context, roots);
   draftOutsideRoots(draft, context, roots);
   return draft.proposal(roots);

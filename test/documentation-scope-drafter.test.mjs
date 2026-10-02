@@ -312,7 +312,7 @@ test('leaves the cases no rule decides as unresolved questions', t => {
     'Which of these Markdown files under `guides` are documentation this scope must cover, such as a document to move into a documentation category: `guides/setup.md`? Include each one, with its destination when it moves.',
     'Which of these Markdown files under `packages` are documentation this scope must cover, such as a document to move into a documentation category: `packages/app/docs/adr/0001-start.md` and `packages/app/docs/usage/guide.md`? Include each one, with its destination when it moves.',
     '`docs/cache` under the documentation root `docs` holds no file that Git keeps, but the documentation check reads it. Should it be removed, or kept by Git and drafted again?',
-    '`docs/overview.md` lies directly under the documentation root `docs`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; its current files are already included.',
+    '`docs/overview.md` lies directly under the documentation root `docs`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; the files Git keeps in it are already included.',
   ]);
 });
 
@@ -331,7 +331,7 @@ test('asks about a stray directory and a symbolic link under a root without draf
     'docs/usage/README.md',
   ]);
   assert.deepEqual(entry.unresolved, [
-    '`docs/api` lies directly under the documentation root `docs`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; its current files are already included.',
+    '`docs/api` lies directly under the documentation root `docs`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; the files Git keeps in it are already included.',
     '`docs/usage/alias.md` under the documentation root `docs` is a symbolic link or special file, which the scope cannot hold. Should it be replaced with a regular file or removed?',
   ]);
 });
@@ -461,6 +461,18 @@ test('excludes each file of an owned directory under a decided root', t => {
     '.agents/skills/adopt-standards/SKILL.md': '# Adopt\n',
   }, ['--root', '.agents']);
   assert.deepEqual(reservedOnly.entry.unresolved, [ownedOnly], 'a directory of reserved paths is not asked to be removed');
+
+  const ignoredOnly = drafted(t, {
+    '.gitignore': '.agents/skills/mine/\n',
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': developmentGuide,
+    '.agents/usage/README.md': '# Usage\n',
+    '.agents/skills/mine/notes.md': '# Notes\n',
+  }, ['--root', '.agents'], root => mkdirSync(join(root, '.agents/empty')));
+  assert.deepEqual(ignoredOnly.entry.unresolved, [
+    '`.agents/empty` under the documentation root `.agents` holds no file that Git keeps, but the documentation check reads it. Should it be removed, or kept by Git and drafted again?',
+    '`.agents/skills` under the documentation root `.agents` holds no file that Git keeps, but the documentation check reads it. Should it be removed, or kept by Git and drafted again?',
+  ], 'a directory without reserved or owned files is asked about as any other');
 });
 
 test('asks about entries that block a root or an index, and survives a dirty working tree', t => {
@@ -509,7 +521,7 @@ test('asks about entries that block a root or an index, and survives a dirty wor
   const [entry] = outcome.proposal.declarations;
   assert.deepEqual(included(entry), ['docs/README.md', 'docs/development/README.md', 'docs/usage']);
   assert.deepEqual(entry.unresolved, [
-    '`docs/usage` lies directly under the documentation root `docs`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; its current files are already included.',
+    '`docs/usage` lies directly under the documentation root `docs`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory\'s index; the files Git keeps in it are already included.',
   ]);
   const throughLink = draft(dirty.root, ['--root', 'handbook']);
   assert.equal(throughLink.status, 1);
