@@ -71,6 +71,9 @@ step: `npm test` already runs it on every pull request.
   outcomes, prerequisites, and focused fixture command.
 - [Documentation and Project README checks](documentation-check.md): concrete
   scope, structural outcomes, prerequisites, and focused fixture commands.
+- [Documentation scope drafter](documentation-scope-drafter.md): drafting the
+  documentation scope from a repository tree, its rules and questions, its
+  source of other declarations' targets, and its fixtures.
 - [Standards source profile](source-profile.md): complete profile ownership,
   declarations, executable prerequisites, and the validation boundary.
 - [Skill exercises](skill-exercises.md): the procedure, fixture builders,

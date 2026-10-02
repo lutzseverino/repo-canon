@@ -6,7 +6,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "check": "for file in operations/*.mjs operations/lib/*.mjs scripts/*.mjs scripts/release/*.mjs scripts/support/*.mjs .github/scripts/*.mjs test/*.test.mjs test/helpers/*.mjs test/fixtures/*.mjs; do node --check \"$file\" || exit 1; done",
+    "check": "for file in operations/*.mjs operations/lib/*.mjs discovery/*.mjs scripts/*.mjs scripts/release/*.mjs scripts/support/*.mjs .github/scripts/*.mjs test/*.test.mjs test/helpers/*.mjs test/fixtures/*.mjs; do node --check \"$file\" || exit 1; done",
     "test": "node --test test/*.test.mjs",
     "release:inputs": "node scripts/release/inputs.mjs",
     "release:check-merge": "node scripts/release/check-merge.mjs",

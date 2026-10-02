@@ -39,14 +39,15 @@ project. Skill names are lower-case kebab-case, so that name never collides
 with a skill directory.
 
 The documentation operation resources retain the shared rendered-Markdown
-module, the separate local-link module, the documentation model, and complete
-Marked and parse5 directories with their notices. Other operation resources
-retain the shared GitHub operation module, Repo Canon's MIT license and
-third-party notice, and the upstream skill license. The rendered-Markdown
-runtime and parser files are also exact declarations because both trusted
-workflow validators import them from the adopting repository. Each executable
-therefore resolves the same relative import layout after installation or
-resource retention.
+module, the separate local-link module, the documentation model, the
+documentation scope drafter, and complete Marked and parse5 directories with
+their notices. The agent runs the drafter during discovery; the CLI only
+retains it. Other operation resources retain the shared GitHub operation
+module, Repo Canon's MIT license and third-party notice, and the upstream skill
+license. The rendered-Markdown runtime and parser files are also exact
+declarations because both trusted workflow validators import them from the
+adopting repository. Each executable therefore resolves the same relative
+import layout after installation or resource retention.
 
 ## Executable prerequisites
 

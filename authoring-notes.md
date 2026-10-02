@@ -14,8 +14,9 @@ upstream license notice. It is installed identically in every
 adopting repository and changes only through a Repo Canon release.
 
 `guidance/` and `discovery/` are source-side instructions for the agent that
-adopts Repo Canon. They are not installed as documents of the adopting
-repository; the CLI only retains them with the other source inputs.
+adopts Repo Canon, and `discovery/` also holds the documentation scope drafter
+that agent runs. They are not installed in the adopting repository; the CLI
+only retains them with the other source inputs.
 
 READMEs, development documentation, glossaries, and project-specific agent
 guidance belong to the adopting repository, because they describe it and its
