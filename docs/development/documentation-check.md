@@ -28,9 +28,10 @@ index; and every rendered local link, marked broken or intact. The model also
 defines the documentation rules over that structure, and the check projects the
 structure and the rule violations onto its corrections, so a new documentation
 rule reads the model rather than walking the tree again. The model exports the
-root inference, the tree walk, the index that lists a document, and the targets
-that declarations own, so that a tool drafting a documentation scope uses the
-same definitions as the check.
+root inference, the tree walk, the index that lists a document, the targets
+that declarations own, and the repository root, development guide, and category
+names, so that the [documentation scope drafter](documentation-scope-drafter.md)
+uses the same definitions as the check.
 
 A documentation root never lies inside another. A confirmed
 `<dir>/<category>/README.md` makes `<dir>` a root only when `<dir>` is not
@@ -53,7 +54,7 @@ references, and GFM tables receive the same link treatment. Final source
 declarations retain `operations/lib/rendered-markdown.mjs`, the mechanically
 separated `operations/lib/local-markdown-links.mjs`, and the Marked and parse5
 resources and notices alongside each operation, and the documentation model
-alongside the documentation operation. The shared document owns
+and the documentation scope drafter alongside the documentation operation. The shared document owns
 rendered structure, including the ordered top-level blocks of the document and
 of each heading's section with their tag, rendered text, links at any depth,
 and nested blocks; Project README title policy remains in its operation,

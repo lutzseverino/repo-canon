@@ -7,14 +7,18 @@ import { localLinks, resolvedLocalPath } from './local-markdown-links.mjs';
 // categories, its directories and their documentation indexes, its documents,
 // their scope membership, and their local links. Roots are inferred from the
 // confirmed paths, never from the tree alone, so the model does not draft
-// scope. The model also defines the documentation rules that read this
+// scope; the documentation scope drafter does, with these same definitions.
+// The model also defines the documentation rules that read this
 // structure: index entry form, one index per document, the development
 // guide's order, and scope coverage. The documentation check reports their
 // violations together with its structural corrections.
 
-const repositoryDocumentationRoot = 'docs';
-const developmentGuide = `${repositoryDocumentationRoot}/development/README.md`;
-const documentationCategories = new Set(['usage', 'development', 'adr', 'agents']);
+// The repository's documentation root, its development guide, and the
+// documentation categories, which the documentation scope drafter shares.
+export const repositoryDocumentationRoot = 'docs';
+export const developmentGuide = `${repositoryDocumentationRoot}/development/README.md`;
+export const documentationCategories = Object.freeze(['usage', 'development', 'adr', 'agents']);
+const categories = new Set(documentationCategories);
 
 // The installed agents index cites the optional project guidance in context
 // rather than listing it as an entry.
@@ -83,13 +87,13 @@ export function inferredRoots(confirmedPaths) {
     const segments = path.split('/');
     const fileName = segments.pop();
     if (fileName !== 'README.md' || segments.length === 0) continue;
-    if (documentationCategories.has(segments.at(-1))) segments.pop();
+    if (categories.has(segments.at(-1))) segments.pop();
     if (segments.length > 0) candidates.add(segments.join('/'));
   }
 
   const candidatesWithCategories = [...candidates].filter(candidate => (
     candidate === repositoryDocumentationRoot
-    || [...documentationCategories].some(category => (
+    || documentationCategories.some(category => (
       confirmedPaths.includes(`${candidate}/${category}/README.md`)
     ))
   ));
@@ -132,7 +136,7 @@ export function documentationTree(projectRoot, root) {
 
 function isStrayEntry(entry) {
   return entry.name !== 'README.md'
-    && !(entry.isDirectory() && documentationCategories.has(entry.name));
+    && !(entry.isDirectory() && categories.has(entry.name));
 }
 
 // The index that lists a document under a documentation root: its
@@ -350,7 +354,7 @@ export function documentationModel(projectRoot, confirmedPaths, {
       confirmedPath.endsWith('/README.md')
       && candidatesInRoot.some(candidate => (
         isInside(confirmedPath, candidate)
-        && documentationCategories.has(confirmedPath.slice(candidate.length + 1).split('/')[0])
+        && categories.has(confirmedPath.slice(candidate.length + 1).split('/')[0])
       ))
     )));
     for (const document of tree.markdownFiles) {
