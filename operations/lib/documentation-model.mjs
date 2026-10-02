@@ -239,7 +239,10 @@ function indexItem(indexPath, item, directories) {
 // (`missing`), and the items before its index.
 function indexStructure(path, document, directories, isDevelopmentGuide) {
   const { blocks } = document;
-  let start = blocks.length > 0 && headingLevel(blocks[0]) !== null ? 1 : 0;
+  const isSetupAndValidation = block => headingLevel(block) !== null && foldedText(block.text) === setupAndValidation;
+  const titled = blocks.length > 0 && headingLevel(blocks[0]) !== null
+    && !(isDevelopmentGuide && isSetupAndValidation(blocks[0]));
+  let start = titled ? 1 : 0;
   const purpose = blocks[start]?.tag === 'p' ? blocks[start] : null;
   if (purpose) start += 1;
   const structure = {
@@ -248,9 +251,7 @@ function indexStructure(path, document, directories, isDevelopmentGuide) {
   };
   let indexStart = start;
   if (isDevelopmentGuide) {
-    const section = blocks.findIndex((block, index) => (
-      index >= start && headingLevel(block) !== null && foldedText(block.text) === setupAndValidation
-    ));
+    const section = blocks.findIndex((block, index) => index >= start && isSetupAndValidation(block));
     const firstSection = blocks.findIndex((block, index) => index >= start && headingLevel(block) !== null);
     if (section >= 0) {
       const level = headingLevel(blocks[section]);
@@ -266,7 +267,7 @@ function indexStructure(path, document, directories, isDevelopmentGuide) {
   }
   structure.items = listItems(blocks.slice(indexStart)).map(item => indexItem(path, item, directories));
   const contextBlocks = blocks.filter((block, index) => (
-    index < indexStart || (block.tag !== 'ul' && block.tag !== 'ol')
+    (index > 0 || !titled) && (index < indexStart || (block.tag !== 'ul' && block.tag !== 'ol'))
   ));
   structure.context = {
     text: contextBlocks.map(block => block.text).join('\n'),
@@ -305,9 +306,11 @@ function documentLinks(projectRoot, source, document) {
 //   (null for a root's own index) and `scope` is `confirmed`, `declared` when
 //   another declaration owns it, or null;
 // - `indexes`: each present index under a root, in root and walk order, as
-//   `{ path, purpose, items }`, where `purpose` is `{ text, oneSentence }` or
-//   null and each item is `{ text, target, path, wellFormed }`; the
-//   development guide also records `setupAndValidation` and
+//   `{ path, purpose, items, context }`, where `purpose` is
+//   `{ text, oneSentence }` or null, each item is
+//   `{ text, target, path, wellFormed }`, and `context` is the `{ text, paths }`
+//   of its blocks other than its entries and its title; the development guide
+//   also records `setupAndValidation` (`first`, `later`, or `missing`) and
 //   `itemsBeforeIndex`;
 // - `links`: each document's local links as `{ source, target, path, broken }`.
 //
@@ -392,11 +395,15 @@ export function documentationModel(projectRoot, confirmedPaths, {
 }
 
 // Whether an index cites a document in context: a link outside its entries
-// names the document, or its context text names the document's file.
+// names the document, or its context text names it by its path relative to
+// the index, such as `project.md` or `./project.md`, or by its repository path.
 function citesInContext(structure, document) {
   if (!structure) return false;
-  const fileName = document.slice(document.lastIndexOf('/') + 1);
-  const named = new RegExp(`(^|[^\\w.-])${fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w/-])`);
+  const escaped = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const relative = document.slice(structure.path.lastIndexOf('/') + 1);
+  const named = new RegExp(
+    `(^|[^\\w./-])((\\./)?${escaped(relative)}|${escaped(document)})(?![\\w/-])`,
+  );
   return structure.context.paths.includes(document) || named.test(structure.context.text);
 }
 

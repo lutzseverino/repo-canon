@@ -600,6 +600,24 @@ test('the one index per document rule accepts the installed agents index citing 
   assert.equal(withoutCitation, 'Documentation navigation needs correction: docs/agents/project.md breaks the one index per document rule: list it in docs/agents/README.md.',
     'an agents index that neither lists nor cites the project guidance does not cover it');
 
+  for (const notCiting of [
+    'See `templates/project.md` for a template.',
+    '# project.md\n\nThis directory holds the agent configuration.',
+  ]) {
+    const agentsIndexText = notCiting.startsWith('#')
+      ? `${notCiting}\n\n- [Issue tracker](issue-tracker.md): issue operations.\n- [Triage labels](triage-labels.md): label strings.\n- [Domain docs](domain.md): domain documentation.\n`
+      : `${index('Agent configuration', 'This directory holds the agent configuration.', [
+        ['Issue tracker', 'issue-tracker.md', 'issue operations.'],
+        ['Triage labels', 'triage-labels.md', 'label strings.'],
+        ['Domain docs', 'domain.md', 'domain documentation.'],
+      ])}\n${notCiting}\n`;
+    assert.equal(
+      failures(check(t, { ...files, 'docs/agents/README.md': agentsIndexText })),
+      'Documentation navigation needs correction: docs/agents/project.md breaks the one index per document rule: list it in docs/agents/README.md.',
+      `another path or the title is not a citation: ${notCiting}`,
+    );
+  }
+
   passes(check(t, {
     ...files,
     'docs/agents/README.md': `${index('Agent configuration', 'This directory holds the agent configuration.', [
@@ -699,6 +717,13 @@ Run \`npm test\`.
 `,
   }));
   assert.equal(sectionLater, 'Documentation navigation needs correction: docs/development/README.md breaks the development guide order rule: give its purpose, then a Setup and validation section, then its index.');
+
+  const untitled = failures(check(t, {
+    ...rootDocumentation,
+    'docs/development/README.md': '## Setup and validation\n\nRun `npm test`.\n',
+  }));
+  assert.equal(untitled, 'Documentation navigation needs correction: docs/development/README.md breaks the index entry form rule: start it with a one-sentence purpose after its title.',
+    'a leading Setup and validation heading is the section, not the title');
 
   const purposeLater = failures(check(t, {
     ...rootDocumentation,

@@ -87,11 +87,13 @@ and by path within each rule. The model reads each rule mechanically:
   as a citation in context, list nothing. The agents index,
   `docs/agents/README.md`, may cite the optional `docs/agents/project.md` in
   context instead of listing it: a link outside its entries, or text outside
-  them that names the file, as the installed agents index does. Any other index
+  its title and entries that names the file by `project.md`, `./project.md`, or
+  `docs/agents/project.md`, as the installed agents index does. Any other index
   still must not list it. A document whose index is missing or empty gets only
   the correction to create or populate that index.
 - Development guide order: `docs/development/README.md` has a Setup and
-  validation heading as its first section after the title. Its index is the
+  validation heading as its first section after the title; a leading Setup and
+  validation heading is that section, not the title. Its index is the
   items after that section ends; other lists inside the section, such as setup
   steps, are not entries. A well-formed item listing one of its entries before
   that point gets only the order correction. Other roots' development indexes
@@ -139,9 +141,10 @@ is a Project, whether discovery covered every Project or migration path, or
 whether purpose, commands, configuration, content placement, and linked material
 are useful or factually correct. Scope coverage shows only that every Markdown
 document under a confirmed documentation root is covered; it cannot find a
-documentation root that the confirmed paths do not name. Review the discovery proposal and those semantic
-questions during the complete inspection. Scope-independent fixtures exercise
-only the operation behavior, not discovery or adoption.
+documentation root that the confirmed paths do not name. Review the discovery
+proposal and those semantic questions during the complete inspection.
+Scope-independent fixtures exercise only the operation behavior, not discovery
+or adoption.
 
 ## Prerequisites and validation
 

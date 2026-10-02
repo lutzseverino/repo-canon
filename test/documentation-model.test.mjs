@@ -357,7 +357,7 @@ This directory explains development.
         { text: 'See Usage: again.', target: 'usage/README.md', path: 'docs/usage/README.md', wellFormed: false },
         { text: 'Website: external.', target: 'https://example.com', path: null, wellFormed: false },
       ],
-      context: { text: 'Documentation\nThis directory maps the documentation. It has two sentences.', paths: [] },
+      context: { text: 'This directory maps the documentation. It has two sentences.', paths: [] },
     },
     {
       path: 'docs/development/README.md',
@@ -371,7 +371,7 @@ This directory explains development.
         { text: 'Late: after the section.', target: 'late.md', path: 'docs/development/late.md', wellFormed: true },
       ],
       context: {
-        text: 'Development\nThis directory explains development.\nEarly: before the section.\nSetup and validation\nInside: inside the section.\nDocuments',
+        text: 'This directory explains development.\nEarly: before the section.\nSetup and validation\nInside: inside the section.\nDocuments',
         paths: ['docs/development/early.md', 'docs/development/inside.md'],
       },
     },

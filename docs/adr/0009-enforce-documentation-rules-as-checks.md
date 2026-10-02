@@ -9,8 +9,9 @@ unless another declaration owns it). The authoring notes had kept these rules
 contextual, and the adopting repositories drifted apart where the check was
 silent, as the
 [`v0.4.0` specification](https://github.com/lutzseverino/repo-canon/issues/122)
-records. The rules are defined once, in the shared documentation model, so that
-the check and a scope drafted from the same model cannot disagree. Each failure
+records. Each check is defined once, in the shared documentation model, so that
+the check and a scope drafted from the same model cannot disagree, while the
+contribution guide stays the rules' one statement. Each failure
 names the file and the rule it breaks. Two alternatives were rejected: keeping
 the rules contextual and relying on review, because review had not kept the
 repositories alike; and a separate check per rule, because each would walk the
