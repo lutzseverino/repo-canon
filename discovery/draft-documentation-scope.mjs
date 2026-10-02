@@ -15,15 +15,18 @@ import {
 
 // Drafts the documentation scope of a repository from its tree, as a
 // Repository Standards scope proposal for the `documentation` declaration.
-// The agent runs it from the standards source at the selected commit; the CLI
-// never runs it. It decides only what the documentation rules decide, through
-// the documentation model the check uses, and lists every other case as an
-// unresolved question. It reads the project and writes the proposal to
+// The agent runs it from the standards source at the selected commit, or from
+// the inputs an adopting repository retains when that source is unavailable;
+// the CLI never runs it. It decides only what the documentation rules decide,
+// through the documentation model the check uses, and lists every other case
+// as an unresolved question. It reads the project and writes the proposal to
 // standard output.
 
 const usage = 'Usage: node discovery/draft-documentation-scope.mjs [--project <path>] [--root <path>]...';
 const proposalFormat = 'repo-standards/scope/v2';
 const declarationId = 'documentation';
+// The declaration fields that decide its targets.
+const targetFields = ['kind', 'target', 'name', 'exclude'];
 const glossary = 'CONTEXT.md';
 const contextMap = 'CONTEXT-MAP.md';
 const directoryIndex = 'README.md';
@@ -33,8 +36,15 @@ const directoryIndex = 'README.md';
 const reservedPaths = ['.repo-standards', '.agents/skills/adopt-standards', '.agents/skills/author-standards'];
 
 // The other declarations' targets come from the source manifest beside this
-// script, the one the selected commit ships.
-const manifestPath = fileURLToPath(new URL('../standards.yaml', import.meta.url));
+// script, the one the selected commit ships. Without it, a drafter that an
+// adopting repository retains under `.repo-standards/inputs/source` reads the
+// manifest Repository Standards retains beside those inputs, resolved to the
+// selected profile.
+const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
+const manifestPaths = [fileURLToPath(new URL('../standards.yaml', import.meta.url))];
+if (sourceRoot.endsWith(`${sep}.repo-standards${sep}inputs${sep}source${sep}`)) {
+  manifestPaths.push(fileURLToPath(new URL('../../standards.yaml', import.meta.url)));
+}
 
 function fail(message) {
   throw new Error(message);
@@ -129,45 +139,133 @@ function projectRootOf(project) {
   }
 }
 
-// The source's declarations with the fields that decide their targets. The
-// manifest's one profile selects every default declaration unchanged.
-function sourceDeclarations() {
-  let text;
-  try {
-    text = readFileSync(manifestPath, 'utf8');
-  } catch {
-    fail(`Run the drafter from the standards source at the selected commit; ${manifestPath} cannot be read.`);
+// The first manifest that exists, with its path. A manifest that exists but
+// cannot be read ends the search.
+function readManifest() {
+  const tried = [];
+  for (const path of manifestPaths) {
+    tried.push(path);
+    try {
+      return { path, text: readFileSync(path, 'utf8') };
+    } catch (error) {
+      if (error.code !== 'ENOENT') break;
+    }
   }
-  const declarations = [];
-  let section = null;
-  let subsection = null;
-  let declaration = null;
+  return fail(`Cannot read a standards manifest at ${tried.join(' or ')}; run the drafter from the standards source at the selected commit, or from the retained inputs of an adopting repository.`);
+}
+
+// Whether a manifest key path holds declarations or a declaration's fields:
+// the top level, `defaults`, `profiles`, a profile, a declarations mapping,
+// or a declaration.
+function holdsDeclarations(keyPath) {
+  const [section, , declarations] = keyPath;
+  if (keyPath.length === 0) return true;
+  if (section === 'defaults') return keyPath.length <= 3;
+  if (section !== 'profiles') return false;
+  return keyPath.length <= 2 || (declarations === 'declarations' && keyPath.length <= 4);
+}
+
+// A scalar value without its quotes or trailing comment, undefined for none,
+// or null for a quoted value the drafter does not decode: one with a
+// backslash escape, without a closing quote, or with text after it.
+function scalar(value) {
+  if (value === undefined || value.startsWith('#')) return undefined;
+  if (!/^["']/.test(value)) return value.replace(/\s+#.*$/, '');
+  const single = /^'((?:[^']|'')*)'(?:\s+#.*)?$/.exec(value);
+  if (single) return single[1].replaceAll("''", "'");
+  const double = /^"([^"\\]*)"(?:\s+#.*)?$/.exec(value);
+  return double ? double[1] : null;
+}
+
+// The declarations the manifest's one profile resolves to, with the fields
+// that decide their targets. As Repository Standards resolves them, a profile
+// declaration replaces the default of its ID, adds a new one, or, with
+// `exclude: true`, removes it. The source's one profile selects every default
+// declaration unchanged. The retained manifest holds the selected profile
+// alone; Repository Standards 4.0.0 writes it with empty defaults and the
+// profile's resolved declarations. The manifest's block mappings are read by
+// indentation, and only the key paths below matter:
+// `defaults.declarations.<id>.<field>` and
+// `profiles.<profile>.declarations.<id>.<field>`. A field that decides a
+// target holds a single-line value on its own line, plain or quoted; any other
+// form fails rather than being misread.
+function manifestDeclarations() {
+  const { path: manifest, text } = readManifest();
+  const unreadable = id => fail(`${manifest} declares ${id} in a form the drafter cannot read.`);
+  const defaults = new Map();
+  const profiles = new Map();
+  const keys = [];
+  // The field read on the previous line, which no deeper line may continue.
+  let readField = null;
   for (const line of text.split('\n')) {
     if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
-    if (/^\S/.test(line)) {
-      section = line.trimEnd();
-      subsection = null;
-      declaration = null;
+    const indent = line.length - line.trimStart().length;
+    if (readField && indent > readField.indent) unreadable(readField.id);
+    readField = null;
+    const entry = /^( *)([A-Za-z0-9._-]+):(?:\s+(\S.*?))?\s*$/.exec(line);
+    if (!entry) {
+      // A line that is not a plain key is a sequence item, a document marker
+      // or directive, or continues a value above it. At the top level or
+      // directly under a declaration, the declarations, or what holds them,
+      // only a key in another form can be none of these.
+      const parent = keys.filter(key => key.indent < indent).map(({ key }) => key);
+      if (!/^\s*-|^\.\.\.|^%/.test(line) && holdsDeclarations(parent)) {
+        const where = parent.length > 0 ? `under ${parent.join('.')}` : 'at its top level';
+        fail(`${manifest} has a line ${where} that the drafter cannot read: ${line.trim()}`);
+      }
       continue;
     }
-    if (section !== 'defaults:') continue;
-    if (/^ {2}\S/.test(line)) {
-      subsection = line.trimEnd();
-      declaration = null;
-      continue;
+    while (keys.length > 0 && keys.at(-1).indent >= indent) keys.pop();
+    keys.push({ indent, key: entry[2] });
+    const value = scalar(entry[3]);
+    const keyPath = keys.map(({ key }) => key);
+    // The declarations this line belongs to, and its key path below them.
+    let declarations = null;
+    let declarationPath = null;
+    if (keyPath[0] === 'defaults' && keyPath[1] === 'declarations') {
+      declarations = defaults;
+      declarationPath = keyPath.slice(2);
+    } else if (keyPath[0] === 'profiles' && keyPath.length > 1) {
+      if (!profiles.has(keyPath[1])) profiles.set(keyPath[1], new Map());
+      if (keyPath[2] === 'declarations') {
+        declarations = profiles.get(keyPath[1]);
+        declarationPath = keyPath.slice(3);
+      }
     }
-    if (subsection !== '  declarations:') continue;
-    const id = /^ {4}([A-Za-z0-9._-]+):\s*$/.exec(line);
-    if (id) {
-      declaration = { id: id[1] };
-      declarations.push(declaration);
-      continue;
+    // `defaults`, `profiles`, and each profile hold their mappings below them.
+    const container = keyPath.length === 1 ? ['defaults', 'profiles'].includes(keyPath[0])
+      : keyPath.length === 2 && keyPath[0] === 'profiles';
+    if (container && value !== undefined) fail(`${manifest} writes ${keyPath.join('.')} in a form the drafter cannot read.`);
+    if (!declarations) continue;
+    const [id, field, ...deeper] = declarationPath;
+    if (id === undefined) {
+      if (value !== undefined && value !== '{}') fail(`${manifest} lists its declarations in a form the drafter cannot read.`);
+    } else if (field === undefined) {
+      if (value === undefined) declarations.set(id, { id });
+      else if (/^\{\s*exclude:\s*true\s*\}$/.test(value)) declarations.set(id, { id, exclude: true });
+      else unreadable(id);
+    } else if (deeper.length === 0 && targetFields.includes(field)) {
+      // A missing value, a block scalar, an anchor, alias, or tag, a flow
+      // collection, or a quoted value the drafter does not decode. `-`, `?`,
+      // and `:` are indicators only before whitespace.
+      if (value == null || /^(?:[,[\]{}&*!|>%@`]|[-?:](?:\s|$))/.test(entry[3])) unreadable(id);
+      readField = { indent, id };
+      const declaration = declarations.get(id);
+      if (field === 'exclude') declaration.exclude = value === 'true';
+      else declaration[field] = value;
     }
-    const field = /^ {6}(kind|target|name):\s*(\S.*?)\s*$/.exec(line);
-    if (field && declaration) declaration[field[1]] = field[2].replace(/^(["'])(.*)\1$/, '$2');
   }
+  if (profiles.size !== 1) {
+    fail(`${manifest} declares ${profiles.size} profiles; the drafter reads a manifest with one profile.`);
+  }
+  const resolved = new Map(defaults);
+  for (const [id, declaration] of [...profiles.values()][0]) {
+    if (declaration.exclude) resolved.delete(id);
+    else resolved.set(id, declaration);
+  }
+  const declarations = [...resolved.values()];
   if (!declarations.some(candidate => candidate.id === declarationId && candidate.kind === 'repository')) {
-    fail(`${manifestPath} declares no ${declarationId} repository declaration.`);
+    fail(`${manifest} declares no ${declarationId} repository declaration.`);
   }
   return declarations;
 }
@@ -491,7 +589,7 @@ function draftOutsideRoots(draft, context, roots) {
 
 function draftDocumentationScope(project, rootArguments) {
   const projectRoot = projectRootOf(project);
-  const { declaredTargets, owner } = ownership(sourceDeclarations());
+  const { declaredTargets, owner } = ownership(manifestDeclarations());
   const kept = keptTree(projectRoot);
   const context = { projectRoot, kept, owner };
   const roots = decidedRoots(rootArguments, kept, owner);

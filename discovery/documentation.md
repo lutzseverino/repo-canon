@@ -9,12 +9,23 @@ node discovery/draft-documentation-scope.mjs --project /path/to/adopting-reposit
   > /tmp/documentation-scope.json
 ```
 
-It reads the repository without changing it and writes a Repository Standards
-scope proposal whose one entry is the `documentation` declaration's; the
-entries of the other discovery declarations join it in the proposal. The
-documentation rules in the `CONTRIBUTING.md` this source installs decide its
-candidates: every file Git keeps under each documentation root, the index of
-each root and of each directory under one, the development guide, the
+When the selected source is unavailable, as in an update that keeps the
+standards the adopting repository retains, run the drafter retained with them
+instead, from the adopting repository's root. It reads the other declarations
+from the manifest that Repository Standards retains with those standards,
+resolved to the selected profile, and drafts the same scope as the source:
+
+```sh
+node .repo-standards/inputs/source/discovery/draft-documentation-scope.mjs \
+  > /tmp/documentation-scope.json
+```
+
+Either way, the drafter reads the repository without changing it and writes a
+Repository Standards scope proposal whose one entry is the `documentation`
+declaration's; the entries of the other discovery declarations join it in the
+proposal. The documentation rules in the `CONTRIBUTING.md` this source installs
+decide its candidates: every file Git keeps under each documentation root, the
+index of each root and of each directory under one, the development guide, the
 repository root's glossary and context map, and each context glossary that
 context map lists. Paths other declarations own, and paths Repository Standards
 reserves, stay out, and so does every `README.md` outside the roots, which the

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -625,20 +625,240 @@ test('rejects invalid arguments, roots, and projects with a process error', t =>
   assert.match(outcome.stderr, /Cannot find the Git working tree/);
 });
 
-test('runs from the source with the retained resources of the documentation declaration', t => {
-  const retainedRoot = dirname(dirname(retainedCheck(t, 'operations/check-documentation.mjs')));
-  const retainedDrafter = join(retainedRoot, drafterPath);
+// A copy of the drafter with the documentation check's resources, outside any
+// retained inputs, where it reads the `standards.yaml` beside it.
+function copiedDrafter(t) {
+  return join(dirname(dirname(retainedCheck(t, 'operations/check-documentation.mjs'))), drafterPath);
+}
+
+// The documentation check's resources, which hold the drafter, as Repository
+// Standards 4.0.0 retains them in an adopting repository: under
+// `.repo-standards/inputs/source`, beside the manifest it resolved to the
+// selected profile, `.repo-standards/inputs/standards.yaml`.
+function retainInputs(t, root, manifest) {
+  const inputs = join(root, '.repo-standards/inputs');
+  cpSync(dirname(dirname(copiedDrafter(t))), join(inputs, 'source'), { recursive: true });
+  if (manifest !== undefined) writeFileSync(join(inputs, 'standards.yaml'), manifest);
+  return join(inputs, 'source', drafterPath);
+}
+
+// The manifest Repository Standards 4.0.0 retains for this source's `complete`
+// profile: the source's metadata, empty defaults, and the profile's resolved
+// declarations under the profile. The profile selects every default
+// declaration unchanged, so they resolve to the defaults.
+function resolvedManifest() {
+  const manifest = readFileSync(join(sourceRoot, 'standards.yaml'), 'utf8');
+  const parts = /^(?<head>[\s\S]*?)^defaults:\n {2}declarations:\n(?<declarations>[\s\S]*?)^profiles:\n {2}complete:\n {4}description: (?<description>.*)\n {4}declarations: \{\}\n$/m.exec(manifest);
+  assert.ok(parts, 'the source\'s one profile selects every default declaration unchanged');
+  const { head, declarations, description } = parts.groups;
+  const nested = declarations.trimEnd().replace(/^(?=.)/gm, '  ');
+  return `${head}defaults:\n  declarations: {}\nprofiles:\n  complete:\n    description: ${description}\n    declarations:\n${nested}\n`;
+}
+
+test('runs from the retained inputs of an adopting repository as from the source', t => {
+  const project = fixture(conforming);
+  t.after(project.close);
+  const retainedDrafter = retainInputs(t, project.root, resolvedManifest());
+
+  const outcome = draft(project.root, [], retainedDrafter);
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.stderr, '');
+  assert.equal(outcome.stdout, draft(project.root).stdout);
+  assert.ok(outcome.proposal.declarations[0].candidates.some(candidate => candidate.reason.startsWith('Owned by')));
+});
+
+// The documentation declaration, with its check, in the form Repository
+// Standards 4.0.0 writes a resolved declaration.
+const documentationDeclaration = indent => [
+  'documentation:',
+  '  checks:',
+  '    - id: documentation-navigation',
+  '      run:',
+  '        executable: node',
+  '        script: operations/check-documentation.mjs',
+  '        resources:',
+  '          - operations/lib/documentation-model.mjs',
+  '        arguments: []',
+  '      prerequisite:',
+  '        version-arguments:',
+  '          - --version',
+  '        version: ">=24.0.0 <25.0.0"',
+  '      timeout-seconds: 30',
+  '  fixes: []',
+  '  kind: repository',
+  '  guidance: guidance/documentation.md',
+  '  discovery: discovery/documentation.md',
+].map(line => `${' '.repeat(indent)}${line}`).join('\n');
+
+const header = `format: repo-standards/v2
+name: widget-standards
+description: Widget repository standards, with a description long enough to
+  fold onto a second line
+requires:
+  repo-standards: ">=4.0.0"
+`;
+
+test('reads the declarations that the selected profile resolves to', t => {
+  const files = {
+    '-notes.md': '# Notes\n',
+    'docs/README.md': '# Documentation\n',
+    'docs/development/README.md': developmentGuide,
+    'docs/usage/README.md': '# Usage\n',
+    "docs/usage/added's.md": '# Added\n',
+    'docs/usage/dropped.md': '# Dropped\n',
+    'docs/usage/kept.md': '# Kept\n',
+    'docs/usage/replaced.md': '# Replaced\n',
+  };
+  const expected = [
+    underDocs('docs/README.md'),
+    underDocs('docs/development/README.md'),
+    underDocs('docs/usage/README.md'),
+    owned("docs/usage/added's.md", 'added-guide'),
+    underDocs('docs/usage/dropped.md'),
+    underDocs('docs/usage/kept.md'),
+    owned('docs/usage/replaced.md', 'usage-guide'),
+  ];
+
+  // A source whose profile replaces, excludes, and adds to its defaults.
+  const project = fixture(files);
+  t.after(project.close);
+  const sourceDrafter = copiedDrafter(t);
+  writeFileSync(join(dirname(dirname(sourceDrafter)), 'standards.yaml'), `---
+${header}
+defaults:
+  declarations:
+    documentation:
+      kind: repository
+      discovery: discovery/documentation.md
+      checks:
+      - id: documentation-navigation
+        run:
+          executable: node
+          script: operations/check-documentation.mjs
+          resources:
+          - operations/lib/documentation-model.mjs
+
+    usage-guide:
+      kind: file
+      target: docs/usage/kept.md # the usage guide
+      exact: kept.md
+
+    dropped-guide:
+      kind: file
+      target: 'docs/usage/dropped.md'
+      exact: dropped.md
+
+profiles:
+  complete:
+    description: The complete widget standards profile
+    declarations:
+      usage-guide:
+        kind: file
+        target: "docs/usage/replaced.md" # replaces the usage guide
+        exact: replaced.md
+      dropped-guide: {exclude: true} # no longer installed
+      added-guide:
+        kind: file
+        target: 'docs/usage/added''s.md' # added
+        exact: added.md
+      notes:
+        kind: file
+        target: -notes.md
+        exact: notes.md
+`);
+  const fromSource = draft(project.root, [], sourceDrafter);
+  assert.equal(fromSource.status, 0, fromSource.stderr);
+  assert.deepEqual(fromSource.proposal.declarations[0].candidates, expected);
+  assert.deepEqual(fromSource.proposal.declarations[0].unresolved, []);
+
+  // The retained manifest of the same selection.
+  const retainedDrafter = retainInputs(t, project.root, `${header}defaults:
+  declarations: {}
+profiles:
+  complete:
+    description: The complete widget standards profile
+    declarations:
+      added-guide:
+        checks: []
+        fixes: []
+        kind: file
+        target: docs/usage/added's.md
+        exact: added.md
+${documentationDeclaration(6)}
+      notes:
+        checks: []
+        fixes: []
+        kind: file
+        target: -notes.md
+        exact: notes.md
+      usage-guide:
+        checks: []
+        fixes: []
+        kind: file
+        target: docs/usage/replaced.md
+        exact: replaced.md
+`);
+  const fromRetained = draft(project.root, [], retainedDrafter);
+  assert.equal(fromRetained.status, 0, fromRetained.stderr);
+  assert.equal(fromRetained.stdout, fromSource.stdout);
+});
+
+test('fails without a manifest it can read, naming the manifests it tried', t => {
   const project = fixture(conforming);
   t.after(project.close);
 
+  const retainedDrafter = retainInputs(t, project.root);
+  const sourceManifest = join(project.root, '.repo-standards/inputs/source/standards.yaml');
+  const retainedManifest = join(project.root, '.repo-standards/inputs/standards.yaml');
   const withoutManifest = draft(project.root, [], retainedDrafter);
   assert.equal(withoutManifest.status, 1);
-  assert.match(withoutManifest.stderr, /Run the drafter from the standards source at the selected commit/);
+  assert.equal(withoutManifest.stdout, '');
+  assert.ok(withoutManifest.stderr.includes(`Cannot read a standards manifest at ${sourceManifest} or ${retainedManifest}`), withoutManifest.stderr);
 
-  copyFileSync(join(sourceRoot, 'standards.yaml'), join(retainedRoot, 'standards.yaml'));
-  const outcome = draft(project.root, [], retainedDrafter);
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.stdout, draft(project.root).stdout);
+  const sourceDrafter = copiedDrafter(t);
+  const besideSource = join(dirname(dirname(sourceDrafter)), 'standards.yaml');
+  const outsideInputs = draft(project.root, [], sourceDrafter);
+  assert.equal(outsideInputs.status, 1);
+  assert.ok(outsideInputs.stderr.includes(`Cannot read a standards manifest at ${besideSource};`), outsideInputs.stderr);
+
+  const withDefaults = declarations => `${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\n${declarations}profiles:\n  complete:\n    description: Complete\n    declarations: {}\n`;
+  const unreadable = 'declares guide in a form the drafter cannot read';
+  for (const [manifest, message] of [
+    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n  minimal:\n    description: Minimal\n    declarations: {}\n`,
+      'declares 2 profiles'],
+    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete:\n    description: Complete\n    declarations: []\n`,
+      'lists its declarations in a form the drafter cannot read'],
+    [`${header}defaults:\n  declarations: {}\nprofiles:\n  complete:\n    description: Complete\n    declarations: {}\n`,
+      'declares no documentation repository declaration'],
+    // Forms of a declaration, or of a field that decides its targets, that
+    // the drafter does not read.
+    [withDefaults('    guide: {kind: file, target: docs/usage/guide.md}\n'), unreadable],
+    [withDefaults('    guide: &guide\n      kind: file\n      target: docs/usage/guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: "docs/usage/guide\\x2emd"\n'), unreadable],
+    [withDefaults("    guide:\n      kind: file\n      target: 'docs/usage/guide.md'#unspaced\n"), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: "docs/usage/guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: >-\n        docs/usage/guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target:\n        docs/usage/guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: docs/usage/\n        guide.md\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      target: *guide\n'), unreadable],
+    [withDefaults('    guide:\n      kind: file\n      "target": docs/usage/guide.md\n'), 'has a line under defaults.declarations.guide that the drafter cannot read'],
+    [withDefaults('    guide:\n      kind: file\n      target : docs/usage/guide.md\n'), 'has a line under defaults.declarations.guide that the drafter cannot read'],
+    [withDefaults('    guide:\n      kind: file\n      ? target\n      : docs/usage/guide.md\n'), 'has a line under defaults.declarations.guide that the drafter cannot read'],
+    [`${header}"defaults":\n  declarations:\n    guide:\n      kind: file\n      target: docs/usage/guide.md\nprofiles:\n  complete:\n    description: Complete\n    declarations:\n${documentationDeclaration(6)}\n`,
+      'has a line at its top level that the drafter cannot read: "defaults":'],
+    [`${header}defaults: {declarations: {guide: {kind: file, target: docs/usage/guide.md}}}\nprofiles:\n  complete:\n    description: Complete\n    declarations:\n${documentationDeclaration(6)}\n`,
+      'writes defaults in a form the drafter cannot read'],
+    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete: {description: Complete, declarations: {guide: {kind: file, target: docs/usage/guide.md}}}\n`,
+      'writes profiles.complete in a form the drafter cannot read'],
+    [`${header}defaults:\n  declarations:\n${documentationDeclaration(4)}\nprofiles:\n  complete:\n    description: Complete\n    "declarations":\n      guide:\n        kind: file\n        target: docs/usage/guide.md\n`,
+      'has a line under profiles.complete that the drafter cannot read'],
+  ]) {
+    writeFileSync(besideSource, manifest);
+    const outcome = draft(project.root, [], sourceDrafter);
+    assert.equal(outcome.status, 1, manifest);
+    assert.equal(outcome.stdout, '');
+    assert.ok(outcome.stderr.includes(`${besideSource} ${message}`), `${manifest}\n${outcome.stderr}`);
+  }
 });
 
 test('drafts this repository\'s own documentation scope', () => {
