@@ -1,1024 +1,5 @@
 {
-  "format": "repo-standards/state/v5",
-  "history": [
-    {
-      "lastComplete": {
-        "run": "baaed5f0-ce1d-4e35-87fa-59c246269b00",
-        "inspection": "sha256:ead33120407cce9fabf34f821f2517b1be1f0886a3e3a408fd99876ef2c50172",
-        "completedAt": "2026-09-18T13:46:19.466Z",
-        "head": "5a03353d95f327b67673e6285c991a4a244b179e"
-      },
-      "observations": [
-        {
-          "phase": "fixes",
-          "scope": {
-            "github-repository-configuration": {
-              "paths": [],
-              "directories": []
-            }
-          },
-          "operation": {
-            "phase": "fixes",
-            "declaration": "github-repository-configuration",
-            "id": "canonical-labels"
-          },
-          "operationIndex": 0,
-          "before": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
-          "after": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
-          "changes": {},
-          "boundaryChanges": {},
-          "violations": []
-        },
-        {
-          "phase": "fixes",
-          "scope": {
-            "github-repository-configuration": {
-              "paths": [],
-              "directories": []
-            }
-          },
-          "operation": {
-            "phase": "fixes",
-            "declaration": "github-repository-configuration",
-            "id": "pull-request-integration"
-          },
-          "operationIndex": 1,
-          "before": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
-          "after": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
-          "changes": {},
-          "boundaryChanges": {},
-          "violations": []
-        },
-        {
-          "phase": "agent",
-          "scope": {
-            "documentation": {
-              "paths": [
-                "CONTEXT.md",
-                "authoring-notes.md",
-                "design-review.md",
-                "docs/README.md",
-                "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
-                "docs/adr/0002-squash-reviewed-changes.md",
-                "docs/adr/0003-follow-product-release-versioning.md",
-                "docs/adr/0004-adopt-published-releases-of-this-source.md",
-                "docs/adr/README.md",
-                "docs/agents/project.md",
-                "docs/development/README.md",
-                "docs/development/adoption-compatibility.md",
-                "docs/development/adoption-evidence.md",
-                "docs/development/completion-record.md",
-                "docs/development/documentation-check.md",
-                "docs/development/engineering-skill-architecture-visual-inspection.md",
-                "docs/development/engineering-skill-exercises.md",
-                "docs/development/engineering-skill-research-result.md",
-                "docs/development/engineering-skill-runtime-transcript.md",
-                "docs/development/engineering-skill-session-finals/README.md",
-                "docs/development/engineering-skill-session-finals/ask-matt.md",
-                "docs/development/engineering-skill-session-finals/code-review.md",
-                "docs/development/engineering-skill-session-finals/codebase-design.md",
-                "docs/development/engineering-skill-session-finals/diagnosing-bugs-completion.md",
-                "docs/development/engineering-skill-session-finals/diagnosing-bugs-initial.md",
-                "docs/development/engineering-skill-session-finals/domain-modeling.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-blocked.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-completion.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture.md",
-                "docs/development/engineering-skill-session-finals/research.md",
-                "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-completion.md",
-                "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-initial.md",
-                "docs/development/engineering-skill-session-finals/tdd-completion.md",
-                "docs/development/engineering-skill-session-finals/tdd-initial.md",
-                "docs/development/first-release.md",
-                "docs/development/github-label-setup.md",
-                "docs/development/github-pr-integration-setup.md",
-                "docs/development/issue-contract-validation.md",
-                "docs/development/planning-skill-artifacts/README.md",
-                "docs/development/planning-skill-artifacts/adoption-inspection.md",
-                "docs/development/planning-skill-artifacts/delivery-schedule-cancellation-verdict.md",
-                "docs/development/planning-skill-artifacts/intake-batch-spec.md",
-                "docs/development/planning-skill-artifacts/intake-batch-ticket-01.md",
-                "docs/development/planning-skill-artifacts/intake-batch-ticket-02.md",
-                "docs/development/planning-skill-artifacts/managed-skill-update-boundary.md",
-                "docs/development/planning-skill-artifacts/receipt-export-triage.md",
-                "docs/development/planning-skill-artifacts/retry-map.md",
-                "docs/development/planning-skill-artifacts/retry-window-ticket.md",
-                "docs/development/planning-skill-exercises.md",
-                "docs/development/planning-skill-session-finals/README.md",
-                "docs/development/planning-skill-session-finals/adoption-preparation.md",
-                "docs/development/planning-skill-session-finals/grill-completion.md",
-                "docs/development/planning-skill-session-finals/grill-initial.md",
-                "docs/development/planning-skill-session-finals/implement-review-blocked.md",
-                "docs/development/planning-skill-session-finals/implement-review-completion.md",
-                "docs/development/planning-skill-session-finals/implement.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update-correction.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update-portable.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update.md",
-                "docs/development/planning-skill-session-finals/prototype.md",
-                "docs/development/planning-skill-session-finals/setup.md",
-                "docs/development/planning-skill-session-finals/to-spec.md",
-                "docs/development/planning-skill-session-finals/to-tickets.md",
-                "docs/development/planning-skill-session-finals/triage-invalidation.md",
-                "docs/development/planning-skill-session-finals/triage-ready.md",
-                "docs/development/planning-skill-session-finals/triage-renewal.md",
-                "docs/development/planning-skill-session-finals/wayfinder.md",
-                "docs/development/planning-skill-session-finals/wizard.md",
-                "docs/development/pr-metadata-validation.md",
-                "docs/development/productivity-skill-exercises.md",
-                "docs/development/productivity-skill-runtime-transcript.md",
-                "docs/development/productivity-skill-runtime/README.md",
-                "docs/development/productivity-skill-runtime/event-retention-questionnaire.md",
-                "docs/development/productivity-skill-runtime/handoff.md",
-                "docs/development/productivity-skill-runtime/teach/GLOSSARY.md",
-                "docs/development/productivity-skill-runtime/teach/MISSION.md",
-                "docs/development/productivity-skill-runtime/teach/NOTES.md",
-                "docs/development/productivity-skill-runtime/teach/README.md",
-                "docs/development/productivity-skill-runtime/teach/RESOURCES.md",
-                "docs/development/productivity-skill-runtime/teach/assets/README.md",
-                "docs/development/productivity-skill-runtime/teach/learning-records/0001-release-ancestry-guard.md",
-                "docs/development/productivity-skill-runtime/teach/learning-records/README.md",
-                "docs/development/productivity-skill-runtime/teach/lessons/README.md",
-                "docs/development/productivity-skill-runtime/teach/reference/README.md",
-                "docs/development/productivity-skill-runtime/writing-for-agents-project.md",
-                "docs/development/productivity-skill-session-finals/README.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-3.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-4.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-5.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-6.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-3.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-4.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-5.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-handoff-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-feedback.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-real-git-verification.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-review-correction.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-safe-failure-correction.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-before.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-change-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-final.md",
-                "docs/development/real-adoption.md",
-                "docs/development/release-v0-1-1.md",
-                "docs/development/release-v0-2-0.md",
-                "docs/development/repository-readme-check.md",
-                "docs/development/scope-capability-specification.md",
-                "docs/development/shared-material-review.md",
-                "docs/development/source-profile.md",
-                "docs/development/upstream-compatibility.md",
-                "docs/usage/README.md",
-                "docs/usage/adopt-repo-canon.md",
-                "docs/usage/prepare-agent-guidance.md",
-                "docs/usage/versioning.md"
-              ],
-              "directories": []
-            },
-            "github-repository-configuration": {
-              "paths": [],
-              "directories": []
-            },
-            "project-readmes": {
-              "paths": [],
-              "directories": []
-            },
-            "repository-readme": {
-              "paths": [
-                "README.md"
-              ],
-              "directories": []
-            }
-          },
-          "before": "sha256:0aadd2f6146a42b8f1fe72f9bc2231ad2f7c7fe9a800f1a771847feb8e408936",
-          "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "changes": {
-            "README.md": {
-              "before": {
-                "type": "file",
-                "sha256": "f57b61986f0be9db3d5839b1e7c1675cb0f2d2533ba2d468f9ccd87a5d622ce5",
-                "executable": false
-              },
-              "after": {
-                "type": "file",
-                "sha256": "8c31187d70410b8bc822b50ee56951c3bf3e9ad3eda15c4eae459c93380b49de",
-                "executable": false
-              }
-            }
-          },
-          "boundaryChanges": {},
-          "violations": []
-        },
-        {
-          "phase": "agent",
-          "scope": {
-            "documentation": {
-              "paths": [
-                "CONTEXT.md",
-                "authoring-notes.md",
-                "design-review.md",
-                "docs/README.md",
-                "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
-                "docs/adr/0002-squash-reviewed-changes.md",
-                "docs/adr/0003-follow-product-release-versioning.md",
-                "docs/adr/0004-adopt-published-releases-of-this-source.md",
-                "docs/adr/README.md",
-                "docs/agents/project.md",
-                "docs/development/README.md",
-                "docs/development/adoption-compatibility.md",
-                "docs/development/adoption-evidence.md",
-                "docs/development/completion-record.md",
-                "docs/development/documentation-check.md",
-                "docs/development/engineering-skill-architecture-visual-inspection.md",
-                "docs/development/engineering-skill-exercises.md",
-                "docs/development/engineering-skill-research-result.md",
-                "docs/development/engineering-skill-runtime-transcript.md",
-                "docs/development/engineering-skill-session-finals/README.md",
-                "docs/development/engineering-skill-session-finals/ask-matt.md",
-                "docs/development/engineering-skill-session-finals/code-review.md",
-                "docs/development/engineering-skill-session-finals/codebase-design.md",
-                "docs/development/engineering-skill-session-finals/diagnosing-bugs-completion.md",
-                "docs/development/engineering-skill-session-finals/diagnosing-bugs-initial.md",
-                "docs/development/engineering-skill-session-finals/domain-modeling.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-blocked.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-completion.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture.md",
-                "docs/development/engineering-skill-session-finals/research.md",
-                "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-completion.md",
-                "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-initial.md",
-                "docs/development/engineering-skill-session-finals/tdd-completion.md",
-                "docs/development/engineering-skill-session-finals/tdd-initial.md",
-                "docs/development/first-release.md",
-                "docs/development/github-label-setup.md",
-                "docs/development/github-pr-integration-setup.md",
-                "docs/development/issue-contract-validation.md",
-                "docs/development/planning-skill-artifacts/README.md",
-                "docs/development/planning-skill-artifacts/adoption-inspection.md",
-                "docs/development/planning-skill-artifacts/delivery-schedule-cancellation-verdict.md",
-                "docs/development/planning-skill-artifacts/intake-batch-spec.md",
-                "docs/development/planning-skill-artifacts/intake-batch-ticket-01.md",
-                "docs/development/planning-skill-artifacts/intake-batch-ticket-02.md",
-                "docs/development/planning-skill-artifacts/managed-skill-update-boundary.md",
-                "docs/development/planning-skill-artifacts/receipt-export-triage.md",
-                "docs/development/planning-skill-artifacts/retry-map.md",
-                "docs/development/planning-skill-artifacts/retry-window-ticket.md",
-                "docs/development/planning-skill-exercises.md",
-                "docs/development/planning-skill-session-finals/README.md",
-                "docs/development/planning-skill-session-finals/adoption-preparation.md",
-                "docs/development/planning-skill-session-finals/grill-completion.md",
-                "docs/development/planning-skill-session-finals/grill-initial.md",
-                "docs/development/planning-skill-session-finals/implement-review-blocked.md",
-                "docs/development/planning-skill-session-finals/implement-review-completion.md",
-                "docs/development/planning-skill-session-finals/implement.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update-correction.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update-portable.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update.md",
-                "docs/development/planning-skill-session-finals/prototype.md",
-                "docs/development/planning-skill-session-finals/setup.md",
-                "docs/development/planning-skill-session-finals/to-spec.md",
-                "docs/development/planning-skill-session-finals/to-tickets.md",
-                "docs/development/planning-skill-session-finals/triage-invalidation.md",
-                "docs/development/planning-skill-session-finals/triage-ready.md",
-                "docs/development/planning-skill-session-finals/triage-renewal.md",
-                "docs/development/planning-skill-session-finals/wayfinder.md",
-                "docs/development/planning-skill-session-finals/wizard.md",
-                "docs/development/pr-metadata-validation.md",
-                "docs/development/productivity-skill-exercises.md",
-                "docs/development/productivity-skill-runtime-transcript.md",
-                "docs/development/productivity-skill-runtime/README.md",
-                "docs/development/productivity-skill-runtime/event-retention-questionnaire.md",
-                "docs/development/productivity-skill-runtime/handoff.md",
-                "docs/development/productivity-skill-runtime/teach/GLOSSARY.md",
-                "docs/development/productivity-skill-runtime/teach/MISSION.md",
-                "docs/development/productivity-skill-runtime/teach/NOTES.md",
-                "docs/development/productivity-skill-runtime/teach/README.md",
-                "docs/development/productivity-skill-runtime/teach/RESOURCES.md",
-                "docs/development/productivity-skill-runtime/teach/assets/README.md",
-                "docs/development/productivity-skill-runtime/teach/learning-records/0001-release-ancestry-guard.md",
-                "docs/development/productivity-skill-runtime/teach/learning-records/README.md",
-                "docs/development/productivity-skill-runtime/teach/lessons/README.md",
-                "docs/development/productivity-skill-runtime/teach/reference/README.md",
-                "docs/development/productivity-skill-runtime/writing-for-agents-project.md",
-                "docs/development/productivity-skill-session-finals/README.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-3.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-4.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-5.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-6.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-3.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-4.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-5.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-handoff-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-feedback.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-real-git-verification.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-review-correction.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-safe-failure-correction.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-before.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-change-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-final.md",
-                "docs/development/real-adoption.md",
-                "docs/development/release-v0-1-1.md",
-                "docs/development/release-v0-2-0.md",
-                "docs/development/repository-readme-check.md",
-                "docs/development/scope-capability-specification.md",
-                "docs/development/shared-material-review.md",
-                "docs/development/source-profile.md",
-                "docs/development/upstream-compatibility.md",
-                "docs/usage/README.md",
-                "docs/usage/adopt-repo-canon.md",
-                "docs/usage/prepare-agent-guidance.md",
-                "docs/usage/versioning.md"
-              ],
-              "directories": []
-            },
-            "github-repository-configuration": {
-              "paths": [],
-              "directories": []
-            },
-            "project-readmes": {
-              "paths": [],
-              "directories": []
-            },
-            "repository-readme": {
-              "paths": [
-                "README.md"
-              ],
-              "directories": []
-            }
-          },
-          "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "changes": {},
-          "boundaryChanges": {},
-          "violations": []
-        },
-        {
-          "phase": "checks",
-          "scope": {
-            "documentation": {
-              "paths": [
-                "CONTEXT.md",
-                "authoring-notes.md",
-                "design-review.md",
-                "docs/README.md",
-                "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
-                "docs/adr/0002-squash-reviewed-changes.md",
-                "docs/adr/0003-follow-product-release-versioning.md",
-                "docs/adr/0004-adopt-published-releases-of-this-source.md",
-                "docs/adr/README.md",
-                "docs/agents/project.md",
-                "docs/development/README.md",
-                "docs/development/adoption-compatibility.md",
-                "docs/development/adoption-evidence.md",
-                "docs/development/completion-record.md",
-                "docs/development/documentation-check.md",
-                "docs/development/engineering-skill-architecture-visual-inspection.md",
-                "docs/development/engineering-skill-exercises.md",
-                "docs/development/engineering-skill-research-result.md",
-                "docs/development/engineering-skill-runtime-transcript.md",
-                "docs/development/engineering-skill-session-finals/README.md",
-                "docs/development/engineering-skill-session-finals/ask-matt.md",
-                "docs/development/engineering-skill-session-finals/code-review.md",
-                "docs/development/engineering-skill-session-finals/codebase-design.md",
-                "docs/development/engineering-skill-session-finals/diagnosing-bugs-completion.md",
-                "docs/development/engineering-skill-session-finals/diagnosing-bugs-initial.md",
-                "docs/development/engineering-skill-session-finals/domain-modeling.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-blocked.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-completion.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture.md",
-                "docs/development/engineering-skill-session-finals/research.md",
-                "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-completion.md",
-                "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-initial.md",
-                "docs/development/engineering-skill-session-finals/tdd-completion.md",
-                "docs/development/engineering-skill-session-finals/tdd-initial.md",
-                "docs/development/first-release.md",
-                "docs/development/github-label-setup.md",
-                "docs/development/github-pr-integration-setup.md",
-                "docs/development/issue-contract-validation.md",
-                "docs/development/planning-skill-artifacts/README.md",
-                "docs/development/planning-skill-artifacts/adoption-inspection.md",
-                "docs/development/planning-skill-artifacts/delivery-schedule-cancellation-verdict.md",
-                "docs/development/planning-skill-artifacts/intake-batch-spec.md",
-                "docs/development/planning-skill-artifacts/intake-batch-ticket-01.md",
-                "docs/development/planning-skill-artifacts/intake-batch-ticket-02.md",
-                "docs/development/planning-skill-artifacts/managed-skill-update-boundary.md",
-                "docs/development/planning-skill-artifacts/receipt-export-triage.md",
-                "docs/development/planning-skill-artifacts/retry-map.md",
-                "docs/development/planning-skill-artifacts/retry-window-ticket.md",
-                "docs/development/planning-skill-exercises.md",
-                "docs/development/planning-skill-session-finals/README.md",
-                "docs/development/planning-skill-session-finals/adoption-preparation.md",
-                "docs/development/planning-skill-session-finals/grill-completion.md",
-                "docs/development/planning-skill-session-finals/grill-initial.md",
-                "docs/development/planning-skill-session-finals/implement-review-blocked.md",
-                "docs/development/planning-skill-session-finals/implement-review-completion.md",
-                "docs/development/planning-skill-session-finals/implement.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update-correction.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update-portable.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update.md",
-                "docs/development/planning-skill-session-finals/prototype.md",
-                "docs/development/planning-skill-session-finals/setup.md",
-                "docs/development/planning-skill-session-finals/to-spec.md",
-                "docs/development/planning-skill-session-finals/to-tickets.md",
-                "docs/development/planning-skill-session-finals/triage-invalidation.md",
-                "docs/development/planning-skill-session-finals/triage-ready.md",
-                "docs/development/planning-skill-session-finals/triage-renewal.md",
-                "docs/development/planning-skill-session-finals/wayfinder.md",
-                "docs/development/planning-skill-session-finals/wizard.md",
-                "docs/development/pr-metadata-validation.md",
-                "docs/development/productivity-skill-exercises.md",
-                "docs/development/productivity-skill-runtime-transcript.md",
-                "docs/development/productivity-skill-runtime/README.md",
-                "docs/development/productivity-skill-runtime/event-retention-questionnaire.md",
-                "docs/development/productivity-skill-runtime/handoff.md",
-                "docs/development/productivity-skill-runtime/teach/GLOSSARY.md",
-                "docs/development/productivity-skill-runtime/teach/MISSION.md",
-                "docs/development/productivity-skill-runtime/teach/NOTES.md",
-                "docs/development/productivity-skill-runtime/teach/README.md",
-                "docs/development/productivity-skill-runtime/teach/RESOURCES.md",
-                "docs/development/productivity-skill-runtime/teach/assets/README.md",
-                "docs/development/productivity-skill-runtime/teach/learning-records/0001-release-ancestry-guard.md",
-                "docs/development/productivity-skill-runtime/teach/learning-records/README.md",
-                "docs/development/productivity-skill-runtime/teach/lessons/README.md",
-                "docs/development/productivity-skill-runtime/teach/reference/README.md",
-                "docs/development/productivity-skill-runtime/writing-for-agents-project.md",
-                "docs/development/productivity-skill-session-finals/README.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-3.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-4.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-5.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-6.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-3.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-4.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-5.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-handoff-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-feedback.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-real-git-verification.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-review-correction.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-safe-failure-correction.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-before.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-change-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-final.md",
-                "docs/development/real-adoption.md",
-                "docs/development/release-v0-1-1.md",
-                "docs/development/release-v0-2-0.md",
-                "docs/development/repository-readme-check.md",
-                "docs/development/scope-capability-specification.md",
-                "docs/development/shared-material-review.md",
-                "docs/development/source-profile.md",
-                "docs/development/upstream-compatibility.md",
-                "docs/usage/README.md",
-                "docs/usage/adopt-repo-canon.md",
-                "docs/usage/prepare-agent-guidance.md",
-                "docs/usage/versioning.md"
-              ],
-              "directories": []
-            }
-          },
-          "operation": {
-            "phase": "checks",
-            "declaration": "documentation",
-            "id": "documentation-navigation"
-          },
-          "operationIndex": 2,
-          "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "changes": {},
-          "boundaryChanges": {},
-          "violations": []
-        },
-        {
-          "phase": "checks",
-          "scope": {
-            "project-readmes": {
-              "paths": [],
-              "directories": []
-            }
-          },
-          "operation": {
-            "phase": "checks",
-            "declaration": "project-readmes",
-            "id": "project-readme-structure"
-          },
-          "operationIndex": 3,
-          "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "changes": {},
-          "boundaryChanges": {},
-          "violations": []
-        },
-        {
-          "phase": "checks",
-          "scope": {
-            "repository-readme": {
-              "paths": [
-                "README.md"
-              ],
-              "directories": []
-            }
-          },
-          "operation": {
-            "phase": "checks",
-            "declaration": "repository-readme",
-            "id": "repository-readme-structure"
-          },
-          "operationIndex": 4,
-          "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "changes": {},
-          "boundaryChanges": {},
-          "violations": []
-        },
-        {
-          "phase": "agent",
-          "scope": {
-            "documentation": {
-              "paths": [
-                "CONTEXT.md",
-                "authoring-notes.md",
-                "design-review.md",
-                "docs/README.md",
-                "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
-                "docs/adr/0002-squash-reviewed-changes.md",
-                "docs/adr/0003-follow-product-release-versioning.md",
-                "docs/adr/0004-adopt-published-releases-of-this-source.md",
-                "docs/adr/README.md",
-                "docs/agents/project.md",
-                "docs/development/README.md",
-                "docs/development/adoption-compatibility.md",
-                "docs/development/adoption-evidence.md",
-                "docs/development/completion-record.md",
-                "docs/development/documentation-check.md",
-                "docs/development/engineering-skill-architecture-visual-inspection.md",
-                "docs/development/engineering-skill-exercises.md",
-                "docs/development/engineering-skill-research-result.md",
-                "docs/development/engineering-skill-runtime-transcript.md",
-                "docs/development/engineering-skill-session-finals/README.md",
-                "docs/development/engineering-skill-session-finals/ask-matt.md",
-                "docs/development/engineering-skill-session-finals/code-review.md",
-                "docs/development/engineering-skill-session-finals/codebase-design.md",
-                "docs/development/engineering-skill-session-finals/diagnosing-bugs-completion.md",
-                "docs/development/engineering-skill-session-finals/diagnosing-bugs-initial.md",
-                "docs/development/engineering-skill-session-finals/domain-modeling.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-blocked.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture-browser-completion.md",
-                "docs/development/engineering-skill-session-finals/improve-codebase-architecture.md",
-                "docs/development/engineering-skill-session-finals/research.md",
-                "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-completion.md",
-                "docs/development/engineering-skill-session-finals/resolving-merge-conflicts-initial.md",
-                "docs/development/engineering-skill-session-finals/tdd-completion.md",
-                "docs/development/engineering-skill-session-finals/tdd-initial.md",
-                "docs/development/first-release.md",
-                "docs/development/github-label-setup.md",
-                "docs/development/github-pr-integration-setup.md",
-                "docs/development/issue-contract-validation.md",
-                "docs/development/planning-skill-artifacts/README.md",
-                "docs/development/planning-skill-artifacts/adoption-inspection.md",
-                "docs/development/planning-skill-artifacts/delivery-schedule-cancellation-verdict.md",
-                "docs/development/planning-skill-artifacts/intake-batch-spec.md",
-                "docs/development/planning-skill-artifacts/intake-batch-ticket-01.md",
-                "docs/development/planning-skill-artifacts/intake-batch-ticket-02.md",
-                "docs/development/planning-skill-artifacts/managed-skill-update-boundary.md",
-                "docs/development/planning-skill-artifacts/receipt-export-triage.md",
-                "docs/development/planning-skill-artifacts/retry-map.md",
-                "docs/development/planning-skill-artifacts/retry-window-ticket.md",
-                "docs/development/planning-skill-exercises.md",
-                "docs/development/planning-skill-session-finals/README.md",
-                "docs/development/planning-skill-session-finals/adoption-preparation.md",
-                "docs/development/planning-skill-session-finals/grill-completion.md",
-                "docs/development/planning-skill-session-finals/grill-initial.md",
-                "docs/development/planning-skill-session-finals/implement-review-blocked.md",
-                "docs/development/planning-skill-session-finals/implement-review-completion.md",
-                "docs/development/planning-skill-session-finals/implement.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update-correction.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update-portable.md",
-                "docs/development/planning-skill-session-finals/managed-skill-update.md",
-                "docs/development/planning-skill-session-finals/prototype.md",
-                "docs/development/planning-skill-session-finals/setup.md",
-                "docs/development/planning-skill-session-finals/to-spec.md",
-                "docs/development/planning-skill-session-finals/to-tickets.md",
-                "docs/development/planning-skill-session-finals/triage-invalidation.md",
-                "docs/development/planning-skill-session-finals/triage-ready.md",
-                "docs/development/planning-skill-session-finals/triage-renewal.md",
-                "docs/development/planning-skill-session-finals/wayfinder.md",
-                "docs/development/planning-skill-session-finals/wizard.md",
-                "docs/development/pr-metadata-validation.md",
-                "docs/development/productivity-skill-exercises.md",
-                "docs/development/productivity-skill-runtime-transcript.md",
-                "docs/development/productivity-skill-runtime/README.md",
-                "docs/development/productivity-skill-runtime/event-retention-questionnaire.md",
-                "docs/development/productivity-skill-runtime/handoff.md",
-                "docs/development/productivity-skill-runtime/teach/GLOSSARY.md",
-                "docs/development/productivity-skill-runtime/teach/MISSION.md",
-                "docs/development/productivity-skill-runtime/teach/NOTES.md",
-                "docs/development/productivity-skill-runtime/teach/README.md",
-                "docs/development/productivity-skill-runtime/teach/RESOURCES.md",
-                "docs/development/productivity-skill-runtime/teach/assets/README.md",
-                "docs/development/productivity-skill-runtime/teach/learning-records/0001-release-ancestry-guard.md",
-                "docs/development/productivity-skill-runtime/teach/learning-records/README.md",
-                "docs/development/productivity-skill-runtime/teach/lessons/README.md",
-                "docs/development/productivity-skill-runtime/teach/reference/README.md",
-                "docs/development/productivity-skill-runtime/writing-for-agents-project.md",
-                "docs/development/productivity-skill-session-finals/README.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-3.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-4.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-5.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grill-me-round-6.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-3.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-4.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-grilling-round-5.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-handoff-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-questionnaire-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-feedback.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-real-git-verification.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-review-correction.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-1.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-round-2.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-teach-safe-failure-correction.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-before.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-wait-what-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-change-final.md",
-                "docs/development/productivity-skill-session-finals/issue-13-v2-writing-probe-final.md",
-                "docs/development/real-adoption.md",
-                "docs/development/release-v0-1-1.md",
-                "docs/development/release-v0-2-0.md",
-                "docs/development/repository-readme-check.md",
-                "docs/development/scope-capability-specification.md",
-                "docs/development/shared-material-review.md",
-                "docs/development/source-profile.md",
-                "docs/development/upstream-compatibility.md",
-                "docs/usage/README.md",
-                "docs/usage/adopt-repo-canon.md",
-                "docs/usage/prepare-agent-guidance.md",
-                "docs/usage/versioning.md"
-              ],
-              "directories": []
-            },
-            "github-repository-configuration": {
-              "paths": [],
-              "directories": []
-            },
-            "project-readmes": {
-              "paths": [],
-              "directories": []
-            },
-            "repository-readme": {
-              "paths": [
-                "README.md"
-              ],
-              "directories": []
-            }
-          },
-          "before": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "after": "sha256:d8f6032cb01ee66922ee84937c0f22c8b652aad4cd1c0520d1ca8359d2fb712b",
-          "changes": {},
-          "boundaryChanges": {},
-          "violations": []
-        }
-      ],
-      "operations": [
-        {
-          "operation": {
-            "declaration": "github-repository-configuration",
-            "phase": "fixes",
-            "id": "canonical-labels"
-          },
-          "process": {
-            "exitCode": 0,
-            "signal": null,
-            "error": null,
-            "timedOut": false
-          },
-          "result": {
-            "format": "repo-standards/result/v1",
-            "status": "changed",
-            "message": "GitHub label setup changed lutzseverino/repo-canon: updated 3 labels. Readback confirmed all 12 canonical labels; unrelated labels were preserved."
-          },
-          "error": null,
-          "stdout": ".repo-standards/local/operations/0.stdout",
-          "stderr": ".repo-standards/local/operations/0.stderr"
-        },
-        {
-          "operation": {
-            "declaration": "github-repository-configuration",
-            "phase": "fixes",
-            "id": "pull-request-integration"
-          },
-          "process": {
-            "exitCode": 0,
-            "signal": null,
-            "error": null,
-            "timedOut": false
-          },
-          "result": {
-            "format": "repo-standards/result/v1",
-            "status": "changed",
-            "message": "GitHub PR integration setup changed lutzseverino/repo-canon: created required-check ruleset. Final readback confirmed PR metadata, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved."
-          },
-          "error": null,
-          "stdout": ".repo-standards/local/operations/1.stdout",
-          "stderr": ".repo-standards/local/operations/1.stderr"
-        },
-        {
-          "operation": {
-            "declaration": "documentation",
-            "phase": "checks",
-            "id": "documentation-navigation"
-          },
-          "process": {
-            "exitCode": 0,
-            "signal": null,
-            "error": null,
-            "timedOut": false
-          },
-          "result": {
-            "format": "repo-standards/result/v1",
-            "status": "passed",
-            "message": "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review."
-          },
-          "error": null,
-          "stdout": ".repo-standards/local/operations/2.stdout",
-          "stderr": ".repo-standards/local/operations/2.stderr"
-        },
-        {
-          "operation": {
-            "declaration": "project-readmes",
-            "phase": "checks",
-            "id": "project-readme-structure"
-          },
-          "process": {
-            "exitCode": 0,
-            "signal": null,
-            "error": null,
-            "timedOut": false
-          },
-          "result": {
-            "format": "repo-standards/result/v1",
-            "status": "passed",
-            "message": "Project README structure is valid for 0 concrete targets; purpose, commands, configuration, and documentation still require maintainer or agent review."
-          },
-          "error": null,
-          "stdout": ".repo-standards/local/operations/3.stdout",
-          "stderr": ".repo-standards/local/operations/3.stderr"
-        },
-        {
-          "operation": {
-            "declaration": "repository-readme",
-            "phase": "checks",
-            "id": "repository-readme-structure"
-          },
-          "process": {
-            "exitCode": 0,
-            "signal": null,
-            "error": null,
-            "timedOut": false
-          },
-          "result": {
-            "format": "repo-standards/result/v1",
-            "status": "passed",
-            "message": "Repository README structure is valid; factual content still requires maintainer or agent review."
-          },
-          "error": null,
-          "stdout": ".repo-standards/local/operations/4.stdout",
-          "stderr": ".repo-standards/local/operations/4.stderr"
-        }
-      ],
-      "retryHistory": [],
-      "checks": [
-        {
-          "operation": {
-            "declaration": "documentation",
-            "phase": "checks",
-            "id": "documentation-navigation"
-          },
-          "process": {
-            "exitCode": 0,
-            "signal": null,
-            "error": null,
-            "timedOut": false
-          },
-          "result": {
-            "format": "repo-standards/result/v1",
-            "status": "passed",
-            "message": "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review."
-          },
-          "error": null,
-          "stdout": ".repo-standards/local/operations/2.stdout",
-          "stderr": ".repo-standards/local/operations/2.stderr"
-        },
-        {
-          "operation": {
-            "declaration": "project-readmes",
-            "phase": "checks",
-            "id": "project-readme-structure"
-          },
-          "process": {
-            "exitCode": 0,
-            "signal": null,
-            "error": null,
-            "timedOut": false
-          },
-          "result": {
-            "format": "repo-standards/result/v1",
-            "status": "passed",
-            "message": "Project README structure is valid for 0 concrete targets; purpose, commands, configuration, and documentation still require maintainer or agent review."
-          },
-          "error": null,
-          "stdout": ".repo-standards/local/operations/3.stdout",
-          "stderr": ".repo-standards/local/operations/3.stderr"
-        },
-        {
-          "operation": {
-            "declaration": "repository-readme",
-            "phase": "checks",
-            "id": "repository-readme-structure"
-          },
-          "process": {
-            "exitCode": 0,
-            "signal": null,
-            "error": null,
-            "timedOut": false
-          },
-          "result": {
-            "format": "repo-standards/result/v1",
-            "status": "passed",
-            "message": "Repository README structure is valid; factual content still requires maintainer or agent review."
-          },
-          "error": null,
-          "stdout": ".repo-standards/local/operations/4.stdout",
-          "stderr": ".repo-standards/local/operations/4.stderr"
-        }
-      ],
-      "assessments": [
-        {
-          "format": "repo-standards/assessment/v2",
-          "run": "baaed5f0-ce1d-4e35-87fa-59c246269b00",
-          "selection": "sha256:8f22ef9f166d4cb75331fe1ea9b127a1818ec5ba7938703aadffe2d1f6483eb9",
-          "snapshot": "sha256:91537700c31f5b108c1f922ccda5726546acb3c5a1a7b1c7168cfca25feb5997",
-          "scope": {
-            "inspection": "sha256:ead33120407cce9fabf34f821f2517b1be1f0886a3e3a408fd99876ef2c50172",
-            "afterFixes": "sha256:c79fdf00c9aaf53faaa8dd23e6662a41243f6a61f9a7fcddd302ec115f413072"
-          },
-          "declarations": [
-            {
-              "id": "documentation",
-              "status": "satisfied",
-              "explanation": "The confirmed documentation tree already follows the guidance and needed no contextual change. docs/README.md maps the usage, development, and adr categories and states the placement rules; each populated directory has a README, including the eight nested directories under docs/development; docs/development/README.md carries the real prerequisites, setup, commands, and required validation that CONTRIBUTING.md points to; the domain glossary sits at the repository root in CONTEXT.md as the guidance requires, with no CONTEXT-MAP.md because this repository has one domain context; and docs/agents/project.md holds the repository-specific agent constraints while the four exact-owned docs/agents files stay outside this scope. No document was moved, so no link repair was due, and the two decision records authoring-notes.md and design-review.md remain linked from the documentation they explain.",
-              "changedPaths": [],
-              "evidence": [
-                "docs/README.md lists the usage, development, adr, and agents categories with their placement rules, and every category README it names exists.",
-                "docs/development/README.md states the Node.js 24 and npm prerequisites, the working-locally steps, and the required validation commands npm run check, git diff --check, and npm test that CONTRIBUTING.md defers to.",
-                "CONTEXT.md defines the repository's terms, including Self-adoption, at the repository root, and no second domain context exists that would justify a CONTEXT-MAP.md.",
-                "docs/agents/project.md records this repository's own constraints, and the shared docs/agents README, domain, issue-tracker, and triage-labels files are exact-owned and were reinstalled byte for byte by this run.",
-                "The documentation-navigation check over these 126 paths reports passed, and the repository's own conformance test runs the same check against this tree on every pull request."
-              ],
-              "scopeValidity": {
-                "afterFixes": {
-                  "status": "valid",
-                  "explanation": "Re-evaluating the discovery criteria against the post-fix project found no new documentation candidate. The two fixes changed only remote GitHub state, and installation wrote only exact targets under .agents/skills plus generated state under .repo-standards, neither of which is documentation this declaration governs.",
-                  "evidence": [
-                    "The post-fix tracked tree is identical to the inspected tree; the only new project content is .agents/skills and .repo-standards, which are author-owned installed material and product state.",
-                    "Every Markdown file under docs except the four exact-owned agent configuration files is in the confirmed paths, together with CONTEXT.md, authoring-notes.md, and design-review.md."
-                  ],
-                  "additionalPaths": []
-                },
-                "current": {
-                  "status": "valid",
-                  "explanation": "At the refreshed snapshot the documentation tree is still exactly what the proposal covers. The only contextual edit in this run was README.md, which the repository-readme declaration governs, so no documentation candidate was added, removed, or moved.",
-                  "evidence": [
-                    "git status reports no modified or new file under docs, and no document was created, deleted, or renamed during contextual work.",
-                    "The excluded candidates are unchanged: the review drafts, the source-side guidance and discovery instructions, the vendored material, the exact-owned shared files, and the retained non-Markdown artifacts under docs."
-                  ],
-                  "additionalPaths": []
-                }
-              }
-            },
-            {
-              "id": "github-repository-configuration",
-              "status": "satisfied",
-              "explanation": "This declaration changes only remote GitHub configuration through its two authored fixes, so its project-content scope is intentionally empty and no file was edited for it. Both fixes ran and reported changed: canonical-labels updated the three canonical label descriptions that had drifted from the shipped bytes and preserved the unrelated labels, and pull-request-integration created the required-check ruleset on the default branch and confirmed squash-only integration with pull request title subjects and body messages.",
-              "changedPaths": [],
-              "evidence": [
-                "The canonical-labels result reads: GitHub label setup changed lutzseverino/repo-canon: updated 3 labels. Readback confirmed all 12 canonical labels; unrelated labels were preserved.",
-                "The pull-request-integration result reads: GitHub PR integration setup changed lutzseverino/repo-canon: created required-check ruleset. Final readback confirmed PR metadata, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved.",
-                "An independent readback of repos/lutzseverino/repo-canon/rulesets shows ruleset 23659277 active for ~DEFAULT_BRANCH requiring the PR metadata context, with bypass_actors empty and current_user_can_bypass never.",
-                "The repository has exactly one github.com remote, https://github.com/lutzseverino/repo-canon, which is the repository this adoption configures."
-              ],
-              "scopeValidity": {
-                "afterFixes": {
-                  "status": "valid",
-                  "explanation": "The empty project-content scope remained correct after the fixes: the declaration's authored operations act on remote settings only, and neither fix wrote project content.",
-                  "evidence": [
-                    "Both fix results describe remote label and ruleset changes and name no project path.",
-                    "No file in the working tree changed during the fixes phase other than the exact installation this declaration does not own."
-                  ],
-                  "additionalPaths": []
-                },
-                "current": {
-                  "status": "valid",
-                  "explanation": "At the refreshed snapshot the declaration still needs no project-content path; nothing in the repository represents its remote configuration.",
-                  "evidence": [
-                    "The repository holds no settings file, ruleset definition, or label manifest that would be a candidate for this declaration.",
-                    "The contextual edit in this run was README.md alone, which belongs to the repository-readme declaration."
-                  ],
-                  "additionalPaths": []
-                }
-              }
-            },
-            {
-              "id": "project-readmes",
-              "status": "satisfied",
-              "explanation": "This repository is a single standards source with one root manifest and one set of development commands, so it contains no nested Project and no non-root Project README is due. The nested directories are vendored third-party material, declared source content executed by the CLI, tests and fixtures, retained documentation, or purely organizational, and none of them has its own responsibility and development commands.",
-              "changedPaths": [],
-              "evidence": [
-                "package.json at the repository root declares every command the repository runs, including the named test groups, and no nested manifest or workspace configuration exists.",
-                "vendor/marked, vendor/parse5, and vendor/mattpocock-skills are copied upstream releases retained for provenance, which THIRD_PARTY_NOTICES.md and the provenance READMEs record.",
-                "operations, scripts, and test hold declared operation scripts, maintenance tooling, and fixtures that the root manifest drives rather than independently maintained Projects.",
-                "The Project README check reports passed for zero concrete targets, which matches the explained empty scope."
-              ],
-              "scopeValidity": {
-                "afterFixes": {
-                  "status": "valid",
-                  "explanation": "The post-fix project introduced no Project. Installation added author-owned skills under .agents/skills and product state under .repo-standards, neither of which is a maintained Project with its own commands.",
-                  "evidence": [
-                    "The installed skills are documents and resources owned by the standards source, with no manifest, build, or test command of their own.",
-                    ".repo-standards holds generated selection, lock, state, inputs, and runtime manifests that the product owns."
-                  ],
-                  "additionalPaths": []
-                },
-                "current": {
-                  "status": "valid",
-                  "explanation": "At the refreshed snapshot the repository still has no nested Project, so the empty scope remains complete.",
-                  "evidence": [
-                    "No directory gained a manifest, entry point, or command set during contextual work.",
-                    "The only contextual edit was README.md, the Repository README, which is not a Project README."
-                  ],
-                  "additionalPaths": []
-                }
-              }
-            },
-            {
-              "id": "repository-readme",
-              "status": "satisfied",
-              "explanation": "README.md now follows the Repository README guidance for someone discovering this repository. The centered title, one-sentence description, and the Markdown and YAML badges are preserved and still accurate for a source made of Markdown documents and standards.yaml. The former Usage section was really the installation path, so it is now Installation and comes first: it gives the shortest working user path, installing the exact public CLI 1.3.0 that v0.2.0 requires outside the adopting project, and it distinguishes that user installation from contributor setup by pointing at the adoption guide for the remaining prerequisites. Usage now carries one representative example, the read-only inspection of v0.2.0 with the complete profile, and keeps the facts that were in the old section: verify the published release, and select only bytes the source acceptance record covers. A short Features list states what adopting applies, Documentation links the documentation index and the durable records, and Contributing and License are unchanged in the required relative order.",
-              "changedPaths": [
-                "README.md"
-              ],
-              "evidence": [
-                "Installation is the first section and names CLI 1.3.0, which standards.yaml requires as the exact repo-standards version for this release.",
-                "The installation command matches the prerequisites section of docs/usage/adopt-repo-canon.md, which installs the same exact version in a directory outside the adopting project.",
-                "The Usage example matches the inspection command in the same guide, including the source, standards version, profile, and project flags.",
-                "The Features list is drawn from the resolved profile this run installed: 23 exact files that already matched, 25 installed skills under .agents/skills, the canonical-labels and pull-request-integration fixes, and the three read-only checks.",
-                "The Documentation section links docs/README.md, Contributing links CONTRIBUTING.md, and License contains only the MIT License link to the root LICENSE file, and the repository-readme-structure check reports passed.",
-                "The document is about 340 words, close to the guidance's roughly 300-word target, with detail left in the linked documents."
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ],
+  "format": "repo-standards/state/v6",
   "observations": [
     {
       "phase": "fixes",
@@ -1034,8 +15,8 @@
         "id": "canonical-labels"
       },
       "operationIndex": 0,
-      "before": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "after": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
+      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -1054,8 +35,8 @@
         "id": "pull-request-integration"
       },
       "operationIndex": 1,
-      "before": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "after": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
+      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -1074,11 +55,15 @@
             "docs/adr/0004-adopt-published-releases-of-this-source.md",
             "docs/adr/0005-require-an-open-ended-minimum-cli-version.md",
             "docs/adr/0006-keep-point-in-time-records-with-their-event.md",
+            "docs/adr/0007-keep-superseded-adrs.md",
+            "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md",
+            "docs/adr/0009-enforce-documentation-rules-as-checks.md",
             "docs/adr/README.md",
             "docs/agents/project.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
             "docs/development/documentation-check.md",
+            "docs/development/documentation-scope-drafter.md",
             "docs/development/github-label-setup.md",
             "docs/development/github-pr-integration-setup.md",
             "docs/development/issue-contract-validation.md",
@@ -1110,8 +95,8 @@
           "directories": []
         }
       },
-      "before": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "after": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
+      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -1130,11 +115,15 @@
             "docs/adr/0004-adopt-published-releases-of-this-source.md",
             "docs/adr/0005-require-an-open-ended-minimum-cli-version.md",
             "docs/adr/0006-keep-point-in-time-records-with-their-event.md",
+            "docs/adr/0007-keep-superseded-adrs.md",
+            "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md",
+            "docs/adr/0009-enforce-documentation-rules-as-checks.md",
             "docs/adr/README.md",
             "docs/agents/project.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
             "docs/development/documentation-check.md",
+            "docs/development/documentation-scope-drafter.md",
             "docs/development/github-label-setup.md",
             "docs/development/github-pr-integration-setup.md",
             "docs/development/issue-contract-validation.md",
@@ -1166,64 +155,8 @@
           "directories": []
         }
       },
-      "before": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "after": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "changes": {},
-      "boundaryChanges": {},
-      "violations": []
-    },
-    {
-      "phase": "agent",
-      "scope": {
-        "documentation": {
-          "paths": [
-            "CONTEXT.md",
-            "authoring-notes.md",
-            "docs/README.md",
-            "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
-            "docs/adr/0002-squash-reviewed-changes.md",
-            "docs/adr/0003-follow-product-release-versioning.md",
-            "docs/adr/0004-adopt-published-releases-of-this-source.md",
-            "docs/adr/0005-require-an-open-ended-minimum-cli-version.md",
-            "docs/adr/0006-keep-point-in-time-records-with-their-event.md",
-            "docs/adr/README.md",
-            "docs/agents/project.md",
-            "docs/development/README.md",
-            "docs/development/adoption-compatibility.md",
-            "docs/development/documentation-check.md",
-            "docs/development/github-label-setup.md",
-            "docs/development/github-pr-integration-setup.md",
-            "docs/development/issue-contract-validation.md",
-            "docs/development/pr-metadata-validation.md",
-            "docs/development/release.md",
-            "docs/development/repository-readme-check.md",
-            "docs/development/skill-exercises.md",
-            "docs/development/source-profile.md",
-            "docs/development/upstream-compatibility.md",
-            "docs/usage/README.md",
-            "docs/usage/adopt-repo-canon.md",
-            "docs/usage/prepare-agent-guidance.md",
-            "docs/usage/versioning.md"
-          ],
-          "directories": []
-        },
-        "github-repository-configuration": {
-          "paths": [],
-          "directories": []
-        },
-        "project-readmes": {
-          "paths": [],
-          "directories": []
-        },
-        "repository-readme": {
-          "paths": [
-            "README.md"
-          ],
-          "directories": []
-        }
-      },
-      "before": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "after": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
+      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -1242,11 +175,15 @@
             "docs/adr/0004-adopt-published-releases-of-this-source.md",
             "docs/adr/0005-require-an-open-ended-minimum-cli-version.md",
             "docs/adr/0006-keep-point-in-time-records-with-their-event.md",
+            "docs/adr/0007-keep-superseded-adrs.md",
+            "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md",
+            "docs/adr/0009-enforce-documentation-rules-as-checks.md",
             "docs/adr/README.md",
             "docs/agents/project.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
             "docs/development/documentation-check.md",
+            "docs/development/documentation-scope-drafter.md",
             "docs/development/github-label-setup.md",
             "docs/development/github-pr-integration-setup.md",
             "docs/development/issue-contract-validation.md",
@@ -1270,8 +207,8 @@
         "id": "documentation-navigation"
       },
       "operationIndex": 2,
-      "before": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "after": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
+      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -1290,8 +227,8 @@
         "id": "project-readme-structure"
       },
       "operationIndex": 3,
-      "before": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "after": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
+      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -1312,8 +249,8 @@
         "id": "repository-readme-structure"
       },
       "operationIndex": 4,
-      "before": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "after": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
+      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -1332,11 +269,15 @@
             "docs/adr/0004-adopt-published-releases-of-this-source.md",
             "docs/adr/0005-require-an-open-ended-minimum-cli-version.md",
             "docs/adr/0006-keep-point-in-time-records-with-their-event.md",
+            "docs/adr/0007-keep-superseded-adrs.md",
+            "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md",
+            "docs/adr/0009-enforce-documentation-rules-as-checks.md",
             "docs/adr/README.md",
             "docs/agents/project.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
             "docs/development/documentation-check.md",
+            "docs/development/documentation-scope-drafter.md",
             "docs/development/github-label-setup.md",
             "docs/development/github-pr-integration-setup.md",
             "docs/development/issue-contract-validation.md",
@@ -1368,8 +309,8 @@
           "directories": []
         }
       },
-      "before": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
-      "after": "sha256:fd8155bdfed2c35100a48c1f331f5de2425708a0ef9af5e82f1cef4dbe5da980",
+      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -1483,19 +424,27 @@
     }
   ],
   "retryHistory": [],
+  "changeSet": [
+    {
+      "path": ".agents/skills/adopt-standards/SKILL.md",
+      "phases": [
+        "installation"
+      ]
+    }
+  ],
   "lastComplete": {
-    "run": "8706f6b7-9d84-4782-b5b5-752bdad81542",
-    "inspection": "sha256:ff8cadbaa7426787529b2fdc96fa371dd0856c4e972fca2837a040aecb06bbbd",
-    "completedAt": "2026-09-28T11:30:04.882Z",
-    "head": "16a1e4b62d82099b8de70a0a9c4a86622341a371"
+    "run": "ec21b845-7269-48f9-85e5-a492e841544a",
+    "inspection": "sha256:850b37dd18ffb824a0a4dab44ab4177f92eec9cc5558887f9dfc18a8ef65e90f",
+    "completedAt": "2026-10-02T16:21:04.851Z",
+    "head": "b906dda656f772fc997c5bbe43e86ccef39b9f2f"
   },
   "baselines": {
     "docs/agents/README.md": {
-      "sha256": "1534d7dacd63d91988a97b2e2928a683ddbf5177a663b75ed438e83d3c5c4836",
+      "sha256": "a78a8a4934c9de37cfcd11be23ce3dd58462108fa53b6cdaead4af18ca7e773b",
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "36f9910acca44fa82f34a33ba8e0ce748ae7c8bd096dddf24a80fe5f4058153d",
+      "sha256": "2e6b5c90fc36abebe5a18d4352996d380d8daa2845ee1c01ecfc82140067ea18",
       "executable": false
     },
     ".github/ISSUE_TEMPLATE/bug-report.yml": {
@@ -1503,11 +452,11 @@
       "executable": false
     },
     "CONTRIBUTING.md": {
-      "sha256": "480248d917dbdd2434bbf50b912431f30c0cae8040410ec9c2e9dca2fd02864d",
+      "sha256": "ab90708574a383a95a2dfd7f9a3d9a9740c638e10bf8b48ec1d4f876a55d1858",
       "executable": false
     },
     "docs/agents/domain.md": {
-      "sha256": "a54f914dc3f24ba5daabe69b7329a4c1605621ba2851b3091e2727fde76e707b",
+      "sha256": "edc6d6131fdffc4b7135704f5262124fc43355c95f61b7399dc5a4db643e28ca",
       "executable": false
     },
     ".github/ISSUE_TEMPLATE/feature-request.yml": {
@@ -1519,7 +468,7 @@
       "executable": false
     },
     "scripts/validate-issue-contract.mjs": {
-      "sha256": "6846a9aa0e51742ab5040d42f223b6f169a3b13563cf98c3abdd0351e12d218d",
+      "sha256": "d10f01c9eba73debfc060c295e32063086b1ef02dbfe9a945060bfa1d99f1372",
       "executable": false
     },
     ".github/workflows/issue-contracts.yml": {
@@ -1527,7 +476,7 @@
       "executable": false
     },
     "docs/agents/issue-tracker.md": {
-      "sha256": "750c7c866465d009eebf462296c3fafcfce9ad3e1bdaa85212e196110f173e55",
+      "sha256": "afd6852a80185217bd28aa5cbe456bef1e85be25be7bd1fba382d5b8ee428325",
       "executable": false
     },
     "vendor/marked/LICENSE": {
@@ -1563,7 +512,7 @@
       "executable": false
     },
     ".github/scripts/validate-pr-metadata.mjs": {
-      "sha256": "7217d4dbb66a2b2afea67c2d15bf6c83c539b7fa03b8c5d6c68262f002900f7d",
+      "sha256": "92c5d69ef964b4898eaa4fc58b8b8cec0d81cddd0fe5fe6f93057731541d058b",
       "executable": false
     },
     ".github/workflows/pr-metadata.yml": {
@@ -1575,7 +524,7 @@
       "executable": false
     },
     "operations/lib/rendered-markdown.mjs": {
-      "sha256": "89ece507cfc1afb55cf1fa6e59741fc58649a5812ca9bcc4cfb51de866e2611b",
+      "sha256": "bbc379d38a2305ba6f351503b14622743961b229570b53d58dcc4b45fe76af55",
       "executable": false
     },
     ".agents/skills/ask-matt/PHASE-BOUNDARIES.md": {
@@ -1879,11 +828,11 @@
       "executable": false
     },
     "docs/agents/triage-labels.md": {
-      "sha256": "b2c6c2b88086dd20b3db8d010a9ec0d9daa9fef4abce8cfe1845883b2547d1af",
+      "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d",
       "executable": false
     },
     ".agents/skills/adopt-standards/SKILL.md": {
-      "sha256": "d733ef6c9357f3a78515783f5c019ec7c868eb4f82c8b868ecd5e58fcd152958",
+      "sha256": "496084e62baa7971c618151a13f1f5aa9888e88d243e87255075a0e9350c19bf",
       "executable": false
     }
   },
@@ -2083,50 +1032,43 @@
   ],
   "assessments": [
     {
-      "format": "repo-standards/assessment/v2",
-      "run": "8706f6b7-9d84-4782-b5b5-752bdad81542",
-      "selection": "sha256:e70e1b7077d4877a28a7b60466526315db870b88b900b50ed52f0e272e0d6beb",
-      "snapshot": "sha256:e302c41a6c0f852db226ea1f0264630670f253ab834c27635f7bd60dc0471275",
+      "format": "repo-standards/assessment/v3",
       "scope": {
-        "inspection": "sha256:ff8cadbaa7426787529b2fdc96fa371dd0856c4e972fca2837a040aecb06bbbd",
-        "afterFixes": "sha256:e302c41a6c0f852db226ea1f0264630670f253ab834c27635f7bd60dc0471275"
+        "inspection": "sha256:850b37dd18ffb824a0a4dab44ab4177f92eec9cc5558887f9dfc18a8ef65e90f",
+        "afterFixes": "sha256:5c0e519d2d75a10d73b95f6a5ee1f3a31e8c6fcd3748c523bf6b1cbb3f5017c3"
       },
+      "run": "ec21b845-7269-48f9-85e5-a492e841544a",
+      "selection": "sha256:047e12d5bfbdd6d095b25ec0c8f20f3a3e215a0fba1712fc3fdf32a0b3ad927b",
+      "snapshot": "sha256:5c0e519d2d75a10d73b95f6a5ee1f3a31e8c6fcd3748c523bf6b1cbb3f5017c3",
       "declarations": [
         {
           "id": "documentation",
           "status": "satisfied",
-          "explanation": "The documentation already follows the v0.3.0 documentation guidance, which #71's tickets applied before this release, so no contextual change was needed.",
+          "explanation": "The documentation already follows the documentation rules in CONTRIBUTING.md and the v0.4.0 guidance; this tree is the v0.4.0 release commit, so no contextual edit was needed and none was made.",
           "changedPaths": [],
           "evidence": [
-            "One documentation root, `docs`, uses only the usage, development, adr, and agents categories, each with a README.",
-            "`docs/README.md` starts with a one-sentence purpose and lists the four category READMEs as `[Title](path): description` items whose descriptions state what belongs in each category.",
-            "`docs/usage/README.md` and `docs/adr/README.md` each start with a one-sentence purpose and list every other document in their directory, three and six entries, once each.",
-            "`docs/development/README.md` gives its purpose, then a Setup and validation section with prerequisites, commands, and required checks, then its index of all eleven other development documents.",
-            "`docs/agents/README.md` is the installed exact file and cites the optional `docs/agents/project.md` in context; no other index lists `project.md`.",
-            "No document repeats an index: the remaining document links, for example in `docs/agents/project.md`, `docs/development/adoption-compatibility.md`, and `authoring-notes.md`, cite single documents in context.",
-            "No point-in-time record remains under `docs`: the release, adoption, completion, exercise-transcript, and session-output files were deleted by #71, and maintained documents cite the first real adoption by commit permalink.",
-            "No superseded document remains; the design review and drafts were removed and their live rationale is in `authoring-notes.md`, which stays beside `standards.yaml`.",
-            "`CONTEXT.md` is the single repository-root glossary and defines Adopting repository, Point-in-time record, and Self-adoption.",
-            "The documentation-navigation check passed against the same tree in the repository conformance test run before submission."
+            "docs/README.md maps the usage, development, adr, and agents categories, and each category README description states what belongs in it.",
+            "docs/development/README.md gives its purpose, then Setup and validation (Node.js 24, npm run check, npm test, git diff --check, source validation with CLI 4.0.0), then its Documents index.",
+            "ADRs 0001-0009 are listed in docs/adr/README.md; no superseded document or point-in-time record remains under docs.",
+            "Project-specific agent constraints are in docs/agents/project.md; the four exact-owned docs/agents files are untouched.",
+            "test/repository-conformance.test.mjs, which runs the shipped documentation check with the four v0.4.0 documentation rules over this tree, passed 4 of 4 in this worktree after fixes."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "After fixes, the confirmed paths still cover every documentation file, glossary, and index: every file under `docs` except the four exact-owned agent files, the root glossary `CONTEXT.md`, and `authoring-notes.md`. The fixes changed no project content, and no document needs a move, a new directory README, or a link repair outside the scope.",
+              "explanation": "The confirmed scope covers every Markdown document under the one documentation root docs except the four exact-owned agent files, plus CONTEXT.md and authoring-notes.md, and the fixes changed no documentation.",
               "evidence": [
-                "The post-fix tree under `docs` holds exactly the 25 confirmed Markdown files plus the four exact-owned `docs/agents` files, and no non-Markdown file.",
-                "`CONTEXT.md` is the only glossary; no `CONTEXT-MAP.md` exists, and the repository has one domain context.",
-                "A scan of relative links in every tracked file outside vendored and installed skills found no link to a missing documentation path apart from test fixture strings.",
-                "Both fixes reported `unchanged` for remote GitHub configuration and wrote no project file."
+                "Reran discovery/draft-documentation-scope.mjs against the post-fix tree: it drafts exactly the same candidates as before start, including the same exclusions for exact-owned files.",
+                "The fixes only reported GitHub labels and PR integration unchanged; they wrote no project files."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "At the refreshed snapshot, which equals the post-fix snapshot, coverage is unchanged: no documentation file was added, moved, or deleted, and every existing documentation file, glossary, and index remains confirmed.",
+              "explanation": "No document was added, moved, or deleted after fixes, so coverage is unchanged and no link repair or move destination is needed.",
               "evidence": [
-                "The refreshed work-request snapshot equals the confirmed post-fix snapshot, so no project content changed during contextual work.",
-                "The same 27 confirmed paths exist, and no documentation file exists outside them apart from the exact-owned `docs/agents` files."
+                "git status shows only the replaced .agents/skills/adopt-standards/SKILL.md and the untracked .repo-standards product state; no path under docs, CONTEXT.md, or authoring-notes.md changed.",
+                "The repository conformance test, which checks local links and scope coverage, passes on the current tree."
               ],
               "additionalPaths": []
             }
@@ -2135,29 +1077,26 @@
         {
           "id": "github-repository-configuration",
           "status": "satisfied",
-          "explanation": "The two fixes read back that the remote already matches the canonical configuration, and no project content is governed by this declaration.",
+          "explanation": "Both fixes ran and read back the canonical configuration for lutzseverino/repo-canon; nothing project-side is in scope.",
           "changedPaths": [],
           "evidence": [
-            "Fix `canonical-labels` exited 0 with result `unchanged`: GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
-            "Fix `pull-request-integration` exited 0 with result `unchanged`: GitHub PR integration already matches the canonical configuration for lutzseverino/repo-canon.",
-            "A read-only query before the run showed squash-only merging using the PR title and body, and the active \"Repo Canon required PR checks\" ruleset."
+            "canonical-labels returned status unchanged: GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
+            "pull-request-integration returned status unchanged: the required PR metadata check, squash-only merging, and PR title and body for squash commits already match."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The declaration changes only remote GitHub configuration, so its project-content scope stays intentionally empty, and the repository identity remains the single `origin` remote `lutzseverino/repo-canon`.",
+              "explanation": "The declaration changes only remote GitHub configuration, so its empty project-content scope is intentional.",
               "evidence": [
-                "The `origin` remote is `https://github.com/lutzseverino/repo-canon`, the only remote.",
-                "Both fixes identified `lutzseverino/repo-canon` and reported that labels and PR integration already match the canonical configuration."
+                "The single origin remote is https://github.com/lutzseverino/repo-canon, the repository the fixes configured."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "The declaration changes only remote GitHub configuration, so its project-content scope stays intentionally empty, and the repository identity remains the single `origin` remote `lutzseverino/repo-canon`.",
+              "explanation": "Nothing changed after fixes; the empty project-content scope remains correct.",
               "evidence": [
-                "The `origin` remote is `https://github.com/lutzseverino/repo-canon`, the only remote.",
-                "Both fixes identified `lutzseverino/repo-canon` and reported that labels and PR integration already match the canonical configuration."
+                "The fixes wrote no project files and no agent edits were made."
               ],
               "additionalPaths": []
             }
@@ -2166,28 +1105,26 @@
         {
           "id": "project-readmes",
           "status": "satisfied",
-          "explanation": "The repository has no nested Project, so no Project README is needed and the empty confirmed scope is complete.",
+          "explanation": "The repository has no nested Project, so there is no Project README to write and the empty scope is correct.",
           "changedPaths": [],
           "evidence": [
-            "The only manifest is the root `package.json`, whose scripts run the test suite and checks for the whole repository.",
-            "Nested directories hold standards source, fixture builders and the shared validator, tests, vendored material, documentation, or installed agent material, none with its own responsibility and commands."
+            "There is one root manifest, package.json, with one set of development commands; operations, scripts, discovery, and guidance are parts of the single standards source.",
+            "test/fixtures holds test data, vendor holds third-party material, and .agents/skills holds installed skills; none is a maintained Project with its own commands."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "After fixes, the repository is still one standards source with one root manifest and one set of development commands, so no nested Project exists and the scope stays intentionally empty.",
+              "explanation": "No Project exists after fixes, so no Project README path is needed.",
               "evidence": [
-                "`package.json` at the root is the only manifest, and its scripts run every test and check.",
-                "`operations`, `scripts`, `test`, `guidance`, `discovery`, `vendor`, `docs`, `.github`, and `.agents` are standards source, tooling, fixtures, vendored material, documentation, or installed agent material, none with its own responsibility and commands."
+                "The fixes changed no project files; the manifest set is still only the root package.json outside fixtures and vendored material."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "At the refreshed snapshot, the repository is still one standards source with one root manifest and one set of development commands, so no nested Project exists and the scope stays intentionally empty.",
+              "explanation": "No Project was introduced during contextual work.",
               "evidence": [
-                "`package.json` at the root is the only manifest, and its scripts run every test and check.",
-                "`operations`, `scripts`, `test`, `guidance`, `discovery`, `vendor`, `docs`, `.github`, and `.agents` are standards source, tooling, fixtures, vendored material, documentation, or installed agent material, none with its own responsibility and commands."
+                "No agent edits were made after fixes."
               ],
               "additionalPaths": []
             }
@@ -2196,17 +1133,13 @@
         {
           "id": "repository-readme",
           "status": "satisfied",
-          "explanation": "The Repository README already follows the v0.3.0 Repository README guidance, which #71 applied, so no contextual change was needed.",
+          "explanation": "README.md already follows the repository README guidance; no edit was needed.",
           "changedPaths": [],
           "evidence": [
-            "The README starts with a centered title, a one-sentence description saying Repo Canon is a standards source of documentation, contribution, and agent-workflow conventions for Repository Standards, and badges.",
-            "The badges cover JavaScript, the language contributors work in, and Node.js 24, the required runtime major version; no file-format badge remains.",
-            "Installation comes first and shows how to install the Repository Standards CLI, the tool Repo Canon is used through, without a version number, and how to point it at Repo Canon with the `complete` profile.",
-            "Each of the six Features items is one line starting with a verb.",
-            "Usage links the adoption guide and shows one `outdated` example; sections follow Installation, Features, Usage, Documentation, Contributing, License.",
-            "Documentation, Contributing, and License each hold only a plain paragraph link to `docs/README.md`, `CONTRIBUTING.md`, and `LICENSE`, labeled MIT License to match the root license.",
-            "The `inspect` example names `v0.3.0`; it is a usage command rather than an install command, and the release procedure updates documents that name the latest release.",
-            "The Repository README check passed against the same file in the repository conformance test run before submission."
+            "It opens with a centered title, a one-sentence description, and JavaScript and Node.js 24 badges matching package.json's engines constraint (>=24 <25).",
+            "Sections run Installation, Features, Usage, Documentation, Contributing, License, in the guidance's relative order; Installation shows installing the Repository Standards CLI and pointing it at this source without version numbers in install commands.",
+            "Documentation, Contributing, and License each hold only their link: docs/README.md, CONTRIBUTING.md, and the MIT License in LICENSE.",
+            "The repository conformance test runs the shipped repository README check on this tree and passes."
           ]
         }
       ]

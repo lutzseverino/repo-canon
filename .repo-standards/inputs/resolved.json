@@ -44,6 +44,8 @@
             "resources": [
               "operations/lib/rendered-markdown.mjs",
               "operations/lib/local-markdown-links.mjs",
+              "operations/lib/documentation-model.mjs",
+              "discovery/draft-documentation-scope.mjs",
               "vendor/marked",
               "vendor/parse5"
             ],
@@ -72,11 +74,15 @@
           "docs/adr/0004-adopt-published-releases-of-this-source.md",
           "docs/adr/0005-require-an-open-ended-minimum-cli-version.md",
           "docs/adr/0006-keep-point-in-time-records-with-their-event.md",
+          "docs/adr/0007-keep-superseded-adrs.md",
+          "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md",
+          "docs/adr/0009-enforce-documentation-rules-as-checks.md",
           "docs/adr/README.md",
           "docs/agents/project.md",
           "docs/development/README.md",
           "docs/development/adoption-compatibility.md",
           "docs/development/documentation-check.md",
+          "docs/development/documentation-scope-drafter.md",
           "docs/development/github-label-setup.md",
           "docs/development/github-pr-integration-setup.md",
           "docs/development/issue-contract-validation.md",
@@ -100,7 +106,7 @@
       "fixes": [],
       "kind": "file",
       "target": "docs/agents/domain.md",
-      "exact": "docs/agents/domain.md"
+      "exact": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
     },
     {
       "id": "feature-request-template",
@@ -191,7 +197,7 @@
       "fixes": [],
       "kind": "file",
       "target": "docs/agents/issue-tracker.md",
-      "exact": "docs/agents/issue-tracker.md"
+      "exact": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md"
     },
     {
       "id": "marked-license",
@@ -566,7 +572,7 @@
       "fixes": [],
       "kind": "file",
       "target": "docs/agents/triage-labels.md",
-      "exact": "docs/agents/triage-labels.md"
+      "exact": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md"
     }
   ]
 }
