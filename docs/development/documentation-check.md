@@ -28,8 +28,9 @@ index; and every rendered local link, marked broken or intact. The model also
 defines the documentation rules over that structure, and the check projects the
 structure and the rule violations onto its corrections, so a new documentation
 rule reads the model rather than walking the tree again. The model exports the
-root inference, the tree walk, and the index that lists a document, so that a
-tool drafting a documentation scope uses the same definitions as the check.
+root inference, the tree walk, the index that lists a document, and the targets
+that declarations own, so that a tool drafting a documentation scope uses the
+same definitions as the check.
 
 A documentation root never lies inside another. A confirmed
 `<dir>/<category>/README.md` makes `<dir>` a root only when `<dir>` is not
@@ -64,46 +65,47 @@ the documentation model and the Project README check both build on it.
 
 ## Documentation rules
 
-The model defines four of the
-[documentation rules](../../CONTRIBUTING.md#documentation) as checks, and each
-failure names the file and the rule it breaks, in the form
-`<file> breaks the <rule> rule: <correction>`. The check reports these failures
-after its other corrections, grouped by rule in the order below and by path
-within each rule.
+The model checks four of the
+[documentation rules](../../CONTRIBUTING.md#documentation), which the
+contribution guide states. Each failure names the file and the rule it breaks,
+in the form `<file> breaks the <rule> rule: <correction>`. The check reports
+these failures after its other corrections, grouped by rule in the order below
+and by path within each rule. The model reads each rule mechanically:
 
-- Index entry form: every present documentation index, at a root or in a
-  directory under one, starts with a one-sentence purpose, the first paragraph
-  after its title. The purpose ends a sentence, and no sentence ends inside it
+- Index entry form: in every present documentation index, at a root or in a
+  directory under one, the purpose is the first paragraph after the title, a
+  leading heading of any level, or the first paragraph when there is no title.
+  It is one sentence when it ends a sentence and no sentence ends inside it
   before a capitalized word. Each item of a top-level list after the purpose is
-  one `[Title](path): description` entry: it opens with a titled link to a local
-  path, followed by a colon, a space, and a description. Other prose may follow
-  the purpose.
-- One index per document: each Markdown document under a root is listed by
-  exactly one item, in its index, which is its directory's README, or for a
-  directory README, its parent's. A root's own index is listed in no index. A
-  link to a directory lists its README, and a document is listed by the first
-  link of an item, even a malformed one. Links outside index items, such as a
-  citation in context, list nothing. The installed agents index,
-  `docs/agents/README.md`, cites the optional `docs/agents/project.md` in
-  context instead of listing it, so that document needs no item; any other
-  index still must not list it. A document whose index is missing or empty gets
-  only the correction to create or populate that index.
-- Development guide order: `docs/development/README.md` gives its purpose, then
-  a Setup and validation section, then its index. Its index is the items after
-  that section ends. A well-formed item before the end of that section that
-  lists one of its entries breaks the order; other lists inside the section,
-  such as setup steps, do not. Other roots' development indexes follow only the
-  index entry form.
-- Scope coverage: every Markdown document under a root is in the confirmed
-  documentation scope, unless another active declaration owns it. The check
-  reads each active declaration's targets from the request's `declarations`
-  field the same way the CLI derives allowed targets: a file declaration's
-  target, a repository declaration's confirmed paths and directories, and a
-  skill's `.agents/skills/<name>` directory. Repository Standards rejects a path
-  that two declarations own, so the installed exact files under `docs/agents`
-  can never be in the documentation scope and are covered by their own
-  declarations. Other files under a root, such as images, belong in the
-  confirmed scope by the discovery guidance but are not checked.
+  an entry, well formed when it opens with a titled link to another local path,
+  followed by a colon, a space, and a description. Other prose may follow the
+  purpose.
+- One index per document: this applies to each Markdown document under a root
+  except the root's own index. The first link of an index item lists its path,
+  even when the item is malformed; a link to a directory lists its README, and
+  a link into the index itself lists nothing. Links outside index items, such
+  as a citation in context, list nothing. The agents index,
+  `docs/agents/README.md`, may cite the optional `docs/agents/project.md` in
+  context instead of listing it: a link outside its entries, or text outside
+  them that names the file, as the installed agents index does. Any other index
+  still must not list it. A document whose index is missing or empty gets only
+  the correction to create or populate that index.
+- Development guide order: `docs/development/README.md` has a Setup and
+  validation heading as its first section after the title. Its index is the
+  items after that section ends; other lists inside the section, such as setup
+  steps, are not entries. A well-formed item listing one of its entries before
+  that point gets only the order correction. Other roots' development indexes
+  follow only the index entry form.
+- Scope coverage: a Markdown document under a root is covered when it is in the
+  confirmed documentation scope or another active declaration owns it. The
+  model's `declarationTargets` reads each declaration in the request's
+  `declarations` field the way the CLI derives allowed targets: a file
+  declaration's target, a repository declaration's confirmed paths and
+  directories, and a skill's `.agents/skills/<name>` directory. Repository
+  Standards rejects a path that two declarations own, so the installed exact
+  files under `docs/agents` can never be in the documentation scope and are
+  covered by their own declarations. Other files under a root, such as images,
+  belong in the confirmed scope by the discovery guidance but are not checked.
 
 These rules make a repository that passed earlier releases fail when it does
 not follow them, as
@@ -135,7 +137,9 @@ process or protocol failure as an execution error.
 The checks never edit project content. They do not establish whether a component
 is a Project, whether discovery covered every Project or migration path, or
 whether purpose, commands, configuration, content placement, and linked material
-are useful or factually correct. Review the discovery proposal and those semantic
+are useful or factually correct. Scope coverage shows only that every Markdown
+document under a confirmed documentation root is covered; it cannot find a
+documentation root that the confirmed paths do not name. Review the discovery proposal and those semantic
 questions during the complete inspection. Scope-independent fixtures exercise
 only the operation behavior, not discovery or adoption.
 

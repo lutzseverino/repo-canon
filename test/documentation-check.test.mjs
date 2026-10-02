@@ -458,6 +458,19 @@ Ask a maintainer when something is missing.
   }));
 });
 
+test('the index entry form rule accepts any heading level as the title', t => {
+  passes(check(t, {
+    ...usageIndexed,
+    'docs/usage/README.md': `## Usage
+
+This directory explains how to use the project.
+
+- [Install](install.md): prerequisites and installation.
+`,
+    'docs/usage/install.md': '# Install\n',
+  }));
+});
+
 test('the index entry form rule fails a missing or multi-sentence purpose and malformed entries', t => {
   const message = failures(check(t, {
     ...usageIndexed,
@@ -497,16 +510,19 @@ This directory explains how to use the project.
 - [Website](https://example.com/guide): the hosted guide.
 - Plain text
 - [Run](run.md):no space before the description.
+- [Usage](#usage): this index itself.
 `,
     'docs/usage/install.md': '# Install\n',
     'docs/usage/configure.md': '# Configure\n',
     'docs/usage/run.md': '# Run\n',
   }));
-  for (const item of ['Install', 'See Configure: settings\\.', 'Website: the hosted guide\\.', 'Plain text', 'Run:no space']) {
+  for (const item of ['Install', 'See Configure: settings\\.', 'Website: the hosted guide\\.', 'Plain text', 'Run:no space', 'Usage: this index itself\\.']) {
     assert.match(malformed, new RegExp(`docs/usage/README\\.md breaks the index entry form rule: write each entry as one "\\[Title\\]\\(path\\): description" item; "${item}[^"]*" is not\\.`), item);
   }
   assert.doesNotMatch(malformed, /docs\/usage\/(install|configure|run)\.md breaks the one index per document rule/,
     'a malformed item still lists the path its first link names');
+  assert.doesNotMatch(malformed, /docs\/usage\/README\.md breaks the one index per document rule/,
+    'a link into the index itself lists nothing');
 });
 
 test('the one index per document rule passes each document listed once in its own index', t => {
@@ -573,6 +589,26 @@ test('the one index per document rule accepts the installed agents index citing 
   }));
   assert.equal(listedElsewhere, 'Documentation navigation needs correction: docs/agents/project.md breaks the one index per document rule: leave it to the in-context citation in docs/agents/README.md; remove it from docs/README.md.');
 
+  const withoutCitation = failures(check(t, {
+    ...files,
+    'docs/agents/README.md': index('Agent configuration', 'This directory holds the agent configuration.', [
+      ['Issue tracker', 'issue-tracker.md', 'issue operations.'],
+      ['Triage labels', 'triage-labels.md', 'label strings.'],
+      ['Domain docs', 'domain.md', 'domain documentation.'],
+    ]),
+  }));
+  assert.equal(withoutCitation, 'Documentation navigation needs correction: docs/agents/project.md breaks the one index per document rule: list it in docs/agents/README.md.',
+    'an agents index that neither lists nor cites the project guidance does not cover it');
+
+  passes(check(t, {
+    ...files,
+    'docs/agents/README.md': `${index('Agent configuration', 'This directory holds the agent configuration.', [
+      ['Issue tracker', 'issue-tracker.md', 'issue operations.'],
+      ['Triage labels', 'triage-labels.md', 'label strings.'],
+      ['Domain docs', 'domain.md', 'domain documentation.'],
+    ])}\nRead [the project guidance](project.md) for repository constraints.\n`,
+  }), 'a link in context is a citation too');
+
   const otherAgentsDocument = failures(check(t, { ...files, 'docs/agents/notes.md': '# Notes\n' }));
   assert.equal(otherAgentsDocument, 'Documentation navigation needs correction: docs/agents/notes.md breaks the one index per document rule: list it in docs/agents/README.md.',
     'only the project guidance is cited in context');
@@ -628,8 +664,8 @@ Run \`npm test\`.
 `,
     'docs/development/testing.md': '# Testing\n',
   }));
-  assert.match(indexFirst, /docs\/development\/README\.md breaks the development guide order rule: list its entries after the Setup and validation section\./);
-  assert.match(indexFirst, /docs\/development\/testing\.md breaks the one index per document rule: list it in docs\/development\/README\.md\./);
+  assert.equal(indexFirst, 'Documentation navigation needs correction: docs/development/README.md breaks the development guide order rule: list its entries after the Setup and validation section.',
+    'an entry listed before the index gets only the order correction');
 
   const indexInside = failures(check(t, {
     ...rootDocumentation,
@@ -646,6 +682,23 @@ Run \`npm test\`.
     'docs/development/testing.md': '# Testing\n',
   }));
   assert.match(indexInside, /docs\/development\/README\.md breaks the development guide order rule: list its entries after the Setup and validation section\./);
+
+  const sectionLater = failures(check(t, {
+    ...rootDocumentation,
+    'docs/development/README.md': `# Development
+
+This directory explains how to build and validate the project.
+
+## Architecture
+
+The project has one module.
+
+## Setup and validation
+
+Run \`npm test\`.
+`,
+  }));
+  assert.equal(sectionLater, 'Documentation navigation needs correction: docs/development/README.md breaks the development guide order rule: give its purpose, then a Setup and validation section, then its index.');
 
   const purposeLater = failures(check(t, {
     ...rootDocumentation,

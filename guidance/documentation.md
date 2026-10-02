@@ -34,5 +34,5 @@ Assess documents against their actual audience and topic. Mechanical checks
 cover categories, directory READMEs, required entry points, local link targets,
 the index entry form, one index per document, the development guide's order,
 and that every Markdown document under a documentation root is in the confirmed
-scope. They do not prove correctness or usefulness, and they do not check where
-records are kept.
+scope unless another declaration, such as an exact file, owns it. They do not
+prove correctness or usefulness, and they do not check where records are kept.

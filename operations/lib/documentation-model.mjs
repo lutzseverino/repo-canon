@@ -149,6 +149,31 @@ export function documentIndex(root, document) {
   return `${directory}/README.md`;
 }
 
+// The targets that declarations own, as Repository Standards derives each
+// declaration's allowed targets: a file declaration's target, a repository
+// declaration's confirmed paths and directories, and a skill's installed
+// directory. An operation request lists every active declaration. A path that
+// one declaration owns cannot be in another's scope, so a document under a
+// documentation root that another declaration owns, such as an installed exact
+// file, is covered without being in the documentation scope. Anything that is
+// not a declaration owns nothing.
+export function declarationTargets(declarations) {
+  const paths = new Set();
+  const directories = new Set();
+  const strings = values => (Array.isArray(values) ? values.filter(value => typeof value === 'string') : []);
+  for (const declaration of Array.isArray(declarations) ? declarations : []) {
+    if (declaration?.kind === 'file' && typeof declaration.target === 'string') {
+      paths.add(declaration.target);
+    } else if (declaration?.kind === 'repository') {
+      for (const path of strings(declaration.targets?.paths)) paths.add(path);
+      for (const directory of strings(declaration.targets?.directories)) directories.add(directory);
+    } else if (declaration?.kind === 'skill' && typeof declaration.name === 'string') {
+      directories.add(`.agents/skills/${declaration.name}`);
+    }
+  }
+  return { paths: [...paths].sort(), directories: [...directories].sort() };
+}
+
 // Whether a path is one of the declared targets: an explicit path, or a path
 // inside a declared directory.
 function isDeclared(path, declaredTargets) {
@@ -181,14 +206,17 @@ function listItems(blocks) {
 }
 
 // An index item. Its first link names the listed path, a directory meaning
-// its README. The item is well formed when it is `[Title](path): description`:
-// it opens with a titled local link, followed by a colon and a description.
+// its README; a link into the index itself, such as to one of its headings,
+// lists nothing. The item is well formed when it is
+// `[Title](path): description`: it opens with a titled link to another local
+// path, followed by a colon and a description.
 function indexItem(indexPath, item, directories) {
   const [link] = item.links;
   let path = link ? resolvedLocalPath(indexPath, link.target) : null;
   if (typeof path === 'string') {
     path = path.replace(/\/+$/, '');
     if (directories.has(path)) path = `${path}/README.md`;
+    if (path === indexPath) path = null;
   } else {
     path = null;
   }
@@ -202,13 +230,16 @@ function indexItem(indexPath, item, directories) {
 }
 
 // The rendered structure of a present documentation index: its purpose, the
-// first paragraph after its title, and the items of its top-level lists after
-// that purpose. The development guide's index follows its Setup and validation
-// section, so only items after that section are its index; the items before
-// it, and whether it has the section, are recorded for its order.
+// first paragraph after its title (a leading heading), the items of its
+// top-level lists after that purpose, and its context, the text and linked
+// paths of every block other than those lists. The development guide's index
+// follows its Setup and validation section, so only items after that section
+// are its index. For its order, the guide also records whether that section is
+// its first section after the title (`first`), a later one (`later`), or absent
+// (`missing`), and the items before its index.
 function indexStructure(path, document, directories, isDevelopmentGuide) {
   const { blocks } = document;
-  let start = blocks[0]?.tag === 'h1' ? 1 : 0;
+  let start = blocks.length > 0 && headingLevel(blocks[0]) !== null ? 1 : 0;
   const purpose = blocks[start]?.tag === 'p' ? blocks[start] : null;
   if (purpose) start += 1;
   const structure = {
@@ -217,9 +248,10 @@ function indexStructure(path, document, directories, isDevelopmentGuide) {
   };
   let indexStart = start;
   if (isDevelopmentGuide) {
-    const section = blocks.findIndex(block => (
-      headingLevel(block) !== null && foldedText(block.text) === setupAndValidation
+    const section = blocks.findIndex((block, index) => (
+      index >= start && headingLevel(block) !== null && foldedText(block.text) === setupAndValidation
     ));
+    const firstSection = blocks.findIndex((block, index) => index >= start && headingLevel(block) !== null);
     if (section >= 0) {
       const level = headingLevel(blocks[section]);
       const next = blocks.findIndex((block, index) => (
@@ -227,11 +259,21 @@ function indexStructure(path, document, directories, isDevelopmentGuide) {
       ));
       indexStart = next < 0 ? blocks.length : next;
     }
-    structure.setupAndValidation = section >= 0;
+    if (section < 0) structure.setupAndValidation = 'missing';
+    else structure.setupAndValidation = section === firstSection ? 'first' : 'later';
     structure.itemsBeforeIndex = listItems(blocks.slice(start, indexStart))
       .map(item => indexItem(path, item, directories));
   }
   structure.items = listItems(blocks.slice(indexStart)).map(item => indexItem(path, item, directories));
+  const contextBlocks = blocks.filter((block, index) => (
+    index < indexStart || (block.tag !== 'ul' && block.tag !== 'ol')
+  ));
+  structure.context = {
+    text: contextBlocks.map(block => block.text).join('\n'),
+    paths: [...new Set(contextBlocks.flatMap(block => block.links)
+      .map(link => resolvedLocalPath(path, link.target))
+      .filter(linked => typeof linked === 'string'))].sort(),
+  };
   return structure;
 }
 
@@ -349,6 +391,15 @@ export function documentationModel(projectRoot, confirmedPaths, {
   };
 }
 
+// Whether an index cites a document in context: a link outside its entries
+// names the document, or its context text names the document's file.
+function citesInContext(structure, document) {
+  if (!structure) return false;
+  const fileName = document.slice(document.lastIndexOf('/') + 1);
+  const named = new RegExp(`(^|[^\\w.-])${fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w/-])`);
+  return structure.context.paths.includes(document) || named.test(structure.context.text);
+}
+
 function itemLabel(item) {
   const [line] = item.text.split('\n');
   return line.length > 80 ? `${line.slice(0, 79)}\u2026` : line;
@@ -381,6 +432,10 @@ export function documentationRuleViolations(model) {
     }
   }
 
+  const guide = indexes.get(developmentGuide);
+  const listedBeforeIndex = new Set((guide?.itemsBeforeIndex ?? [])
+    .filter(item => item.wellFormed)
+    .map(item => item.path));
   const listings = new Map();
   for (const path of sortedIndexes) {
     for (const item of indexes.get(path).items) {
@@ -393,9 +448,11 @@ export function documentationRuleViolations(model) {
   for (const member of model.members) {
     if (member.index === null) continue;
     const listing = listings.get(member.path) ?? [];
-    const citedInContext = member.path === projectGuidance && member.index === agentsIndex;
+    const citedInContext = member.path === projectGuidance && member.index === agentsIndex
+      && citesInContext(indexes.get(agentsIndex), projectGuidance);
     const ownListings = listing.filter(path => path === member.index).length;
-    if (indexes.has(member.index) && ownListings === 0 && !citedInContext) {
+    const listedTooEarly = member.index === developmentGuide && listedBeforeIndex.has(member.path);
+    if (indexes.has(member.index) && ownListings === 0 && !citedInContext && !listedTooEarly) {
       violation(documentationRules.oneIndex, member.path, `list it in ${member.index}.`);
     } else if (ownListings > 1) {
       violation(documentationRules.oneIndex, member.path, `list it once in ${member.index}.`);
@@ -407,17 +464,14 @@ export function documentationRuleViolations(model) {
     }
   }
 
-  const guide = indexes.get(developmentGuide);
   if (guide) {
-    if (!guide.setupAndValidation) {
+    if (guide.setupAndValidation !== 'first') {
       violation(
         documentationRules.developmentGuideOrder,
         guide.path,
         'give its purpose, then a Setup and validation section, then its index.',
       );
-    } else if (guide.itemsBeforeIndex.some(item => item.wellFormed && model.members.some(member => (
-      member.path === item.path && member.index === guide.path
-    )))) {
+    } else if (model.members.some(member => member.index === guide.path && listedBeforeIndex.has(member.path))) {
       violation(
         documentationRules.developmentGuideOrder,
         guide.path,

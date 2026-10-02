@@ -3,6 +3,7 @@ import { mkdirSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import {
+  declarationTargets,
   documentationModel,
   documentationRuleViolations,
   documentationRules,
@@ -270,6 +271,21 @@ test('resolves each rendered local link and marks it broken or intact', t => {
   ]);
 });
 
+test('derives the targets that declarations own as the CLI derives allowed targets', () => {
+  assert.deepEqual(declarationTargets([
+    { id: 'agents-index', kind: 'file', target: 'docs/agents/README.md', exact: 'docs/agents/README.md' },
+    { id: 'readme', kind: 'file', target: 'README.md', guidance: 'guidance/repository-readme.md' },
+    { id: 'documentation', kind: 'repository', guidance: 'g.md', targets: { paths: ['docs/README.md', 7], directories: ['docs/generated'] } },
+    { id: 'skill-tdd', kind: 'skill', name: 'tdd', source: 'vendor/tdd' },
+    { id: 'unknown', kind: 'other', target: 'ignored.md' },
+    null,
+  ]), {
+    paths: ['README.md', 'docs/README.md', 'docs/agents/README.md'],
+    directories: ['.agents/skills/tdd', 'docs/generated'],
+  });
+  assert.deepEqual(declarationTargets(undefined), { paths: [], directories: [] });
+});
+
 test('names the index that lists each document under a documentation root', () => {
   assert.equal(documentIndex('docs', 'docs/README.md'), null, 'a root index is listed in no index');
   assert.equal(documentIndex('docs', 'docs/usage/README.md'), 'docs/README.md');
@@ -341,11 +357,12 @@ This directory explains development.
         { text: 'See Usage: again.', target: 'usage/README.md', path: 'docs/usage/README.md', wellFormed: false },
         { text: 'Website: external.', target: 'https://example.com', path: null, wellFormed: false },
       ],
+      context: { text: 'Documentation\nThis directory maps the documentation. It has two sentences.', paths: [] },
     },
     {
       path: 'docs/development/README.md',
       purpose: { text: 'This directory explains development.', oneSentence: true },
-      setupAndValidation: true,
+      setupAndValidation: 'first',
       itemsBeforeIndex: [
         { text: 'Early: before the section.', target: 'early.md', path: 'docs/development/early.md', wellFormed: true },
         { text: 'Inside: inside the section.', target: 'inside.md', path: 'docs/development/inside.md', wellFormed: true },
@@ -353,6 +370,10 @@ This directory explains development.
       items: [
         { text: 'Late: after the section.', target: 'late.md', path: 'docs/development/late.md', wellFormed: true },
       ],
+      context: {
+        text: 'Development\nThis directory explains development.\nEarly: before the section.\nSetup and validation\nInside: inside the section.\nDocuments',
+        paths: ['docs/development/early.md', 'docs/development/inside.md'],
+      },
     },
   ], 'an empty index records no structure');
 });
