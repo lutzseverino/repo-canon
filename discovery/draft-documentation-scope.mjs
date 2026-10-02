@@ -246,8 +246,9 @@ function manifestDeclarations() {
       else unreadable(id);
     } else if (deeper.length === 0 && targetFields.includes(field)) {
       // A missing value, a block scalar, an anchor, alias, or tag, a flow
-      // collection, or a quoted value the drafter does not decode.
-      if (value == null || /^[-?:,[\]{}&*!|>%@`]/.test(entry[3])) unreadable(id);
+      // collection, or a quoted value the drafter does not decode. `-`, `?`,
+      // and `:` are indicators only before whitespace.
+      if (value == null || /^(?:[,[\]{}&*!|>%@`]|[-?:](?:\s|$))/.test(entry[3])) unreadable(id);
       readField = { indent, id };
       const declaration = declarations.get(id);
       if (field === 'exclude') declaration.exclude = value === 'true';

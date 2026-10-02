@@ -700,6 +700,7 @@ requires:
 
 test('reads the declarations that the selected profile resolves to', t => {
   const files = {
+    '-notes.md': '# Notes\n',
     'docs/README.md': '# Documentation\n',
     'docs/development/README.md': developmentGuide,
     'docs/usage/README.md': '# Usage\n',
@@ -760,10 +761,15 @@ profiles:
         kind: file
         target: 'docs/usage/added''s.md' # added
         exact: added.md
+      notes:
+        kind: file
+        target: -notes.md
+        exact: notes.md
 `);
   const fromSource = draft(project.root, [], sourceDrafter);
   assert.equal(fromSource.status, 0, fromSource.stderr);
   assert.deepEqual(fromSource.proposal.declarations[0].candidates, expected);
+  assert.deepEqual(fromSource.proposal.declarations[0].unresolved, []);
 
   // The retained manifest of the same selection.
   const retainedDrafter = retainInputs(t, project.root, `${header}defaults:
@@ -779,6 +785,12 @@ profiles:
         target: docs/usage/added's.md
         exact: added.md
 ${documentationDeclaration(6)}
+      notes:
+        checks: []
+        fixes: []
+        kind: file
+        target: -notes.md
+        exact: notes.md
       usage-guide:
         checks: []
         fixes: []
