@@ -372,6 +372,7 @@ test('asks for a category when a decided root has none', t => {
     'docs/development/README.md': developmentGuide,
     'packages/app/handbook/notes.md': '# Notes\n',
     'packages/app/handbook/guides/first-run.md': '# First run\n',
+    'packages/app/handbook/guides/usage/tips.md': '# Tips\n',
   }, ['--root', 'packages/app/handbook']);
 
   assert.deepEqual(included(entry), [
@@ -380,6 +381,8 @@ test('asks for a category when a decided root has none', t => {
     'packages/app/handbook/README.md',
     'packages/app/handbook/guides/README.md',
     'packages/app/handbook/guides/first-run.md',
+    'packages/app/handbook/guides/usage/README.md',
+    'packages/app/handbook/guides/usage/tips.md',
     'packages/app/handbook/notes.md',
   ]);
   assert.deepEqual(entry.unresolved, [

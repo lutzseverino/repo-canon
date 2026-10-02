@@ -374,9 +374,9 @@ function draftGlossaries(draft, context, roots, model) {
 // which. Their files are already included as move sources, and a moved
 // directory needs no new index where it is now. A decided root without a
 // category is ambiguous to the check, which then also reads the indexes inside
-// it as candidate roots; only the decided root is asked about.
+// it as candidate roots; only the decided roots are asked about.
 function askStrayEntries(draft, model, roots) {
-  for (const root of model.roots) {
+  for (const root of model.roots.filter(candidate => roots.includes(candidate.path))) {
     for (const entry of root.strayEntries) {
       if (draft.isAsked(entry)) continue;
       draft.ask(entry, questions.stray(entry, root.path));

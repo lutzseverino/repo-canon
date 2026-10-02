@@ -60,7 +60,8 @@ another is asked about only if the outer one is not a root. Markdown files
 outside the roots are asked about in one question per top-level directory,
 which also covers the documents of a candidate root that is not one. A decided
 root without a category is asked about, but not the directories inside it,
-which the check then also reads as candidate roots. A stray directory's missing
+which the check then also reads as candidate roots or roots, nor their stray
+entries. A stray directory's missing
 indexes are not drafted, because its contents move.
 
 ## Other declarations' targets
