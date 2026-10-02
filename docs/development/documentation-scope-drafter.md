@@ -14,7 +14,10 @@ node discovery/draft-documentation-scope.mjs [--project <path>] [--root <path>].
 ```
 
 The agent runs it with Node.js 24 from the standards source at the selected
-commit. `--project` names a path in the adopting repository and defaults to the
+commit, or, when that source is unavailable, from the inputs the adopting
+repository retains, as
+`.repo-standards/inputs/source/discovery/draft-documentation-scope.mjs`.
+`--project` names a path in the adopting repository and defaults to the
 current directory; like Repository Standards, the drafter drafts the top level
 of the Git working tree that holds it. Each `--root` names a directory that the
 agent decided is a documentation root, besides `docs`, which always is one. It
@@ -29,8 +32,10 @@ to standard output with exit status 0. The proposal has one entry, for the
 and evidence paths, its coverage explanation, and its unresolved questions.
 Candidates are sorted by path and questions by text, so the same tree always
 gives the same bytes. An unknown argument, an invalid root, a project that is
-not a Git repository, or an unreadable `standards.yaml` writes the reason to
-standard error with exit status 1 and no proposal.
+not a Git repository, or a standards manifest that is missing, unreadable, or
+in a form the drafter does not read writes the reason to standard error with
+exit status 1 and no proposal; for a missing manifest, it names each path the
+drafter tried.
 
 ## What the rules decide
 
@@ -68,16 +73,31 @@ indexes are not drafted, because its contents move.
 ## Other declarations' targets
 
 The drafter runs outside the CLI, so no operation request lists the other
-active declarations. It reads them from `standards.yaml` beside it in the
-source at the selected commit: each default declaration's `kind`, `target`, and
-`name`, which the source's one `complete` profile selects unchanged. A file
-declaration owns its target and a skill its `.agents/skills/<name>` directory.
-The repository declarations with discovery own paths that only their own
-proposals name. The drafter also leaves out the paths Repository Standards
+active declarations. It reads them from the manifest of the standards it ships
+with, taking each declaration's `kind`, `target`, and `name`:
+
+- From the source, it reads `standards.yaml` beside it at the selected commit,
+  whose one `complete` profile selects every default declaration unchanged.
+- From the retained inputs, where no `standards.yaml` lies beside it in
+  `.repo-standards/inputs/source`, it reads
+  `.repo-standards/inputs/standards.yaml`. Repository Standards retains that
+  manifest resolved to the selected profile: its defaults are empty and the
+  profile holds every resolved declaration.
+
+Either way it resolves the declarations as Repository Standards does: a
+profile's declaration replaces the default of its ID, adds a new one, or, with
+`exclude: true`, removes it. The retained manifest holds what the source's
+resolves to, so both runs draft the same scope for the same selection. The
+drafter reads the manifest's block mappings by indentation rather than as YAML
+in full. It fails rather than guess when the manifest has more or fewer than
+one profile, when its declarations or one of them take a form it cannot read,
+or when it has no `documentation` repository declaration.
+
+A file declaration owns its target and a skill its `.agents/skills/<name>`
+directory. The repository declarations with discovery own paths that only their
+own proposals name. The drafter also leaves out the paths Repository Standards
 reserves: `.repo-standards` and the `adopt-standards` and `author-standards`
-system skills. Because the manifest is read from the source rather than from
-the retained inputs, the agent runs the drafter from the source, never from
-`.repo-standards/inputs/source`.
+system skills.
 
 ## Evidence
 
@@ -126,5 +146,7 @@ node --test test/documentation-scope-drafter.test.mjs
 They run the drafter as a process over fixture repositories and compare the
 whole proposal, check its shape against the `repo-standards/scope/v2` rules,
 cover the unresolved questions and process errors, run it from the retained
-resources with the source manifest, and show that the drafted scope of a
-conforming fixture, and of this repository, passes the documentation check.
+inputs of an adopted fixture repository and compare its proposal with the
+source's, resolve a profile's declarations from both manifest forms, and show
+that the drafted scope of a conforming fixture, and of this repository, passes
+the documentation check.
