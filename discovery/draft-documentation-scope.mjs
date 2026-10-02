@@ -164,9 +164,10 @@ function scalar(value) {
 // that decide their targets. As Repository Standards resolves them, a profile
 // declaration replaces the default of its ID, adds a new one, or, with
 // `exclude: true`, removes it. The source's one profile selects every default
-// declaration unchanged; the retained manifest has empty defaults and the
-// selected profile's resolved declarations. The manifest's block mappings are
-// read by indentation, and only the key paths below matter:
+// declaration unchanged. The retained manifest holds the selected profile
+// alone; Repository Standards 4.0.0 writes it with empty defaults and the
+// profile's resolved declarations. The manifest's block mappings are read by
+// indentation, and only the key paths below matter:
 // `defaults.declarations.<id>.<field>` and
 // `profiles.<profile>.declarations.<id>.<field>`.
 function manifestDeclarations() {
