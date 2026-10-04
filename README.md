@@ -19,13 +19,13 @@ repo-standards --version
 ```
 
 Point the CLI at Repo Canon from the adopting repository by selecting the
-[`v0.4.1` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.4.1)
+[`v0.5.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.0)
 and the `complete` profile. The report is read-only and authorizes nothing:
 
 ```sh
 repo-standards inspect \
   --source https://github.com/lutzseverino/repo-canon \
-  --standards-version v0.4.1 --profile complete \
+  --standards-version v0.5.0 --profile complete \
   --project /path/to/adopting-project --json
 ```
 
