@@ -71,7 +71,7 @@ repeated.
   run's uncommitted changes, to an opened pull request with its checks
   reported. It sequences the rules of `CONTRIBUTING.md` and the pull request
   template without restating them, and chooses the adoption record, which
-  those rules allow, as an adoption run's description. It has no delivery
+  those rules allow, as a non-breaking adoption run's description. It has no delivery
   file: the required checks live in the project's development guide, project
   constraints in the optional `docs/agents/project.md`, and the adoption record
   in the pinned CLI's `status --summary`, so a delivery file would only copy

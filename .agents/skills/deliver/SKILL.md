@@ -21,23 +21,29 @@ Read these before acting, and keep them as the authority for every later step:
 - `docs/agents/project.md`, when present: project constraints, such as branch
   naming or a base branch, that supplement the shared rules.
 
-Done when you can name the required checks, the template's sections, and any
-project constraint on branches.
+Resolve the **delivery base**: the base branch `docs/agents/project.md` names,
+else the default branch. Every later step branches from, compares with, and
+opens the pull request against `origin/<base>`.
+
+Done when you can name the required checks, the template's sections, any
+project constraint on branches, and the delivery base.
 
 ## 2. Establish the work and its link
 
-The work is what the maintainer names, or else everything that differs from the
-remote default branch: commits on the current branch and uncommitted changes.
+The work is what the maintainer names, or else everything that differs from
+`origin/<base>`: commits on the current branch and uncommitted changes.
 Ask when the tree mixes unrelated changes and the maintainer has not said which
 belong.
 
 The work is an **adoption run** when its uncommitted changes include
 `.repo-standards/`. Read `status --json` with the project's pinned
-`.repo-standards/runtime/node_modules/.bin/repo-standards`. When `active` is
-not `null`, the run is unfinished: stop, and tell the maintainer to finish it
-with `adopt-standards`. Otherwise the run is complete, and its record is the
-output of `status --summary`. The record describes only the run, so its pull
-request holds only the run.
+`.repo-standards/runtime/node_modules/.bin/repo-standards`. Deliver it only when
+`active` is `null`, `lastComplete` is present, there is no `stateError`, and
+every `changeSet` path is among the uncommitted changes; otherwise stop, and
+tell the maintainer to finish or recover the run with `adopt-standards`. The
+run's work is its `changeSet` paths and `.repo-standards/`, and its record is
+the output of `status --summary`. The record describes only the run, so its
+pull request holds only the run.
 
 Find the link the pull request rules require: the related issue, from the
 maintainer, the branch, or the commits, read with its comments; or, for an
@@ -50,20 +56,20 @@ record are known.
 ## 3. Branch
 
 Put the work on a branch that holds only this work, created from the up-to-date
-remote default branch when the current branch is the default branch or carries
-other work. Carry the work's uncommitted changes onto it unchanged, and leave
+`origin/<base>` when the current branch is the base branch or carries other
+work. Carry the work's uncommitted changes onto it unchanged, and leave
 any unrelated uncommitted changes uncommitted.
 
-Done when `git log origin/<default>..HEAD` shows only this work's commits.
+Done when `git log origin/<base>..HEAD` shows only this work's commits.
 
 ## 4. Commit and title
 
 Write the title as the rules for titles and commits require. An adoption run's
 title names the selected source version and CLI from the record's Selection
-table, and takes no breaking-change marker, because the record carries no
-impact or migration explanation. Commit the work with the title as the commit
-subject, staging only the work's paths. For an adoption run, those are the
-record's changed paths and `.repo-standards/`.
+table. It is not breaking by default, because an adoption changes the adopted
+conventions rather than the project's interface; mark it breaking only when the
+maintainer judges the run breaking for the project. Commit the work with the
+title as the commit subject, staging only the work's paths.
 
 Done when `git status` shows no part of the work left uncommitted.
 
@@ -74,7 +80,7 @@ when it lacks them, stop and report. Run every required check from the
 development guide on the committed work, plus the focused tests for the changed
 behavior. A check that reads a diff, such as `git diff --check`, sees only
 unstaged changes in its bare form: run it over the pull request's whole change
-instead, against `origin/<default>...HEAD`. Record each command and its outcome
+instead, against `origin/<base>...HEAD`. Record each command and its outcome
 as you run it. Fix a failure that the work caused, within the work's scope,
 commit the fix, and run the checks again; stop and report any other failure.
 
@@ -84,19 +90,21 @@ recorded.
 ## 6. Describe
 
 Write the description from the template, as the pull request rules require.
-For an adoption run, use the record as the description instead, as those rules
-allow: the `status --summary` output unchanged, starting with its
-`# Repository Standards adoption record` heading.
+For a non-breaking adoption run, use the record as the description instead, as
+those rules allow. A breaking adoption run uses the template, so that it can
+explain the impact and migration.
 
-Done when every template section is present in its order, and the Validation
-section lists only checks that actually ran and explains any required check
-that did not.
+Done, for a template description, when every template section is present in
+its order, and the Validation section lists only checks that actually ran and
+explains any required check that did not. Done, for an adoption record, when
+the description is the `status --summary` output byte for byte, its first line
+the `# Repository Standards adoption record` heading.
 
 ## 7. Open and report
 
-Push the branch and open the pull request against the default branch with the
-title and description. For an adoption run, post the step 5 outcomes as one
-pull request comment, because the record leaves them out.
+Push the branch and open the pull request against the delivery base with the
+title and description. When the record is the description, post the step 5
+outcomes as one pull request comment, because the record leaves them out.
 
 Wait for the pull request's checks to finish, for example with
 `gh pr checks <number> --watch`. When no check has registered yet, wait briefly
