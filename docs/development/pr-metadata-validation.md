@@ -90,7 +90,7 @@ npm run check
 
 The focused fixtures include an installed-layout execution containing only the
 validator, shared runtime, and declared parser resources. The project has no
-compilation step or external package dependencies. CI runs the complete Node
+compilation step or external runtime dependencies. CI runs the complete Node
 test suite for pull requests and pushes to `main`.
 
 The shared runtime reads Markdown structure with the repository's pinned
