@@ -56,22 +56,7 @@ any unrelated uncommitted changes uncommitted.
 
 Done when `git log origin/<default>..HEAD` shows only this work's commits.
 
-## 4. Validate
-
-Check that the changed behavior has the tests the validation rules ask for;
-when it lacks them, stop and report. Run every required check from the
-development guide, plus the focused tests for the changed behavior. A check
-that reads a diff, such as `git diff --check`, sees only unstaged changes in
-its bare form: run it over the pull request's whole change instead, against
-`origin/<default>...HEAD` once step 5 has committed the work. Record each
-command and its outcome as you run it. Fix a failure that the work caused,
-within the work's scope, and run the checks again; stop and report any other
-failure.
-
-Done when every required check has run on the final content and each outcome is
-recorded.
-
-## 5. Commit and title
+## 4. Commit and title
 
 Write the title as the rules for titles and commits require. An adoption run's
 title names the selected source version and CLI from the record's Selection
@@ -80,8 +65,20 @@ impact or migration explanation. Commit the work with the title as the commit
 subject, staging only the work's paths. For an adoption run, those are the
 record's changed paths and `.repo-standards/`.
 
-Done when `git status` shows no part of the work left uncommitted, and each
-diff-reading check has run against `origin/<default>...HEAD` with its outcome
+Done when `git status` shows no part of the work left uncommitted.
+
+## 5. Validate
+
+Check that the changed behavior has the tests the validation rules ask for;
+when it lacks them, stop and report. Run every required check from the
+development guide on the committed work, plus the focused tests for the changed
+behavior. A check that reads a diff, such as `git diff --check`, sees only
+unstaged changes in its bare form: run it over the pull request's whole change
+instead, against `origin/<default>...HEAD`. Record each command and its outcome
+as you run it. Fix a failure that the work caused, within the work's scope,
+commit the fix, and run the checks again; stop and report any other failure.
+
+Done when every required check has run on the final commit and each outcome is
 recorded.
 
 ## 6. Describe
@@ -98,7 +95,7 @@ that did not.
 ## 7. Open and report
 
 Push the branch and open the pull request against the default branch with the
-title and description. For an adoption run, post the step 4 outcomes as one
+title and description. For an adoption run, post the step 5 outcomes as one
 pull request comment, because the record leaves them out.
 
 Wait for the pull request's checks to finish, for example with
