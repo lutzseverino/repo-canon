@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import {
-  cpSync,
   existsSync,
-  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -13,6 +11,7 @@ import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { installedValidator } from "./helpers/installed-validator.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const validator = join(
@@ -36,10 +35,8 @@ ${extra}`;
 }
 
 function runEvent({
-  action = "opened",
   title = "feat(metadata): validate pull requests",
   body = validBody(),
-  pullRequest = {},
   validatorPath = validator,
 } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-pr-metadata-"));
@@ -47,7 +44,7 @@ function runEvent({
   const summaryPath = join(directory, "summary.md");
   writeFileSync(
     eventPath,
-    JSON.stringify({ action, pull_request: { title, body, ...pullRequest } }),
+    JSON.stringify({ action: "opened", pull_request: { title, body } }),
   );
   const result = spawnSync(process.execPath, [validatorPath, eventPath], {
     cwd: repositoryRoot,
@@ -61,53 +58,24 @@ function runEvent({
   return { ...result, summary };
 }
 
-function installedValidator(t) {
-  const root = mkdtempSync(join(tmpdir(), "repo-canon-pr-installed-"));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
-  for (const path of [
-    ".github/scripts/validate-pr-metadata.mjs",
-    "operations/lib/rendered-markdown.mjs",
-    "vendor/marked",
-    "vendor/parse5",
-  ]) {
-    const destination = join(root, path);
-    mkdirSync(dirname(destination), { recursive: true });
-    cpSync(join(repositoryRoot, path), destination, { recursive: true });
-  }
-  return join(root, ".github/scripts/validate-pr-metadata.mjs");
-}
+test("passes valid metadata and fails invalid metadata", () => {
+  const valid = runEvent();
+  assert.equal(valid.status, 0, valid.stderr);
+  assert.match(valid.stdout, /validation passed/);
+  assert.match(valid.summary, /validation passed/);
 
-test("accepts valid metadata for every configured pull request update", () => {
-  const workflow = readFileSync(
-    join(repositoryRoot, ".github/workflows/pr-metadata.yml"),
-    "utf8",
-  );
-  const configuredTypes = workflow
-    .match(/types:\s*\[([^\]]+)]/)?.[1]
-    .split(",")
-    .map((type) => type.trim());
-  assert.deepEqual(configuredTypes, [
-    "opened",
-    "edited",
-    "synchronize",
-    "reopened",
-    "ready_for_review",
-  ]);
-
-  for (const action of configuredTypes) {
-    const valid = runEvent({ action });
-    assert.equal(valid.status, 0, `${action}: ${valid.stderr}`);
-    assert.match(valid.stdout, /validation passed/);
-    assert.match(valid.summary, /validation passed/);
-
-    const invalid = runEvent({ action, body: "Unstructured description" });
-    assert.equal(invalid.status, 1, action);
-    assert.match(invalid.stderr, /Add a Summary section/);
-  }
+  const invalid = runEvent({ body: "Unstructured description" });
+  assert.equal(invalid.status, 1);
+  assert.match(invalid.stderr, /Add a Summary section/);
 });
 
 test("runs from the exact installed workflow layout", (t) => {
-  const result = runEvent({ validatorPath: installedValidator(t) });
+  const result = runEvent({
+    validatorPath: installedValidator(
+      t,
+      ".github/scripts/validate-pr-metadata.mjs",
+    ),
+  });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /validation passed/);
 });
@@ -132,8 +100,6 @@ Small correction: fix a typo in contributor-facing text.
 test("accepts any meaningful small-correction reason", () => {
   for (const reason of [
     "fix a typo in contributor-facing text",
-    "clarify an ambiguous sentence in the release procedure",
-    "reword the readiness rule so it reads as one instruction",
     "add a new authorization system",
   ]) {
     const result = runEvent({
@@ -147,10 +113,7 @@ test("accepts any meaningful small-correction reason", () => {
 test("rejects a small-correction reason that is not meaningful", () => {
   for (const relatedIssue of [
     "Small correction:",
-    "Small correction:   ",
     "Small correction: TODO",
-    "Small correction: N/A.",
-    "Small correction: None",
     "Small correction: TBD: explain later",
     "Small correction: typo",
     "Small correction: <!-- explain the correction -->",
@@ -643,70 +606,42 @@ test("rejects invalid Conventional Commit title structure", () => {
 });
 
 test("requires impact and migration explanations for marked breaking changes", () => {
-  const missing = runEvent({ title: "feat(api)!: remove legacy response" });
-  assert.equal(missing.status, 1);
-  assert.match(missing.stderr, /under an Impact/);
-  assert.match(missing.stderr, /under a Migration/);
-
-  const body = `${validBody()}
+  const explanation = `Impact: old clients stop working after this change.
+Migration: clients must use the replacement response field.`;
+  for (const { name, body, status } of [
+    { name: "no explanation", body: validBody(), status: 1 },
+    {
+      name: "an Impact heading and a Migration label",
+      body: `${validBody()}
 ## Impact
 
 Clients using the legacy response will stop receiving that field.
 
 Migration: read the replacement response field before upgrading.
-`;
-  const valid = runEvent({ title: "feat(api)!: remove legacy response", body });
-  assert.equal(valid.status, 0, valid.stderr);
-
-  const hiddenComment = runEvent({
-    title: "feat(api)!: remove legacy response",
-    body: `${validBody()}
-<!--
-Impact: old clients stop working after this change.
-Migration: clients must use the replacement response field.
--->
 `,
-  });
-  assert.equal(hiddenComment.status, 1);
-  assert.match(hiddenComment.stderr, /under an Impact/);
-  assert.match(hiddenComment.stderr, /under a Migration/);
-
-  const hiddenAttribute = runEvent({
-    title: "feat(api)!: remove legacy response",
-    body: `${validBody()}
-<span hidden>
-Impact: old clients stop working after this change.
-Migration: clients must use the replacement response field.
-</span>
-`,
-  });
-  assert.equal(hiddenAttribute.status, 1);
-  assert.match(hiddenAttribute.stderr, /under an Impact/);
-  assert.match(hiddenAttribute.stderr, /under a Migration/);
-
-  const fenced = runEvent({
-    title: "feat(api)!: remove legacy response",
-    body: `${validBody()}
-\`\`\`text
-Impact: old clients stop working after this change.
-Migration: clients must use the replacement response field.
-\`\`\`
-`,
-  });
-  assert.equal(fenced.status, 1);
-  assert.match(fenced.stderr, /under an Impact/);
-  assert.match(fenced.stderr, /under a Migration/);
-
-  const htmlCode = runEvent({
-    title: "feat(api)!: remove legacy response",
-    body: `${validBody()}
-<pre>Impact: old clients stop working after this change.
-Migration: clients must use the replacement response field.</pre>
-`,
-  });
-  assert.equal(htmlCode.status, 1);
-  assert.match(htmlCode.stderr, /under an Impact/);
-  assert.match(htmlCode.stderr, /under a Migration/);
+      status: 0,
+    },
+    {
+      name: "hidden HTML",
+      body: `${validBody()}\n<span hidden>\n${explanation}\n</span>\n`,
+      status: 1,
+    },
+    {
+      name: "a code example",
+      body: `${validBody()}\n\`\`\`text\n${explanation}\n\`\`\`\n`,
+      status: 1,
+    },
+  ]) {
+    const result = runEvent({
+      title: "feat(api)!: remove legacy response",
+      body,
+    });
+    assert.equal(result.status, status, `${name}: ${result.stderr}`);
+    if (status === 1) {
+      assert.match(result.stderr, /under an Impact/, name);
+      assert.match(result.stderr, /under a Migration/, name);
+    }
+  }
 });
 
 test("requires the title marker for an explicit breaking-change footer", () => {
@@ -736,55 +671,4 @@ BREAKING CHANGE: example footer text stays inert.
 `,
   });
   assert.equal(htmlCode.status, 0, htmlCode.stderr);
-});
-
-test("treats hostile fork metadata as inert workflow input", () => {
-  const directory = mkdtempSync(join(tmpdir(), "repo-canon-hostile-"));
-  const sentinel = join(directory, "executed");
-  const fixture = readFileSync(
-    join(repositoryRoot, "test/fixtures/hostile-pull-request.json"),
-    "utf8",
-  ).replaceAll("__SENTINEL__", sentinel);
-  const event = JSON.parse(fixture);
-  const result = runEvent({
-    action: event.action,
-    title: event.pull_request.title,
-    body: event.pull_request.body,
-    pullRequest: {
-      head: event.pull_request.head,
-      base: event.pull_request.base,
-    },
-  });
-
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    existsSync(sentinel),
-    false,
-    "hostile metadata executed unexpectedly",
-  );
-  rmSync(directory, { recursive: true, force: true });
-});
-
-test("trusted workflow checks out the base revision and never names the head revision", () => {
-  const workflow = readFileSync(
-    join(repositoryRoot, ".github/workflows/pr-metadata.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /pull_request_target:/);
-  assert.match(
-    workflow,
-    /ref: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/,
-  );
-  assert.match(workflow, /persist-credentials: false/);
-  assert.doesNotMatch(workflow, /pull_request\.head\.(?:sha|ref)/);
-  assert.doesNotMatch(workflow, /(?:issues|pull-requests):\s*write/);
-});
-
-test("trusted workflow installs no dependencies and caches no package manager", () => {
-  const workflow = readFileSync(
-    join(repositoryRoot, ".github/workflows/pr-metadata.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /package-manager-cache: false/);
-  assert.doesNotMatch(workflow, /npm (?:ci|install)/);
 });

@@ -64,11 +64,12 @@ The workflow uses `pull_request_target` so GitHub loads its definition from the
 base repository. It checks out the pull request's base commit explicitly, does
 not persist credentials, and only grants `contents: read` to its token. The
 validator reads title and body values from the event JSON; it does not check out
-or execute the proposed head revision. The hostile event fixture in the test
-suite verifies that command-like values in fork metadata and descriptions stay
-inert. The workflow has no issue or pull-request write permission and does not
-label, convert, or otherwise send external pull requests into feature-request
-triage.
+or execute the proposed head revision. No `run:` step interpolates the pull
+request title or body, so command-like values in fork metadata and descriptions
+reach the validator only as data in that file; a workflow test fails if a shared
+workflow's `run:` step interpolates either. The workflow has no issue or
+pull-request write permission and does not label, convert, or otherwise send
+external pull requests into feature-request triage.
 
 The validator has no package dependencies, so the job installs none and
 disables the Node.js setup action's automatic package-manager cache. A
@@ -84,14 +85,15 @@ check.
 Run the executable checks with Node.js 24:
 
 ```sh
-node --test test/pr-metadata.test.mjs
+node --test test/pr-metadata.test.mjs test/shared-workflows.test.mjs
 npm run check
 ```
 
 The focused fixtures include an installed-layout execution containing only the
-validator, shared runtime, and declared parser resources. The project has no
-compilation step or external runtime dependencies. CI runs the complete Node
-test suite for pull requests and pushes to `main`.
+validator, shared runtime, and declared parser resources, each installed from
+its `standards.yaml` declaration. The project has no compilation step or
+external runtime dependencies. CI runs the complete Node test suite for pull
+requests and pushes to `main`.
 
 The shared runtime reads Markdown structure with the repository's pinned
 [Marked lexer](../../vendor/marked/README.md) and rendered HTML content and link
