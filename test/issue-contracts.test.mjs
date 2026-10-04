@@ -1243,6 +1243,7 @@ decisionTable("a readiness label applied at creation is reviewed whichever run a
         feedbackBody: [opener.rejection, /"observedEventId":"101"/],
       });
       assertDecision(second, { exitCode: 0, feedback: 99, message: /awaiting authorized review/i, feedbackBody: /awaiting review/i });
+      assert.match(comments[0].body, opener.rejection);
       assert.deepEqual(labels, ["needs-triage"]);
       assert.equal(comments.length, 1);
     },
