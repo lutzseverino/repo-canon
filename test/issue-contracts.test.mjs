@@ -1440,6 +1440,23 @@ decisionTable("a recorded readiness rejection lasts until another review or cont
     },
   },
   ...[
+    { name: "only the creation label recorded", creationOnly: true, error: notAuthorized, feedback: null },
+    { name: "bot cleanup recorded", creationOnly: false, error: /timeline does not contain the current readiness label event/, feedback: 99 },
+  ].map(({ name, creationOnly, error, feedback }) => ({
+    name: `a maintainer's fresh label keeps main's grant behavior with ${name}`,
+    run: () => {
+      const snapshot = rejectedCreationSnapshot();
+      snapshot.issue.labels.push({ name: "ready-for-agent" });
+      snapshot.issue.updated_at = "2026-09-14T17:01:00Z";
+      snapshot.event = labeledBy("maintainer", "ready-for-agent", snapshot.issue);
+      snapshot.permissions.maintainer = role("admin");
+      if (creationOnly) snapshot.issueEvents = [creationLabel({ actor: { login: "reporter" } })];
+      assertDecision(decideIssueContract(snapshotFor(snapshot)), {
+        exitCode: 1, remove: ["ready-for-agent"], feedback, message: error,
+      });
+    },
+  })),
+  ...[
     { name: "changed contract bytes", change: (snapshot) => { snapshot.issue.body = ticketBody.replace("Add caching.", "Add an index."); } },
     { name: "an edit with unchanged contract bytes", change: (snapshot) => { snapshot.bodyLastEditedAt = "2026-09-14T17:01:00Z"; } },
     { name: "a later readiness removal by a maintainer", change: (snapshot) => {
@@ -1455,15 +1472,15 @@ decisionTable("a recorded readiness rejection lasts until another review or cont
       snapshot.issueEvents.push(creationLabel({ id: 300, actor: { login: "reporter" }, created_at: "2026-09-14T17:01:00Z" }));
       snapshot.event = labeledBy("reporter");
     } },
-    ...["labeled", "unlabeled"].map((action) => ({
-      name: `a maintainer's ${action} event absent from the timeline`,
+    {
+      name: "a maintainer's unlabeled event absent from the timeline",
       change: (snapshot) => {
         snapshot.event = {
           ...labeledBy("maintainer", "ready-for-agent", { updated_at: "2026-09-14T17:01:00Z" }),
-          action,
+          action: "unlabeled",
         };
       },
-    })),
+    },
   ].map(({ name, change }) => ({
     name: `${name} replaces the rejection with a plain revision notice`,
     run: () => {
