@@ -43,7 +43,11 @@ every `changeSet` path is among the uncommitted changes; otherwise stop, and
 tell the maintainer to finish or recover the run with `adopt-standards`. The
 run's work is its `changeSet` paths and `.repo-standards/`, and its record is
 the output of `status --summary`. The record describes only the run, so its
-pull request holds only the run.
+pull request holds only the run. Establish, from the maintainer or from the
+session that ran the adoption, whether the run's paths changed after it
+completed. If they did, the record no longer describes the work: return it to
+`adopt-standards`, or, when the maintainer wants the edits delivered with the
+run, describe the run and its edits with the template.
 
 Find the link the pull request rules require: the related issue, from the
 maintainer, the branch, or the commits, read with its comments; or, for an
@@ -96,9 +100,10 @@ recorded.
 ## 6. Describe
 
 Write the description from the template, as the pull request rules require.
-For a non-breaking adoption run, use the record as the description instead, as
-those rules allow. A breaking adoption run uses the template, so that it can
-explain the impact and migration.
+For a non-breaking adoption run whose paths are unchanged since completion, use
+the record as the description instead, as those rules allow. A breaking
+adoption run uses the template, so that it can explain the impact and
+migration.
 
 Done, for a template description, when every template section is present in
 its order, and the Validation section lists only checks that actually ran and
