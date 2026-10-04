@@ -22,6 +22,10 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+      - name: Install development dependencies
+        run: npm ci --include=dev
+      - name: Lint authored files
+        run: npm run lint
       - name: Check JavaScript syntax
         run: npm run check
       - name: Run test suite

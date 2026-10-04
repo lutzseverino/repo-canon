@@ -159,7 +159,7 @@ test('release:inputs lists the inputs, the dropped inputs, and the diff stat fro
   for (const path of ['check.mjs', 'guidance.md', 'kept.md', 'lib', 'skill', 'standards.yaml']) {
     assert.match(output, new RegExp(`^  ${path.replaceAll('.', '\\.')}$`, 'm'));
   }
-  assert.match(output, /no longer selects[^\n]*\n  dropped\.md$/m);
+  assert.match(output, /no longer selects[^\n]*\n {2}dropped\.md$/m);
   assert.match(output, /lib\/support\.mjs \| 2 \+-/);
   assert.match(output, /dropped\.md\s+\| 1 -/);
   assert.doesNotMatch(output, /notes\.md/);

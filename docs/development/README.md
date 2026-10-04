@@ -5,18 +5,25 @@ Repo Canon standards source.
 
 ## Setup and validation
 
-Clone the repository with Git and use Node.js 24 and npm. The source needs no
-package installation, typecheck, or build step; parser dependencies are
-vendored. GitHub planning uses authenticated `gh` access. For source validation,
+Clone the repository with Git and use Node.js 24 and npm. Run
+`npm ci --include=dev` to install the pinned development dependencies. The source
+needs no typecheck or build step; parser dependencies are vendored. Adopters do
+not install development dependencies. GitHub planning uses authenticated `gh`
+access. For source validation,
 install public Repository Standards CLI 4.0.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 
-Run focused tests for the changed behavior, `npm run check`, and
+Run focused tests for the changed behavior, `npm run lint`, `npm run check`, and
 `git diff --check` before opening a PR. Review affected links, issue-form fields,
 and consistency with the confirmed preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
-CI runs the full `npm test` suite and all-profile source validation.
+CI installs development dependencies and runs lint, the full `npm test` suite,
+and all-profile source validation. The lint step uses oxlint's defaults plus
+ESLint's `recommended` rules that oxlint does not enable by default, with Node
+globals, as named in `.oxlintrc.json`. It excludes `vendor/`, `.repo-standards/`,
+and installed skills under `.agents/skills/`. Both warnings and errors fail the
+lint step.
 
 The Node test suite exercises executable operation fixtures, including
 disposable remote-label and PR-integration state with interruption recovery,

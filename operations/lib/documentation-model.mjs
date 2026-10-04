@@ -187,7 +187,7 @@ function isDeclared(path, declaredTargets) {
 }
 
 const sentenceEnd = /[.!?]["'\u2019\u201d)\]]*$/u;
-const sentenceBoundary = /[.!?]["'\u2019\u201d)\]]*\s+["'\u2018\u201c(\[]*\p{Lu}/u;
+const sentenceBoundary = /[.!?]["'\u2019\u201d)\]]*\s+["'\u2018\u201c([]*\p{Lu}/u;
 
 // Rendered text is one sentence when it ends a sentence and no sentence ends
 // before a capitalized word inside it.

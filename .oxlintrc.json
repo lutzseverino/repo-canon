@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // Oxlint's defaults plus the rules of ESLint's `recommended` preset
+  // (@eslint/js 10.0.1) that oxlint doesn't enable by default.
+  "env": { "node": true },
+  "ignorePatterns": ["vendor/**", ".repo-standards/**", ".agents/skills/**"],
+  "rules": {
+    "no-case-declarations": "error",
+    "no-empty": "error",
+    "no-fallthrough": "error",
+    "no-prototype-builtins": "error",
+    "no-redeclare": "error",
+    "no-regex-spaces": "error",
+    "no-undef": "error",
+    "no-unexpected-multiline": "error",
+    "no-useless-assignment": "error",
+    "preserve-caught-error": "error"
+  }
+}
