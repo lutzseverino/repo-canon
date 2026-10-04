@@ -75,25 +75,26 @@ the latest readiness-label transition it observed. Approved state records the
 exact GitHub issue-event ID that supplied the review.
 
 An unauthorized reviewer's readiness rejection records its "is not authorized
-to grant readiness" reason. Later runs retain that reason while the contract
-revision is unchanged and no new readiness transition has occurred, including
-either completion order of the creation runs. If the opening run rejected from
-its payload before the timeline recorded the opener's creation label, that
-label appearing later does not replace the reason. The bot's removal of
-readiness as rejection cleanup also retains it. A creation rejection records
-which label the creation review rejected, so the opener's matching `labeled`
-trigger retains the reason even when both creation runs see empty history.
-This recognition does not match payload `updated_at` to a timeline timestamp.
-A later readiness event or a
-contract edit replaces the rejection through the usual review or
-revision-notice path. A triggering human readiness transition replaces it even
-when the timeline has not recorded that transition yet, except for that
-creation-label replay. Other readiness errors, including
-multiple labels, stale readiness, unverifiable authority, and
+to grant readiness" reason. Once a run has recorded that rejection, later runs
+retain the reason while the contract revision is unchanged and no new readiness
+transition has occurred. If the opening run rejected from its payload before
+the timeline recorded the opener's creation label, that label appearing later
+does not replace the reason. Timeline recognition of the opener's creation label
+requires its application in the same second the issue was created. The bot's
+removal of readiness as rejection cleanup also retains the reason.
+
+A creation rejection records which label the creation review rejected. A
+`labeled` trigger by the issue's opener for the rejected creation label is
+treated as that replay, retaining the reason even when both creation runs see
+empty history. A later readiness event or a contract edit replaces the
+rejection through the usual review or revision-notice path. A triggering human
+readiness transition replaces it even when the timeline has not recorded that
+transition yet, except for that creation-label replay. Other readiness errors,
+including multiple labels, stale readiness, unverifiable authority, and
 deleted-Agent-Brief invalidation, keep their existing feedback behavior, as do
 plain awaiting-review notices, structural corrections, and superseding workflow
-states. Feedback records from
-the previous validator without a rejection reason keep the plain notice.
+states. Feedback records from the previous validator without a rejection reason
+keep the plain notice.
 
 The revision is computed from a versioned record containing the selected
 contract kind, exact contract bytes, source identity, and source edit revision.
@@ -123,7 +124,8 @@ It removes readiness and reports that the timeline does not contain the
 readiness label event, whatever the opener's role, and the later `opened` run
 finds no readiness label to review. The remedy is to reapply the label: an
 authorized reviewer applies it again after the revision notice, and the
-validator decides it as any later review.
+validator decides it as any later review. This existing timeline-lag behavior
+is tracked in [#157](https://github.com/lutzseverino/repo-canon/issues/157).
 
 Every later review, and every Agent Brief review, starts after the validator
 publishes the exact revision in its feedback comment; the reviewer then applies
