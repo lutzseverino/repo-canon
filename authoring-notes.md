@@ -101,8 +101,8 @@ repeated.
   requests, titles and commits, and documentation. Every other file cites it
   rather than repeating one of them. Agent implementation procedures belong in
   skills. Files Repo Canon authors do not restate or cite them; the skill setup
-  files may, AGENTS.md may name the Repository Standards adoption skill, and
-  the `deliver` skill may hand an unfinished adoption back to it.
+  files may, and the `deliver` skill may hand an unfinished adoption back to
+  the Repository Standards adoption skill.
   CONTRIBUTING.md should be repository-agnostic exact content, copied
   identically between adopting repositories. Its fixed link to
   docs/development/README.md delegates project-specific setup and required
@@ -127,10 +127,11 @@ repeated.
   vendored upstream setup seeds, and Repo Canon writes nothing into them, as
   [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
   decides. Project-specific guidance remains separate. AGENTS.md is an
-  identical standards-owned pointer file, and its Available updates section is
-  the home of the shared available-updates guidance. Create the optional
-  project guidance document, docs/agents/project.md, only when it has useful
-  content.
+  identical standards-owned pointer file. Repository Standards owns the update
+  notice through its `standards-updates` system skill
+  ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/main/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
+  Create the optional project guidance document, docs/agents/project.md, only
+  when it has useful content.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
   changes. The
   [GitHub repository configuration guidance](guidance/github-repository-configuration.md)
@@ -185,7 +186,7 @@ repeated.
 ## Source profile
 
 The complete `repo-standards/v2` source is `standards.yaml`, with one
-`complete` profile and the open-ended CLI compatibility minimum `>=4.0.0`. The
+`complete` profile and the open-ended CLI compatibility minimum `>=5.0.0`. The
 concise policy-to-declaration, material, operation, ownership, and prerequisite
 mapping is maintained in [the source profile](docs/development/source-profile.md).
 Contextual Project README and documentation scope uses separate assessment and
@@ -193,7 +194,7 @@ discovery guidance and resolves to individual adopter-reviewed paths.
 
 [Adoption compatibility](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface. Use installed public
-CLI 4.0.0 as the current validation baseline; claim only compatibility
+CLI 5.0.0 as the current validation baseline; claim only compatibility
 demonstrated against the released source bytes.
 
 ## License
