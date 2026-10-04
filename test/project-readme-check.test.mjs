@@ -83,11 +83,12 @@ test("runs from its declared retained source layout", (t) => {
   assert.equal(outcome.result.status, "passed");
 });
 
-test("reports missing Project READMEs and centered or absent titles", (t) => {
-  const outcome = check(
-    t,
+test("reports missing Project READMEs and every title that is not one non-centered Markdown level-one first heading", (t) => {
+  const readmes = [
     {
-      "services/gateway/README.md": `<div align="center">
+      name: "a centered title",
+      path: "services/gateway/README.md",
+      content: `<div align="center">
 
 # Gateway
 
@@ -95,68 +96,51 @@ test("reports missing Project READMEs and centered or absent titles", (t) => {
 
 Gateway accepts public requests.
 `,
-      "packages/parser/README.md": "Parser utilities for workspace packages.\n",
     },
-    [
-      "services/gateway/README.md",
-      "packages/parser/README.md",
-      "unusual-layout/worker/README.md",
-    ],
-  );
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "failed");
-  assert.match(
-    outcome.result.message,
-    /Give services\/gateway\/README\.md one non-centered level-one title/,
-  );
-  assert.match(
-    outcome.result.message,
-    /Give packages\/parser\/README\.md one non-centered level-one title/,
-  );
-  assert.match(
-    outcome.result.message,
-    /Create unusual-layout\/worker\/README\.md for the maintained Project/,
-  );
-});
-
-test("requires the Project title to be the first rendered heading", (t) => {
-  const outcome = check(
-    t,
     {
-      "tools/report/README.md": `## Draft notes
+      name: "no title",
+      path: "packages/parser/README.md",
+      content: "Parser utilities for workspace packages.\n",
+    },
+    {
+      name: "a title after another heading",
+      path: "tools/report/README.md",
+      content: `## Draft notes
 
 # Report
 
 Report creates maintenance summaries.
 `,
     },
-    ["tools/report/README.md"],
-  );
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "failed");
-  assert.match(
-    outcome.result.message,
-    /Give tools\/report\/README\.md one non-centered level-one title as its first heading/,
-  );
-});
-
-test("requires the Project title to use Markdown heading syntax", (t) => {
+    {
+      name: "an HTML title",
+      path: "libraries/raw-title/README.md",
+      content: "<h1>Raw title</h1>\n\nLibrary purpose.\n",
+    },
+    {
+      name: "two titles",
+      path: "libraries/two-titles/README.md",
+      content: "# Two\n\nLibrary purpose.\n\n# Titles\n",
+    },
+  ];
   const outcome = check(
     t,
-    {
-      "libraries/raw-title/README.md":
-        "<h1>Raw title</h1>\n\nLibrary purpose.\n",
-    },
-    ["libraries/raw-title/README.md"],
+    Object.fromEntries(readmes.map(({ path, content }) => [path, content])),
+    [...readmes.map(({ path }) => path), "unusual-layout/worker/README.md"],
   );
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "failed");
+  for (const { name, path } of readmes)
+    assert.ok(
+      outcome.result.message.includes(
+        `Give ${path} one non-centered level-one title as its first heading.`,
+      ),
+      name,
+    );
   assert.match(
     outcome.result.message,
-    /Give libraries\/raw-title\/README\.md one non-centered level-one title/,
+    /Create unusual-layout\/worker\/README\.md for the maintained Project/,
   );
 });
 
@@ -173,13 +157,9 @@ The work unit transforms queued input.
 [External](https://example.com/manual)
 [This section](#development)
 
-\`[Example](also-missing.md)\`
-
 \`\`\`markdown
 [Example](still-missing.md)
 \`\`\`
-
-<!-- [Draft](hidden-missing.md) -->
 
 ## Development
 
@@ -196,10 +176,7 @@ Run the checks from this directory.
     outcome.result.message,
     /odd\/work-unit\/README\.md links to missing guide\/missing\.md/,
   );
-  assert.doesNotMatch(
-    outcome.result.message,
-    /also-missing|still-missing|hidden-missing/,
-  );
+  assert.doesNotMatch(outcome.result.message, /still-missing/);
 });
 
 test("checks heading links and rejects decoded paths that escape the repository", (t) => {

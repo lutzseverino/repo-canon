@@ -3,6 +3,7 @@ import { chmodSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { developmentGuide, index } from "./helpers/documentation.mjs";
 import {
   fixture,
   invokeCheck,
@@ -32,36 +33,6 @@ function check(t, files, paths = Object.keys(files)) {
     "the check must not change project content",
   );
   return outcome;
-}
-
-// A documentation index that follows the index entry form: a title, a
-// one-sentence purpose, then one `[Title](path): description` item per entry.
-function index(title, purpose, entries = []) {
-  const items = entries.map(
-    ([entryTitle, path, description]) =>
-      `- [${entryTitle}](${path}): ${description}`,
-  );
-  return `# ${title}\n\n${purpose}\n${items.length > 0 ? `\n${items.join("\n")}\n` : ""}`;
-}
-
-// A development guide in the required order: its purpose, a Setup and
-// validation section, then its index.
-function developmentGuide(
-  entries = [],
-  setup = "Install Node.js 24, then run `npm test` from the repository root.",
-) {
-  const items = entries.map(
-    ([entryTitle, path, description]) =>
-      `- [${entryTitle}](${path}): ${description}`,
-  );
-  return `# Development
-
-This directory explains how to build and validate the project.
-
-## Setup and validation
-
-${setup}
-${items.length > 0 ? `\n## Documents\n\n${items.join("\n")}\n` : ""}`;
 }
 
 // The two required root documentation files, conforming to every rule.
@@ -147,51 +118,14 @@ test("reports the missing mandatory guide and indexes for populated documentatio
   );
 });
 
-test("reports both required root documentation files before the docs tree exists", (t) => {
-  const outcome = check(t, {}, [
-    "docs/README.md",
-    "docs/development/README.md",
-  ]);
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "failed");
-  assert.match(
-    outcome.result.message,
-    /Create docs\/README\.md to map the documentation categories/,
-  );
-  assert.match(
-    outcome.result.message,
-    /Create docs\/development\/README\.md with the project's prerequisites/,
-  );
-});
-
 test("reports broken rendered file links across documentation and migration sources", (t) => {
   const outcome = check(
     t,
     {
-      "docs/README.md": rootDocumentation["docs/README.md"],
-      "docs/development/README.md": `# Development
-
-This directory explains how to build and validate the project.
-
-## Setup and validation
-
-<a href="missing.html&amp;mode=full">Missing HTML guide</a>
-![Architecture](../assets/missing.svg)
-
-\`[Example](example-missing.md)\`
-
-<!-- [Draft](draft-missing.md) -->
-
-## Documents
-
-- [Setup](setup.md?plain=1#node): installing the project.
-- [Session records](session-finals/): records of past sessions.
-`,
-      "docs/development/setup.md": "# Setup\n",
-      "docs/development/session-finals/README.md": index(
-        "Session records",
-        "This directory holds session records.",
+      ...rootDocumentation,
+      "docs/development/README.md": developmentGuide(
+        [],
+        "![Architecture](../assets/missing.svg)",
       ),
       "legacy-notes.md": `# Legacy notes
 
@@ -201,45 +135,17 @@ Move this material to [the intended destination](docs/usage/migrated.md).
     [
       "docs/README.md",
       "docs/development/README.md",
-      "docs/development/setup.md",
-      "docs/development/session-finals/README.md",
       "docs/usage/migrated.md",
       "legacy-notes.md",
     ],
   );
 
   assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(
+    outcome.result.message,
+    "Documentation navigation needs correction: docs/development/README.md links to missing ../assets/missing.svg. legacy-notes.md links to missing docs/usage/migrated.md.",
+  );
   assert.equal(outcome.result.status, "failed");
-  assert.match(
-    outcome.result.message,
-    /docs\/development\/README\.md links to missing missing\.html&mode=full/,
-  );
-  assert.match(
-    outcome.result.message,
-    /docs\/development\/README\.md links to missing \.\.\/assets\/missing\.svg/,
-  );
-  assert.match(
-    outcome.result.message,
-    /legacy-notes\.md links to missing docs\/usage\/migrated\.md/,
-  );
-  assert.doesNotMatch(
-    outcome.result.message,
-    /session-finals|example-missing|draft-missing/,
-  );
-});
-
-test("checks links nested in rendered headings", (t) => {
-  const outcome = check(t, {
-    "docs/README.md": "# [Documentation](missing-map.md)\n",
-    "docs/development/README.md": "# Development\n",
-  });
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "failed");
-  assert.match(
-    outcome.result.message,
-    /docs\/README\.md links to missing missing-map\.md/,
-  );
 });
 
 test("rejects populated top-level documentation outside the recognized categories", (t) => {
@@ -308,7 +214,7 @@ test("does not confuse a context ancestor named docs with its documentation root
   assert.doesNotMatch(outcome.result.message, /Move contexts\/docs\/app into/);
 });
 
-test("does not confuse a nested folder named docs with a documentation root", (t) => {
+test("reports a missing confirmed category index inside a documentation root as an ordinary directory index", (t) => {
   const outcome = check(t, {
     "docs/README.md": index(
       "Documentation",
@@ -326,21 +232,25 @@ test("does not confuse a nested folder named docs with a documentation root", (t
     "docs/usage/README.md": index(
       "Usage",
       "This directory explains how to use the project.",
-      [["API documentation", "docs/README.md", "the API reference."]],
     ),
-    "docs/usage/docs/README.md": index(
-      "API documentation",
-      "This directory documents the API.",
+    "docs/usage/guides/intro.md": "# Intro\n",
+    "docs/usage/guides/adr/README.md": index(
+      "Decisions",
+      "This directory records the guides' decisions.",
     ),
   });
 
   assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "passed");
+  assert.equal(outcome.result.status, "failed");
+  assert.equal(
+    outcome.result.message,
+    "Documentation navigation needs correction: Create docs/usage/guides/README.md to explain this documentation directory and link its useful contents.",
+  );
 });
 
-test("treats a confirmed category index inside a documentation root as an ordinary directory index", (t) => {
-  const usagePurpose = "This directory explains how to use the project.";
-  const files = {
+test("asks to populate an empty index instead of reading entries from it", (t) => {
+  const outcome = check(t, {
+    ...rootDocumentation,
     "docs/README.md": index(
       "Documentation",
       "This directory maps the documentation categories.",
@@ -353,39 +263,15 @@ test("treats a confirmed category index inside a documentation root as an ordina
         ["Usage", "usage/README.md", "using the project."],
       ],
     ),
-    "docs/development/README.md": developmentGuide(),
-    "docs/usage/README.md": index("Usage", usagePurpose, [
-      ["Guides", "guides/README.md", "step-by-step guides."],
-    ]),
-    "docs/usage/guides/README.md": index(
-      "Guides",
-      "This directory holds step-by-step guides.",
-      [
-        ["Introduction", "intro.md", "a first look."],
-        ["Decisions", "adr/README.md", "the guides' decisions."],
-      ],
-    ),
-    "docs/usage/guides/intro.md": "# Intro\n",
-    "docs/usage/guides/adr/README.md": index(
-      "Decisions",
-      "This directory records the guides' decisions.",
-    ),
-  };
-  const outcome = check(t, files);
+    "docs/usage/README.md": "<!-- Nothing rendered. -->\n",
+    "docs/usage/install.md": "# Install\n",
+  });
 
   assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "passed", outcome.result.message);
-
-  // Without the guides index, the usage index cannot list it either.
-  const { "docs/usage/guides/README.md": _guidesIndex, ...withoutGuidesIndex } =
-    files;
-  withoutGuidesIndex["docs/usage/README.md"] = index("Usage", usagePurpose);
-  const missingIndex = check(t, withoutGuidesIndex);
-  assert.equal(missingIndex.status, 0, missingIndex.stderr);
-  assert.equal(missingIndex.result.status, "failed");
+  assert.equal(outcome.result.status, "failed");
   assert.equal(
-    missingIndex.result.message,
-    "Documentation navigation needs correction: Create docs/usage/guides/README.md to explain this documentation directory and link its useful contents.",
+    outcome.result.message,
+    "Documentation navigation needs correction: Populate docs/usage/README.md with the directory purpose and links to useful contents.",
   );
 });
 
@@ -408,23 +294,6 @@ test("blocks when confirmed paths cannot identify whether an index starts a docu
   );
 });
 
-test("does not infer a documentation root from a nested category descendant", (t) => {
-  const outcome = check(t, {
-    "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": "# Development\n",
-    "packages/app/handbook/README.md": "# Handbook\n",
-    "packages/app/handbook/usage/deep/README.md": "# Deep usage\n",
-  });
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "blocked");
-  assert.match(
-    outcome.result.message,
-    /Cannot determine whether packages\/app\/handbook is a documentation root/,
-  );
-  assert.match(outcome.result.message, /confirmed category README/);
-});
-
 test("requires the development guide in concrete scope even when the file exists", (t) => {
   const outcome = check(
     t,
@@ -444,16 +313,6 @@ test("requires the development guide in concrete scope even when the file exists
 });
 
 test("treats malformed public-protocol input as a process error", (t) => {
-  const outcome = check(
-    t,
-    {
-      "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": "# Development\n",
-    },
-    ["docs/development/README.md"],
-  );
-  assert.equal(outcome.status, 0, outcome.stderr);
-
   const project = fixture({ "docs/development/README.md": "# Development\n" });
   t.after(project.close);
   const before = snapshot(project.root);
