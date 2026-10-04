@@ -64,30 +64,31 @@ Done when `git log origin/<base>..HEAD` shows only this work's commits.
 
 ## 4. Commit and title
 
-Write the title as the rules for titles and commits require. An adoption run's
-title names the selected source version and CLI from the record's Selection
-table. It is not breaking by default, because an adoption changes the adopted
-conventions rather than the project's interface; mark it breaking only when the
-maintainer judges the run breaking for the project. Commit the work's
-uncommitted changes with the title as the commit subject, staging only the
-work's paths. Work already committed on the branch keeps its commits; the title
-still names the pull request.
+Write the pull request's title, which the squash merge makes the final commit
+subject, as the rules for titles and commits require. An adoption run's title
+names the selected source version and CLI from the record's Selection table. It
+is not breaking by default, because an adoption changes the adopted conventions
+rather than the project's interface; mark it breaking only when the maintainer
+judges the run breaking for the project, and step 6 then explains its impact and
+migration. Commit only the work's uncommitted changes, with the title as the
+commit subject, staging only the work's paths. Commits already on the branch
+stay as they are.
 
 Done when `git status` shows no part of the work left uncommitted.
 
 ## 5. Validate
 
-Check that the changed behavior has the tests the validation rules ask for;
-when it lacks them, stop and report. Run every required check from the
-development guide on the committed work, plus the focused tests for the changed
-behavior. When unrelated uncommitted changes remain, run the checks in a clean
-worktree of the final commit, such as one made with `git worktree add`, so that
-they see only the work. A check that reads a diff, such as `git diff --check`,
-sees only unstaged changes in its bare form: run it over the pull request's
-whole change instead, against `origin/<base>...HEAD`. Record each command and
-its outcome as you run it. Fix a failure that the work caused, within the
-work's scope, commit the fix, and run the checks again; stop and report any
-other failure.
+Check that the changed behavior has the tests the validation rules ask for; when
+it lacks them, stop and report. Run every required check from the development
+guide on the committed work, plus the focused tests for the changed behavior.
+When unrelated uncommitted changes remain, leave them in place and run the
+checks in a clean checkout of the final commit: a temporary `git worktree add`,
+removed afterwards. A check that reads a diff, such as `git diff --check`, sees
+only unstaged changes in its bare form: run it over the pull request's whole
+change instead, against `origin/<base>...HEAD`. Record each command and its
+outcome as you run it. Fix a failure that the work caused, within the work's
+scope, commit the fix, and run the checks again; stop and report any other
+failure.
 
 Done when every required check has run on the final commit and each outcome is
 recorded.
