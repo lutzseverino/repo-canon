@@ -1,54 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync } from "node:fs";
-
-const statePath = process.env.FAKE_GH_STATE;
-if (!statePath) throw new Error("FAKE_GH_STATE is required.");
-
-const state = JSON.parse(readFileSync(statePath, "utf8"));
-const save = () => writeFileSync(statePath, `${JSON.stringify(state)}\n`);
-const args = process.argv.slice(2);
-
-if (args[0] === "--version") {
-  process.stdout.write(`${state.version ?? "gh version 2.80.0 (fixture)"}\n`);
-  process.exit(0);
-}
-
-if (args[0] === "auth" && args[1] === "status") {
-  state.authStatusArguments = args.slice(2);
-  save();
-  if (
-    state.authenticated === false ||
-    (state.inactiveAuthInvalid && !args.includes("--active"))
-  ) {
-    process.stderr.write("not logged into github.com\n");
-    process.exit(1);
-  }
-  process.stdout.write("logged into github.com\n");
-  process.exit(0);
-}
-
-if (args[0] !== "api") {
-  process.stderr.write(`unsupported fixture command: ${args.join(" ")}\n`);
-  process.exit(2);
-}
-
-const hostnameIndex = args.indexOf("--hostname");
-state.apiHosts ??= [];
-state.apiHosts.push(
-  hostnameIndex >= 0
-    ? args[hostnameIndex + 1]
-    : (process.env.GH_HOST ?? "github.com"),
-);
-save();
-
-const methodIndex = args.indexOf("--method");
-const method = methodIndex >= 0 ? args[methodIndex + 1] : "GET";
-const endpoint = args.find((argument) => argument.startsWith("repos/"));
-if (!endpoint) {
-  process.stderr.write("fixture expected a repos/... endpoint\n");
-  process.exit(2);
-}
+import { args, endpoint, method, save, state } from "../helpers/fake-gh.mjs";
 
 const fields = {};
 for (let index = 0; index < args.length; index += 1) {
