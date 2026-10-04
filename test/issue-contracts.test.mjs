@@ -1419,6 +1419,15 @@ decisionTable("a recorded readiness rejection lasts until another review or cont
     { name: "a later readiness removal by a maintainer", change: (snapshot) => {
       snapshot.issueEvents.push(creationLabel({ id: 300, event: "unlabeled", created_at: "2026-09-14T17:01:00Z" }));
     } },
+    ...["labeled", "unlabeled"].map((action) => ({
+      name: `a maintainer's ${action} event absent from the timeline`,
+      change: (snapshot) => {
+        snapshot.event = {
+          ...labeledBy("maintainer", "ready-for-agent", { updated_at: "2026-09-14T17:01:00Z" }),
+          action,
+        };
+      },
+    })),
   ].map(({ name, change }) => ({
     name: `${name} replaces the rejection with a plain revision notice`,
     run: () => {

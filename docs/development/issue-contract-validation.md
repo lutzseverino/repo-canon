@@ -82,10 +82,13 @@ its payload before the timeline recorded the opener's creation label, that
 label appearing later does not replace the reason. The bot's removal of
 readiness as rejection cleanup also retains it. A later readiness event or a
 contract edit replaces the rejection through the usual review or
-revision-notice path. Other readiness errors, including multiple labels, stale
-readiness, unverifiable authority, and deleted-Agent-Brief invalidation, keep
-their existing feedback behavior, as do plain awaiting-review notices,
-structural corrections, and superseding workflow states. Feedback records from
+revision-notice path. A triggering human readiness transition replaces it even
+when the timeline has not recorded that transition yet; replaying the original
+recorded creation event retains the reason. Other readiness errors, including
+multiple labels, stale readiness, unverifiable authority, and
+deleted-Agent-Brief invalidation, keep their existing feedback behavior, as do
+plain awaiting-review notices, structural corrections, and superseding workflow
+states. Feedback records from
 the previous validator without a rejection reason keep the plain notice.
 
 The revision is computed from a versioned record containing the selected

@@ -869,6 +869,17 @@ function issueTimeline({ event, issue, issueEvents }) {
     // Removing readiness is part of the validator's rejection cleanup, not
     // another review attempt. Every other readiness transition replaces it.
     rejectionUnchanged(observedEventId) {
+      // A human transition missing from the timeline still replaces the
+      // rejection. A replay of an already recorded transition is handled by
+      // the timeline below, including the original creation label.
+      const readinessTrigger = ["labeled", "unlabeled"].includes(event.action) && readinessTransitionLabel(event);
+      if (readinessTrigger && event.sender?.login !== "github-actions[bot]"
+        && !issueEvents.some((candidate) => candidate.event === event.action
+          && candidate.label?.name === event.label.name
+          && candidate.actor?.login === event.sender?.login
+          && candidate.created_at === event.issue?.updated_at)) {
+        return false;
+      }
       const observed = observedEventId == null ? 0 : position(observedEventId);
       if (observed === null) return false;
       const transitions = issueEvents.slice(observed).filter(isReadinessTransition);
