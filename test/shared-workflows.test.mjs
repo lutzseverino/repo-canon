@@ -7,9 +7,9 @@ const repositoryRoot = new URL("..", import.meta.url).pathname;
 
 function sharedWorkflows() {
   const profile = readFileSync(join(repositoryRoot, "standards.yaml"), "utf8");
-  return [...profile.matchAll(/^\s+exact: (\.github\/workflows\/\S+\.ya?ml)$/gm)].map(
-    ([, path]) => path,
-  );
+  return [
+    ...profile.matchAll(/^\s+exact: (\.github\/workflows\/\S+\.ya?ml)$/gm),
+  ].map(([, path]) => path);
 }
 
 function actionPins(workflow, action) {
@@ -30,14 +30,25 @@ test("every shared workflow pins the same checkout and setup-node versions", () 
   for (const action of ["actions/checkout", "actions/setup-node"]) {
     const pins = new Set();
     for (const path of paths) {
-      const workflowPins = actionPins(readFileSync(join(repositoryRoot, path), "utf8"), action);
+      const workflowPins = actionPins(
+        readFileSync(join(repositoryRoot, path), "utf8"),
+        action,
+      );
       assert.ok(workflowPins.length > 0, `${path} uses ${action}`);
       for (const pin of workflowPins) {
-        assert.match(pin, /^[0-9a-f]{40}$/, `${path} pins ${action} to a full commit`);
+        assert.match(
+          pin,
+          /^[0-9a-f]{40}$/,
+          `${path} pins ${action} to a full commit`,
+        );
         pins.add(pin);
       }
     }
-    assert.equal(pins.size, 1, `${action} pins differ: ${[...pins].join(", ")}`);
+    assert.equal(
+      pins.size,
+      1,
+      `${action} pins differ: ${[...pins].join(", ")}`,
+    );
   }
 });
 

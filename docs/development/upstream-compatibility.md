@@ -10,10 +10,10 @@ conventions without editing upstream skill content.
 
 ## Included skills
 
-| Category | Skills |
-| --- | --- |
-| Engineering | ask-matt, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-with-docs, implement, improve-codebase-architecture, prototype, research, resolving-merge-conflicts, setup-matt-pocock-skills, tdd, to-spec, to-tickets, triage, wayfinder, wizard |
-| Productivity | grill-me, grilling, handoff, teach, to-questionnaire, wait-what, writing-for-agents |
+| Category     | Skills                                                                                                                                                                                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Engineering  | ask-matt, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-with-docs, implement, improve-codebase-architecture, prototype, research, resolving-merge-conflicts, setup-matt-pocock-skills, tdd, to-spec, to-tickets, triage, wayfinder, wizard |
+| Productivity | grill-me, grilling, handoff, teach, to-questionnaire, wait-what, writing-for-agents                                                                                                                                                                                |
 
 Experimental skills are excluded; the pinned tree has no top-level
 `experimental` skill category. The `in-progress`, `misc`, and `deprecated`
@@ -139,13 +139,13 @@ whether to distribute the new snapshot.
 The four public templates do not prohibit the installed skills' native issue
 formats. Validation must recognize the applicable contract and workflow.
 
-| Shape | Required structure and readiness meaning |
-| --- | --- |
-| Native specification | Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope, Further Notes. to-spec can publish a reviewed specification ready-for-agent without intake triage or a brief. |
-| Native implementation ticket | Optional Parent, What to build, Acceptance criteria, Blocked by. to-tickets can publish reviewed tickets ready-for-agent even when blockers remain open. |
-| Triaged request | Agent Brief comment with Category, Summary, Current behavior, Desired behavior, Key interfaces, Acceptance criteria, Out of scope; original body/discussion is intake context. |
-| Wayfinder map | Destination, Notes, Decisions so far, Not yet specified, Out of scope. An initially empty decisions section is valid; label wayfinder:map. |
-| Wayfinder child | Question; one wayfinder research/prototype/grilling/task label. Eligibility uses open state, assignment, and blockers rather than requiring intake labels or a brief. |
+| Shape                        | Required structure and readiness meaning                                                                                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Native specification         | Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope, Further Notes. to-spec can publish a reviewed specification ready-for-agent without intake triage or a brief. |
+| Native implementation ticket | Optional Parent, What to build, Acceptance criteria, Blocked by. to-tickets can publish reviewed tickets ready-for-agent even when blockers remain open.                                                            |
+| Triaged request              | Agent Brief comment with Category, Summary, Current behavior, Desired behavior, Key interfaces, Acceptance criteria, Out of scope; original body/discussion is intake context.                                      |
+| Wayfinder map                | Destination, Notes, Decisions so far, Not yet specified, Out of scope. An initially empty decisions section is valid; label wayfinder:map.                                                                          |
+| Wayfinder child              | Question; one wayfinder research/prototype/grilling/task label. Eligibility uses open state, assignment, and blockers rather than requiring intake labels or a brief.                                               |
 
 Recognize GitHub form heading levels and harmless casing differences. Optional
 unanswered fields are not missing required content. Native parent/dependency

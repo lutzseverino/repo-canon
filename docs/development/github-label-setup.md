@@ -4,20 +4,20 @@ The GitHub label setup is a repeat-safe Repository Standards fixes operation.
 It reads the adopting repository identity from Git remotes, verifies that the
 GitHub API resolves the same repository, and reconciles these labels:
 
-| Label | Color | Description |
-| --- | --- | --- |
-| `needs-triage` | `fbca04` | Requires review or renewed review |
-| `needs-info` | `d4c5f9` | Waiting for information needed to evaluate the request |
-| `ready-for-agent` | `0e8a16` | Reviewed and sufficiently specified for agent implementation |
-| `ready-for-human` | `1d76db` | Reviewed and requires human implementation |
-| `wontfix` | `ffffff` | Will not be actioned |
-| `bug` | `d73a4a` | Something isn't working |
-| `enhancement` | `a2eeef` | New feature or request |
-| `wayfinder:map` | `5319e7` | Planning map for related work |
-| `wayfinder:research` | `bfd4f2` | Research question in a planning map |
-| `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map |
-| `wayfinder:grilling` | `bfd4f2` | Design decision requiring discussion |
-| `wayfinder:task` | `bfd4f2` | Task in a planning map |
+| Label                 | Color    | Description                                                  |
+| --------------------- | -------- | ------------------------------------------------------------ |
+| `needs-triage`        | `fbca04` | Requires review or renewed review                            |
+| `needs-info`          | `d4c5f9` | Waiting for information needed to evaluate the request       |
+| `ready-for-agent`     | `0e8a16` | Reviewed and sufficiently specified for agent implementation |
+| `ready-for-human`     | `1d76db` | Reviewed and requires human implementation                   |
+| `wontfix`             | `ffffff` | Will not be actioned                                         |
+| `bug`                 | `d73a4a` | Something isn't working                                      |
+| `enhancement`         | `a2eeef` | New feature or request                                       |
+| `wayfinder:map`       | `5319e7` | Planning map for related work                                |
+| `wayfinder:research`  | `bfd4f2` | Research question in a planning map                          |
+| `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                         |
+| `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                         |
+| `wayfinder:task`      | `bfd4f2` | Task in a planning map                                       |
 
 Matching labels are left alone. Missing labels are created, and labels with a
 matching case-insensitive name but different casing, color, or description are
