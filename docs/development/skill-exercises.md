@@ -1,11 +1,12 @@
 # Skill exercises
 
 This procedure exercises the pinned skills under `vendor/mattpocock-skills`
-against disposable local Git repositories. Run it when a release changes a
-vendored skill, as the [release
+and Repo Canon's own `deliver` skill against disposable local Git
+repositories. Run it when a release changes a skill, as the [release
 procedure](release.md#when-selected-bytes-change) requires, for the changed
-skills. Three builders create the repositories: one each for the engineering,
-productivity, and planning skills. Together they cover all 25 pinned skills.
+skills. Four builders create the repositories: one each for the engineering,
+productivity, and planning skills, which together cover all 25 pinned skills,
+and one for the `deliver` skill.
 
 Building and testing the fixtures is a prerequisite, not an exercise. An
 exercise is an agent session that invokes the skill in a fixture repository
@@ -21,9 +22,10 @@ Each builder creates its repositories under a new temporary directory, or under
 `--root <path>`, which must not exist yet. Each repository has real Git history,
 the exact shared `AGENTS.md`, `CONTRIBUTING.md`, and `docs/agents`
 configuration, scenario-specific project guidance in `docs/agents/project.md`,
-and repository-scoped `.agents/skills` symbolic links to the complete pinned
+and repository-scoped `.agents/skills` symbolic links to the complete
 skill directories it needs. The repositories set `commit.gpgsign=false` in
-repository-local configuration and have no remote.
+repository-local configuration and have no remote, except the `deliver`
+repositories' local stand-in described below.
 
 Each builder's manifest maps every repository to its skills and records the
 source `HEAD`, the SHA-256 of the builder, the shared fixture-authoring module,
@@ -43,7 +45,7 @@ directory:
   variable, secret, or message is published.
 - Relax the harness sandbox, if at all, only inside the disposable repository.
   A sandbox that mounts `.git` read-only blocks the commits that the debugging,
-  merge-conflict, TDD, and planning scenarios make.
+  merge-conflict, TDD, planning, and deliver scenarios make.
 
 For example, with Codex CLI:
 
@@ -134,3 +136,38 @@ The test verifies every repository and skill link, the manifest identities,
 local signing, an ordinary later commit under hostile global signing, and the
 managed-update boundary: a synthetic change to a candidate copy of a vendored
 skill is detected while the vendored directory stays unchanged.
+
+## Deliver skill
+
+```bash
+node scripts/create-deliver-skill-fixtures.mjs
+npm run test:deliver-skill-fixtures
+```
+
+The builder prints a `repo-canon/deliver-skill-fixtures/v1` manifest. Two
+repositories exercise `deliver`, each holding uncommitted work on `main`:
+`work` implements the ready issue #12, and `adoption` holds an adoption run's
+uncommitted changes. Each also has the exact pull request template, which
+`adoption` holds as its uncommitted change, the trusted PR metadata workflow,
+validator, and parsers, and a development guide whose required checks are
+`npm test` and `git diff --check`.
+
+Delivery publishes, so the builder replaces publication with local stand-ins.
+Each repository's `origin` is a bare repository under the fixture root. The
+manifest's `path` directory holds a `gh` stand-in; put it first on `PATH` for
+the session. The stand-in serves the builder's issues and records pull requests
+and comments under the manifest's `github` directory. `gh pr checks` runs the
+PR metadata validator from the base branch and `npm test` at the head, and
+links each check's log. Any command it does not support fails, so nothing
+reaches GitHub. In `adoption`, the ignored pinned CLI is a stand-in that
+answers `status --json` and `status --summary` for the completed run.
+
+A session writes the remotes and records under the fixture root, so relax its
+sandbox to that root, which is as disposable as the repository. With Codex CLI,
+pass `--add-dir <fixture-root> --add-dir <repository>/.git`; `workspace-write`
+otherwise keeps `.git` read-only even under an added fixture root.
+
+The test verifies the skill's agreeing invocation settings, the exact shared
+files, the local remotes and stand-ins, a full delivery of each repository
+through them, including a failing PR metadata check, and an ordinary later
+commit under hostile global signing.

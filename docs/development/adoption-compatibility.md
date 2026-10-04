@@ -18,7 +18,7 @@ releases above the floor.
 
 | Accepted requirement | Supported mapping |
 | --- | --- |
-| Exact shared files and complete pinned skill directories | Exact file and skill declarations; retain disjoint ownership. |
+| Exact shared files and complete skill directories | Exact file and skill declarations; retain disjoint ownership. |
 | Project-owned documents with known targets | Contextual file declarations where the target is fixed. |
 | Project READMEs at arbitrary locations, including missing files | Repository declarations with separate `guidance` and `discovery` references; an agent resolves membership from repository evidence. |
 | Documentation reorganization around exact shared files | Individual contextual source, destination, directory-index introduction, and link-repair paths; exact files remain outside contextual scope. |

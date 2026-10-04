@@ -31,8 +31,9 @@ public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 
 Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
-disposable local repositories used for the seven productivity skill exercises.
-[Skill exercises](skill-exercises.md) describes all three fixture builders and
+disposable local repositories used for the seven productivity skill exercises,
+and `npm run test:deliver-skill-fixtures` for the `deliver` skill exercise.
+[Skill exercises](skill-exercises.md) describes all four fixture builders and
 the harness that exercises the skills.
 
 This repository takes the same path every adopter takes, so the suite also runs
@@ -77,4 +78,5 @@ step: `npm test` already runs it on every pull request.
 - [Standards source profile](source-profile.md): complete profile ownership,
   declarations, executable prerequisites, and the validation boundary.
 - [Skill exercises](skill-exercises.md): the procedure, fixture builders,
-  common harness, and scenarios for exercising the pinned skills.
+  common harness, and scenarios for exercising the pinned skills and the
+  `deliver` skill.

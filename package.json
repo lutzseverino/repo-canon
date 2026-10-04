@@ -11,6 +11,7 @@
     "release:inputs": "node scripts/release/inputs.mjs",
     "release:check-merge": "node scripts/release/check-merge.mjs",
     "release:verify": "node scripts/release/verify.mjs",
+    "test:deliver-skill-fixtures": "node --test test/deliver-skill-fixtures.test.mjs",
     "test:engineering-skill-fixtures": "node --test test/engineering-skill-fixtures.test.mjs",
     "test:planning-skill-fixtures": "node --test test/planning-skill-fixtures.test.mjs",
     "test:github-pr-integration": "node --test test/github-pr-integration-setup.test.mjs",

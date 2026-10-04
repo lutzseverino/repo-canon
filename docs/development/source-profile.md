@@ -21,11 +21,12 @@ does not imply a release or successful adoption.
 | Maintained Project READMEs | `project-readmes` | Separate assessment and discovery guidance; `project-readme-structure` check | Project-owned paths confirmed through v2 discovery |
 | Documentation, glossaries, and project agent guidance | `documentation` | Separate assessment and discovery guidance; `documentation-navigation` check | Project-owned individual source, destination, index, glossary, and link-repair paths confirmed through v2 discovery |
 | GitHub labels, required check, and squash settings | `github-repository-configuration` | Separate guidance and intentionally empty project-content discovery; repeat-safe `canonical-labels` and `pull-request-integration` fixes | Remote settings; no project-content paths |
-| Pinned regular skills | `skill-*` (25 declarations) | Full directories under `vendor/mattpocock-skills`, pinned at `3cca18b368ae95cdbdebbff572ccafa662551015`; upstream notice retained by the configuration operation and installed by `mattpocock-skills-license` | Exact whole skill directories |
+| Pinned regular skills | `skill-*` except `skill-deliver` (25 declarations) | Full directories under `vendor/mattpocock-skills`, pinned at `3cca18b368ae95cdbdebbff572ccafa662551015`; upstream notice retained by the configuration operation and installed by `mattpocock-skills-license` | Exact whole skill directories |
+| Delivery through the contribution workflow | `skill-deliver` | Repo Canon's own `.agents/skills/deliver`, whose source is its installed path; it reads the installed contribution guidance, pull request template, and skill setup files and the project's development guide | Exact whole skill directory |
 | Upstream skill license notice | `mattpocock-skills-license` | `vendor/mattpocock-skills/LICENSE`, installed at `.agents/skills/LICENSE.mattpocock-skills` beside the copied skills | Exact file outside every skill directory |
 
-The resolved profile contains 53 declarations: 24 exact files, one contextual
-file, three repository declarations, and 25 exact skill directories. It has
+The resolved profile contains 54 declarations: 24 exact files, one contextual
+file, three repository declarations, and 26 exact skill directories. It has
 three checks and two fixes. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
 trees, globs, or adopter-specific paths embedded in this source.
@@ -78,7 +79,7 @@ and validates every profile.
 ## Validation boundary
 
 Installed public CLI 4.0.0 under Node.js 24 returns `valid: true`, no errors,
-one `complete` profile, and 53 declarations for the source, matching the
+one `complete` profile, and 54 declarations for the source, matching the
 inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@4.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
