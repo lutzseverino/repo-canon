@@ -1,5 +1,13 @@
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -7,7 +15,10 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const validator = join(repositoryRoot, ".github/scripts/validate-pr-metadata.mjs");
+const validator = join(
+  repositoryRoot,
+  ".github/scripts/validate-pr-metadata.mjs",
+);
 
 function validBody(extra = "") {
   return `## Summary
@@ -24,7 +35,13 @@ Closes #6
 ${extra}`;
 }
 
-function runEvent({ action = "opened", title = "feat(metadata): validate pull requests", body = validBody(), pullRequest = {}, validatorPath = validator } = {}) {
+function runEvent({
+  action = "opened",
+  title = "feat(metadata): validate pull requests",
+  body = validBody(),
+  pullRequest = {},
+  validatorPath = validator,
+} = {}) {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-pr-metadata-"));
   const eventPath = join(directory, "event.json");
   const summaryPath = join(directory, "summary.md");
@@ -37,7 +54,9 @@ function runEvent({ action = "opened", title = "feat(metadata): validate pull re
     encoding: "utf8",
     env: { ...process.env, GITHUB_STEP_SUMMARY: summaryPath },
   });
-  const summary = existsSync(summaryPath) ? readFileSync(summaryPath, "utf8") : "";
+  const summary = existsSync(summaryPath)
+    ? readFileSync(summaryPath, "utf8")
+    : "";
   rmSync(directory, { recursive: true, force: true });
   return { ...result, summary };
 }
@@ -63,7 +82,8 @@ test("accepts valid metadata for every configured pull request update", () => {
     join(repositoryRoot, ".github/workflows/pr-metadata.yml"),
     "utf8",
   );
-  const configuredTypes = workflow.match(/types:\s*\[([^\]]+)]/)?.[1]
+  const configuredTypes = workflow
+    .match(/types:\s*\[([^\]]+)]/)?.[1]
     .split(",")
     .map((type) => type.trim());
   assert.deepEqual(configuredTypes, [
@@ -192,9 +212,15 @@ test("accepts a body that is exactly an adoption record", () => {
     ["record", record],
     ["CRLF record", record.replace(/\n/g, "\r\n")],
     ["record after blank lines", `\n \t\n${record}`],
-    ["record heading with trailing spaces", record.replace("record\n", "record \t\n")],
+    [
+      "record heading with trailing spaces",
+      record.replace("record\n", "record \t\n"),
+    ],
   ]) {
-    const result = runEvent({ title: "chore: update Repo Canon to v0.4.0", body });
+    const result = runEvent({
+      title: "chore: update Repo Canon to v0.4.0",
+      body,
+    });
     assert.equal(result.status, 0, `${variant}: ${result.stderr}`);
     assert.match(result.stdout, /validation passed/, variant);
     assert.match(result.summary, /adoption record/, variant);
@@ -202,12 +228,18 @@ test("accepts a body that is exactly an adoption record", () => {
 });
 
 test("still validates the title of an adoption record body", () => {
-  const result = runEvent({ title: "Update Repo Canon", body: adoptionRecord() });
+  const result = runEvent({
+    title: "Update Repo Canon",
+    body: adoptionRecord(),
+  });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Conventional Commit title/);
   assert.doesNotMatch(result.stderr, /Add a Summary section/);
 
-  const breaking = runEvent({ title: "chore!: update Repo Canon to v0.4.0", body: adoptionRecord() });
+  const breaking = runEvent({
+    title: "chore!: update Repo Canon to v0.4.0",
+    body: adoptionRecord(),
+  });
   assert.equal(breaking.status, 1);
   assert.match(breaking.stderr, /under an Impact/);
   assert.match(breaking.stderr, /under a Migration/);
@@ -219,15 +251,27 @@ test("validates a body whose record heading is not its first content as an ordin
   for (const [variant, body] of [
     ["text before the record", `Update Repo Canon.\n\n${record}`],
     ["comment before the record", `<!-- adoption -->\n${record}`],
-    ["hidden text before the record", `<span hidden>adoption</span>\n\n${record}`],
+    [
+      "hidden text before the record",
+      `<span hidden>adoption</span>\n\n${record}`,
+    ],
     ["record in a code fence", `\`\`\`markdown\n${record}\`\`\`\n`],
     ["indented record heading", `  ${record}`],
     ["non-breaking space before the record", `\u00a0\n${record}`],
     ["second-level record heading", `#${record}`],
-    ["differently cased record heading", record.replace("adoption record", "Adoption Record")],
-    ["longer record heading", record.replace("adoption record", "adoption record draft")],
+    [
+      "differently cased record heading",
+      record.replace("adoption record", "Adoption Record"),
+    ],
+    [
+      "longer record heading",
+      record.replace("adoption record", "adoption record draft"),
+    ],
   ]) {
-    const result = runEvent({ title: "chore: update Repo Canon to v0.4.0", body });
+    const result = runEvent({
+      title: "chore: update Repo Canon to v0.4.0",
+      body,
+    });
     assert.equal(result.status, 1, variant);
     assert.match(result.stderr, /Add a Summary section/, variant);
     assert.match(result.stderr, /Add a Validation section/, variant);
@@ -239,8 +283,22 @@ test("validates a body whose record heading is not its first content as an ordin
 });
 
 test("accepts every allowed lowercase Conventional Commit type", () => {
-  for (const type of ["feat", "fix", "docs", "refactor", "perf", "test", "build", "ci", "style", "chore", "revert"]) {
-    const result = runEvent({ title: `${type}(metadata): validate pull requests` });
+  for (const type of [
+    "feat",
+    "fix",
+    "docs",
+    "refactor",
+    "perf",
+    "test",
+    "build",
+    "ci",
+    "style",
+    "chore",
+    "revert",
+  ]) {
+    const result = runEvent({
+      title: `${type}(metadata): validate pull requests`,
+    });
     assert.equal(result.status, 0, `${type}: ${result.stderr}`);
   }
 });
@@ -289,7 +347,14 @@ Closes #6
 });
 
 test("rejects common placeholder variants and rendered-empty HTML", () => {
-  for (const placeholder of ["Not applicable", "Not applicable.", "No tests", "Same as title", "<br><br>", "&nbsp;&nbsp;"]) {
+  for (const placeholder of [
+    "Not applicable",
+    "Not applicable.",
+    "No tests",
+    "Same as title",
+    "<br><br>",
+    "&nbsp;&nbsp;",
+  ]) {
     const result = runEvent({
       body: `## Summary
 
@@ -306,7 +371,11 @@ Closes #6
     });
     assert.equal(result.status, 1, placeholder);
     assert.match(result.stderr, /Replace the Summary placeholder/, placeholder);
-    assert.match(result.stderr, /Replace the Validation placeholder/, placeholder);
+    assert.match(
+      result.stderr,
+      /Replace the Validation placeholder/,
+      placeholder,
+    );
   }
 });
 
@@ -404,7 +473,11 @@ Example summary text.
 \`\`\`
 `,
   });
-  assert.equal(realSectionsWithExample.status, 0, realSectionsWithExample.stderr);
+  assert.equal(
+    realSectionsWithExample.status,
+    0,
+    realSectionsWithExample.stderr,
+  );
 });
 
 test("treats HTML comment syntax inside fenced code as inert", () => {
@@ -553,7 +626,10 @@ test("rejects invalid Conventional Commit title structure", () => {
   const cases = [
     ["Feature(metadata): validate pull requests", /allowed lowercase type/],
     ["feature(metadata): validate pull requests", /allowed lowercase type/],
-    ["feat(metadata) validate pull requests", /form type\(scope\): description/],
+    [
+      "feat(metadata) validate pull requests",
+      /form type\(scope\): description/,
+    ],
     ["feat(): validate pull requests", /form type\(scope\): description/],
     ["feat: ---", /letter or number/],
     ["feat(metadata): validate pull requests.", /trailing period/],
@@ -681,7 +757,11 @@ test("treats hostile fork metadata as inert workflow input", () => {
   });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(existsSync(sentinel), false, "hostile metadata executed unexpectedly");
+  assert.equal(
+    existsSync(sentinel),
+    false,
+    "hostile metadata executed unexpectedly",
+  );
   rmSync(directory, { recursive: true, force: true });
 });
 
@@ -691,7 +771,10 @@ test("trusted workflow checks out the base revision and never names the head rev
     "utf8",
   );
   assert.match(workflow, /pull_request_target:/);
-  assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/);
+  assert.match(
+    workflow,
+    /ref: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/,
+  );
   assert.match(workflow, /persist-credentials: false/);
   assert.doesNotMatch(workflow, /pull_request\.head\.(?:sha|ref)/);
   assert.doesNotMatch(workflow, /(?:issues|pull-requests):\s*write/);

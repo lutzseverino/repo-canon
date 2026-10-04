@@ -24,6 +24,8 @@ jobs:
           package-manager-cache: false
       - name: Install development dependencies
         run: npm ci --include=dev
+      - name: Check formatting
+        run: npm run format:check
       - name: Lint authored files
         run: npm run lint
       - name: Check JavaScript syntax

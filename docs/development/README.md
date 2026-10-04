@@ -14,12 +14,18 @@ install public Repository Standards CLI 4.0.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 
-Run focused tests for the changed behavior, `npm run lint`, `npm run check`, and
-`git diff --check` before opening a PR. Review affected links, issue-form fields,
-and consistency with the confirmed preferences. A single fixture runs with
+Run `npm run format` to format supported files locally with Prettier's defaults;
+there is no configuration file. `.prettierignore` excludes vendored code,
+installed Repository Standards state, installed skills (including Repo Canon's
+own `deliver` skill), and the npm lockfile.
+
+Run focused tests for the changed behavior, `npm run format:check`,
+`npm run lint`, `npm run check`, and `git diff --check` before opening a PR.
+Review affected links, issue-form fields, and consistency with the confirmed
+preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
-CI installs development dependencies and runs lint, the full `npm test` suite,
-and all-profile source validation. The lint step uses oxlint's defaults plus
+CI installs development dependencies and runs the format check, lint, the full
+`npm test` suite, and all-profile source validation. The lint step uses oxlint's defaults plus
 ESLint's `recommended` rules that oxlint does not enable by default, with Node
 globals, as named in `.oxlintrc.json`. It excludes `vendor/`, `.repo-standards/`,
 and installed skills under `.agents/skills/`. Both warnings and errors fail the

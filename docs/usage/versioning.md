@@ -48,12 +48,12 @@ new minimum and why it moved.
 Versions beginning with `0` indicate initial development. Repo Canon uses the
 following bump convention during this period:
 
-| Change | Example next version |
-| --- | --- |
-| Compatible fix | `0.1.0` to `0.1.1` |
-| Raised required CLI version | `0.1.0` to `0.1.1` |
-| Compatible feature | `0.1.0` to `0.2.0` |
-| Breaking standards change | `0.1.0` to `0.2.0` |
+| Change                      | Example next version |
+| --------------------------- | -------------------- |
+| Compatible fix              | `0.1.0` to `0.1.1`   |
+| Raised required CLI version | `0.1.0` to `0.1.1`   |
+| Compatible feature          | `0.1.0` to `0.2.0`   |
+| Breaking standards change   | `0.1.0` to `0.2.0`   |
 
 A middle-number bump can contain either compatible features or breaking changes;
 read the release notes before selecting it for adoption.

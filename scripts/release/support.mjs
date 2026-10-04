@@ -2,10 +2,10 @@
 // repository or GitHub: commits are read with `git archive` and `git show`,
 // and every extracted tree lives in a temporary directory that is removed.
 
-import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 export class ReleaseCheckFailure extends Error {}
 
@@ -18,7 +18,7 @@ export function fail(message) {
 export async function runScript(name, usage, arity, body) {
   const args = process.argv.slice(2);
   try {
-    if (args.length !== arity || args.includes('')) fail(`Usage: ${usage}`);
+    if (args.length !== arity || args.includes("")) fail(`Usage: ${usage}`);
     await body(...args);
   } catch (error) {
     if (!(error instanceof ReleaseCheckFailure)) throw error;
@@ -28,7 +28,11 @@ export async function runScript(name, usage, arity, body) {
 }
 
 export function run(command, args, options = {}) {
-  const child = spawnSync(command, args, { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, ...options });
+  const child = spawnSync(command, args, {
+    encoding: "utf8",
+    maxBuffer: 256 * 1024 * 1024,
+    ...options,
+  });
   if (child.error) fail(`Could not run ${command}: ${child.error.message}`);
   return child;
 }
@@ -42,28 +46,40 @@ export function parseJson(text, description) {
 }
 
 export function git(args) {
-  const child = run('git', ['--literal-pathspecs', ...args]);
+  const child = run("git", ["--literal-pathspecs", ...args]);
   if (child.status !== 0) fail(`git ${args[0]} failed: ${child.stderr.trim()}`);
   return child.stdout;
 }
 
 function commitOf(revision, missing) {
-  const child = run('git', ['rev-parse', '--verify', '--quiet', '--end-of-options', `${revision}^{commit}`]);
+  const child = run("git", [
+    "rev-parse",
+    "--verify",
+    "--quiet",
+    "--end-of-options",
+    `${revision}^{commit}`,
+  ]);
   if (child.status !== 0) fail(missing);
   return child.stdout.trim();
 }
 
 export function resolveCommit(revision) {
-  return commitOf(revision, `${revision} does not name a commit in this repository; fetch it first.`);
+  return commitOf(
+    revision,
+    `${revision} does not name a commit in this repository; fetch it first.`,
+  );
 }
 
 export function resolveTag(tag) {
-  return commitOf(`refs/tags/${tag}`, `${tag} is not a tag in this repository; fetch the release tags first.`);
+  return commitOf(
+    `refs/tags/${tag}`,
+    `${tag} is not a tag in this repository; fetch the release tags first.`,
+  );
 }
 
 // Returns a reader of the files at a commit, for checks of its documents.
 export function filesAt(commit) {
-  return path => git(['show', `${commit}:${path}`]);
+  return (path) => git(["show", `${commit}:${path}`]);
 }
 
 // The public Repository Standards CLI, installed outside the checkout under
@@ -71,11 +87,14 @@ export function filesAt(commit) {
 export function repoStandardsCli() {
   const prefix = process.env.REPO_STANDARDS_PREFIX;
   if (!prefix) {
-    fail('Set REPO_STANDARDS_PREFIX to the directory where the public Repository Standards CLI is installed, '
-      + 'as docs/development/source-profile.md describes.');
+    fail(
+      "Set REPO_STANDARDS_PREFIX to the directory where the public Repository Standards CLI is installed, " +
+        "as docs/development/source-profile.md describes.",
+    );
   }
-  const executable = join(prefix, 'node_modules/.bin/repo-standards');
-  if (!existsSync(executable)) fail(`No Repository Standards CLI is installed at ${executable}.`);
+  const executable = join(prefix, "node_modules/.bin/repo-standards");
+  if (!existsSync(executable))
+    fail(`No Repository Standards CLI is installed at ${executable}.`);
   return executable;
 }
 
@@ -92,15 +111,19 @@ export function withTemporaryDirectory(prefix, body) {
 // declaration's exact file, guidance, discovery, skill directory, and operation
 // scripts and resources.
 function selectedPaths(validation) {
-  const paths = new Set(['standards.yaml']);
+  const paths = new Set(["standards.yaml"]);
   for (const profile of Object.values(validation.profiles)) {
     for (const declaration of profile.declarations) {
-      for (const field of ['exact', 'guidance', 'discovery', 'source']) {
+      for (const field of ["exact", "guidance", "discovery", "source"]) {
         if (declaration[field] != null) paths.add(declaration[field]);
       }
-      for (const operation of [...(declaration.checks ?? []), ...(declaration.fixes ?? [])]) {
+      for (const operation of [
+        ...(declaration.checks ?? []),
+        ...(declaration.fixes ?? []),
+      ]) {
         paths.add(operation.run.script);
-        for (const resource of operation.run.resources ?? []) paths.add(resource);
+        for (const resource of operation.run.resources ?? [])
+          paths.add(resource);
       }
     }
   }
@@ -111,17 +134,29 @@ function selectedPaths(validation) {
 // reports them for every profile of that commit's tree.
 export function sourceInputsAt(commit) {
   const cli = repoStandardsCli();
-  return withTemporaryDirectory('repo-canon-release-', directory => {
-    const archive = join(directory, 'source.tar');
-    const tree = join(directory, 'source');
-    git(['archive', '--format=tar', '--prefix=source/', `--output=${archive}`, commit]);
-    const extracted = run('tar', ['-x', '-f', archive, '-C', directory]);
-    if (extracted.status !== 0) fail(`Could not extract ${commit}: ${extracted.stderr.trim()}`);
+  return withTemporaryDirectory("repo-canon-release-", (directory) => {
+    const archive = join(directory, "source.tar");
+    const tree = join(directory, "source");
+    git([
+      "archive",
+      "--format=tar",
+      "--prefix=source/",
+      `--output=${archive}`,
+      commit,
+    ]);
+    const extracted = run("tar", ["-x", "-f", archive, "-C", directory]);
+    if (extracted.status !== 0)
+      fail(`Could not extract ${commit}: ${extracted.stderr.trim()}`);
 
-    const child = run(cli, ['source', 'validate', tree, '--json']);
-    const validation = parseJson(child.stdout || child.stderr, `source validate output for ${commit}`);
+    const child = run(cli, ["source", "validate", tree, "--json"]);
+    const validation = parseJson(
+      child.stdout || child.stderr,
+      `source validate output for ${commit}`,
+    );
     if (child.status !== 0 || validation.valid !== true) {
-      const errors = (validation.errors ?? []).map(error => `  ${error.message}`).join('\n');
+      const errors = (validation.errors ?? [])
+        .map((error) => `  ${error.message}`)
+        .join("\n");
       fail(`The source at ${commit} does not validate:\n${errors}`);
     }
     return selectedPaths(validation);

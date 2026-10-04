@@ -5,12 +5,12 @@ operation. It requires the stable `PR metadata` check from the
 [pull request metadata workflow](pr-metadata-validation.md) on the default
 branch and configures these repository merge settings:
 
-| Setting | Required value |
-| --- | --- |
-| Squash merging | Enabled |
-| Merge commits | Disabled |
-| Rebase merging | Disabled |
-| Squash commit title | Pull request title |
+| Setting               | Required value           |
+| --------------------- | ------------------------ |
+| Squash merging        | Enabled                  |
+| Merge commits         | Disabled                 |
+| Rebase merging        | Disabled                 |
+| Squash commit title   | Pull request title       |
 | Squash commit message | Pull request description |
 
 The operation first reads repository settings, classic required status checks,
@@ -25,12 +25,12 @@ rulesets and branch policy remain untouched.
 The classic-protection read distinguishes GitHub's documented response states
 before choosing an enforcement location:
 
-| Branch protection response | Required-check action | Readback |
-| --- | --- | --- |
-| `404 Branch not protected` | Use the dedicated ruleset | Confirm an active ruleset applies to the default branch and requires `PR metadata` |
-| `200` with no `required_status_checks` policy | Preserve the other classic protections and use the dedicated ruleset | Confirm the same ruleset enforcement |
-| `200` with `required_status_checks` | Add `PR metadata` to the existing classic contexts | Re-read branch protection and confirm the context |
-| Any other `404` or unreadable response | Return `blocked` without mutation | None; the operation cannot safely distinguish absence from inaccessible state |
+| Branch protection response                    | Required-check action                                                | Readback                                                                           |
+| --------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `404 Branch not protected`                    | Use the dedicated ruleset                                            | Confirm an active ruleset applies to the default branch and requires `PR metadata` |
+| `200` with no `required_status_checks` policy | Preserve the other classic protections and use the dedicated ruleset | Confirm the same ruleset enforcement                                               |
+| `200` with `required_status_checks`           | Add `PR metadata` to the existing classic contexts                   | Re-read branch protection and confirm the context                                  |
+| Any other `404` or unreadable response        | Return `blocked` without mutation                                    | None; the operation cannot safely distinguish absence from inaccessible state      |
 
 Ruleset readback checks active enforcement, branch applicability, exclusions,
 and the required-check rule together. An inactive or non-applicable managed
