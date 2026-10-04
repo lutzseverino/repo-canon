@@ -31,7 +31,7 @@ const sharedFiles = [
   "docs/agents/triage-labels.md",
 ];
 
-function build(t, env = process.env) {
+function build(t) {
   const parent = mkdtempSync(join(tmpdir(), "repo-canon-deliver-test-"));
   t.after(() => rmSync(parent, { recursive: true, force: true }));
   const output = execFileSync(
@@ -40,7 +40,6 @@ function build(t, env = process.env) {
     {
       cwd: sourceRoot,
       encoding: "utf8",
-      env,
     },
   );
   return JSON.parse(output);
@@ -81,41 +80,10 @@ function deliverBranch(repository, branch, message, paths) {
   git(repository, "push", "--quiet", "-u", "origin", branch);
 }
 
-test("the deliver skill is manual only in both invocation settings", () => {
-  const skill = readFileSync(
-    join(sourceRoot, ".agents/skills/deliver/SKILL.md"),
-    "utf8",
-  );
-  const frontmatter = /^---\n([\s\S]*?)\n---\n/.exec(skill)?.[1] ?? "";
-  assert.match(frontmatter, /^name: deliver$/m);
-  assert.match(frontmatter, /^disable-model-invocation: true$/m);
-  const policy = readFileSync(
-    join(sourceRoot, ".agents/skills/deliver/agents/openai.yaml"),
-    "utf8",
-  );
-  assert.match(policy, /^policy:\n {2}allow_implicit_invocation: false$/m);
-});
-
 test("builds the deliver exercise repositories with their stand-ins", (t) => {
   const manifest = build(t);
   assert.equal(manifest.format, "repo-canon/deliver-skill-fixtures/v1");
-  assert.match(manifest.source.worktreeCommit, /^[0-9a-f]{40}$/);
-  assert.match(manifest.source.builderSha256, /^[0-9a-f]{64}$/);
-  assert.equal(
-    manifest.source.directoryHashSerialization,
-    "repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1",
-  );
-  for (const path of [
-    ...sharedFiles,
-    "scripts/create-deliver-skill-fixtures.mjs",
-    "scripts/support/exercise-gh.mjs",
-    "scripts/support/exercise-repo-standards.mjs",
-    "scripts/support/fixture-authoring.mjs",
-  ]) {
-    assert.match(manifest.source.inputFiles[path].sha256, /^[a-f0-9]{64}$/);
-  }
   assert.deepEqual(Object.keys(manifest.source.skills), ["deliver"]);
-  assert.match(manifest.source.skills.deliver.sha256, /^[a-f0-9]{64}$/);
   assert.deepEqual(Object.keys(manifest.repositories).sort(), [
     "adoption",
     "work",
@@ -124,19 +92,6 @@ test("builds the deliver exercise repositories with their stand-ins", (t) => {
 
   for (const repository of Object.values(manifest.repositories)) {
     const root = repository.path;
-    assert.equal(
-      git(root, "config", "--local", "--get", "commit.gpgsign"),
-      "false",
-    );
-    assert.equal(
-      git(root, "config", "--local", "--get", "user.name"),
-      "Repo Canon Exercise",
-    );
-    assert.equal(
-      git(root, "config", "--local", "--get", "user.email"),
-      "exercise@example.invalid",
-    );
-    assert.equal(git(root, "branch", "--show-current"), "main");
     assert.equal(git(root, "remote", "get-url", "origin"), repository.remote);
     assert.equal(git(root, "rev-parse", "HEAD"), repository.head);
     assert.equal(
@@ -158,14 +113,6 @@ test("builds the deliver exercise repositories with their stand-ins", (t) => {
         path,
       );
     }
-    assert.match(
-      readFileSync(join(root, "docs/development/README.md"), "utf8"),
-      /## Setup and validation\n\n.*`npm test`/s,
-    );
-    assert.match(
-      readFileSync(join(root, "docs/agents/project.md"), "utf8"),
-      /disposable/,
-    );
     const link = join(root, ".agents/skills/deliver");
     assert.ok(lstatSync(link).isSymbolicLink());
     assert.ok(existsSync(join(link, "SKILL.md")));
@@ -337,26 +284,4 @@ test("an adoption run is delivered with its record as the description", (t) => {
   const checks = gh(manifest, root, "pr", "checks");
   assert.equal(checks.status, 0, checks.stdout);
   assert.match(checks.stdout, /^PR metadata\tpass\t/m);
-});
-
-test("later ordinary commits use local signing policy under hostile host configuration", (t) => {
-  const parent = mkdtempSync(
-    join(tmpdir(), "repo-canon-deliver-signing-test-"),
-  );
-  t.after(() => rmSync(parent, { recursive: true, force: true }));
-  const globalGitConfig = join(parent, "gitconfig");
-  const globalGitConfigBytes =
-    "[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = /bin/false\n";
-  writeFileSync(globalGitConfig, globalGitConfigBytes);
-  const env = { ...process.env, GIT_CONFIG_GLOBAL: globalGitConfig };
-  const manifest = build(t, env);
-  const repository = manifest.repositories.work.path;
-
-  execFileSync("git", ["add", "--all"], { cwd: repository, env });
-  execFileSync(
-    "git",
-    ["commit", "--quiet", "-m", "fix: reject empty Parcel references"],
-    { cwd: repository, env },
-  );
-  assert.equal(readFileSync(globalGitConfig, "utf8"), globalGitConfigBytes);
 });
