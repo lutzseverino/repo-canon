@@ -104,7 +104,7 @@ export function decideIssueContract(snapshot) {
       message: readiness.error,
       removeLabels: readinessLabels(result.labels),
       addLabels: result.usesWorkflowState ? reviewReturnLabels(result.labels) : [],
-      feedback: feedbackChange(comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, { reason: readiness.error, rejected: Boolean(readiness.rejectionReason) })),
+      feedback: feedbackChange(comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, { reason: readiness.error, rejected: Boolean(readiness.rejectionReason), rejectedCreationLabel: readiness.rejectedCreationLabel })),
     });
   }
 
@@ -141,7 +141,7 @@ export function decideIssueContract(snapshot) {
       comments,
       readiness.approved
         ? approvedFeedback(result.kind, revision, readiness.label, readiness.reviewer, readiness.reviewEventId, readiness.sourceInvalidation)
-        : awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, { reason: readiness.rejectionReason, rejected: true }),
+        : awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, { reason: readiness.rejectionReason, rejected: true, rejectedCreationLabel: readiness.rejectedCreationLabel }),
     ),
   });
 }
@@ -627,6 +627,7 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
         sourceInvalidation,
         error,
         rejectionReason: authority.error ? null : error,
+        rejectedCreationLabel: !authority.error && creationEvent ? grant.label : null,
       };
     }
     return {
@@ -643,10 +644,10 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
     const rejectionReason = recorded?.status === "awaiting-review"
       && recorded.revision === revision
       && recorded.rejectionReason
-      && timeline.rejectionUnchanged(recorded.observedEventId)
+      && timeline.rejectionUnchanged(recorded.observedEventId, recorded.rejectedCreationLabel)
       ? recorded.rejectionReason
       : null;
-    return { valid: true, approved: false, observedEventId, sourceInvalidation, rejectionReason };
+    return { valid: true, approved: false, observedEventId, sourceInvalidation, rejectionReason, rejectedCreationLabel: rejectionReason ? recorded.rejectedCreationLabel : null };
   }
 
   return {
@@ -868,16 +869,17 @@ function issueTimeline({ event, issue, issueEvents }) {
 
     // Removing readiness is part of the validator's rejection cleanup, not
     // another review attempt. Every other readiness transition replaces it.
-    rejectionUnchanged(observedEventId) {
-      // A human transition missing from the timeline still replaces the
-      // rejection. A replay of an already recorded transition is handled by
-      // the timeline below, including the original creation label.
+    rejectionUnchanged(observedEventId, rejectedCreationLabel) {
+      // The creation review recorded which opener's label it rejected. Its
+      // other creation run can replay that label while history is still empty.
+      // Every other human readiness trigger replaces the rejection.
       const readinessTrigger = ["labeled", "unlabeled"].includes(event.action) && readinessTransitionLabel(event);
+      const creationTrigger = event.action === "labeled"
+        && Boolean(issue.user?.login)
+        && event.sender?.login === issue.user.login
+        && event.label?.name === rejectedCreationLabel;
       if (readinessTrigger && event.sender?.login !== "github-actions[bot]"
-        && !issueEvents.some((candidate) => candidate.event === event.action
-          && candidate.label?.name === event.label.name
-          && candidate.actor?.login === event.sender?.login
-          && candidate.created_at === event.issue?.updated_at)) {
+        && !creationTrigger) {
         return false;
       }
       const observed = observedEventId == null ? 0 : position(observedEventId);
@@ -886,6 +888,7 @@ function issueTimeline({ event, issue, issueEvents }) {
       const first = transitions[0];
       if (observedEventId == null
         && first?.event === "labeled"
+        && first.label?.name === rejectedCreationLabel
         && atCreation(first.created_at)
         && first.actor?.login === issue.user?.login) {
         transitions.shift();
@@ -1001,8 +1004,8 @@ function invalidFeedback(errors) {
   return `${feedbackMarker}\n## Issue contract needs attention\n\n${errors.map((error) => `- ${error}`).join("\n")}\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.`;
 }
 
-function awaitingReviewFeedback(kind, revision, observedEventId = null, sourceInvalidation = null, { reason = null, rejected = false } = {}) {
-  const state = JSON.stringify({ status: "awaiting-review", revision, label: null, reviewer: null, observedEventId, sourceInvalidation, ...(rejected && reason ? { rejectionReason: reason } : {}) });
+function awaitingReviewFeedback(kind, revision, observedEventId = null, sourceInvalidation = null, { reason = null, rejected = false, rejectedCreationLabel = null } = {}) {
+  const state = JSON.stringify({ status: "awaiting-review", revision, label: null, reviewer: null, observedEventId, sourceInvalidation, ...(rejected && reason ? { rejectionReason: reason, ...(rejectedCreationLabel ? { rejectedCreationLabel } : {}) } : {}) });
   const explanation = reason ? `\n\nThe last readiness attempt was rejected: ${reason}` : "";
   return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${revision}\`.${explanation}\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
 }

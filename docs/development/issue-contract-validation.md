@@ -80,11 +80,15 @@ revision is unchanged and no new readiness transition has occurred, including
 either completion order of the creation runs. If the opening run rejected from
 its payload before the timeline recorded the opener's creation label, that
 label appearing later does not replace the reason. The bot's removal of
-readiness as rejection cleanup also retains it. A later readiness event or a
+readiness as rejection cleanup also retains it. A creation rejection records
+which label the creation review rejected, so the opener's matching `labeled`
+trigger retains the reason even when both creation runs see empty history.
+This recognition does not match payload `updated_at` to a timeline timestamp.
+A later readiness event or a
 contract edit replaces the rejection through the usual review or
 revision-notice path. A triggering human readiness transition replaces it even
-when the timeline has not recorded that transition yet; replaying the original
-recorded creation event retains the reason. Other readiness errors, including
+when the timeline has not recorded that transition yet, except for that
+creation-label replay. Other readiness errors, including
 multiple labels, stale readiness, unverifiable authority, and
 deleted-Agent-Brief invalidation, keep their existing feedback behavior, as do
 plain awaiting-review notices, structural corrections, and superseding workflow

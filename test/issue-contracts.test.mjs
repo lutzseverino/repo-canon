@@ -1175,18 +1175,20 @@ const creationState = (opener) => ({ labels: ["ready-for-agent"], issueEvents: [
 // Decides the `opened` and `labeled` runs of an issue that `opener` created
 // with readiness, in `order`. Each run sees the labels, timeline, and feedback
 // the previous run left, as the per-issue concurrency group serializes them.
-function decideCreationRuns(order, { opener = "maintainer", permissions = { [opener]: role("admin") }, firstRunIssueEvents } = {}) {
+function decideCreationRuns(order, { opener = "maintainer", permissions = { [opener]: role("admin") }, firstRunIssueEvents, runIssueEvents, labeledPayloadUpdatedAt } = {}) {
   const comments = [];
   const state = creationState(opener);
   const decisions = order.map((run, index) => {
-    const decision = decideIssueContract(snapshotFor(createdWithReadiness({
+    const snapshot = createdWithReadiness({
       run,
       opener,
       currentLabels: state.labels,
       comments,
-      issueEvents: index === 0 && firstRunIssueEvents ? firstRunIssueEvents : [...state.issueEvents],
+      issueEvents: runIssueEvents?.[index] ?? (index === 0 && firstRunIssueEvents ? firstRunIssueEvents : [...state.issueEvents]),
       permissions,
-    })));
+    });
+    if (run === "labeled" && labeledPayloadUpdatedAt !== undefined) snapshot.event.issue.updated_at = labeledPayloadUpdatedAt;
+    const decision = decideIssueContract(snapshotFor(snapshot));
     applyFeedback(comments, decision);
     applyLabelChanges(state, decision.removeLabels, decision.addLabels);
     return decision;
@@ -1205,6 +1207,30 @@ const unauthorizedOpeners = [
 const lostCreationReadiness = (message, remove = ["ready-for-agent"]) => ({ exitCode: 1, remove, add: ["needs-triage"], feedback: "create", message });
 
 decisionTable("a readiness label applied at creation is reviewed whichever run arrives first", [
+  ...[null, "2026-09-14T17:00:04Z"].map((updatedAt) => ({
+    name: `the rejected creation-label replay retains its reason with payload updated_at ${updatedAt}`,
+    run: () => {
+      const { comments, labels } = decideCreationRuns(["opened", "labeled"], {
+        opener: "reporter", permissions: { reporter: role("write") }, labeledPayloadUpdatedAt: updatedAt,
+      });
+      assert.match(comments[0].body, notAuthorized);
+      assert.deepEqual(labels, ["needs-triage"]);
+      assert.equal(comments.length, 1);
+    },
+  })),
+  {
+    name: "an unauthorized opened-first rejection survives empty history in both runs",
+    run: () => {
+      const { decisions: [first, second], comments, labels } = decideCreationRuns(["opened", "labeled"], {
+        opener: "reporter", permissions: { reporter: role("write") }, runIssueEvents: [[], []],
+      });
+      assertDecision(first, { ...lostCreationReadiness(notAuthorized), feedbackBody: [notAuthorized, /"observedEventId":null/] });
+      assertDecision(second, { exitCode: 0 });
+      assert.match(comments[0].body, notAuthorized);
+      assert.deepEqual(labels, ["needs-triage"]);
+      assert.equal(comments.length, 1);
+    },
+  },
   {
     name: "an unauthorized opened-first rejection survives creation-timeline catch-up",
     run: () => {
@@ -1418,6 +1444,16 @@ decisionTable("a recorded readiness rejection lasts until another review or cont
     { name: "an edit with unchanged contract bytes", change: (snapshot) => { snapshot.bodyLastEditedAt = "2026-09-14T17:01:00Z"; } },
     { name: "a later readiness removal by a maintainer", change: (snapshot) => {
       snapshot.issueEvents.push(creationLabel({ id: 300, event: "unlabeled", created_at: "2026-09-14T17:01:00Z" }));
+    } },
+    { name: "a different readiness label triggered by the opener", change: (snapshot) => {
+      snapshot.event = labeledBy("reporter", "ready-for-human");
+    } },
+    { name: "a readiness removal triggered by the opener", change: (snapshot) => {
+      snapshot.event = { ...labeledBy("reporter"), action: "unlabeled" };
+    } },
+    { name: "a later recorded readiness application by the opener", change: (snapshot) => {
+      snapshot.issueEvents.push(creationLabel({ id: 300, actor: { login: "reporter" }, created_at: "2026-09-14T17:01:00Z" }));
+      snapshot.event = labeledBy("reporter");
     } },
     ...["labeled", "unlabeled"].map((action) => ({
       name: `a maintainer's ${action} event absent from the timeline`,
