@@ -45,7 +45,7 @@ directory:
   variable, secret, or message is published.
 - Relax the harness sandbox, if at all, only inside the disposable repository.
   A sandbox that mounts `.git` read-only blocks the commits that the debugging,
-  merge-conflict, TDD, and planning scenarios make.
+  merge-conflict, TDD, planning, and deliver scenarios make.
 
 For example, with Codex CLI:
 
@@ -147,9 +147,10 @@ npm run test:deliver-skill-fixtures
 The builder prints a `repo-canon/deliver-skill-fixtures/v1` manifest. Two
 repositories exercise `deliver`, each holding uncommitted work on `main`:
 `work` implements the ready issue #12, and `adoption` holds an adoption run's
-uncommitted changes. Each also has the exact pull request template and the
-trusted PR metadata workflow, validator, and parsers, and a development guide
-whose required checks are `npm test` and `git diff --check`.
+uncommitted changes. Each also has the exact pull request template, which
+`adoption` holds as its uncommitted change, the trusted PR metadata workflow,
+validator, and parsers, and a development guide whose required checks are
+`npm test` and `git diff --check`.
 
 Delivery publishes, so the builder replaces publication with local stand-ins.
 Each repository's `origin` is a bare repository under the fixture root. The
@@ -160,6 +161,11 @@ PR metadata validator from the base branch and `npm test` at the head, and
 links each check's log. Any command it does not support fails, so nothing
 reaches GitHub. In `adoption`, the ignored pinned CLI is a stand-in that
 answers `status --json` and `status --summary` for the completed run.
+
+A session writes the remotes and records under the fixture root, so relax its
+sandbox to that root, which is as disposable as the repository. With Codex CLI,
+pass `--add-dir <fixture-root> --add-dir <repository>/.git`; `workspace-write`
+otherwise keeps `.git` read-only even under an added fixture root.
 
 The test verifies the skill's agreeing invocation settings, the exact shared
 files, the local remotes and stand-ins, a full delivery of each repository

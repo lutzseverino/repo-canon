@@ -51,7 +51,7 @@ function gh(manifest, cwd, ...args) {
   return spawnSync('gh', args, { cwd, encoding: 'utf8', env: exerciseEnv(manifest) });
 }
 
-function deliverBranch(manifest, repository, branch, message, paths) {
+function deliverBranch(repository, branch, message, paths) {
   git(repository, 'switch', '--quiet', '-c', branch);
   git(repository, 'add', '--', ...paths);
   git(repository, 'commit', '--quiet', '-m', message);
@@ -128,7 +128,7 @@ test('the stand-ins carry ordinary work to a pull request with its checks', (t) 
   assert.equal(unpushed.status, 1);
   assert.match(unpushed.stderr, /must first push/);
 
-  deliverBranch(manifest, root, 'fix/12-reject-empty-references', 'fix: reject empty Parcel references', ['src', 'test']);
+  deliverBranch(root, 'fix/12-reject-empty-references', 'fix: reject empty Parcel references', ['src', 'test']);
   const body = join(manifest.root, 'body.md');
   writeFileSync(body, '## Summary\n\nRejects a missing or blank Parcel reference.\n\n## Validation\n\n- `npm test`: passed.\n- `git diff --check`: passed.\n\n## Related issue\n\nCloses #12\n');
   const created = gh(manifest, root, 'pr', 'create', '--base', 'main', '--title', 'fix: reject empty Parcel references', '--body-file', body);
@@ -182,7 +182,7 @@ test('an adoption run is delivered with its record as the description', (t) => {
   assert.equal(spawnSync(cli, ['inspect', '--json'], { cwd: root }).status, 1);
 
   const title = 'chore: adopt Repo Canon v0.4.1 with Repository Standards CLI 4.0.0';
-  deliverBranch(manifest, root, 'chore/adopt-repo-canon-v0.4.1', title, ['.github', '.repo-standards']);
+  deliverBranch(root, 'chore/adopt-repo-canon-v0.4.1', title, ['.github', '.repo-standards']);
   assert.deepEqual(changes(root), []);
   const body = join(manifest.root, 'record.md');
   writeFileSync(body, record);

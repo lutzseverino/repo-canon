@@ -70,12 +70,14 @@ repeated.
   The manual-only `deliver` skill takes completed work, including an adoption
   run's uncommitted changes, to an opened pull request with its checks
   reported. It sequences the rules of `CONTRIBUTING.md` and the pull request
-  template without restating them. It has no delivery file: the required
-  checks live in the project's development guide, project constraints in the
-  optional `docs/agents/project.md`, and the adoption record in the pinned
-  CLI's `status --summary`, so a delivery file would only copy them. Its source
-  is its installed path, `.agents/skills/deliver`, as for Repo Canon's other
-  original exact files; only vendored material has a separate source path.
+  template without restating them, and chooses the adoption record, which
+  those rules allow, as an adoption run's description. It has no delivery
+  file: the required checks live in the project's development guide, project
+  constraints in the optional `docs/agents/project.md`, and the adoption record
+  in the pinned CLI's `status --summary`, so a delivery file would only copy
+  them. Its source is its installed path, `.agents/skills/deliver`, as for Repo
+  Canon's other original exact files; only vendored material has a separate
+  source path.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the
   standards source.
