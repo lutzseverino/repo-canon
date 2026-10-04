@@ -74,14 +74,19 @@ without reapproving or duplicating feedback. Awaiting-review state also records
 the latest readiness-label transition it observed. Approved state records the
 exact GitHub issue-event ID that supplied the review.
 
-A readiness rejection also records its reason. Later runs retain that reason
-while the contract revision is unchanged and no new readiness transition has
-occurred, including either completion order of the creation runs. The bot's
-removal of readiness as rejection cleanup does not replace the reason. A later
-readiness event or a contract edit replaces the rejection through the usual
-review or revision-notice path. Plain awaiting-review notices, structural
-corrections, and superseding workflow states keep their existing feedback
-behavior.
+An unauthorized reviewer's readiness rejection records its "is not authorized
+to grant readiness" reason. Later runs retain that reason while the contract
+revision is unchanged and no new readiness transition has occurred, including
+either completion order of the creation runs. If the opening run rejected from
+its payload before the timeline recorded the opener's creation label, that
+label appearing later does not replace the reason. The bot's removal of
+readiness as rejection cleanup also retains it. A later readiness event or a
+contract edit replaces the rejection through the usual review or
+revision-notice path. Other readiness errors, including multiple labels, stale
+readiness, unverifiable authority, and deleted-Agent-Brief invalidation, keep
+their existing feedback behavior, as do plain awaiting-review notices,
+structural corrections, and superseding workflow states. Feedback records from
+the previous validator without a rejection reason keep the plain notice.
 
 The revision is computed from a versioned record containing the selected
 contract kind, exact contract bytes, source identity, and source edit revision.
@@ -221,7 +226,8 @@ repeat-safe feedback,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized
 actors, stale and repeated events, native creation by authorized and
 unauthorized openers in either run order,
-preservation of rejection reasons across cleanup and repeated events, their
+preservation of unauthorized-reviewer reasons across timeline catch-up, cleanup,
+and repeated events, their
 replacement by later review or contract edits,
 readiness removal and re-add
 ordering across paginated issue events, the one timeline ordering rule,

@@ -104,7 +104,7 @@ export function decideIssueContract(snapshot) {
       message: readiness.error,
       removeLabels: readinessLabels(result.labels),
       addLabels: result.usesWorkflowState ? reviewReturnLabels(result.labels) : [],
-      feedback: feedbackChange(comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, { reason: readiness.error, rejected: true })),
+      feedback: feedbackChange(comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, { reason: readiness.error, rejected: Boolean(readiness.rejectionReason) })),
     });
   }
 
@@ -618,13 +618,15 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
     if (!grant.valid) return { valid: false, error: grant.error, observedEventId, sourceInvalidation };
     const authority = reviewerAuthority(permissions, grant.reviewer);
     if (!authority.authorized) {
+      const error = authority.error
+        ? `Could not verify @${grant.reviewer}'s review authority: ${authority.error}`
+        : `@${grant.reviewer} is not authorized to grant readiness. Use a repository admin, maintainer, or collaborator with the triage role.`;
       return {
         valid: false,
         observedEventId,
         sourceInvalidation,
-        error: authority.error
-          ? `Could not verify @${grant.reviewer}'s review authority: ${authority.error}`
-          : `@${grant.reviewer} is not authorized to grant readiness. Use a repository admin, maintainer, or collaborator with the triage role.`,
+        error,
+        rejectionReason: authority.error ? null : error,
       };
     }
     return {
@@ -640,7 +642,7 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
   if (currentReadyLabels.length === 0) {
     const rejectionReason = recorded?.status === "awaiting-review"
       && recorded.revision === revision
-      && recorded.sourceInvalidation === sourceInvalidation
+      && recorded.rejectionReason
       && timeline.rejectionUnchanged(recorded.observedEventId)
       ? recorded.rejectionReason
       : null;
@@ -869,7 +871,15 @@ function issueTimeline({ event, issue, issueEvents }) {
     rejectionUnchanged(observedEventId) {
       const observed = observedEventId == null ? 0 : position(observedEventId);
       if (observed === null) return false;
-      return issueEvents.slice(observed).filter(isReadinessTransition).every((candidate) =>
+      const transitions = issueEvents.slice(observed).filter(isReadinessTransition);
+      const first = transitions[0];
+      if (observedEventId == null
+        && first?.event === "labeled"
+        && atCreation(first.created_at)
+        && first.actor?.login === issue.user?.login) {
+        transitions.shift();
+      }
+      return transitions.every((candidate) =>
         candidate.event === "unlabeled" && candidate.actor?.login === "github-actions[bot]",
       );
     },
