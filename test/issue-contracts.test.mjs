@@ -1175,18 +1175,20 @@ const creationState = (opener) => ({ labels: ["ready-for-agent"], issueEvents: [
 // Decides the `opened` and `labeled` runs of an issue that `opener` created
 // with readiness, in `order`. Each run sees the labels, timeline, and feedback
 // the previous run left, as the per-issue concurrency group serializes them.
-function decideCreationRuns(order, { opener = "maintainer", permissions = { [opener]: role("admin") } } = {}) {
+function decideCreationRuns(order, { opener = "maintainer", permissions = { [opener]: role("admin") }, firstRunIssueEvents, runIssueEvents, labeledPayloadUpdatedAt } = {}) {
   const comments = [];
   const state = creationState(opener);
-  const decisions = order.map((run) => {
-    const decision = decideIssueContract(snapshotFor(createdWithReadiness({
+  const decisions = order.map((run, index) => {
+    const snapshot = createdWithReadiness({
       run,
       opener,
       currentLabels: state.labels,
       comments,
-      issueEvents: [...state.issueEvents],
+      issueEvents: runIssueEvents?.[index] ?? (index === 0 && firstRunIssueEvents ? firstRunIssueEvents : [...state.issueEvents]),
       permissions,
-    })));
+    });
+    if (run === "labeled" && labeledPayloadUpdatedAt !== undefined) snapshot.event.issue.updated_at = labeledPayloadUpdatedAt;
+    const decision = decideIssueContract(snapshotFor(snapshot));
     applyFeedback(comments, decision);
     applyLabelChanges(state, decision.removeLabels, decision.addLabels);
     return decision;
@@ -1205,6 +1207,43 @@ const unauthorizedOpeners = [
 const lostCreationReadiness = (message, remove = ["ready-for-agent"]) => ({ exitCode: 1, remove, add: ["needs-triage"], feedback: "create", message });
 
 decisionTable("a readiness label applied at creation is reviewed whichever run arrives first", [
+  ...[null, "2026-09-14T17:00:04Z"].map((updatedAt) => ({
+    name: `the rejected creation-label replay retains its reason with payload updated_at ${updatedAt}`,
+    run: () => {
+      const { comments, labels } = decideCreationRuns(["opened", "labeled"], {
+        opener: "reporter", permissions: { reporter: role("write") }, labeledPayloadUpdatedAt: updatedAt,
+      });
+      assert.match(comments[0].body, notAuthorized);
+      assert.deepEqual(labels, ["needs-triage"]);
+      assert.equal(comments.length, 1);
+    },
+  })),
+  {
+    name: "an unauthorized opened-first rejection survives empty history in both runs",
+    run: () => {
+      const { decisions: [first, second], comments, labels } = decideCreationRuns(["opened", "labeled"], {
+        opener: "reporter", permissions: { reporter: role("write") }, runIssueEvents: [[], []],
+      });
+      assertDecision(first, { ...lostCreationReadiness(notAuthorized), feedbackBody: [notAuthorized, /"observedEventId":null/] });
+      assertDecision(second, { exitCode: 0 });
+      assert.match(comments[0].body, notAuthorized);
+      assert.deepEqual(labels, ["needs-triage"]);
+      assert.equal(comments.length, 1);
+    },
+  },
+  {
+    name: "an unauthorized opened-first rejection survives creation-timeline catch-up",
+    run: () => {
+      const { decisions: [first, second], comments, labels } = decideCreationRuns(["opened", "labeled"], {
+        opener: "reporter", permissions: { reporter: role("write") }, firstRunIssueEvents: [],
+      });
+      assertDecision(first, { ...lostCreationReadiness(notAuthorized), feedbackBody: [notAuthorized, /"observedEventId":null/] });
+      assertDecision(second, { exitCode: 0, feedback: 99, feedbackBody: notAuthorized });
+      assert.match(comments[0].body, notAuthorized);
+      assert.deepEqual(labels, ["needs-triage"]);
+      assert.equal(comments.length, 1);
+    },
+  },
   ...[["labeled", "opened"], ["opened", "labeled"]].map((order) => ({
     name: `an authorized opener keeps the label when the ${order[0]} run arrives first`,
     run: () => {
@@ -1243,6 +1282,12 @@ decisionTable("a readiness label applied at creation is reviewed whichever run a
         feedbackBody: [opener.rejection, /"observedEventId":"101"/],
       });
       assertDecision(second, { exitCode: 0, feedback: 99, message: /awaiting authorized review/i, feedbackBody: /awaiting review/i });
+      if (opener.permission?.error) {
+        assert.doesNotMatch(comments[0].body, opener.rejection);
+        assert.doesNotMatch(comments[0].body, /last readiness attempt was rejected|rejectionReason/);
+      } else {
+        assert.match(comments[0].body, opener.rejection);
+      }
       assert.deepEqual(labels, ["needs-triage"]);
       assert.equal(comments.length, 1);
     },
@@ -1308,6 +1353,144 @@ decisionTable("a readiness label applied at creation is reviewed whichever run a
     }),
     expected: lostCreationReadiness(/wait for the validator to publish/i),
   },
+]);
+
+// A rejection followed by the validator's label cleanup, as a later run sees it.
+function rejectedCreationSnapshot() {
+  const comments = [];
+  const state = creationState("reporter");
+  const snapshot = createdWithReadiness({
+    run: "labeled", opener: "reporter", issueEvents: state.issueEvents,
+    comments, permissions: { reporter: role("write") },
+  });
+  const rejection = decideIssueContract(snapshotFor(snapshot));
+  applyFeedback(comments, rejection);
+  comments[0].updated_at = "2026-09-14T17:00:05Z";
+  applyLabelChanges(state, rejection.removeLabels, rejection.addLabels);
+  snapshot.issue.labels = state.labels.map((name) => ({ name }));
+  snapshot.event = { action: "reopened", issue: { number: 42 } };
+  return snapshot;
+}
+
+decisionTable("a recorded readiness rejection lasts until another review or contract change", [
+  {
+    name: "a multiple-labels rejection is replaced by the next run as on main",
+    run: () => {
+      const comments = [];
+      const state = {
+        labels: ["ready-for-agent", "ready-for-human"],
+        issueEvents: [creationLabel(), creationLabel({ id: 102, label: { name: "ready-for-human" } })],
+      };
+      const snapshot = createdWithReadiness({ run: "labeled", labels: state.labels, issueEvents: state.issueEvents, comments });
+      const rejection = decideIssueContract(snapshotFor(snapshot));
+      assertDecision(rejection, lostCreationReadiness(/only one readiness label/, state.labels));
+      applyFeedback(comments, rejection);
+      applyLabelChanges(state, rejection.removeLabels, rejection.addLabels);
+      snapshot.issue.labels = state.labels.map((name) => ({ name }));
+      snapshot.event = { action: "reopened", issue: { number: 42 } };
+      const next = decideIssueContract(snapshotFor(snapshot));
+      assertDecision(next, { exitCode: 0, feedback: 99 });
+      assert.equal(next.feedback.body, awaitingTicketFeedback(snapshot.issue, { observedEventId: "203" }).body);
+    },
+  },
+  {
+    name: "a previous validator's record without rejectionReason keeps the plain notice unchanged",
+    run: () => {
+      const issue = createdWithReadiness({ run: "opened", currentLabels: ["needs-triage"] }).issue;
+      const previous = awaitingTicketFeedback(issue, { observedEventId: "101" });
+      const comments = [previous];
+      const decision = decideIssueContract(snapshotFor({ issue, comments, issueEvents: [creationLabel()] }));
+      assertDecision(decision, { exitCode: 0 });
+      assert.doesNotMatch(previous.body, /rejectionReason/);
+      applyFeedback(comments, decision);
+      assert.equal(comments[0].body, previous.body);
+    },
+  },
+  {
+    name: "unrelated and repeated runs retain the rejection after bot cleanup",
+    run: () => {
+      const snapshot = rejectedCreationSnapshot();
+      const cleanup = decideIssueContract(snapshotFor(snapshot));
+      assertDecision(cleanup, { exitCode: 0, feedback: 99, feedbackBody: notAuthorized });
+      applyFeedback(snapshot.comments, cleanup);
+      const retained = snapshot.comments[0].body;
+      for (const event of [
+        { action: "unlabeled", label: { name: "ready-for-agent" }, sender: bot },
+        { action: "created", comment: { id: 100, body: "Discussion." } },
+        { action: "reopened" },
+      ]) {
+        snapshot.event = { issue: { number: 42 }, ...event };
+        assertDecision(decideIssueContract(snapshotFor(snapshot)), { exitCode: 0 });
+        assert.equal(snapshot.comments[0].body, retained);
+      }
+    },
+  },
+  {
+    name: "an authorized readiness event replaces the rejection with approval",
+    run: () => {
+      const snapshot = rejectedCreationSnapshot();
+      snapshot.issue.labels.push({ name: "ready-for-agent" });
+      snapshot.issue.updated_at = "2026-09-14T17:01:00Z";
+      snapshot.issueEvents.push(creationLabel({ id: 300, created_at: snapshot.issue.updated_at }));
+      snapshot.event = labeledBy("maintainer", "ready-for-agent", snapshot.issue);
+      snapshot.permissions.maintainer = role("admin");
+      const decision = decideIssueContract(snapshotFor(snapshot));
+      assertDecision(decision, { exitCode: 0, remove: ["needs-triage"], feedback: 99, feedbackBody: /reviewed by @maintainer/ });
+      assert.doesNotMatch(decision.feedback.body, /not authorized|last readiness attempt was rejected|rejectionReason/);
+    },
+  },
+  ...[
+    { name: "only the creation label recorded", creationOnly: true, error: notAuthorized, feedback: null },
+    { name: "bot cleanup recorded", creationOnly: false, error: /timeline does not contain the current readiness label event/, feedback: 99 },
+  ].map(({ name, creationOnly, error, feedback }) => ({
+    name: `a maintainer's fresh label keeps main's grant behavior with ${name}`,
+    run: () => {
+      const snapshot = rejectedCreationSnapshot();
+      snapshot.issue.labels.push({ name: "ready-for-agent" });
+      snapshot.issue.updated_at = "2026-09-14T17:01:00Z";
+      snapshot.event = labeledBy("maintainer", "ready-for-agent", snapshot.issue);
+      snapshot.permissions.maintainer = role("admin");
+      if (creationOnly) snapshot.issueEvents = [creationLabel({ actor: { login: "reporter" } })];
+      assertDecision(decideIssueContract(snapshotFor(snapshot)), {
+        exitCode: 1, remove: ["ready-for-agent"], feedback, message: error,
+      });
+    },
+  })),
+  ...[
+    { name: "changed contract bytes", change: (snapshot) => { snapshot.issue.body = ticketBody.replace("Add caching.", "Add an index."); } },
+    { name: "an edit with unchanged contract bytes", change: (snapshot) => { snapshot.bodyLastEditedAt = "2026-09-14T17:01:00Z"; } },
+    { name: "a later readiness removal by a maintainer", change: (snapshot) => {
+      snapshot.issueEvents.push(creationLabel({ id: 300, event: "unlabeled", created_at: "2026-09-14T17:01:00Z" }));
+    } },
+    { name: "a different readiness label triggered by the opener", change: (snapshot) => {
+      snapshot.event = labeledBy("reporter", "ready-for-human");
+    } },
+    { name: "a readiness removal triggered by the opener", change: (snapshot) => {
+      snapshot.event = { ...labeledBy("reporter"), action: "unlabeled" };
+    } },
+    { name: "a later recorded readiness application by the opener", change: (snapshot) => {
+      snapshot.issueEvents.push(creationLabel({ id: 300, actor: { login: "reporter" }, created_at: "2026-09-14T17:01:00Z" }));
+      snapshot.event = labeledBy("reporter");
+    } },
+    {
+      name: "a maintainer's unlabeled event absent from the timeline",
+      change: (snapshot) => {
+        snapshot.event = {
+          ...labeledBy("maintainer", "ready-for-agent", { updated_at: "2026-09-14T17:01:00Z" }),
+          action: "unlabeled",
+        };
+      },
+    },
+  ].map(({ name, change }) => ({
+    name: `${name} replaces the rejection with a plain revision notice`,
+    run: () => {
+      const snapshot = rejectedCreationSnapshot();
+      change(snapshot);
+      const decision = decideIssueContract(snapshotFor(snapshot));
+      assertDecision(decision, { exitCode: 0, feedback: 99, feedbackBody: /awaiting review/ });
+      assert.doesNotMatch(decision.feedback.body, /not authorized|last readiness attempt was rejected|rejectionReason/);
+    },
+  })),
 ]);
 
 // An approved direct ticket whose review is event 101 at 17:00:00.
@@ -2228,6 +2411,8 @@ test("an issue created with readiness ends the same through the adapter whicheve
       assert.doesNotMatch(first.writes[2][2].body, /wait for the validator to publish/i);
       assert.equal(second.code, 0, second.stderr);
       assert.deepEqual(second.writes.map(([method, url]) => [method, url]), [["PATCH", "/repos/example/repository/issues/comments/99"]]);
+      assert.equal(outcome.comments.length, 1);
+      assert.match(outcome.comments[0].body, notAuthorized);
       assert.deepEqual(outcome.labels, ["needs-triage"]);
       outcomes.push(outcome);
     }
