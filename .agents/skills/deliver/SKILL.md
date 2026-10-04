@@ -70,13 +70,14 @@ Done when `git log origin/<base>..HEAD` shows only this work's commits.
 
 Write the pull request's title, which the squash merge makes the final commit
 subject, as the rules for titles and commits require. An adoption run's title
-names the selected source version and CLI from the record's Selection table. It
-is not breaking by default, because an adoption changes the adopted conventions
-rather than the project's interface; mark it breaking only when the maintainer
-judges the run breaking for the project, and step 6 then explains its impact and
-migration. Commit only the work's uncommitted changes, with the title as the
-commit subject, staging only the work's paths. Commits already on the branch
-stay as they are.
+names, from the record's Selection table, the source by the repository name in
+its URL, the selected version, and the CLI version, such as
+`chore: adopt repo-canon v0.4.1 with CLI 4.0.0`. It is not breaking by default,
+because an adoption changes the adopted conventions rather than the project's
+interface; mark it breaking only when the maintainer judges the run breaking for
+the project, and step 6 then explains its impact and migration. Commit only the
+work's uncommitted changes, with the title as the commit subject, staging only
+the work's paths. Commits already on the branch stay as they are.
 
 Done when `git status` shows no part of the work left uncommitted.
 
