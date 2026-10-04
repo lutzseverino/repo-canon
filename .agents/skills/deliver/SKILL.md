@@ -60,7 +60,10 @@ Done when `git log origin/<default>..HEAD` shows only this work's commits.
 
 Check that the changed behavior has the tests the validation rules ask for;
 when it lacks them, stop and report. Run every required check from the
-development guide, plus the focused tests for the changed behavior. Record each
+development guide, plus the focused tests for the changed behavior. A check
+that reads a diff, such as `git diff --check`, sees only unstaged changes in
+its bare form: run it over the pull request's whole change instead, against
+`origin/<default>...HEAD` once step 5 has committed the work. Record each
 command and its outcome as you run it. Fix a failure that the work caused,
 within the work's scope, and run the checks again; stop and report any other
 failure.
@@ -77,7 +80,9 @@ impact or migration explanation. Commit the work with the title as the commit
 subject, staging only the work's paths. For an adoption run, those are the
 record's changed paths and `.repo-standards/`.
 
-Done when `git status` shows no part of the work left uncommitted.
+Done when `git status` shows no part of the work left uncommitted, and each
+diff-reading check has run against `origin/<default>...HEAD` with its outcome
+recorded.
 
 ## 6. Describe
 
