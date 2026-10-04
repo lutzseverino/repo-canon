@@ -295,7 +295,7 @@ decisionTable("issue structure decides the contract and its corrections", [
         },
   })),
   {
-    name: "a Wayfinder map accepts empty initial decisions and a child reads its parent: map",
+    name: "a Wayfinder map accepts an empty initial Decisions so far section",
     snapshot: {
       issue: {
         number: 42,
@@ -307,7 +307,7 @@ decisionTable("issue structure decides the contract and its corrections", [
     expected: { exitCode: 0, message: /valid Wayfinder map/i },
   },
   {
-    name: "a Wayfinder map accepts empty initial decisions and a child reads its parent: child",
+    name: "a Wayfinder child reads its parent map from native relationships",
     snapshot: {
       issue: {
         number: 42,
@@ -392,7 +392,7 @@ decisionTable("issue structure decides the contract and its corrections", [
     },
   },
   {
-    name: "a ready triaged request requires a complete latest Agent Brief and exact preamble position",
+    name: "an Agent Brief comment must start with its preamble",
     snapshot: {
       issue: {
         number: 42,
@@ -701,84 +701,65 @@ decisionTable("issue structure decides the contract and its corrections", [
     },
   },
   {
-    name: "created, edited, and deleted comment events use the authoritative discussion: created",
-    snapshot: {
-      issue: {
-        number: 42,
-        body: featureBody,
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
-        state: "open",
-      },
-      comments: [
-        { id: 1, body: completeAgentBrief, user: { login: "maintainer" } },
-      ],
-      event: {
-        action: "created",
-        issue: { number: 42 },
-        comment: { id: 1, body: "stale payload" },
-      },
-    },
-    expected: {
-      exitCode: 0,
-      feedback: "create",
-      message: /valid triaged Agent Brief/i,
-    },
-  },
-  {
-    name: "created, edited, and deleted comment events use the authoritative discussion: edited",
-    snapshot: {
-      issue: {
-        number: 42,
-        body: featureBody,
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
-        state: "open",
-      },
-      comments: [
-        {
-          id: 1,
-          body: completeAgentBrief.replace(
-            "**Summary:** Make search fast",
-            "**Summary:** _No response_",
-          ),
-          user: { login: "maintainer" },
-        },
-      ],
-      event: {
-        action: "edited",
-        issue: { number: 42 },
-        comment: { id: 1, body: completeAgentBrief },
-      },
-    },
-    expected: {
-      exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
-      feedback: "create",
-      message: /Summary/,
-    },
-  },
-  {
-    name: "created, edited, and deleted comment events use the authoritative discussion: deleted",
-    snapshot: {
-      issue: {
-        number: 42,
-        body: featureBody,
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
-        state: "open",
-      },
-      comments: [],
-      event: {
-        action: "deleted",
-        issue: { number: 42 },
-        comment: { id: 1, body: completeAgentBrief },
-      },
-    },
-    expected: {
-      exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
-      feedback: "create",
-      message: /Add a reviewed Agent Brief/,
+    name: "created, edited, and deleted comment events use the authoritative discussion, not the event's comment",
+    run: () => {
+      for (const action of ["created", "edited", "deleted"]) {
+        const decision = decideIssueContract(
+          snapshotFor({
+            issue: {
+              number: 42,
+              body: featureBody,
+              labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+              state: "open",
+            },
+            comments: [
+              {
+                id: 1,
+                body: completeAgentBrief.replace(
+                  "**Summary:** Make search fast",
+                  "**Summary:** _No response_",
+                ),
+                user: { login: "maintainer" },
+              },
+            ],
+            event: {
+              action,
+              issue: { number: 42 },
+              comment: { id: 1, body: completeAgentBrief },
+            },
+          }),
+        );
+        assertDecision(decision, {
+          exitCode: 1,
+          remove: ["ready-for-agent"],
+          add: ["needs-triage"],
+          feedback: "create",
+          message: /Summary/,
+        });
+      }
+
+      const deletedOnlyBrief = decideIssueContract(
+        snapshotFor({
+          issue: {
+            number: 42,
+            body: featureBody,
+            labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+            state: "open",
+          },
+          event: {
+            action: "deleted",
+            issue: { number: 42 },
+            comment: { id: 1, body: completeAgentBrief },
+          },
+        }),
+      );
+      assertDecision(deletedOnlyBrief, {
+        exitCode: 1,
+        remove: ["ready-for-agent"],
+        add: ["needs-triage"],
+        feedback: "create",
+        message: /Add a reviewed Agent Brief/,
+      });
     },
   },
 ]);
@@ -852,7 +833,7 @@ decisionTable(
       expected: { exitCode: 0, feedback: "create" },
     },
     {
-      name: "explicit parent and blocker links are read when native relationships are absent: only the first parent link is used",
+      name: "only the first link under Parent is the parent reference",
       snapshot: {
         issue: {
           number: 42,
@@ -881,7 +862,7 @@ decisionTable(
       },
     },
     {
-      name: "explicit blocker links are used when the native dependency endpoint is unavailable: only visible links are references",
+      name: "only visible links under Blocked by are blocker references",
       snapshot: {
         issue: {
           number: 42,
@@ -1072,42 +1053,6 @@ decisionTable("an authorized review binds readiness to the exact revision", [
     };
   }),
   {
-    name: "an authorized native issue creation with needs-triage keeps only its readiness state",
-    snapshot: (() => {
-      const issue = {
-        number: 42,
-        node_id: "ISSUE_42",
-        body: ticketBody,
-        labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
-        state: "open",
-        created_at: "2026-09-14T17:00:00Z",
-        updated_at: "2026-09-14T17:00:00Z",
-      };
-      return {
-        issue,
-        issueEvents: [],
-        event: {
-          action: "opened",
-          issue: {
-            number: 42,
-            body: issue.body,
-            labels: issue.labels,
-            created_at: issue.created_at,
-            updated_at: issue.updated_at,
-          },
-          sender: { login: "maintainer" },
-        },
-        permissions: { maintainer: role("admin") },
-      };
-    })(),
-    expected: {
-      exitCode: 0,
-      remove: ["needs-triage"],
-      feedback: "create",
-      message: /valid implementation ticket with ready-for-agent bound/i,
-    },
-  },
-  {
     name: "a repeated event removes needs-triage left beside an approved direct contract",
     snapshot: (() => {
       const issue = {
@@ -1125,140 +1070,6 @@ decisionTable("an authorized review binds readiness to the exact revision", [
       };
     })(),
     expected: { exitCode: 0, remove: ["needs-triage"] },
-  },
-  {
-    name: "an authorized native issue creation preserves its reviewed readiness",
-    snapshot: (() => {
-      const issue = {
-        number: 42,
-        node_id: "ISSUE_42",
-        body: specificationBody,
-        labels: [{ name: "ready-for-agent" }],
-        state: "open",
-        created_at: "2026-09-14T17:00:00Z",
-        updated_at: "2026-09-14T17:00:00Z",
-      };
-      return {
-        issue,
-        issueEvents: [],
-        event: {
-          action: "opened",
-          issue: {
-            number: 42,
-            body: issue.body,
-            labels: issue.labels,
-            created_at: issue.created_at,
-            updated_at: issue.updated_at,
-          },
-          sender: { login: "maintainer" },
-        },
-        permissions: { maintainer: role("admin") },
-      };
-    })(),
-    expected: {
-      exitCode: 0,
-      feedback: "create",
-      message: /valid specification with ready-for-agent bound/i,
-    },
-  },
-  {
-    name: "a repeated multiply-ready opening cannot approve the one remaining label",
-    snapshot: {
-      issue: {
-        number: 42,
-        node_id: "ISSUE_42",
-        body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
-        state: "open",
-        created_at: "2026-09-14T17:00:00Z",
-        updated_at: "2026-09-14T17:01:00Z",
-      },
-      issueEvents: [
-        {
-          id: 102,
-          event: "unlabeled",
-          label: { name: "ready-for-human" },
-          actor: { login: "maintainer" },
-          created_at: "2026-09-14T17:01:00Z",
-        },
-      ],
-      event: {
-        action: "opened",
-        issue: {
-          number: 42,
-          body: ticketBody,
-          labels: [{ name: "ready-for-agent" }, { name: "ready-for-human" }],
-          created_at: "2026-09-14T17:00:00Z",
-          updated_at: "2026-09-14T17:00:00Z",
-        },
-        sender: { login: "maintainer" },
-      },
-      permissions: { maintainer: role("admin") },
-    },
-    expected: {
-      exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
-      feedback: "create",
-    },
-  },
-  {
-    name: "a delayed opening cannot treat a later same-actor re-add as the creation review",
-    snapshot: (() => {
-      const issue = {
-        number: 42,
-        node_id: "ISSUE_42",
-        body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
-        state: "open",
-        created_at: "2026-09-14T17:00:00Z",
-        updated_at: "2026-09-14T17:02:00Z",
-      };
-      return {
-        issue,
-        issueEvents: [
-          {
-            id: 101,
-            event: "labeled",
-            label: { name: "ready-for-agent" },
-            actor: { login: "maintainer" },
-            created_at: "2026-09-14T17:00:00Z",
-          },
-          {
-            id: 102,
-            event: "unlabeled",
-            label: { name: "ready-for-agent" },
-            actor: { login: "maintainer" },
-            created_at: "2026-09-14T17:01:00Z",
-          },
-          {
-            id: 103,
-            event: "labeled",
-            label: { name: "ready-for-agent" },
-            actor: { login: "maintainer" },
-            created_at: "2026-09-14T17:02:00Z",
-          },
-        ],
-        event: {
-          action: "opened",
-          issue: {
-            number: 42,
-            body: issue.body,
-            labels: issue.labels,
-            created_at: issue.created_at,
-            updated_at: issue.created_at,
-          },
-          sender: { login: "maintainer" },
-        },
-        permissions: { maintainer: role("admin") },
-      };
-    })(),
-    expected: {
-      exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
-      feedback: "create",
-    },
   },
   {
     name: "a triage-role reviewer can bind the latest Agent Brief after the exact revision is published",
@@ -1699,8 +1510,197 @@ const lostCreationReadiness = (message, remove = ["ready-for-agent"]) => ({
 });
 
 decisionTable(
-  "a readiness label applied at creation is reviewed whichever run arrives first",
+  "the creation review binds a readiness label applied at creation, whichever run arrives first",
   [
+    {
+      name: "an authorized native issue creation with needs-triage keeps only its readiness state",
+      snapshot: (() => {
+        const issue = {
+          number: 42,
+          node_id: "ISSUE_42",
+          body: ticketBody,
+          labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
+          state: "open",
+          created_at: "2026-09-14T17:00:00Z",
+          updated_at: "2026-09-14T17:00:00Z",
+        };
+        return {
+          issue,
+          issueEvents: [],
+          event: {
+            action: "opened",
+            issue: {
+              number: 42,
+              body: issue.body,
+              labels: issue.labels,
+              created_at: issue.created_at,
+              updated_at: issue.updated_at,
+            },
+            sender: { login: "maintainer" },
+          },
+          permissions: { maintainer: role("admin") },
+        };
+      })(),
+      expected: {
+        exitCode: 0,
+        remove: ["needs-triage"],
+        feedback: "create",
+        message: /valid implementation ticket with ready-for-agent bound/i,
+      },
+    },
+    {
+      name: "an authorized native issue creation preserves its reviewed readiness",
+      snapshot: (() => {
+        const issue = {
+          number: 42,
+          node_id: "ISSUE_42",
+          body: specificationBody,
+          labels: [{ name: "ready-for-agent" }],
+          state: "open",
+          created_at: "2026-09-14T17:00:00Z",
+          updated_at: "2026-09-14T17:00:00Z",
+        };
+        return {
+          issue,
+          issueEvents: [],
+          event: {
+            action: "opened",
+            issue: {
+              number: 42,
+              body: issue.body,
+              labels: issue.labels,
+              created_at: issue.created_at,
+              updated_at: issue.updated_at,
+            },
+            sender: { login: "maintainer" },
+          },
+          permissions: { maintainer: role("admin") },
+        };
+      })(),
+      expected: {
+        exitCode: 0,
+        feedback: "create",
+        message: /valid specification with ready-for-agent bound/i,
+      },
+    },
+    {
+      name: "a repeated multiply-ready opening cannot approve the one remaining label",
+      snapshot: {
+        issue: {
+          number: 42,
+          node_id: "ISSUE_42",
+          body: ticketBody,
+          labels: [{ name: "ready-for-agent" }],
+          state: "open",
+          created_at: "2026-09-14T17:00:00Z",
+          updated_at: "2026-09-14T17:01:00Z",
+        },
+        issueEvents: [
+          {
+            id: 102,
+            event: "unlabeled",
+            label: { name: "ready-for-human" },
+            actor: { login: "maintainer" },
+            created_at: "2026-09-14T17:01:00Z",
+          },
+        ],
+        event: {
+          action: "opened",
+          issue: {
+            number: 42,
+            body: ticketBody,
+            labels: [{ name: "ready-for-agent" }, { name: "ready-for-human" }],
+            created_at: "2026-09-14T17:00:00Z",
+            updated_at: "2026-09-14T17:00:00Z",
+          },
+          sender: { login: "maintainer" },
+        },
+        permissions: { maintainer: role("admin") },
+      },
+      expected: {
+        exitCode: 1,
+        remove: ["ready-for-agent"],
+        add: ["needs-triage"],
+        feedback: "create",
+      },
+    },
+    {
+      name: "a delayed opening cannot treat a later same-actor re-add as the creation review",
+      snapshot: (() => {
+        const issue = {
+          number: 42,
+          node_id: "ISSUE_42",
+          body: ticketBody,
+          labels: [{ name: "ready-for-agent" }],
+          state: "open",
+          created_at: "2026-09-14T17:00:00Z",
+          updated_at: "2026-09-14T17:02:00Z",
+        };
+        return {
+          issue,
+          issueEvents: [
+            {
+              id: 101,
+              event: "labeled",
+              label: { name: "ready-for-agent" },
+              actor: { login: "maintainer" },
+              created_at: "2026-09-14T17:00:00Z",
+            },
+            {
+              id: 102,
+              event: "unlabeled",
+              label: { name: "ready-for-agent" },
+              actor: { login: "maintainer" },
+              created_at: "2026-09-14T17:01:00Z",
+            },
+            {
+              id: 103,
+              event: "labeled",
+              label: { name: "ready-for-agent" },
+              actor: { login: "maintainer" },
+              created_at: "2026-09-14T17:02:00Z",
+            },
+          ],
+          event: {
+            action: "opened",
+            issue: {
+              number: 42,
+              body: issue.body,
+              labels: issue.labels,
+              created_at: issue.created_at,
+              updated_at: issue.created_at,
+            },
+            sender: { login: "maintainer" },
+          },
+          permissions: { maintainer: role("admin") },
+        };
+      })(),
+      expected: {
+        exitCode: 1,
+        remove: ["ready-for-agent"],
+        add: ["needs-triage"],
+        feedback: "create",
+      },
+    },
+    {
+      name: "a creation-time workflow label event is replaced by the same-second review",
+      snapshot: {
+        ...supersessionSnapshot({
+          labels: ["needs-triage", "ready-for-agent"],
+          created_at: "2026-09-14T17:00:00Z",
+          issueEvents: [readinessReview],
+          event: labeledBy("maintainer", "needs-triage", {
+            body: ticketBody,
+            updated_at: "2026-09-14T17:00:00Z",
+          }),
+        }),
+      },
+      expected: {
+        exitCode: 0,
+        remove: ["needs-triage"],
+        message: /valid implementation ticket with ready-for-agent bound/i,
+      },
+    },
     ...[null, "2026-09-14T17:00:04Z"].map((updatedAt) => ({
       name: `the rejected creation-label replay retains its reason with payload updated_at ${updatedAt}`,
       run: () => {
@@ -1762,37 +1762,6 @@ decisionTable(
         assert.equal(comments.length, 1);
       },
     },
-    ...[
-      ["labeled", "opened"],
-      ["opened", "labeled"],
-    ].map((order) => ({
-      name: `an authorized opener keeps the label when the ${order[0]} run arrives first`,
-      run: () => {
-        const comments = [];
-        const first = decideIssueContract(
-          snapshotFor(createdWithReadiness({ run: order[0], comments })),
-        );
-        assertDecision(first, {
-          exitCode: 0,
-          feedback: "create",
-          message: /valid implementation ticket with ready-for-agent bound/i,
-          feedbackBody: [/reviewed by @maintainer/i, /"reviewEventId":"101"/],
-        });
-        applyFeedback(comments, first);
-        const second = decideIssueContract(
-          snapshotFor(createdWithReadiness({ run: order[1], comments })),
-        );
-        assertDecision(second, {
-          exitCode: 0,
-          message: /valid implementation ticket with ready-for-agent bound/i,
-        });
-        const { issue } = createdWithReadiness({ run: order[0] });
-        assert.equal(
-          comments[0].body,
-          approvedTicketFeedback(issue, { reviewEventId: "101" }).body,
-        );
-      },
-    })),
     {
       name: "the labeled run for a workflow state created beside readiness keeps only the readiness state",
       snapshot: createdWithReadiness({
@@ -1811,18 +1780,41 @@ decisionTable(
         feedbackBody: /"reviewEventId":"101"/,
       },
     },
-    ...unauthorizedOpeners.flatMap((opener) =>
-      runOrders.map((order) => ({
-        name: `${opener.name} is rejected as unauthorized when the ${order[0]} run arrives first`,
-        run: () => {
-          const {
-            decisions: [first, second],
-            comments,
-            labels,
-          } = decideCreationRuns(order, {
-            opener: "reporter",
-            permissions: { reporter: opener.permission },
+    ...[
+      {
+        name: "an authorized opener keeps the label",
+        options: {},
+        check: ({ decisions: [first, second], comments, labels }) => {
+          assertDecision(first, {
+            exitCode: 0,
+            feedback: "create",
+            message: /valid implementation ticket with ready-for-agent bound/i,
           });
+          assertDecision(second, {
+            exitCode: 0,
+            message: /valid implementation ticket with ready-for-agent bound/i,
+          });
+          assert.deepEqual(recordedState(comments[0].body), {
+            status: "approved",
+            revision: bodyRevision(
+              createdWithReadiness({ run: "opened" }).issue,
+            ),
+            label: "ready-for-agent",
+            reviewer: "maintainer",
+            reviewEventId: "101",
+            sourceInvalidation: null,
+          });
+          assert.deepEqual(labels, ["ready-for-agent"]);
+          assert.equal(comments.length, 1);
+        },
+      },
+      ...unauthorizedOpeners.map((opener) => ({
+        name: `${opener.name} is rejected as unauthorized`,
+        options: {
+          opener: "reporter",
+          permissions: { reporter: opener.permission },
+        },
+        check: ({ decisions: [first, second], comments, labels }) => {
           assertDecision(first, {
             ...lostCreationReadiness(opener.rejection),
             notMessage: /wait for the validator to publish/i,
@@ -1847,23 +1839,14 @@ decisionTable(
           assert.equal(comments.length, 1);
         },
       })),
-    ),
-    ...[
-      { name: "an authorized opener", options: {} },
-      ...unauthorizedOpeners.map((opener) => ({
-        name: opener.name,
-        options: {
-          opener: "reporter",
-          permissions: { reporter: opener.permission },
-        },
-      })),
-    ].map(({ name, options }) => ({
-      name: `${name} gets the same decisions, feedback, and labels in either run order`,
+    ].map(({ name, options, check }) => ({
+      name: `${name}, with the same decisions, feedback, and labels in either run order`,
       run: () => {
         const [labeledFirst, openedFirst] = runOrders.map((order) =>
           decideCreationRuns(order, options),
         );
         assert.deepEqual(labeledFirst, openedFirst);
+        check(labeledFirst);
       },
     })),
     {
@@ -1969,7 +1952,7 @@ decisionTable(
   "a recorded readiness rejection lasts until another review or contract change",
   [
     {
-      name: "a multiple-labels rejection is replaced by the next run as on main",
+      name: "a multiple-labels rejection is replaced by the next run's plain revision notice, unchanged by #157",
       run: () => {
         const comments = [];
         const state = {
@@ -1996,11 +1979,14 @@ decisionTable(
         snapshot.event = { action: "reopened", issue: { number: 42 } };
         const next = decideIssueContract(snapshotFor(snapshot));
         assertDecision(next, { exitCode: 0, feedback: 99 });
-        assert.equal(
-          next.feedback.body,
-          awaitingTicketFeedback(snapshot.issue, { observedEventId: "203" })
-            .body,
-        );
+        assert.deepEqual(recordedState(next.feedback.body), {
+          status: "awaiting-review",
+          revision: bodyRevision(snapshot.issue),
+          label: null,
+          reviewer: null,
+          observedEventId: "203",
+          sourceInvalidation: null,
+        });
       },
     },
     {
@@ -2094,7 +2080,7 @@ decisionTable(
         feedback: 99,
       },
     ].map(({ name, creationOnly, error, feedback }) => ({
-      name: `a maintainer's fresh label keeps main's grant behavior with ${name}`,
+      name: `a maintainer's fresh label after a rejected creation grant is still removed, as #157 reports, with ${name}`,
       run: () => {
         const snapshot = rejectedCreationSnapshot();
         snapshot.issue.labels.push({ name: "ready-for-agent" });
@@ -2401,9 +2387,10 @@ decisionTable("workflow states are ordered against the review", [
     })(),
     expected: supersededBy("wontfix"),
   },
-  ...["needs-info", "wontfix"].flatMap((state) =>
-    [state, "ready-for-agent"].map((trigger) => ({
-      name: `a workflow state recorded after the review in the same second supersedes it: ${state} in the run for ${trigger}`,
+  ...["needs-info", "ready-for-agent"].map((trigger) => {
+    const state = "needs-info";
+    return {
+      name: `a workflow state recorded after the review in the same second supersedes it: in the run for ${trigger}`,
       snapshot: supersessionSnapshot({
         labels: ["ready-for-agent", state],
         created_at: "2026-09-14T16:00:00Z",
@@ -2423,8 +2410,8 @@ decisionTable("workflow states are ordered against the review", [
         }),
       }),
       expected: supersededBy(state),
-    })),
-  ),
+    };
+  }),
   ...["needs-info", "ready-for-agent"].map((trigger) => ({
     name: `a workflow state recorded before the review in the same second is replaced: in the run for ${trigger}`,
     snapshot: supersessionSnapshot({
@@ -2543,25 +2530,6 @@ decisionTable("workflow states are ordered against the review", [
         },
   })),
   {
-    name: "a creation-time workflow label event is replaced by the same-second review",
-    snapshot: {
-      ...supersessionSnapshot({
-        labels: ["needs-triage", "ready-for-agent"],
-        created_at: "2026-09-14T17:00:00Z",
-        issueEvents: [readinessReview],
-        event: labeledBy("maintainer", "needs-triage", {
-          body: ticketBody,
-          updated_at: "2026-09-14T17:00:00Z",
-        }),
-      }),
-    },
-    expected: {
-      exitCode: 0,
-      remove: ["needs-triage"],
-      message: /valid implementation ticket with ready-for-agent bound/i,
-    },
-  },
-  {
     name: "removing readiness returns a direct contract to review",
     snapshot: (() => {
       const issue = { number: 42, body: ticketBody, labels: [], state: "open" };
@@ -2663,19 +2631,29 @@ decisionTable("workflow states are ordered against the review", [
 decisionTable("edits, replacements, and stale events invalidate readiness", [
   {
     name: "stale readiness events cannot approve a newer direct contract revision",
+    // The label reviewed the revision whose notice preceded it; the body
+    // changed after the label, so only the revision decides.
     snapshot: (() => {
+      const reviewed = { number: 42, body: ticketBody };
       const issue = {
-        number: 42,
-        body: "## What to build\n\nAdd the revised cache.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.",
+        ...reviewed,
+        body: ticketBody.replace("Add caching.", "Add the revised cache."),
         labels: [{ name: "ready-for-agent" }],
         state: "open",
         updated_at: "2026-09-14T17:01:00Z",
       };
       return {
         issue,
+        comments: [
+          {
+            ...awaitingTicketFeedback(reviewed),
+            updated_at: "2026-09-14T16:59:00Z",
+          },
+        ],
         bodyLastEditedAt: "2026-09-14T17:01:00Z",
+        issueEvents: [readinessReview],
         event: labeledBy("maintainer", "ready-for-agent", {
-          body: issue.body.replace("revised ", ""),
+          body: reviewed.body,
           updated_at: "2026-09-14T17:00:00Z",
         }),
         permissions: { maintainer: role("admin") },
@@ -2685,32 +2663,46 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
       exitCode: 1,
       remove: ["ready-for-agent"],
       add: ["needs-triage"],
-      feedback: "create",
+      feedback: 13,
+      message: /wait for the validator to publish/i,
     },
   },
   {
     name: "a restored direct body cannot make an old label event review the newer edit revision",
-    snapshot: {
-      issue: {
+    // The label reviewed the unedited revision whose notice preceded it; an
+    // edit restored the same bytes after the label, so only the revision
+    // decides.
+    snapshot: (() => {
+      const issue = {
         number: 42,
         body: ticketBody,
         labels: [{ name: "ready-for-agent" }],
         state: "open",
         updated_at: "2026-09-14T17:02:00Z",
-      },
-      bodyLastEditedAt: "2026-09-14T17:02:00Z",
-      issueEvents: [readinessReview],
-      event: labeledBy("maintainer", "ready-for-agent", {
-        body: ticketBody,
-        updated_at: "2026-09-14T17:00:00Z",
-      }),
-      permissions: { maintainer: role("admin") },
-    },
+      };
+      return {
+        issue,
+        comments: [
+          {
+            ...awaitingTicketFeedback(issue),
+            updated_at: "2026-09-14T16:59:00Z",
+          },
+        ],
+        bodyLastEditedAt: "2026-09-14T17:02:00Z",
+        issueEvents: [readinessReview],
+        event: labeledBy("maintainer", "ready-for-agent", {
+          body: ticketBody,
+          updated_at: "2026-09-14T17:00:00Z",
+        }),
+        permissions: { maintainer: role("admin") },
+      };
+    })(),
     expected: {
       exitCode: 1,
       remove: ["ready-for-agent"],
       add: ["needs-triage"],
-      feedback: "create",
+      feedback: 13,
+      message: /wait for the validator to publish/i,
     },
   },
   {
@@ -2887,81 +2879,6 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
     },
   },
   {
-    name: "a repeated Brief deletion cannot revoke the restored source after fresh review",
-    snapshot: (() => {
-      const brief = {
-        id: 12,
-        node_id: "COMMENT_12",
-        body: completeAgentBrief,
-        created_at: "2026-09-14T17:00:00Z",
-        updated_at: "2026-09-14T17:00:00Z",
-        user: { login: "triager" },
-      };
-      return {
-        issue: {
-          number: 42,
-          body: "Intake context.",
-          labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
-          state: "open",
-        },
-        comments: [
-          brief,
-          {
-            id: 13,
-            body: feedbackState({
-              status: "approved",
-              revision: briefRevision(brief),
-              label: "ready-for-agent",
-              reviewer: "triager",
-              reviewEventId: "103",
-              sourceInvalidation: "deleted-comment:COMMENT_14",
-              kind: "triaged Agent Brief",
-            }),
-            user: bot,
-          },
-        ],
-        issueEvents: [
-          {
-            id: 101,
-            event: "labeled",
-            label: { name: "ready-for-agent" },
-            actor: { login: "triager" },
-            created_at: "2026-09-14T17:01:00Z",
-          },
-          {
-            id: 102,
-            event: "unlabeled",
-            label: { name: "ready-for-agent" },
-            actor: bot,
-            created_at: "2026-09-14T17:02:00Z",
-          },
-          {
-            id: 103,
-            event: "labeled",
-            label: { name: "ready-for-agent" },
-            actor: { login: "triager" },
-            created_at: "2026-09-14T17:03:00Z",
-          },
-        ],
-        event: {
-          action: "deleted",
-          issue: { number: 42, body: "Intake context." },
-          comment: {
-            id: 14,
-            node_id: "COMMENT_14",
-            body: completeAgentBrief,
-            created_at: "2026-09-14T17:02:00Z",
-          },
-        },
-        permissions: { triager: role("triage") },
-      };
-    })(),
-    expected: {
-      exitCode: 0,
-      message: /valid triaged Agent Brief with ready-for-agent bound/i,
-    },
-  },
-  {
     name: "a same-second direct edit requires a revision notice before authorized re-add",
     run() {
       const oldIssue = { number: 42, body: ticketBody };
@@ -3118,67 +3035,6 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
   },
 ]);
 
-// Boundaries of the timeline helper that no earlier case reached.
-decisionTable("the timeline helper keeps its strict boundaries", [
-  {
-    name: "a readiness label in the revision notice's second is rejected",
-    snapshot: (() => {
-      const issue = {
-        number: 42,
-        body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
-        state: "open",
-        updated_at: "2026-09-14T17:00:00Z",
-      };
-      return {
-        issue,
-        comments: [
-          {
-            ...awaitingTicketFeedback(issue),
-            updated_at: "2026-09-14T17:00:00Z",
-          },
-        ],
-        issueEvents: [readinessReview],
-        event: labeledBy("maintainer", "ready-for-agent", issue),
-        permissions: { maintainer: role("admin") },
-      };
-    })(),
-    expected: {
-      exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
-      feedback: 13,
-      message: /wait for the validator to publish/i,
-    },
-  },
-  {
-    name: "a readiness label the revision notice already observed cannot approve it",
-    snapshot: (() => {
-      const issue = {
-        number: 42,
-        body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
-        state: "open",
-        updated_at: "2026-09-14T17:00:00Z",
-      };
-      return {
-        issue,
-        comments: [awaitingTicketFeedback(issue, { observedEventId: "101" })],
-        issueEvents: [readinessReview],
-        event: labeledBy("maintainer", "ready-for-agent", issue),
-        permissions: { maintainer: role("admin") },
-      };
-    })(),
-    expected: {
-      exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
-      feedback: 13,
-      message: /wait for the validator to publish/i,
-    },
-  },
-]);
-
 // An Agent Brief of issue 42 created at `createdAt` by `triager`.
 const agentBrief = (id, createdAt, body = completeAgentBrief) => ({
   id,
@@ -3265,9 +3121,67 @@ function openingBarrierSnapshot({
 }
 
 decisionTable("issue-contract events are ordered by one timeline rule", [
-  ...["needs-info", "wontfix"].flatMap((state) =>
-    [state, "ready-for-agent"].map((trigger) => ({
-      name: `a workflow state recorded after the review with an earlier timestamp supersedes it: ${state} in the run for ${trigger}`,
+  {
+    name: "a readiness label in the revision notice's second is rejected",
+    snapshot: (() => {
+      const issue = {
+        number: 42,
+        body: ticketBody,
+        labels: [{ name: "ready-for-agent" }],
+        state: "open",
+        updated_at: "2026-09-14T17:00:00Z",
+      };
+      return {
+        issue,
+        comments: [
+          {
+            ...awaitingTicketFeedback(issue),
+            updated_at: "2026-09-14T17:00:00Z",
+          },
+        ],
+        issueEvents: [readinessReview],
+        event: labeledBy("maintainer", "ready-for-agent", issue),
+        permissions: { maintainer: role("admin") },
+      };
+    })(),
+    expected: {
+      exitCode: 1,
+      remove: ["ready-for-agent"],
+      add: ["needs-triage"],
+      feedback: 13,
+      message: /wait for the validator to publish/i,
+    },
+  },
+  {
+    name: "a readiness label the revision notice already observed cannot approve it",
+    snapshot: (() => {
+      const issue = {
+        number: 42,
+        body: ticketBody,
+        labels: [{ name: "ready-for-agent" }],
+        state: "open",
+        updated_at: "2026-09-14T17:00:00Z",
+      };
+      return {
+        issue,
+        comments: [awaitingTicketFeedback(issue, { observedEventId: "101" })],
+        issueEvents: [readinessReview],
+        event: labeledBy("maintainer", "ready-for-agent", issue),
+        permissions: { maintainer: role("admin") },
+      };
+    })(),
+    expected: {
+      exitCode: 1,
+      remove: ["ready-for-agent"],
+      add: ["needs-triage"],
+      feedback: 13,
+      message: /wait for the validator to publish/i,
+    },
+  },
+  ...["needs-info", "ready-for-agent"].map((trigger) => {
+    const state = "needs-info";
+    return {
+      name: `a workflow state recorded after the review with an earlier timestamp supersedes it: in the run for ${trigger}`,
       snapshot: supersessionSnapshot({
         labels: ["ready-for-agent", state],
         created_at: "2026-09-14T16:00:00Z",
@@ -3287,8 +3201,8 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
         }),
       }),
       expected: supersededBy(state),
-    })),
-  ),
+    };
+  }),
   {
     name: "a workflow state recorded after the review with an earlier timestamp supersedes it in another event's run",
     snapshot: supersessionSnapshot({
@@ -3335,25 +3249,6 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
       message: /valid triaged Agent Brief/i,
     },
   },
-  {
-    name: "deleting a Brief with a lower comment ID keeps the newest Brief's approval, even when it was created later",
-    snapshot: deletedBriefSnapshot(agentBrief(12, "2026-09-14T17:05:00Z")),
-    expected: {
-      exitCode: 0,
-      message: /valid triaged Agent Brief with ready-for-agent bound/i,
-    },
-  },
-  {
-    name: "deleting a Brief with a higher comment ID invalidates the restored source, even when it was created earlier",
-    snapshot: deletedBriefSnapshot(agentBrief(25, "2026-09-14T16:55:00Z")),
-    expected: {
-      exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
-      feedback: 30,
-      feedbackBody: /"sourceInvalidation":"deleted-comment:COMMENT_25"/,
-    },
-  },
   ...["awaiting-review", "approved"].flatMap((status) => [
     {
       name: `a readiness event follows this issue's own opening barrier: ${status}`,
@@ -3393,3 +3288,103 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
     },
   },
 ]);
+
+decisionTable(
+  "deleting an Agent Brief invalidates readiness only when it was the newest Brief",
+  [
+    {
+      name: "a repeated Brief deletion cannot revoke the restored source after fresh review",
+      snapshot: (() => {
+        const brief = {
+          id: 12,
+          node_id: "COMMENT_12",
+          body: completeAgentBrief,
+          created_at: "2026-09-14T17:00:00Z",
+          updated_at: "2026-09-14T17:00:00Z",
+          user: { login: "triager" },
+        };
+        return {
+          issue: {
+            number: 42,
+            body: "Intake context.",
+            labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+            state: "open",
+          },
+          comments: [
+            brief,
+            {
+              id: 13,
+              body: feedbackState({
+                status: "approved",
+                revision: briefRevision(brief),
+                label: "ready-for-agent",
+                reviewer: "triager",
+                reviewEventId: "103",
+                sourceInvalidation: "deleted-comment:COMMENT_14",
+                kind: "triaged Agent Brief",
+              }),
+              user: bot,
+            },
+          ],
+          issueEvents: [
+            {
+              id: 101,
+              event: "labeled",
+              label: { name: "ready-for-agent" },
+              actor: { login: "triager" },
+              created_at: "2026-09-14T17:01:00Z",
+            },
+            {
+              id: 102,
+              event: "unlabeled",
+              label: { name: "ready-for-agent" },
+              actor: bot,
+              created_at: "2026-09-14T17:02:00Z",
+            },
+            {
+              id: 103,
+              event: "labeled",
+              label: { name: "ready-for-agent" },
+              actor: { login: "triager" },
+              created_at: "2026-09-14T17:03:00Z",
+            },
+          ],
+          event: {
+            action: "deleted",
+            issue: { number: 42, body: "Intake context." },
+            comment: {
+              id: 14,
+              node_id: "COMMENT_14",
+              body: completeAgentBrief,
+              created_at: "2026-09-14T17:02:00Z",
+            },
+          },
+          permissions: { triager: role("triage") },
+        };
+      })(),
+      expected: {
+        exitCode: 0,
+        message: /valid triaged Agent Brief with ready-for-agent bound/i,
+      },
+    },
+    {
+      name: "deleting a Brief with a lower comment ID keeps the newest Brief's approval, even when it was created later",
+      snapshot: deletedBriefSnapshot(agentBrief(12, "2026-09-14T17:05:00Z")),
+      expected: {
+        exitCode: 0,
+        message: /valid triaged Agent Brief with ready-for-agent bound/i,
+      },
+    },
+    {
+      name: "deleting a Brief with a higher comment ID invalidates the restored source, even when it was created earlier",
+      snapshot: deletedBriefSnapshot(agentBrief(25, "2026-09-14T16:55:00Z")),
+      expected: {
+        exitCode: 1,
+        remove: ["ready-for-agent"],
+        add: ["needs-triage"],
+        feedback: 30,
+        feedbackBody: /"sourceInvalidation":"deleted-comment:COMMENT_25"/,
+      },
+    },
+  ],
+);
