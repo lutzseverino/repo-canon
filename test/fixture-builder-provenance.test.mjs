@@ -64,12 +64,17 @@ test('every builder identifies dirty source bytes independently of source HEAD',
   const dirtyAuthoringPath = 'scripts/support/fixture-authoring.mjs';
   const dirtyEngineeringSkill = 'vendor/mattpocock-skills/skills/engineering/tdd';
   const dirtyProductivitySkill = 'vendor/mattpocock-skills/skills/productivity/grilling';
+  const dirtyDeliverSkill = '.agents/skills/deliver';
   const committedEngineeringSkillSha256 = sha256Directory(join(source, dirtyEngineeringSkill));
   const committedProductivitySkillSha256 = sha256Directory(join(source, dirtyProductivitySkill));
   appendFileSync(join(source, dirtySharedPath), '\n<!-- uncommitted provenance test -->\n');
   appendFileSync(join(source, dirtyAuthoringPath), '\n// uncommitted provenance test\n');
   appendFileSync(join(source, dirtyEngineeringSkill, 'SKILL.md'), '\n<!-- uncommitted provenance test -->\n');
   appendFileSync(join(source, dirtyProductivitySkill, 'SKILL.md'), '\n<!-- uncommitted provenance test -->\n');
+  const committedDeliverSkillSha256 = sha256Directory(join(source, dirtyDeliverSkill));
+  appendFileSync(join(source, dirtyDeliverSkill, 'SKILL.md'), '\n<!-- uncommitted provenance test -->\n');
+  const dirtyDeliverSkillSha256 = sha256Directory(join(source, dirtyDeliverSkill));
+  assert.notEqual(dirtyDeliverSkillSha256, committedDeliverSkillSha256);
   const dirtySharedSha256 = sha256(readFileSync(join(source, dirtySharedPath)));
   const committedSharedSha256 = sha256(execFileSync('git', ['show', `HEAD:${dirtySharedPath}`], { cwd: source }));
   const dirtyAuthoringSha256 = sha256(readFileSync(join(source, dirtyAuthoringPath)));
@@ -114,4 +119,14 @@ test('every builder identifies dirty source bytes independently of source HEAD',
   assert.equal(planning.source.linkedSkillDirectories.tdd.sha256, dirtyEngineeringSkillSha256);
   assert.equal(planning.source.linkedSkillDirectories.grilling.sha256, dirtyProductivitySkillSha256);
 
+  const deliverRoot = join(parent, 'deliver');
+  const deliver = JSON.parse(execFileSync(
+    process.execPath,
+    [join(source, 'scripts/create-deliver-skill-fixtures.mjs'), '--root', deliverRoot],
+    { cwd: source, encoding: 'utf8' },
+  ));
+  assert.equal(deliver.source.worktreeCommit, sourceHead);
+  assert.equal(deliver.source.inputFiles[dirtySharedPath].sha256, dirtySharedSha256);
+  assert.equal(deliver.source.inputFiles[dirtyAuthoringPath].sha256, dirtyAuthoringSha256);
+  assert.equal(deliver.source.skills.deliver.sha256, dirtyDeliverSkillSha256);
 });

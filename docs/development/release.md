@@ -44,8 +44,9 @@ diff is not empty, the release requires all of the following:
   runs `source validate` without filtering and returns `valid: true` with no
   errors.
 - Refreshed fixture results. A changed operation or operation resource has its
-  operation fixtures updated and passing. A changed vendored skill is exercised
-  again through the [skill exercise procedure](skill-exercises.md). The skill
+  operation fixtures updated and passing. A changed skill, vendored or Repo
+  Canon's own, is exercised again through the
+  [skill exercise procedure](skill-exercises.md). The skill
   fixture builders copy the shared guidance, so a change to it keeps their
   tests passing.
 
