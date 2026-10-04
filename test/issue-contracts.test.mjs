@@ -1311,6 +1311,75 @@ decisionTable("a readiness label applied at creation is reviewed whichever run a
   },
 ]);
 
+// A rejection followed by the validator's label cleanup, as a later run sees it.
+function rejectedCreationSnapshot() {
+  const comments = [];
+  const state = creationState("reporter");
+  const snapshot = createdWithReadiness({
+    run: "labeled", opener: "reporter", issueEvents: state.issueEvents,
+    comments, permissions: { reporter: role("write") },
+  });
+  const rejection = decideIssueContract(snapshotFor(snapshot));
+  applyFeedback(comments, rejection);
+  comments[0].updated_at = "2026-09-14T17:00:05Z";
+  applyLabelChanges(state, rejection.removeLabels, rejection.addLabels);
+  snapshot.issue.labels = state.labels.map((name) => ({ name }));
+  snapshot.event = { action: "reopened", issue: { number: 42 } };
+  return snapshot;
+}
+
+decisionTable("a recorded readiness rejection lasts until another review or contract change", [
+  {
+    name: "unrelated and repeated runs retain the rejection after bot cleanup",
+    run: () => {
+      const snapshot = rejectedCreationSnapshot();
+      const cleanup = decideIssueContract(snapshotFor(snapshot));
+      assertDecision(cleanup, { exitCode: 0, feedback: 99, feedbackBody: notAuthorized });
+      applyFeedback(snapshot.comments, cleanup);
+      const retained = snapshot.comments[0].body;
+      for (const event of [
+        { action: "unlabeled", label: { name: "ready-for-agent" }, sender: bot },
+        { action: "created", comment: { id: 100, body: "Discussion." } },
+        { action: "reopened" },
+      ]) {
+        snapshot.event = { issue: { number: 42 }, ...event };
+        assertDecision(decideIssueContract(snapshotFor(snapshot)), { exitCode: 0 });
+        assert.equal(snapshot.comments[0].body, retained);
+      }
+    },
+  },
+  {
+    name: "an authorized readiness event replaces the rejection with approval",
+    run: () => {
+      const snapshot = rejectedCreationSnapshot();
+      snapshot.issue.labels.push({ name: "ready-for-agent" });
+      snapshot.issue.updated_at = "2026-09-14T17:01:00Z";
+      snapshot.issueEvents.push(creationLabel({ id: 300, created_at: snapshot.issue.updated_at }));
+      snapshot.event = labeledBy("maintainer", "ready-for-agent", snapshot.issue);
+      snapshot.permissions.maintainer = role("admin");
+      const decision = decideIssueContract(snapshotFor(snapshot));
+      assertDecision(decision, { exitCode: 0, remove: ["needs-triage"], feedback: 99, feedbackBody: /reviewed by @maintainer/ });
+      assert.doesNotMatch(decision.feedback.body, /not authorized|last readiness attempt was rejected|rejectionReason/);
+    },
+  },
+  ...[
+    { name: "changed contract bytes", change: (snapshot) => { snapshot.issue.body = ticketBody.replace("Add caching.", "Add an index."); } },
+    { name: "an edit with unchanged contract bytes", change: (snapshot) => { snapshot.bodyLastEditedAt = "2026-09-14T17:01:00Z"; } },
+    { name: "a later readiness removal by a maintainer", change: (snapshot) => {
+      snapshot.issueEvents.push(creationLabel({ id: 300, event: "unlabeled", created_at: "2026-09-14T17:01:00Z" }));
+    } },
+  ].map(({ name, change }) => ({
+    name: `${name} replaces the rejection with a plain revision notice`,
+    run: () => {
+      const snapshot = rejectedCreationSnapshot();
+      change(snapshot);
+      const decision = decideIssueContract(snapshotFor(snapshot));
+      assertDecision(decision, { exitCode: 0, feedback: 99, feedbackBody: /awaiting review/ });
+      assert.doesNotMatch(decision.feedback.body, /not authorized|last readiness attempt was rejected|rejectionReason/);
+    },
+  })),
+]);
+
 // An approved direct ticket whose review is event 101 at 17:00:00.
 function supersessionSnapshot({ labels, issueEvents, event, created_at: createdAt }) {
   const issue = { number: 42, body: ticketBody, labels: labels.map((name) => ({ name })), state: "open", ...(createdAt ? { created_at: createdAt } : {}) };
@@ -2229,6 +2298,8 @@ test("an issue created with readiness ends the same through the adapter whicheve
       assert.doesNotMatch(first.writes[2][2].body, /wait for the validator to publish/i);
       assert.equal(second.code, 0, second.stderr);
       assert.deepEqual(second.writes.map(([method, url]) => [method, url]), [["PATCH", "/repos/example/repository/issues/comments/99"]]);
+      assert.equal(outcome.comments.length, 1);
+      assert.match(outcome.comments[0].body, notAuthorized);
       assert.deepEqual(outcome.labels, ["needs-triage"]);
       outcomes.push(outcome);
     }

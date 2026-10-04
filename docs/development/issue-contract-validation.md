@@ -74,6 +74,15 @@ without reapproving or duplicating feedback. Awaiting-review state also records
 the latest readiness-label transition it observed. Approved state records the
 exact GitHub issue-event ID that supplied the review.
 
+A readiness rejection also records its reason. Later runs retain that reason
+while the contract revision is unchanged and no new readiness transition has
+occurred, including either completion order of the creation runs. The bot's
+removal of readiness as rejection cleanup does not replace the reason. A later
+readiness event or a contract edit replaces the rejection through the usual
+review or revision-notice path. Plain awaiting-review notices, structural
+corrections, and superseding workflow states keep their existing feedback
+behavior.
+
 The revision is computed from a versioned record containing the selected
 contract kind, exact contract bytes, source identity, and source edit revision.
 Direct-body contracts use the issue GraphQL node ID and `lastEditedAt`. Agent
@@ -212,6 +221,8 @@ repeat-safe feedback,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized
 actors, stale and repeated events, native creation by authorized and
 unauthorized openers in either run order,
+preservation of rejection reasons across cleanup and repeated events, their
+replacement by later review or contract edits,
 readiness removal and re-add
 ordering across paginated issue events, the one timeline ordering rule,
 contract edits, pull request exclusion, and hostile Markdown that must remain

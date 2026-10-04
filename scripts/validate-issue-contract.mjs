@@ -104,7 +104,7 @@ export function decideIssueContract(snapshot) {
       message: readiness.error,
       removeLabels: readinessLabels(result.labels),
       addLabels: result.usesWorkflowState ? reviewReturnLabels(result.labels) : [],
-      feedback: feedbackChange(comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, readiness.error)),
+      feedback: feedbackChange(comments, awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, { reason: readiness.error, rejected: true })),
     });
   }
 
@@ -118,7 +118,7 @@ export function decideIssueContract(snapshot) {
       removeLabels: replacedWorkflowStates(result.labels, supersedingState),
       feedback: feedbackChange(
         comments,
-        awaitingReviewFeedback(result.kind, revision, readiness.reviewEventId, readiness.sourceInvalidation, `\`${supersedingState}\` was applied after the review and supersedes its readiness.`),
+        awaitingReviewFeedback(result.kind, revision, readiness.reviewEventId, readiness.sourceInvalidation, { reason: `\`${supersedingState}\` was applied after the review and supersedes its readiness.` }),
       ),
     });
   }
@@ -141,7 +141,7 @@ export function decideIssueContract(snapshot) {
       comments,
       readiness.approved
         ? approvedFeedback(result.kind, revision, readiness.label, readiness.reviewer, readiness.reviewEventId, readiness.sourceInvalidation)
-        : awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation),
+        : awaitingReviewFeedback(result.kind, revision, readiness.observedEventId, readiness.sourceInvalidation, { reason: readiness.rejectionReason, rejected: true }),
     ),
   });
 }
@@ -638,7 +638,13 @@ function assessReadiness({ snapshot, result, timeline, previousFeedback, revisio
   }
 
   if (currentReadyLabels.length === 0) {
-    return { valid: true, approved: false, observedEventId, sourceInvalidation };
+    const rejectionReason = recorded?.status === "awaiting-review"
+      && recorded.revision === revision
+      && recorded.sourceInvalidation === sourceInvalidation
+      && timeline.rejectionUnchanged(recorded.observedEventId)
+      ? recorded.rejectionReason
+      : null;
+    return { valid: true, approved: false, observedEventId, sourceInvalidation, rejectionReason };
   }
 
   return {
@@ -858,6 +864,16 @@ function issueTimeline({ event, issue, issueEvents }) {
   return {
     latestReadinessTransition,
 
+    // Removing readiness is part of the validator's rejection cleanup, not
+    // another review attempt. Every other readiness transition replaces it.
+    rejectionUnchanged(observedEventId) {
+      const observed = observedEventId == null ? 0 : position(observedEventId);
+      if (observed === null) return false;
+      return issueEvents.slice(observed).filter(isReadinessTransition).every((candidate) =>
+        candidate.event === "unlabeled" && candidate.actor?.login === "github-actions[bot]",
+      );
+    },
+
     // Whether a review event follows an earlier barrier in the timeline. No
     // barrier precedes every review. This issue's own opening is the only
     // `opened:` barrier, and an event the timeline has not recorded follows
@@ -964,8 +980,8 @@ function invalidFeedback(errors) {
   return `${feedbackMarker}\n## Issue contract needs attention\n\n${errors.map((error) => `- ${error}`).join("\n")}\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.`;
 }
 
-function awaitingReviewFeedback(kind, revision, observedEventId = null, sourceInvalidation = null, reason = null) {
-  const state = JSON.stringify({ status: "awaiting-review", revision, label: null, reviewer: null, observedEventId, sourceInvalidation });
+function awaitingReviewFeedback(kind, revision, observedEventId = null, sourceInvalidation = null, { reason = null, rejected = false } = {}) {
+  const state = JSON.stringify({ status: "awaiting-review", revision, label: null, reviewer: null, observedEventId, sourceInvalidation, ...(rejected && reason ? { rejectionReason: reason } : {}) });
   const explanation = reason ? `\n\nThe last readiness attempt was rejected: ${reason}` : "";
   return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${revision}\`.${explanation}\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
 }
