@@ -6,6 +6,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
+    "lint": "oxlint --deny-warnings",
     "check": "for file in operations/*.mjs operations/lib/*.mjs discovery/*.mjs scripts/*.mjs scripts/release/*.mjs scripts/support/*.mjs .github/scripts/*.mjs test/*.test.mjs test/helpers/*.mjs test/fixtures/*.mjs; do node --check \"$file\" || exit 1; done",
     "test": "node --test test/*.test.mjs",
     "release:inputs": "node scripts/release/inputs.mjs",
@@ -17,5 +18,8 @@
     "test:github-pr-integration": "node --test test/github-pr-integration-setup.test.mjs",
     "test:issue-contracts": "node --test test/issue-contracts.test.mjs",
     "test:productivity-skill-fixtures": "node --test test/productivity-skill-fixtures.test.mjs"
+  },
+  "devDependencies": {
+    "oxlint": "1.86.0"
   }
 }

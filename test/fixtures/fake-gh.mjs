@@ -38,7 +38,7 @@ save();
 
 const methodIndex = args.indexOf('--method');
 const method = methodIndex >= 0 ? args[methodIndex + 1] : 'GET';
-const endpoint = args.find(argument => /^repos\//.test(argument));
+const endpoint = args.find(argument => argument.startsWith('repos/'));
 if (!endpoint) {
   process.stderr.write('fixture expected a repos/... endpoint\n');
   process.exit(2);

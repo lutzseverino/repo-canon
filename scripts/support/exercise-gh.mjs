@@ -195,7 +195,7 @@ function runCheck(repo, pull, name, branch, command, args) {
 }
 
 function checks(repo, pull) {
-  const metadata = runCheck(repo, pull, 'PR metadata', pull.baseRefName, () => process.execPath, (directory) => {
+  const metadata = runCheck(repo, pull, 'PR metadata', pull.baseRefName, () => process.execPath, () => {
     const event = join(githubRoot, repo.name, 'checks', `${pull.number}-event.json`);
     mkdirSync(dirname(event), { recursive: true });
     writeFileSync(event, JSON.stringify({ pull_request: { title: pull.title, body: pull.body } }));
