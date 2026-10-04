@@ -1,19 +1,21 @@
 # Discover documentation scope
 
-Draft the documentation scope with the drafter this source ships. Run it with
-Node.js 24 from the standards source at the selected commit, the source that
-holds this file, against the adopting repository:
+Draft the documentation scope with the drafter this source ships. With
+Node.js 24, run it from either supported location. From the root of a clone of
+the standards source checked out at the selected commit, pass the adopting
+repository's path:
 
 ```sh
 node discovery/draft-documentation-scope.mjs --project /path/to/adopting-repository \
   > /tmp/documentation-scope.json
 ```
 
-When the selected source is unavailable, as in an update that keeps the
-standards the adopting repository retains, run the drafter retained with them
-instead, from the adopting repository's root. It reads the other declarations
-from the manifest that Repository Standards retains with those standards,
-resolved to the selected profile, and drafts the same scope as the source:
+Or run the retained copy under `.repo-standards/inputs/source/` from the
+adopting repository's root (supported since Repo Canon v0.4.1). This also works
+when the selected source clone is unavailable, as in an update that keeps the
+retained standards. It reads the other declarations from the manifest that
+Repository Standards retains with those standards, resolved to the selected
+profile, and drafts the same scope as the source:
 
 ```sh
 node .repo-standards/inputs/source/discovery/draft-documentation-scope.mjs \

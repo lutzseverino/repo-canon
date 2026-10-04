@@ -655,16 +655,29 @@ function resolvedManifest() {
   return `${head}defaults:\n  declarations: {}\nprofiles:\n  complete:\n    description: ${description}\n    declarations:\n${nested}\n`;
 }
 
-test('runs from the retained inputs of an adopting repository as from the source', t => {
+test('the documented source and retained-copy commands draft the same scope without changing the repository', t => {
   const project = fixture(conforming);
   t.after(project.close);
-  const retainedDrafter = retainInputs(t, project.root, resolvedManifest());
+  retainInputs(t, project.root, resolvedManifest());
+  const before = snapshot(project.root);
 
-  const outcome = draft(project.root, [], retainedDrafter);
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.stderr, '');
-  assert.equal(outcome.stdout, draft(project.root).stdout);
-  assert.ok(outcome.proposal.declarations[0].candidates.some(candidate => candidate.reason.startsWith('Owned by')));
+  const fromSource = spawnSync(process.execPath, [drafterPath, '--project', project.root], {
+    cwd: sourceRoot, encoding: 'utf8',
+  });
+  assert.equal(fromSource.status, 0, fromSource.stderr);
+  assert.equal(fromSource.stderr, '');
+  assert.deepEqual(snapshot(project.root), before);
+
+  const fromRetained = spawnSync(process.execPath, [`.repo-standards/inputs/source/${drafterPath}`], {
+    cwd: project.root, encoding: 'utf8',
+  });
+  assert.equal(fromRetained.status, 0, fromRetained.stderr);
+  assert.equal(fromRetained.stderr, '');
+  assert.equal(fromRetained.stdout, fromSource.stdout);
+  assert.deepEqual(snapshot(project.root), before);
+  const proposal = JSON.parse(fromRetained.stdout);
+  assertScopeProposal(proposal, project.root);
+  assert.ok(proposal.declarations[0].candidates.some(candidate => candidate.reason.startsWith('Owned by')));
 });
 
 // The documentation declaration, with its check, in the form Repository
