@@ -13,10 +13,23 @@ inspection.
 node discovery/draft-documentation-scope.mjs [--project <path>] [--root <path>]...
 ```
 
-The agent runs it with Node.js 24 from the standards source at the selected
-commit, or, when that source is unavailable, from the inputs the adopting
-repository retains, as
-`.repo-standards/inputs/source/discovery/draft-documentation-scope.mjs`.
+With Node.js 24, the agent can run it from either supported location. From the
+root of a clone of the standards source checked out at the selected commit:
+
+```sh
+node discovery/draft-documentation-scope.mjs --project /path/to/adopting-repository \
+  > /tmp/documentation-scope.json
+```
+
+Or from the adopting repository's root, using the retained copy under
+`.repo-standards/inputs/source/` (supported since Repo Canon v0.4.1), including
+when the selected source clone is unavailable:
+
+```sh
+node .repo-standards/inputs/source/discovery/draft-documentation-scope.mjs \
+  > /tmp/documentation-scope.json
+```
+
 `--project` names a path in the adopting repository and defaults to the
 current directory; like Repository Standards, the drafter drafts the top level
 of the Git working tree that holds it. Each `--root` names a directory that the
@@ -154,7 +167,8 @@ node --test test/documentation-scope-drafter.test.mjs
 They run the drafter as a process over fixture repositories and compare the
 whole proposal, check its shape against the `repo-standards/scope/v2` rules,
 cover the unresolved questions and process errors, run it from the retained
-inputs of an adopting fixture repository and compare its proposal with the
-source's, resolve a profile's declarations from both manifest forms, and show
+inputs of an adopting fixture repository with the documented commands and
+compare its proposal with the source's without changing repository content,
+resolve a profile's declarations from both manifest forms, and show
 that the drafted scope of a conforming fixture, and of this repository, passes
 the documentation check.
