@@ -10,10 +10,11 @@
 ## Installation
 
 Repo Canon is applied through the Repository Standards CLI. On macOS or Linux,
-use Node.js 24, npm, and Git, and install the CLI outside the adopting project:
+use Node.js 24, npm, and Git 2.32.0 or newer, and install the CLI outside the
+adopting project:
 
 ```sh
-npm install --global --ignore-scripts @lutzseverino/repo-standards
+npm install --global --ignore-scripts @lutzseverino/repo-standards@5.0.0
 repo-standards --version
 ```
 
@@ -43,12 +44,7 @@ repo-standards inspect \
 Review the report, confirm the scope, and complete the adoption as the
 [adoption guide](docs/usage/adopt-repo-canon.md) describes. It lists the
 remaining prerequisites, including the authenticated `gh` access the two GitHub
-setup fixes need. Once adopted, check for newer Repo Canon and CLI releases with
-the CLI that the adoption pins, from the adopting repository:
-
-```sh
-.repo-standards/runtime/node_modules/.bin/repo-standards outdated
-```
+setup fixes need.
 
 ## Documentation
 

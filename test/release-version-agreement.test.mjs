@@ -25,6 +25,7 @@ const developmentDocuments = [developmentGuide, sourceProfile, authoringNotes];
 // Every version in the development and authoring documents that is not the CLI:
 // the context locates the mention, and the version is the part to change.
 const otherVersions = [
+  { path: developmentGuide, context: "Git 2.32.0", version: "2.32.0" },
   { path: sourceProfile, context: "Marked 18.0.13", version: "18.0.13" },
   { path: sourceProfile, context: "parse5 8.0.1", version: "8.0.1" },
   { path: sourceProfile, context: "`>=24.0.0 <25.0.0`", version: "24.0.0" },
