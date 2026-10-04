@@ -6,6 +6,8 @@
     "node": ">=24 <25"
   },
   "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "oxlint --deny-warnings",
     "check": "for file in operations/*.mjs operations/lib/*.mjs discovery/*.mjs scripts/*.mjs scripts/release/*.mjs scripts/support/*.mjs .github/scripts/*.mjs test/*.test.mjs test/helpers/*.mjs test/fixtures/*.mjs; do node --check \"$file\" || exit 1; done",
     "test": "node --test test/*.test.mjs",
@@ -20,6 +22,7 @@
     "test:productivity-skill-fixtures": "node --test test/productivity-skill-fixtures.test.mjs"
   },
   "devDependencies": {
-    "oxlint": "1.86.0"
+    "oxlint": "1.86.0",
+    "prettier": "3.9.9"
   }
 }
