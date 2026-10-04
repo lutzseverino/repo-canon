@@ -224,6 +224,11 @@ defaults:
       name: codebase-design
       source: vendor/mattpocock-skills/skills/engineering/codebase-design
 
+    skill-deliver:
+      kind: skill
+      name: deliver
+      source: .agents/skills/deliver
+
     skill-diagnosing-bugs:
       kind: skill
       name: diagnosing-bugs
