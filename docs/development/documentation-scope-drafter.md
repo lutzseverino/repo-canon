@@ -117,13 +117,8 @@ collection, or a double-quoted value with a backslash escape fail.
 A file declaration owns its target and a skill its `.agents/skills/<name>`
 directory. The repository declarations with discovery own paths that only their
 own proposals name. The drafter also leaves out the paths Repository Standards
-reserves: `.repo-standards` and the `adopt-standards` and `author-standards`
-system skills.
-
-Repository Standards 5.0.0 also reserves the `standards-updates` system skill.
-The released drafter can still ask about its Markdown file after installation;
-resolve that question by leaving the product-owned skill outside documentation
-scope.
+reserves: `.repo-standards` and the `adopt-standards`, `standards-updates`, and
+`author-standards` system skills.
 
 ## Evidence
 

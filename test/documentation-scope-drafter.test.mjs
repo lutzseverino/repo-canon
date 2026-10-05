@@ -572,6 +572,48 @@ test("leaves out the paths that other declarations and Repository Standards own"
   ]);
 });
 
+test("leaves the installed standards-updates skill out of the whole proposal", (t) => {
+  const { proposal } = drafted(t, {
+    "docs/README.md": "# Documentation\n",
+    "docs/development/README.md": developmentGuide(),
+    ".agents/skills/standards-updates/SKILL.md": "# Standards updates\n",
+  });
+
+  assert.doesNotMatch(
+    JSON.stringify(proposal),
+    /\.agents\/skills\/standards-updates/,
+    "questions, targets, and evidence must leave out the reserved skill",
+  );
+});
+
+test("asks whether a parent of reserved skills is a documentation root without drafting the skills", (t) => {
+  const { entry } = drafted(
+    t,
+    {
+      "docs/README.md": "# Documentation\n",
+      "docs/development/README.md": developmentGuide(),
+      ".agents/skills/usage/README.md": "# Usage\n",
+      ".agents/skills/adopt-standards/SKILL.md": "# Adopt\n",
+      ".agents/skills/standards-updates/SKILL.md": "# Standards updates\n",
+    },
+    ["--root", ".agents/skills"],
+  );
+
+  assert.deepEqual(entry.unresolved, [
+    "`.agents/skills/adopt-standards` lies directly under the documentation root `.agents/skills`, outside the usage, development, adr, and agents categories, but its files belong to other declarations or to Repository Standards, so this scope cannot move it. Is `.agents/skills` a documentation root after all?",
+    "`.agents/skills/standards-updates` lies directly under the documentation root `.agents/skills`, outside the usage, development, adr, and agents categories, but its files belong to other declarations or to Repository Standards, so this scope cannot move it. Is `.agents/skills` a documentation root after all?",
+  ]);
+  for (const candidate of entry.candidates) {
+    for (const path of [candidate.path, ...candidate.evidence]) {
+      assert.doesNotMatch(
+        path,
+        /^\.agents\/skills\/(adopt-standards|standards-updates)(\/|$)/,
+        "targets and evidence must leave out the reserved skills",
+      );
+    }
+  }
+});
+
 test("excludes each file of an owned directory under a decided root", (t) => {
   const { entry } = drafted(
     t,
