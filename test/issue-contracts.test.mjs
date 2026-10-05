@@ -1995,6 +1995,39 @@ function freshGrantSnapshot() {
   return snapshot;
 }
 
+// A ticket that `author` opened without readiness, after its revision notice,
+// with the readiness label present when `sender`'s labeled run reads it.
+function laterGrantSnapshot({ feedback, issueEvents, sender }) {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: ticketBody,
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    user: { login: "author" },
+    created_at: "2026-09-14T16:00:00Z",
+    updated_at: "2026-09-14T17:03:00Z",
+  };
+  return {
+    issue,
+    comments: [feedback(issue)],
+    issueEvents,
+    event: labeledBy(sender, "ready-for-agent", issue),
+    permissions: {
+      author: role("admin"),
+      maintainer: role("admin"),
+      triager: role("triage"),
+    },
+  };
+}
+
+// The author's application of readiness after the revision notice.
+const authorGrant = creationLabel({
+  id: 201,
+  actor: { login: "author" },
+  created_at: "2026-09-14T17:01:00Z",
+});
+
 const maintainerGrant = creationLabel({
   id: 300,
   created_at: "2026-09-14T17:01:00Z",
@@ -2007,11 +2040,11 @@ decisionTable(
       ["only the opener's creation label", ([creation]) => [creation]],
       ["the bot's cleanup", (issueEvents) => issueEvents],
       [
-        "an earlier application the trigger's sender removed",
+        "the sender's application followed by the label's removal",
         (issueEvents) => [
           ...issueEvents,
           maintainerGrant,
-          { ...maintainerGrant, id: 301, event: "unlabeled" },
+          { ...maintainerGrant, id: 301, event: "unlabeled", actor: bot },
         ],
       ],
     ].map(([name, timeline]) => ({
@@ -2022,6 +2055,18 @@ decisionTable(
         assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), true);
       },
     })),
+    {
+      name: "the maintainer's trigger is recorded once another person's reapplication is the label's latest change",
+      run: () => {
+        const snapshot = freshGrantSnapshot();
+        snapshot.issueEvents.push(
+          maintainerGrant,
+          { ...maintainerGrant, id: 301, event: "unlabeled" },
+          { ...maintainerGrant, id: 302, actor: { login: "triager" } },
+        );
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
+      },
+    },
     {
       name: "the maintainer's recorded trigger binds readiness to the maintainer's review event",
       run: () => {
@@ -2081,6 +2126,85 @@ decisionTable(
         );
       },
     })),
+    ...[
+      ["a pending review", awaitingTicketFeedback],
+      [
+        "a recorded approval of that application",
+        (issue) =>
+          approvedTicketFeedback(issue, {
+            reviewer: "author",
+            reviewEventId: "201",
+          }),
+      ],
+    ].map(([name, feedback]) => ({
+      name: `a trigger whose removal and reapplication are unrecorded fails closed rather than binding the sender's earlier application, with ${name}`,
+      snapshot: laterGrantSnapshot({
+        feedback,
+        issueEvents: [authorGrant],
+        sender: "maintainer",
+      }),
+      expected: {
+        exitCode: 1,
+        remove: ["ready-for-agent"],
+        add: ["needs-triage"],
+        feedback: 13,
+        message: /timeline does not contain the current readiness label event/,
+      },
+    })),
+    {
+      name: "a trigger whose label another person removed and a third reapplied binds the latest application",
+      snapshot: laterGrantSnapshot({
+        feedback: awaitingTicketFeedback,
+        issueEvents: [
+          authorGrant,
+          {
+            ...authorGrant,
+            id: 202,
+            event: "unlabeled",
+            actor: { login: "maintainer" },
+            created_at: "2026-09-14T17:02:00Z",
+          },
+          {
+            ...authorGrant,
+            id: 203,
+            actor: { login: "triager" },
+            created_at: "2026-09-14T17:03:00Z",
+          },
+        ],
+        sender: "author",
+      }),
+      expected: {
+        exitCode: 0,
+        feedback: 13,
+        message: /valid implementation ticket with ready-for-agent bound/i,
+        feedbackBody: [/reviewed by @triager/, /"reviewEventId":"203"/],
+      },
+    },
+    {
+      name: "a non-readiness label applied by another maintainer before any feedback keeps the creation review",
+      snapshot: createdWithReadiness({
+        run: "labeled",
+        labeler: "documenter",
+        currentLabels: ["ready-for-agent", "documentation"],
+        trigger: "documentation",
+        issueEvents: [
+          creationLabel(),
+          creationLabel({
+            id: 102,
+            label: { name: "documentation" },
+            actor: { login: "documenter" },
+            created_at: "2026-09-14T17:00:30Z",
+          }),
+        ],
+        permissions: { maintainer: role("admin"), documenter: role("admin") },
+      }),
+      expected: {
+        exitCode: 0,
+        feedback: "create",
+        message: /valid implementation ticket with ready-for-agent bound/i,
+        feedbackBody: [/reviewed by @maintainer/, /"reviewEventId":"101"/],
+      },
+    },
     {
       name: "a creation label in the creation second never reviews another sender's trigger",
       snapshot: createdWithReadiness({

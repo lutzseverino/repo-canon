@@ -908,6 +908,61 @@ test("the adapter waits, within its bound, for the timeline to record a human re
   );
 
   await context.test(
+    "a trigger whose removal and reapplication stay unrecorded fails closed after the bound rather than binding the sender's earlier application",
+    async (t) => {
+      const issue = {
+        number: 42,
+        node_id: "ISSUE_42",
+        body: ticketBody,
+        labels: [{ name: "ready-for-agent" }],
+        state: "open",
+        user: { login: "author" },
+        created_at: "2026-09-14T16:00:00Z",
+        updated_at: "2026-09-14T17:03:00Z",
+      };
+      const result = await exerciseWaiting(t, {
+        issue,
+        comments: [awaitingTicketFeedback(issue)],
+        event: labeledBy("maintainer", "ready-for-agent", issue),
+        issueEventReads: [
+          [
+            creationLabel({
+              id: 201,
+              actor: { login: "author" },
+              created_at: "2026-09-14T17:01:00Z",
+            }),
+          ],
+        ],
+        permissions: {
+          author: { permission: "admin", role_name: "admin" },
+          maintainer: { permission: "admin", role_name: "admin" },
+        },
+      });
+
+      assert.equal(result.code, 1);
+      assert.match(
+        result.stderr,
+        /timeline does not contain the current readiness label event/,
+      );
+      assert.equal(eventReads(result), 16);
+      assert.deepEqual(waits(result), Array(15).fill(2000));
+      const applied = writes(result);
+      assert.deepEqual(
+        applied.map(([method, url]) => [method, url]),
+        [
+          [
+            "DELETE",
+            "/repos/example/repository/issues/42/labels/ready-for-agent",
+          ],
+          ["POST", "/repos/example/repository/issues/42/labels"],
+          ["PATCH", "/repos/example/repository/issues/comments/13"],
+        ],
+      );
+      assert.doesNotMatch(applied[2][2].body, /readiness recorded/);
+    },
+  );
+
+  await context.test(
     "a creation labeled run that first reads an empty timeline records the opener's rejection",
     async (t) => {
       const { issue, event } = createdWithReadiness({

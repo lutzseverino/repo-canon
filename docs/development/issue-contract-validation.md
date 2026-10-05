@@ -112,35 +112,41 @@ An unedited direct specification or ticket created with exactly one readiness
 label can take its initial review from its creation snapshot, whichever of its
 `opened` and `labeled` workflow runs arrives first. That label's application
 must be both the first and the latest readiness transition, applied by the
-issue's opener. The `opened` run reads the label from its payload. Only a
-`labeled` run whose sender is the opener takes the creation review, and it needs
-the timeline to record the opener applying the label in the issue's creation
-second; otherwise it is decided as any later review. Another sender's
-readiness label is never attributed to the opener's creation label event.
+issue's opener. The `opened` run reads the label from its payload. A `labeled`
+run needs the timeline to record the opener applying the label in the issue's
+creation second; otherwise it is decided as any later review. A readiness
+trigger takes the creation review only when its sender is the opener, so
+another sender's readiness label is never attributed to the opener's creation
+label event; a `labeled` run for any other label keeps the creation review.
 Either run then checks the opener's role as it checks any reviewer's, so an
 opener without an authorizing role gets the same "not authorized" feedback
-whichever run arrives first. Once
-the timeline holds the creation label event, either run records it as the
-review, so both orders end with the same labels and recorded review.
+whichever run arrives first. Once the timeline holds the creation label event,
+either run records it as the review, so both orders end with the same labels and
+recorded review.
 
 GitHub can deliver a `labeled` webhook before its issue-event timeline records
 that label event. A human readiness trigger is a `labeled` event for
 `ready-for-agent` or `ready-for-human` by a sender other than
 `github-actions[bot]`, whose re-fetched issue still carries that label. The
-timeline records its application when it holds a `labeled` event of that label
-by that sender with no `unlabeled` event for the label after it. While the
-timeline does not, the adapter re-reads the issue events every 2 seconds, for at
-most 30 seconds of waiting in total (15 re-reads), and decides from the first
-read that records the trigger. The bound stays short because the workflow
-serializes runs per issue and, while one run waits, GitHub keeps only the newest
-pending run for that issue. The decision itself stays pure: it reads one
-snapshot, and the adapter asks `readinessTriggerUnrecorded` whether to read
-again. Every other trigger, and a readiness trigger
-whose label is already gone from the re-fetched issue, reads the events once.
+timeline records it when it holds a `labeled` event of that label by that sender
+and the label's latest recorded change is an application, by anyone. So a label
+one person removed and another reapplied is recorded, and is decided as the
+latest application. While the timeline does not record the trigger, the adapter
+re-reads the issue events every 2 seconds, for at most 30 seconds of waiting in
+total (15 re-reads), and decides from the first read that records it. The bound
+stays short because the workflow serializes runs per issue and, while one run
+waits, GitHub keeps only the newest pending run for that issue. The decision
+itself stays pure: it reads one snapshot, and the adapter asks
+`readinessTriggerUnrecorded` whether to read again. Every other trigger, and a
+readiness trigger whose label is already gone from the re-fetched issue, reads
+the events once.
 
-When the bound runs out, the run decides once from its last read and fails
-closed: it removes readiness and reports that the authoritative issue timeline
-does not contain the current readiness label event. The remedy is to reapply
+The decision asks the same predicate. While it holds, the decision fails closed
+before selecting any review, including a recorded approval, so a lagging
+timeline never supplies the review. When the bound runs out, the run decides
+once from its last read this way: it removes readiness and reports that the
+authoritative issue timeline does not contain the current readiness label
+event. The remedy is to reapply
 the label after the revision notice, and the validator decides it as any later
 review. Because a creation `labeled` run waits for the opener's creation label,
 an unauthorized opener's rejection is recorded in either run order, and the
