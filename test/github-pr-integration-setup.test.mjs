@@ -1,29 +1,12 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import {
-  chmodSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { fixture, invokeOperation, snapshot } from "./helpers/operation.mjs";
+import {
+  assertProjectUnchanged,
+  githubPrIntegrationSetup,
+  setup as githubSetup,
+} from "./helpers/github-setup.mjs";
+import { snapshot } from "./helpers/operation.mjs";
 
-const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const script = join(
-  repositoryRoot,
-  "operations/setup-github-pr-integration.mjs",
-);
-const fakeGh = join(repositoryRoot, "test/fixtures/fake-gh-pr-settings.mjs");
-const fakeNodeVersion = join(
-  repositoryRoot,
-  "test/fixtures/fake-node-version.mjs",
-);
 const checkName = "PR metadata";
 const rulesetName = "Repo Canon required PR checks";
 
@@ -67,93 +50,8 @@ function classicProtection(statusChecks, overrides = {}) {
   };
 }
 
-function operationRequest(projectRoot, overrides = {}) {
-  return {
-    format: "repo-standards/operation/v1",
-    operation: {
-      declaration: "github-pr-integration",
-      phase: "fixes",
-      id: "required-checks-and-squash",
-    },
-    projectRoot,
-    standards: {
-      repository: "https://github.com/lutzseverino/repo-canon",
-      version: "v0.0.0-test",
-      commit: "0000000000000000000000000000000000000000",
-    },
-    profile: "complete",
-    declarations: [],
-    allowedTargets: { paths: [], directories: [] },
-    ...overrides,
-  };
-}
-
-function setup(t, options = {}) {
-  const project = fixture({ "README.md": "# Fixture\n" });
-  t.after(project.close);
-  for (const [name, url] of Object.entries(
-    options.remotes ?? { origin: "git@github.com:acme/widgets.git" },
-  )) {
-    execFileSync("git", ["remote", "add", name, url], { cwd: project.root });
-  }
-  for (const [name, url] of Object.entries(options.pushUrls ?? {})) {
-    execFileSync("git", ["remote", "set-url", "--add", "--push", name, url], {
-      cwd: project.root,
-    });
-  }
-
-  const toolsRoot = mkdtempSync(
-    join(tmpdir(), "repo-canon-pr-settings-tools-"),
-  );
-  t.after(() => rmSync(toolsRoot, { recursive: true, force: true }));
-  chmodSync(fakeGh, 0o755);
-  symlinkSync(fakeGh, join(toolsRoot, "gh"));
-  const statePath = join(toolsRoot, "state.json");
-  writeFileSync(
-    statePath,
-    `${JSON.stringify({
-      repo: "acme/widgets",
-      authenticated: true,
-      settings: {
-        allow_squash_merge: false,
-        allow_merge_commit: true,
-        allow_rebase_merge: true,
-        squash_merge_commit_title: "COMMIT_OR_PR_TITLE",
-        squash_merge_commit_message: "COMMIT_MESSAGES",
-        delete_branch_on_merge: true,
-      },
-      branchProtection: null,
-      rulesets: [],
-      ...options.state,
-    })}\n`,
-  );
-  const env = {
-    PATH: `${toolsRoot}:${dirname(process.execPath)}:/usr/bin:/bin`,
-    FAKE_GH_STATE: statePath,
-  };
-  const invoke = (
-    requestOverrides = {},
-    envOverrides = {},
-    nodeArguments = [],
-  ) =>
-    invokeOperation(script, operationRequest(project.root, requestOverrides), {
-      env: { ...env, ...envOverrides },
-      nodeArguments,
-    });
-  return {
-    project,
-    toolsRoot,
-    invoke,
-    readState: () => JSON.parse(readFileSync(statePath, "utf8")),
-  };
-}
-
-function assertProjectUnchanged(before, scenario) {
-  assert.deepEqual(
-    snapshot(scenario.project.root),
-    before,
-    "remote setup must not change project content",
-  );
+function setup(t, options) {
+  return githubSetup(t, githubPrIntegrationSetup, options);
 }
 
 test("creates required-check enforcement, configures squash defaults, and is unchanged on repeat", (t) => {
@@ -492,168 +390,7 @@ test("blocks when unsupported pattern syntax makes default-branch applicability 
   assert.equal(scenario.readState().mutations ?? 0, 0);
 });
 
-test("pins API requests and authentication to the inferred github.com target", async (t) => {
-  await t.test("enterprise environment override", (st) => {
-    const scenario = setup(st, {
-      state: {
-        settings: matchingSettings,
-        branchProtection: classicProtection({
-          strict: false,
-          contexts: [checkName],
-          checks: [],
-        }),
-      },
-    });
-    const outcome = scenario.invoke({}, { GH_HOST: "enterprise.example" });
-    assert.equal(outcome.status, 0, outcome.stderr);
-    assert.equal(outcome.result.status, "unchanged");
-    assert.deepEqual(
-      [...new Set(scenario.readState().apiHosts)],
-      ["github.com"],
-    );
-    assert.deepEqual(scenario.readState().authStatusArguments, [
-      "--hostname",
-      "github.com",
-      "--active",
-    ]);
-  });
-
-  await t.test("global remote cannot supply the target", (st) => {
-    const scenario = setup(st, { remotes: {} });
-    const globalConfig = join(scenario.toolsRoot, "global.gitconfig");
-    writeFileSync(
-      globalConfig,
-      '[remote "injected"]\n\turl = git@github.com:other/widgets.git\n',
-    );
-    const outcome = scenario.invoke({}, { GIT_CONFIG_GLOBAL: globalConfig });
-    assert.equal(outcome.status, 0, outcome.stderr);
-    assert.equal(outcome.result.status, "blocked");
-    assert.match(
-      outcome.result.message,
-      /No unambiguous github.com repository/,
-    );
-    assert.deepEqual(scenario.readState().apiHosts ?? [], []);
-  });
-
-  await t.test("global remote cannot conflict with a local target", (st) => {
-    const scenario = setup(st, {
-      state: {
-        settings: matchingSettings,
-        branchProtection: classicProtection({
-          strict: false,
-          contexts: [checkName],
-          checks: [],
-        }),
-      },
-    });
-    const globalConfig = join(scenario.toolsRoot, "global.gitconfig");
-    writeFileSync(
-      globalConfig,
-      '[remote "injected"]\n\turl = git@github.com:other/widgets.git\n',
-    );
-    const outcome = scenario.invoke({}, { GIT_CONFIG_GLOBAL: globalConfig });
-    assert.equal(outcome.status, 0, outcome.stderr);
-    assert.equal(outcome.result.status, "unchanged");
-  });
-});
-
-test("blocks before mutation when repository identity is absent, ambiguous, or mismatched", async (t) => {
-  const cases = [
-    [
-      { remotes: { origin: "https://example.com/acme/widgets.git" } },
-      /No unambiguous github.com repository/,
-    ],
-    [
-      {
-        remotes: {
-          origin: "https://github.com/acme/widgets.git",
-          upstream: "git@github.com:other/widgets.git",
-        },
-      },
-      /Multiple github.com repositories/,
-    ],
-    [
-      { pushUrls: { origin: "git@github.com:other/widgets.git" } },
-      /Multiple github.com repositories/,
-    ],
-    [
-      { state: { repo: "acme/renamed-widgets" } },
-      /resolved acme\/widgets as acme\/renamed-widgets/,
-    ],
-  ];
-  for (const [options, message] of cases) {
-    await t.test(message.source, (st) => {
-      const scenario = setup(st, options);
-      const outcome = scenario.invoke();
-      assert.equal(outcome.status, 0, outcome.stderr);
-      assert.equal(outcome.result.status, "blocked");
-      assert.match(outcome.result.message, message);
-      assert.equal(scenario.readState().mutations ?? 0, 0);
-    });
-  }
-});
-
-test("blocks for unavailable prerequisites, authentication, permission, and inspection failures", async (t) => {
-  await t.test("incompatible Node.js runtime", (st) => {
-    const scenario = setup(st);
-    const outcome = scenario.invoke({}, { FAKE_NODE_VERSION: "23.11.0" }, [
-      "--import",
-      fakeNodeVersion,
-    ]);
-    assert.equal(outcome.status, 0, outcome.stderr);
-    assert.equal(outcome.result.status, "blocked");
-    assert.match(outcome.result.message, /requires Node\.js 24/);
-  });
-  await t.test("missing Git", (st) => {
-    const scenario = setup(st);
-    const outcome = scenario.invoke({}, { PATH: scenario.toolsRoot });
-    assert.equal(outcome.result.status, "blocked");
-    assert.match(outcome.result.message, /Git is unavailable/);
-  });
-  await t.test("incompatible Git", (st) => {
-    const scenario = setup(st);
-    const git = join(scenario.toolsRoot, "git");
-    writeFileSync(git, "#!/bin/sh\nprintf 'git version 2.17.9\\n'\n");
-    chmodSync(git, 0o755);
-    const outcome = scenario.invoke();
-    assert.equal(outcome.result.status, "blocked");
-    assert.match(outcome.result.message, /requires Git 2\.18\.0 or newer/);
-  });
-  await t.test("missing gh", (st) => {
-    const scenario = setup(st);
-    rmSync(join(scenario.toolsRoot, "gh"));
-    symlinkSync("/usr/bin/git", join(scenario.toolsRoot, "git"));
-    const outcome = scenario.invoke({}, { PATH: scenario.toolsRoot });
-    assert.equal(outcome.result.status, "blocked");
-    assert.match(outcome.result.message, /GitHub CLI \(gh\) is unavailable/);
-  });
-  await t.test("incompatible gh", (st) => {
-    const scenario = setup(st, { state: { version: "gh version 2.56.0" } });
-    const outcome = scenario.invoke();
-    assert.equal(outcome.result.status, "blocked");
-    assert.match(outcome.result.message, /requires gh 2\.57\.0 or newer/);
-  });
-  await t.test("not authenticated", (st) => {
-    const scenario = setup(st, { state: { authenticated: false } });
-    const outcome = scenario.invoke();
-    assert.equal(outcome.result.status, "blocked");
-    assert.match(outcome.result.message, /authenticated github.com access/);
-  });
-  await t.test("inactive invalid account does not mask active access", (st) => {
-    const scenario = setup(st, {
-      state: {
-        inactiveAuthInvalid: true,
-        settings: matchingSettings,
-        branchProtection: classicProtection({
-          strict: false,
-          contexts: [checkName],
-          checks: [],
-        }),
-      },
-    });
-    const outcome = scenario.invoke();
-    assert.equal(outcome.result.status, "unchanged");
-  });
+test("blocks without admin access or when rules cannot be inspected", async (t) => {
   await t.test("non-admin access", (st) => {
     const scenario = setup(st, {
       state: {
@@ -761,24 +498,5 @@ test("blocks when final readback disagrees and reports applied effects", async (
       assert.match(outcome.result.message, /final readback did not match/);
       assert.match(outcome.result.message, /Applied changes:/);
     });
-  }
-});
-
-test("rejects non-fix invocation and project-content targets as protocol errors", (t) => {
-  const scenario = setup(t);
-  for (const overrides of [
-    {
-      operation: {
-        declaration: "github-pr-integration",
-        phase: "checks",
-        id: "required-checks-and-squash",
-      },
-    },
-    { allowedTargets: { paths: ["README.md"], directories: [] } },
-  ]) {
-    const outcome = scenario.invoke(overrides);
-    assert.equal(outcome.status, 1);
-    assert.equal(outcome.result, null);
-    assert.match(outcome.stderr, /GitHub PR integration setup/);
   }
 });

@@ -22,22 +22,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // baseline or the install version.
 const developmentDocuments = [developmentGuide, sourceProfile, authoringNotes];
 
-// Every version in the development and authoring documents that is not the CLI:
-// the context locates the mention, and the version is the part to change.
-const otherVersions = [
-  { path: developmentGuide, context: "Git 2.32.0", version: "2.32.0" },
-  { path: sourceProfile, context: "Marked 18.0.13", version: "18.0.13" },
-  { path: sourceProfile, context: "parse5 8.0.1", version: "8.0.1" },
-  { path: sourceProfile, context: "`>=24.0.0 <25.0.0`", version: "24.0.0" },
-  { path: sourceProfile, context: "`>=24.0.0 <25.0.0`", version: "25.0.0" },
-  { path: sourceProfile, context: "Git 2.18.0", version: "2.18.0" },
-  { path: sourceProfile, context: "GitHub CLI 2.57.0", version: "2.57.0" },
-  {
-    path: authoringNotes,
-    context: "stable `1.0.0` baseline",
-    version: "1.0.0",
-  },
-];
+// A sentence naming versions that are not the CLI: other tools, the Node.js
+// version constraint, and a stable baseline.
+const otherVersionsSentence =
+  "Use Git 99.0.0, GitHub CLI 99.0.0, Marked 99.0.0, parse5 99.0.0, and `node --version` constrained to `>=99.0.0 <100.0.0` since the stable `99.0.0` baseline.";
 
 function workingTree() {
   const files = new Map();
@@ -76,14 +64,6 @@ function oneOccurrenceChanged(text, literal, replacement) {
   return variants;
 }
 
-// The offsets of every version in a text, found by the test itself rather than
-// by the checker's classifier.
-function versionOffsets(text) {
-  return [...text.matchAll(/(?<![\w.])v?\d+\.\d+\.\d+(?!\.?\d)/g)].map(
-    (match) => match.index,
-  );
-}
-
 // The release the Repository README selects, read independently of the checker.
 function selectedRelease(files) {
   return files.get(readme).match(/releases\/tag\/(v\d+\.\d+\.\d+)/)[1];
@@ -98,36 +78,39 @@ test("the named Repo Canon and CLI versions agree on main", () => {
   assert.deepEqual(versionDisagreements(reader(workingTree())), []);
 });
 
-test("changing any one named Repo Canon version fails the agreement", () => {
+test("changing any one named Repo Canon or CLI version fails the agreement", () => {
   const files = workingTree();
   const release = selectedRelease(files);
-  for (const path of [readme, adoptionGuide]) {
-    const variants = oneOccurrenceChanged(files.get(path), release, "v99.0.0");
-    assert.ok(variants.length > 0, `${path} names ${release}`);
-    for (const variant of variants) {
-      const changed = new Map(files).set(path, variant);
-      assert.notDeepEqual(
-        versionDisagreements(reader(changed)),
-        [],
-        `${path} with one ${release} changed`,
-      );
-    }
-  }
-});
-
-test("changing any one named CLI version fails the agreement", () => {
-  const files = workingTree();
   const floor = cliFloor(files);
-  for (const path of [adoptionGuide, ciWorkflow]) {
-    const variants = oneOccurrenceChanged(files.get(path), floor, "99.0.0");
-    assert.ok(variants.length > 0, `${path} names CLI ${floor}`);
-    for (const variant of variants) {
-      const changed = new Map(files).set(path, variant);
-      assert.notDeepEqual(
-        versionDisagreements(reader(changed)),
-        [],
-        `${path} with one ${floor} changed`,
+  for (const { paths, named, literal, replacement } of [
+    {
+      paths: [readme, adoptionGuide],
+      named: release,
+      literal: release,
+      replacement: "v99.0.0",
+    },
+    {
+      paths: [adoptionGuide, ciWorkflow],
+      named: `CLI ${floor}`,
+      literal: floor,
+      replacement: "99.0.0",
+    },
+  ]) {
+    for (const path of paths) {
+      const variants = oneOccurrenceChanged(
+        files.get(path),
+        literal,
+        replacement,
       );
+      assert.ok(variants.length > 0, `${path} names ${named}`);
+      for (const variant of variants) {
+        const changed = new Map(files).set(path, variant);
+        assert.notDeepEqual(
+          versionDisagreements(reader(changed)),
+          [],
+          `${path} with one ${literal} changed`,
+        );
+      }
     }
   }
 });
@@ -149,44 +132,33 @@ test("changing any one CLI version in the development and authoring documents fa
   }
 });
 
-test("changing another version in the development and authoring documents keeps the agreement", () => {
+test("versions of other tools and the stable baseline in the development and authoring documents keep the agreement", () => {
   const files = workingTree();
-  for (const { path, context, version } of otherVersions) {
-    const text = files.get(path);
-    assert.equal(
-      text.split(context).length,
-      2,
-      `${path} names ${context} once`,
+  for (const path of developmentDocuments) {
+    const changed = new Map(files).set(
+      path,
+      `${files.get(path)}\n${otherVersionsSentence}\n`,
     );
-    const variant = text.replace(context, context.replace(version, "99.0.0"));
-    const changed = new Map(files).set(path, variant);
-    assert.deepEqual(
-      versionDisagreements(reader(changed)),
-      [],
-      `${path} with ${version} in ${context} changed`,
-    );
+    assert.deepEqual(versionDisagreements(reader(changed)), [], path);
   }
 });
 
-test("every version in the development and authoring documents is the CLI floor or another listed version", () => {
+test("a version of a tool the agreement does not name fails as a CLI version", () => {
   const files = workingTree();
-  const floor = cliFloor(files);
   for (const path of developmentDocuments) {
-    const text = files.get(path);
-    const listed = new Set();
-    for (const { context, version } of otherVersions.filter(
-      (other) => other.path === path,
-    )) {
-      listed.add(text.indexOf(context) + context.indexOf(version));
-    }
-    for (const offset of versionOffsets(text)) {
-      const version = text.slice(offset).match(/^v?\d+\.\d+\.\d+/)[0];
-      const line = text.slice(0, offset).split("\n").length;
-      assert.ok(
-        version === floor || listed.has(offset),
-        `${path}:${line} names ${version}, which the tests do not cover`,
-      );
-    }
+    const changed = new Map(files).set(
+      path,
+      `${files.get(path)}\nUse Docker 99.0.0 or newer.\n`,
+    );
+    const problems = versionDisagreements(reader(changed));
+    assert.ok(
+      problems.some(
+        (problem) =>
+          problem.startsWith(`${path}:`) &&
+          problem.includes("names CLI 99.0.0"),
+      ),
+      `${path}: ${problems.join("\n")}`,
+    );
   }
 });
 

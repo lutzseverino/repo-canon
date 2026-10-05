@@ -1,45 +1,25 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { lstatSync, readFileSync } from "node:fs";
+import { lstatSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import {
+  exactOwnedAgentConfiguration,
+  fileDeclarations,
+} from "./helpers/documentation.mjs";
 import { invokeCheck } from "./helpers/operation.mjs";
 
-// This repository is an adopter of its own published standards, so the three
-// shipped checks run against the real tree on every pull request instead of
-// against fixtures only. The documentation paths below are the repository's
-// documentation scope: the documentation tree, the repository-root glossary,
-// and the authoring notes. The source-side guidance, the discovery
-// instructions, and the vendored material stay out.
+// This repository is an adopter of its own published standards, so the shipped
+// checks run against the real tree on every pull request instead of against
+// fixtures only. It has no Project READMEs, and an empty Project README scope
+// cannot fail, so that check runs against fixtures only. The documentation
+// check runs against this repository here and nowhere else. The documentation
+// paths below are the repository's documentation scope: the documentation tree,
+// the repository-root glossary, and the authoring notes. The source-side
+// guidance, the discovery instructions, and the vendored material stay out.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const rootDocuments = ["CONTEXT.md", "authoring-notes.md"];
-
-// `discovery/documentation.md` keeps the exact-owned shared agent configuration
-// outside documentation scope, and `standards.yaml` declares each of those files
-// separately. The check still reads every Markdown file under `docs`, so leaving
-// them out of this declaration does not reduce what it validates.
-const exactOwnedAgentConfiguration = [
-  "docs/agents/README.md",
-  "docs/agents/domain.md",
-  "docs/agents/issue-tracker.md",
-  "docs/agents/triage-labels.md",
-];
-
-// The CLI passes every active declaration to each operation. The documentation
-// check counts a document that another declaration owns, such as the exact-owned
-// agent configuration, as covered by scope, so the file declarations of
-// `standards.yaml` are passed here as the CLI would.
-function fileDeclarations() {
-  return readFileSync(join(root, "standards.yaml"), "utf8")
-    .split("\n")
-    .flatMap((line) => {
-      const target = /^\s+target: (\S+)$/.exec(line);
-      return target
-        ? [{ kind: "file", target: target[1], checks: [], fixes: [] }]
-        : [];
-    });
-}
 
 // The CLI's discovery observation refuses any file larger than this, which would
 // reject the whole inspection before it reports anything.
@@ -78,20 +58,6 @@ test("the repository passes the documentation navigation check at its root", () 
     },
     declarations: fileDeclarations(),
     allowedTargets: { paths: documentationScope(), directories: [] },
-  });
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "passed", outcome.result.message);
-});
-
-test("the repository passes the Project README check at its root", () => {
-  const outcome = invokeCheck(operation("check-project-readmes.mjs"), root, {
-    operation: {
-      declaration: "project-readmes",
-      phase: "checks",
-      id: "project-readme-structure",
-    },
-    allowedTargets: { paths: [], directories: [] },
   });
 
   assert.equal(outcome.status, 0, outcome.stderr);

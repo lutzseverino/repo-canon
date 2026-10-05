@@ -7,7 +7,9 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { basename, join, relative } from "node:path";
 import { tmpdir } from "node:os";
@@ -15,6 +17,69 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
+const sharedInputs = [
+  "AGENTS.md",
+  "CONTRIBUTING.md",
+  "docs/agents/README.md",
+  "docs/agents/domain.md",
+  "docs/agents/issue-tracker.md",
+  "docs/agents/triage-labels.md",
+  "scripts/support/fixture-authoring.mjs",
+];
+
+// What each builder records in its manifest, read the same way for all four.
+const builders = [
+  {
+    name: "engineering",
+    script: "scripts/create-engineering-skill-fixtures.mjs",
+    manifest: (output) => JSON.parse(output),
+    head: (manifest) => manifest.source.worktreeCommit,
+    builderSha256: (manifest) => manifest.source.fixtureBuilderSha256,
+    skills: (manifest) => manifest.skills,
+    inputs: [],
+    laterCommit: "architecture",
+  },
+  {
+    name: "productivity",
+    script: "scripts/create-productivity-skill-fixtures.mjs",
+    manifest: (output) => JSON.parse(output),
+    head: (manifest) => manifest.source.worktreeCommit,
+    builderSha256: (manifest) => manifest.source.builderSha256,
+    skills: (manifest) => manifest.source.skills,
+    inputs: [],
+    laterCommit: "teach",
+  },
+  {
+    name: "planning",
+    script: "scripts/create-planning-skill-fixtures.mjs",
+    manifest: (_output, root) =>
+      JSON.parse(readFileSync(join(root, "manifest.json"), "utf8")),
+    head: (manifest) => manifest.source.repositoryHead,
+    builderSha256: (manifest) => manifest.source.fixtureBuilderSha256,
+    skills: (manifest) => manifest.source.linkedSkillDirectories,
+    inputs: [],
+    laterCommit: "delivery",
+  },
+  {
+    name: "deliver",
+    script: "scripts/create-deliver-skill-fixtures.mjs",
+    manifest: (output) => JSON.parse(output),
+    head: (manifest) => manifest.source.worktreeCommit,
+    builderSha256: (manifest) => manifest.source.builderSha256,
+    skills: (manifest) => manifest.source.skills,
+    inputs: [
+      ".github/PULL_REQUEST_TEMPLATE.md",
+      ".github/workflows/pr-metadata.yml",
+      ".github/scripts/validate-pr-metadata.mjs",
+      "operations/lib/rendered-markdown.mjs",
+      "vendor/marked/marked.esm.js",
+      "vendor/parse5/parse5.esm.js",
+      "scripts/support/exercise-gh.mjs",
+      "scripts/support/exercise-repo-standards.mjs",
+    ],
+    laterCommit: "work",
+  },
+];
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -46,7 +111,7 @@ function sha256Directory(root) {
   return digest.digest("hex");
 }
 
-test("every builder identifies dirty source bytes independently of source HEAD", (t) => {
+test("every builder records its dirty source bytes and builds repositories with local Git policy that survives hostile host signing", (t) => {
   const parent = mkdtempSync(
     join(tmpdir(), "repo-canon-builder-provenance-test-"),
   );
@@ -64,166 +129,125 @@ test("every builder identifies dirty source bytes independently of source HEAD",
   git(source, "commit", "--quiet", "-m", "chore: establish provenance source");
   const sourceHead = git(source, "rev-parse", "HEAD");
 
-  const dirtySharedPath = "AGENTS.md";
-  const dirtyAuthoringPath = "scripts/support/fixture-authoring.mjs";
-  const dirtyEngineeringSkill =
-    "vendor/mattpocock-skills/skills/engineering/tdd";
-  const dirtyProductivitySkill =
-    "vendor/mattpocock-skills/skills/productivity/grilling";
-  const dirtyDeliverSkill = ".agents/skills/deliver";
-  const committedEngineeringSkillSha256 = sha256Directory(
-    join(source, dirtyEngineeringSkill),
+  // Uncommitted changes to shared guidance, the fixture-authoring module, and
+  // one skill of each builder, so only the working tree's bytes can match.
+  const dirtyFiles = ["AGENTS.md", "scripts/support/fixture-authoring.mjs"];
+  const dirtySkills = {
+    engineering: ["tdd"],
+    productivity: ["grilling"],
+    planning: ["tdd", "grilling"],
+    deliver: ["deliver"],
+  };
+  const dirtySkillDirectories = [
+    "vendor/mattpocock-skills/skills/engineering/tdd",
+    "vendor/mattpocock-skills/skills/productivity/grilling",
+    ".agents/skills/deliver",
+  ];
+  const committedSkillSha256 = Object.fromEntries(
+    dirtySkillDirectories.map((path) => [
+      path,
+      sha256Directory(join(source, path)),
+    ]),
   );
-  const committedProductivitySkillSha256 = sha256Directory(
-    join(source, dirtyProductivitySkill),
-  );
-  appendFileSync(
-    join(source, dirtySharedPath),
-    "\n<!-- uncommitted provenance test -->\n",
-  );
-  appendFileSync(
-    join(source, dirtyAuthoringPath),
-    "\n// uncommitted provenance test\n",
-  );
-  appendFileSync(
-    join(source, dirtyEngineeringSkill, "SKILL.md"),
-    "\n<!-- uncommitted provenance test -->\n",
-  );
-  appendFileSync(
-    join(source, dirtyProductivitySkill, "SKILL.md"),
-    "\n<!-- uncommitted provenance test -->\n",
-  );
-  const committedDeliverSkillSha256 = sha256Directory(
-    join(source, dirtyDeliverSkill),
-  );
-  appendFileSync(
-    join(source, dirtyDeliverSkill, "SKILL.md"),
-    "\n<!-- uncommitted provenance test -->\n",
-  );
-  const dirtyDeliverSkillSha256 = sha256Directory(
-    join(source, dirtyDeliverSkill),
-  );
-  assert.notEqual(dirtyDeliverSkillSha256, committedDeliverSkillSha256);
-  const dirtySharedSha256 = sha256(readFileSync(join(source, dirtySharedPath)));
-  const committedSharedSha256 = sha256(
-    execFileSync("git", ["show", `HEAD:${dirtySharedPath}`], { cwd: source }),
-  );
-  const dirtyAuthoringSha256 = sha256(
-    readFileSync(join(source, dirtyAuthoringPath)),
-  );
-  const dirtyEngineeringSkillSha256 = sha256Directory(
-    join(source, dirtyEngineeringSkill),
-  );
-  const dirtyProductivitySkillSha256 = sha256Directory(
-    join(source, dirtyProductivitySkill),
-  );
-  assert.notEqual(dirtySharedSha256, committedSharedSha256);
-  assert.notEqual(dirtyEngineeringSkillSha256, committedEngineeringSkillSha256);
-  assert.notEqual(
-    dirtyProductivitySkillSha256,
-    committedProductivitySkillSha256,
-  );
+  for (const path of dirtyFiles)
+    appendFileSync(
+      join(source, path),
+      path.endsWith(".mjs")
+        ? "\n// uncommitted provenance test\n"
+        : "\n<!-- uncommitted provenance test -->\n",
+    );
+  for (const path of dirtySkillDirectories) {
+    appendFileSync(
+      join(source, path, "SKILL.md"),
+      "\n<!-- uncommitted provenance test -->\n",
+    );
+    assert.notEqual(
+      sha256Directory(join(source, path)),
+      committedSkillSha256[path],
+    );
+  }
+  for (const path of dirtyFiles)
+    assert.notEqual(
+      sha256(readFileSync(join(source, path))),
+      sha256(execFileSync("git", ["show", `HEAD:${path}`], { cwd: source })),
+    );
 
-  const engineeringRoot = join(parent, "engineering");
-  const engineering = JSON.parse(
+  // A host whose global configuration requires signing with an unusable
+  // program, for the builds and for the later ordinary commits.
+  const hostileGlobalConfig = join(parent, "hostile-global-gitconfig");
+  const hostileGlobalConfigBytes =
+    "[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = /bin/false\n";
+  writeFileSync(hostileGlobalConfig, hostileGlobalConfigBytes);
+  const hostileEnv = { ...process.env, GIT_CONFIG_GLOBAL: hostileGlobalConfig };
+
+  for (const builder of builders) {
+    const root = join(parent, builder.name);
+    const manifest = builder.manifest(
+      execFileSync(
+        process.execPath,
+        [join(source, builder.script), "--root", root],
+        { cwd: source, encoding: "utf8", env: hostileEnv },
+      ),
+      root,
+    );
+
+    assert.equal(builder.head(manifest), sourceHead, builder.name);
+    assert.equal(
+      manifest.source.directoryHashSerialization,
+      "repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1",
+      builder.name,
+    );
+    const { inputFiles } = manifest.source;
+    for (const path of [...sharedInputs, ...builder.inputs, builder.script])
+      assert.ok(path in inputFiles, `${builder.name} records ${path}`);
+    for (const [path, { sha256: recorded }] of Object.entries(inputFiles))
+      assert.equal(
+        recorded,
+        sha256(readFileSync(join(source, path))),
+        `${builder.name} ${path}`,
+      );
+    assert.equal(
+      builder.builderSha256(manifest),
+      inputFiles[builder.script].sha256,
+      builder.name,
+    );
+    const skills = builder.skills(manifest);
+    for (const skill of dirtySkills[builder.name])
+      assert.ok(skill in skills, `${builder.name} ${skill}`);
+    for (const [skill, { path, sha256: recorded }] of Object.entries(skills)) {
+      assert.ok(
+        realpathSync(path).startsWith(`${realpathSync(source)}/`),
+        `${builder.name} ${skill} comes from the source checkout`,
+      );
+      assert.equal(recorded, sha256Directory(path), `${builder.name} ${skill}`);
+    }
+
+    for (const [name, repository] of Object.entries(manifest.repositories)) {
+      const label = `${builder.name} ${name}`;
+      const local = (key) =>
+        git(repository.path, "config", "--local", "--get", key);
+      assert.equal(local("commit.gpgsign"), "false", label);
+      assert.equal(local("user.name"), "Repo Canon Exercise", label);
+      assert.equal(local("user.email"), "exercise@example.invalid", label);
+      assert.equal(git(repository.path, "branch", "--show-current"), "main");
+      if (builder.name !== "deliver")
+        assert.equal(git(repository.path, "remote"), "", label);
+    }
+
+    const repository = manifest.repositories[builder.laterCommit].path;
+    writeFileSync(
+      join(repository, "later-agent-work.md"),
+      "# Later agent work\n",
+    );
+    execFileSync("git", ["add", "--all"], { cwd: repository, env: hostileEnv });
     execFileSync(
-      process.execPath,
-      [
-        join(source, "scripts/create-engineering-skill-fixtures.mjs"),
-        "--root",
-        engineeringRoot,
-      ],
-      { cwd: source, encoding: "utf8" },
-    ),
-  );
-  assert.equal(engineering.source.worktreeCommit, sourceHead);
+      "git",
+      ["commit", "--quiet", "-m", "test: record later agent work"],
+      { cwd: repository, env: hostileEnv },
+    );
+  }
   assert.equal(
-    engineering.source.inputFiles[dirtySharedPath].sha256,
-    dirtySharedSha256,
+    readFileSync(hostileGlobalConfig, "utf8"),
+    hostileGlobalConfigBytes,
   );
-  assert.equal(
-    engineering.source.inputFiles[dirtyAuthoringPath].sha256,
-    dirtyAuthoringSha256,
-  );
-  assert.equal(engineering.skills.tdd.sha256, dirtyEngineeringSkillSha256);
-
-  const productivityRoot = join(parent, "productivity");
-  const productivity = JSON.parse(
-    execFileSync(
-      process.execPath,
-      [
-        join(source, "scripts/create-productivity-skill-fixtures.mjs"),
-        "--root",
-        productivityRoot,
-      ],
-      { cwd: source, encoding: "utf8" },
-    ),
-  );
-  assert.equal(productivity.source.worktreeCommit, sourceHead);
-  assert.equal(
-    productivity.source.inputFiles[dirtySharedPath].sha256,
-    dirtySharedSha256,
-  );
-  assert.equal(
-    productivity.source.inputFiles[dirtyAuthoringPath].sha256,
-    dirtyAuthoringSha256,
-  );
-  assert.equal(
-    productivity.source.skills.grilling.sha256,
-    dirtyProductivitySkillSha256,
-  );
-
-  const planningRoot = join(parent, "planning");
-  execFileSync(
-    process.execPath,
-    [
-      join(source, "scripts/create-planning-skill-fixtures.mjs"),
-      "--root",
-      planningRoot,
-    ],
-    { cwd: source, stdio: "pipe" },
-  );
-  const planning = JSON.parse(
-    readFileSync(join(planningRoot, "manifest.json"), "utf8"),
-  );
-  assert.equal(planning.source.repositoryHead, sourceHead);
-  assert.equal(
-    planning.source.inputFiles[dirtySharedPath].sha256,
-    dirtySharedSha256,
-  );
-  assert.equal(
-    planning.source.inputFiles[dirtyAuthoringPath].sha256,
-    dirtyAuthoringSha256,
-  );
-  assert.equal(
-    planning.source.linkedSkillDirectories.tdd.sha256,
-    dirtyEngineeringSkillSha256,
-  );
-  assert.equal(
-    planning.source.linkedSkillDirectories.grilling.sha256,
-    dirtyProductivitySkillSha256,
-  );
-
-  const deliverRoot = join(parent, "deliver");
-  const deliver = JSON.parse(
-    execFileSync(
-      process.execPath,
-      [
-        join(source, "scripts/create-deliver-skill-fixtures.mjs"),
-        "--root",
-        deliverRoot,
-      ],
-      { cwd: source, encoding: "utf8" },
-    ),
-  );
-  assert.equal(deliver.source.worktreeCommit, sourceHead);
-  assert.equal(
-    deliver.source.inputFiles[dirtySharedPath].sha256,
-    dirtySharedSha256,
-  );
-  assert.equal(
-    deliver.source.inputFiles[dirtyAuthoringPath].sha256,
-    dirtyAuthoringSha256,
-  );
-  assert.equal(deliver.source.skills.deliver.sha256, dirtyDeliverSkillSha256);
 });

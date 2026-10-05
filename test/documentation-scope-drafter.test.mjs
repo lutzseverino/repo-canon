@@ -15,6 +15,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
+  developmentGuide,
+  exactOwnedAgentConfiguration,
+  fileDeclarations,
+  index,
+} from "./helpers/documentation.mjs";
+import {
   fixture,
   invokeCheck,
   retainedCheck,
@@ -181,19 +187,6 @@ const included = (entry) =>
     .filter((candidate) => candidate.decision === "include")
     .map((candidate) => candidate.path);
 
-// The declarations the CLI passes to the check, as `standards.yaml` declares
-// them: the file declarations own their targets.
-function fileDeclarations() {
-  return readFileSync(join(sourceRoot, "standards.yaml"), "utf8")
-    .split("\n")
-    .flatMap((line) => {
-      const target = /^\s+target: (\S+)$/.exec(line);
-      return target
-        ? [{ kind: "file", target: target[1], checks: [], fixes: [] }]
-        : [];
-    });
-}
-
 function checkDraftedScope(root, entry) {
   return invokeCheck(check, root, {
     operation: {
@@ -205,23 +198,6 @@ function checkDraftedScope(root, entry) {
     allowedTargets: { paths: included(entry), directories: [] },
   });
 }
-
-function index(title, purpose, entries = []) {
-  const items = entries.map(
-    ([entryTitle, path, description]) =>
-      `- [${entryTitle}](${path}): ${description}`,
-  );
-  return `# ${title}\n\n${purpose}\n${items.length > 0 ? `\n${items.join("\n")}\n` : ""}`;
-}
-
-const developmentGuide = `# Development
-
-This directory explains how to build and validate the project.
-
-## Setup and validation
-
-Install Node.js 24, then run \`npm test\` from the repository root.
-`;
 
 const coverage = (roots) =>
   `Drafted from the repository tree by \`discovery/draft-documentation-scope.mjs\`: every file Git keeps under the documentation ${roots.includes(" and ") ? "roots" : "root"} ${roots}, a new index for each of ${roots.includes(" and ") ? "their" : "its"} directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them.`;
@@ -282,7 +258,7 @@ const conforming = {
   ),
   "docs/usage/install.md": "# Install\n\n![Overview](overview.svg)\n",
   "docs/usage/overview.svg": "<svg/>\n",
-  "docs/development/README.md": developmentGuide,
+  "docs/development/README.md": developmentGuide(),
   "docs/adr/README.md": index(
     "Architecture decisions",
     "This directory records consequential decisions.",
@@ -336,15 +312,6 @@ test("drafts the expected scope of a conforming repository", (t) => {
       },
     ],
   });
-});
-
-test("drafts the same scope twice from the same tree", (t) => {
-  const project = fixture(conforming);
-  t.after(project.close);
-  const first = draft(project.root);
-  const second = draft(project.root);
-  assert.equal(first.status, 0, first.stderr);
-  assert.equal(second.stdout, first.stdout);
 });
 
 test("drafts new indexes, the development guide, and context glossaries the rules decide", (t) => {
@@ -481,7 +448,7 @@ test("asks about a stray directory and a symbolic link under a root without draf
     t,
     {
       "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide,
+      "docs/development/README.md": developmentGuide(),
       "docs/api/endpoints.md": "# Endpoints\n",
       "docs/usage/README.md": "# Usage\n",
     },
@@ -504,7 +471,7 @@ test("asks about a stray directory and a symbolic link under a root without draf
 test("drafts a documentation root the agent decided on", (t) => {
   const files = {
     "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": developmentGuide,
+    "docs/development/README.md": developmentGuide(),
     "packages/app/README.md": "# App\n",
     "packages/app/docs/usage/guide.md": "# Guide\n",
     "packages/app/docs/adr/README.md": "# Decisions\n",
@@ -554,7 +521,7 @@ test("asks for a category when a decided root has none", (t) => {
     t,
     {
       "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide,
+      "docs/development/README.md": developmentGuide(),
       "packages/app/handbook/notes.md": "# Notes\n",
       "packages/app/handbook/guides/first-run.md": "# First run\n",
       "packages/app/handbook/guides/usage/tips.md": "# Tips\n",
@@ -580,7 +547,7 @@ test("asks for a category when a decided root has none", (t) => {
 test("leaves out the paths that other declarations and Repository Standards own", (t) => {
   const { entry } = drafted(t, {
     "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": developmentGuide,
+    "docs/development/README.md": developmentGuide(),
     "AGENTS.md": "# Agents\n",
     "CONTRIBUTING.md": "# Contributing\n",
     "THIRD_PARTY_NOTICES.md": "# Notices\n",
@@ -610,7 +577,7 @@ test("excludes each file of an owned directory under a decided root", (t) => {
     t,
     {
       "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide,
+      "docs/development/README.md": developmentGuide(),
       ".agents/usage/README.md": "# Usage\n",
       ".agents/skills/tdd/SKILL.md": "# TDD\n",
       ".agents/skills/tdd/tests.md": "# Tests\n",
@@ -648,7 +615,7 @@ test("excludes each file of an owned directory under a decided root", (t) => {
     t,
     {
       "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide,
+      "docs/development/README.md": developmentGuide(),
       ".agents/usage/README.md": "# Usage\n",
       ".agents/skills/adopt-standards/SKILL.md": "# Adopt\n",
     },
@@ -665,7 +632,7 @@ test("excludes each file of an owned directory under a decided root", (t) => {
     {
       ".gitignore": ".agents/skills/mine/\n",
       "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide,
+      "docs/development/README.md": developmentGuide(),
       ".agents/usage/README.md": "# Usage\n",
       ".agents/skills/mine/notes.md": "# Notes\n",
     },
@@ -703,7 +670,7 @@ test("asks about entries that block a root or an index, and survives a dirty wor
 
   const directoryIndex = drafted(t, {
     "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": developmentGuide,
+    "docs/development/README.md": developmentGuide(),
     "docs/usage/README.md/notes.md": "# Notes\n",
   });
   assert.deepEqual(included(directoryIndex.entry), [
@@ -720,7 +687,7 @@ test("asks about entries that block a root or an index, and survives a dirty wor
   writeFileSync(join(outside, "usage/guide.md"), "# Guide\n");
   const dirty = fixture({
     "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": developmentGuide,
+    "docs/development/README.md": developmentGuide(),
     "docs/usage/guide.md": "# Guide\n",
     "handbook/usage/guide.md": "# Guide\n",
   });
@@ -770,7 +737,7 @@ test("over conforming repositories the drafted scope passes the documentation ch
         ],
       ],
     ),
-    "docs/development/README.md": developmentGuide,
+    "docs/development/README.md": developmentGuide(),
     "CONTEXT-MAP.md":
       "# Contexts\n\n- [Ordering](src/ordering/CONTEXT.md): orders.\n",
     "src/ordering/CONTEXT.md": "# Ordering\n",
@@ -797,7 +764,7 @@ test("asks about every ignored file under a root and qualifies nested candidate 
   const { entry } = drafted(t, {
     ".gitignore": "*.png\n",
     "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": developmentGuide,
+    "docs/development/README.md": developmentGuide(),
     "docs/usage/README.md": "# Usage\n",
     "docs/usage/diagram.png": "png\n",
     "pkg/a/docs/usage/guide.md": "# Guide\n",
@@ -1012,7 +979,7 @@ test("reads the declarations that the selected profile resolves to", (t) => {
   const files = {
     "-notes.md": "# Notes\n",
     "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": developmentGuide,
+    "docs/development/README.md": developmentGuide(),
     "docs/usage/README.md": "# Usage\n",
     "docs/usage/added's.md": "# Added\n",
     "docs/usage/dropped.md": "# Dropped\n",
@@ -1275,15 +1242,7 @@ test("drafts this repository's own documentation scope", () => {
   const [entry] = outcome.proposal.declarations;
   const documentation = keptFiles(sourceRoot)
     .filter((path) => path.startsWith("docs/"))
-    .filter(
-      (path) =>
-        ![
-          "docs/agents/README.md",
-          "docs/agents/domain.md",
-          "docs/agents/issue-tracker.md",
-          "docs/agents/triage-labels.md",
-        ].includes(path),
-    );
+    .filter((path) => !exactOwnedAgentConfiguration.includes(path));
   assert.deepEqual(included(entry), ["CONTEXT.md", ...documentation].sort());
   assert.ok(
     entry.unresolved.every((question) =>
@@ -1295,11 +1254,5 @@ test("drafts this repository's own documentation scope", () => {
     entry.unresolved.some((question) =>
       question.includes("`authoring-notes.md`"),
     ),
-  );
-  const outcomeOfCheck = checkDraftedScope(sourceRoot, entry);
-  assert.equal(
-    outcomeOfCheck.result.status,
-    "passed",
-    outcomeOfCheck.result.message,
   );
 });

@@ -3,7 +3,6 @@ import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
   lstatSync,
-  mkdirSync,
   mkdtempSync,
   readFileSync,
   readlinkSync,
@@ -21,44 +20,26 @@ const script = join(
   "scripts/create-engineering-skill-fixtures.mjs",
 );
 
-test("creates disposable engineering-skill repositories with their runtime prerequisites", (t) => {
+function build(t, env = process.env) {
   const parent = mkdtempSync(
     join(tmpdir(), "repo-canon-engineering-skills-test-"),
   );
   t.after(() => rmSync(parent, { recursive: true, force: true }));
   const root = join(parent, "fixtures");
-
   const child = spawnSync(process.execPath, [script, "--root", root], {
     cwd: repositoryRoot,
     encoding: "utf8",
+    env,
   });
   assert.equal(child.status, 0, child.stderr);
-  const manifest = JSON.parse(child.stdout);
+  return { parent, root, manifest: JSON.parse(child.stdout) };
+}
+
+test("creates the engineering-skill repositories with their skills and an unresolved merge", (t) => {
+  const { root, manifest } = build(t);
 
   assert.equal(manifest.format, "repo-canon/engineering-skill-fixtures/v1");
   assert.equal(manifest.root, root);
-  assert.ok(
-    manifest.source.repository === null ||
-      typeof manifest.source.repository === "string",
-  );
-  assert.match(manifest.source.worktreeCommit, /^[a-f0-9]{40}$/);
-  assert.match(manifest.source.fixtureBuilderSha256, /^[a-f0-9]{64}$/);
-  assert.equal(
-    manifest.source.directoryHashSerialization,
-    "repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1",
-  );
-  for (const path of [
-    "AGENTS.md",
-    "CONTRIBUTING.md",
-    "docs/agents/README.md",
-    "docs/agents/domain.md",
-    "docs/agents/issue-tracker.md",
-    "docs/agents/triage-labels.md",
-    "scripts/create-engineering-skill-fixtures.mjs",
-    "scripts/support/fixture-authoring.mjs",
-  ]) {
-    assert.match(manifest.source.inputFiles[path].sha256, /^[a-f0-9]{64}$/);
-  }
   assert.deepEqual(Object.keys(manifest.skills).sort(), [
     "ask-matt",
     "code-review",
@@ -81,14 +62,6 @@ test("creates disposable engineering-skill repositories with their runtime prere
 
   for (const [name, repository] of Object.entries(manifest.repositories)) {
     assert.equal(
-      execFileSync("git", ["rev-parse", "--is-inside-work-tree"], {
-        cwd: repository.path,
-        encoding: "utf8",
-      }).trim(),
-      "true",
-      name,
-    );
-    assert.equal(
       readFileSync(join(repository.path, "AGENTS.md"), "utf8"),
       readFileSync(join(repositoryRoot, "AGENTS.md"), "utf8"),
       `${name} has the shared agent entry point`,
@@ -98,60 +71,6 @@ test("creates disposable engineering-skill repositories with their runtime prere
       readFileSync(join(repositoryRoot, "CONTRIBUTING.md"), "utf8"),
       `${name} has the shared contribution contract`,
     );
-    assert.match(
-      readFileSync(join(repository.path, "docs/agents/project.md"), "utf8"),
-      /disposable local repository/,
-    );
-    assert.match(
-      readFileSync(join(repository.path, "CONTEXT.md"), "utf8"),
-      /## Language/,
-    );
-    assert.match(
-      readFileSync(join(repository.path, "docs/development/README.md"), "utf8"),
-      /npm test/,
-    );
-    assert.equal(
-      execFileSync("git", ["config", "--local", "--get", "commit.gpgsign"], {
-        cwd: repository.path,
-        encoding: "utf8",
-      }).trim(),
-      "false",
-    );
-    assert.equal(
-      execFileSync("git", ["config", "--local", "--get", "user.name"], {
-        cwd: repository.path,
-        encoding: "utf8",
-      }).trim(),
-      "Repo Canon Exercise",
-    );
-    assert.equal(
-      execFileSync("git", ["config", "--local", "--get", "user.email"], {
-        cwd: repository.path,
-        encoding: "utf8",
-      }).trim(),
-      "exercise@example.invalid",
-    );
-    assert.equal(
-      execFileSync("git", ["branch", "--show-current"], {
-        cwd: repository.path,
-        encoding: "utf8",
-      }).trim(),
-      "main",
-    );
-    assert.equal(
-      execFileSync("git", ["remote"], {
-        cwd: repository.path,
-        encoding: "utf8",
-      }),
-      "",
-    );
-    if (["architecture", "debugging", "modeling-research"].includes(name)) {
-      assert.match(
-        readFileSync(join(repository.path, "docs/adr/README.md"), "utf8"),
-        /Architecture decisions/,
-      );
-    }
-
     for (const skill of repository.skills) {
       const link = join(repository.path, ".agents/skills", skill);
       assert.equal(
@@ -160,7 +79,6 @@ test("creates disposable engineering-skill repositories with their runtime prere
         `${name} exposes ${skill} as a repo skill`,
       );
       assert.equal(readlinkSync(link), manifest.skills[skill].path);
-      assert.match(manifest.skills[skill].sha256, /^[a-f0-9]{64}$/);
     }
   }
 
@@ -179,58 +97,26 @@ test("creates disposable engineering-skill repositories with their runtime prere
     }).trim().length,
     40,
   );
+});
 
-  const shimDirectory = join(parent, "bin");
-  const gitShim = join(shimDirectory, "git");
+test("builds from a Repo Canon checkout without an origin remote", (t) => {
+  const shimDirectory = mkdtempSync(
+    join(tmpdir(), "repo-canon-engineering-git-shim-"),
+  );
+  t.after(() => rmSync(shimDirectory, { recursive: true, force: true }));
   const actualGit = execFileSync("sh", ["-c", "command -v git"], {
     encoding: "utf8",
   }).trim();
-  mkdirSync(shimDirectory);
+  const gitShim = join(shimDirectory, "git");
   writeFileSync(
     gitShim,
     `#!/bin/sh\nif [ "$1" = config ] && [ "$2" = --get ] && [ "$3" = remote.origin.url ]; then\n  exit 1\nfi\nexec "${actualGit}" "$@"\n`,
   );
   chmodSync(gitShim, 0o755);
-  const hostileGlobalConfig = join(parent, "hostile-global-gitconfig");
-  const hostileGlobalConfigBytes =
-    "[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = /bin/false\n";
-  writeFileSync(hostileGlobalConfig, hostileGlobalConfigBytes);
-  const remoteLessRoot = join(parent, "remote-less-fixtures");
-  const remoteLess = spawnSync(
-    process.execPath,
-    [script, "--root", remoteLessRoot],
-    {
-      cwd: repositoryRoot,
-      encoding: "utf8",
-      env: {
-        ...process.env,
-        PATH: `${shimDirectory}:${process.env.PATH}`,
-        GIT_CONFIG_GLOBAL: hostileGlobalConfig,
-      },
-    },
-  );
-  assert.equal(remoteLess.status, 0, remoteLess.stderr);
-  const remoteLessManifest = JSON.parse(remoteLess.stdout);
-  assert.equal(remoteLessManifest.source.repository, null);
-  const laterRepository = remoteLessManifest.repositories.architecture.path;
-  writeFileSync(
-    join(laterRepository, "later-agent-work.md"),
-    "# Later agent work\n",
-  );
-  execFileSync("git", ["add", "later-agent-work.md"], {
-    cwd: laterRepository,
-    env: { ...process.env, GIT_CONFIG_GLOBAL: hostileGlobalConfig },
+
+  const { manifest } = build(t, {
+    ...process.env,
+    PATH: `${shimDirectory}:${process.env.PATH}`,
   });
-  execFileSync(
-    "git",
-    ["commit", "--quiet", "-m", "test: record later agent work"],
-    {
-      cwd: laterRepository,
-      env: { ...process.env, GIT_CONFIG_GLOBAL: hostileGlobalConfig },
-    },
-  );
-  assert.equal(
-    readFileSync(hostileGlobalConfig, "utf8"),
-    hostileGlobalConfigBytes,
-  );
+  assert.equal(manifest.source.repository, null);
 });

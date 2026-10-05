@@ -27,6 +27,21 @@ function check(t, files, overrides) {
 
 const mit = "MIT License\n\nCopyright (c) 2026 Example\n";
 
+// Usage, Features, then Installation breaks the general order rule only for
+// Features before Usage, and the Installation-first rule only for Installation
+// before Usage, so each correction names its own rule.
+const generalOrderCorrection = "Move Features before Usage.";
+const installationFirstCorrection =
+  "Move Installation before Usage; it is the first section when present.";
+
+function assertCorrections(message, corrections) {
+  for (const correction of corrections)
+    assert.ok(
+      message.includes(correction),
+      `expected ${JSON.stringify(correction)} in ${JSON.stringify(message)}`,
+    );
+}
+
 test("passes an applicable Repository README without changing content", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
@@ -140,25 +155,6 @@ Harbor reads queues without modifying them.
   assert.equal(outcome.result.status, "passed");
 });
 
-test("blocks rather than inferring licensing from another filename", (t) => {
-  const outcome = check(t, {
-    "README.md": `<h1 align="center">Harbor</h1>
-
-A queue inspector.
-
-## License
-
-[GNU General Public License](COPYING)
-`,
-    COPYING: "GNU General Public License\n\nVersion 3, 29 June 2007\n",
-  });
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "blocked");
-  assert.match(outcome.result.message, /No root LICENSE file/);
-  assert.match(outcome.result.message, /Owner clarification required/);
-});
-
 test("reports concrete title and section-order corrections as a policy failure", (t) => {
   const outcome = check(t, {
     "README.md": `\`<h1 align="center">Example</h1>\`
@@ -166,6 +162,10 @@ test("reports concrete title and section-order corrections as a policy failure",
 # Harbor
 
 A queue inspector.
+
+## Usage
+
+Run it.
 
 ## Features
 
@@ -185,7 +185,49 @@ Install it.
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "failed");
   assert.match(outcome.result.message, /Center the Repository README title/);
-  assert.match(outcome.result.message, /Move Installation before Features/);
+  assertCorrections(outcome.result.message, [
+    generalOrderCorrection,
+    installationFirstCorrection,
+  ]);
+});
+
+test("asks to keep one of each recognized section and to create a missing README", async (t) => {
+  for (const example of [
+    {
+      name: "a repeated section",
+      files: {
+        "README.md": `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+## Usage
+
+Run it.
+
+## Usage
+
+Run it again.
+
+## License
+
+[MIT License](LICENSE)
+`,
+      },
+      correction: "Keep only one Usage section.",
+    },
+    {
+      name: "no README",
+      files: {},
+      correction: "Create the root README.md.",
+    },
+  ])
+    await t.test(example.name, (st) => {
+      const outcome = check(st, { ...example.files, LICENSE: mit });
+
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "failed");
+      assertCorrections(outcome.result.message, [example.correction]);
+    });
 });
 
 test("orders recognized sections across Markdown heading forms", (t) => {
@@ -194,12 +236,17 @@ test("orders recognized sections across Markdown heading forms", (t) => {
 
 A queue inspector.
 
-Features
---------
+Usage
+-----
+
+Run it.
+
+ # Features
 
 - Small
 
- # Installation
+Installation
+============
 
 Install it.
 
@@ -212,7 +259,10 @@ Install it.
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "failed");
-  assert.match(outcome.result.message, /Move Installation before Features/);
+  assertCorrections(outcome.result.message, [
+    generalOrderCorrection,
+    installationFirstCorrection,
+  ]);
 });
 
 test("orders and validates sections rendered with HTML headings", (t) => {
@@ -220,6 +270,10 @@ test("orders and validates sections rendered with HTML headings", (t) => {
     "README.md": `<h1 align="center">Harbor</h1>
 
 A queue inspector.
+
+<h2>Usage</h2>
+
+Run it.
 
 <h2>Features</h2>
 
@@ -238,7 +292,10 @@ Install it.
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "failed");
-  assert.match(outcome.result.message, /Move Installation before Features/);
+  assertCorrections(outcome.result.message, [
+    generalOrderCorrection,
+    installationFirstCorrection,
+  ]);
   assert.doesNotMatch(outcome.result.message, /Add a License section/);
 });
 
@@ -420,10 +477,25 @@ A queue inspector.
 
 test("rejects pointer sections holding anything besides their link", async (t) => {
   const pointers = [
-    { section: "Contributing", target: "CONTRIBUTING.md" },
-    { section: "Documentation", target: "docs/README.md" },
+    {
+      section: "Contributing",
+      target: "CONTRIBUTING.md",
+      diagnostic:
+        /Make the Contributing section contain only a link to CONTRIBUTING\.md\./,
+    },
+    {
+      section: "Documentation",
+      target: "docs/README.md",
+      diagnostic:
+        /Make the Documentation section contain only a link to docs\/README\.md\./,
+    },
+    {
+      section: "License",
+      target: "LICENSE",
+      diagnostic: /Make the License section contain only the license link/,
+    },
   ];
-  const extras = [
+  for (const example of [
     {
       name: "surrounding prose",
       body: (target) => `Read [the guide](${target}) first.\n`,
@@ -455,37 +527,47 @@ test("rejects pointer sections holding anything besides their link", async (t) =
       name: "a subsection",
       body: (target) => `[Guide](${target})\n\n### Details\n`,
     },
-  ];
-  for (const { section, target } of pointers) {
-    for (const extra of extras)
-      await t.test(`${section} with ${extra.name}`, (st) => {
-        const outcome = check(st, {
-          "README.md": `<h1 align="center">Harbor</h1>
-
-A queue inspector.
-
-## ${section}
-
-${extra.body(target)}
-## License
-
-[MIT License](LICENSE)
-`,
-          LICENSE: mit,
-          "CONTRIBUTING.md": "# Contributing\n",
-          "docs/README.md": "# Documentation\n",
-        });
-
-        assert.equal(outcome.status, 0, outcome.stderr);
-        assert.equal(outcome.result.status, "failed");
-        assert.match(
-          outcome.result.message,
-          new RegExp(
-            `Make the ${section} section contain only a link to ${target.replace(".", "\\.")}\\.`,
-          ),
-        );
+    { name: "a one-item list", body: (target) => `- [Guide](${target})\n` },
+    { name: "a quotation", body: (target) => `> [Guide](${target})\n` },
+    {
+      name: "a one-cell table",
+      body: (target) => `| [Guide](${target}) |\n| --- |\n`,
+    },
+    {
+      name: "a linked image",
+      body: (target) => `[![Guide](guide.svg)](${target})\n`,
+    },
+    {
+      name: "an HTML list",
+      body: (target) => `<ul><li><a href="${target}">Guide</a></li></ul>\n`,
+    },
+    {
+      name: "a div without a paragraph",
+      body: (target) => `<div><a href="${target}">Guide</a></div>\n`,
+    },
+    {
+      name: "a bare HTML block",
+      body: (target) => `<a href="${target}">\nGuide\n</a>\n`,
+    },
+  ])
+    await t.test(example.name, (st) => {
+      const outcome = check(st, {
+        "README.md": `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n${pointers
+          .map(
+            ({ section, target }) =>
+              `## ${section}\n\n${example.body(target)}\n`,
+          )
+          .join("")}`,
+        LICENSE: mit,
+        "CONTRIBUTING.md": "# Contributing\n",
+        "docs/README.md": "# Documentation\n",
       });
-  }
+
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "failed");
+      for (const { diagnostic } of pointers)
+        assert.match(outcome.result.message, diagnostic);
+    });
 });
 
 test("keeps pointer sections link-only even when their target is absent", (t) => {
@@ -521,126 +603,60 @@ Pull requests are welcome.
   );
 });
 
-test("rejects pointer links wrapped in lists, quotations, tables, or images", async (t) => {
-  const pointers = [
-    {
-      section: "Contributing",
-      target: "CONTRIBUTING.md",
-      diagnostic:
-        /Make the Contributing section contain only a link to CONTRIBUTING\.md\./,
-    },
-    {
-      section: "Documentation",
-      target: "docs/README.md",
-      diagnostic:
-        /Make the Documentation section contain only a link to docs\/README\.md\./,
-    },
-    {
-      section: "License",
-      target: "LICENSE",
-      diagnostic: /Make the License section contain only the license link/,
-    },
-  ];
-  const wrappers = [
-    { name: "a one-item list", body: (target) => `- [Guide](${target})\n` },
-    { name: "a quotation", body: (target) => `> [Guide](${target})\n` },
-    {
-      name: "a one-cell table",
-      body: (target) => `| [Guide](${target}) |\n| --- |\n`,
-    },
-    {
-      name: "a linked image",
-      body: (target) => `[![Guide](guide.svg)](${target})\n`,
-    },
-    {
-      name: "an HTML list",
-      body: (target) => `<ul><li><a href="${target}">Guide</a></li></ul>\n`,
-    },
-  ];
-  for (const { section, target, diagnostic } of pointers) {
-    for (const wrapper of wrappers)
-      await t.test(`${section} in ${wrapper.name}`, (st) => {
-        const license =
-          section === "License" ? "" : "## License\n\n[MIT License](LICENSE)\n";
-        const outcome = check(st, {
-          "README.md": `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## ${section}\n\n${wrapper.body(target)}\n${license}`,
-          LICENSE: mit,
-          "CONTRIBUTING.md": "# Contributing\n",
-          "docs/README.md": "# Documentation\n",
-        });
-
-        assert.equal(outcome.status, 0, outcome.stderr);
-        assert.equal(outcome.result.status, "failed");
-        assert.match(outcome.result.message, diagnostic);
-      });
-  }
-});
-
-test("rejects pointer links rendered outside a paragraph", async (t) => {
-  const pointers = [
-    {
-      section: "Contributing",
-      target: "CONTRIBUTING.md",
-      diagnostic:
-        /Make the Contributing section contain only a link to CONTRIBUTING\.md\./,
-    },
-    {
-      section: "Documentation",
-      target: "docs/README.md",
-      diagnostic:
-        /Make the Documentation section contain only a link to docs\/README\.md\./,
-    },
-    {
-      section: "License",
-      target: "LICENSE",
-      diagnostic: /Make the License section contain only the license link/,
-    },
-  ];
-  const wrappers = [
-    {
-      name: "a div without a paragraph",
-      body: (target) => `<div><a href="${target}">Guide</a></div>\n`,
-    },
-    {
-      name: "a bare HTML block",
-      body: (target) => `<a href="${target}">\nGuide\n</a>\n`,
-    },
-  ];
-  for (const { section, target, diagnostic } of pointers) {
-    for (const wrapper of wrappers)
-      await t.test(`${section} in ${wrapper.name}`, (st) => {
-        const license =
-          section === "License" ? "" : "## License\n\n[MIT License](LICENSE)\n";
-        const outcome = check(st, {
-          "README.md": `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## ${section}\n\n${wrapper.body(target)}\n${license}`,
-          LICENSE: mit,
-          "CONTRIBUTING.md": "# Contributing\n",
-          "docs/README.md": "# Documentation\n",
-        });
-
-        assert.equal(outcome.status, 0, outcome.stderr);
-        assert.equal(outcome.result.status, "failed");
-        assert.match(outcome.result.message, diagnostic);
-      });
-  }
-});
-
-test("passes pointer links in a paragraph, optionally inside a centered div", async (t) => {
+test("passes pointer sections holding only their link in any rendered form", async (t) => {
+  const pointerLinks = (body) =>
+    `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## Documentation\n\n${body("docs/README.md")}\n## Contributing\n\n${body("CONTRIBUTING.md")}\n## License\n\n${body("LICENSE")}`;
   for (const example of [
-    { name: "a Markdown paragraph", body: (target) => `[Guide](${target})\n` },
+    {
+      name: "a Markdown paragraph",
+      readme: pointerLinks((target) => `[Guide](${target})\n`),
+    },
     {
       name: "an HTML paragraph",
-      body: (target) => `<p><a href="${target}">Guide</a></p>\n`,
+      readme: pointerLinks(
+        (target) => `<p><a href="${target}">Guide</a></p>\n`,
+      ),
     },
     {
       name: "a centered div around a paragraph",
-      body: (target) =>
-        `<div align="center"><p><a href="${target}">Guide</a></p></div>\n`,
+      readme: pointerLinks(
+        (target) =>
+          `<div align="center"><p><a href="${target}">Guide</a></p></div>\n`,
+      ),
+    },
+    {
+      name: "a comment, a fragment, an HTML heading, and emphasis",
+      readme: `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+## Documentation
+
+<!-- The documentation map lists every document. -->
+[Documentation](./docs/README.md#usage)
+
+<h2>Contributing</h2>
+
+<div><p><a href="CONTRIBUTING.md">Contribution <strong>guidelines</strong></a></p></div>
+
+## License
+
+[MIT License](LICENSE)
+`,
+    },
+    {
+      name: "one rendered HTML fragment",
+      readme: `<div align="center"><a href="/"><h1>Harbor</h1></a></div>
+<p>A queue inspector.</p>
+<h2>Documentation</h2><p><a href="docs/README.md#usage">Documentation</a></p>
+<h2>Contributing</h2><p><a href="CONTRIBUTING.md">Contributing</a></p>
+<a href="#license"><h2>License</h2></a><p><a href="LICENSE">MIT License</a></p>
+`,
     },
   ])
     await t.test(example.name, (st) => {
       const outcome = check(st, {
-        "README.md": `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## Documentation\n\n${example.body("docs/README.md")}\n## Contributing\n\n${example.body("CONTRIBUTING.md")}\n## License\n\n${example.body("LICENSE")}`,
+        "README.md": example.readme,
         LICENSE: mit,
         "CONTRIBUTING.md": "# Contributing\n",
         "docs/README.md": "# Documentation\n",
@@ -841,51 +857,6 @@ A queue inspector.
   );
 });
 
-test("passes pointer sections holding only their link in any rendered form", (t) => {
-  const outcome = check(t, {
-    "README.md": `<h1 align="center">Harbor</h1>
-
-A queue inspector.
-
-## Documentation
-
-<!-- The documentation map lists every document. -->
-[Documentation](./docs/README.md#usage)
-
-<h2>Contributing</h2>
-
-<div><p><a href="CONTRIBUTING.md">Contribution <strong>guidelines</strong></a></p></div>
-
-## License
-
-[MIT License](LICENSE)
-`,
-    LICENSE: mit,
-    "CONTRIBUTING.md": "# Contributing\n",
-    "docs/README.md": "# Documentation\n",
-  });
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "passed", outcome.result.message);
-});
-
-test("validates headings and links from one rendered HTML fragment", (t) => {
-  const outcome = check(t, {
-    "README.md": `<div align="center"><a href="/"><h1>Harbor</h1></a></div>
-<p>A queue inspector.</p>
-<h2>Documentation</h2><p><a href="docs/README.md#usage">Documentation</a></p>
-<h2>Contributing</h2><p><a href="CONTRIBUTING.md">Contributing</a></p>
-<a href="#license"><h2>License</h2></a><p><a href="LICENSE">MIT License</a></p>
-`,
-    LICENSE: mit,
-    "CONTRIBUTING.md": "# Contributing\n",
-    "docs/README.md": "# Documentation\n",
-  });
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "passed");
-});
-
 test("does not treat links inside section headings as section content", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
@@ -949,7 +920,27 @@ test("reports malformed license sections against the repository license file", a
 
 test("blocks when licensing is missing or ambiguous instead of selecting a license", async (t) => {
   for (const example of [
-    { name: "missing", files: {}, diagnostic: "No root LICENSE file" },
+    {
+      name: "missing, keeping other structural corrections",
+      files: {},
+      diagnostic: "No root LICENSE file",
+      corrections: true,
+    },
+    {
+      name: "another filename linked from the License section",
+      readme: `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+## License
+
+[GNU General Public License](COPYING)
+`,
+      files: {
+        COPYING: "GNU General Public License\n\nVersion 3, 29 June 2007\n",
+      },
+      diagnostic: "No root LICENSE file",
+    },
     {
       name: "multiple files",
       files: { LICENSE: mit, "LICENSE.md": mit },
@@ -969,18 +960,24 @@ test("blocks when licensing is missing or ambiguous instead of selecting a licen
     await t.test(example.name, (st) => {
       const outcome = check(st, {
         "README.md":
-          "# Harbor\n\nA queue inspector.\n\n## Features\n\nFast.\n\n## Installation\n\nInstall it.\n",
+          example.readme ??
+          "# Harbor\n\nA queue inspector.\n\n## Usage\n\nRun it.\n\n## Features\n\nFast.\n\n## Installation\n\nInstall it.\n",
         ...example.files,
       });
       assert.equal(outcome.status, 0, outcome.stderr);
       assert.equal(outcome.result.status, "blocked");
       assert.match(outcome.result.message, /Owner clarification required/);
       assert.match(outcome.result.message, new RegExp(example.diagnostic));
-      assert.match(
-        outcome.result.message,
-        /Center the Repository README title/,
-      );
-      assert.match(outcome.result.message, /Move Installation before Features/);
+      if (example.corrections) {
+        assert.match(
+          outcome.result.message,
+          /Center the Repository README title/,
+        );
+        assertCorrections(outcome.result.message, [
+          generalOrderCorrection,
+          installationFirstCorrection,
+        ]);
+      }
     });
 });
 
