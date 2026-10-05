@@ -18,9 +18,9 @@ one issue event came after another, and it orders events by one rule: the
 timeline's order decides when GitHub has recorded both events. Timestamps are
 used only for what has no timeline position (the feedback comment, Agent Brief
 comments, and a label change the timeline has not recorded yet) and to
-recognize labels applied at creation. Agent Brief comments are ordered among themselves by comment ID: the
-latest Agent Brief is the Brief comment with the highest comment ID, for both
-the contract lookup and a deleted Brief.
+recognize labels applied at creation. Agent Brief comments are ordered among
+themselves by comment ID: the latest Agent Brief is the Brief comment with the
+highest comment ID, for both the contract lookup and a deleted Brief.
 
 The validator recognizes these contracts:
 

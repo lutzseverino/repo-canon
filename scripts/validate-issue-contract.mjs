@@ -934,7 +934,7 @@ function assessReadiness({
   const otherSendersTrigger =
     currentEvent.action === "labeled" &&
     Boolean(readinessTransitionLabel(currentEvent)) &&
-    currentEvent.sender?.login !== issue.user?.login;
+    !timeline.sentByOpener();
   const labelEvent =
     creationEvent ??
     (currentReadyLabels.length === 1 &&
@@ -1119,8 +1119,7 @@ function creationLabelEvent(
   if (result.contract.type !== "issue-body" || !openingEligible || !label)
     return null;
   if (currentEvent.action === "labeled") {
-    if (!issue.user?.login || currentEvent.sender?.login !== issue.user.login)
-      return null;
+    if (!timeline.sentByOpener()) return null;
     return timeline.creationReview(label, issue.user, {
       openingPayload: false,
     });
@@ -1321,6 +1320,25 @@ function issueTimeline({ event, issue, issueEvents }) {
     return time >= reviewAt && !atCreation(time);
   }
 
+  // Whether the run's sender is the issue's opener.
+  function sentByOpener() {
+    return (
+      Boolean(issue.user?.login) && event.sender?.login === issue.user.login
+    );
+  }
+
+  // Whether a label event is the opener's application of a readiness label
+  // in the issue's creation second, which only the opener's own run reviews.
+  function isCreationLabel(candidate) {
+    return (
+      candidate?.event === "labeled" &&
+      readyLabels.has(candidate.label?.name) &&
+      Boolean(issue.user?.login) &&
+      candidate.actor?.login === issue.user.login &&
+      atCreation(candidate.created_at)
+    );
+  }
+
   function latestReadinessTransition() {
     return issueEvents.findLast(isReadinessTransition) ?? null;
   }
@@ -1349,8 +1367,7 @@ function issueTimeline({ event, issue, issueEvents }) {
         readinessTransitionLabel(event);
       const creationTrigger =
         event.action === "labeled" &&
-        Boolean(issue.user?.login) &&
-        event.sender?.login === issue.user.login &&
+        sentByOpener() &&
         event.label?.name === rejectedCreationLabel;
       if (
         readinessTrigger &&
@@ -1367,10 +1384,8 @@ function issueTimeline({ event, issue, issueEvents }) {
       const first = transitions[0];
       if (
         observedEventId == null &&
-        first?.event === "labeled" &&
-        first.label?.name === rejectedCreationLabel &&
-        atCreation(first.created_at) &&
-        first.actor?.login === issue.user?.login
+        isCreationLabel(first) &&
+        first.label?.name === rejectedCreationLabel
       ) {
         transitions.shift();
       }
@@ -1481,17 +1496,8 @@ function issueTimeline({ event, issue, issueEvents }) {
       );
     },
 
-    // Whether a label event is the opener's application of a readiness label
-    // in the issue's creation second, which only the opener's own run reviews.
-    isCreationLabel(candidate) {
-      return (
-        candidate?.event === "labeled" &&
-        readyLabels.has(candidate.label?.name) &&
-        Boolean(issue.user?.login) &&
-        candidate.actor?.login === issue.user.login &&
-        atCreation(candidate.created_at)
-      );
-    },
+    sentByOpener,
+    isCreationLabel,
 
     // Whether the triggering label's payload time places it after the review:
     // in a strictly later second when its application is recorded.

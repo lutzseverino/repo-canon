@@ -54,7 +54,7 @@ async function exercise({
   }
   const effectiveIssueEventPages = issueEventPages ?? [issueEvents ?? []];
   // Successive reads of a one-page timeline, the last repeated once reached.
-  let eventReads = 0;
+  let issueEventReadCount = 0;
   const server = createServer(async (request, response) => {
     let body = "";
     for await (const chunk of request) body += chunk;
@@ -101,8 +101,8 @@ async function exercise({
       request.url === `${issuePath}/events?per_page=100`
     ) {
       if (issueEventReads) {
-        const read = Math.min(eventReads, issueEventReads.length - 1);
-        eventReads += 1;
+        const read = Math.min(issueEventReadCount, issueEventReads.length - 1);
+        issueEventReadCount += 1;
         return json(response, 200, issueEventReads[read]);
       }
       const headers =
