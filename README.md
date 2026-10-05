@@ -9,7 +9,7 @@
 
 ## Installation
 
-Repo Canon is applied through Repository Standards CLI 5.0.0 or newer. On macOS
+Repo Canon is applied through Repository Standards CLI 5.0.1 or newer. On macOS
 or Linux, use Node.js 24, npm, and Git 2.32.0 or newer, and install the CLI outside
 the adopting project:
 
@@ -19,7 +19,7 @@ repo-standards --version
 ```
 
 Point the CLI at Repo Canon from the adopting repository by selecting the
-[`v0.5.1` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.1)
+[`v0.5.2` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.2)
 and the `complete` profile, as the inspection example below shows.
 
 ## Features
@@ -40,7 +40,7 @@ authorizes nothing:
 ```sh
 repo-standards inspect \
   --source https://github.com/lutzseverino/repo-canon \
-  --standards-version v0.5.1 --profile complete \
+  --standards-version v0.5.2 --profile complete \
   --project /path/to/adopting-project --json
 ```
 
