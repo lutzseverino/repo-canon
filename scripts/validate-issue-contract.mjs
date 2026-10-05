@@ -269,10 +269,10 @@ export function decideIssueContract(snapshot) {
 // `github-actions[bot]`, whose re-fetched issue still carries that label, while
 // the timeline lacks the sender's application of that label or records a
 // removal as the label's latest change. While the latest feedback awaits
-// review, only an application after its observed event counts: the run that
-// wrote it already observed every one at or before it. The adapter re-reads
-// the timeline while this holds, within its bound, and the decision fails
-// closed while it does.
+// review, the label's latest application must also follow its observed event:
+// the run that wrote it already observed every one at or before it. The adapter
+// re-reads the timeline while this holds, within its bound, and the decision
+// fails closed while it does.
 export function readinessTriggerUnrecorded(snapshot) {
   const { event, issue, comments } = snapshot;
   const label = readinessTransitionLabel(event);
@@ -1495,17 +1495,20 @@ function issueTimeline({ event, issue, issueEvents }) {
 
     latestChangeIsApplication,
 
-    // Whether the timeline holds the sender's application of the label after
-    // the barrier and the label's latest recorded change is an application, by
-    // anyone.
+    // Whether the timeline holds the sender's application of the label, the
+    // label's latest application, by anyone, follows the barrier, and the
+    // label's latest recorded change is an application.
     recordsApplication(label, login, barrierEventId) {
-      const applied = eventsAfter(barrierEventId)?.some(
-        (candidate) =>
-          candidate.event === "labeled" &&
-          candidate.label?.name === label &&
-          candidate.actor?.login === login,
+      const appliesLabel = (candidate) =>
+        candidate.event === "labeled" && candidate.label?.name === label;
+      return (
+        issueEvents.some(
+          (candidate) =>
+            appliesLabel(candidate) && candidate.actor?.login === login,
+        ) &&
+        Boolean(eventsAfter(barrierEventId)?.some(appliesLabel)) &&
+        latestChangeIsApplication(label)
       );
-      return Boolean(applied) && latestChangeIsApplication(label);
     },
 
     sentByOpener,

@@ -1012,6 +1012,44 @@ test("the adapter waits, within its bound, for the timeline to record a human re
   );
 
   await context.test(
+    "a delayed trigger by the sender of the observed application reads the events once and binds another person's reapplication",
+    async (t) => {
+      const { issueEvents, ...retry } = readinessRetry();
+      const result = await exerciseWaiting(t, {
+        ...retry,
+        comments: [
+          {
+            ...awaitingTicketFeedback(retry.issue, { observedEventId: "201" }),
+            updated_at: "2026-09-14T17:01:05Z",
+          },
+        ],
+        issueEventReads: [
+          [
+            ...issueEvents.slice(0, 2),
+            { ...issueEvents[2], actor: { login: "triager" } },
+          ],
+          [],
+        ],
+        permissions: {
+          ...retry.permissions,
+          triager: { permission: "triage", role_name: "triage" },
+        },
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.equal(eventReads(result), 1);
+      assert.deepEqual(waits(result), []);
+      const applied = writes(result);
+      assert.deepEqual(
+        applied.map(([method, url]) => [method, url]),
+        [["PATCH", "/repos/example/repository/issues/comments/13"]],
+      );
+      assert.match(applied[0][2].body, /reviewed by @triager/);
+      assert.match(applied[0][2].body, /"reviewEventId":"203"/);
+    },
+  );
+
+  await context.test(
     "a redelivered trigger for an approved review reads the events once and keeps the approval",
     async (t) => {
       const { issueEvents, ...retry } = readinessRetry();
