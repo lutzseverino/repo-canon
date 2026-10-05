@@ -2021,6 +2021,35 @@ function laterGrantSnapshot({ feedback, issueEvents, sender }) {
   };
 }
 
+// The maintainer applied and removed `ready-for-human`, the author applied
+// `ready-for-agent`, and the maintainer's removal and reapplication of
+// `ready-for-agent` are unrecorded when the maintainer's labeled run reads it.
+function crossLabelSnapshot() {
+  const maintainerHuman = creationLabel({
+    id: 201,
+    label: { name: "ready-for-human" },
+    created_at: "2026-09-14T17:01:00Z",
+  });
+  return laterGrantSnapshot({
+    feedback: awaitingTicketFeedback,
+    issueEvents: [
+      maintainerHuman,
+      {
+        ...maintainerHuman,
+        id: 202,
+        event: "unlabeled",
+        created_at: "2026-09-14T17:01:30Z",
+      },
+      creationLabel({
+        id: 203,
+        actor: { login: "author" },
+        created_at: "2026-09-14T17:02:00Z",
+      }),
+    ],
+    sender: "maintainer",
+  });
+}
+
 // The author's application of readiness after the revision notice.
 const authorGrant = creationLabel({
   id: 201,
@@ -2151,6 +2180,28 @@ decisionTable(
         message: /timeline does not contain the current readiness label event/,
       },
     })),
+    ...[
+      {
+        name: "the sender's application of the other readiness label leaves the trigger unrecorded",
+        run: () =>
+          assert.equal(
+            readinessTriggerUnrecorded(snapshotFor(crossLabelSnapshot())),
+            true,
+          ),
+      },
+      {
+        name: "the sender's application of the other readiness label fails closed rather than binding another person's application",
+        snapshot: crossLabelSnapshot(),
+        expected: {
+          exitCode: 1,
+          remove: ["ready-for-agent"],
+          add: ["needs-triage"],
+          feedback: 13,
+          message:
+            /timeline does not contain the current readiness label event/,
+        },
+      },
+    ],
     {
       name: "a trigger whose label another person removed and a third reapplied binds the latest application",
       snapshot: laterGrantSnapshot({

@@ -142,13 +142,19 @@ readiness trigger whose label is already gone from the re-fetched issue, reads
 the events once.
 
 The decision asks the same predicate. While it holds, the decision fails closed
-before selecting any review, including a recorded approval, so a lagging
-timeline never supplies the review. When the bound runs out, the run decides
-once from its last read this way: it removes readiness and reports that the
-authoritative issue timeline does not contain the current readiness label
-event. The remedy is to reapply
-the label after the revision notice, and the validator decides it as any later
-review. Because a creation `labeled` run waits for the opener's creation label,
+before selecting any review, including a recorded approval, so a timeline that
+lacks the sender's application of the trigger's label, or whose latest change
+of that label is a removal, never supplies the review. When the bound runs out,
+the run decides once from its last read this way: it removes readiness and
+reports that the authoritative issue timeline does not contain the current
+readiness label event. The remedy is to reapply the label after the revision
+notice, and the validator decides it as any later review.
+
+One lagging case is accepted as recorded. The trigger's sender has an earlier
+recorded application of the label, the label's latest recorded change is an
+application by anyone, and the trigger's own removal and reapplication are still
+unrecorded. The run then decides from the latest recorded application, an
+earlier review of the same revision, without waiting. Because a creation `labeled` run waits for the opener's creation label,
 an unauthorized opener's rejection is recorded in either run order, and the
 later `opened` run keeps it.
 
