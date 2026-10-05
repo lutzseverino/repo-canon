@@ -1,7 +1,7 @@
 {
-  "format": "repo-standards/scope-history/v4",
+  "format": "repo-standards/scope-history/v5",
   "evidence": "historical",
-  "inspection": "sha256:850b37dd18ffb824a0a4dab44ab4177f92eec9cc5558887f9dfc18a8ef65e90f",
+  "inspection": "sha256:b0a3ddd33c5a2dbb300a539c37431aa8ed42fdf123dc0281786bf603aee59ae4",
   "resolved": {
     "description": "The complete Repo Canon standards profile",
     "declarations": [
@@ -385,6 +385,14 @@
         "kind": "skill",
         "name": "codebase-design",
         "source": "vendor/mattpocock-skills/skills/engineering/codebase-design"
+      },
+      {
+        "id": "skill-deliver",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "deliver",
+        "source": ".agents/skills/deliver"
       },
       {
         "id": "skill-diagnosing-bugs",
@@ -924,6 +932,14 @@
         "source": "vendor/mattpocock-skills/skills/engineering/codebase-design"
       },
       {
+        "id": "skill-deliver",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "deliver",
+        "source": ".agents/skills/deliver"
+      },
+      {
         "id": "skill-diagnosing-bugs",
         "checks": [],
         "fixes": [],
@@ -1118,13 +1134,13 @@
     ]
   },
   "discovery": {
-    "identity": "sha256:75839bfafb01d67f8d40fb7d30e9312c76380573a8c2dcb332986b09bb6dcbd6",
+    "identity": "sha256:667eaf8dc500fc016e297740b397a852482741a1d8ac7174aa2d933426982d2f",
     "proposal": {
       "format": "repo-standards/scope/v2",
       "declarations": [
         {
           "id": "documentation",
-          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. The drafter's open questions are resolved as in this repository's earlier adoption: the root `authoring-notes.md` is included and stays in place; `THIRD_PARTY_NOTICES.md`, the `discovery` and `guidance` source inputs, and the vendored material under `vendor` are excluded. No document moves and no link repair is needed: the tree already passes the documentation check.",
+          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Current repository evidence resolves the four drafter questions: include root authoring-notes.md in place as the maintained author decision record beside standards.yaml; exclude THIRD_PARTY_NOTICES.md as legal notice text, discovery and guidance as standards source instructions, and vendor as preserved third-party material. docs is the only documentation root. Existing indexes cover all its directories. No moves, missing indexes, or additional link-repair paths are indicated by the current tree and reviewed guidance. README.md is governed separately by repository-readme. The earlier proposal supplies discovery context only; these decisions are based on the current repository.",
           "candidates": [
             {
               "path": "CONTEXT.md",
@@ -1443,7 +1459,7 @@
         },
         {
           "id": "github-repository-configuration",
-          "coverage": "This declaration changes only remote GitHub configuration through its two authored fixes, canonical labels and pull request integration, so its project-content scope is intentionally empty. The repository identity is unambiguous: the single `origin` remote is `https://github.com/lutzseverino/repo-canon`, the repository this adoption runs in, whose labels, required `PR metadata` check, and squash-only merge settings the maintainer authorizes through the confirmation of this inspection.",
+          "coverage": "The project-content scope is intentionally empty: canonical-labels and pull-request-integration configure only remote GitHub settings. The sole origin fetch/push URL is https://github.com/lutzseverino/repo-canon; authenticated read-only GitHub lookup confirms lutzseverino/repo-canon, default branch main, and viewer permission ADMIN. The later confirmation must authorize the disclosed remote fixes; this proposal and inspection perform none.",
           "candidates": [],
           "unresolved": []
         },
@@ -1465,7 +1481,7 @@
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "93000b06d2be4a3881720c6138b885e49c429df87c60b4b7d7bf80a542ba0381",
+          "sha256": "eccbb502e0eadd030f5e81342f4236f307160375b7f501c2d6cfb987994e4e1e",
           "executable": false
         },
         "docs/README.md": {
@@ -1495,7 +1511,7 @@
         },
         "docs/adr/0005-require-an-open-ended-minimum-cli-version.md": {
           "type": "file",
-          "sha256": "98134c914710793d27ce87c3962b74371e3c55a79575afc5f4caf425210f9aed",
+          "sha256": "eb84ad738d80b2ef22956e0492889985077b316257db418bb953886613116b6c",
           "executable": false
         },
         "docs/adr/0006-keep-point-in-time-records-with-their-event.md": {
@@ -1530,12 +1546,12 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "a1e3d5a4b3768b91b45ad2449f65f7a8ea624a6ba8ab8d66da3cffdfd646f496",
+          "sha256": "cbd4714aa8807e7884f38e1dd1697f0964ca21375cb1e4be2d08768b07ac8c91",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
           "type": "file",
-          "sha256": "4ea929741fbd7e6e9d2ac476ac14d9170d78aefff9e10a3cbef665081c123297",
+          "sha256": "901cb00d8fa213d1c99a6fe2be823df537bc3ebd2d03ad4de7da574e7bfdd120",
           "executable": false
         },
         "docs/development/documentation-check.md": {
@@ -1545,32 +1561,32 @@
         },
         "docs/development/documentation-scope-drafter.md": {
           "type": "file",
-          "sha256": "2a9887596ff6d3d7b1542c9ea3e4122d400da177ee9a6bdd5af60685fd13c6ea",
+          "sha256": "37e2c48e134004f502a53b15bae1965907b6fa0a5c580bcb28ee61cbd0fbdc50",
           "executable": false
         },
         "docs/development/github-label-setup.md": {
           "type": "file",
-          "sha256": "8aaf519a7d80337d73f62d27c96f3a55d9eb9a3ad975ee7c83c6ed9648f7acdd",
+          "sha256": "6bf6f0f0343b73294d74d3690c1e81a4a69e2b637800b7b526b41f4c3ccef675",
           "executable": false
         },
         "docs/development/github-pr-integration-setup.md": {
           "type": "file",
-          "sha256": "c7c8bd60860886fec02c3e63d0fea0981dc1216fc13ccb574f9dc299b689e86f",
+          "sha256": "758db7fd1acb3b843e46958918656708775f8da5466fec57a57bc9039fa737da",
           "executable": false
         },
         "docs/development/issue-contract-validation.md": {
           "type": "file",
-          "sha256": "c577a3a2ffcf99de38e22611a95e98c508b687773dcaa812d08bc81c9bd1380e",
+          "sha256": "a2a04eb8cff334998e01e93b3bd0f331b2b9507648baf241e04d7d6d47f6c02e",
           "executable": false
         },
         "docs/development/pr-metadata-validation.md": {
           "type": "file",
-          "sha256": "939fd013369fcc0d7a297ffe535ec3bd70fd335e49282504041564a659290387",
+          "sha256": "7360b335c897bf19fc3a306871efb42fa44d12f7a1a157537562cd874ed5c468",
           "executable": false
         },
         "docs/development/release.md": {
           "type": "file",
-          "sha256": "58eda2227b51131cef11b6cbccf7a3f2569fd9670e364d7967c01219ce957f9e",
+          "sha256": "8434a3b7575833df0bcb1829712d700efd3270226374f95c7f476a7e0b25cac7",
           "executable": false
         },
         "docs/development/repository-readme-check.md": {
@@ -1580,17 +1596,17 @@
         },
         "docs/development/skill-exercises.md": {
           "type": "file",
-          "sha256": "f429ef7b9a695f5b31e7507871ef137e06259774607476fb20c6a2500e3a6bd8",
+          "sha256": "676216c2c26fd24c1370d877c0cb67c7206dd88c56a67bf62a8de00f8eafe6cc",
           "executable": false
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "50faf9d395cb5a22b1e0b1c7f5b74a6178cd6424eeffbae1d4f1412516fe5976",
+          "sha256": "1dcf558e1ba96d9a92143fa8c41b20b4f96fb7fba0e639071420d407bccdf388",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
           "type": "file",
-          "sha256": "ee40383311ee1e73034fd35ea614b007bcb7a1081bbe5a64b08aaef13a341de9",
+          "sha256": "1203d36e1cad322416c7613779cddf3d6cba66b5f723e50fc184dbfca5e8bc80",
           "executable": false
         },
         "docs/usage/README.md": {
@@ -1600,7 +1616,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "c5bae5521c2123fbfd56796492c4bf1714104bf3c6b4a6508308ae2b9fc9f60b",
+          "sha256": "565339c8b6f957d2edaa32d4a2fe6b2db45273b0e9f3ca850f0ef284f1c569d0",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -1610,7 +1626,7 @@
         },
         "docs/usage/versioning.md": {
           "type": "file",
-          "sha256": "a5d4445d13bfa9e9b32623e37e3558442ea032e74ac6dcc070348f77a42b6c07",
+          "sha256": "7e511346b0da2107323c0e7d22f85b1d8b96fb6eb2ee50e52968e2f641c659d5",
           "executable": false
         }
       }
@@ -1619,7 +1635,7 @@
       {
         "id": "documentation",
         "source": "discovery/documentation.md",
-        "sha256": "ac3f0fbba6bffcc1e5e66127d6b4922c95981ea41d8d4a7417629b53b86b726e",
+        "sha256": "2ff022d0fd5f601a3c381ccdcb79c221f6d46d48a6816c8ed9d9d4f0805e3e51",
         "executable": false
       },
       {
@@ -1644,7 +1660,7 @@
         },
         ".agents/skills/adopt-standards/SKILL.md": {
           "type": "file",
-          "sha256": "d733ef6c9357f3a78515783f5c019ec7c868eb4f82c8b868ecd5e58fcd152958",
+          "sha256": "496084e62baa7971c618151a13f1f5aa9888e88d243e87255075a0e9350c19bf",
           "executable": false
         },
         ".agents/skills/ask-matt/PHASE-BOUNDARIES.md": {
@@ -1690,6 +1706,16 @@
         ".agents/skills/codebase-design/agents/openai.yaml": {
           "type": "file",
           "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
+          "executable": false
+        },
+        ".agents/skills/deliver/SKILL.md": {
+          "type": "file",
+          "sha256": "e1138f5120adaa23036065ce730488de88f76e02f2f43a9ef2e31956dac44ff9",
+          "executable": false
+        },
+        ".agents/skills/deliver/agents/openai.yaml": {
+          "type": "file",
+          "sha256": "de8c252bae82640677c7d2b11522dbdf650e17800414ce430ac89a3501a57b2c",
           "executable": false
         },
         ".agents/skills/diagnosing-bugs/SKILL.md": {
@@ -2044,12 +2070,12 @@
         },
         ".github/scripts/validate-pr-metadata.mjs": {
           "type": "file",
-          "sha256": "92c5d69ef964b4898eaa4fc58b8b8cec0d81cddd0fe5fe6f93057731541d058b",
+          "sha256": "f158dd6cd917302fd655ac9644aaaf54505b6f6f44e54e9d89e3c3d6dff4ecfb",
           "executable": false
         },
         ".github/workflows/ci.yml": {
           "type": "file",
-          "sha256": "68ee9c880f555a61f8ac3d19dd29c289b124015f4989359306b8e84c698c6e16",
+          "sha256": "ea8a8b80118a3b413a8e0522f47e65c141b82cbb9d0da0e7521548a8b3d0d983",
           "executable": false
         },
         ".github/workflows/issue-contracts.yml": {
@@ -2062,9 +2088,24 @@
           "sha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82",
           "executable": false
         },
+        ".gitignore": {
+          "type": "file",
+          "sha256": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+          "executable": false
+        },
+        ".oxlintrc.json": {
+          "type": "file",
+          "sha256": "cabd8576eaad0cf53f427fa7d92904d5c2571aefc0377e96fd729d1a73aadeb0",
+          "executable": false
+        },
+        ".prettierignore": {
+          "type": "file",
+          "sha256": "ed34e9281ae473fa15dc93ec4d72b363c406b2c547d36c0f0342df09237739a5",
+          "executable": false
+        },
         "AGENTS.md": {
           "type": "file",
-          "sha256": "2e6b5c90fc36abebe5a18d4352996d380d8daa2845ee1c01ecfc82140067ea18",
+          "sha256": "a618bde85fc4febaf526f393ebffc0129506cf4a52501e20fbb490e204cb8b7c",
           "executable": false
         },
         "CONTEXT.md": {
@@ -2074,7 +2115,7 @@
         },
         "CONTRIBUTING.md": {
           "type": "file",
-          "sha256": "ab90708574a383a95a2dfd7f9a3d9a9740c638e10bf8b48ec1d4f876a55d1858",
+          "sha256": "ec24834f03f1cd8fdb5c7fb0d62aa4d9824a0c55dc008b21477c141de0091d59",
           "executable": false
         },
         "LICENSE": {
@@ -2084,7 +2125,7 @@
         },
         "README.md": {
           "type": "file",
-          "sha256": "1665ff733ad1bdeb977b7634d9ced9c1e069a8155c5018e94b26569c528416c2",
+          "sha256": "a87d9aa58d4c3dfa9da5df070603bf6d1062b814b905a82a216299d2bc4ed122",
           "executable": false
         },
         "THIRD_PARTY_NOTICES.md": {
@@ -2094,17 +2135,17 @@
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "93000b06d2be4a3881720c6138b885e49c429df87c60b4b7d7bf80a542ba0381",
+          "sha256": "eccbb502e0eadd030f5e81342f4236f307160375b7f501c2d6cfb987994e4e1e",
           "executable": false
         },
         "discovery/documentation.md": {
           "type": "file",
-          "sha256": "ac3f0fbba6bffcc1e5e66127d6b4922c95981ea41d8d4a7417629b53b86b726e",
+          "sha256": "2ff022d0fd5f601a3c381ccdcb79c221f6d46d48a6816c8ed9d9d4f0805e3e51",
           "executable": false
         },
         "discovery/draft-documentation-scope.mjs": {
           "type": "file",
-          "sha256": "8392b385ff75e14714e45d2e795011cabc0d5be5c7539f1d6d5c1bc42b623798",
+          "sha256": "5df8ea87f49f4206b8df7b596a5bc2e86efad849d0b2d2d6f235b3a1570da295",
           "executable": false
         },
         "discovery/github-repository-configuration.md": {
@@ -2144,7 +2185,7 @@
         },
         "docs/adr/0005-require-an-open-ended-minimum-cli-version.md": {
           "type": "file",
-          "sha256": "98134c914710793d27ce87c3962b74371e3c55a79575afc5f4caf425210f9aed",
+          "sha256": "eb84ad738d80b2ef22956e0492889985077b316257db418bb953886613116b6c",
           "executable": false
         },
         "docs/adr/0006-keep-point-in-time-records-with-their-event.md": {
@@ -2199,12 +2240,12 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "a1e3d5a4b3768b91b45ad2449f65f7a8ea624a6ba8ab8d66da3cffdfd646f496",
+          "sha256": "cbd4714aa8807e7884f38e1dd1697f0964ca21375cb1e4be2d08768b07ac8c91",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
           "type": "file",
-          "sha256": "4ea929741fbd7e6e9d2ac476ac14d9170d78aefff9e10a3cbef665081c123297",
+          "sha256": "901cb00d8fa213d1c99a6fe2be823df537bc3ebd2d03ad4de7da574e7bfdd120",
           "executable": false
         },
         "docs/development/documentation-check.md": {
@@ -2214,32 +2255,32 @@
         },
         "docs/development/documentation-scope-drafter.md": {
           "type": "file",
-          "sha256": "2a9887596ff6d3d7b1542c9ea3e4122d400da177ee9a6bdd5af60685fd13c6ea",
+          "sha256": "37e2c48e134004f502a53b15bae1965907b6fa0a5c580bcb28ee61cbd0fbdc50",
           "executable": false
         },
         "docs/development/github-label-setup.md": {
           "type": "file",
-          "sha256": "8aaf519a7d80337d73f62d27c96f3a55d9eb9a3ad975ee7c83c6ed9648f7acdd",
+          "sha256": "6bf6f0f0343b73294d74d3690c1e81a4a69e2b637800b7b526b41f4c3ccef675",
           "executable": false
         },
         "docs/development/github-pr-integration-setup.md": {
           "type": "file",
-          "sha256": "c7c8bd60860886fec02c3e63d0fea0981dc1216fc13ccb574f9dc299b689e86f",
+          "sha256": "758db7fd1acb3b843e46958918656708775f8da5466fec57a57bc9039fa737da",
           "executable": false
         },
         "docs/development/issue-contract-validation.md": {
           "type": "file",
-          "sha256": "c577a3a2ffcf99de38e22611a95e98c508b687773dcaa812d08bc81c9bd1380e",
+          "sha256": "a2a04eb8cff334998e01e93b3bd0f331b2b9507648baf241e04d7d6d47f6c02e",
           "executable": false
         },
         "docs/development/pr-metadata-validation.md": {
           "type": "file",
-          "sha256": "939fd013369fcc0d7a297ffe535ec3bd70fd335e49282504041564a659290387",
+          "sha256": "7360b335c897bf19fc3a306871efb42fa44d12f7a1a157537562cd874ed5c468",
           "executable": false
         },
         "docs/development/release.md": {
           "type": "file",
-          "sha256": "58eda2227b51131cef11b6cbccf7a3f2569fd9670e364d7967c01219ce957f9e",
+          "sha256": "8434a3b7575833df0bcb1829712d700efd3270226374f95c7f476a7e0b25cac7",
           "executable": false
         },
         "docs/development/repository-readme-check.md": {
@@ -2249,17 +2290,17 @@
         },
         "docs/development/skill-exercises.md": {
           "type": "file",
-          "sha256": "f429ef7b9a695f5b31e7507871ef137e06259774607476fb20c6a2500e3a6bd8",
+          "sha256": "676216c2c26fd24c1370d877c0cb67c7206dd88c56a67bf62a8de00f8eafe6cc",
           "executable": false
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "50faf9d395cb5a22b1e0b1c7f5b74a6178cd6424eeffbae1d4f1412516fe5976",
+          "sha256": "1dcf558e1ba96d9a92143fa8c41b20b4f96fb7fba0e639071420d407bccdf388",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
           "type": "file",
-          "sha256": "ee40383311ee1e73034fd35ea614b007bcb7a1081bbe5a64b08aaef13a341de9",
+          "sha256": "1203d36e1cad322416c7613779cddf3d6cba66b5f723e50fc184dbfca5e8bc80",
           "executable": false
         },
         "docs/usage/README.md": {
@@ -2269,7 +2310,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "c5bae5521c2123fbfd56796492c4bf1714104bf3c6b4a6508308ae2b9fc9f60b",
+          "sha256": "565339c8b6f957d2edaa32d4a2fe6b2db45273b0e9f3ca850f0ef284f1c569d0",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -2279,7 +2320,7 @@
         },
         "docs/usage/versioning.md": {
           "type": "file",
-          "sha256": "a5d4445d13bfa9e9b32623e37e3558442ea032e74ac6dcc070348f77a42b6c07",
+          "sha256": "7e511346b0da2107323c0e7d22f85b1d8b96fb6eb2ee50e52968e2f641c659d5",
           "executable": false
         },
         "guidance/documentation.md": {
@@ -2304,147 +2345,172 @@
         },
         "operations/check-documentation.mjs": {
           "type": "file",
-          "sha256": "cc67cb7482da77cb58d9e23618c42eab9b708e35889a4b1264419f1a70a8c8e1",
+          "sha256": "6be93d5fcaa837b65c4b1df18cccc3d4b167ade270c60fa7fcc8c74ab68b3fd7",
           "executable": false
         },
         "operations/check-project-readmes.mjs": {
           "type": "file",
-          "sha256": "77609ccf56ba3bd76ec67e1c1d3e6d203922539d9987143b354e9a268e12b113",
+          "sha256": "1f85407c2e957209d3c35010d605c1890c1b2a1260dee90c74683d7636eb0ede",
           "executable": false
         },
         "operations/check-repository-readme.mjs": {
           "type": "file",
-          "sha256": "3d83f77132fa6074ba8aca6bc06ccd969ef97ceb61a93b8c5100a836a0cee816",
+          "sha256": "0ac707767b91a6900d1cfee373d34a6c48eaaf6bfcba182c16f5b1bfb10bdf60",
           "executable": false
         },
         "operations/lib/documentation-model.mjs": {
           "type": "file",
-          "sha256": "754628c45b47b749d60f35a4b0b836a663c20901e852504867209093cea4b35f",
+          "sha256": "20a0a60e77f2905552b9c8c437e0b4d878632b0e6ba27b5e2798a152fed88707",
           "executable": false
         },
         "operations/lib/github-operation.mjs": {
           "type": "file",
-          "sha256": "e3ab9ad479fb741b90c7372a71a8f3da650c374820e9346b340ad850625affa9",
+          "sha256": "00a1efcc9305c04f73d09f631f8832f02e848e2660452dce214f2d84ad08ea92",
           "executable": false
         },
         "operations/lib/local-markdown-links.mjs": {
           "type": "file",
-          "sha256": "3c58d0eace6d2ab7f63ab84f5f8c725be27260b8aeac3859f3a39a50909a0093",
+          "sha256": "e9b25e6a81c6f40ac8a18358e001619dcf50d7b61f4b9bb2c1f2fd3323539260",
           "executable": false
         },
         "operations/lib/rendered-markdown.mjs": {
           "type": "file",
-          "sha256": "bbc379d38a2305ba6f351503b14622743961b229570b53d58dcc4b45fe76af55",
+          "sha256": "c9e0db1806e9ecac66bb9f99c201a07306a5155d205294e80c5592acc175476b",
           "executable": false
         },
         "operations/setup-github-labels.mjs": {
           "type": "file",
-          "sha256": "587c0eff5bf3a2c822ce974bec0a72967a7c2608c81f67e8735dec9a1beb6525",
+          "sha256": "c6728405c1f7391486d6075f54fd432e6374c20e7baddbbff4cf11a495beea07",
           "executable": false
         },
         "operations/setup-github-pr-integration.mjs": {
           "type": "file",
-          "sha256": "812a63d62b3c06c791b19d1943f2113f5eed3b9247ff52571384efce4394c7c0",
+          "sha256": "3f3d7ec38ea8e58606346f40c6420c58ffb8b12bf8cb45389433d35f12c5ff9d",
+          "executable": false
+        },
+        "package-lock.json": {
+          "type": "file",
+          "sha256": "5e97307712045ef9f34113767e9e58fc3de18d3e718e01c9936b047b3a14de65",
           "executable": false
         },
         "package.json": {
           "type": "file",
-          "sha256": "939123c5fd4f40a0bd174eff0e998c16f6b0d84d727a4baa9a88057d1aeadeed",
+          "sha256": "9741784bd594b6bc8e55474e65a08747e82dddfe77ae1a0345695df2869ed541",
+          "executable": false
+        },
+        "scripts/create-deliver-skill-fixtures.mjs": {
+          "type": "file",
+          "sha256": "54bfb87346430272874676f607080370431e0d1cae474333a498d03f90110a21",
           "executable": false
         },
         "scripts/create-engineering-skill-fixtures.mjs": {
           "type": "file",
-          "sha256": "c3c89b20e5fdddde0508d3859d0f6c7e4b0656a33aab8e1005ea63f078b87aa9",
+          "sha256": "2787f8eaed8f99d669be9ef6057992fe2d3c028f814bb72ea4547667d54eb15d",
           "executable": false
         },
         "scripts/create-planning-skill-fixtures.mjs": {
           "type": "file",
-          "sha256": "ce3d0d6e42099567cea099cbee582f946f787f25da709bbbecf189c6ddca9cbf",
+          "sha256": "683465541ed1622a944bb74f81066430604b58afc3885b06021a24a5d46c1694",
           "executable": false
         },
         "scripts/create-productivity-skill-fixtures.mjs": {
           "type": "file",
-          "sha256": "27331f290c909aec7d78fe80a34ae1a46bee04b2612bd6460c13dfed1c07abcd",
+          "sha256": "85ac5d81096e4a40cb059f2cc4fd2632579587f1f751d26deb5e92ae5a2a3918",
           "executable": false
         },
         "scripts/release/check-merge.mjs": {
           "type": "file",
-          "sha256": "c3a01f17b21403751f7eebf40c3c1f35dec53e7b18d507d7cfa103cdb9b2432a",
+          "sha256": "7a9a5eba837353eddcb7d91053c1316f2d238994296d108ac40a18b79d634a76",
           "executable": false
         },
         "scripts/release/inputs.mjs": {
           "type": "file",
-          "sha256": "e934f41f90509888475fd5de5cae0de061f818641481327db69b370fe8f3c72a",
+          "sha256": "de41bb27d4049a95111574a291e011cac180b6163b4db2b97e9de179b6479ccc",
           "executable": false
         },
         "scripts/release/named-versions.mjs": {
           "type": "file",
-          "sha256": "6dd722cdd60ee2813736636e3a9a8945ca8b78e885a503e1fe9404a42582df5e",
+          "sha256": "aa85a5cca63ae0163ca768a106b237710a87deaa2a079035b3f2d96c261a6105",
           "executable": false
         },
         "scripts/release/support.mjs": {
           "type": "file",
-          "sha256": "c2d22855fef5b2e3ff574f27f1378980591c32ff71d2227003e2d25607a50840",
+          "sha256": "7fa0b7a4e53e7ba533408085d92653db12c19bbaacbb0623eef71e0ed135fdb4",
           "executable": false
         },
         "scripts/release/verify.mjs": {
           "type": "file",
-          "sha256": "0fab84407b7f2b1d134468a8b1f322a230a5b1a6ef215b35050cdc9297980320",
+          "sha256": "361a549f79c26b234afa4bf9e114f1d60f5618c3739d8eb996504a0c89d9f67f",
+          "executable": false
+        },
+        "scripts/support/exercise-gh.mjs": {
+          "type": "file",
+          "sha256": "4264339c69a6768a4829ba8f7ce3cfaf8701d2e327fbec9477e5b5c2f52abaa0",
+          "executable": false
+        },
+        "scripts/support/exercise-repo-standards.mjs": {
+          "type": "file",
+          "sha256": "bf089a513a301a070ac22065a52c682b05159ecd8cc1a81e706d424ff5afe6b6",
           "executable": false
         },
         "scripts/support/fixture-authoring.mjs": {
           "type": "file",
-          "sha256": "9f5474de4e9211429442fa071453fd5815c4e1adc40be1a0367f961eaa7cac33",
+          "sha256": "61b4e6f4f6c066b725790632de78adf3719f763048389df653dd5f1ac06af462",
           "executable": false
         },
         "scripts/validate-issue-contract.mjs": {
           "type": "file",
-          "sha256": "d10f01c9eba73debfc060c295e32063086b1ef02dbfe9a945060bfa1d99f1372",
+          "sha256": "7fdab26e0f051a9b3493e667f84c2324cac1aa16c8c9c2d52024ab318615bf73",
           "executable": false
         },
         "standards.yaml": {
           "type": "file",
-          "sha256": "298b157b18354f569a811856065e3ed3bf15f5151e0a576137180304b7a17745",
+          "sha256": "7c6ebb019dd0ef287df928fc538713d2d2339d6f4f047008965b1277eff7bb39",
+          "executable": false
+        },
+        "test/deliver-skill-fixtures.test.mjs": {
+          "type": "file",
+          "sha256": "9dddd7f78cb1c4e49477e4f5a46b0b04199f98d509b743af238011f4753f1449",
           "executable": false
         },
         "test/documentation-check.test.mjs": {
           "type": "file",
-          "sha256": "11bf19825eec5ac0998916a3d011ea5660d3b2eee62368973fd3892bf344b444",
+          "sha256": "9e4daf3282bfbf720b8661754db82b7f6848c4bacbf0b2f8b82de7c1fffad4a1",
           "executable": false
         },
         "test/documentation-model.test.mjs": {
           "type": "file",
-          "sha256": "e35de1086d6ab339d83fd242fb791b475c2294decc4a2f3407e1568488085897",
+          "sha256": "da9439a03c0b1d20b968f8b5db6638323596cbcb9e5d5f92155115661f1bad3b",
           "executable": false
         },
         "test/documentation-scope-drafter.test.mjs": {
           "type": "file",
-          "sha256": "a9d7a52708f6c7f9bd5e4d667a05ca637b4869b48ef19997d5f94f314db827c7",
+          "sha256": "a745d924ad0f53b7756fb6278c5ee05171e64ab64b8a99e54554d1dc5cce32e9",
           "executable": false
         },
         "test/engineering-skill-fixtures.test.mjs": {
           "type": "file",
-          "sha256": "4629c003fafd8b0fd81cc9dafb7dc7e06f6fe51626806a2aa01a2e0b82c6ce7b",
+          "sha256": "6e3f6cd40cb662cfe5776b14dfee3ded80b23de1da643a4dd641e7f03af5edcb",
           "executable": false
         },
         "test/fixture-builder-provenance.test.mjs": {
           "type": "file",
-          "sha256": "ee90c9190de341547a54713341237d34fde3992b315e04352d6d52ea3a96e1d6",
+          "sha256": "16a2a0cee468e48c2129e125f11bdf59a1f8e76fdcb120e1b507861d608531b8",
           "executable": false
         },
         "test/fixtures/fake-gh-pr-settings.mjs": {
           "type": "file",
-          "sha256": "5d727cccc17db8650755ba46e17b6279ba23ea28e444b0752c166f8a97547fc1",
+          "sha256": "214112e8736b0edc8277733a47bf52b8d47cf5f819e667d3ad642103060e2819",
           "executable": true
         },
         "test/fixtures/fake-gh.mjs": {
           "type": "file",
-          "sha256": "12584910d39c6942732c346401544c91440678e2c1e66bfe77a47e2d8d764a05",
+          "sha256": "6e9fa361a7eb3d48bf744e1dd71a3103aa3e0838823203770c65a6c8f5d7937e",
           "executable": true
         },
         "test/fixtures/fake-node-version.mjs": {
           "type": "file",
-          "sha256": "616cb529ff1a725d848a173bb5521d367648c83d16b3cd8714678f2d932eda51",
+          "sha256": "ebce31e4cd02f3b61ccdad26373631e3a03641e0cc69c2aac3537f207992f1dc",
           "executable": false
         },
         "test/fixtures/hostile-pull-request.json": {
@@ -2454,72 +2520,72 @@
         },
         "test/github-label-setup.test.mjs": {
           "type": "file",
-          "sha256": "e7336ba478bd50bb2e18d9dc86af0894bd377e2906526edff2ee0d62511e171f",
+          "sha256": "b235a05ec2df433bfc66d14ff07a011297a1b6913a69cd3487d0e8b21908c440",
           "executable": false
         },
         "test/github-pr-integration-setup.test.mjs": {
           "type": "file",
-          "sha256": "64acd8f0996f5d0a087e2805ece2a11a8dfc3f9a22360b47ee184c299fd9fbe8",
+          "sha256": "e85fdb877b2f6b7a887b2e4345700d408e6f22458f95535a0e86d372254230fd",
           "executable": false
         },
         "test/helpers/operation.mjs": {
           "type": "file",
-          "sha256": "cfb6fef6d5dbef43be360c536c4be1ce571bfdcac3d4addf4506ac54635bd6a9",
+          "sha256": "97d8ba7f01b43dbce55d4315ed10b30e01e4899780d93eee1a645c0568c073cb",
           "executable": false
         },
         "test/issue-contracts.test.mjs": {
           "type": "file",
-          "sha256": "eb02ba0bf5833cb5d840caa3768ef455c838ee6a4ddc6f4114b60afd81b7ab3e",
+          "sha256": "1d57f71b4fe949f0b9c2d7d8b7930d978e3e9aa9d5793a995bffa07f6f39d8b9",
           "executable": false
         },
         "test/planning-skill-fixtures.test.mjs": {
           "type": "file",
-          "sha256": "2c54b19715e1331abbe5c5c1e04cb7a3ca5249c9141bd789c68fdd9a58f2658b",
+          "sha256": "760c9964574bf3a332bfc88d291d5f15d2cd995d4f26fcc789c456b97aea901f",
           "executable": false
         },
         "test/pr-metadata.test.mjs": {
           "type": "file",
-          "sha256": "913d16610694f7bfbd82b477fdde9e38adf9238e8ed183e7e4cab1d9861c49cd",
+          "sha256": "7038f9a1c363e3e59f7a2327f693dceeb92701b87eb4b086933d6ab718ed1cca",
           "executable": false
         },
         "test/productivity-skill-fixtures.test.mjs": {
           "type": "file",
-          "sha256": "a97634252cb9781d3cd523999656f76f567389534079499dbf681f6762cffa48",
+          "sha256": "1e025057e6b66b051bf620e536e79177392a9a9c77f0b16c365444d934e8d169",
           "executable": false
         },
         "test/project-readme-check.test.mjs": {
           "type": "file",
-          "sha256": "aed9bad40239344e3072ba1b5a6d00b7c891bca726bea877231eb738ec198d62",
+          "sha256": "973d8d2d566b938d55e1a4e68be4f16d15e4468e31e35b4cda8e92ae499d9f17",
           "executable": false
         },
         "test/release-scripts.test.mjs": {
           "type": "file",
-          "sha256": "cf64b9a20772d7144d2f101df0039232bb8fc34e5557b34e8dcfd0505a3845a2",
+          "sha256": "229b601cbf8b03f96f4374ee55a6546e55a65d0323eba61d65d9fa44d32e690f",
           "executable": false
         },
         "test/release-version-agreement.test.mjs": {
           "type": "file",
-          "sha256": "25dc61b4ef955df2e1e2c1adfd1e8b3d048e98d3317d8f6b6e0868d85764f261",
+          "sha256": "813caf8e9a92ae59f1b8b27705cf979eacd9d9439a02d25981d225e8e14ec26d",
           "executable": false
         },
         "test/rendered-markdown.test.mjs": {
           "type": "file",
-          "sha256": "45ddfcdef3c19080db60bcfaca4505591ab09b84d894ca9f2971f6e4317bf9df",
+          "sha256": "f794b86bb1a11a7cee2471cfa8cf0e6a090e9ed96ee2953146b38d3fc0a36e61",
           "executable": false
         },
         "test/repository-conformance.test.mjs": {
           "type": "file",
-          "sha256": "1a769629031043081a49c38b50a26cf40243908bd2d3264954cf3849556deb82",
+          "sha256": "e381d8a0f82c05c20c784886fa2a66de8dbfc28a3eb862fe694fcbe7e0180128",
           "executable": false
         },
         "test/repository-readme-check.test.mjs": {
           "type": "file",
-          "sha256": "16dad6f3e8f11faf4ba9466c8649d07d848693ccc5a9d8efe8b61ef4dd5b1cef",
+          "sha256": "35c3a715d7436d0ce77fabf01fe1dd45d3f55dea2ebfd08a723f3e017f661e95",
           "executable": false
         },
         "test/shared-workflows.test.mjs": {
           "type": "file",
-          "sha256": "68e607b7706ec0fe5ada30cb9daa0166e4452bf98737b412457a5445acab7308",
+          "sha256": "95dd92d7c40e391850080c2ca7766c975f133d13c5638733101dde7370b59729",
           "executable": false
         },
         "vendor/marked/LICENSE": {
@@ -2937,6 +3003,9 @@
         ".": [
           ".agents",
           ".github",
+          ".gitignore",
+          ".oxlintrc.json",
+          ".prettierignore",
           "AGENTS.md",
           "CONTEXT.md",
           "CONTRIBUTING.md",
@@ -2948,6 +3017,7 @@
           "docs",
           "guidance",
           "operations",
+          "package-lock.json",
           "package.json",
           "scripts",
           "standards.yaml",
@@ -2963,6 +3033,7 @@
           ".agents/skills/ask-matt",
           ".agents/skills/code-review",
           ".agents/skills/codebase-design",
+          ".agents/skills/deliver",
           ".agents/skills/diagnosing-bugs",
           ".agents/skills/domain-modeling",
           ".agents/skills/grill-me",
@@ -3012,6 +3083,13 @@
         ],
         ".agents/skills/codebase-design/agents": [
           ".agents/skills/codebase-design/agents/openai.yaml"
+        ],
+        ".agents/skills/deliver": [
+          ".agents/skills/deliver/SKILL.md",
+          ".agents/skills/deliver/agents"
+        ],
+        ".agents/skills/deliver/agents": [
+          ".agents/skills/deliver/agents/openai.yaml"
         ],
         ".agents/skills/diagnosing-bugs": [
           ".agents/skills/diagnosing-bugs/SKILL.md",
@@ -3285,6 +3363,7 @@
           "operations/lib/rendered-markdown.mjs"
         ],
         "scripts": [
+          "scripts/create-deliver-skill-fixtures.mjs",
           "scripts/create-engineering-skill-fixtures.mjs",
           "scripts/create-planning-skill-fixtures.mjs",
           "scripts/create-productivity-skill-fixtures.mjs",
@@ -3300,9 +3379,12 @@
           "scripts/release/verify.mjs"
         ],
         "scripts/support": [
+          "scripts/support/exercise-gh.mjs",
+          "scripts/support/exercise-repo-standards.mjs",
           "scripts/support/fixture-authoring.mjs"
         ],
         "test": [
+          "test/deliver-skill-fixtures.test.mjs",
           "test/documentation-check.test.mjs",
           "test/documentation-model.test.mjs",
           "test/documentation-scope-drafter.test.mjs",
@@ -3591,528 +3673,403 @@
       },
       "boundaries": {
         ".agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/adopt-standards": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/ask-matt": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/ask-matt/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/code-review": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/code-review/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/codebase-design": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/codebase-design/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
+        },
+        ".agents/skills/deliver": {
+          "type": "directory"
+        },
+        ".agents/skills/deliver/agents": {
+          "type": "directory"
         },
         ".agents/skills/diagnosing-bugs": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/diagnosing-bugs/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/diagnosing-bugs/scripts": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/domain-modeling": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/domain-modeling/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/grill-me": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/grill-me/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/grill-with-docs": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/grill-with-docs/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/grilling": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/grilling/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/handoff": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/handoff/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/implement": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/implement/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/improve-codebase-architecture": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/improve-codebase-architecture/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/prototype": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/prototype/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/research": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/research/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/resolving-merge-conflicts": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/resolving-merge-conflicts/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/setup-matt-pocock-skills": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/setup-matt-pocock-skills/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/tdd": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/tdd/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/teach": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/teach/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/to-questionnaire": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/to-questionnaire/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/to-spec": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/to-spec/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/to-tickets": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/to-tickets/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/triage": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/triage/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/wait-what": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/wait-what/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/wayfinder": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/wayfinder/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/wizard": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/wizard/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/writing-for-agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".agents/skills/writing-for-agents/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".github": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".github/ISSUE_TEMPLATE": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".github/scripts": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         ".github/workflows": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "discovery": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "docs": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "docs/adr": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "docs/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "docs/development": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "docs/usage": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "guidance": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "operations": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "operations/lib": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "scripts": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "scripts/release": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "scripts/support": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "test": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "test/fixtures": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "test/helpers": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/marked": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/ask-matt": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/ask-matt/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/code-review": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/code-review/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/codebase-design": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/codebase-design/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/scripts": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/domain-modeling": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/domain-modeling/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/grill-with-docs": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/grill-with-docs/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/implement": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/implement/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/prototype": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/prototype/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/research": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/research/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/tdd": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/tdd/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/to-spec": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/to-spec/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/to-tickets": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/to-tickets/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/triage": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/triage/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/wayfinder": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/wayfinder/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/wizard": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/wizard/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/grill-me": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/grill-me/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/grilling": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/grilling/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/handoff": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/handoff/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/teach": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/teach/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/to-questionnaire": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/to-questionnaire/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/wait-what": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/wait-what/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/writing-for-agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/mattpocock-skills/skills/productivity/writing-for-agents/agents": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         },
         "vendor/parse5": {
-          "type": "directory",
-          "mode": 448
+          "type": "directory"
         }
       },
       "targets": {},
@@ -4130,11 +4087,13 @@
         },
         "info": {
           "type": "file",
-          "sha256": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1",
+          "sha256": "321dffcb77a68a6c079d35da12944866b895b4cc9fb3b1fae72fe9468c7eafeb",
           "executable": false
         },
         ".gitignore": {
-          "type": "missing"
+          "type": "file",
+          "sha256": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+          "executable": false
         },
         ".agents/.gitignore": {
           "type": "missing"
@@ -4161,6 +4120,12 @@
           "type": "missing"
         },
         ".agents/skills/codebase-design/agents/.gitignore": {
+          "type": "missing"
+        },
+        ".agents/skills/deliver/.gitignore": {
+          "type": "missing"
+        },
+        ".agents/skills/deliver/agents/.gitignore": {
           "type": "missing"
         },
         ".agents/skills/diagnosing-bugs/.gitignore": {

@@ -9,25 +9,18 @@
 
 ## Installation
 
-Repo Canon is applied through the Repository Standards CLI. On macOS or Linux,
-use Node.js 24, npm, and Git 2.32.0 or newer, and install the CLI outside the
-adopting project:
+Repo Canon is applied through Repository Standards CLI 5.0.0 or newer. On macOS
+or Linux, use Node.js 24, npm, and Git 2.32.0 or newer, and install the CLI outside
+the adopting project:
 
 ```sh
-npm install --global --ignore-scripts @lutzseverino/repo-standards@5.0.0
+npm install --global --ignore-scripts @lutzseverino/repo-standards
 repo-standards --version
 ```
 
 Point the CLI at Repo Canon from the adopting repository by selecting the
 [`v0.5.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.0)
-and the `complete` profile. The report is read-only and authorizes nothing:
-
-```sh
-repo-standards inspect \
-  --source https://github.com/lutzseverino/repo-canon \
-  --standards-version v0.5.0 --profile complete \
-  --project /path/to/adopting-project --json
-```
+and the `complete` profile, as the inspection example below shows.
 
 ## Features
 
@@ -41,10 +34,20 @@ repo-standards inspect \
 
 ## Usage
 
+Inspect the published selection before adoption. The report is read-only and
+authorizes nothing:
+
+```sh
+repo-standards inspect \
+  --source https://github.com/lutzseverino/repo-canon \
+  --standards-version v0.5.0 --profile complete \
+  --project /path/to/adopting-project --json
+```
+
 Review the report, confirm the scope, and complete the adoption as the
 [adoption guide](docs/usage/adopt-repo-canon.md) describes. It lists the
-remaining prerequisites, including the authenticated `gh` access the two GitHub
-setup fixes need.
+remaining prerequisites, the exact CLI installation to retain through adoption,
+and the authenticated `gh` access the two GitHub setup fixes need.
 
 ## Documentation
 
