@@ -201,6 +201,78 @@ export const readinessRetryEvents = [
   { ...rejectedApplication, id: 203, created_at: "2026-09-14T17:01:10Z" },
 ];
 
+// Alice, whose `write` role cannot grant readiness, applied it as event 100,
+// which a run rejected, writing a notice that observed it. The bot removed it
+// (101), Bob reapplied it (203), Carol removed it (204), and Alice reapplied it
+// (205). A lagging read ends at Bob's 203.
+const aliceApplication = creationLabel({
+  id: 100,
+  actor: { login: "alice" },
+});
+export const reapplicationEvents = [
+  aliceApplication,
+  {
+    ...aliceApplication,
+    id: 101,
+    event: "unlabeled",
+    actor: bot,
+    created_at: "2026-09-14T17:00:05Z",
+  },
+  {
+    ...aliceApplication,
+    id: 203,
+    actor: { login: "bob" },
+    created_at: "2026-09-14T17:01:00Z",
+  },
+  {
+    ...aliceApplication,
+    id: 204,
+    event: "unlabeled",
+    actor: { login: "carol" },
+    created_at: "2026-09-14T17:01:30Z",
+  },
+  { ...aliceApplication, id: 205, created_at: "2026-09-14T17:01:40Z" },
+];
+export const laggingReapplicationEvents = reapplicationEvents.slice(0, 3);
+
+// The labeled run of `sender`, Alice unless stated, while `ready-for-agent` is
+// present, with the notice that observed 100 or, when `approved`, Bob's
+// recorded approval of 203.
+export function reapplicationRun({ approved = false, sender = "alice" } = {}) {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: ticketBody,
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    user: { login: "author" },
+    created_at: "2026-09-14T16:00:00Z",
+    updated_at: "2026-09-14T17:01:40Z",
+  };
+  const feedback = approved
+    ? {
+        ...approvedTicketFeedback(issue, {
+          reviewer: "bob",
+          reviewEventId: "203",
+        }),
+        updated_at: "2026-09-14T17:01:05Z",
+      }
+    : {
+        ...awaitingTicketFeedback(issue, { observedEventId: "100" }),
+        updated_at: "2026-09-14T17:00:30Z",
+      };
+  return {
+    issue,
+    comments: [feedback],
+    event: labeledBy(sender, "ready-for-agent", issue),
+    permissions: {
+      alice: role("write"),
+      bob: role("admin"),
+      carol: role("admin"),
+    },
+  };
+}
+
 export const readinessReview = {
   id: 101,
   event: "labeled",

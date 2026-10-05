@@ -19,7 +19,10 @@ import {
   feedbackState,
   ignoredBlockerReferences,
   labeledBy,
+  laggingReapplicationEvents,
   mapBody,
+  reapplicationEvents,
+  reapplicationRun,
   readinessRetryEvents,
   readinessReview,
   recordedState,
@@ -88,6 +91,8 @@ function assertDecision(decision, expected) {
     assert.doesNotMatch(decision.message, pattern);
   for (const pattern of [expected.feedbackBody ?? []].flat())
     assert.match(decision.feedback.body, pattern);
+  for (const pattern of [expected.notFeedbackBody ?? []].flat())
+    assert.doesNotMatch(decision.feedback.body, pattern);
 }
 
 function decisionTable(title, rows) {
@@ -2086,7 +2091,7 @@ decisionTable(
       },
     })),
     {
-      name: "the maintainer's trigger is recorded once another person's reapplication is the label's latest change",
+      name: "the maintainer's trigger stays unrecorded while another person's reapplication is the label's latest change",
       run: () => {
         const snapshot = freshGrantSnapshot();
         snapshot.issueEvents.push(
@@ -2094,7 +2099,7 @@ decisionTable(
           { ...maintainerGrant, id: 301, event: "unlabeled" },
           { ...maintainerGrant, id: 302, actor: { login: "triager" } },
         );
-        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), true);
       },
     },
     {
@@ -2201,7 +2206,7 @@ decisionTable(
       },
     },
     {
-      name: "a trigger whose label another person removed and a third reapplied binds the latest application",
+      name: "a trigger whose label another person removed and a third reapplied fails closed rather than binding the third person's application",
       snapshot: laterGrantSnapshot({
         feedback: awaitingTicketFeedback,
         issueEvents: [
@@ -2223,10 +2228,12 @@ decisionTable(
         sender: "author",
       }),
       expected: {
-        exitCode: 0,
+        exitCode: 1,
+        remove: ["ready-for-agent"],
+        add: ["needs-triage"],
         feedback: 13,
-        message: /valid implementation ticket with ready-for-agent bound/i,
-        feedbackBody: [/reviewed by @triager/, /"reviewEventId":"203"/],
+        message: /timeline does not contain the current readiness label event/,
+        notFeedbackBody: /reviewed by @triager/,
       },
     },
     {
@@ -2409,23 +2416,18 @@ decisionTable(
       },
     },
     {
-      name: "a delayed trigger by the sender of the observed application binds another person's reapplication after the barrier",
+      name: "a delayed trigger by the sender of the observed application fails closed rather than binding another person's reapplication after the barrier",
       run: () => {
         const snapshot = retrySnapshot({ issueEvents: otherRetryEvents });
-        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
-        const decision = decideIssueContract(snapshotFor(snapshot));
-        assertDecision(decision, {
-          exitCode: 0,
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), true);
+        assertDecision(decideIssueContract(snapshotFor(snapshot)), {
+          exitCode: 1,
+          remove: ["ready-for-agent"],
+          add: ["needs-triage"],
           feedback: 13,
-          message: /valid implementation ticket with ready-for-agent bound/i,
-        });
-        assert.deepEqual(recordedState(decision.feedback.body), {
-          status: "approved",
-          revision: bodyRevision(snapshot.issue),
-          label: "ready-for-agent",
-          reviewer: "triager",
-          reviewEventId: "203",
-          sourceInvalidation: null,
+          message:
+            /timeline does not contain the current readiness label event/,
+          notFeedbackBody: /reviewed by @triager/,
         });
       },
     },
@@ -2500,6 +2502,96 @@ decisionTable(
         },
       },
     ]),
+  ],
+);
+
+// A reapplication run's fail-closed decision.
+const reapplicationFailsClosed = {
+  exitCode: 1,
+  remove: ["ready-for-agent"],
+  add: ["needs-triage"],
+  feedback: 13,
+  message: /timeline does not contain the current readiness label event/,
+};
+
+// Whether a decision's feedback records no approval.
+function keepsNoApproval(decision) {
+  const state = recordedState(decision.feedback.body);
+  assert.equal(state.status, "awaiting-review");
+  assert.equal(state.reviewer, null);
+}
+
+decisionTable(
+  "a readiness trigger is recorded only when the label's latest application is the sender's",
+  [
+    ...[
+      ["awaits review", {}],
+      ["records Bob's approval", { approved: true }],
+    ].flatMap(([name, options]) => [
+      {
+        name: `Alice's trigger over a timeline ending at Bob's application is unrecorded while the feedback ${name}`,
+        run: () =>
+          assert.equal(
+            readinessTriggerUnrecorded(
+              snapshotFor({
+                ...reapplicationRun(options),
+                issueEvents: laggingReapplicationEvents,
+              }),
+            ),
+            true,
+          ),
+      },
+      {
+        name: `Alice's trigger over a timeline ending at Bob's application fails closed rather than binding Bob's review while the feedback ${name}`,
+        snapshot: {
+          ...reapplicationRun(options),
+          issueEvents: laggingReapplicationEvents,
+        },
+        expected: reapplicationFailsClosed,
+        check: keepsNoApproval,
+      },
+      {
+        name: `Alice's trigger over the complete timeline is rejected as unauthorized while the feedback ${name}`,
+        run: () => {
+          const snapshot = snapshotFor({
+            ...reapplicationRun(options),
+            issueEvents: reapplicationEvents,
+          });
+          assert.equal(readinessTriggerUnrecorded(snapshot), false);
+          assertDecision(decideIssueContract(snapshot), {
+            exitCode: 1,
+            remove: ["ready-for-agent"],
+            add: ["needs-triage"],
+            feedback: 13,
+            message: /@alice is not authorized/,
+          });
+        },
+      },
+    ]),
+    {
+      name: "the sender's own earlier application, the label's latest after the barrier, binds while the sender's removal and reapplication are unrecorded",
+      run: () => {
+        const snapshot = snapshotFor({
+          ...reapplicationRun({ sender: "bob" }),
+          issueEvents: laggingReapplicationEvents,
+        });
+        assert.equal(readinessTriggerUnrecorded(snapshot), false);
+        const decision = decideIssueContract(snapshot);
+        assertDecision(decision, {
+          exitCode: 0,
+          feedback: 13,
+          message: /valid implementation ticket with ready-for-agent bound/i,
+        });
+        assert.deepEqual(recordedState(decision.feedback.body), {
+          status: "approved",
+          revision: bodyRevision(snapshot.issue),
+          label: "ready-for-agent",
+          reviewer: "bob",
+          reviewEventId: "203",
+          sourceInvalidation: null,
+        });
+      },
+    },
   ],
 );
 
