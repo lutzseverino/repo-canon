@@ -20,6 +20,7 @@ import {
   ignoredBlockerReferences,
   labeledBy,
   mapBody,
+  readinessRetryEvents,
   readinessReview,
   recordedState,
   repository,
@@ -2316,18 +2317,7 @@ decisionTable(
 const ownOpening = "opened:ISSUE_42:2026-09-14T16:00:00Z";
 const otherOpening = "opened:ISSUE_99:2026-09-14T16:00:00Z";
 
-// The maintainer's application of readiness that a run rejected, writing the
-// awaiting-review notice for the current revision with it as the barrier, and
-// the bot's removal and the maintainer's reapplication after that notice.
-const rejectedGrant = creationLabel({
-  id: 201,
-  created_at: "2026-09-14T17:01:00Z",
-});
-const rejectedGrantCleanup = [
-  rejectedGrant,
-  { ...rejectedGrant, id: 202, event: "unlabeled", actor: bot },
-  { ...rejectedGrant, id: 203, created_at: "2026-09-14T17:01:10Z" },
-];
+const [rejectedGrant] = readinessRetryEvents;
 
 // The maintainer's retry of readiness after the notice that observed 201,
 // with the timeline its labeled run reads.
@@ -2371,7 +2361,7 @@ decisionTable(
     {
       name: "a retry whose removal and reapplication are recorded binds the reapplication",
       run: () => {
-        const snapshot = retrySnapshot({ issueEvents: rejectedGrantCleanup });
+        const snapshot = retrySnapshot({ issueEvents: readinessRetryEvents });
         assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
         const decision = decideIssueContract(snapshotFor(snapshot));
         assertDecision(decision, {
@@ -2395,7 +2385,7 @@ decisionTable(
         const snapshot = laterGrantSnapshot({
           feedback: (issue) =>
             approvedTicketFeedback(issue, { reviewEventId: "203" }),
-          issueEvents: rejectedGrantCleanup,
+          issueEvents: readinessRetryEvents,
           sender: "maintainer",
         });
         assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
@@ -2416,7 +2406,7 @@ decisionTable(
             readinessTriggerUnrecorded(
               snapshotFor(
                 retrySnapshot({
-                  issueEvents: rejectedGrantCleanup,
+                  issueEvents: readinessRetryEvents,
                   observedEventId,
                 }),
               ),
@@ -2427,7 +2417,7 @@ decisionTable(
       {
         name: `a barrier at ${name} fails the trigger closed`,
         snapshot: retrySnapshot({
-          issueEvents: rejectedGrantCleanup,
+          issueEvents: readinessRetryEvents,
           observedEventId,
         }),
         expected: {

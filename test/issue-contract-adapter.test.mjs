@@ -14,6 +14,7 @@ import {
   createdWithReadiness,
   creationLabel,
   labeledBy,
+  readinessRetryEvents,
   readinessReview,
   repository,
   specificationBody,
@@ -836,8 +837,7 @@ function freshGrant() {
 }
 
 // A maintainer's reapplication of readiness after a run rejected the
-// maintainer's application 201: the timeline holds 201, the bot's removal, and
-// the reapplication 203.
+// maintainer's application 201.
 function readinessRetry() {
   const issue = {
     number: 42,
@@ -849,18 +849,10 @@ function readinessRetry() {
     created_at: "2026-09-14T16:00:00Z",
     updated_at: "2026-09-14T17:01:10Z",
   };
-  const application = creationLabel({
-    id: 201,
-    created_at: "2026-09-14T17:01:00Z",
-  });
   return {
     issue,
     event: labeledBy("maintainer", "ready-for-agent", issue),
-    issueEvents: [
-      application,
-      { ...application, id: 202, event: "unlabeled", actor: bot },
-      { ...application, id: 203, created_at: "2026-09-14T17:01:10Z" },
-    ],
+    issueEvents: readinessRetryEvents,
     permissions: { maintainer: { permission: "admin", role_name: "admin" } },
   };
 }

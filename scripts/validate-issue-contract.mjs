@@ -270,9 +270,9 @@ export function decideIssueContract(snapshot) {
 // the timeline lacks the sender's application of that label or records a
 // removal as the label's latest change. While the latest feedback awaits
 // review, only an application after its observed event counts: the run that
-// wrote it already observed every earlier one. The adapter re-reads the
-// timeline while this holds, within its bound, and the decision fails closed
-// while it does.
+// wrote it already observed every one at or before it. The adapter re-reads
+// the timeline while this holds, within its bound, and the decision fails
+// closed while it does.
 export function readinessTriggerUnrecorded(snapshot) {
   const { event, issue, comments } = snapshot;
   const label = readinessTransitionLabel(event);
@@ -1354,6 +1354,13 @@ function issueTimeline({ event, issue, issueEvents }) {
     );
   }
 
+  // The events after a barrier. No barrier precedes every event, and a
+  // barrier the timeline cannot place has none after it: `null`.
+  function eventsAfter(barrierEventId) {
+    const barrier = barrierEventId == null ? 0 : position(barrierEventId);
+    return barrier === null ? null : issueEvents.slice(barrier);
+  }
+
   function latestReadinessTransition() {
     return issueEvents.findLast(isReadinessTransition) ?? null;
   }
@@ -1391,11 +1398,9 @@ function issueTimeline({ event, issue, issueEvents }) {
       ) {
         return false;
       }
-      const observed = observedEventId == null ? 0 : position(observedEventId);
+      const observed = eventsAfter(observedEventId);
       if (observed === null) return false;
-      const transitions = issueEvents
-        .slice(observed)
-        .filter(isReadinessTransition);
+      const transitions = observed.filter(isReadinessTransition);
       const first = transitions[0];
       if (
         observedEventId == null &&
@@ -1492,21 +1497,15 @@ function issueTimeline({ event, issue, issueEvents }) {
 
     // Whether the timeline holds the sender's application of the label after
     // the barrier and the label's latest recorded change is an application, by
-    // anyone. No barrier precedes every application, and a barrier the
-    // timeline cannot place precedes none.
+    // anyone.
     recordsApplication(label, login, barrierEventId) {
-      const barrier = barrierEventId == null ? 0 : position(barrierEventId);
-      if (barrier === null) return false;
-      return (
-        issueEvents
-          .slice(barrier)
-          .some(
-            (candidate) =>
-              candidate.event === "labeled" &&
-              candidate.label?.name === label &&
-              candidate.actor?.login === login,
-          ) && latestChangeIsApplication(label)
+      const applied = eventsAfter(barrierEventId)?.some(
+        (candidate) =>
+          candidate.event === "labeled" &&
+          candidate.label?.name === label &&
+          candidate.actor?.login === login,
       );
+      return Boolean(applied) && latestChangeIsApplication(label);
     },
 
     sentByOpener,
