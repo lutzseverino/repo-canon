@@ -25,15 +25,15 @@ Source authoring, publication, and adoption are separate stages:
 ## Prerequisites
 
 Use macOS or Linux with Node.js 24, npm, and Git 2.32.0 or newer. Use public CLI
-5.0.1 or newer; 5.0.1 is the current source-validation baseline. Install a pinned
+5.1.0 or newer; 5.1.0 is the current source-validation baseline. Install a pinned
 CLI in a persistent directory outside the adopting repository so inspection,
 start, and recovery use the same executable:
 
 ```sh
-adoption_cli="$HOME/.local/share/repo-standards/cli-5.0.1"
+adoption_cli="$HOME/.local/share/repo-standards/cli-5.1.0"
 mkdir -p "$adoption_cli"
 npm install --prefix "$adoption_cli" --ignore-scripts --save-exact \
-  --no-audit --no-fund @lutzseverino/repo-standards@5.0.1
+  --no-audit --no-fund @lutzseverino/repo-standards@5.1.0
 repo_standards="$adoption_cli/node_modules/.bin/repo-standards"
 "$repo_standards" --version
 ```
@@ -48,19 +48,19 @@ settings. Keep the repository clean and committed. If useful existing
 [Prepare existing agent guidance](prepare-agent-guidance.md), commit that change,
 and inspect the prepared commit afresh. Records that a CLI before major version 5 wrote,
 in `.repo-standards` or as run records in Git's directory, use retired formats,
-which CLI 5.0.1 does not read; such a repository adopts fresh, as the CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v5.0.1/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
+which CLI 5.1.0 does not read; such a repository adopts fresh, as the CLI's
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v5.1.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
 describes.
 
 ## Inspect the published source
 
-This guide selects `v0.5.2`. Verify its
-[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.2)
+This guide selects `v0.5.3`. Verify its
+[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.3)
 first. Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.5.2
+source_tag=v0.5.3
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
@@ -79,7 +79,7 @@ Prepare a `repo-standards/scope/v2` proposal from the repository evidence and
 Repo Canon's discovery guidance. For the `documentation` declaration, that
 guidance has the agent run the documentation scope drafter shipped with the
 selected source and decide only its unresolved questions. The public CLI's
-[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v5.0.1/docs/usage/inspection.md#discover-contextual-file-scope)
+[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v5.1.0/docs/usage/inspection.md#discover-contextual-file-scope)
 defines the proposal fields; the CLI derives the evidence binding.
 
 Request the complete inspection with the proposal:
@@ -146,5 +146,5 @@ rollback or freshness guarantee.
 
 When contextual work needs a file outside the confirmed scope, or a confirmed
 path is mistaken, correct the scope as the CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v5.0.1/docs/usage/adoption.md#correct-a-confirmed-scope)
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v5.1.0/docs/usage/adoption.md#correct-a-confirmed-scope)
 describes.
