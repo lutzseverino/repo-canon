@@ -14,6 +14,9 @@ import {
   createdWithReadiness,
   creationLabel,
   labeledBy,
+  laggingReapplicationEvents,
+  reapplicationEvents,
+  reapplicationRun,
   readinessRetryEvents,
   readinessReview,
   repository,
@@ -857,6 +860,13 @@ function readinessRetry() {
   };
 }
 
+// The roles of Alice, Bob, and Carol in `reapplicationRun`.
+const reapplicationPermissions = {
+  alice: { permission: "write", role_name: "write" },
+  bob: { permission: "admin", role_name: "admin" },
+  carol: { permission: "admin", role_name: "admin" },
+};
+
 test("the adapter waits, within its bound, for the timeline to record a human readiness trigger", async (context) => {
   async function exerciseWaiting(t, options) {
     const root = await scratchFiles(t, { "wait.mjs": instantWait });
@@ -1012,7 +1022,7 @@ test("the adapter waits, within its bound, for the timeline to record a human re
   );
 
   await context.test(
-    "a delayed trigger by the sender of the observed application reads the events once and binds another person's reapplication",
+    "a delayed trigger by the sender of the observed application waits out the bound and fails closed rather than binding another person's reapplication",
     async (t) => {
       const { issueEvents, ...retry } = readinessRetry();
       const result = await exerciseWaiting(t, {
@@ -1028,7 +1038,6 @@ test("the adapter waits, within its bound, for the timeline to record a human re
             ...issueEvents.slice(0, 2),
             { ...issueEvents[2], actor: { login: "triager" } },
           ],
-          [],
         ],
         permissions: {
           ...retry.permissions,
@@ -1036,16 +1045,85 @@ test("the adapter waits, within its bound, for the timeline to record a human re
         },
       });
 
-      assert.equal(result.code, 0, result.stderr);
-      assert.equal(eventReads(result), 1);
-      assert.deepEqual(waits(result), []);
+      assert.equal(result.code, 1);
+      assert.match(
+        result.stderr,
+        /timeline does not contain the current readiness label event/,
+      );
+      assert.equal(eventReads(result), 16);
+      assert.deepEqual(waits(result), Array(15).fill(2000));
       const applied = writes(result);
       assert.deepEqual(
         applied.map(([method, url]) => [method, url]),
-        [["PATCH", "/repos/example/repository/issues/comments/13"]],
+        [
+          [
+            "DELETE",
+            "/repos/example/repository/issues/42/labels/ready-for-agent",
+          ],
+          ["POST", "/repos/example/repository/issues/42/labels"],
+          ["PATCH", "/repos/example/repository/issues/comments/13"],
+        ],
       );
-      assert.match(applied[0][2].body, /reviewed by @triager/);
-      assert.match(applied[0][2].body, /"reviewEventId":"203"/);
+      assert.doesNotMatch(applied[2][2].body, /reviewed by @triager/);
+    },
+  );
+
+  await context.test(
+    "Alice's trigger whose reads end at Bob's application waits out the bound and fails closed rather than binding Bob's review",
+    async (t) => {
+      const result = await exerciseWaiting(t, {
+        ...reapplicationRun(),
+        issueEventReads: [laggingReapplicationEvents],
+        permissions: reapplicationPermissions,
+      });
+
+      assert.equal(result.code, 1);
+      assert.match(
+        result.stderr,
+        /timeline does not contain the current readiness label event/,
+      );
+      assert.equal(eventReads(result), 16);
+      assert.deepEqual(waits(result), Array(15).fill(2000));
+      const applied = writes(result);
+      assert.deepEqual(
+        applied.map(([method, url]) => [method, url]),
+        [
+          [
+            "DELETE",
+            "/repos/example/repository/issues/42/labels/ready-for-agent",
+          ],
+          ["POST", "/repos/example/repository/issues/42/labels"],
+          ["PATCH", "/repos/example/repository/issues/comments/13"],
+        ],
+      );
+      assert.doesNotMatch(applied[2][2].body, /reviewed by @bob/);
+    },
+  );
+
+  await context.test(
+    "Alice's trigger whose later read catches up is judged by Alice's application",
+    async (t) => {
+      const result = await exerciseWaiting(t, {
+        ...reapplicationRun(),
+        issueEventReads: [laggingReapplicationEvents, reapplicationEvents],
+        permissions: reapplicationPermissions,
+      });
+
+      assert.equal(result.code, 1);
+      assert.match(result.stderr, /@alice is not authorized/);
+      assert.equal(eventReads(result), 2);
+      assert.deepEqual(waits(result), [2000]);
+      assert.deepEqual(
+        writes(result).map(([method, url]) => [method, url]),
+        [
+          [
+            "DELETE",
+            "/repos/example/repository/issues/42/labels/ready-for-agent",
+          ],
+          ["POST", "/repos/example/repository/issues/42/labels"],
+          ["PATCH", "/repos/example/repository/issues/comments/13"],
+        ],
+      );
     },
   );
 
