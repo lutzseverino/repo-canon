@@ -100,14 +100,23 @@ test("the pull request metadata workflow runs on every configured pull request u
   assert.doesNotMatch(text, /(?:issues|pull-requests):\s*write/);
 });
 
+// The expressions a script interpolates, with index syntax such as
+// `github['event']` rewritten to property syntax.
+function expressions(script) {
+  return [...script.matchAll(/\$\{\{([\s\S]*?)\}\}/g)].map(([, expression]) =>
+    expression.replace(/\s*\[\s*(['"])([^'"]*)\1\s*\]/g, ".$2"),
+  );
+}
+
 test("no shared workflow interpolates a pull request title or body into a run step", () => {
   const untrustedText =
-    /\$\{\{(?:(?!\}\})[\s\S])*?github\.event(?:\.pull_request)?(?:\.(?:title|body)\b|\s*[),}])/;
+    /github\.event(?:\.pull_request)?(?:\.(?:title|body)\b|\s*(?:[),]|$))/;
   for (const path of sharedWorkflows()) {
     const scripts = runScripts(workflow(path));
     assert.ok(scripts.length > 0, `${path} has a run step`);
     for (const script of scripts)
-      assert.doesNotMatch(script, untrustedText, `${path}: ${script}`);
+      for (const expression of expressions(script))
+        assert.doesNotMatch(expression, untrustedText, `${path}: ${script}`);
   }
 });
 
