@@ -20,6 +20,7 @@ import {
   ignoredBlockerReferences,
   labeledBy,
   mapBody,
+  readinessRetryEvents,
   readinessReview,
   recordedState,
   repository,
@@ -2312,6 +2313,196 @@ decisionTable(
   ],
 );
 
+// This issue's own opening barrier and another issue's.
+const ownOpening = "opened:ISSUE_42:2026-09-14T16:00:00Z";
+const otherOpening = "opened:ISSUE_99:2026-09-14T16:00:00Z";
+
+const [rejectedGrant, rejectedGrantRemoved, retriedGrant] =
+  readinessRetryEvents;
+
+// The triager's reapplication of readiness after the maintainer's rejected
+// application and its removal.
+const otherRetryEvents = [
+  rejectedGrant,
+  rejectedGrantRemoved,
+  { ...retriedGrant, actor: { login: "triager" } },
+];
+
+// A retry of readiness by `sender`, the maintainer unless stated, after the
+// notice that observed 201, with the timeline its labeled run reads.
+function retrySnapshot({
+  issueEvents,
+  observedEventId = "201",
+  sender = "maintainer",
+}) {
+  return laterGrantSnapshot({
+    feedback: (issue) => ({
+      ...awaitingTicketFeedback(issue, { observedEventId }),
+      updated_at: "2026-09-14T17:01:05Z",
+    }),
+    issueEvents,
+    sender,
+  });
+}
+
+decisionTable(
+  "an awaiting-review notice's observed event is a barrier for the readiness trigger",
+  [
+    {
+      name: "a retry whose timeline ends at the sender's application the notice observed is unrecorded",
+      run: () =>
+        assert.equal(
+          readinessTriggerUnrecorded(
+            snapshotFor(retrySnapshot({ issueEvents: [rejectedGrant] })),
+          ),
+          true,
+        ),
+    },
+    {
+      name: "a retry whose timeline ends at the sender's application the notice observed fails closed rather than rejecting that application again",
+      snapshot: retrySnapshot({ issueEvents: [rejectedGrant] }),
+      expected: {
+        exitCode: 1,
+        remove: ["ready-for-agent"],
+        add: ["needs-triage"],
+        feedback: 13,
+        message: /timeline does not contain the current readiness label event/,
+        notMessage: /wait for the validator to publish/i,
+        feedbackBody: /"observedEventId":"201"/,
+      },
+    },
+    {
+      name: "a retry whose removal and reapplication are recorded binds the reapplication",
+      run: () => {
+        const snapshot = retrySnapshot({ issueEvents: readinessRetryEvents });
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
+        const decision = decideIssueContract(snapshotFor(snapshot));
+        assertDecision(decision, {
+          exitCode: 0,
+          feedback: 13,
+          message: /valid implementation ticket with ready-for-agent bound/i,
+        });
+        assert.deepEqual(recordedState(decision.feedback.body), {
+          status: "approved",
+          revision: bodyRevision(snapshot.issue),
+          label: "ready-for-agent",
+          reviewer: "maintainer",
+          reviewEventId: "203",
+          sourceInvalidation: null,
+        });
+      },
+    },
+    {
+      name: "a redelivered trigger for an approved review stays recorded and keeps the approval",
+      run: () => {
+        const snapshot = laterGrantSnapshot({
+          feedback: (issue) =>
+            approvedTicketFeedback(issue, { reviewEventId: "203" }),
+          issueEvents: readinessRetryEvents,
+          sender: "maintainer",
+        });
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
+        assertDecision(decideIssueContract(snapshotFor(snapshot)), {
+          exitCode: 0,
+          message: /valid implementation ticket with ready-for-agent bound/i,
+        });
+      },
+    },
+    {
+      name: "a delayed trigger by the sender of the observed application binds another person's reapplication after the barrier",
+      run: () => {
+        const snapshot = retrySnapshot({ issueEvents: otherRetryEvents });
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
+        const decision = decideIssueContract(snapshotFor(snapshot));
+        assertDecision(decision, {
+          exitCode: 0,
+          feedback: 13,
+          message: /valid implementation ticket with ready-for-agent bound/i,
+        });
+        assert.deepEqual(recordedState(decision.feedback.body), {
+          status: "approved",
+          revision: bodyRevision(snapshot.issue),
+          label: "ready-for-agent",
+          reviewer: "triager",
+          reviewEventId: "203",
+          sourceInvalidation: null,
+        });
+      },
+    },
+    ...[
+      [
+        "is unrecorded",
+        (snapshot) =>
+          assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), true),
+      ],
+      [
+        "fails closed",
+        (snapshot) =>
+          assertDecision(decideIssueContract(snapshotFor(snapshot)), {
+            exitCode: 1,
+            remove: ["ready-for-agent"],
+            add: ["needs-triage"],
+            feedback: 13,
+            message:
+              /timeline does not contain the current readiness label event/,
+          }),
+      ],
+    ].map(([name, check]) => ({
+      name: `a retry whose sender applied the label only before the observed application ${name}`,
+      run: () =>
+        check(
+          retrySnapshot({
+            issueEvents: [
+              {
+                ...rejectedGrant,
+                id: 150,
+                actor: { login: "triager" },
+                created_at: "2026-09-14T16:30:00Z",
+              },
+              rejectedGrant,
+            ],
+            sender: "triager",
+          }),
+        ),
+    })),
+    ...[
+      ["an event the timeline does not hold", "999"],
+      ["another issue's opening", otherOpening],
+    ].flatMap(([name, observedEventId]) => [
+      {
+        name: `a barrier at ${name} never makes the trigger recorded`,
+        run: () =>
+          assert.equal(
+            readinessTriggerUnrecorded(
+              snapshotFor(
+                retrySnapshot({
+                  issueEvents: readinessRetryEvents,
+                  observedEventId,
+                }),
+              ),
+            ),
+            true,
+          ),
+      },
+      {
+        name: `a barrier at ${name} fails the trigger closed`,
+        snapshot: retrySnapshot({
+          issueEvents: readinessRetryEvents,
+          observedEventId,
+        }),
+        expected: {
+          exitCode: 1,
+          remove: ["ready-for-agent"],
+          add: ["needs-triage"],
+          feedback: 13,
+          message:
+            /timeline does not contain the current readiness label event/,
+        },
+      },
+    ]),
+  ],
+);
+
 decisionTable(
   "a recorded readiness rejection lasts until another review or contract change",
   [
@@ -3447,8 +3638,6 @@ function deletedBriefSnapshot(deleted) {
 // A direct ticket opened at 16:00:00 whose feedback records `barrier` as its
 // latest review or observed transition, seen by the run for readiness applied
 // at 17:00:00 as `issueEvents` record it.
-const ownOpening = "opened:ISSUE_42:2026-09-14T16:00:00Z";
-const otherOpening = "opened:ISSUE_99:2026-09-14T16:00:00Z";
 function openingBarrierSnapshot({
   status,
   barrier,
@@ -3531,7 +3720,7 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
       remove: ["ready-for-agent"],
       add: ["needs-triage"],
       feedback: 13,
-      message: /wait for the validator to publish/i,
+      message: /timeline does not contain the current readiness label event/,
     },
   },
   ...["needs-info", "ready-for-agent"].map((trigger) => {
@@ -3624,7 +3813,10 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
         remove: ["ready-for-agent"],
         add: ["needs-triage"],
         feedback: 13,
-        message: /wait for the validator to publish/i,
+        message:
+          status === "awaiting-review"
+            ? /timeline does not contain the current readiness label event/
+            : /wait for the validator to publish/i,
       },
     },
   ]),

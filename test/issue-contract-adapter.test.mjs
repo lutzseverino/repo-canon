@@ -14,6 +14,7 @@ import {
   createdWithReadiness,
   creationLabel,
   labeledBy,
+  readinessRetryEvents,
   readinessReview,
   repository,
   specificationBody,
@@ -835,6 +836,27 @@ function freshGrant() {
   };
 }
 
+// A maintainer's reapplication of readiness after a run rejected the
+// maintainer's application 201.
+function readinessRetry() {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: ticketBody,
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+    user: { login: "author" },
+    created_at: "2026-09-14T16:00:00Z",
+    updated_at: "2026-09-14T17:01:10Z",
+  };
+  return {
+    issue,
+    event: labeledBy("maintainer", "ready-for-agent", issue),
+    issueEvents: readinessRetryEvents,
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  };
+}
+
 test("the adapter waits, within its bound, for the timeline to record a human readiness trigger", async (context) => {
   async function exerciseWaiting(t, options) {
     const root = await scratchFiles(t, { "wait.mjs": instantWait });
@@ -959,6 +981,90 @@ test("the adapter waits, within its bound, for the timeline to record a human re
         ],
       );
       assert.doesNotMatch(applied[2][2].body, /readiness recorded/);
+    },
+  );
+
+  await context.test(
+    "a retry whose first read ends at the application the notice observed waits for its reapplication",
+    async (t) => {
+      const { issueEvents, ...retry } = readinessRetry();
+      const result = await exerciseWaiting(t, {
+        ...retry,
+        comments: [
+          {
+            ...awaitingTicketFeedback(retry.issue, { observedEventId: "201" }),
+            updated_at: "2026-09-14T17:01:05Z",
+          },
+        ],
+        issueEventReads: [issueEvents.slice(0, 1), issueEvents],
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.equal(eventReads(result), 2);
+      assert.deepEqual(waits(result), [2000]);
+      const applied = writes(result);
+      assert.deepEqual(
+        applied.map(([method, url]) => [method, url]),
+        [["PATCH", "/repos/example/repository/issues/comments/13"]],
+      );
+      assert.match(applied[0][2].body, /"reviewEventId":"203"/);
+    },
+  );
+
+  await context.test(
+    "a delayed trigger by the sender of the observed application reads the events once and binds another person's reapplication",
+    async (t) => {
+      const { issueEvents, ...retry } = readinessRetry();
+      const result = await exerciseWaiting(t, {
+        ...retry,
+        comments: [
+          {
+            ...awaitingTicketFeedback(retry.issue, { observedEventId: "201" }),
+            updated_at: "2026-09-14T17:01:05Z",
+          },
+        ],
+        issueEventReads: [
+          [
+            ...issueEvents.slice(0, 2),
+            { ...issueEvents[2], actor: { login: "triager" } },
+          ],
+          [],
+        ],
+        permissions: {
+          ...retry.permissions,
+          triager: { permission: "triage", role_name: "triage" },
+        },
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.equal(eventReads(result), 1);
+      assert.deepEqual(waits(result), []);
+      const applied = writes(result);
+      assert.deepEqual(
+        applied.map(([method, url]) => [method, url]),
+        [["PATCH", "/repos/example/repository/issues/comments/13"]],
+      );
+      assert.match(applied[0][2].body, /reviewed by @triager/);
+      assert.match(applied[0][2].body, /"reviewEventId":"203"/);
+    },
+  );
+
+  await context.test(
+    "a redelivered trigger for an approved review reads the events once and keeps the approval",
+    async (t) => {
+      const { issueEvents, ...retry } = readinessRetry();
+      const result = await exerciseWaiting(t, {
+        ...retry,
+        comments: [
+          approvedTicketFeedback(retry.issue, { reviewEventId: "203" }),
+        ],
+        issueEventReads: [issueEvents, []],
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.equal(eventReads(result), 1);
+      assert.deepEqual(waits(result), []);
+      assert.deepEqual(writes(result), []);
     },
   );
 

@@ -188,6 +188,19 @@ export function createdWithReadiness({
   return { issue, comments, issueEvents, event, permissions, bodyLastEditedAt };
 }
 
+// The maintainer's application of readiness, event 201, that a run rejected,
+// writing an awaiting-review notice that observed it; the bot's removal; and
+// the maintainer's reapplication, event 203, after that notice.
+const rejectedApplication = creationLabel({
+  id: 201,
+  created_at: "2026-09-14T17:01:00Z",
+});
+export const readinessRetryEvents = [
+  rejectedApplication,
+  { ...rejectedApplication, id: 202, event: "unlabeled", actor: bot },
+  { ...rejectedApplication, id: 203, created_at: "2026-09-14T17:01:10Z" },
+];
+
 export const readinessReview = {
   id: 101,
   event: "labeled",

@@ -131,32 +131,57 @@ that label event. A human readiness trigger is a `labeled` event for
 timeline records it when it holds a `labeled` event of that label by that sender
 and the label's latest recorded change is an application, by anyone. So a label
 one person removed and another reapplied is recorded, and is decided as the
-latest application. While the timeline does not record the trigger, the adapter
-re-reads the issue events every 2 seconds, for at most 30 seconds of waiting in
-total (15 re-reads), and decides from the first read that records it. The bound
-stays short because the workflow serializes runs per issue and, while one run
-waits, GitHub keeps only the newest pending run for that issue. The decision
-itself stays pure: it reads one snapshot, and the adapter asks
-`readinessTriggerUnrecorded` whether to read again. Every other trigger, and a
-readiness trigger whose label is already gone from the re-fetched issue, reads
-the events once.
+latest application. While the latest feedback awaits review, the readiness
+transition it records as observed is a barrier: the timeline records the trigger
+only when, in addition, the label's latest application, by anyone, is positioned
+after the barrier. The run that wrote that feedback already observed every
+application at or before the barrier, so none of them can be this trigger.
+Awaiting-review feedback is only written while readiness is absent or being
+removed, so a present readiness label was applied after the barrier, and a
+complete timeline always holds that application. The sender's own application
+may come before the barrier: a sender's delayed trigger is decided from another
+person's later application, as it is without a barrier. A barrier the timeline
+cannot place, such as another issue's opening or an event the timeline does not
+hold, never lets a trigger count as recorded; this issue's own opening places
+before every event. Approved feedback, and awaiting-review feedback that records
+no observed transition, set no barrier. The payload's issue update time is not
+used, because matching it against a recorded event's second-resolution time
+could make a recorded trigger look unrecorded. While the timeline does not
+record the trigger, the adapter re-reads the issue events every 2 seconds, for
+at most 30 seconds of waiting in total (15 re-reads), and decides from the first
+read that records it. The bound stays short because the workflow serializes runs
+per issue and, while one run waits, GitHub keeps only the newest pending run for
+that issue. The decision itself stays pure: it reads one snapshot, and the
+adapter asks `readinessTriggerUnrecorded` whether to read again. Every other
+trigger, and a readiness trigger whose label is already gone from the re-fetched
+issue, reads the events once.
 
 The decision asks the same predicate. While it holds, the decision fails closed
 before selecting any review, including a recorded approval, so a timeline that
-lacks the sender's application of the trigger's label, or whose latest change of
-that label is a removal, never supplies the review. When the bound runs out, the
-run decides once from its last read this way: it removes readiness and reports
-that the authoritative issue timeline does not contain the current readiness
-label event. The remedy is to reapply the label after the revision notice, and
-the validator decides it as any later review. Because a creation `labeled` run
-waits for the opener's creation label, an unauthorized opener's rejection is
-recorded in either run order, and the later `opened` run keeps it.
+lacks the sender's application of the trigger's label or an application of it
+after the barrier, or whose latest change of that label is a removal, never
+supplies the review. When the bound runs out, the run decides once from its last
+read this way: it removes readiness and reports that the authoritative issue
+timeline does not contain the current readiness label event. The remedy is to
+reapply the label after the revision notice, and the validator decides it as any
+later review. Because a creation `labeled` run waits for the opener's creation
+label, an unauthorized opener's rejection is recorded in either run order, and
+the later `opened` run keeps it.
 
-One lagging case is accepted as recorded. The trigger's sender has an earlier
-recorded application of the label, the label's latest recorded change is an
-application by anyone, and the trigger's own removal and reapplication are still
-unrecorded. The run then decides from the latest recorded application, an
-earlier review of the same revision, without waiting.
+One lagging case is accepted as recorded, on the approval side. The trigger's
+sender has an earlier recorded application of the label, the label's latest
+recorded application, by anyone, follows any barrier and is its latest change,
+and the trigger's own removal and reapplication are still unrecorded. The run
+then decides from the latest recorded application, an earlier review of the same
+revision, without waiting, and keeps a recorded approval of it.
+
+On the rejecting side, a retry after a rejection is not judged by the rejected
+application, with one remaining case. If the rejecting run's bound ran out
+before the timeline recorded the rejected application, its feedback records an
+earlier barrier, and a retry while the timeline still lags is judged by that
+application again and rejected. This needs the timeline to lag past the bound
+twice; reapplying the label once the timeline has caught up is decided as any
+later review.
 
 Every later review, and every Agent Brief review, starts after the validator
 publishes the exact revision in its feedback comment; the reviewer then applies
