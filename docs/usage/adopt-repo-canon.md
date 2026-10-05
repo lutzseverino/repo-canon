@@ -54,13 +54,13 @@ describes.
 
 ## Inspect the published source
 
-This guide selects `v0.5.3`. Verify its
-[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.3)
+This guide selects `v0.5.4`. Verify its
+[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.4)
 first. Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.5.3
+source_tag=v0.5.4
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
