@@ -186,7 +186,7 @@ repeated.
 ## Source profile
 
 The complete `repo-standards/v2` source is `standards.yaml`, with one
-`complete` profile and the open-ended CLI compatibility minimum `>=5.0.0`. The
+`complete` profile and the open-ended CLI compatibility minimum `>=5.0.1`. The
 concise policy-to-declaration, material, operation, ownership, and prerequisite
 mapping is maintained in [the source profile](docs/development/source-profile.md).
 Contextual Project README and documentation scope uses separate assessment and
@@ -194,7 +194,7 @@ discovery guidance and resolves to individual adopter-reviewed paths.
 
 [Adoption compatibility](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface. Use installed public
-CLI 5.0.0 as the current validation baseline; claim only compatibility
+CLI 5.0.1 as the current validation baseline; claim only compatibility
 demonstrated against the released source bytes.
 
 ## License
