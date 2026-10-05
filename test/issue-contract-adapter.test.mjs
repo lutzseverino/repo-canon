@@ -9,8 +9,10 @@ import test from "node:test";
 import {
   approvedTicketFeedback,
   awaitingTicketFeedback,
+  bot,
   bugBody,
   createdWithReadiness,
+  creationLabel,
   labeledBy,
   readinessReview,
   repository,
@@ -37,6 +39,7 @@ async function exercise({
   bodyLastEditedAt = null,
   issueEvents,
   issueEventPages,
+  issueEventReads,
   validatorPath = validator,
   nodeArguments = [],
 }) {
@@ -50,6 +53,8 @@ async function exercise({
     }
   }
   const effectiveIssueEventPages = issueEventPages ?? [issueEvents ?? []];
+  // Successive reads of a one-page timeline, the last repeated once reached.
+  let issueEventReadCount = 0;
   const server = createServer(async (request, response) => {
     let body = "";
     for await (const chunk of request) body += chunk;
@@ -95,6 +100,11 @@ async function exercise({
       request.method === "GET" &&
       request.url === `${issuePath}/events?per_page=100`
     ) {
+      if (issueEventReads) {
+        const read = Math.min(issueEventReadCount, issueEventReads.length - 1);
+        issueEventReadCount += 1;
+        return json(response, 200, issueEventReads[read]);
+      }
       const headers =
         effectiveIssueEventPages.length > 1
           ? {
@@ -233,6 +243,14 @@ function requested(result, method, url) {
   return result.requests.some(
     (candidate) => candidate.method === method && candidate.url === url,
   );
+}
+
+function eventReads(result) {
+  return result.requests.filter(
+    ({ method, url }) =>
+      method === "GET" &&
+      url === "/repos/example/repository/issues/42/events?per_page=100",
+  ).length;
 }
 
 function permissionLookups(result) {
@@ -697,7 +715,10 @@ test("the adapter runs only when the validator is executed directly", async (con
     async (t) => {
       const root = await scratchFiles(t, { "probe.mjs": importProbe });
       const { stderr, ...probe } = await probeImport(root);
-      assert.deepEqual(probe, { exports: ["decideIssueContract"], calls: [] });
+      assert.deepEqual(probe, {
+        exports: ["decideIssueContract", "readinessTriggerUnrecorded"],
+        calls: [],
+      });
       assert.equal(stderr, "");
     },
   );
@@ -715,7 +736,7 @@ test("the adapter runs only when the validator is executed directly", async (con
       ]);
       assert.match(stderr, new RegExp(hiddenImportMetaMain));
       assert.deepEqual(probe, {
-        exports: ["decideIssueContract"],
+        exports: ["decideIssueContract", "readinessTriggerUnrecorded"],
         calls: ["fs.realpathSync", "fs.realpathSync"],
       });
     },
@@ -746,4 +767,282 @@ test("the adapter runs only when the validator is executed directly", async (con
       );
     },
   );
+});
+
+// Replaces the validator's wait for the timeline with an immediate one that
+// reports each requested delay on stderr, so a test uses no real time.
+const instantWait = `import timers from "node:timers/promises";
+import { syncBuiltinESMExports } from "node:module";
+timers.setTimeout = async (delay, value) => {
+  process.stderr.write("waited " + delay + "\\n");
+  return value;
+};
+syncBuiltinESMExports();
+`;
+
+function waits(result) {
+  return [...result.stderr.matchAll(/^waited (\d+)$/gm)].map(([, delay]) =>
+    Number(delay),
+  );
+}
+
+// A maintainer's fresh readiness label after the bot removed the opener's
+// rejected creation label, with each timeline the run can read: the opener's
+// creation label alone, the bot's cleanup, and the maintainer's label.
+function freshGrant() {
+  const { issue, event } = createdWithReadiness({
+    run: "labeled",
+    opener: "reporter",
+    labeler: "maintainer",
+    currentLabels: ["needs-triage", "ready-for-agent"],
+  });
+  issue.updated_at = "2026-09-14T17:01:00Z";
+  event.issue.updated_at = issue.updated_at;
+  const creation = creationLabel({ actor: { login: "reporter" } });
+  const cleanup = [
+    creation,
+    { ...creation, id: 102, event: "unlabeled", actor: bot },
+    {
+      ...creation,
+      id: 103,
+      label: { name: "needs-triage" },
+      actor: bot,
+    },
+  ];
+  const feedback = awaitingTicketFeedback(issue, { observedEventId: "101" });
+  feedback.updated_at = "2026-09-14T17:00:05Z";
+  return {
+    issue,
+    event,
+    comments: [feedback],
+    permissions: {
+      reporter: { permission: "write", role_name: "write" },
+      maintainer: { permission: "admin", role_name: "admin" },
+    },
+    timelines: {
+      creation: [creation],
+      cleanup,
+      recorded: [
+        ...cleanup,
+        {
+          ...creation,
+          id: 104,
+          actor: { login: "maintainer" },
+          created_at: "2026-09-14T17:01:00Z",
+        },
+      ],
+    },
+  };
+}
+
+test("the adapter waits, within its bound, for the timeline to record a human readiness trigger", async (context) => {
+  async function exerciseWaiting(t, options) {
+    const root = await scratchFiles(t, { "wait.mjs": instantWait });
+    return exercise({
+      ...options,
+      nodeArguments: ["--import", join(root, "wait.mjs")],
+    });
+  }
+
+  await context.test(
+    "a trigger recorded by a later read is decided from that read",
+    async (t) => {
+      const { timelines, ...grant } = freshGrant();
+      const result = await exerciseWaiting(t, {
+        ...grant,
+        issueEventReads: [
+          timelines.creation,
+          timelines.cleanup,
+          timelines.recorded,
+        ],
+      });
+
+      assert.equal(result.code, 0, result.stderr);
+      assert.match(
+        result.stdout,
+        /valid implementation ticket with ready-for-agent bound/i,
+      );
+      assert.equal(eventReads(result), 3);
+      assert.deepEqual(waits(result), [2000, 2000]);
+      const applied = writes(result);
+      assert.deepEqual(
+        applied.map(([method, url]) => [method, url]),
+        [
+          ["DELETE", "/repos/example/repository/issues/42/labels/needs-triage"],
+          ["PATCH", "/repos/example/repository/issues/comments/13"],
+        ],
+      );
+      assert.match(applied[1][2].body, /reviewed by @maintainer/);
+      assert.match(applied[1][2].body, /"reviewEventId":"104"/);
+    },
+  );
+
+  await context.test(
+    "a trigger never recorded is decided once from the last read after the bound and fails closed",
+    async (t) => {
+      const { timelines, ...grant } = freshGrant();
+      const result = await exerciseWaiting(t, {
+        ...grant,
+        issueEventReads: [timelines.creation],
+      });
+
+      assert.equal(result.code, 1);
+      assert.match(
+        result.stderr,
+        /timeline does not contain the current readiness label event/,
+      );
+      assert.doesNotMatch(result.stderr, /not authorized/);
+      assert.equal(eventReads(result), 16);
+      assert.deepEqual(waits(result), Array(15).fill(2000));
+      assert.deepEqual(
+        writes(result).map(([method, url]) => [method, url]),
+        [
+          [
+            "DELETE",
+            "/repos/example/repository/issues/42/labels/ready-for-agent",
+          ],
+          ["PATCH", "/repos/example/repository/issues/comments/13"],
+        ],
+      );
+    },
+  );
+
+  await context.test(
+    "a trigger whose removal and reapplication stay unrecorded fails closed after the bound rather than binding the sender's earlier application",
+    async (t) => {
+      const issue = {
+        number: 42,
+        node_id: "ISSUE_42",
+        body: ticketBody,
+        labels: [{ name: "ready-for-agent" }],
+        state: "open",
+        user: { login: "author" },
+        created_at: "2026-09-14T16:00:00Z",
+        updated_at: "2026-09-14T17:03:00Z",
+      };
+      const result = await exerciseWaiting(t, {
+        issue,
+        comments: [awaitingTicketFeedback(issue)],
+        event: labeledBy("maintainer", "ready-for-agent", issue),
+        issueEventReads: [
+          [
+            creationLabel({
+              id: 201,
+              actor: { login: "author" },
+              created_at: "2026-09-14T17:01:00Z",
+            }),
+          ],
+        ],
+        permissions: {
+          author: { permission: "admin", role_name: "admin" },
+          maintainer: { permission: "admin", role_name: "admin" },
+        },
+      });
+
+      assert.equal(result.code, 1);
+      assert.match(
+        result.stderr,
+        /timeline does not contain the current readiness label event/,
+      );
+      assert.equal(eventReads(result), 16);
+      assert.deepEqual(waits(result), Array(15).fill(2000));
+      const applied = writes(result);
+      assert.deepEqual(
+        applied.map(([method, url]) => [method, url]),
+        [
+          [
+            "DELETE",
+            "/repos/example/repository/issues/42/labels/ready-for-agent",
+          ],
+          ["POST", "/repos/example/repository/issues/42/labels"],
+          ["PATCH", "/repos/example/repository/issues/comments/13"],
+        ],
+      );
+      assert.doesNotMatch(applied[2][2].body, /readiness recorded/);
+    },
+  );
+
+  await context.test(
+    "a creation labeled run that first reads an empty timeline records the opener's rejection",
+    async (t) => {
+      const { issue, event } = createdWithReadiness({
+        run: "labeled",
+        opener: "reporter",
+      });
+      const result = await exerciseWaiting(t, {
+        issue,
+        event,
+        issueEventReads: [
+          [],
+          [creationLabel({ actor: { login: "reporter" } })],
+        ],
+        permissions: { reporter: { permission: "write", role_name: "write" } },
+      });
+
+      assert.equal(result.code, 1);
+      assert.match(result.stderr, /@reporter is not authorized/);
+      assert.equal(eventReads(result), 2);
+      assert.deepEqual(waits(result), [2000]);
+      const comment = writes(result).find(
+        ([method, url]) =>
+          method === "POST" &&
+          url === "/repos/example/repository/issues/42/comments",
+      );
+      assert.match(
+        comment[2].body,
+        /"rejectedCreationLabel":"ready-for-agent"/,
+      );
+    },
+  );
+
+  for (const [name, variant] of [
+    [
+      "an opened run",
+      () => {
+        const { issue, event } = createdWithReadiness({ run: "opened" });
+        return {
+          issue,
+          event,
+          permissions: {
+            maintainer: { permission: "admin", role_name: "admin" },
+          },
+        };
+      },
+    ],
+    [
+      "a trigger by github-actions[bot]",
+      () => {
+        const { timelines: _, ...grant } = freshGrant();
+        return { ...grant, event: labeledBy(bot.login, "ready-for-agent") };
+      },
+    ],
+    [
+      "a non-readiness label",
+      () => {
+        const { timelines: _, ...grant } = freshGrant();
+        return { ...grant, event: labeledBy("maintainer", "needs-triage") };
+      },
+    ],
+    [
+      "a readiness trigger whose label is gone from the re-fetched issue",
+      () => {
+        const { timelines: _, ...grant } = freshGrant();
+        grant.issue.labels = [{ name: "needs-triage" }];
+        return grant;
+      },
+    ],
+  ]) {
+    await context.test(`${name} reads the events once`, async (t) => {
+      const result = await exerciseWaiting(t, {
+        ...variant(),
+        issueEventReads: [
+          [],
+          [creationLabel({ actor: { login: "maintainer" }, id: 104 })],
+        ],
+      });
+
+      assert.equal(eventReads(result), 1, result.stderr);
+      assert.deepEqual(waits(result), []);
+    });
+  }
 });
