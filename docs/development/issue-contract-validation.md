@@ -8,15 +8,17 @@ comment Markdown only as data.
 
 The validator is one file. It exports `decideIssueContract`, a synchronous
 decision that reads one snapshot and returns the label changes, the feedback
-comment write, and the exit status, with no network or file access. Its GitHub
-adapter runs only when the workflow executes the file: it fetches the complete
-snapshot before deciding, then applies the returned writes. One timeline helper
-inside the decision answers every question about whether one issue event came
-after another, and it orders events by one rule: the timeline's order decides
-when GitHub has recorded both events. Timestamps are used only for what has no
-timeline position (the feedback comment, Agent Brief comments, and a label
-change the timeline has not recorded yet) and to recognize labels applied at
-creation. Agent Brief comments are ordered among themselves by comment ID: the
+comment write, and the exit status, with no network or file access, and
+`readinessTriggerUnrecorded`, a pure predicate over the same snapshot. Its
+GitHub adapter runs only when the workflow executes the file: it fetches the
+complete snapshot before deciding, waiting within a bound for the issue-event
+timeline to record a human readiness trigger, then applies the returned writes.
+One timeline helper inside the decision answers every question about whether
+one issue event came after another, and it orders events by one rule: the
+timeline's order decides when GitHub has recorded both events. Timestamps are
+used only for what has no timeline position (the feedback comment, Agent Brief
+comments, and a label change the timeline has not recorded yet) and to
+recognize labels applied at creation. Agent Brief comments are ordered among themselves by comment ID: the
 latest Agent Brief is the Brief comment with the highest comment ID, for both
 the contract lookup and a deleted Brief.
 
@@ -110,22 +112,39 @@ An unedited direct specification or ticket created with exactly one readiness
 label can take its initial review from its creation snapshot, whichever of its
 `opened` and `labeled` workflow runs arrives first. That label's application
 must be both the first and the latest readiness transition, applied by the
-issue's opener. The `opened` run reads the label from its payload. A `labeled`
-run needs the timeline to record the opener applying it in the issue's creation
-second; otherwise it is decided as any later review. Either run then checks the
-opener's role as it checks any reviewer's, so an opener without an authorizing
-role gets the same "not authorized" feedback whichever run arrives first. Once
+issue's opener. The `opened` run reads the label from its payload. Only a
+`labeled` run whose sender is the opener takes the creation review, and it needs
+the timeline to record the opener applying the label in the issue's creation
+second; otherwise it is decided as any later review. Another sender's
+readiness label is never attributed to the opener's creation label event.
+Either run then checks the opener's role as it checks any reviewer's, so an
+opener without an authorizing role gets the same "not authorized" feedback
+whichever run arrives first. Once
 the timeline holds the creation label event, either run records it as the
 review, so both orders end with the same labels and recorded review.
 
-A residual race is accepted: a `labeled` run that arrives before the timeline
-records the creation label event cannot recognize the creation review.
-It removes readiness and reports that the timeline does not contain the
-readiness label event, whatever the opener's role, and the later `opened` run
-finds no readiness label to review. The remedy is to reapply the label: an
-authorized reviewer applies it again after the revision notice, and the
-validator decides it as any later review. This existing timeline-lag behavior
-is tracked in [#157](https://github.com/lutzseverino/repo-canon/issues/157).
+GitHub can deliver a `labeled` webhook before its issue-event timeline records
+that label event. A human readiness trigger is a `labeled` event for
+`ready-for-agent` or `ready-for-human` by a sender other than
+`github-actions[bot]`, whose re-fetched issue still carries that label. The
+timeline records its application when it holds a `labeled` event of that label
+by that sender with no `unlabeled` event for the label after it. While the
+timeline does not, the adapter re-reads the issue events every 2 seconds, for at
+most 30 seconds of waiting in total (15 re-reads), and decides from the first
+read that records the trigger. The bound stays short because the workflow
+serializes runs per issue and, while one run waits, GitHub keeps only the newest
+pending run for that issue. The decision itself stays pure: it reads one
+snapshot, and the adapter asks `readinessTriggerUnrecorded` whether to read
+again. Every other trigger, and a readiness trigger
+whose label is already gone from the re-fetched issue, reads the events once.
+
+When the bound runs out, the run decides once from its last read and fails
+closed: it removes readiness and reports that the authoritative issue timeline
+does not contain the current readiness label event. The remedy is to reapply
+the label after the revision notice, and the validator decides it as any later
+review. Because a creation `labeled` run waits for the opener's creation label,
+an unauthorized opener's rejection is recorded in either run order, and the
+later `opened` run keeps it.
 
 Every later review, and every Agent Brief review, starts after the validator
 publishes the exact revision in its feedback comment; the reviewer then applies
@@ -220,11 +239,14 @@ Most fixtures are snapshot tables that call `decideIssueContract` directly with
 the snapshot the adapter would fetch, and assert the exact exit status, label
 changes, and feedback write. A few adapter fixtures invoke the same executable
 boundary as GitHub Actions against a local HTTP server. They cover event parsing,
-pagination, the role lookups, the order of writes, the exit status, unavailable
-endpoints, and the path fallback for releases without `import.meta.main`. They
-also show that importing the validator runs no adapter and, where
-`import.meta.main` exists, makes no file-system or network call; without it, an
-import only resolves the two compared paths. One executes the validator from an
+pagination, the role lookups, the bounded wait for a readiness trigger's
+timeline event, the order of writes, the exit status, unavailable endpoints, and
+the path fallback for releases without `import.meta.main`. The wait fixtures
+preload a replacement for the `setTimeout` of `node:timers/promises`, the
+adapter's only wait, so they use no real time. They also show that importing
+the validator runs no adapter and, where `import.meta.main` exists, makes no
+file-system or network call; without it, an import only resolves the two
+compared paths. One executes the validator from an
 installed layout containing only the validator, shared runtime, and declared
 parser resources.
 Together they exercise the four public forms, native contracts,
@@ -232,6 +254,7 @@ Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, workflow-state replacement,
 superseding states, and return to review for triaged and direct contracts,
 repeat-safe feedback,
+timeline lag behind a fresh readiness label,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized
 actors, stale and repeated events, native creation by authorized and
 unauthorized openers in either run order,

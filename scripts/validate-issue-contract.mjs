@@ -2,6 +2,7 @@
 
 import { realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { setTimeout as wait } from "node:timers/promises";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { lexer } from "../vendor/marked/marked.esm.js";
@@ -1596,6 +1597,13 @@ function resolvedFeedback(kind) {
   return `${feedbackMarker}\n## Issue contract structure corrected\n\nThe ${kind} now has the required structure. A fresh authorized review is still required before restoring readiness.`;
 }
 
+// While a human readiness trigger is unrecorded, the adapter re-reads the
+// issue events every two seconds, waiting thirty seconds at most in total, then
+// decides from the last read. The wait is `node:timers/promises`'s
+// `setTimeout`, which the adapter tests replace so they use no real time.
+const triggerWaitInterval = 2000;
+const triggerWaitBound = 30000;
+
 // The GitHub adapter runs only when the workflow executes this file. It reads
 // the event, fetches the complete snapshot, decides, and applies the writes.
 // Node.js 24.2 and later report that as `import.meta.main`. Earlier 24
@@ -1673,6 +1681,14 @@ async function runIssueContractValidation(environment) {
     if (contract.type === "issue-body")
       snapshot.bodyRevision = await api.getIssueBodyRevision(issueNumber);
     snapshot.issueEvents = await api.listEvents(issueNumber);
+    for (
+      let waited = 0;
+      waited < triggerWaitBound && readinessTriggerUnrecorded(snapshot);
+      waited += triggerWaitInterval
+    ) {
+      await wait(triggerWaitInterval);
+      snapshot.issueEvents = await api.listEvents(issueNumber);
+    }
     for (const login of reviewerLogins(snapshot))
       snapshot.permissions[login] = await readPermission(api, login);
   }
