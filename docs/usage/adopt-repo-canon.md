@@ -46,9 +46,9 @@ write access for labels plus admin access for required checks and merge
 settings. Keep the repository clean and committed. If useful existing
 `AGENTS.md` instructions need to survive replacement, follow
 [Prepare existing agent guidance](prepare-agent-guidance.md), commit that change,
-and inspect the prepared commit afresh. Records in retired formats,
-in `.repo-standards` or as run records in Git's directory, are not read by
-CLI 5.0.1; such a repository adopts fresh, as the CLI's
+and inspect the prepared commit afresh. Records that a CLI before 5.0.0 wrote,
+in `.repo-standards` or as run records in Git's directory, use retired formats,
+which CLI 5.0.1 does not read; such a repository adopts fresh, as the CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v5.0.1/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
 describes.
 
