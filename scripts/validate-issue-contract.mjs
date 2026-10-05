@@ -1321,7 +1321,11 @@ function issueTimeline({ event, issue, issueEvents }) {
     );
     return index < 0
       ? null
-      : { position: index + 1, at: issueEvents[index].created_at };
+      : {
+          event: issueEvents[index],
+          position: index + 1,
+          at: issueEvents[index].created_at,
+        };
   }
 
   // Whether a label change carries the issue's creation timestamp, so the
@@ -1498,10 +1502,7 @@ function issueTimeline({ event, issue, issueEvents }) {
     // Whether the label's latest application, by anyone, is the sender's,
     // follows the barrier, and is the label's latest recorded change.
     recordsApplication(label, login, barrierEventId) {
-      const application = issueEvents.findLast(
-        (candidate) =>
-          candidate.event === "labeled" && candidate.label?.name === label,
-      );
+      const application = lastApplication(label)?.event;
       return (
         application?.actor?.login === login &&
         Boolean(eventsAfter(barrierEventId)?.includes(application)) &&

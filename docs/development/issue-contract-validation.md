@@ -138,12 +138,12 @@ already observed every application at or before the barrier, so none of them
 can be this trigger. Awaiting-review feedback is only written while readiness is
 absent or being removed, so a present readiness label was applied after the
 barrier, and a complete timeline always holds that application. A barrier the
-timeline cannot place, such as another issue's opening or an event the timeline does not
-hold, never lets a trigger count as recorded; this issue's own opening places
-before every event. Approved feedback, and awaiting-review feedback that records
-no observed transition, set no barrier. The payload's issue update time is not
-used, because matching it against a recorded event's second-resolution time
-could make a recorded trigger look unrecorded. While the timeline does not
+timeline cannot place, such as another issue's opening or an event the timeline
+does not hold, never lets a trigger count as recorded; this issue's own opening
+places before every event. Approved feedback, and awaiting-review feedback that
+records no observed transition, set no barrier. The payload's issue update time
+is not used, because matching it against a recorded event's second-resolution
+time could make a recorded trigger look unrecorded. While the timeline does not
 record the trigger, the adapter re-reads the issue events every 2 seconds, for
 at most 30 seconds of waiting in total (15 re-reads), and decides from the first
 read that records it. The bound stays short because the workflow serializes runs
@@ -171,8 +171,9 @@ label, and the timeline records that reapplication. The run then waits out its
 bound and fails closed: it removes that valid label, which has to be applied
 again. Deciding the trigger from the other person's application instead could,
 while the timeline lags, bind or keep another reviewer's earlier, withdrawn
-review for a label the sender currently holds. A safe rejection that needs
-out-of-order delivery replaces that possible binding to the wrong reviewer.
+review for a label the sender currently holds. The validator accepts this safe
+rejection, which needs out-of-order delivery, in place of a possible binding to
+the wrong reviewer.
 
 One lagging case is accepted as recorded, on the approval side. The label's
 latest recorded application is the sender's own earlier one, it follows any

@@ -2505,19 +2505,21 @@ decisionTable(
   ],
 );
 
-// A reapplication run whose fail-closed decision keeps no approval.
+// A reapplication run's fail-closed decision.
 const reapplicationFailsClosed = {
   exitCode: 1,
   remove: ["ready-for-agent"],
   add: ["needs-triage"],
   feedback: 13,
   message: /timeline does not contain the current readiness label event/,
-  check: (decision) => {
-    const state = recordedState(decision.feedback.body);
-    assert.equal(state.status, "awaiting-review");
-    assert.equal(state.reviewer, null);
-  },
 };
+
+// Whether a decision's feedback records no approval.
+function keepsNoApproval(decision) {
+  const state = recordedState(decision.feedback.body);
+  assert.equal(state.status, "awaiting-review");
+  assert.equal(state.reviewer, null);
+}
 
 decisionTable(
   "a readiness trigger is recorded only when the label's latest application is the sender's",
@@ -2546,6 +2548,7 @@ decisionTable(
           issueEvents: laggingReapplicationEvents,
         },
         expected: reapplicationFailsClosed,
+        check: keepsNoApproval,
       },
       {
         name: `Alice's trigger over the complete timeline is rejected as unauthorized while the feedback ${name}`,
