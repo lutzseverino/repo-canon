@@ -19,7 +19,7 @@ repo-standards --version
 ```
 
 Point the CLI at Repo Canon from the adopting repository by selecting the
-[`v0.5.3` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.3)
+[`v0.5.4` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.4)
 and the `complete` profile, as the inspection example below shows.
 
 ## Features
@@ -40,7 +40,7 @@ authorizes nothing:
 ```sh
 repo-standards inspect \
   --source https://github.com/lutzseverino/repo-canon \
-  --standards-version v0.5.3 --profile complete \
+  --standards-version v0.5.4 --profile complete \
   --project /path/to/adopting-project --json
 ```
 
