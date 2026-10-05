@@ -34,11 +34,11 @@ jobs:
         run: npm test
       - name: Validate the complete standards source
         env:
-          REPO_STANDARDS_PREFIX: ${{ runner.temp }}/repo-standards-cli-5.0.1
+          REPO_STANDARDS_PREFIX: ${{ runner.temp }}/repo-standards-cli-5.1.0
         run: |
           npm install --prefix "$REPO_STANDARDS_PREFIX" --ignore-scripts \
             --registry=https://registry.npmjs.org \
-            @lutzseverino/repo-standards@5.0.1
+            @lutzseverino/repo-standards@5.1.0
           "$REPO_STANDARDS_PREFIX/node_modules/.bin/repo-standards" --version
           "$REPO_STANDARDS_PREFIX/node_modules/.bin/repo-standards" \
             source validate "$PWD" --json
