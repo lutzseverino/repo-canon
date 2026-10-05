@@ -738,6 +738,30 @@ decisionTable("issue structure decides the contract and its corrections", [
         });
       }
 
+      const createdWithStalePayload = decideIssueContract(
+        snapshotFor({
+          issue: {
+            number: 42,
+            body: featureBody,
+            labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+            state: "open",
+          },
+          comments: [
+            { id: 1, body: completeAgentBrief, user: { login: "maintainer" } },
+          ],
+          event: {
+            action: "created",
+            issue: { number: 42 },
+            comment: { id: 1, body: "stale payload" },
+          },
+        }),
+      );
+      assertDecision(createdWithStalePayload, {
+        exitCode: 0,
+        feedback: "create",
+        message: /valid triaged Agent Brief/i,
+      });
+
       const deletedOnlyBrief = decideIssueContract(
         snapshotFor({
           issue: {
@@ -1512,8 +1536,17 @@ const lostCreationReadiness = (message, remove = ["ready-for-agent"]) => ({
 decisionTable(
   "the creation review binds a readiness label applied at creation, whichever run arrives first",
   [
-    {
-      name: "an authorized native issue creation with needs-triage keeps only its readiness state",
+    ...[
+      ["no recorded history", []],
+      [
+        "both label applications recorded in the creation second",
+        [
+          creationLabel(),
+          creationLabel({ id: 102, label: { name: "needs-triage" } }),
+        ],
+      ],
+    ].map(([history, issueEvents]) => ({
+      name: `an authorized native issue creation with needs-triage keeps only its readiness state: ${history}`,
       snapshot: (() => {
         const issue = {
           number: 42,
@@ -1526,7 +1559,7 @@ decisionTable(
         };
         return {
           issue,
-          issueEvents: [],
+          issueEvents,
           event: {
             action: "opened",
             issue: {
@@ -1547,7 +1580,7 @@ decisionTable(
         feedback: "create",
         message: /valid implementation ticket with ready-for-agent bound/i,
       },
-    },
+    })),
     {
       name: "an authorized native issue creation preserves its reviewed readiness",
       snapshot: (() => {
