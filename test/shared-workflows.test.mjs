@@ -16,29 +16,6 @@ function workflow(path) {
   return readFileSync(join(repositoryRoot, path), "utf8");
 }
 
-// The script of every `run:` step, whether written on the key's line or as a
-// block scalar indented below it.
-function runScripts(text) {
-  const lines = text.split("\n");
-  const scripts = [];
-  for (const [index, line] of lines.entries()) {
-    const run = /^(\s*)(?:- )?run:\s*(.*)$/.exec(line);
-    if (run === null) continue;
-    const [, indent, value] = run;
-    if (!/^[|>]/.test(value)) {
-      scripts.push(value);
-      continue;
-    }
-    const block = [];
-    for (const next of lines.slice(index + 1)) {
-      if (next.trim() !== "" && next.search(/\S/) <= indent.length) break;
-      block.push(next);
-    }
-    scripts.push(block.join("\n"));
-  }
-  return scripts;
-}
-
 function actionPins(workflow, action) {
   return [...workflow.matchAll(new RegExp(`uses: ${action}@(\\S+)`, "g"))].map(
     ([, pin]) => pin,
@@ -100,24 +77,21 @@ test("the pull request metadata workflow runs on every configured pull request u
   assert.doesNotMatch(text, /(?:issues|pull-requests):\s*write/);
 });
 
-// The expressions a script interpolates, with index syntax such as
-// `github['event']` rewritten to property syntax.
-function expressions(script) {
-  return [...script.matchAll(/\$\{\{([\s\S]*?)\}\}/g)].map(([, expression]) =>
+// The expressions a workflow interpolates anywhere, with index syntax such as
+// `github['event']` rewritten to property syntax. Reading the whole file, not
+// only `run:` values, also covers anchors, aliases, and multi-line scalars.
+function expressions(text) {
+  return [...text.matchAll(/\$\{\{([\s\S]*?)\}\}/g)].map(([, expression]) =>
     expression.replace(/\s*\[\s*(['"])([^'"]*)\1\s*\]/g, ".$2"),
   );
 }
 
-test("no shared workflow interpolates a pull request title or body into a run step", () => {
+test("no shared workflow interpolates a pull request title or body, so neither reaches a run step", () => {
   const untrustedText =
     /github\.event(?:\.pull_request)?(?:\.(?:title|body)\b|\s*(?:[),]|$))/;
-  for (const path of sharedWorkflows()) {
-    const scripts = runScripts(workflow(path));
-    assert.ok(scripts.length > 0, `${path} has a run step`);
-    for (const script of scripts)
-      for (const expression of expressions(script))
-        assert.doesNotMatch(expression, untrustedText, `${path}: ${script}`);
-  }
+  for (const path of sharedWorkflows())
+    for (const expression of expressions(workflow(path)))
+      assert.doesNotMatch(expression, untrustedText, `${path}: ${expression}`);
 });
 
 test("the issue contract workflow covers issue and comment changes using default-branch code", () => {

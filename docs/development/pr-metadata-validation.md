@@ -67,9 +67,10 @@ validator reads title and body values from the event JSON; it does not check out
 or execute the proposed head revision. No `run:` step interpolates the pull
 request title or body, so command-like values in fork metadata and descriptions
 reach the validator only as data in that file; a workflow test fails if a shared
-workflow's `run:` step interpolates either. The workflow has no issue or
-pull-request write permission and does not label, convert, or otherwise send
-external pull requests into feature-request triage.
+workflow interpolates either anywhere, including through a YAML alias or a
+multi-line value. The workflow has no issue or pull-request write permission and
+does not label, convert, or otherwise send external pull requests into
+feature-request triage.
 
 The validator has no package dependencies, so the job installs none and
 disables the Node.js setup action's automatic package-manager cache. A
