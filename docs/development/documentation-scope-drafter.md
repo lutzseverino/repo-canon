@@ -39,7 +39,7 @@ must be a repository-relative directory that holds a file Git keeps, outside
 other declaration may own it or its `README.md`.
 
 The drafter reads the repository and writes nothing to it. On success it writes
-a Repository Standards 4.0.0 scope proposal, format `repo-standards/scope/v2`,
+a Repository Standards scope proposal, format `repo-standards/scope/v2`,
 to standard output with exit status 0. The proposal has one entry, for the
 `documentation` declaration, with its candidates, each with a decision, reason,
 and evidence paths, its coverage explanation, and its unresolved questions.
@@ -94,7 +94,7 @@ with, taking each declaration's `kind`, `target`, `name`, and `exclude`:
 - From the retained inputs, where no `standards.yaml` lies beside it in
   `.repo-standards/inputs/source`, it reads
   `.repo-standards/inputs/standards.yaml`, the manifest Repository Standards
-  retains normalized to the selected profile alone. Repository Standards 4.0.0
+  retains normalized to the selected profile alone. Repository Standards 5.0.0
   writes it with empty defaults and every resolved declaration under that
   profile.
 
@@ -120,6 +120,11 @@ own proposals name. The drafter also leaves out the paths Repository Standards
 reserves: `.repo-standards` and the `adopt-standards` and `author-standards`
 system skills.
 
+Repository Standards 5.0.0 also reserves the `standards-updates` system skill.
+The released drafter can still ask about its Markdown file after installation;
+resolve that question by leaving the product-owned skill outside documentation
+scope.
+
 ## Evidence
 
 The drafter cites only files that Git keeps, which it lists with
@@ -129,13 +134,14 @@ that no longer reaches a regular file through real directories, such as one
 whose directory the working tree replaced with a file or a symbolic link, is
 not kept. An existing
 file cites itself. A missing index cites its directory when that directory holds
-a file that Git keeps, and cites nothing otherwise. Repository Standards
-requires a missing `README.md` to cite a file or nonempty directory within its
-own directory, so it rejects an index without that evidence, such as
-`docs/README.md` in a repository without `docs`. The drafter still drafts the
-index, which the rules require, and asks whether to commit the directory's
-first content in a separate reviewed change, which gives the index its
-evidence.
+a file that Git keeps, and cites nothing otherwise. Repository Standards 5.0.0
+requires eligible evidence for existing and excluded candidates; every included
+missing file, including a README, is exempt because the CLI observes its absence.
+Evidence for a missing README need not come from its own directory. The drafter
+can still ask whether to commit a directory's first content separately; that is
+not required to establish absence evidence with CLI 5.0.0. Review whether the
+directory is meaningful documentation and include any intended content paths
+before confirmation.
 
 ## Retention
 

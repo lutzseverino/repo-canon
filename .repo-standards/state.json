@@ -1,5 +1,5 @@
 {
-  "format": "repo-standards/state/v6",
+  "format": "repo-standards/state/v7",
   "observations": [
     {
       "phase": "fixes",
@@ -15,8 +15,8 @@
         "id": "canonical-labels"
       },
       "operationIndex": 0,
-      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
-      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "before": "sha256:618bc48c4e47436110c66c53305b2896592978817b96d5d831fa472c3b40b09c",
+      "after": "sha256:618bc48c4e47436110c66c53305b2896592978817b96d5d831fa472c3b40b09c",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -35,8 +35,8 @@
         "id": "pull-request-integration"
       },
       "operationIndex": 1,
-      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
-      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "before": "sha256:618bc48c4e47436110c66c53305b2896592978817b96d5d831fa472c3b40b09c",
+      "after": "sha256:618bc48c4e47436110c66c53305b2896592978817b96d5d831fa472c3b40b09c",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -95,9 +95,34 @@
           "directories": []
         }
       },
-      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
-      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
-      "changes": {},
+      "before": "sha256:618bc48c4e47436110c66c53305b2896592978817b96d5d831fa472c3b40b09c",
+      "after": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
+      "changes": {
+        "README.md": {
+          "before": {
+            "type": "file",
+            "sha256": "a87d9aa58d4c3dfa9da5df070603bf6d1062b814b905a82a216299d2bc4ed122",
+            "executable": false
+          },
+          "after": {
+            "type": "file",
+            "sha256": "80d1bf3f64e09662ca8b48fe9fcb850d486598a670be3198eeeb1467ad9bc348",
+            "executable": false
+          }
+        },
+        "docs/development/documentation-scope-drafter.md": {
+          "before": {
+            "type": "file",
+            "sha256": "37e2c48e134004f502a53b15bae1965907b6fa0a5c580bcb28ee61cbd0fbdc50",
+            "executable": false
+          },
+          "after": {
+            "type": "file",
+            "sha256": "9d81b7569cc33f5a98d9626962458cdca723f4a5587fe412a37c77f02689e732",
+            "executable": false
+          }
+        }
+      },
       "boundaryChanges": {},
       "violations": []
     },
@@ -155,8 +180,8 @@
           "directories": []
         }
       },
-      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
-      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "before": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
+      "after": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -207,8 +232,8 @@
         "id": "documentation-navigation"
       },
       "operationIndex": 2,
-      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
-      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "before": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
+      "after": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -227,8 +252,8 @@
         "id": "project-readme-structure"
       },
       "operationIndex": 3,
-      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
-      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "before": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
+      "after": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -249,8 +274,8 @@
         "id": "repository-readme-structure"
       },
       "operationIndex": 4,
-      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
-      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "before": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
+      "after": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -309,8 +334,8 @@
           "directories": []
         }
       },
-      "before": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
-      "after": "sha256:210436430c0d8eac37357ac5af3ddd5ab513733236c289941cce00bcd7d32737",
+      "before": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
+      "after": "sha256:2f791eb2b2729e6a73f3a2f38215520a743bccc961c5e61545a300043a370232",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -430,13 +455,235 @@
       "phases": [
         "installation"
       ]
+    },
+    {
+      "path": ".agents/skills/adopt-standards/agents/openai.yaml",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".agents/skills/adopt-standards/references/assessment.md",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".agents/skills/adopt-standards/references/discovery.md",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".agents/skills/adopt-standards/references/recovery.md",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".agents/skills/adopt-standards/references/review.md",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".agents/skills/standards-updates/SKILL.md",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".agents/skills/standards-updates/agents/openai.yaml",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/adopt-standards",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/ask-matt",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/code-review",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/codebase-design",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/deliver",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/diagnosing-bugs",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/domain-modeling",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/grill-me",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/grill-with-docs",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/grilling",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/handoff",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/implement",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/improve-codebase-architecture",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/prototype",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/research",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/resolving-merge-conflicts",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/setup-matt-pocock-skills",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/standards-updates",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/tdd",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/teach",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/to-questionnaire",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/to-spec",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/to-tickets",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/triage",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/wait-what",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/wayfinder",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/wizard",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": ".claude/skills/writing-for-agents",
+      "phases": [
+        "installation"
+      ]
+    },
+    {
+      "path": "README.md",
+      "phases": [
+        "agent"
+      ]
+    },
+    {
+      "path": "docs/development/documentation-scope-drafter.md",
+      "phases": [
+        "agent"
+      ]
     }
   ],
   "lastComplete": {
-    "run": "ec21b845-7269-48f9-85e5-a492e841544a",
-    "inspection": "sha256:850b37dd18ffb824a0a4dab44ab4177f92eec9cc5558887f9dfc18a8ef65e90f",
-    "completedAt": "2026-10-02T16:21:04.851Z",
-    "head": "b906dda656f772fc997c5bbe43e86ccef39b9f2f"
+    "run": "01fa17a8-30c5-4f33-8de4-8fcb13ae58fb",
+    "inspection": "sha256:b0a3ddd33c5a2dbb300a539c37431aa8ed42fdf123dc0281786bf603aee59ae4",
+    "completedAt": "2026-10-04T23:48:50.031Z",
+    "head": "117582e1ab9260fe1b486eddbd0b16118efea5f0"
   },
   "baselines": {
     "docs/agents/README.md": {
@@ -444,7 +691,7 @@
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "2e6b5c90fc36abebe5a18d4352996d380d8daa2845ee1c01ecfc82140067ea18",
+      "sha256": "a618bde85fc4febaf526f393ebffc0129506cf4a52501e20fbb490e204cb8b7c",
       "executable": false
     },
     ".github/ISSUE_TEMPLATE/bug-report.yml": {
@@ -452,7 +699,7 @@
       "executable": false
     },
     "CONTRIBUTING.md": {
-      "sha256": "ab90708574a383a95a2dfd7f9a3d9a9740c638e10bf8b48ec1d4f876a55d1858",
+      "sha256": "ec24834f03f1cd8fdb5c7fb0d62aa4d9824a0c55dc008b21477c141de0091d59",
       "executable": false
     },
     "docs/agents/domain.md": {
@@ -468,7 +715,7 @@
       "executable": false
     },
     "scripts/validate-issue-contract.mjs": {
-      "sha256": "d10f01c9eba73debfc060c295e32063086b1ef02dbfe9a945060bfa1d99f1372",
+      "sha256": "7fdab26e0f051a9b3493e667f84c2324cac1aa16c8c9c2d52024ab318615bf73",
       "executable": false
     },
     ".github/workflows/issue-contracts.yml": {
@@ -512,7 +759,7 @@
       "executable": false
     },
     ".github/scripts/validate-pr-metadata.mjs": {
-      "sha256": "92c5d69ef964b4898eaa4fc58b8b8cec0d81cddd0fe5fe6f93057731541d058b",
+      "sha256": "f158dd6cd917302fd655ac9644aaaf54505b6f6f44e54e9d89e3c3d6dff4ecfb",
       "executable": false
     },
     ".github/workflows/pr-metadata.yml": {
@@ -524,7 +771,7 @@
       "executable": false
     },
     "operations/lib/rendered-markdown.mjs": {
-      "sha256": "bbc379d38a2305ba6f351503b14622743961b229570b53d58dcc4b45fe76af55",
+      "sha256": "c9e0db1806e9ecac66bb9f99c201a07306a5155d205294e80c5592acc175476b",
       "executable": false
     },
     ".agents/skills/ask-matt/PHASE-BOUNDARIES.md": {
@@ -561,6 +808,14 @@
     },
     ".agents/skills/codebase-design/agents/openai.yaml": {
       "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
+      "executable": false
+    },
+    ".agents/skills/deliver/SKILL.md": {
+      "sha256": "e1138f5120adaa23036065ce730488de88f76e02f2f43a9ef2e31956dac44ff9",
+      "executable": false
+    },
+    ".agents/skills/deliver/agents/openai.yaml": {
+      "sha256": "de8c252bae82640677c7d2b11522dbdf650e17800414ce430ac89a3501a57b2c",
       "executable": false
     },
     ".agents/skills/diagnosing-bugs/SKILL.md": {
@@ -832,7 +1087,35 @@
       "executable": false
     },
     ".agents/skills/adopt-standards/SKILL.md": {
-      "sha256": "496084e62baa7971c618151a13f1f5aa9888e88d243e87255075a0e9350c19bf",
+      "sha256": "68052a9bd2eb026527934d693cee844345fbd5a3b508f9f34f10548f1548ccd0",
+      "executable": false
+    },
+    ".agents/skills/adopt-standards/agents/openai.yaml": {
+      "sha256": "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
+      "executable": false
+    },
+    ".agents/skills/adopt-standards/references/assessment.md": {
+      "sha256": "0101c11ed4dac35c46f2617d85c100438e17e9edc93bb911f900f2c031846137",
+      "executable": false
+    },
+    ".agents/skills/adopt-standards/references/discovery.md": {
+      "sha256": "1442f4dfe99543e56b3cc6350285d3f740c89d2e949c71b9bd771e46566b7690",
+      "executable": false
+    },
+    ".agents/skills/adopt-standards/references/recovery.md": {
+      "sha256": "ec78fa6b4d5adc20190fb33a96f1e32275121d80cfe2ed63b0ed73a743b6498c",
+      "executable": false
+    },
+    ".agents/skills/adopt-standards/references/review.md": {
+      "sha256": "ea585384dbd581638a7ef947d5512848d1f895a543f4417b2acd895fc3aa1ca0",
+      "executable": false
+    },
+    ".agents/skills/standards-updates/SKILL.md": {
+      "sha256": "722c218bf5a3cf54ea5778bac1c7c7c56fa27f912b8648e7de2b798699f1ee18",
+      "executable": false
+    },
+    ".agents/skills/standards-updates/agents/openai.yaml": {
+      "sha256": "8619a54e8c098122a7f3881394f84ca89b684366e848233a29ad18b6ec363935",
       "executable": false
     }
   },
@@ -849,6 +1132,10 @@
     ".agents/skills/codebase-design": [
       "DEEPENING.md",
       "DESIGN-IT-TWICE.md",
+      "SKILL.md",
+      "agents/openai.yaml"
+    ],
+    ".agents/skills/deliver": [
       "SKILL.md",
       "agents/openai.yaml"
     ],
@@ -962,8 +1249,47 @@
       "agents/openai.yaml"
     ],
     ".agents/skills/adopt-standards": [
-      "SKILL.md"
+      "SKILL.md",
+      "agents/openai.yaml",
+      "references/assessment.md",
+      "references/discovery.md",
+      "references/recovery.md",
+      "references/review.md"
+    ],
+    ".agents/skills/standards-updates": [
+      "SKILL.md",
+      "agents/openai.yaml"
     ]
+  },
+  "links": {
+    ".claude/skills/adopt-standards": "../../.agents/skills/adopt-standards",
+    ".claude/skills/standards-updates": "../../.agents/skills/standards-updates",
+    ".claude/skills/ask-matt": "../../.agents/skills/ask-matt",
+    ".claude/skills/code-review": "../../.agents/skills/code-review",
+    ".claude/skills/codebase-design": "../../.agents/skills/codebase-design",
+    ".claude/skills/deliver": "../../.agents/skills/deliver",
+    ".claude/skills/diagnosing-bugs": "../../.agents/skills/diagnosing-bugs",
+    ".claude/skills/domain-modeling": "../../.agents/skills/domain-modeling",
+    ".claude/skills/grill-me": "../../.agents/skills/grill-me",
+    ".claude/skills/grill-with-docs": "../../.agents/skills/grill-with-docs",
+    ".claude/skills/grilling": "../../.agents/skills/grilling",
+    ".claude/skills/handoff": "../../.agents/skills/handoff",
+    ".claude/skills/implement": "../../.agents/skills/implement",
+    ".claude/skills/improve-codebase-architecture": "../../.agents/skills/improve-codebase-architecture",
+    ".claude/skills/prototype": "../../.agents/skills/prototype",
+    ".claude/skills/research": "../../.agents/skills/research",
+    ".claude/skills/resolving-merge-conflicts": "../../.agents/skills/resolving-merge-conflicts",
+    ".claude/skills/setup-matt-pocock-skills": "../../.agents/skills/setup-matt-pocock-skills",
+    ".claude/skills/tdd": "../../.agents/skills/tdd",
+    ".claude/skills/teach": "../../.agents/skills/teach",
+    ".claude/skills/to-questionnaire": "../../.agents/skills/to-questionnaire",
+    ".claude/skills/to-spec": "../../.agents/skills/to-spec",
+    ".claude/skills/to-tickets": "../../.agents/skills/to-tickets",
+    ".claude/skills/triage": "../../.agents/skills/triage",
+    ".claude/skills/wait-what": "../../.agents/skills/wait-what",
+    ".claude/skills/wayfinder": "../../.agents/skills/wayfinder",
+    ".claude/skills/wizard": "../../.agents/skills/wizard",
+    ".claude/skills/writing-for-agents": "../../.agents/skills/writing-for-agents"
   },
   "checks": [
     {
@@ -1034,41 +1360,47 @@
     {
       "format": "repo-standards/assessment/v3",
       "scope": {
-        "inspection": "sha256:850b37dd18ffb824a0a4dab44ab4177f92eec9cc5558887f9dfc18a8ef65e90f",
-        "afterFixes": "sha256:5c0e519d2d75a10d73b95f6a5ee1f3a31e8c6fcd3748c523bf6b1cbb3f5017c3"
+        "inspection": "sha256:b0a3ddd33c5a2dbb300a539c37431aa8ed42fdf123dc0281786bf603aee59ae4",
+        "afterFixes": "sha256:6c05bb0b3dd4b1440ad5b6b0688df84d5118ff661a57a38326e39917607f7496"
       },
-      "run": "ec21b845-7269-48f9-85e5-a492e841544a",
-      "selection": "sha256:047e12d5bfbdd6d095b25ec0c8f20f3a3e215a0fba1712fc3fdf32a0b3ad927b",
-      "snapshot": "sha256:5c0e519d2d75a10d73b95f6a5ee1f3a31e8c6fcd3748c523bf6b1cbb3f5017c3",
+      "run": "01fa17a8-30c5-4f33-8de4-8fcb13ae58fb",
+      "selection": "sha256:3129e187ebbd1d40002af2e525a49ba6e82e17b9bdd075b7e66633ff54d329bb",
+      "snapshot": "sha256:1825c9817d381728d6fdb275b09f37ea62f8ad818b870e3df4c45a59fb1e13bb",
       "declarations": [
         {
           "id": "documentation",
           "status": "satisfied",
-          "explanation": "The documentation already follows the documentation rules in CONTRIBUTING.md and the v0.4.0 guidance; this tree is the v0.4.0 release commit, so no contextual edit was needed and none was made.",
-          "changedPaths": [],
+          "explanation": "The maintained documentation uses the four documented categories, one index per document, the required development entry point, the root glossary and author decision notes, and separate project-specific agent constraints. Corrected the scope-drafter document to describe the current CLI 5.0.0 evidence exemption and the observed reserved-system-skill question without changing released source code, exact content, or scope. No document migration is needed.",
+          "changedPaths": [
+            "docs/development/documentation-scope-drafter.md"
+          ],
           "evidence": [
-            "docs/README.md maps the usage, development, adr, and agents categories, and each category README description states what belongs in it.",
-            "docs/development/README.md gives its purpose, then Setup and validation (Node.js 24, npm run check, npm test, git diff --check, source validation with CLI 4.0.0), then its Documents index.",
-            "ADRs 0001-0009 are listed in docs/adr/README.md; no superseded document or point-in-time record remains under docs.",
-            "Project-specific agent constraints are in docs/agents/project.md; the four exact-owned docs/agents files are untouched.",
-            "test/repository-conformance.test.mjs, which runs the shipped documentation check with the four v0.4.0 documentation rules over this tree, passed 4 of 4 in this worktree after fixes."
+            "docs/README.md describes the four category audiences; docs/usage/README.md, docs/development/README.md, and docs/adr/README.md index the maintained adoption, development, and decision documents. The exact docs/agents/README.md cites project.md in context.",
+            "docs/development/README.md lists actual Node 24/npm/Git setup, formatting, lint, syntax, test, and public source validation commands matching package.json and .github/workflows/ci.yml.",
+            "docs/development/documentation-scope-drafter.md now states scope/v2, current retained-manifest behavior, and that every included missing file is exempt from evidence-path requirements in CLI 5.0.0; existing and excluded candidates still require eligible evidence.",
+            "The documentation describes source policy and current interfaces; prior publication/adoption records remain linked by permanent release or commit identities. No point-in-time adoption report was added to docs.",
+            "Formatting, lint, syntax, whitespace, and all-profile CLI 5.0.0 source validation passed; the current suite passed its documentation and README conformance tests. The sole intermediate suite failure concerns durable state not yet written by this active adoption, not documentation correctness."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The confirmed scope covers every Markdown document under the one documentation root docs except the four exact-owned agent files, plus CONTEXT.md and authoring-notes.md, and the fixes changed no documentation.",
+              "explanation": "The post-fix tree retains full documentation coverage within the confirmed scope; newly installed system skills are outside documentation scope.",
               "evidence": [
-                "Reran discovery/draft-documentation-scope.mjs against the post-fix tree: it drafts exactly the same candidates as before start, including the same exclusions for exact-owned files.",
-                "The fixes only reported GitHub labels and PR integration unchanged; they wrote no project files."
+                "Reviewed the documentation tree, docs/README.md, category indexes, CONTEXT.md, authoring-notes.md, and docs/agents/project.md against the confirmed 31-file documentation scope and eight exclusions.",
+                "The selected-source drafter was rerun after fixes and again after contextual edits; candidate membership is unchanged. Its additional question about .agents/skills/standards-updates/SKILL.md concerns a reserved product-owned skill, which stays outside contextual documentation authority.",
+                "docs is the only documentation root; every populated directory has an existing index, and there is no context map, missing index, planned move, or extra link-repair path. Exact docs/agents setup files remain governed by their own declarations.",
+                "THIRD_PARTY_NOTICES.md remains legal notice text; discovery and guidance remain standards source inputs; vendor remains preserved third-party material. No additional contextual path is needed."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "No document was added, moved, or deleted after fixes, so coverage is unchanged and no link repair or move destination is needed.",
+              "explanation": "The refreshed tree has the same roots, files, exclusions, and ownership. The one documentation edit is within an existing confirmed file; no scope expansion or withdrawal is needed.",
               "evidence": [
-                "git status shows only the replaced .agents/skills/adopt-standards/SKILL.md and the untracked .repo-standards product state; no path under docs, CONTEXT.md, or authoring-notes.md changed.",
-                "The repository conformance test, which checks local links and scope coverage, passes on the current tree."
+                "Reviewed the documentation tree, docs/README.md, category indexes, CONTEXT.md, authoring-notes.md, and docs/agents/project.md against the confirmed 31-file documentation scope and eight exclusions.",
+                "The selected-source drafter was rerun after fixes and again after contextual edits; candidate membership is unchanged. Its additional question about .agents/skills/standards-updates/SKILL.md concerns a reserved product-owned skill, which stays outside contextual documentation authority.",
+                "docs is the only documentation root; every populated directory has an existing index, and there is no context map, missing index, planned move, or extra link-repair path. Exact docs/agents setup files remain governed by their own declarations.",
+                "THIRD_PARTY_NOTICES.md remains legal notice text; discovery and guidance remain standards source inputs; vendor remains preserved third-party material. No additional contextual path is needed."
               ],
               "additionalPaths": []
             }
@@ -1077,26 +1409,31 @@
         {
           "id": "github-repository-configuration",
           "status": "satisfied",
-          "explanation": "Both fixes ran and read back the canonical configuration for lutzseverino/repo-canon; nothing project-side is in scope.",
+          "explanation": "The confirmed remote-only fixes verified the repository identity and existing canonical configuration without changing it. Their results satisfy the guidance at execution time, with no claim of continuing remote freshness or rollback.",
           "changedPaths": [],
           "evidence": [
-            "canonical-labels returned status unchanged: GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
-            "pull-request-integration returned status unchanged: the required PR metadata check, squash-only merging, and PR title and body for squash commits already match."
+            "The sole origin fetch/push remote identifies lutzseverino/repo-canon; authenticated repository lookup identified main and ADMIN viewer permission.",
+            "The confirmed start ran canonical-labels and pull-request-integration successfully: both returned unchanged with verified canonical labels and PR integration. Their operation reports are retained separately from this assessment.",
+            "This declaration intentionally has no project-content targets. Product installation and contextual README/documentation edits do not change that remote-only boundary; no additional local path is needed."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The declaration changes only remote GitHub configuration, so its empty project-content scope is intentional.",
+              "explanation": "The empty local scope correctly covers the remote-only GitHub configuration declaration after fixes.",
               "evidence": [
-                "The single origin remote is https://github.com/lutzseverino/repo-canon, the repository the fixes configured."
+                "The sole origin fetch/push remote identifies lutzseverino/repo-canon; authenticated repository lookup identified main and ADMIN viewer permission.",
+                "The confirmed start ran canonical-labels and pull-request-integration successfully: both returned unchanged with verified canonical labels and PR integration. Their operation reports are retained separately from this assessment.",
+                "This declaration intentionally has no project-content targets. Product installation and contextual README/documentation edits do not change that remote-only boundary; no additional local path is needed."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Nothing changed after fixes; the empty project-content scope remains correct.",
+              "explanation": "The current declaration still requires no local targets or added paths.",
               "evidence": [
-                "The fixes wrote no project files and no agent edits were made."
+                "The sole origin fetch/push remote identifies lutzseverino/repo-canon; authenticated repository lookup identified main and ADMIN viewer permission.",
+                "The confirmed start ran canonical-labels and pull-request-integration successfully: both returned unchanged with verified canonical labels and PR integration. Their operation reports are retained separately from this assessment.",
+                "This declaration intentionally has no project-content targets. Product installation and contextual README/documentation edits do not change that remote-only boundary; no additional local path is needed."
               ],
               "additionalPaths": []
             }
@@ -1105,26 +1442,31 @@
         {
           "id": "project-readmes",
           "status": "satisfied",
-          "explanation": "The repository has no nested Project, so there is no Project README to write and the empty scope is correct.",
+          "explanation": "The repository is a single standards source. It contains no nested maintained Project, so there is no non-root Project README to create or assess; the intentionally empty scope is supported by current manifests, commands, and component boundaries.",
           "changedPaths": [],
           "evidence": [
-            "There is one root manifest, package.json, with one set of development commands; operations, scripts, discovery, and guidance are parts of the single standards source.",
-            "test/fixtures holds test data, vendor holds third-party material, and .agents/skills holds installed skills; none is a maintained Project with its own commands."
+            "package.json is the single root manifest, with Node >=24 <25 and the repository-wide setup, format, lint, syntax, and test commands documented in docs/development/README.md.",
+            "Reviewed source, operations, scripts, discovery tooling, tests/fixtures, docs, installed skills, and vendor: none establishes a nested maintained Project with its own responsibility and development commands.",
+            "Vendor parser READMEs are provenance, documentation READMEs are indexes, and README.md belongs to the separate repository-readme declaration."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "No Project exists after fixes, so no Project README path is needed.",
+              "explanation": "Post-fix installation creates only product state, skills, and skill links; it introduces no maintained nested Project.",
               "evidence": [
-                "The fixes changed no project files; the manifest set is still only the root package.json outside fixtures and vendored material."
+                "package.json is the single root manifest, with Node >=24 <25 and the repository-wide setup, format, lint, syntax, and test commands documented in docs/development/README.md.",
+                "Reviewed source, operations, scripts, discovery tooling, tests/fixtures, docs, installed skills, and vendor: none establishes a nested maintained Project with its own responsibility and development commands.",
+                "Vendor parser READMEs are provenance, documentation READMEs are indexes, and README.md belongs to the separate repository-readme declaration."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "No Project was introduced during contextual work.",
+              "explanation": "The refreshed tree still has no nested Project, and contextual changes introduce no new Project boundary.",
               "evidence": [
-                "No agent edits were made after fixes."
+                "package.json is the single root manifest, with Node >=24 <25 and the repository-wide setup, format, lint, syntax, and test commands documented in docs/development/README.md.",
+                "Reviewed source, operations, scripts, discovery tooling, tests/fixtures, docs, installed skills, and vendor: none establishes a nested maintained Project with its own responsibility and development commands.",
+                "Vendor parser READMEs are provenance, documentation READMEs are indexes, and README.md belongs to the separate repository-readme declaration."
               ],
               "additionalPaths": []
             }
@@ -1133,13 +1475,17 @@
         {
           "id": "repository-readme",
           "status": "satisfied",
-          "explanation": "README.md already follows the repository README guidance; no edit was needed.",
-          "changedPaths": [],
+          "explanation": "The README introduces Repo Canon with its centered title, concise description and relevant JavaScript/Node 24 badges, distinguishes user installation from contribution setup, and preserves the current stable source selection. The CLI install command is unversioned, while its minimum is explained in prose and exact adoption installation is delegated to the maintained guide. One read-only inspection example now appears under Usage. Features describe the actual complete profile; pointer sections link only to documentation, contribution guidance, and the selected MIT license.",
+          "changedPaths": [
+            "README.md"
+          ],
           "evidence": [
-            "It opens with a centered title, a one-sentence description, and JavaScript and Node.js 24 badges matching package.json's engines constraint (>=24 <25).",
-            "Sections run Installation, Features, Usage, Documentation, Contributing, License, in the guidance's relative order; Installation shows installing the Repository Standards CLI and pointing it at this source without version numbers in install commands.",
-            "Documentation, Contributing, and License each hold only their link: docs/README.md, CONTRIBUTING.md, and the MIT License in LICENSE.",
-            "The repository conformance test runs the shipped repository README check on this tree and passes."
+            "README.md begins with a centered Repo Canon h1, a one-sentence standards-source description, and JavaScript and Node.js 24 badges supported by the .mjs source and package.json engines.",
+            "The Installation npm command names @lutzseverino/repo-standards without a version suffix; prose states CLI 5.0.0 or newer, Node 24, npm, Git 2.32.0, macOS/Linux, and an external installation.",
+            "Usage gives the public v0.5.0 complete-profile inspect command and links docs/usage/adopt-repo-canon.md for exact runtime retention, scope review, prerequisites, and confirmed adoption.",
+            "standards.yaml resolves 54 declarations, including 25 upstream skills plus deliver, exact contribution/agent/templates/validators, two GitHub fixes, and three README/documentation checks, supporting the concise verb-led Features list.",
+            "Documentation, Contributing, and License are single plain link paragraphs to docs/README.md, CONTRIBUTING.md, and LICENSE. The root LICENSE expressly selects MIT for original material and existing third-party notices remain intact.",
+            "The repository README conformance and release-version agreement tests passed in the intermediate suite; descriptions, installation semantics, license, badges, and feature claims were also reviewed against repository content."
           ]
         }
       ]

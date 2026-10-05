@@ -383,6 +383,14 @@
       "source": "vendor/mattpocock-skills/skills/engineering/codebase-design"
     },
     {
+      "id": "skill-deliver",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "deliver",
+      "source": ".agents/skills/deliver"
+    },
+    {
       "id": "skill-diagnosing-bugs",
       "checks": [],
       "fixes": [],
