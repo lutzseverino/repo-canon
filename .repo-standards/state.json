@@ -15,8 +15,8 @@
         "id": "canonical-labels"
       },
       "operationIndex": 0,
-      "before": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
-      "after": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
+      "before": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
+      "after": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -35,8 +35,8 @@
         "id": "pull-request-integration"
       },
       "operationIndex": 1,
-      "before": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
-      "after": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
+      "before": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
+      "after": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -95,8 +95,8 @@
           "directories": []
         }
       },
-      "before": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
-      "after": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
+      "before": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
+      "after": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -155,8 +155,8 @@
           "directories": []
         }
       },
-      "before": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
-      "after": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
+      "before": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
+      "after": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -207,8 +207,8 @@
         "id": "documentation-navigation"
       },
       "operationIndex": 2,
-      "before": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
-      "after": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
+      "before": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
+      "after": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -227,8 +227,8 @@
         "id": "project-readme-structure"
       },
       "operationIndex": 3,
-      "before": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
-      "after": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
+      "before": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
+      "after": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -249,8 +249,8 @@
         "id": "repository-readme-structure"
       },
       "operationIndex": 4,
-      "before": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
-      "after": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
+      "before": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
+      "after": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -309,8 +309,8 @@
           "directories": []
         }
       },
-      "before": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
-      "after": "sha256:41dcf8ed6baac2df63c241bf8b39d030fdf19a44f04cee6ae5a1e0fb6faff48c",
+      "before": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
+      "after": "sha256:1a3bfb76a82f84f67fab652a74dab9f9bd99b9bd9c887fc6fa11b621686747f0",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -457,10 +457,10 @@
     }
   ],
   "lastComplete": {
-    "run": "9f219d01-d555-4ff9-b2b1-6dd697b7e119",
-    "inspection": "sha256:453753f734f530331520d89c5a3cfd6c8d0763871b0bc828b0748f926e5ff1ac",
-    "completedAt": "2026-10-05T14:30:55.330Z",
-    "head": "124aca117542cf9f7c11e49ffee715828a31be88"
+    "run": "e8eb011f-0c7a-4663-a06a-b756abe6dabb",
+    "inspection": "sha256:dbea5ce1e6ec11c8aa700fbd7672b8afb6409acc1e2212fcc228905db9dba356",
+    "completedAt": "2026-10-05T19:30:17.593Z",
+    "head": "4ca905a28e1918eaa8c3b2a5b2aaed8c21a5a479"
   },
   "baselines": {
     "docs/agents/README.md": {
@@ -492,7 +492,7 @@
       "executable": false
     },
     "scripts/validate-issue-contract.mjs": {
-      "sha256": "3334b3322dfe3f34e9dc78b723b0826d8648f541b9bd8c1ad207d258fdff1b2d",
+      "sha256": "ff4cafab526a72d1bb430936b3da20aaca7e65df47eb0087dfe67907124a5275",
       "executable": false
     },
     ".github/workflows/issue-contracts.yml": {
@@ -864,7 +864,7 @@
       "executable": false
     },
     ".agents/skills/adopt-standards/SKILL.md": {
-      "sha256": "d5f3893f503e4076da953581d9ce00994f55e68eb67da0351bc2170224bb133c",
+      "sha256": "ef097e2e369ed5bc44311a75292891de0260ff3dd318942f36ee49cb668df08e",
       "executable": false
     },
     ".agents/skills/adopt-standards/agents/openai.yaml": {
@@ -872,19 +872,19 @@
       "executable": false
     },
     ".agents/skills/adopt-standards/references/assessment.md": {
-      "sha256": "11ce493b12024dcdcef1a1c3e9460068997669a9ae954a0717e56994caa17181",
+      "sha256": "517e66c6556d19e0e29f19f229c5a10c202cb4a0dd9d3d70ad7275fba165f7fe",
       "executable": false
     },
     ".agents/skills/adopt-standards/references/discovery.md": {
-      "sha256": "75ab58e5ac82ced9e1c3aeb1d43dda7300ac180235ac53c70ef9fcede1151f7b",
+      "sha256": "30acedb91d827e23d1442252a2c8e42ffd3b5b22dc5cdbf969cf09e66a026494",
       "executable": false
     },
     ".agents/skills/adopt-standards/references/recovery.md": {
-      "sha256": "6904bb1126f7b62078f2d690f2bb6fd6f5406e5d6eefcbce3cbf85f62b3bb07e",
+      "sha256": "69c25d7f4bde8cedd20350be878f1444f5ee7095d746c46a39ddacb848dad621",
       "executable": false
     },
     ".agents/skills/adopt-standards/references/review.md": {
-      "sha256": "f1f476fd67e0ae0c58d4f66f0ee0b9dcb7a7c02d170468fa2eefe5eab5ce2993",
+      "sha256": "cf8f028b0965d0395571e79a5ca5bb795de1b2ff397a45aab411474da72df10a",
       "executable": false
     },
     ".agents/skills/standards-updates/SKILL.md": {
@@ -1137,43 +1137,43 @@
     {
       "format": "repo-standards/assessment/v3",
       "scope": {
-        "inspection": "sha256:453753f734f530331520d89c5a3cfd6c8d0763871b0bc828b0748f926e5ff1ac",
-        "afterFixes": "sha256:87e04bf4bebdc65132455e2f9cc850fc0b53cf3fe36740614609edc980214b2e"
+        "inspection": "sha256:dbea5ce1e6ec11c8aa700fbd7672b8afb6409acc1e2212fcc228905db9dba356",
+        "afterFixes": "sha256:867c2599949dd24b26bca43262fd2f26937dac1997567ad04c08d8e9c83abf5f"
       },
-      "run": "9f219d01-d555-4ff9-b2b1-6dd697b7e119",
-      "selection": "sha256:d2d89b3e962bc5c18d12fb5bc671debcfff283d5ece8b45446aad95f540bfb69",
-      "snapshot": "sha256:87e04bf4bebdc65132455e2f9cc850fc0b53cf3fe36740614609edc980214b2e",
+      "run": "e8eb011f-0c7a-4663-a06a-b756abe6dabb",
+      "selection": "sha256:ddf1ba511168c657f545f98265594badc0551f61ff739b3273612768005be18e",
+      "snapshot": "sha256:867c2599949dd24b26bca43262fd2f26937dac1997567ad04c08d8e9c83abf5f",
       "declarations": [
         {
           "id": "documentation",
           "status": "satisfied",
-          "explanation": "The existing maintained documentation already applies the selected contribution rules and accurately describes the published source, development commands, retained checks, release procedure and project constraints; no contextual edits or migration are needed. Placement and useful content were reviewed separately from the structural checks that run on submission.",
+          "explanation": "The maintained documentation already satisfies the selected guidance; no contextual changes or migration are needed. Content accuracy and placement were assessed separately from structural checks.",
           "changedPaths": [],
           "evidence": [
-            "docs/README.md defines usage, development, adr and agents with category-specific descriptions; each category README indexes its maintained entries. ADRs record durable decisions, including retained superseded ADRs and record placement.",
-            "docs/development/README.md has Setup and validation before its index and names Node.js 24, npm ci --include=dev, focused tests, format:check, lint, check and the repository conformance fixture; these commands match package.json and existing test files.",
-            "docs/usage/adopt-repo-canon.md, docs/development/adoption-compatibility.md, source-profile.md, versioning.md and authoring-notes.md consistently name v0.5.2 and the open-ended CLI minimum >=5.0.1, in agreement with standards.yaml and the inspected published release.",
-            "The drafter guide lists all three reserved system skills, and issue-contract-validation.md describes the actual two-second retry and 30-second bound in scripts/validate-issue-contract.mjs. docs/agents/project.md preserves the repository-specific release, adoption and upstream-license constraints.",
-            "Point-in-time adoption records remain external in the handoff; maintained guides cite releases, issues and historical commit permalinks rather than storing run logs in the documentation tree."
+            "docs/README.md defines usage, development, adr and agents; each category index covers its maintained entries. ADRs retain durable decisions, while guides cite historical releases and commit permalinks rather than storing run records.",
+            "docs/development/README.md places Setup and validation before its index and names Node.js 24, npm ci --include=dev, format:check, lint, check and the full tests; these agree with package.json and the current fixtures.",
+            "README.md and docs/usage/adopt-repo-canon.md select v0.5.3. source-profile.md, adoption-compatibility.md, versioning.md, ADR 0005 and authoring-notes.md name CLI 5.1.0 and the minimum >=5.1.0, matching standards.yaml and the published release.",
+            "issue-contract-validation.md describes the observed-event barrier for awaiting-review retries, the two-second interval, 30-second bound, approved-event redelivery and accepted residual lagging cases implemented by scripts/validate-issue-contract.mjs.",
+            "docs/agents/project.md preserves the source-versus-product distinction, adoption constraints and upstream license preservation. authoring-notes.md remains the maintained author decision record beside standards.yaml."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Reviewed confirmed documentation coverage against the post-fix snapshot; included and excluded candidates and any empty scope remain correct, with no additional paths required.",
+              "explanation": "Reviewed coverage against the post-fix snapshot; confirmed membership remains correct and needs no additional paths.",
               "evidence": [
-                "The retained v0.5.2 drafter produced the same 34 rule-decided candidates after fixes and at the refreshed current snapshot; its four outside-root questions have the same recorded resolutions, with no standards-updates candidate or evidence.",
-                "All 31 included documentation files retain their inspection-time hashes. docs is the only documentation root; its four category indexes exist, five exact-owned agent files remain excluded, and CONTEXT.md, authoring-notes.md and docs/agents/project.md are covered.",
-                "THIRD_PARTY_NOTICES.md is legal notice material; discovery and guidance are source instructions; vendor is preserved third-party material. No moves, new indexes, missing README targets, or additional link-repair files are needed."
+                "The selected v0.5.3 drafter gives identical 34 rule-decided candidates and four outside-root questions before start, after fixes and at the refreshed snapshot; the same five reviewed decisions resolve those questions.",
+                "docs is the only documentation root. All category indexes exist, the four exact-owned docs/agents files remain excluded, and CONTEXT.md, authoring-notes.md and docs/agents/project.md remain included.",
+                "THIRD_PARTY_NOTICES.md is legal notice material, discovery and guidance are released source instructions, and vendor is preserved third-party material. No moves, missing indexes or additional link-repair paths are needed."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Reviewed confirmed documentation coverage against the refreshed current snapshot; included and excluded candidates and any empty scope remain correct, with no additional paths required.",
+              "explanation": "Reviewed coverage against the refreshed current snapshot; confirmed membership remains correct and needs no additional paths.",
               "evidence": [
-                "The retained v0.5.2 drafter produced the same 34 rule-decided candidates after fixes and at the refreshed current snapshot; its four outside-root questions have the same recorded resolutions, with no standards-updates candidate or evidence.",
-                "All 31 included documentation files retain their inspection-time hashes. docs is the only documentation root; its four category indexes exist, five exact-owned agent files remain excluded, and CONTEXT.md, authoring-notes.md and docs/agents/project.md are covered.",
-                "THIRD_PARTY_NOTICES.md is legal notice material; discovery and guidance are source instructions; vendor is preserved third-party material. No moves, new indexes, missing README targets, or additional link-repair files are needed."
+                "The selected v0.5.3 drafter gives identical 34 rule-decided candidates and four outside-root questions before start, after fixes and at the refreshed snapshot; the same five reviewed decisions resolve those questions.",
+                "docs is the only documentation root. All category indexes exist, the four exact-owned docs/agents files remain excluded, and CONTEXT.md, authoring-notes.md and docs/agents/project.md remain included.",
+                "THIRD_PARTY_NOTICES.md is legal notice material, discovery and guidance are released source instructions, and vendor is preserved third-party material. No moves, missing indexes or additional link-repair paths are needed."
               ],
               "additionalPaths": []
             }
@@ -1182,29 +1182,29 @@
         {
           "id": "github-repository-configuration",
           "status": "satisfied",
-          "explanation": "The disclosed repeat-safe fixes verified the intended GitHub configuration for the correct repository and required no remote changes. Their point-in-time readback satisfies the selected remote setup guidance without implying ongoing freshness or rollback. No project-content edit is needed.",
+          "explanation": "The selected remote configuration was verified at execution time and required no mutation. No project-content work is needed.",
           "changedPaths": [],
           "evidence": [
-            "The canonical-labels fix exited 0 with status unchanged and message: GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
-            "The pull-request-integration fix exited 0 with status unchanged and message: GitHub PR integration already matches the canonical configuration for lutzseverino/repo-canon.",
-            "Reviewed retained guidance and fix implementations: the intended result is 12 canonical labels, required PR metadata on the default branch, squash-only merges, PR-title subjects and PR-body messages, preserving unrelated settings. Both fixes performed their final readback."
+            "canonical-labels returned unchanged: GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
+            "pull-request-integration returned unchanged: GitHub PR integration already matches the canonical configuration for lutzseverino/repo-canon.",
+            "Retained guidance and setup documentation require canonical labels, required PR metadata on the default branch, squash-only merging and PR-title/body commit defaults, preserving unrelated settings. Successful fix readback is point-in-time evidence."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Reviewed confirmed github-repository-configuration coverage against the post-fix snapshot; included and excluded candidates and any empty scope remain correct, with no additional paths required.",
+              "explanation": "Reviewed coverage against the post-fix snapshot; confirmed membership remains correct and needs no additional paths.",
               "evidence": [
-                "Both authored fixes completed with unchanged results for lutzseverino/repo-canon, verifying the remote-derived identity and expected remote configuration.",
-                "The confirmed scope has no project-content paths or directories because these operations configure only GitHub. The maintainer confirmation relayed by the orchestrator authorized these disclosed remote fixes."
+                "The origin remote and authenticated metadata identify lutzseverino/repo-canon, default branch main, with ADMIN permission; both fixes verified that repository and reported unchanged.",
+                "The confirmed scope intentionally has no project-content paths: the declaration governs remote settings only. The owner approved the disclosed fixes under the six inspection guards, which all passed."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Reviewed confirmed github-repository-configuration coverage against the refreshed current snapshot; included and excluded candidates and any empty scope remain correct, with no additional paths required.",
+              "explanation": "Reviewed coverage against the refreshed current snapshot; confirmed membership remains correct and needs no additional paths.",
               "evidence": [
-                "Both authored fixes completed with unchanged results for lutzseverino/repo-canon, verifying the remote-derived identity and expected remote configuration.",
-                "The confirmed scope has no project-content paths or directories because these operations configure only GitHub. The maintainer confirmation relayed by the orchestrator authorized these disclosed remote fixes."
+                "The origin remote and authenticated metadata identify lutzseverino/repo-canon, default branch main, with ADMIN permission; both fixes verified that repository and reported unchanged.",
+                "The confirmed scope intentionally has no project-content paths: the declaration governs remote settings only. The owner approved the disclosed fixes under the six inspection guards, which all passed."
               ],
               "additionalPaths": []
             }
@@ -1213,28 +1213,28 @@
         {
           "id": "project-readmes",
           "status": "satisfied",
-          "explanation": "There is no nested maintained Project, so an intentionally empty Project README scope is correct. Existing nested READMEs are documentation indexes or vendored provenance, not developer introductions for independently maintained components.",
+          "explanation": "An intentionally empty scope satisfies the guidance because this standards source has no nested maintained Project.",
           "changedPaths": [],
           "evidence": [
-            "The root package.json defines one standards source and one set of development commands, with no workspaces or nested maintained Project manifest.",
-            "scripts, operations and discovery implement the root standards source; tests and disposable fixtures, installed skills, vendor material and documentation indexes are not nested Projects. No non-root Project README is missing."
+            "package.json defines one root standards source, one development command set and no workspaces. standards.yaml supplies one complete profile; there is no nested maintained Project.",
+            "scripts, operations and discovery implement the root source. Test fixtures, installed skills, vendor material and documentation indexes are not independently maintained Projects. No non-root Project README is missing."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Reviewed confirmed project-readmes coverage against the post-fix snapshot; included and excluded candidates and any empty scope remain correct, with no additional paths required.",
+              "explanation": "Reviewed coverage against the post-fix snapshot; confirmed membership remains correct and needs no additional paths.",
               "evidence": [
-                "The root package.json defines one standards source and one set of development commands, with no workspaces or nested maintained Project manifest.",
-                "scripts, operations and discovery implement the root standards source; tests and disposable fixtures, installed skills, vendor material and documentation indexes are not nested Projects. No non-root Project README is missing."
+                "package.json defines one root standards source, one development command set and no workspaces. standards.yaml supplies one complete profile; there is no nested maintained Project.",
+                "scripts, operations and discovery implement the root source. Test fixtures, installed skills, vendor material and documentation indexes are not independently maintained Projects. No non-root Project README is missing."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Reviewed confirmed project-readmes coverage against the refreshed current snapshot; included and excluded candidates and any empty scope remain correct, with no additional paths required.",
+              "explanation": "Reviewed coverage against the refreshed current snapshot; confirmed membership remains correct and needs no additional paths.",
               "evidence": [
-                "The root package.json defines one standards source and one set of development commands, with no workspaces or nested maintained Project manifest.",
-                "scripts, operations and discovery implement the root standards source; tests and disposable fixtures, installed skills, vendor material and documentation indexes are not nested Projects. No non-root Project README is missing."
+                "package.json defines one root standards source, one development command set and no workspaces. standards.yaml supplies one complete profile; there is no nested maintained Project.",
+                "scripts, operations and discovery implement the root source. Test fixtures, installed skills, vendor material and documentation indexes are not independently maintained Projects. No non-root Project README is missing."
               ],
               "additionalPaths": []
             }
@@ -1243,13 +1243,13 @@
         {
           "id": "repository-readme",
           "status": "satisfied",
-          "explanation": "The existing Repository README accurately introduces Repo Canon and its public installation and adoption route, follows the selected section and pointer conventions, and needs no edit. Facts were checked against the manifest, selected declaration inventory, source scripts, published release and root license.",
+          "explanation": "The root README accurately introduces Repo Canon, provides the public installation and inspection route, and follows the selected conventions without edits.",
           "changedPaths": [],
           "evidence": [
-            "README.md begins with a centered Repo Canon title and one-sentence description of a standards source for Repository Standards; its JavaScript and Node.js 24 badges agree with the ESM source and package.json engine requirement.",
-            "Installation distinguishes users from contributor setup, gives an unversioned global npm install with lifecycle scripts disabled, and points to the v0.5.2 complete profile. The representative inspect command agrees with the source URL, published tag and profile used by this run.",
-            "The feature list describes the 25 pinned regular skills plus the separate deliver skill, exact contribution/configuration/templates, trusted validators, remote setup fixes and documentation checks selected by the 54-declaration complete profile.",
-            "Installation, Features, Usage, Documentation, Contributing and License are in the required order; the final three sections each contain only their correct pointer. LICENSE contains the selected MIT License and copyright notice, matching the README label."
+            "The centered title and concise description identify Repo Canon as a standards source for Repository Standards. JavaScript and Node.js 24 badges agree with the ESM source and package.json engines.",
+            "Installation gives an unversioned global npm install with lifecycle scripts disabled, then Usage points inspect at the published v0.5.3 complete profile. Contributor setup is linked separately through CONTRIBUTING.md and docs/development/README.md.",
+            "The feature list agrees with standards.yaml: contribution guidance, templates, workflow validators, 25 pinned regular skills plus deliver, two remote fixes and three structural checks.",
+            "Installation, Features, Usage, Documentation, Contributing and License appear in the required order. The final three sections each hold their correct single pointer; LICENSE explicitly identifies MIT, matching the README."
           ]
         }
       ]

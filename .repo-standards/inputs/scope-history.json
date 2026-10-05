@@ -1,7 +1,7 @@
 {
   "format": "repo-standards/scope-history/v5",
   "evidence": "historical",
-  "inspection": "sha256:453753f734f530331520d89c5a3cfd6c8d0763871b0bc828b0748f926e5ff1ac",
+  "inspection": "sha256:dbea5ce1e6ec11c8aa700fbd7672b8afb6409acc1e2212fcc228905db9dba356",
   "resolved": {
     "description": "The complete Repo Canon standards profile",
     "declarations": [
@@ -1134,7 +1134,7 @@
     ]
   },
   "discovery": {
-    "identity": "sha256:84d94db223573a11921745034069b3869d44387e41c3b10695125aee35885632",
+    "identity": "sha256:44e91e14c833bdf36d672cf1a0addabcbaff1b90d73fb7fb4104884340e01977",
     "proposal": {
       "format": "repo-standards/scope/v2",
       "declarations": [
@@ -1481,7 +1481,7 @@
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "baac28507ae1198a9fd151f7949d41f526c0fab4a915f41d2aaedfcfebfcf71d",
+          "sha256": "60e3365567edbbc24f650296908111537bae612a0b44424bc631ad1d0590b52f",
           "executable": false
         },
         "docs/README.md": {
@@ -1511,7 +1511,7 @@
         },
         "docs/adr/0005-require-an-open-ended-minimum-cli-version.md": {
           "type": "file",
-          "sha256": "fa324c338f23e4611fe45164bff706d61dd52e628406a0d2deb4526b25a0aae4",
+          "sha256": "4d66c1859bdfe4b24f1a6d800f02df20d58b21fda2a7782f04ee2fed31574ba1",
           "executable": false
         },
         "docs/adr/0006-keep-point-in-time-records-with-their-event.md": {
@@ -1546,12 +1546,12 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "c30113f68a92ffc1462cf08d22978a71570b9d88dd883d507b32017b8ca696f9",
+          "sha256": "e0ef20e66141a0f4b4c11caa3eb4891a2f48332cb8a6e46d956009ba7d1e28e6",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
           "type": "file",
-          "sha256": "bd04e626879b9591d42baf468366f28ca8f9acb3175bb615b76b1369218c2967",
+          "sha256": "c0520538794ba76ab95e6d0519e9e8418f9a2e65ac8a2c989aab5d90e126b838",
           "executable": false
         },
         "docs/development/documentation-check.md": {
@@ -1576,7 +1576,7 @@
         },
         "docs/development/issue-contract-validation.md": {
           "type": "file",
-          "sha256": "a6a6d215e9e84f89a657fc2bdf126712976320d878af38b65d658ea3370b12b9",
+          "sha256": "afb01fa193531db1e5e1ae746850cb4af5cc077b1236c5025b2e75bdccf97ef9",
           "executable": false
         },
         "docs/development/pr-metadata-validation.md": {
@@ -1601,7 +1601,7 @@
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "1405830adc6a0001c1194a8546b90bead6b86a731a8c7bb2c304241499b711ce",
+          "sha256": "9ef13813a0fad57d002da1f5f0feea4a4318d09f932736f783a3b26c8e5554f8",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
@@ -1616,7 +1616,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "42495d048450ff8fab10ed31ddfce39a9cc1a0fadb868b1ec139b213020d2a7e",
+          "sha256": "e9dce89f8dae041f58f4167a059a55abe219def1025836e20e30cef50b65db70",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -1626,7 +1626,7 @@
         },
         "docs/usage/versioning.md": {
           "type": "file",
-          "sha256": "b5bcbea03c4bb515669b52c37549a7459f698693ac58f97d84f54a34ed9383b5",
+          "sha256": "fad6b98f57651b0d320e7273396c5fad9dbb61a1b78c044ed011c6d713ee78a2",
           "executable": false
         }
       }
@@ -1660,7 +1660,7 @@
         },
         ".agents/skills/adopt-standards/SKILL.md": {
           "type": "file",
-          "sha256": "68052a9bd2eb026527934d693cee844345fbd5a3b508f9f34f10548f1548ccd0",
+          "sha256": "d5f3893f503e4076da953581d9ce00994f55e68eb67da0351bc2170224bb133c",
           "executable": false
         },
         ".agents/skills/adopt-standards/agents/openai.yaml": {
@@ -1670,22 +1670,22 @@
         },
         ".agents/skills/adopt-standards/references/assessment.md": {
           "type": "file",
-          "sha256": "0101c11ed4dac35c46f2617d85c100438e17e9edc93bb911f900f2c031846137",
+          "sha256": "11ce493b12024dcdcef1a1c3e9460068997669a9ae954a0717e56994caa17181",
           "executable": false
         },
         ".agents/skills/adopt-standards/references/discovery.md": {
           "type": "file",
-          "sha256": "1442f4dfe99543e56b3cc6350285d3f740c89d2e949c71b9bd771e46566b7690",
+          "sha256": "75ab58e5ac82ced9e1c3aeb1d43dda7300ac180235ac53c70ef9fcede1151f7b",
           "executable": false
         },
         ".agents/skills/adopt-standards/references/recovery.md": {
           "type": "file",
-          "sha256": "ec78fa6b4d5adc20190fb33a96f1e32275121d80cfe2ed63b0ed73a743b6498c",
+          "sha256": "6904bb1126f7b62078f2d690f2bb6fd6f5406e5d6eefcbce3cbf85f62b3bb07e",
           "executable": false
         },
         ".agents/skills/adopt-standards/references/review.md": {
           "type": "file",
-          "sha256": "ea585384dbd581638a7ef947d5512848d1f895a543f4417b2acd895fc3aa1ca0",
+          "sha256": "f1f476fd67e0ae0c58d4f66f0ee0b9dcb7a7c02d170468fa2eefe5eab5ce2993",
           "executable": false
         },
         ".agents/skills/ask-matt/PHASE-BOUNDARIES.md": {
@@ -2222,7 +2222,7 @@
         },
         ".github/workflows/ci.yml": {
           "type": "file",
-          "sha256": "0e0c767ac726b59569709724b92f565f5c1ac0f58a6e8646ce0f31536b6eb2f2",
+          "sha256": "81ef279a3f100b2d856fcdda1d06c06706a09fd169a8a229428b2fb9676e4658",
           "executable": false
         },
         ".github/workflows/issue-contracts.yml": {
@@ -2272,7 +2272,7 @@
         },
         "README.md": {
           "type": "file",
-          "sha256": "f1e23c45e737566e4ea1df573008d76d39d6eff0edba8358972bcead1b10bf75",
+          "sha256": "7dcd24ec245c62dd5b1775897f99a557b75ee3336fe637b466e3fc2b376eab8b",
           "executable": false
         },
         "THIRD_PARTY_NOTICES.md": {
@@ -2282,7 +2282,7 @@
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "baac28507ae1198a9fd151f7949d41f526c0fab4a915f41d2aaedfcfebfcf71d",
+          "sha256": "60e3365567edbbc24f650296908111537bae612a0b44424bc631ad1d0590b52f",
           "executable": false
         },
         "discovery/documentation.md": {
@@ -2332,7 +2332,7 @@
         },
         "docs/adr/0005-require-an-open-ended-minimum-cli-version.md": {
           "type": "file",
-          "sha256": "fa324c338f23e4611fe45164bff706d61dd52e628406a0d2deb4526b25a0aae4",
+          "sha256": "4d66c1859bdfe4b24f1a6d800f02df20d58b21fda2a7782f04ee2fed31574ba1",
           "executable": false
         },
         "docs/adr/0006-keep-point-in-time-records-with-their-event.md": {
@@ -2387,12 +2387,12 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "c30113f68a92ffc1462cf08d22978a71570b9d88dd883d507b32017b8ca696f9",
+          "sha256": "e0ef20e66141a0f4b4c11caa3eb4891a2f48332cb8a6e46d956009ba7d1e28e6",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
           "type": "file",
-          "sha256": "bd04e626879b9591d42baf468366f28ca8f9acb3175bb615b76b1369218c2967",
+          "sha256": "c0520538794ba76ab95e6d0519e9e8418f9a2e65ac8a2c989aab5d90e126b838",
           "executable": false
         },
         "docs/development/documentation-check.md": {
@@ -2417,7 +2417,7 @@
         },
         "docs/development/issue-contract-validation.md": {
           "type": "file",
-          "sha256": "a6a6d215e9e84f89a657fc2bdf126712976320d878af38b65d658ea3370b12b9",
+          "sha256": "afb01fa193531db1e5e1ae746850cb4af5cc077b1236c5025b2e75bdccf97ef9",
           "executable": false
         },
         "docs/development/pr-metadata-validation.md": {
@@ -2442,7 +2442,7 @@
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "1405830adc6a0001c1194a8546b90bead6b86a731a8c7bb2c304241499b711ce",
+          "sha256": "9ef13813a0fad57d002da1f5f0feea4a4318d09f932736f783a3b26c8e5554f8",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
@@ -2457,7 +2457,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "42495d048450ff8fab10ed31ddfce39a9cc1a0fadb868b1ec139b213020d2a7e",
+          "sha256": "e9dce89f8dae041f58f4167a059a55abe219def1025836e20e30cef50b65db70",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -2467,7 +2467,7 @@
         },
         "docs/usage/versioning.md": {
           "type": "file",
-          "sha256": "b5bcbea03c4bb515669b52c37549a7459f698693ac58f97d84f54a34ed9383b5",
+          "sha256": "fad6b98f57651b0d320e7273396c5fad9dbb61a1b78c044ed011c6d713ee78a2",
           "executable": false
         },
         "guidance/documentation.md": {
@@ -2607,12 +2607,12 @@
         },
         "scripts/validate-issue-contract.mjs": {
           "type": "file",
-          "sha256": "3334b3322dfe3f34e9dc78b723b0826d8648f541b9bd8c1ad207d258fdff1b2d",
+          "sha256": "ff4cafab526a72d1bb430936b3da20aaca7e65df47eb0087dfe67907124a5275",
           "executable": false
         },
         "standards.yaml": {
           "type": "file",
-          "sha256": "8a8ce28b091829964dd304ba5fb8084717040dfc84ac3411b6ccb0b8f8080681",
+          "sha256": "8599c7ffc4b7a7f174b0ca94a5775c6c3f5d621febea081c977a27a058eac665",
           "executable": false
         },
         "test/deliver-skill-fixtures.test.mjs": {
@@ -2707,7 +2707,7 @@
         },
         "test/helpers/issue-contracts.mjs": {
           "type": "file",
-          "sha256": "ad8e58226d9724b4f0d48166a6202d6ec95e7f343cfb00aa25c21111cf28c8c2",
+          "sha256": "74100f0d05bae2a3f87adeef7456f54f7b5bdefdac839ff066c27651c0396b5f",
           "executable": false
         },
         "test/helpers/operation.mjs": {
@@ -2717,12 +2717,12 @@
         },
         "test/issue-contract-adapter.test.mjs": {
           "type": "file",
-          "sha256": "ba9fd7a539da4588da446dd765de660fe667769689decb5eb349e1ba4720ec14",
+          "sha256": "7b89a313a7da2b3c4a5c819f12e07298a57a22fb73f4e7682e5c89820d72282c",
           "executable": false
         },
         "test/issue-contracts.test.mjs": {
           "type": "file",
-          "sha256": "ac0c3e48247d9a79f035d0559af2851af93870a3b3dc2ec0b548973d695aa5c4",
+          "sha256": "1ba4d0335e009631f7771a2f9ffcb185aa64e6072cb6c563c1da501bf3a4f4c6",
           "executable": false
         },
         "test/planning-skill-fixtures.test.mjs": {
