@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { decideIssueContract } from "../scripts/validate-issue-contract.mjs";
+import {
+  decideIssueContract,
+  readinessTriggerUnrecorded,
+} from "../scripts/validate-issue-contract.mjs";
 import {
   approvedTicketFeedback,
   awaitingTicketFeedback,
@@ -1981,6 +1984,162 @@ function rejectedCreationSnapshot() {
   return snapshot;
 }
 
+// A maintainer's fresh readiness label after the opener's rejected creation
+// grant and its cleanup, with the timeline that run reads.
+function freshGrantSnapshot() {
+  const snapshot = rejectedCreationSnapshot();
+  snapshot.issue.labels.push({ name: "ready-for-agent" });
+  snapshot.issue.updated_at = "2026-09-14T17:01:00Z";
+  snapshot.event = labeledBy("maintainer", "ready-for-agent", snapshot.issue);
+  snapshot.permissions.maintainer = role("admin");
+  return snapshot;
+}
+
+const maintainerGrant = creationLabel({
+  id: 300,
+  created_at: "2026-09-14T17:01:00Z",
+});
+
+decisionTable(
+  "a human readiness trigger is reviewed only from a timeline that records its application",
+  [
+    ...[
+      ["only the opener's creation label", ([creation]) => [creation]],
+      ["the bot's cleanup", (issueEvents) => issueEvents],
+      [
+        "an earlier application the trigger's sender removed",
+        (issueEvents) => [
+          ...issueEvents,
+          maintainerGrant,
+          { ...maintainerGrant, id: 301, event: "unlabeled" },
+        ],
+      ],
+    ].map(([name, timeline]) => ({
+      name: `the maintainer's trigger is unrecorded in a timeline holding ${name}`,
+      run: () => {
+        const snapshot = freshGrantSnapshot();
+        snapshot.issueEvents = timeline(snapshot.issueEvents);
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), true);
+      },
+    })),
+    {
+      name: "the maintainer's recorded trigger binds readiness to the maintainer's review event",
+      run: () => {
+        const snapshot = freshGrantSnapshot();
+        snapshot.issueEvents.push(maintainerGrant);
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
+        const decision = decideIssueContract(snapshotFor(snapshot));
+        assertDecision(decision, {
+          exitCode: 0,
+          remove: ["needs-triage"],
+          feedback: 99,
+          message: /valid implementation ticket with ready-for-agent bound/i,
+        });
+        assert.deepEqual(recordedState(decision.feedback.body), {
+          status: "approved",
+          revision: bodyRevision(snapshot.issue),
+          label: "ready-for-agent",
+          reviewer: "maintainer",
+          reviewEventId: "300",
+          sourceInvalidation: null,
+        });
+      },
+    },
+    ...[
+      [
+        "an opened run",
+        () => createdWithReadiness({ run: "opened", issueEvents: [] }),
+      ],
+      [
+        "a trigger by github-actions[bot]",
+        () => ({
+          ...freshGrantSnapshot(),
+          event: labeledBy(bot.login, "ready-for-agent"),
+        }),
+      ],
+      [
+        "a non-readiness label",
+        () => ({
+          ...freshGrantSnapshot(),
+          event: labeledBy("maintainer", "needs-triage"),
+        }),
+      ],
+      [
+        "a readiness trigger whose label is gone from the re-fetched issue",
+        () => {
+          const snapshot = freshGrantSnapshot();
+          snapshot.issue.labels = [{ name: "needs-triage" }];
+          return snapshot;
+        },
+      ],
+    ].map(([name, snapshot]) => ({
+      name: `${name} awaits no timeline application`,
+      run: () => {
+        assert.equal(
+          readinessTriggerUnrecorded(snapshotFor(snapshot())),
+          false,
+        );
+      },
+    })),
+    {
+      name: "a creation label in the creation second never reviews another sender's trigger",
+      snapshot: createdWithReadiness({
+        run: "labeled",
+        opener: "reporter",
+        labeler: "maintainer",
+        issueEvents: [creationLabel({ actor: { login: "reporter" } })],
+        permissions: { reporter: role("write"), maintainer: role("admin") },
+      }),
+      expected: {
+        ...lostCreationReadiness(
+          /timeline does not contain the current readiness label event/,
+        ),
+        notMessage: notAuthorized,
+      },
+    },
+    {
+      name: "a creation labeled run that first reads an empty timeline records the opener's rejection, which the opened run keeps",
+      run: () => {
+        const comments = [];
+        const state = creationState("reporter");
+        const permissions = { reporter: role("write") };
+        const labeled = createdWithReadiness({
+          run: "labeled",
+          opener: "reporter",
+          comments,
+          issueEvents: [],
+          permissions,
+        });
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(labeled)), true);
+        labeled.issueEvents = [...state.issueEvents];
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(labeled)), false);
+        const rejection = decideIssueContract(snapshotFor(labeled));
+        assertDecision(rejection, {
+          ...lostCreationReadiness(notAuthorized),
+          feedbackBody: /"rejectedCreationLabel":"ready-for-agent"/,
+        });
+        applyFeedback(comments, rejection);
+        applyLabelChanges(state, rejection.removeLabels, rejection.addLabels);
+
+        const opened = createdWithReadiness({
+          run: "opened",
+          opener: "reporter",
+          currentLabels: state.labels,
+          comments,
+          issueEvents: [...state.issueEvents],
+          permissions,
+        });
+        assert.equal(readinessTriggerUnrecorded(snapshotFor(opened)), false);
+        const kept = decideIssueContract(snapshotFor(opened));
+        assertDecision(kept, { exitCode: 0, feedback: 99 });
+        applyFeedback(comments, kept);
+        assert.match(comments[0].body, notAuthorized);
+        assert.deepEqual(state.labels, ["needs-triage"]);
+      },
+    },
+  ],
+);
+
 decisionTable(
   "a recorded readiness rejection lasts until another review or contract change",
   [
@@ -2103,27 +2262,17 @@ decisionTable(
       {
         name: "only the creation label recorded",
         creationOnly: true,
-        error: notAuthorized,
-        feedback: null,
+        feedback: 99,
       },
       {
         name: "bot cleanup recorded",
         creationOnly: false,
-        error: /timeline does not contain the current readiness label event/,
         feedback: 99,
       },
-    ].map(({ name, creationOnly, error, feedback }) => ({
-      name: `a maintainer's fresh label after a rejected creation grant is still removed, as #157 reports, with ${name}`,
+    ].map(({ name, creationOnly, feedback }) => ({
+      name: `a maintainer's fresh label decided from a timeline that has not recorded it fails closed without blaming the opener, with ${name}`,
       run: () => {
-        const snapshot = rejectedCreationSnapshot();
-        snapshot.issue.labels.push({ name: "ready-for-agent" });
-        snapshot.issue.updated_at = "2026-09-14T17:01:00Z";
-        snapshot.event = labeledBy(
-          "maintainer",
-          "ready-for-agent",
-          snapshot.issue,
-        );
-        snapshot.permissions.maintainer = role("admin");
+        const snapshot = freshGrantSnapshot();
         if (creationOnly)
           snapshot.issueEvents = [
             creationLabel({ actor: { login: "reporter" } }),
@@ -2132,7 +2281,9 @@ decisionTable(
           exitCode: 1,
           remove: ["ready-for-agent"],
           feedback,
-          message: error,
+          message:
+            /timeline does not contain the current readiness label event/,
+          notMessage: notAuthorized,
         });
       },
     })),

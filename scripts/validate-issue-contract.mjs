@@ -261,6 +261,27 @@ export function decideIssueContract(snapshot) {
   });
 }
 
+// Whether the snapshot's run is a human readiness trigger the timeline has not
+// recorded yet: a `labeled` event for a readiness label by a sender other than
+// `github-actions[bot]`, whose re-fetched issue still carries that label, with
+// no recorded application of that label by that sender left unremoved. The
+// adapter re-reads the timeline while this holds, within its bound.
+export function readinessTriggerUnrecorded(snapshot) {
+  const { event, issue } = snapshot;
+  const label = readinessTransitionLabel(event);
+  const sender = event.sender?.login;
+  if (
+    event.action !== "labeled" ||
+    !label ||
+    !sender ||
+    sender === "github-actions[bot]" ||
+    !(issue.labels ?? []).some((candidate) => labelName(candidate) === label)
+  ) {
+    return false;
+  }
+  return !issueTimeline(snapshot).recordsApplication(label, sender);
+}
+
 function issueDecision({
   exitCode,
   message,
@@ -907,11 +928,18 @@ function assessReadiness({
     timeline,
     openingEligible,
   );
+  // Another sender's readiness label is never attributed to the opener's
+  // creation label event, even from a timeline that has not recorded it.
+  const otherSendersTrigger =
+    currentEvent.action === "labeled" &&
+    Boolean(readinessTransitionLabel(currentEvent)) &&
+    currentEvent.sender?.login !== issue.user?.login;
   const labelEvent =
     creationEvent ??
     (currentReadyLabels.length === 1 &&
     latestEvent?.event === "labeled" &&
-    latestEvent.label?.name === currentReadyLabels[0]
+    latestEvent.label?.name === currentReadyLabels[0] &&
+    !(otherSendersTrigger && timeline.isCreationLabel(latestEvent))
       ? latestEvent
       : null);
   if (
@@ -1073,11 +1101,12 @@ function activeApproval(permissions, recorded, revision, label, timeline) {
 // The creation snapshot's review of an unedited direct contract, for either the
 // `opened` run or a `labeled` run, whichever arrives first. The opening payload
 // shows the one readiness label the issue was created with. A `labeled` run has
-// no such payload, so the timeline must show the opener, the issue's author,
-// applying it in the issue's creation second. Otherwise the run is decided as
-// any later review. Either run then checks the opener's role as it checks any
-// reviewer's, so an opener without an authorizing role gets the same rejection
-// in either order.
+// no such payload: only a run whose sender is the opener, the issue's author,
+// reviews from the creation snapshot, and the timeline must show the opener
+// applying the label in the issue's creation second. Otherwise the run is
+// decided as any later review. Either run then checks the opener's role as it
+// checks any reviewer's, so an opener without an authorizing role gets the same
+// rejection in either order.
 function creationLabelEvent(
   currentEvent,
   issue,
@@ -1089,7 +1118,8 @@ function creationLabelEvent(
   if (result.contract.type !== "issue-body" || !openingEligible || !label)
     return null;
   if (currentEvent.action === "labeled") {
-    if (!issue.user?.login) return null;
+    if (!issue.user?.login || currentEvent.sender?.login !== issue.user.login)
+      return null;
     return timeline.creationReview(label, issue.user, {
       openingPayload: false,
     });
@@ -1428,6 +1458,39 @@ function issueTimeline({ event, issue, issueEvents }) {
     },
 
     latestChangeIsApplication,
+
+    // Whether the timeline holds the sender's application of the label with
+    // no removal of that label after it.
+    recordsApplication(label, login) {
+      const index = issueEvents.findLastIndex(
+        (candidate) =>
+          candidate.event === "labeled" &&
+          candidate.label?.name === label &&
+          candidate.actor?.login === login,
+      );
+      return (
+        index >= 0 &&
+        !issueEvents
+          .slice(index + 1)
+          .some(
+            (candidate) =>
+              candidate.event === "unlabeled" &&
+              candidate.label?.name === label,
+          )
+      );
+    },
+
+    // Whether a label event is the opener's application of a readiness label
+    // in the issue's creation second, which only the opener's own run reviews.
+    isCreationLabel(candidate) {
+      return (
+        candidate?.event === "labeled" &&
+        readyLabels.has(candidate.label?.name) &&
+        Boolean(issue.user?.login) &&
+        candidate.actor?.login === issue.user.login &&
+        atCreation(candidate.created_at)
+      );
+    },
 
     // Whether the triggering label's payload time places it after the review:
     // in a strictly later second when its application is recorded.
