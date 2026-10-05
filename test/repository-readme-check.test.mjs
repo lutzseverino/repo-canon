@@ -927,7 +927,15 @@ test("blocks when licensing is missing or ambiguous instead of selecting a licen
       corrections: true,
     },
     {
-      name: "another filename",
+      name: "another filename linked from the License section",
+      readme: `<h1 align="center">Harbor</h1>
+
+A queue inspector.
+
+## License
+
+[GNU General Public License](COPYING)
+`,
       files: {
         COPYING: "GNU General Public License\n\nVersion 3, 29 June 2007\n",
       },
@@ -952,6 +960,7 @@ test("blocks when licensing is missing or ambiguous instead of selecting a licen
     await t.test(example.name, (st) => {
       const outcome = check(st, {
         "README.md":
+          example.readme ??
           "# Harbor\n\nA queue inspector.\n\n## Usage\n\nRun it.\n\n## Features\n\nFast.\n\n## Installation\n\nInstall it.\n",
         ...example.files,
       });

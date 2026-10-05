@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -132,10 +133,10 @@ test("every builder records its dirty source bytes and builds repositories with 
   // one skill of each builder, so only the working tree's bytes can match.
   const dirtyFiles = ["AGENTS.md", "scripts/support/fixture-authoring.mjs"];
   const dirtySkills = {
-    engineering: "tdd",
-    productivity: "grilling",
-    planning: "tdd",
-    deliver: "deliver",
+    engineering: ["tdd"],
+    productivity: ["grilling"],
+    planning: ["tdd", "grilling"],
+    deliver: ["deliver"],
   };
   const dirtySkillDirectories = [
     "vendor/mattpocock-skills/skills/engineering/tdd",
@@ -211,9 +212,15 @@ test("every builder records its dirty source bytes and builds repositories with 
       builder.name,
     );
     const skills = builder.skills(manifest);
-    assert.ok(dirtySkills[builder.name] in skills, builder.name);
-    for (const [skill, { path, sha256: recorded }] of Object.entries(skills))
+    for (const skill of dirtySkills[builder.name])
+      assert.ok(skill in skills, `${builder.name} ${skill}`);
+    for (const [skill, { path, sha256: recorded }] of Object.entries(skills)) {
+      assert.ok(
+        realpathSync(path).startsWith(`${realpathSync(source)}/`),
+        `${builder.name} ${skill} comes from the source checkout`,
+      );
       assert.equal(recorded, sha256Directory(path), `${builder.name} ${skill}`);
+    }
 
     for (const [name, repository] of Object.entries(manifest.repositories)) {
       const label = `${builder.name} ${name}`;

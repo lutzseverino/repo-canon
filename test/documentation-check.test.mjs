@@ -124,9 +124,10 @@ test("reports broken rendered file links across documentation and migration sour
     {
       ...rootDocumentation,
       "docs/development/README.md": developmentGuide(
-        [],
+        [["Setup", "setup.md?plain=1#node", "installing the project."]],
         "![Architecture](../assets/missing.svg)",
       ),
+      "docs/development/setup.md": "# Setup\n",
       "legacy-notes.md": `# Legacy notes
 
 Move this material to [the intended destination](docs/usage/migrated.md).
@@ -135,6 +136,7 @@ Move this material to [the intended destination](docs/usage/migrated.md).
     [
       "docs/README.md",
       "docs/development/README.md",
+      "docs/development/setup.md",
       "docs/usage/migrated.md",
       "legacy-notes.md",
     ],
