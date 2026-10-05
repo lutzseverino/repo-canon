@@ -2180,28 +2180,25 @@ decisionTable(
         message: /timeline does not contain the current readiness label event/,
       },
     })),
-    ...[
-      {
-        name: "the sender's application of the other readiness label leaves the trigger unrecorded",
-        run: () =>
-          assert.equal(
-            readinessTriggerUnrecorded(snapshotFor(crossLabelSnapshot())),
-            true,
-          ),
+    {
+      name: "the sender's application of the other readiness label leaves the trigger unrecorded",
+      run: () =>
+        assert.equal(
+          readinessTriggerUnrecorded(snapshotFor(crossLabelSnapshot())),
+          true,
+        ),
+    },
+    {
+      name: "the sender's application of the other readiness label fails closed rather than binding another person's application",
+      snapshot: crossLabelSnapshot(),
+      expected: {
+        exitCode: 1,
+        remove: ["ready-for-agent"],
+        add: ["needs-triage"],
+        feedback: 13,
+        message: /timeline does not contain the current readiness label event/,
       },
-      {
-        name: "the sender's application of the other readiness label fails closed rather than binding another person's application",
-        snapshot: crossLabelSnapshot(),
-        expected: {
-          exitCode: 1,
-          remove: ["ready-for-agent"],
-          add: ["needs-triage"],
-          feedback: 13,
-          message:
-            /timeline does not contain the current readiness label event/,
-        },
-      },
-    ],
+    },
     {
       name: "a trigger whose label another person removed and a third reapplied binds the latest application",
       snapshot: laterGrantSnapshot({
