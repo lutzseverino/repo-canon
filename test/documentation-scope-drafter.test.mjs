@@ -572,6 +572,20 @@ test("leaves out the paths that other declarations and Repository Standards own"
   ]);
 });
 
+test("leaves the installed standards-updates skill out of the whole proposal", (t) => {
+  const { proposal } = drafted(t, {
+    "docs/README.md": "# Documentation\n",
+    "docs/development/README.md": developmentGuide(),
+    ".agents/skills/standards-updates/SKILL.md": "# Standards updates\n",
+  });
+
+  assert.doesNotMatch(
+    JSON.stringify(proposal),
+    /\.agents\/skills\/standards-updates/,
+    "questions, targets, and evidence must leave out the reserved skill",
+  );
+});
+
 test("excludes each file of an owned directory under a decided root", (t) => {
   const { entry } = drafted(
     t,
