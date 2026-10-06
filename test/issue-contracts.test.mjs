@@ -2712,6 +2712,46 @@ decisionTable(
         );
       },
     },
+    ...[
+      ["ready-for-agent", "ready-for-human"],
+      ["ready-for-human", "ready-for-agent"],
+    ].flatMap(([trigger, other]) =>
+      [
+        [trigger, other],
+        [other, trigger],
+      ].map((carried) => ({
+        name: `Alice's ${trigger} trigger over an issue carrying ${carried.join(" and ")} is checked against her own ${trigger}, not Bob's ${other}`,
+        run: () => {
+          // Alice's ready-for-human (100) and the bot's removal (101), then
+          // Alice's application of the trigger's label (300) and Bob's of the
+          // other (301).
+          const issueEvents = [
+            ...swapEvents().slice(0, 2),
+            creationLabel({
+              id: 300,
+              label: { name: trigger },
+              actor: { login: "alice" },
+              created_at: "2026-09-14T17:02:00Z",
+            }),
+            creationLabel({
+              id: 301,
+              label: { name: other },
+              actor: { login: "bob" },
+              created_at: "2026-09-14T17:02:10Z",
+            }),
+          ];
+          const run = reapplicationRun({ trigger });
+          const carrying = (labels) =>
+            snapshotFor({
+              ...run,
+              issue: { ...run.issue, labels: labels.map((name) => ({ name })) },
+              issueEvents,
+            });
+          assert.equal(readinessTriggerUnrecorded(carrying(carried)), false);
+          assert.equal(readinessTriggerUnrecorded(carrying([other])), true);
+        },
+      })),
+    ),
   ],
 );
 
