@@ -235,15 +235,64 @@ export const reapplicationEvents = [
 ];
 export const laggingReapplicationEvents = reapplicationEvents.slice(0, 3);
 
-// The labeled run of `sender`, Alice unless stated, while `ready-for-agent` is
-// present, with the notice that observed 100 or, when `approved`, Bob's
-// recorded approval of 203.
-export function reapplicationRun({ approved = false, sender = "alice" } = {}) {
+// The same history for `ready-for-human` through Carol's removal (204), then a
+// swap: `applier`, Alice unless stated, applied `ready-for-agent` (205), and
+// `swapper`, the applier unless stated, removed it (206) and applied
+// `ready-for-human` (207).
+export function swapEvents({ applier = "alice", swapper = applier } = {}) {
+  const human = reapplicationEvents
+    .slice(0, 4)
+    .map((event) => ({ ...event, label: { name: "ready-for-human" } }));
+  const agent = {
+    ...aliceApplication,
+    id: 205,
+    actor: { login: applier },
+    created_at: "2026-09-14T17:01:40Z",
+  };
+  return [
+    ...human,
+    agent,
+    {
+      ...agent,
+      id: 206,
+      event: "unlabeled",
+      actor: { login: swapper },
+      created_at: "2026-09-14T17:01:45Z",
+    },
+    {
+      ...human[0],
+      id: 207,
+      actor: { login: swapper },
+      created_at: "2026-09-14T17:01:50Z",
+    },
+  ];
+}
+// A lagging read of the swap ends at Bob's 203.
+export const laggingSwapEvents = swapEvents().slice(0, 3);
+
+// The `ready-for-agent` run of Alice or `sender` while `ready-for-human` is
+// present.
+export const swapRun = (options) =>
+  reapplicationRun({
+    label: "ready-for-human",
+    trigger: "ready-for-agent",
+    ...options,
+  });
+
+// The labeled run of `sender`, Alice unless stated, for `trigger` while `label`
+// is present, both `ready-for-agent` unless stated, with the notice that
+// observed 100 or, when `approved`, Bob's recorded approval of 203.
+export function reapplicationRun({
+  approved = false,
+  sender = "alice",
+  label = "ready-for-agent",
+  trigger = label,
+} = {}) {
   const issue = {
     number: 42,
     node_id: "ISSUE_42",
     body: ticketBody,
-    labels: [{ name: "ready-for-agent" }],
+    labels: [{ name: label }],
     state: "open",
     user: { login: "author" },
     created_at: "2026-09-14T16:00:00Z",
@@ -252,6 +301,7 @@ export function reapplicationRun({ approved = false, sender = "alice" } = {}) {
   const feedback = approved
     ? {
         ...approvedTicketFeedback(issue, {
+          label,
           reviewer: "bob",
           reviewEventId: "203",
         }),
@@ -264,7 +314,7 @@ export function reapplicationRun({ approved = false, sender = "alice" } = {}) {
   return {
     issue,
     comments: [feedback],
-    event: labeledBy(sender, "ready-for-agent", issue),
+    event: labeledBy(sender, trigger, issue),
     permissions: {
       alice: role("write"),
       bob: role("admin"),

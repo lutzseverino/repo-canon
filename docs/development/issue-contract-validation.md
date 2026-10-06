@@ -127,15 +127,20 @@ recorded review.
 GitHub can deliver a `labeled` webhook before its issue-event timeline records
 that label event. A human readiness trigger is a `labeled` event for
 `ready-for-agent` or `ready-for-human` by a sender other than
-`github-actions[bot]`, whose re-fetched issue still carries that label. The
-timeline records it only when the label's latest recorded application, by
-anyone, was made by that sender and is the label's latest recorded change. A
-trigger is therefore never decided from another person's application. While the
-latest feedback awaits review, the readiness transition it records as observed
-is a barrier: the timeline records the trigger only when, in addition, that
-application is positioned after the barrier. The run that wrote that feedback
-already observed every application at or before the barrier, so none of them
-can be this trigger. Awaiting-review feedback is only written while readiness is
+`github-actions[bot]`. It is checked against the readiness label its re-fetched
+issue carries: its own label when present, and otherwise the other readiness
+label. A sender who swaps one readiness label for the other leaves the trigger's
+own label gone, and the label the issue carries is the one a lagging timeline
+could attribute to another reviewer. When the issue carries both, the trigger's
+own label is checked, and the decision rejects the two labels. The timeline
+records the trigger only when the checked label's latest recorded application,
+by anyone, was made by that sender and is that label's latest recorded change.
+A trigger is therefore never decided from another person's application. While
+the latest feedback awaits review, the readiness transition it records as
+observed is a barrier: the timeline records the trigger only when, in addition,
+that application is positioned after the barrier. The run that wrote that
+feedback already observed every application at or before the barrier, so none
+of them can be this trigger. Awaiting-review feedback is only written while readiness is
 absent or being removed, so a present readiness label was applied after the
 barrier, and a complete timeline always holds that application. A barrier the
 timeline cannot place, such as another issue's opening or an event the timeline
@@ -150,12 +155,12 @@ read that records it. The bound stays short because the workflow serializes runs
 per issue and, while one run waits, GitHub keeps only the newest pending run for
 that issue. The decision itself stays pure: it reads one snapshot, and the
 adapter asks `readinessTriggerUnrecorded` whether to read again. Every other
-trigger, and a readiness trigger whose label is already gone from the re-fetched
-issue, reads the events once.
+trigger, and a readiness trigger whose re-fetched issue carries no readiness
+label, reads the events once.
 
 The decision asks the same predicate. While it holds, the decision fails closed
 before selecting any review, including a recorded approval, so a timeline whose
-latest application of the trigger's label is another person's or does not
+latest application of the checked label is another person's or does not
 follow the barrier, or whose latest change of that label is a removal, never
 supplies the review. When the bound runs out, the run decides once from its last
 read this way: it removes readiness and reports that the authoritative issue
@@ -167,13 +172,15 @@ the later `opened` run keeps it.
 
 Requiring the sender's own application has an accepted cost. Suppose one
 person's trigger is delayed until another person has removed and reapplied the
-label, and the timeline records that reapplication. The run then waits out its
-bound and fails closed: it removes that valid label, which has to be applied
-again. Deciding the trigger from the other person's application instead could,
-while the timeline lags, bind or keep another reviewer's earlier, withdrawn
-review for a label the sender currently holds. The validator accepts this safe
-rejection, which needs out-of-order delivery, in place of a possible binding to
-the wrong reviewer.
+label, or has swapped it for the other readiness label, and the timeline
+records that reapplication or that removal and application. The run then waits
+out its bound and fails closed: it removes that valid label, which has to be
+applied again. A `labeled` payload carries no issue-event ID, so the run cannot
+identify its own event among the recorded ones. Deciding the trigger from the
+other person's application instead could, while the timeline lags, bind or keep
+another reviewer's earlier, withdrawn review for a label the sender currently
+holds. The validator accepts this safe rejection, which needs out-of-order
+delivery, in place of a possible binding to the wrong reviewer.
 
 One lagging case is accepted as recorded, on the approval side. The label's
 latest recorded application is the sender's own earlier one, it follows any
@@ -189,6 +196,21 @@ earlier barrier, and a retry while the timeline still lags is judged by that
 application again and rejected. This needs the timeline to lag past the bound
 twice; reapplying the label once the timeline has caught up is decided as any
 later review.
+
+A run without a readiness label event has a documented limitation that is not
+fixed. Such a run, for example for a comment, an edit, or a reopening, has no
+trigger identity, so for it a lagging timeline is indistinguishable from a
+complete one. GitHub keeps only the newest pending run per issue, as described
+above, so such a run can replace the pending run of a readiness trigger or of a
+removal. It can then grant, or keep, another reviewer's earlier review that a
+human removal withdrew. This needs all of these at once: a labeler without
+review authority, a review withdrawn by a human removal, a lagging events
+endpoint, and a superseding non-readiness event. The next run that reads a
+complete timeline corrects it. Neither alternative closes it. Granting or
+keeping only the label's latest recorded applicant changes nothing, because in
+the lagging timeline that applicant is the withdrawn reviewer. Never granting
+from a non-readiness run prevents only the grant, and removes valid labels
+whenever a comment quickly follows a label.
 
 Every later review, and every Agent Brief review, starts after the validator
 publishes the exact revision in its feedback comment; the reviewer then applies
@@ -299,7 +321,7 @@ labels, placeholder failures, readiness removal, workflow-state replacement,
 superseding states, and return to review for triaged and direct contracts,
 repeat-safe feedback,
 timeline lag behind a fresh readiness label, including lag that ends at another
-reviewer's application,
+reviewer's application of either readiness label,
 corrections, direct and Agent Brief revision changes, authorized and unauthorized
 actors, stale and repeated events, native creation by authorized and
 unauthorized openers in either run order,

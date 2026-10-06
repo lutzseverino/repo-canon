@@ -15,12 +15,15 @@ import {
   creationLabel,
   labeledBy,
   laggingReapplicationEvents,
+  laggingSwapEvents,
   reapplicationEvents,
   reapplicationRun,
   readinessRetryEvents,
   readinessReview,
   repository,
   specificationBody,
+  swapEvents,
+  swapRun,
   ticketBody,
 } from "./helpers/issue-contracts.mjs";
 import { installedValidator } from "./helpers/installed-validator.mjs";
@@ -1119,6 +1122,65 @@ test("the adapter waits, within its bound, for the timeline to record a human re
           [
             "DELETE",
             "/repos/example/repository/issues/42/labels/ready-for-agent",
+          ],
+          ["POST", "/repos/example/repository/issues/42/labels"],
+          ["PATCH", "/repos/example/repository/issues/comments/13"],
+        ],
+      );
+    },
+  );
+
+  await context.test(
+    "Alice's ready-for-agent trigger whose reads end at Bob's ready-for-human waits out the bound and fails closed rather than binding Bob's review",
+    async (t) => {
+      const result = await exerciseWaiting(t, {
+        ...swapRun(),
+        issueEventReads: [laggingSwapEvents],
+        permissions: reapplicationPermissions,
+      });
+
+      assert.equal(result.code, 1);
+      assert.match(
+        result.stderr,
+        /timeline does not contain the current readiness label event/,
+      );
+      assert.equal(eventReads(result), 16);
+      assert.deepEqual(waits(result), Array(15).fill(2000));
+      const applied = writes(result);
+      assert.deepEqual(
+        applied.map(([method, url]) => [method, url]),
+        [
+          [
+            "DELETE",
+            "/repos/example/repository/issues/42/labels/ready-for-human",
+          ],
+          ["POST", "/repos/example/repository/issues/42/labels"],
+          ["PATCH", "/repos/example/repository/issues/comments/13"],
+        ],
+      );
+      assert.doesNotMatch(applied[2][2].body, /reviewed by @bob/);
+    },
+  );
+
+  await context.test(
+    "Alice's ready-for-agent trigger whose later read catches up is judged by her ready-for-human application",
+    async (t) => {
+      const result = await exerciseWaiting(t, {
+        ...swapRun(),
+        issueEventReads: [laggingSwapEvents, swapEvents()],
+        permissions: reapplicationPermissions,
+      });
+
+      assert.equal(result.code, 1);
+      assert.match(result.stderr, /@alice is not authorized/);
+      assert.equal(eventReads(result), 2);
+      assert.deepEqual(waits(result), [2000]);
+      assert.deepEqual(
+        writes(result).map(([method, url]) => [method, url]),
+        [
+          [
+            "DELETE",
+            "/repos/example/repository/issues/42/labels/ready-for-human",
           ],
           ["POST", "/repos/example/repository/issues/42/labels"],
           ["PATCH", "/repos/example/repository/issues/comments/13"],
