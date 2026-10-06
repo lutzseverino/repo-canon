@@ -47,6 +47,10 @@ const rulesetEndpoint = /\/rulesets\/(\d+)$/;
 if (method === "GET" && repositoryEndpoint.test(endpoint)) {
   state.repositoryReads = (state.repositoryReads ?? 0) + 1;
   save();
+  if (state.failRepositoryReadback && state.repositoryReads > 1) {
+    process.stderr.write("gh: Server Error (HTTP 500)\n");
+    process.exit(1);
+  }
   const settings = structuredClone(state.settings ?? {});
   if (state.readbackMismatch === "settings" && state.repositoryReads > 1) {
     settings.allow_squash_merge = false;

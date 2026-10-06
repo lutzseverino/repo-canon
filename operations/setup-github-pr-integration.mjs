@@ -338,6 +338,12 @@ function effectSummary(effects) {
   return `Confirmed partial effects: ${effects.join(" and ")}.`;
 }
 
+// Names what the final readback did not confirm, with GitHub's reason when
+// the read itself failed.
+function mismatch(subject, read) {
+  return read.error ? `${subject} (${read.error})` : subject;
+}
+
 function blockReadback(identity, mismatches, effects) {
   const applied =
     effects.length > 0
@@ -380,7 +386,11 @@ function setupOfferedIntegration(identity, repository, projectRoot) {
     githubApi([apiEndpoint(identity)], projectRoot),
   );
   if (repositoryAfter.error || !matchingMergeSettings(repositoryAfter.value)) {
-    blockReadback(identity, ["squash merge settings"], effects);
+    blockReadback(
+      identity,
+      [mismatch("squash merge settings", repositoryAfter)],
+      effects,
+    );
     return;
   }
   const offered = `matches what GitHub offers this repository: squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is unavailable because GitHub offers neither branch protection nor rulesets for this private repository on its current plan. Upgrade the plan or make the repository public; the next adoption or update then requires the check.`;
@@ -557,10 +567,10 @@ function setupIntegration(request) {
   const rulesetsAfter = readRulesets(inferred.identity, request.projectRoot);
   const mismatches = [];
   if (repositoryAfter.error || !matchingMergeSettings(repositoryAfter.value)) {
-    mismatches.push("squash merge settings");
+    mismatches.push(mismatch("squash merge settings", repositoryAfter));
   }
   if (branchAfter.error) {
-    mismatches.push("branch protection readback");
+    mismatches.push(mismatch("branch protection readback", branchAfter));
   }
   if (checkLocation === "ruleset") {
     if (
@@ -571,7 +581,9 @@ function setupIntegration(request) {
         repository.default_branch,
       )
     ) {
-      mismatches.push(`${checkName} ruleset enforcement`);
+      mismatches.push(
+        mismatch(`${checkName} ruleset enforcement`, rulesetsAfter),
+      );
     }
   } else if (
     !branchAfter.error &&
@@ -580,7 +592,7 @@ function setupIntegration(request) {
     mismatches.push(`${checkName} branch enforcement`);
   }
   if (rulesetsAfter.error && checkLocation !== "ruleset") {
-    mismatches.push("repository ruleset readback");
+    mismatches.push(mismatch("repository ruleset readback", rulesetsAfter));
   }
   if (mismatches.length > 0) {
     blockReadback(inferred.identity, mismatches, effects);

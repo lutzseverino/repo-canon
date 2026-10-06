@@ -542,6 +542,23 @@ test("blocks with GitHub's reason unless both reads hit the plan limit on a priv
     });
 });
 
+test("blocks with GitHub's reason when the merge-settings readback fails where the plan offers no enforcement", (t) => {
+  const scenario = setup(t, {
+    state: {
+      private: true,
+      failRepositoryReadback: true,
+      forbidden: { protection: planLimit, rulesets: planLimit },
+    },
+  });
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "blocked");
+  assert.match(
+    outcome.result.message,
+    /final readback did not match squash merge settings \(exit 1: gh: Server Error \(HTTP 500\)\)\. Applied changes: updated squash merge settings\./,
+  );
+});
+
 test("names Organisation plans in the recognised plan limit", (t) => {
   const teamLimit =
     "Upgrade to GitHub Team or make this repository public to enable this feature.";
@@ -628,6 +645,12 @@ test("blocks when final readback disagrees and reports applied effects", async (
       assert.equal(outcome.result.status, "blocked");
       assert.match(outcome.result.message, /final readback did not match/);
       assert.match(outcome.result.message, /Applied changes:/);
+      if (mismatch === "branch inspection") {
+        assert.match(
+          outcome.result.message,
+          /branch protection readback \(exit 1: gh: Not Found \(HTTP 404\)\)/,
+        );
+      }
     });
   }
 });
