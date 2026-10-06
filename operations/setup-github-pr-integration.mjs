@@ -24,12 +24,26 @@ function matchingMergeSettings(repository) {
   );
 }
 
+// GitHub refuses both classic protection and rulesets on a private
+// repository whose plan offers neither, naming the upgrade that would.
+function planLimited(response) {
+  return (
+    !response.ok &&
+    /HTTP 403/i.test(response.stderr ?? "") &&
+    /Upgrade to GitHub .+ or make this repository public/i.test(
+      response.stderr ?? "",
+    )
+  );
+}
+
 function readBranchProtection(identity, defaultBranch, projectRoot) {
   const endpoint = apiEndpoint(
     identity,
     `/branches/${encodeURIComponent(defaultBranch)}/protection`,
   );
   const response = githubApi([endpoint], projectRoot);
+  const parsed = jsonFrom(response);
+  if (planLimited(response)) return { ...parsed, planLimited: true };
   if (
     !response.ok &&
     /Branch not protected/i.test(response.stderr ?? "") &&
@@ -37,7 +51,6 @@ function readBranchProtection(identity, defaultBranch, projectRoot) {
   ) {
     return { value: null };
   }
-  const parsed = jsonFrom(response);
   if (parsed.error) return parsed;
   const protection = parsed.value;
   if (
@@ -94,16 +107,16 @@ function flattenPages(value) {
 }
 
 function readRulesets(identity, projectRoot) {
-  const list = jsonFrom(
-    githubApi(
-      [
-        "--paginate",
-        "--slurp",
-        `${apiEndpoint(identity, "/rulesets")}?includes_parents=false&per_page=100`,
-      ],
-      projectRoot,
-    ),
+  const response = githubApi(
+    [
+      "--paginate",
+      "--slurp",
+      `${apiEndpoint(identity, "/rulesets")}?includes_parents=false&per_page=100`,
+    ],
+    projectRoot,
   );
+  const list = jsonFrom(response);
+  if (planLimited(response)) return { ...list, planLimited: true };
   if (list.error) return list;
   const summaries = flattenPages(list.value);
   if (
@@ -324,6 +337,29 @@ function effectSummary(effects) {
   return `Confirmed partial effects: ${effects.join(" and ")}.`;
 }
 
+function reportUnavailableRequirement(identity, repositoryAfter, effects) {
+  if (repositoryAfter.error || !matchingMergeSettings(repositoryAfter.value)) {
+    const applied =
+      effects.length > 0
+        ? ` Applied changes: ${effects.join(" and ")}.`
+        : " No changes were applied.";
+    result(
+      "blocked",
+      `${operationName} is incomplete for ${identity}; final readback did not match squash merge settings.${applied}`,
+    );
+    return;
+  }
+  const offered = `GitHub PR integration for ${identity} matches what GitHub offers this repository: squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is unavailable because GitHub offers neither branch protection nor rulesets for this private repository on its current plan. Upgrade the plan or make the repository public; the next adoption or update then requires the check.`;
+  if (effects.length === 0) {
+    result("unchanged", offered);
+    return;
+  }
+  result(
+    "changed",
+    `${operationName} changed ${identity}: ${effects.join(" and ")}, confirmed by final readback. ${offered}`,
+  );
+}
+
 function setupIntegration(request) {
   const prepared = prepareGithubRepository(request, operationName);
   if (prepared.blocked) {
@@ -355,15 +391,19 @@ function setupIntegration(request) {
     repository.default_branch,
     request.projectRoot,
   );
-  if (branchBefore.error) {
+  const rulesetsBefore = readRulesets(inferred.identity, request.projectRoot);
+  const requirementUnavailable =
+    repository.private === true &&
+    branchBefore.planLimited &&
+    rulesetsBefore.planLimited;
+  if (branchBefore.error && !requirementUnavailable) {
     result(
       "blocked",
       `${operationName} could not inspect required checks on ${repository.default_branch} (${branchBefore.error}).`,
     );
     return;
   }
-  const rulesetsBefore = readRulesets(inferred.identity, request.projectRoot);
-  if (rulesetsBefore.error) {
+  if (rulesetsBefore.error && !requirementUnavailable) {
     result(
       "blocked",
       `${operationName} could not inspect repository rulesets for ${inferred.identity} (${rulesetsBefore.error}).`,
@@ -378,7 +418,7 @@ function setupIntegration(request) {
     checkLocation = "branch";
     if (!hasRequiredCheck(branchBefore.value.statusChecks))
       checkAction = { type: "branch" };
-  } else {
+  } else if (!requirementUnavailable) {
     const plan = managedRulesetPlan(
       rulesetsBefore.value,
       repository.default_branch,
@@ -480,6 +520,10 @@ function setupIntegration(request) {
   const repositoryAfter = jsonFrom(
     githubApi([apiEndpoint(inferred.identity)], request.projectRoot),
   );
+  if (requirementUnavailable) {
+    reportUnavailableRequirement(inferred.identity, repositoryAfter, effects);
+    return;
+  }
   const branchAfter = readBranchProtection(
     inferred.identity,
     repository.default_branch,

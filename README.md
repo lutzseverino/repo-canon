@@ -28,7 +28,7 @@ and the `complete` profile, as the inspection example below shows.
 - Validate issue contracts and pull request metadata in GitHub workflows.
 - Copy twenty-five engineering and productivity skills into `.agents/skills/`.
 - Ship a `deliver` skill that opens a pull request through the contribution workflow.
-- Set up triage labels, squash-only merging, and a required `PR metadata` check.
+- Set up triage labels, squash-only merging, and a required `PR metadata` check where GitHub's plan offers one.
 - Check the Repository README, Project READMEs, and documentation navigation.
 - Guide agents on the documentation tree, Project READMEs, and the Repository README.
 
