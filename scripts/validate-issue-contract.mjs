@@ -272,9 +272,9 @@ export function decideIssueContract(snapshot) {
 // removal is the label's latest recorded change. While the latest feedback
 // awaits review, that application must also follow its observed event: the run
 // that wrote it already observed every one at or before it. A trigger whose
-// issue carries no readiness label is recorded. The adapter re-reads the
-// timeline while this holds, within its bound, and the decision fails closed
-// while it does.
+// issue carries no readiness label awaits no timeline application. The adapter
+// re-reads the timeline while this holds, within its bound, and the decision
+// fails closed while it does.
 export function readinessTriggerUnrecorded(snapshot) {
   const { event, issue, comments } = snapshot;
   const trigger = readinessTransitionLabel(event);
@@ -287,8 +287,8 @@ export function readinessTriggerUnrecorded(snapshot) {
   ) {
     return false;
   }
-  const present = readinessLabels((issue.labels ?? []).map(labelName));
-  const label = present.includes(trigger) ? trigger : present[0];
+  const carried = readinessLabels((issue.labels ?? []).map(labelName));
+  const label = carried.includes(trigger) ? trigger : carried[0];
   if (!label) return false;
   const recorded = feedbackState(findFeedback(comments)?.body);
   const barrier =

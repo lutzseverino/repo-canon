@@ -23,6 +23,7 @@ import {
   repository,
   specificationBody,
   swapEvents,
+  swapRun,
   ticketBody,
 } from "./helpers/issue-contracts.mjs";
 import { installedValidator } from "./helpers/installed-validator.mjs";
@@ -1133,10 +1134,7 @@ test("the adapter waits, within its bound, for the timeline to record a human re
     "Alice's ready-for-agent trigger whose reads end at Bob's ready-for-human waits out the bound and fails closed rather than binding Bob's review",
     async (t) => {
       const result = await exerciseWaiting(t, {
-        ...reapplicationRun({
-          label: "ready-for-human",
-          trigger: "ready-for-agent",
-        }),
+        ...swapRun(),
         issueEventReads: [laggingSwapEvents],
         permissions: reapplicationPermissions,
       });
@@ -1168,10 +1166,7 @@ test("the adapter waits, within its bound, for the timeline to record a human re
     "Alice's ready-for-agent trigger whose later read catches up is judged by her ready-for-human application",
     async (t) => {
       const result = await exerciseWaiting(t, {
-        ...reapplicationRun({
-          label: "ready-for-human",
-          trigger: "ready-for-agent",
-        }),
+        ...swapRun(),
         issueEventReads: [laggingSwapEvents, swapEvents()],
         permissions: reapplicationPermissions,
       });

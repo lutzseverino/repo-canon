@@ -31,6 +31,7 @@ import {
   role,
   specificationBody,
   swapEvents,
+  swapRun,
   ticketBody,
 } from "./helpers/issue-contracts.mjs";
 
@@ -2597,14 +2598,6 @@ decisionTable(
   ],
 );
 
-// Alice's or `sender`'s `ready-for-agent` run while `ready-for-human` is present.
-const swapRun = (options) =>
-  reapplicationRun({
-    label: "ready-for-human",
-    trigger: "ready-for-agent",
-    ...options,
-  });
-
 // A swap run's fail-closed decision.
 const swapFailsClosed = {
   ...reapplicationFailsClosed,
@@ -2656,7 +2649,7 @@ decisionTable(
       },
     ]),
     {
-      name: "Alice's ready-for-agent trigger over her own ready-for-human before the barrier is unrecorded and fails closed",
+      name: "Alice's ready-for-agent trigger over her own ready-for-human at the barrier is unrecorded and fails closed",
       run: () => {
         const snapshot = snapshotFor({
           ...swapRun(),

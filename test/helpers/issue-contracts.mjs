@@ -270,6 +270,15 @@ export function swapEvents({ applier = "alice", swapper = applier } = {}) {
 // A lagging read of the swap ends at Bob's 203.
 export const laggingSwapEvents = swapEvents().slice(0, 3);
 
+// The `ready-for-agent` run of Alice or `sender` while `ready-for-human` is
+// present.
+export const swapRun = (options) =>
+  reapplicationRun({
+    label: "ready-for-human",
+    trigger: "ready-for-agent",
+    ...options,
+  });
+
 // The labeled run of `sender`, Alice unless stated, for `trigger` while `label`
 // is present, both `ready-for-agent` unless stated, with the notice that
 // observed 100 or, when `approved`, Bob's recorded approval of 203.

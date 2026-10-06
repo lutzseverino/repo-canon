@@ -138,9 +138,9 @@ by anyone, was made by that sender and is that label's latest recorded change.
 A trigger is therefore never decided from another person's application. While
 the latest feedback awaits review, the readiness transition it records as
 observed is a barrier: the timeline records the trigger only when, in addition,
-that application is positioned after the barrier. The run that wrote that feedback
-already observed every application at or before the barrier, so none of them
-can be this trigger. Awaiting-review feedback is only written while readiness is
+that application is positioned after the barrier. The run that wrote that
+feedback already observed every application at or before the barrier, so none
+of them can be this trigger. Awaiting-review feedback is only written while readiness is
 absent or being removed, so a present readiness label was applied after the
 barrier, and a complete timeline always holds that application. A barrier the
 timeline cannot place, such as another issue's opening or an event the timeline
@@ -197,20 +197,20 @@ application again and rejected. This needs the timeline to lag past the bound
 twice; reapplying the label once the timeline has caught up is decided as any
 later review.
 
-One lagging case is accepted and not fixed. A run without a readiness label
-event, such as one for a comment, an edit, or a reopening, has no trigger
-identity, so for it a lagging timeline is indistinguishable from a complete one.
-While one run waits, GitHub keeps only the newest pending run per issue. When
-that replaces the pending run of a readiness trigger or of a removal with such a
-run, the run can grant, or keep, another reviewer's earlier review that a human
-removal withdrew. This needs all of these at once: a labeler without review
-authority, a review withdrawn by a human removal, a lagging events endpoint, and
-a superseding non-readiness event. The next run that reads a complete timeline
-corrects it. Neither alternative closes it. Granting or keeping only the
-label's latest recorded applicant changes nothing, because in the lagging
-timeline that applicant is the withdrawn reviewer. Never granting from a
-non-readiness run prevents only the grant, and removes valid labels whenever a
-comment quickly follows a label.
+A run without a readiness label event has a documented limitation that is not
+fixed. Such a run, for example for a comment, an edit, or a reopening, has no
+trigger identity, so for it a lagging timeline is indistinguishable from a
+complete one. GitHub keeps only the newest pending run per issue, as described
+above, so such a run can replace the pending run of a readiness trigger or of a
+removal. It can then grant, or keep, another reviewer's earlier review that a
+human removal withdrew. This needs all of these at once: a labeler without
+review authority, a review withdrawn by a human removal, a lagging events
+endpoint, and a superseding non-readiness event. The next run that reads a
+complete timeline corrects it. Neither alternative closes it. Granting or
+keeping only the label's latest recorded applicant changes nothing, because in
+the lagging timeline that applicant is the withdrawn reviewer. Never granting
+from a non-readiness run prevents only the grant, and removes valid labels
+whenever a comment quickly follows a label.
 
 Every later review, and every Agent Brief review, starts after the validator
 publishes the exact revision in its feedback comment; the reviewer then applies
