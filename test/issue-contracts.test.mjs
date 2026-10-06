@@ -20,6 +20,7 @@ import {
   ignoredBlockerReferences,
   labeledBy,
   laggingReapplicationEvents,
+  laggingSwapEvents,
   mapBody,
   reapplicationEvents,
   reapplicationRun,
@@ -29,6 +30,7 @@ import {
   repository,
   role,
   specificationBody,
+  swapEvents,
   ticketBody,
 } from "./helpers/issue-contracts.mjs";
 
@@ -2590,6 +2592,131 @@ decisionTable(
           reviewEventId: "203",
           sourceInvalidation: null,
         });
+      },
+    },
+  ],
+);
+
+// Alice's or `sender`'s `ready-for-agent` run while `ready-for-human` is present.
+const swapRun = (options) =>
+  reapplicationRun({
+    label: "ready-for-human",
+    trigger: "ready-for-agent",
+    ...options,
+  });
+
+// A swap run's fail-closed decision.
+const swapFailsClosed = {
+  ...reapplicationFailsClosed,
+  remove: ["ready-for-human"],
+};
+
+decisionTable(
+  "a readiness trigger whose label is gone is checked against the readiness label the issue carries",
+  [
+    ...[
+      ["awaits review", {}],
+      ["records Bob's approval", { approved: true }],
+    ].flatMap(([name, options]) => [
+      {
+        name: `Alice's ready-for-agent trigger over a timeline ending at Bob's ready-for-human is unrecorded while the feedback ${name}`,
+        run: () =>
+          assert.equal(
+            readinessTriggerUnrecorded(
+              snapshotFor({
+                ...swapRun(options),
+                issueEvents: laggingSwapEvents,
+              }),
+            ),
+            true,
+          ),
+      },
+      {
+        name: `Alice's ready-for-agent trigger over a timeline ending at Bob's ready-for-human fails closed rather than binding Bob's review while the feedback ${name}`,
+        snapshot: { ...swapRun(options), issueEvents: laggingSwapEvents },
+        expected: swapFailsClosed,
+        check: keepsNoApproval,
+      },
+      {
+        name: `Alice's ready-for-agent trigger over the complete swap is rejected as unauthorized while the feedback ${name}`,
+        run: () => {
+          const snapshot = snapshotFor({
+            ...swapRun(options),
+            issueEvents: swapEvents(),
+          });
+          assert.equal(readinessTriggerUnrecorded(snapshot), false);
+          assertDecision(decideIssueContract(snapshot), {
+            exitCode: 1,
+            remove: ["ready-for-human"],
+            add: ["needs-triage"],
+            feedback: 13,
+            message: /@alice is not authorized/,
+          });
+        },
+      },
+    ]),
+    {
+      name: "Alice's ready-for-agent trigger over her own ready-for-human before the barrier is unrecorded and fails closed",
+      run: () => {
+        const snapshot = snapshotFor({
+          ...swapRun(),
+          issueEvents: swapEvents().slice(0, 1),
+        });
+        assert.equal(readinessTriggerUnrecorded(snapshot), true);
+        assertDecision(decideIssueContract(snapshot), swapFailsClosed);
+      },
+    },
+    {
+      name: "Alice's delayed ready-for-agent trigger over Bob's recorded swap to ready-for-human is unrecorded and fails closed",
+      run: () => {
+        const snapshot = snapshotFor({
+          ...swapRun(),
+          issueEvents: swapEvents({ swapper: "bob" }),
+        });
+        assert.equal(readinessTriggerUnrecorded(snapshot), true);
+        const decision = decideIssueContract(snapshot);
+        assertDecision(decision, {
+          ...swapFailsClosed,
+          notFeedbackBody: /reviewed by @bob/,
+        });
+        keepsNoApproval(decision);
+      },
+    },
+    {
+      name: "Bob's ready-for-agent trigger over his own recorded swap binds his ready-for-human application",
+      run: () => {
+        const snapshot = snapshotFor({
+          ...swapRun({ sender: "bob" }),
+          issueEvents: swapEvents({ applier: "bob" }),
+        });
+        assert.equal(readinessTriggerUnrecorded(snapshot), false);
+        const decision = decideIssueContract(snapshot);
+        assertDecision(decision, {
+          exitCode: 0,
+          feedback: 13,
+          message: /valid implementation ticket with ready-for-human bound/i,
+        });
+        assert.deepEqual(recordedState(decision.feedback.body), {
+          status: "approved",
+          revision: bodyRevision(snapshot.issue),
+          label: "ready-for-human",
+          reviewer: "bob",
+          reviewEventId: "207",
+          sourceInvalidation: null,
+        });
+      },
+    },
+    {
+      name: "Alice's ready-for-agent trigger stays recorded over a lagging timeline when the issue carries no readiness label",
+      run: () => {
+        const run = swapRun();
+        run.issue.labels = [{ name: "needs-triage" }];
+        assert.equal(
+          readinessTriggerUnrecorded(
+            snapshotFor({ ...run, issueEvents: laggingSwapEvents }),
+          ),
+          false,
+        );
       },
     },
   ],
