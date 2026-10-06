@@ -3,7 +3,8 @@
 The GitHub PR integration setup is a repeat-safe Repository Standards fixes
 operation. It requires the stable `PR metadata` check from the
 [pull request metadata workflow](pr-metadata-validation.md) on the default
-branch and configures these repository merge settings:
+branch wherever GitHub offers branch protection or rulesets for the repository,
+and configures these repository merge settings:
 
 | Setting               | Required value           |
 | --------------------- | ------------------------ |
@@ -97,7 +98,8 @@ rollback, or remote ownership-baseline guarantee.
 Authoring fixtures use a temporary local Git repository and a stateful GitHub
 CLI replacement. They exercise classic branch protection, repository rulesets,
 merge settings, the plan-limit response on either read, identity, permissions,
-partial effects, readback, retry, and unchanged repetition without contacting GitHub or mutating live settings:
+partial effects, readback, retry, and unchanged repetition without contacting
+GitHub or mutating live settings:
 
 ```sh
 npm run test:github-pr-integration

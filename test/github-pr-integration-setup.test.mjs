@@ -458,12 +458,14 @@ test("applies only merge settings when the plan offers neither branch protection
   });
   assert.deepEqual(state.rulesets, []);
   assert.equal(state.branchProtection, null);
+  assert.equal(state.branchReads, 1, "enforcement readback is skipped");
 
   const repeat = scenario.invoke();
   assert.equal(repeat.status, 0, repeat.stderr);
   assert.equal(repeat.result.status, "unchanged");
   assert.match(repeat.result.message, unavailableRequirement);
   assert.equal(scenario.readState().mutations, 1);
+  assert.equal(scenario.readState().branchReads, 2);
 });
 
 test("is unchanged when the plan offers no enforcement and merge settings already match", (t) => {

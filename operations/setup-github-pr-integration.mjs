@@ -24,16 +24,18 @@ function matchingMergeSettings(repository) {
   );
 }
 
-// GitHub refuses both classic protection and rulesets on a private
-// repository whose plan offers neither, naming the upgrade that would.
-function planLimited(response) {
-  return (
+// GitHub refuses classic protection and rulesets with a 403 naming the upgrade
+// that would offer them when a private repository's plan offers neither. The
+// read keeps its error so a caller that cannot rely on the limit still blocks.
+function readEnforcement(response) {
+  const parsed = jsonFrom(response);
+  const planLimited =
     !response.ok &&
     /HTTP 403/i.test(response.stderr ?? "") &&
     /Upgrade to GitHub .+ or make this repository public/i.test(
       response.stderr ?? "",
-    )
-  );
+    );
+  return planLimited ? { ...parsed, planLimited } : parsed;
 }
 
 function readBranchProtection(identity, defaultBranch, projectRoot) {
@@ -42,8 +44,8 @@ function readBranchProtection(identity, defaultBranch, projectRoot) {
     `/branches/${encodeURIComponent(defaultBranch)}/protection`,
   );
   const response = githubApi([endpoint], projectRoot);
-  const parsed = jsonFrom(response);
-  if (planLimited(response)) return { ...parsed, planLimited: true };
+  const parsed = readEnforcement(response);
+  if (parsed.planLimited) return parsed;
   if (
     !response.ok &&
     /Branch not protected/i.test(response.stderr ?? "") &&
@@ -115,8 +117,7 @@ function readRulesets(identity, projectRoot) {
     ],
     projectRoot,
   );
-  const list = jsonFrom(response);
-  if (planLimited(response)) return { ...list, planLimited: true };
+  const list = readEnforcement(response);
   if (list.error) return list;
   const summaries = flattenPages(list.value);
   if (
@@ -337,26 +338,59 @@ function effectSummary(effects) {
   return `Confirmed partial effects: ${effects.join(" and ")}.`;
 }
 
-function reportUnavailableRequirement(identity, repositoryAfter, effects) {
-  if (repositoryAfter.error || !matchingMergeSettings(repositoryAfter.value)) {
-    const applied =
-      effects.length > 0
-        ? ` Applied changes: ${effects.join(" and ")}.`
-        : " No changes were applied.";
+function blockReadback(identity, mismatches, effects) {
+  const applied =
+    effects.length > 0
+      ? ` Applied changes: ${effects.join(" and ")}.`
+      : " No changes were applied.";
+  result(
+    "blocked",
+    `${operationName} is incomplete for ${identity}; final readback did not match ${mismatches.join(" and ")}.${applied}`,
+  );
+}
+
+function updateMergeSettings(identity, projectRoot, effects) {
+  const mutation = githubApi(
+    [apiEndpoint(identity), "--method", "PATCH", "--input", "-"],
+    projectRoot,
+    mergeSettings,
+  );
+  if (!mutation.ok) {
     result(
       "blocked",
-      `${operationName} is incomplete for ${identity}; final readback did not match squash merge settings.${applied}`,
+      `${operationName} is incomplete for ${identity}; the squash merge settings mutation failed (${mutation.detail}). ${effectSummary(effects)} Squash merge settings remain; inspect remote state and retry.`,
     );
+    return false;
+  }
+  effects.push("updated squash merge settings");
+  return true;
+}
+
+// Requiring PR metadata is a plan-gated requirement: where GitHub offers
+// neither branch protection nor rulesets, only the merge settings apply.
+function setupOfferedIntegration(identity, repository, projectRoot) {
+  const effects = [];
+  if (
+    !matchingMergeSettings(repository) &&
+    !updateMergeSettings(identity, projectRoot, effects)
+  ) {
     return;
   }
-  const offered = `GitHub PR integration for ${identity} matches what GitHub offers this repository: squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is unavailable because GitHub offers neither branch protection nor rulesets for this private repository on its current plan. Upgrade the plan or make the repository public; the next adoption or update then requires the check.`;
+  const repositoryAfter = jsonFrom(
+    githubApi([apiEndpoint(identity)], projectRoot),
+  );
+  if (repositoryAfter.error || !matchingMergeSettings(repositoryAfter.value)) {
+    blockReadback(identity, ["squash merge settings"], effects);
+    return;
+  }
+  const offered = `matches what GitHub offers this repository: squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is unavailable because GitHub offers neither branch protection nor rulesets for this private repository on its current plan. Upgrade the plan or make the repository public; the next adoption or update then requires the check.`;
   if (effects.length === 0) {
-    result("unchanged", offered);
+    result("unchanged", `GitHub PR integration for ${identity} ${offered}`);
     return;
   }
   result(
     "changed",
-    `${operationName} changed ${identity}: ${effects.join(" and ")}, confirmed by final readback. ${offered}`,
+    `${operationName} changed ${identity}: ${effects.join(" and ")}. Final readback confirmed that GitHub PR integration ${offered}`,
   );
 }
 
@@ -392,18 +426,22 @@ function setupIntegration(request) {
     request.projectRoot,
   );
   const rulesetsBefore = readRulesets(inferred.identity, request.projectRoot);
-  const requirementUnavailable =
+  if (
     repository.private === true &&
     branchBefore.planLimited &&
-    rulesetsBefore.planLimited;
-  if (branchBefore.error && !requirementUnavailable) {
+    rulesetsBefore.planLimited
+  ) {
+    setupOfferedIntegration(inferred.identity, repository, request.projectRoot);
+    return;
+  }
+  if (branchBefore.error) {
     result(
       "blocked",
       `${operationName} could not inspect required checks on ${repository.default_branch} (${branchBefore.error}).`,
     );
     return;
   }
-  if (rulesetsBefore.error && !requirementUnavailable) {
+  if (rulesetsBefore.error) {
     result(
       "blocked",
       `${operationName} could not inspect repository rulesets for ${inferred.identity} (${rulesetsBefore.error}).`,
@@ -418,7 +456,7 @@ function setupIntegration(request) {
     checkLocation = "branch";
     if (!hasRequiredCheck(branchBefore.value.statusChecks))
       checkAction = { type: "branch" };
-  } else if (!requirementUnavailable) {
+  } else {
     const plan = managedRulesetPlan(
       rulesetsBefore.value,
       repository.default_branch,
@@ -501,29 +539,16 @@ function setupIntegration(request) {
     );
   }
 
-  if (settingsNeedUpdate) {
-    const mutation = githubApi(
-      [apiEndpoint(inferred.identity), "--method", "PATCH", "--input", "-"],
-      request.projectRoot,
-      mergeSettings,
-    );
-    if (!mutation.ok) {
-      result(
-        "blocked",
-        `${operationName} is incomplete for ${inferred.identity}; the squash merge settings mutation failed (${mutation.detail}). ${effectSummary(effects)} Squash merge settings remain; inspect remote state and retry.`,
-      );
-      return;
-    }
-    effects.push("updated squash merge settings");
+  if (
+    settingsNeedUpdate &&
+    !updateMergeSettings(inferred.identity, request.projectRoot, effects)
+  ) {
+    return;
   }
 
   const repositoryAfter = jsonFrom(
     githubApi([apiEndpoint(inferred.identity)], request.projectRoot),
   );
-  if (requirementUnavailable) {
-    reportUnavailableRequirement(inferred.identity, repositoryAfter, effects);
-    return;
-  }
   const branchAfter = readBranchProtection(
     inferred.identity,
     repository.default_branch,
@@ -558,14 +583,7 @@ function setupIntegration(request) {
     mismatches.push("repository ruleset readback");
   }
   if (mismatches.length > 0) {
-    const applied =
-      effects.length > 0
-        ? ` Applied changes: ${effects.join(" and ")}.`
-        : " No changes were applied.";
-    result(
-      "blocked",
-      `${operationName} is incomplete for ${inferred.identity}; final readback did not match ${mismatches.join(" and ")}.${applied}`,
-    );
+    blockReadback(inferred.identity, mismatches, effects);
     return;
   }
 

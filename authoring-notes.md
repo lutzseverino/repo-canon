@@ -135,7 +135,10 @@ repeated.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
   changes. The
   [GitHub repository configuration guidance](guidance/github-repository-configuration.md)
-  makes PR validation a required merge check.
+  makes PR validation a required merge check wherever GitHub offers branch
+  protection or rulesets for the repository. It is a plan-gated requirement:
+  on a private repository whose plan offers neither, it is unavailable rather
+  than optional, and adoption completes without it.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   and [issue contract validation](docs/development/issue-contract-validation.md)
   state what each check requires and how a contract loses readiness.
