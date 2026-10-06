@@ -67,6 +67,12 @@ Applying a selected standards source to a repository within its confirmed
 scope and satisfying the source's requirements there.
 _Avoid_: Publication, copying shared files
 
+**Plan-gated requirement**:
+A source requirement that GitHub offers only for some repository plans or
+visibilities. Adoption satisfies it wherever GitHub offers it; where GitHub
+does not, it is unavailable rather than optional.
+_Avoid_: Optional requirement, exception, waiver
+
 **Adopting repository**:
 A repository that applies a selected Repo Canon release through adoption.
 _Avoid_: Adopting project

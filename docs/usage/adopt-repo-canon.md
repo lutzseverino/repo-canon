@@ -119,9 +119,12 @@ inspection_identity=sha256:REPLACE_WITH_CONFIRMED_IDENTITY
 
 The fixes run before contextual work. They reconcile canonical GitHub labels,
 the `PR metadata` required check, and squash settings, then verify the remote
-result. A `blocked` operation or incomplete run names the remaining work and
-does not count as adoption. Repeat an interrupted run with `resume --retry` only
-after reviewing its retained effects.
+result. The required check is plan-gated: on a private repository whose GitHub
+plan offers neither branch protection nor rulesets, the fix reports it
+unavailable and adoption completes without it. A `blocked` operation or
+incomplete run names the remaining work and does not count as adoption. Repeat
+an interrupted run with `resume --retry` only after reviewing its retained
+effects.
 
 For contextual work, follow the returned request within the confirmed paths,
 refresh the observation with `resume`, and submit the required

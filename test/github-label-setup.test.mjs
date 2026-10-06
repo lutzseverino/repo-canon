@@ -145,6 +145,19 @@ test("blocks without label-management permission before changing labels", (t) =>
   assert.equal(scenario.readState().mutations ?? 0, 0);
 });
 
+test("blocks with GitHub's reason when labels cannot be inspected", (t) => {
+  const scenario = setup(t, { state: { failLabelInspection: true } });
+  const outcome = scenario.invoke();
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "blocked");
+  assert.match(
+    outcome.result.message,
+    /could not inspect labels for acme\/widgets \(exit 1: gh: Resource not accessible by integration \(HTTP 403\)\)/,
+  );
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+});
+
 test("reports partial effects and completes missing work after a transient API failure", (t) => {
   const scenario = setup(t, { state: { failAtMutation: 2 } });
   const first = scenario.invoke();

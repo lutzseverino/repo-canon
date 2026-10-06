@@ -27,6 +27,12 @@ if (method === "GET" && !endpoint.includes("/labels")) {
 }
 
 if (method === "GET" && endpoint.includes("/labels")) {
+  if (state.failLabelInspection) {
+    process.stderr.write(
+      "gh: Resource not accessible by integration (HTTP 403)\n",
+    );
+    process.exit(1);
+  }
   state.labelReads = (state.labelReads ?? 0) + 1;
   save();
   const labels = structuredClone(state.labels ?? []);

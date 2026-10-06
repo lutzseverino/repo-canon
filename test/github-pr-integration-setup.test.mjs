@@ -427,6 +427,154 @@ test("blocks without admin access or when rules cannot be inspected", async (t) 
   });
 });
 
+const planLimit =
+  "Upgrade to GitHub Pro or make this repository public to enable this feature.";
+const unavailableRequirement = new RegExp(
+  [
+    "matches what GitHub offers this repository: squash-only integration, PR-title subjects, and PR-body messages\\.",
+    "Requiring `PR metadata` is unavailable because GitHub offers neither branch protection nor rulesets for this private repository on its current plan\\.",
+    "Upgrade the plan or make the repository public; the next adoption or update then requires the check\\.",
+  ].join(" "),
+);
+
+test("applies only merge settings when the plan offers neither branch protection nor rulesets", (t) => {
+  const scenario = setup(t, {
+    state: {
+      private: true,
+      forbidden: { protection: planLimit, rulesets: planLimit },
+    },
+  });
+  const first = scenario.invoke();
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(first.result.status, "changed");
+  assert.match(first.result.message, /updated squash merge settings/);
+  assert.match(first.result.message, unavailableRequirement);
+  assert.doesNotMatch(first.result.message, /canonical configuration/);
+  const state = scenario.readState();
+  assert.deepEqual(state.mutationLog, ["update squash settings"]);
+  assert.deepEqual(state.settings, {
+    ...matchingSettings,
+    delete_branch_on_merge: true,
+  });
+  assert.deepEqual(state.rulesets, []);
+  assert.equal(state.branchProtection, null);
+  assert.equal(state.branchReads, 1, "enforcement readback is skipped");
+
+  const repeat = scenario.invoke();
+  assert.equal(repeat.status, 0, repeat.stderr);
+  assert.equal(repeat.result.status, "unchanged");
+  assert.match(repeat.result.message, unavailableRequirement);
+  assert.equal(scenario.readState().mutations, 1);
+  assert.equal(scenario.readState().branchReads, 2);
+});
+
+test("is unchanged when the plan offers no enforcement and merge settings already match", (t) => {
+  const scenario = setup(t, {
+    state: {
+      private: true,
+      settings: matchingSettings,
+      forbidden: { protection: planLimit, rulesets: planLimit },
+    },
+  });
+  for (const run of [scenario.invoke(), scenario.invoke()]) {
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(run.result.status, "unchanged");
+    assert.match(
+      run.result.message,
+      /^GitHub PR integration for acme\/widgets matches what GitHub offers/,
+    );
+    assert.match(run.result.message, unavailableRequirement);
+  }
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+});
+
+test("blocks with GitHub's reason unless both reads hit the plan limit on a private repository", async (t) => {
+  for (const { name, state, message } of [
+    {
+      name: "only branch protection is plan-limited",
+      state: { private: true, forbidden: { protection: planLimit } },
+      message:
+        /could not inspect required checks on main \(exit 1: gh: Upgrade to GitHub Pro .* \(HTTP 403\)\)/,
+    },
+    {
+      name: "only rulesets are plan-limited",
+      state: { private: true, forbidden: { rulesets: planLimit } },
+      message:
+        /could not inspect repository rulesets for acme\/widgets \(exit 1: gh: Upgrade to GitHub Pro .* \(HTTP 403\)\)/,
+    },
+    {
+      name: "a public repository",
+      state: { forbidden: { protection: planLimit, rulesets: planLimit } },
+      message:
+        /could not inspect required checks on main \(.*Upgrade to GitHub Pro/,
+    },
+    {
+      name: "another 403",
+      state: {
+        private: true,
+        forbidden: {
+          protection: "Resource not accessible by integration",
+          rulesets: "Resource not accessible by integration",
+        },
+      },
+      message:
+        /could not inspect required checks on main \(exit 1: gh: Resource not accessible by integration \(HTTP 403\)\)/,
+    },
+    {
+      name: "a reworded plan limit",
+      state: {
+        private: true,
+        forbidden: {
+          protection: "This feature requires a paid plan.",
+          rulesets: "This feature requires a paid plan.",
+        },
+      },
+      message: /This feature requires a paid plan/,
+    },
+  ])
+    await t.test(name, (st) => {
+      const scenario = setup(st, { state });
+      const outcome = scenario.invoke();
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "blocked");
+      assert.match(outcome.result.message, message);
+      assert.equal(scenario.readState().mutations ?? 0, 0);
+    });
+});
+
+test("blocks with GitHub's reason when the merge-settings readback fails where the plan offers no enforcement", (t) => {
+  const scenario = setup(t, {
+    state: {
+      private: true,
+      failRepositoryReadback: true,
+      forbidden: { protection: planLimit, rulesets: planLimit },
+    },
+  });
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "blocked");
+  assert.match(
+    outcome.result.message,
+    /final readback did not match squash merge settings \(exit 1: gh: Server Error \(HTTP 500\)\)\. Applied changes: updated squash merge settings\./,
+  );
+});
+
+test("names Organisation plans in the recognised plan limit", (t) => {
+  const teamLimit =
+    "Upgrade to GitHub Team or make this repository public to enable this feature.";
+  const scenario = setup(t, {
+    state: {
+      private: true,
+      settings: matchingSettings,
+      forbidden: { protection: teamLimit, rulesets: teamLimit },
+    },
+  });
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "unchanged");
+  assert.match(outcome.result.message, unavailableRequirement);
+});
+
 test("reports partial effects and retries only the missing squash change", (t) => {
   const scenario = setup(t, { state: { failAtMutation: 2 } });
   const first = scenario.invoke();
@@ -497,6 +645,12 @@ test("blocks when final readback disagrees and reports applied effects", async (
       assert.equal(outcome.result.status, "blocked");
       assert.match(outcome.result.message, /final readback did not match/);
       assert.match(outcome.result.message, /Applied changes:/);
+      if (mismatch === "branch inspection") {
+        assert.match(
+          outcome.result.message,
+          /branch protection readback \(exit 1: gh: Not Found \(HTTP 404\)\)/,
+        );
+      }
     });
   }
 });

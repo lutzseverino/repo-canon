@@ -27,6 +27,16 @@ function mutate(action) {
   state.mutationLog.push(action);
 }
 
+// GitHub answers a forbidden read with its error body on stdout and the
+// message with the HTTP status on stderr.
+function forbid(read) {
+  const message = state.forbidden?.[read];
+  if (!message) return;
+  process.stdout.write(`${JSON.stringify({ message, status: "403" })}\n`);
+  process.stderr.write(`gh: ${message} (HTTP 403)\n`);
+  process.exit(1);
+}
+
 const repositoryEndpoint = /^repos\/[^/]+\/[^/?]+$/;
 const branchProtectionEndpoint = /\/branches\/[^/]+\/protection$/;
 const contextsEndpoint =
@@ -37,6 +47,10 @@ const rulesetEndpoint = /\/rulesets\/(\d+)$/;
 if (method === "GET" && repositoryEndpoint.test(endpoint)) {
   state.repositoryReads = (state.repositoryReads ?? 0) + 1;
   save();
+  if (state.failRepositoryReadback && state.repositoryReads > 1) {
+    process.stderr.write("gh: Server Error (HTTP 500)\n");
+    process.exit(1);
+  }
   const settings = structuredClone(state.settings ?? {});
   if (state.readbackMismatch === "settings" && state.repositoryReads > 1) {
     settings.allow_squash_merge = false;
@@ -52,6 +66,7 @@ if (method === "GET" && repositoryEndpoint.test(endpoint)) {
         pull: true,
       },
       default_branch: state.defaultBranch ?? "main",
+      private: state.private ?? false,
       ...settings,
     })}\n`,
   );
@@ -61,6 +76,7 @@ if (method === "GET" && repositoryEndpoint.test(endpoint)) {
 if (method === "GET" && branchProtectionEndpoint.test(endpoint)) {
   state.branchReads = (state.branchReads ?? 0) + 1;
   save();
+  forbid("protection");
   if (
     state.failBranchInspection ||
     (state.failBranchReadback && state.branchReads > 1)
@@ -106,6 +122,7 @@ if (method === "POST" && contextsEndpoint.test(endpoint)) {
 }
 
 if (method === "GET" && rulesetsEndpoint.test(endpoint)) {
+  forbid("rulesets");
   if (state.failRulesetInspection) {
     process.stderr.write("simulated ruleset inspection failure\n");
     process.exit(1);

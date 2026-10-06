@@ -3,7 +3,8 @@
 The GitHub PR integration setup is a repeat-safe Repository Standards fixes
 operation. It requires the stable `PR metadata` check from the
 [pull request metadata workflow](pr-metadata-validation.md) on the default
-branch and configures these repository merge settings:
+branch wherever GitHub offers branch protection or rulesets for the repository,
+and configures these repository merge settings:
 
 | Setting               | Required value           |
 | --------------------- | ------------------------ |
@@ -25,12 +26,23 @@ rulesets and branch policy remain untouched.
 The classic-protection read distinguishes GitHub's documented response states
 before choosing an enforcement location:
 
-| Branch protection response                    | Required-check action                                                | Readback                                                                           |
-| --------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `404 Branch not protected`                    | Use the dedicated ruleset                                            | Confirm an active ruleset applies to the default branch and requires `PR metadata` |
-| `200` with no `required_status_checks` policy | Preserve the other classic protections and use the dedicated ruleset | Confirm the same ruleset enforcement                                               |
-| `200` with `required_status_checks`           | Add `PR metadata` to the existing classic contexts                   | Re-read branch protection and confirm the context                                  |
-| Any other `404` or unreadable response        | Return `blocked` without mutation                                    | None; the operation cannot safely distinguish absence from inaccessible state      |
+| Branch protection response                         | Required-check action                                                | Readback                                                                           |
+| -------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `404 Branch not protected`                         | Use the dedicated ruleset                                            | Confirm an active ruleset applies to the default branch and requires `PR metadata` |
+| `200` with no `required_status_checks` policy      | Preserve the other classic protections and use the dedicated ruleset | Confirm the same ruleset enforcement                                               |
+| `200` with `required_status_checks`                | Add `PR metadata` to the existing classic contexts                   | Re-read branch protection and confirm the context                                  |
+| `403` plan limit on both reads, private repository | Make no protection or ruleset change; reconcile only merge settings  | Re-read merge settings only                                                        |
+| Any other `404` or unreadable response             | Return `blocked` without mutation                                    | None; the operation cannot safely distinguish absence from inaccessible state      |
+
+Requiring `PR metadata` is a plan-gated requirement. GitHub offers neither
+classic protection nor rulesets on a private repository on some plans, and
+answers both reads with HTTP 403 and a message of the form
+`Upgrade to GitHub … or make this repository public`, naming Pro for personal
+accounts and Team for organisations. The requirement is unavailable only when
+the repository is private and both the protection read and the rulesets read
+return that response. Any other 403, the plan-limit response on a public
+repository or on only one of the two reads, or a reworded message returns
+`blocked`.
 
 Ruleset readback checks active enforcement, branch applicability, exclusions,
 and the required-check rule together. An inactive or non-applicable managed
@@ -67,9 +79,17 @@ boundary with an empty project-content target scope. It returns `changed` only
 after a final readback confirms required-check enforcement and every merge
 setting. It returns `unchanged` when the first read already matches.
 
+When the `PR metadata` requirement is unavailable, the operation applies only
+missing merge settings and reads them back, returning `changed` when it updated
+them and `unchanged` when they already matched. Its message says the
+integration matches what GitHub offers the repository, names the unavailable
+requirement and its reason, and asks to upgrade the plan or make the repository
+public; the next adoption or update then requires the check as usual.
+
 Missing or incompatible tools, uncertain identity, authentication failure,
 insufficient permission, an unreadable rule configuration, an API failure, or
-a readback mismatch returns `blocked`. A mutation failure names confirmed
+a readback mismatch returns `blocked`, with GitHub's error text from `gh`
+when the failure came from an API call. A mutation failure names confirmed
 partial effects and the work that remains. Each retry reads current remote
 state and performs only missing changes, including after process interruption.
 Readback is point-in-time evidence: the operation supplies no freshness,
@@ -77,8 +97,9 @@ rollback, or remote ownership-baseline guarantee.
 
 Authoring fixtures use a temporary local Git repository and a stateful GitHub
 CLI replacement. They exercise classic branch protection, repository rulesets,
-merge settings, identity, permissions, partial effects, readback, retry, and
-unchanged repetition without contacting GitHub or mutating live settings:
+merge settings, the plan-limit response on either read, identity, permissions,
+partial effects, readback, retry, and unchanged repetition without contacting
+GitHub or mutating live settings:
 
 ```sh
 npm run test:github-pr-integration
