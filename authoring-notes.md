@@ -138,7 +138,10 @@ repeated.
   makes PR validation a required merge check wherever GitHub offers branch
   protection or rulesets for the repository. It is a plan-gated requirement:
   on a private repository whose plan offers neither, it is unavailable rather
-  than optional, and adoption completes without it.
+  than optional, and adoption completes without it. GitHub runs the PR
+  metadata workflow only from the default branch, so the requirement is
+  deferred until the workflow is there, and the next adoption or update after
+  it merges requires the check.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   and [issue contract validation](docs/development/issue-contract-validation.md)
   state what each check requires and how a contract loses readiness.

@@ -51,11 +51,11 @@ default branch on GitHub carries the workflow at its installed path,
 workflow triggers on `pull_request_target`, which GitHub runs only from a
 workflow file on the default branch, so until the file is there `PR metadata`
 never reports and a required check would hold every pull request, including
-the adoption pull request that installs the workflow. A `404 Not Found` means
-the workflow is absent and defers the requirement; any other failed read
-returns `blocked` with GitHub's error text and no mutation. The Actions
-workflow list is not used, because GitHub keeps listing a workflow after its
-file leaves the default branch.
+the adoption pull request that installs the workflow. GitHub's `Not Found` 404
+response means the workflow is absent and defers the requirement; any other
+failed read returns `blocked` with GitHub's error text and no mutation. The
+Actions workflow list is not used, because GitHub keeps listing a workflow
+after its file leaves the default branch.
 
 Ruleset readback checks active enforcement, branch applicability, exclusions,
 and the required-check rule together. An inactive or non-applicable managed

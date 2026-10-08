@@ -111,7 +111,7 @@ function readWorkflowPresence(identity, defaultBranch, projectRoot) {
   );
   if (
     !response.ok &&
-    /Not Found/.test(response.stderr ?? "") &&
+    /Not Found/i.test(response.stderr ?? "") &&
     /HTTP 404/i.test(response.stderr ?? "")
   ) {
     return { value: false };
