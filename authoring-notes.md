@@ -19,11 +19,12 @@ adopts Repo Canon, and `discovery/` also holds the documentation scope drafter
 that agent runs. They are not installed in the adopting repository; the CLI
 only retains them with the other source inputs.
 
-READMEs, development documentation, glossaries, and project-specific agent
-guidance belong to the adopting repository, because they describe it and its
-projects. Repo Canon shapes them through contextual guidance and checks. The
-Repository README has the fixed target `README.md`. Discovery proposes the
-concrete paths of Project READMEs at arbitrary locations and of documentation
+The repository license, READMEs, development documentation, glossaries, and
+project-specific agent guidance belong to the adopting repository, because
+they describe it and its projects. Repo Canon shapes them through contextual
+guidance and checks. The Repository license has the fixed target `LICENSE`,
+and the Repository README has the fixed target `README.md`. Discovery proposes
+the concrete paths of Project READMEs at arbitrary locations and of documentation
 files, glossaries, and indexes, including documentation moves and link repairs.
 The maintainer confirms the complete inspection before adoption writes any of
 them.

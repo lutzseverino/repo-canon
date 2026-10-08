@@ -101,6 +101,17 @@ Set \`HARBOR_PORT\`.
   });
 });
 
+test("passes an all-rights-reserved notice with its matching License link", (t) => {
+  const outcome = check(t, {
+    "README.md":
+      '<h1 align="center">Harbor</h1>\n\n## License\n\n[All rights reserved](LICENSE)\n',
+    LICENSE: "Copyright (c) 2026 Example\n\nAll rights reserved.\n",
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "passed");
+});
+
 test("runs from its declared retained source layout", (t) => {
   const retainedScript = retainedCheck(
     t,
