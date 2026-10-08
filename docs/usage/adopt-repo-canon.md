@@ -121,7 +121,12 @@ The fixes run before contextual work. They reconcile canonical GitHub labels,
 the `PR metadata` required check, and squash settings, then verify the remote
 result. The required check is plan-gated: on a private repository whose GitHub
 plan offers neither branch protection nor rulesets, the fix reports it
-unavailable and adoption completes without it. A `blocked` operation or
+unavailable and adoption completes without it. A first adoption defers the
+required check, because GitHub runs the PR metadata validation workflow only
+from the default branch, which carries it only once the adoption merges: the
+fix applies the squash settings, reports the check deferred, and adoption
+completes without it. After the adoption merges, the next update, including one
+with an unchanged selection, requires the check. A `blocked` operation or
 incomplete run names the remaining work and does not count as adoption. Repeat
 an interrupted run with `resume --retry` only after reviewing its retained
 effects.

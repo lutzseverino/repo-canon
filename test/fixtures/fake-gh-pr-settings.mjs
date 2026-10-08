@@ -37,12 +37,43 @@ function forbid(read) {
   process.exit(1);
 }
 
+state.requests ??= [];
+state.requests.push(`${method} ${endpoint}`);
+save();
+
 const repositoryEndpoint = /^repos\/[^/]+\/[^/?]+$/;
 const branchProtectionEndpoint = /\/branches\/[^/]+\/protection$/;
 const contextsEndpoint =
   /\/branches\/[^/]+\/protection\/required_status_checks\/contexts$/;
 const rulesetsEndpoint = /\/rulesets(?:\?.*)?$/;
 const rulesetEndpoint = /\/rulesets\/(\d+)$/;
+const workflowEndpoint =
+  /\/contents\/\.github\/workflows\/pr-metadata\.yml\?ref=[^&]+$/;
+
+// The default branch carries the PR metadata validation workflow unless the
+// state says it is absent, or that GitHub fails the read.
+if (method === "GET" && workflowEndpoint.test(endpoint)) {
+  if (state.workflow === "absent") {
+    process.stdout.write(
+      `${JSON.stringify({ message: "Not Found", status: "404" })}\n`,
+    );
+    process.stderr.write("gh: Not Found (HTTP 404)\n");
+    process.exit(1);
+  }
+  if (state.workflow === "failed") {
+    process.stderr.write("gh: Server Error (HTTP 500)\n");
+    process.exit(1);
+  }
+  process.stdout.write(
+    `${JSON.stringify({
+      type: "file",
+      path: ".github/workflows/pr-metadata.yml",
+      encoding: "base64",
+      content: Buffer.from("name: PR metadata validation\n").toString("base64"),
+    })}\n`,
+  );
+  process.exit(0);
+}
 
 if (method === "GET" && repositoryEndpoint.test(endpoint)) {
   state.repositoryReads = (state.repositoryReads ?? 0) + 1;

@@ -3,8 +3,9 @@
 The GitHub PR integration setup is a repeat-safe Repository Standards fixes
 operation. It requires the stable `PR metadata` check from the
 [pull request metadata workflow](pr-metadata-validation.md) on the default
-branch wherever GitHub offers branch protection or rulesets for the repository,
-and configures these repository merge settings:
+branch wherever GitHub offers branch protection or rulesets for the repository
+and the default branch carries that workflow, and configures these repository
+merge settings:
 
 | Setting               | Required value           |
 | --------------------- | ------------------------ |
@@ -44,6 +45,18 @@ return that response. Any other 403, the plan-limit response on a public
 repository or on only one of the two reads, or a reworded message returns
 `blocked`.
 
+Where the requirement is available, the operation then reads whether the
+default branch on GitHub carries the workflow at its installed path,
+`.github/workflows/pr-metadata.yml`, through the repository contents API. The
+workflow triggers on `pull_request_target`, which GitHub runs only from a
+workflow file on the default branch, so until the file is there `PR metadata`
+never reports and a required check would hold every pull request, including
+the adoption pull request that installs the workflow. GitHub's `Not Found` 404
+response means the workflow is absent and defers the requirement; any other
+failed read returns `blocked` with GitHub's error text and no mutation. The
+Actions workflow list is not used, because GitHub keeps listing a workflow
+after its file leaves the default branch.
+
 Ruleset readback checks active enforcement, branch applicability, exclusions,
 and the required-check rule together. An inactive or non-applicable managed
 ruleset is reconciled before settings are changed.
@@ -60,9 +73,9 @@ title, description, issue references, and any breaking-change explanation.
 The operation requires Node.js 24, Git 2.18.0 or newer, and GitHub CLI 2.57.0
 or newer. `gh` must have an authenticated active account for `github.com`, and
 that account must have admin access to edit branch or ruleset policy and
-repository merge settings. The `PR metadata validation` workflow must be
-installed so the required check can report a result. GitHub may require the
-check to run once before its name can be selected.
+repository merge settings. The `PR metadata validation` workflow must be on the
+default branch before the operation requires the check, so that the check can
+report a result.
 
 All repository-local `github.com` fetch and push remote URLs must identify one
 repository. Global and system Git configuration cannot supply or conflict with
@@ -86,6 +99,18 @@ integration matches what GitHub offers the repository, names the unavailable
 requirement and its reason, and asks to upgrade the plan or make the repository
 public; the next adoption or update then requires the check as usual.
 
+When the default branch does not carry the workflow, requiring `PR metadata` is
+deferred. The operation creates no ruleset, adds no classic required check, and
+leaves existing branch protection and rulesets as they are, including an
+inactive managed ruleset. It applies only missing merge settings and reads them
+back, returning `changed` when it updated them and `unchanged` when they
+already matched, so the adoption completes. Its message says the integration
+applies squash-only integration, PR-title subjects, and PR-body messages,
+names the deferred requirement and the default branch that lacks the workflow,
+and asks to merge the adoption. Once the adoption pull request merges and the
+workflow is on the default branch, the next adoption or update, including one
+with an unchanged selection, requires the check as usual.
+
 Missing or incompatible tools, uncertain identity, authentication failure,
 insufficient permission, an unreadable rule configuration, an API failure, or
 a readback mismatch returns `blocked`, with GitHub's error text from `gh`
@@ -97,7 +122,8 @@ rollback, or remote ownership-baseline guarantee.
 
 Authoring fixtures use a temporary local Git repository and a stateful GitHub
 CLI replacement. They exercise classic branch protection, repository rulesets,
-merge settings, the plan-limit response on either read, identity, permissions,
+merge settings, the plan-limit response on either read, a workflow that is
+present, absent, or unreadable on the default branch, identity, permissions,
 partial effects, readback, retry, and unchanged repetition without contacting
 GitHub or mutating live settings:
 

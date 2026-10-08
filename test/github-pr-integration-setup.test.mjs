@@ -654,3 +654,163 @@ test("blocks when final readback disagrees and reports applied effects", async (
     });
   }
 });
+
+const workflowRead =
+  "GET repos/acme/widgets/contents/.github/workflows/pr-metadata.yml?ref=main";
+const deferredRequirement = new RegExp(
+  [
+    "GitHub PR integration for acme/widgets applies squash-only integration, PR-title subjects, and PR-body messages\\.",
+    "Requiring `PR metadata` is deferred because the default branch `main` does not carry the PR metadata validation workflow yet, so GitHub cannot report the check\\.",
+    "Merge this adoption; the next adoption or update then requires the check\\.",
+  ].join(" "),
+);
+
+// The requests other than reads that a run made.
+function writes(state) {
+  return state.requests.filter((request) => !request.startsWith("GET "));
+}
+
+test("defers requiring PR metadata while the default branch lacks the workflow", (t) => {
+  const scenario = setup(t, { state: { workflow: "absent" } });
+  const first = scenario.invoke();
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(first.result.status, "changed");
+  assert.match(first.result.message, /updated squash merge settings/);
+  assert.match(first.result.message, deferredRequirement);
+  assert.doesNotMatch(first.result.message, /canonical configuration/);
+  const state = scenario.readState();
+  assert.ok(state.requests.includes(workflowRead));
+  assert.deepEqual(state.mutationLog, ["update squash settings"]);
+  assert.deepEqual(state.settings, {
+    ...matchingSettings,
+    delete_branch_on_merge: true,
+  });
+  assert.deepEqual(state.rulesets, []);
+  assert.equal(state.branchProtection, null);
+
+  const repeat = scenario.invoke();
+  assert.equal(repeat.status, 0, repeat.stderr);
+  assert.equal(repeat.result.status, "unchanged");
+  assert.match(
+    repeat.result.message,
+    new RegExp(`^${deferredRequirement.source}$`),
+  );
+  assert.equal(scenario.readState().mutations, 1);
+});
+
+test("leaves existing protection and rulesets untouched while the requirement is deferred", async (t) => {
+  for (const { name, state } of [
+    {
+      name: "classic required checks without PR metadata",
+      state: {
+        branchProtection: classicProtection({
+          strict: true,
+          contexts: ["build"],
+          checks: [{ context: "security", app_id: 456 }],
+        }),
+      },
+    },
+    {
+      name: "an inactive managed ruleset",
+      state: {
+        rulesets: [
+          canonicalRuleset({
+            enforcement: "disabled",
+            rules: [{ type: "non_fast_forward" }],
+          }),
+        ],
+      },
+    },
+    {
+      name: "ambiguous managed rulesets",
+      state: {
+        rulesets: [
+          canonicalRuleset(),
+          canonicalRuleset({ id: 51, name: rulesetName.toUpperCase() }),
+        ],
+      },
+    },
+  ])
+    await t.test(name, (st) => {
+      const scenario = setup(st, {
+        state: { ...state, settings: matchingSettings, workflow: "absent" },
+      });
+      const outcome = scenario.invoke();
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "unchanged");
+      assert.match(outcome.result.message, deferredRequirement);
+      const after = scenario.readState();
+      assert.deepEqual(writes(after), []);
+      assert.deepEqual(after.branchProtection, state.branchProtection ?? null);
+      assert.deepEqual(after.rulesets, state.rulesets ?? []);
+      assert.equal(after.branchReads, 1, "enforcement readback is skipped");
+    });
+});
+
+test("blocks with GitHub's reason when the workflow read fails", (t) => {
+  const scenario = setup(t, { state: { workflow: "failed" } });
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "blocked");
+  assert.match(
+    outcome.result.message,
+    /could not read \.github\/workflows\/pr-metadata\.yml on main \(exit 1: gh: Server Error \(HTTP 500\)\)/,
+  );
+  assert.deepEqual(writes(scenario.readState()), []);
+});
+
+test("requires PR metadata on the run after the workflow reaches the default branch", async (t) => {
+  await t.test("creates the ruleset", (st) => {
+    const scenario = setup(st, { state: { workflow: "absent" } });
+    assert.equal(scenario.invoke().result.status, "changed");
+    scenario.updateState({ workflow: "present" });
+
+    const next = scenario.invoke();
+    assert.equal(next.status, 0, next.stderr);
+    assert.equal(next.result.status, "changed");
+    assert.match(next.result.message, /created required-check ruleset/);
+    const state = scenario.readState();
+    assert.deepEqual(state.mutationLog, [
+      "update squash settings",
+      "create required-check ruleset",
+    ]);
+    assert.deepEqual(state.rulesets, [canonicalRuleset({ id: 100 })]);
+  });
+
+  await t.test("reconciles an inactive managed ruleset", (st) => {
+    const scenario = setup(st, {
+      state: {
+        settings: matchingSettings,
+        rulesets: [canonicalRuleset({ enforcement: "disabled" })],
+        workflow: "absent",
+      },
+    });
+    assert.equal(scenario.invoke().result.status, "unchanged");
+    scenario.updateState({ workflow: "present" });
+
+    const next = scenario.invoke();
+    assert.equal(next.status, 0, next.stderr);
+    assert.equal(next.result.status, "changed");
+    assert.match(next.result.message, /updated required-check ruleset/);
+    assert.deepEqual(scenario.readState().rulesets, [canonicalRuleset()]);
+  });
+});
+
+test("reports the plan limit regardless of the workflow read", async (t) => {
+  for (const workflow of ["absent", "failed"])
+    await t.test(workflow, (st) => {
+      const scenario = setup(st, {
+        state: {
+          private: true,
+          settings: matchingSettings,
+          forbidden: { protection: planLimit, rulesets: planLimit },
+          workflow,
+        },
+      });
+      const outcome = scenario.invoke();
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "unchanged");
+      assert.match(outcome.result.message, unavailableRequirement);
+      assert.ok(!scenario.readState().requests.includes(workflowRead));
+    });
+});

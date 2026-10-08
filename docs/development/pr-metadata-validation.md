@@ -79,9 +79,11 @@ therefore does not need that package manager installed on the runner.
 
 Repository setup can require the `PR metadata` check alongside existing checks.
 The setup operator needs permission to edit the target branch rule or ruleset;
-the workflow itself does not need that permission. Let the check run once before
-selecting its name in GitHub when the repository UI requires a recently observed
-check.
+the workflow itself does not need that permission. GitHub runs a
+`pull_request_target` workflow only from the default branch, so the check first
+reports on pull requests opened after the workflow merges there; the
+[PR integration setup](github-pr-integration-setup.md) defers requiring it
+until then.
 
 Run the executable checks with Node.js 24:
 
