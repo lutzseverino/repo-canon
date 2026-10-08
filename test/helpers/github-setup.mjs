@@ -122,6 +122,14 @@ export function setup(t, subject, options = {}) {
     toolsRoot,
     invoke,
     readState: () => JSON.parse(readFileSync(statePath, "utf8")),
+    updateState: (changes) =>
+      writeFileSync(
+        statePath,
+        `${JSON.stringify({
+          ...JSON.parse(readFileSync(statePath, "utf8")),
+          ...changes,
+        })}\n`,
+      ),
   };
 }
 
