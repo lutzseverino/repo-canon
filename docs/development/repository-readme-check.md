@@ -53,6 +53,15 @@ that file. Whether the label names the actual license remains a maintainer or
 agent semantic judgment. A missing, empty, or ambiguous set of root license
 files returns `blocked` for owner clarification.
 
+The contextual `repository-license` declaration owns only `LICENSE`. Its
+[guidance](../../guidance/repository-license.md) establishes the license decision
+before this check runs: it preserves a clear existing license, asks the
+maintainer when a decision is needed, and records a decision to grant no license
+as a copyright notice with all rights reserved. An unanswered decision or an
+alternative root license file blocks that declaration's assessment before
+checks. Once resolved, adoption can write `LICENSE` and the README's License
+link in the same run, within their separate declarations' targets.
+
 Run the public-boundary fixtures with Node.js 24:
 
 ```sh
@@ -66,7 +75,8 @@ links hidden in code, resolving elsewhere, outside a paragraph, or wrapped in
 lists, quotations, tables, or images, pointer links sharing a div, quotation,
 or `details` block with their heading, links wrapping the next heading, named
 anchors and hidden media around pointer links, malformed titles and license
-links, missing and ambiguous licensing, invalid protocol input, and
+links, missing and ambiguous licensing, an all-rights-reserved notice with a
+matching License link, invalid protocol input, and
 byte-for-byte preservation of the disposable project. One fixture executes
 the operation from a retained layout containing only its declared script and
 resources, so an import cannot succeed accidentally through the source

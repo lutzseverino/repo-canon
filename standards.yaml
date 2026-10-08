@@ -189,6 +189,11 @@ defaults:
       target: .github/PULL_REQUEST_TEMPLATE.md
       exact: .github/PULL_REQUEST_TEMPLATE.md
 
+    repository-license:
+      kind: file
+      target: LICENSE
+      guidance: guidance/repository-license.md
+
     repository-readme:
       kind: file
       target: README.md
