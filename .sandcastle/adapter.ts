@@ -239,7 +239,8 @@ export function createFactory(settings: Settings, ports: Ports) {
   }
 
   // A run's pull request is one that closes its issue or comes from the run's
-  // branch. A closed issue counts as merged work.
+  // branch. Only a closed issue counts as merged work; a merged pull request
+  // with the issue still open is its own state.
   async function pullRequestState(number: number): Promise<PullRequestState> {
     const response = JSON.parse(
       await ports.gh([
@@ -259,7 +260,8 @@ export function createFactory(settings: Settings, ports: Ports) {
       ...issue.closedByPullRequestsReferences.nodes,
       ...pullRequests.nodes,
     ].map((pullRequest: { state: string }) => pullRequest.state);
-    if (issue.state === "CLOSED" || states.includes("MERGED")) return "merged";
+    if (issue.state === "CLOSED") return "merged";
+    if (states.includes("MERGED")) return "merged-issue-open";
     if (states.includes("OPEN")) return "open";
     return states.includes("CLOSED") ? "closed" : "none";
   }

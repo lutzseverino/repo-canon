@@ -606,3 +606,48 @@ test("a run's claim is released when its pull request merges after the run ends"
   assert.deepEqual(run.github.find(4).labels, ["ready-for-agent"]);
   assert.deepEqual(run.github.find(4).comments, []);
 });
+
+test("a run whose pull request merged without closing its issue fails it and never retries", async () => {
+  const run = factory({
+    issues: [{ number: 4 }],
+    hostSettings: { retryModel: "gpt-5.5@xhigh" },
+  });
+  await run.tick();
+  run.github.find(4).branchPullRequests.push("MERGED");
+  run.sandcastle.launched[0].finish();
+  await settled();
+  await run.tick();
+  await run.tick();
+  const issue = run.github.find(4);
+  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
+  assert.equal(issue.comments.length, 1);
+  assert.match(
+    issue.comments[0],
+    /its pull request merged without closing the issue/,
+  );
+  assert.equal(run.sandcastle.launched.length, 1);
+});
+
+test("a claim whose pull request merged without closing its issue is failed, not released", async () => {
+  const run = factory({
+    issues: [
+      {
+        number: 4,
+        labels: ["ready-for-agent", "factory:running"],
+        pullRequests: ["MERGED"],
+      },
+    ],
+  });
+  await run.tick();
+  await run.tick();
+  const issue = run.github.find(4);
+  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
+  assert.deepEqual(issue.comments, [
+    [
+      "The factory run failed: its pull request merged without closing the issue; close the issue if that finished it.",
+      "",
+      "Remove `factory:failed` to let the factory pick this issue up again.",
+    ].join("\n"),
+  ]);
+  assert.equal(run.sandcastle.launched.length, 0);
+});

@@ -99,9 +99,16 @@ A run's pull request is one that closes its issue or comes from the run's
 branch, `factory/issue-<n>`. A `factory:running` claim is held by a run the
 factory is tracking or by the issue's open pull request, so it stays while
 `babysit` works. On each pass, the factory settles every claim that neither
-holds: it removes the claim once the pull request merged or the issue closed,
-and otherwise fails the issue. This covers a pull request closed without
-merging and a claim left by an earlier factory process.
+holds: it removes the claim once the issue closed, and otherwise fails the
+issue. This covers a pull request closed without merging and a claim left by
+an earlier factory process.
+
+A pull request that merged while its issue is still open does not release the
+claim, since the factory would run the issue again. The factory fails the
+issue instead, whether its run just ended or no run holds the claim, and never
+retries it. The comment says the pull request merged without closing the
+issue: close the issue if that finished it, or remove `factory:failed` to run
+it again.
 
 A run that ends without an open pull request, or exceeds the time limit, has
 failed. A failed first run retries once on the retry model, keeping the claim.

@@ -496,6 +496,43 @@ test("a claim that neither a run nor an open pull request holds fails its issue"
   ]);
 });
 
+test("a run whose pull request merged without closing its issue fails it without a retry", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [issue(4, claimed)],
+      runs: [
+        run(4, {
+          ended: { timedOut: false, pullRequest: "merged-issue-open" },
+        }),
+      ],
+    }),
+  );
+  assert.deepEqual(launches(decisions), []);
+  assert.deepEqual(decisions[0], {
+    kind: "fail",
+    issue: 4,
+    failure:
+      "its pull request merged without closing the issue; close the issue if that finished it",
+    log: "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
+  });
+});
+
+test("a claim whose pull request merged without closing its issue fails it", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [issue(6, claimed)],
+      claims: [{ issue: 6, pullRequest: "merged-issue-open" }],
+    }),
+  );
+  assert.deepEqual(decisions[0], {
+    kind: "fail",
+    issue: 6,
+    failure:
+      "its pull request merged without closing the issue; close the issue if that finished it",
+    log: null,
+  });
+});
+
 test("a retry takes its turn in oldest-first order", () => {
   const ended = { timedOut: false, pullRequest: "none" };
   const decisions = decideFactory(

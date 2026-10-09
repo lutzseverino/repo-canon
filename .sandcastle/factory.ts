@@ -21,9 +21,11 @@ export type Settings = {
   timeLimitMinutes: number;
 };
 
-// The state of the pull requests for an issue: merged once one merged or the
-// issue closed, else open while one is open.
-export type PullRequestState = "open" | "merged" | "closed" | "none";
+// The state of the pull requests for an issue: merged once the issue closed,
+// merged-issue-open when one merged but the issue is still open, else open
+// while one is open.
+export type PullRequestState =
+  "open" | "merged" | "merged-issue-open" | "closed" | "none";
 
 // A run the factory host started. `ended` is null while its agent runs.
 export type Run = {
@@ -88,6 +90,11 @@ const vendorPrefixes: [string, Provider][] = [
 ];
 
 const defaultEffort = "high";
+
+// Running the issue again could redo merged work, so this failure never
+// retries.
+const mergedIssueOpen =
+  "its pull request merged without closing the issue; close the issue if that finished it";
 
 export function decideFactory(snapshot: Snapshot): Decision[] {
   const decisions: Decision[] = [];
@@ -160,9 +167,9 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
 type Retry = { run: Run; failure: string; model: Model };
 
 // A running run over the time limit is stopped. An ended run releases its
-// claim once its pull request merges and keeps it while the pull request is
-// open. A failed first run may retry once on the retry model; any other
-// failure fails the issue.
+// claim once its issue closes and keeps it while the pull request is open. A
+// failed first run may retry once on the retry model; any other failure fails
+// the issue.
 function settle(run: Run, snapshot: Snapshot): Decision[] | Retry {
   const limit = snapshot.settings.timeLimitMinutes;
   const overtime = `the time limit of ${limit} minutes`;
@@ -172,6 +179,15 @@ function settle(run: Run, snapshot: Snapshot): Decision[] | Retry {
       ? [{ kind: "stop", issue: run.issue, reason: `exceeded ${overtime}` }]
       : [];
   }
+  if (run.ended.pullRequest === "merged-issue-open")
+    return [
+      {
+        kind: "fail",
+        issue: run.issue,
+        failure: mergedIssueOpen,
+        log: run.log,
+      },
+    ];
   if (!run.ended.timedOut && run.ended.pullRequest === "merged")
     return [{ kind: "release", issue: run.issue }];
   if (!run.ended.timedOut && run.ended.pullRequest === "open")
@@ -233,15 +249,17 @@ function unretried({ run, failure }: Retry, reason: string): Decision {
 }
 
 // A claim no run holds stays while its pull request is open and is released
-// once it merges. Any other claim, such as one left by a factory restart,
-// fails its issue.
+// once its issue closes. Any other claim, such as one left by a factory
+// restart, fails its issue.
 function settleClaim({ issue, pullRequest }: Claim): Decision[] {
   if (pullRequest === "open") return [];
   if (pullRequest === "merged") return [{ kind: "release", issue }];
   const failure =
-    pullRequest === "closed"
-      ? "its pull request closed without merging"
-      : "no factory run or open pull request holds its claim";
+    pullRequest === "merged-issue-open"
+      ? mergedIssueOpen
+      : pullRequest === "closed"
+        ? "its pull request closed without merging"
+        : "no factory run or open pull request holds its claim";
   return [{ kind: "fail", issue, failure, log: null }];
 }
 
