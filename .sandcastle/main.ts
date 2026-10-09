@@ -223,12 +223,16 @@ for (;;) {
   const pull = spawnSync("git", ["pull", "--ff-only", "--quiet"], {
     cwd: root,
   });
-  if (pull.status !== 0) report(`git pull failed: ${pull.stderr}`);
-  try {
-    for (const decision of await factory.tick())
-      if (decision.kind !== "skip") report(JSON.stringify(decision));
-  } catch (error) {
-    report(`tick failed: ${error}`);
-  }
+  // A checkout that did not update would launch runs from stale guidance, so
+  // the pass waits for the next one.
+  if (pull.status !== 0)
+    report(`git pull failed, so this pass is skipped: ${pull.stderr}`);
+  else
+    try {
+      for (const decision of await factory.tick())
+        if (decision.kind !== "skip") report(JSON.stringify(decision));
+    } catch (error) {
+      report(`tick failed: ${error}`);
+    }
   await sleep(settings.pollSeconds * 1000);
 }

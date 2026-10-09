@@ -5,6 +5,7 @@ import {
   claudeUsage,
   codexUsage,
   createFactory,
+  imageName,
   readSettings,
 } from "../.sandcastle/adapter.ts";
 
@@ -246,7 +247,7 @@ test("every launch runs in the repository's image, built before the claim", asyn
   await run.tick();
   assert.deepEqual(run.docker.builds, [
     {
-      image: "factory-acme-widgets",
+      image: "factory-acme-widgets-d782c8744023",
       dockerfile: "/srv/factory/.sandcastle/Dockerfile",
       labels: { 4: ["ready-for-agent"], 5: ["ready-for-agent"] },
     },
@@ -264,9 +265,9 @@ test("every launch runs in the repository's image, built before the claim", asyn
   assert.deepEqual(
     run.sandcastle.launched.map(({ issue, image }) => ({ issue, image })),
     [
-      { issue: 4, image: "factory-acme-widgets" },
-      { issue: 5, image: "factory-acme-widgets" },
-      { issue: 4, image: "factory-acme-widgets" },
+      { issue: 4, image: "factory-acme-widgets-d782c8744023" },
+      { issue: 5, image: "factory-acme-widgets-d782c8744023" },
+      { issue: 4, image: "factory-acme-widgets-d782c8744023" },
     ],
   );
 });
@@ -800,5 +801,40 @@ test("a cap too large to count is refused", () => {
         FACTORY_TIME_LIMIT_MINUTES: "60",
       }),
     /FACTORY_CAPS: codex=9+ is not <provider>=<count>/,
+  );
+});
+
+test("a run whose retry waits settles on the issue's latest state", async () => {
+  const run = factory({
+    issues: [{ number: 4 }],
+    hostSettings: {
+      retryModel: "gpt-5.5",
+      caps: { "claude-code": 2, codex: 0 },
+    },
+  });
+  await run.tick();
+  run.sandcastle.launched[0].finish();
+  await settled();
+  await run.tick();
+  assert.deepEqual(run.github.find(4).labels, [
+    "ready-for-agent",
+    "factory:running",
+  ]);
+  run.github.find(4).state = "CLOSED";
+  await run.tick();
+  assert.deepEqual(run.github.find(4).labels, ["ready-for-agent"]);
+  assert.deepEqual(run.github.find(4).comments, []);
+  assert.equal(run.sandcastle.launched.length, 1);
+});
+
+test("repositories whose names flatten alike get different images", () => {
+  assert.equal(
+    imageName("acme", "widgets"),
+    "factory-acme-widgets-d782c8744023",
+  );
+  assert.notEqual(imageName("a-b", "c"), imageName("a", "b-c"));
+  assert.match(
+    imageName("Acme", "Wid.gets_2"),
+    /^factory-acme-wid-gets-2-[0-9a-f]{12}$/,
   );
 });

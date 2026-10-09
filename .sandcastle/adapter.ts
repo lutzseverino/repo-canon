@@ -1,6 +1,7 @@
 // The factory's adapter: it reads the snapshot through the GitHub CLI and the
 // usage readers, asks the decision core what to do, and carries the decisions
 // out through GitHub label edits, comments, and Sandcastle launches.
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -169,6 +170,18 @@ const pullRequestsQuery = `query($owner: String!, $name: String!, $number: Int!,
   }
 }`;
 
+// A repository's sandbox image. Image tags are global to a Docker daemon, so a
+// hash of the full identity keeps repositories whose names flatten alike, such
+// as a-b/c and a/b-c, apart.
+export function imageName(owner: string, name: string): string {
+  const slug = `${owner}-${name}`.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
+  const hash = createHash("sha256")
+    .update(`${owner}/${name}`)
+    .digest("hex")
+    .slice(0, 12);
+  return `factory-${slug}-${hash}`;
+}
+
 // The branch Sandcastle gives an issue's runs.
 export function runBranch(issue: number): string {
   return `factory/issue-${issue}`;
@@ -198,9 +211,7 @@ export function createFactory(settings: Settings, ports: Ports) {
   // build quick.
   async function buildImage(): Promise<string> {
     const { owner, name } = await readRepository();
-    const image = `factory-${owner}-${name}`
-      .toLowerCase()
-      .replaceAll(/[^a-z0-9]+/g, "-");
+    const image = imageName(owner, name);
     await ports.buildImage({
       image,
       dockerfile: join(ports.root, ".sandcastle", "Dockerfile"),
@@ -435,7 +446,9 @@ export function createFactory(settings: Settings, ports: Ports) {
 
   async function tick(): Promise<Decision[]> {
     for (const run of runs) {
-      if (run.exited && run.ended === null)
+      // An exited run stays on the host only while it waits to settle, such
+      // as for its retry's gate, so its pull request state is read each pass.
+      if (run.exited)
         run.ended = {
           // Sandcastle's idle timeout can end a run at its limit before the
           // factory stops it, so the time it ran decides, not who ended it.

@@ -10,8 +10,9 @@ node .sandcastle/main.ts
 It runs itself again under a pinned `npx` of
 [Sandcastle](https://github.com/mattpocock/sandcastle), so the repository
 needs no dependency. Each pass pulls the checkout forward, reads the open
-issues, starts the runs it decides on, and settles the runs that ended. It
-repeats every `FACTORY_POLL_SECONDS`, 300 by default.
+issues, starts the runs it decides on, and settles the runs that ended. When
+the checkout does not update, the pass is skipped, so no run starts from stale
+guidance. It repeats every `FACTORY_POLL_SECONDS`, 300 by default.
 
 ## Host prerequisites
 
@@ -30,7 +31,9 @@ Claude Code, and Codex, followed by the repository's toolchain from its
 [development guide](../development/README.md). Adoption writes the file, and
 the [sandbox image check](../development/sandbox-image-check.md) keeps the base
 intact. Before each pass that launches a run, the factory builds the image as
-`factory-<owner>-<name>` from the file in the checkout, without a build context
+`factory-<owner>-<name>-<hash>`, where the hash of the full repository identity
+keeps repositories whose names flatten alike apart on a shared Docker daemon,
+from the file in the checkout, without a build context
 and with the host user's IDs for the sandbox's `agent` user. When the build
 fails, the factory launches nothing, leaves the issues unclaimed on the
 frontier, and logs the error.
