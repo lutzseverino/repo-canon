@@ -52,6 +52,11 @@ considers sufficiently specified for work.
 It does not itself dispatch implementation.
 _Avoid_: Passing structural validation, automatic dispatch
 
+**Direct change**:
+A change made without a ticket, at the maintainer's request in a thread or as
+a minor correction.
+_Avoid_: Untracked work, issue exemption
+
 **Source acceptance**:
 The reviewed conclusion that a specific version of the standards source meets
 its agreed requirements and has the required supporting evidence.

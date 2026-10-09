@@ -2,9 +2,10 @@
 
 ## Issues
 
-Use an issue for behavior changes and substantive work. Small corrections need
-no issue; see [pull requests](#pull-requests). Agree on the scope and acceptance
-criteria before implementation. Open issues with the repository's issue
+Use an issue for behavior changes and substantive work unless the maintainer
+requests the change in a thread. Work without a ticket is a Direct change; see
+[pull requests](#pull-requests). Agree on the scope and acceptance criteria
+before implementation. Open issues with the repository's issue
 templates. Specifications and implementation tickets live in the issue tracker;
 repository documents keep durable domain language, decisions, usage guidance,
 and development knowledge.
@@ -72,16 +73,17 @@ work-in-progress commits are allowed.
 
 Keep each pull request focused. Describe the problem and resulting change,
 report the checks you ran and their outcomes, and link the relevant issue.
-Small corrections, such as typos, broken links, and formatting, need no issue:
-write `Small correction:` and its reason instead of the link. Reviewers judge
-whether a correction is small.
+A Direct change is work without a ticket, requested by the maintainer in a
+thread or making a minor correction, such as a typo, broken link, or formatting
+fix. Write `Direct change:` and a meaningful reason instead of the issue link.
 
 Write multi-line pull request bodies to a file and pass it with `--body-file`.
 
-Keep the pull request template's sections in the template's order, adding
-Limits last when relevant. Put any other material, such as scope, impact, or
-migration, in a subsection of the section it belongs to. An adoption or update
-pull request may instead use the Repository Standards adoption record as its
+Keep the pull request template's sections in order: Summary, Evidence, Merge
+Danger, and Related issue. Include checks and outcomes in Evidence, and
+relevant limits in Merge Danger. Put any other material, such as scope, impact,
+or migration, in a subsection of the section it belongs to. An adoption or
+update pull request may instead use the Repository Standards adoption record as its
 description, starting with the record's
 `# Repository Standards adoption record` heading.
 

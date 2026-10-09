@@ -50,11 +50,11 @@ completed. If they did, the record no longer describes the work: return it to
 run, describe the run and its edits with the template.
 
 Find the link the pull request rules require: the related issue, from the
-maintainer, the branch, or the commits, read with its comments; or, for an
-eligible small correction, its reason. An adoption run needs neither when its
-record is the description. When work needs an issue and has none, stop and ask.
+maintainer, the branch, or the commits, read with its comments; or, for a
+Direct change, its reason. An adoption run needs neither when its
+record is the description.
 
-Done when the work's paths and its issue, small-correction reason, or adoption
+Done when the work's paths and its issue, Direct change reason, or adoption
 record are known.
 
 ## 3. Branch

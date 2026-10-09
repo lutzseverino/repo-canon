@@ -170,7 +170,7 @@ test("the stand-ins carry ordinary work to a pull request with its checks", (t) 
   const body = join(manifest.root, "body.md");
   writeFileSync(
     body,
-    "## Summary\n\nRejects a missing or blank Parcel reference.\n\n## Validation\n\n- `npm test`: passed.\n- `git diff --check`: passed.\n\n## Related issue\n\nCloses #12\n",
+    "## Summary\n\nRejects a missing or blank Parcel reference.\n\n## Evidence\n\n- `npm test`: passed.\n- `git diff --check`: passed.\n\n## Merge Danger\n\nTwo-way door: revert the validation change. Blast radius: Parcel inputs.\n\n## Related issue\n\nCloses #12\n",
   );
   const created = gh(
     manifest,

@@ -95,7 +95,7 @@ repeated.
   actionable feedback and remain unready. Agents assess content meaning.
   Automation identifies missing information rather than inventing it.
 - When an issue is required is stated in
-  [`CONTRIBUTING.md`](CONTRIBUTING.md#issues). The small-correction exemption is
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#issues). The Direct change route is
   stated in its [pull request rules](CONTRIBUTING.md#pull-requests), and
   [pull request metadata validation](docs/development/pr-metadata-validation.md)
   states what the check accepts. Larger work can use a parent specification and
@@ -125,7 +125,7 @@ repeated.
 - Pull request descriptions follow the
   [pull request template](.github/PULL_REQUEST_TEMPLATE.md) and the pull request
   rules in [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests), including the
-  small-correction exemption and the adoption record accepted as an update pull
+  Direct change route and the adoption record accepted as an update pull
   request's description.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   states what the check enforces.

@@ -243,12 +243,12 @@ test('rejects a missing or blank Parcel reference', () => {
     "utf8",
   );
   const previousTemplate = template.replace(
-    /\n<!-- Add a Limits section[^\n]*-->\n$/,
+    /\n<!-- For a breaking change[^\n]*-->\n$/,
     "\n",
   );
   if (previousTemplate === template)
     throw new Error(
-      "The pull request template no longer ends with its Limits comment.",
+      "The pull request template no longer ends with its breaking-change comment.",
     );
   const selection = (version) =>
     `cli: 4.0.0\nstandards:\n  repository: https://github.com/lutzseverino/repo-canon\n  version: ${version}\nprofile: complete\n`;
