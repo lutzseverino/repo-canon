@@ -109,7 +109,8 @@ export function readSettings(
   const pollSeconds = env.FACTORY_POLL_SECONDS
     ? number(
         "FACTORY_POLL_SECONDS",
-        (value) => value > 0,
+        // Node's timers wait at most 2^31 - 1 milliseconds.
+        (value) => value > 0 && value * 1000 <= 2 ** 31 - 1,
         "set it to a positive number of seconds, or leave it unset for 300",
       )
     : 300;
@@ -159,9 +160,9 @@ const pullRequestsQuery = `query($owner: String!, $name: String!, $number: Int!,
   repository(owner: $owner, name: $name) {
     issue(number: $number) {
       state
-      closedByPullRequestsReferences(first: 20, includeClosedPrs: true) { nodes { state } }
+      closedByPullRequestsReferences(first: 20, includeClosedPrs: true) { nodes { state createdAt } }
     }
-    pullRequests(headRefName: $branch, first: 20) { nodes { state } }
+    pullRequests(headRefName: $branch, first: 20) { nodes { state createdAt } }
   }
 }`;
 
@@ -239,9 +240,14 @@ export function createFactory(settings: Settings, ports: Ports) {
   }
 
   // A run's pull request is one that closes its issue or comes from the run's
-  // branch. Only a closed issue counts as merged work; a merged pull request
-  // with the issue still open is its own state.
-  async function pullRequestState(number: number): Promise<PullRequestState> {
+  // branch, opened once the run started (`since`), so an earlier run's pull
+  // requests on the same branch don't decide it. Only a closed issue counts as
+  // merged work. An open pull request holds the claim; a merged pull request
+  // with the issue still open and none open is its own state.
+  async function pullRequestState(
+    number: number,
+    since?: string,
+  ): Promise<PullRequestState> {
     const response = JSON.parse(
       await ports.gh([
         "api",
@@ -259,10 +265,16 @@ export function createFactory(settings: Settings, ports: Ports) {
     const states = [
       ...issue.closedByPullRequestsReferences.nodes,
       ...pullRequests.nodes,
-    ].map((pullRequest: { state: string }) => pullRequest.state);
+    ]
+      .filter(
+        (pullRequest: { createdAt: string }) =>
+          since === undefined ||
+          Date.parse(pullRequest.createdAt) >= Date.parse(since),
+      )
+      .map((pullRequest: { state: string }) => pullRequest.state);
     if (issue.state === "CLOSED") return "merged";
-    if (states.includes("MERGED")) return "merged-issue-open";
     if (states.includes("OPEN")) return "open";
+    if (states.includes("MERGED")) return "merged-issue-open";
     return states.includes("CLOSED") ? "closed" : "none";
   }
 
@@ -420,7 +432,7 @@ export function createFactory(settings: Settings, ports: Ports) {
       if (run.exited && run.ended === null)
         run.ended = {
           timedOut: run.stopped,
-          pullRequest: await pullRequestState(run.issue),
+          pullRequest: await pullRequestState(run.issue, run.startedAt),
         };
     }
     const issues = await readIssues();

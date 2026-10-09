@@ -37,6 +37,12 @@ function fakeGitHub(issues) {
   const find = (number) =>
     state.issues.find((issue) => issue.number === Number(number));
   const names = (labels) => ({ nodes: labels.map((name) => ({ name })) });
+  // A pull request is its state, or its state and when it was opened; a bare
+  // state was opened at the fake clock's start of the run.
+  const pullRequest = (pr) =>
+    typeof pr === "string"
+      ? { state: pr, createdAt: "2026-10-09T12:00:00Z" }
+      : pr;
   const field = (args, name) =>
     args[
       args.findIndex(
@@ -61,11 +67,11 @@ function fakeGitHub(issues) {
               issue: {
                 state: issue.state,
                 closedByPullRequestsReferences: {
-                  nodes: issue.pullRequests.map((pr) => ({ state: pr })),
+                  nodes: issue.pullRequests.map(pullRequest),
                 },
               },
               pullRequests: {
-                nodes: issue.branchPullRequests.map((pr) => ({ state: pr })),
+                nodes: issue.branchPullRequests.map(pullRequest),
               },
             },
           },
@@ -650,4 +656,79 @@ test("a claim whose pull request merged without closing its issue is failed, not
     ].join("\n"),
   ]);
   assert.equal(run.sandcastle.launched.length, 0);
+});
+
+test("a merged pull request from an earlier run does not decide a later run's outcome", async () => {
+  const earlier = { state: "MERGED", createdAt: "2026-10-01T00:00:00Z" };
+  const kept = factory({
+    issues: [{ number: 4, branchPullRequests: [earlier] }],
+  });
+  await kept.tick();
+  kept.github.find(4).branchPullRequests.push("OPEN");
+  kept.sandcastle.launched[0].finish();
+  await settled();
+  await kept.tick();
+  assert.deepEqual(kept.github.find(4).labels, [
+    "ready-for-agent",
+    "factory:running",
+  ]);
+  assert.deepEqual(kept.github.find(4).comments, []);
+
+  const retried = factory({
+    issues: [{ number: 4, branchPullRequests: [earlier] }],
+    hostSettings: { retryModel: "gpt-5.5@xhigh" },
+  });
+  await retried.tick();
+  retried.sandcastle.launched[0].finish();
+  await settled();
+  await retried.tick();
+  assert.equal(retried.sandcastle.launched.length, 2);
+  assert.match(retried.sandcastle.launched[1].log, /attempt-2\.log$/);
+  assert.deepEqual(retried.github.find(4).comments, []);
+});
+
+test("an open pull request holds a claim even beside an earlier merged one", async () => {
+  const run = factory({
+    issues: [
+      {
+        number: 4,
+        labels: ["ready-for-agent", "factory:running"],
+        branchPullRequests: [
+          { state: "MERGED", createdAt: "2026-10-01T00:00:00Z" },
+          "OPEN",
+        ],
+      },
+    ],
+  });
+  await run.tick();
+  assert.deepEqual(run.github.find(4).labels, [
+    "ready-for-agent",
+    "factory:running",
+  ]);
+  assert.deepEqual(run.github.find(4).comments, []);
+});
+
+test("a poll interval a timer cannot wait is refused", () => {
+  for (const seconds of ["Infinity", "2147484"])
+    assert.throws(
+      () =>
+        readSettings({
+          FACTORY_DEFAULT_MODEL: "gpt-5.5",
+          FACTORY_CAPS: "codex=1",
+          FACTORY_USAGE_THRESHOLD: "90",
+          FACTORY_TIME_LIMIT_MINUTES: "60",
+          FACTORY_POLL_SECONDS: seconds,
+        }),
+      /FACTORY_POLL_SECONDS: set it to a positive number of seconds/,
+    );
+  assert.equal(
+    readSettings({
+      FACTORY_DEFAULT_MODEL: "gpt-5.5",
+      FACTORY_CAPS: "codex=1",
+      FACTORY_USAGE_THRESHOLD: "90",
+      FACTORY_TIME_LIMIT_MINUTES: "60",
+      FACTORY_POLL_SECONDS: "2147483",
+    }).pollSeconds,
+    2147483,
+  );
 });

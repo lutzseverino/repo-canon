@@ -47,7 +47,7 @@ and the factory refuses to start until the required ones are usable.
 | `FACTORY_CAPS`               | Yes      | The most agents each provider may run at once, such as `claude-code=2,codex=1`       |
 | `FACTORY_USAGE_THRESHOLD`    | Yes      | The usage percentage at or above which a provider launches nothing                   |
 | `FACTORY_TIME_LIMIT_MINUTES` | Yes      | How long a run may take before it is stopped and fails                               |
-| `FACTORY_POLL_SECONDS`       | No       | The time between passes                                                              |
+| `FACTORY_POLL_SECONDS`       | No       | The seconds between passes, at most 2147483                                          |
 
 A provider that `FACTORY_CAPS` omits launches nothing.
 
@@ -96,15 +96,17 @@ usage is below the threshold. An issue held by a gate stays on the frontier.
 ## Claims and failures
 
 A run's pull request is one that closes its issue or comes from the run's
-branch, `factory/issue-<n>`. A `factory:running` claim is held by a run the
+branch, `factory/issue-<n>`. For a run the factory is tracking, only pull
+requests opened after the run started count, so an earlier run's pull requests
+on the same branch don't decide it. A `factory:running` claim is held by a run the
 factory is tracking or by the issue's open pull request, so it stays while
 `babysit` works. On each pass, the factory settles every claim that neither
 holds: it removes the claim once the issue closed, and otherwise fails the
 issue. This covers a pull request closed without merging and a claim left by
 an earlier factory process.
 
-A pull request that merged while its issue is still open does not release the
-claim, since the factory would run the issue again. The factory fails the
+A pull request that merged while its issue is still open, with none of its
+pull requests open, does not release the claim, since the factory would run the issue again. The factory fails the
 issue instead, whether its run just ended or no run holds the claim, and never
 retries it. The comment says the pull request merged without closing the
 issue: close the issue if that finished it, or remove `factory:failed` to run
