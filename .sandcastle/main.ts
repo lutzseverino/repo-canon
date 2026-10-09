@@ -15,6 +15,7 @@ import {
   codexUsage,
   createFactory,
   readSettings,
+  runBranch,
   type ImageBuild,
   type LaunchRequest,
 } from "./adapter.ts";
@@ -85,10 +86,7 @@ async function launch(request: LaunchRequest): Promise<void> {
         : sandcastle.claudeCode(request.model, options),
     sandbox: sandcastle.docker({ imageName: request.image }),
     prompt: request.prompt,
-    branchStrategy: {
-      type: "branch",
-      branch: `factory/issue-${request.issue}`,
-    },
+    branchStrategy: { type: "branch", branch: runBranch(request.issue) },
     logging: { type: "file", path: request.log },
     idleTimeoutSeconds: settings.timeLimitMinutes * 60,
     signal: request.signal,

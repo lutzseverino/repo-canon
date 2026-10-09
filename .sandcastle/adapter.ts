@@ -136,14 +136,20 @@ const issuesQuery = `query($owner: String!, $name: String!, $endCursor: String) 
   }
 }`;
 
-const pullRequestsQuery = `query($owner: String!, $name: String!, $number: Int!) {
+const pullRequestsQuery = `query($owner: String!, $name: String!, $number: Int!, $branch: String!) {
   repository(owner: $owner, name: $name) {
     issue(number: $number) {
       state
       closedByPullRequestsReferences(first: 20, includeClosedPrs: true) { nodes { state } }
     }
+    pullRequests(headRefName: $branch, first: 20) { nodes { state } }
   }
 }`;
+
+// The branch Sandcastle gives an issue's runs.
+export function runBranch(issue: number): string {
+  return `factory/issue-${issue}`;
+}
 
 export function createFactory(settings: Settings, ports: Ports) {
   const runs: HostRun[] = [];
@@ -213,8 +219,8 @@ export function createFactory(settings: Settings, ports: Ports) {
     );
   }
 
-  // A run's pull request is one that closes its issue. A closed issue counts
-  // as merged work.
+  // A run's pull request is one that closes its issue or comes from the run's
+  // branch. A closed issue counts as merged work.
   async function pullRequestState(number: number) {
     const response = JSON.parse(
       await ports.gh([
@@ -225,12 +231,15 @@ export function createFactory(settings: Settings, ports: Ports) {
         ...(await identity()),
         "-F",
         `number=${number}`,
+        "-F",
+        `branch=${runBranch(number)}`,
       ]),
     );
-    const issue = response.data.repository.issue;
-    const states = issue.closedByPullRequestsReferences.nodes.map(
-      (pullRequest: { state: string }) => pullRequest.state,
-    );
+    const { issue, pullRequests } = response.data.repository;
+    const states = [
+      ...issue.closedByPullRequestsReferences.nodes,
+      ...pullRequests.nodes,
+    ].map((pullRequest: { state: string }) => pullRequest.state);
     if (issue.state === "CLOSED" || states.includes("MERGED")) return "merged";
     return states.includes("OPEN") ? "open" : "none";
   }

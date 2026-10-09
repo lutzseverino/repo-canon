@@ -29,6 +29,7 @@ function fakeGitHub(issues) {
       subIssues: [],
       blockedBy: [],
       pullRequests: [],
+      branchPullRequests: [],
       comments: [],
       ...issue,
     })),
@@ -53,6 +54,7 @@ function fakeGitHub(issues) {
       const query = args.find((arg) => arg.startsWith("query="));
       if (query.includes("closedByPullRequestsReferences")) {
         const issue = find(field(args, "number"));
+        assert.equal(field(args, "branch"), `factory/issue-${issue.number}`);
         return JSON.stringify({
           data: {
             repository: {
@@ -61,6 +63,9 @@ function fakeGitHub(issues) {
                 closedByPullRequestsReferences: {
                   nodes: issue.pullRequests.map((pr) => ({ state: pr })),
                 },
+              },
+              pullRequests: {
+                nodes: issue.branchPullRequests.map((pr) => ({ state: pr })),
               },
             },
           },
@@ -369,6 +374,20 @@ test("a run that opened its pull request keeps the claim until it merges", async
   assert.deepEqual(run.github.find(5).labels, ["ready-for-agent"]);
   assert.equal(run.sandcastle.launched.length, 2);
   assert.deepEqual(run.github.find(4).comments, []);
+});
+
+test("an open pull request from the run's branch holds the claim without closing the issue", async () => {
+  const run = factory({ issues: [{ number: 4 }] });
+  await run.tick();
+  run.github.find(4).branchPullRequests.push("OPEN");
+  run.sandcastle.launched[0].finish();
+  await settled();
+  await run.tick();
+  await run.tick();
+  const issue = run.github.find(4);
+  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:running"]);
+  assert.deepEqual(issue.comments, []);
+  assert.equal(run.sandcastle.launched.length, 1);
 });
 
 test("an unreadable usage reading leaves the provider gated by count only", async () => {
