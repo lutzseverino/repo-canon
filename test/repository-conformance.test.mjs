@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { lstatSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
@@ -89,4 +90,66 @@ test("no tracked file reaches the observation limit that would reject inspection
     [],
     `keep every tracked file below ${observationFileLimit} bytes so the CLI can observe it`,
   );
+});
+
+test("adoption includes the complete show-me skill from its pinned HumanLayer upstream", () => {
+  const standards = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.match(
+    standards,
+    /\n {4}skill-show-me:\n {6}kind: skill\n {6}name: show-me\n {6}source: vendor\/humanlayer-skills\/skills\/show-me\n/,
+  );
+
+  // Independent hashes of the upstream files at this commit, including the
+  // SKILL.md instructions for optional HTML output. No network is needed in CI.
+  const pin = "653b6411c1f70c275a18e37673b042ff99f67ceb";
+  const upstreamPath = "plugins/show-me/skills/show-me";
+  const source = join(root, "vendor/humanlayer-skills/skills/show-me");
+  const files = readdirSync(source, { recursive: true })
+    .filter((path) => lstatSync(join(source, path)).isFile())
+    .sort();
+  const expected = {
+    "SKILL.md":
+      "434a2346cc95e313b0d367d477dda2e23ba642dd2181757415a09500664af100",
+    "agents/openai.yaml":
+      "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
+  };
+  assert.deepEqual(files, Object.keys(expected));
+  for (const [path, digest] of Object.entries(expected)) {
+    assert.equal(
+      createHash("sha256")
+        .update(readFileSync(join(source, path)))
+        .digest("hex"),
+      digest,
+      `${path} must match humanlayer/skills at ${pin}:${upstreamPath}`,
+    );
+  }
+  const provenance = readFileSync(
+    join(root, "vendor/humanlayer-skills/README.md"),
+    "utf8",
+  );
+  assert.ok(
+    provenance.includes(
+      `https://github.com/humanlayer/skills/tree/${pin}/${upstreamPath}`,
+    ),
+  );
+});
+
+test("adoption retains the HumanLayer MIT notice beside the copied skills", () => {
+  const standards = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.match(
+    standards,
+    /\n {4}humanlayer-skills-license:\n {6}kind: file\n {6}target: \.agents\/skills\/LICENSE\.humanlayer-skills\n {6}exact: vendor\/humanlayer-skills\/LICENSE\n/,
+  );
+  assert.equal(
+    createHash("sha256")
+      .update(readFileSync(join(root, "vendor/humanlayer-skills/LICENSE")))
+      .digest("hex"),
+    "5f13c18ea00ea5c1384f41745feeca774079164f7f59a92e4ac0899ad217b26f",
+  );
+  const notices = readFileSync(join(root, "THIRD_PARTY_NOTICES.md"), "utf8");
+  assert.match(
+    notices,
+    /\[MIT License and copyright notice\]\(vendor\/humanlayer-skills\/LICENSE\)/,
+  );
+  assert.ok(notices.includes(".agents/skills/LICENSE.humanlayer-skills"));
 });

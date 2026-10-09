@@ -22,12 +22,14 @@ does not imply a release or successful adoption.
 | Maintained Project READMEs                            | `project-readmes`                                                                                                                                           | Separate assessment and discovery guidance; `project-readme-structure` check                                                                                                                                  | Project-owned paths confirmed through v2 discovery                                                                  |
 | Documentation, glossaries, and project agent guidance | `documentation`                                                                                                                                             | Separate assessment and discovery guidance; `documentation-navigation` check                                                                                                                                  | Project-owned individual source, destination, index, glossary, and link-repair paths confirmed through v2 discovery |
 | GitHub labels, required check, and squash settings    | `github-repository-configuration`                                                                                                                           | Separate guidance and intentionally empty project-content discovery; repeat-safe `canonical-labels` and `pull-request-integration` fixes                                                                      | Remote settings; no project-content paths                                                                           |
-| Pinned regular skills                                 | `skill-*` except `skill-deliver` (25 declarations)                                                                                                          | Full directories under `vendor/mattpocock-skills`, pinned at `3cca18b368ae95cdbdebbff572ccafa662551015`; upstream notice retained by the configuration operation and installed by `mattpocock-skills-license` | Exact whole skill directories                                                                                       |
+| Matt Pocock regular skills                            | `skill-*` except `skill-deliver` and `skill-show-me` (25 declarations)                                                                                      | Full directories under `vendor/mattpocock-skills`, pinned at `3cca18b368ae95cdbdebbff572ccafa662551015`; upstream notice retained by the configuration operation and installed by `mattpocock-skills-license` | Exact whole skill directories                                                                                       |
+| HumanLayer visual explanations                        | `skill-show-me`                                                                                                                                             | Complete `vendor/humanlayer-skills/skills/show-me`, pinned at `653b6411c1f70c275a18e37673b042ff99f67ceb` from `plugins/show-me/skills/show-me`; includes optional HTML output                                 | Exact whole skill directory                                                                                         |
 | Delivery through the contribution workflow            | `skill-deliver`                                                                                                                                             | Repo Canon's own `.agents/skills/deliver`, whose source is its installed path; it reads the installed contribution guidance, pull request template, and skill setup files and the project's development guide | Exact whole skill directory                                                                                         |
 | Upstream skill license notice                         | `mattpocock-skills-license`                                                                                                                                 | `vendor/mattpocock-skills/LICENSE`, installed at `.agents/skills/LICENSE.mattpocock-skills` beside the copied skills                                                                                          | Exact file outside every skill directory                                                                            |
+| HumanLayer skill license notice                       | `humanlayer-skills-license`                                                                                                                                 | `vendor/humanlayer-skills/LICENSE`, installed at `.agents/skills/LICENSE.humanlayer-skills` beside the copied skills                                                                                          | Exact file outside every skill directory                                                                            |
 
-The resolved profile contains 55 declarations: 24 exact files, two contextual
-files, three repository declarations, and 26 exact skill directories. It has
+The resolved profile contains 57 declarations: 25 exact files, two contextual
+files, three repository declarations, and 27 exact skill directories. It has
 three checks and two fixes. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
 trees, globs, or adopter-specific paths embedded in this source.
@@ -38,15 +40,16 @@ skill directory. The exact `mattpocock-skills-license` declaration installs the
 vendored upstream `LICENSE` byte for byte as the sibling file
 `.agents/skills/LICENSE.mattpocock-skills`, whose name identifies the upstream
 project. Skill names are lower-case kebab-case, so that name never collides
-with a skill directory.
+with a skill directory. The `humanlayer-skills-license` declaration uses the
+same sibling-file route for `.agents/skills/LICENSE.humanlayer-skills`.
 
 The documentation operation resources retain the shared rendered-Markdown
 module, the separate local-link module, the documentation model, the
 documentation scope drafter, and complete Marked and parse5 directories with
 their notices. The agent runs the drafter during discovery; the CLI only
 retains it. Other operation resources retain the shared GitHub operation
-module, Repo Canon's MIT license and third-party notice, and the upstream skill
-license. The rendered-Markdown runtime and parser files are also exact
+module, Repo Canon's MIT license and third-party notice, and both upstream skill
+licenses. The rendered-Markdown runtime and parser files are also exact
 declarations because both trusted workflow validators import them from the
 adopting repository. Each executable therefore resolves the same relative
 import layout after installation or resource retention.
@@ -80,7 +83,7 @@ and validates every profile.
 ## Validation boundary
 
 Installed public CLI 5.1.0 under Node.js 24 returns `valid: true`, no errors,
-one `complete` profile, and 55 declarations for the source, matching the
+one `complete` profile, and 57 declarations for the source, matching the
 inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@5.1.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why

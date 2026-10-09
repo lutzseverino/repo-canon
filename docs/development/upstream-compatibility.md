@@ -1,4 +1,4 @@
-# Matt Pocock workflow compatibility
+# Upstream skill compatibility
 
 The managed snapshot is mattpocock/skills commit
 `3cca18b368ae95cdbdebbff572ccafa662551015`. Its promoted plugin set contains 25
@@ -133,6 +133,58 @@ Rerun the byte comparison with the proposed commit, review all resource
 references and runtime prerequisites, and exercise the changed skills through
 the [skill exercise procedure](skill-exercises.md). Release review then decides
 whether to distribute the new snapshot.
+
+## HumanLayer snapshot and updates
+
+The second managed upstream is `humanlayer/skills`, pinned to commit
+`653b6411c1f70c275a18e37673b042ff99f67ceb`. Only its complete
+`plugins/show-me/skills/show-me` directory is selected, installed verbatim as
+`.agents/skills/show-me`. The two upstream files are `SKILL.md`, including its
+optional HTML-output instructions, and `agents/openai.yaml`, which preserves
+explicit invocation. The upstream root MIT `LICENSE` is copied unchanged to
+`vendor/humanlayer-skills/LICENSE` and installed as the sibling
+`.agents/skills/LICENSE.humanlayer-skills`.
+
+The [vendored provenance record](../../vendor/humanlayer-skills/README.md)
+names the upstream path and pin. The repository conformance suite verifies the
+complete file inventory and independent upstream SHA-256 hashes, the skill and
+licence declarations, and the third-party notice. This proves the selected
+installation bytes; it does not exercise a host's HTML viewer. HTML output uses
+the host's file-writing and `open` capabilities as upstream describes them.
+No other HumanLayer skill or external resource is required by this snapshot.
+
+For either upstream, review an exact proposed commit and its diff, retain full
+selected skill directories and the root licence, reconcile declarations and
+pin references, verify upstream bytes, and exercise changed behavior before
+release review. For Matt Pocock, use the manifest-driven procedure above; for
+HumanLayer, keep the selection limited to `show-me`. Reproduce its byte
+comparison from the repository root:
+
+```bash
+set -eu
+humanlayer_task_dir="$(mktemp -d /tmp/repo-canon-humanlayer.XXXXXX)"
+trap 'rm -rf "$humanlayer_task_dir"' EXIT
+git clone https://github.com/humanlayer/skills.git "$humanlayer_task_dir/upstream"
+git -C "$humanlayer_task_dir/upstream" checkout --detach \
+  653b6411c1f70c275a18e37673b042ff99f67ceb
+diff -ru "$humanlayer_task_dir/upstream/plugins/show-me/skills/show-me" \
+  vendor/humanlayer-skills/skills/show-me
+cmp "$humanlayer_task_dir/upstream/LICENSE" vendor/humanlayer-skills/LICENSE
+```
+
+To update HumanLayer, change the checkout command to the reviewed full commit
+SHA, review `git diff <current-pin>..<proposed-pin> -- LICENSE plugins/show-me`,
+replace `vendor/humanlayer-skills/skills/show-me` with the complete upstream
+directory, and copy the root `LICENSE`. Reconcile this document, the vendored
+provenance record, `authoring-notes.md`, the source-profile mapping, and the
+conformance suite's pin, inventory, and independently computed hashes. Review
+new resource references and runtime prerequisites, rerun the byte comparison
+and the development guide's required checks and all-profile source validation,
+and exercise both inline visuals and optional HTML output with a capable host
+as described in the [skill exercise procedure](skill-exercises.md). Neither
+upstream's vendored bytes may be edited to adapt Repo Canon conventions.
+
+Source: [pinned show-me directory](https://github.com/humanlayer/skills/tree/653b6411c1f70c275a18e37673b042ff99f67ceb/plugins/show-me/skills/show-me).
 
 ## Native issue shapes
 

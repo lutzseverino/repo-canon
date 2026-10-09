@@ -77,8 +77,9 @@ step: `npm test` already runs it on every pull request.
   behavior, stable identity, permissions, and local verification.
 - [Issue contract validation](issue-contract-validation.md): supported issue
   shapes, feedback behavior, workflow permissions, and runnable fixtures.
-- [Matt Pocock workflow compatibility](upstream-compatibility.md): the pinned
-  skill snapshot, its review and update steps, the native issue formats that
+- [Upstream skill compatibility](upstream-compatibility.md): the pinned
+  Matt Pocock and HumanLayer snapshots, their review and update steps, the native
+  issue formats that
   automation must respect, and how shared instructions and configuration adapt
   upstream setup.
 - [Repository README check](repository-readme-check.md): operation protocol,
