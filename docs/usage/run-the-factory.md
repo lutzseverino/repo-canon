@@ -70,14 +70,14 @@ Each skipped ready issue is logged with its reason.
 
 ## Models
 
-A `model:` label names the model as `<slug>` or `<provider>/<slug>`, with an
-optional `@<effort>` suffix. The effort is `high` by default.
+An issue's `model:` label chooses its model, as the contribution guide's
+[Readiness section](../../CONTRIBUTING.md#readiness) describes; without one,
+the host's default model runs.
 
-- A bare `claude-*` slug runs on Claude Code (`claude-code`), and a bare `gpt-*`
-  slug on Codex (`codex`). Any other slug names its provider, such as
-  `model:codex/o5@medium`.
-- Claude Code accepts the efforts `low`, `medium`, `high`, `xhigh`, and `max`;
-  Codex accepts all but `max`.
+- A bare `claude-*` slug runs on Claude Code and a bare `gpt-*` slug on Codex.
+  The providers are named `claude-code` and `codex`.
+- The effort is `high` by default. Claude Code accepts the efforts `low`,
+  `medium`, `high`, `xhigh`, and `max`; Codex accepts all but `max`.
 - An issue with an unusable or more than one `model:` label is skipped with the
   correction.
 

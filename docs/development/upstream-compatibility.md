@@ -162,13 +162,13 @@ explicit invocation. The upstream root MIT `LICENSE` is copied unchanged to
 The [vendored provenance record](../../vendor/humanlayer-skills/README.md)
 names the upstream path and pin. The repository conformance suite verifies the
 complete file inventory and independent upstream SHA-256 hashes, the skill and
-licence declarations, and the third-party notice. This proves the selected
+license declarations, and the third-party notice. This proves the selected
 installation bytes; it does not exercise a host's HTML viewer. HTML output uses
 the host's file-writing and `open` capabilities as upstream describes them.
 No other HumanLayer skill or external resource is required by this snapshot.
 
 For either upstream, review an exact proposed commit and its diff, retain full
-selected skill directories and the root licence, reconcile declarations and
+selected skill directories and the root license, reconcile declarations and
 pin references, verify upstream bytes, and exercise changed behavior before
 release review. For Matt Pocock, use the manifest-driven procedure above; for
 HumanLayer, keep the selection limited to `show-me`. Reproduce its byte

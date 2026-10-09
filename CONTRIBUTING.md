@@ -127,13 +127,12 @@ Its body is the adoption record: the output of `status --summary`, byte for
 byte, starting with its `# Repository Standards adoption record` heading. The
 record omits the checks, so post their outcomes as one comment. Write the body
 from the template instead when the run is breaking, so that it explains the
-impact and migration, or when the run's paths changed after it completed, since
-the record no longer describes them.
+impact and migration.
 
 ### Merging
 
 Merge a pull request once every required check passes on its latest head and
-every review thread is answered. Squash-merge pull requests into the default
+every review thread is answered. Squash-merge pull requests into their base
 branch, using the PR title as the commit subject and its description as the
 body. Preserve issue references and breaking-change explanations in the final
 message.

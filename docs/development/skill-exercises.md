@@ -1,13 +1,15 @@
 # Skill exercises
 
 This procedure exercises the pinned skills under `vendor/mattpocock-skills`
-against disposable local Git repositories. Run it when a release changes a
-skill, as the [release procedure](release.md#when-selected-bytes-change)
-requires, for the changed skills. Three builders create the repositories: one
-each for the engineering, productivity, and planning skills, which together
-cover all 27 pinned skills. Repo Canon's own `babysit` skill acts on a live pull
-request, so no builder covers it; exercise it on a pull request in a disposable
-GitHub repository.
+and `vendor/humanlayer-skills` against disposable local Git repositories. Run
+it when a release changes a skill, as the
+[release procedure](release.md#when-selected-bytes-change) requires, for the
+changed skills. Three builders create the repositories: one each for the
+engineering, productivity, and planning skills, which together cover all 27
+pinned Matt Pocock skills. HumanLayer's `show-me` reuses an engineering
+repository, as [its scenario](#humanlayer-show-me) describes. Repo Canon's own
+`babysit` skill acts on a live pull request, so no builder covers it; exercise
+it on a pull request in a disposable GitHub repository.
 
 Building and testing the fixtures is a prerequisite, not an exercise. An
 exercise is an agent session that invokes the skill in a fixture repository
@@ -139,3 +141,24 @@ The test verifies every repository and skill link, the manifest identities,
 local signing, an ordinary later commit under hostile global signing, and the
 managed-update boundary: a synthetic change to a candidate copy of a vendored
 skill is detected while the vendored directory stays unchanged.
+
+## HumanLayer `show-me`
+
+`show-me` needs no builder of its own. Build the engineering fixtures, then
+link the vendored skill into the `architecture` repository, whose Order intake
+source and glossary give it a topic to explain:
+
+```bash
+node scripts/create-engineering-skill-fixtures.mjs --root <fixture-root>
+ln -s "$PWD/vendor/humanlayer-skills/skills/show-me" \
+  <fixture-root>/architecture/.agents/skills/show-me
+```
+
+The skill disallows implicit invocation, so each session invokes it by name.
+Run two sessions. In the first, ask for a visual explanation of the
+repository's control flow; the outcome is a short inline view, such as a call
+tree, file tree, or Mermaid diagram, next to brief text. In the second, ask for
+a visual comparison too dense for Mermaid; the outcome is one focused HTML file
+that the agent writes and opens. Opening it needs the host's `open` capability
+and a browser; in a headless harness, render the file with a local headless
+browser and inspect the result.
