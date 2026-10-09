@@ -125,9 +125,9 @@ project.
 
 Its body is the adoption record: the output of `status --summary`, byte for
 byte, starting with its `# Repository Standards adoption record` heading. The
-record omits the checks, so post their outcomes as one comment. Write the body
-from the template instead when the run is breaking, so that it explains the
-impact and migration.
+record omits the checks, so post their outcomes as one comment. The record
+stays the body; for a breaking (`!`) title, add Impact and Migration sections
+after the record.
 
 ### Merging
 

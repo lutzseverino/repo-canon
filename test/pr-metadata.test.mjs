@@ -287,6 +287,23 @@ test("still validates the title of an adoption record body", () => {
   assert.doesNotMatch(breaking.stderr, /Add a Summary section/);
 });
 
+test("accepts a breaking adoption record followed by Impact and Migration", () => {
+  const result = runEvent({
+    title: "chore!: adopt repo-canon v0.6.0 with CLI 5.1.0",
+    body: `${adoptionRecord()}
+## Impact
+
+The factory's claim labels change, so open claims need relabelling.
+
+## Migration
+
+Relabel each open factory:running issue before the factory restarts.
+`,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.summary, /adoption record/);
+});
+
 test("validates a body whose record heading is not its first content as an ordinary body", () => {
   const record = adoptionRecord();
   for (const [variant, body] of [
