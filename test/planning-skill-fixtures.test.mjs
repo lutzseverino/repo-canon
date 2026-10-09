@@ -37,7 +37,7 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
   ]);
   assert.equal(
     manifest.source.upstreamCommit,
-    "3cca18b368ae95cdbdebbff572ccafa662551015",
+    "24fe0ef7737efae15c87225755e9f6f5965e4888",
   );
   assert.deepEqual(Object.keys(manifest.source.linkedSkillDirectories).sort(), [
     "code-review",
@@ -45,6 +45,8 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
     "grill-with-docs",
     "grilling",
     "implement",
+    "implement-spec",
+    "pr",
     "prototype",
     "research",
     "setup-matt-pocock-skills",
@@ -65,9 +67,25 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
       "triage",
       "wayfinder",
       "implement",
+      "implement-spec",
+      "pr",
       "prototype",
       "wizard",
     ],
+  );
+  const deliveryScenario = manifest.repositories.delivery;
+  assert.ok(deliveryScenario.skills.includes("implement-spec"));
+  assert.ok(deliveryScenario.skills.includes("pr"));
+  assert.match(
+    readFileSync(
+      join(deliveryScenario.path, ".scratch/delivery/spec.md"),
+      "utf8",
+    ),
+    /01-prioritize-parcels/,
+  );
+  assert.match(
+    readFileSync(join(deliveryScenario.path, "docs/pr-evidence.md"), "utf8"),
+    /Before/,
   );
   for (const repository of Object.values(manifest.repositories)) {
     for (const skill of readdirSync(

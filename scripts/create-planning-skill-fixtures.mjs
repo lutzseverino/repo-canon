@@ -22,7 +22,7 @@ import {
 const sourceRoot = fileURLToPath(new URL("..", import.meta.url));
 const scriptSourcePath = "scripts/create-planning-skill-fixtures.mjs";
 const skillsRoot = join(sourceRoot, "vendor/mattpocock-skills/skills");
-const upstreamCommit = "3cca18b368ae95cdbdebbff572ccafa662551015";
+const upstreamCommit = "24fe0ef7737efae15c87225755e9f6f5965e4888";
 const skillNames = [
   "setup-matt-pocock-skills",
   "grill-with-docs",
@@ -31,6 +31,8 @@ const skillNames = [
   "triage",
   "wayfinder",
   "implement",
+  "implement-spec",
+  "pr",
   "prototype",
   "wizard",
 ];
@@ -76,7 +78,7 @@ function createRepository(name, skills, { agents, context }) {
   mkdirSync(root, { recursive: true });
   write(root, "AGENTS.md", agents);
   cpSync(join(sourceRoot, "CONTRIBUTING.md"), join(root, "CONTRIBUTING.md"));
-  write(root, "CONTEXT.md", context);
+  write(root, "GLOSSARY.md", context);
   write(
     root,
     "docs/development/README.md",
@@ -352,7 +354,15 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
 {
   const root = createRepository(
     "delivery",
-    ["implement", "tdd", "code-review", "prototype", "wizard"],
+    [
+      "implement",
+      "implement-spec",
+      "pr",
+      "tdd",
+      "code-review",
+      "prototype",
+      "wizard",
+    ],
     {
       agents:
         "# Agent guidance\n\nRead the native ticket, glossary, and development commands. Use tests at the public `scheduleDelivery()` seam. Prototype work stays on a throwaway branch. Wizards must never contact production during this exercise.\n",
@@ -438,9 +448,44 @@ jobs:
     "docs/sandbox-setup.md",
     "# Sandbox setup\n\nThe fictional dashboard URL is `https://sandbox.example.invalid/settings/api`. A human creates a test token there. The wizard may author instructions and validate syntax but must not open the URL or set a real secret in this exercise.\n",
   );
+  write(
+    root,
+    ".scratch/delivery/spec.md",
+    `# Stable Delivery schedules
+
+## Problem Statement
+Urgent Parcels must dispatch first without changing their submission order.
+
+## Solution
+Implement scheduleDelivery through the existing public interface.
+
+## User Stories
+A dispatcher can prioritize urgent Parcels while preserving the input.
+
+## Implementation Decisions
+The native child ticket is [Prioritize urgent Parcels](issues/01-prioritize-parcels.md). It has no blockers and is ready-for-agent. Keep this local exercise on one integration branch; resolve its ticket through the local tracker. Publish nothing.
+
+## Testing Decisions
+Use the agreed scheduleDelivery seam and the existing failing tests.
+
+## Out of Scope
+Remote services and publication.
+
+## Further Notes
+This is a disposable local fixture.
+`,
+  );
+  write(
+    root,
+    "docs/pr-evidence.md",
+    `# Delivery pull request exercise
+
+Draft a local PR body after implementing the ticket. Do not open a pull request. Before: the urgent-Parcels test fails because input is mutated. After: npm test passes with input preserved and submission order stable. Use a minimal visual summary and describe the reversible ordering fix's merge danger.
+`,
+  );
   repositories.delivery = {
     path: root,
-    skills: ["implement", "prototype", "wizard"],
+    skills: ["implement", "implement-spec", "pr", "prototype", "wizard"],
     initial: commit(root, "chore: establish delivery exercises"),
   };
 }

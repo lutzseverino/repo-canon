@@ -134,7 +134,7 @@ function createRepository(name, { files = {} } = {}) {
     write(root, path, readFileSync(join(sourceRoot, path)));
   write(root, "docs/agents/project.md", projectGuidance);
   write(root, "docs/development/README.md", development);
-  write(root, "CONTEXT.md", context);
+  write(root, "GLOSSARY.md", context);
   write(root, "package.json", packageJson);
   write(root, "src/parcel.mjs", acceptParcel);
   write(

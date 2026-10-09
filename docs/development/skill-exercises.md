@@ -5,7 +5,7 @@ and Repo Canon's own `deliver` skill against disposable local Git
 repositories. Run it when a release changes a skill, as the [release
 procedure](release.md#when-selected-bytes-change) requires, for the changed
 skills. Four builders create the repositories: one each for the engineering,
-productivity, and planning skills, which together cover all 25 pinned skills,
+productivity, and planning skills, which together cover all 27 pinned skills,
 and one for the `deliver` skill.
 
 Building and testing the fixtures is a prerequisite, not an exercise. An
@@ -45,7 +45,7 @@ directory:
   variable, secret, or message is published.
 - Relax the harness sandbox, if at all, only inside the disposable repository.
   A sandbox that mounts `.git` read-only blocks the commits that the debugging,
-  merge-conflict, TDD, planning, and deliver scenarios make.
+  TDD, planning, and deliver scenarios make.
 
 For example, with Codex CLI:
 
@@ -66,13 +66,14 @@ node scripts/create-engineering-skill-fixtures.mjs
 npm run test:engineering-skill-fixtures
 ```
 
-The builder prints its JSON manifest. Six repositories cover nine skills:
+The builder prints its JSON manifest. Six repositories exercise nine
+engineering skills:
 `routing-review` for `ask-matt` and `code-review`; `architecture` for
 `codebase-design` and `improve-codebase-architecture`; `debugging` for
 `diagnosing-bugs`; `modeling-research` for `domain-modeling` and `research`;
-`tdd`; and `merge-conflict` for `resolving-merge-conflicts`, which starts inside
-an unresolved Git merge. The scenarios supply a domain glossary, applicable
-ADRs with their indexes, contributor commands, source, tests, requests, and
+`tdd`; and `retrospective` for `retro`, with a recorded session and the support
+reference `writing-for-agents`. The scenarios supply a domain glossary,
+applicable ADRs with their indexes, contributor commands, source, tests, requests, and
 specifications.
 
 The research exercise needs web search, such as Codex CLI's `--search` option.
@@ -80,8 +81,8 @@ Opening the architecture report needs a browser; in a headless harness, render
 it with a local headless browser and inspect the result.
 
 The test verifies the shared and scenario guidance, domain and development
-context, ADR indexes, skill links and digests, the unresolved merge, a build
-from a Repo Canon checkout without an `origin` remote, and an ordinary later
+context, ADR indexes, skill links and digests, the retrospective transcript, a
+build from a Repo Canon checkout without an `origin` remote, and an ordinary later
 commit under a host that requires signing with an unusable program.
 
 ## Productivity skills
@@ -118,11 +119,13 @@ npm run test:planning-skill-fixtures
 ```
 
 The builder writes `manifest.json` under its root and prints that path. Five
-repositories cover nine skills: `setup` for `setup-matt-pocock-skills` and
+repositories cover eleven skills: `setup` for `setup-matt-pocock-skills` and
 `triage`; `adoption-preparation` for the preparation that precedes whole-file
 ownership of `AGENTS.md`; `planning` for `grill-with-docs`, `to-spec`, and
 `to-tickets`; `triage-wayfinder` for `triage` and `wayfinder`; and `delivery`
-for `implement`, `prototype`, and `wizard`. The manifest also records the
+for `implement`, `implement-spec`, `pr`, `prototype`, and `wizard`. The latter
+includes a local specification and child ticket for the integration branch
+exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
 support skills that exercised skills depend on, such as the productivity
 `grilling` skill that `grill-with-docs` uses.
 

@@ -56,10 +56,12 @@ repeated.
   documentation check enforce the index entry form, one index per document,
   the development guide's order, and scope coverage, with each check defined
   once in the shared documentation model.
-- Include all regular Matt Pocock skills. Upstream's promoted set at commit
-  `3cca18b368ae95cdbdebbff572ccafa662551015` consists of 18 engineering and seven
-  productivity skills, matching its plugin manifest. Experimental skills are
-  excluded; the upstream in-progress, misc, and deprecated categories are
+- Include all regular Matt Pocock skills. Upstream's promoted set at tag
+  `v1.3.1`, commit
+  `24fe0ef7737efae15c87225755e9f6f5965e4888` consists of 20 engineering and seven
+  productivity skills, matching its plugin manifest. The set includes `pr`,
+  `implement-spec`, and `retro`; upstream removed `resolving-merge-conflicts`.
+  Experimental skills are excluded; the upstream in-progress, misc, and deprecated categories are
   outside the regular set. No additional regular-skill exclusions are agreed.
 - The standards source manages reviewed, pinned upstream skill snapshots and
   distributes changes through standards releases. Keep upstream skill content
@@ -177,7 +179,7 @@ repeated.
 
 ## Verified upstream facts
 
-- The 25 promoted skills are self-contained with respect to concrete internal
+- The 27 promoted skills are self-contained with respect to concrete internal
   skill invocations and referenced resources; none requires an experimental,
   miscellaneous, or deprecated skill. Full directories must be retained.
   Harness facilities such as subagents and context controls remain runtime

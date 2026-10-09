@@ -35,7 +35,7 @@ function build(t, env = process.env) {
   return { parent, root, manifest: JSON.parse(child.stdout) };
 }
 
-test("creates the engineering-skill repositories with their skills and an unresolved merge", (t) => {
+test("creates the engineering-skill repositories with the current regular skills and a retrospective", (t) => {
   const { root, manifest } = build(t);
 
   assert.equal(manifest.format, "repo-canon/engineering-skill-fixtures/v1");
@@ -48,14 +48,15 @@ test("creates the engineering-skill repositories with their skills and an unreso
     "domain-modeling",
     "improve-codebase-architecture",
     "research",
-    "resolving-merge-conflicts",
+    "retro",
     "tdd",
+    "writing-for-agents",
   ]);
   assert.deepEqual(Object.keys(manifest.repositories).sort(), [
     "architecture",
     "debugging",
-    "merge-conflict",
     "modeling-research",
+    "retrospective",
     "routing-review",
     "tdd",
   ]);
@@ -82,20 +83,16 @@ test("creates the engineering-skill repositories with their skills and an unreso
     }
   }
 
-  const conflict = manifest.repositories["merge-conflict"];
-  assert.equal(
-    execFileSync("git", ["diff", "--name-only", "--diff-filter=U"], {
-      cwd: conflict.path,
-      encoding: "utf8",
-    }).trim(),
-    "src/order-intake.mjs",
+  const retrospective = manifest.repositories.retrospective;
+  assert.match(
+    readFileSync(join(retrospective.path, "docs/session.md"), "utf8"),
+    /npm test/,
   );
   assert.equal(
-    execFileSync("git", ["rev-parse", "-q", "--verify", "MERGE_HEAD"], {
-      cwd: conflict.path,
-      encoding: "utf8",
-    }).trim().length,
-    40,
+    readFileSync(join(retrospective.path, "GLOSSARY.md"), "utf8").startsWith(
+      "# Ordering",
+    ),
+    true,
   );
 });
 

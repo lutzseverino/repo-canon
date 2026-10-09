@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { lstatSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
@@ -19,7 +20,7 @@ import { invokeCheck } from "./helpers/operation.mjs";
 // the repository-root glossary, and the authoring notes. The source-side
 // guidance, the discovery instructions, and the vendored material stay out.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const rootDocuments = ["CONTEXT.md", "authoring-notes.md"];
+const rootDocuments = ["GLOSSARY.md", "authoring-notes.md"];
 
 // The CLI's discovery observation refuses any file larger than this, which would
 // reject the whole inspection before it reports anything.
@@ -89,4 +90,70 @@ test("no tracked file reaches the observation limit that would reject inspection
     [],
     `keep every tracked file below ${observationFileLimit} bytes so the CLI can observe it`,
   );
+});
+
+// Expected digests were taken from the upstream v1.3.1 checkout, independently
+// of the distributed snapshot. Keep the plugin manifest as the set authority.
+const upstreamSnapshot = JSON.parse(
+  readFileSync(join(root, "test/fixtures/mattpocock-v1.3.1.json"), "utf8"),
+);
+const snapshotRoot = join(root, "vendor/mattpocock-skills");
+
+function snapshotFiles(directory, prefix = "") {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = `${prefix}${entry.name}`;
+    return entry.isDirectory()
+      ? snapshotFiles(join(directory, entry.name), `${path}/`)
+      : [path];
+  });
+}
+
+test("the shipped Matt Pocock set and bytes match the v1.3.1 plugin manifest", () => {
+  assert.deepEqual(
+    snapshotFiles(snapshotRoot).sort(),
+    Object.keys(upstreamSnapshot.files).sort(),
+  );
+  for (const [path, expected] of Object.entries(upstreamSnapshot.files)) {
+    assert.equal(
+      createHash("sha256")
+        .update(readFileSync(join(snapshotRoot, path)))
+        .digest("hex"),
+      expected,
+      `${path} matches ${upstreamSnapshot.tag} (${upstreamSnapshot.commit})`,
+    );
+  }
+  const manifest = JSON.parse(
+    readFileSync(join(snapshotRoot, ".claude-plugin/plugin.json"), "utf8"),
+  );
+  assert.equal(manifest.version, "1.3.1");
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  const shipped = [
+    ...declarations.matchAll(
+      /source: vendor\/mattpocock-skills\/(skills\/[^\s]+)/g,
+    ),
+  ]
+    .map((match) => `./${match[1]}`)
+    .sort();
+  assert.deepEqual(shipped, [...manifest.skills].sort());
+  assert.ok(
+    !shipped.some((path) => path.endsWith("/resolving-merge-conflicts")),
+  );
+});
+
+test("the installed setup files retain the v1.3.1 seed bytes", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  for (const [target, seed] of [
+    ["docs/agents/domain.md", "domain.md"],
+    ["docs/agents/issue-tracker.md", "issue-tracker-github.md"],
+    ["docs/agents/triage-labels.md", "triage-labels.md"],
+  ]) {
+    const source = `vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/${seed}`;
+    assert.ok(
+      declarations.includes(`target: ${target}\n      exact: ${source}`),
+    );
+    assert.deepEqual(
+      readFileSync(join(root, target)),
+      readFileSync(join(root, source)),
+    );
+  }
 });

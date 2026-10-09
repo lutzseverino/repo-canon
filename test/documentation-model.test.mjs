@@ -349,7 +349,7 @@ test("collects Markdown documents under each root and confirmed Markdown files e
     "packages/app/handbook/usage/README.md": "# Usage\n",
     "legacy-notes.md": "# Legacy\n",
     "unconfirmed.md": "# Unconfirmed\n",
-    "CONTEXT.md": "# Context\n",
+    "GLOSSARY.md": "# Context\n",
     LICENSE: "MIT\n",
   });
   t.after(project.close);
@@ -357,13 +357,13 @@ test("collects Markdown documents under each root and confirmed Markdown files e
 
   const built = documentationModel(project.root, [
     "legacy-notes.md",
-    "CONTEXT.md",
+    "GLOSSARY.md",
     "LICENSE",
     "docs/usage/planned.md",
     "packages/app/handbook/usage/README.md",
   ]);
   assert.deepEqual(built.documents, [
-    "CONTEXT.md",
+    "GLOSSARY.md",
     "docs/README.md",
     "docs/usage/GUIDE.MD",
     "legacy-notes.md",

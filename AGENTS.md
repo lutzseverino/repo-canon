@@ -19,5 +19,5 @@ The five canonical triage roles use their default label strings. See
 
 ### Domain docs
 
-Single-context by default: a root `CONTEXT.md` and `docs/adr/`; a root
-`CONTEXT-MAP.md` makes it multi-context. See `docs/agents/domain.md`.
+Single-context by default: a root `GLOSSARY.md` and `docs/adr/`; a root
+`GLOSSARY-MAP.md` makes it multi-context. See `docs/agents/domain.md`.
