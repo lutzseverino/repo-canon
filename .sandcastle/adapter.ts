@@ -51,10 +51,13 @@ type HostRun = Run & {
   stopped: boolean;
 };
 
+// The decision core's settings and the time between passes.
+export type HostSettings = Settings & { pollSeconds: number };
+
 // The factory host sets these; Repo Canon ships no values for them.
 export function readSettings(
   env: Record<string, string | undefined>,
-): Settings {
+): HostSettings {
   const problems: string[] = [];
   const model = (name: string) => {
     const value = env[name]?.trim() ?? "";
@@ -103,11 +106,25 @@ export function readSettings(
     (value) => value > 0,
     "set it to a positive number of minutes",
   );
+  const pollSeconds = env.FACTORY_POLL_SECONDS
+    ? number(
+        "FACTORY_POLL_SECONDS",
+        (value) => value > 0,
+        "set it to a positive number of seconds, or leave it unset for 300",
+      )
+    : 300;
   if (problems.length > 0)
     throw new Error(
       ["The factory host settings are unusable:", ...problems].join("\n"),
     );
-  return { defaultModel, retryModel, caps, usageThreshold, timeLimitMinutes };
+  return {
+    defaultModel,
+    retryModel,
+    caps,
+    usageThreshold,
+    timeLimitMinutes,
+    pollSeconds,
+  };
 }
 
 const templates: Record<Mode, string> = {

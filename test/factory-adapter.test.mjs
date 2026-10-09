@@ -436,6 +436,7 @@ test("the host's settings come from its environment", () => {
       FACTORY_CAPS: "claude-code=2, codex=1",
       FACTORY_USAGE_THRESHOLD: "80",
       FACTORY_TIME_LIMIT_MINUTES: "240",
+      FACTORY_POLL_SECONDS: "60",
     }),
     {
       defaultModel: "claude-sonnet-5-5",
@@ -443,17 +444,17 @@ test("the host's settings come from its environment", () => {
       caps: { "claude-code": 2, codex: 1 },
       usageThreshold: 80,
       timeLimitMinutes: 240,
+      pollSeconds: 60,
     },
   );
-  assert.equal(
-    readSettings({
-      FACTORY_DEFAULT_MODEL: "gpt-5.5",
-      FACTORY_CAPS: "codex=1",
-      FACTORY_USAGE_THRESHOLD: "90",
-      FACTORY_TIME_LIMIT_MINUTES: "60",
-    }).retryModel,
-    null,
-  );
+  const defaults = readSettings({
+    FACTORY_DEFAULT_MODEL: "gpt-5.5",
+    FACTORY_CAPS: "codex=1",
+    FACTORY_USAGE_THRESHOLD: "90",
+    FACTORY_TIME_LIMIT_MINUTES: "60",
+  });
+  assert.equal(defaults.retryModel, null);
+  assert.equal(defaults.pollSeconds, 300);
 });
 
 test("unusable host settings are refused with every correction", () => {
@@ -463,6 +464,7 @@ test("unusable host settings are refused with every correction", () => {
         FACTORY_DEFAULT_MODEL: "gemini-3",
         FACTORY_RETRY_MODEL: "gpt-5.5@max",
         FACTORY_CAPS: "claude-code=two,cursor=1",
+        FACTORY_POLL_SECONDS: "soon",
       }),
     {
       message: [
@@ -473,6 +475,7 @@ test("unusable host settings are refused with every correction", () => {
         "- FACTORY_CAPS: provider cursor is not claude-code or codex",
         "- FACTORY_USAGE_THRESHOLD: set it to a percentage from 0 to 100",
         "- FACTORY_TIME_LIMIT_MINUTES: set it to a positive number of minutes",
+        "- FACTORY_POLL_SECONDS: set it to a positive number of seconds, or leave it unset for 300",
       ].join("\n"),
     },
   );

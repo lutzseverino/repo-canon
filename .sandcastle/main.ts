@@ -23,9 +23,26 @@ import type { Provider } from "./factory.ts";
 
 const sandcastleVersion = "0.12.0";
 const root = fileURLToPath(new URL("..", import.meta.url));
-const pollSeconds = Number(process.env.FACTORY_POLL_SECONDS ?? 300);
 const settings = readSettings(process.env);
 const sandcastle = await loadSandcastle();
+
+// Each provider's Sandcastle agent and usage reader.
+const providers: Record<
+  Provider,
+  {
+    agent(model: string, options: { effort: string }): unknown;
+    readUsage(): Promise<number | null>;
+  }
+> = {
+  "claude-code": {
+    agent: (model, options) => sandcastle.claudeCode(model, options),
+    readUsage: readClaudeUsage,
+  },
+  codex: {
+    agent: (model, options) => sandcastle.codex(model, options),
+    readUsage: readCodexUsage,
+  },
+};
 
 // Sandcastle is resolved from the `npx` install on PATH. Without it, the
 // factory runs itself again under `npx` with the pinned version.
@@ -76,14 +93,12 @@ async function gh(args: string[]): Promise<string> {
 }
 
 async function launch(request: LaunchRequest): Promise<void> {
-  const options = { effort: request.effort };
   await sandcastle.run({
     name: `issue-${request.issue}`,
     cwd: root,
-    agent:
-      request.provider === "codex"
-        ? sandcastle.codex(request.model, options)
-        : sandcastle.claudeCode(request.model, options),
+    agent: providers[request.provider].agent(request.model, {
+      effort: request.effort,
+    }),
     sandbox: sandcastle.docker({ imageName: request.image }),
     prompt: request.prompt,
     branchStrategy: { type: "branch", branch: runBranch(request.issue) },
@@ -117,10 +132,6 @@ async function buildImage(request: ImageBuild): Promise<void> {
   const [status] = await once(build, "close");
   if (status !== 0)
     throw new Error(`docker build exited with ${status}: ${errors.trim()}`);
-}
-
-async function readUsage(provider: Provider): Promise<number | null> {
-  return provider === "codex" ? readCodexUsage() : readClaudeUsage();
 }
 
 // The Codex app-server's documented rate-limit read, over stdio JSONL.
@@ -185,7 +196,7 @@ const factory = createFactory(settings, {
   gh,
   launch,
   buildImage,
-  readUsage,
+  readUsage: (provider) => providers[provider].readUsage(),
   now: () => new Date(),
   root,
   report,
@@ -203,5 +214,5 @@ for (;;) {
   } catch (error) {
     report(`tick failed: ${error}`);
   }
-  await sleep(pollSeconds * 1000);
+  await sleep(settings.pollSeconds * 1000);
 }
