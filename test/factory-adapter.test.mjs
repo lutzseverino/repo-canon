@@ -755,3 +755,37 @@ test("a time limit a timer cannot wait is refused", () => {
     35791,
   );
 });
+
+test("a run that Sandcastle ends at the time limit fails even with an open pull request", async () => {
+  const run = factory({ issues: [{ number: 4 }] });
+  await run.tick();
+  run.github.find(4).pullRequests.push("OPEN");
+  run.time.now = new Date("2026-10-09T16:00:00Z");
+  run.sandcastle.launched[0].finish(new Error("idle timeout"));
+  await settled();
+  await run.tick();
+  const issue = run.github.find(4);
+  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
+  assert.match(
+    issue.comments[0],
+    /the run exceeded the time limit of 240 minutes/,
+  );
+});
+
+test("a pull request from a fork never counts as the run's", async () => {
+  const run = factory({ issues: [{ number: 4 }] });
+  await run.tick();
+  const fork = {
+    state: "OPEN",
+    createdAt: "2026-10-09T12:30:00Z",
+    isCrossRepository: true,
+  };
+  run.github.find(4).branchPullRequests.push(fork);
+  run.github.find(4).pullRequests.push(fork);
+  run.sandcastle.launched[0].finish();
+  await settled();
+  await run.tick();
+  const issue = run.github.find(4);
+  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
+  assert.match(issue.comments[0], /the run ended without an open pull request/);
+});

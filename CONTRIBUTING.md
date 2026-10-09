@@ -105,7 +105,8 @@ holds unrelated uncommitted edits, run them in a clean checkout of that commit,
 such as a temporary Git worktree. Run a check that reads a diff, such as
 `git diff --check`, over the whole change against the base.
 
-Write the body from the pull request template with the `pr` skill.
+Write the body with the `pr` skill, in the pull request template's sections:
+the skill's Summary, Evidence and Merge Danger, then Related issue.
 
 ### Adoption pull requests
 

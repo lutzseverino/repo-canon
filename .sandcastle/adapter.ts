@@ -48,6 +48,7 @@ export type Ports = {
 type HostRun = Run & {
   controller: AbortController;
   exited: boolean;
+  exitedAt: Date | null;
   stopped: boolean;
 };
 
@@ -162,9 +163,9 @@ const pullRequestsQuery = `query($owner: String!, $name: String!, $number: Int!,
   repository(owner: $owner, name: $name) {
     issue(number: $number) {
       state
-      closedByPullRequestsReferences(first: 20, includeClosedPrs: true) { nodes { state createdAt } }
+      closedByPullRequestsReferences(first: 20, includeClosedPrs: true) { nodes { state createdAt isCrossRepository } }
     }
-    pullRequests(headRefName: $branch, first: 20) { nodes { state createdAt } }
+    pullRequests(headRefName: $branch, first: 20) { nodes { state createdAt isCrossRepository } }
   }
 }`;
 
@@ -241,8 +242,8 @@ export function createFactory(settings: Settings, ports: Ports) {
     );
   }
 
-  // A run's pull request is one that closes its issue or comes from the run's
-  // branch, opened once the run started (`since`), so an earlier run's pull
+  // A run's pull request is one from this repository, not a fork, that closes
+  // its issue or comes from the run's branch, opened once the run started (`since`), so an earlier run's pull
   // requests on the same branch don't decide it. Only a closed issue counts as
   // merged work. An open pull request holds the claim; a merged pull request
   // with the issue still open and none open is its own state.
@@ -269,9 +270,10 @@ export function createFactory(settings: Settings, ports: Ports) {
       ...pullRequests.nodes,
     ]
       .filter(
-        (pullRequest: { createdAt: string }) =>
-          since === undefined ||
-          Date.parse(pullRequest.createdAt) >= Date.parse(since),
+        (pullRequest: { createdAt: string; isCrossRepository: boolean }) =>
+          !pullRequest.isCrossRepository &&
+          (since === undefined ||
+            Date.parse(pullRequest.createdAt) >= Date.parse(since)),
       )
       .map((pullRequest: { state: string }) => pullRequest.state);
     if (issue.state === "CLOSED") return "merged";
@@ -355,6 +357,7 @@ export function createFactory(settings: Settings, ports: Ports) {
           ended: null,
           controller,
           exited: false,
+          exitedAt: null,
           stopped: false,
         };
         runs.push(run);
@@ -374,6 +377,7 @@ export function createFactory(settings: Settings, ports: Ports) {
           )
           .finally(() => {
             run.exited = true;
+            run.exitedAt = ports.now();
           });
         return;
       }
@@ -433,7 +437,12 @@ export function createFactory(settings: Settings, ports: Ports) {
     for (const run of runs) {
       if (run.exited && run.ended === null)
         run.ended = {
-          timedOut: run.stopped,
+          // Sandcastle's idle timeout can end a run at its limit before the
+          // factory stops it, so the time it ran decides, not who ended it.
+          timedOut:
+            run.stopped ||
+            run.exitedAt!.getTime() - Date.parse(run.startedAt) >=
+              settings.timeLimitMinutes * 60_000,
           pullRequest: await pullRequestState(run.issue, run.startedAt),
         };
     }

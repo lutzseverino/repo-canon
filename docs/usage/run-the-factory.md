@@ -95,8 +95,8 @@ usage is below the threshold. An issue held by a gate stays on the frontier.
 
 ## Claims and failures
 
-A run's pull request is one that closes its issue or comes from the run's
-branch, `factory/issue-<n>`. For a run the factory is tracking, only pull
+A run's pull request is one from the repository itself, not a fork, that
+closes its issue or comes from the run's branch, `factory/issue-<n>`. For a run the factory is tracking, only pull
 requests opened after the run started count, so an earlier run's pull requests
 on the same branch don't decide it. A `factory:running` claim is held by a run the
 factory is tracking or by the issue's open pull request, so it stays while
@@ -113,7 +113,8 @@ issue: close the issue if that finished it, or remove `factory:failed` to run
 it again.
 
 A run that ends without an open pull request, or exceeds the time limit, has
-failed. A failed first run retries once on the retry model, keeping the claim.
+failed. A run counts as over the limit by how long it ran, whether the factory
+stopped it or Sandcastle's idle timeout ended it. A failed first run retries once on the retry model, keeping the claim.
 The retry takes its issue's turn in oldest-first order, waits for its
 provider's gate, and launches only while the issue would still be picked up,
 apart from its own claim. When the run cannot retry, the factory removes the
