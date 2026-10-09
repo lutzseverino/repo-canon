@@ -3,6 +3,7 @@
 // repository's checkout; it re-runs itself under a pinned `npx` of Sandcastle,
 // so the repository needs no dependency.
 import { execFile, spawn, spawnSync } from "node:child_process";
+import { once } from "node:events";
 import { readFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
 import { createInterface } from "node:readline";
@@ -14,6 +15,7 @@ import {
   codexUsage,
   createFactory,
   readSettings,
+  type ImageBuild,
   type LaunchRequest,
 } from "./adapter.ts";
 import type { Provider } from "./factory.ts";
@@ -23,11 +25,6 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const pollSeconds = Number(process.env.FACTORY_POLL_SECONDS ?? 300);
 const settings = readSettings(process.env);
 const sandcastle = await loadSandcastle();
-
-// The image every run's sandbox starts from.
-function sandbox() {
-  return sandcastle.docker();
-}
 
 // Sandcastle is resolved from the `npx` install on PATH. Without it, the
 // factory runs itself again under `npx` with the pinned version.
@@ -86,7 +83,7 @@ async function launch(request: LaunchRequest): Promise<void> {
       request.provider === "codex"
         ? sandcastle.codex(request.model, options)
         : sandcastle.claudeCode(request.model, options),
-    sandbox: sandbox(),
+    sandbox: sandcastle.docker({ imageName: request.image }),
     prompt: request.prompt,
     branchStrategy: {
       type: "branch",
@@ -96,6 +93,32 @@ async function launch(request: LaunchRequest): Promise<void> {
     idleTimeoutSeconds: settings.timeLimitMinutes * 60,
     signal: request.signal,
   });
+}
+
+// The Dockerfile arrives on standard input, so the build has no context, and
+// the agent user takes the host user's IDs, as Sandcastle requires.
+async function buildImage(request: ImageBuild): Promise<void> {
+  const build = spawn(
+    "docker",
+    [
+      "build",
+      "--quiet",
+      "--tag",
+      request.image,
+      "--build-arg",
+      `AGENT_UID=${process.getuid?.() ?? 1000}`,
+      "--build-arg",
+      `AGENT_GID=${process.getgid?.() ?? 1000}`,
+      "-",
+    ],
+    { stdio: ["pipe", "ignore", "pipe"] },
+  );
+  let errors = "";
+  build.stderr.on("data", (chunk) => (errors += chunk));
+  build.stdin.end(readFileSync(request.dockerfile));
+  const [status] = await once(build, "close");
+  if (status !== 0)
+    throw new Error(`docker build exited with ${status}: ${errors.trim()}`);
 }
 
 async function readUsage(provider: Provider): Promise<number | null> {
@@ -163,9 +186,10 @@ function report(line: string) {
 const factory = createFactory(settings, {
   gh,
   launch,
+  buildImage,
   readUsage,
   now: () => new Date(),
-  logDirectory: join(root, ".sandcastle", "logs"),
+  root,
   report,
 });
 

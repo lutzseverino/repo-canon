@@ -83,6 +83,23 @@ defaults:
       target: .sandcastle/orchestrated-prompt.md
       exact: .sandcastle/orchestrated-prompt.md
 
+    factory-sandbox-image:
+      kind: file
+      target: .sandcastle/Dockerfile
+      guidance: guidance/factory-sandbox-image.md
+      checks:
+        - id: sandbox-image-base
+          run:
+            executable: node
+            script: operations/check-sandbox-image.mjs
+            resources:
+              - operations/sandbox-image-base.Dockerfile
+            arguments: []
+          prerequisite:
+            version-arguments: ["--version"]
+            version: ">=24.0.0 <25.0.0"
+          timeout-seconds: 30
+
     feature-request-template:
       kind: file
       target: .github/ISSUE_TEMPLATE/feature-request.yml

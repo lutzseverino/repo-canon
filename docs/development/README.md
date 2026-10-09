@@ -52,7 +52,8 @@ disposable local repositories used for the seven productivity skill exercises.
 the harness that exercises the skills.
 
 This repository takes the same path every adopter takes, so the suite also runs
-the three shipped checks against this repository's own root through the
+the shipped Repository README, documentation, and sandbox image checks against
+this repository's own root through the
 operation request helper, with the documentation tree, the repository-root
 glossary [`GLOSSARY.md`](../../GLOSSARY.md), and the
 [authoring notes](../../authoring-notes.md) as its documentation scope, and
@@ -86,6 +87,8 @@ step: `npm test` already runs it on every pull request.
   upstream setup.
 - [Repository README check](repository-readme-check.md): operation protocol,
   outcomes, prerequisites, and focused fixture command.
+- [Sandbox image check](sandbox-image-check.md): the base image, operation
+  protocol, outcomes, and focused fixture command.
 - [Documentation and Project README checks](documentation-check.md): concrete
   scope, structural outcomes, prerequisites, and focused fixture commands.
 - [Documentation scope drafter](documentation-scope-drafter.md): drafting the

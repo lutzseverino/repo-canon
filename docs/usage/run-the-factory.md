@@ -16,12 +16,24 @@ repeats every `FACTORY_POLL_SECONDS`, 300 by default.
 ## Host prerequisites
 
 The host needs Node.js 24, Git, Docker, and the GitHub CLI authenticated with
-permission to edit issue labels and comments. Runs start in Sandcastle's default
-Docker image, `sandcastle:<checkout directory name>`. Sandcastle passes the
+permission to edit issue labels and comments. Sandcastle passes the
 variables listed in `.sandcastle/.env`, such as `GH_TOKEN` and the agent's
 credentials, into each sandbox. The file stays on the host;
 `.sandcastle/.gitignore` keeps it, the run logs, and Sandcastle's worktrees
 out of Git.
+
+## Sandbox image
+
+Every run starts in the repository's own image, built from
+`.sandcastle/Dockerfile`: Repo Canon's base, with Node.js, Git, the GitHub CLI,
+Claude Code, and Codex, followed by the repository's toolchain from its
+[development guide](../development/README.md). Adoption writes the file, and
+the [sandbox image check](../development/sandbox-image-check.md) keeps the base
+intact. Before each pass that launches a run, the factory builds the image as
+`factory-<owner>-<name>` from the file in the checkout, without a build context
+and with the host user's IDs for the sandbox's `agent` user. When the build
+fails, the factory launches nothing, leaves the issues unclaimed on the
+frontier, and logs the error.
 
 ## Host settings
 

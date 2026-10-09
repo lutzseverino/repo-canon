@@ -24,9 +24,12 @@ The repository license, READMEs, development documentation, glossaries, and
 project-specific agent guidance belong to the adopting repository, because
 they describe it and its projects. Repo Canon shapes them through contextual
 guidance and checks. The Repository license has the fixed target `LICENSE`,
-and the Repository README has the fixed target `README.md`. Discovery proposes
-the concrete paths of Project READMEs at arbitrary locations and of documentation
-files, glossaries, and indexes, including documentation moves and link repairs.
+and the Repository README has the fixed target `README.md`. The factory's
+sandbox image has the fixed target `.sandcastle/Dockerfile`, because each
+repository's toolchain differs; Repo Canon ships its base, and a check keeps
+the base intact. Discovery proposes the concrete paths of Project READMEs at
+arbitrary locations and of documentation files, glossaries, and indexes,
+including documentation moves and link repairs.
 The maintainer confirms the complete inspection before adoption writes any of
 them.
 
@@ -93,10 +96,13 @@ repeated.
   `.sandcastle/` holds a repository-agnostic entry, adapter, and pure decision
   core, with the two prompt templates, as exact files whose source is their
   installed path. It runs Sandcastle through a pinned `npx`, so an adopting
-  repository gains no dependency. The host sets the default and retry models,
-  the per-provider caps, the usage threshold, and the time limit; Repo Canon
-  ships none of them. The canonical labels carry the claim, failure, and
-  run-mode labels but no `model:` labels.
+  repository gains no dependency. Runs start in the repository's own sandbox
+  image, Repo Canon's base followed by the toolchain the adopting agent takes
+  from the development guide, as the
+  [sandbox image guidance](guidance/factory-sandbox-image.md) states. The host
+  sets the default and retry models, the per-provider caps, the usage
+  threshold, and the time limit; Repo Canon ships none of them. The canonical
+  labels carry the claim, failure, and run-mode labels but no `model:` labels.
   [Run the factory](docs/usage/run-the-factory.md) describes its behavior.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the

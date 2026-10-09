@@ -138,25 +138,44 @@ function fakeSandcastle() {
   return { launch, launched };
 }
 
+// A fake image builder that records each build with the issue labels it saw.
+function fakeDocker(github) {
+  const builds = [];
+  const failures = [];
+  async function buildImage(request) {
+    builds.push({
+      ...request,
+      labels: Object.fromEntries(
+        github.state.issues.map((issue) => [issue.number, [...issue.labels]]),
+      ),
+    });
+    if (failures.length > 0) throw failures.shift();
+  }
+  return { buildImage, builds, failures };
+}
+
 function factory({ issues, usage = {}, hostSettings = {}, clock }) {
   const github = fakeGitHub(issues);
   const sandcastle = fakeSandcastle();
+  const docker = fakeDocker(github);
+  const reports = [];
   const time = clock ?? { now: new Date("2026-10-09T12:00:00Z") };
   const instance = createFactory(
     { ...settings, ...hostSettings },
     {
       gh: github.gh,
       launch: sandcastle.launch,
+      buildImage: docker.buildImage,
       readUsage: async (provider) => {
         if (usage[provider] instanceof Error) throw usage[provider];
         return usage[provider] ?? null;
       },
       now: () => time.now,
-      logDirectory: "/srv/factory/.sandcastle/logs",
-      report: () => {},
+      root: "/srv/factory",
+      report: (line) => reports.push(line),
     },
   );
-  return { ...instance, github, sandcastle, time };
+  return { ...instance, github, sandcastle, docker, reports, time };
 }
 
 test("a ready issue is claimed, then launched with exactly /implement #<n>", async () => {
@@ -184,6 +203,59 @@ test("a ready issue is claimed, then launched with exactly /implement #<n>", asy
       effort: "high",
       log: "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
     },
+  );
+});
+
+test("every launch runs in the repository's image, built before the claim", async () => {
+  const run = factory({
+    issues: [{ number: 4 }, { number: 5 }],
+    hostSettings: { retryModel: "gpt-5.5" },
+  });
+  await run.tick();
+  assert.deepEqual(run.docker.builds, [
+    {
+      image: "factory-acme-widgets",
+      dockerfile: "/srv/factory/.sandcastle/Dockerfile",
+      labels: { 4: ["ready-for-agent"], 5: ["ready-for-agent"] },
+    },
+  ]);
+  await run.tick();
+  assert.equal(
+    run.docker.builds.length,
+    1,
+    "a pass without launches builds nothing",
+  );
+  run.sandcastle.launched[0].finish(new Error("agent crashed"));
+  await settled();
+  await run.tick();
+  assert.equal(run.docker.builds.length, 2, "a retry rebuilds the image");
+  assert.deepEqual(
+    run.sandcastle.launched.map(({ issue, image }) => ({ issue, image })),
+    [
+      { issue: 4, image: "factory-acme-widgets" },
+      { issue: 5, image: "factory-acme-widgets" },
+      { issue: 4, image: "factory-acme-widgets" },
+    ],
+  );
+});
+
+test("an image that does not build leaves its issues unclaimed on the frontier", async () => {
+  const run = factory({ issues: [{ number: 4 }] });
+  run.docker.failures.push(new Error("apt-get exited with 100"));
+  const decisions = await run.tick();
+  assert.deepEqual(decisions, []);
+  assert.deepEqual(run.github.find(4).labels, ["ready-for-agent"]);
+  assert.equal(run.sandcastle.launched.length, 0);
+  assert.ok(
+    run.reports.includes(
+      "the sandbox image did not build, so nothing launches: Error: apt-get exited with 100",
+    ),
+    run.reports.join("\n"),
+  );
+  await run.tick();
+  assert.deepEqual(
+    run.sandcastle.launched.map((launch) => launch.issue),
+    [4],
   );
 });
 

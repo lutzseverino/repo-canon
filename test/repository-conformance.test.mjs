@@ -79,6 +79,39 @@ test("the repository passes the Repository README check at its root", () => {
   assert.equal(outcome.result.status, "passed", outcome.result.message);
 });
 
+test("the repository passes the sandbox image check at its root", () => {
+  const outcome = invokeCheck(operation("check-sandbox-image.mjs"), root, {
+    operation: {
+      declaration: "factory-sandbox-image",
+      phase: "checks",
+      id: "sandbox-image-base",
+    },
+    allowedTargets: { paths: [".sandcastle/Dockerfile"], directories: [] },
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "passed", outcome.result.message);
+});
+
+test("the sandbox image is a contextual declaration whose only target is the image", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  const declaration = declarations.match(
+    /^ {4}factory-sandbox-image:\n((?: {6}.+\n)+)/m,
+  )?.[1];
+  assert.ok(declaration, "the profile declares factory-sandbox-image");
+  assert.match(
+    declaration,
+    /^ {6}kind: file\n {6}target: \.sandcastle\/Dockerfile\n {6}guidance: guidance\/factory-sandbox-image\.md\n {6}checks:\n/,
+  );
+  assert.doesNotMatch(declaration, /^ {6}(?:exact|fixes|discovery):/m);
+  assert.equal(
+    [...declarations.matchAll(/^\s+target: \.sandcastle\/Dockerfile$/gm)]
+      .length,
+    1,
+    "only factory-sandbox-image owns the image",
+  );
+});
+
 test("no tracked file reaches the observation limit that would reject inspection", () => {
   const oversized = trackedFiles()
     .map((path) => ({ path, state: lstatSync(join(root, path)) }))
@@ -270,11 +303,12 @@ test("adoption installs the factory's exact files, which name no repository", ()
       `${id} must install ${path} exactly`,
     );
   }
+  // The sandbox image is the repository's own, from its contextual declaration.
   assert.deepEqual(
     trackedFiles()
       .filter((path) => path.startsWith(".sandcastle/"))
       .sort(),
-    Object.values(factory).sort(),
+    [...Object.values(factory), ".sandcastle/Dockerfile"].sort(),
   );
   for (const path of Object.values(factory)) {
     assert.doesNotMatch(

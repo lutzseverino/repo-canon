@@ -24,16 +24,22 @@ export type LaunchRequest = {
   model: string;
   effort: string;
   log: string;
+  // The repository's sandbox image, built from its `.sandcastle/Dockerfile`.
+  image: string;
   signal: AbortSignal;
 };
+
+export type ImageBuild = { image: string; dockerfile: string };
 
 export type Ports = {
   gh(args: string[]): Promise<string>;
   // Resolves or rejects when the run's agent exits.
   launch(request: LaunchRequest): Promise<void>;
+  buildImage(request: ImageBuild): Promise<void>;
   readUsage(provider: Provider): Promise<number | null>;
   now(): Date;
-  logDirectory: string;
+  // The repository checkout the factory runs from.
+  root: string;
   report(line: string): void;
 };
 
@@ -143,14 +149,34 @@ export function createFactory(settings: Settings, ports: Ports) {
   const runs: HostRun[] = [];
   let repository: { owner: string; name: string } | null = null;
 
-  async function identity() {
+  async function readRepository() {
     if (!repository) {
       const view = JSON.parse(
         await ports.gh(["repo", "view", "--json", "owner,name"]),
       );
       repository = { owner: view.owner.login, name: view.name };
     }
-    return ["-F", `owner=${repository.owner}`, "-F", `name=${repository.name}`];
+    return repository;
+  }
+
+  async function identity() {
+    const { owner, name } = await readRepository();
+    return ["-F", `owner=${owner}`, "-F", `name=${name}`];
+  }
+
+  // Each pass that launches builds the image again, so runs start from the
+  // Dockerfile the checkout holds now; Docker's cache keeps an unchanged
+  // build quick.
+  async function buildImage(): Promise<string> {
+    const { owner, name } = await readRepository();
+    const image = `factory-${owner}-${name}`
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9]+/g, "-");
+    await ports.buildImage({
+      image,
+      dockerfile: join(ports.root, ".sandcastle", "Dockerfile"),
+    });
+    return image;
   }
 
   async function readIssues(): Promise<Issue[]> {
@@ -222,7 +248,7 @@ export function createFactory(settings: Settings, ports: Ports) {
     return usage;
   }
 
-  async function apply(decision: Decision) {
+  async function apply(decision: Decision, image: string) {
     const { issue } = decision;
     switch (decision.kind) {
       case "claim":
@@ -246,7 +272,9 @@ export function createFactory(settings: Settings, ports: Ports) {
           attempt: decision.attempt,
           startedAt: ports.now().toISOString(),
           log: join(
-            ports.logDirectory,
+            ports.root,
+            ".sandcastle",
+            "logs",
             `issue-${issue}-attempt-${decision.attempt}.log`,
           ),
           ended: null,
@@ -263,6 +291,7 @@ export function createFactory(settings: Settings, ports: Ports) {
             model: run.model,
             effort: run.effort,
             log: run.log,
+            image,
             signal: controller.signal,
           })
           .catch((error) =>
@@ -344,8 +373,22 @@ export function createFactory(settings: Settings, ports: Ports) {
       usage,
       settings,
     });
-    for (const decision of decisions) await apply(decision);
-    return decisions;
+    let image = "";
+    let applied = decisions;
+    if (decisions.some((decision) => decision.kind === "launch")) {
+      try {
+        image = await buildImage();
+      } catch (error) {
+        ports.report(
+          `the sandbox image did not build, so nothing launches: ${error}`,
+        );
+        applied = decisions.filter(
+          (decision) => decision.kind !== "claim" && decision.kind !== "launch",
+        );
+      }
+    }
+    for (const decision of applied) await apply(decision, image);
+    return applied;
   }
 
   return { tick };
