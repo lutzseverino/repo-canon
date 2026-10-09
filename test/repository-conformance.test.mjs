@@ -219,3 +219,35 @@ test("adoption retains the HumanLayer MIT notice beside the copied skills", () =
   );
   assert.ok(notices.includes(".agents/skills/LICENSE.humanlayer-skills"));
 });
+
+test("adoption installs the model-invocable babysit skill in place of deliver", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.match(
+    declarations,
+    /\n {4}skill-babysit:\n {6}kind: skill\n {6}name: babysit\n {6}source: \.agents\/skills\/babysit\n/,
+  );
+  assert.doesNotMatch(declarations, /deliver/);
+  const frontmatter =
+    /^---\n([\s\S]*?)\n---\n/.exec(
+      readFileSync(join(root, ".agents/skills/babysit/SKILL.md"), "utf8"),
+    )?.[1] ?? "";
+  assert.match(frontmatter, /^name: babysit$/m);
+  assert.match(frontmatter, /^description: \S/m);
+  assert.doesNotMatch(frontmatter, /disable-model-invocation/);
+  assert.deepEqual(
+    readdirSync(join(root, ".agents/skills/babysit"), { recursive: true }),
+    ["SKILL.md"],
+  );
+});
+
+test("the installed agent guidance ends every change as a babysat pull request", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.ok(declarations.includes("target: AGENTS.md\n      exact: AGENTS.md"));
+  assert.ok(
+    readFileSync(join(root, "AGENTS.md"), "utf8")
+      .replaceAll(/\s+/g, " ")
+      .includes(
+        "Deliver every change as one pull request: open it as `CONTRIBUTING.md` says, write its body with `pr`, then `babysit` it until it merges.",
+      ),
+  );
+});

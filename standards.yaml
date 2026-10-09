@@ -225,6 +225,11 @@ defaults:
       name: ask-matt
       source: vendor/mattpocock-skills/skills/engineering/ask-matt
 
+    skill-babysit:
+      kind: skill
+      name: babysit
+      source: .agents/skills/babysit
+
     skill-code-review:
       kind: skill
       name: code-review
@@ -234,11 +239,6 @@ defaults:
       kind: skill
       name: codebase-design
       source: vendor/mattpocock-skills/skills/engineering/codebase-design
-
-    skill-deliver:
-      kind: skill
-      name: deliver
-      source: .agents/skills/deliver
 
     skill-diagnosing-bugs:
       kind: skill

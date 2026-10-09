@@ -10,7 +10,7 @@ same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
 and pull request templates, the skill setup files under `docs/agents`, the
 trusted validation workflows with their scripts, the vendored rendered-Markdown
 runtime and parsers with their notices, the pinned skills with their
-upstream license notice, and Repo Canon's own `deliver` skill. It is installed
+upstream license notice, and Repo Canon's own `babysit` skill. It is installed
 identically in every adopting repository and changes only through a Repo Canon
 release.
 
@@ -77,17 +77,16 @@ repeated.
 - Delivery belongs to this source, because Repository Standards leaves it to
   standards sources
   ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/main/docs/adr/0015-leave-delivery-to-standards-sources.md)).
-  The manual-only `deliver` skill takes completed work, including an adoption
-  run's uncommitted changes, to an opened pull request with its checks
-  reported. It sequences the rules of `CONTRIBUTING.md` and the pull request
-  template without restating them, and chooses the adoption record, which
-  those rules allow, as a non-breaking adoption run's description. It has no delivery
-  file: the required checks live in the project's development guide, project
-  constraints in the optional `docs/agents/project.md`, and the adoption record
-  in the pinned CLI's `status --summary`, so a delivery file would only copy
-  them. Its source is its installed path, `.agents/skills/deliver`, as for Repo
-  Canon's other original exact files; only vendored material has a separate
-  source path.
+  The environment carries delivery, as
+  [ADR 0010](docs/adr/0010-carry-delivery-rules-in-the-environment.md)
+  decides: [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests) says how to open
+  a pull request, an adoption pull request included, and when it may merge,
+  and the installed `AGENTS.md` points every change through `pr` and
+  `babysit`. The model-invocable `babysit` skill watches the pull request,
+  settles its findings, and merges it, stating no rule the guide holds. Its
+  source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
+  other original exact files; only vendored material has a separate source
+  path.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the
   standards source.
@@ -110,9 +109,10 @@ repeated.
   and implementation contracts, readiness, development setup, validation, pull
   requests, titles and commits, and documentation. Every other file cites it
   rather than repeating one of them. Agent implementation procedures belong in
-  skills. Files Repo Canon authors do not restate or cite them; the skill setup
-  files may, and the `deliver` skill may hand an unfinished adoption back to
-  the Repository Standards adoption skill.
+  skills. Files Repo Canon authors do not restate them, and cite them only for
+  delivery: `AGENTS.md` names `pr` and `babysit`, and `CONTRIBUTING.md` names
+  `pr` for a pull request's body and `adopt-standards` for an unfinished
+  adoption run. The skill setup files may cite them.
   CONTRIBUTING.md should be repository-agnostic exact content, copied
   identically between adopting repositories. Its fixed link to
   docs/development/README.md delegates project-specific setup and required

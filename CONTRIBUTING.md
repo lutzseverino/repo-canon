@@ -82,15 +82,52 @@ Write multi-line pull request bodies to a file and pass it with `--body-file`.
 Keep the pull request template's sections in order: Summary, Evidence, Merge
 Danger, and Related issue. Include checks and outcomes in Evidence, and
 relevant limits in Merge Danger. Put any other material, such as scope, impact,
-or migration, in a subsection of the section it belongs to. An adoption or
-update pull request may instead use the Repository Standards adoption record as its
-description, starting with the record's
-`# Repository Standards adoption record` heading.
+or migration, in a subsection of the section it belongs to.
 
-Address review feedback and ensure required checks pass before merging.
-Squash-merge pull requests into the default branch, using the PR title as the
-commit subject and its description as the body. Preserve issue references and
-breaking-change explanations in the final message.
+### Opening a pull request
+
+Open the pull request against the base branch that `docs/agents/project.md`
+names, else the default branch. Its branch holds only the work: branch from the
+up-to-date base, and leave unrelated changes out of its commits. Title it as
+[titles and commits](#titles-and-commits) describe.
+
+Before opening, run the required checks on the final commit. When the checkout
+holds unrelated uncommitted edits, run them in a clean checkout of that commit,
+such as a temporary Git worktree. Run a check that reads a diff, such as
+`git diff --check`, over the whole change against the base.
+
+Write the body from the pull request template with the `pr` skill.
+
+### Adoption pull requests
+
+An adoption pull request holds one completed Repository Standards adoption or
+update run and nothing else: the run's `changeSet` paths and `.repo-standards/`.
+Before opening it, read `status --json` with the project's pinned
+`.repo-standards/runtime/node_modules/.bin/repo-standards`. Open it only when
+`active` is `null`, `lastComplete` is present, there is no `stateError`, and
+every `changeSet` path is among the uncommitted changes; otherwise finish or
+recover the run with the `adopt-standards` skill.
+
+Title it `chore: adopt <source> <version> with CLI <version>`, naming the
+source by the repository name in its URL and the versions from the record's
+Selection table, such as `chore: adopt repo-canon v0.6.0 with CLI 5.1.0`. An
+adoption is not breaking unless the maintainer judges it breaking for the
+project.
+
+Its body is the adoption record: the output of `status --summary`, byte for
+byte, starting with its `# Repository Standards adoption record` heading. The
+record omits the checks, so post their outcomes as one comment. Write the body
+from the template instead when the run is breaking, so that it explains the
+impact and migration, or when the run's paths changed after it completed, since
+the record no longer describes them.
+
+### Merging
+
+Merge a pull request once every required check passes on its latest head and
+every review thread is answered. Squash-merge pull requests into the default
+branch, using the PR title as the commit subject and its description as the
+body. Preserve issue references and breaking-change explanations in the final
+message.
 
 ## Documentation
 

@@ -27,7 +27,7 @@ const sharedInputs = [
   "scripts/support/fixture-authoring.mjs",
 ];
 
-// What each builder records in its manifest, read the same way for all four.
+// What each builder records in its manifest, read the same way for all three.
 const builders = [
   {
     name: "engineering",
@@ -36,7 +36,6 @@ const builders = [
     head: (manifest) => manifest.source.worktreeCommit,
     builderSha256: (manifest) => manifest.source.fixtureBuilderSha256,
     skills: (manifest) => manifest.skills,
-    inputs: [],
     laterCommit: "architecture",
   },
   {
@@ -46,7 +45,6 @@ const builders = [
     head: (manifest) => manifest.source.worktreeCommit,
     builderSha256: (manifest) => manifest.source.builderSha256,
     skills: (manifest) => manifest.source.skills,
-    inputs: [],
     laterCommit: "teach",
   },
   {
@@ -57,27 +55,7 @@ const builders = [
     head: (manifest) => manifest.source.repositoryHead,
     builderSha256: (manifest) => manifest.source.fixtureBuilderSha256,
     skills: (manifest) => manifest.source.linkedSkillDirectories,
-    inputs: [],
     laterCommit: "delivery",
-  },
-  {
-    name: "deliver",
-    script: "scripts/create-deliver-skill-fixtures.mjs",
-    manifest: (output) => JSON.parse(output),
-    head: (manifest) => manifest.source.worktreeCommit,
-    builderSha256: (manifest) => manifest.source.builderSha256,
-    skills: (manifest) => manifest.source.skills,
-    inputs: [
-      ".github/PULL_REQUEST_TEMPLATE.md",
-      ".github/workflows/pr-metadata.yml",
-      ".github/scripts/validate-pr-metadata.mjs",
-      "operations/lib/rendered-markdown.mjs",
-      "vendor/marked/marked.esm.js",
-      "vendor/parse5/parse5.esm.js",
-      "scripts/support/exercise-gh.mjs",
-      "scripts/support/exercise-repo-standards.mjs",
-    ],
-    laterCommit: "work",
   },
 ];
 
@@ -136,12 +114,10 @@ test("every builder records its dirty source bytes and builds repositories with 
     engineering: ["tdd"],
     productivity: ["grilling"],
     planning: ["tdd", "grilling"],
-    deliver: ["deliver"],
   };
   const dirtySkillDirectories = [
     "vendor/mattpocock-skills/skills/engineering/tdd",
     "vendor/mattpocock-skills/skills/productivity/grilling",
-    ".agents/skills/deliver",
   ];
   const committedSkillSha256 = Object.fromEntries(
     dirtySkillDirectories.map((path) => [
@@ -198,7 +174,7 @@ test("every builder records its dirty source bytes and builds repositories with 
       builder.name,
     );
     const { inputFiles } = manifest.source;
-    for (const path of [...sharedInputs, ...builder.inputs, builder.script])
+    for (const path of [...sharedInputs, builder.script])
       assert.ok(path in inputFiles, `${builder.name} records ${path}`);
     for (const [path, { sha256: recorded }] of Object.entries(inputFiles))
       assert.equal(
@@ -230,8 +206,7 @@ test("every builder records its dirty source bytes and builds repositories with 
       assert.equal(local("user.name"), "Repo Canon Exercise", label);
       assert.equal(local("user.email"), "exercise@example.invalid", label);
       assert.equal(git(repository.path, "branch", "--show-current"), "main");
-      if (builder.name !== "deliver")
-        assert.equal(git(repository.path, "remote"), "", label);
+      assert.equal(git(repository.path, "remote"), "", label);
     }
 
     const repository = manifest.repositories[builder.laterCommit].path;

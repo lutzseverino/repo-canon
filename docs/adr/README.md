@@ -30,3 +30,7 @@ involve real alternatives.
 - [Enforce documentation rules as checks](0009-enforce-documentation-rules-as-checks.md):
   the documentation check enforces the index entry form, one index per
   document, the development guide's order, and scope coverage.
+- [Carry delivery rules in the environment and keep skills short](0010-carry-delivery-rules-in-the-environment.md):
+  the contribution guide and one `AGENTS.md` line carry delivery, the delivery
+  skill is deleted, and the short `babysit` skill takes a pull request to its
+  merge.
