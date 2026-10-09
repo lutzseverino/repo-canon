@@ -94,12 +94,25 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
   const running = new Map<Provider, number>();
   for (const run of snapshot.runs.filter((run) => run.ended === null))
     running.set(run.provider, (running.get(run.provider) ?? 0) + 1);
-  for (const run of snapshot.runs)
-    decisions.push(...settle(run, running, snapshot));
+  const retries = new Map<number, Retry>();
+  for (const run of snapshot.runs) {
+    const settled = settle(run, snapshot);
+    if ("failure" in settled) retries.set(run.issue, settled);
+    else decisions.push(...settled);
+  }
   for (const claim of snapshot.claims) decisions.push(...settleClaim(claim));
   for (const issue of oldestFirst(snapshot.issues)) {
+    const retry = retries.get(issue.number);
+    if (retry) {
+      retries.delete(issue.number);
+      decisions.push(...relaunch(issue, retry, running, snapshot));
+      continue;
+    }
     if (!issue.labels.includes(labels.ready)) continue;
     const reason =
+      (issue.labels.includes(labels.running)
+        ? "claimed by a running factory run"
+        : null) ??
       exclusion(issue) ??
       (snapshot.runs.some((run) => run.issue === issue.number)
         ? "a factory run for it is still on the host"
@@ -138,18 +151,19 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
       },
     );
   }
+  for (const retry of retries.values())
+    decisions.push(unretried(retry, "its issue is no longer open"));
   return decisions;
 }
 
+// A failed first run that may retry on the retry model.
+type Retry = { run: Run; failure: string; model: Model };
+
 // A running run over the time limit is stopped. An ended run releases its
 // claim once its pull request merges and keeps it while the pull request is
-// open. A failed first run retries once on the retry model, waiting for its
-// gate; any other failure fails the issue.
-function settle(
-  run: Run,
-  running: Map<Provider, number>,
-  snapshot: Snapshot,
-): Decision[] {
+// open. A failed first run may retry once on the retry model; any other
+// failure fails the issue.
+function settle(run: Run, snapshot: Snapshot): Decision[] | Retry {
   const limit = snapshot.settings.timeLimitMinutes;
   const overtime = `the time limit of ${limit} minutes`;
   if (run.ended === null) {
@@ -175,21 +189,47 @@ function settle(
   if (run.attempt === 2 || retryModel === null) return [fail];
   const model = parseModel(retryModel);
   if ("error" in model) return [fail];
-  const gated = gate(model.provider, running, snapshot);
+  return { run, failure, model };
+}
+
+// A retry takes its issue's turn in oldest-first order. It launches only
+// while the issue would still be picked up, apart from its own claim, and
+// waits for its provider's gate.
+function relaunch(
+  issue: Issue,
+  retry: Retry,
+  running: Map<Provider, number>,
+  snapshot: Snapshot,
+): Decision[] {
+  const reason = issue.labels.includes(labels.ready)
+    ? exclusion(issue)
+    : `it no longer carries ${labels.ready}`;
+  if (reason) return [unretried(retry, reason)];
+  const { provider } = retry.model;
+  const gated = gate(provider, running, snapshot);
   if (gated)
     return [
-      { kind: "skip", issue: run.issue, reason: `retry waits: ${gated}` },
+      { kind: "skip", issue: issue.number, reason: `retry waits: ${gated}` },
     ];
-  running.set(model.provider, (running.get(model.provider) ?? 0) + 1);
+  running.set(provider, (running.get(provider) ?? 0) + 1);
   return [
     {
       kind: "launch",
-      issue: run.issue,
-      mode: run.mode,
-      ...model,
+      issue: issue.number,
+      mode: retry.run.mode,
+      ...retry.model,
       attempt: 2,
     },
   ];
+}
+
+function unretried({ run, failure }: Retry, reason: string): Decision {
+  return {
+    kind: "fail",
+    issue: run.issue,
+    failure: `${failure}, and its retry did not launch: ${reason}`,
+    log: run.log,
+  };
 }
 
 // A claim no run holds stays while its pull request is open and is released
@@ -283,8 +323,6 @@ function oldestFirst(issues: Issue[]): Issue[] {
 
 function exclusion(issue: Issue): string | null {
   if (issue.parent !== null) return `child of specification #${issue.parent}`;
-  if (issue.labels.includes(labels.running))
-    return "claimed by a running factory run";
   if (issue.labels.includes(labels.failed))
     return `labelled ${labels.failed}; remove the label to run it again`;
   const blockers = issue.blockedBy.filter(

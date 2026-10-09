@@ -366,7 +366,6 @@ test("a failed first run retries once on the host's retry model, keeping its cla
       effort: "xhigh",
       attempt: 2,
     },
-    { kind: "skip", issue: 4, reason: "claimed by a running factory run" },
   ]);
 });
 
@@ -495,4 +494,61 @@ test("a claim that neither a run nor an open pull request holds fails its issue"
       log: null,
     },
   ]);
+});
+
+test("a retry takes its turn in oldest-first order", () => {
+  const ended = { timedOut: false, pullRequest: "none" };
+  const decisions = decideFactory(
+    snapshot({
+      issues: [issue(4, claimed), issue(2)],
+      runs: [run(4, { ended })],
+      settings: { caps: { "claude-code": 1 } },
+    }),
+  );
+  assert.deepEqual(
+    launches(decisions).map(({ issue, attempt }) => ({ issue, attempt })),
+    [{ issue: 2, attempt: 1 }],
+  );
+  assert.equal(
+    skipOf(decisions, 4),
+    "retry waits: claude-code already runs its cap of 1 agent",
+  );
+});
+
+test("a retry whose issue is no longer eligible fails it instead", () => {
+  const ended = { timedOut: false, pullRequest: "none" };
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        issue(4, ["factory:running"]),
+        issue(5, claimed, { blockedBy: [{ number: 2, state: "open" }] }),
+        issue(6, [...claimed, "factory:failed"]),
+      ],
+      runs: [run(4, { ended }), run(5, { ended }), run(6, { ended })],
+    }),
+  );
+  assert.deepEqual(launches(decisions), []);
+  assert.deepEqual(
+    decisions.map(({ kind, issue, failure }) => ({ kind, issue, failure })),
+    [
+      {
+        kind: "fail",
+        issue: 4,
+        failure:
+          "the run ended without an open pull request, and its retry did not launch: it no longer carries ready-for-agent",
+      },
+      {
+        kind: "fail",
+        issue: 5,
+        failure:
+          "the run ended without an open pull request, and its retry did not launch: blocked by #2",
+      },
+      {
+        kind: "fail",
+        issue: 6,
+        failure:
+          "the run ended without an open pull request, and its retry did not launch: labelled factory:failed; remove the label to run it again",
+      },
+    ],
+  );
 });

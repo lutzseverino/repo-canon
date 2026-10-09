@@ -105,8 +105,10 @@ merging and a claim left by an earlier factory process.
 
 A run that ends without an open pull request, or exceeds the time limit, has
 failed. A failed first run retries once on the retry model, keeping the claim.
-Otherwise the factory removes the claim, comments the failure, the model, and
-the run's log, and labels the issue `factory:failed`. Each run's log is
-`.sandcastle/logs/issue-<n>-attempt-<a>.log` on the host; a failed claim that
-no run holds names neither. The factory skips a failed issue until someone
-removes `factory:failed`.
+The retry takes its issue's turn in oldest-first order, waits for its
+provider's gate, and launches only while the issue would still be picked up,
+apart from its own claim. When the run cannot retry, the factory removes the
+claim, comments the failure, the model, and the run's log, and labels the issue
+`factory:failed`. Each run's log is `.sandcastle/logs/issue-<n>-attempt-<a>.log`
+on the host; a failed claim that no run holds names neither. The factory skips
+a failed issue until someone removes `factory:failed`.
