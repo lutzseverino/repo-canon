@@ -67,6 +67,13 @@ repeated.
   distributes changes through standards releases. Keep upstream skill content
   intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
   guidance files, not in the skills or their setup files.
+- HumanLayer is a second managed upstream. Select only `show-me` from
+  `humanlayer/skills` commit `653b6411c1f70c275a18e37673b042ff99f67ceb`, at
+  `plugins/show-me/skills/show-me`. Retain its complete directory unchanged,
+  including optional HTML output and invocation metadata, and install its MIT
+  notice as `.agents/skills/LICENSE.humanlayer-skills`. Both upstreams follow
+  the [upstream-compatibility procedure](docs/development/upstream-compatibility.md);
+  neither is updated independently by adopting contributors.
 - Delivery belongs to this source, because Repository Standards leaves it to
   standards sources
   ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/main/docs/adr/0015-leave-delivery-to-standards-sources.md)).
