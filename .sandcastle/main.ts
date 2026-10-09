@@ -139,32 +139,48 @@ async function readCodexUsage(): Promise<number | null> {
   const server = spawn("codex", ["app-server"], {
     stdio: ["pipe", "pipe", "ignore"],
   });
+  // One reader for the whole session: each reply settles its request by id.
+  const pending = new Map<
+    number,
+    { resolve: (result: unknown) => void; reject: (error: Error) => void }
+  >();
+  const abandon = (error: Error) => {
+    for (const request of pending.values()) request.reject(error);
+    pending.clear();
+  };
+  server.on("error", abandon);
+  createInterface({ input: server.stdout })
+    .on("line", (line) => {
+      let message;
+      try {
+        message = JSON.parse(line);
+      } catch {
+        return;
+      }
+      const request = pending.get(message.id);
+      if (!request) return;
+      pending.delete(message.id);
+      if (message.error) request.reject(new Error(message.error.message));
+      else request.resolve(message.result);
+    })
+    .on("close", () =>
+      abandon(new Error("codex app-server closed before replying")),
+    );
   const send = (message: object) =>
     server.stdin.write(`${JSON.stringify(message)}\n`);
-  try {
-    const responses = createInterface({ input: server.stdout });
-    const reply = async (id: number) => {
-      for await (const line of responses) {
-        const message = JSON.parse(line);
-        if (message.id !== id) continue;
-        if (message.error) throw new Error(message.error.message);
-        return message.result;
-      }
-      throw new Error("codex app-server closed before replying");
-    };
-    send({
-      method: "initialize",
-      id: 0,
-      params: {
-        clientInfo: { name: "factory", title: "Factory", version: "1.0.0" },
-      },
-    });
-    await Promise.race([reply(0), sleep(30_000).then(timeout)]);
-    send({ method: "initialized", params: {} });
-    send({ method: "account/rateLimits/read", id: 1 });
-    return codexUsage(
-      await Promise.race([reply(1), sleep(30_000).then(timeout)]),
+  const request = (method: string, id: number, params?: object) => {
+    const reply = new Promise((resolve, reject) =>
+      pending.set(id, { resolve, reject }),
     );
+    send({ method, id, params });
+    return Promise.race([reply, sleep(30_000).then(timeout)]);
+  };
+  try {
+    await request("initialize", 0, {
+      clientInfo: { name: "factory", title: "Factory", version: "1.0.0" },
+    });
+    send({ method: "initialized", params: {} });
+    return codexUsage(await request("account/rateLimits/read", 1));
   } finally {
     server.kill();
   }
