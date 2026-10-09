@@ -89,7 +89,7 @@ export function readSettings(
   else
     for (const entry of env.FACTORY_CAPS.split(",")) {
       const match = /^\s*([^=\s]+)\s*=\s*(\d+)\s*$/.exec(entry);
-      if (!match)
+      if (!match || !Number.isSafeInteger(Number(match[2])))
         problems.push(
           `- FACTORY_CAPS: ${entry.trim() || "an empty entry"} is not <provider>=<count>`,
         );

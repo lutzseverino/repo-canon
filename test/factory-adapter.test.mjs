@@ -789,3 +789,16 @@ test("a pull request from a fork never counts as the run's", async () => {
   assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
   assert.match(issue.comments[0], /the run ended without an open pull request/);
 });
+
+test("a cap too large to count is refused", () => {
+  assert.throws(
+    () =>
+      readSettings({
+        FACTORY_DEFAULT_MODEL: "gpt-5.5",
+        FACTORY_CAPS: `codex=${"9".repeat(400)}`,
+        FACTORY_USAGE_THRESHOLD: "90",
+        FACTORY_TIME_LIMIT_MINUTES: "60",
+      }),
+    /FACTORY_CAPS: codex=9+ is not <provider>=<count>/,
+  );
+});
