@@ -21,6 +21,10 @@ export type Settings = {
   timeLimitMinutes: number;
 };
 
+// The state of the pull requests for an issue: merged once one merged or the
+// issue closed, else open while one is open.
+export type PullRequestState = "open" | "merged" | "closed" | "none";
+
 // A run the factory host started. `ended` is null while its agent runs.
 export type Run = {
   issue: number;
@@ -31,13 +35,17 @@ export type Run = {
   attempt: 1 | 2;
   startedAt: string;
   log: string;
-  ended: null | { timedOut: boolean; pullRequest: "open" | "merged" | "none" };
+  ended: null | { timedOut: boolean; pullRequest: PullRequestState };
 };
+
+// A `factory:running` issue that no run on the host holds.
+export type Claim = { issue: number; pullRequest: PullRequestState };
 
 export type Snapshot = {
   now: string;
   issues: Issue[];
   runs: Run[];
+  claims: Claim[];
   usage: Partial<Record<Provider, number | null>>;
   settings: Settings;
 };
@@ -57,7 +65,7 @@ export type Decision =
   | Launch
   | { kind: "skip"; issue: number; reason: string }
   | { kind: "stop"; issue: number; reason: string }
-  | { kind: "fail"; issue: number; failure: string; log: string }
+  | { kind: "fail"; issue: number; failure: string; log: string | null }
   | { kind: "keep"; issue: number }
   | { kind: "release"; issue: number };
 
@@ -88,6 +96,7 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
     running.set(run.provider, (running.get(run.provider) ?? 0) + 1);
   for (const run of snapshot.runs)
     decisions.push(...settle(run, running, snapshot));
+  for (const claim of snapshot.claims) decisions.push(...settleClaim(claim));
   for (const issue of oldestFirst(snapshot.issues)) {
     if (!issue.labels.includes(labels.ready)) continue;
     const reason =
@@ -181,6 +190,19 @@ function settle(
       attempt: 2,
     },
   ];
+}
+
+// A claim no run holds stays while its pull request is open and is released
+// once it merges. Any other claim, such as one left by a factory restart,
+// fails its issue.
+function settleClaim({ issue, pullRequest }: Claim): Decision[] {
+  if (pullRequest === "open") return [];
+  if (pullRequest === "merged") return [{ kind: "release", issue }];
+  const failure =
+    pullRequest === "closed"
+      ? "its pull request closed without merging"
+      : "no factory run or open pull request holds its claim";
+  return [{ kind: "fail", issue, failure, log: null }];
 }
 
 // A launch needs fewer running agents than the provider's cap and, when its

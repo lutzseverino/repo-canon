@@ -18,11 +18,18 @@ function issue(number, labels = ["ready-for-agent"], details = {}) {
   };
 }
 
-function snapshot({ issues = [], runs = [], usage = {}, settings = {} } = {}) {
+function snapshot({
+  issues = [],
+  runs = [],
+  claims = [],
+  usage = {},
+  settings = {},
+} = {}) {
   return {
     now,
     issues,
     runs,
+    claims,
     usage,
     settings: {
       defaultModel: "claude-sonnet-5-5",
@@ -446,4 +453,46 @@ test("an issue whose run is still on the host is not launched twice", () => {
     skipOf(decisions, 4),
     "a factory run for it is still on the host",
   );
+});
+
+test("a claim no run holds stays while its pull request is open and is released once it merges", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [issue(4, claimed)],
+      claims: [
+        { issue: 4, pullRequest: "open" },
+        { issue: 5, pullRequest: "merged" },
+      ],
+    }),
+  );
+  assert.deepEqual(decisions, [
+    { kind: "release", issue: 5 },
+    { kind: "skip", issue: 4, reason: "claimed by a running factory run" },
+  ]);
+});
+
+test("a claim that neither a run nor an open pull request holds fails its issue", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [issue(6, claimed), issue(7, claimed)],
+      claims: [
+        { issue: 6, pullRequest: "closed" },
+        { issue: 7, pullRequest: "none" },
+      ],
+    }),
+  );
+  assert.deepEqual(decisions.slice(0, 2), [
+    {
+      kind: "fail",
+      issue: 6,
+      failure: "its pull request closed without merging",
+      log: null,
+    },
+    {
+      kind: "fail",
+      issue: 7,
+      failure: "no factory run or open pull request holds its claim",
+      log: null,
+    },
+  ]);
 });

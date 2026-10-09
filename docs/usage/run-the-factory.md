@@ -95,18 +95,18 @@ usage is below the threshold. An issue held by a gate stays on the frontier.
 
 ## Claims and failures
 
-A run's pull request is one that closes its issue. A run that opened its pull
-request keeps the claim while `babysit` works. When the run ends, the factory
-removes the claim if the pull request merged or the issue closed, and leaves
-it while the pull request is open.
+A run's pull request is one that closes its issue or comes from the run's
+branch, `factory/issue-<n>`. A `factory:running` claim is held by a run the
+factory is tracking or by the issue's open pull request, so it stays while
+`babysit` works. On each pass, the factory settles every claim that neither
+holds: it removes the claim once the pull request merged or the issue closed,
+and otherwise fails the issue. This covers a pull request closed without
+merging and a claim left by an earlier factory process.
 
 A run that ends without an open pull request, or exceeds the time limit, has
 failed. A failed first run retries once on the retry model, keeping the claim.
 Otherwise the factory removes the claim, comments the failure, the model, and
 the run's log, and labels the issue `factory:failed`. Each run's log is
-`.sandcastle/logs/issue-<n>-attempt-<a>.log` on the host. The factory skips a
-failed issue until someone removes `factory:failed`.
-
-The factory tracks its runs in memory. After a restart, an issue still claimed
-by a run of the earlier process keeps `factory:running` until someone removes
-it.
+`.sandcastle/logs/issue-<n>-attempt-<a>.log` on the host; a failed claim that
+no run holds names neither. The factory skips a failed issue until someone
+removes `factory:failed`.

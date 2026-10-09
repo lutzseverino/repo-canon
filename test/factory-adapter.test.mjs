@@ -104,6 +104,27 @@ function fakeGitHub(issues) {
         },
       ]);
     }
+    if (args[0] === "issue" && args[1] === "list") {
+      assert.deepEqual(args.slice(2), [
+        "--state",
+        "closed",
+        "--label",
+        "factory:running",
+        "--json",
+        "number",
+        "--limit",
+        "1000",
+      ]);
+      return JSON.stringify(
+        state.issues
+          .filter(
+            (issue) =>
+              issue.state === "CLOSED" &&
+              issue.labels.includes("factory:running"),
+          )
+          .map((issue) => ({ number: issue.number })),
+      );
+    }
     if (args[0] === "issue" && args[1] === "edit") {
       const issue = find(args[2]);
       for (let index = 3; index < args.length; index += 2) {
@@ -522,4 +543,63 @@ test("a run handed to its open pull request leaves the host", async () => {
       "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
     ],
   );
+});
+
+test("a claim left by an earlier factory process is settled by its pull request", async () => {
+  const claimed = ["ready-for-agent", "factory:running"];
+  const run = factory({
+    issues: [
+      { number: 4, labels: [...claimed] },
+      { number: 5, labels: [...claimed], branchPullRequests: ["OPEN"] },
+      { number: 6, labels: [...claimed], pullRequests: ["CLOSED"] },
+      {
+        number: 7,
+        labels: [...claimed],
+        state: "CLOSED",
+        pullRequests: ["MERGED"],
+      },
+    ],
+  });
+  await run.tick();
+  assert.deepEqual(run.github.find(4).labels, [
+    "ready-for-agent",
+    "factory:failed",
+  ]);
+  assert.deepEqual(run.github.find(4).comments, [
+    [
+      "The factory run failed: no factory run or open pull request holds its claim.",
+      "",
+      "Remove `factory:failed` to let the factory pick this issue up again.",
+    ].join("\n"),
+  ]);
+  assert.deepEqual(run.github.find(5).labels, claimed);
+  assert.deepEqual(run.github.find(6).labels, [
+    "ready-for-agent",
+    "factory:failed",
+  ]);
+  assert.match(
+    run.github.find(6).comments[0],
+    /its pull request closed without merging/,
+  );
+  assert.deepEqual(run.github.find(7).labels, ["ready-for-agent"]);
+  assert.equal(run.sandcastle.launched.length, 0);
+});
+
+test("a run's claim is released when its pull request merges after the run ends", async () => {
+  const run = factory({ issues: [{ number: 4 }] });
+  await run.tick();
+  run.github.find(4).pullRequests.push("OPEN");
+  run.sandcastle.launched[0].finish();
+  await settled();
+  await run.tick();
+  await run.tick();
+  assert.deepEqual(run.github.find(4).labels, [
+    "ready-for-agent",
+    "factory:running",
+  ]);
+  run.github.find(4).pullRequests = ["MERGED"];
+  run.github.find(4).state = "CLOSED";
+  await run.tick();
+  assert.deepEqual(run.github.find(4).labels, ["ready-for-agent"]);
+  assert.deepEqual(run.github.find(4).comments, []);
 });

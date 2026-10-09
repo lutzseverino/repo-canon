@@ -9,10 +9,12 @@ import {
   labels,
   parseModel,
   unknownProvider,
+  type Claim,
   type Decision,
   type Issue,
   type Mode,
   type Provider,
+  type PullRequestState,
   type Run,
   type Settings,
 } from "./factory.ts";
@@ -221,7 +223,7 @@ export function createFactory(settings: Settings, ports: Ports) {
 
   // A run's pull request is one that closes its issue or comes from the run's
   // branch. A closed issue counts as merged work.
-  async function pullRequestState(number: number) {
+  async function pullRequestState(number: number): Promise<PullRequestState> {
     const response = JSON.parse(
       await ports.gh([
         "api",
@@ -241,7 +243,38 @@ export function createFactory(settings: Settings, ports: Ports) {
       ...pullRequests.nodes,
     ].map((pullRequest: { state: string }) => pullRequest.state);
     if (issue.state === "CLOSED" || states.includes("MERGED")) return "merged";
-    return states.includes("OPEN") ? "open" : "none";
+    if (states.includes("OPEN")) return "open";
+    return states.includes("CLOSED") ? "closed" : "none";
+  }
+
+  // Every `factory:running` issue, open or closed, that no run on the host
+  // holds. A closed issue's work counts as merged.
+  async function readClaims(issues: Issue[]): Promise<Claim[]> {
+    const closed: { number: number }[] = JSON.parse(
+      await ports.gh([
+        "issue",
+        "list",
+        "--state",
+        "closed",
+        "--label",
+        labels.running,
+        "--json",
+        "number",
+        "--limit",
+        "1000",
+      ]),
+    );
+    const held = (number: number) => runs.some((run) => run.issue === number);
+    const claims: Claim[] = closed
+      .filter(({ number }) => !held(number))
+      .map(({ number }) => ({ issue: number, pullRequest: "merged" }));
+    for (const issue of issues)
+      if (issue.labels.includes(labels.running) && !held(issue.number))
+        claims.push({
+          issue: issue.number,
+          pullRequest: await pullRequestState(issue.number),
+        });
+    return claims;
   }
 
   async function readUsage() {
@@ -372,6 +405,7 @@ export function createFactory(settings: Settings, ports: Ports) {
         };
     }
     const issues = await readIssues();
+    const claims = await readClaims(issues);
     const usage = await readUsage();
     const decisions = decideFactory({
       now: ports.now().toISOString(),
@@ -379,6 +413,7 @@ export function createFactory(settings: Settings, ports: Ports) {
       runs: runs.map(
         ({ controller: _c, exited: _e, stopped: _s, ...run }) => run,
       ),
+      claims,
       usage,
       settings,
     });
@@ -403,14 +438,24 @@ export function createFactory(settings: Settings, ports: Ports) {
   return { tick };
 }
 
-function failureComment(failure: string, log: string, run?: HostRun): string {
-  const model = run ? `${run.provider}/${run.model}@${run.effort}` : "unknown";
+// A claim no run holds has no model or log to name.
+function failureComment(
+  failure: string,
+  log: string | null,
+  run?: HostRun,
+): string {
+  const details = [
+    ...(run
+      ? [
+          `- Model: \`${run.provider}/${run.model}@${run.effort}\`, attempt ${run.attempt}`,
+        ]
+      : []),
+    ...(log ? [`- Log: \`${log}\` on the factory host`] : []),
+  ];
   return [
     `The factory run failed: ${failure}.`,
     "",
-    `- Model: \`${model}\`, attempt ${run?.attempt ?? "unknown"}`,
-    `- Log: \`${log}\` on the factory host`,
-    "",
+    ...(details.length > 0 ? [...details, ""] : []),
     `Remove \`${labels.failed}\` to let the factory pick this issue up again.`,
   ].join("\n");
 }
