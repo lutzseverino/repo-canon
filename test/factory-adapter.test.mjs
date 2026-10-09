@@ -732,3 +732,26 @@ test("a poll interval a timer cannot wait is refused", () => {
     2147483,
   );
 });
+
+test("a time limit a timer cannot wait is refused", () => {
+  for (const minutes of ["Infinity", "1e309", "35792"])
+    assert.throws(
+      () =>
+        readSettings({
+          FACTORY_DEFAULT_MODEL: "gpt-5.5",
+          FACTORY_CAPS: "codex=1",
+          FACTORY_USAGE_THRESHOLD: "90",
+          FACTORY_TIME_LIMIT_MINUTES: minutes,
+        }),
+      /FACTORY_TIME_LIMIT_MINUTES: set it to a positive number of minutes/,
+    );
+  assert.equal(
+    readSettings({
+      FACTORY_DEFAULT_MODEL: "gpt-5.5",
+      FACTORY_CAPS: "codex=1",
+      FACTORY_USAGE_THRESHOLD: "90",
+      FACTORY_TIME_LIMIT_MINUTES: "35791",
+    }).timeLimitMinutes,
+    35791,
+  );
+});

@@ -101,16 +101,18 @@ export function readSettings(
     (value) => value >= 0 && value <= 100,
     "set it to a percentage from 0 to 100",
   );
+  // Both durations become timers, which wait at most 2^31 - 1 milliseconds.
+  const timer = (milliseconds: number) =>
+    milliseconds > 0 && milliseconds <= 2 ** 31 - 1;
   const timeLimitMinutes = number(
     "FACTORY_TIME_LIMIT_MINUTES",
-    (value) => value > 0,
+    (value) => timer(value * 60_000),
     "set it to a positive number of minutes",
   );
   const pollSeconds = env.FACTORY_POLL_SECONDS
     ? number(
         "FACTORY_POLL_SECONDS",
-        // Node's timers wait at most 2^31 - 1 milliseconds.
-        (value) => value > 0 && value * 1000 <= 2 ** 31 - 1,
+        (value) => timer(value * 1000),
         "set it to a positive number of seconds, or leave it unset for 300",
       )
     : 300;

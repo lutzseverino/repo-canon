@@ -46,7 +46,7 @@ and the factory refuses to start until the required ones are usable.
 | `FACTORY_RETRY_MODEL`        | No       | The model for the one retry of a failed run; without it, a failed run is not retried |
 | `FACTORY_CAPS`               | Yes      | The most agents each provider may run at once, such as `claude-code=2,codex=1`       |
 | `FACTORY_USAGE_THRESHOLD`    | Yes      | The usage percentage at or above which a provider launches nothing                   |
-| `FACTORY_TIME_LIMIT_MINUTES` | Yes      | How long a run may take before it is stopped and fails                               |
+| `FACTORY_TIME_LIMIT_MINUTES` | Yes      | How long a run may take before it is stopped and fails, at most 35791 minutes        |
 | `FACTORY_POLL_SECONDS`       | No       | The seconds between passes, at most 2147483                                          |
 
 A provider that `FACTORY_CAPS` omits launches nothing.
