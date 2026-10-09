@@ -39,7 +39,10 @@ issue-contract structure, exact revision association, actor authority,
 invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
 `npm run test:issue-contracts` for the focused issue-contract fixtures and
-`npm run test:planning-skill-fixtures` for the planning-skill harness. The
+`npm run test:planning-skill-fixtures` for the planning-skill harness. Run
+`npm run test:factory` for the factory's decision core, driven by snapshots,
+and its adapter, driven by a stateful GitHub CLI fake and a fake Sandcastle
+launcher. The
 public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 

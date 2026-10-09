@@ -34,3 +34,6 @@ involve real alternatives.
   the contribution guide and one `AGENTS.md` line carry delivery, the delivery
   skill is deleted, and the short `babysit` skill takes a pull request to its
   merge.
+- [Ship the factory with the standard](0011-ship-the-factory-with-the-standard.md):
+  every adopting repository carries `.sandcastle/`, which replaces orchestrator
+  prompts, and labels choose each run's mode and model.

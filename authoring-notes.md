@@ -10,7 +10,8 @@ same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
 and pull request templates, the skill setup files under `docs/agents`, the
 trusted validation workflows with their scripts, the vendored rendered-Markdown
 runtime and parsers with their notices, the pinned skills with their
-upstream license notice, and Repo Canon's own `babysit` skill. It is installed
+upstream license notice, Repo Canon's own `babysit` skill, and the factory's
+`.sandcastle/` files. It is installed
 identically in every adopting repository and changes only through a Repo Canon
 release.
 
@@ -87,6 +88,16 @@ repeated.
   source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
   other original exact files; only vendored material has a separate source
   path.
+- The factory ships with the standard, as
+  [ADR 0011](docs/adr/0011-ship-the-factory-with-the-standard.md) decides.
+  `.sandcastle/` holds a repository-agnostic entry, adapter, and pure decision
+  core, with the two prompt templates, as exact files whose source is their
+  installed path. It runs Sandcastle through a pinned `npx`, so an adopting
+  repository gains no dependency. The host sets the default and retry models,
+  the per-provider caps, the usage threshold, and the time limit; Repo Canon
+  ships none of them. The canonical labels carry the claim, failure, and
+  run-mode labels but no `model:` labels.
+  [Run the factory](docs/usage/run-the-factory.md) describes its behavior.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the
   standards source.

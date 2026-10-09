@@ -40,6 +40,15 @@ or posting an Agent Brief, wait for the issue-contract workflow's revision
 notice before applying readiness. Editing a contract removes its readiness. A
 specification or ticket can be ready while its blockers are open.
 
+The factory picks up ready issues. Without a `model:` label it runs the
+factory's default model. Name a stronger model with `model:<slug>` or
+`model:<provider>/<slug>`, optionally followed by `@<effort>`, when the work
+needs design judgment, has an ambiguous scope, or makes a long cross-cutting
+change; create the label if the repository lacks it. A `claude-*` or `gpt-*`
+slug needs no provider. Add `run:orchestrated` to a ticket for an implementer
+and a reviewer that are different agents; a specification always runs that
+way.
+
 ## Development setup
 
 See the [development guide](docs/development/README.md) for prerequisites,

@@ -8,3 +8,5 @@ This directory explains how maintainers prepare for and use Repo Canon.
   changes, and selecting an adoptable release.
 - [Prepare existing agent guidance](prepare-agent-guidance.md): preserve useful
   project instructions before Repo Canon installs its shared `AGENTS.md`.
+- [Run the factory](run-the-factory.md): host prerequisites and settings,
+  pickup, model labels, gates, claims, and failures.

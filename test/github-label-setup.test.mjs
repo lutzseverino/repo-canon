@@ -60,6 +60,21 @@ const canonicalLabels = [
     color: "bfd4f2",
     description: "Task in a planning map",
   },
+  {
+    name: "factory:running",
+    color: "0052cc",
+    description: "Claimed by a factory run",
+  },
+  {
+    name: "factory:failed",
+    color: "b60205",
+    description: "The factory run failed; remove to run it again",
+  },
+  {
+    name: "run:orchestrated",
+    color: "c5def5",
+    description: "The factory runs an orchestrator over this ticket",
+  },
 ];
 
 function setup(t, options) {
@@ -73,14 +88,14 @@ test("provisions every canonical label in an empty repository and is unchanged o
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
-  assert.match(outcome.result.message, /created 12 labels/);
+  assert.match(outcome.result.message, /created 15 labels/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
   assertProjectUnchanged(before, scenario);
 
   const repeat = scenario.invoke();
   assert.equal(repeat.status, 0, repeat.stderr);
   assert.equal(repeat.result.status, "unchanged");
-  assert.equal(scenario.readState().mutations, 12);
+  assert.equal(scenario.readState().mutations, 15);
   assertProjectUnchanged(before, scenario);
 });
 
@@ -165,13 +180,13 @@ test("reports partial effects and completes missing work after a transient API f
   assert.equal(first.status, 0, first.stderr);
   assert.equal(first.result.status, "blocked");
   assert.match(first.result.message, /created needs-triage/);
-  assert.match(first.result.message, /11 labels remain/);
+  assert.match(first.result.message, /14 labels remain/);
   assert.equal(scenario.readState().labels.length, 1);
 
   const retry = scenario.invoke();
   assert.equal(retry.status, 0, retry.stderr);
   assert.equal(retry.result.status, "changed");
-  assert.match(retry.result.message, /created 11 labels/);
+  assert.match(retry.result.message, /created 14 labels/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });
 
@@ -186,7 +201,7 @@ test("recovers after interruption by applying only labels still missing", (t) =>
   const retry = scenario.invoke();
   assert.equal(retry.status, 0, retry.stderr);
   assert.equal(retry.result.status, "changed");
-  assert.match(retry.result.message, /created 11 labels/);
+  assert.match(retry.result.message, /created 14 labels/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });
 
@@ -196,7 +211,7 @@ test("blocks when readback disagrees and reports the changes already applied", (
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "blocked");
-  assert.match(outcome.result.message, /created 12 labels/);
+  assert.match(outcome.result.message, /created 15 labels/);
   assert.match(outcome.result.message, /readback did not match/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });

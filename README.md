@@ -28,6 +28,7 @@ and the `complete` profile, as the inspection example below shows.
 - Validate issue contracts and pull request metadata in GitHub workflows.
 - Copy twenty-five engineering and productivity skills into `.agents/skills/`.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.
+- Ship a factory in `.sandcastle/` that takes each ready issue to a pull request, in the run mode and with the model its labels name.
 - Set up triage labels, squash-only merging, and a required `PR metadata` check where GitHub's plan offers one.
 - Check the Repository README, Project READMEs, and documentation navigation.
 - Guide agents on the documentation tree, Project READMEs, and the Repository README.

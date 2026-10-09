@@ -52,6 +52,11 @@ considers sufficiently specified for work.
 It does not itself dispatch implementation.
 _Avoid_: Passing structural validation, automatic dispatch
 
+**Factory**:
+The unattended service that takes each ready issue on the frontier to a merged
+pull request, in the run mode and with the model its labels name.
+_Avoid_: Pipeline, orchestrator
+
 **Direct change**:
 A change made without a ticket, at the maintainer's request in a thread or as
 a minor correction.

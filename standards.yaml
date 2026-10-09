@@ -53,6 +53,36 @@ defaults:
       target: docs/agents/domain.md
       exact: vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md
 
+    factory-adapter:
+      kind: file
+      target: .sandcastle/adapter.ts
+      exact: .sandcastle/adapter.ts
+
+    factory-decision-core:
+      kind: file
+      target: .sandcastle/factory.ts
+      exact: .sandcastle/factory.ts
+
+    factory-direct-prompt:
+      kind: file
+      target: .sandcastle/direct-prompt.md
+      exact: .sandcastle/direct-prompt.md
+
+    factory-entry:
+      kind: file
+      target: .sandcastle/main.ts
+      exact: .sandcastle/main.ts
+
+    factory-gitignore:
+      kind: file
+      target: .sandcastle/.gitignore
+      exact: .sandcastle/.gitignore
+
+    factory-orchestrated-prompt:
+      kind: file
+      target: .sandcastle/orchestrated-prompt.md
+      exact: .sandcastle/orchestrated-prompt.md
+
     feature-request-template:
       kind: file
       target: .github/ISSUE_TEMPLATE/feature-request.yml

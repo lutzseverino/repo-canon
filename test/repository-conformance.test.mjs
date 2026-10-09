@@ -251,3 +251,40 @@ test("the installed agent guidance ends every change as a babysat pull request",
       ),
   );
 });
+
+test("adoption installs the factory's exact files, which name no repository", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  const factory = {
+    "factory-adapter": ".sandcastle/adapter.ts",
+    "factory-decision-core": ".sandcastle/factory.ts",
+    "factory-direct-prompt": ".sandcastle/direct-prompt.md",
+    "factory-entry": ".sandcastle/main.ts",
+    "factory-gitignore": ".sandcastle/.gitignore",
+    "factory-orchestrated-prompt": ".sandcastle/orchestrated-prompt.md",
+  };
+  for (const [id, path] of Object.entries(factory)) {
+    assert.ok(
+      declarations.includes(
+        `\n    ${id}:\n      kind: file\n      target: ${path}\n      exact: ${path}\n`,
+      ),
+      `${id} must install ${path} exactly`,
+    );
+  }
+  assert.deepEqual(
+    trackedFiles()
+      .filter((path) => path.startsWith(".sandcastle/"))
+      .sort(),
+    Object.values(factory).sort(),
+  );
+  for (const path of Object.values(factory)) {
+    assert.doesNotMatch(
+      readFileSync(join(root, path), "utf8"),
+      /repo-canon|lutzseverino/i,
+      `${path} must name no repository`,
+    );
+  }
+  assert.match(
+    readFileSync(join(root, ".sandcastle/main.ts"), "utf8"),
+    /\nconst sandcastleVersion = "\d+\.\d+\.\d+";\n/,
+  );
+});
