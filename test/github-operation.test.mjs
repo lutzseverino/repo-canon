@@ -203,6 +203,9 @@ test("each GitHub operation stops at a blocked preparation and rejects protocol 
 
       const scenario = setup(st, subject);
       for (const overrides of [
+        { format: "repo-standards/operation/v1" },
+        { overwriteAllowed: undefined },
+        { overwriteAllowed: "true" },
         { operation: { ...subject.operation, phase: "checks" } },
         { allowedTargets: { paths: ["README.md"], directories: [] } },
       ]) {

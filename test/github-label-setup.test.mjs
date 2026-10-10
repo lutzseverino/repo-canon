@@ -107,7 +107,7 @@ test("reports unchanged after a successful matching setup", (t) => {
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v1",
+    format: "repo-standards/result/v2",
     status: "unchanged",
     message:
       "GitHub labels already match the canonical configuration for acme/widgets.",
@@ -128,7 +128,7 @@ test("reconciles conflicting desired label values without replacing unrelated la
     description: "Keep me",
   });
   const scenario = setup(t, { state: { labels } });
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
@@ -214,4 +214,43 @@ test("blocks when readback disagrees and reports the changes already applied", (
   assert.match(outcome.result.message, /created 15 labels/);
   assert.match(outcome.result.message, /readback did not match/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
+});
+
+test("asks before updating drifted labels and creates nothing until confirmed", (t) => {
+  const labels = [
+    { ...canonicalLabels[0], color: "000000", description: "Custom meaning" },
+    { ...canonicalLabels[1], description: "Custom needs-info" },
+  ];
+  const scenario = setup(t, { state: { labels } });
+  const before = snapshot(scenario.project.root);
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "confirmation-required");
+  for (const value of [
+    "needs-triage",
+    "000000",
+    "fbca04",
+    "Custom meaning",
+    canonicalLabels[0].description,
+    "needs-info",
+    "Custom needs-info",
+    canonicalLabels[1].description,
+  ])
+    assert.ok(outcome.result.message.includes(value), value);
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+  assert.deepEqual(scenario.readState().labels, labels);
+  assertProjectUnchanged(before, scenario);
+  const confirmed = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(confirmed.result.status, "changed");
+  assert.deepEqual(scenario.readState().labels, canonicalLabels);
+});
+
+test("treats hexadecimal colour casing as matching without confirmation", (t) => {
+  const labels = canonicalLabels.map((label) => ({
+    ...label,
+    color: label.color.toUpperCase(),
+  }));
+  const scenario = setup(t, { state: { labels } });
+  assert.equal(scenario.invoke().result.status, "unchanged");
+  assert.equal(scenario.readState().mutations ?? 0, 0);
 });

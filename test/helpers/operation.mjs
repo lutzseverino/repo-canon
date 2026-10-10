@@ -67,7 +67,7 @@ export function fixture(files) {
 
 export function invokeCheck(script, root, overrides = {}) {
   const request = {
-    format: "repo-standards/operation/v1",
+    format: "repo-standards/operation/v2",
     operation: {
       declaration: "repository-readme",
       phase: "checks",
@@ -81,6 +81,7 @@ export function invokeCheck(script, root, overrides = {}) {
     },
     profile: "complete",
     declarations: [],
+    overwriteAllowed: false,
     allowedTargets: { paths: ["README.md"], directories: [] },
     ...overrides,
   };

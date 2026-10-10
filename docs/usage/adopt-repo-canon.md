@@ -25,15 +25,15 @@ Source authoring, publication, and adoption are separate stages:
 ## Prerequisites
 
 Use macOS or Linux with Node.js 24, npm, and Git 2.32.0 or newer. Use public CLI
-5.1.0 or newer; 5.1.0 is the current source-validation baseline. Install a pinned
+6.0.0 or newer; 6.0.0 is the current source-validation baseline. Install a pinned
 CLI in a persistent directory outside the adopting repository so inspection,
 start, and recovery use the same executable:
 
 ```sh
-adoption_cli="$HOME/.local/share/repo-standards/cli-5.1.0"
+adoption_cli="$HOME/.local/share/repo-standards/cli-6.0.0"
 mkdir -p "$adoption_cli"
 npm install --prefix "$adoption_cli" --ignore-scripts --save-exact \
-  --no-audit --no-fund @lutzseverino/repo-standards@5.1.0
+  --no-audit --no-fund @lutzseverino/repo-standards@6.0.0
 repo_standards="$adoption_cli/node_modules/.bin/repo-standards"
 "$repo_standards" --version
 ```
@@ -46,21 +46,24 @@ write access for labels plus admin access for required checks and merge
 settings. Keep the repository clean and committed. If useful existing
 `AGENTS.md` instructions need to survive replacement, follow
 [Prepare existing agent guidance](prepare-agent-guidance.md), commit that change,
-and inspect the prepared commit afresh. Records that a CLI before major version 5 wrote,
+and inspect the prepared commit afresh. Records that a CLI before major version 6 wrote,
 in `.repo-standards` or as run records in Git's directory, use retired formats,
-which CLI 5.1.0 does not read; such a repository adopts fresh, as the CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v5.1.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
+which CLI 6.0.0 does not read; such a repository adopts fresh, as the CLI's
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
 describes.
 
 ## Inspect the published source
 
-This guide selects `v0.5.6`. Verify its
-[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.6)
-first. Run the first inspection from the adopting repository:
+The latest [published release, `v0.5.6`](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.6),
+predates operation/result v2 and cannot run with CLI 6.0.0. Before running these
+commands, select a later owner-published release whose notes require CLI 6.0.0
+and replace `REPLACE_WITH_COMPATIBLE_RELEASE_TAG` below with its tag. Until that
+release exists, use the adoption guide at the earlier release's tag with its
+matching CLI. Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.5.6
+source_tag=REPLACE_WITH_COMPATIBLE_RELEASE_TAG
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
@@ -79,7 +82,7 @@ Prepare a `repo-standards/scope/v2` proposal from the repository evidence and
 Repo Canon's discovery guidance. For the `documentation` declaration, that
 guidance has the agent run the documentation scope drafter shipped with the
 selected source and decide only its unresolved questions. The public CLI's
-[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v5.1.0/docs/usage/inspection.md#discover-contextual-file-scope)
+[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/inspection.md#discover-contextual-file-scope)
 defines the proposal fields; the CLI derives the evidence binding.
 
 Request the complete inspection with the proposal:
@@ -99,27 +102,37 @@ edits they discard, repository state, prerequisite status, and every operation.
 A changed project or proposal changes the inspection identity and requires
 another review.
 
-## Confirm and complete adoption
+## Review and complete adoption
 
-After a maintainer confirms the complete inspection, pass its exact `identity`
-and the same scope proposal to `start`:
+After reviewing the complete inspection, pass its exact `identity` and the
+same scope proposal to `start`:
 
 ```sh
-inspection_identity=sha256:REPLACE_WITH_CONFIRMED_IDENTITY
+inspection_identity=sha256:REPLACE_WITH_REVIEWED_IDENTITY
 
 "$repo_standards" start \
   --source https://github.com/lutzseverino/repo-canon \
   --standards-version "$source_tag" \
   --profile complete \
   --scope /path/to/reviewed-scope.json \
-  --confirm "$inspection_identity" \
+  --identity "$inspection_identity" \
   --project "$project_root" \
   --json
 ```
 
+When the report's `confirmation.required` is `true`, obtain the maintainer's
+confirmation of those changes and add `--confirmed` to `start`. When it is
+`false`, start with the identity alone; `--confirmed` is rejected when the
+inspection does not require it.
+
 The fixes run before contextual work. They reconcile canonical GitHub labels,
 the `PR metadata` required check, and squash settings, then verify the remote
-result. The required check is plan-gated: on a private repository whose GitHub
+result. They create missing settings freely. Before changing an existing
+chosen value, a fix returns `confirmation-required` without mutation, naming
+the current and proposed values. After the maintainer confirms that overwrite,
+run `resume --confirmed --project "$project_root" --json`. Confirmation applies
+to that fix only; a later fix asks separately when it needs to overwrite.
+The required check is plan-gated: on a private repository whose GitHub
 plan offers neither branch protection nor rulesets, the fix reports it
 unavailable and adoption completes without it. A first adoption defers the
 required check, because GitHub runs the PR metadata validation workflow only
@@ -154,5 +167,5 @@ rollback or freshness guarantee.
 
 When contextual work needs a file outside the confirmed scope, or a confirmed
 path is mistaken, correct the scope as the CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v5.1.0/docs/usage/adoption.md#correct-a-confirmed-scope)
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/adoption.md#correct-a-confirmed-scope)
 describes.

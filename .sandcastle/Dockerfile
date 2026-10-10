@@ -36,5 +36,5 @@ ENTRYPOINT ["sleep", "infinity"]
 
 # The repository's toolchain follows.
 USER root
-RUN npm install --global --ignore-scripts @lutzseverino/repo-standards@5.1.0
+RUN npm install --global --ignore-scripts @lutzseverino/repo-standards@6.0.0
 USER ${AGENT_UID}:${AGENT_GID}
