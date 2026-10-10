@@ -997,7 +997,7 @@ test("treats invalid public-protocol input as a process error", (t) => {
   t.after(project.close);
   const before = snapshot(project.root);
   const outcome = invokeCheck(script, project.root, {
-    format: "repo-standards/operation/v2",
+    format: "repo-standards/operation/v1",
   });
 
   assert.notEqual(outcome.status, 0);
