@@ -73,7 +73,7 @@ function createRepository(
   for (const path of sharedFiles)
     cpSync(join(sourceRoot, path), join(root, path), { recursive: true });
   write(root, "docs/agents/project.md", project);
-  write(root, "CONTEXT.md", context);
+  write(root, "GLOSSARY.md", context);
   write(root, "docs/development/README.md", development);
   for (const [path, content] of Object.entries(files))
     write(root, path, content);
@@ -153,7 +153,7 @@ repositories["to-questionnaire"] = createRepository(
 
 repositories["wait-what"] = createRepository("wait-what", ["wait-what"], {
   context: `# Import processing\n\nLanguage for customer imports.\n\n## Language\n\n**Import batch**:\nOne uploaded file and its processing result.\n_Avoid_: Payload, job\n\n**Quarantine**:\nStorage for an Import batch that needs operator review.\n_Avoid_: Dead-letter bucket\n`,
-  project: `# Exercise repository guidance\n\nThis disposable repository contains a status explanation that must be understandable to an operator. Use the glossary terms in \`CONTEXT.md\`.\n`,
+  project: `# Exercise repository guidance\n\nThis disposable repository contains a status explanation that must be understandable to an operator. Use the glossary terms in \`GLOSSARY.md\`.\n`,
   development: `# Development\n\nThe exercise changes no files. Current facts are in \`docs/status.md\`.\n`,
   files: {
     "docs/status.md": `# Import status\n\nThe parser accepted 84 of 100 rows. Sixteen malformed rows caused the Import batch to enter Quarantine. No customer data was deleted. An operator must correct those rows and submit a new file.\n`,
@@ -191,7 +191,7 @@ const manifest = {
   source: {
     worktreeCommit: provenance.head,
     builderSha256: provenance.inputFiles[scriptSourcePath].sha256,
-    upstreamCommit: "3cca18b368ae95cdbdebbff572ccafa662551015",
+    upstreamCommit: "24fe0ef7737efae15c87225755e9f6f5965e4888",
     directoryHashSerialization: provenance.directoryHashSerialization,
     inputFiles: provenance.inputFiles,
     skills: provenance.directories,

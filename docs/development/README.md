@@ -17,7 +17,7 @@ validates with the same version.
 Run `npm run format` to format supported files locally with Prettier's defaults;
 there is no configuration file. `.prettierignore` excludes vendored code,
 installed Repository Standards state, installed skills (including Repo Canon's
-own `deliver` skill), and the npm lockfile.
+own `babysit` skill), and the npm lockfile.
 
 Run focused tests for the changed behavior, `npm run format:check`,
 `npm run lint`, `npm run check`, and `git diff --check` before opening a PR.
@@ -39,20 +39,23 @@ issue-contract structure, exact revision association, actor authority,
 invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
 `npm run test:issue-contracts` for the focused issue-contract fixtures and
-`npm run test:planning-skill-fixtures` for the planning-skill harness. The
+`npm run test:planning-skill-fixtures` for the planning-skill harness. Run
+`npm run test:factory` for the factory's decision core, driven by snapshots,
+and its adapter, driven by a stateful GitHub CLI fake and a fake Sandcastle
+launcher. The
 public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 
 Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
-disposable local repositories used for the seven productivity skill exercises,
-and `npm run test:deliver-skill-fixtures` for the `deliver` skill exercise.
-[Skill exercises](skill-exercises.md) describes all four fixture builders and
+disposable local repositories used for the seven productivity skill exercises.
+[Skill exercises](skill-exercises.md) describes all three fixture builders and
 the harness that exercises the skills.
 
 This repository takes the same path every adopter takes, so the suite also runs
-the three shipped checks against this repository's own root through the
+the shipped Repository README, documentation, and sandbox image checks against
+this repository's own root through the
 operation request helper, with the documentation tree, the repository-root
-glossary [`CONTEXT.md`](../../CONTEXT.md), and the
+glossary [`GLOSSARY.md`](../../GLOSSARY.md), and the
 [authoring notes](../../authoring-notes.md) as its documentation scope, and
 the file declarations of `standards.yaml` as the other active declarations. The
 same fixture fails if any tracked file reaches the CLI's 8 MiB per-file
@@ -77,12 +80,15 @@ step: `npm test` already runs it on every pull request.
   behavior, stable identity, permissions, and local verification.
 - [Issue contract validation](issue-contract-validation.md): supported issue
   shapes, feedback behavior, workflow permissions, and runnable fixtures.
-- [Matt Pocock workflow compatibility](upstream-compatibility.md): the pinned
-  skill snapshot, its review and update steps, the native issue formats that
+- [Upstream skill compatibility](upstream-compatibility.md): the pinned
+  Matt Pocock and HumanLayer snapshots, their review and update steps, the native
+  issue formats that
   automation must respect, and how shared instructions and configuration adapt
   upstream setup.
 - [Repository README check](repository-readme-check.md): operation protocol,
   outcomes, prerequisites, and focused fixture command.
+- [Sandbox image check](sandbox-image-check.md): the base image, operation
+  protocol, outcomes, and focused fixture command.
 - [Documentation and Project README checks](documentation-check.md): concrete
   scope, structural outcomes, prerequisites, and focused fixture commands.
 - [Documentation scope drafter](documentation-scope-drafter.md): drafting the
@@ -92,4 +98,4 @@ step: `npm test` already runs it on every pull request.
   declarations, executable prerequisites, and the validation boundary.
 - [Skill exercises](skill-exercises.md): the procedure, fixture builders,
   common harness, and scenarios for exercising the pinned skills and the
-  `deliver` skill.
+  `babysit` skill.

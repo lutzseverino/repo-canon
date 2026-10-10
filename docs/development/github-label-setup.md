@@ -18,6 +18,9 @@ GitHub API resolves the same repository, and reconciles these labels:
 | `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                         |
 | `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                         |
 | `wayfinder:task`      | `bfd4f2` | Task in a planning map                                       |
+| `factory:running`     | `0052cc` | Claimed by a factory run                                     |
+| `factory:failed`      | `b60205` | The factory run failed; remove to run it again               |
+| `run:orchestrated`    | `c5def5` | The factory runs an orchestrator over this ticket            |
 
 Matching labels are left alone. Missing labels are created freely. A label with
 a matching case-insensitive name but different casing, color, or description

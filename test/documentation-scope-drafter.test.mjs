@@ -232,7 +232,7 @@ const conforming = {
   "AGENTS.md": "# Agents\n",
   "CONTRIBUTING.md": "# Contributing\n",
   "README.md": "# Widget\n",
-  "CONTEXT.md": "# Widget\n",
+  "GLOSSARY.md": "# Widget\n",
   "docs/README.md": index(
     "Documentation",
     "This directory maps the documentation categories.",
@@ -289,10 +289,10 @@ test("drafts the expected scope of a conforming repository", (t) => {
         coverage: coverage("`docs`"),
         candidates: [
           {
-            path: "CONTEXT.md",
+            path: "GLOSSARY.md",
             decision: "include",
             reason: "The domain glossary at the repository root.",
-            evidence: ["CONTEXT.md"],
+            evidence: ["GLOSSARY.md"],
           },
           underDocs("docs/README.md"),
           underDocs("docs/adr/0001-use-node.md"),
@@ -319,24 +319,24 @@ test("drafts new indexes, the development guide, and context glossaries the rule
     "docs/README.md": "# Documentation\n",
     "docs/usage/install.md": "# Install\n",
     "docs/usage/guides/first-run.md": "# First run\n",
-    "CONTEXT-MAP.md":
-      "# Contexts\n\n- [Ordering](src/ordering/CONTEXT.md): orders.\n- [Billing](src/billing/): invoices.\n",
-    "src/ordering/CONTEXT.md": "# Ordering\n",
-    "src/billing/CONTEXT.md": "# Billing\n",
+    "GLOSSARY-MAP.md":
+      "# Contexts\n\n- [Ordering](src/ordering/GLOSSARY.md): orders.\n- [Billing](src/billing/): invoices.\n",
+    "src/ordering/GLOSSARY.md": "# Ordering\n",
+    "src/billing/GLOSSARY.md": "# Billing\n",
   });
 
   const contextGlossary = (path) => ({
     path,
     decision: "include",
-    reason: "A context glossary that `CONTEXT-MAP.md` lists.",
-    evidence: [path, "CONTEXT-MAP.md"],
+    reason: "A context glossary that `GLOSSARY-MAP.md` lists.",
+    evidence: [path, "GLOSSARY-MAP.md"],
   });
   assert.deepEqual(proposal.declarations[0].candidates, [
     {
-      path: "CONTEXT-MAP.md",
+      path: "GLOSSARY-MAP.md",
       decision: "include",
       reason: "The context map at the repository root.",
-      evidence: ["CONTEXT-MAP.md"],
+      evidence: ["GLOSSARY-MAP.md"],
     },
     underDocs("docs/README.md"),
     {
@@ -362,8 +362,8 @@ test("drafts new indexes, the development guide, and context glossaries the rule
     },
     underDocs("docs/usage/guides/first-run.md"),
     underDocs("docs/usage/install.md"),
-    contextGlossary("src/billing/CONTEXT.md"),
-    contextGlossary("src/ordering/CONTEXT.md"),
+    contextGlossary("src/billing/GLOSSARY.md"),
+    contextGlossary("src/ordering/GLOSSARY.md"),
   ]);
   assert.deepEqual(proposal.declarations[0].unresolved, [
     unsupported("docs/development/README.md", "docs/development"),
@@ -407,7 +407,7 @@ test("leaves the cases no rule decides as unresolved questions", (t) => {
     "packages/app/README.md": "# App\n",
     "packages/app/docs/usage/guide.md": "# Guide\n",
     "packages/app/docs/adr/0001-start.md": "# Start\n",
-    "src/legacy/CONTEXT.md": "# Legacy\n",
+    "src/legacy/GLOSSARY.md": "# Legacy\n",
   });
 
   assert.deepEqual(entry.candidates, [
@@ -433,7 +433,7 @@ test("leaves the cases no rule decides as unresolved questions", (t) => {
   assert.deepEqual(entry.unresolved, [
     "Git ignores `docs/usage/draft.md`, which lies under the documentation root `docs`. Should it be removed, moved outside the root, or kept by Git and drafted again?",
     "Is `packages/app/docs` a documentation root? Its `packages/app/docs/adr` and `packages/app/docs/usage` directories hold Markdown documents. If it is, draft again with `--root packages/app/docs`.",
-    "Is `src/legacy/CONTEXT.md` a domain glossary or context map of this repository? Include it if it is.",
+    "Is `src/legacy/GLOSSARY.md` a domain glossary or context map of this repository? Include it if it is.",
     unsupported("docs/development/README.md", "docs/development"),
     "Which of these Markdown files at the repository root are documentation this scope must cover, such as a document to move into a documentation category: `notes.md`? Include each one, with its destination when it moves.",
     "Which of these Markdown files under `guides` are documentation this scope must cover, such as a document to move into a documentation category: `guides/setup.md`? Include each one, with its destination when it moves.",
@@ -780,9 +780,9 @@ test("over conforming repositories the drafted scope passes the documentation ch
       ],
     ),
     "docs/development/README.md": developmentGuide(),
-    "CONTEXT-MAP.md":
-      "# Contexts\n\n- [Ordering](src/ordering/CONTEXT.md): orders.\n",
-    "src/ordering/CONTEXT.md": "# Ordering\n",
+    "GLOSSARY-MAP.md":
+      "# Contexts\n\n- [Ordering](src/ordering/GLOSSARY.md): orders.\n",
+    "src/ordering/GLOSSARY.md": "# Ordering\n",
     "src/ordering/docs/README.md": index(
       "Ordering documentation",
       "This directory maps the ordering documentation.",
@@ -1285,7 +1285,7 @@ test("drafts this repository's own documentation scope", () => {
   const documentation = keptFiles(sourceRoot)
     .filter((path) => path.startsWith("docs/"))
     .filter((path) => !exactOwnedAgentConfiguration.includes(path));
-  assert.deepEqual(included(entry), ["CONTEXT.md", ...documentation].sort());
+  assert.deepEqual(included(entry), ["GLOSSARY.md", ...documentation].sort());
   assert.ok(
     entry.unresolved.every((question) =>
       question.startsWith("Which of these Markdown files"),

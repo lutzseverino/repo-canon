@@ -1,7 +1,7 @@
-# Matt Pocock workflow compatibility
+# Upstream skill compatibility
 
-The managed snapshot is mattpocock/skills commit
-`3cca18b368ae95cdbdebbff572ccafa662551015`. Its promoted plugin set contains 25
+The managed snapshot is mattpocock/skills tag `v1.3.1`, commit
+`24fe0ef7737efae15c87225755e9f6f5965e4888`. Its promoted plugin set contains 27
 regular skills. Their complete directories are vendored under
 `vendor/mattpocock-skills/skills`, with the upstream MIT notice retained at
 `vendor/mattpocock-skills/LICENSE` and installed beside the copied skills as
@@ -12,7 +12,7 @@ conventions without editing upstream skill content.
 
 | Category     | Skills                                                                                                                                                                                                                                                             |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Engineering  | ask-matt, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-with-docs, implement, improve-codebase-architecture, prototype, research, resolving-merge-conflicts, setup-matt-pocock-skills, tdd, to-spec, to-tickets, triage, wayfinder, wizard |
+| Engineering  | ask-matt, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-with-docs, implement, implement-spec, improve-codebase-architecture, pr, prototype, research, retro, setup-matt-pocock-skills, tdd, to-spec, to-tickets, triage, wayfinder, wizard |
 | Productivity | grill-me, grilling, handoff, teach, to-questionnaire, wait-what, writing-for-agents                                                                                                                                                                                |
 
 Experimental skills are excluded; the pinned tree has no top-level
@@ -22,15 +22,17 @@ no concrete dependency on any of those exclusions. Harness capabilities such as
 subagents, context controls, browser access, and authenticated tracker tools
 remain runtime requirements.
 
-Sources: [promoted manifest](https://github.com/mattpocock/skills/blob/3cca18b368ae95cdbdebbff572ccafa662551015/.claude-plugin/plugin.json),
-[upstream taxonomy](https://github.com/mattpocock/skills/blob/3cca18b368ae95cdbdebbff572ccafa662551015/CLAUDE.md).
+Sources: [promoted manifest](https://github.com/mattpocock/skills/blob/24fe0ef7737efae15c87225755e9f6f5965e4888/.claude-plugin/plugin.json),
+[upstream taxonomy](https://github.com/mattpocock/skills/blob/24fe0ef7737efae15c87225755e9f6f5965e4888/CLAUDE.md).
 
 ## Snapshot review and verification
 
-The pinned plugin manifest was reviewed against the inventory above. All 25
+The pinned plugin manifest was reviewed against the inventory above. All 27
 promoted regular skills are present, and no experimental skill or skill from the
 upstream `in-progress`, `misc`, or `deprecated` categories is included. The
-vendored snapshot contains 74 files across the 25 full skill directories. Every
+vendored snapshot contains 79 files across the 27 full skill directories. Its
+plugin manifest is retained at
+`vendor/mattpocock-skills/.claude-plugin/plugin.json` as provenance. Every
 byte in those directories, including referenced templates, scripts, agent
 metadata, and supporting Markdown, matches the pinned commit. The retained
 `LICENSE` also matches that commit byte for byte.
@@ -50,12 +52,12 @@ set -eu
 upstream_checkout="$(mktemp -d)"
 git clone https://github.com/mattpocock/skills.git "$upstream_checkout"
 git -C "$upstream_checkout" checkout --detach \
-  3cca18b368ae95cdbdebbff572ccafa662551015
+  24fe0ef7737efae15c87225755e9f6f5965e4888
 
 skills='engineering/ask-matt engineering/code-review engineering/codebase-design
 engineering/diagnosing-bugs engineering/domain-modeling engineering/grill-with-docs
-engineering/implement engineering/improve-codebase-architecture engineering/prototype
-engineering/research engineering/resolving-merge-conflicts
+engineering/implement engineering/implement-spec engineering/improve-codebase-architecture
+engineering/pr engineering/prototype engineering/research engineering/retro
 engineering/setup-matt-pocock-skills engineering/tdd engineering/to-spec
 engineering/to-tickets engineering/triage engineering/wayfinder engineering/wizard
 productivity/grill-me productivity/grilling productivity/handoff productivity/teach
@@ -65,6 +67,8 @@ expected_snapshot="$(mktemp -d)"
 mkdir -p "$expected_snapshot/skills/engineering" \
   "$expected_snapshot/skills/productivity"
 cp "$upstream_checkout/LICENSE" "$expected_snapshot/LICENSE"
+mkdir -p "$expected_snapshot/.claude-plugin"
+cp "$upstream_checkout/.claude-plugin/plugin.json" "$expected_snapshot/.claude-plugin/plugin.json"
 for skill in $skills; do
   category="${skill%%/*}"
   name="${skill#*/}"
@@ -81,7 +85,8 @@ adopting repository's contributors do not update these files independently.
 For a proposed upstream pin, a standards maintainer checks out that exact
 commit, reviews the plugin manifest and the complete diff from the current pin,
 and stages only the promoted engineering and productivity directories plus
-`LICENSE`. The manifest-reading command uses the project's Node.js 24 authoring
+`LICENSE` and `.claude-plugin/plugin.json`. The manifest-reading command uses
+the project's Node.js 24 authoring
 baseline; that maintainer prerequisite is separate from skill runtime:
 
 ```bash
@@ -91,7 +96,7 @@ next_upstream_checkout="$(mktemp -d)"
 git clone https://github.com/mattpocock/skills.git "$next_upstream_checkout"
 git -C "$next_upstream_checkout" checkout --detach "$proposed_commit"
 git -C "$next_upstream_checkout" diff \
-  "3cca18b368ae95cdbdebbff572ccafa662551015..$proposed_commit" -- \
+  "24fe0ef7737efae15c87225755e9f6f5965e4888..$proposed_commit" -- \
   .claude-plugin/plugin.json LICENSE skills
 
 skills="$(node -e '
@@ -110,6 +115,8 @@ git rm -r vendor/mattpocock-skills
 mkdir -p vendor/mattpocock-skills/skills/engineering \
   vendor/mattpocock-skills/skills/productivity
 cp "$next_upstream_checkout/LICENSE" vendor/mattpocock-skills/LICENSE
+mkdir -p vendor/mattpocock-skills/.claude-plugin
+cp "$next_upstream_checkout/.claude-plugin/plugin.json" vendor/mattpocock-skills/.claude-plugin/plugin.json
 for skill in $skills; do
   category="${skill%%/*}"
   name="${skill#*/}"
@@ -125,14 +132,73 @@ authoritative pin, inventory, and skill-count reference. This includes at least
 `docs/development/adoption-compatibility.md`; locate further references with:
 
 ```bash
-rg -n '3cca18b368ae95cdbdebbff572ccafa662551015|all 25|25 (managed|promoted|regular|skill)|18 engineering|seven productivity' \
+rg -n '24fe0ef7737efae15c87225755e9f6f5965e4888|all 27|27 (managed|promoted|regular|skill)|20 engineering|seven productivity' \
   authoring-notes.md docs
 ```
+
+Update the tag, commit, and per-file SHA-256 values in
+`test/fixtures/mattpocock-v1.3.1.json` from the independent upstream checkout,
+renaming the fixture and its test reference for a new tag. The repository
+conformance suite compares the shipped set to the pinned manifest, checks every
+vendored byte against those digests, and compares the installed setup files to
+their seeds. The manifest is provenance, not an installed adopter file.
 
 Rerun the byte comparison with the proposed commit, review all resource
 references and runtime prerequisites, and exercise the changed skills through
 the [skill exercise procedure](skill-exercises.md). Release review then decides
 whether to distribute the new snapshot.
+
+## HumanLayer snapshot and updates
+
+The second managed upstream is `humanlayer/skills`, pinned to commit
+`653b6411c1f70c275a18e37673b042ff99f67ceb`. Only its complete
+`plugins/show-me/skills/show-me` directory is selected, installed verbatim as
+`.agents/skills/show-me`. The two upstream files are `SKILL.md`, including its
+optional HTML-output instructions, and `agents/openai.yaml`, which preserves
+explicit invocation. The upstream root MIT `LICENSE` is copied unchanged to
+`vendor/humanlayer-skills/LICENSE` and installed as the sibling
+`.agents/skills/LICENSE.humanlayer-skills`.
+
+The [vendored provenance record](../../vendor/humanlayer-skills/README.md)
+names the upstream path and pin. The repository conformance suite verifies the
+complete file inventory and independent upstream SHA-256 hashes, the skill and
+license declarations, and the third-party notice. This proves the selected
+installation bytes; it does not exercise a host's HTML viewer. HTML output uses
+the host's file-writing and `open` capabilities as upstream describes them.
+No other HumanLayer skill or external resource is required by this snapshot.
+
+For either upstream, review an exact proposed commit and its diff, retain full
+selected skill directories and the root license, reconcile declarations and
+pin references, verify upstream bytes, and exercise changed behavior before
+release review. For Matt Pocock, use the manifest-driven procedure above; for
+HumanLayer, keep the selection limited to `show-me`. Reproduce its byte
+comparison from the repository root:
+
+```bash
+set -eu
+humanlayer_task_dir="$(mktemp -d /tmp/repo-canon-humanlayer.XXXXXX)"
+trap 'rm -rf "$humanlayer_task_dir"' EXIT
+git clone https://github.com/humanlayer/skills.git "$humanlayer_task_dir/upstream"
+git -C "$humanlayer_task_dir/upstream" checkout --detach \
+  653b6411c1f70c275a18e37673b042ff99f67ceb
+diff -ru "$humanlayer_task_dir/upstream/plugins/show-me/skills/show-me" \
+  vendor/humanlayer-skills/skills/show-me
+cmp "$humanlayer_task_dir/upstream/LICENSE" vendor/humanlayer-skills/LICENSE
+```
+
+To update HumanLayer, change the checkout command to the reviewed full commit
+SHA, review `git diff <current-pin>..<proposed-pin> -- LICENSE plugins/show-me`,
+replace `vendor/humanlayer-skills/skills/show-me` with the complete upstream
+directory, and copy the root `LICENSE`. Reconcile this document, the vendored
+provenance record, `authoring-notes.md`, the source-profile mapping, and the
+conformance suite's pin, inventory, and independently computed hashes. Review
+new resource references and runtime prerequisites, rerun the byte comparison
+and the development guide's required checks and all-profile source validation,
+and exercise both inline visuals and optional HTML output with a capable host
+as described in the [skill exercise procedure](skill-exercises.md). Neither
+upstream's vendored bytes may be edited to adapt Repo Canon conventions.
+
+Source: [pinned show-me directory](https://github.com/humanlayer/skills/tree/653b6411c1f70c275a18e37673b042ff99f67ceb/plugins/show-me/skills/show-me).
 
 ## Native issue shapes
 
@@ -156,10 +222,10 @@ addition. Upstream has no approved-revision selector or immutable approval
 marker. Do not treat matching a heading, an AI preamble, or passing structural
 validation as proof of human approval or authorization.
 
-Sources: [to-spec](https://github.com/mattpocock/skills/blob/3cca18b368ae95cdbdebbff572ccafa662551015/skills/engineering/to-spec/SKILL.md),
-[to-tickets](https://github.com/mattpocock/skills/blob/3cca18b368ae95cdbdebbff572ccafa662551015/skills/engineering/to-tickets/SKILL.md),
-[triage](https://github.com/mattpocock/skills/blob/3cca18b368ae95cdbdebbff572ccafa662551015/skills/engineering/triage/SKILL.md),
-[wayfinder](https://github.com/mattpocock/skills/blob/3cca18b368ae95cdbdebbff572ccafa662551015/skills/engineering/wayfinder/SKILL.md).
+Sources: [to-spec](https://github.com/mattpocock/skills/blob/24fe0ef7737efae15c87225755e9f6f5965e4888/skills/engineering/to-spec/SKILL.md),
+[to-tickets](https://github.com/mattpocock/skills/blob/24fe0ef7737efae15c87225755e9f6f5965e4888/skills/engineering/to-tickets/SKILL.md),
+[triage](https://github.com/mattpocock/skills/blob/24fe0ef7737efae15c87225755e9f6f5965e4888/skills/engineering/triage/SKILL.md),
+[wayfinder](https://github.com/mattpocock/skills/blob/24fe0ef7737efae15c87225755e9f6f5965e4888/skills/engineering/wayfinder/SKILL.md).
 
 ## Shared instructions and configuration
 
@@ -175,4 +241,4 @@ five canonical states, while the complete workflow also uses bug, enhancement,
 and five Wayfinder planning labels. Writing these configuration files does not
 provision those labels on GitHub.
 
-Source: [setup](https://github.com/mattpocock/skills/blob/3cca18b368ae95cdbdebbff572ccafa662551015/skills/engineering/setup-matt-pocock-skills/SKILL.md).
+Source: [setup](https://github.com/mattpocock/skills/blob/24fe0ef7737efae15c87225755e9f6f5965e4888/skills/engineering/setup-matt-pocock-skills/SKILL.md).

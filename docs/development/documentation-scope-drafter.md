@@ -63,8 +63,8 @@ category names, and the test for a Markdown document. Its candidates are:
 - each file Git keeps under a documentation root, included;
 - the index of a root or of a directory under one when the directory has none,
   and the development guide when it is missing, included as files to create;
-- `CONTEXT.md` and `CONTEXT-MAP.md` at the repository root, and each
-  `CONTEXT.md` that the root context map links to, or whose directory it links
+- `GLOSSARY.md` and `GLOSSARY-MAP.md` at the repository root, and each
+  `GLOSSARY.md` that the root context map links to, or whose directory it links
   to, included;
 - each file under a root that another declaration owns, excluded;
 - each `README.md` outside the roots, excluded, because the documentation check

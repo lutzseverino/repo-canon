@@ -1,12 +1,15 @@
 # Skill exercises
 
 This procedure exercises the pinned skills under `vendor/mattpocock-skills`
-and Repo Canon's own `deliver` skill against disposable local Git
-repositories. Run it when a release changes a skill, as the [release
-procedure](release.md#when-selected-bytes-change) requires, for the changed
-skills. Four builders create the repositories: one each for the engineering,
-productivity, and planning skills, which together cover all 25 pinned skills,
-and one for the `deliver` skill.
+and `vendor/humanlayer-skills` against disposable local Git repositories. Run
+it when a release changes a skill, as the
+[release procedure](release.md#when-selected-bytes-change) requires, for the
+changed skills. Three builders create the repositories: one each for the
+engineering, productivity, and planning skills, which together cover all 27
+pinned Matt Pocock skills. HumanLayer's `show-me` reuses an engineering
+repository, as [its scenario](#humanlayer-show-me) describes. Repo Canon's own
+`babysit` skill acts on a live pull request, so no builder covers it; exercise
+it on a pull request in a disposable GitHub repository.
 
 Building and testing the fixtures is a prerequisite, not an exercise. An
 exercise is an agent session that invokes the skill in a fixture repository
@@ -24,8 +27,7 @@ the exact shared `AGENTS.md`, `CONTRIBUTING.md`, and `docs/agents`
 configuration, scenario-specific project guidance in `docs/agents/project.md`,
 and repository-scoped `.agents/skills` symbolic links to the complete
 skill directories it needs. The repositories set `commit.gpgsign=false` in
-repository-local configuration and have no remote, except the `deliver`
-repositories' local stand-in described below.
+repository-local configuration and have no remote.
 
 Each builder's manifest maps every repository to its skills and records the
 source `HEAD`, the SHA-256 of the builder, the shared fixture-authoring module,
@@ -45,7 +47,7 @@ directory:
   variable, secret, or message is published.
 - Relax the harness sandbox, if at all, only inside the disposable repository.
   A sandbox that mounts `.git` read-only blocks the commits that the debugging,
-  merge-conflict, TDD, planning, and deliver scenarios make.
+  TDD, and planning scenarios make.
 
 For example, with Codex CLI:
 
@@ -66,13 +68,14 @@ node scripts/create-engineering-skill-fixtures.mjs
 npm run test:engineering-skill-fixtures
 ```
 
-The builder prints its JSON manifest. Six repositories cover nine skills:
+The builder prints its JSON manifest. Six repositories exercise nine
+engineering skills:
 `routing-review` for `ask-matt` and `code-review`; `architecture` for
 `codebase-design` and `improve-codebase-architecture`; `debugging` for
 `diagnosing-bugs`; `modeling-research` for `domain-modeling` and `research`;
-`tdd`; and `merge-conflict` for `resolving-merge-conflicts`, which starts inside
-an unresolved Git merge. The scenarios supply a domain glossary, applicable
-ADRs with their indexes, contributor commands, source, tests, requests, and
+`tdd`; and `retrospective` for `retro`, with a recorded session and the support
+reference `writing-for-agents`. The scenarios supply a domain glossary,
+applicable ADRs with their indexes, contributor commands, source, tests, requests, and
 specifications.
 
 The research exercise needs web search, such as Codex CLI's `--search` option.
@@ -80,8 +83,8 @@ Opening the architecture report needs a browser; in a headless harness, render
 it with a local headless browser and inspect the result.
 
 The test verifies the shared and scenario guidance, domain and development
-context, ADR indexes, skill links and digests, the unresolved merge, a build
-from a Repo Canon checkout without an `origin` remote, and an ordinary later
+context, ADR indexes, skill links and digests, the retrospective transcript, a
+build from a Repo Canon checkout without an `origin` remote, and an ordinary later
 commit under a host that requires signing with an unusable program.
 
 ## Productivity skills
@@ -118,11 +121,13 @@ npm run test:planning-skill-fixtures
 ```
 
 The builder writes `manifest.json` under its root and prints that path. Five
-repositories cover nine skills: `setup` for `setup-matt-pocock-skills` and
+repositories cover eleven skills: `setup` for `setup-matt-pocock-skills` and
 `triage`; `adoption-preparation` for the preparation that precedes whole-file
 ownership of `AGENTS.md`; `planning` for `grill-with-docs`, `to-spec`, and
 `to-tickets`; `triage-wayfinder` for `triage` and `wayfinder`; and `delivery`
-for `implement`, `prototype`, and `wizard`. The manifest also records the
+for `implement`, `implement-spec`, `pr`, `prototype`, and `wizard`. The latter
+includes a local specification and child ticket for the integration branch
+exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
 support skills that exercised skills depend on, such as the productivity
 `grilling` skill that `grill-with-docs` uses.
 
@@ -137,37 +142,23 @@ local signing, an ordinary later commit under hostile global signing, and the
 managed-update boundary: a synthetic change to a candidate copy of a vendored
 skill is detected while the vendored directory stays unchanged.
 
-## Deliver skill
+## HumanLayer `show-me`
+
+`show-me` needs no builder of its own. Build the engineering fixtures, then
+link the vendored skill into the `architecture` repository, whose Order intake
+source and glossary give it a topic to explain:
 
 ```bash
-node scripts/create-deliver-skill-fixtures.mjs
-npm run test:deliver-skill-fixtures
+node scripts/create-engineering-skill-fixtures.mjs --root <fixture-root>
+ln -s "$PWD/vendor/humanlayer-skills/skills/show-me" \
+  <fixture-root>/architecture/.agents/skills/show-me
 ```
 
-The builder prints a `repo-canon/deliver-skill-fixtures/v1` manifest. Two
-repositories exercise `deliver`, each holding uncommitted work on `main`:
-`work` implements the ready issue #12, and `adoption` holds an adoption run's
-uncommitted changes. Each also has the exact pull request template, which
-`adoption` holds as its uncommitted change, the trusted PR metadata workflow,
-validator, and parsers, and a development guide whose required checks are
-`npm test` and `git diff --check`.
-
-Delivery publishes, so the builder replaces publication with local stand-ins.
-Each repository's `origin` is a bare repository under the fixture root. The
-manifest's `path` directory holds a `gh` stand-in; put it first on `PATH` for
-the session. The stand-in serves the builder's issues and records pull requests
-and comments under the manifest's `github` directory. `gh pr checks` runs the
-PR metadata validator from the base branch and `npm test` at the head, and
-links each check's log. Any command it does not support fails, so nothing
-reaches GitHub. In `adoption`, the ignored pinned CLI is a stand-in that
-answers `status --json` and `status --summary` for the completed run.
-
-A session writes the remotes and records under the fixture root, so relax its
-sandbox to that root, which is as disposable as the repository. With Codex CLI,
-pass `--add-dir <fixture-root> --add-dir <repository>/.git`; `workspace-write`
-otherwise keeps `.git` read-only even under an added fixture root.
-
-The test verifies the skill's agreeing invocation settings, the exact shared
-files, the local remotes and stand-ins, a full delivery of each repository
-through them, including a failing PR metadata check, and an ordinary later
-commit under hostile global signing.
+The skill disallows implicit invocation, so each session invokes it by name.
+Run two sessions. In the first, ask for a visual explanation of the
+repository's control flow; the outcome is a short inline view, such as a call
+tree, file tree, or Mermaid diagram, next to brief text. In the second, ask for
+a visual comparison too dense for Mermaid; the outcome is one focused HTML file
+that the agent writes and opens. Opening it needs the host's `open` capability
+and a browser; in a headless harness, render the file with a local headless
+browser and inspect the result.

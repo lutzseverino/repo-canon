@@ -24,9 +24,15 @@ function validBody(extra = "") {
 
 Validate the pull request metadata before merge.
 
-## Validation
+## Evidence
 
 \`npm test\` passed with all event fixtures.
+
+## Merge Danger
+
+**Door:** two-way; the validator can be reverted.
+
+**Blast Radius:** metadata checks.
 
 ## Related issue
 
@@ -69,6 +75,62 @@ test("passes valid metadata and fails invalid metadata", () => {
   assert.match(invalid.stderr, /Add a Summary section/);
 });
 
+test("requires meaningful content in all four PR sections", () => {
+  for (const section of [
+    "Summary",
+    "Evidence",
+    "Merge Danger",
+    "Related issue",
+  ]) {
+    const region = new RegExp(`## ${section}\\n[\\s\\S]*?(?=\\n## |$)`);
+    const missing = runEvent({ body: validBody().replace(region, "") });
+    assert.equal(missing.status, 1, section);
+    assert.match(missing.stderr, new RegExp(`Add (?:a|an) ${section} section`));
+
+    for (const content of [
+      "",
+      "TODO",
+      "Not applicable",
+      "---",
+      "<br>",
+      "<span hidden>Useful visible content</span>",
+      "<!-- Explain this section -->",
+      "Later",
+    ]) {
+      const meaningless = runEvent({
+        body: validBody().replace(region, `## ${section}\n\n${content}\n`),
+      });
+      assert.equal(meaningless.status, 1, `${section}: ${content}`);
+      assert.match(
+        meaningless.stderr,
+        section === "Related issue"
+          ? /Link a related GitHub issue/
+          : new RegExp(`Replace the ${section} placeholder`),
+      );
+    }
+  }
+});
+
+test("publishes the four-section template in the required order", () => {
+  const template = readFileSync(
+    join(repositoryRoot, ".github/PULL_REQUEST_TEMPLATE.md"),
+    "utf8",
+  );
+  assert.deepEqual(
+    [...template.matchAll(/^## (.+)$/gm)].map((match) => match[1]),
+    ["Summary", "Evidence", "Merge Danger", "Related issue"],
+  );
+  const result = runEvent({ body: template });
+  assert.equal(result.status, 1);
+  for (const section of ["Summary", "Evidence", "Merge Danger"]) {
+    assert.match(
+      result.stderr,
+      new RegExp(`Replace the ${section} placeholder`),
+    );
+  }
+  assert.match(result.stderr, /Link a related GitHub issue/);
+});
+
 test("runs from the exact installed workflow layout", (t) => {
   const result = runEvent({
     validatorPath: installedValidator(
@@ -85,40 +147,44 @@ test("accepts harmless heading casing and formatting variations", () => {
 
 Fix a typo in the contributor instructions.
 
-# VALIDATION
+# EVIDENCE
 
 Manual link inspection completed successfully.
 
+## **mERGe dANGER:**
+
+The contributor text can be reverted without affecting runtime behavior.
+
 #### Related Issue
 
-Small correction: fix a typo in contributor-facing text.
+Direct change: fix a typo in contributor-facing text.
 `;
   const result = runEvent({ title: "docs: fix contributor typo", body });
   assert.equal(result.status, 0, result.stderr);
 });
 
-test("accepts any meaningful small-correction reason", () => {
+test("accepts any meaningful Direct change reason", () => {
   for (const reason of [
     "fix a typo in contributor-facing text",
     "add a new authorization system",
   ]) {
     const result = runEvent({
       title: "docs: correct contributor guidance",
-      body: validBody().replace("Closes #6", `Small correction: ${reason}.`),
+      body: validBody().replace("Closes #6", `Direct change: ${reason}.`),
     });
     assert.equal(result.status, 0, `${reason}: ${result.stderr}`);
   }
 });
 
-test("rejects a small-correction reason that is not meaningful", () => {
+test("rejects a Direct change reason that is not meaningful", () => {
   for (const relatedIssue of [
-    "Small correction:",
-    "Small correction: TODO",
-    "Small correction: TBD: explain later",
-    "Small correction: typo",
-    "Small correction: <!-- explain the correction -->",
-    "Small correction: <span hidden>fix a typo in the guide</span>",
-    "Small correction: `fix a typo in the guide`",
+    "Direct change:",
+    "Direct change: TODO",
+    "Direct change: TBD: explain later",
+    "Direct change: typo",
+    "Direct change: <!-- explain the correction -->",
+    "Direct change: <span hidden>fix a typo in the guide</span>",
+    "Direct change: `fix a typo in the guide`",
   ]) {
     const result = runEvent({
       title: "docs: correct contributor guidance",
@@ -127,6 +193,18 @@ test("rejects a small-correction reason that is not meaningful", () => {
     assert.equal(result.status, 1, relatedIssue);
     assert.match(result.stderr, /Link a related GitHub issue/, relatedIssue);
   }
+});
+
+test("rejects the retired exception marker", () => {
+  const marker = ["Small", "correction"].join(" ");
+  const result = runEvent({
+    body: validBody().replace(
+      "Closes #6",
+      `${marker}: fix a typo in the guide`,
+    ),
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Link a related GitHub issue/);
 });
 
 function adoptionRecord() {
@@ -209,6 +287,23 @@ test("still validates the title of an adoption record body", () => {
   assert.doesNotMatch(breaking.stderr, /Add a Summary section/);
 });
 
+test("accepts a breaking adoption record followed by Impact and Migration", () => {
+  const result = runEvent({
+    title: "chore!: adopt repo-canon v0.6.0 with CLI 5.1.0",
+    body: `${adoptionRecord()}
+## Impact
+
+The factory's claim labels change, so open claims need relabelling.
+
+## Migration
+
+Relabel each open factory:running issue before the factory restarts.
+`,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.summary, /adoption record/);
+});
+
 test("validates a body whose record heading is not its first content as an ordinary body", () => {
   const record = adoptionRecord();
   for (const [variant, body] of [
@@ -237,7 +332,7 @@ test("validates a body whose record heading is not its first content as an ordin
     });
     assert.equal(result.status, 1, variant);
     assert.match(result.stderr, /Add a Summary section/, variant);
-    assert.match(result.stderr, /Add a Validation section/, variant);
+    assert.match(result.stderr, /Add an Evidence section/, variant);
     assert.match(result.stderr, /Add a Related issue section/, variant);
   }
 
@@ -276,9 +371,13 @@ test("reports missing and placeholder PR sections together", () => {
 
 TODO
 
-## Validation
+## Evidence
 
 <!-- List checks here. -->
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -287,7 +386,7 @@ Later
   const result = runEvent({ body });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Replace the Summary placeholder/);
-  assert.match(result.stderr, /Replace the Validation placeholder/);
+  assert.match(result.stderr, /Replace the Evidence placeholder/);
   assert.match(result.stderr, /Link a related GitHub issue/);
   assert.match(result.summary, /PR metadata validation failed/);
 });
@@ -296,8 +395,12 @@ test("rejects empty sections and headings hidden in comments", () => {
   const body = `## Summary
 
 <!--
-## Validation
+## Evidence
 Hidden validation text passed.
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
+
 ## Related issue
 Closes #6
 -->
@@ -305,7 +408,7 @@ Closes #6
   const result = runEvent({ body });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Replace the Summary placeholder/);
-  assert.match(result.stderr, /Add a Validation section/);
+  assert.match(result.stderr, /Add an Evidence section/);
   assert.match(result.stderr, /Add a Related issue section/);
 });
 
@@ -323,9 +426,13 @@ test("rejects common placeholder variants and rendered-empty HTML", () => {
 
 ${placeholder}
 
-## Validation
+## Evidence
 
 ${placeholder}
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -336,7 +443,7 @@ Closes #6
     assert.match(result.stderr, /Replace the Summary placeholder/, placeholder);
     assert.match(
       result.stderr,
-      /Replace the Validation placeholder/,
+      /Replace the Evidence placeholder/,
       placeholder,
     );
   }
@@ -348,9 +455,13 @@ test("rejects required pull request metadata hidden from rendered HTML", () => {
 
 <span hidden>Correct the metadata validator behavior.</span>
 
-## Validation
+## Evidence
 
 <span hidden>The focused validator tests passed.</span>
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -360,7 +471,7 @@ test("rejects required pull request metadata hidden from rendered HTML", () => {
 
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Replace the Summary placeholder/);
-  assert.match(result.stderr, /Replace the Validation placeholder/);
+  assert.match(result.stderr, /Replace the Evidence placeholder/);
   assert.match(result.stderr, /Link a related GitHub issue/);
 });
 
@@ -371,9 +482,13 @@ test("accepts visible metadata alongside hidden HTML", () => {
 
 <span hidden>Ignore this decoy.</span> Reject hidden pull request metadata.
 
-## Validation
+## Evidence
 
 <span hidden>Ignore this decoy.</span> \`node --test test/pr-metadata.test.mjs\` passed.
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -399,9 +514,13 @@ test("preserves visible title and fragment-head text in pull request sections", 
 
 <title>Correct the metadata validator behavior.</title>
 
-## Validation
+## Evidence
 
 <head>The focused validator tests passed.</head>
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -417,8 +536,12 @@ test("ignores headings inside fenced Markdown examples", () => {
     body: `\`\`\`markdown
 ## Summary
 Example summary text.
-## Validation
+## Evidence
 Example validation passed.
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
+
 ## Related issue
 Closes #6
 \`\`\`
@@ -462,10 +585,14 @@ test("rejects code fences whose only content is an info string", () => {
 \`\`\`text
 \`\`\`
 
-## Validation
+## Evidence
 
 \`\`\`shell session
 \`\`\`
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -474,7 +601,7 @@ Closes #6
   });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Replace the Summary placeholder/);
-  assert.match(result.stderr, /Replace the Validation placeholder/);
+  assert.match(result.stderr, /Replace the Evidence placeholder/);
 
   const codeEvidence = runEvent({
     body: validBody().replace(
@@ -493,11 +620,15 @@ test("keeps nested subsections attached to required sections", () => {
 
 Pull requests need consistent metadata, so this adds validation.
 
-## Validation
+## Evidence
 
 ### Automated checks
 
 The complete Node test suite passed.
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -512,19 +643,23 @@ Closes #6
 test("does not accept issue references or exceptions inside code examples", () => {
   for (const relatedIssue of [
     "Use `#123` as the example format.",
-    "Use `Small correction: explain the typo here` as the exception format.",
+    "Use `Direct change: explain the typo here` as the exception format.",
     "<code>#123</code>",
     "<pre>#123</pre>",
-    "<code>Small correction: explain the typo here</code>",
+    "<code>Direct change: explain the typo here</code>",
   ]) {
     const result = runEvent({
       body: `## Summary
 
 Validate pull request metadata before merge.
 
-## Validation
+## Evidence
 
 The complete Node test suite passed.
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -542,9 +677,13 @@ test("uses rendered issue text and actual link destinations", () => {
 
 Validate pull request metadata before merge.
 
-## Validation
+## Evidence
 
 The complete Node test suite passed.
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -563,9 +702,13 @@ The complete Node test suite passed.
 
 Validate pull request metadata before merge.
 
-## Validation
+## Evidence
 
 The complete Node test suite passed.
+
+## Merge Danger
+
+The metadata validator can be reverted; only pull request checks are affected.
 
 ## Related issue
 
@@ -576,13 +719,19 @@ ${reference}
   }
 });
 
-test("requires each PR section exactly once without requiring Limits", () => {
-  const result = runEvent({
-    body: `${validBody()}\n## Summary\n\nA duplicate summary is ambiguous.\n`,
-  });
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /exactly one Summary section/);
-  assert.doesNotMatch(result.stderr, /Limits/);
+test("rejects duplicate required PR sections", () => {
+  for (const section of [
+    "Summary",
+    "Evidence",
+    "Merge Danger",
+    "Related issue",
+  ]) {
+    const result = runEvent({
+      body: `${validBody()}\n## ${section}\n\nA duplicate section is ambiguous.\n`,
+    });
+    assert.equal(result.status, 1, section);
+    assert.match(result.stderr, new RegExp(`exactly one ${section} section`));
+  }
 });
 
 test("rejects invalid Conventional Commit title structure", () => {
