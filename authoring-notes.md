@@ -10,7 +10,8 @@ same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
 and pull request templates, the skill setup files under `docs/agents`, the
 trusted validation workflows with their scripts, the vendored rendered-Markdown
 runtime and parsers with their notices, the pinned skills with their
-upstream license notice, and Repo Canon's own `deliver` skill. It is installed
+upstream license notice, Repo Canon's own `babysit` skill, and the factory's
+`.sandcastle/` files. It is installed
 identically in every adopting repository and changes only through a Repo Canon
 release.
 
@@ -23,9 +24,12 @@ The repository license, READMEs, development documentation, glossaries, and
 project-specific agent guidance belong to the adopting repository, because
 they describe it and its projects. Repo Canon shapes them through contextual
 guidance and checks. The Repository license has the fixed target `LICENSE`,
-and the Repository README has the fixed target `README.md`. Discovery proposes
-the concrete paths of Project READMEs at arbitrary locations and of documentation
-files, glossaries, and indexes, including documentation moves and link repairs.
+and the Repository README has the fixed target `README.md`. The factory's
+sandbox image has the fixed target `.sandcastle/Dockerfile`, because each
+repository's toolchain differs; Repo Canon ships its base, and a check keeps
+the base intact. Discovery proposes the concrete paths of Project READMEs at
+arbitrary locations and of documentation files, glossaries, and indexes,
+including documentation moves and link repairs.
 The maintainer confirms the complete inspection before adoption writes any of
 them.
 
@@ -56,29 +60,50 @@ repeated.
   documentation check enforce the index entry form, one index per document,
   the development guide's order, and scope coverage, with each check defined
   once in the shared documentation model.
-- Include all regular Matt Pocock skills. Upstream's promoted set at commit
-  `3cca18b368ae95cdbdebbff572ccafa662551015` consists of 18 engineering and seven
-  productivity skills, matching its plugin manifest. Experimental skills are
-  excluded; the upstream in-progress, misc, and deprecated categories are
+- Include all regular Matt Pocock skills. Upstream's promoted set at tag
+  `v1.3.1`, commit
+  `24fe0ef7737efae15c87225755e9f6f5965e4888` consists of 20 engineering and seven
+  productivity skills, matching its plugin manifest. The set includes `pr`,
+  `implement-spec`, and `retro`; upstream removed `resolving-merge-conflicts`.
+  Experimental skills are excluded; the upstream in-progress, misc, and deprecated categories are
   outside the regular set. No additional regular-skill exclusions are agreed.
 - The standards source manages reviewed, pinned upstream skill snapshots and
   distributes changes through standards releases. Keep upstream skill content
   intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
   guidance files, not in the skills or their setup files.
+- HumanLayer is a second managed upstream. Select only `show-me` from
+  `humanlayer/skills` commit `653b6411c1f70c275a18e37673b042ff99f67ceb`, at
+  `plugins/show-me/skills/show-me`. Retain its complete directory unchanged,
+  including optional HTML output and invocation metadata, and install its MIT
+  notice as `.agents/skills/LICENSE.humanlayer-skills`. Both upstreams follow
+  the [upstream-compatibility procedure](docs/development/upstream-compatibility.md);
+  neither is updated independently by adopting contributors.
 - Delivery belongs to this source, because Repository Standards leaves it to
   standards sources
   ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/main/docs/adr/0015-leave-delivery-to-standards-sources.md)).
-  The manual-only `deliver` skill takes completed work, including an adoption
-  run's uncommitted changes, to an opened pull request with its checks
-  reported. It sequences the rules of `CONTRIBUTING.md` and the pull request
-  template without restating them, and chooses the adoption record, which
-  those rules allow, as a non-breaking adoption run's description. It has no delivery
-  file: the required checks live in the project's development guide, project
-  constraints in the optional `docs/agents/project.md`, and the adoption record
-  in the pinned CLI's `status --summary`, so a delivery file would only copy
-  them. Its source is its installed path, `.agents/skills/deliver`, as for Repo
-  Canon's other original exact files; only vendored material has a separate
-  source path.
+  The environment carries delivery, as
+  [ADR 0010](docs/adr/0010-carry-delivery-rules-in-the-environment.md)
+  decides: [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests) says how to open
+  a pull request, an adoption pull request included, and when it may merge,
+  and the installed `AGENTS.md` points every change through `pr` and
+  `babysit`. The model-invocable `babysit` skill watches the pull request,
+  settles its findings, and merges it, stating no rule the guide holds. Its
+  source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
+  other original exact files; only vendored material has a separate source
+  path.
+- The factory ships with the standard, as
+  [ADR 0011](docs/adr/0011-ship-the-factory-with-the-standard.md) decides.
+  `.sandcastle/` holds a repository-agnostic entry, adapter, and pure decision
+  core, with the two prompt templates, as exact files whose source is their
+  installed path. It runs Sandcastle through a pinned `npx`, so an adopting
+  repository gains no dependency. Runs start in the repository's own sandbox
+  image, Repo Canon's base followed by the toolchain the adopting agent takes
+  from the development guide, as the
+  [sandbox image guidance](guidance/factory-sandbox-image.md) states. The host
+  sets the default and retry models, the per-provider caps, the usage
+  threshold, and the time limit; Repo Canon ships none of them. The canonical
+  labels carry the claim, failure, and run-mode labels but no `model:` labels.
+  [Run the factory](docs/usage/run-the-factory.md) describes its behavior.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the
   standards source.
@@ -86,7 +111,7 @@ repeated.
   actionable feedback and remain unready. Agents assess content meaning.
   Automation identifies missing information rather than inventing it.
 - When an issue is required is stated in
-  [`CONTRIBUTING.md`](CONTRIBUTING.md#issues). The small-correction exemption is
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#issues). The Direct change route is
   stated in its [pull request rules](CONTRIBUTING.md#pull-requests), and
   [pull request metadata validation](docs/development/pr-metadata-validation.md)
   states what the check accepts. Larger work can use a parent specification and
@@ -101,9 +126,10 @@ repeated.
   and implementation contracts, readiness, development setup, validation, pull
   requests, titles and commits, and documentation. Every other file cites it
   rather than repeating one of them. Agent implementation procedures belong in
-  skills. Files Repo Canon authors do not restate or cite them; the skill setup
-  files may, and the `deliver` skill may hand an unfinished adoption back to
-  the Repository Standards adoption skill.
+  skills. Files Repo Canon authors do not restate them, and cite them only for
+  delivery: `AGENTS.md` names `pr` and `babysit`, and `CONTRIBUTING.md` names
+  `pr` for a pull request's body and `adopt-standards` for an unfinished
+  adoption run. The skill setup files may cite them.
   CONTRIBUTING.md should be repository-agnostic exact content, copied
   identically between adopting repositories. Its fixed link to
   docs/development/README.md delegates project-specific setup and required
@@ -116,7 +142,7 @@ repeated.
 - Pull request descriptions follow the
   [pull request template](.github/PULL_REQUEST_TEMPLATE.md) and the pull request
   rules in [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests), including the
-  small-correction exemption and the adoption record accepted as an update pull
+  Direct change route and the adoption record accepted as an update pull
   request's description.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   states what the check enforces.
@@ -177,7 +203,7 @@ repeated.
 
 ## Verified upstream facts
 
-- The 25 promoted skills are self-contained with respect to concrete internal
+- The 27 promoted skills are self-contained with respect to concrete internal
   skill invocations and referenced resources; none requires an experimental,
   miscellaneous, or deprecated skill. Full directories must be retained.
   Harness facilities such as subagents and context controls remain runtime

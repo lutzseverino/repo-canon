@@ -48,9 +48,31 @@ _Avoid_: Intake report, any comment, inferred scope
 
 **Readiness**:
 The reviewed state of an implementation contract that an authorized reviewer
-considers sufficiently specified for work.
-It does not itself dispatch implementation.
-_Avoid_: Passing structural validation, automatic dispatch
+considers sufficiently specified for work. It grants the work to an agent; the
+factory picks up ready issues on the frontier.
+_Avoid_: Passing structural validation
+
+**Factory**:
+The unattended service that takes each ready issue on the frontier to a merged
+pull request, in the run mode and with the model its labels name.
+_Avoid_: Pipeline, orchestrator
+
+**Frontier**:
+The open issues the factory may pick up: those carrying `ready-for-agent`, with
+no open native blocker, and neither claimed nor marked failed. An issue a gate
+holds stays on the frontier.
+_Avoid_: Backlog, queue
+
+**Run mode**:
+How the factory runs an issue: direct, one agent taking it to one pull
+request, or orchestrated, an orchestrator over a ticket or a specification
+whose implementer and reviewer are different agents.
+_Avoid_: Run type, pipeline
+
+**Direct change**:
+A change made without a ticket, at the maintainer's request in a thread or as
+a minor correction.
+_Avoid_: Untracked work, issue exemption
 
 **Source acceptance**:
 The reviewed conclusion that a specific version of the standards source meets

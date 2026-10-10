@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import {
   cpSync,
   existsSync,
-  lstatSync,
   mkdirSync,
   mkdtempSync,
   symlinkSync,
@@ -33,8 +32,9 @@ const skillNames = [
   "domain-modeling",
   "improve-codebase-architecture",
   "research",
-  "resolving-merge-conflicts",
+  "retro",
   "tdd",
+  "writing-for-agents",
 ];
 const sharedFiles = [
   "AGENTS.md",
@@ -44,6 +44,12 @@ const sharedFiles = [
   "docs/agents/issue-tracker.md",
   "docs/agents/triage-labels.md",
 ];
+
+function skillPath(name) {
+  return name === "writing-for-agents"
+    ? join(sourceRoot, "vendor/mattpocock-skills/skills/productivity", name)
+    : join(skillsRoot, name);
+}
 
 function argument(name) {
   const index = process.argv.indexOf(name);
@@ -67,14 +73,6 @@ function write(root, path, content) {
   writeFileSync(target, content);
 }
 
-function git(root, args, options = {}) {
-  return execFileSync("git", args, {
-    cwd: root,
-    encoding: "utf8",
-    ...options,
-  }).trim();
-}
-
 function gitOptional(root, args) {
   const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
   if (result.status === 0) return result.stdout.trim();
@@ -92,7 +90,7 @@ function createRepository(name, skills, { context, development }) {
     "docs/agents/project.md",
     `# Exercise repository guidance\n\nThis is a disposable local repository for one Repo Canon engineering-skill exercise. Use its local scenario documents as the implementation contract or primary sources. Do not contact an issue tracker, publish its branches, or mutate a remote repository.\n`,
   );
-  write(root, "CONTEXT.md", context);
+  write(root, "GLOSSARY.md", context);
   write(root, "docs/development/README.md", development);
   write(
     root,
@@ -110,11 +108,7 @@ function createRepository(name, skills, { context, development }) {
   );
   mkdirSync(join(root, ".agents/skills"), { recursive: true });
   for (const skill of skills)
-    symlinkSync(
-      join(skillsRoot, skill),
-      join(root, ".agents/skills", skill),
-      "dir",
-    );
+    symlinkSync(skillPath(skill), join(root, ".agents/skills", skill), "dir");
   initializeFixtureRepository(root, {
     author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
   });
@@ -163,7 +157,7 @@ const repositories = {};
   const skills = ["codebase-design", "improve-codebase-architecture"];
   const root = createRepository("architecture", skills, {
     context: `# Ordering\n\nLanguage for accepting Orders into fulfillment.\n\n## Language\n\n**Order**:\n+A customer request accepted for fulfillment.\n_Avoid_: Payload, request\n\n**Order intake**:\n+The validation and normalization that turns submitted data into an Order.\n_Avoid_: Pipeline\n`,
-    development: `# Development\n\nRun \`npm test\` with Node.js 24. Architecture work must read \`CONTEXT.md\` and \`docs/adr\` first.\n`,
+    development: `# Development\n\nRun \`npm test\` with Node.js 24. Architecture work must read \`GLOSSARY.md\` and \`docs/adr\` first.\n`,
   });
   write(
     root,
@@ -288,70 +282,26 @@ const repositories = {};
 }
 
 {
-  const skills = ["resolving-merge-conflicts"];
-  const root = createRepository("merge-conflict", skills, {
-    context: `# Ordering\n\nLanguage for accepting Orders.\n\n## Language\n\n**Order**:\n+A customer request identified by a reference and fulfillment status.\n_Avoid_: Payload\n\n**Order status**:\n+The normalized fulfillment state of an Order.\n_Avoid_: State string\n`,
-    development: `# Development\n\nRun \`npm test\` with Node.js 24 after integrating changes. Both accepted request documents under \`docs/requests\` are primary sources for the merge.\n`,
+  const skills = ["retro", "writing-for-agents"];
+  const root = createRepository("retrospective", skills, {
+    context: `# Ordering\n\n## Language\n\n**Order**:\nA customer request identified by a reference.\n_Avoid_: Payload\n`,
+    development: `# Development\n\nRun \`npm test\` with Node.js 24. The local session transcript is \`docs/session.md\`.\n`,
   });
   write(
     root,
-    "src/order-intake.mjs",
-    `export function normalizeOrder(input) {\n  return { reference: input.reference, status: input.status };\n}\n`,
+    "src/order.mjs",
+    "export function orderReference(order) { return order.reference.trim(); }\n",
   );
   write(
     root,
-    "test/base.test.mjs",
-    `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { normalizeOrder } from '../src/order-intake.mjs';\n\ntest('Order intake returns reference and status', () => {\n  assert.deepEqual(normalizeOrder({ reference: 'A-1', status: 'pending' }), { reference: 'A-1', status: 'pending' });\n});\n`,
+    "docs/session.md",
+    `# Order reference session
+
+The agent changed orderReference to trim references, then committed without running npm test. A later run of npm test found that empty references were still accepted. The development guide already listed npm test, but there was no CI workflow or pre-commit check. Review this recorded session and suggest improvements to the repository environment. Do not apply them or publish anything.
+`,
   );
-  commit(root, "chore: establish Order normalization");
-  git(root, ["checkout", "-q", "-b", "reference-normalization"]);
-  write(
-    root,
-    "docs/requests/reference-normalization.md",
-    `# Normalize Order references\n\nTrim surrounding whitespace from Order references and reject a reference that becomes empty. Preserve Order status behavior.\n`,
-  );
-  write(
-    root,
-    "src/order-intake.mjs",
-    `export function normalizeOrder(input) {\n  const reference = input.reference.trim();\n  if (!reference) throw new Error('reference required');\n  return { reference, status: input.status };\n}\n`,
-  );
-  write(
-    root,
-    "test/reference.test.mjs",
-    `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { normalizeOrder } from '../src/order-intake.mjs';\n\ntest('Order intake trims references', () => {\n  assert.equal(normalizeOrder({ reference: ' A-1 ', status: 'pending' }).reference, 'A-1');\n});\n\ntest('Order intake rejects empty references', () => {\n  assert.throws(() => normalizeOrder({ reference: ' ', status: 'pending' }), /reference required/);\n});\n`,
-  );
-  const incoming = commit(root, "feat: normalize Order references");
-  git(root, ["checkout", "-q", "main"]);
-  write(
-    root,
-    "docs/requests/status-normalization.md",
-    `# Normalize Order status\n\nNormalize Order status to lowercase and reject values other than \`pending\` and \`shipped\`. Preserve Order reference behavior.\n`,
-  );
-  write(
-    root,
-    "src/order-intake.mjs",
-    `export function normalizeOrder(input) {\n  const status = input.status.toLowerCase();\n  if (!['pending', 'shipped'].includes(status)) throw new Error('unknown Order status');\n  return { reference: input.reference, status };\n}\n`,
-  );
-  write(
-    root,
-    "test/status.test.mjs",
-    `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { normalizeOrder } from '../src/order-intake.mjs';\n\ntest('Order intake normalizes status', () => {\n  assert.equal(normalizeOrder({ reference: 'A-1', status: 'SHIPPED' }).status, 'shipped');\n});\n\ntest('Order intake rejects unknown status', () => {\n  assert.throws(() => normalizeOrder({ reference: 'A-1', status: 'lost' }), /unknown Order status/);\n});\n`,
-  );
-  const current = commit(root, "feat: normalize Order status");
-  const merge = spawnSync(
-    "git",
-    ["merge", "--no-edit", "reference-normalization"],
-    { cwd: root, encoding: "utf8" },
-  );
-  if (
-    merge.status === 0 ||
-    !lstatSync(join(root, ".git/MERGE_HEAD")).isFile()
-  ) {
-    throw new Error(
-      "Expected the merge-conflict fixture to stop at a conflict",
-    );
-  }
-  repositories["merge-conflict"] = { path: root, skills, current, incoming };
+  const head = commit(root, "chore: establish retrospective exercise");
+  repositories.retrospective = { path: root, skills, head };
 }
 
 const provenance = identifyFixtureSource({
@@ -359,7 +309,7 @@ const provenance = identifyFixtureSource({
   builderPath: scriptSourcePath,
   files: sharedFiles,
   directories: Object.fromEntries(
-    skillNames.map((name) => [name, join(skillsRoot, name)]),
+    skillNames.map((name) => [name, skillPath(name)]),
   ),
 });
 const skills = provenance.directories;
@@ -377,7 +327,7 @@ process.stdout.write(
         ]),
         worktreeCommit: provenance.head,
         fixtureBuilderSha256: provenance.inputFiles[scriptSourcePath].sha256,
-        pinnedUpstreamCommit: "3cca18b368ae95cdbdebbff572ccafa662551015",
+        pinnedUpstreamCommit: "24fe0ef7737efae15c87225755e9f6f5965e4888",
         directoryHashSerialization: provenance.directoryHashSerialization,
         inputFiles: provenance.inputFiles,
       },

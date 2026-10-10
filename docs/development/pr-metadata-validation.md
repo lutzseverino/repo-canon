@@ -5,27 +5,29 @@ whenever the request is opened, edited, synchronized, reopened, or marked ready
 for review. Its stable check-run name is `PR metadata`.
 
 Unless it is an adoption record, described below, the description must contain
-exactly one meaningful `Summary`, `Validation`, and `Related issue` Markdown
-section. Heading level, emphasis, trailing colons, and letter casing do not
-affect recognition. HTML comments, placeholders such as `TODO`, `TBD`, `N/A`,
+exactly one meaningful `Summary`, `Evidence`, `Merge Danger`, and `Related issue`
+Markdown section. Heading level, emphasis, trailing colons, and letter casing
+do not affect recognition. HTML comments, placeholders such as `TODO`, `TBD`, `N/A`,
 `Not applicable`, and `None`, rendered-empty HTML, and content inside HTML
 elements with the `hidden` attribute do not count as content.
 Punctuation alone does not count either. Headings inside fenced code examples do
-not define sections. Code contents can describe Validation evidence, but fence
-delimiters and language info do not count as content. `Limits` remains optional.
+not define sections. Code contents can describe summaries, evidence, and merge
+danger, but fence delimiters and language info do not count as content.
+Validation belongs in Evidence, and relevant limits belong in Merge Danger.
 Section order and subsections follow the
 [contribution guide](../../CONTRIBUTING.md#pull-requests) and are reviewed
 rather than checked.
 
 `Related issue` accepts a GitHub issue URL, `owner/repository#123`, or `#123`.
-A small correction can instead use `Small correction: reason` with any
+A Direct change can instead use `Direct change: reason` with any
 meaningful reason: visible text outside code, from the marker to the end of
 the section, that holds at least two words, each a run of letters or numbers,
-and is not a placeholder. Summary and Validation apply the same word and
-placeholder test, but their code contents count. An empty reason, a placeholder
-such as `TODO` or `N/A`, a one-word reason, or a reason only in code fails.
-Whether the correction is small enough is for reviewers to judge; the check does
-not restrict the reason to particular kinds of correction.
+and is not a placeholder. Summary, Evidence, and Merge Danger apply the same
+word and placeholder test, but their code contents count. An empty reason, a
+placeholder such as `TODO` or `N/A`, a one-word reason, or a reason only in code fails.
+A Direct change is work without a ticket, as defined in the
+[contribution guide](../../CONTRIBUTING.md#pull-requests); the check does not
+restrict the reason to particular kinds of change.
 References in code examples, HTML comments, and unrelated HTML attributes do not
 count. References inside HTML elements with the `hidden` attribute do not count.
 A GitHub issue URL used as a visible Markdown or HTML link destination does count.
@@ -33,9 +35,9 @@ A GitHub issue URL used as a visible Markdown or HTML link destination does coun
 A body whose first line, after any blank lines, is exactly
 `# Repository Standards adoption record`, apart from trailing spaces or tabs, is
 a Repository Standards adoption record, a complete body for an adoption or
-update pull request. It needs no Summary, Validation, or Related issue section,
-and the title rules below still apply. The heading counts only as that exact
-first line: text, an HTML comment, or a code fence before it, indentation,
+update pull request. It needs no Summary, Evidence, Merge Danger, or Related
+issue section, and the title rules below still apply. The heading counts only
+as that exact first line: text, an HTML comment, or a code fence before it, indentation,
 another heading level, or other wording makes the body an ordinary description,
 validated as above.
 
@@ -55,9 +57,9 @@ The validator consumes the shared pure rendered-Markdown document installed at
 text and links, heading provenance, and section regions. PR policy remains in
 the validator: recognized section names use rendered Markdown headings,
 matching-section nesting and duplicate rules remain PR-specific, visible code
-can supply Validation evidence, and code cannot supply relationship or
-small-correction evidence. HTML `title` content remains visible for PR metadata,
-and parse5's fragment handling continues to expose text from a bare `head`
+can supply Summary, Evidence, and Merge Danger content, and code cannot supply
+relationship or Direct change reasons. HTML `title` content remains visible for
+PR metadata, and parse5's fragment handling continues to expose text from a bare `head`
 wrapper as body text.
 
 The workflow uses `pull_request_target` so GitHub loads its definition from the

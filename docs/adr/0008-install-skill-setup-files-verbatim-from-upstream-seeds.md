@@ -27,7 +27,7 @@ from the snapshot the skills were written against.
   table's invitation to edit its right-hand column, ships unchanged. The
   defaults stay as upstream sets them: GitHub as the tracker, external pull
   requests not a request surface, the default triage label strings, and a
-  single-context domain layout unless a root `CONTEXT-MAP.md` exists.
+  single-context domain layout unless a root `GLOSSARY-MAP.md` exists.
 - The agent instructions point to each file in the setup skill's format: a
   one-line summary and a pointer per file.
 - The files are third-party material under the skill collection's license

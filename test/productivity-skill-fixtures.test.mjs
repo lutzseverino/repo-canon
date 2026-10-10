@@ -33,7 +33,7 @@ test("builds scenario-specific repositories using every pinned productivity skil
   assert.equal(manifest.format, "repo-canon/productivity-skill-fixtures/v1");
   assert.equal(
     manifest.source.upstreamCommit,
-    "3cca18b368ae95cdbdebbff572ccafa662551015",
+    "24fe0ef7737efae15c87225755e9f6f5965e4888",
   );
   assert.deepEqual(Object.keys(manifest.source.skills), [
     "grill-me",

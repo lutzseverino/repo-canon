@@ -61,6 +61,21 @@ const canonicalLabels = [
     color: "bfd4f2",
     description: "Task in a planning map",
   },
+  {
+    name: "factory:running",
+    color: "0052cc",
+    description: "Claimed by a factory run",
+  },
+  {
+    name: "factory:failed",
+    color: "b60205",
+    description: "The factory run failed; remove to run it again",
+  },
+  {
+    name: "run:orchestrated",
+    color: "c5def5",
+    description: "The factory runs an orchestrator over this ticket",
+  },
 ];
 
 function readLabels(identity, projectRoot) {
@@ -236,7 +251,7 @@ function setupLabels(request) {
   }
   result(
     "changed",
-    `GitHub label setup changed ${inferred.identity}: ${effects}. Readback confirmed all 12 canonical labels; unrelated labels were preserved.`,
+    `GitHub label setup changed ${inferred.identity}: ${effects}. Readback confirmed all 15 canonical labels; unrelated labels were preserved.`,
   );
 }
 

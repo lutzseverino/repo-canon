@@ -4,7 +4,7 @@ vendor/
 # Installed Repository Standards state changes only through adoption.
 .repo-standards/
 
-# Installed skills retain their source bytes, including Repo Canon's deliver skill.
+# Installed skills retain their source bytes, including Repo Canon's babysit skill.
 .agents/skills/
 
 # npm maintains the dependency lockfile.

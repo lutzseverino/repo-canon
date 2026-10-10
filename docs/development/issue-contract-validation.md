@@ -277,7 +277,8 @@ workflow, and the validator never adds a workflow state to them.
 Incomplete, edited, replaced, stale, unauthorized, or multiply-ready contracts
 lose `ready-for-agent` and `ready-for-human`. Corrections update the same comment
 with a new revision and require fresh review. Structural success never grants
-readiness, and readiness never dispatches work.
+readiness, and the validator never starts work; the factory picks up ready
+issues.
 
 The workflow needs `contents: read` to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access
