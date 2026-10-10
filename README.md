@@ -19,9 +19,9 @@ repo-standards --version
 ```
 
 Select an owner-published release compatible with that CLI and the `complete`
-profile. The latest [`v0.5.6` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.6)
-predates the current operation protocol; use its tagged adoption guide and
-matching CLI until a compatible release is published.
+profile. The latest [`v0.6.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.6.0)
+requires CLI 6.0.0 or newer. Read its breaking standards changes and migration
+steps before updating an existing adoption.
 
 ## Features
 
@@ -36,13 +36,13 @@ matching CLI until a compatible release is published.
 
 ## Usage
 
-Replace the placeholder below with a compatible published tag, then inspect
-the selection before adoption. The report is read-only and authorizes nothing:
+Inspect the published release before adoption. The report is read-only and
+authorizes nothing:
 
 ```sh
 repo-standards inspect \
   --source https://github.com/lutzseverino/repo-canon \
-  --standards-version REPLACE_WITH_COMPATIBLE_RELEASE_TAG --profile complete \
+  --standards-version v0.6.0 --profile complete \
   --project /path/to/adopting-project --json
 ```
 
