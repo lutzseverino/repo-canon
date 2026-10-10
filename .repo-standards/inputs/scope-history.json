@@ -1,7 +1,7 @@
 {
   "format": "repo-standards/scope-history/v5",
   "evidence": "historical",
-  "inspection": "sha256:d4f97a23f456f1a5643a5f5f266c41ab136ff647229440722241dcad0df7324b",
+  "inspection": "sha256:3cfab676d40e2296e4c45b4f8cf9d7e5ae91a37aa547d685137ce715ef5f6807",
   "resolved": {
     "description": "The complete Repo Canon standards profile",
     "declarations": [
@@ -69,7 +69,7 @@
         "guidance": "guidance/documentation.md",
         "targets": {
           "paths": [
-            "CONTEXT.md",
+            "GLOSSARY.md",
             "authoring-notes.md",
             "docs/README.md",
             "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
@@ -81,6 +81,8 @@
             "docs/adr/0007-keep-superseded-adrs.md",
             "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md",
             "docs/adr/0009-enforce-documentation-rules-as-checks.md",
+            "docs/adr/0010-carry-delivery-rules-in-the-environment.md",
+            "docs/adr/0011-ship-the-factory-with-the-standard.md",
             "docs/adr/README.md",
             "docs/agents/project.md",
             "docs/development/README.md",
@@ -93,12 +95,14 @@
             "docs/development/pr-metadata-validation.md",
             "docs/development/release.md",
             "docs/development/repository-readme-check.md",
+            "docs/development/sandbox-image-check.md",
             "docs/development/skill-exercises.md",
             "docs/development/source-profile.md",
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
             "docs/usage/prepare-agent-guidance.md",
+            "docs/usage/run-the-factory.md",
             "docs/usage/versioning.md"
           ],
           "directories": []
@@ -111,6 +115,81 @@
         "kind": "file",
         "target": "docs/agents/domain.md",
         "exact": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
+      },
+      {
+        "id": "factory-adapter",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/adapter.ts",
+        "exact": ".sandcastle/adapter.ts"
+      },
+      {
+        "id": "factory-decision-core",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/factory.ts",
+        "exact": ".sandcastle/factory.ts"
+      },
+      {
+        "id": "factory-direct-prompt",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/direct-prompt.md",
+        "exact": ".sandcastle/direct-prompt.md"
+      },
+      {
+        "id": "factory-entry",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/main.ts",
+        "exact": ".sandcastle/main.ts"
+      },
+      {
+        "id": "factory-gitignore",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/.gitignore",
+        "exact": ".sandcastle/.gitignore"
+      },
+      {
+        "id": "factory-orchestrated-prompt",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/orchestrated-prompt.md",
+        "exact": ".sandcastle/orchestrated-prompt.md"
+      },
+      {
+        "id": "factory-sandbox-image",
+        "checks": [
+          {
+            "id": "sandbox-image-base",
+            "run": {
+              "executable": "node",
+              "script": "operations/check-sandbox-image.mjs",
+              "resources": [
+                "operations/sandbox-image-base.Dockerfile"
+              ],
+              "arguments": []
+            },
+            "prerequisite": {
+              "version-arguments": [
+                "--version"
+              ],
+              "version": ">=24.0.0 <25.0.0"
+            },
+            "timeout-seconds": 30
+          }
+        ],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/Dockerfile",
+        "guidance": "guidance/factory-sandbox-image.md"
       },
       {
         "id": "feature-request-template",
@@ -133,6 +212,7 @@
                 "operations/lib/github-operation.mjs",
                 "LICENSE",
                 "THIRD_PARTY_NOTICES.md",
+                "vendor/humanlayer-skills/LICENSE",
                 "vendor/mattpocock-skills/LICENSE"
               ],
               "arguments": []
@@ -170,6 +250,14 @@
           "paths": [],
           "directories": []
         }
+      },
+      {
+        "id": "humanlayer-skills-license",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".agents/skills/LICENSE.humanlayer-skills",
+        "exact": "vendor/humanlayer-skills/LICENSE"
       },
       {
         "id": "implementation-ticket-template",
@@ -379,6 +467,14 @@
         "source": "vendor/mattpocock-skills/skills/engineering/ask-matt"
       },
       {
+        "id": "skill-babysit",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "babysit",
+        "source": ".agents/skills/babysit"
+      },
+      {
         "id": "skill-code-review",
         "checks": [],
         "fixes": [],
@@ -393,14 +489,6 @@
         "kind": "skill",
         "name": "codebase-design",
         "source": "vendor/mattpocock-skills/skills/engineering/codebase-design"
-      },
-      {
-        "id": "skill-deliver",
-        "checks": [],
-        "fixes": [],
-        "kind": "skill",
-        "name": "deliver",
-        "source": ".agents/skills/deliver"
       },
       {
         "id": "skill-diagnosing-bugs",
@@ -459,12 +547,28 @@
         "source": "vendor/mattpocock-skills/skills/engineering/implement"
       },
       {
+        "id": "skill-implement-spec",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "implement-spec",
+        "source": "vendor/mattpocock-skills/skills/engineering/implement-spec"
+      },
+      {
         "id": "skill-improve-codebase-architecture",
         "checks": [],
         "fixes": [],
         "kind": "skill",
         "name": "improve-codebase-architecture",
         "source": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture"
+      },
+      {
+        "id": "skill-pr",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "pr",
+        "source": "vendor/mattpocock-skills/skills/engineering/pr"
       },
       {
         "id": "skill-prototype",
@@ -483,12 +587,12 @@
         "source": "vendor/mattpocock-skills/skills/engineering/research"
       },
       {
-        "id": "skill-resolving-merge-conflicts",
+        "id": "skill-retro",
         "checks": [],
         "fixes": [],
         "kind": "skill",
-        "name": "resolving-merge-conflicts",
-        "source": "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts"
+        "name": "retro",
+        "source": "vendor/mattpocock-skills/skills/engineering/retro"
       },
       {
         "id": "skill-setup-matt-pocock-skills",
@@ -497,6 +601,14 @@
         "kind": "skill",
         "name": "setup-matt-pocock-skills",
         "source": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills"
+      },
+      {
+        "id": "skill-show-me",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "show-me",
+        "source": "vendor/humanlayer-skills/skills/show-me"
       },
       {
         "id": "skill-tdd",
@@ -672,6 +784,81 @@
         "exact": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
       },
       {
+        "id": "factory-adapter",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/adapter.ts",
+        "exact": ".sandcastle/adapter.ts"
+      },
+      {
+        "id": "factory-decision-core",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/factory.ts",
+        "exact": ".sandcastle/factory.ts"
+      },
+      {
+        "id": "factory-direct-prompt",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/direct-prompt.md",
+        "exact": ".sandcastle/direct-prompt.md"
+      },
+      {
+        "id": "factory-entry",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/main.ts",
+        "exact": ".sandcastle/main.ts"
+      },
+      {
+        "id": "factory-gitignore",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/.gitignore",
+        "exact": ".sandcastle/.gitignore"
+      },
+      {
+        "id": "factory-orchestrated-prompt",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/orchestrated-prompt.md",
+        "exact": ".sandcastle/orchestrated-prompt.md"
+      },
+      {
+        "id": "factory-sandbox-image",
+        "checks": [
+          {
+            "id": "sandbox-image-base",
+            "run": {
+              "executable": "node",
+              "script": "operations/check-sandbox-image.mjs",
+              "resources": [
+                "operations/sandbox-image-base.Dockerfile"
+              ],
+              "arguments": []
+            },
+            "prerequisite": {
+              "version-arguments": [
+                "--version"
+              ],
+              "version": ">=24.0.0 <25.0.0"
+            },
+            "timeout-seconds": 30
+          }
+        ],
+        "fixes": [],
+        "kind": "file",
+        "target": ".sandcastle/Dockerfile",
+        "guidance": "guidance/factory-sandbox-image.md"
+      },
+      {
         "id": "feature-request-template",
         "checks": [],
         "fixes": [],
@@ -692,6 +879,7 @@
                 "operations/lib/github-operation.mjs",
                 "LICENSE",
                 "THIRD_PARTY_NOTICES.md",
+                "vendor/humanlayer-skills/LICENSE",
                 "vendor/mattpocock-skills/LICENSE"
               ],
               "arguments": []
@@ -726,6 +914,14 @@
         "kind": "repository",
         "guidance": "guidance/github-repository-configuration.md",
         "discovery": "discovery/github-repository-configuration.md"
+      },
+      {
+        "id": "humanlayer-skills-license",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".agents/skills/LICENSE.humanlayer-skills",
+        "exact": "vendor/humanlayer-skills/LICENSE"
       },
       {
         "id": "implementation-ticket-template",
@@ -932,6 +1128,14 @@
         "source": "vendor/mattpocock-skills/skills/engineering/ask-matt"
       },
       {
+        "id": "skill-babysit",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "babysit",
+        "source": ".agents/skills/babysit"
+      },
+      {
         "id": "skill-code-review",
         "checks": [],
         "fixes": [],
@@ -946,14 +1150,6 @@
         "kind": "skill",
         "name": "codebase-design",
         "source": "vendor/mattpocock-skills/skills/engineering/codebase-design"
-      },
-      {
-        "id": "skill-deliver",
-        "checks": [],
-        "fixes": [],
-        "kind": "skill",
-        "name": "deliver",
-        "source": ".agents/skills/deliver"
       },
       {
         "id": "skill-diagnosing-bugs",
@@ -1012,12 +1208,28 @@
         "source": "vendor/mattpocock-skills/skills/engineering/implement"
       },
       {
+        "id": "skill-implement-spec",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "implement-spec",
+        "source": "vendor/mattpocock-skills/skills/engineering/implement-spec"
+      },
+      {
         "id": "skill-improve-codebase-architecture",
         "checks": [],
         "fixes": [],
         "kind": "skill",
         "name": "improve-codebase-architecture",
         "source": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture"
+      },
+      {
+        "id": "skill-pr",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "pr",
+        "source": "vendor/mattpocock-skills/skills/engineering/pr"
       },
       {
         "id": "skill-prototype",
@@ -1036,12 +1248,12 @@
         "source": "vendor/mattpocock-skills/skills/engineering/research"
       },
       {
-        "id": "skill-resolving-merge-conflicts",
+        "id": "skill-retro",
         "checks": [],
         "fixes": [],
         "kind": "skill",
-        "name": "resolving-merge-conflicts",
-        "source": "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts"
+        "name": "retro",
+        "source": "vendor/mattpocock-skills/skills/engineering/retro"
       },
       {
         "id": "skill-setup-matt-pocock-skills",
@@ -1050,6 +1262,14 @@
         "kind": "skill",
         "name": "setup-matt-pocock-skills",
         "source": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills"
+      },
+      {
+        "id": "skill-show-me",
+        "checks": [],
+        "fixes": [],
+        "kind": "skill",
+        "name": "show-me",
+        "source": "vendor/humanlayer-skills/skills/show-me"
       },
       {
         "id": "skill-tdd",
@@ -1150,26 +1370,34 @@
     ]
   },
   "discovery": {
-    "identity": "sha256:fb1507d8131196dcd7139bf82044eae6c65b7a66b8a0162e0b9c31ccbd058c67",
+    "identity": "sha256:5fa8815da792b347e9c6e5ec140b07718624ba4398cab7fdbbd83e1391956384",
     "proposal": {
       "format": "repo-standards/scope/v2",
       "declarations": [
         {
           "id": "documentation",
-          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Fresh review for v0.5.6 confirms docs is the sole documentation root, all required directory indexes exist, and CONTEXT.md is the root glossary. Include authoring-notes.md in place as the maintained author-decision record. Legal notices, standards input guidance/discovery and preserved vendor files stay outside this documentation scope. No planned moves, index introductions, or link repairs need additional paths.",
+          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Reviewed all unresolved groups: authoring-notes.md is maintained source policy explicitly covered by the repository conformance scope; THIRD_PARTY_NOTICES.md is a license notice, discovery/ and guidance/ are shipped standards inputs, vendor/ is pinned third-party source, and the retired resolving-merge-conflicts skill is installation content, not repository documentation. docs is the sole documentation root. The root already has GLOSSARY.md and no CONTEXT.md or CONTEXT-MAP.md remains outside pinned installed skill inputs.",
           "candidates": [
             {
-              "path": "CONTEXT.md",
+              "path": ".agents/skills/resolving-merge-conflicts",
+              "decision": "exclude",
+              "reason": "Retired exact skill removed by this adoption, not maintained documentation.",
+              "evidence": [
+                ".agents/skills/resolving-merge-conflicts"
+              ]
+            },
+            {
+              "path": "GLOSSARY.md",
               "decision": "include",
               "reason": "The domain glossary at the repository root.",
               "evidence": [
-                "CONTEXT.md"
+                "GLOSSARY.md"
               ]
             },
             {
               "path": "THIRD_PARTY_NOTICES.md",
               "decision": "exclude",
-              "reason": "Licence and attribution payload, preserved outside maintained repository documentation.",
+              "reason": "License and attribution notice; not a documentation category document.",
               "evidence": [
                 "THIRD_PARTY_NOTICES.md"
               ]
@@ -1177,33 +1405,18 @@
             {
               "path": "authoring-notes.md",
               "decision": "include",
-              "reason": "Maintained source-author decisions belong beside standards.yaml, as docs/agents/project.md directs; keep this root document in place.",
+              "reason": "Maintained source authoring decisions explicitly included by test/repository-conformance.test.mjs.",
               "evidence": [
-                "authoring-notes.md"
+                "authoring-notes.md",
+                "test/repository-conformance.test.mjs"
               ]
             },
             {
-              "path": "discovery/documentation.md",
+              "path": "discovery",
               "decision": "exclude",
-              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
+              "reason": "Shipped source discovery guidance and executable scope drafter, not adopter documentation.",
               "evidence": [
-                "discovery/documentation.md"
-              ]
-            },
-            {
-              "path": "discovery/github-repository-configuration.md",
-              "decision": "exclude",
-              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
-              "evidence": [
-                "discovery/github-repository-configuration.md"
-              ]
-            },
-            {
-              "path": "discovery/project-readmes.md",
-              "decision": "exclude",
-              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
-              "evidence": [
-                "discovery/project-readmes.md"
+                "discovery"
               ]
             },
             {
@@ -1284,6 +1497,22 @@
               "reason": "A file under the documentation root `docs`.",
               "evidence": [
                 "docs/adr/0009-enforce-documentation-rules-as-checks.md"
+              ]
+            },
+            {
+              "path": "docs/adr/0010-carry-delivery-rules-in-the-environment.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/adr/0010-carry-delivery-rules-in-the-environment.md"
+              ]
+            },
+            {
+              "path": "docs/adr/0011-ship-the-factory-with-the-standard.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/adr/0011-ship-the-factory-with-the-standard.md"
               ]
             },
             {
@@ -1415,6 +1644,14 @@
               ]
             },
             {
+              "path": "docs/development/sandbox-image-check.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/development/sandbox-image-check.md"
+              ]
+            },
+            {
               "path": "docs/development/skill-exercises.md",
               "decision": "include",
               "reason": "A file under the documentation root `docs`.",
@@ -1463,6 +1700,14 @@
               ]
             },
             {
+              "path": "docs/usage/run-the-factory.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/usage/run-the-factory.md"
+              ]
+            },
+            {
               "path": "docs/usage/versioning.md",
               "decision": "include",
               "reason": "A file under the documentation root `docs`.",
@@ -1471,419 +1716,27 @@
               ]
             },
             {
-              "path": "guidance/documentation.md",
+              "path": "guidance",
               "decision": "exclude",
-              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
+              "reason": "Shipped standards contextual guidance, not adopter documentation.",
               "evidence": [
-                "guidance/documentation.md"
+                "guidance"
               ]
             },
             {
-              "path": "guidance/github-repository-configuration.md",
+              "path": "vendor",
               "decision": "exclude",
-              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
+              "reason": "Pinned upstream sources and notices retain their complete upstream inventories.",
               "evidence": [
-                "guidance/github-repository-configuration.md"
+                "vendor"
               ]
             },
             {
-              "path": "guidance/project-readmes.md",
+              "path": "vendor/humanlayer-skills/README.md",
               "decision": "exclude",
-              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
+              "reason": "A README.md outside the documentation roots, which the documentation check would read as a documentation root's index.",
               "evidence": [
-                "guidance/project-readmes.md"
-              ]
-            },
-            {
-              "path": "guidance/repository-license.md",
-              "decision": "exclude",
-              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
-              "evidence": [
-                "guidance/repository-license.md"
-              ]
-            },
-            {
-              "path": "guidance/repository-readme.md",
-              "decision": "exclude",
-              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
-              "evidence": [
-                "guidance/repository-readme.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/ask-matt/PHASE-BOUNDARIES.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/ask-matt/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/CONTEXT-FORMAT.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/domain-modeling/CONTEXT-FORMAT.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/prototype/UI.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/prototype/UI.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/research/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/research/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/tdd/tests.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/tdd/tests.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/wizard/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/wizard/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/grill-me/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/grill-me/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/handoff/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/handoff/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/teach/GLOSSARY-FORMAT.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/teach/GLOSSARY-FORMAT.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/teach/LEARNING-RECORD-FORMAT.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/teach/LEARNING-RECORD-FORMAT.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/teach/MISSION-FORMAT.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/teach/MISSION-FORMAT.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/teach/RESOURCES-FORMAT.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/teach/RESOURCES-FORMAT.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/teach/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/teach/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/to-questionnaire/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/to-questionnaire/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/wait-what/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/wait-what/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved third-party skill or parser source and accompanying resources.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md"
+                "vendor/humanlayer-skills/README.md"
               ]
             }
           ],
@@ -1891,20 +1744,20 @@
         },
         {
           "id": "github-repository-configuration",
-          "coverage": "Intentionally empty project-content scope: both fixes configure remote GitHub settings only. Fresh Git remotes and authenticated gh repo view identify lutzseverino/repo-canon, default branch main, viewer permission ADMIN. The maintainer confirmation of the complete inspection must authorize the disclosed fixes; no operation runs during inspection.",
+          "coverage": "Intentionally empty project-content scope: only remote canonical labels, required PR metadata check and squash merge settings for the unambiguous origin https://github.com/lutzseverino/repo-canon. The maintainer requested adoption including these authored fixes.",
           "candidates": [],
           "unresolved": []
         },
         {
           "id": "project-readmes",
-          "coverage": "Fresh review of package.json, root source and tooling responsibilities, development commands, README and documentation identifies one root standards-source package. Nested tooling and acceptance harnesses use root setup, build and release commands. Fixture manifests and generated outputs are synthetic; preserved vendor content and packaged skills are assets. There is no independently maintained nested Project requiring a non-root README. The scope is intentionally empty.",
+          "coverage": "Repo Canon is one standards source with shared root development commands. operations, discovery, scripts, test and .sandcastle implement or test that source and factory using the root package.json and development guide; none is an independently maintained Project. vendor holds verbatim third-party material, not internal Projects. No non-root Project README is required.",
           "candidates": [
             {
-              "path": ".agents",
+              "path": ".sandcastle",
               "decision": "exclude",
-              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "reason": "Factory source developed and tested through the root package commands.",
               "evidence": [
-                ".agents",
+                ".sandcastle",
                 "docs/development/README.md",
                 "package.json"
               ]
@@ -1912,7 +1765,7 @@
             {
               "path": "discovery",
               "decision": "exclude",
-              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "reason": "Source discovery code developed through root commands.",
               "evidence": [
                 "discovery",
                 "docs/development/README.md",
@@ -1920,29 +1773,9 @@
               ]
             },
             {
-              "path": "docs",
-              "decision": "exclude",
-              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
-              "evidence": [
-                "docs",
-                "docs/development/README.md",
-                "package.json"
-              ]
-            },
-            {
-              "path": "guidance",
-              "decision": "exclude",
-              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
-              "evidence": [
-                "docs/development/README.md",
-                "guidance",
-                "package.json"
-              ]
-            },
-            {
               "path": "operations",
               "decision": "exclude",
-              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "reason": "Source operations developed through root commands.",
               "evidence": [
                 "docs/development/README.md",
                 "operations",
@@ -1952,7 +1785,7 @@
             {
               "path": "scripts",
               "decision": "exclude",
-              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "reason": "Maintenance scripts developed through root commands.",
               "evidence": [
                 "docs/development/README.md",
                 "package.json",
@@ -1962,7 +1795,7 @@
             {
               "path": "test",
               "decision": "exclude",
-              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "reason": "Fixtures and tests, not Projects.",
               "evidence": [
                 "docs/development/README.md",
                 "package.json",
@@ -1972,7 +1805,7 @@
             {
               "path": "vendor",
               "decision": "exclude",
-              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "reason": "Third-party source and dependencies, not maintained internal Projects.",
               "evidence": [
                 "docs/development/README.md",
                 "package.json",
@@ -1987,14 +1820,14 @@
     "absence": [],
     "named": {
       "targets": {
-        "CONTEXT.md": {
+        "GLOSSARY.md": {
           "type": "file",
-          "sha256": "ae9765bb76c9f6bd6271d3d2a2bef78a2d54f70badbdc9af95c3e9ef8592a795",
+          "sha256": "eb1a2d55fc773703909302a218c7bc2f87e26bab7616cd358826fd84bac2b56d",
           "executable": false
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "e20ec4ed63ec9dec49db0f6bed2451711bb6c3db47ce9bbc043e8ca6b3c57e1b",
+          "sha256": "ef3c46a30e957614d69bca8e07230da9485898a23303a90f412c43e59b6006c3",
           "executable": false
         },
         "docs/README.md": {
@@ -2024,7 +1857,7 @@
         },
         "docs/adr/0005-require-an-open-ended-minimum-cli-version.md": {
           "type": "file",
-          "sha256": "4d66c1859bdfe4b24f1a6d800f02df20d58b21fda2a7782f04ee2fed31574ba1",
+          "sha256": "7ea31d4a11658f1e43a6f4be4778bccc10673996a4987590c9fca7ef0543be86",
           "executable": false
         },
         "docs/adr/0006-keep-point-in-time-records-with-their-event.md": {
@@ -2039,7 +1872,7 @@
         },
         "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md": {
           "type": "file",
-          "sha256": "e6f7971130a3b61cd21ddc187226546916e7eb820631e13a57e165afee681197",
+          "sha256": "15de75a67de86f7ba1168a4ae7d21e76480010d01ae219aaa3232bc4d79651f1",
           "executable": false
         },
         "docs/adr/0009-enforce-documentation-rules-as-checks.md": {
@@ -2047,9 +1880,19 @@
           "sha256": "25d4418cb25934d229b2941039002e2681a9076b84bb29483e3a836d589d07f8",
           "executable": false
         },
+        "docs/adr/0010-carry-delivery-rules-in-the-environment.md": {
+          "type": "file",
+          "sha256": "8680524acbaefc58b321248caacc6fc1967a4a7bbfab8fe7d7e2c9e13122c539",
+          "executable": false
+        },
+        "docs/adr/0011-ship-the-factory-with-the-standard.md": {
+          "type": "file",
+          "sha256": "a193fdd08f23e794c4db565ffbad3396b83f451bf6d085b20d3e7f9f4fac0117",
+          "executable": false
+        },
         "docs/adr/README.md": {
           "type": "file",
-          "sha256": "bce8f53d3046070ba64ee616bf7cd56839a9a7b9aeff7a3011b23c5f65deb13f",
+          "sha256": "ceff0c4108c94604dcd02707facee3609a42ca069c5489411a2b4d3204708be8",
           "executable": false
         },
         "docs/agents/project.md": {
@@ -2059,42 +1902,42 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "e0ef20e66141a0f4b4c11caa3eb4891a2f48332cb8a6e46d956009ba7d1e28e6",
+          "sha256": "6f2772e431018a7962d774a194f0db4a694bbcf273c7ba747045be983e731b8b",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
           "type": "file",
-          "sha256": "c0520538794ba76ab95e6d0519e9e8418f9a2e65ac8a2c989aab5d90e126b838",
+          "sha256": "579480fa9ab36890714c92fcc1a4c3fbe68506c4788d03298669430dcb120b4a",
           "executable": false
         },
         "docs/development/documentation-check.md": {
           "type": "file",
-          "sha256": "68727cc029f4d3d91f50e09b5a16972326cfe9b6fbb9b2baabfd23b97b0859fb",
+          "sha256": "2a3268177446030e1258b357ac77435e8540bbf3a1a1dc99b8bf8fbbb48dd37d",
           "executable": false
         },
         "docs/development/documentation-scope-drafter.md": {
           "type": "file",
-          "sha256": "109f4490063da327b5383c32a1dfc7ea5b24e62507ff9be8eb619eec7a52185e",
+          "sha256": "f758e420e2c8e0f299f3e6deb8470bcc8de327ab44625e7cd8aa0ee508329bb8",
           "executable": false
         },
         "docs/development/github-label-setup.md": {
           "type": "file",
-          "sha256": "6bf6f0f0343b73294d74d3690c1e81a4a69e2b637800b7b526b41f4c3ccef675",
+          "sha256": "531a0049b62fe1ca2a16e61469e4fbd39cdf383c466f8c1c90d77f89b069cb6e",
           "executable": false
         },
         "docs/development/github-pr-integration-setup.md": {
           "type": "file",
-          "sha256": "00a84fa7f80cfe57353cbf5fda2e1556400626a1885b24c44d4794486a96aefa",
+          "sha256": "7f669844b8a5390044a9fc196ceb0c4a8e558f4c5e8cd31f7f8723b926f44be8",
           "executable": false
         },
         "docs/development/issue-contract-validation.md": {
           "type": "file",
-          "sha256": "41bd6eb4aeca46586acd11fc18fa0785f0e6f4451d6a3dbeac37a6368254d791",
+          "sha256": "422d6beac4fe1ce99967db442866e8fde01a4bcac06707639d4b54e3b847105d",
           "executable": false
         },
         "docs/development/pr-metadata-validation.md": {
           "type": "file",
-          "sha256": "300b25262e2d4d2223453495abaf554323abe560ab3180a365be31967df35c51",
+          "sha256": "03e264ca3f2371165d87b41378c9a3680cd12e8abbc16292fbcdf19f12032602",
           "executable": false
         },
         "docs/development/release.md": {
@@ -2104,32 +1947,37 @@
         },
         "docs/development/repository-readme-check.md": {
           "type": "file",
-          "sha256": "b914fba6cf6e69582898c56324c86c66816d178a61f9167c04fa3152a4160768",
+          "sha256": "2941217833073efed94a2ec34b582aa7b6c9b92beb8bc8aa44e0fb5b8fa365f6",
+          "executable": false
+        },
+        "docs/development/sandbox-image-check.md": {
+          "type": "file",
+          "sha256": "f2405bbe784a1c026084c70622201ae46abac1301c56d67f5aa2a4f1b667a2c4",
           "executable": false
         },
         "docs/development/skill-exercises.md": {
           "type": "file",
-          "sha256": "676216c2c26fd24c1370d877c0cb67c7206dd88c56a67bf62a8de00f8eafe6cc",
+          "sha256": "e09073b05ed4d5e7d8a09975c3b99a0bd8cab3738b5b918606bcfe28f8971aba",
           "executable": false
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "fabe5ac102fe94c007b3e4d71be2d1f64ab42a0c0df3c0586fdd3e44adb124b9",
+          "sha256": "0468f450762f8b4a8c252b3aa6a0dd1c0f30544b0e1f642479b21193fad5033c",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
           "type": "file",
-          "sha256": "1203d36e1cad322416c7613779cddf3d6cba66b5f723e50fc184dbfca5e8bc80",
+          "sha256": "f6365f2a91267e9e572328838edbbd30913fcdd7b65d961c841fc3e649741fe6",
           "executable": false
         },
         "docs/usage/README.md": {
           "type": "file",
-          "sha256": "72863280bbc0b90c3f01c7153f3948fc0f20892d6a9254e00b7eb4e1a75ecf30",
+          "sha256": "64fb49c57e907ede378dd08bcffeb677b21b964faa8803b91939901d6a63a634",
           "executable": false
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "ef4beeec4336a9e75c0100b461ece6f613c320b7bceb56dfca70bbe7c2240f64",
+          "sha256": "858510a4e2465de28b2a0c5bb1891601f461919f5657fe979fd302e076dea11a",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -2137,9 +1985,14 @@
           "sha256": "f969ae36d8b07b8b4045969fc7c212532a354c85666bad5f909463712bb41d80",
           "executable": false
         },
+        "docs/usage/run-the-factory.md": {
+          "type": "file",
+          "sha256": "c00551a1e8e9c89439df66dd0693be692229b16c07391f68e26e3aa2cfa01698",
+          "executable": false
+        },
         "docs/usage/versioning.md": {
           "type": "file",
-          "sha256": "fad6b98f57651b0d320e7273396c5fad9dbb61a1b78c044ed011c6d713ee78a2",
+          "sha256": "8d82f9234eee318613485871ce39d362a358f16230679c35523335211399804b",
           "executable": false
         }
       }
@@ -2148,7 +2001,7 @@
       {
         "id": "documentation",
         "source": "discovery/documentation.md",
-        "sha256": "2ff022d0fd5f601a3c381ccdcb79c221f6d46d48a6816c8ed9d9d4f0805e3e51",
+        "sha256": "a500542e46d0bda006a810b26085b64a2de7241123ce7cc3b94ff322fee336b3",
         "executable": false
       },
       {
@@ -2216,6 +2069,11 @@
           "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c",
           "executable": false
         },
+        ".agents/skills/babysit/SKILL.md": {
+          "type": "file",
+          "sha256": "c30ca8fe16691b1d7ce7c7223b9743cc382b6c39f72fdd89325fe0aa3a6918c9",
+          "executable": false
+        },
         ".agents/skills/code-review/SKILL.md": {
           "type": "file",
           "sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50",
@@ -2244,16 +2102,6 @@
         ".agents/skills/codebase-design/agents/openai.yaml": {
           "type": "file",
           "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
-          "executable": false
-        },
-        ".agents/skills/deliver/SKILL.md": {
-          "type": "file",
-          "sha256": "e1138f5120adaa23036065ce730488de88f76e02f2f43a9ef2e31956dac44ff9",
-          "executable": false
-        },
-        ".agents/skills/deliver/agents/openai.yaml": {
-          "type": "file",
-          "sha256": "de8c252bae82640677c7d2b11522dbdf650e17800414ce430ac89a3501a57b2c",
           "executable": false
         },
         ".agents/skills/diagnosing-bugs/SKILL.md": {
@@ -2607,10 +2455,6 @@
           "type": "symlink",
           "target": "../../.agents/skills/codebase-design"
         },
-        ".claude/skills/deliver": {
-          "type": "symlink",
-          "target": "../../.agents/skills/deliver"
-        },
         ".claude/skills/diagnosing-bugs": {
           "type": "symlink",
           "target": "../../.agents/skills/diagnosing-bugs"
@@ -2725,17 +2569,17 @@
         },
         ".github/PULL_REQUEST_TEMPLATE.md": {
           "type": "file",
-          "sha256": "3da5d642dd01ec874d4a855d608c21f42d082fcd8a05bf66b11e823ded57f1ae",
+          "sha256": "4ca0528fa7bab99c0107da587058aebf6cb94c2e9a5760b725f50a3e2c29d2ec",
           "executable": false
         },
         ".github/scripts/validate-pr-metadata.mjs": {
           "type": "file",
-          "sha256": "f158dd6cd917302fd655ac9644aaaf54505b6f6f44e54e9d89e3c3d6dff4ecfb",
+          "sha256": "65b6f02602bdafe9b8c0f9cd33ac517ced92211eb2782c8327757406d747ed5e",
           "executable": false
         },
         ".github/workflows/ci.yml": {
           "type": "file",
-          "sha256": "81ef279a3f100b2d856fcdda1d06c06706a09fd169a8a229428b2fb9676e4658",
+          "sha256": "6561244d445eb9a7e4e417e46fec181a81ad7e211cae6b643f9b61508625a354",
           "executable": false
         },
         ".github/workflows/issue-contracts.yml": {
@@ -2760,22 +2604,57 @@
         },
         ".prettierignore": {
           "type": "file",
-          "sha256": "ed34e9281ae473fa15dc93ec4d72b363c406b2c547d36c0f0342df09237739a5",
+          "sha256": "0295c1d690ffd40bf739845f09414d5666a0b74c3a8a1581a82736e04cd671b0",
+          "executable": false
+        },
+        ".sandcastle/.gitignore": {
+          "type": "file",
+          "sha256": "95f8dff762dbd253b540e84c6f40919cdac8c5a7f5a0fab1150d501e4cc8edb4",
+          "executable": false
+        },
+        ".sandcastle/Dockerfile": {
+          "type": "file",
+          "sha256": "14586b1b860917988e5779ffcbf4a330e6c15beb099aa819ec79c38158f23def",
+          "executable": false
+        },
+        ".sandcastle/adapter.ts": {
+          "type": "file",
+          "sha256": "4f80995276122f1222059c578be6a89e45f42c5f4f7289707fa5abdff68e1c3e",
+          "executable": false
+        },
+        ".sandcastle/direct-prompt.md": {
+          "type": "file",
+          "sha256": "0435fe1d4892564d831d6dc221512739eb72f04a82d006f001b6269030ac9861",
+          "executable": false
+        },
+        ".sandcastle/factory.ts": {
+          "type": "file",
+          "sha256": "9d072c085552c6fbef36ba6611b23a8fe99e752c15587771e6f8f8d6061ddd90",
+          "executable": false
+        },
+        ".sandcastle/main.ts": {
+          "type": "file",
+          "sha256": "7d2ce378a5d495729ee0156b895334bf397f7ebf5dca68f4c3fa0831ca1a5865",
+          "executable": false
+        },
+        ".sandcastle/orchestrated-prompt.md": {
+          "type": "file",
+          "sha256": "e1d2d4aad583a3ea755133874d9531d83405ce793534ca37fcf9042c3211e9dc",
           "executable": false
         },
         "AGENTS.md": {
           "type": "file",
-          "sha256": "a618bde85fc4febaf526f393ebffc0129506cf4a52501e20fbb490e204cb8b7c",
-          "executable": false
-        },
-        "CONTEXT.md": {
-          "type": "file",
-          "sha256": "ae9765bb76c9f6bd6271d3d2a2bef78a2d54f70badbdc9af95c3e9ef8592a795",
+          "sha256": "f6145c198fbd884a665182cce07f2694817f5100d396dfe0091b87387fbd213f",
           "executable": false
         },
         "CONTRIBUTING.md": {
           "type": "file",
-          "sha256": "ec24834f03f1cd8fdb5c7fb0d62aa4d9824a0c55dc008b21477c141de0091d59",
+          "sha256": "c607558049b95241761d45b9d172b84b290d56ef6f6fe3393d5b1ea5e0f444d3",
+          "executable": false
+        },
+        "GLOSSARY.md": {
+          "type": "file",
+          "sha256": "eb1a2d55fc773703909302a218c7bc2f87e26bab7616cd358826fd84bac2b56d",
           "executable": false
         },
         "LICENSE": {
@@ -2785,27 +2664,27 @@
         },
         "README.md": {
           "type": "file",
-          "sha256": "bc0b94e00b9196c67a6e02f5a3a272ac94051be5b8771d0116c82922e8e2015b",
+          "sha256": "1a623f11d95aeca343384441c341d4420f60e9d0b4a8f044abfbaed92e542e29",
           "executable": false
         },
         "THIRD_PARTY_NOTICES.md": {
           "type": "file",
-          "sha256": "4758b5d94be52a626020be0be5557fb1e48154e2874e6ce4be3b97c2722aa6d5",
+          "sha256": "3b60efc274a647cdea6eaa8503bcec3aad1e518801ea5b70a8028a63a30f8dd1",
           "executable": false
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "e20ec4ed63ec9dec49db0f6bed2451711bb6c3db47ce9bbc043e8ca6b3c57e1b",
+          "sha256": "ef3c46a30e957614d69bca8e07230da9485898a23303a90f412c43e59b6006c3",
           "executable": false
         },
         "discovery/documentation.md": {
           "type": "file",
-          "sha256": "2ff022d0fd5f601a3c381ccdcb79c221f6d46d48a6816c8ed9d9d4f0805e3e51",
+          "sha256": "a500542e46d0bda006a810b26085b64a2de7241123ce7cc3b94ff322fee336b3",
           "executable": false
         },
         "discovery/draft-documentation-scope.mjs": {
           "type": "file",
-          "sha256": "5cc81cb922512ce695fd0c9c0725ae9d2a43eaef383200adf43ec84c8ab77cb0",
+          "sha256": "cfdca2ab87d5355b2aafd7a08eab1da2139c3dde66c308e0550662fa621051fe",
           "executable": false
         },
         "discovery/github-repository-configuration.md": {
@@ -2845,7 +2724,7 @@
         },
         "docs/adr/0005-require-an-open-ended-minimum-cli-version.md": {
           "type": "file",
-          "sha256": "4d66c1859bdfe4b24f1a6d800f02df20d58b21fda2a7782f04ee2fed31574ba1",
+          "sha256": "7ea31d4a11658f1e43a6f4be4778bccc10673996a4987590c9fca7ef0543be86",
           "executable": false
         },
         "docs/adr/0006-keep-point-in-time-records-with-their-event.md": {
@@ -2860,7 +2739,7 @@
         },
         "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md": {
           "type": "file",
-          "sha256": "e6f7971130a3b61cd21ddc187226546916e7eb820631e13a57e165afee681197",
+          "sha256": "15de75a67de86f7ba1168a4ae7d21e76480010d01ae219aaa3232bc4d79651f1",
           "executable": false
         },
         "docs/adr/0009-enforce-documentation-rules-as-checks.md": {
@@ -2868,9 +2747,19 @@
           "sha256": "25d4418cb25934d229b2941039002e2681a9076b84bb29483e3a836d589d07f8",
           "executable": false
         },
+        "docs/adr/0010-carry-delivery-rules-in-the-environment.md": {
+          "type": "file",
+          "sha256": "8680524acbaefc58b321248caacc6fc1967a4a7bbfab8fe7d7e2c9e13122c539",
+          "executable": false
+        },
+        "docs/adr/0011-ship-the-factory-with-the-standard.md": {
+          "type": "file",
+          "sha256": "a193fdd08f23e794c4db565ffbad3396b83f451bf6d085b20d3e7f9f4fac0117",
+          "executable": false
+        },
         "docs/adr/README.md": {
           "type": "file",
-          "sha256": "bce8f53d3046070ba64ee616bf7cd56839a9a7b9aeff7a3011b23c5f65deb13f",
+          "sha256": "ceff0c4108c94604dcd02707facee3609a42ca069c5489411a2b4d3204708be8",
           "executable": false
         },
         "docs/agents/README.md": {
@@ -2880,7 +2769,7 @@
         },
         "docs/agents/domain.md": {
           "type": "file",
-          "sha256": "edc6d6131fdffc4b7135704f5262124fc43355c95f61b7399dc5a4db643e28ca",
+          "sha256": "593a7042218689f1d24df89df14eaf0a20e19e0d0a7d479a01947ac78f0784b9",
           "executable": false
         },
         "docs/agents/issue-tracker.md": {
@@ -2900,42 +2789,42 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "e0ef20e66141a0f4b4c11caa3eb4891a2f48332cb8a6e46d956009ba7d1e28e6",
+          "sha256": "6f2772e431018a7962d774a194f0db4a694bbcf273c7ba747045be983e731b8b",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
           "type": "file",
-          "sha256": "c0520538794ba76ab95e6d0519e9e8418f9a2e65ac8a2c989aab5d90e126b838",
+          "sha256": "579480fa9ab36890714c92fcc1a4c3fbe68506c4788d03298669430dcb120b4a",
           "executable": false
         },
         "docs/development/documentation-check.md": {
           "type": "file",
-          "sha256": "68727cc029f4d3d91f50e09b5a16972326cfe9b6fbb9b2baabfd23b97b0859fb",
+          "sha256": "2a3268177446030e1258b357ac77435e8540bbf3a1a1dc99b8bf8fbbb48dd37d",
           "executable": false
         },
         "docs/development/documentation-scope-drafter.md": {
           "type": "file",
-          "sha256": "109f4490063da327b5383c32a1dfc7ea5b24e62507ff9be8eb619eec7a52185e",
+          "sha256": "f758e420e2c8e0f299f3e6deb8470bcc8de327ab44625e7cd8aa0ee508329bb8",
           "executable": false
         },
         "docs/development/github-label-setup.md": {
           "type": "file",
-          "sha256": "6bf6f0f0343b73294d74d3690c1e81a4a69e2b637800b7b526b41f4c3ccef675",
+          "sha256": "531a0049b62fe1ca2a16e61469e4fbd39cdf383c466f8c1c90d77f89b069cb6e",
           "executable": false
         },
         "docs/development/github-pr-integration-setup.md": {
           "type": "file",
-          "sha256": "00a84fa7f80cfe57353cbf5fda2e1556400626a1885b24c44d4794486a96aefa",
+          "sha256": "7f669844b8a5390044a9fc196ceb0c4a8e558f4c5e8cd31f7f8723b926f44be8",
           "executable": false
         },
         "docs/development/issue-contract-validation.md": {
           "type": "file",
-          "sha256": "41bd6eb4aeca46586acd11fc18fa0785f0e6f4451d6a3dbeac37a6368254d791",
+          "sha256": "422d6beac4fe1ce99967db442866e8fde01a4bcac06707639d4b54e3b847105d",
           "executable": false
         },
         "docs/development/pr-metadata-validation.md": {
           "type": "file",
-          "sha256": "300b25262e2d4d2223453495abaf554323abe560ab3180a365be31967df35c51",
+          "sha256": "03e264ca3f2371165d87b41378c9a3680cd12e8abbc16292fbcdf19f12032602",
           "executable": false
         },
         "docs/development/release.md": {
@@ -2945,32 +2834,37 @@
         },
         "docs/development/repository-readme-check.md": {
           "type": "file",
-          "sha256": "b914fba6cf6e69582898c56324c86c66816d178a61f9167c04fa3152a4160768",
+          "sha256": "2941217833073efed94a2ec34b582aa7b6c9b92beb8bc8aa44e0fb5b8fa365f6",
+          "executable": false
+        },
+        "docs/development/sandbox-image-check.md": {
+          "type": "file",
+          "sha256": "f2405bbe784a1c026084c70622201ae46abac1301c56d67f5aa2a4f1b667a2c4",
           "executable": false
         },
         "docs/development/skill-exercises.md": {
           "type": "file",
-          "sha256": "676216c2c26fd24c1370d877c0cb67c7206dd88c56a67bf62a8de00f8eafe6cc",
+          "sha256": "e09073b05ed4d5e7d8a09975c3b99a0bd8cab3738b5b918606bcfe28f8971aba",
           "executable": false
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "fabe5ac102fe94c007b3e4d71be2d1f64ab42a0c0df3c0586fdd3e44adb124b9",
+          "sha256": "0468f450762f8b4a8c252b3aa6a0dd1c0f30544b0e1f642479b21193fad5033c",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
           "type": "file",
-          "sha256": "1203d36e1cad322416c7613779cddf3d6cba66b5f723e50fc184dbfca5e8bc80",
+          "sha256": "f6365f2a91267e9e572328838edbbd30913fcdd7b65d961c841fc3e649741fe6",
           "executable": false
         },
         "docs/usage/README.md": {
           "type": "file",
-          "sha256": "72863280bbc0b90c3f01c7153f3948fc0f20892d6a9254e00b7eb4e1a75ecf30",
+          "sha256": "64fb49c57e907ede378dd08bcffeb677b21b964faa8803b91939901d6a63a634",
           "executable": false
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "ef4beeec4336a9e75c0100b461ece6f613c320b7bceb56dfca70bbe7c2240f64",
+          "sha256": "858510a4e2465de28b2a0c5bb1891601f461919f5657fe979fd302e076dea11a",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -2978,14 +2872,24 @@
           "sha256": "f969ae36d8b07b8b4045969fc7c212532a354c85666bad5f909463712bb41d80",
           "executable": false
         },
+        "docs/usage/run-the-factory.md": {
+          "type": "file",
+          "sha256": "c00551a1e8e9c89439df66dd0693be692229b16c07391f68e26e3aa2cfa01698",
+          "executable": false
+        },
         "docs/usage/versioning.md": {
           "type": "file",
-          "sha256": "fad6b98f57651b0d320e7273396c5fad9dbb61a1b78c044ed011c6d713ee78a2",
+          "sha256": "8d82f9234eee318613485871ce39d362a358f16230679c35523335211399804b",
           "executable": false
         },
         "guidance/documentation.md": {
           "type": "file",
-          "sha256": "fcaf5cda7f1ab01fe9d1d8ce392d5939174f7135f5a9580443e93939f78a3c36",
+          "sha256": "191b70e5af309f63ea22da9260553473730c0816f626eed14d5e59f6ed0d702b",
+          "executable": false
+        },
+        "guidance/factory-sandbox-image.md": {
+          "type": "file",
+          "sha256": "6db7bebb27083ce42c9725f7ec7fa0d7e2dd8b86710902acf774da061d096dc1",
           "executable": false
         },
         "guidance/github-repository-configuration.md": {
@@ -3010,17 +2914,22 @@
         },
         "operations/check-documentation.mjs": {
           "type": "file",
-          "sha256": "6be93d5fcaa837b65c4b1df18cccc3d4b167ade270c60fa7fcc8c74ab68b3fd7",
+          "sha256": "c94a576f09e960743d8921b4d54b3daa6d5ef375d572d783f133b53691cb6b1f",
           "executable": false
         },
         "operations/check-project-readmes.mjs": {
           "type": "file",
-          "sha256": "1f85407c2e957209d3c35010d605c1890c1b2a1260dee90c74683d7636eb0ede",
+          "sha256": "115974f2adf43b819ece333a54917a0bfdd2ce9c03c13c905e5ab0f989aab676",
           "executable": false
         },
         "operations/check-repository-readme.mjs": {
           "type": "file",
-          "sha256": "0ac707767b91a6900d1cfee373d34a6c48eaaf6bfcba182c16f5b1bfb10bdf60",
+          "sha256": "1d6012c6c8146bdcbd9a02cb550794b4bc70c39af9edf9bcba7d43fead4e7fdb",
+          "executable": false
+        },
+        "operations/check-sandbox-image.mjs": {
+          "type": "file",
+          "sha256": "ceeddfb1d41b4c4af8d283f9548c5ae3fdb0dcc8aea04004b04a41a147d950f6",
           "executable": false
         },
         "operations/lib/documentation-model.mjs": {
@@ -3030,7 +2939,7 @@
         },
         "operations/lib/github-operation.mjs": {
           "type": "file",
-          "sha256": "e2227a1ed1ca6c7f57e05e23f07d3cc72605800299f2a4ba5ce5659ceef1de6b",
+          "sha256": "a3a6d29a87ce9e3a977fff0d601fc7661a101d60c903249ec175030b159049c9",
           "executable": false
         },
         "operations/lib/local-markdown-links.mjs": {
@@ -3043,14 +2952,19 @@
           "sha256": "c9e0db1806e9ecac66bb9f99c201a07306a5155d205294e80c5592acc175476b",
           "executable": false
         },
+        "operations/sandbox-image-base.Dockerfile": {
+          "type": "file",
+          "sha256": "08bec9b191727ae6c89405f4a30f17e9253bd592ca5c8411556c3c451a3b19e2",
+          "executable": false
+        },
         "operations/setup-github-labels.mjs": {
           "type": "file",
-          "sha256": "c6728405c1f7391486d6075f54fd432e6374c20e7baddbbff4cf11a495beea07",
+          "sha256": "f77851b1e480714b5c2219f4d5897b744d478500038204705ab63d60629bfe05",
           "executable": false
         },
         "operations/setup-github-pr-integration.mjs": {
           "type": "file",
-          "sha256": "63c1ce84ed6de8cd8e3461b642d8705c8fd7e381cf598c303b2a05e493c55685",
+          "sha256": "f46011df1575de7a3c5d3651fbd226f65b529020b900400d5621c7ffc6745f13",
           "executable": false
         },
         "package-lock.json": {
@@ -3060,27 +2974,22 @@
         },
         "package.json": {
           "type": "file",
-          "sha256": "a9c123a05776384e065cd4f22b76698c70c137893755c6c1836a8d6a417d8d0d",
-          "executable": false
-        },
-        "scripts/create-deliver-skill-fixtures.mjs": {
-          "type": "file",
-          "sha256": "54bfb87346430272874676f607080370431e0d1cae474333a498d03f90110a21",
+          "sha256": "5d2d8635614748d1d53c4f9a592d1d01dd908e0f683457d0a8accf37212e31fd",
           "executable": false
         },
         "scripts/create-engineering-skill-fixtures.mjs": {
           "type": "file",
-          "sha256": "2787f8eaed8f99d669be9ef6057992fe2d3c028f814bb72ea4547667d54eb15d",
+          "sha256": "9f69fa3ceecd98c398519aeca469bfcd8bb7f91611dabe0de91a17b2c604d39a",
           "executable": false
         },
         "scripts/create-planning-skill-fixtures.mjs": {
           "type": "file",
-          "sha256": "683465541ed1622a944bb74f81066430604b58afc3885b06021a24a5d46c1694",
+          "sha256": "c938c192512b882bc5e56f0b0e8ef76899ea69a9c882edb98632741ddb10c0ec",
           "executable": false
         },
         "scripts/create-productivity-skill-fixtures.mjs": {
           "type": "file",
-          "sha256": "85ac5d81096e4a40cb059f2cc4fd2632579587f1f751d26deb5e92ae5a2a3918",
+          "sha256": "8507d3d7b0dab132676424d2b9a90ae2ecdc43e212e238ccce55f8668aaffece",
           "executable": false
         },
         "scripts/release/check-merge.mjs": {
@@ -3108,16 +3017,6 @@
           "sha256": "361a549f79c26b234afa4bf9e114f1d60f5618c3739d8eb996504a0c89d9f67f",
           "executable": false
         },
-        "scripts/support/exercise-gh.mjs": {
-          "type": "file",
-          "sha256": "4264339c69a6768a4829ba8f7ce3cfaf8701d2e327fbec9477e5b5c2f52abaa0",
-          "executable": false
-        },
-        "scripts/support/exercise-repo-standards.mjs": {
-          "type": "file",
-          "sha256": "bf089a513a301a070ac22065a52c682b05159ecd8cc1a81e706d424ff5afe6b6",
-          "executable": false
-        },
         "scripts/support/fixture-authoring.mjs": {
           "type": "file",
           "sha256": "61b4e6f4f6c066b725790632de78adf3719f763048389df653dd5f1ac06af462",
@@ -3130,42 +3029,42 @@
         },
         "standards.yaml": {
           "type": "file",
-          "sha256": "debe1d71d453527ff9698dbe223e1b260d107b7affe9a890b9c6e920ffd75ce1",
-          "executable": false
-        },
-        "test/deliver-skill-fixtures.test.mjs": {
-          "type": "file",
-          "sha256": "c16002e69726e8e48f272087d43303b7a00a238ee0c8176fbccc549b36105df0",
-          "executable": false
-        },
-        "test/deliver-skill.test.mjs": {
-          "type": "file",
-          "sha256": "1277b01e458d978282d95775d501e8a677f05537b94596d7a57ecf89959eafed",
+          "sha256": "f0471a87a769c04e50d14294cdccf978301c20bcae7d175d17e13eb8febce01a",
           "executable": false
         },
         "test/documentation-check.test.mjs": {
           "type": "file",
-          "sha256": "7c5b3076e7a48ec15c0456682eb22bd6cf8b0d9a018c6b87e0f1f10fa7b445b8",
+          "sha256": "81a6e515a7480adfd7da896959134275f7a8cb34d65e4f215c8709dc1e40107b",
           "executable": false
         },
         "test/documentation-model.test.mjs": {
           "type": "file",
-          "sha256": "e2b8be96d5c05f9f0006836a234488245513ea493a924964021d8846a40f5f01",
+          "sha256": "e5b89410d34f0f750db5a4e9ce4e7e34cfd742632721f79b85b95bdb8d237c8d",
           "executable": false
         },
         "test/documentation-scope-drafter.test.mjs": {
           "type": "file",
-          "sha256": "61daef0273ec7187c6feab7aacfbfac8b10c4f70362e982170caa3dce07be072",
+          "sha256": "33b44f56bb476ad97986404347eb262d2b4574c41c5d4d5572681aa152ef7c75",
           "executable": false
         },
         "test/engineering-skill-fixtures.test.mjs": {
           "type": "file",
-          "sha256": "b78fcfed0bc044eabda03629afeab0f4720b25a4d606fca6af0c8c04fb6ee365",
+          "sha256": "2538be7c542f9b1d29f035376677f02293ff722dd20ba9da04b60fa3a32564e2",
+          "executable": false
+        },
+        "test/factory-adapter.test.mjs": {
+          "type": "file",
+          "sha256": "ae18edb3c3dabbf51a18011cdddbee9ed1d9e4c4160d4a42870f5d459ba01d55",
+          "executable": false
+        },
+        "test/factory.test.mjs": {
+          "type": "file",
+          "sha256": "88a70b9fb991fbad20982485b66e1e8e6ce7f467f00ef1b1d235d02b8a5f9994",
           "executable": false
         },
         "test/fixture-builder-provenance.test.mjs": {
           "type": "file",
-          "sha256": "6e3cb9d01fe224a4bc06c0860ee98cbcf39626febf28d85a46170652aedcb9d3",
+          "sha256": "c9f1f5239dad7dba6f920811af5ad491abacdf1dc06f16706a0651fdbb71cc1d",
           "executable": false
         },
         "test/fixtures/fake-gh-pr-settings.mjs": {
@@ -3188,19 +3087,24 @@
           "sha256": "7bb388ca3ce06d8f5e7900fea8da31f050dc2eb3b83951bfe9be278b05454376",
           "executable": false
         },
+        "test/fixtures/mattpocock-v1.3.1.json": {
+          "type": "file",
+          "sha256": "92decb3e0fcf83a9bf18cb9379c4403e74608f91094238119fda8aa1385cf6bc",
+          "executable": false
+        },
         "test/github-label-setup.test.mjs": {
           "type": "file",
-          "sha256": "d773fcfa153035df11f7a1ddef7d80e5a7966957ac478a560cba6321ac1bc214",
+          "sha256": "6995be5c5ef5fec1c7988f4d294aebd8d2f2d8adc3cfb0c149e8c60a9147452c",
           "executable": false
         },
         "test/github-operation.test.mjs": {
           "type": "file",
-          "sha256": "f1f5150e4c8f0930fd1c67d657cdbea63f823e534c81c9ddc7a4dbb499fe0331",
+          "sha256": "df5260200d048925a7d7d6e0134fdf60655a7a9013306e58e3f847f78f9b9174",
           "executable": false
         },
         "test/github-pr-integration-setup.test.mjs": {
           "type": "file",
-          "sha256": "4bf0c0f7bccb364668b77f68f7cc2c1e5c6237d8c557d07fe6973069e0e417ec",
+          "sha256": "47a70876c56a92e60a781aec9fa586eaf3853aac639fbb022f1a71ccdf66c796",
           "executable": false
         },
         "test/helpers/documentation.mjs": {
@@ -3215,7 +3119,7 @@
         },
         "test/helpers/github-setup.mjs": {
           "type": "file",
-          "sha256": "a285f54a610d32a66435d136f34412c7c5e5a146cd383d77c536885d116f7d18",
+          "sha256": "09c2748cda34b0083873e2a9487fc321800e41ff17333e060b5db124f837ff4f",
           "executable": false
         },
         "test/helpers/installed-validator.mjs": {
@@ -3230,7 +3134,7 @@
         },
         "test/helpers/operation.mjs": {
           "type": "file",
-          "sha256": "97d8ba7f01b43dbce55d4315ed10b30e01e4899780d93eee1a645c0568c073cb",
+          "sha256": "d31a78863c1332705ac293d0929806a6599048252483a7f0e2fc3115cc601c97",
           "executable": false
         },
         "test/issue-contract-adapter.test.mjs": {
@@ -3245,22 +3149,22 @@
         },
         "test/planning-skill-fixtures.test.mjs": {
           "type": "file",
-          "sha256": "ba46ada05922f8a1d53d849c13f91f592fd38e0eeb8ffa86f86cc03b104d880e",
+          "sha256": "ea4edeac0424861a15466e73d137c57e9ae9c56a3edf7bfdf885454f9594f0dc",
           "executable": false
         },
         "test/pr-metadata.test.mjs": {
           "type": "file",
-          "sha256": "89924c98b7ce8570ed6fa3c06844b3183debd568aa06cee0b53a0b984cb4e6ce",
+          "sha256": "20bbced379f862166906fa049ddb66f85669ac701cf63b3f709a4d206d9f94ff",
           "executable": false
         },
         "test/productivity-skill-fixtures.test.mjs": {
           "type": "file",
-          "sha256": "3754ad9a34bc7c198ac24f339766365cfba672da831d893d0ae74d271a888a3d",
+          "sha256": "6fc0a10e5258e830b47b7fd52884d3e517ca44f0bfddaf638a1c1a9d3d7ce632",
           "executable": false
         },
         "test/project-readme-check.test.mjs": {
           "type": "file",
-          "sha256": "2f6d6d65714cdce4fd61fb5f5362531ddc54912ff9c95cd2cfcf6b504af96a97",
+          "sha256": "5373d2c99ac87bdcc98b9583a63167d79abaa9e0d710214a223674704636955b",
           "executable": false
         },
         "test/release-scripts.test.mjs": {
@@ -3280,7 +3184,7 @@
         },
         "test/repository-conformance.test.mjs": {
           "type": "file",
-          "sha256": "e187ecde23bdb1ef08e98c6d464cbaf49588810f9e23bb1f01b620190650ec7e",
+          "sha256": "21958a8e8b2ce14b0777ea1345a14a2195f5146befd7079da5f47c16baa8236c",
           "executable": false
         },
         "test/repository-license.test.mjs": {
@@ -3290,12 +3194,37 @@
         },
         "test/repository-readme-check.test.mjs": {
           "type": "file",
-          "sha256": "20220a698a9a3548cd02a5318e2ce87419a4030da19ea126dd10fa17f5e9c453",
+          "sha256": "deaa49ec62125ab9344b0cdd0a444663ee392987d4b71d6cefe14cab3415752e",
+          "executable": false
+        },
+        "test/sandbox-image-check.test.mjs": {
+          "type": "file",
+          "sha256": "07a150f15caedbb0402320d0d808c6268aa9fe0c58c126523cfbd1d3d543e58e",
           "executable": false
         },
         "test/shared-workflows.test.mjs": {
           "type": "file",
           "sha256": "ed7ab07faeb6fc6b97ba0e56a2a35ca306f9f71d10e32738edfda2f3076d86a3",
+          "executable": false
+        },
+        "vendor/humanlayer-skills/LICENSE": {
+          "type": "file",
+          "sha256": "5f13c18ea00ea5c1384f41745feeca774079164f7f59a92e4ac0899ad217b26f",
+          "executable": false
+        },
+        "vendor/humanlayer-skills/README.md": {
+          "type": "file",
+          "sha256": "8a740929c8c0118ee2b7fd2646030e552d47600566c95d23d0f15da12f008554",
+          "executable": false
+        },
+        "vendor/humanlayer-skills/skills/show-me/SKILL.md": {
+          "type": "file",
+          "sha256": "434a2346cc95e313b0d367d477dda2e23ba642dd2181757415a09500664af100",
+          "executable": false
+        },
+        "vendor/humanlayer-skills/skills/show-me/agents/openai.yaml": {
+          "type": "file",
+          "sha256": "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
           "executable": false
         },
         "vendor/marked/LICENSE": {
@@ -3313,6 +3242,11 @@
           "sha256": "2e70fea3ee49f98ab67ee395e5af51cc6bee4fafed15910da9ccb7f650df8014",
           "executable": false
         },
+        "vendor/mattpocock-skills/.claude-plugin/plugin.json": {
+          "type": "file",
+          "sha256": "15a5a7227915917856ea019ad82584ee877309b5bc3cabfb86b83b7e2cc6e238",
+          "executable": false
+        },
         "vendor/mattpocock-skills/LICENSE": {
           "type": "file",
           "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
@@ -3325,7 +3259,7 @@
         },
         "vendor/mattpocock-skills/skills/engineering/ask-matt/SKILL.md": {
           "type": "file",
-          "sha256": "b25d86fb36b1d294eeead5d7db529f86135f9671f2afcd607579a63bb2213769",
+          "sha256": "32b3c71d6dbb5a7c15147e8a503a9df28e9a567f45eba6a6bb42aa903225c6ff",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/ask-matt/agents/openai.yaml": {
@@ -3350,7 +3284,7 @@
         },
         "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md": {
           "type": "file",
-          "sha256": "8e740bf98446dbd4dfdc132ac4346d9a7eedaf93de6a495889171cf7f99f16bd",
+          "sha256": "52b52e75655a27aea59c6966b410bac82448968ad46ef1ebb9f07c274e3ae010",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md": {
@@ -3365,7 +3299,7 @@
         },
         "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md": {
           "type": "file",
-          "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84",
+          "sha256": "9168404abda0967a5d32977e3498cd95fda6807018852f3de736a78357c82b40",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/agents/openai.yaml": {
@@ -3383,14 +3317,14 @@
           "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0",
           "executable": false
         },
-        "vendor/mattpocock-skills/skills/engineering/domain-modeling/CONTEXT-FORMAT.md": {
+        "vendor/mattpocock-skills/skills/engineering/domain-modeling/GLOSSARY-FORMAT.md": {
           "type": "file",
-          "sha256": "17ab16ce783e4d2801ee52fd9acdf550cbf44de65ae76797a93943bbedf22a13",
+          "sha256": "21dcc40cdec8e151a829b98ab1517c1867bc444e3665134a98c6983411996801",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md": {
           "type": "file",
-          "sha256": "327a2b50620e2fd70abc6893cd6965e76b20f8d0adb0dc2c8d5eb3845efb643e",
+          "sha256": "7b925d7b1e341a2eeae33ad68a8a8c0ab889a38ddd22a7598e4c240e5a7556a3",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/domain-modeling/agents/openai.yaml": {
@@ -3406,6 +3340,16 @@
         "vendor/mattpocock-skills/skills/engineering/grill-with-docs/agents/openai.yaml": {
           "type": "file",
           "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9",
+          "executable": false
+        },
+        "vendor/mattpocock-skills/skills/engineering/implement-spec/SKILL.md": {
+          "type": "file",
+          "sha256": "7a22dd2e60b8fcece478ced9d2533582adf3520d695acd3ab715341535c9e56d",
+          "executable": false
+        },
+        "vendor/mattpocock-skills/skills/engineering/implement-spec/agents/openai.yaml": {
+          "type": "file",
+          "sha256": "fd41efb42c60c96320d6531be7e4bf15cbf5518cd652d57dff27ccffa46988e9",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md": {
@@ -3425,12 +3369,27 @@
         },
         "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md": {
           "type": "file",
-          "sha256": "d1ac25511a936ff4250a48dbcefda363837d6bb9321b3cba73df99fa37270a75",
+          "sha256": "552240a5ab5cec6b67c15dd1ad6e9f6962b1bca6ce870059a8c2713760c20392",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/agents/openai.yaml": {
           "type": "file",
           "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1",
+          "executable": false
+        },
+        "vendor/mattpocock-skills/skills/engineering/pr/CREDITS.md": {
+          "type": "file",
+          "sha256": "a7a087127665d7298a72280ef6e19c41ad8404523712a788c8dc3ab414bc2497",
+          "executable": false
+        },
+        "vendor/mattpocock-skills/skills/engineering/pr/SKILL.md": {
+          "type": "file",
+          "sha256": "ab63f1cf78647389edcd386c9427c5dfca27ed2836930c24773ffee834c19bcd",
+          "executable": false
+        },
+        "vendor/mattpocock-skills/skills/engineering/pr/agents/openai.yaml": {
+          "type": "file",
+          "sha256": "2295b586624db4ef546f3fd4695492f039d941a46d8a1593a702ce3ca511b8ad",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md": {
@@ -3463,19 +3422,19 @@
           "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d",
           "executable": false
         },
-        "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/SKILL.md": {
+        "vendor/mattpocock-skills/skills/engineering/retro/SKILL.md": {
           "type": "file",
-          "sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0",
+          "sha256": "33fbc28568e3146f20fd908b12998bc0ab30aa4f4c87288199a40793efa94696",
           "executable": false
         },
-        "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/agents/openai.yaml": {
+        "vendor/mattpocock-skills/skills/engineering/retro/agents/openai.yaml": {
           "type": "file",
-          "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf",
+          "sha256": "cb6fb9d7e6b4be5975f41f6def1dd00a1255bad5d9b02696b124c924a8b8745c",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md": {
           "type": "file",
-          "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec",
+          "sha256": "9a0c21694be19fa3eefc39343355d3af7414716ba364882c7432c2f821eac3e9",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/agents/openai.yaml": {
@@ -3485,7 +3444,7 @@
         },
         "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md": {
           "type": "file",
-          "sha256": "edc6d6131fdffc4b7135704f5262124fc43355c95f61b7399dc5a4db643e28ca",
+          "sha256": "593a7042218689f1d24df89df14eaf0a20e19e0d0a7d479a01947ac78f0784b9",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md": {
@@ -3510,7 +3469,7 @@
         },
         "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md": {
           "type": "file",
-          "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927",
+          "sha256": "93ea419b76e9caaf26153b828e984f7c3fb136f4caa67b14af95f32ea965a1cc",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/tdd/agents/openai.yaml": {
@@ -3560,7 +3519,7 @@
         },
         "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md": {
           "type": "file",
-          "sha256": "623a2ed692bdc77d2090e2a3dea3b627dd722ad3bbaca0be83aada75292c8fc4",
+          "sha256": "917b0baf74be583e74f110857ed45df2766617f75c00baf61fd136d7af515edf",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/engineering/triage/agents/openai.yaml": {
@@ -3665,7 +3624,7 @@
         },
         "vendor/mattpocock-skills/skills/productivity/wait-what/SKILL.md": {
           "type": "file",
-          "sha256": "e3f44e3ccbc0e7b62f20ba70b295fc9c9f4aa3f96c77168faee1c71bacbf4215",
+          "sha256": "d961bb37defd975c539427edb8f450cdbccdcdd552e213c1ece46676a7970905",
           "executable": false
         },
         "vendor/mattpocock-skills/skills/productivity/wait-what/agents/openai.yaml": {
@@ -3717,9 +3676,10 @@
           ".gitignore",
           ".oxlintrc.json",
           ".prettierignore",
+          ".sandcastle",
           "AGENTS.md",
-          "CONTEXT.md",
           "CONTRIBUTING.md",
+          "GLOSSARY.md",
           "LICENSE",
           "README.md",
           "THIRD_PARTY_NOTICES.md",
@@ -3742,9 +3702,9 @@
           ".agents/skills/LICENSE.mattpocock-skills",
           ".agents/skills/adopt-standards",
           ".agents/skills/ask-matt",
+          ".agents/skills/babysit",
           ".agents/skills/code-review",
           ".agents/skills/codebase-design",
-          ".agents/skills/deliver",
           ".agents/skills/diagnosing-bugs",
           ".agents/skills/domain-modeling",
           ".agents/skills/grill-me",
@@ -3791,6 +3751,9 @@
         ".agents/skills/ask-matt/agents": [
           ".agents/skills/ask-matt/agents/openai.yaml"
         ],
+        ".agents/skills/babysit": [
+          ".agents/skills/babysit/SKILL.md"
+        ],
         ".agents/skills/code-review": [
           ".agents/skills/code-review/SKILL.md",
           ".agents/skills/code-review/agents"
@@ -3806,13 +3769,6 @@
         ],
         ".agents/skills/codebase-design/agents": [
           ".agents/skills/codebase-design/agents/openai.yaml"
-        ],
-        ".agents/skills/deliver": [
-          ".agents/skills/deliver/SKILL.md",
-          ".agents/skills/deliver/agents"
-        ],
-        ".agents/skills/deliver/agents": [
-          ".agents/skills/deliver/agents/openai.yaml"
         ],
         ".agents/skills/diagnosing-bugs": [
           ".agents/skills/diagnosing-bugs/SKILL.md",
@@ -4007,7 +3963,6 @@
           ".claude/skills/ask-matt",
           ".claude/skills/code-review",
           ".claude/skills/codebase-design",
-          ".claude/skills/deliver",
           ".claude/skills/diagnosing-bugs",
           ".claude/skills/domain-modeling",
           ".claude/skills/grill-me",
@@ -4052,6 +4007,15 @@
           ".github/workflows/issue-contracts.yml",
           ".github/workflows/pr-metadata.yml"
         ],
+        ".sandcastle": [
+          ".sandcastle/.gitignore",
+          ".sandcastle/Dockerfile",
+          ".sandcastle/adapter.ts",
+          ".sandcastle/direct-prompt.md",
+          ".sandcastle/factory.ts",
+          ".sandcastle/main.ts",
+          ".sandcastle/orchestrated-prompt.md"
+        ],
         "discovery": [
           "discovery/documentation.md",
           "discovery/draft-documentation-scope.mjs",
@@ -4075,6 +4039,8 @@
           "docs/adr/0007-keep-superseded-adrs.md",
           "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md",
           "docs/adr/0009-enforce-documentation-rules-as-checks.md",
+          "docs/adr/0010-carry-delivery-rules-in-the-environment.md",
+          "docs/adr/0011-ship-the-factory-with-the-standard.md",
           "docs/adr/README.md"
         ],
         "docs/agents": [
@@ -4095,6 +4061,7 @@
           "docs/development/pr-metadata-validation.md",
           "docs/development/release.md",
           "docs/development/repository-readme-check.md",
+          "docs/development/sandbox-image-check.md",
           "docs/development/skill-exercises.md",
           "docs/development/source-profile.md",
           "docs/development/upstream-compatibility.md"
@@ -4103,10 +4070,12 @@
           "docs/usage/README.md",
           "docs/usage/adopt-repo-canon.md",
           "docs/usage/prepare-agent-guidance.md",
+          "docs/usage/run-the-factory.md",
           "docs/usage/versioning.md"
         ],
         "guidance": [
           "guidance/documentation.md",
+          "guidance/factory-sandbox-image.md",
           "guidance/github-repository-configuration.md",
           "guidance/project-readmes.md",
           "guidance/repository-license.md",
@@ -4116,7 +4085,9 @@
           "operations/check-documentation.mjs",
           "operations/check-project-readmes.mjs",
           "operations/check-repository-readme.mjs",
+          "operations/check-sandbox-image.mjs",
           "operations/lib",
+          "operations/sandbox-image-base.Dockerfile",
           "operations/setup-github-labels.mjs",
           "operations/setup-github-pr-integration.mjs"
         ],
@@ -4127,7 +4098,6 @@
           "operations/lib/rendered-markdown.mjs"
         ],
         "scripts": [
-          "scripts/create-deliver-skill-fixtures.mjs",
           "scripts/create-engineering-skill-fixtures.mjs",
           "scripts/create-planning-skill-fixtures.mjs",
           "scripts/create-productivity-skill-fixtures.mjs",
@@ -4143,17 +4113,15 @@
           "scripts/release/verify.mjs"
         ],
         "scripts/support": [
-          "scripts/support/exercise-gh.mjs",
-          "scripts/support/exercise-repo-standards.mjs",
           "scripts/support/fixture-authoring.mjs"
         ],
         "test": [
-          "test/deliver-skill-fixtures.test.mjs",
-          "test/deliver-skill.test.mjs",
           "test/documentation-check.test.mjs",
           "test/documentation-model.test.mjs",
           "test/documentation-scope-drafter.test.mjs",
           "test/engineering-skill-fixtures.test.mjs",
+          "test/factory-adapter.test.mjs",
+          "test/factory.test.mjs",
           "test/fixture-builder-provenance.test.mjs",
           "test/fixtures",
           "test/github-label-setup.test.mjs",
@@ -4172,13 +4140,15 @@
           "test/repository-conformance.test.mjs",
           "test/repository-license.test.mjs",
           "test/repository-readme-check.test.mjs",
+          "test/sandbox-image-check.test.mjs",
           "test/shared-workflows.test.mjs"
         ],
         "test/fixtures": [
           "test/fixtures/fake-gh-pr-settings.mjs",
           "test/fixtures/fake-gh.mjs",
           "test/fixtures/fake-node-version.mjs",
-          "test/fixtures/github-operation.mjs"
+          "test/fixtures/github-operation.mjs",
+          "test/fixtures/mattpocock-v1.3.1.json"
         ],
         "test/helpers": [
           "test/helpers/documentation.mjs",
@@ -4189,9 +4159,25 @@
           "test/helpers/operation.mjs"
         ],
         "vendor": [
+          "vendor/humanlayer-skills",
           "vendor/marked",
           "vendor/mattpocock-skills",
           "vendor/parse5"
+        ],
+        "vendor/humanlayer-skills": [
+          "vendor/humanlayer-skills/LICENSE",
+          "vendor/humanlayer-skills/README.md",
+          "vendor/humanlayer-skills/skills"
+        ],
+        "vendor/humanlayer-skills/skills": [
+          "vendor/humanlayer-skills/skills/show-me"
+        ],
+        "vendor/humanlayer-skills/skills/show-me": [
+          "vendor/humanlayer-skills/skills/show-me/SKILL.md",
+          "vendor/humanlayer-skills/skills/show-me/agents"
+        ],
+        "vendor/humanlayer-skills/skills/show-me/agents": [
+          "vendor/humanlayer-skills/skills/show-me/agents/openai.yaml"
         ],
         "vendor/marked": [
           "vendor/marked/LICENSE",
@@ -4199,8 +4185,12 @@
           "vendor/marked/marked.esm.js"
         ],
         "vendor/mattpocock-skills": [
+          "vendor/mattpocock-skills/.claude-plugin",
           "vendor/mattpocock-skills/LICENSE",
           "vendor/mattpocock-skills/skills"
+        ],
+        "vendor/mattpocock-skills/.claude-plugin": [
+          "vendor/mattpocock-skills/.claude-plugin/plugin.json"
         ],
         "vendor/mattpocock-skills/skills": [
           "vendor/mattpocock-skills/skills/engineering",
@@ -4214,10 +4204,12 @@
           "vendor/mattpocock-skills/skills/engineering/domain-modeling",
           "vendor/mattpocock-skills/skills/engineering/grill-with-docs",
           "vendor/mattpocock-skills/skills/engineering/implement",
+          "vendor/mattpocock-skills/skills/engineering/implement-spec",
           "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture",
+          "vendor/mattpocock-skills/skills/engineering/pr",
           "vendor/mattpocock-skills/skills/engineering/prototype",
           "vendor/mattpocock-skills/skills/engineering/research",
-          "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts",
+          "vendor/mattpocock-skills/skills/engineering/retro",
           "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills",
           "vendor/mattpocock-skills/skills/engineering/tdd",
           "vendor/mattpocock-skills/skills/engineering/to-spec",
@@ -4263,7 +4255,7 @@
         ],
         "vendor/mattpocock-skills/skills/engineering/domain-modeling": [
           "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md",
-          "vendor/mattpocock-skills/skills/engineering/domain-modeling/CONTEXT-FORMAT.md",
+          "vendor/mattpocock-skills/skills/engineering/domain-modeling/GLOSSARY-FORMAT.md",
           "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md",
           "vendor/mattpocock-skills/skills/engineering/domain-modeling/agents"
         ],
@@ -4281,6 +4273,13 @@
           "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md",
           "vendor/mattpocock-skills/skills/engineering/implement/agents"
         ],
+        "vendor/mattpocock-skills/skills/engineering/implement-spec": [
+          "vendor/mattpocock-skills/skills/engineering/implement-spec/SKILL.md",
+          "vendor/mattpocock-skills/skills/engineering/implement-spec/agents"
+        ],
+        "vendor/mattpocock-skills/skills/engineering/implement-spec/agents": [
+          "vendor/mattpocock-skills/skills/engineering/implement-spec/agents/openai.yaml"
+        ],
         "vendor/mattpocock-skills/skills/engineering/implement/agents": [
           "vendor/mattpocock-skills/skills/engineering/implement/agents/openai.yaml"
         ],
@@ -4291,6 +4290,14 @@
         ],
         "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/agents": [
           "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/agents/openai.yaml"
+        ],
+        "vendor/mattpocock-skills/skills/engineering/pr": [
+          "vendor/mattpocock-skills/skills/engineering/pr/CREDITS.md",
+          "vendor/mattpocock-skills/skills/engineering/pr/SKILL.md",
+          "vendor/mattpocock-skills/skills/engineering/pr/agents"
+        ],
+        "vendor/mattpocock-skills/skills/engineering/pr/agents": [
+          "vendor/mattpocock-skills/skills/engineering/pr/agents/openai.yaml"
         ],
         "vendor/mattpocock-skills/skills/engineering/prototype": [
           "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md",
@@ -4308,12 +4315,12 @@
         "vendor/mattpocock-skills/skills/engineering/research/agents": [
           "vendor/mattpocock-skills/skills/engineering/research/agents/openai.yaml"
         ],
-        "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts": [
-          "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/SKILL.md",
-          "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/agents"
+        "vendor/mattpocock-skills/skills/engineering/retro": [
+          "vendor/mattpocock-skills/skills/engineering/retro/SKILL.md",
+          "vendor/mattpocock-skills/skills/engineering/retro/agents"
         ],
-        "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/agents": [
-          "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/agents/openai.yaml"
+        "vendor/mattpocock-skills/skills/engineering/retro/agents": [
+          "vendor/mattpocock-skills/skills/engineering/retro/agents/openai.yaml"
         ],
         "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills": [
           "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md",
@@ -4466,6 +4473,9 @@
         ".agents/skills/ask-matt/agents": {
           "type": "directory"
         },
+        ".agents/skills/babysit": {
+          "type": "directory"
+        },
         ".agents/skills/code-review": {
           "type": "directory"
         },
@@ -4476,12 +4486,6 @@
           "type": "directory"
         },
         ".agents/skills/codebase-design/agents": {
-          "type": "directory"
-        },
-        ".agents/skills/deliver": {
-          "type": "directory"
-        },
-        ".agents/skills/deliver/agents": {
           "type": "directory"
         },
         ".agents/skills/diagnosing-bugs": {
@@ -4643,6 +4647,9 @@
         ".github/workflows": {
           "type": "directory"
         },
+        ".sandcastle": {
+          "type": "directory"
+        },
         "discovery": {
           "type": "directory"
         },
@@ -4691,10 +4698,25 @@
         "vendor": {
           "type": "directory"
         },
+        "vendor/humanlayer-skills": {
+          "type": "directory"
+        },
+        "vendor/humanlayer-skills/skills": {
+          "type": "directory"
+        },
+        "vendor/humanlayer-skills/skills/show-me": {
+          "type": "directory"
+        },
+        "vendor/humanlayer-skills/skills/show-me/agents": {
+          "type": "directory"
+        },
         "vendor/marked": {
           "type": "directory"
         },
         "vendor/mattpocock-skills": {
+          "type": "directory"
+        },
+        "vendor/mattpocock-skills/.claude-plugin": {
           "type": "directory"
         },
         "vendor/mattpocock-skills/skills": {
@@ -4745,6 +4767,12 @@
         "vendor/mattpocock-skills/skills/engineering/implement": {
           "type": "directory"
         },
+        "vendor/mattpocock-skills/skills/engineering/implement-spec": {
+          "type": "directory"
+        },
+        "vendor/mattpocock-skills/skills/engineering/implement-spec/agents": {
+          "type": "directory"
+        },
         "vendor/mattpocock-skills/skills/engineering/implement/agents": {
           "type": "directory"
         },
@@ -4752,6 +4780,12 @@
           "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/agents": {
+          "type": "directory"
+        },
+        "vendor/mattpocock-skills/skills/engineering/pr": {
+          "type": "directory"
+        },
+        "vendor/mattpocock-skills/skills/engineering/pr/agents": {
           "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/prototype": {
@@ -4766,10 +4800,10 @@
         "vendor/mattpocock-skills/skills/engineering/research/agents": {
           "type": "directory"
         },
-        "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts": {
+        "vendor/mattpocock-skills/skills/engineering/retro": {
           "type": "directory"
         },
-        "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/agents": {
+        "vendor/mattpocock-skills/skills/engineering/retro/agents": {
           "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills": {
@@ -4907,6 +4941,9 @@
         ".agents/skills/ask-matt/agents/.gitignore": {
           "type": "missing"
         },
+        ".agents/skills/babysit/.gitignore": {
+          "type": "missing"
+        },
         ".agents/skills/code-review/.gitignore": {
           "type": "missing"
         },
@@ -4917,12 +4954,6 @@
           "type": "missing"
         },
         ".agents/skills/codebase-design/agents/.gitignore": {
-          "type": "missing"
-        },
-        ".agents/skills/deliver/.gitignore": {
-          "type": "missing"
-        },
-        ".agents/skills/deliver/agents/.gitignore": {
           "type": "missing"
         },
         ".agents/skills/diagnosing-bugs/.gitignore": {
@@ -5084,6 +5115,11 @@
         ".github/workflows/.gitignore": {
           "type": "missing"
         },
+        ".sandcastle/.gitignore": {
+          "type": "file",
+          "sha256": "95f8dff762dbd253b540e84c6f40919cdac8c5a7f5a0fab1150d501e4cc8edb4",
+          "executable": false
+        },
         "discovery/.gitignore": {
           "type": "missing"
         },
@@ -5132,10 +5168,25 @@
         "vendor/.gitignore": {
           "type": "missing"
         },
+        "vendor/humanlayer-skills/.gitignore": {
+          "type": "missing"
+        },
+        "vendor/humanlayer-skills/skills/.gitignore": {
+          "type": "missing"
+        },
+        "vendor/humanlayer-skills/skills/show-me/.gitignore": {
+          "type": "missing"
+        },
+        "vendor/humanlayer-skills/skills/show-me/agents/.gitignore": {
+          "type": "missing"
+        },
         "vendor/marked/.gitignore": {
           "type": "missing"
         },
         "vendor/mattpocock-skills/.gitignore": {
+          "type": "missing"
+        },
+        "vendor/mattpocock-skills/.claude-plugin/.gitignore": {
           "type": "missing"
         },
         "vendor/mattpocock-skills/skills/.gitignore": {
@@ -5186,6 +5237,12 @@
         "vendor/mattpocock-skills/skills/engineering/implement/.gitignore": {
           "type": "missing"
         },
+        "vendor/mattpocock-skills/skills/engineering/implement-spec/.gitignore": {
+          "type": "missing"
+        },
+        "vendor/mattpocock-skills/skills/engineering/implement-spec/agents/.gitignore": {
+          "type": "missing"
+        },
         "vendor/mattpocock-skills/skills/engineering/implement/agents/.gitignore": {
           "type": "missing"
         },
@@ -5193,6 +5250,12 @@
           "type": "missing"
         },
         "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/agents/.gitignore": {
+          "type": "missing"
+        },
+        "vendor/mattpocock-skills/skills/engineering/pr/.gitignore": {
+          "type": "missing"
+        },
+        "vendor/mattpocock-skills/skills/engineering/pr/agents/.gitignore": {
           "type": "missing"
         },
         "vendor/mattpocock-skills/skills/engineering/prototype/.gitignore": {
@@ -5207,10 +5270,10 @@
         "vendor/mattpocock-skills/skills/engineering/research/agents/.gitignore": {
           "type": "missing"
         },
-        "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/.gitignore": {
+        "vendor/mattpocock-skills/skills/engineering/retro/.gitignore": {
           "type": "missing"
         },
-        "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/agents/.gitignore": {
+        "vendor/mattpocock-skills/skills/engineering/retro/agents/.gitignore": {
           "type": "missing"
         },
         "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/.gitignore": {
@@ -5312,5 +5375,19 @@
       }
     }
   },
-  "scopeChanges": []
+  "scopeChanges": [
+    {
+      "id": "documentation",
+      "additions": [
+        "GLOSSARY.md",
+        "docs/adr/0010-carry-delivery-rules-in-the-environment.md",
+        "docs/adr/0011-ship-the-factory-with-the-standard.md",
+        "docs/development/sandbox-image-check.md",
+        "docs/usage/run-the-factory.md"
+      ],
+      "removals": [
+        "CONTEXT.md"
+      ]
+    }
+  ]
 }
