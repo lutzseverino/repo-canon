@@ -65,7 +65,7 @@
       "guidance": "guidance/documentation.md",
       "targets": {
         "paths": [
-          "CONTEXT.md",
+          "GLOSSARY.md",
           "authoring-notes.md",
           "docs/README.md",
           "docs/adr/0001-manage-shared-skills-through-standards-releases.md",
@@ -77,6 +77,8 @@
           "docs/adr/0007-keep-superseded-adrs.md",
           "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md",
           "docs/adr/0009-enforce-documentation-rules-as-checks.md",
+          "docs/adr/0010-carry-delivery-rules-in-the-environment.md",
+          "docs/adr/0011-ship-the-factory-with-the-standard.md",
           "docs/adr/README.md",
           "docs/agents/project.md",
           "docs/development/README.md",
@@ -89,12 +91,14 @@
           "docs/development/pr-metadata-validation.md",
           "docs/development/release.md",
           "docs/development/repository-readme-check.md",
+          "docs/development/sandbox-image-check.md",
           "docs/development/skill-exercises.md",
           "docs/development/source-profile.md",
           "docs/development/upstream-compatibility.md",
           "docs/usage/README.md",
           "docs/usage/adopt-repo-canon.md",
           "docs/usage/prepare-agent-guidance.md",
+          "docs/usage/run-the-factory.md",
           "docs/usage/versioning.md"
         ],
         "directories": []
@@ -107,6 +111,81 @@
       "kind": "file",
       "target": "docs/agents/domain.md",
       "exact": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
+    },
+    {
+      "id": "factory-adapter",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".sandcastle/adapter.ts",
+      "exact": ".sandcastle/adapter.ts"
+    },
+    {
+      "id": "factory-decision-core",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".sandcastle/factory.ts",
+      "exact": ".sandcastle/factory.ts"
+    },
+    {
+      "id": "factory-direct-prompt",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".sandcastle/direct-prompt.md",
+      "exact": ".sandcastle/direct-prompt.md"
+    },
+    {
+      "id": "factory-entry",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".sandcastle/main.ts",
+      "exact": ".sandcastle/main.ts"
+    },
+    {
+      "id": "factory-gitignore",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".sandcastle/.gitignore",
+      "exact": ".sandcastle/.gitignore"
+    },
+    {
+      "id": "factory-orchestrated-prompt",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".sandcastle/orchestrated-prompt.md",
+      "exact": ".sandcastle/orchestrated-prompt.md"
+    },
+    {
+      "id": "factory-sandbox-image",
+      "checks": [
+        {
+          "id": "sandbox-image-base",
+          "run": {
+            "executable": "node",
+            "script": "operations/check-sandbox-image.mjs",
+            "resources": [
+              "operations/sandbox-image-base.Dockerfile"
+            ],
+            "arguments": []
+          },
+          "prerequisite": {
+            "version-arguments": [
+              "--version"
+            ],
+            "version": ">=24.0.0 <25.0.0"
+          },
+          "timeout-seconds": 30
+        }
+      ],
+      "fixes": [],
+      "kind": "file",
+      "target": ".sandcastle/Dockerfile",
+      "guidance": "guidance/factory-sandbox-image.md"
     },
     {
       "id": "feature-request-template",
@@ -129,6 +208,7 @@
               "operations/lib/github-operation.mjs",
               "LICENSE",
               "THIRD_PARTY_NOTICES.md",
+              "vendor/humanlayer-skills/LICENSE",
               "vendor/mattpocock-skills/LICENSE"
             ],
             "arguments": []
@@ -166,6 +246,14 @@
         "paths": [],
         "directories": []
       }
+    },
+    {
+      "id": "humanlayer-skills-license",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".agents/skills/LICENSE.humanlayer-skills",
+      "exact": "vendor/humanlayer-skills/LICENSE"
     },
     {
       "id": "implementation-ticket-template",
@@ -375,6 +463,14 @@
       "source": "vendor/mattpocock-skills/skills/engineering/ask-matt"
     },
     {
+      "id": "skill-babysit",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "babysit",
+      "source": ".agents/skills/babysit"
+    },
+    {
       "id": "skill-code-review",
       "checks": [],
       "fixes": [],
@@ -389,14 +485,6 @@
       "kind": "skill",
       "name": "codebase-design",
       "source": "vendor/mattpocock-skills/skills/engineering/codebase-design"
-    },
-    {
-      "id": "skill-deliver",
-      "checks": [],
-      "fixes": [],
-      "kind": "skill",
-      "name": "deliver",
-      "source": ".agents/skills/deliver"
     },
     {
       "id": "skill-diagnosing-bugs",
@@ -455,12 +543,28 @@
       "source": "vendor/mattpocock-skills/skills/engineering/implement"
     },
     {
+      "id": "skill-implement-spec",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "implement-spec",
+      "source": "vendor/mattpocock-skills/skills/engineering/implement-spec"
+    },
+    {
       "id": "skill-improve-codebase-architecture",
       "checks": [],
       "fixes": [],
       "kind": "skill",
       "name": "improve-codebase-architecture",
       "source": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture"
+    },
+    {
+      "id": "skill-pr",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "pr",
+      "source": "vendor/mattpocock-skills/skills/engineering/pr"
     },
     {
       "id": "skill-prototype",
@@ -479,12 +583,12 @@
       "source": "vendor/mattpocock-skills/skills/engineering/research"
     },
     {
-      "id": "skill-resolving-merge-conflicts",
+      "id": "skill-retro",
       "checks": [],
       "fixes": [],
       "kind": "skill",
-      "name": "resolving-merge-conflicts",
-      "source": "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts"
+      "name": "retro",
+      "source": "vendor/mattpocock-skills/skills/engineering/retro"
     },
     {
       "id": "skill-setup-matt-pocock-skills",
@@ -493,6 +597,14 @@
       "kind": "skill",
       "name": "setup-matt-pocock-skills",
       "source": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills"
+    },
+    {
+      "id": "skill-show-me",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "show-me",
+      "source": "vendor/humanlayer-skills/skills/show-me"
     },
     {
       "id": "skill-tdd",
