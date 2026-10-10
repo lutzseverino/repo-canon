@@ -333,8 +333,12 @@ export function createFactory(settings: Settings, ports: Ports) {
           "--body",
           triageBody(inspection, marker),
         ]);
-      } else if (decision.kind === "adopt-update") pendingUpdate = inspection;
-      else if (decision.kind === "wait-update")
+      } else if (decision.kind === "adopt-update") {
+        // Keep checking daily during a long run, but do not queue that same
+        // candidate again before its run has settled and the next check is due.
+        const branch = `factory/update-${updateMarker(inspection.selection)}`;
+        if (updateRun?.branch !== branch) pendingUpdate = inspection;
+      } else if (decision.kind === "wait-update")
         ports.report(`update waits: ${decision.reason}`);
     } catch (error) {
       ports.report(`daily update check failed: ${error}`);

@@ -1147,7 +1147,7 @@ test("an existing open adoption PR prevents another update launch after restart"
   assert.equal(run.github.state.pullRequestReads, 2);
 });
 
-test("daily availability checks continue while adoption waits longer than a day", async () => {
+test("daily checks continue during long adoptions without requeueing the same candidate", async () => {
   const run = factory({
     issues: [],
     hostSettings: { timeLimitMinutes: 2880 },
@@ -1162,7 +1162,23 @@ test("daily availability checks continue while adoption waits longer than a day"
   );
   assert.equal(run.sandcastle.launched.length, 1);
   assert.equal(run.sandcastle.launched[0].signal.aborted, false);
+  run.time.now = new Date("2026-10-10T12:05:00Z");
   run.sandcastle.launched[0].finish();
+  await new Promise((resolve) => setImmediate(resolve));
+  await run.tick();
+  assert.match(
+    run.reports.join("\n"),
+    /update run ended without a pull request/,
+  );
+  assert.equal(run.sandcastle.launched.length, 1);
+  assert.equal(run.docker.builds.length, 1);
+  run.time.now = new Date("2026-10-11T11:59:00Z");
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 1);
+  run.time.now = new Date("2026-10-11T12:00:00Z");
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 2);
+  run.sandcastle.launched[1].finish();
 });
 
 test("a fork PR cannot reserve the factory's update slot", async () => {
@@ -1364,4 +1380,36 @@ test("successful update exits inspect the exact branch and ignore fork lookalike
       isCrossRepository,
     );
   }
+});
+
+test("a different daily update candidate waits for the active adoption to exit", async () => {
+  const updates = { outdated: available, inspection: routineInspection };
+  const run = factory({
+    issues: [],
+    hostSettings: { timeLimitMinutes: 2880 },
+    updates,
+  });
+  await run.tick();
+  const first = run.sandcastle.launched[0];
+  updates.outdated = {
+    ...available,
+    cli: { update: "available", newest: "7.0.0" },
+  };
+  updates.inspection = {
+    ...routineInspection,
+    selection: {
+      ...routineInspection.selection,
+      cli: { ...routineInspection.selection.cli, version: "7.0.0" },
+    },
+  };
+  run.time.now = new Date("2026-10-10T12:00:00Z");
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 1);
+  first.finish();
+  await new Promise((resolve) => setImmediate(resolve));
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 2);
+  assert.notEqual(run.sandcastle.launched[1].branch, first.branch);
+  assert.match(run.sandcastle.launched[1].prompt, /7\.0\.0/);
+  run.sandcastle.launched[1].finish();
 });

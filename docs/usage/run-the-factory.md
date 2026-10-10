@@ -163,4 +163,6 @@ reserve no update slot. Held candidates
 are reconsidered on the next daily check, without image builds or repeated
 pull request reads between checks. After an update agent exits, the host checks
 its exact branch for a pull request. An ended run without a pull request is
-logged with its log path and may run again at the next daily check.
+logged with its log path and may run again at the next daily check. Daily checks
+continue during a long adoption without queuing its candidate again; a different
+candidate may wait for the active run to exit.
