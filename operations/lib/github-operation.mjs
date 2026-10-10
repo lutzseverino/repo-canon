@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
-const resultFormat = "repo-standards/result/v1";
+const resultFormat = "repo-standards/result/v2";
 const maximumOutput = 1024 * 1024;
 
 function failProcess(message) {
@@ -15,11 +15,16 @@ export function readFixesRequest(operationName) {
   } catch {
     failProcess(`${operationName} input must be one JSON object.`);
   }
-  if (request?.format !== "repo-standards/operation/v1") {
-    failProcess(`${operationName} requires repo-standards/operation/v1 input.`);
+  if (request?.format !== "repo-standards/operation/v2") {
+    failProcess(`${operationName} requires repo-standards/operation/v2 input.`);
   }
   if (request.operation?.phase !== "fixes") {
     failProcess(`${operationName} must run as a fixes operation.`);
+  }
+  if (typeof request.overwriteAllowed !== "boolean") {
+    failProcess(
+      `${operationName} input must name overwriteAllowed as a boolean.`,
+    );
   }
   const { paths, directories } = request.allowedTargets ?? {};
   if (

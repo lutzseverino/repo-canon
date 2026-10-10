@@ -22,6 +22,8 @@ const settings = {
 
 function fakeGitHub(issues) {
   const state = {
+    created: [],
+    pullRequests: [],
     issues: issues.map((issue) => ({
       state: "OPEN",
       createdAt: `2026-10-0${issue.number}T00:00:00Z`,
@@ -111,6 +113,28 @@ function fakeGitHub(issues) {
         },
       ]);
     }
+    if (args[0] === "pr" && args[1] === "list")
+      return JSON.stringify(state.pullRequests);
+    if (args[0] === "issue" && args[1] === "create") {
+      state.created.push({
+        title: args[args.indexOf("--title") + 1],
+        body: args[args.indexOf("--body") + 1],
+        label: args[args.indexOf("--label") + 1],
+      });
+      return "https://github.com/acme/widgets/issues/10";
+    }
+    if (
+      args[0] === "issue" &&
+      args[1] === "list" &&
+      args.includes("--search")
+    ) {
+      const marker = args[args.indexOf("--search") + 1].replace("in:body ", "");
+      return JSON.stringify(
+        state.created
+          .filter((issue) => issue.body.includes(marker))
+          .map((_, index) => ({ number: 10 + index })),
+      );
+    }
     if (args[0] === "issue" && args[1] === "list") {
       assert.deepEqual(args.slice(2), [
         "--state",
@@ -187,16 +211,41 @@ function fakeDocker(github) {
   return { buildImage, builds, failures };
 }
 
-function factory({ issues, usage = {}, hostSettings = {}, clock }) {
+function factory({
+  issues,
+  usage = {},
+  hostSettings = {},
+  clock,
+  updates = {},
+}) {
   const github = fakeGitHub(issues);
   const sandcastle = fakeSandcastle();
   const docker = fakeDocker(github);
   const reports = [];
+  const commands = [];
   const time = clock ?? { now: new Date("2026-10-09T12:00:00Z") };
   const instance = createFactory(
     { ...settings, ...hostSettings },
     {
       gh: github.gh,
+      standards: async (args, version) => {
+        commands.push({ args, version });
+        if (updates.error) throw updates.error;
+        if (args[0] === "outdated")
+          return JSON.stringify(
+            updates.outdated ?? {
+              cli: { update: "none" },
+              standards: { update: "none" },
+            },
+          );
+        if (args[0] === "status")
+          return JSON.stringify(
+            updates.status ?? { active: null, selection: currentSelection },
+          );
+        if (args[0] === "inspect")
+          return JSON.stringify(updates.inspection ?? routineInspection);
+        throw new Error(`unexpected standards ${args.join(" ")}`);
+      },
       launch: sandcastle.launch,
       buildImage: docker.buildImage,
       readUsage: async (provider) => {
@@ -208,7 +257,7 @@ function factory({ issues, usage = {}, hostSettings = {}, clock }) {
       report: (line) => reports.push(line),
     },
   );
-  return { ...instance, github, sandcastle, docker, reports, time };
+  return { ...instance, github, sandcastle, docker, reports, time, commands };
 }
 
 test("a ready issue is claimed, then launched with exactly /implement #<n>", async () => {
@@ -837,4 +886,223 @@ test("repositories whose names flatten alike get different images", () => {
     imageName("Acme", "Wid.gets_2"),
     /^factory-acme-wid-gets-2-[0-9a-f]{12}$/,
   );
+});
+
+const currentSelection = {
+  cli: { package: "@lutzseverino/repo-standards", version: "5.1.0" },
+  standards: {
+    repository: "https://github.com/acme/standards",
+    version: "v0.5.6",
+  },
+  profile: "complete",
+};
+const available = {
+  cli: { update: "available", newest: "6.0.0" },
+  standards: { update: "available", newest: "v0.6.0" },
+};
+const candidateSelection = {
+  ...currentSelection,
+  cli: { ...currentSelection.cli, version: "6.0.0" },
+  standards: { ...currentSelection.standards, version: "v0.6.0" },
+};
+const routineInspection = {
+  format: "repo-standards/inspection/v7",
+  identity: "sha256:candidate",
+  selection: candidateSelection,
+  confirmation: { required: false, reasons: [] },
+};
+
+test("the factory checks outdated once per 24 hours and inspects only available updates", async () => {
+  const run = factory({ issues: [] });
+  await run.tick();
+  run.time.now = new Date("2026-10-10T11:59:59Z");
+  await run.tick();
+  assert.deepEqual(run.commands, [
+    { args: ["outdated", "--json"], version: undefined },
+  ]);
+  run.time.now = new Date("2026-10-10T12:00:00Z");
+  await run.tick();
+  assert.equal(run.commands.length, 2);
+  assert.equal(run.sandcastle.launched.length, 0);
+});
+
+test("a routine update inspects with the exact candidate CLI and runs adoption to merge without a ticket", async () => {
+  const run = factory({ issues: [], updates: { outdated: available } });
+  await run.tick();
+  assert.deepEqual(run.commands, [
+    { args: ["outdated", "--json"], version: undefined },
+    { args: ["status", "--json"], version: undefined },
+    {
+      args: [
+        "inspect",
+        "--source",
+        "https://github.com/acme/standards",
+        "--standards-version",
+        "v0.6.0",
+        "--profile",
+        "complete",
+        "--json",
+      ],
+      version: "6.0.0",
+    },
+  ]);
+  const [launch] = run.sandcastle.launched;
+  assert.equal(launch.issue, undefined);
+  assert.match(launch.branch, /^factory\/update-standards-update-/);
+  assert.match(launch.prompt, /adopt-standards/);
+  assert.match(launch.prompt, /babysit.*merge/);
+  assert.match(launch.prompt, /"version":"6.0.0"/);
+  assert.match(launch.prompt, /fresh discovery proposal/);
+  assert.match(launch.prompt, /Never pass --confirmed unattended/);
+  assert.equal(run.github.state.created.length, 0);
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 1);
+  launch.finish();
+  await new Promise((resolve) => setImmediate(resolve));
+});
+
+test("confirmation-required updates file one triage issue naming every reason instead of adopting", async () => {
+  const inspection = {
+    ...routineInspection,
+    confirmation: {
+      required: true,
+      reasons: [
+        { change: "discarded-edit", target: "CONTRIBUTING.md" },
+        { change: "discarded-edit", target: "AGENTS.md" },
+      ],
+    },
+  };
+  const run = factory({
+    issues: [],
+    updates: { outdated: available, inspection },
+  });
+  await run.tick();
+  const [issue] = run.github.state.created;
+  assert.equal(issue.label, "needs-triage");
+  assert.match(issue.title, /v0.6.0 with CLI 6.0.0/);
+  assert.match(issue.body, /discarded-edit: `CONTRIBUTING.md`/);
+  assert.match(issue.body, /discarded-edit: `AGENTS.md`/);
+  assert.match(issue.body, /sha256:candidate/);
+  run.time.now = new Date("2026-10-10T12:00:00Z");
+  await run.tick();
+  assert.equal(run.github.state.created.length, 1);
+  assert.equal(run.sandcastle.launched.length, 0);
+});
+
+test("CLI-only updates inspect retained standards without source flags", async () => {
+  const run = factory({
+    issues: [],
+    updates: { outdated: { ...available, standards: { update: "none" } } },
+  });
+  await run.tick();
+  assert.deepEqual(run.commands.at(-1), {
+    args: ["inspect", "--json"],
+    version: "6.0.0",
+  });
+  run.sandcastle.launched[0].finish();
+});
+
+test("standards-only updates inspect with the pinned confirmation-aware CLI", async () => {
+  const run = factory({
+    issues: [],
+    updates: {
+      outdated: { ...available, cli: { update: "none" } },
+      status: {
+        active: null,
+        selection: { ...currentSelection, cli: candidateSelection.cli },
+      },
+    },
+  });
+  await run.tick();
+  assert.equal(run.commands.at(-1).version, "6.0.0");
+  run.sandcastle.launched[0].finish();
+});
+
+test("daily lookup failures are logged once and do not stop issue launches", async () => {
+  const run = factory({
+    issues: [{ number: 4 }],
+    updates: { error: new Error("offline") },
+  });
+  await run.tick();
+  await run.tick();
+  assert.equal(run.commands.length, 1);
+  assert.match(run.reports.join("\n"), /daily update check failed.*offline/);
+  assert.equal(run.sandcastle.launched[0].issue, 4);
+  run.sandcastle.launched[0].finish();
+});
+
+test("an active adoption or an old inspection report cannot launch an unattended update", async () => {
+  for (const updates of [
+    {
+      outdated: available,
+      status: { active: {}, selection: currentSelection },
+    },
+    {
+      outdated: available,
+      inspection: {
+        ...routineInspection,
+        format: "repo-standards/inspection/v6",
+        confirmation: undefined,
+      },
+    },
+  ]) {
+    const run = factory({ issues: [], updates });
+    await run.tick();
+    assert.equal(run.sandcastle.launched.length, 0);
+    assert.equal(run.github.state.created.length, 0);
+  }
+});
+
+test("updates wait behind issue runs at the provider cap and then use released capacity", async () => {
+  const run = factory({
+    issues: [{ number: 4 }],
+    hostSettings: { caps: { "claude-code": 1 } },
+    updates: { outdated: available },
+  });
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 1);
+  run.github.find(4).pullRequests = ["OPEN"];
+  run.sandcastle.launched[0].finish();
+  await new Promise((resolve) => setImmediate(resolve));
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 2);
+  assert.equal(run.sandcastle.launched[1].issue, undefined);
+  run.sandcastle.launched[1].finish();
+});
+
+test("an adoption agent counts against the provider cap and is stopped at its time limit", async () => {
+  const run = factory({
+    issues: [],
+    hostSettings: { caps: { "claude-code": 1 } },
+    updates: { outdated: available },
+  });
+  await run.tick();
+  run.github.state.issues.push({
+    number: 4,
+    state: "OPEN",
+    createdAt: "2026-10-09T12:00:00Z",
+    labels: ["ready-for-agent"],
+    parent: null,
+    subIssues: [],
+    blockedBy: [],
+    pullRequests: [],
+    branchPullRequests: [],
+    comments: [],
+  });
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 1);
+  assert.deepEqual(run.github.find(4).labels, ["ready-for-agent"]);
+  run.time.now = new Date("2026-10-09T16:01:00Z");
+  await run.tick();
+  assert.equal(run.sandcastle.launched[0].signal.aborted, true);
+});
+
+test("an existing open adoption PR prevents another update launch after restart", async () => {
+  const run = factory({ issues: [], updates: { outdated: available } });
+  run.github.state.pullRequests.push({
+    state: "OPEN",
+    headRefName: "factory/update-earlier",
+  });
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 0);
 });

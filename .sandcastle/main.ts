@@ -4,7 +4,7 @@
 // so the repository needs no dependency.
 import { execFile, spawn, spawnSync } from "node:child_process";
 import { once } from "node:events";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
 import { createInterface } from "node:readline";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -15,7 +15,6 @@ import {
   codexUsage,
   createFactory,
   readSettings,
-  runBranch,
   type ImageBuild,
   type LaunchRequest,
 } from "./adapter.ts";
@@ -92,16 +91,42 @@ async function gh(args: string[]): Promise<string> {
   return stdout;
 }
 
+// The pinned bootstrap acquires the exact candidate outside the checkout and
+// removes its temporary runtime afterwards. Inspection never changes the pin.
+async function standards(args: string[], version?: string): Promise<string> {
+  const bin = join(root, ".repo-standards", "runtime", "node_modules", ".bin");
+  if (!existsSync(join(bin, "repo-standards")))
+    await promisify(execFile)(
+      "npm",
+      [
+        "ci",
+        "--ignore-scripts",
+        "--prefix",
+        join(root, ".repo-standards", "runtime"),
+      ],
+      { cwd: root },
+    );
+  const { stdout } = await promisify(execFile)(
+    join(bin, version ? "repo-standards-bootstrap" : "repo-standards"),
+    version ? ["--cli-version", version, ...args] : args,
+    { cwd: root, maxBuffer: 64 * 1024 * 1024 },
+  );
+  return stdout;
+}
+
 async function launch(request: LaunchRequest): Promise<void> {
   await sandcastle.run({
-    name: `issue-${request.issue}`,
+    name:
+      request.issue === undefined
+        ? "standards-update"
+        : `issue-${request.issue}`,
     cwd: root,
     agent: providers[request.provider].agent(request.model, {
       effort: request.effort,
     }),
     sandbox: sandcastle.docker({ imageName: request.image }),
     prompt: request.prompt,
-    branchStrategy: { type: "branch", branch: runBranch(request.issue) },
+    branchStrategy: { type: "branch", branch: request.branch },
     logging: { type: "file", path: request.log },
     idleTimeoutSeconds: settings.timeLimitMinutes * 60,
     signal: request.signal,
@@ -210,6 +235,7 @@ function report(line: string) {
 
 const factory = createFactory(settings, {
   gh,
+  standards,
   launch,
   buildImage,
   readUsage: (provider) => providers[provider].readUsage(),

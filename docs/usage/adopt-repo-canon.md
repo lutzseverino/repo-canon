@@ -14,10 +14,11 @@ Source authoring, publication, and adoption are separate stages:
 2. The owner publishes a stable Repo Canon source version through the
    [release procedure](../development/release.md), which reviews and validates
    its source inputs before publication.
-3. An adopting maintainer inspects the published version, confirms its complete
-   project-specific scope, and then starts adoption. Adoption writes project
+3. An adopting maintainer inspects the published version, reviews its complete
+   project-specific scope, and then starts adoption, confirming only when the
+   inspection requires it. Adoption writes project
    content and can change GitHub settings, so review the inspection before
-   confirmation. The
+   starting. The
    [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md) records how one
    repository completed these stages, including the migration effort and the
    defects it surfaced.
@@ -25,15 +26,15 @@ Source authoring, publication, and adoption are separate stages:
 ## Prerequisites
 
 Use macOS or Linux with Node.js 24, npm, and Git 2.32.0 or newer. Use public CLI
-5.1.0 or newer; 5.1.0 is the current source-validation baseline. Install a pinned
+6.0.0 or newer; 6.0.0 is the current source-validation baseline. Install a pinned
 CLI in a persistent directory outside the adopting repository so inspection,
 start, and recovery use the same executable:
 
 ```sh
-adoption_cli="$HOME/.local/share/repo-standards/cli-5.1.0"
+adoption_cli="$HOME/.local/share/repo-standards/cli-6.0.0"
 mkdir -p "$adoption_cli"
 npm install --prefix "$adoption_cli" --ignore-scripts --save-exact \
-  --no-audit --no-fund @lutzseverino/repo-standards@5.1.0
+  --no-audit --no-fund @lutzseverino/repo-standards@6.0.0
 repo_standards="$adoption_cli/node_modules/.bin/repo-standards"
 "$repo_standards" --version
 ```
@@ -48,8 +49,8 @@ settings. Keep the repository clean and committed. If useful existing
 [Prepare existing agent guidance](prepare-agent-guidance.md), commit that change,
 and inspect the prepared commit afresh. Records that a CLI before major version 5 wrote,
 in `.repo-standards` or as run records in Git's directory, use retired formats,
-which CLI 5.1.0 does not read; such a repository adopts fresh, as the CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v5.1.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
+which CLI 6.0.0 does not read; such a repository adopts fresh, as the CLI's
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
 describes.
 
 ## Inspect the published source
@@ -79,7 +80,7 @@ Prepare a `repo-standards/scope/v2` proposal from the repository evidence and
 Repo Canon's discovery guidance. For the `documentation` declaration, that
 guidance has the agent run the documentation scope drafter shipped with the
 selected source and decide only its unresolved questions. The public CLI's
-[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v5.1.0/docs/usage/inspection.md#discover-contextual-file-scope)
+[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/inspection.md#discover-contextual-file-scope)
 defines the proposal fields; the CLI derives the evidence binding.
 
 Request the complete inspection with the proposal:
@@ -99,27 +100,32 @@ edits they discard, repository state, prerequisite status, and every operation.
 A changed project or proposal changes the inspection identity and requires
 another review.
 
-## Confirm and complete adoption
+## Start and complete adoption
 
-After a maintainer confirms the complete inspection, pass its exact `identity`
-and the same scope proposal to `start`:
+After reviewing the complete inspection, pass its exact `identity` and the
+same scope proposal to `start`. When `confirmation.required` is false, no
+additional confirmation is needed. When it is true, review each reason and
+obtain the maintainer's confirmation before adding `--confirmed` to this command:
 
 ```sh
-inspection_identity=sha256:REPLACE_WITH_CONFIRMED_IDENTITY
+inspection_identity=sha256:REPLACE_WITH_INSPECTION_IDENTITY
 
 "$repo_standards" start \
   --source https://github.com/lutzseverino/repo-canon \
   --standards-version "$source_tag" \
   --profile complete \
   --scope /path/to/reviewed-scope.json \
-  --confirm "$inspection_identity" \
+  --identity "$inspection_identity" \
   --project "$project_root" \
   --json
 ```
 
 The fixes run before contextual work. They reconcile canonical GitHub labels,
 the `PR metadata` required check, and squash settings, then verify the remote
-result. The required check is plan-gated: on a private repository whose GitHub
+result. A fix that would overwrite a different existing setting returns
+`confirmation-required` without making a change. Review its message, obtain
+the maintainer's confirmation, and then use `resume --confirmed --json` to
+continue that fix; never pass `--confirmed` automatically. The required check is plan-gated: on a private repository whose GitHub
 plan offers neither branch protection nor rulesets, the fix reports it
 unavailable and adoption completes without it. A first adoption defers the
 required check, because GitHub runs the PR metadata validation workflow only
@@ -154,5 +160,5 @@ rollback or freshness guarantee.
 
 When contextual work needs a file outside the confirmed scope, or a confirmed
 path is mistaken, correct the scope as the CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v5.1.0/docs/usage/adoption.md#correct-a-confirmed-scope)
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/adoption.md#correct-a-confirmed-scope)
 describes.

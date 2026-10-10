@@ -158,7 +158,7 @@ test("returns unchanged when branch protection and merge settings already match"
   const outcome = scenario.invoke();
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v1",
+    format: "repo-standards/result/v2",
     status: "unchanged",
     message:
       "GitHub PR integration already matches the canonical configuration for acme/widgets.",
@@ -813,4 +813,16 @@ test("reports the plan limit regardless of the workflow read", async (t) => {
       assert.match(outcome.result.message, unavailableRequirement);
       assert.ok(!scenario.readState().requests.includes(workflowRead));
     });
+});
+
+test("different merge settings require confirmation before enforcement or settings change", (t) => {
+  const scenario = setup(t);
+  const before = scenario.readState();
+  const outcome = scenario.invoke({ overwriteAllowed: false });
+  assert.equal(outcome.result.status, "confirmation-required");
+  assert.match(outcome.result.message, /allow_squash_merge.*false.*true/);
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+  assert.deepEqual(scenario.readState().settings, before.settings);
+  const resumed = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(resumed.result.status, "changed");
 });

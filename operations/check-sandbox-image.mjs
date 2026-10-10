@@ -1,7 +1,7 @@
 import { lstatSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const resultFormat = "repo-standards/result/v1";
+const resultFormat = "repo-standards/result/v2";
 const target = ".sandcastle/Dockerfile";
 const base = readFileSync(
   new URL("./sandbox-image-base.Dockerfile", import.meta.url),
@@ -19,9 +19,9 @@ function readRequest() {
   } catch {
     failProcess("Operation input must be one JSON object.");
   }
-  if (request?.format !== "repo-standards/operation/v1") {
+  if (request?.format !== "repo-standards/operation/v2") {
     failProcess(
-      "Unsupported operation input format; expected repo-standards/operation/v1.",
+      "Unsupported operation input format; expected repo-standards/operation/v2.",
     );
   }
   if (request.operation?.phase !== "checks") {

@@ -50,7 +50,83 @@ export type Snapshot = {
   claims: Claim[];
   usage: Partial<Record<Provider, number | null>>;
   settings: Settings;
+  // Adoption agents count against the same provider caps as issue agents.
+  additionalRunning?: Partial<Record<Provider, number>>;
 };
+
+export type Outdated = {
+  cli: { update: "available" | "none" | "unknown"; newest?: string };
+  standards: { update: "available" | "none" | "unknown"; newest?: string };
+};
+
+export type Selection = {
+  cli: { package: string; version: string };
+  standards: { repository: string; version: string; commit?: string };
+  profile: string;
+};
+
+export type Inspection = {
+  format: string;
+  identity: string;
+  selection: Selection;
+  confirmation: {
+    required: boolean;
+    reasons: { change: string; target: string }[];
+  };
+};
+
+export type UpdateDecision =
+  | { kind: "no-update" }
+  | { kind: "inspect-update" }
+  | { kind: "triage-update"; inspection: Inspection }
+  | { kind: "adopt-update"; inspection: Inspection }
+  | { kind: "wait-update"; reason: string };
+
+// Availability is not consent to discard edits. An unknown or older report
+// never authorizes an unattended adoption.
+export function decideUpdate(
+  outdated: Outdated,
+  inspection?: Inspection,
+): UpdateDecision {
+  if (
+    ![outdated.cli, outdated.standards].some(
+      (pin) => pin.update === "available",
+    )
+  )
+    return { kind: "no-update" };
+  if (!inspection) return { kind: "inspect-update" };
+  if (
+    inspection.format !== "repo-standards/inspection/v7" ||
+    typeof inspection.confirmation?.required !== "boolean" ||
+    !Array.isArray(inspection.confirmation.reasons)
+  )
+    return {
+      kind: "wait-update",
+      reason: "inspection does not report confirmation-required changes",
+    };
+  return {
+    kind: inspection.confirmation.required ? "triage-update" : "adopt-update",
+    inspection,
+  };
+}
+
+export function updateModel(snapshot: Snapshot): Model | { error: string } {
+  const model = parseModel(snapshot.settings.defaultModel);
+  if ("error" in model) return model;
+  const reason = gate(model.provider, runningCounts(snapshot), snapshot);
+  return reason ? { error: reason } : model;
+}
+
+function runningCounts(snapshot: Snapshot): Map<Provider, number> {
+  const running = new Map<Provider, number>();
+  for (const [provider, count] of Object.entries(
+    snapshot.additionalRunning ?? {},
+  ))
+    running.set(provider as Provider, count!);
+  for (const run of snapshot.runs.filter((run) => run.ended === null))
+    running.set(run.provider, (running.get(run.provider) ?? 0) + 1);
+  return running;
+}
 
 export type Launch = {
   kind: "launch";
@@ -98,9 +174,7 @@ const mergedIssueOpen =
 
 export function decideFactory(snapshot: Snapshot): Decision[] {
   const decisions: Decision[] = [];
-  const running = new Map<Provider, number>();
-  for (const run of snapshot.runs.filter((run) => run.ended === null))
-    running.set(run.provider, (running.get(run.provider) ?? 0) + 1);
+  const running = runningCounts(snapshot);
   const retries = new Map<number, Retry>();
   for (const run of snapshot.runs) {
     const settled = settle(run, snapshot);

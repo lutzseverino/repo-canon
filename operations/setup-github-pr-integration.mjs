@@ -474,6 +474,18 @@ function setupIntegration(request) {
     return;
   }
 
+  const overwrittenSettings = Object.entries(mergeSettings).filter(
+    ([name, value]) =>
+      repository[name] !== undefined && repository[name] !== value,
+  );
+  if (!request.overwriteAllowed && overwrittenSettings.length > 0) {
+    result(
+      "confirmation-required",
+      `${operationName} would overwrite merge settings: ${overwrittenSettings.map(([name, value]) => `${name}: ${JSON.stringify(repository[name])} -> ${JSON.stringify(value)}`).join("; ")}.`,
+    );
+    return;
+  }
+
   const branchBefore = readBranchProtection(
     inferred.identity,
     repository.default_branch,
@@ -554,6 +566,21 @@ function setupIntegration(request) {
   }
   const settingsNeedUpdate = !matchingMergeSettings(repository);
   const effects = [];
+
+  if (
+    !request.overwriteAllowed &&
+    checkAction?.type === "ruleset" &&
+    checkAction.plan.kind === "update"
+  ) {
+    const existing = rulesetsBefore.value.find(
+      (ruleset) => ruleset.id === checkAction.plan.id,
+    );
+    result(
+      "confirmation-required",
+      `${operationName} would overwrite ruleset ${rulesetName}: ${JSON.stringify(existing)} -> ${JSON.stringify(checkAction.plan.payload)}.`,
+    );
+    return;
+  }
 
   if (checkAction?.type === "branch") {
     const endpoint = apiEndpoint(

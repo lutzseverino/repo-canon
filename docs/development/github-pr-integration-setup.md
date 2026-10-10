@@ -87,7 +87,7 @@ enterprise server.
 ## Results and recovery
 
 The operation implements the public
-[`repo-standards/operation/v1`](https://github.com/lutzseverino/repo-standards/blob/v4.0.0/docs/usage/script-protocol.md)
+[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/script-protocol.md)
 boundary with an empty project-content target scope. It returns `changed` only
 after a final readback confirms required-check enforcement and every merge
 setting. It returns `unchanged` when the first read already matches.
@@ -130,3 +130,9 @@ GitHub or mutating live settings:
 ```sh
 npm run test:github-pr-integration
 ```
+
+A fix receives `overwriteAllowed` from CLI 6.0.0. Before any remote mutation,
+it returns `confirmation-required` when existing settings would be overwritten
+without that permission. Its message names the current and proposed values;
+`resume --confirmed` runs the fix again with permission after the maintainer
+confirms. Missing settings can be created without confirmation.

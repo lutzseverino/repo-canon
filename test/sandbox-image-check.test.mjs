@@ -53,7 +53,7 @@ test("passes an image that extends the base with the repository's toolchain", (t
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v1",
+    format: "repo-standards/result/v2",
     status: "passed",
     message:
       "The sandbox image extends the factory's base; the toolchain it adds still requires maintainer or agent review.",
@@ -68,7 +68,7 @@ test("fails a missing image with a correction to create it from the base", (t) =
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v1",
+    format: "repo-standards/result/v2",
     status: "failed",
     message:
       "The sandbox image needs correction: Create .sandcastle/Dockerfile from the factory's base, and add the repository's toolchain after it.",
@@ -127,7 +127,7 @@ test("fails a toolchain that undoes the base, naming each correction", (t) => {
     assert.deepEqual(
       outcome.result,
       {
-        format: "repo-standards/result/v1",
+        format: "repo-standards/result/v2",
         status: "failed",
         message: `The sandbox image needs correction: ${correction}`,
       },
@@ -177,7 +177,7 @@ test("treats invalid public-protocol input as a process error", (t) => {
   const before = snapshot(project.root);
   const outcome = invokeCheck(script, project.root, {
     ...request,
-    format: "repo-standards/operation/v2",
+    format: "repo-standards/operation/v99",
   });
 
   assert.notEqual(outcome.status, 0);
