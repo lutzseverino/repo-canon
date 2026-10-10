@@ -329,6 +329,14 @@
       "exact": "operations/lib/rendered-markdown.mjs"
     },
     {
+      "id": "repository-license",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "LICENSE",
+      "guidance": "guidance/repository-license.md"
+    },
+    {
       "id": "repository-readme",
       "checks": [
         {
