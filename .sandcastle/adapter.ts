@@ -605,7 +605,7 @@ export function createFactory(settings: Settings, ports: Ports) {
       updateRun.controller.abort(
         new Error("update exceeded the host time limit"),
       );
-    if (!updateRun) await readUpdate();
+    await readUpdate();
     for (const run of runs) {
       // An exited run stays on the host only while it waits to settle, such
       // as for its retry's gate, so its pull request state is read each pass.

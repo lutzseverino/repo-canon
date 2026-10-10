@@ -1106,3 +1106,21 @@ test("an existing open adoption PR prevents another update launch after restart"
   await run.tick();
   assert.equal(run.sandcastle.launched.length, 0);
 });
+
+test("daily availability checks continue while adoption waits longer than a day", async () => {
+  const run = factory({
+    issues: [],
+    hostSettings: { timeLimitMinutes: 2880 },
+    updates: { outdated: available },
+  });
+  await run.tick();
+  run.time.now = new Date("2026-10-10T12:00:00Z");
+  await run.tick();
+  assert.equal(
+    run.commands.filter(({ args }) => args[0] === "outdated").length,
+    2,
+  );
+  assert.equal(run.sandcastle.launched.length, 1);
+  assert.equal(run.sandcastle.launched[0].signal.aborted, false);
+  run.sandcastle.launched[0].finish();
+});

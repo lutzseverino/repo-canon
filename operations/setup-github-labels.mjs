@@ -192,14 +192,6 @@ function setupLabels(request) {
 
   const created = [];
   const updated = [];
-  const overwrites = actions.filter((action) => action.kind === "update");
-  if (!request.overwriteAllowed && overwrites.length > 0) {
-    result(
-      "confirmation-required",
-      `GitHub label setup would overwrite existing labels: ${overwrites.map(({ actual, desired }) => `${actual.name}: ${JSON.stringify(actual)} -> ${JSON.stringify(desired)}`).join("; ")}.`,
-    );
-    return;
-  }
   for (let index = 0; index < actions.length; index += 1) {
     const action = actions[index];
     const mutation = mutateLabel(

@@ -58,7 +58,7 @@ export const githubPrIntegrationSetup = {
 
 export function operationRequest(projectRoot, operation, overrides = {}) {
   return {
-    format: "repo-standards/operation/v2",
+    format: "repo-standards/operation/v1",
     operation,
     projectRoot,
     standards: {
@@ -69,7 +69,6 @@ export function operationRequest(projectRoot, operation, overrides = {}) {
     profile: "complete",
     declarations: [],
     allowedTargets: { paths: [], directories: [] },
-    overwriteAllowed: true,
     ...overrides,
   };
 }

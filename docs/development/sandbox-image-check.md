@@ -11,9 +11,9 @@ the file with the base and add the repository's toolchain from its development
 guide after it.
 
 `operations/check-sandbox-image.mjs` is the read-only check that the file still
-builds from the base. It consumes `repo-standards/operation/v2` on standard
+builds from the base. It consumes `repo-standards/operation/v1` on standard
 input, accepts only a checks operation whose allowed target is
-`.sandcastle/Dockerfile`, and returns one `repo-standards/result/v2` object on
+`.sandcastle/Dockerfile`, and returns one `repo-standards/result/v1` object on
 standard output. It requires Node.js 24, with the same `node --version`
 prerequisite and 30-second timeout as the other checks, and retains the base
 as its only resource.

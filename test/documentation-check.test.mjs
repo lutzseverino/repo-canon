@@ -56,7 +56,7 @@ test("passes indexed documentation with the mandatory development entry point", 
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v2",
+    format: "repo-standards/result/v1",
     status: "passed",
     message:
       "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review.",

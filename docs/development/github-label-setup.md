@@ -47,7 +47,7 @@ a GitHub Enterprise host.
 ## Results and recovery
 
 The operation implements the public
-[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/script-protocol.md)
+[`repo-standards/operation/v1`](https://github.com/lutzseverino/repo-standards/blob/v4.0.0/docs/usage/script-protocol.md)
 boundary with an empty project-content target scope. It returns `changed` only
 after final readback confirms all canonical labels and `unchanged` when the
 first read already matches. Missing prerequisites, identity uncertainty,
@@ -65,9 +65,3 @@ fixture. They never call GitHub or change live repository settings:
 ```sh
 node --test test/github-label-setup.test.mjs
 ```
-
-A fix receives `overwriteAllowed` from CLI 6.0.0. Before any remote mutation,
-it returns `confirmation-required` when existing settings would be overwritten
-without that permission. Its message names the current and proposed values;
-`resume --confirmed` runs the fix again with permission after the maintainer
-confirms. Missing settings can be created without confirmation.

@@ -107,7 +107,7 @@ test("reports unchanged after a successful matching setup", (t) => {
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v2",
+    format: "repo-standards/result/v1",
     status: "unchanged",
     message:
       "GitHub labels already match the canonical configuration for acme/widgets.",
@@ -214,24 +214,4 @@ test("blocks when readback disagrees and reports the changes already applied", (
   assert.match(outcome.result.message, /created 15 labels/);
   assert.match(outcome.result.message, /readback did not match/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
-});
-
-test("conflicting labels require confirmation before any remote mutation", (t) => {
-  const scenario = setup(t, {
-    state: {
-      labels: [
-        {
-          name: "needs-triage",
-          color: "000000",
-          description: "Personal meaning",
-        },
-      ],
-    },
-  });
-  const outcome = scenario.invoke({ overwriteAllowed: false });
-  assert.equal(outcome.result.status, "confirmation-required");
-  assert.match(outcome.result.message, /needs-triage.*000000.*fbca04/);
-  assert.equal(scenario.readState().mutations ?? 0, 0);
-  const resumed = scenario.invoke({ overwriteAllowed: true });
-  assert.equal(resumed.result.status, "changed");
 });

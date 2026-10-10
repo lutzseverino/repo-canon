@@ -94,7 +94,7 @@ Set \`HARBOR_PORT\`.
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v2",
+    format: "repo-standards/result/v1",
     status: "passed",
     message:
       "Repository README structure is valid; factual content still requires maintainer or agent review.",
@@ -997,7 +997,7 @@ test("treats invalid public-protocol input as a process error", (t) => {
   t.after(project.close);
   const before = snapshot(project.root);
   const outcome = invokeCheck(script, project.root, {
-    format: "repo-standards/operation/v99",
+    format: "repo-standards/operation/v2",
   });
 
   assert.notEqual(outcome.status, 0);

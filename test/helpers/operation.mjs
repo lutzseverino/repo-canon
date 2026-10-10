@@ -67,7 +67,7 @@ export function fixture(files) {
 
 export function invokeCheck(script, root, overrides = {}) {
   const request = {
-    format: "repo-standards/operation/v2",
+    format: "repo-standards/operation/v1",
     operation: {
       declaration: "repository-readme",
       phase: "checks",
@@ -82,7 +82,6 @@ export function invokeCheck(script, root, overrides = {}) {
     profile: "complete",
     declarations: [],
     allowedTargets: { paths: ["README.md"], directories: [] },
-    overwriteAllowed: false,
     ...overrides,
   };
   const child = spawnSync(process.execPath, [script], {

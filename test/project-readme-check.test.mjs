@@ -57,7 +57,7 @@ Shared setup lives in [the development guide](../../docs/development/README.md).
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v2",
+    format: "repo-standards/result/v1",
     status: "passed",
     message:
       "Project README structure is valid for 1 concrete target; purpose, commands, configuration, and documentation still require maintainer or agent review.",

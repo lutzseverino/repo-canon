@@ -122,10 +122,7 @@ inspection_identity=sha256:REPLACE_WITH_INSPECTION_IDENTITY
 
 The fixes run before contextual work. They reconcile canonical GitHub labels,
 the `PR metadata` required check, and squash settings, then verify the remote
-result. A fix that would overwrite a different existing setting returns
-`confirmation-required` without making a change. Review its message, obtain
-the maintainer's confirmation, and then use `resume --confirmed --json` to
-continue that fix; never pass `--confirmed` automatically. The required check is plan-gated: on a private repository whose GitHub
+result. The required check is plan-gated: on a private repository whose GitHub
 plan offers neither branch protection nor rulesets, the fix reports it
 unavailable and adoption completes without it. A first adoption defers the
 required check, because GitHub runs the PR metadata validation workflow only
