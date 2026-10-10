@@ -24,6 +24,7 @@ function fakeGitHub(issues) {
   const state = {
     created: [],
     pullRequests: [],
+    pullRequestReads: 0,
     issues: issues.map((issue) => ({
       state: "OPEN",
       createdAt: `2026-10-0${issue.number}T00:00:00Z`,
@@ -113,8 +114,14 @@ function fakeGitHub(issues) {
         },
       ]);
     }
-    if (args[0] === "pr" && args[1] === "list")
+    if (args[0] === "pr" && args[1] === "list") {
+      assert.equal(
+        args[args.indexOf("--json") + 1],
+        "state,headRefName,isCrossRepository",
+      );
+      state.pullRequestReads += 1;
       return JSON.stringify(state.pullRequests);
+    }
     if (args[0] === "issue" && args[1] === "create") {
       state.created.push({
         title: args[args.indexOf("--title") + 1],
@@ -240,7 +247,11 @@ function factory({
           );
         if (args[0] === "status")
           return JSON.stringify(
-            updates.status ?? { active: null, selection: currentSelection },
+            updates.status ?? {
+              active: null,
+              selection: currentSelection,
+              lastComplete: { inspection: "sha256:previous" },
+            },
           );
         if (args[0] === "inspect")
           return JSON.stringify(updates.inspection ?? routineInspection);
@@ -1009,6 +1020,7 @@ test("standards-only updates inspect with the pinned confirmation-aware CLI", as
       outdated: { ...available, cli: { update: "none" } },
       status: {
         active: null,
+        lastComplete: { inspection: "sha256:previous" },
         selection: { ...currentSelection, cli: candidateSelection.cli },
       },
     },
@@ -1102,9 +1114,13 @@ test("an existing open adoption PR prevents another update launch after restart"
   run.github.state.pullRequests.push({
     state: "OPEN",
     headRefName: "factory/update-earlier",
+    isCrossRepository: false,
   });
   await run.tick();
+  await run.tick();
   assert.equal(run.sandcastle.launched.length, 0);
+  assert.equal(run.docker.builds.length, 0);
+  assert.equal(run.github.state.pullRequestReads, 1);
 });
 
 test("daily availability checks continue while adoption waits longer than a day", async () => {
@@ -1123,4 +1139,51 @@ test("daily availability checks continue while adoption waits longer than a day"
   assert.equal(run.sandcastle.launched.length, 1);
   assert.equal(run.sandcastle.launched[0].signal.aborted, false);
   run.sandcastle.launched[0].finish();
+});
+
+test("a fork PR cannot reserve the factory's update slot", async () => {
+  const run = factory({ issues: [], updates: { outdated: available } });
+  run.github.state.pullRequests.push({
+    state: "OPEN",
+    headRefName: "factory/update-contributor",
+    isCrossRepository: true,
+  });
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 1);
+  run.sandcastle.launched[0].finish();
+});
+
+test("a retained selection without a completed adoption cannot schedule an update", async () => {
+  const run = factory({
+    issues: [],
+    updates: {
+      outdated: available,
+      status: { active: null, selection: currentSelection, lastComplete: null },
+    },
+  });
+  await run.tick();
+  assert.equal(
+    run.commands.some(({ args }) => args[0] === "inspect"),
+    false,
+  );
+  assert.equal(run.sandcastle.launched.length, 0);
+  assert.equal(run.github.state.created.length, 0);
+});
+
+test("a closed candidate PR holds the update without image builds or repeated PR reads", async () => {
+  const earlier = factory({ issues: [], updates: { outdated: available } });
+  await earlier.tick();
+  const branch = earlier.sandcastle.launched[0].branch;
+  earlier.sandcastle.launched[0].finish();
+  const run = factory({ issues: [], updates: { outdated: available } });
+  run.github.state.pullRequests.push({
+    state: "CLOSED",
+    headRefName: branch,
+    isCrossRepository: false,
+  });
+  await run.tick();
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 0);
+  assert.equal(run.docker.builds.length, 0);
+  assert.equal(run.github.state.pullRequestReads, 1);
 });

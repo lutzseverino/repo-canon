@@ -221,7 +221,12 @@ export function createFactory(settings: Settings, ports: Ports) {
       );
       if (decideUpdate(outdated).kind === "no-update") return;
       const status = JSON.parse(await ports.standards(["status", "--json"]));
-      if (status.active || status.stateError || !status.selection) {
+      if (
+        status.active !== null ||
+        status.stateError ||
+        !status.lastComplete ||
+        !status.selection
+      ) {
         ports.report("update waits for a complete, readable adoption");
         return;
       }
@@ -279,6 +284,39 @@ export function createFactory(settings: Settings, ports: Ports) {
     }
   }
 
+  async function checkUpdatePullRequests() {
+    if (!pendingUpdate || updateRun) return;
+    const branch = `factory/update-${updateMarker(pendingUpdate.selection)}`;
+    // An open adoption PR holds the update even across host restarts. A
+    // completed/closed PR for this candidate also prevents daily duplicate runs.
+    const prs: {
+      state: string;
+      headRefName: string;
+      isCrossRepository: boolean;
+    }[] = JSON.parse(
+      await ports.gh([
+        "pr",
+        "list",
+        "--state",
+        "all",
+        "--limit",
+        "1000",
+        "--json",
+        "state,headRefName,isCrossRepository",
+      ]),
+    );
+    if (
+      prs.some(
+        (pr) =>
+          !pr.isCrossRepository &&
+          (pr.headRefName === branch ||
+            (pr.state === "OPEN" &&
+              pr.headRefName.startsWith("factory/update-"))),
+      )
+    )
+      pendingUpdate = null;
+  }
+
   async function launchUpdate(snapshot: Snapshot, image: string) {
     if (!pendingUpdate || updateRun) return;
     const model = updateModel(snapshot);
@@ -288,28 +326,6 @@ export function createFactory(settings: Settings, ports: Ports) {
     }
     const inspection = pendingUpdate;
     const branch = `factory/update-${updateMarker(inspection.selection)}`;
-    // An open adoption PR holds the update even across host restarts. A
-    // completed/closed PR for this candidate also prevents daily duplicate runs.
-    const prs: { state: string; headRefName: string }[] = JSON.parse(
-      await ports.gh([
-        "pr",
-        "list",
-        "--state",
-        "all",
-        "--limit",
-        "1000",
-        "--json",
-        "state,headRefName",
-      ]),
-    );
-    if (
-      prs.some(
-        (pr) =>
-          pr.headRefName === branch ||
-          (pr.state === "OPEN" && pr.headRefName.startsWith("factory/update-")),
-      )
-    )
-      return;
     const controller = new AbortController();
     const run = {
       provider: model.provider,
@@ -635,6 +651,8 @@ export function createFactory(settings: Settings, ports: Ports) {
       additionalRunning: updateRun ? { [updateRun.provider]: 1 } : {},
     };
     const decisions = decideFactory(snapshot);
+    if (pendingUpdate && !updateRun && !("error" in updateModel(snapshot)))
+      await checkUpdatePullRequests();
     let image = "";
     let applied = decisions;
     if (

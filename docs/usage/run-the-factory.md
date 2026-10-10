@@ -153,6 +153,9 @@ before confirming anything. The factory never supplies `--confirmed`.
 
 The adoption branch is `factory/update-standards-update-<hash>`, determined by
 the candidate CLI, source, standards tag and profile. An open update pull
-request holds the update across host restarts; any pull request on that
-candidate's branch prevents another run of the same candidate. An ended run
+request from the repository itself holds the update across host restarts; any
+in-repository pull request on that candidate's branch prevents another run of
+the same candidate. Fork pull requests reserve no update slot. Held candidates
+are reconsidered on the next daily check, without image builds or repeated
+pull request reads between checks. An ended run
 without a pull request is logged and may run again at the next daily check.
