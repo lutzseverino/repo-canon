@@ -652,7 +652,12 @@ export function createFactory(settings: Settings, ports: Ports) {
     };
     const decisions = decideFactory(snapshot);
     if (pendingUpdate && !updateRun && !("error" in updateModel(snapshot)))
-      await checkUpdatePullRequests();
+      try {
+        await checkUpdatePullRequests();
+      } catch (error) {
+        pendingUpdate = null;
+        ports.report(`update PR lookup failed: ${error}`);
+      }
     let image = "";
     let applied = decisions;
     if (

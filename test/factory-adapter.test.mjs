@@ -120,6 +120,7 @@ function fakeGitHub(issues) {
         "state,headRefName,isCrossRepository",
       );
       state.pullRequestReads += 1;
+      if (state.pullRequestError) throw state.pullRequestError;
       return JSON.stringify(state.pullRequests);
     }
     if (args[0] === "issue" && args[1] === "create") {
@@ -1186,4 +1187,17 @@ test("a closed candidate PR holds the update without image builds or repeated PR
   assert.equal(run.sandcastle.launched.length, 0);
   assert.equal(run.docker.builds.length, 0);
   assert.equal(run.github.state.pullRequestReads, 1);
+});
+
+test("a failed update PR lookup does not prevent ready issue launches", async () => {
+  const run = factory({
+    issues: [{ number: 4 }],
+    updates: { outdated: available },
+  });
+  run.github.state.pullRequestError = new Error("PR lookup offline");
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 1);
+  assert.equal(run.sandcastle.launched[0].issue, 4);
+  assert.match(run.reports.join("\n"), /update PR lookup failed.*offline/);
+  run.sandcastle.launched[0].finish();
 });
