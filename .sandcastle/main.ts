@@ -14,8 +14,8 @@ import {
   claudeUsage,
   codexUsage,
   createFactory,
+  createStandardsRunner,
   readSettings,
-  runBranch,
   type ImageBuild,
   type LaunchRequest,
 } from "./adapter.ts";
@@ -92,16 +92,27 @@ async function gh(args: string[]): Promise<string> {
   return stdout;
 }
 
+const standards = createStandardsRunner(root, async (executable, args) => {
+  const { stdout } = await promisify(execFile)(executable, args, {
+    cwd: root,
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  return stdout;
+});
+
 async function launch(request: LaunchRequest): Promise<void> {
   await sandcastle.run({
-    name: `issue-${request.issue}`,
+    name:
+      request.issue === undefined
+        ? "standards-update"
+        : `issue-${request.issue}`,
     cwd: root,
     agent: providers[request.provider].agent(request.model, {
       effort: request.effort,
     }),
     sandbox: sandcastle.docker({ imageName: request.image }),
     prompt: request.prompt,
-    branchStrategy: { type: "branch", branch: runBranch(request.issue) },
+    branchStrategy: { type: "branch", branch: request.branch },
     logging: { type: "file", path: request.log },
     idleTimeoutSeconds: settings.timeLimitMinutes * 60,
     signal: request.signal,
@@ -210,6 +221,7 @@ function report(line: string) {
 
 const factory = createFactory(settings, {
   gh,
+  standards,
   launch,
   buildImage,
   readUsage: (provider) => providers[provider].readUsage(),

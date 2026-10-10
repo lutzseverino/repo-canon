@@ -30,8 +30,10 @@ repository's toolchain differs; Repo Canon ships its base, and a check keeps
 the base intact. Discovery proposes the concrete paths of Project READMEs at
 arbitrary locations and of documentation files, glossaries, and indexes,
 including documentation moves and link repairs.
-The maintainer confirms the complete inspection before adoption writes any of
-them.
+The complete inspection reports when adoption would discard edits. The
+maintainer confirms those changes before adoption writes them; routine updates
+proceed without additional confirmation. A fix that overwrites an existing
+setting likewise waits for confirmation.
 
 ## Confirmed preferences
 
@@ -99,7 +101,9 @@ repeated.
   repository gains no dependency. Runs start in the repository's own sandbox
   image, Repo Canon's base followed by the toolchain the adopting agent takes
   from the development guide, as the
-  [sandbox image guidance](guidance/factory-sandbox-image.md) states. The host
+  [sandbox image guidance](guidance/factory-sandbox-image.md) states. The factory checks for updates daily: routine updates run through adoption
+  to a pull request that `babysit` merges, and confirmation-required changes
+  become issues for triage. The host
   sets the default and retry models, the per-provider caps, the usage
   threshold, and the time limit; Repo Canon ships none of them. The canonical
   labels carry the claim, failure, and run-mode labels but no `model:` labels.

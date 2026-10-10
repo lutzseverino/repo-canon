@@ -14,10 +14,11 @@ Source authoring, publication, and adoption are separate stages:
 2. The owner publishes a stable Repo Canon source version through the
    [release procedure](../development/release.md), which reviews and validates
    its source inputs before publication.
-3. An adopting maintainer inspects the published version, confirms its complete
-   project-specific scope, and then starts adoption. Adoption writes project
+3. An adopting maintainer inspects the published version, reviews its complete
+   project-specific scope, and then starts adoption, confirming only when the
+   inspection requires it. Adoption writes project
    content and can change GitHub settings, so review the inspection before
-   confirmation. The
+   starting. The
    [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md) records how one
    repository completed these stages, including the migration effort and the
    defects it surfaced.
@@ -46,9 +47,8 @@ write access for labels plus admin access for required checks and merge
 settings. Keep the repository clean and committed. If useful existing
 `AGENTS.md` instructions need to survive replacement, follow
 [Prepare existing agent guidance](prepare-agent-guidance.md), commit that change,
-and inspect the prepared commit afresh. Records that a CLI before major version 6 wrote,
-in `.repo-standards` or as run records in Git's directory, use retired formats,
-which CLI 6.0.0 does not read; such a repository adopts fresh, as the CLI's
+and inspect the prepared commit afresh. Records with retired formats in `.repo-standards` or as run records in Git's
+directory cannot be read by CLI 6.0.0; such a repository adopts fresh, as the CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
 describes.
 

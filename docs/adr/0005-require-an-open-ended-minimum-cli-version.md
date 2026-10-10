@@ -1,7 +1,7 @@
 # Require an open-ended minimum CLI version
 
 `standards.yaml` declares `requires.repo-standards` as an open-ended minimum,
-currently `>=5.1.0`, naming the oldest public Repository Standards CLI this
+currently `>=6.0.0`, naming the oldest public Repository Standards CLI this
 source was validated against. Repository Standards evaluates that requirement
 only when an adopter selects a standards version and never re-validates it
 afterwards, so an exact or upper-bounded requirement strands established

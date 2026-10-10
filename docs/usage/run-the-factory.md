@@ -17,7 +17,9 @@ guidance. It repeats every `FACTORY_POLL_SECONDS`, 300 by default.
 ## Host prerequisites
 
 The host needs Node.js 24, Git, Docker, and the GitHub CLI authenticated with
-permission to edit issue labels and comments. Sandcastle passes the
+permission to edit issue labels and comments and open pull requests. The
+repository must have a completed adoption and a restorable pinned runtime for
+the daily update check. Sandcastle passes the
 variables listed in `.sandcastle/.env`, such as `GH_TOKEN` and the agent's
 credentials, into each sandbox. The file stays on the host;
 `.sandcastle/.gitignore` keeps it, the run logs, and Sandcastle's worktrees
@@ -125,3 +127,46 @@ claim, comments the failure, the model, and the run's log, and labels the issue
 `factory:failed`. Each run's log is `.sandcastle/logs/issue-<n>-attempt-<a>.log`
 on the host; a failed claim that no run holds names neither. The factory skips
 a failed issue until someone removes `factory:failed`.
+
+## Daily updates
+
+Once per 24 hours, starting with the first pass, the factory runs the project's
+pinned `outdated --json`. Before each CLI command, the host checks the installed
+runtime against the current lockfile and restores it with `npm ci --ignore-scripts`
+when the pin changes. When a pin has an available update, it reads
+`status --json` and inspects the candidate using that exact CLI through the
+pinned bootstrap, without changing the project's pin. A standards update
+selects the same source and profile with the available tag; a CLI-only update
+keeps retained standards. An unknown pin alone launches nothing. A failed
+check is logged and tried on the next daily check; it does not stop issue work.
+
+The decision core classifies the inspection's `confirmation` report. When it
+requires confirmation, the adapter files a `needs-triage` issue naming the
+selection, inspection identity, and every reason. It does not create another
+issue for that candidate while an earlier one exists, including a closed one.
+Any such marker issue also holds routine adoption of the same candidate before
+image builds, including issues filed by an agent when a later fix requires
+confirmation. The hold persists across host restarts and applies while a
+candidate waits for capacity; closing the issue does not authorize automation.
+
+A routine update uses spare capacity on the host's default model and the same
+provider gates and time limit as issue work. Its agent follows the candidate
+CLI's `adopt-standards` skill, inspects afresh with a new discovery proposal
+when needed, delivers the adoption as a pull request, and uses `babysit` to
+merge it. No implementation ticket is opened. If that fresh inspection or a
+later fix needs confirmation, the agent stops and files the reasons for triage
+before confirming anything. The factory never supplies `--confirmed`.
+
+The adoption branch is `factory/update-standards-update-<hash>`, determined by
+the candidate CLI, source, standards tag and profile. An open update pull
+request from the repository itself holds the update across host restarts; any
+in-repository pull request on that candidate's branch prevents another run of
+the same candidate. These lookups paginate candidate branch history and open
+pull requests, so repository history has no fixed cutoff. Fork pull requests
+reserve no update slot. Held candidates
+are reconsidered on the next daily check, without image builds or repeated
+pull request reads between checks. After an update agent exits, the host checks
+its exact branch for a pull request. An ended run without a pull request is
+logged with its log path and may run again at the next daily check. Daily checks
+continue during a long adoption without queuing its candidate again; a different
+candidate may wait for the active run to exit.

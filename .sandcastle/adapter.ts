@@ -2,14 +2,16 @@
 // usage readers, asks the decision core what to do, and carries the decisions
 // out through GitHub label edits, comments, and Sandcastle launches.
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   decideFactory,
+  decideUpdate,
   isProvider,
   labels,
   parseModel,
   unknownProvider,
+  updateModel,
   type Claim,
   type Decision,
   type Issue,
@@ -18,10 +20,15 @@ import {
   type PullRequestState,
   type Run,
   type Settings,
+  type Snapshot,
+  type Inspection,
+  type Outdated,
+  type Selection,
 } from "./factory.ts";
 
 export type LaunchRequest = {
-  issue: number;
+  issue?: number;
+  branch: string;
   prompt: string;
   provider: Provider;
   model: string;
@@ -36,6 +43,9 @@ export type ImageBuild = { image: string; dockerfile: string };
 
 export type Ports = {
   gh(args: string[]): Promise<string>;
+  // No version uses the project's pinned runtime; a version uses an exact
+  // external candidate runtime, leaving the project's pin alone.
+  standards(args: string[], version?: string): Promise<string>;
   // Resolves or rejects when the run's agent exits.
   launch(request: LaunchRequest): Promise<void>;
   buildImage(request: ImageBuild): Promise<void>;
@@ -132,6 +142,61 @@ export function readSettings(
   };
 }
 
+// The pinned bootstrap acquires a candidate outside the checkout and removes
+// its temporary runtime afterwards. Inspection never changes the pin.
+export function createStandardsRunner(
+  root: string,
+  execute: (executable: string, args: string[]) => Promise<string>,
+): Ports["standards"] {
+  return async (args, version) => {
+    const runtime = join(root, ".repo-standards", "runtime");
+    const bin = join(runtime, "node_modules", ".bin");
+    // Adoption can replace the runtime pin while this host keeps running.
+    // Read the checkout and the installation each time, rather than treating
+    // an existing executable as evidence that it matches the new lockfile.
+    const manifest = JSON.parse(
+      readFileSync(join(runtime, "package.json"), "utf8"),
+    );
+    const packages = Object.keys(manifest.dependencies);
+    if (packages.length !== 1)
+      throw new Error("the runtime must pin one CLI package");
+    const packageName = packages[0];
+    const lock = JSON.parse(
+      readFileSync(join(runtime, "package-lock.json"), "utf8"),
+    );
+    const pinned = lock.packages[`node_modules/${packageName}`]?.version;
+    if (!pinned || manifest.dependencies[packageName] !== pinned)
+      throw new Error("the CLI manifest and lockfile pins disagree");
+    const installed = () => {
+      try {
+        return (
+          JSON.parse(
+            readFileSync(
+              join(runtime, "node_modules", packageName, "package.json"),
+              "utf8",
+            ),
+          ).version === pinned
+        );
+      } catch {
+        return false;
+      }
+    };
+    const executable = join(
+      bin,
+      version ? "repo-standards-bootstrap" : "repo-standards",
+    );
+    if (!installed() || !existsSync(executable)) {
+      await execute("npm", ["ci", "--ignore-scripts", "--prefix", runtime]);
+      if (!installed() || !existsSync(executable))
+        throw new Error("npm ci did not restore the pinned CLI runtime");
+    }
+    return execute(
+      executable,
+      version ? ["--cli-version", version, ...args] : args,
+    );
+  };
+}
+
 const templates: Record<Mode, string> = {
   direct: readFileSync(new URL("./direct-prompt.md", import.meta.url), "utf8"),
   orchestrated: readFileSync(
@@ -190,6 +255,211 @@ export function runBranch(issue: number): string {
 export function createFactory(settings: Settings, ports: Ports) {
   const runs: HostRun[] = [];
   let repository: { owner: string; name: string } | null = null;
+  let checkedAt: number | null = null;
+  let pendingUpdate: Inspection | null = null;
+  let updateRun: {
+    provider: Provider;
+    branch: string;
+    log: string;
+    controller: AbortController;
+    startedAt: number;
+    exited: boolean;
+  } | null = null;
+
+  async function readUpdate() {
+    const now = ports.now().getTime();
+    if (checkedAt !== null && now - checkedAt < 86_400_000) return;
+    checkedAt = now;
+    // Refresh rather than keep a candidate inspected against yesterday's tree.
+    pendingUpdate = null;
+    try {
+      const outdated: Outdated = JSON.parse(
+        await ports.standards(["outdated", "--json"]),
+      );
+      if (decideUpdate(outdated).kind === "no-update") return;
+      const status = JSON.parse(await ports.standards(["status", "--json"]));
+      if (
+        status.active !== null ||
+        status.stateError ||
+        !status.lastComplete ||
+        !status.selection
+      ) {
+        ports.report("update waits for a complete, readable adoption");
+        return;
+      }
+      const current: Selection = status.selection;
+      const version =
+        outdated.cli.update === "available"
+          ? outdated.cli.newest!
+          : current.cli.version;
+      const args = ["inspect"];
+      if (outdated.standards.update === "available")
+        args.push(
+          "--source",
+          current.standards.repository,
+          "--standards-version",
+          outdated.standards.newest!,
+          "--profile",
+          current.profile,
+        );
+      const inspection: Inspection = JSON.parse(
+        await ports.standards([...args, "--json"], version),
+      );
+      const decision = decideUpdate(outdated, inspection);
+      if (decision.kind === "triage-update") {
+        const marker = updateMarker(inspection.selection);
+        if ((await updateIssue(marker)) !== null) return;
+        await ports.gh([
+          "issue",
+          "create",
+          "--label",
+          "needs-triage",
+          "--title",
+          `Review standards update to ${inspection.selection.standards.version} with CLI ${inspection.selection.cli.version}`,
+          "--body",
+          triageBody(inspection, marker),
+        ]);
+      } else if (decision.kind === "adopt-update") {
+        // Keep checking daily during a long run, but do not queue that same
+        // candidate again before its run has settled and the next check is due.
+        const branch = `factory/update-${updateMarker(inspection.selection)}`;
+        if (updateRun?.branch !== branch) pendingUpdate = inspection;
+      } else if (decision.kind === "wait-update")
+        ports.report(`update waits: ${decision.reason}`);
+    } catch (error) {
+      ports.report(`daily update check failed: ${error}`);
+    }
+  }
+
+  async function updateIssue(marker: string): Promise<number | null> {
+    const existing: { number: number }[] = JSON.parse(
+      await ports.gh([
+        "issue",
+        "list",
+        "--state",
+        "all",
+        "--search",
+        `in:body ${marker}`,
+        "--json",
+        "number",
+        "--limit",
+        "1",
+      ]),
+    );
+    return existing[0]?.number ?? null;
+  }
+
+  async function readUpdatePullRequests(branch?: string) {
+    // Scope candidate history by exact branch, and scan only open PRs for
+    // another update. Both connections paginate, regardless of repository size.
+    const query = `query($owner: String!, $name: String!, $endCursor: String${branch ? ", $branch: String!" : ""}) {
+      repository(owner: $owner, name: $name) {
+        pullRequests(${branch ? "headRefName: $branch" : "states: OPEN"}, first: 100, after: $endCursor) {
+          pageInfo { hasNextPage endCursor }
+          nodes { state headRefName isCrossRepository }
+        }
+      }
+    }`;
+    const pages = JSON.parse(
+      await ports.gh([
+        "api",
+        "graphql",
+        "--paginate",
+        "--slurp",
+        "-f",
+        `query=${query}`,
+        ...(await identity()),
+        ...(branch ? ["-F", `branch=${branch}`] : []),
+      ]),
+    );
+    const prs: {
+      state: string;
+      headRefName: string;
+      isCrossRepository: boolean;
+    }[] = pages.flatMap((page: any) => page.data.repository.pullRequests.nodes);
+    return prs.filter(
+      (pr) =>
+        !pr.isCrossRepository &&
+        (branch
+          ? pr.headRefName === branch
+          : pr.headRefName.startsWith("factory/update-")),
+    );
+  }
+
+  async function settleUpdateRun() {
+    if (!updateRun?.exited) return;
+    const run = updateRun;
+    try {
+      if ((await readUpdatePullRequests(run.branch)).length === 0)
+        ports.report(
+          `update run ended without a pull request; log: ${run.log}`,
+        );
+    } catch (error) {
+      ports.report(`ended update PR lookup failed: ${error}; log: ${run.log}`);
+    }
+    updateRun = null;
+  }
+
+  async function checkUpdateHolds() {
+    if (!pendingUpdate || updateRun) return;
+    const marker = updateMarker(pendingUpdate.selection);
+    const issue = await updateIssue(marker);
+    if (issue !== null) {
+      ports.report(`update held by triage issue #${issue}`);
+      pendingUpdate = null;
+      return;
+    }
+    const branch = `factory/update-${marker}`;
+    // An open adoption PR holds the update even across host restarts. A
+    // completed/closed PR for this candidate also prevents daily duplicate runs.
+    if (
+      (await readUpdatePullRequests(branch)).length > 0 ||
+      (await readUpdatePullRequests()).length > 0
+    )
+      pendingUpdate = null;
+  }
+
+  async function launchUpdate(snapshot: Snapshot, image: string) {
+    if (!pendingUpdate || updateRun) return;
+    const model = updateModel(snapshot);
+    if ("error" in model) {
+      ports.report(`update waits: ${model.error}`);
+      return;
+    }
+    const inspection = pendingUpdate;
+    const branch = `factory/update-${updateMarker(inspection.selection)}`;
+    const controller = new AbortController();
+    const run = {
+      provider: model.provider,
+      branch,
+      log: join(
+        ports.root,
+        ".sandcastle",
+        "logs",
+        `${updateMarker(inspection.selection)}.log`,
+      ),
+      controller,
+      startedAt: ports.now().getTime(),
+      exited: false,
+    };
+    updateRun = run;
+    pendingUpdate = null;
+    ports
+      .launch({
+        ...model,
+        branch,
+        image,
+        signal: controller.signal,
+        log: run.log,
+        prompt: updatePrompt(inspection),
+      })
+      .catch((error) =>
+        ports.report(`update run ended with an error: ${error}`),
+      )
+      .finally(() => {
+        run.exited = true;
+      });
+  }
 
   async function readRepository() {
     if (!repository) {
@@ -375,6 +645,7 @@ export function createFactory(settings: Settings, ports: Ports) {
         ports
           .launch({
             issue,
+            branch: runBranch(issue),
             prompt: prompt(decision.mode, issue),
             provider: run.provider,
             model: run.model,
@@ -445,6 +716,16 @@ export function createFactory(settings: Settings, ports: Ports) {
   }
 
   async function tick(): Promise<Decision[]> {
+    await settleUpdateRun();
+    if (
+      updateRun &&
+      ports.now().getTime() - updateRun.startedAt >
+        settings.timeLimitMinutes * 60_000
+    )
+      updateRun.controller.abort(
+        new Error("update exceeded the host time limit"),
+      );
+    await readUpdate();
     for (const run of runs) {
       // An exited run stays on the host only while it waits to settle, such
       // as for its retry's gate, so its pull request state is read each pass.
@@ -462,7 +743,7 @@ export function createFactory(settings: Settings, ports: Ports) {
     const issues = await readIssues();
     const claims = await readClaims(issues);
     const usage = await readUsage();
-    const decisions = decideFactory({
+    const snapshot: Snapshot = {
       now: ports.now().toISOString(),
       issues,
       runs: runs.map(
@@ -471,10 +752,22 @@ export function createFactory(settings: Settings, ports: Ports) {
       claims,
       usage,
       settings,
-    });
+      additionalRunning: updateRun ? { [updateRun.provider]: 1 } : {},
+    };
+    const decisions = decideFactory(snapshot);
+    if (pendingUpdate && !updateRun && !("error" in updateModel(snapshot)))
+      try {
+        await checkUpdateHolds();
+      } catch (error) {
+        pendingUpdate = null;
+        ports.report(`update prerequisite lookup failed: ${error}`);
+      }
     let image = "";
     let applied = decisions;
-    if (decisions.some((decision) => decision.kind === "launch")) {
+    if (
+      decisions.some((decision) => decision.kind === "launch") ||
+      (pendingUpdate && !updateRun && !("error" in updateModel(snapshot)))
+    ) {
       try {
         image = await buildImage();
       } catch (error) {
@@ -487,10 +780,60 @@ export function createFactory(settings: Settings, ports: Ports) {
       }
     }
     for (const decision of applied) await apply(decision, image);
+    // Issue launches take their oldest-first turn before an update uses spare
+    // capacity. Recount after applying them.
+    if (image) await launchUpdate({ ...snapshot, runs }, image);
     return applied;
   }
 
   return { tick };
+}
+
+function updateMarker(selection: Selection): string {
+  return `standards-update-${createHash("sha256")
+    .update(
+      JSON.stringify({
+        cli: selection.cli.version,
+        source: selection.standards.repository,
+        version: selection.standards.version,
+        profile: selection.profile,
+      }),
+    )
+    .digest("hex")
+    .slice(0, 16)}`;
+}
+
+function triageBody(inspection: Inspection, marker: string): string {
+  const { selection } = inspection;
+  return [
+    `<!-- ${marker} -->`,
+    "### Problem",
+    "",
+    `The available update to ${selection.standards.repository} ${selection.standards.version} (${selection.profile}) with CLI ${selection.cli.version} requires confirmation.`,
+    "",
+    ...inspection.confirmation.reasons.map(
+      (reason) => `- ${reason.change}: \`${reason.target}\``,
+    ),
+    "",
+    "### Desired outcome",
+    "",
+    "Triage whether to accept these changes before adopting the update.",
+    "",
+    "### Additional context",
+    "",
+    `Inspection identity: \`${inspection.identity}\`. Reinspect before confirming; project content may have changed.`,
+  ].join("\n");
+}
+
+function updatePrompt(inspection: Inspection): string {
+  return [
+    `Use adopt-standards to update to this selection: ${JSON.stringify(inspection.selection)}.`,
+    "The factory authorizes this routine update without a ticket. Install the exact candidate CLI outside the project and use its packaged adopt-standards skill, then the repository's matching skill after installation.",
+    "Inspect afresh, build any fresh discovery proposal, and follow the skill through completion. Do not reuse the host inspection identity for start.",
+    "If a fresh inspection or a later fix requires confirmation, stop before confirming it and file a needs-triage issue naming the update and every reason. Never pass --confirmed unattended. Include this marker in the issue body and check for an existing issue with it first:",
+    updateMarker(inspection.selection),
+    "Deliver the completed adoption as one pull request using CONTRIBUTING.md's adoption rules, and use babysit to take it to merge. Do not open an implementation ticket for a routine update.",
+  ].join("\n\n");
 }
 
 // A claim no run holds has no model or log to name.

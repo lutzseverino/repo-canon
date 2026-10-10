@@ -589,3 +589,64 @@ test("a retry whose issue is no longer eligible fails it instead", () => {
     ],
   );
 });
+
+test("an unavailable update launches no adoption", async () => {
+  const { decideUpdate } = await import("../.sandcastle/factory.ts");
+  assert.deepEqual(
+    decideUpdate({ cli: { update: "none" }, standards: { update: "unknown" } }),
+    { kind: "no-update" },
+  );
+});
+
+const availableUpdate = {
+  cli: { update: "available", newest: "6.0.0" },
+  standards: { update: "available", newest: "v0.6.0" },
+};
+const inspectedUpdate = {
+  format: "repo-standards/inspection/v7",
+  identity: "sha256:candidate",
+  selection: {
+    cli: { package: "@lutzseverino/repo-standards", version: "6.0.0" },
+    standards: {
+      repository: "https://github.com/acme/standards",
+      version: "v0.6.0",
+    },
+    profile: "complete",
+  },
+  confirmation: { required: false, reasons: [] },
+};
+
+test("a routine update is inspected then run without a ticket", async () => {
+  const { decideUpdate } = await import("../.sandcastle/factory.ts");
+  assert.deepEqual(decideUpdate(availableUpdate), { kind: "inspect-update" });
+  assert.deepEqual(decideUpdate(availableUpdate, inspectedUpdate), {
+    kind: "adopt-update",
+    inspection: inspectedUpdate,
+  });
+});
+
+test("an update that discards edits becomes triage with its inspection reasons", async () => {
+  const { decideUpdate } = await import("../.sandcastle/factory.ts");
+  const inspection = {
+    ...inspectedUpdate,
+    confirmation: {
+      required: true,
+      reasons: [{ change: "discarded-edit", target: "CONTRIBUTING.md" }],
+    },
+  };
+  assert.deepEqual(decideUpdate(availableUpdate, inspection), {
+    kind: "triage-update",
+    inspection,
+  });
+});
+
+test("a report without the confirmation contract cannot authorize adoption", async () => {
+  const { decideUpdate } = await import("../.sandcastle/factory.ts");
+  assert.equal(
+    decideUpdate(availableUpdate, {
+      ...inspectedUpdate,
+      confirmation: undefined,
+    }).kind,
+    "wait-update",
+  );
+});
