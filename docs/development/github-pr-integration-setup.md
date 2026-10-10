@@ -87,10 +87,23 @@ enterprise server.
 ## Results and recovery
 
 The operation implements the public
-[`repo-standards/operation/v1`](https://github.com/lutzseverino/repo-standards/blob/v4.0.0/docs/usage/script-protocol.md)
+[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/script-protocol.md)
 boundary with an empty project-content target scope. It returns `changed` only
 after a final readback confirms required-check enforcement and every merge
-setting. It returns `unchanged` when the first read already matches.
+setting. It returns `unchanged` when the first read already matches. Results use
+`repo-standards/result/v2`.
+
+Missing merge settings and a missing dedicated ruleset are created freely.
+Before any mutation, the fix checks the complete plan for changes to existing
+merge settings, classic protection's required-check contexts, and the managed
+ruleset's enforcement, conditions, or rules. When `overwriteAllowed` is
+`false`, any such difference returns `confirmation-required`, naming each
+setting and its current and proposed values. It makes no mutation, including
+creating missing enforcement or merge settings. This guard also applies to
+merge settings when enforcement is deferred or unavailable. After the
+maintainer confirms, `resume --confirmed` invokes the fix with
+`overwriteAllowed: true`; it re-reads the remote and applies the plan while
+preserving unrelated policy.
 
 When the `PR metadata` requirement is unavailable, the operation applies only
 missing merge settings and reads them back, returning `changed` when it updated

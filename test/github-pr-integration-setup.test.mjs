@@ -57,7 +57,7 @@ function setup(t, options) {
 test("creates required-check enforcement, configures squash defaults, and is unchanged on repeat", (t) => {
   const scenario = setup(t);
   const before = snapshot(scenario.project.root);
-  const first = scenario.invoke();
+  const first = scenario.invoke({ overwriteAllowed: true });
 
   assert.equal(first.status, 0, first.stderr);
   assert.equal(first.result.status, "changed");
@@ -71,7 +71,7 @@ test("creates required-check enforcement, configures squash defaults, and is unc
   assert.deepEqual(state.rulesets, [canonicalRuleset({ id: 100 })]);
   assertProjectUnchanged(before, scenario);
 
-  const repeat = scenario.invoke();
+  const repeat = scenario.invoke({ overwriteAllowed: true });
   assert.equal(repeat.status, 0, repeat.stderr);
   assert.equal(repeat.result.status, "unchanged");
   assert.equal(scenario.readState().mutations, 2);
@@ -92,7 +92,7 @@ test("uses rulesets when classic protection is present but required checks are d
       const scenario = setup(st, {
         state: { branchProtection: protectionWithoutChecks },
       });
-      const outcome = scenario.invoke();
+      const outcome = scenario.invoke({ overwriteAllowed: true });
       assert.equal(outcome.status, 0, outcome.stderr);
       assert.equal(outcome.result.status, "changed");
       assert.match(outcome.result.message, /created required-check ruleset/);
@@ -116,7 +116,7 @@ test("uses rulesets when classic protection is present but required checks are d
           rulesets: [canonicalRuleset()],
         },
       });
-      const outcome = scenario.invoke();
+      const outcome = scenario.invoke({ overwriteAllowed: true });
       assert.equal(outcome.status, 0, outcome.stderr);
       assert.equal(outcome.result.status, "unchanged");
       assert.equal(scenario.readState().mutations ?? 0, 0);
@@ -155,10 +155,10 @@ test("returns unchanged when branch protection and merge settings already match"
     },
   });
 
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v1",
+    format: "repo-standards/result/v2",
     status: "unchanged",
     message:
       "GitHub PR integration already matches the canonical configuration for acme/widgets.",
@@ -184,7 +184,7 @@ test("adds PR metadata to classic branch checks while preserving checks, ruleset
     },
   });
 
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
   assert.match(
@@ -212,7 +212,7 @@ test("accepts GitHub classic status-check responses that omit the optional check
     },
   });
 
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
   assert.deepEqual(
@@ -265,7 +265,7 @@ test("reconciles the dedicated ruleset and conflicting merge settings without re
     },
   });
 
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
   const state = scenario.readState();
@@ -319,7 +319,7 @@ test("removes a concrete default-branch exclusion from the dedicated ruleset", (
     },
   });
 
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
   assert.deepEqual(
@@ -341,7 +341,7 @@ test("removes a matching glob exclusion while preserving unrelated glob policy",
     state: { settings: matchingSettings, rulesets: [managed] },
   });
 
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
   assert.deepEqual(
@@ -363,7 +363,7 @@ test("accepts a direct default-branch include with an unrelated glob as unchange
     state: { settings: matchingSettings, rulesets: [managed] },
   });
 
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "unchanged");
   assert.equal(scenario.readState().mutations ?? 0, 0);
@@ -380,7 +380,7 @@ test("blocks when unsupported pattern syntax makes default-branch applicability 
   });
   const scenario = setup(t, { state: { rulesets: [managed] } });
 
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "blocked");
   assert.match(
@@ -403,14 +403,14 @@ test("blocks without admin access or when rules cannot be inspected", async (t) 
         },
       },
     });
-    const outcome = scenario.invoke();
+    const outcome = scenario.invoke({ overwriteAllowed: true });
     assert.equal(outcome.result.status, "blocked");
     assert.match(outcome.result.message, /admin access/);
     assert.equal(scenario.readState().mutations ?? 0, 0);
   });
   await t.test("ruleset inspection failure", (st) => {
     const scenario = setup(st, { state: { failRulesetInspection: true } });
-    const outcome = scenario.invoke();
+    const outcome = scenario.invoke({ overwriteAllowed: true });
     assert.equal(outcome.result.status, "blocked");
     assert.match(
       outcome.result.message,
@@ -420,7 +420,7 @@ test("blocks without admin access or when rules cannot be inspected", async (t) 
   });
   await t.test("ambiguous branch-protection 404", (st) => {
     const scenario = setup(st, { state: { failBranchInspection: true } });
-    const outcome = scenario.invoke();
+    const outcome = scenario.invoke({ overwriteAllowed: true });
     assert.equal(outcome.result.status, "blocked");
     assert.match(outcome.result.message, /could not inspect required checks/);
     assert.equal(scenario.readState().mutations ?? 0, 0);
@@ -444,7 +444,7 @@ test("applies only merge settings when the plan offers neither branch protection
       forbidden: { protection: planLimit, rulesets: planLimit },
     },
   });
-  const first = scenario.invoke();
+  const first = scenario.invoke({ overwriteAllowed: true });
   assert.equal(first.status, 0, first.stderr);
   assert.equal(first.result.status, "changed");
   assert.match(first.result.message, /updated squash merge settings/);
@@ -460,7 +460,7 @@ test("applies only merge settings when the plan offers neither branch protection
   assert.equal(state.branchProtection, null);
   assert.equal(state.branchReads, 1, "enforcement readback is skipped");
 
-  const repeat = scenario.invoke();
+  const repeat = scenario.invoke({ overwriteAllowed: true });
   assert.equal(repeat.status, 0, repeat.stderr);
   assert.equal(repeat.result.status, "unchanged");
   assert.match(repeat.result.message, unavailableRequirement);
@@ -476,7 +476,10 @@ test("is unchanged when the plan offers no enforcement and merge settings alread
       forbidden: { protection: planLimit, rulesets: planLimit },
     },
   });
-  for (const run of [scenario.invoke(), scenario.invoke()]) {
+  for (const run of [
+    scenario.invoke({ overwriteAllowed: true }),
+    scenario.invoke({ overwriteAllowed: true }),
+  ]) {
     assert.equal(run.status, 0, run.stderr);
     assert.equal(run.result.status, "unchanged");
     assert.match(
@@ -534,7 +537,7 @@ test("blocks with GitHub's reason unless both reads hit the plan limit on a priv
   ])
     await t.test(name, (st) => {
       const scenario = setup(st, { state });
-      const outcome = scenario.invoke();
+      const outcome = scenario.invoke({ overwriteAllowed: true });
       assert.equal(outcome.status, 0, outcome.stderr);
       assert.equal(outcome.result.status, "blocked");
       assert.match(outcome.result.message, message);
@@ -550,7 +553,7 @@ test("blocks with GitHub's reason when the merge-settings readback fails where t
       forbidden: { protection: planLimit, rulesets: planLimit },
     },
   });
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "blocked");
   assert.match(
@@ -569,7 +572,7 @@ test("names Organisation plans in the recognised plan limit", (t) => {
       forbidden: { protection: teamLimit, rulesets: teamLimit },
     },
   });
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "unchanged");
   assert.match(outcome.result.message, unavailableRequirement);
@@ -577,7 +580,7 @@ test("names Organisation plans in the recognised plan limit", (t) => {
 
 test("reports partial effects and retries only the missing squash change", (t) => {
   const scenario = setup(t, { state: { failAtMutation: 2 } });
-  const first = scenario.invoke();
+  const first = scenario.invoke({ overwriteAllowed: true });
   assert.equal(first.status, 0, first.stderr);
   assert.equal(first.result.status, "blocked");
   assert.match(
@@ -587,7 +590,7 @@ test("reports partial effects and retries only the missing squash change", (t) =
   assert.match(first.result.message, /squash merge settings remain/i);
   assert.equal(scenario.readState().rulesets.length, 1);
 
-  const retry = scenario.invoke();
+  const retry = scenario.invoke({ overwriteAllowed: true });
   assert.equal(retry.status, 0, retry.stderr);
   assert.equal(retry.result.status, "changed");
   assert.match(retry.result.message, /updated squash merge settings/);
@@ -596,19 +599,19 @@ test("reports partial effects and retries only the missing squash change", (t) =
     "update squash settings",
   ]);
 
-  const repeat = scenario.invoke();
+  const repeat = scenario.invoke({ overwriteAllowed: true });
   assert.equal(repeat.result.status, "unchanged");
   assert.equal(scenario.readState().mutations, 2);
 });
 
 test("recovers after interruption by applying only the remaining change", (t) => {
   const scenario = setup(t, { state: { interruptAtMutation: 2 } });
-  const interrupted = scenario.invoke();
+  const interrupted = scenario.invoke({ overwriteAllowed: true });
   assert.equal(interrupted.status, null);
   assert.equal(interrupted.signal, "SIGKILL");
   assert.equal(scenario.readState().rulesets.length, 1);
 
-  const retry = scenario.invoke();
+  const retry = scenario.invoke({ overwriteAllowed: true });
   assert.equal(retry.status, 0, retry.stderr);
   assert.equal(retry.result.status, "changed");
   assert.deepEqual(scenario.readState().mutationLog, [
@@ -640,7 +643,7 @@ test("blocks when final readback disagrees and reports applied effects", async (
             ? { failBranchReadback: true }
             : { readbackMismatch: mismatch };
       const scenario = setup(st, { state });
-      const outcome = scenario.invoke();
+      const outcome = scenario.invoke({ overwriteAllowed: true });
       assert.equal(outcome.status, 0, outcome.stderr);
       assert.equal(outcome.result.status, "blocked");
       assert.match(outcome.result.message, /final readback did not match/);
@@ -672,7 +675,7 @@ function writes(state) {
 
 test("defers requiring PR metadata while the default branch lacks the workflow", (t) => {
   const scenario = setup(t, { state: { workflow: "absent" } });
-  const first = scenario.invoke();
+  const first = scenario.invoke({ overwriteAllowed: true });
   assert.equal(first.status, 0, first.stderr);
   assert.equal(first.result.status, "changed");
   assert.match(first.result.message, /updated squash merge settings/);
@@ -688,7 +691,7 @@ test("defers requiring PR metadata while the default branch lacks the workflow",
   assert.deepEqual(state.rulesets, []);
   assert.equal(state.branchProtection, null);
 
-  const repeat = scenario.invoke();
+  const repeat = scenario.invoke({ overwriteAllowed: true });
   assert.equal(repeat.status, 0, repeat.stderr);
   assert.equal(repeat.result.status, "unchanged");
   assert.match(
@@ -735,7 +738,7 @@ test("leaves existing protection and rulesets untouched while the requirement is
       const scenario = setup(st, {
         state: { ...state, settings: matchingSettings, workflow: "absent" },
       });
-      const outcome = scenario.invoke();
+      const outcome = scenario.invoke({ overwriteAllowed: true });
       assert.equal(outcome.status, 0, outcome.stderr);
       assert.equal(outcome.result.status, "unchanged");
       assert.match(outcome.result.message, deferredRequirement);
@@ -749,7 +752,7 @@ test("leaves existing protection and rulesets untouched while the requirement is
 
 test("blocks with GitHub's reason when the workflow read fails", (t) => {
   const scenario = setup(t, { state: { workflow: "failed" } });
-  const outcome = scenario.invoke();
+  const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "blocked");
   assert.match(
@@ -762,10 +765,13 @@ test("blocks with GitHub's reason when the workflow read fails", (t) => {
 test("requires PR metadata on the run after the workflow reaches the default branch", async (t) => {
   await t.test("creates the ruleset", (st) => {
     const scenario = setup(st, { state: { workflow: "absent" } });
-    assert.equal(scenario.invoke().result.status, "changed");
+    assert.equal(
+      scenario.invoke({ overwriteAllowed: true }).result.status,
+      "changed",
+    );
     scenario.updateState({ workflow: "present" });
 
-    const next = scenario.invoke();
+    const next = scenario.invoke({ overwriteAllowed: true });
     assert.equal(next.status, 0, next.stderr);
     assert.equal(next.result.status, "changed");
     assert.match(next.result.message, /created required-check ruleset/);
@@ -785,10 +791,13 @@ test("requires PR metadata on the run after the workflow reaches the default bra
         workflow: "absent",
       },
     });
-    assert.equal(scenario.invoke().result.status, "unchanged");
+    assert.equal(
+      scenario.invoke({ overwriteAllowed: true }).result.status,
+      "unchanged",
+    );
     scenario.updateState({ workflow: "present" });
 
-    const next = scenario.invoke();
+    const next = scenario.invoke({ overwriteAllowed: true });
     assert.equal(next.status, 0, next.stderr);
     assert.equal(next.result.status, "changed");
     assert.match(next.result.message, /updated required-check ruleset/);
@@ -807,10 +816,157 @@ test("reports the plan limit regardless of the workflow read", async (t) => {
           workflow,
         },
       });
-      const outcome = scenario.invoke();
+      const outcome = scenario.invoke({ overwriteAllowed: true });
       assert.equal(outcome.status, 0, outcome.stderr);
       assert.equal(outcome.result.status, "unchanged");
       assert.match(outcome.result.message, unavailableRequirement);
       assert.ok(!scenario.readState().requests.includes(workflowRead));
     });
+});
+
+test("creates missing merge settings and enforcement without confirmation", (t) => {
+  const scenario = setup(t, { state: { settings: {} } });
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "changed");
+  assert.deepEqual(scenario.readState().settings, matchingSettings);
+  assert.deepEqual(scenario.readState().rulesets, [
+    canonicalRuleset({ id: 100 }),
+  ]);
+});
+
+test("asks before changing existing settings with no remote or project mutation", async (t) => {
+  const cases = [
+    {
+      name: "merge settings before creating missing enforcement",
+      state: {
+        settings: { ...matchingSettings, allow_merge_commit: true },
+      },
+      values: ["allow_merge_commit", "true", "false"],
+    },
+    {
+      name: "classic protection before creating missing merge settings",
+      state: {
+        settings: {},
+        branchProtection: classicProtection({
+          strict: true,
+          contexts: ["build"],
+        }),
+      },
+      values: ["main", "contexts", "build", "PR metadata"],
+    },
+    {
+      name: "managed ruleset enforcement",
+      state: {
+        settings: matchingSettings,
+        rulesets: [canonicalRuleset({ enforcement: "disabled" })],
+      },
+      values: [rulesetName, "enforcement", "disabled", "active"],
+    },
+    {
+      name: "managed ruleset rules",
+      state: {
+        settings: matchingSettings,
+        rulesets: [canonicalRuleset({ rules: [{ type: "non_fast_forward" }] })],
+      },
+      values: [
+        rulesetName,
+        "rules",
+        "non_fast_forward",
+        "required_status_checks",
+        "PR metadata",
+      ],
+    },
+    {
+      name: "managed ruleset exclusion removal",
+      state: {
+        settings: matchingSettings,
+        rulesets: [
+          canonicalRuleset({
+            conditions: {
+              ref_name: {
+                include: ["~DEFAULT_BRANCH"],
+                exclude: ["refs/heads/main"],
+              },
+            },
+          }),
+        ],
+      },
+      values: [rulesetName, "conditions", "refs/heads/main", '"exclude":[]'],
+    },
+    {
+      name: "deferred enforcement",
+      state: {
+        workflow: "absent",
+        settings: {
+          ...matchingSettings,
+          squash_merge_commit_title: "COMMIT_OR_PR_TITLE",
+        },
+      },
+      values: ["squash_merge_commit_title", "COMMIT_OR_PR_TITLE", "PR_TITLE"],
+    },
+    {
+      name: "plan limited enforcement",
+      state: {
+        private: true,
+        forbidden: { protection: planLimit, rulesets: planLimit },
+        settings: { ...matchingSettings, allow_rebase_merge: true },
+      },
+      values: ["allow_rebase_merge", "true", "false"],
+    },
+  ];
+  for (const { name, state, values } of cases)
+    await t.test(name, (st) => {
+      const scenario = setup(st, { state });
+      const before = snapshot(scenario.project.root);
+      const remoteBefore = scenario.readState();
+      const outcome = scenario.invoke();
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "confirmation-required");
+      for (const value of values)
+        assert.ok(outcome.result.message.includes(value), value);
+      const after = scenario.readState();
+      assert.deepEqual(writes(after), []);
+      for (const key of ["settings", "branchProtection", "rulesets"])
+        assert.deepEqual(after[key], remoteBefore[key]);
+      assertProjectUnchanged(before, scenario);
+      const confirmed = scenario.invoke({ overwriteAllowed: true });
+      assert.equal(confirmed.status, 0, confirmed.stderr);
+      assert.equal(confirmed.result.status, "changed");
+      assert.equal(scenario.invoke().result.status, "unchanged");
+    });
+});
+
+test("checks every merge setting before changing any remote configuration", async (t) => {
+  for (const [setting, value] of Object.entries(
+    githubPrIntegrationSetup.state.settings,
+  )) {
+    if (!Object.hasOwn(matchingSettings, setting)) continue;
+    await t.test(setting, (st) => {
+      const scenario = setup(st, {
+        state: { settings: { ...matchingSettings, [setting]: value } },
+      });
+      const outcome = scenario.invoke();
+      assert.equal(outcome.result.status, "confirmation-required");
+      assert.ok(
+        outcome.result.message.includes(
+          `repository.${setting} is ${JSON.stringify(value)}; the standard sets ${JSON.stringify(matchingSettings[setting])}`,
+        ),
+      );
+      assert.deepEqual(writes(scenario.readState()), []);
+    });
+  }
+});
+
+test("creates missing enforcement alongside matching existing merge settings without confirmation", (t) => {
+  const protection = classicProtection(null);
+  const scenario = setup(t, {
+    state: { settings: matchingSettings, branchProtection: protection },
+  });
+  const outcome = scenario.invoke();
+  assert.equal(outcome.result.status, "changed");
+  assert.deepEqual(scenario.readState().branchProtection, protection);
+  assert.deepEqual(scenario.readState().rulesets, [
+    canonicalRuleset({ id: 100 }),
+  ]);
 });

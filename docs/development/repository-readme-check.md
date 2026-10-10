@@ -2,9 +2,9 @@
 
 `operations/check-repository-readme.mjs` is the read-only structural check for
 the [Repository README guidance](../../guidance/repository-readme.md). It consumes
-`repo-standards/operation/v1` on standard input, accepts only a checks operation
+`repo-standards/operation/v2` on standard input, accepts only a checks operation
 whose allowed target is the root `README.md`, and returns one
-`repo-standards/result/v1` object on standard output.
+`repo-standards/result/v2` object on standard output.
 
 The operation requires Node.js 24. Its integration metadata is `node` with
 `["--version"]`, version range `>=24.0.0 <25.0.0`, retained resource directories

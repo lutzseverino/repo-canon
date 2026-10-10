@@ -2,7 +2,7 @@
 
 `standards.yaml` defines one complete `repo-standards/v2` profile named
 `complete`. The source identity is `repo-canon`, and its compatibility contract
-is the open-ended minimum `requires.repo-standards: ">=5.1.0"`. Public CLI 5.1.0
+is the open-ended minimum `requires.repo-standards: ">=6.0.0"`. Public CLI 6.0.0
 is the oldest version this source was validated against; the range gates which
 CLI versions may select it and is never re-validated afterwards. The profile
 does not imply a release or successful adoption.
@@ -68,7 +68,7 @@ repository and validate every profile without filtering:
 cli_prefix="$(mktemp -d)"
 npm install --prefix "$cli_prefix" --ignore-scripts \
   --registry=https://registry.npmjs.org \
-  @lutzseverino/repo-standards@5.1.0
+  @lutzseverino/repo-standards@6.0.0
 "$cli_prefix/node_modules/.bin/repo-standards" --version
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
@@ -79,10 +79,10 @@ and validates every profile.
 
 ## Validation boundary
 
-Installed public CLI 5.1.0 under Node.js 24 returns `valid: true`, no errors,
+Installed public CLI 6.0.0 under Node.js 24 returns `valid: true`, no errors,
 one `complete` profile, and 55 declarations for the source, matching the
 inventory above. Local validation and CI install
-`@lutzseverino/repo-standards@5.1.0`, the oldest version the requirement admits;
+`@lutzseverino/repo-standards@6.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
 the requirement is a minimum.
 

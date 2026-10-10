@@ -9,7 +9,7 @@
 
 ## Installation
 
-Repo Canon is applied through Repository Standards CLI 5.1.0 or newer. On macOS
+Repo Canon is applied through Repository Standards CLI 6.0.0 or newer. On macOS
 or Linux, use Node.js 24, npm, and Git 2.32.0 or newer, and install the CLI outside
 the adopting project:
 

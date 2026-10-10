@@ -25,7 +25,11 @@ Source authoring, publication, and adoption are separate stages:
 ## Prerequisites
 
 Use macOS or Linux with Node.js 24, npm, and Git 2.32.0 or newer. Use public CLI
-5.1.0 or newer; 5.1.0 is the current source-validation baseline. Install a pinned
+5.1.0 for the published `v0.5.6` selected in this guide. That release uses the
+retired operation/result v1 protocol and cannot run with CLI 6.0.0. The current
+source requires CLI 6.0.0 and operation/result v2; adopt it only after a new
+Repo Canon release is published, following that release's migration notes.
+Install a pinned
 CLI in a persistent directory outside the adopting repository so inspection,
 start, and recovery use the same executable:
 

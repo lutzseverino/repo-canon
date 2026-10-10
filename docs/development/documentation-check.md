@@ -167,8 +167,8 @@ documents, members, index structure, rule violations, and link resolution have
 theirs in `test/documentation-model.test.mjs`. Each documentation rule has
 passing and failing fixture repositories in `test/documentation-check.test.mjs`.
 
-Each check fixture invokes the scripts with a `repo-standards/operation/v1`
-request, asserts the `repo-standards/result/v1` outcome or process error, and
+Each check fixture invokes the scripts with a `repo-standards/operation/v2`
+request, asserts the `repo-standards/result/v2` outcome or process error, and
 compares a complete before-and-after snapshot of the temporary Git repository.
 Each operation also runs from a retained tree containing only its script and
 the resources that `standards.yaml` declares for it.
