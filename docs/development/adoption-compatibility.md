@@ -66,6 +66,9 @@ The selected route uses repeat-safe author operations. Their implementation
 and prerequisites must be reviewed and exercised. They verify repository
 identity, preserve unrelated settings,
 report partial effects, block on missing permission, and verify the result.
+They create missing configuration freely and return `confirmation-required`
+without mutation before changing an existing chosen value; the maintainer's
+`resume --confirmed` authorizes that fix's overwrite.
 They must not imply remote freshness or rollback guarantees from local
 inspection. They run during adoption; authoring exercises use disposable
 fixtures and do not mutate live GitHub settings.

@@ -47,21 +47,23 @@ write access for labels plus admin access for required checks and merge
 settings. Keep the repository clean and committed. If useful existing
 `AGENTS.md` instructions need to survive replacement, follow
 [Prepare existing agent guidance](prepare-agent-guidance.md), commit that change,
-and inspect the prepared commit afresh. Records that a CLI before major version 5 wrote,
-in `.repo-standards` or as run records in Git's directory, use retired formats,
-which CLI 6.0.0 does not read; such a repository adopts fresh, as the CLI's
+and inspect the prepared commit afresh. Records with retired formats in `.repo-standards` or as run records in Git's
+directory cannot be read by CLI 6.0.0; such a repository adopts fresh, as the CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
 describes.
 
 ## Inspect the published source
 
-This guide selects `v0.5.6`. Verify its
-[GitHub release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.6)
-first. Run the first inspection from the adopting repository:
+The latest [published release, `v0.5.6`](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.6),
+predates operation/result v2 and cannot run with CLI 6.0.0. Before running these
+commands, select a later owner-published release whose notes require CLI 6.0.0
+and replace `REPLACE_WITH_COMPATIBLE_RELEASE_TAG` below with its tag. Until that
+release exists, use the adoption guide at the earlier release's tag with its
+matching CLI. Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.5.6
+source_tag=REPLACE_WITH_COMPATIBLE_RELEASE_TAG
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
@@ -100,15 +102,13 @@ edits they discard, repository state, prerequisite status, and every operation.
 A changed project or proposal changes the inspection identity and requires
 another review.
 
-## Start and complete adoption
+## Review and complete adoption
 
 After reviewing the complete inspection, pass its exact `identity` and the
-same scope proposal to `start`. When `confirmation.required` is false, no
-additional confirmation is needed. When it is true, review each reason and
-obtain the maintainer's confirmation before adding `--confirmed` to this command:
+same scope proposal to `start`:
 
 ```sh
-inspection_identity=sha256:REPLACE_WITH_INSPECTION_IDENTITY
+inspection_identity=sha256:REPLACE_WITH_REVIEWED_IDENTITY
 
 "$repo_standards" start \
   --source https://github.com/lutzseverino/repo-canon \
@@ -120,9 +120,19 @@ inspection_identity=sha256:REPLACE_WITH_INSPECTION_IDENTITY
   --json
 ```
 
+When the report's `confirmation.required` is `true`, obtain the maintainer's
+confirmation of those changes and add `--confirmed` to `start`. When it is
+`false`, start with the identity alone; `--confirmed` is rejected when the
+inspection does not require it.
+
 The fixes run before contextual work. They reconcile canonical GitHub labels,
 the `PR metadata` required check, and squash settings, then verify the remote
-result. The required check is plan-gated: on a private repository whose GitHub
+result. They create missing settings freely. Before changing an existing
+chosen value, a fix returns `confirmation-required` without mutation, naming
+the current and proposed values. After the maintainer confirms that overwrite,
+run `resume --confirmed --project "$project_root" --json`. Confirmation applies
+to that fix only; a later fix asks separately when it needs to overwrite.
+The required check is plan-gated: on a private repository whose GitHub
 plan offers neither branch protection nor rulesets, the fix reports it
 unavailable and adoption completes without it. A first adoption defers the
 required check, because GitHub runs the PR metadata validation workflow only

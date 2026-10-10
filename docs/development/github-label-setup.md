@@ -22,9 +22,9 @@ GitHub API resolves the same repository, and reconciles these labels:
 | `factory:failed`      | `b60205` | The factory run failed; remove to run it again               |
 | `run:orchestrated`    | `c5def5` | The factory runs an orchestrator over this ticket            |
 
-Matching labels are left alone. Missing labels are created, and labels with a
-matching case-insensitive name but different casing, color, or description are
-updated. Other labels are never deleted or edited.
+Matching labels are left alone. Missing labels are created freely. A label with
+a matching case-insensitive name but different casing, color, or description
+requires confirmation before updating. Other labels are never deleted or edited.
 
 ## Prerequisites and identity
 
@@ -47,10 +47,19 @@ a GitHub Enterprise host.
 ## Results and recovery
 
 The operation implements the public
-[`repo-standards/operation/v1`](https://github.com/lutzseverino/repo-standards/blob/v4.0.0/docs/usage/script-protocol.md)
+[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/script-protocol.md)
 boundary with an empty project-content target scope. It returns `changed` only
 after final readback confirms all canonical labels and `unchanged` when the
-first read already matches. Missing prerequisites, identity uncertainty,
+first read already matches. Results use `repo-standards/result/v2`.
+
+When any existing canonical label differs and `overwriteAllowed` is `false`,
+the fix returns `confirmation-required` naming every differing label field,
+its current value, and the standard's value. It makes no mutation, including
+creating missing labels. After the maintainer confirms, `resume --confirmed`
+invokes the fix with `overwriteAllowed: true`; it re-reads the remote, applies
+the changes, and verifies them. Colour casing alone is treated as equivalent.
+
+Missing prerequisites, identity uncertainty,
 insufficient access, API failure, or a readback mismatch returns `blocked`.
 
 A blocked result names confirmed effects and remaining work when a mutation

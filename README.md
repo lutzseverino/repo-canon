@@ -18,9 +18,10 @@ npm install --global --ignore-scripts @lutzseverino/repo-standards
 repo-standards --version
 ```
 
-Point the CLI at Repo Canon from the adopting repository by selecting the
-[`v0.5.6` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.6)
-and the `complete` profile, as the inspection example below shows.
+Select an owner-published release compatible with that CLI and the `complete`
+profile. The latest [`v0.5.6` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.6)
+predates the current operation protocol; use its tagged adoption guide and
+matching CLI until a compatible release is published.
 
 ## Features
 
@@ -35,13 +36,13 @@ and the `complete` profile, as the inspection example below shows.
 
 ## Usage
 
-Inspect the published selection before adoption. The report is read-only and
-authorizes nothing:
+Replace the placeholder below with a compatible published tag, then inspect
+the selection before adoption. The report is read-only and authorizes nothing:
 
 ```sh
 repo-standards inspect \
   --source https://github.com/lutzseverino/repo-canon \
-  --standards-version v0.5.6 --profile complete \
+  --standards-version REPLACE_WITH_COMPATIBLE_RELEASE_TAG --profile complete \
   --project /path/to/adopting-project --json
 ```
 

@@ -1,5 +1,7 @@
 import {
   apiEndpoint,
+  describeSettingChanges,
+  requireOverwriteConfirmation,
   githubApi,
   jsonFrom,
   prepareGithubRepository,
@@ -189,6 +191,21 @@ function setupLabels(request) {
       ? []
       : [{ kind: "update", actual, desired }];
   });
+
+  const changes = actions.flatMap((action) =>
+    action.kind === "update"
+      ? describeSettingChanges(
+          {
+            ...action.actual,
+            color: String(action.actual.color).toLowerCase(),
+            description: action.actual.description ?? "",
+          },
+          action.desired,
+          `label ${action.actual.name}`,
+        )
+      : [],
+  );
+  if (requireOverwriteConfirmation(request, operationName, changes)) return;
 
   const created = [];
   const updated = [];
