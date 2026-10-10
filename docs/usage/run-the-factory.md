@@ -131,7 +131,9 @@ a failed issue until someone removes `factory:failed`.
 ## Daily updates
 
 Once per 24 hours, starting with the first pass, the factory runs the project's
-pinned `outdated --json`. When a pin has an available update, it reads
+pinned `outdated --json`. Before each CLI command, the host checks the installed
+runtime against the current lockfile and restores it with `npm ci --ignore-scripts`
+when the pin changes. When a pin has an available update, it reads
 `status --json` and inspects the candidate using that exact CLI through the
 pinned bootstrap, without changing the project's pin. A standards update
 selects the same source and profile with the available tag; a CLI-only update
@@ -155,7 +157,10 @@ The adoption branch is `factory/update-standards-update-<hash>`, determined by
 the candidate CLI, source, standards tag and profile. An open update pull
 request from the repository itself holds the update across host restarts; any
 in-repository pull request on that candidate's branch prevents another run of
-the same candidate. Fork pull requests reserve no update slot. Held candidates
+the same candidate. These lookups paginate candidate branch history and open
+pull requests, so repository history has no fixed cutoff. Fork pull requests
+reserve no update slot. Held candidates
 are reconsidered on the next daily check, without image builds or repeated
-pull request reads between checks. An ended run
-without a pull request is logged and may run again at the next daily check.
+pull request reads between checks. After an update agent exits, the host checks
+its exact branch for a pull request. An ended run without a pull request is
+logged with its log path and may run again at the next daily check.

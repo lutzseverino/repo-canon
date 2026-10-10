@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { fixture } from "./helpers/operation.mjs";
 import {
   claudeUsage,
   codexUsage,
   createFactory,
+  createStandardsRunner,
   imageName,
   readSettings,
 } from "../.sandcastle/adapter.ts";
@@ -81,6 +85,34 @@ function fakeGitHub(issues) {
           },
         });
       }
+      if (query.includes("pullRequests(")) {
+        assert.ok(args.includes("--paginate"));
+        assert.ok(args.includes("--slurp"));
+        assert.match(query, /after: \$endCursor/);
+        assert.match(query, /pageInfo \{ hasNextPage endCursor \}/);
+        state.pullRequestReads += 1;
+        if (state.pullRequestError) throw state.pullRequestError;
+        const branch = field(args, "branch");
+        const prs = state.pullRequests.filter((pr) =>
+          branch ? pr.headRefName === branch : pr.state === "OPEN",
+        );
+        const pages = [];
+        for (let start = 0; start < prs.length || start === 0; start += 100)
+          pages.push({
+            data: {
+              repository: {
+                pullRequests: {
+                  pageInfo: {
+                    hasNextPage: start + 100 < prs.length,
+                    endCursor: String(start + 100),
+                  },
+                  nodes: prs.slice(start, start + 100),
+                },
+              },
+            },
+          });
+        return JSON.stringify(pages);
+      }
       return JSON.stringify([
         {
           data: {
@@ -113,15 +145,6 @@ function fakeGitHub(issues) {
           },
         },
       ]);
-    }
-    if (args[0] === "pr" && args[1] === "list") {
-      assert.equal(
-        args[args.indexOf("--json") + 1],
-        "state,headRefName,isCrossRepository",
-      );
-      state.pullRequestReads += 1;
-      if (state.pullRequestError) throw state.pullRequestError;
-      return JSON.stringify(state.pullRequests);
     }
     if (args[0] === "issue" && args[1] === "create") {
       state.created.push({
@@ -1121,7 +1144,7 @@ test("an existing open adoption PR prevents another update launch after restart"
   await run.tick();
   assert.equal(run.sandcastle.launched.length, 0);
   assert.equal(run.docker.builds.length, 0);
-  assert.equal(run.github.state.pullRequestReads, 1);
+  assert.equal(run.github.state.pullRequestReads, 2);
 });
 
 test("daily availability checks continue while adoption waits longer than a day", async () => {
@@ -1200,4 +1223,145 @@ test("a failed update PR lookup does not prevent ready issue launches", async ()
   assert.equal(run.sandcastle.launched[0].issue, 4);
   assert.match(run.reports.join("\n"), /update PR lookup failed.*offline/);
   run.sandcastle.launched[0].finish();
+});
+
+test("the running host restores the CLI when adoption changes its runtime pin", async (t) => {
+  const packageName = "@example/standards-cli";
+  const manifest = (version) =>
+    JSON.stringify({ dependencies: { [packageName]: version } });
+  const lock = (version) =>
+    JSON.stringify({
+      packages: {
+        "": { dependencies: { [packageName]: version } },
+        [`node_modules/${packageName}`]: { version },
+      },
+    });
+  const runtime = ".repo-standards/runtime";
+  const installed = `${runtime}/node_modules/${packageName}/package.json`;
+  const repo = fixture({
+    [`${runtime}/package.json`]: manifest("6.0.0"),
+    [`${runtime}/package-lock.json`]: lock("6.0.0"),
+    [installed]: JSON.stringify({ version: "6.0.0" }),
+    [`${runtime}/node_modules/.bin/repo-standards`]: "",
+    [`${runtime}/node_modules/.bin/repo-standards-bootstrap`]: "",
+  });
+  t.after(repo.close);
+  const commands = [];
+  const standards = createStandardsRunner(
+    repo.root,
+    async (executable, args) => {
+      commands.push({ executable, args });
+      if (executable === "npm")
+        writeFileSync(
+          join(repo.root, installed),
+          JSON.stringify({ version: "7.0.0" }),
+        );
+      return "result";
+    },
+  );
+  assert.equal(await standards(["outdated", "--json"]), "result");
+  assert.equal(commands.length, 1);
+  writeFileSync(join(repo.root, runtime, "package.json"), manifest("7.0.0"));
+  writeFileSync(join(repo.root, runtime, "package-lock.json"), lock("7.0.0"));
+  await standards(["status", "--json"]);
+  assert.equal(commands[1].executable, "npm");
+  assert.deepEqual(commands[1].args, [
+    "ci",
+    "--ignore-scripts",
+    "--prefix",
+    join(repo.root, runtime),
+  ]);
+  assert.equal(
+    commands[2].executable,
+    join(repo.root, runtime, "node_modules/.bin/repo-standards"),
+  );
+  await standards(["inspect", "--json"], "8.0.0");
+  assert.equal(commands.length, 4);
+  assert.equal(
+    commands[3].executable,
+    join(repo.root, runtime, "node_modules/.bin/repo-standards-bootstrap"),
+  );
+  assert.deepEqual(commands[3].args, [
+    "--cli-version",
+    "8.0.0",
+    "inspect",
+    "--json",
+  ]);
+});
+
+test("a normal update exit without a PR reports its log and waits until the next daily check", async () => {
+  const run = factory({ issues: [], updates: { outdated: available } });
+  await run.tick();
+  const launch = run.sandcastle.launched[0];
+  launch.finish();
+  await new Promise((resolve) => setImmediate(resolve));
+  await run.tick();
+  assert.match(
+    run.reports.join("\n"),
+    /update run ended without a pull request/,
+  );
+  assert.ok(run.reports.some((line) => line.includes(launch.log)));
+  assert.equal(run.sandcastle.launched.length, 1);
+  run.time.now = new Date("2026-10-10T12:00:00Z");
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 2);
+  run.sandcastle.launched[1].finish();
+});
+
+test("old candidate PRs beyond 1,000 unrelated PRs still prevent a duplicate adoption", async () => {
+  const earlier = factory({ issues: [], updates: { outdated: available } });
+  await earlier.tick();
+  const branch = earlier.sandcastle.launched[0].branch;
+  earlier.sandcastle.launched[0].finish();
+  const run = factory({ issues: [], updates: { outdated: available } });
+  run.github.state.pullRequests = Array.from({ length: 1001 }, (_, index) => ({
+    state: "CLOSED",
+    headRefName: `topic-${index}`,
+    isCrossRepository: false,
+  }));
+  run.github.state.pullRequests.push({
+    state: "CLOSED",
+    headRefName: branch,
+    isCrossRepository: false,
+  });
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 0);
+  assert.equal(run.docker.builds.length, 0);
+});
+
+test("an open adoption beyond the first page of open PRs still holds the update", async () => {
+  const run = factory({ issues: [], updates: { outdated: available } });
+  run.github.state.pullRequests = Array.from({ length: 1001 }, (_, index) => ({
+    state: "OPEN",
+    headRefName: `topic-${index}`,
+    isCrossRepository: false,
+  }));
+  run.github.state.pullRequests.push({
+    state: "OPEN",
+    headRefName: "factory/update-earlier",
+    isCrossRepository: false,
+  });
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 0);
+  assert.equal(run.docker.builds.length, 0);
+});
+
+test("successful update exits inspect the exact branch and ignore fork lookalikes", async () => {
+  for (const isCrossRepository of [false, true]) {
+    const run = factory({ issues: [], updates: { outdated: available } });
+    await run.tick();
+    const launch = run.sandcastle.launched[0];
+    run.github.state.pullRequests.push({
+      state: "MERGED",
+      headRefName: launch.branch,
+      isCrossRepository,
+    });
+    launch.finish();
+    await new Promise((resolve) => setImmediate(resolve));
+    await run.tick();
+    assert.equal(
+      run.reports.some((line) => line.includes("without a pull request")),
+      isCrossRepository,
+    );
+  }
 });

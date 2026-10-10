@@ -2,7 +2,7 @@
 // usage readers, asks the decision core what to do, and carries the decisions
 // out through GitHub label edits, comments, and Sandcastle launches.
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   decideFactory,
@@ -142,6 +142,61 @@ export function readSettings(
   };
 }
 
+// The pinned bootstrap acquires a candidate outside the checkout and removes
+// its temporary runtime afterwards. Inspection never changes the pin.
+export function createStandardsRunner(
+  root: string,
+  execute: (executable: string, args: string[]) => Promise<string>,
+): Ports["standards"] {
+  return async (args, version) => {
+    const runtime = join(root, ".repo-standards", "runtime");
+    const bin = join(runtime, "node_modules", ".bin");
+    // Adoption can replace the runtime pin while this host keeps running.
+    // Read the checkout and the installation each time, rather than treating
+    // an existing executable as evidence that it matches the new lockfile.
+    const manifest = JSON.parse(
+      readFileSync(join(runtime, "package.json"), "utf8"),
+    );
+    const packages = Object.keys(manifest.dependencies);
+    if (packages.length !== 1)
+      throw new Error("the runtime must pin one CLI package");
+    const packageName = packages[0];
+    const lock = JSON.parse(
+      readFileSync(join(runtime, "package-lock.json"), "utf8"),
+    );
+    const pinned = lock.packages[`node_modules/${packageName}`]?.version;
+    if (!pinned || manifest.dependencies[packageName] !== pinned)
+      throw new Error("the CLI manifest and lockfile pins disagree");
+    const installed = () => {
+      try {
+        return (
+          JSON.parse(
+            readFileSync(
+              join(runtime, "node_modules", packageName, "package.json"),
+              "utf8",
+            ),
+          ).version === pinned
+        );
+      } catch {
+        return false;
+      }
+    };
+    const executable = join(
+      bin,
+      version ? "repo-standards-bootstrap" : "repo-standards",
+    );
+    if (!installed() || !existsSync(executable)) {
+      await execute("npm", ["ci", "--ignore-scripts", "--prefix", runtime]);
+      if (!installed() || !existsSync(executable))
+        throw new Error("npm ci did not restore the pinned CLI runtime");
+    }
+    return execute(
+      executable,
+      version ? ["--cli-version", version, ...args] : args,
+    );
+  };
+}
+
 const templates: Record<Mode, string> = {
   direct: readFileSync(new URL("./direct-prompt.md", import.meta.url), "utf8"),
   orchestrated: readFileSync(
@@ -204,6 +259,8 @@ export function createFactory(settings: Settings, ports: Ports) {
   let pendingUpdate: Inspection | null = null;
   let updateRun: {
     provider: Provider;
+    branch: string;
+    log: string;
     controller: AbortController;
     startedAt: number;
     exited: boolean;
@@ -284,35 +341,65 @@ export function createFactory(settings: Settings, ports: Ports) {
     }
   }
 
+  async function readUpdatePullRequests(branch?: string) {
+    // Scope candidate history by exact branch, and scan only open PRs for
+    // another update. Both connections paginate, regardless of repository size.
+    const query = `query($owner: String!, $name: String!, $endCursor: String${branch ? ", $branch: String!" : ""}) {
+      repository(owner: $owner, name: $name) {
+        pullRequests(${branch ? "headRefName: $branch" : "states: OPEN"}, first: 100, after: $endCursor) {
+          pageInfo { hasNextPage endCursor }
+          nodes { state headRefName isCrossRepository }
+        }
+      }
+    }`;
+    const pages = JSON.parse(
+      await ports.gh([
+        "api",
+        "graphql",
+        "--paginate",
+        "--slurp",
+        "-f",
+        `query=${query}`,
+        ...(await identity()),
+        ...(branch ? ["-F", `branch=${branch}`] : []),
+      ]),
+    );
+    const prs: {
+      state: string;
+      headRefName: string;
+      isCrossRepository: boolean;
+    }[] = pages.flatMap((page: any) => page.data.repository.pullRequests.nodes);
+    return prs.filter(
+      (pr) =>
+        !pr.isCrossRepository &&
+        (branch
+          ? pr.headRefName === branch
+          : pr.headRefName.startsWith("factory/update-")),
+    );
+  }
+
+  async function settleUpdateRun() {
+    if (!updateRun?.exited) return;
+    const run = updateRun;
+    try {
+      if ((await readUpdatePullRequests(run.branch)).length === 0)
+        ports.report(
+          `update run ended without a pull request; log: ${run.log}`,
+        );
+    } catch (error) {
+      ports.report(`ended update PR lookup failed: ${error}; log: ${run.log}`);
+    }
+    updateRun = null;
+  }
+
   async function checkUpdatePullRequests() {
     if (!pendingUpdate || updateRun) return;
     const branch = `factory/update-${updateMarker(pendingUpdate.selection)}`;
     // An open adoption PR holds the update even across host restarts. A
     // completed/closed PR for this candidate also prevents daily duplicate runs.
-    const prs: {
-      state: string;
-      headRefName: string;
-      isCrossRepository: boolean;
-    }[] = JSON.parse(
-      await ports.gh([
-        "pr",
-        "list",
-        "--state",
-        "all",
-        "--limit",
-        "1000",
-        "--json",
-        "state,headRefName,isCrossRepository",
-      ]),
-    );
     if (
-      prs.some(
-        (pr) =>
-          !pr.isCrossRepository &&
-          (pr.headRefName === branch ||
-            (pr.state === "OPEN" &&
-              pr.headRefName.startsWith("factory/update-"))),
-      )
+      (await readUpdatePullRequests(branch)).length > 0 ||
+      (await readUpdatePullRequests()).length > 0
     )
       pendingUpdate = null;
   }
@@ -329,6 +416,13 @@ export function createFactory(settings: Settings, ports: Ports) {
     const controller = new AbortController();
     const run = {
       provider: model.provider,
+      branch,
+      log: join(
+        ports.root,
+        ".sandcastle",
+        "logs",
+        `${updateMarker(inspection.selection)}.log`,
+      ),
       controller,
       startedAt: ports.now().getTime(),
       exited: false,
@@ -341,12 +435,7 @@ export function createFactory(settings: Settings, ports: Ports) {
         branch,
         image,
         signal: controller.signal,
-        log: join(
-          ports.root,
-          ".sandcastle",
-          "logs",
-          `${updateMarker(inspection.selection)}.log`,
-        ),
+        log: run.log,
         prompt: updatePrompt(inspection),
       })
       .catch((error) =>
@@ -612,7 +701,7 @@ export function createFactory(settings: Settings, ports: Ports) {
   }
 
   async function tick(): Promise<Decision[]> {
-    if (updateRun?.exited) updateRun = null;
+    await settleUpdateRun();
     if (
       updateRun &&
       ports.now().getTime() - updateRun.startedAt >
