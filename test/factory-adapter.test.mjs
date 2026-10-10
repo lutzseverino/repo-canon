@@ -160,9 +160,15 @@ function fakeGitHub(issues) {
       args.includes("--search")
     ) {
       const marker = args[args.indexOf("--search") + 1].replace("in:body ", "");
+      const requestedState = args[args.indexOf("--state") + 1];
       return JSON.stringify(
         state.created
-          .filter((issue) => issue.body.includes(marker))
+          .filter(
+            (issue) =>
+              issue.body.includes(marker) &&
+              (requestedState === "all" ||
+                (issue.state ?? "OPEN").toLowerCase() === requestedState),
+          )
           .map((_, index) => ({ number: 10 + index })),
       );
     }
@@ -1237,7 +1243,10 @@ test("a failed update PR lookup does not prevent ready issue launches", async ()
   await run.tick();
   assert.equal(run.sandcastle.launched.length, 1);
   assert.equal(run.sandcastle.launched[0].issue, 4);
-  assert.match(run.reports.join("\n"), /update PR lookup failed.*offline/);
+  assert.match(
+    run.reports.join("\n"),
+    /update prerequisite lookup failed.*offline/,
+  );
   run.sandcastle.launched[0].finish();
 });
 
@@ -1412,4 +1421,53 @@ test("a different daily update candidate waits for the active adoption to exit",
   assert.notEqual(run.sandcastle.launched[1].branch, first.branch);
   assert.match(run.sandcastle.launched[1].prompt, /7\.0\.0/);
   run.sandcastle.launched[1].finish();
+});
+
+test("an agent-filed triage issue holds a routine candidate on later daily checks and remains held after closure and restart", async () => {
+  const run = factory({ issues: [], updates: { outdated: available } });
+  await run.tick();
+  const launch = run.sandcastle.launched[0];
+  const marker = launch.prompt.match(/standards-update-[a-f0-9]{16}/)[0];
+  const issue = {
+    title: "Confirm remote settings change",
+    label: "needs-triage",
+    body: `<!-- ${marker} -->\nThe fresh fix requires confirmation.`,
+  };
+  run.github.state.created.push(issue);
+  launch.finish();
+  await new Promise((resolve) => setImmediate(resolve));
+  await run.tick();
+  run.time.now = new Date("2026-10-10T12:00:00Z");
+  await run.tick();
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 1);
+  assert.equal(run.docker.builds.length, 1);
+  const restarted = factory({ issues: [], updates: { outdated: available } });
+  restarted.github.state.created.push({ ...issue, state: "CLOSED" });
+  await restarted.tick();
+  assert.equal(restarted.sandcastle.launched.length, 0);
+  assert.equal(restarted.docker.builds.length, 0);
+});
+
+test("triage issues filed while a candidate waits for capacity hold it before image builds", async () => {
+  const earlier = factory({ issues: [], updates: { outdated: available } });
+  await earlier.tick();
+  const marker = earlier.sandcastle.launched[0].prompt.match(
+    /standards-update-[a-f0-9]{16}/,
+  )[0];
+  earlier.sandcastle.launched[0].finish();
+  const usage = { "claude-code": 90 };
+  const run = factory({ issues: [], usage, updates: { outdated: available } });
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 0);
+  run.github.state.created.push({
+    label: "needs-triage",
+    body: `<!-- ${marker} -->`,
+  });
+  usage["claude-code"] = 10;
+  await run.tick();
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 0);
+  assert.equal(run.docker.builds.length, 0);
+  assert.match(run.reports.join("\n"), /update held by triage issue #10/);
 });

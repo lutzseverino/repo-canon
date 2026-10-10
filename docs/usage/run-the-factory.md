@@ -144,6 +144,10 @@ The decision core classifies the inspection's `confirmation` report. When it
 requires confirmation, the adapter files a `needs-triage` issue naming the
 selection, inspection identity, and every reason. It does not create another
 issue for that candidate while an earlier one exists, including a closed one.
+Any such marker issue also holds routine adoption of the same candidate before
+image builds, including issues filed by an agent when a later fix requires
+confirmation. The hold persists across host restarts and applies while a
+candidate waits for capacity; closing the issue does not authorize automation.
 
 A routine update uses spare capacity on the host's default model and the same
 provider gates and time limit as issue work. Its agent follows the candidate

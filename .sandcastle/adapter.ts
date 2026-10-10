@@ -308,21 +308,7 @@ export function createFactory(settings: Settings, ports: Ports) {
       const decision = decideUpdate(outdated, inspection);
       if (decision.kind === "triage-update") {
         const marker = updateMarker(inspection.selection);
-        const existing = JSON.parse(
-          await ports.gh([
-            "issue",
-            "list",
-            "--state",
-            "all",
-            "--search",
-            `in:body ${marker}`,
-            "--json",
-            "number",
-            "--limit",
-            "1",
-          ]),
-        );
-        if (existing.length > 0) return;
+        if ((await updateIssue(marker)) !== null) return;
         await ports.gh([
           "issue",
           "create",
@@ -343,6 +329,24 @@ export function createFactory(settings: Settings, ports: Ports) {
     } catch (error) {
       ports.report(`daily update check failed: ${error}`);
     }
+  }
+
+  async function updateIssue(marker: string): Promise<number | null> {
+    const existing: { number: number }[] = JSON.parse(
+      await ports.gh([
+        "issue",
+        "list",
+        "--state",
+        "all",
+        "--search",
+        `in:body ${marker}`,
+        "--json",
+        "number",
+        "--limit",
+        "1",
+      ]),
+    );
+    return existing[0]?.number ?? null;
   }
 
   async function readUpdatePullRequests(branch?: string) {
@@ -396,9 +400,16 @@ export function createFactory(settings: Settings, ports: Ports) {
     updateRun = null;
   }
 
-  async function checkUpdatePullRequests() {
+  async function checkUpdateHolds() {
     if (!pendingUpdate || updateRun) return;
-    const branch = `factory/update-${updateMarker(pendingUpdate.selection)}`;
+    const marker = updateMarker(pendingUpdate.selection);
+    const issue = await updateIssue(marker);
+    if (issue !== null) {
+      ports.report(`update held by triage issue #${issue}`);
+      pendingUpdate = null;
+      return;
+    }
+    const branch = `factory/update-${marker}`;
     // An open adoption PR holds the update even across host restarts. A
     // completed/closed PR for this candidate also prevents daily duplicate runs.
     if (
@@ -746,10 +757,10 @@ export function createFactory(settings: Settings, ports: Ports) {
     const decisions = decideFactory(snapshot);
     if (pendingUpdate && !updateRun && !("error" in updateModel(snapshot)))
       try {
-        await checkUpdatePullRequests();
+        await checkUpdateHolds();
       } catch (error) {
         pendingUpdate = null;
-        ports.report(`update PR lookup failed: ${error}`);
+        ports.report(`update prerequisite lookup failed: ${error}`);
       }
     let image = "";
     let applied = decisions;
