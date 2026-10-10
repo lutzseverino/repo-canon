@@ -1,7 +1,7 @@
 {
   "format": "repo-standards/scope-history/v5",
   "evidence": "historical",
-  "inspection": "sha256:53e9918f8a2bfff24be07c35313836c669918e45ac1a8bf106e9ecbdd86a8603",
+  "inspection": "sha256:d4f97a23f456f1a5643a5f5f266c41ab136ff647229440722241dcad0df7324b",
   "resolved": {
     "description": "The complete Repo Canon standards profile",
     "declarations": [
@@ -331,6 +331,14 @@
         "kind": "file",
         "target": "operations/lib/rendered-markdown.mjs",
         "exact": "operations/lib/rendered-markdown.mjs"
+      },
+      {
+        "id": "repository-license",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": "LICENSE",
+        "guidance": "guidance/repository-license.md"
       },
       {
         "id": "repository-readme",
@@ -878,6 +886,14 @@
         "exact": "operations/lib/rendered-markdown.mjs"
       },
       {
+        "id": "repository-license",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": "LICENSE",
+        "guidance": "guidance/repository-license.md"
+      },
+      {
         "id": "repository-readme",
         "checks": [
           {
@@ -1134,13 +1150,13 @@
     ]
   },
   "discovery": {
-    "identity": "sha256:6aa4af0100ee892c59b803f79f55998b39705c9800f0866307e72051f5bb2ddb",
+    "identity": "sha256:fb1507d8131196dcd7139bf82044eae6c65b7a66b8a0162e0b9c31ccbd058c67",
     "proposal": {
       "format": "repo-standards/scope/v2",
       "declarations": [
         {
           "id": "documentation",
-          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Current repository evidence resolves the four drafter questions: include root authoring-notes.md in place as the maintained author decision record beside standards.yaml; exclude THIRD_PARTY_NOTICES.md as legal notice text, discovery and guidance as standards source instructions, and vendor as preserved third-party material. docs is the only documentation root. Existing indexes cover all its directories. No moves, missing indexes, or additional link-repair paths are indicated by the current tree and reviewed guidance. README.md is governed separately by repository-readme. The earlier proposal supplies discovery context only; these decisions are based on the current repository.",
+          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Fresh review for v0.5.6 confirms docs is the sole documentation root, all required directory indexes exist, and CONTEXT.md is the root glossary. Include authoring-notes.md in place as the maintained author-decision record. Legal notices, standards input guidance/discovery and preserved vendor files stay outside this documentation scope. No planned moves, index introductions, or link repairs need additional paths.",
           "candidates": [
             {
               "path": "CONTEXT.md",
@@ -1153,7 +1169,7 @@
             {
               "path": "THIRD_PARTY_NOTICES.md",
               "decision": "exclude",
-              "reason": "The third-party license notice that the root MIT License and the vendored notices accompany, and a resource of the GitHub label setup fix; it is legal notice text, not documentation to categorize or move.",
+              "reason": "Licence and attribution payload, preserved outside maintained repository documentation.",
               "evidence": [
                 "THIRD_PARTY_NOTICES.md"
               ]
@@ -1161,17 +1177,33 @@
             {
               "path": "authoring-notes.md",
               "decision": "include",
-              "reason": "Repo Canon's maintained authoring notes: the root decision record that the documentation links and the repository conformance test reads as documentation. It stays at the repository root and does not move.",
+              "reason": "Maintained source-author decisions belong beside standards.yaml, as docs/agents/project.md directs; keep this root document in place.",
               "evidence": [
                 "authoring-notes.md"
               ]
             },
             {
-              "path": "discovery",
+              "path": "discovery/documentation.md",
               "decision": "exclude",
-              "reason": "Standards source inputs: the discovery guidance and the drafter this source ships to adopting repositories, read by the CLI and agents from the selected source, not repository documentation.",
+              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
               "evidence": [
-                "discovery"
+                "discovery/documentation.md"
+              ]
+            },
+            {
+              "path": "discovery/github-repository-configuration.md",
+              "decision": "exclude",
+              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
+              "evidence": [
+                "discovery/github-repository-configuration.md"
+              ]
+            },
+            {
+              "path": "discovery/project-readmes.md",
+              "decision": "exclude",
+              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
+              "evidence": [
+                "discovery/project-readmes.md"
               ]
             },
             {
@@ -1439,19 +1471,419 @@
               ]
             },
             {
-              "path": "guidance",
+              "path": "guidance/documentation.md",
               "decision": "exclude",
-              "reason": "Standards source inputs: the contextual guidance this source ships to adopting repositories, not repository documentation.",
+              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
               "evidence": [
-                "guidance"
+                "guidance/documentation.md"
               ]
             },
             {
-              "path": "vendor",
+              "path": "guidance/github-repository-configuration.md",
               "decision": "exclude",
-              "reason": "Vendored third-party material (the pinned Matt Pocock skills, Marked, parse5), preserved byte for byte under its own notices; never edited or moved.",
+              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
               "evidence": [
-                "vendor"
+                "guidance/github-repository-configuration.md"
+              ]
+            },
+            {
+              "path": "guidance/project-readmes.md",
+              "decision": "exclude",
+              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
+              "evidence": [
+                "guidance/project-readmes.md"
+              ]
+            },
+            {
+              "path": "guidance/repository-license.md",
+              "decision": "exclude",
+              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
+              "evidence": [
+                "guidance/repository-license.md"
+              ]
+            },
+            {
+              "path": "guidance/repository-readme.md",
+              "decision": "exclude",
+              "reason": "Published standards source guidance/discovery asset; it is an input for adopting agents, not repository documentation to reorganize.",
+              "evidence": [
+                "guidance/repository-readme.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/ask-matt/PHASE-BOUNDARIES.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/ask-matt/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/CONTEXT-FORMAT.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/domain-modeling/CONTEXT-FORMAT.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/prototype/UI.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/prototype/UI.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/research/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/research/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/resolving-merge-conflicts/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/tdd/tests.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/tdd/tests.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/engineering/wizard/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/engineering/wizard/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/grill-me/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/grill-me/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/handoff/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/handoff/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/teach/GLOSSARY-FORMAT.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/teach/GLOSSARY-FORMAT.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/teach/LEARNING-RECORD-FORMAT.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/teach/LEARNING-RECORD-FORMAT.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/teach/MISSION-FORMAT.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/teach/MISSION-FORMAT.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/teach/RESOURCES-FORMAT.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/teach/RESOURCES-FORMAT.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/teach/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/teach/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/to-questionnaire/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/to-questionnaire/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/wait-what/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/wait-what/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md"
+              ]
+            },
+            {
+              "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md",
+              "decision": "exclude",
+              "reason": "Preserved third-party skill or parser source and accompanying resources.",
+              "evidence": [
+                "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md"
               ]
             }
           ],
@@ -1459,14 +1891,95 @@
         },
         {
           "id": "github-repository-configuration",
-          "coverage": "The project-content scope is intentionally empty: canonical-labels and pull-request-integration configure only remote GitHub settings. The sole origin fetch/push URL is https://github.com/lutzseverino/repo-canon; authenticated read-only GitHub lookup confirms lutzseverino/repo-canon, default branch main, and viewer permission ADMIN. The later confirmation must authorize the disclosed remote fixes; this proposal and inspection perform none.",
+          "coverage": "Intentionally empty project-content scope: both fixes configure remote GitHub settings only. Fresh Git remotes and authenticated gh repo view identify lutzseverino/repo-canon, default branch main, viewer permission ADMIN. The maintainer confirmation of the complete inspection must authorize the disclosed fixes; no operation runs during inspection.",
           "candidates": [],
           "unresolved": []
         },
         {
           "id": "project-readmes",
-          "coverage": "This repository is a single standards source with one root manifest, `package.json`, and one set of development commands, and it has no nested Project. Every nested directory is standards source, executable tooling, tests and fixtures, vendored third-party material, documentation, or installed agent material. There is therefore no non-root Project README to propose, and the scope is intentionally empty.",
-          "candidates": [],
+          "coverage": "Fresh review of package.json, root source and tooling responsibilities, development commands, README and documentation identifies one root standards-source package. Nested tooling and acceptance harnesses use root setup, build and release commands. Fixture manifests and generated outputs are synthetic; preserved vendor content and packaged skills are assets. There is no independently maintained nested Project requiring a non-root README. The scope is intentionally empty.",
+          "candidates": [
+            {
+              "path": ".agents",
+              "decision": "exclude",
+              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "evidence": [
+                ".agents",
+                "docs/development/README.md",
+                "package.json"
+              ]
+            },
+            {
+              "path": "discovery",
+              "decision": "exclude",
+              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "evidence": [
+                "discovery",
+                "docs/development/README.md",
+                "package.json"
+              ]
+            },
+            {
+              "path": "docs",
+              "decision": "exclude",
+              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "evidence": [
+                "docs",
+                "docs/development/README.md",
+                "package.json"
+              ]
+            },
+            {
+              "path": "guidance",
+              "decision": "exclude",
+              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "evidence": [
+                "docs/development/README.md",
+                "guidance",
+                "package.json"
+              ]
+            },
+            {
+              "path": "operations",
+              "decision": "exclude",
+              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "evidence": [
+                "docs/development/README.md",
+                "operations",
+                "package.json"
+              ]
+            },
+            {
+              "path": "scripts",
+              "decision": "exclude",
+              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "evidence": [
+                "docs/development/README.md",
+                "package.json",
+                "scripts"
+              ]
+            },
+            {
+              "path": "test",
+              "decision": "exclude",
+              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "evidence": [
+                "docs/development/README.md",
+                "package.json",
+                "test"
+              ]
+            },
+            {
+              "path": "vendor",
+              "decision": "exclude",
+              "reason": "Root package component using the single root development/build/release workflow; not an independent maintained Project. Fixtures, generated code, vendor payloads, and organizational directories have no separately maintained Project here.",
+              "evidence": [
+                "docs/development/README.md",
+                "package.json",
+                "vendor"
+              ]
+            }
+          ],
           "unresolved": []
         }
       ]
@@ -1476,12 +1989,12 @@
       "targets": {
         "CONTEXT.md": {
           "type": "file",
-          "sha256": "f5717e479ad5c87eceb8e0f31ec28c284ea2ad32299a0fdd762d8c57cd0b9aee",
+          "sha256": "ae9765bb76c9f6bd6271d3d2a2bef78a2d54f70badbdc9af95c3e9ef8592a795",
           "executable": false
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "60e3365567edbbc24f650296908111537bae612a0b44424bc631ad1d0590b52f",
+          "sha256": "e20ec4ed63ec9dec49db0f6bed2451711bb6c3db47ce9bbc043e8ca6b3c57e1b",
           "executable": false
         },
         "docs/README.md": {
@@ -1571,17 +2084,17 @@
         },
         "docs/development/github-pr-integration-setup.md": {
           "type": "file",
-          "sha256": "758db7fd1acb3b843e46958918656708775f8da5466fec57a57bc9039fa737da",
+          "sha256": "00a84fa7f80cfe57353cbf5fda2e1556400626a1885b24c44d4794486a96aefa",
           "executable": false
         },
         "docs/development/issue-contract-validation.md": {
           "type": "file",
-          "sha256": "3f39f3f926e21d1db7a546da1f8a97481eaf6f5efdebb689e62a59fc88114d98",
+          "sha256": "41bd6eb4aeca46586acd11fc18fa0785f0e6f4451d6a3dbeac37a6368254d791",
           "executable": false
         },
         "docs/development/pr-metadata-validation.md": {
           "type": "file",
-          "sha256": "4eda1e7d8ed0d2e4f3c853cd0614f3f510a891e1692e5cce2a3c24d855600c4c",
+          "sha256": "300b25262e2d4d2223453495abaf554323abe560ab3180a365be31967df35c51",
           "executable": false
         },
         "docs/development/release.md": {
@@ -1591,7 +2104,7 @@
         },
         "docs/development/repository-readme-check.md": {
           "type": "file",
-          "sha256": "f6f9276e7d4ecf6332527b937a19f48c4d7e09548b57c9cebd3056c601bbef72",
+          "sha256": "b914fba6cf6e69582898c56324c86c66816d178a61f9167c04fa3152a4160768",
           "executable": false
         },
         "docs/development/skill-exercises.md": {
@@ -1601,7 +2114,7 @@
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "9ef13813a0fad57d002da1f5f0feea4a4318d09f932736f783a3b26c8e5554f8",
+          "sha256": "fabe5ac102fe94c007b3e4d71be2d1f64ab42a0c0df3c0586fdd3e44adb124b9",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
@@ -1616,7 +2129,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "c64baa1035b89a68178a712475525ece0515b7651e47a2db4b997e596a8caf19",
+          "sha256": "ef4beeec4336a9e75c0100b461ece6f613c320b7bceb56dfca70bbe7c2240f64",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -2257,7 +2770,7 @@
         },
         "CONTEXT.md": {
           "type": "file",
-          "sha256": "f5717e479ad5c87eceb8e0f31ec28c284ea2ad32299a0fdd762d8c57cd0b9aee",
+          "sha256": "ae9765bb76c9f6bd6271d3d2a2bef78a2d54f70badbdc9af95c3e9ef8592a795",
           "executable": false
         },
         "CONTRIBUTING.md": {
@@ -2272,7 +2785,7 @@
         },
         "README.md": {
           "type": "file",
-          "sha256": "667da1fbcabec134c6a2d1d5d3cd16c92b8aa0376a802e51439b58c1b4f91846",
+          "sha256": "bc0b94e00b9196c67a6e02f5a3a272ac94051be5b8771d0116c82922e8e2015b",
           "executable": false
         },
         "THIRD_PARTY_NOTICES.md": {
@@ -2282,7 +2795,7 @@
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "60e3365567edbbc24f650296908111537bae612a0b44424bc631ad1d0590b52f",
+          "sha256": "e20ec4ed63ec9dec49db0f6bed2451711bb6c3db47ce9bbc043e8ca6b3c57e1b",
           "executable": false
         },
         "discovery/documentation.md": {
@@ -2412,17 +2925,17 @@
         },
         "docs/development/github-pr-integration-setup.md": {
           "type": "file",
-          "sha256": "758db7fd1acb3b843e46958918656708775f8da5466fec57a57bc9039fa737da",
+          "sha256": "00a84fa7f80cfe57353cbf5fda2e1556400626a1885b24c44d4794486a96aefa",
           "executable": false
         },
         "docs/development/issue-contract-validation.md": {
           "type": "file",
-          "sha256": "3f39f3f926e21d1db7a546da1f8a97481eaf6f5efdebb689e62a59fc88114d98",
+          "sha256": "41bd6eb4aeca46586acd11fc18fa0785f0e6f4451d6a3dbeac37a6368254d791",
           "executable": false
         },
         "docs/development/pr-metadata-validation.md": {
           "type": "file",
-          "sha256": "4eda1e7d8ed0d2e4f3c853cd0614f3f510a891e1692e5cce2a3c24d855600c4c",
+          "sha256": "300b25262e2d4d2223453495abaf554323abe560ab3180a365be31967df35c51",
           "executable": false
         },
         "docs/development/release.md": {
@@ -2432,7 +2945,7 @@
         },
         "docs/development/repository-readme-check.md": {
           "type": "file",
-          "sha256": "f6f9276e7d4ecf6332527b937a19f48c4d7e09548b57c9cebd3056c601bbef72",
+          "sha256": "b914fba6cf6e69582898c56324c86c66816d178a61f9167c04fa3152a4160768",
           "executable": false
         },
         "docs/development/skill-exercises.md": {
@@ -2442,7 +2955,7 @@
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "9ef13813a0fad57d002da1f5f0feea4a4318d09f932736f783a3b26c8e5554f8",
+          "sha256": "fabe5ac102fe94c007b3e4d71be2d1f64ab42a0c0df3c0586fdd3e44adb124b9",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
@@ -2457,7 +2970,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "c64baa1035b89a68178a712475525ece0515b7651e47a2db4b997e596a8caf19",
+          "sha256": "ef4beeec4336a9e75c0100b461ece6f613c320b7bceb56dfca70bbe7c2240f64",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -2477,7 +2990,7 @@
         },
         "guidance/github-repository-configuration.md": {
           "type": "file",
-          "sha256": "cafbb76d990bdc5fb5876946c4aa2225e4be67f55e3e5afac29269fa2c646c34",
+          "sha256": "024e015dd5a5458741b691dc427aa8fd2547fe7f1195a91fc0724ccd816797fc",
           "executable": false
         },
         "guidance/project-readmes.md": {
@@ -2485,9 +2998,14 @@
           "sha256": "950db5eb503d79b04ff9c2dac7955410e9434b50ad951f30051e9b89119edce6",
           "executable": false
         },
+        "guidance/repository-license.md": {
+          "type": "file",
+          "sha256": "e78aab1c88e422a579a60f2e5e4addeeca20c564c4191665eb17a3717ee3b5d1",
+          "executable": false
+        },
         "guidance/repository-readme.md": {
           "type": "file",
-          "sha256": "5b7e2a4366bf1a615bea5e5d3acd79ccb8e4a16e9b2c2e23e31923cb9ee27ed3",
+          "sha256": "eb1d47ed0e41dbe880a5551371038110bf7387ed68fe83468d96a81c77e95cf0",
           "executable": false
         },
         "operations/check-documentation.mjs": {
@@ -2512,7 +3030,7 @@
         },
         "operations/lib/github-operation.mjs": {
           "type": "file",
-          "sha256": "00a1efcc9305c04f73d09f631f8832f02e848e2660452dce214f2d84ad08ea92",
+          "sha256": "e2227a1ed1ca6c7f57e05e23f07d3cc72605800299f2a4ba5ce5659ceef1de6b",
           "executable": false
         },
         "operations/lib/local-markdown-links.mjs": {
@@ -2532,7 +3050,7 @@
         },
         "operations/setup-github-pr-integration.mjs": {
           "type": "file",
-          "sha256": "3f3d7ec38ea8e58606346f40c6420c58ffb8b12bf8cb45389433d35f12c5ff9d",
+          "sha256": "63c1ce84ed6de8cd8e3461b642d8705c8fd7e381cf598c303b2a05e493c55685",
           "executable": false
         },
         "package-lock.json": {
@@ -2607,12 +3125,12 @@
         },
         "scripts/validate-issue-contract.mjs": {
           "type": "file",
-          "sha256": "191300570b34b7b3f689aaf093435184dd9d2171e83a1272d1554c69fb6d26ab",
+          "sha256": "557049976a4307e864467f20af5a453aef8aa8674df5415afb7f1b5405c41ff7",
           "executable": false
         },
         "standards.yaml": {
           "type": "file",
-          "sha256": "8599c7ffc4b7a7f174b0ca94a5775c6c3f5d621febea081c977a27a058eac665",
+          "sha256": "debe1d71d453527ff9698dbe223e1b260d107b7affe9a890b9c6e920ffd75ce1",
           "executable": false
         },
         "test/deliver-skill-fixtures.test.mjs": {
@@ -2652,12 +3170,12 @@
         },
         "test/fixtures/fake-gh-pr-settings.mjs": {
           "type": "file",
-          "sha256": "1e53a1c7763ce1f83ed33db76a3a14bcc431f63736cdc0d42f643d57db03c995",
+          "sha256": "12b1de6ca85e9ca4ef72a7f91d240a0a8e73495fbee493d024fdad123bef1d7a",
           "executable": true
         },
         "test/fixtures/fake-gh.mjs": {
           "type": "file",
-          "sha256": "b342033b782c20d4b670b79465d45f485ecb35db70e56b9bda86aa6bfaa1db69",
+          "sha256": "84d1ee1da46b83d3edeaae25956edf2bb56fa8bc74a9aa3865b91b5ebad52ec8",
           "executable": true
         },
         "test/fixtures/fake-node-version.mjs": {
@@ -2672,7 +3190,7 @@
         },
         "test/github-label-setup.test.mjs": {
           "type": "file",
-          "sha256": "4642f60fa9334afe00d2bd1ddfd76183b905ab3711805787b8a02f6fb4a8ea03",
+          "sha256": "d773fcfa153035df11f7a1ddef7d80e5a7966957ac478a560cba6321ac1bc214",
           "executable": false
         },
         "test/github-operation.test.mjs": {
@@ -2682,7 +3200,7 @@
         },
         "test/github-pr-integration-setup.test.mjs": {
           "type": "file",
-          "sha256": "2228b122c639332ce436364fc1b9c6b8ca4e00e60cfffb942cfdd89b769d5653",
+          "sha256": "4bf0c0f7bccb364668b77f68f7cc2c1e5c6237d8c557d07fe6973069e0e417ec",
           "executable": false
         },
         "test/helpers/documentation.mjs": {
@@ -2697,7 +3215,7 @@
         },
         "test/helpers/github-setup.mjs": {
           "type": "file",
-          "sha256": "45e80e79132a2df48f755aa97a661ad3eeab4aac374ab6136f879b73d0e33a39",
+          "sha256": "a285f54a610d32a66435d136f34412c7c5e5a146cd383d77c536885d116f7d18",
           "executable": false
         },
         "test/helpers/installed-validator.mjs": {
@@ -2707,7 +3225,7 @@
         },
         "test/helpers/issue-contracts.mjs": {
           "type": "file",
-          "sha256": "b04f0794f3466d19b7b5d436a749aabcd49dab6cf5ba9439b3b7bfbb4663d805",
+          "sha256": "2eec95e65ab01492a43b8c090d64aa3cd1f5dae0df7e262bcfb1473b9a580fb6",
           "executable": false
         },
         "test/helpers/operation.mjs": {
@@ -2717,12 +3235,12 @@
         },
         "test/issue-contract-adapter.test.mjs": {
           "type": "file",
-          "sha256": "325df61428a2ca401ffb5bf1c26e00c07c305faade9a3d6c69b94f8a0e78e858",
+          "sha256": "801e8a3b3a109f792a55434703d7d4e8f56251f3ef34b7559da26079ac6c3638",
           "executable": false
         },
         "test/issue-contracts.test.mjs": {
           "type": "file",
-          "sha256": "01992628056b56c21f436101507dba16eeb58e73f9188ea8e5dee859ddf922c9",
+          "sha256": "d1dc7769ea5a057ffc52e3a1e34852839d194920e87e5d76600c194552acc6f2",
           "executable": false
         },
         "test/planning-skill-fixtures.test.mjs": {
@@ -2765,9 +3283,14 @@
           "sha256": "e187ecde23bdb1ef08e98c6d464cbaf49588810f9e23bb1f01b620190650ec7e",
           "executable": false
         },
+        "test/repository-license.test.mjs": {
+          "type": "file",
+          "sha256": "42ec7711b78076dfdda0445717a0860e5d2a32a528e7fa8f9e8bd49c6a82b016",
+          "executable": false
+        },
         "test/repository-readme-check.test.mjs": {
           "type": "file",
-          "sha256": "64e34e3ba72da0b59af45cf10dc8c34ca8f5b7d0b7a53573b55b04d8ef28cd92",
+          "sha256": "20220a698a9a3548cd02a5318e2ce87419a4030da19ea126dd10fa17f5e9c453",
           "executable": false
         },
         "test/shared-workflows.test.mjs": {
@@ -3586,6 +4109,7 @@
           "guidance/documentation.md",
           "guidance/github-repository-configuration.md",
           "guidance/project-readmes.md",
+          "guidance/repository-license.md",
           "guidance/repository-readme.md"
         ],
         "operations": [
@@ -3646,6 +4170,7 @@
           "test/release-version-agreement.test.mjs",
           "test/rendered-markdown.test.mjs",
           "test/repository-conformance.test.mjs",
+          "test/repository-license.test.mjs",
           "test/repository-readme-check.test.mjs",
           "test/shared-workflows.test.mjs"
         ],
