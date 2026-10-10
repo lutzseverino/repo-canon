@@ -54,16 +54,14 @@ describes.
 
 ## Inspect the published source
 
-The latest [published release, `v0.5.6`](https://github.com/lutzseverino/repo-canon/releases/tag/v0.5.6),
-predates operation/result v2 and cannot run with CLI 6.0.0. Before running these
-commands, select a later owner-published release whose notes require CLI 6.0.0
-and replace `REPLACE_WITH_COMPATIBLE_RELEASE_TAG` below with its tag. Until that
-release exists, use the adoption guide at the earlier release's tag with its
-matching CLI. Run the first inspection from the adopting repository:
+The latest [published release, `v0.6.0`](https://github.com/lutzseverino/repo-canon/releases/tag/v0.6.0),
+requires CLI 6.0.0 or newer and uses operation/result v2. Review its breaking
+standards changes and migration steps before updating an existing adoption.
+Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=REPLACE_WITH_COMPATIBLE_RELEASE_TAG
+source_tag=v0.6.0
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
