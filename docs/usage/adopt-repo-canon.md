@@ -54,14 +54,14 @@ describes.
 
 ## Inspect the published source
 
-The latest [published release, `v0.7.0`](https://github.com/lutzseverino/repo-canon/releases/tag/v0.7.0),
+The latest [published release, `v0.8.0`](https://github.com/lutzseverino/repo-canon/releases/tag/v0.8.0),
 requires CLI 6.0.0 or newer and uses operation/result v2. Review its breaking
 standards changes and migration steps before updating an existing adoption.
 Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.7.0
+source_tag=v0.8.0
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
