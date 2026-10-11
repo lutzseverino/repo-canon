@@ -1,7 +1,8 @@
 // Identifies the kind of an issue's contract from its labels and body, and
 // the parent its `Parent` section names, with the issue Markdown parsing they
 // rest on. The issue-contract validator and the factory share it, so they
-// agree on which issues are specifications and which are children.
+// agree on which issues are specifications and which issue a `Parent` section
+// names.
 import { interpretMarkdown } from "./rendered-markdown.mjs";
 
 export const categoryLabels = new Set(["bug", "enhancement"]);

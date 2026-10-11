@@ -514,7 +514,8 @@ test("a specification body waits for its tickets, then launches /implement-spec 
 
 // A specification's readiness counts once it postdates its latest linked
 // ticket, and a published ticket counts by its `Parent` section before it is
-// linked.
+// linked. A native parent outranks the `Parent` section, and a parent in
+// another repository holds nothing.
 test("a specification waits for its published tickets to be linked and for readiness after them", async () => {
   const run = factory({
     issues: [
@@ -550,13 +551,23 @@ test("a specification waits for its published tickets to be linked and for readi
         body: `## Parent\n\nhttps://github.com/acme/gadgets/issues/3\n\n${ticketBody}`,
       },
       { number: 10, parent: 3, parentRepository: "acme/gadgets" },
+      {
+        number: 11,
+        parent: 12,
+        body: `## Parent\n\n#3\n\n${ticketBody}`,
+      },
+      {
+        number: 12,
+        labels: ["wayfinder:map"],
+        subIssues: [{ number: 11, labels: ["ready-for-agent"] }],
+      },
     ],
-    hostSettings: { caps: { "claude-code": 3 } },
+    hostSettings: { caps: { "claude-code": 4 } },
   });
   await run.tick();
   assert.deepEqual(
     run.sandcastle.launched.map(({ prompt }) => prompt),
-    ["/implement #8"],
+    ["/implement #8", "/implement #9", "/implement #10"],
   );
   assert.ok(
     run.reports.includes(
@@ -564,15 +575,19 @@ test("a specification waits for its published tickets to be linked and for readi
     ),
     run.reports.join("\n"),
   );
-  assert.ok(run.reports.includes("#6 skipped: child of specification #3"));
-  assert.ok(run.reports.includes("#7 skipped: child of specification #3"));
-  for (const number of [9, 10])
+  for (const number of [6, 7])
     assert.ok(
       run.reports.includes(
-        `#${number} skipped: child of specification acme/gadgets#3`,
+        `#${number} skipped: names specification #3 as its parent but is not linked to it yet`,
       ),
       run.reports.join("\n"),
     );
+  assert.ok(
+    run.reports.includes(
+      "#11 skipped: sub-issue of #12; it runs as part of #12 once #12 is ready for agent",
+    ),
+    run.reports.join("\n"),
+  );
 
   const spec = run.github.find(3);
   for (const [number, at] of [
@@ -584,10 +599,10 @@ test("a specification waits for its published tickets to be linked and for readi
     run.github.find(number).parent = 3;
   }
   await run.tick();
-  assert.equal(run.sandcastle.launched.length, 1);
+  assert.equal(run.sandcastle.launched.length, 3);
   assert.ok(
     run.reports.includes(
-      "#3 skipped: readiness predates its latest ticket #7; re-apply ready-for-agent once its tickets are published",
+      "#3 skipped: readiness predates its latest ticket #7; remove and re-apply ready-for-agent once its tickets are published",
     ),
     run.reports.join("\n"),
   );

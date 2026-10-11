@@ -49,8 +49,10 @@ _Avoid_: Intake report, any comment, inferred scope
 **Readiness**:
 The reviewed state of an implementation contract that an authorized reviewer
 considers sufficiently specified for work. It grants the work to an agent; the
-factory picks up ready issues on the frontier. A specification's readiness
-covers its tickets, so it is applied after they are published.
+factory picks up ready issues on the frontier. The readiness of an issue that
+runs over its tickets (a specification or any issue with sub-issues) covers
+them, so it is applied after they are published. When a ticket is published
+later, it is re-applied by removing `ready-for-agent` and adding it back.
 _Avoid_: Passing structural validation
 
 **Factory**:
