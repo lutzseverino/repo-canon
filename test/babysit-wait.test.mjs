@@ -38,8 +38,10 @@ Comment "@codex review" or "@codex security review".
 
 </details>`,
 });
-const completed =
-  '✅ **Completed** <relative-time datetime="2026-10-11T05:42:32.812517Z">2026-10-11T05:42:32.812517Z</relative-time>';
+const completedCell = (datetime) =>
+  `✅ **Completed** <relative-time datetime="${datetime}">${datetime}</relative-time>`;
+const completed = completedCell("2026-10-11T05:42:32.812517Z");
+const inProgress = "⏳ **In progress**";
 
 // Codex's reply on #231 when the repository has no Codex environment.
 const unavailable = (createdAt) => ({
@@ -55,6 +57,7 @@ const decision = (overrides) =>
     head: "f7bb671a07642acc7458fd7a885dfb0d7507f4c4",
     checks: passed,
     requestedAt: Date.parse("2026-10-11T05:39:50Z"),
+    pushedAt: Date.parse("2026-10-11T05:39:50Z"),
     comments: [],
     now: Date.parse("2026-10-11T05:43:00Z"),
     startedAt: Date.parse("2026-10-11T05:40:00Z"),
@@ -72,6 +75,7 @@ test("Completed for the head after a manual request is reviewed (#233)", () => {
   const outcome = decision({
     head: "322f254a37c73492dab5ca4a8b2566dcb48ae82f",
     requestedAt: Date.parse("2026-10-11T04:35:42Z"),
+    pushedAt: Date.parse("2026-10-11T04:35:37Z"),
     comments: [
       summary(completed, "322f254", "Manual request"),
       {
@@ -94,10 +98,126 @@ test("Completed for an older commit keeps waiting", () => {
 });
 
 test("a review in progress for the head keeps waiting", () => {
+  const outcome = decision({ comments: [summary(inProgress, "f7bb671")] });
+  assert.equal(outcome.code, null);
+  assert.equal(outcome.codex, "reviewing");
+});
+
+test("a re-request on an unchanged head waits past the earlier Completed row", () => {
+  const requestedAt = Date.parse("2026-10-11T05:50:00Z");
+  const rerequest = {
+    requestedAt,
+    startedAt: requestedAt,
+    now: requestedAt + 2 * minute,
+  };
   assert.equal(
-    decision({ comments: [summary("⏳ **In progress**", "f7bb671")] }).code,
+    decision({ ...rerequest, comments: [summary(completed, "f7bb671")] }).code,
     null,
   );
+  const outcome = decision({
+    ...rerequest,
+    comments: [summary(completedCell("2026-10-11T05:50:00Z"), "f7bb671")],
+  });
+  assert.equal(outcome.code, 0);
+  assert.equal(outcome.codex, "reviewed");
+});
+
+test("a Completed row without its datetime is not reviewed", () => {
+  const outcome = decision({
+    comments: [summary("✅ **Completed**", "f7bb671")],
+  });
+  assert.equal(outcome.code, null);
+  assert.equal(outcome.codex, "pending");
+});
+
+test("a push and a later re-request wait for the review after it (#265)", () => {
+  const head = "fa82ec7d5c1d1f2b8a6e0c4b3a2f1e0d9c8b7a65";
+  const opened = Date.parse("2026-10-11T22:15:21Z");
+  const comments = [
+    {
+      ...summary(completedCell("2026-10-11T22:18:00.000000Z"), "0b7bcb4"),
+      createdAt: "2026-10-11T22:15:39Z",
+    },
+    {
+      login: "lutzseverino",
+      createdAt: "2026-10-11T22:18:04Z",
+      body: "@codex review",
+    },
+  ];
+  const requestedAt = reviewRequestedAt(opened, comments);
+  assert.equal(requestedAt, Date.parse("2026-10-11T22:18:04Z"));
+  const look = {
+    head,
+    requestedAt,
+    pushedAt: Date.parse("2026-10-11T22:17:16Z"),
+    startedAt: Date.parse("2026-10-11T22:18:10Z"),
+  };
+  assert.equal(
+    decision({ ...look, comments, now: Date.parse("2026-10-11T22:20:00Z") })
+      .code,
+    null,
+  );
+  comments[0] = {
+    ...summary(
+      completedCell("2026-10-11T22:22:02.430104Z"),
+      "fa82ec7",
+      "Manual request",
+    ),
+    createdAt: "2026-10-11T22:15:39Z",
+  };
+  const outcome = decision({
+    ...look,
+    comments,
+    now: Date.parse("2026-10-11T22:22:30Z"),
+  });
+  assert.equal(outcome.code, 0);
+  assert.equal(outcome.codex, "reviewed");
+});
+
+test("a head pushed after the latest request is not requested, at once", () => {
+  const pushed = {
+    pushedAt: Date.parse("2026-10-11T05:45:00Z"),
+    now: Date.parse("2026-10-11T05:45:30Z"),
+    comments: [summary(completed, "61e9ca4")],
+  };
+  const outcome = decision(pushed);
+  assert.equal(outcome.code, 4);
+  assert.equal(outcome.codex, "not requested");
+  assert.deepEqual(report(outcome, "f7bb671a07642acc"), [
+    "f7bb671: checks passed, Codex review not requested for this head",
+  ]);
+  const failed = decision({
+    ...pushed,
+    checks: [{ name: "lint", state: "fail", link: "https://ci/2" }],
+  });
+  assert.equal(failed.code, 2);
+  assert.deepEqual(report(failed, "f7bb671a07642acc"), [
+    "f7bb671: 1 check failed, Codex review not requested for this head",
+    "lint https://ci/2",
+  ]);
+});
+
+test("no Codex comment 5 minutes after the request is no response", () => {
+  const requestedAt = Date.parse("2026-10-11T05:39:50Z");
+  assert.equal(decision({ now: requestedAt + 4 * minute }).code, null);
+  const outcome = decision({ now: requestedAt + 5 * minute });
+  assert.equal(outcome.code, 4);
+  assert.equal(outcome.codex, "no response");
+  assert.deepEqual(report(outcome, "f7bb671a07642acc"), [
+    "f7bb671: checks passed, Codex did not respond within 5 minutes",
+  ]);
+  // Once Codex has commented on the pull request, only 30 minutes bound it.
+  const answered = {
+    comments: [summary(completed, "61e9ca4")],
+    startedAt: requestedAt + 25 * minute,
+  };
+  assert.equal(
+    decision({ ...answered, now: requestedAt + 29 * minute }).code,
+    null,
+  );
+  const bounded = decision({ ...answered, now: requestedAt + 30 * minute });
+  assert.equal(bounded.code, 4);
+  assert.equal(bounded.codex, "not reviewing");
 });
 
 test("the unavailable reply after the latest request is unavailable (#231)", () => {
@@ -121,16 +241,18 @@ test("an unavailable reply before the latest request is ignored", () => {
 
 test("30 minutes after the latest request is not reviewing, across invocations", () => {
   const requestedAt = Date.parse("2026-10-11T05:39:50Z");
+  const comments = [summary(inProgress, "f7bb671")];
   // An earlier invocation hit its limit; a later one starts 25 minutes in.
   assert.equal(
     decision({
       requestedAt,
+      comments,
       startedAt: requestedAt,
       now: requestedAt + 9 * minute,
     }).code,
     5,
   );
-  const later = { requestedAt, startedAt: requestedAt + 25 * minute };
+  const later = { requestedAt, comments, startedAt: requestedAt + 25 * minute };
   assert.equal(
     decision({ ...later, now: requestedAt + 29 * minute }).code,
     null,
@@ -140,19 +262,52 @@ test("30 minutes after the latest request is not reviewing, across invocations",
   assert.equal(outcome.codex, "not reviewing");
 });
 
-test("a failed check is exit 2 once Codex settles, naming Codex's state", () => {
-  const checks = [
-    ...passed,
-    { name: "lint", state: "fail", link: "https://ci/2" },
-  ];
-  assert.equal(decision({ checks }).code, null);
+const failedChecks = [
+  ...passed,
+  { name: "lint", state: "fail", link: "https://ci/2" },
+];
+
+test("a failed check waits while Codex reviews, then is exit 2 once it settles", () => {
+  assert.equal(
+    decision({
+      checks: failedChecks,
+      comments: [summary(inProgress, "f7bb671")],
+    }).code,
+    null,
+  );
   const outcome = decision({
-    checks,
+    checks: failedChecks,
     comments: [summary(completed, "f7bb671")],
   });
   assert.equal(outcome.code, 2);
   assert.deepEqual(report(outcome, "f7bb671a07642acc"), [
     "f7bb671: 1 check failed, Codex reviewed",
+    "lint https://ci/2",
+  ]);
+  const requestedAt = Date.parse("2026-10-11T05:39:50Z");
+  // Past the 30-minute bound, a review still in progress no longer holds it.
+  const late = decision({
+    checks: failedChecks,
+    comments: [summary(inProgress, "f7bb671")],
+    startedAt: requestedAt + 25 * minute,
+    now: requestedAt + 30 * minute,
+  });
+  assert.equal(late.code, 2);
+  assert.equal(
+    report(late, "f7bb671a07642acc")[0],
+    "f7bb671: 1 check failed, Codex did not review within 30 minutes",
+  );
+});
+
+test("a failed check with no summary row for the head is exit 2 at once", () => {
+  const outcome = decision({
+    checks: failedChecks,
+    comments: [summary(completed, "61e9ca4")],
+  });
+  assert.equal(outcome.code, 2);
+  assert.equal(outcome.codex, "pending");
+  assert.deepEqual(report(outcome, "f7bb671a07642acc"), [
+    "f7bb671: 1 check failed, Codex review pending",
     "lint https://ci/2",
   ]);
 });
@@ -173,7 +328,10 @@ test("a head with no checks counts as passed", () => {
 });
 
 test("the invocation limit is exit 5 and names what is still pending", () => {
-  const outcome = decision({ now: Date.parse("2026-10-11T05:49:00Z") });
+  const outcome = decision({
+    comments: [summary(inProgress, "f7bb671")],
+    now: Date.parse("2026-10-11T05:49:00Z"),
+  });
   assert.equal(outcome.code, 5);
   assert.deepEqual(report(outcome, "f7bb671a07642acc"), [
     "f7bb671: still waiting on Codex; run again",
@@ -183,6 +341,7 @@ test("the invocation limit is exit 5 and names what is still pending", () => {
 test("the invocation limit lists checks that already failed", () => {
   const outcome = decision({
     checks: [{ name: "lint", state: "fail", link: "https://ci/2" }],
+    comments: [summary(inProgress, "f7bb671")],
     now: Date.parse("2026-10-11T05:49:00Z"),
   });
   assert.equal(outcome.code, 5);
@@ -203,13 +362,19 @@ test("each settled outcome reports one line", () => {
     ["f7bb671: checks passed, Codex unavailable"],
   );
   assert.deepEqual(
-    report(decision({ now: Date.parse("2026-10-11T06:10:00Z") }), head),
+    report(
+      decision({
+        comments: [summary(inProgress, "f7bb671")],
+        now: Date.parse("2026-10-11T06:10:00Z"),
+      }),
+      head,
+    ),
     ["f7bb671: checks passed, Codex did not review within 30 minutes"],
   );
 });
 
-test("the latest request is the later of the head's request and a re-request", () => {
-  const head = Date.parse("2026-10-11T04:35:37Z");
+test("the latest request is the later of the opening and a re-request", () => {
+  const opened = Date.parse("2026-10-11T04:20:00Z");
   const comments = [
     summary(completed, "322f254"),
     {
@@ -219,7 +384,14 @@ test("the latest request is the later of the head's request and a re-request", (
     },
   ];
   // Codex's own summary quotes "@codex review" and is no request.
-  assert.equal(reviewRequestedAt(head, comments), head);
+  assert.equal(
+    reviewRequestedAt(opened, comments),
+    Date.parse("2026-10-11T04:30:00Z"),
+  );
+  assert.equal(
+    reviewRequestedAt(opened, [summary(completed, "322f254")]),
+    opened,
+  );
   comments.push({
     login: "factory-app[bot]",
     createdAt: "2026-10-11T04:40:00Z",
@@ -231,7 +403,7 @@ test("the latest request is the later of the head's request and a re-request", (
     body: "@codex security review",
   });
   assert.equal(
-    reviewRequestedAt(head, comments),
+    reviewRequestedAt(opened, comments),
     Date.parse("2026-10-11T04:45:00Z"),
   );
 });
@@ -321,11 +493,12 @@ const run = (state, args) => {
   });
 };
 
+const openedNow = new Date().toISOString();
 const pendingPullRequest = {
   head: "f7bb671a07642acc7458fd7a885dfb0d7507f4c4",
   branch: "feat/example",
-  createdAt: new Date().toISOString(),
-  pushedAt: new Date().toISOString(),
+  createdAt: openedNow,
+  pushedAt: openedNow,
   checks: [
     {
       __typename: "CheckRun",
@@ -370,7 +543,7 @@ test("an already-settled outcome exits at once", async () => {
       ],
       comments: [
         {
-          ...summary(completed, "f7bb671"),
+          ...summary(completedCell(new Date().toISOString()), "f7bb671"),
           createdAt: new Date().toISOString(),
         },
       ],
@@ -385,29 +558,55 @@ test("an already-settled outcome exits at once", async () => {
   assert.ok(result.elapsed < 5000);
 });
 
-test("the head's request time is its push, from GitHub's activity record", async () => {
-  // Opened long ago, pushed just now: Codex's 30 minutes have not passed.
+test("the head's push time comes from GitHub's activity record", async () => {
+  // Opened long ago, pushed just now with no re-request: not requested.
   const pushed = await run(
     { ...pendingPullRequest, checks: [], createdAt: "2026-10-11T05:00:00Z" },
+    ["12"],
+  );
+  assert.equal(pushed.code, 4);
+  assert.equal(
+    pushed.stdout,
+    "f7bb671: checks passed, Codex review not requested for this head\n",
+  );
+  // A later re-request makes the pushed head requested again.
+  const rerequested = await run(
+    {
+      ...pendingPullRequest,
+      checks: [],
+      createdAt: "2026-10-11T05:00:00Z",
+      pushedAt: new Date(Date.now() - minute).toISOString(),
+      comments: [
+        {
+          login: "lutzseverino",
+          createdAt: new Date().toISOString(),
+          body: "@codex review",
+        },
+      ],
+    },
     ["12", "--limit", "0.3", "--interval", "0.1"],
   );
-  assert.equal(pushed.code, 5);
-  assert.equal(pushed.stdout, "f7bb671: still waiting on Codex; run again\n");
-  // Without an activity record, the head's committer date stands in.
+  assert.equal(rerequested.code, 5);
+  assert.equal(
+    rerequested.stdout,
+    "f7bb671: still waiting on Codex; run again\n",
+  );
+  // Without an activity record, the head's committer date stands in, and a
+  // push is never before the opening.
   const committed = await run(
     {
       ...pendingPullRequest,
       checks: [],
       createdAt: "2026-10-11T05:00:00Z",
       pushedAt: null,
-      committedAt: "2026-10-11T05:01:00Z",
+      committedAt: "2026-10-11T04:59:00Z",
     },
     ["12"],
   );
   assert.equal(committed.code, 4);
   assert.equal(
     committed.stdout,
-    "f7bb671: checks passed, Codex did not review within 30 minutes\n",
+    "f7bb671: checks passed, Codex did not respond within 5 minutes\n",
   );
 });
 

@@ -14,7 +14,7 @@ conditions and the wording rules.
    - `0`: checks passed and Codex reviewed; go to step 2.
    - `2`: the listed checks failed; go to step 2.
    - `3` or `4`: checks passed and Codex did not review this head (`3`
-     unavailable, `4` no review arrived); go to step 2 and follow
+     unavailable, `4` for the reason its line gives); go to step 2 and follow
      `CONTRIBUTING.md` for merging without that review.
    - `5`: still waiting; run it again.
    - `1`: fix the invocation or `gh` access and run it again.
