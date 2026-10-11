@@ -42,7 +42,10 @@ specification or ticket can be ready while its blockers are open. The
 readiness of an issue that runs over its tickets (a specification or any issue
 with sub-issues) covers them: apply it after they are published, and apply it
 again when a ticket is published later. To re-apply readiness the issue still
-carries, remove `ready-for-agent` and add it back.
+carries, remove `ready-for-agent` and add it back. Apply that readiness only once
+the latest ticket link appears in the issue's timeline. Readiness recorded in
+the same second as that link holds the issue; the factory's skip reason says to
+remove `ready-for-agent` and add it back.
 
 The factory picks up ready issues. Without a `model:` label it runs the
 factory's default model. Name a stronger model with `model:<slug>` or
