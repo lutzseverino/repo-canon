@@ -48,9 +48,11 @@ From \`components/relay\`, run \`npm test\`.
 
 Configuration is described in [the relay guide](../../docs/development/relay.md).
 Shared setup lives in [the development guide](../../docs/development/README.md).
+See [contribution instructions](../../CONTRIBUTING.md).
 `,
       "docs/development/README.md": "# Development\n",
       "docs/development/relay.md": "# Relay development\n",
+      "CONTRIBUTING.md": "# Contributing\n",
     },
     ["components/relay/README.md"],
   );
@@ -60,7 +62,130 @@ Shared setup lives in [the development guide](../../docs/development/README.md).
     format: "repo-standards/result/v2",
     status: "passed",
     message:
-      "Project README structure is valid for 1 concrete target; purpose, commands, configuration, and documentation still require maintainer or agent review.",
+      "Project README structure and shared setup and contribution links are valid for 1 concrete target; Project membership, purpose, commands, configuration, documentation, and duplication of shared instructions still require maintainer or agent review.",
+  });
+});
+
+test("requires each shared guidance link with a separate correction", async (t) => {
+  const sharedPaths = ["CONTRIBUTING.md", "docs/development/README.md"];
+  for (const missingPaths of [
+    [sharedPaths[0]],
+    [sharedPaths[1]],
+    sharedPaths,
+  ]) {
+    await t.test(`missing ${missingPaths.join(" and ")}`, (st) => {
+      const outcome = check(
+        st,
+        {
+          "component/README.md": `# Component\n\n${sharedPaths
+            .filter((path) => !missingPaths.includes(path))
+            .map((path) => `[Shared guidance](../${path})`)
+            .join("\n")}\n`,
+          "CONTRIBUTING.md": "# Contributing\n",
+          "docs/development/README.md": "# Development\n",
+        },
+        ["component/README.md"],
+      );
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.deepEqual(outcome.result, {
+        format: "repo-standards/result/v2",
+        status: "failed",
+        message: `Project README structure needs correction: ${missingPaths
+          .map((path) => `Link component/README.md to the root ${path}.`)
+          .join(" ")}`,
+      });
+    });
+  }
+});
+
+test("accepts rendered Markdown reference and HTML links with fragments", (t) => {
+  const outcome = check(
+    t,
+    {
+      "odd/work-unit/README.md": `# Work unit
+
+[Contributing][contribution]
+
+[contribution]: ../../CONTRIBUTING.md#pull-requests
+
+<a href="../../docs/development/README.md#setup">Setup</a>
+`,
+      "CONTRIBUTING.md": "# Contributing\n",
+      "docs/development/README.md": "# Development\n",
+    },
+    ["odd/work-unit/README.md"],
+  );
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "passed");
+});
+
+test("broken shared links fail and do not satisfy either requirement", (t) => {
+  const outcome = check(
+    t,
+    {
+      "component/README.md":
+        "# Component\n\n[Contributing](../CONTRIBUTING.md#issues)\n[Setup](../docs/development/README.md)\n",
+    },
+    ["component/README.md"],
+  );
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.deepEqual(outcome.result, {
+    format: "repo-standards/result/v2",
+    status: "failed",
+    message:
+      "Project README structure needs correction: component/README.md links to missing ../CONTRIBUTING.md#issues. component/README.md links to missing ../docs/development/README.md. Link component/README.md to the root CONTRIBUTING.md. Link component/README.md to the root docs/development/README.md.",
+  });
+});
+
+test("only rendered local links satisfy the shared guidance requirements", async (t) => {
+  const links =
+    "[Contributing](../CONTRIBUTING.md)\n[Setup](../docs/development/README.md)";
+  const examples = {
+    "fenced code": `\`\`\`markdown\n${links}\n\`\`\``,
+    "inline code": links
+      .split("\n")
+      .map((link) => `\`${link}\``)
+      .join("\n"),
+    "HTML comment": `<!--\n${links}\n-->`,
+    "hidden HTML": `<div hidden>\n\n${links}\n\n</div>`,
+    images: links.replaceAll("[", "!["),
+    external:
+      "[Contributing](https://example.com/CONTRIBUTING.md)\n[Setup](https://example.com/docs/development/README.md)",
+    "Project-local files":
+      "[Contributing](CONTRIBUTING.md)\n[Setup](docs/development/README.md)",
+  };
+  for (const [name, content] of Object.entries(examples)) {
+    await t.test(name, (st) => {
+      const outcome = check(
+        st,
+        {
+          "component/README.md": `# Component\n\n${content}\n`,
+          "CONTRIBUTING.md": "# Contributing\n",
+          "docs/development/README.md": "# Development\n",
+          "component/CONTRIBUTING.md": "# Component contributing\n",
+          "component/docs/development/README.md": "# Component development\n",
+        },
+        ["component/README.md"],
+      );
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.deepEqual(outcome.result, {
+        format: "repo-standards/result/v2",
+        status: "failed",
+        message:
+          "Project README structure needs correction: Link component/README.md to the root CONTRIBUTING.md. Link component/README.md to the root docs/development/README.md.",
+      });
+    });
+  }
+});
+
+test("a missing README receives only its create correction", (t) => {
+  const outcome = check(t, {}, ["component/README.md"]);
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.deepEqual(outcome.result, {
+    format: "repo-standards/result/v2",
+    status: "failed",
+    message:
+      "Project README structure needs correction: Create component/README.md for the maintained Project.",
   });
 });
 
@@ -69,7 +194,12 @@ test("runs from its declared retained source layout", (t) => {
     t,
     "operations/check-project-readmes.mjs",
   );
-  const project = fixture({ "packages/parser/README.md": "# Parser\n" });
+  const project = fixture({
+    "packages/parser/README.md":
+      "# Parser\n\n[Contributing](../../CONTRIBUTING.md)\n[Setup](../../docs/development/README.md)\n",
+    "CONTRIBUTING.md": "# Contributing\n",
+    "docs/development/README.md": "# Development\n",
+  });
   t.after(project.close);
   const outcome = invokeCheck(retainedScript, project.root, {
     operation: {
@@ -280,11 +410,16 @@ test("resolves sibling links from Project paths containing URL syntax", (t) => {
   const outcome = check(
     t,
     {
-      "component#1/README.md": "# Hash component\n\n[Guide](guide.md)\n",
+      "component#1/README.md":
+        "# Hash component\n\n[Guide](guide.md)\n[Contributing](../CONTRIBUTING.md)\n[Setup](../docs/development/README.md)\n",
       "component#1/guide.md": "# Guide\n",
-      "component?1/README.md": "# Query component\n\n[Guide](guide.md)\n",
+      "component?1/README.md":
+        "# Query component\n\n[Guide](guide.md)\n[Contributing](../CONTRIBUTING.md)\n[Setup](../docs/development/README.md)\n",
       "component?1/guide.md": "# Guide\n",
-      "component%1/README.md": "# Percent component\n\n[Guide](guide.md)\n",
+      "component%1/README.md":
+        "# Percent component\n\n[Guide](guide.md)\n[Contributing](../CONTRIBUTING.md)\n[Setup](../docs/development/README.md)\n",
+      "CONTRIBUTING.md": "# Contributing\n",
+      "docs/development/README.md": "# Development\n",
       "component%1/guide.md": "# Guide\n",
     },
     paths,
@@ -309,6 +444,7 @@ test("rejects directory scope and non-README targets as process errors", (t) => 
     { paths: ["component/README.md"], directories: ["component"] },
     { paths: ["component/package.json"], directories: [] },
     { paths: ["../README.md"], directories: [] },
+    { paths: ["README.md"], directories: [] },
   ]) {
     const outcome = invokeCheck(script, project.root, { allowedTargets });
     assert.notEqual(outcome.status, 0);
