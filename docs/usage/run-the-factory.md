@@ -41,8 +41,9 @@ such variable, so the host keeps a Codex login file and names it in
 Every run on Codex, including a standards update, gets the file as a read-only
 mount at `/home/agent/.codex/auth.json`, the sandbox's default Codex home; the
 rest of that home stays writable and private to the sandbox. The mount is made
-at each launch, so a file the host replaces reaches the next run, while a
-running sandbox keeps the copy it started with. Runs on Claude Code get no
+at each launch, so when the host replaces the file by renaming a new one over
+it, the next run gets the new file and a running sandbox keeps the one it
+started with. Runs on Claude Code get no
 mount. The file's contents never appear in `docker run` arguments, factory
 output, or run logs; errors name only its path.
 

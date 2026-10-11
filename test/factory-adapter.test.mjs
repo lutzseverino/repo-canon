@@ -837,10 +837,15 @@ const login = JSON.stringify({
   },
 });
 
-test("a readable Codex login file at an absolute path is accepted", (t) => {
+// A host directory holding the Codex login file, removed after the test.
+function loginFile(t) {
   const host = fixture({ "codex/auth.json": login });
   t.after(host.close);
-  const path = join(host.root, "codex", "auth.json");
+  return { host, path: join(host.root, "codex", "auth.json") };
+}
+
+test("a readable Codex login file at an absolute path is accepted", (t) => {
+  const { path } = loginFile(t);
   assert.equal(
     readSettings({ ...required, FACTORY_CODEX_LOGIN: path }).codexLogin,
     path,
@@ -848,8 +853,7 @@ test("a readable Codex login file at an absolute path is accepted", (t) => {
 });
 
 test("an unusable Codex login file is refused by its path", (t) => {
-  const host = fixture({ "codex/auth.json": login });
-  t.after(host.close);
+  const { host } = loginFile(t);
   const refusal = (path) => {
     try {
       readSettings({ ...required, FACTORY_CODEX_LOGIN: path });
@@ -875,9 +879,7 @@ test("an unusable Codex login file is refused by its path", (t) => {
 
 test("a Codex login file the factory's user cannot read is refused", (t) => {
   if (process.getuid?.() === 0) return t.skip("root reads every file");
-  const host = fixture({ "codex/auth.json": login });
-  t.after(host.close);
-  const path = join(host.root, "codex", "auth.json");
+  const { path } = loginFile(t);
   chmodSync(path, 0o000);
   assert.throws(
     () => readSettings({ ...required, FACTORY_CODEX_LOGIN: path }),
@@ -945,9 +947,7 @@ require("node:readline").createInterface({ input: process.stdin }).on("line", (l
 }
 
 test("each Codex usage read signs in from a private copy of the login that it removes", async (t) => {
-  const host = fixture({ "codex/auth.json": login });
-  t.after(host.close);
-  const path = join(host.root, "codex", "auth.json");
+  const { host, path } = loginFile(t);
   chmodSync(path, 0o444);
   const codex = fakeCodex(host.root, "answer");
   assert.equal(await readCodexUsage(path, codex.executable), 42);
@@ -965,9 +965,7 @@ test("each Codex usage read signs in from a private copy of the login that it re
 });
 
 test("a Codex usage read removes its login copy after an error or a timeout", async (t) => {
-  const host = fixture({ "codex/auth.json": login });
-  t.after(host.close);
-  const path = join(host.root, "codex", "auth.json");
+  const { host, path } = loginFile(t);
   for (const [behavior, message] of [
     ["refuse", /not signed in/],
     ["hang", /timed out/],
