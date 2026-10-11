@@ -173,6 +173,11 @@ const efforts: Record<Provider, string[]> = {
   codex: ["low", "medium", "high", "xhigh"],
 };
 
+export const skillPrefixes: Record<Provider, string> = {
+  "claude-code": "/",
+  codex: "$",
+};
+
 const vendorPrefixes: [string, Provider][] = [
   ["claude-", "claude-code"],
   ["gpt-", "codex"],

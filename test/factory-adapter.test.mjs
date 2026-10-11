@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { copyFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { installedValidator } from "./helpers/installed-validator.mjs";
 import { fixture } from "./helpers/operation.mjs";
@@ -443,6 +443,39 @@ test("an image that does not build leaves its issues unclaimed on the frontier",
 
 const settled = () => new Promise((resolve) => setImmediate(resolve));
 
+for (const [provider, model, prefix] of [
+  ["claude-code", "claude-sonnet-5-5", "/"],
+  ["codex", "gpt-5.5", "$"],
+]) {
+  for (const [mode, skill] of [
+    ["direct", "implement"],
+    ["orchestrated", "implement-spec"],
+  ]) {
+    test(`${provider} launches a ${mode} run with exactly ${prefix}${skill} #<n>`, async () => {
+      const run = factory({
+        issues: [
+          {
+            number: 4,
+            labels: [
+              "ready-for-agent",
+              ...(mode === "orchestrated" ? ["run:orchestrated"] : []),
+            ],
+          },
+        ],
+        hostSettings: { defaultModel: model },
+      });
+      await run.tick();
+      assert.deepEqual(
+        run.sandcastle.launched.map(({ provider, prompt }) => ({
+          provider,
+          prompt,
+        })),
+        [{ provider, prompt: `${prefix}${skill} #4` }],
+      );
+    });
+  }
+}
+
 test("a specification is launched with exactly /implement-spec #<n>", async () => {
   const run = factory({
     issues: [
@@ -619,13 +652,8 @@ test("a specification waits for its published tickets to be linked and for readi
 // so it reaches the issue-contract rule at the same relative path.
 test("the adapter loads from an adopting repository's installed files", async (t) => {
   const adapter = installedValidator(t, ".sandcastle/adapter.ts");
-  for (const template of ["direct-prompt.md", "orchestrated-prompt.md"])
-    copyFileSync(
-      new URL(`../.sandcastle/${template}`, import.meta.url),
-      join(dirname(adapter), template),
-    );
   const { prompt } = await import(pathToFileURL(adapter).href);
-  assert.equal(prompt("orchestrated", 3), "/implement-spec #3");
+  assert.equal(prompt("codex", "orchestrated", 3), "$implement-spec #3");
 });
 
 test("a run that exits without an open pull request fails its issue", async () => {
@@ -648,7 +676,7 @@ test("a run that exits without an open pull request fails its issue", async () =
   assert.equal(issue.comments.length, 1);
 });
 
-test("a failed first run relaunches its prompt on the retry model", async () => {
+test("a failed first run uses the retry provider's skill prefix", async () => {
   const run = factory({
     issues: [{ number: 4, labels: ["ready-for-agent", "run:orchestrated"] }],
     hostSettings: { retryModel: "gpt-5.5@xhigh" },
@@ -674,7 +702,7 @@ test("a failed first run relaunches its prompt on the retry model", async () => 
         log: "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
       },
       {
-        prompt: "/implement-spec #4",
+        prompt: "$implement-spec #4",
         provider: "codex",
         model: "gpt-5.5",
         effort: "xhigh",

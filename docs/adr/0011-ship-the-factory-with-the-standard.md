@@ -3,7 +3,8 @@
 Every adopting repository carries the factory as exact files in `.sandcastle/`,
 which a generic host service runs. The factory takes each ready issue on the
 frontier to a pull request that `babysit` merges, and starts each agent with
-only `/implement #<n>`, or `/implement-spec #<n>` for an orchestrated run.
+only its provider's invocation of `implement`, or `implement-spec` for an
+orchestrated run, and `#<n>`: `/` for Claude Code, `$` for Codex.
 Labels choose the run: `run:orchestrated`, or native sub-issues, select an
 orchestrator, and a `model:` label selects the model. This replaces the
 orchestrator prompts a maintainer wrote and relayed for each change, as the
