@@ -14,6 +14,7 @@ import {
   isProvider,
   labels,
   parseModel,
+  skillPrefixes,
   unknownProvider,
   updateModel,
   type Claim,
@@ -204,16 +205,9 @@ export function createStandardsRunner(
   };
 }
 
-const templates: Record<Mode, string> = {
-  direct: readFileSync(new URL("./direct-prompt.md", import.meta.url), "utf8"),
-  orchestrated: readFileSync(
-    new URL("./orchestrated-prompt.md", import.meta.url),
-    "utf8",
-  ),
-};
-
-export function prompt(mode: Mode, issue: number): string {
-  return templates[mode].trim().replaceAll("{{ISSUE}}", String(issue));
+export function prompt(provider: Provider, mode: Mode, issue: number): string {
+  const skill = mode === "direct" ? "implement" : "implement-spec";
+  return `${skillPrefixes[provider]}${skill} #${issue}`;
 }
 
 // A page holds 25 issues so the query stays within GitHub's limit of 500,000
@@ -708,7 +702,7 @@ export function createFactory(settings: Settings, ports: Ports) {
           .launch({
             issue,
             branch: runBranch(issue),
-            prompt: prompt(decision.mode, issue),
+            prompt: prompt(run.provider, run.mode, issue),
             provider: run.provider,
             model: run.model,
             effort: run.effort,

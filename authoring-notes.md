@@ -101,7 +101,7 @@ repeated.
 - The factory ships with the standard, as
   [ADR 0011](docs/adr/0011-ship-the-factory-with-the-standard.md) decides.
   `.sandcastle/` holds a repository-agnostic entry, adapter, and pure decision
-  core, with the two prompt templates, as exact files whose source is their
+  core as exact files whose source is their
   installed path. The adapter recognizes a specification, and a ticket's
   `Parent` reference, by the issue contract validator's rules, which it
   imports from their shared runtime. It runs Sandcastle through a pinned

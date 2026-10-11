@@ -62,10 +62,11 @@ The frontier is every open issue that carries `ready-for-agent`, has no open
 native blocker, and carries neither `factory:running` nor `factory:failed`.
 The oldest issue launches first.
 
-- **Direct run**: one agent started with `/implement #<n>`. An issue runs
-  directly by default.
-- **Orchestrated run**: one agent started with `/implement-spec #<n>`. A ticket
-  labelled `run:orchestrated` runs this way.
+- **Direct run**: one agent started with only `/implement #<n>` for Claude Code
+  or `$implement #<n>` for Codex. An issue runs directly by default.
+- **Orchestrated run**: one agent started with only `/implement-spec #<n>` for
+  Claude Code or `$implement-spec #<n>` for Codex. A ticket labelled
+  `run:orchestrated` runs this way.
 - **Specification**: an issue whose contract is a specification, as the issue
   contract validator identifies it. Like any issue with native sub-issues, it
   runs over its tickets: always orchestrated, and only once it and every open
@@ -135,8 +136,8 @@ it again.
 A run that ends without an open pull request, or exceeds the time limit, has
 failed. A run counts as over the limit by how long it ran, whether the factory
 stopped it or Sandcastle's idle timeout ended it. A failed first run retries once on the retry model, keeping the claim.
-The retry takes its issue's turn in oldest-first order, waits for its
-provider's gate, and launches only while the issue would still be picked up,
+The retry uses its provider's skill prefix, takes its issue's turn in
+oldest-first order, waits for its provider's gate, and launches only while the issue would still be picked up,
 apart from its own claim. When the run cannot retry, the factory removes the
 claim, comments the failure, the model, and the run's log, and labels the issue
 `factory:failed`. Each run's log is `.sandcastle/logs/issue-<n>-attempt-<a>.log`
