@@ -15,5 +15,6 @@ Preserve useful and accurate existing content. Assess purpose, commands,
 configuration, and links against repository evidence. The read-only structural
 check verifies the title, local links, and resolving links to the root
 `CONTRIBUTING.md` and `docs/development/README.md` for each confirmed path.
+Each shared link must render text or visible linked media.
 It does not decide Project membership, establish semantic accuracy, or detect
 duplication of shared instructions.

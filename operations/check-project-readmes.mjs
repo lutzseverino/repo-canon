@@ -106,7 +106,10 @@ function validate(projectRoot, paths) {
     const sharedLinks = localLinks(
       projectRoot,
       path,
-      document.content.elements.filter((element) => element.type === "link"),
+      document.content.elements.filter(
+        (element) =>
+          element.type === "link" && (element.text || element.containsMedia),
+      ),
     );
     for (const sharedPath of [
       "CONTRIBUTING.md",

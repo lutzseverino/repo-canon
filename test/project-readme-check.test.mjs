@@ -148,6 +148,14 @@ test("only rendered local links satisfy the shared guidance requirements", async
       .join("\n"),
     "HTML comment": `<!--\n${links}\n-->`,
     "hidden HTML": `<div hidden>\n\n${links}\n\n</div>`,
+    "empty HTML anchors":
+      '<a href="../CONTRIBUTING.md"></a>\n<a href="../docs/development/README.md"></a>',
+    "empty Markdown links":
+      "[](../CONTRIBUTING.md)\n[](../docs/development/README.md)",
+    "whitespace-only anchors":
+      '<a href="../CONTRIBUTING.md"> </a>\n<a href="../docs/development/README.md"> </a>',
+    "anchors with hidden children":
+      '<a href="../CONTRIBUTING.md"><span hidden>Contributing</span></a>\n<a href="../docs/development/README.md"><img hidden src="setup.png" alt="Setup"></a>',
     images: links.replaceAll("[", "!["),
     external:
       "[Contributing](https://example.com/CONTRIBUTING.md)\n[Setup](https://example.com/docs/development/README.md)",
@@ -176,6 +184,46 @@ test("only rendered local links satisfy the shared guidance requirements", async
       });
     });
   }
+});
+
+test("visible linked media can supply shared guidance links without text", (t) => {
+  const outcome = check(
+    t,
+    {
+      "component/README.md": `# Component
+
+[![](contributing.png)](../CONTRIBUTING.md)
+<a href="../docs/development/README.md"><img src="setup.png" alt=""></a>
+`,
+      "CONTRIBUTING.md": "# Contributing\n",
+      "docs/development/README.md": "# Development\n",
+      "component/contributing.png": "image",
+      "component/setup.png": "image",
+    },
+    ["component/README.md"],
+  );
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "passed");
+});
+
+test("shared guidance links containing visible media also count inside headings", (t) => {
+  const outcome = check(
+    t,
+    {
+      "component/README.md": `# Component
+
+## [![](contributing.png)](../CONTRIBUTING.md)
+<h2><a href="../docs/development/README.md"><img src="setup.png" alt=""></a></h2>
+`,
+      "CONTRIBUTING.md": "# Contributing\n",
+      "docs/development/README.md": "# Development\n",
+      "component/contributing.png": "image",
+      "component/setup.png": "image",
+    },
+    ["component/README.md"],
+  );
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "passed");
 });
 
 test("a missing README receives only its create correction", (t) => {

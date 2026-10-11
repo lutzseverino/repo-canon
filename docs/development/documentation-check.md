@@ -6,7 +6,8 @@ through the Repository Standards public operation protocol:
 - `operations/check-project-readmes.mjs` checks each concrete Project README
   target for a single non-centered level-one title and valid rendered local
   links, including links to the root `CONTRIBUTING.md` and
-  `docs/development/README.md`. Each missing shared link receives its own
+  `docs/development/README.md` that render text or visible linked media.
+  Each missing shared link receives its own
   correction. A selected missing path receives only a create-file diagnostic.
 - `operations/check-documentation.mjs` requires `docs/README.md` and
   `docs/development/README.md`, derives every context-local documentation root
