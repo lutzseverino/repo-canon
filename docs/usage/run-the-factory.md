@@ -69,8 +69,13 @@ The oldest issue launches first.
 - **Specification**: an issue with native sub-issues, or whose contract is a
   specification as the issue contract validator identifies it, always runs
   orchestrated, and only once it and every open child carry `ready-for-agent`.
-  A specification without tickets waits until they exist. The factory never
-  picks up a child of a specification.
+  A specification without tickets waits until they exist. Its
+  `ready-for-agent` must have been applied after its latest sub-issue was
+  linked; until it is applied again, the specification waits.
+- **Child**: an issue whose native parent, or else the first issue its
+  `Parent` section names, is another issue in the repository. The factory
+  never picks up a child, and it holds back a parent while an open child that
+  names it is not linked as its sub-issue.
 
 The factory claims an issue with `factory:running` before it launches the run.
 Each skipped ready issue is logged with its reason.

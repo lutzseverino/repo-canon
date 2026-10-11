@@ -190,6 +190,88 @@ test("a specification runs orchestrated once its tickets exist and are ready", (
   assert.equal(launch.mode, "orchestrated");
 });
 
+// A specification's readiness covers its ticket graph: it counts only when it
+// was applied after the latest of its tickets was linked.
+function graph(readyAt) {
+  return issue(3, ["ready-for-agent"], {
+    specification: true,
+    readyAt,
+    subIssues: [
+      {
+        number: 5,
+        state: "open",
+        labels: ["ready-for-agent"],
+        linkedAt: "2026-10-09T10:00:00Z",
+      },
+      {
+        number: 6,
+        state: "open",
+        labels: ["ready-for-agent"],
+        linkedAt: "2026-10-09T10:05:00Z",
+      },
+      {
+        number: 4,
+        state: "closed",
+        labels: [],
+        linkedAt: "2026-10-09T09:55:00Z",
+      },
+    ],
+  });
+}
+
+test("a specification whose readiness predates its latest ticket waits for readiness again", () => {
+  for (const readyAt of [
+    "2026-10-09T10:02:00Z",
+    "2026-10-09T10:05:00Z",
+    null,
+  ]) {
+    const decisions = decideFactory(snapshot({ issues: [graph(readyAt)] }));
+    assert.deepEqual(decisions, [
+      {
+        kind: "skip",
+        issue: 3,
+        reason:
+          "readiness predates its latest ticket #6; re-apply ready-for-agent once its tickets are published",
+      },
+    ]);
+  }
+});
+
+test("a specification made ready after its latest ticket was linked runs orchestrated", () => {
+  const decisions = decideFactory(
+    snapshot({ issues: [graph("2026-10-09T10:06:00Z")] }),
+  );
+  assert.deepEqual(decisions[0], { kind: "claim", issue: 3 });
+  assert.deepEqual(
+    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
+    [{ issue: 3, mode: "orchestrated" }],
+  );
+});
+
+// A ticket's parent is its native parent, or else the issue its `Parent`
+// section names, so a published ticket counts before it is linked.
+test("a ticket naming a specification it is not linked to holds both back", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        graph("2026-10-09T10:06:00Z"),
+        issue(7, ["ready-for-agent"], { parent: 3 }),
+        issue(8, ["needs-triage"], { parent: 3 }),
+        issue(9),
+      ],
+    }),
+  );
+  assert.equal(
+    skipOf(decisions, 3),
+    "tickets name it as their parent but are not linked to it yet: #7, #8",
+  );
+  assert.equal(skipOf(decisions, 7), "child of specification #3");
+  assert.deepEqual(
+    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
+    [{ issue: 9, mode: "direct" }],
+  );
+});
+
 test("the oldest ready issue launches first", () => {
   const decisions = decideFactory(
     snapshot({

@@ -38,7 +38,9 @@ Applying `ready-for-agent` or `ready-for-human` is the review action and needs
 the repository `admin`, `maintain`, or `triage` role. After revising a contract
 or posting an Agent Brief, wait for the issue-contract workflow's revision
 notice before applying readiness. Editing a contract removes its readiness. A
-specification or ticket can be ready while its blockers are open.
+specification or ticket can be ready while its blockers are open. A
+specification's readiness covers its ticket graph: apply it after its tickets
+are published and linked, and apply it again when a ticket is linked later.
 
 The factory picks up ready issues. Without a `model:` label it runs the
 factory's default model. Name a stronger model with `model:<slug>` or

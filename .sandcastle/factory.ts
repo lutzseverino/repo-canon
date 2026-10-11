@@ -11,8 +11,17 @@ export type Issue = {
   // Whether its contract is a specification, which runs orchestrated over
   // its tickets.
   specification: boolean;
+  // When `ready-for-agent` was last applied, or null when it is unknown.
+  readyAt: string | null;
   parent: number | null;
-  subIssues: { number: number; state: "open" | "closed"; labels: string[] }[];
+  // `linkedAt` is when the child was last added as a native sub-issue, or
+  // null when it is unknown.
+  subIssues: {
+    number: number;
+    state: "open" | "closed";
+    labels: string[];
+    linkedAt: string | null;
+  }[];
   blockedBy: { number: number; state: "open" | "closed" }[];
 };
 
@@ -197,7 +206,7 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
       (issue.labels.includes(labels.running)
         ? "claimed by a running factory run"
         : null) ??
-      exclusion(issue) ??
+      exclusion(issue, snapshot.issues) ??
       (snapshot.runs.some((run) => run.issue === issue.number)
         ? "a factory run for it is still on the host"
         : null);
@@ -297,7 +306,7 @@ function relaunch(
   snapshot: Snapshot,
 ): Decision[] {
   const reason = issue.labels.includes(labels.ready)
-    ? exclusion(issue)
+    ? exclusion(issue, snapshot.issues)
     : `it no longer carries ${labels.ready}`;
   if (reason) return [unretried(retry, reason)];
   const { provider } = retry.model;
@@ -418,7 +427,9 @@ function oldestFirst(issues: Issue[]): Issue[] {
   );
 }
 
-function exclusion(issue: Issue): string | null {
+// An issue's exclusion from pickup. `issues` are the open issues, whose
+// parents may name it.
+function exclusion(issue: Issue, issues: Issue[]): string | null {
   if (issue.parent !== null) return `child of specification #${issue.parent}`;
   if (issue.labels.includes(labels.failed))
     return `labelled ${labels.failed}; remove the label to run it again`;
@@ -426,14 +437,43 @@ function exclusion(issue: Issue): string | null {
     (blocker) => blocker.state === "open",
   );
   if (blockers.length > 0) return `blocked by ${references(blockers)}`;
+  const unlinked = issues.filter(
+    (other) =>
+      other.parent === issue.number &&
+      !issue.subIssues.some((child) => child.number === other.number),
+  );
+  if (unlinked.length > 0)
+    return `tickets name it as their parent but are not linked to it yet: ${references(unlinked)}`;
   if (issue.specification && issue.subIssues.length === 0)
     return "specification has no tickets yet";
+  const latest = latestLinked(issue.subIssues);
+  if (
+    latest &&
+    (issue.readyAt === null ||
+      Date.parse(issue.readyAt) <= Date.parse(latest.linkedAt!))
+  )
+    return `readiness predates its latest ticket #${latest.number}; re-apply ${labels.ready} once its tickets are published`;
   const unready = issue.subIssues.filter(
     (child) => child.state === "open" && !child.labels.includes(labels.ready),
   );
   if (unready.length > 0)
     return `children not ready for agent: ${references(unready)}`;
   return null;
+}
+
+// The sub-issue linked last, by its known link time.
+function latestLinked(
+  subIssues: Issue["subIssues"],
+): Issue["subIssues"][number] | null {
+  return subIssues
+    .filter((child) => child.linkedAt)
+    .reduce<Issue["subIssues"][number] | null>(
+      (latest, child) =>
+        latest && Date.parse(latest.linkedAt!) >= Date.parse(child.linkedAt!)
+          ? latest
+          : child,
+      null,
+    );
 }
 
 function references(issues: { number: number }[]): string {

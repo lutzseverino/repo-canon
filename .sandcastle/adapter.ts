@@ -4,7 +4,10 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { isSpecification } from "../operations/lib/issue-contract-kind.mjs";
+import {
+  isSpecification,
+  parentSectionReference,
+} from "../operations/lib/issue-contract-kind.mjs";
 import {
   decideFactory,
   decideUpdate,
@@ -212,9 +215,11 @@ export function prompt(mode: Mode, issue: number): string {
   return templates[mode].trim().replaceAll("{{ISSUE}}", String(issue));
 }
 
+// A page holds 25 issues so the query stays within GitHub's limit of 500,000
+// requested nodes.
 const issuesQuery = `query($owner: String!, $name: String!, $endCursor: String) {
   repository(owner: $owner, name: $name) {
-    issues(states: OPEN, first: 50, after: $endCursor) {
+    issues(states: OPEN, first: 25, after: $endCursor) {
       pageInfo { hasNextPage endCursor }
       nodes {
         number
@@ -224,10 +229,27 @@ const issuesQuery = `query($owner: String!, $name: String!, $endCursor: String) 
         parent { number }
         subIssues(first: 100) { nodes { number state labels(first: 100) { nodes { name } } } }
         blockedBy(first: 100) { nodes { number state } }
+        labelEvents: timelineItems(itemTypes: [LABELED_EVENT], last: 100) { nodes { ... on LabeledEvent { createdAt label { name } } } }
+        linkEvents: timelineItems(itemTypes: [SUB_ISSUE_ADDED_EVENT], last: 100) { nodes { ... on SubIssueAddedEvent { createdAt subIssue { number } } } }
       }
     }
   }
 }`;
+
+// The number of an issue API path in this repository, or null for another
+// repository's issue or no path.
+function localIssue(
+  reference: string | null,
+  owner: string,
+  name: string,
+): number | null {
+  const match = reference?.match(/^\/repos\/([^/]+)\/([^/]+)\/issues\/(\d+)$/);
+  return match &&
+    match[1].toLowerCase() === owner.toLowerCase() &&
+    match[2].toLowerCase() === name.toLowerCase()
+    ? Number(match[3])
+    : null;
+}
 
 const pullRequestsQuery = `query($owner: String!, $name: String!, $number: Int!, $branch: String!) {
   repository(owner: $owner, name: $name) {
@@ -508,6 +530,10 @@ export function createFactory(settings: Settings, ports: Ports) {
     const names = (connection: { nodes: { name: string }[] }) =>
       connection.nodes.map((label) => label.name);
     const state = (value: string) => (value === "OPEN" ? "open" : "closed");
+    const { owner, name } = await readRepository();
+    // Events arrive oldest first, so the last match is the latest.
+    const latest = (events: any[], matches: (event: any) => boolean) =>
+      events.findLast(matches)?.createdAt ?? null;
     return pages.flatMap((page: any) =>
       page.data.repository.issues.nodes.map((node: any) => ({
         number: node.number,
@@ -517,11 +543,25 @@ export function createFactory(settings: Settings, ports: Ports) {
           labels: names(node.labels),
           body: node.body,
         }),
-        parent: node.parent?.number ?? null,
+        readyAt: latest(
+          node.labelEvents.nodes,
+          (event) => event.label?.name === labels.ready,
+        ),
+        parent:
+          node.parent?.number ??
+          localIssue(
+            parentSectionReference(node.body ?? "", `${owner}/${name}`),
+            owner,
+            name,
+          ),
         subIssues: node.subIssues.nodes.map((child: any) => ({
           number: child.number,
           state: state(child.state),
           labels: names(child.labels),
+          linkedAt: latest(
+            node.linkEvents.nodes,
+            (event) => event.subIssue?.number === child.number,
+          ),
         })),
         blockedBy: node.blockedBy.nodes.map((blocker: any) => ({
           number: blocker.number,
