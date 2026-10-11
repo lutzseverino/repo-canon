@@ -129,14 +129,6 @@
       "exact": ".sandcastle/factory.ts"
     },
     {
-      "id": "factory-direct-prompt",
-      "checks": [],
-      "fixes": [],
-      "kind": "file",
-      "target": ".sandcastle/direct-prompt.md",
-      "exact": ".sandcastle/direct-prompt.md"
-    },
-    {
       "id": "factory-entry",
       "checks": [],
       "fixes": [],
@@ -151,14 +143,6 @@
       "kind": "file",
       "target": ".sandcastle/.gitignore",
       "exact": ".sandcastle/.gitignore"
-    },
-    {
-      "id": "factory-orchestrated-prompt",
-      "checks": [],
-      "fixes": [],
-      "kind": "file",
-      "target": ".sandcastle/orchestrated-prompt.md",
-      "exact": ".sandcastle/orchestrated-prompt.md"
     },
     {
       "id": "factory-sandbox-image",

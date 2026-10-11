@@ -1,7 +1,7 @@
 {
   "format": "repo-standards/scope-history/v5",
   "evidence": "historical",
-  "inspection": "sha256:e4c6138f06bf57c2a9d64d5c317026794f36ae28ea3bd6cf8b154597276d71af",
+  "inspection": "sha256:ac1781d9e4c15e00a4d88e65281de70ce8e6f4e63d463a8d167e6b5b6cdeb058",
   "resolved": {
     "description": "The complete Repo Canon standards profile",
     "declarations": [
@@ -133,14 +133,6 @@
         "exact": ".sandcastle/factory.ts"
       },
       {
-        "id": "factory-direct-prompt",
-        "checks": [],
-        "fixes": [],
-        "kind": "file",
-        "target": ".sandcastle/direct-prompt.md",
-        "exact": ".sandcastle/direct-prompt.md"
-      },
-      {
         "id": "factory-entry",
         "checks": [],
         "fixes": [],
@@ -155,14 +147,6 @@
         "kind": "file",
         "target": ".sandcastle/.gitignore",
         "exact": ".sandcastle/.gitignore"
-      },
-      {
-        "id": "factory-orchestrated-prompt",
-        "checks": [],
-        "fixes": [],
-        "kind": "file",
-        "target": ".sandcastle/orchestrated-prompt.md",
-        "exact": ".sandcastle/orchestrated-prompt.md"
       },
       {
         "id": "factory-sandbox-image",
@@ -808,14 +792,6 @@
         "exact": ".sandcastle/factory.ts"
       },
       {
-        "id": "factory-direct-prompt",
-        "checks": [],
-        "fixes": [],
-        "kind": "file",
-        "target": ".sandcastle/direct-prompt.md",
-        "exact": ".sandcastle/direct-prompt.md"
-      },
-      {
         "id": "factory-entry",
         "checks": [],
         "fixes": [],
@@ -830,14 +806,6 @@
         "kind": "file",
         "target": ".sandcastle/.gitignore",
         "exact": ".sandcastle/.gitignore"
-      },
-      {
-        "id": "factory-orchestrated-prompt",
-        "checks": [],
-        "fixes": [],
-        "kind": "file",
-        "target": ".sandcastle/orchestrated-prompt.md",
-        "exact": ".sandcastle/orchestrated-prompt.md"
       },
       {
         "id": "factory-sandbox-image",
@@ -1386,13 +1354,13 @@
     ]
   },
   "discovery": {
-    "identity": "sha256:763e11e5d7f3938a63d5a4b29bd328c6fdfe82ed08922e9b162944d4ae809c9a",
+    "identity": "sha256:85647b5c3283862d0a0f56b5dbb5de431ff81d3efe7abb6505db6cad83035f39",
     "proposal": {
       "format": "repo-standards/scope/v2",
       "declarations": [
         {
           "id": "documentation",
-          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Reviewed source-authoring notes, source payloads and third-party provenance against current project guidance and the current tree. The notes remain maintained source guidance; payloads and pinned third-party material retain their source layout. No extra documentation roots, moves or link repairs are needed.",
+          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Reviewed current manifests, maintained source-authoring constraints, source payloads, release docs and third-party notices. authoring-notes.md remains maintained source guidance in its established author layout. guidance/ and discovery/ are delivered standards payloads; vendor/ is pinned third-party source. None is an additional documentation root. No new moves or link repairs are needed.",
           "candidates": [
             {
               "path": "GLOSSARY.md",
@@ -2254,7 +2222,7 @@
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "974a159bc491fc5644c8f4f0d1faa268c95aa758f9ce466b102b0f277757a614",
+          "sha256": "fb230828db67f7e384554bd99911c7f135fb8b74e845e66681d705f2d115374a",
           "executable": false
         },
         "docs/README.md": {
@@ -2309,12 +2277,12 @@
         },
         "docs/adr/0010-carry-delivery-rules-in-the-environment.md": {
           "type": "file",
-          "sha256": "8680524acbaefc58b321248caacc6fc1967a4a7bbfab8fe7d7e2c9e13122c539",
+          "sha256": "21f132105e5f0bf58216d2b3d16bb79b0833d790b1d721b55c011fc0743f6b22",
           "executable": false
         },
         "docs/adr/0011-ship-the-factory-with-the-standard.md": {
           "type": "file",
-          "sha256": "a193fdd08f23e794c4db565ffbad3396b83f451bf6d085b20d3e7f9f4fac0117",
+          "sha256": "ad47ae0841369123f9ff00ef3523e66f3abc9497bb9010dc6f4e0e4eb9e637e0",
           "executable": false
         },
         "docs/adr/README.md": {
@@ -2329,7 +2297,7 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "6f2772e431018a7962d774a194f0db4a694bbcf273c7ba747045be983e731b8b",
+          "sha256": "76ae00d13d89d4f6de3742b900553c83a6047827eb6dfb188578b2875b7d4850",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
@@ -2384,12 +2352,12 @@
         },
         "docs/development/skill-exercises.md": {
           "type": "file",
-          "sha256": "e09073b05ed4d5e7d8a09975c3b99a0bd8cab3738b5b918606bcfe28f8971aba",
+          "sha256": "c90cfa5f4de1d861169b589e6cf3ec808f8aa68d9c9ed7534a6752cdd793d526",
           "executable": false
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "0915b4c3d579ccd465362e479dacbb50a276631648c298ce5e0e86c3050d13a6",
+          "sha256": "1793e74234cdbac0e0e9d7e551821a8a1e80a5ce88a2b3b7852f9379f9100a0a",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
@@ -2404,7 +2372,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "27a97df5eead072dba23400b0154fce1223bd5965cfc50feb35b05cf6db93398",
+          "sha256": "01cd4cdde1dce3e74a8759f61c2328dc26612f78009f3126717543b1277c1311",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -2414,7 +2382,7 @@
         },
         "docs/usage/run-the-factory.md": {
           "type": "file",
-          "sha256": "0f7b19b43c60116c8e064b15583906ce8dfed033157a1ff8b29a625fe9db8f63",
+          "sha256": "d9ab1e29edea5f2f46662297040cf3d12d4f32b9e8c4ec209b98c298337991cb",
           "executable": false
         },
         "docs/usage/versioning.md": {
@@ -2503,7 +2471,12 @@
         },
         ".agents/skills/babysit/SKILL.md": {
           "type": "file",
-          "sha256": "f1b03813dc8a30c5594f52861390c00d5671ea2085065baedfcf0ff1c21a701e",
+          "sha256": "b79467f82f54f64186b54894b25c9b47e500cf53b2c88e128519f53ba6b6082e",
+          "executable": false
+        },
+        ".agents/skills/babysit/wait.mjs": {
+          "type": "file",
+          "sha256": "c3ba206e74d3cc95caee0eaec1daddfc92b6812531818b99935782fc62534be2",
           "executable": false
         },
         ".agents/skills/code-review/SKILL.md": {
@@ -3102,27 +3075,17 @@
         },
         ".sandcastle/adapter.ts": {
           "type": "file",
-          "sha256": "83ca42c2e7d20072bf28ed63acd3bc81efcd5fd4364c8ffdcc071dd70e280171",
-          "executable": false
-        },
-        ".sandcastle/direct-prompt.md": {
-          "type": "file",
-          "sha256": "0435fe1d4892564d831d6dc221512739eb72f04a82d006f001b6269030ac9861",
+          "sha256": "fe89956d204b7047cf992f24f297823bac6456ea6e92e4cc3a71cd58c36e1231",
           "executable": false
         },
         ".sandcastle/factory.ts": {
           "type": "file",
-          "sha256": "892714cd2dbfbb198c4580f7b4a0bdda3d5981e00bbd2ae2f27c1a1260558e31",
+          "sha256": "ae37bf7a0560893374e3c4a4f67fbc6f3b26ad6f8f8c7c8ec7367a6a60fc4cb2",
           "executable": false
         },
         ".sandcastle/main.ts": {
           "type": "file",
-          "sha256": "7d2ce378a5d495729ee0156b895334bf397f7ebf5dca68f4c3fa0831ca1a5865",
-          "executable": false
-        },
-        ".sandcastle/orchestrated-prompt.md": {
-          "type": "file",
-          "sha256": "e1d2d4aad583a3ea755133874d9531d83405ce793534ca37fcf9042c3211e9dc",
+          "sha256": "bbc8fcc396b6745de5bff6d9c59d412dff340c4c8b1611cea1742c582f7049f5",
           "executable": false
         },
         "AGENTS.md": {
@@ -3132,7 +3095,7 @@
         },
         "CONTRIBUTING.md": {
           "type": "file",
-          "sha256": "a18409516f02793f7a72a9562bcda4f45be1e9992f2827871545131e6ab4ce7b",
+          "sha256": "84b7d3188157f82574efcbebfc9e9d6f338140e1600d9d30fcfaa297754b2aef",
           "executable": false
         },
         "GLOSSARY.md": {
@@ -3147,7 +3110,7 @@
         },
         "README.md": {
           "type": "file",
-          "sha256": "04718fb9809ff77655cb14eb640a403612b694c7a0da0dc5b4b3a9e8389b1f40",
+          "sha256": "56fd106847eb7aa9c772654c3b73de34b5ff32ab668d796278adcc85dd6d7668",
           "executable": false
         },
         "THIRD_PARTY_NOTICES.md": {
@@ -3157,7 +3120,7 @@
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "974a159bc491fc5644c8f4f0d1faa268c95aa758f9ce466b102b0f277757a614",
+          "sha256": "fb230828db67f7e384554bd99911c7f135fb8b74e845e66681d705f2d115374a",
           "executable": false
         },
         "discovery/documentation.md": {
@@ -3232,12 +3195,12 @@
         },
         "docs/adr/0010-carry-delivery-rules-in-the-environment.md": {
           "type": "file",
-          "sha256": "8680524acbaefc58b321248caacc6fc1967a4a7bbfab8fe7d7e2c9e13122c539",
+          "sha256": "21f132105e5f0bf58216d2b3d16bb79b0833d790b1d721b55c011fc0743f6b22",
           "executable": false
         },
         "docs/adr/0011-ship-the-factory-with-the-standard.md": {
           "type": "file",
-          "sha256": "a193fdd08f23e794c4db565ffbad3396b83f451bf6d085b20d3e7f9f4fac0117",
+          "sha256": "ad47ae0841369123f9ff00ef3523e66f3abc9497bb9010dc6f4e0e4eb9e637e0",
           "executable": false
         },
         "docs/adr/README.md": {
@@ -3272,7 +3235,7 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "6f2772e431018a7962d774a194f0db4a694bbcf273c7ba747045be983e731b8b",
+          "sha256": "76ae00d13d89d4f6de3742b900553c83a6047827eb6dfb188578b2875b7d4850",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
@@ -3327,12 +3290,12 @@
         },
         "docs/development/skill-exercises.md": {
           "type": "file",
-          "sha256": "e09073b05ed4d5e7d8a09975c3b99a0bd8cab3738b5b918606bcfe28f8971aba",
+          "sha256": "c90cfa5f4de1d861169b589e6cf3ec808f8aa68d9c9ed7534a6752cdd793d526",
           "executable": false
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "0915b4c3d579ccd465362e479dacbb50a276631648c298ce5e0e86c3050d13a6",
+          "sha256": "1793e74234cdbac0e0e9d7e551821a8a1e80a5ce88a2b3b7852f9379f9100a0a",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
@@ -3347,7 +3310,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "27a97df5eead072dba23400b0154fce1223bd5965cfc50feb35b05cf6db93398",
+          "sha256": "01cd4cdde1dce3e74a8759f61c2328dc26612f78009f3126717543b1277c1311",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -3357,7 +3320,7 @@
         },
         "docs/usage/run-the-factory.md": {
           "type": "file",
-          "sha256": "0f7b19b43c60116c8e064b15583906ce8dfed033157a1ff8b29a625fe9db8f63",
+          "sha256": "d9ab1e29edea5f2f46662297040cf3d12d4f32b9e8c4ec209b98c298337991cb",
           "executable": false
         },
         "docs/usage/versioning.md": {
@@ -3462,7 +3425,7 @@
         },
         "package.json": {
           "type": "file",
-          "sha256": "5d2d8635614748d1d53c4f9a592d1d01dd908e0f683457d0a8accf37212e31fd",
+          "sha256": "957ad75515a873e014d495fab47384ba145e2f774f0392ea7cad331f910a8393",
           "executable": false
         },
         "scripts/create-engineering-skill-fixtures.mjs": {
@@ -3517,7 +3480,12 @@
         },
         "standards.yaml": {
           "type": "file",
-          "sha256": "df6b07447d1ea44898e8da53c284ea99d9b741541b8cd9a2c63e6ea4acdf4ca6",
+          "sha256": "a0fed90de07c5f5db2d247bf5e093ec7b19a5586b6ab45ca2aba48538d000738",
+          "executable": false
+        },
+        "test/babysit-wait.test.mjs": {
+          "type": "file",
+          "sha256": "26abb60c8b4a414fffd6dd9e09ba96f46b51c3b37af50d39d3ea2c86e266da1a",
           "executable": false
         },
         "test/documentation-check.test.mjs": {
@@ -3542,17 +3510,22 @@
         },
         "test/factory-adapter.test.mjs": {
           "type": "file",
-          "sha256": "4b47204d2d76363c576bfb5bc834281f231473f484d394b60d186e350c57961d",
+          "sha256": "df8bc76670518d4d5ca71ee2282b999948596934e91f942241b0bac20f7b1b9a",
           "executable": false
         },
         "test/factory.test.mjs": {
           "type": "file",
-          "sha256": "033443e1bb8723e0a5c7762ef8f8e6f9133ea1d72f3aa9c5cf5b13aad8d97504",
+          "sha256": "1df83b8c4a1c0b38bbfe44f9138fa3b89628ed5e2e01756471524ed485112180",
           "executable": false
         },
         "test/fixture-builder-provenance.test.mjs": {
           "type": "file",
           "sha256": "c9f1f5239dad7dba6f920811af5ad491abacdf1dc06f16706a0651fdbb71cc1d",
+          "executable": false
+        },
+        "test/fixtures/fake-gh-babysit-wait.mjs": {
+          "type": "file",
+          "sha256": "03712f4c77598a9bef4103d30c086a0658e27d3e54322bf268e212fd63345f4b",
           "executable": false
         },
         "test/fixtures/fake-gh-pr-settings.mjs": {
@@ -3672,7 +3645,7 @@
         },
         "test/repository-conformance.test.mjs": {
           "type": "file",
-          "sha256": "517a33b8d2fb927c364d633e1b33e81ecd04faf2a86b273226e2d67414f4c297",
+          "sha256": "57f6a0c7f7616e5126b6ecc80a2cda38abb9c0ae92e0f4787ed74ad00af6159a",
           "executable": false
         },
         "test/repository-license.test.mjs": {
@@ -4244,7 +4217,8 @@
           ".agents/skills/ask-matt/agents/openai.yaml"
         ],
         ".agents/skills/babysit": [
-          ".agents/skills/babysit/SKILL.md"
+          ".agents/skills/babysit/SKILL.md",
+          ".agents/skills/babysit/wait.mjs"
         ],
         ".agents/skills/code-review": [
           ".agents/skills/code-review/SKILL.md",
@@ -4529,10 +4503,8 @@
           ".sandcastle/.gitignore",
           ".sandcastle/Dockerfile",
           ".sandcastle/adapter.ts",
-          ".sandcastle/direct-prompt.md",
           ".sandcastle/factory.ts",
-          ".sandcastle/main.ts",
-          ".sandcastle/orchestrated-prompt.md"
+          ".sandcastle/main.ts"
         ],
         "discovery": [
           "discovery/documentation.md",
@@ -4635,6 +4607,7 @@
           "scripts/support/fixture-authoring.mjs"
         ],
         "test": [
+          "test/babysit-wait.test.mjs",
           "test/documentation-check.test.mjs",
           "test/documentation-model.test.mjs",
           "test/documentation-scope-drafter.test.mjs",
@@ -4663,6 +4636,7 @@
           "test/shared-workflows.test.mjs"
         ],
         "test/fixtures": [
+          "test/fixtures/fake-gh-babysit-wait.mjs",
           "test/fixtures/fake-gh-pr-settings.mjs",
           "test/fixtures/fake-gh.mjs",
           "test/fixtures/fake-node-version.mjs",
