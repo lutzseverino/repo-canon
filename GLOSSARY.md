@@ -51,8 +51,10 @@ The reviewed state of an implementation contract that an authorized reviewer
 considers sufficiently specified for work. It grants the work to an agent; the
 factory picks up ready issues on the frontier. The readiness of an issue that
 runs over its tickets (a specification or any issue with sub-issues) covers
-them, so it is applied after they are published. When a ticket is published
-later, it is re-applied by removing `ready-for-agent` and adding it back.
+them, so it is applied after they are published, once the latest ticket link
+appears in the issue's timeline. Readiness recorded in the same second as that
+link holds the issue and needs re-applying, as does readiness when a ticket is
+published later.
 _Avoid_: Passing structural validation
 
 **Factory**:
