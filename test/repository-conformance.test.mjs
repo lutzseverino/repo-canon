@@ -291,9 +291,21 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   );
   assert.doesNotMatch(babysit, /--watch|watch tool|poll for reviews/);
   assert.doesNotMatch(babysit, /comments on it that Codex/);
+  assert.match(babysit, /`4` for the reason its line gives/);
   assert.match(
-    flowedText("CONTRIBUTING.md"),
+    babysit,
+    /When pushed fixes change enough to warrant another look/,
+  );
+  assert.doesNotMatch(babysit, /5 minutes|30 minutes/);
+  const guide = flowedText("CONTRIBUTING.md");
+  assert.match(
+    guide,
     /the merging agent comments on it that Codex did not review that head and why/,
+  );
+  assert.match(guide, /a push is not one/);
+  assert.match(
+    guide,
+    /it is unavailable, no review was requested after the head's push, Codex did not respond on the pull request within 5 minutes of the latest review request, or no review arrived within 30 minutes of it/,
   );
 });
 
