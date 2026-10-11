@@ -147,6 +147,11 @@ defaults:
       target: .github/ISSUE_TEMPLATE/implementation-ticket.yml
       exact: .github/ISSUE_TEMPLATE/implementation-ticket.yml
 
+    issue-contract-kind-runtime:
+      kind: file
+      target: operations/lib/issue-contract-kind.mjs
+      exact: operations/lib/issue-contract-kind.mjs
+
     issue-contract-validator:
       kind: file
       target: scripts/validate-issue-contract.mjs

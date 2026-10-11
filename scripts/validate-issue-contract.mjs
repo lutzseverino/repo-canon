@@ -7,7 +7,15 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { lexer } from "../vendor/marked/marked.esm.js";
 import {
-  interpretMarkdown,
+  categoryLabels,
+  identifyContract,
+  isSpecification,
+  issueMarkdown,
+  normalizeMarkdown,
+  parseSections,
+  wayfinderChildLabels,
+} from "../operations/lib/issue-contract-kind.mjs";
+import {
   markdownInlineText,
   markdownTokenSpans,
 } from "../operations/lib/rendered-markdown.mjs";
@@ -24,41 +32,7 @@ const workflowLabels = new Set([
 ]);
 const missingLabelEventError =
   "The authoritative issue timeline does not contain the current readiness label event.";
-const categoryLabels = new Set(["bug", "enhancement"]);
-const childLabels = new Set([
-  "wayfinder:research",
-  "wayfinder:prototype",
-  "wayfinder:grilling",
-  "wayfinder:task",
-]);
 const agentBriefHeadingNames = new Set(["agent brief"]);
-const issueNonRenderedElements = ["head", "title"];
-const contractSectionNames = new Set([
-  "acceptance criteria",
-  "actual behavior",
-  "additional context",
-  "blocked by",
-  "decisions so far",
-  "destination",
-  "desired outcome",
-  "environment",
-  "expected behavior",
-  "further notes",
-  "implementation decisions",
-  "not yet specified",
-  "notes",
-  "out of scope",
-  "parent",
-  "problem",
-  "problem statement",
-  "proposed approach",
-  "question",
-  "solution",
-  "steps to reproduce",
-  "testing decisions",
-  "user stories",
-  "what to build",
-]);
 const contractFields = new Map([
   [
     "bug report",
@@ -450,12 +424,6 @@ function markdownVisibleText(markdown) {
   return issueMarkdown(markdown).content.text().text;
 }
 
-function issueMarkdown(markdown) {
-  return interpretMarkdown(markdown, {
-    additionalNonRenderedElements: issueNonRenderedElements,
-  });
-}
-
 function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   const labels = new Set((issue.labels ?? []).map(labelName));
   const body = issue.body ?? "";
@@ -469,7 +437,7 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   }
 
   const wayfinderChildren = [...labels].filter((label) =>
-    childLabels.has(label),
+    wayfinderChildLabels.has(label),
   );
   if (wayfinderChildren.length > 0) {
     sections = parseSections(body, wayfinderChildFields);
@@ -498,7 +466,7 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
 
   const contractKind = identifyContract(sections);
   sections = parseSections(body, contractFields.get(contractKind));
-  if (!hasTriageCategory && contractKind === "specification") {
+  if (isSpecification(issue)) {
     requireSections(
       sections,
       ["Problem Statement", "Solution", "User Stories", "Out of Scope"],
@@ -571,25 +539,6 @@ function validate({ issue, comments, blockedBy, parent, relationshipErrors }) {
   return outcome("issue contract", errors, labels, true);
 }
 
-function identifyContract(sections) {
-  const headings = new Map([
-    ["problem statement", "specification"],
-    ["solution", "specification"],
-    ["user stories", "specification"],
-    ["what to build", "implementation ticket"],
-    ["blocked by", "implementation ticket"],
-    ["steps to reproduce", "bug report"],
-    ["expected behavior", "bug report"],
-    ["actual behavior", "bug report"],
-    ["problem", "feature request"],
-    ["desired outcome", "feature request"],
-  ]);
-  for (const heading of sections.keys()) {
-    if (headings.has(heading)) return headings.get(heading);
-  }
-  return null;
-}
-
 // Triaged requests, direct specifications and tickets, and unrecognized issues
 // that lose readiness carry one workflow state; Wayfinder issues never gain one.
 function outcome(kind, errors, labels, usesWorkflowState, contract = null) {
@@ -601,19 +550,6 @@ function outcome(kind, errors, labels, usesWorkflowState, contract = null) {
     usesWorkflowState,
     contract,
   };
-}
-
-function parseSections(markdown, acceptedNames = contractSectionNames) {
-  markdown = normalizeMarkdown(markdown);
-  const occurrences = issueMarkdown(markdown).sections(acceptedNames, {
-    hierarchy: "outermost",
-    nameSource: "markdown",
-  });
-  const sections = new Map();
-  for (const [name, matches] of occurrences) {
-    sections.set(name, matches.at(-1).source);
-  }
-  return sections;
 }
 
 function findMarkdownHeadings(markdown, acceptedNames = null) {
@@ -661,10 +597,6 @@ function normalize(value) {
     .toLowerCase();
 }
 
-function normalizeMarkdown(value) {
-  return value.replace(/\r\n?/g, "\n");
-}
-
 function requireSections(sections, names, errors) {
   for (const name of names) requireSection(sections, name, errors);
 }
@@ -698,7 +630,7 @@ function isPlaceholder(value) {
 
 function validateWayfinderMap(sections, labels, errors) {
   rejectPlanningReadiness(labels, errors);
-  if ([...labels].some((label) => childLabels.has(label))) {
+  if ([...labels].some((label) => wayfinderChildLabels.has(label))) {
     errors.push("Keep `wayfinder:map` separate from Wayfinder child labels.");
   }
   requireSections(

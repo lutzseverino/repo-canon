@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { copyFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { installedValidator } from "./helpers/installed-validator.mjs";
 import { fixture } from "./helpers/operation.mjs";
 import {
   claudeUsage,
@@ -32,6 +34,7 @@ function fakeGitHub(issues) {
     issues: issues.map((issue) => ({
       state: "OPEN",
       createdAt: `2026-10-0${issue.number}T00:00:00Z`,
+      body: "",
       labels: ["ready-for-agent"],
       parent: null,
       subIssues: [],
@@ -124,6 +127,7 @@ function fakeGitHub(issues) {
                   .map((issue) => ({
                     number: issue.number,
                     createdAt: issue.createdAt,
+                    body: issue.body,
                     labels: names(issue.labels),
                     parent: issue.parent && { number: issue.parent },
                     subIssues: {
@@ -395,6 +399,75 @@ test("a specification is launched with exactly /implement-spec #<n>", async () =
     run.sandcastle.launched.map((launch) => launch.prompt),
     ["/implement-spec #3"],
   );
+});
+
+const specificationBody = `## Problem Statement
+
+Widgets cannot be exported.
+
+## Solution
+
+Export widgets as CSV.
+
+## User Stories
+
+1. As an owner, I want to export widgets, so that I can audit them.
+`;
+
+const ticketBody = `## What to build
+
+Export widgets as CSV.
+
+## Acceptance criteria
+
+- [ ] Widgets export as CSV.
+
+## Blocked by
+
+None - can start immediately
+`;
+
+test("a specification body waits for its tickets, then launches /implement-spec #<n>", async () => {
+  const run = factory({
+    issues: [
+      { number: 3, body: specificationBody },
+      { number: 4, body: ticketBody },
+      {
+        number: 5,
+        body: specificationBody,
+        labels: ["ready-for-agent", "bug"],
+      },
+    ],
+    hostSettings: { caps: { "claude-code": 3 } },
+  });
+  await run.tick();
+  assert.deepEqual(run.github.find(3).labels, ["ready-for-agent"]);
+  assert.deepEqual(
+    run.sandcastle.launched.map(({ issue, prompt }) => ({ issue, prompt })),
+    [
+      { issue: 4, prompt: "/implement #4" },
+      { issue: 5, prompt: "/implement #5" },
+    ],
+  );
+  run.github.find(3).subIssues.push({
+    number: 6,
+    labels: ["ready-for-agent"],
+  });
+  await run.tick();
+  assert.equal(run.sandcastle.launched.at(-1).prompt, "/implement-spec #3");
+});
+
+// An adopter receives the adapter and every module it imports as exact files,
+// so it reaches the issue-contract rule at the same relative path.
+test("the adapter loads from an adopting repository's installed files", async (t) => {
+  const adapter = installedValidator(t, ".sandcastle/adapter.ts");
+  for (const template of ["direct-prompt.md", "orchestrated-prompt.md"])
+    copyFileSync(
+      new URL(`../.sandcastle/${template}`, import.meta.url),
+      join(dirname(adapter), template),
+    );
+  const { prompt } = await import(pathToFileURL(adapter).href);
+  assert.equal(prompt("orchestrated", 3), "/implement-spec #3");
 });
 
 test("a run that exits without an open pull request fails its issue", async () => {
