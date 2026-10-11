@@ -192,29 +192,16 @@ test("a specification runs orchestrated once its tickets exist and are ready", (
 
 // A specification's readiness covers its ticket graph: it counts only when it
 // was applied after the latest of its tickets was linked.
-function graph(readyAt) {
+function graph(readyAt, subIssues = []) {
   return issue(3, ["ready-for-agent"], {
     specification: true,
     readyAt,
+    latestLink: { ticket: 6, at: "2026-10-09T10:05:00Z" },
     subIssues: [
-      {
-        number: 5,
-        state: "open",
-        labels: ["ready-for-agent"],
-        linkedAt: "2026-10-09T10:00:00Z",
-      },
-      {
-        number: 6,
-        state: "open",
-        labels: ["ready-for-agent"],
-        linkedAt: "2026-10-09T10:05:00Z",
-      },
-      {
-        number: 4,
-        state: "closed",
-        labels: [],
-        linkedAt: "2026-10-09T09:55:00Z",
-      },
+      { number: 5, state: "open", labels: ["ready-for-agent"] },
+      { number: 6, state: "open", labels: ["ready-for-agent"] },
+      { number: 4, state: "closed", labels: [] },
+      ...subIssues,
     ],
   });
 }
@@ -269,6 +256,44 @@ test("a ticket naming a specification it is not linked to holds both back", () =
   assert.deepEqual(
     launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
     [{ issue: 9, mode: "direct" }],
+  );
+});
+
+test("another repository's sub-issue does not stand in for a local ticket with its number", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        graph("2026-10-09T10:06:00Z", [
+          {
+            number: "acme/gadgets#7",
+            state: "open",
+            labels: ["ready-for-agent"],
+          },
+        ]),
+        issue(7, ["ready-for-agent"], { parent: 3 }),
+      ],
+    }),
+  );
+  assert.equal(
+    skipOf(decisions, 3),
+    "tickets name it as their parent but are not linked to it yet: #7",
+  );
+  assert.deepEqual(launches(decisions), []);
+});
+
+test("an unready sub-issue in another repository is named by its repository", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        graph("2026-10-09T10:06:00Z", [
+          { number: "acme/gadgets#7", state: "open", labels: [] },
+        ]),
+      ],
+    }),
+  );
+  assert.equal(
+    skipOf(decisions, 3),
+    "children not ready for agent: acme/gadgets#7",
   );
 });
 

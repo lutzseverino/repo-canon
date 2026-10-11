@@ -62,6 +62,7 @@ function fakeGitHub(issues) {
       subIssues: [],
       blockedBy: [],
       labelEvents: [],
+      linkEvents: [],
       pullRequests: [],
       branchPullRequests: [],
       comments: [],
@@ -165,6 +166,9 @@ function fakeGitHub(issues) {
                     subIssues: {
                       nodes: issue.subIssues.map((child) => ({
                         number: child.number,
+                        repository: {
+                          nameWithOwner: child.repository ?? "acme/widgets",
+                        },
                         state: child.state ?? "OPEN",
                         labels: names(child.labels),
                       })),
@@ -182,12 +186,17 @@ function fakeGitHub(issues) {
                       })),
                     },
                     linkEvents: {
-                      nodes: issue.subIssues
-                        .filter((child) => child.linkedAt)
-                        .map((child) => ({
-                          createdAt: child.linkedAt,
-                          subIssue: { number: child.number },
-                        })),
+                      nodes: issue.linkEvents.map(
+                        ({ number, repository, at }) => ({
+                          createdAt: at,
+                          subIssue: {
+                            number,
+                            repository: {
+                              nameWithOwner: repository ?? "acme/widgets",
+                            },
+                          },
+                        }),
+                      ),
                     },
                   })),
               },
@@ -516,12 +525,18 @@ test("a specification waits for its published tickets to be linked and for readi
           { label: "ready-for-agent", at: "2026-10-09T10:00:00Z" },
           { label: "documentation", at: "2026-10-09T11:00:00Z" },
         ],
+        // Another repository's #6 is no stand-in for this repository's.
         subIssues: [
+          { number: 5, labels: ["ready-for-agent"] },
           {
-            number: 5,
+            number: 6,
+            repository: "acme/gadgets",
             labels: ["ready-for-agent"],
-            linkedAt: "2026-10-09T09:00:00Z",
           },
+        ],
+        linkEvents: [
+          { number: 5, at: "2026-10-09T09:00:00Z" },
+          { number: 6, repository: "acme/gadgets", at: "2026-10-09T09:30:00Z" },
         ],
       },
       {
@@ -560,11 +575,12 @@ test("a specification waits for its published tickets to be linked and for readi
     );
 
   const spec = run.github.find(3);
-  for (const [number, linkedAt] of [
+  for (const [number, at] of [
     [6, "2026-10-09T10:30:00Z"],
     [7, "2026-10-09T10:31:00Z"],
   ]) {
-    spec.subIssues.push({ number, labels: ["ready-for-agent"], linkedAt });
+    spec.subIssues.push({ number, labels: ["ready-for-agent"] });
+    spec.linkEvents.push({ number, at });
     run.github.find(number).parent = 3;
   }
   await run.tick();
@@ -1414,6 +1430,7 @@ test("an adoption agent counts against the provider cap and is stopped at its ti
     subIssues: [],
     blockedBy: [],
     labelEvents: [],
+    linkEvents: [],
     pullRequests: [],
     branchPullRequests: [],
     comments: [],

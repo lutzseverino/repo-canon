@@ -4,6 +4,9 @@
 export type Provider = "claude-code" | "codex";
 export type Mode = "direct" | "orchestrated";
 
+// An issue's number in this repository, or `<owner>/<name>#<n>` in another.
+export type IssueId = number | string;
+
 export type Issue = {
   number: number;
   createdAt: string;
@@ -13,17 +16,11 @@ export type Issue = {
   specification: boolean;
   // When `ready-for-agent` was last applied, or null when it is unknown.
   readyAt: string | null;
-  // Its native parent, or else the first issue its `Parent` section names: a
-  // number in this repository, or `<owner>/<name>#<n>` in another.
-  parent: number | string | null;
-  // `linkedAt` is when the child was last added as a native sub-issue, or
-  // null when it is unknown.
-  subIssues: {
-    number: number;
-    state: "open" | "closed";
-    labels: string[];
-    linkedAt: string | null;
-  }[];
+  // Its native parent, or else the first issue its `Parent` section names.
+  parent: IssueId | null;
+  // When a native sub-issue was last added, and which, or null when none was.
+  latestLink: { ticket: IssueId | null; at: string } | null;
+  subIssues: { number: IssueId; state: "open" | "closed"; labels: string[] }[];
   blockedBy: { number: number; state: "open" | "closed" }[];
 };
 
@@ -433,7 +430,7 @@ function oldestFirst(issues: Issue[]): Issue[] {
 // name it.
 function exclusion(issue: Issue, openIssues: Issue[]): string | null {
   if (issue.parent !== null)
-    return `child of specification ${typeof issue.parent === "number" ? `#${issue.parent}` : issue.parent}`;
+    return `child of specification ${reference(issue.parent)}`;
   if (issue.labels.includes(labels.failed))
     return `labelled ${labels.failed}; remove the label to run it again`;
   const blockers = issue.blockedBy.filter(
@@ -449,13 +446,13 @@ function exclusion(issue: Issue, openIssues: Issue[]): string | null {
     return `tickets name it as their parent but are not linked to it yet: ${references(unlinked)}`;
   if (issue.specification && issue.subIssues.length === 0)
     return "specification has no tickets yet";
-  const latest = latestLinked(issue.subIssues);
+  const link = issue.latestLink;
   if (
-    latest &&
-    (issue.readyAt === null ||
-      Date.parse(issue.readyAt) <= Date.parse(latest.linkedAt!))
+    issue.subIssues.length > 0 &&
+    link &&
+    (issue.readyAt === null || Date.parse(issue.readyAt) <= Date.parse(link.at))
   )
-    return `readiness predates its latest ticket #${latest.number}; re-apply ${labels.ready} once its tickets are published`;
+    return `readiness predates its latest ticket${link.ticket === null ? "" : ` ${reference(link.ticket)}`}; re-apply ${labels.ready} once its tickets are published`;
   const unready = issue.subIssues.filter(
     (child) => child.state === "open" && !child.labels.includes(labels.ready),
   );
@@ -464,21 +461,10 @@ function exclusion(issue: Issue, openIssues: Issue[]): string | null {
   return null;
 }
 
-// The sub-issue linked last, by its known link time.
-function latestLinked(
-  subIssues: Issue["subIssues"],
-): Issue["subIssues"][number] | null {
-  return subIssues
-    .filter((child) => child.linkedAt)
-    .reduce<Issue["subIssues"][number] | null>(
-      (latest, child) =>
-        latest && Date.parse(latest.linkedAt!) >= Date.parse(child.linkedAt!)
-          ? latest
-          : child,
-      null,
-    );
+function references(issues: { number: IssueId }[]): string {
+  return issues.map((issue) => reference(issue.number)).join(", ");
 }
 
-function references(issues: { number: number }[]): string {
-  return issues.map((issue) => `#${issue.number}`).join(", ");
+function reference(id: IssueId): string {
+  return typeof id === "number" ? `#${id}` : id;
 }
