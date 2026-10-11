@@ -46,7 +46,7 @@ repo-standards inspect \
   --project /path/to/adopting-project --json
 ```
 
-Review the report, confirm the scope, and complete the adoption as the
+Review the report and scope, and complete the adoption as the
 [adoption guide](docs/usage/adopt-repo-canon.md) describes. It lists the
 remaining prerequisites, the exact CLI installation to retain through adoption,
 and the authenticated `gh` access the two GitHub setup fixes need.

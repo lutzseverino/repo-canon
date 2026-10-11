@@ -34,8 +34,8 @@ reserves, stay out, and so does every `README.md` outside the roots, which the
 documentation check would read as a root's index; such a README cannot enter
 this scope, even as a move source.
 
-Decide only the cases in its unresolved questions, and remove each question once
-it is decided:
+Decide only the cases in its unresolved questions, resolving genuine membership
+questions with the maintainer, and remove each question once it is decided:
 
 - Whether a directory is a documentation root. For each one that is, draft
   again with `--root <directory>`. `docs` is always a root, and a documentation
@@ -60,5 +60,7 @@ documentation needs repair. Keep all declarations' paths disjoint: a Project
 README under a documentation root belongs to one declaration only. A move
 requires authority for its source, destination, and affected link repairs.
 
-The draft does not confirm membership: the maintainer confirms the
-documentation scope with the complete inspection.
+The draft does not decide membership by itself. The maintainer's request to
+adopt or update is consent to the drafted and reviewed scope. Ask them to
+confirm only when the complete inspection reports `confirmation.required` as
+`true`; pass `--confirmed` to `start` only in that case.

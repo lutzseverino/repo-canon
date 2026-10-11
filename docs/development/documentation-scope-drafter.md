@@ -4,8 +4,11 @@
 documentation scope from its tree, so that the agent decides only what no rule
 decides and two agents draft the same scope from the same tree. The
 [documentation discovery guidance](../../discovery/documentation.md) tells the
-agent to run it; the maintainer still confirms the scope with the complete
-inspection.
+agent to run it, resolve the draft's questions with the maintainer for genuine
+membership questions, and complete the proposal. The maintainer's request to
+adopt or update is consent to the drafted and reviewed scope. Ask them to
+confirm only when the complete inspection reports `confirmation.required` as
+`true`; pass `--confirmed` to `start` only in that case.
 
 ## Interface
 
@@ -136,7 +139,7 @@ Evidence for a missing README need not come from its own directory. The drafter
 can still ask whether to commit a directory's first content separately; that is
 not required to establish absence evidence with CLI 5.0.0. Review whether the
 directory is meaningful documentation and include any intended content paths
-before confirmation.
+before the complete inspection.
 
 ## Retention
 
@@ -151,8 +154,8 @@ check's retained source layout holds every module the drafter imports.
 
 ## Limits
 
-The draft is not a confirmation. The drafter cannot know move destinations,
-link-repair files, whether repository-specific agent constraints need
+The draft does not decide membership by itself. The drafter cannot know move
+destinations, link-repair files, whether repository-specific agent constraints need
 `docs/agents/project.md`, or anything an earlier confirmed scope decided, so an
 update asks its root questions again. It does not judge whether a file's
 content is useful or current.
