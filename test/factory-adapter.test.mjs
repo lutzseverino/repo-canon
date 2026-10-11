@@ -156,7 +156,12 @@ function fakeGitHub(issues) {
                     createdAt: issue.createdAt,
                     body: issue.body,
                     labels: names(issue.labels),
-                    parent: issue.parent && { number: issue.parent },
+                    parent: issue.parent && {
+                      number: issue.parent,
+                      repository: {
+                        nameWithOwner: issue.parentRepository ?? "acme/widgets",
+                      },
+                    },
                     subIssues: {
                       nodes: issue.subIssues.map((child) => ({
                         number: child.number,
@@ -525,6 +530,11 @@ test("a specification waits for its published tickets to be linked and for readi
       },
       { number: 7, body: `## Parent\n\n#3\n\n${ticketBody}` },
       { number: 8, body: ticketBody },
+      {
+        number: 9,
+        body: `## Parent\n\nhttps://github.com/acme/gadgets/issues/3\n\n${ticketBody}`,
+      },
+      { number: 10, parent: 3, parentRepository: "acme/gadgets" },
     ],
     hostSettings: { caps: { "claude-code": 3 } },
   });
@@ -541,6 +551,13 @@ test("a specification waits for its published tickets to be linked and for readi
   );
   assert.ok(run.reports.includes("#6 skipped: child of specification #3"));
   assert.ok(run.reports.includes("#7 skipped: child of specification #3"));
+  for (const number of [9, 10])
+    assert.ok(
+      run.reports.includes(
+        `#${number} skipped: child of specification acme/gadgets#3`,
+      ),
+      run.reports.join("\n"),
+    );
 
   const spec = run.github.find(3);
   for (const [number, linkedAt] of [

@@ -226,7 +226,7 @@ const issuesQuery = `query($owner: String!, $name: String!, $endCursor: String) 
         createdAt
         body
         labels(first: 100) { nodes { name } }
-        parent { number }
+        parent { number repository { nameWithOwner } }
         subIssues(first: 100) { nodes { number state labels(first: 100) { nodes { name } } } }
         blockedBy(first: 100) { nodes { number state } }
         labelEvents: timelineItems(itemTypes: [LABELED_EVENT], last: 100) { nodes { ... on LabeledEvent { createdAt label { name } } } }
@@ -236,19 +236,25 @@ const issuesQuery = `query($owner: String!, $name: String!, $endCursor: String) 
   }
 }`;
 
-// The number of an issue API path in this repository, or null for another
-// repository's issue or no path.
-function localIssue(
+// An issue as the decision core names a parent: its number in this
+// repository, or `<owner>/<name>#<n>` in another.
+function parentIssue(
+  repository: string,
+  number: number,
+  local: string,
+): number | string {
+  return repository.toLowerCase() === local.toLowerCase()
+    ? number
+    : `${repository}#${number}`;
+}
+
+// The parent an issue API path names, or null for no path.
+function referencedParent(
   reference: string | null,
-  owner: string,
-  name: string,
-): number | null {
-  const match = reference?.match(/^\/repos\/([^/]+)\/([^/]+)\/issues\/(\d+)$/);
-  return match &&
-    match[1].toLowerCase() === owner.toLowerCase() &&
-    match[2].toLowerCase() === name.toLowerCase()
-    ? Number(match[3])
-    : null;
+  local: string,
+): number | string | null {
+  const match = reference?.match(/^\/repos\/([^/]+\/[^/]+)\/issues\/(\d+)$/);
+  return match ? parentIssue(match[1], Number(match[2]), local) : null;
 }
 
 const pullRequestsQuery = `query($owner: String!, $name: String!, $number: Int!, $branch: String!) {
@@ -531,8 +537,9 @@ export function createFactory(settings: Settings, ports: Ports) {
       connection.nodes.map((label) => label.name);
     const state = (value: string) => (value === "OPEN" ? "open" : "closed");
     const { owner, name } = await readRepository();
+    const local = `${owner}/${name}`;
     // Events arrive oldest first, so the last match is the latest.
-    const latest = (events: any[], matches: (event: any) => boolean) =>
+    const latestAt = (events: any[], matches: (event: any) => boolean) =>
       events.findLast(matches)?.createdAt ?? null;
     return pages.flatMap((page: any) =>
       page.data.repository.issues.nodes.map((node: any) => ({
@@ -543,22 +550,25 @@ export function createFactory(settings: Settings, ports: Ports) {
           labels: names(node.labels),
           body: node.body,
         }),
-        readyAt: latest(
+        readyAt: latestAt(
           node.labelEvents.nodes,
           (event) => event.label?.name === labels.ready,
         ),
-        parent:
-          node.parent?.number ??
-          localIssue(
-            parentSectionReference(node.body ?? "", `${owner}/${name}`),
-            owner,
-            name,
-          ),
+        parent: node.parent
+          ? parentIssue(
+              node.parent.repository.nameWithOwner,
+              node.parent.number,
+              local,
+            )
+          : referencedParent(
+              parentSectionReference(node.body ?? "", local),
+              local,
+            ),
         subIssues: node.subIssues.nodes.map((child: any) => ({
           number: child.number,
           state: state(child.state),
           labels: names(child.labels),
-          linkedAt: latest(
+          linkedAt: latestAt(
             node.linkEvents.nodes,
             (event) => event.subIssue?.number === child.number,
           ),

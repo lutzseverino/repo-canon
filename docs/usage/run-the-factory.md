@@ -73,7 +73,7 @@ The oldest issue launches first.
   `ready-for-agent` must have been applied after its latest sub-issue was
   linked; until it is applied again, the specification waits.
 - **Child**: an issue whose native parent, or else the first issue its
-  `Parent` section names, is another issue in the repository. The factory
+  `Parent` section names, is another issue. The factory
   never picks up a child, and it holds back a parent while an open child that
   names it is not linked as its sub-issue.
 

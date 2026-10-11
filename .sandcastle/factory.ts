@@ -13,7 +13,9 @@ export type Issue = {
   specification: boolean;
   // When `ready-for-agent` was last applied, or null when it is unknown.
   readyAt: string | null;
-  parent: number | null;
+  // Its native parent, or else the first issue its `Parent` section names: a
+  // number in this repository, or `<owner>/<name>#<n>` in another.
+  parent: number | string | null;
   // `linkedAt` is when the child was last added as a native sub-issue, or
   // null when it is unknown.
   subIssues: {
@@ -427,17 +429,18 @@ function oldestFirst(issues: Issue[]): Issue[] {
   );
 }
 
-// An issue's exclusion from pickup. `issues` are the open issues, whose
-// parents may name it.
-function exclusion(issue: Issue, issues: Issue[]): string | null {
-  if (issue.parent !== null) return `child of specification #${issue.parent}`;
+// An issue's exclusion from pickup, given the open issues, whose parents may
+// name it.
+function exclusion(issue: Issue, openIssues: Issue[]): string | null {
+  if (issue.parent !== null)
+    return `child of specification ${typeof issue.parent === "number" ? `#${issue.parent}` : issue.parent}`;
   if (issue.labels.includes(labels.failed))
     return `labelled ${labels.failed}; remove the label to run it again`;
   const blockers = issue.blockedBy.filter(
     (blocker) => blocker.state === "open",
   );
   if (blockers.length > 0) return `blocked by ${references(blockers)}`;
-  const unlinked = issues.filter(
+  const unlinked = openIssues.filter(
     (other) =>
       other.parent === issue.number &&
       !issue.subIssues.some((child) => child.number === other.number),

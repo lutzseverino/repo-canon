@@ -272,6 +272,22 @@ test("a ticket naming a specification it is not linked to holds both back", () =
   );
 });
 
+test("a ticket naming another repository's issue as its parent never runs directly", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        graph("2026-10-09T10:06:00Z"),
+        issue(7, ["ready-for-agent"], { parent: "acme/gadgets#3" }),
+      ],
+    }),
+  );
+  assert.equal(skipOf(decisions, 7), "child of specification acme/gadgets#3");
+  assert.deepEqual(
+    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
+    [{ issue: 3, mode: "orchestrated" }],
+  );
+});
+
 test("the oldest ready issue launches first", () => {
   const decisions = decideFactory(
     snapshot({
@@ -705,6 +721,31 @@ test("a retry whose issue is no longer eligible fails it instead", () => {
         issue: 6,
         failure:
           "the run ended without an open pull request, and its retry did not launch: labelled factory:failed; remove the label to run it again",
+      },
+    ],
+  );
+});
+
+test("a retry over a ticket graph that changed since its readiness fails it", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [graph("2026-10-09T10:02:00Z")],
+      runs: [
+        run(3, {
+          mode: "orchestrated",
+          ended: { timedOut: false, pullRequest: "none" },
+        }),
+      ],
+    }),
+  );
+  assert.deepEqual(
+    decisions.map(({ kind, issue, failure }) => ({ kind, issue, failure })),
+    [
+      {
+        kind: "fail",
+        issue: 3,
+        failure:
+          "the run ended without an open pull request, and its retry did not launch: readiness predates its latest ticket #6; re-apply ready-for-agent once its tickets are published",
       },
     ],
   );
