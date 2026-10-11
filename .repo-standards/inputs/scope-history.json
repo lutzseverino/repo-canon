@@ -1,7 +1,7 @@
 {
   "format": "repo-standards/scope-history/v5",
   "evidence": "historical",
-  "inspection": "sha256:91f8a84db9185ab2e9490f6de98161ca0fe285e60767b4239a7923e84f3531f4",
+  "inspection": "sha256:e4c6138f06bf57c2a9d64d5c317026794f36ae28ea3bd6cf8b154597276d71af",
   "resolved": {
     "description": "The complete Repo Canon standards profile",
     "declarations": [
@@ -1386,13 +1386,13 @@
     ]
   },
   "discovery": {
-    "identity": "sha256:84ec8defa4780ab978326a7eea2012473c24db77da0ada4dceb25e3fe7830cbe",
+    "identity": "sha256:763e11e5d7f3938a63d5a4b29bd328c6fdfe82ed08922e9b162944d4ae809c9a",
     "proposal": {
       "format": "repo-standards/scope/v2",
       "declarations": [
         {
           "id": "documentation",
-          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Reviewed root authoring notes as maintained source guidance; source guidance/discovery payloads, third-party notices and vendored upstream documentation retain their source layout and provenance. No additional documentation roots, planned moves or link repairs are needed.",
+          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Reviewed source-authoring notes, source payloads and third-party provenance against current project guidance and the current tree. The notes remain maintained source guidance; payloads and pinned third-party material retain their source layout. No extra documentation roots, moves or link repairs are needed.",
           "candidates": [
             {
               "path": "GLOSSARY.md",
@@ -1422,7 +1422,7 @@
             {
               "path": "discovery",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
               "evidence": [
                 "discovery"
               ]
@@ -1750,7 +1750,7 @@
             {
               "path": "guidance",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
               "evidence": [
                 "guidance"
               ]
@@ -2232,95 +2232,14 @@
         },
         {
           "id": "github-repository-configuration",
-          "coverage": "Only remote GitHub configuration belongs to this declaration. The origin unambiguously identifies lutzseverino/repo-canon and authenticated access has admin/maintain/triage permissions; the requested adoption authorizes repeat-safe missing-setting setup, subject to confirmation-required stops. No project-content paths.",
+          "coverage": "Only remote configuration is governed. The origin is https://github.com/lutzseverino/repo-canon; the maintainer authorized this update and its declared repeat-safe operations. No project-content paths apply.",
           "candidates": [],
           "unresolved": []
         },
         {
           "id": "project-readmes",
-          "coverage": "The root package is one standards source. .sandcastle, operations, discovery, scripts and test are components developed through root package commands and the shared development guide, with no independent package or maintained Project boundary. vendor contains pinned third-party materials; .agents contains installed skills; docs contains documentation indexes. None is a separate Project, so there are no non-root Project README targets.",
-          "candidates": [
-            {
-              "path": ".agents",
-              "decision": "exclude",
-              "reason": "Installed skill content, not independent Projects.",
-              "evidence": [
-                ".agents",
-                "docs/development/README.md",
-                "package.json"
-              ]
-            },
-            {
-              "path": ".sandcastle",
-              "decision": "exclude",
-              "reason": "Root-package factory component; documented and tested through root commands.",
-              "evidence": [
-                ".sandcastle",
-                "docs/development/README.md",
-                "package.json"
-              ]
-            },
-            {
-              "path": "discovery",
-              "decision": "exclude",
-              "reason": "Root-package discovery implementation and source payload.",
-              "evidence": [
-                "discovery",
-                "docs/development/README.md",
-                "package.json"
-              ]
-            },
-            {
-              "path": "docs",
-              "decision": "exclude",
-              "reason": "Documentation indexes, not Project READMEs.",
-              "evidence": [
-                "docs",
-                "docs/development/README.md",
-                "package.json"
-              ]
-            },
-            {
-              "path": "operations",
-              "decision": "exclude",
-              "reason": "Root-package standards operations, not independent projects.",
-              "evidence": [
-                "docs/development/README.md",
-                "operations",
-                "package.json"
-              ]
-            },
-            {
-              "path": "scripts",
-              "decision": "exclude",
-              "reason": "Root-package release and support scripts.",
-              "evidence": [
-                "docs/development/README.md",
-                "package.json",
-                "scripts"
-              ]
-            },
-            {
-              "path": "test",
-              "decision": "exclude",
-              "reason": "Disposable fixtures and source test suite.",
-              "evidence": [
-                "docs/development/README.md",
-                "package.json",
-                "test"
-              ]
-            },
-            {
-              "path": "vendor",
-              "decision": "exclude",
-              "reason": "Pinned third-party material, not maintained Projects of this repository.",
-              "evidence": [
-                "docs/development/README.md",
-                "package.json",
-                "vendor"
-              ]
-            }
-          ],
+          "coverage": "Reviewed package.json, docs/development/README.md, source directories and README inventory. This is a single root package without workspaces or separate maintained Projects below it. The operations, discovery, scripts and factory components share root development commands; tests are fixtures and vendor is pinned third-party material. Documentation READMEs are indexes. The Project README scope is intentionally empty.",
+          "candidates": [],
           "unresolved": []
         }
       ]
@@ -2330,7 +2249,7 @@
       "targets": {
         "GLOSSARY.md": {
           "type": "file",
-          "sha256": "3f3123b4e9da19d49063e16d2422619af8f016597ce0c512cc8106f69828c721",
+          "sha256": "56c191a1b024aec6cc1423c9bc7c9700e72d9a9ebb4654ccfbca4bdcaad85fd9",
           "executable": false
         },
         "authoring-notes.md": {
@@ -2485,7 +2404,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "e0552a96db7777ed64a26719cd8b69ae1bea44f9b0659b27778a3183a4362aae",
+          "sha256": "27a97df5eead072dba23400b0154fce1223bd5965cfc50feb35b05cf6db93398",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -3213,12 +3132,12 @@
         },
         "CONTRIBUTING.md": {
           "type": "file",
-          "sha256": "640f12b8843e39c45d06638ec60783ef8d61c4f23e105d15816459572b9e3d91",
+          "sha256": "a18409516f02793f7a72a9562bcda4f45be1e9992f2827871545131e6ab4ce7b",
           "executable": false
         },
         "GLOSSARY.md": {
           "type": "file",
-          "sha256": "3f3123b4e9da19d49063e16d2422619af8f016597ce0c512cc8106f69828c721",
+          "sha256": "56c191a1b024aec6cc1423c9bc7c9700e72d9a9ebb4654ccfbca4bdcaad85fd9",
           "executable": false
         },
         "LICENSE": {
@@ -3228,7 +3147,7 @@
         },
         "README.md": {
           "type": "file",
-          "sha256": "173439753dfcecb7e482223aa563fc5e8829d850d91d7be3b40788e43415a4bf",
+          "sha256": "04718fb9809ff77655cb14eb640a403612b694c7a0da0dc5b4b3a9e8389b1f40",
           "executable": false
         },
         "THIRD_PARTY_NOTICES.md": {
@@ -3428,7 +3347,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "e0552a96db7777ed64a26719cd8b69ae1bea44f9b0659b27778a3183a4362aae",
+          "sha256": "27a97df5eead072dba23400b0154fce1223bd5965cfc50feb35b05cf6db93398",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {

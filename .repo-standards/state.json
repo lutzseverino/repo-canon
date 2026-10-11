@@ -15,8 +15,8 @@
         "id": "canonical-labels"
       },
       "operationIndex": 0,
-      "before": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
-      "after": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
+      "before": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
+      "after": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -35,8 +35,8 @@
         "id": "pull-request-integration"
       },
       "operationIndex": 1,
-      "before": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
-      "after": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
+      "before": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
+      "after": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -111,8 +111,8 @@
           "directories": []
         }
       },
-      "before": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
-      "after": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
+      "before": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
+      "after": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -187,8 +187,8 @@
           "directories": []
         }
       },
-      "before": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
-      "after": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
+      "before": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
+      "after": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -243,8 +243,8 @@
         "id": "documentation-navigation"
       },
       "operationIndex": 2,
-      "before": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
-      "after": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
+      "before": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
+      "after": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -265,8 +265,8 @@
         "id": "sandbox-image-base"
       },
       "operationIndex": 3,
-      "before": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
-      "after": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
+      "before": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
+      "after": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -285,8 +285,8 @@
         "id": "project-readme-structure"
       },
       "operationIndex": 4,
-      "before": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
-      "after": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
+      "before": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
+      "after": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -307,8 +307,8 @@
         "id": "repository-readme-structure"
       },
       "operationIndex": 5,
-      "before": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
-      "after": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
+      "before": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
+      "after": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -383,8 +383,8 @@
           "directories": []
         }
       },
-      "before": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
-      "after": "sha256:6c8fb026c145e0467aaf77f9dd724a0b7b6946fa222f43cd1f76c53b21d395d7",
+      "before": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
+      "after": "sha256:6c7830fb6e911ccced18169a1878ba5d17689783377f131d787f33d480277250",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -521,10 +521,10 @@
   "retryHistory": [],
   "changeSet": [],
   "lastComplete": {
-    "run": "e10ad3ff-c2d6-4989-a528-3e8690c2a703",
-    "inspection": "sha256:91f8a84db9185ab2e9490f6de98161ca0fe285e60767b4239a7923e84f3531f4",
-    "completedAt": "2026-10-11T04:56:20.399Z",
-    "head": "f215d0bf4e9e9e4320e12dcae99215de6e7c29e7"
+    "run": "3aeaa4e4-e7c4-425f-bc02-64ce46788d4b",
+    "inspection": "sha256:e4c6138f06bf57c2a9d64d5c317026794f36ae28ea3bd6cf8b154597276d71af",
+    "completedAt": "2026-10-11T05:38:40.590Z",
+    "head": "b94fdd2ffd097882b0d8a87a55e8fed5082ad4c7"
   },
   "baselines": {
     "docs/agents/README.md": {
@@ -540,7 +540,7 @@
       "executable": false
     },
     "CONTRIBUTING.md": {
-      "sha256": "640f12b8843e39c45d06638ec60783ef8d61c4f23e105d15816459572b9e3d91",
+      "sha256": "a18409516f02793f7a72a9562bcda4f45be1e9992f2827871545131e6ab4ce7b",
       "executable": false
     },
     "docs/agents/domain.md": {
@@ -1293,41 +1293,40 @@
     {
       "format": "repo-standards/assessment/v3",
       "scope": {
-        "inspection": "sha256:91f8a84db9185ab2e9490f6de98161ca0fe285e60767b4239a7923e84f3531f4",
-        "afterFixes": "sha256:6c261820083db77030cfa93988680475cbf7e434c4cb38d3bc67ffe8dfd20de1"
+        "inspection": "sha256:e4c6138f06bf57c2a9d64d5c317026794f36ae28ea3bd6cf8b154597276d71af",
+        "afterFixes": "sha256:2e8f923b7eb194aad35af96bb0b157fb0323919e67560833cd3791bbea728ce6"
       },
-      "run": "e10ad3ff-c2d6-4989-a528-3e8690c2a703",
-      "selection": "sha256:d7dfff3bf72eaca8e06cbb3ed7996d5e8cd34e8a8a642c75b9c7b8238172bc37",
-      "snapshot": "sha256:6c261820083db77030cfa93988680475cbf7e434c4cb38d3bc67ffe8dfd20de1",
+      "run": "3aeaa4e4-e7c4-425f-bc02-64ce46788d4b",
+      "selection": "sha256:e935b7c2b497a9c3d977b8352e5099ebee8bdcbd058fbed1b431836bd32cad1b",
+      "snapshot": "sha256:2e8f923b7eb194aad35af96bb0b157fb0323919e67560833cd3791bbea728ce6",
       "declarations": [
         {
           "id": "documentation",
           "status": "satisfied",
-          "explanation": "Existing maintained documentation already expresses the selected rules; no reorganization or glossary rename is needed.",
+          "explanation": "Maintained documentation already follows the category and navigation rules; no migration or contextual edit is needed.",
           "changedPaths": [],
           "evidence": [
-            "docs/README.md indexes usage, development, adr and agents by audience; category READMEs map maintained topics.",
-            "docs/development/README.md provides Node 24 setup and root validation commands that agree with package.json and source-profile.md.",
-            "docs/usage/run-the-factory.md and GLOSSARY.md already state readiness after ticket publication and v0.8.0 parent pickup rules; only open issue #217 is needs-triage with no sub-issues or readiness.",
-            "docs/agents/project.md preserves source-specific constraints and upstream notices; authoring-notes.md maintains source-author decisions beside standards.yaml, as its introduction states.",
-            "ADRs preserve decisions and rationale; historical run citations point to PRs/releases/commit permalinks. No CONTEXT.md, CONTEXT-MAP.md or evidence documentation category requires migration."
+            "docs/README.md indexes usage, development, adr and agents by audience; their README indexes describe maintained topics.",
+            "docs/development/README.md gives Node 24 setup and validation commands consistent with package.json and source-profile.md.",
+            "docs/usage/adopt-repo-canon.md and README.md name the published v0.8.1 and CLI 6.0.0 baseline; GLOSSARY.md and factory usage describe readiness consistently with CONTRIBUTING.md.",
+            "authoring-notes.md holds maintained source-author decisions; docs/agents/project.md holds project constraints. Source payloads and vendored notices retain their required layout. No CONTEXT files, new documentation roots, moves or link repairs apply."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Reviewed coverage again after fixes and at the refreshed current snapshot; membership, exclusions and empty scopes remain correct. No additional paths or withdrawn targets are needed.",
+              "explanation": "Rechecked the fresh scope against the current repository after fixes and again at refresh. Documentation membership and source/upstream exclusions remain correct; no separate Project or remote project-content path applies.",
               "evidence": [
-                "docs/README.md indexes usage, development, adr and agents by audience; category READMEs map maintained topics.",
-                "The retained drafter after fixes produces exactly the same documentation draft as before start; no contextual files were modified."
+                "The retained documentation drafter output is byte-for-byte identical to the pre-start draft.",
+                "Git diff outside .repo-standards is empty; package.json, documentation indexes and source boundaries remain unchanged."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Reviewed coverage again after fixes and at the refreshed current snapshot; membership, exclusions and empty scopes remain correct. No additional paths or withdrawn targets are needed.",
+              "explanation": "Rechecked the fresh scope against the current repository after fixes and again at refresh. Documentation membership and source/upstream exclusions remain correct; no separate Project or remote project-content path applies.",
               "evidence": [
-                "docs/README.md indexes usage, development, adr and agents by audience; category READMEs map maintained topics.",
-                "The retained drafter after fixes produces exactly the same documentation draft as before start; no contextual files were modified."
+                "The retained documentation drafter output is byte-for-byte identical to the pre-start draft.",
+                "Git diff outside .repo-standards is empty; package.json, documentation indexes and source boundaries remain unchanged."
               ],
               "additionalPaths": []
             }
@@ -1336,39 +1335,39 @@
         {
           "id": "factory-sandbox-image",
           "status": "satisfied",
-          "explanation": "The Dockerfile retains the exact release base and only adds the required public CLI 6.0.0.",
+          "explanation": "The image retains the complete released base and adds only the required public CLI 6.0.0.",
           "changedPaths": [],
           "evidence": [
-            ".sandcastle/Dockerfile starts with operations/sandbox-image-base.Dockerfile unchanged, then installs @lutzseverino/repo-standards@6.0.0 as root and restores the agent user.",
-            "docs/development/README.md requires Node 24, npm, Git, authenticated gh and external CLI 6.0.0; the base supplies the other tools and npm ci installs project dependencies during each run."
+            ".sandcastle/Dockerfile starts with operations/sandbox-image-base.Dockerfile unchanged, installs @lutzseverino/repo-standards@6.0.0 as root and restores the agent user.",
+            "docs/development/README.md and source-profile.md require Node 24, npm, Git, gh and CLI 6.0.0. The base supplies the other tools and each run installs project dependencies using npm ci."
           ]
         },
         {
           "id": "github-repository-configuration",
           "status": "satisfied",
-          "explanation": "Repeat-safe setup verified existing labels and PR integration without overwriting settings.",
+          "explanation": "Repeat-safe fixes verified the existing canonical remote settings without mutation.",
           "changedPaths": [],
           "evidence": [
-            "start.json canonical-labels reports unchanged: GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
-            "start.json pull-request-integration reports unchanged: GitHub PR integration already matches the canonical configuration for lutzseverino/repo-canon.",
-            "Origin is unambiguously https://github.com/lutzseverino/repo-canon; gh repository readback reports admin, maintain and triage access. Remote configuration intentionally has no project-content targets."
+            "start.json canonical-labels: unchanged; GitHub labels already match canonical configuration for lutzseverino/repo-canon.",
+            "start.json pull-request-integration: unchanged; required PR metadata check and squash integration already match canonical configuration.",
+            "The origin is https://github.com/lutzseverino/repo-canon and the authorized operations completed; remote configuration intentionally owns no project-content paths."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Reviewed coverage again after fixes and at the refreshed current snapshot; membership, exclusions and empty scopes remain correct. No additional paths or withdrawn targets are needed.",
+              "explanation": "Rechecked the fresh scope against the current repository after fixes and again at refresh. Documentation membership and source/upstream exclusions remain correct; no separate Project or remote project-content path applies.",
               "evidence": [
-                "start.json canonical-labels reports unchanged: GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
-                "The retained drafter after fixes produces exactly the same documentation draft as before start; no contextual files were modified."
+                "The retained documentation drafter output is byte-for-byte identical to the pre-start draft.",
+                "Git diff outside .repo-standards is empty; package.json, documentation indexes and source boundaries remain unchanged."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Reviewed coverage again after fixes and at the refreshed current snapshot; membership, exclusions and empty scopes remain correct. No additional paths or withdrawn targets are needed.",
+              "explanation": "Rechecked the fresh scope against the current repository after fixes and again at refresh. Documentation membership and source/upstream exclusions remain correct; no separate Project or remote project-content path applies.",
               "evidence": [
-                "start.json canonical-labels reports unchanged: GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
-                "The retained drafter after fixes produces exactly the same documentation draft as before start; no contextual files were modified."
+                "The retained documentation drafter output is byte-for-byte identical to the pre-start draft.",
+                "Git diff outside .repo-standards is empty; package.json, documentation indexes and source boundaries remain unchanged."
               ],
               "additionalPaths": []
             }
@@ -1377,29 +1376,29 @@
         {
           "id": "project-readmes",
           "status": "satisfied",
-          "explanation": "No separate maintained Project exists below this single-package standards source; the empty Project README scope is correct.",
+          "explanation": "The root package has no separate maintained Project below it; the empty scope remains correct.",
           "changedPaths": [],
           "evidence": [
-            "package.json defines all development commands at the root with no workspaces or independent non-vendored manifests.",
-            ".sandcastle, operations, discovery and scripts are root-package components covered by docs/development/README.md; test holds disposable fixtures and vendor holds pinned upstream material.",
-            "docs category READMEs are documentation indexes, not Project READMEs. No v0.8.0 shared-link migration applies to an empty scope."
+            "package.json has root development commands and no workspaces or independent non-vendored manifests.",
+            "Operations, discovery, scripts and .sandcastle components share root-package setup and validation. Tests hold disposable fixtures and vendor holds pinned upstream material.",
+            "docs category READMEs are documentation indexes; the only non-vendored Project is the repository root."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Reviewed coverage again after fixes and at the refreshed current snapshot; membership, exclusions and empty scopes remain correct. No additional paths or withdrawn targets are needed.",
+              "explanation": "Rechecked the fresh scope against the current repository after fixes and again at refresh. Documentation membership and source/upstream exclusions remain correct; no separate Project or remote project-content path applies.",
               "evidence": [
-                "package.json defines all development commands at the root with no workspaces or independent non-vendored manifests.",
-                "The retained drafter after fixes produces exactly the same documentation draft as before start; no contextual files were modified."
+                "The retained documentation drafter output is byte-for-byte identical to the pre-start draft.",
+                "Git diff outside .repo-standards is empty; package.json, documentation indexes and source boundaries remain unchanged."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Reviewed coverage again after fixes and at the refreshed current snapshot; membership, exclusions and empty scopes remain correct. No additional paths or withdrawn targets are needed.",
+              "explanation": "Rechecked the fresh scope against the current repository after fixes and again at refresh. Documentation membership and source/upstream exclusions remain correct; no separate Project or remote project-content path applies.",
               "evidence": [
-                "package.json defines all development commands at the root with no workspaces or independent non-vendored manifests.",
-                "The retained drafter after fixes produces exactly the same documentation draft as before start; no contextual files were modified."
+                "The retained documentation drafter output is byte-for-byte identical to the pre-start draft.",
+                "Git diff outside .repo-standards is empty; package.json, documentation indexes and source boundaries remain unchanged."
               ],
               "additionalPaths": []
             }
@@ -1408,23 +1407,23 @@
         {
           "id": "repository-license",
           "status": "satisfied",
-          "explanation": "The root already holds one clear MIT license with the existing copyright notice; retain it unchanged.",
+          "explanation": "The root already holds a single clear MIT license with its existing copyright notice.",
           "changedPaths": [],
           "evidence": [
-            "LICENSE is MIT License, copyright (c) 2026 Jasper Lutz Severino.",
-            "There is no competing root LICENSE.md or other root license file; third-party provenance remains in THIRD_PARTY_NOTICES.md and vendored notices."
+            "LICENSE is MIT License, Copyright (c) 2026 Jasper Lutz Severino.",
+            "No competing root license file exists; THIRD_PARTY_NOTICES.md and vendored notices preserve third-party provenance."
           ]
         },
         {
           "id": "repository-readme",
           "status": "satisfied",
-          "explanation": "The root README already gives an accurate introduction and adoption path for the released standards source.",
+          "explanation": "The Repository README gives an accurate introduction and current adoption path.",
           "changedPaths": [],
           "evidence": [
-            "README.md has a centered Repo Canon title, one-sentence source description, JavaScript and Node.js 24 badges consistent with package.json and executable modules.",
-            "Installation gives an unversioned public CLI npm command; Usage shows inspect for published v0.8.0 and the complete profile, consistent with the inspected selection and standards.yaml.",
-            "Features describe installed guidance, templates, 28 upstream skills, babysit, factory, remote setup and documentation checks; the declaration inventory in standards.yaml supports these claims.",
-            "Documentation, Contributing and License each contain only their resolving local pointer, with the License labelled MIT License."
+            "README.md has a centered title, concise standards-source description, JavaScript and Node 24 badges consistent with package.json and executable source modules.",
+            "Installation uses an unversioned public CLI package command; Usage selects published v0.8.1 with complete profile, matching the inspected source and 67 declarations.",
+            "Features describe installed guidance, templates, 28 upstream skills, babysit, factory, GitHub configuration and documentation checks, consistent with standards.yaml.",
+            "Documentation, Contributing and License are single resolving pointers; License is labelled MIT License."
           ]
         }
       ]
