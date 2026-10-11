@@ -90,9 +90,9 @@ Each skipped ready issue is logged with its reason.
 
 ## Models
 
-An issue's `model:` label chooses its model, as the contribution guide's
-[Readiness section](../../CONTRIBUTING.md#readiness) describes; without one,
-the host's default model runs.
+The factory runs the picked-up issue on its `model:` label's model, as the
+contribution guide's [Readiness section](../../CONTRIBUTING.md#readiness)
+describes; without one, the host's default model runs.
 
 - A bare `claude-*` slug runs on Claude Code and a bare `gpt-*` slug on Codex.
   The providers are named `claude-code` and `codex`.
@@ -100,6 +100,24 @@ the host's default model runs.
   `medium`, `high`, `xhigh`, and `max`; Codex accepts all but `max`.
 - An issue with an unusable or more than one `model:` label is skipped with the
   correction.
+
+An orchestrated run over tickets uses the parent's label, or the host's
+default model without one, for every ticket. A ticket's label does not choose
+a separate model inside that run. At pickup, each open native sub-issue's
+`model:` label, including one in another repository, must name the run's
+provider, model and effort. Equivalent spellings agree after parsing:
+`model:claude-opus-5-5` and `model:claude-code/claude-opus-5-5@high` agree.
+An unlabelled ticket does not conflict, and closed tickets never hold the
+parent.
+
+A ticket naming another model holds its parent unclaimed, including when
+only the effort differs. One skip reason lists every conflicting ticket and
+its model, names the run's model, and gives the correction: label the parent
+and its tickets with one model, or remove the tickets' `model:` labels.
+An open ticket with an unusable or several `model:` labels also holds the
+parent with that ticket's correction. A retry still uses the host's retry
+model. A `run:orchestrated` ticket without sub-issues uses its own label as
+the run's model.
 
 ## Gates
 

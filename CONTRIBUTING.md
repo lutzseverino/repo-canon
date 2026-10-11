@@ -56,6 +56,15 @@ slug needs no provider. Add `run:orchestrated` to a ticket for an implementer
 and a reviewer that are different agents; a specification always runs that
 way.
 
+An orchestrated run over tickets uses the parent's `model:` label, or the
+host's default model without one, for every ticket. A ticket's label does not
+choose a separate model inside that run. At pickup, an open ticket naming a
+different provider, model or effort holds its parent unclaimed; label the
+parent and its tickets with one model, or remove the tickets' `model:` labels.
+Equivalent spellings name the same model after parsing, with `high` as the
+default effort. An open ticket with an unusable or several `model:` labels
+also holds its parent, with the ticket's correction in the skip reason.
+
 ## Development setup
 
 See the [development guide](docs/development/README.md) for prerequisites,

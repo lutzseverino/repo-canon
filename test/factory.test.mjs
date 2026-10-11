@@ -509,6 +509,217 @@ test("an unusable model label skips the issue with a correction", () => {
   assert.equal(skipOf(decisions, 5), "model codex/ names no model");
 });
 
+test("an open ticket naming another provider, model or effort holds its parent unclaimed", () => {
+  for (const ticketModel of [
+    "codex/claude-opus-5-5@high",
+    "claude-sonnet-5-5",
+    "claude-opus-5-5@xhigh",
+  ]) {
+    for (const specification of [false, true]) {
+      const decisions = decideFactory(
+        snapshot({
+          issues: [
+            issue(3, ["ready-for-agent", "model:claude-opus-5-5"], {
+              specification,
+              subIssues: [
+                {
+                  number: 5,
+                  state: "open",
+                  labels: ["ready-for-agent", `model:${ticketModel}`],
+                },
+              ],
+            }),
+          ],
+        }),
+      );
+      assert.equal(decisions.length, 1);
+      assert.equal(decisions[0].kind, "skip");
+      const reason = skipOf(decisions, 3);
+      assert.match(reason, /#5/);
+      assert.ok(reason.includes(ticketModel));
+      assert.ok(reason.includes("claude-code/claude-opus-5-5@high"));
+      assert.match(
+        reason,
+        /label the parent and its tickets with one model, or remove the tickets' model: labels/,
+      );
+    }
+  }
+});
+
+test("unlabelled tickets and equivalent model labels let the parent launch", () => {
+  for (const [parentModel, ticketModel] of [
+    ["claude-opus-5-5", "claude-code/claude-opus-5-5@high"],
+    ["claude-code/claude-opus-5-5@high", "claude-opus-5-5"],
+    ["gpt-5.5", "codex/gpt-5.5@high"],
+    ["codex/gpt-5.5@low", "gpt-5.5@low"],
+    [null, "claude-code/claude-sonnet-5-5@high"],
+  ]) {
+    const decisions = decideFactory(
+      snapshot({
+        issues: [
+          issue(
+            3,
+            [
+              "ready-for-agent",
+              ...(parentModel ? [`model:${parentModel}`] : []),
+            ],
+            {
+              specification: true,
+              subIssues: [
+                { number: 5, state: "open", labels: ["ready-for-agent"] },
+                {
+                  number: "owner/other#6",
+                  state: "open",
+                  labels: ["ready-for-agent", `model:${ticketModel}`],
+                },
+              ],
+            },
+          ),
+        ],
+      }),
+    );
+    assert.equal(decisions[0].kind, "claim");
+    assert.equal(launches(decisions)[0].mode, "orchestrated");
+  }
+});
+
+test("closed tickets' conflicting or unusable model labels never hold the parent", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        issue(3, ["ready-for-agent"], {
+          specification: true,
+          subIssues: [
+            { number: 5, state: "open", labels: ["ready-for-agent"] },
+            { number: 6, state: "closed", labels: ["model:gpt-5.5"] },
+            { number: 7, state: "closed", labels: ["model:gemini-3"] },
+            {
+              number: 8,
+              state: "closed",
+              labels: ["model:gpt-5.5", "model:claude-opus-5-5"],
+            },
+          ],
+        }),
+      ],
+    }),
+  );
+  assert.equal(decisions[0].kind, "claim");
+  assert.equal(launches(decisions)[0].issue, 3);
+});
+
+test("an open ticket's unusable or several model labels give its direct-issue correction", () => {
+  for (const modelLabels of [
+    ["model:gemini-3"],
+    ["model:cursor/composer-2"],
+    ["model:gpt-5.5@max"],
+    ["model:codex/"],
+    ["model:gpt-5.5", "model:claude-opus-5-5"],
+  ]) {
+    const decisions = decideFactory(
+      snapshot({
+        issues: [
+          issue(3, ["ready-for-agent"], {
+            subIssues: [
+              {
+                number: "owner/other#5",
+                state: "open",
+                labels: ["ready-for-agent", ...modelLabels],
+              },
+            ],
+          }),
+          issue(5, ["ready-for-agent", ...modelLabels]),
+        ],
+      }),
+    );
+    assert.deepEqual(launches(decisions), []);
+    assert.equal(decisions.length, 2);
+    assert.ok(skipOf(decisions, 3).includes("owner/other#5"));
+    assert.ok(skipOf(decisions, 3).includes(skipOf(decisions, 5)));
+  }
+});
+
+test("one skip reason lists every conflicting ticket against the host default", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        issue(3, ["ready-for-agent"], {
+          subIssues: [
+            {
+              number: 5,
+              state: "open",
+              labels: ["ready-for-agent", "model:gpt-5.5"],
+            },
+            {
+              number: "owner/other#6",
+              state: "open",
+              labels: ["ready-for-agent", "model:claude-sonnet-5-5@low"],
+            },
+            {
+              number: 7,
+              state: "open",
+              labels: ["ready-for-agent", "model:gemini-3"],
+            },
+          ],
+        }),
+      ],
+    }),
+  );
+  assert.equal(decisions.length, 1);
+  assert.equal(decisions[0].kind, "skip");
+  const reason = skipOf(decisions, 3);
+  for (const detail of [
+    "#5",
+    "codex/gpt-5.5@high",
+    "owner/other#6",
+    "claude-code/claude-sonnet-5-5@low",
+    "#7",
+    "model gemini-3 names no provider",
+    "claude-code/claude-sonnet-5-5@high",
+  ])
+    assert.ok(reason.includes(detail), reason);
+});
+
+test("an orchestrated ticket without sub-issues runs on its own labelled model", () => {
+  const [, launch] = decideFactory(
+    snapshot({
+      issues: [
+        issue(3, ["ready-for-agent", "run:orchestrated", "model:gpt-5.5"]),
+      ],
+    }),
+  );
+  assert.equal(launch.mode, "orchestrated");
+  assert.equal(launch.model, "gpt-5.5");
+});
+
+test("a parent retry still launches on the retry model despite its tickets' labels", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        issue(3, ["ready-for-agent", "factory:running"], {
+          subIssues: [
+            {
+              number: 5,
+              state: "open",
+              labels: ["ready-for-agent", "model:claude-sonnet-5-5"],
+            },
+          ],
+        }),
+      ],
+      runs: [
+        run(3, {
+          mode: "orchestrated",
+          ended: { timedOut: false, pullRequest: "none" },
+        }),
+      ],
+    }),
+  );
+  assert.equal(decisions.length, 1);
+  assert.equal(decisions[0].kind, "launch");
+  assert.equal(decisions[0].attempt, 2);
+  assert.equal(decisions[0].model, "claude-opus-5-5");
+  assert.equal(decisions[0].effort, "xhigh");
+});
+
 test("a provider launches only while fewer agents than its cap run there", () => {
   const decisions = decideFactory(
     snapshot({
