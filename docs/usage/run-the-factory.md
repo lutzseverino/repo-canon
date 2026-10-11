@@ -66,12 +66,13 @@ The oldest issue launches first.
   directly by default.
 - **Orchestrated run**: one agent started with `/implement-spec #<n>`. A ticket
   labelled `run:orchestrated` runs this way.
-- **Specification**: an issue with native sub-issues, or whose contract is a
-  specification as the issue contract validator identifies it, always runs
-  orchestrated, and only once it and every open child carry `ready-for-agent`.
-  A specification without tickets waits until they exist. Its
-  `ready-for-agent` must have been applied after its latest sub-issue was
-  linked; until it is removed and added back, the specification waits.
+- **Specification**: an issue whose contract is a specification, as the issue
+  contract validator identifies it. Like any issue with native sub-issues, it
+  runs over its tickets: always orchestrated, and only once it and every open
+  sub-issue carry `ready-for-agent`. A specification without tickets waits until
+  they exist. An issue that runs over its tickets needs `ready-for-agent`
+  applied after its latest sub-issue was linked; until it is removed and added
+  back, the issue waits.
 - **Sub-issue**: an issue whose native parent is open in this repository. The
   factory never picks it up; it runs as part of its parent's orchestrated run
   once the parent is ready.

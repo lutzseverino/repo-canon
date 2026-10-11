@@ -431,7 +431,7 @@ function oldestFirst(issues: Issue[]): Issue[] {
 // An issue's exclusion from pickup, given the open issues, which may hold it
 // or name it as their parent.
 function exclusion(issue: Issue, openIssues: Issue[]): string | null {
-  const held = holder(issue, openIssues);
+  const held = parentExclusion(issue, openIssues);
   if (held) return held;
   if (issue.labels.includes(labels.failed))
     return `labelled ${labels.failed}; remove the label to run it again`;
@@ -471,16 +471,16 @@ function exclusion(issue: Issue, openIssues: Issue[]): string | null {
 // this repository. An issue with no native parent runs as part of the open
 // specification in this repository that its `Parent` section names. Any other
 // parent leaves it to run on its own.
-function holder(issue: Issue, openIssues: Issue[]): string | null {
-  const open = (id: IssueId | null) =>
+function parentExclusion(issue: Issue, openIssues: Issue[]): string | null {
+  const findOpen = (id: IssueId | null) =>
     openIssues.find((other) => other.number === id);
   if (issue.nativeParent !== null) {
-    const parent = open(issue.nativeParent);
+    const parent = findOpen(issue.nativeParent);
     if (!parent) return null;
-    const ref = reference(parent.number);
-    return `sub-issue of ${parent.specification ? "specification " : ""}${ref}; it runs as part of ${ref} once ${ref} is ready for agent`;
+    const name = reference(parent.number);
+    return `sub-issue of ${parent.specification ? "specification " : ""}${name}; it runs as part of ${name} once ${name} is ready for agent`;
   }
-  const named = open(issue.parentReference);
+  const named = findOpen(issue.parentReference);
   return named?.specification
     ? `names specification ${reference(named.number)} as its parent but is not linked to it yet`
     : null;
