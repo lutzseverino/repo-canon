@@ -132,6 +132,29 @@ record omits the checks, so post their outcomes as one comment. The record
 stays the body; for a breaking (`!`) title, add Impact and Migration sections
 after the record.
 
+A finding is a defect, gap, or stale instruction the adoption or update run
+observed in the standards or tooling it used. The run's own contextual work in
+the adopting repository is not a finding. File each finding in the right
+repository:
+
+- For the standards source's guidance, discovery, checks, fixes, installed
+  files, or drafter, use the source repository identified by the source URL in
+  the adoption record's Selection.
+- For the Repository Standards CLI or the `adopt-standards` skill, use
+  `lutzseverino/repo-standards`.
+
+Before filing, check for an open issue that already reports the finding and
+link it instead of creating a duplicate. Otherwise, open one issue per finding
+through the target repository's issue forms, labelled `needs-triage`. Cite the
+adoption pull request and distinguish what the run observed from what it only
+read in code. Link every filed or existing issue from the check-outcomes
+comment.
+
+If an issue cannot be created in its target repository, list each unfiled
+finding in that comment, name its target repository, and state that it was not
+filed. Findings never block or delay the adoption pull request; it still
+proceeds when findings cannot be filed.
+
 ### Merging
 
 Merge a pull request once every required check passes on its latest head and

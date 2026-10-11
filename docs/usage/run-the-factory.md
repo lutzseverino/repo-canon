@@ -159,8 +159,9 @@ candidate waits for capacity; closing the issue does not authorize automation.
 A routine update uses spare capacity on the host's default model and the same
 provider gates and time limit as issue work. Its agent follows the candidate
 CLI's `adopt-standards` skill, inspects afresh with a new discovery proposal
-when needed, delivers the adoption as a pull request, and uses `babysit` to
-merge it. No implementation ticket is opened. If that fresh inspection or a
+when needed, delivers the adoption using
+[`CONTRIBUTING.md`'s adoption pull request rules](../../CONTRIBUTING.md#adoption-pull-requests),
+and uses `babysit` to merge it. No implementation ticket is opened. If that fresh inspection or a
 later fix needs confirmation, the agent stops and files the reasons for triage
 before confirming anything. The factory never supplies `--confirmed`.
 
