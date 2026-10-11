@@ -35,6 +35,10 @@ function trackedFiles() {
     .filter(Boolean);
 }
 
+function flowedText(path) {
+  return readFileSync(join(root, path), "utf8").replaceAll(/\s+/g, " ");
+}
+
 function operation(name) {
   return fileURLToPath(new URL(`../operations/${name}`, import.meta.url));
 }
@@ -277,19 +281,14 @@ test("the installed agent guidance ends every change as a babysat pull request",
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   assert.ok(declarations.includes("target: AGENTS.md\n      exact: AGENTS.md"));
   assert.ok(
-    readFileSync(join(root, "AGENTS.md"), "utf8")
-      .replaceAll(/\s+/g, " ")
-      .includes(
-        "Deliver every change as one pull request: open it as `CONTRIBUTING.md` says, write its body with `pr`, then `babysit` it until it merges.",
-      ),
+    flowedText("AGENTS.md").includes(
+      "Deliver every change as one pull request: open it as `CONTRIBUTING.md` says, write its body with `pr`, then `babysit` it until it merges.",
+    ),
   );
 });
 
 test("review converges on fixes and reasoned declines the guide allows", () => {
-  const guide = readFileSync(join(root, "CONTRIBUTING.md"), "utf8").replaceAll(
-    /\s+/g,
-    " ",
-  );
+  const guide = flowedText("CONTRIBUTING.md");
   assert.ok(
     guide.includes(
       "every review thread is answered with its fix or a reasoned decline",
@@ -297,13 +296,13 @@ test("review converges on fixes and reasoned declines the guide allows", () => {
   );
   assert.match(guide, /another layer owns/);
   assert.match(guide, /files only the owner writes/);
-  const babysit = readFileSync(
-    join(root, ".agents/skills/babysit/SKILL.md"),
-    "utf8",
-  ).replaceAll(/\s+/g, " ");
-  assert.match(babysit, /decline/);
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  assert.match(babysit, /does not let you decline/);
   assert.match(babysit, /warrant another look/);
-  assert.doesNotMatch(babysit, /another layer|only the owner writes|scope/);
+  assert.doesNotMatch(
+    babysit,
+    /ticket or scope|another layer|only the owner writes/,
+  );
 });
 
 test("adoption installs the factory's exact files, which name no repository", () => {

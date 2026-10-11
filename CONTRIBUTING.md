@@ -138,13 +138,14 @@ Squash-merge pull requests into their base branch, using the PR title as the
 commit subject and its description as the body. Preserve issue references and
 breaking-change explanations in the final message.
 
-Fix a review finding about a defect in what the change is responsible for. A
-real finding may be declined when it is outside the change's ticket or scope;
-when it guards a rule another layer owns, such as by duplicating that layer's
-validation; or when it guards against the owner misconfiguring files only the
-owner writes, or a component corrupting state it owns itself. Answer a declined
-finding, or one that does not hold, with its reason in its review thread. Open a
-follow-up issue only for a declined finding worth keeping.
+Fix a review finding about a defect in what the change is responsible for.
+Decline a finding that does not hold. A real finding may also be declined when
+it is outside the change's ticket or scope; when it guards a rule another layer
+owns, such as by duplicating that layer's validation; or when it guards against
+the owner misconfiguring files only the owner writes, or a component corrupting
+state it owns itself, which lie outside the threat model. Answer a decline with
+its reason in its review thread. Open a follow-up issue for a declined finding
+only when it is worth keeping, and leave it to triage.
 
 ## Documentation
 

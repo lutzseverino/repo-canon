@@ -10,8 +10,8 @@ conditions and the wording rules.
    arrives. Use the host's watch tool; without one, run
    `gh pr checks <number> --watch`, then poll for reviews.
 2. Verify each failing check and review finding against the source.
-3. Fix the real findings `CONTRIBUTING.md` does not let you decline. Answer
-   every review thread with its fix, or with why you decline the finding.
+3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
+   every review thread as it requires.
 4. When pushed fixes change enough to warrant another look, comment
    `@codex review` to re-request review of the new head. After any push, return
    to step 1.
