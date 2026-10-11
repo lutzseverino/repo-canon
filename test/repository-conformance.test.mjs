@@ -285,6 +285,27 @@ test("the installed agent guidance ends every change as a babysat pull request",
   );
 });
 
+test("review converges on fixes and reasoned declines the guide allows", () => {
+  const guide = readFileSync(join(root, "CONTRIBUTING.md"), "utf8").replaceAll(
+    /\s+/g,
+    " ",
+  );
+  assert.ok(
+    guide.includes(
+      "every review thread is answered with its fix or a reasoned decline",
+    ),
+  );
+  assert.match(guide, /another layer owns/);
+  assert.match(guide, /files only the owner writes/);
+  const babysit = readFileSync(
+    join(root, ".agents/skills/babysit/SKILL.md"),
+    "utf8",
+  ).replaceAll(/\s+/g, " ");
+  assert.match(babysit, /decline/);
+  assert.match(babysit, /warrant another look/);
+  assert.doesNotMatch(babysit, /another layer|only the owner writes|scope/);
+});
+
 test("adoption installs the factory's exact files, which name no repository", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   const factory = {
