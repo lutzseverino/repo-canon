@@ -130,9 +130,12 @@ project.
 
 Its body is the adoption record: the output of `status --summary`, byte for
 byte, starting with its `# Repository Standards adoption record` heading. The
-record omits the checks, so post their outcomes as one comment. The record
-stays the body; for a breaking (`!`) title, add Impact and Migration sections
-after the record.
+record's Operations table lists the standards source's fixes and checks with
+their results. Post one check-outcomes comment with the repository's own
+validation outcomes, confirmation that the run-state conditions for opening
+the pull request hold, and findings links or unfiled findings as described
+below. The record stays the body; for a breaking (`!`) title, add Impact and
+Migration sections after the record.
 
 A finding is a defect, gap, or stale instruction the adoption or update run
 observed in the standards or tooling it used. The run's own contextual work in
