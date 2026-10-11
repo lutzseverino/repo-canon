@@ -57,6 +57,8 @@ export type Ports = {
 };
 
 type HostRun = Run & {
+  // The first attempt's start; a retry continues its pull request.
+  pullRequestSince: string;
   controller: AbortController;
   exited: boolean;
   exitedAt: Date | null;
@@ -524,8 +526,9 @@ export function createFactory(settings: Settings, ports: Ports) {
   }
 
   // A run's pull request is one from this repository, not a fork, that closes
-  // its issue or comes from the run's branch, opened once the run started (`since`), so an earlier run's pull
-  // requests on the same branch don't decide it. Only a closed issue counts as
+  // its issue or comes from the run's branch, opened since the first attempt
+  // started (`since`), so an earlier run's pull requests don't decide it.
+  // Only a closed issue counts as
   // merged work. An open pull request holds the claim; a merged pull request
   // with the issue still open and none open is its own state.
   async function pullRequestState(
@@ -619,8 +622,10 @@ export function createFactory(settings: Settings, ports: Ports) {
         ]);
         return;
       case "launch": {
+        const previous = runs.find((run) => run.issue === issue);
         forget(issue);
         const controller = new AbortController();
+        const startedAt = ports.now().toISOString();
         const run: HostRun = {
           issue,
           mode: decision.mode,
@@ -628,7 +633,8 @@ export function createFactory(settings: Settings, ports: Ports) {
           model: decision.model,
           effort: decision.effort,
           attempt: decision.attempt,
-          startedAt: ports.now().toISOString(),
+          startedAt,
+          pullRequestSince: previous?.pullRequestSince ?? startedAt,
           log: join(
             ports.root,
             ".sandcastle",
@@ -737,7 +743,7 @@ export function createFactory(settings: Settings, ports: Ports) {
             run.stopped ||
             run.exitedAt!.getTime() - Date.parse(run.startedAt) >=
               settings.timeLimitMinutes * 60_000,
-          pullRequest: await pullRequestState(run.issue, run.startedAt),
+          pullRequest: await pullRequestState(run.issue, run.pullRequestSince),
         };
     }
     const issues = await readIssues();

@@ -778,6 +778,92 @@ test("a merged pull request from an earlier run does not decide a later run's ou
   assert.deepEqual(retried.github.find(4).comments, []);
 });
 
+test("a retry keeps the open pull request from its timed-out first attempt", async () => {
+  const run = factory({
+    issues: [{ number: 4 }],
+    hostSettings: { retryModel: "gpt-5.5", timeLimitMinutes: 1 },
+  });
+  await run.tick();
+  const issue = run.github.find(4);
+  issue.branchPullRequests.push({
+    state: "OPEN",
+    createdAt: "2026-10-09T12:00:30Z",
+  });
+  run.time.now = new Date("2026-10-09T12:02:00Z");
+  await run.tick();
+  assert.equal(run.sandcastle.launched[0].signal.aborted, true);
+  await settled();
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 2);
+  assert.equal(run.sandcastle.launched[1].branch, "factory/issue-4");
+  run.time.now = new Date("2026-10-09T12:02:30Z");
+  run.sandcastle.launched[1].finish();
+  await settled();
+  await run.tick();
+  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:running"]);
+  assert.deepEqual(issue.comments, []);
+});
+
+for (const branchPullRequests of [
+  [],
+  [{ state: "OPEN", createdAt: "2026-10-09T11:59:59Z" }],
+])
+  test(`a retry fails with ${branchPullRequests.length ? "only an earlier run's" : "no"} pull request`, async () => {
+    const run = factory({
+      issues: [{ number: 4, branchPullRequests }],
+      hostSettings: { retryModel: "gpt-5.5" },
+    });
+    await run.tick();
+    run.sandcastle.launched[0].finish();
+    await settled();
+    await run.tick();
+    assert.equal(run.sandcastle.launched.length, 2);
+    run.sandcastle.launched[1].finish();
+    await settled();
+    await run.tick();
+    const issue = run.github.find(4);
+    assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
+    assert.equal(issue.comments.length, 1);
+    assert.match(
+      issue.comments[0],
+      /the run ended without an open pull request/,
+    );
+    assert.match(issue.comments[0], /attempt-2\.log/);
+  });
+
+test("a retry's time limit starts at its own launch even with an open pull request", async () => {
+  const run = factory({
+    issues: [{ number: 4 }],
+    hostSettings: { retryModel: "gpt-5.5", timeLimitMinutes: 1 },
+  });
+  await run.tick();
+  const issue = run.github.find(4);
+  issue.branchPullRequests.push({
+    state: "OPEN",
+    createdAt: "2026-10-09T12:00:30Z",
+  });
+  run.time.now = new Date("2026-10-09T12:02:00Z");
+  await run.tick();
+  await settled();
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 2);
+  run.time.now = new Date("2026-10-09T12:02:30Z");
+  await run.tick();
+  assert.equal(run.sandcastle.launched[1].signal.aborted, false);
+  run.time.now = new Date("2026-10-09T12:03:01Z");
+  await run.tick();
+  assert.equal(run.sandcastle.launched[1].signal.aborted, true);
+  await settled();
+  await run.tick();
+  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
+  assert.equal(issue.comments.length, 1);
+  assert.match(
+    issue.comments[0],
+    /the run exceeded the time limit of 1 minutes/,
+  );
+  assert.match(issue.comments[0], /attempt-2\.log/);
+});
+
 test("an open pull request holds a claim even beside an earlier merged one", async () => {
   const run = factory({
     issues: [
