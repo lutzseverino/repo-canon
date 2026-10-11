@@ -19,9 +19,10 @@ repo-standards --version
 ```
 
 Select an owner-published release compatible with that CLI and the `complete`
-profile. The latest [`v0.8.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.8.0)
-requires CLI 6.0.0 or newer. Read its breaking standards changes and migration
-steps before updating an existing adoption.
+profile. The latest [`v0.8.1` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.8.1)
+requires CLI 6.0.0 or newer. Before updating an existing adoption, read the
+breaking standards changes and migration steps of each release since the
+adopted one.
 
 ## Features
 
@@ -42,7 +43,7 @@ authorizes nothing:
 ```sh
 repo-standards inspect \
   --source https://github.com/lutzseverino/repo-canon \
-  --standards-version v0.8.0 --profile complete \
+  --standards-version v0.8.1 --profile complete \
   --project /path/to/adopting-project --json
 ```
 
