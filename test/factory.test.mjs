@@ -12,7 +12,8 @@ function issue(number, labels = ["ready-for-agent"], details = {}) {
     createdAt: `2026-10-0${Math.min(number, 9)}T00:00:00Z`,
     labels,
     specification: false,
-    parent: null,
+    nativeParent: null,
+    parentReference: null,
     subIssues: [],
     blockedBy: [],
     ...details,
@@ -139,8 +140,8 @@ test("a specification runs orchestrated once it and every open child are ready",
         issue(4, ["ready-for-agent"], {
           subIssues: [child(7, ["ready-for-agent"]), child(8, ["needs-info"])],
         }),
-        issue(5, ["ready-for-agent"], { parent: 3 }),
-        issue(7, ["ready-for-agent"], { parent: 4 }),
+        issue(5, ["ready-for-agent"], { nativeParent: 3 }),
+        issue(7, ["ready-for-agent"], { nativeParent: 4 }),
       ],
     }),
   );
@@ -149,8 +150,14 @@ test("a specification runs orchestrated once it and every open child are ready",
     [{ issue: 3, mode: "orchestrated" }],
   );
   assert.equal(skipOf(decisions, 4), "children not ready for agent: #8");
-  assert.equal(skipOf(decisions, 5), "child of specification #3");
-  assert.equal(skipOf(decisions, 7), "child of specification #4");
+  assert.equal(
+    skipOf(decisions, 5),
+    "sub-issue of #3; it runs as part of #3 once #3 is ready for agent",
+  );
+  assert.equal(
+    skipOf(decisions, 7),
+    "sub-issue of #4; it runs as part of #4 once #4 is ready for agent",
+  );
 });
 
 test("a specification without tickets waits for them instead of running directly", () => {
@@ -218,7 +225,7 @@ test("a specification whose readiness predates its latest ticket waits for readi
         kind: "skip",
         issue: 3,
         reason:
-          "readiness predates its latest ticket #6; re-apply ready-for-agent once its tickets are published",
+          "readiness predates its latest ticket #6; remove and re-apply ready-for-agent once its tickets are published",
       },
     ]);
   }
@@ -235,15 +242,15 @@ test("a specification made ready after its latest ticket was linked runs orchest
   );
 });
 
-// A ticket's parent is its native parent, or else the issue its `Parent`
-// section names, so a published ticket counts before it is linked.
+// A ticket that names an open specification in its `Parent` section counts as
+// its ticket before it is linked.
 test("a ticket naming a specification it is not linked to holds both back", () => {
   const decisions = decideFactory(
     snapshot({
       issues: [
         graph("2026-10-09T10:06:00Z"),
-        issue(7, ["ready-for-agent"], { parent: 3 }),
-        issue(8, ["needs-triage"], { parent: 3 }),
+        issue(7, ["ready-for-agent"], { parentReference: 3 }),
+        issue(8, ["needs-triage"], { parentReference: 3 }),
         issue(9),
       ],
     }),
@@ -252,11 +259,105 @@ test("a ticket naming a specification it is not linked to holds both back", () =
     skipOf(decisions, 3),
     "tickets name it as their parent but are not linked to it yet: #7, #8",
   );
-  assert.equal(skipOf(decisions, 7), "child of specification #3");
+  assert.equal(
+    skipOf(decisions, 7),
+    "names specification #3 as its parent but is not linked to it yet",
+  );
   assert.deepEqual(
     launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
     [{ issue: 9, mode: "direct" }],
   );
+});
+
+// Only an open specification in this repository runs over the tickets that
+// name it, so any other `Parent` reference leaves the ticket to run alone.
+test("a ticket naming anything but an open specification runs directly", () => {
+  for (const parentReference of [4, 5]) {
+    const decisions = decideFactory(
+      snapshot({
+        issues: [
+          issue(4, ["wayfinder:map"]),
+          issue(7, ["ready-for-agent"], { parentReference }),
+        ],
+      }),
+    );
+    assert.deepEqual(
+      launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
+      [{ issue: 7, mode: "direct" }],
+      `Parent ${parentReference}`,
+    );
+  }
+});
+
+test("a ready planning issue does not wait for the tickets that name it", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        issue(4, ["ready-for-agent"]),
+        issue(7, ["ready-for-agent"], { parentReference: 4 }),
+      ],
+    }),
+  );
+  assert.deepEqual(
+    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
+    [
+      { issue: 4, mode: "direct" },
+      { issue: 7, mode: "direct" },
+    ],
+  );
+});
+
+// A sub-issue runs as part of its open native parent, whatever kind of issue
+// that is, and the native parent outranks the `Parent` section.
+test("a sub-issue of an open parent in this repository waits for the parent", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        graph("2026-10-09T10:06:00Z"),
+        issue(4, ["wayfinder:map"], {
+          subIssues: [{ number: 8, state: "open", labels: [] }],
+        }),
+        issue(5, ["ready-for-agent"], { nativeParent: 3 }),
+        issue(7, ["ready-for-agent"], { nativeParent: 4 }),
+        issue(8, ["ready-for-agent"], { nativeParent: 4, parentReference: 9 }),
+        issue(9, ["needs-triage"], { specification: true }),
+      ],
+    }),
+  );
+  assert.equal(
+    skipOf(decisions, 5),
+    "sub-issue of specification #3; it runs as part of #3 once #3 is ready for agent",
+  );
+  for (const number of [7, 8])
+    assert.equal(
+      skipOf(decisions, number),
+      "sub-issue of #4; it runs as part of #4 once #4 is ready for agent",
+    );
+  assert.deepEqual(
+    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
+    [{ issue: 3, mode: "orchestrated" }],
+  );
+});
+
+test("a sub-issue of a closed parent or one in another repository runs directly", () => {
+  for (const nativeParent of [4, "acme/gadgets#3"]) {
+    const decisions = decideFactory(
+      snapshot({
+        issues: [
+          graph("2026-10-09T10:06:00Z"),
+          issue(7, ["ready-for-agent"], { nativeParent, parentReference: 3 }),
+        ],
+      }),
+    );
+    assert.deepEqual(
+      launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
+      [
+        { issue: 3, mode: "orchestrated" },
+        { issue: 7, mode: "direct" },
+      ],
+      `native parent ${nativeParent}`,
+    );
+  }
 });
 
 test("another repository's sub-issue does not stand in for a local ticket with its number", () => {
@@ -270,7 +371,7 @@ test("another repository's sub-issue does not stand in for a local ticket with i
             labels: ["ready-for-agent"],
           },
         ]),
-        issue(7, ["ready-for-agent"], { parent: 3 }),
+        issue(7, ["ready-for-agent"], { parentReference: 3 }),
       ],
     }),
   );
@@ -297,19 +398,21 @@ test("an unready sub-issue in another repository is named by its repository", ()
   );
 });
 
-test("a ticket naming another repository's issue as its parent never runs directly", () => {
+test("a ticket naming another repository's issue as its parent runs directly", () => {
   const decisions = decideFactory(
     snapshot({
       issues: [
         graph("2026-10-09T10:06:00Z"),
-        issue(7, ["ready-for-agent"], { parent: "acme/gadgets#3" }),
+        issue(7, ["ready-for-agent"], { parentReference: "acme/gadgets#3" }),
       ],
     }),
   );
-  assert.equal(skipOf(decisions, 7), "child of specification acme/gadgets#3");
   assert.deepEqual(
     launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-    [{ issue: 3, mode: "orchestrated" }],
+    [
+      { issue: 3, mode: "orchestrated" },
+      { issue: 7, mode: "direct" },
+    ],
   );
 });
 
@@ -751,6 +854,38 @@ test("a retry whose issue is no longer eligible fails it instead", () => {
   );
 });
 
+test("a retry follows the same parent rules as a first launch", () => {
+  const ended = { timedOut: false, pullRequest: "none" };
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        issue(4, ["wayfinder:map"]),
+        issue(5, claimed, { parentReference: 4 }),
+        issue(6, claimed, { nativeParent: 4 }),
+      ],
+      runs: [run(5, { ended }), run(6, { ended })],
+    }),
+  );
+  assert.deepEqual(
+    decisions.map(({ kind, issue, attempt, failure }) => ({
+      kind,
+      issue,
+      attempt,
+      failure,
+    })),
+    [
+      { kind: "launch", issue: 5, attempt: 2, failure: undefined },
+      {
+        kind: "fail",
+        issue: 6,
+        attempt: undefined,
+        failure:
+          "the run ended without an open pull request, and its retry did not launch: sub-issue of #4; it runs as part of #4 once #4 is ready for agent",
+      },
+    ],
+  );
+});
+
 test("a retry over a ticket graph that changed since its readiness fails it", () => {
   const decisions = decideFactory(
     snapshot({
@@ -770,7 +905,7 @@ test("a retry over a ticket graph that changed since its readiness fails it", ()
         kind: "fail",
         issue: 3,
         failure:
-          "the run ended without an open pull request, and its retry did not launch: readiness predates its latest ticket #6; re-apply ready-for-agent once its tickets are published",
+          "the run ended without an open pull request, and its retry did not launch: readiness predates its latest ticket #6; remove and re-apply ready-for-agent once its tickets are published",
       },
     ],
   );

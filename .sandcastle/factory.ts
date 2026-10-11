@@ -16,8 +16,10 @@ export type Issue = {
   specification: boolean;
   // When `ready-for-agent` was last applied, or null when it is unknown.
   readyAt: string | null;
-  // Its native parent, or else the first issue its `Parent` section names.
-  parent: IssueId | null;
+  // Its native parent, or null when it has none.
+  nativeParent: IssueId | null;
+  // The first issue its `Parent` section names, or null when it names none.
+  parentReference: IssueId | null;
   // When a native sub-issue was last added, and which, or null when none was.
   latestLink: { ticket: IssueId | null; at: string } | null;
   subIssues: { number: IssueId; state: "open" | "closed"; labels: string[] }[];
@@ -426,22 +428,26 @@ function oldestFirst(issues: Issue[]): Issue[] {
   );
 }
 
-// An issue's exclusion from pickup, given the open issues, whose parents may
-// name it.
+// An issue's exclusion from pickup, given the open issues, which may hold it
+// or name it as their parent.
 function exclusion(issue: Issue, openIssues: Issue[]): string | null {
-  if (issue.parent !== null)
-    return `child of specification ${reference(issue.parent)}`;
+  const held = holder(issue, openIssues);
+  if (held) return held;
   if (issue.labels.includes(labels.failed))
     return `labelled ${labels.failed}; remove the label to run it again`;
   const blockers = issue.blockedBy.filter(
     (blocker) => blocker.state === "open",
   );
   if (blockers.length > 0) return `blocked by ${references(blockers)}`;
-  const unlinked = openIssues.filter(
-    (other) =>
-      other.parent === issue.number &&
-      !issue.subIssues.some((child) => child.number === other.number),
-  );
+  // Only a specification holds the tickets that name it without a link.
+  const unlinked = issue.specification
+    ? openIssues.filter(
+        (other) =>
+          other.nativeParent === null &&
+          other.parentReference === issue.number &&
+          !issue.subIssues.some((child) => child.number === other.number),
+      )
+    : [];
   if (unlinked.length > 0)
     return `tickets name it as their parent but are not linked to it yet: ${references(unlinked)}`;
   if (issue.specification && issue.subIssues.length === 0)
@@ -452,13 +458,32 @@ function exclusion(issue: Issue, openIssues: Issue[]): string | null {
     link &&
     (issue.readyAt === null || Date.parse(issue.readyAt) <= Date.parse(link.at))
   )
-    return `readiness predates its latest ticket${link.ticket === null ? "" : ` ${reference(link.ticket)}`}; re-apply ${labels.ready} once its tickets are published`;
+    return `readiness predates its latest ticket${link.ticket === null ? "" : ` ${reference(link.ticket)}`}; remove and re-apply ${labels.ready} once its tickets are published`;
   const unready = issue.subIssues.filter(
     (child) => child.state === "open" && !child.labels.includes(labels.ready),
   );
   if (unready.length > 0)
     return `children not ready for agent: ${references(unready)}`;
   return null;
+}
+
+// A sub-issue runs as part of its native parent while that parent is open in
+// this repository. An issue with no native parent runs as part of the open
+// specification in this repository that its `Parent` section names. Any other
+// parent leaves it to run on its own.
+function holder(issue: Issue, openIssues: Issue[]): string | null {
+  const open = (id: IssueId | null) =>
+    openIssues.find((other) => other.number === id);
+  if (issue.nativeParent !== null) {
+    const parent = open(issue.nativeParent);
+    if (!parent) return null;
+    const ref = reference(parent.number);
+    return `sub-issue of ${parent.specification ? "specification " : ""}${ref}; it runs as part of ${ref} once ${ref} is ready for agent`;
+  }
+  const named = open(issue.parentReference);
+  return named?.specification
+    ? `names specification ${reference(named.number)} as its parent but is not linked to it yet`
+    : null;
 }
 
 function references(issues: { number: IssueId }[]): string {

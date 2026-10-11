@@ -556,9 +556,11 @@ export function createFactory(settings: Settings, ports: Ports) {
             node.labelEvents.nodes.findLast(
               (event: any) => event.label?.name === labels.ready,
             )?.createdAt ?? null,
-          parent: node.parent
-            ? nodeId(node.parent, local)
-            : pathId(parentSectionReference(node.body ?? "", local), local),
+          nativeParent: node.parent ? nodeId(node.parent, local) : null,
+          parentReference: pathId(
+            parentSectionReference(node.body ?? "", local),
+            local,
+          ),
           latestLink: link
             ? {
                 ticket: link.subIssue ? nodeId(link.subIssue, local) : null,
