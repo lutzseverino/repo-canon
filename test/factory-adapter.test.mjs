@@ -26,6 +26,28 @@ const settings = {
   timeLimitMinutes: 240,
 };
 
+// The most nodes GitHub lets one GraphQL query request: each connection
+// counts its `first` or `last` times those of the connections around it.
+const nodeLimit = 500_000;
+
+function requestedNodes(query) {
+  let total = 0;
+  const scopes = [1];
+  for (const [, args, close] of query.matchAll(
+    /(?:\(([^()]*)\)\s*)?\{|(\})/g,
+  )) {
+    if (close) {
+      scopes.pop();
+      continue;
+    }
+    const limit = args?.match(/\b(?:first|last):\s*(\d+)/);
+    const nodes = scopes.at(-1) * (limit ? Number(limit[1]) : 1);
+    if (limit) total += nodes;
+    scopes.push(nodes);
+  }
+  return total;
+}
+
 function fakeGitHub(issues) {
   const state = {
     created: [],
@@ -39,6 +61,8 @@ function fakeGitHub(issues) {
       parent: null,
       subIssues: [],
       blockedBy: [],
+      labelEvents: [],
+      linkEvents: [],
       pullRequests: [],
       branchPullRequests: [],
       comments: [],
@@ -116,6 +140,10 @@ function fakeGitHub(issues) {
           });
         return JSON.stringify(pages);
       }
+      assert.ok(
+        requestedNodes(query) <= nodeLimit,
+        "issue query over the node limit",
+      );
       return JSON.stringify([
         {
           data: {
@@ -129,10 +157,18 @@ function fakeGitHub(issues) {
                     createdAt: issue.createdAt,
                     body: issue.body,
                     labels: names(issue.labels),
-                    parent: issue.parent && { number: issue.parent },
+                    parent: issue.parent && {
+                      number: issue.parent,
+                      repository: {
+                        nameWithOwner: issue.parentRepository ?? "acme/widgets",
+                      },
+                    },
                     subIssues: {
                       nodes: issue.subIssues.map((child) => ({
                         number: child.number,
+                        repository: {
+                          nameWithOwner: child.repository ?? "acme/widgets",
+                        },
                         state: child.state ?? "OPEN",
                         labels: names(child.labels),
                       })),
@@ -142,6 +178,25 @@ function fakeGitHub(issues) {
                         number: blocker.number,
                         state: blocker.state,
                       })),
+                    },
+                    labelEvents: {
+                      nodes: issue.labelEvents.map(({ label, at }) => ({
+                        createdAt: at,
+                        label: { name: label },
+                      })),
+                    },
+                    linkEvents: {
+                      nodes: issue.linkEvents.map(
+                        ({ number, repository, at }) => ({
+                          createdAt: at,
+                          subIssue: {
+                            number,
+                            repository: {
+                              nameWithOwner: repository ?? "acme/widgets",
+                            },
+                          },
+                        }),
+                      ),
                     },
                   })),
               },
@@ -452,6 +507,94 @@ test("a specification body waits for its tickets, then launches /implement-spec 
   run.github.find(3).subIssues.push({
     number: 6,
     labels: ["ready-for-agent"],
+  });
+  await run.tick();
+  assert.equal(run.sandcastle.launched.at(-1).prompt, "/implement-spec #3");
+});
+
+// A specification's readiness counts once it postdates its latest linked
+// ticket, and a published ticket counts by its `Parent` section before it is
+// linked.
+test("a specification waits for its published tickets to be linked and for readiness after them", async () => {
+  const run = factory({
+    issues: [
+      {
+        number: 3,
+        body: specificationBody,
+        labelEvents: [
+          { label: "ready-for-agent", at: "2026-10-09T10:00:00Z" },
+          { label: "documentation", at: "2026-10-09T11:00:00Z" },
+        ],
+        // Another repository's #6 is no stand-in for this repository's.
+        subIssues: [
+          { number: 5, labels: ["ready-for-agent"] },
+          {
+            number: 6,
+            repository: "acme/gadgets",
+            labels: ["ready-for-agent"],
+          },
+        ],
+        linkEvents: [
+          { number: 5, at: "2026-10-09T09:00:00Z" },
+          { number: 6, repository: "acme/gadgets", at: "2026-10-09T09:30:00Z" },
+        ],
+      },
+      {
+        number: 6,
+        body: `## Parent\n\nhttps://github.com/acme/widgets/issues/3\n\n${ticketBody}`,
+      },
+      { number: 7, body: `## Parent\n\n#3\n\n${ticketBody}` },
+      { number: 8, body: ticketBody },
+      {
+        number: 9,
+        body: `## Parent\n\nhttps://github.com/acme/gadgets/issues/3\n\n${ticketBody}`,
+      },
+      { number: 10, parent: 3, parentRepository: "acme/gadgets" },
+    ],
+    hostSettings: { caps: { "claude-code": 3 } },
+  });
+  await run.tick();
+  assert.deepEqual(
+    run.sandcastle.launched.map(({ prompt }) => prompt),
+    ["/implement #8"],
+  );
+  assert.ok(
+    run.reports.includes(
+      "#3 skipped: tickets name it as their parent but are not linked to it yet: #6, #7",
+    ),
+    run.reports.join("\n"),
+  );
+  assert.ok(run.reports.includes("#6 skipped: child of specification #3"));
+  assert.ok(run.reports.includes("#7 skipped: child of specification #3"));
+  for (const number of [9, 10])
+    assert.ok(
+      run.reports.includes(
+        `#${number} skipped: child of specification acme/gadgets#3`,
+      ),
+      run.reports.join("\n"),
+    );
+
+  const spec = run.github.find(3);
+  for (const [number, at] of [
+    [6, "2026-10-09T10:30:00Z"],
+    [7, "2026-10-09T10:31:00Z"],
+  ]) {
+    spec.subIssues.push({ number, labels: ["ready-for-agent"] });
+    spec.linkEvents.push({ number, at });
+    run.github.find(number).parent = 3;
+  }
+  await run.tick();
+  assert.equal(run.sandcastle.launched.length, 1);
+  assert.ok(
+    run.reports.includes(
+      "#3 skipped: readiness predates its latest ticket #7; re-apply ready-for-agent once its tickets are published",
+    ),
+    run.reports.join("\n"),
+  );
+
+  spec.labelEvents.push({
+    label: "ready-for-agent",
+    at: "2026-10-09T11:30:00Z",
   });
   await run.tick();
   assert.equal(run.sandcastle.launched.at(-1).prompt, "/implement-spec #3");
@@ -1286,6 +1429,8 @@ test("an adoption agent counts against the provider cap and is stopped at its ti
     parent: null,
     subIssues: [],
     blockedBy: [],
+    labelEvents: [],
+    linkEvents: [],
     pullRequests: [],
     branchPullRequests: [],
     comments: [],

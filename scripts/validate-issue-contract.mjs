@@ -11,7 +11,9 @@ import {
   identifyContract,
   isSpecification,
   issueMarkdown,
+  issueReferences,
   normalizeMarkdown,
+  parentSectionReference,
   parseSections,
   wayfinderChildLabels,
 } from "../operations/lib/issue-contract-kind.mjs";
@@ -335,10 +337,7 @@ function relationshipLookups({
   blockedBy: nativeBlockedBy,
 }) {
   const sections = parseSections(issue.body ?? "");
-  const parentReference = firstIssueReference(
-    sections.get("parent"),
-    repository,
-  );
+  const parentReference = parentSectionReference(issue.body ?? "", repository);
   const knownReferences = new Set(
     nativeBlockedBy
       .map((blocker) => issueReferenceFor(blocker))
@@ -388,36 +387,6 @@ function issueReferenceFor(issue) {
     /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/,
   );
   return match ? `/repos/${match[1]}/${match[2]}/issues/${match[3]}` : null;
-}
-
-function firstIssueReference(value, repository) {
-  return issueReferences(value, repository)[0] ?? null;
-}
-
-function issueReferences(value = "", repository) {
-  const references = [];
-  const seen = new Set();
-  const expression =
-    /https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/issues\/(\d+)|(?:^|[\s(])#(\d+)\b/gim;
-  for (const match of markdownReferenceText(value).matchAll(expression)) {
-    const reference = match[4]
-      ? `/repos/${repository}/issues/${match[4]}`
-      : `/repos/${match[1]}/${match[2]}/issues/${match[3]}`;
-    if (!seen.has(reference)) {
-      seen.add(reference);
-      references.push(reference);
-    }
-  }
-  return references;
-}
-
-function markdownReferenceText(markdown) {
-  return issueMarkdown(markdown).content.text({
-    includeCode: false,
-    includeKeyboardInput: true,
-    includeImageAlt: false,
-    includeLinkTargets: true,
-  }).text;
 }
 
 function markdownVisibleText(markdown) {

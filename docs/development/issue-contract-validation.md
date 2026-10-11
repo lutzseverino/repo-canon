@@ -49,7 +49,10 @@ require an Agent Brief.
 Native parent and blocking relationships are read from GitHub. Explicit issue
 links in rendered `Parent` and `Blocked by` section content are used
 when native relationships are absent or the native dependency endpoint is
-unavailable. An open blocker does not make a complete contract invalid.
+unavailable. The `Parent` reference rule lives in
+`operations/lib/issue-contract-kind.mjs` too, and the factory uses it to count
+a published ticket as its parent's child before it is linked. An open blocker
+does not make a complete contract invalid.
 
 Rendered visibility, text, links, heading provenance, and outermost section
 regions come from the shared pure interpreted-document runtime installed at

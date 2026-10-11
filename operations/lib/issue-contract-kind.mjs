@@ -1,6 +1,7 @@
-// Identifies the kind of an issue's contract from its labels and body, with
-// the issue Markdown parsing it rests on. The issue-contract validator and
-// the factory share it, so they agree on which issues are specifications.
+// Identifies the kind of an issue's contract from its labels and body, and
+// the parent its `Parent` section names, with the issue Markdown parsing they
+// rest on. The issue-contract validator and the factory share it, so they
+// agree on which issues are specifications and which are children.
 import { interpretMarkdown } from "./rendered-markdown.mjs";
 
 export const categoryLabels = new Set(["bug", "enhancement"]);
@@ -52,6 +53,43 @@ export function isSpecification({ labels, body }) {
     !names.some((name) => categoryLabels.has(name)) &&
     identifyContract(parseSections(body ?? "")) === "specification"
   );
+}
+
+// The first issue reference in the body's `Parent` section, as an API path
+// such as `/repos/<owner>/<name>/issues/<n>`, or null. An issue with no native
+// parent counts as the child of the issue it references.
+export function parentSectionReference(body, repository) {
+  return (
+    issueReferences(parseSections(body).get("parent"), repository)[0] ?? null
+  );
+}
+
+// The distinct issue references in Markdown, as API paths; a bare `#<n>`
+// resolves against `repository`, written `<owner>/<name>`.
+export function issueReferences(value = "", repository) {
+  const references = [];
+  const seen = new Set();
+  const expression =
+    /https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/issues\/(\d+)|(?:^|[\s(])#(\d+)\b/gim;
+  for (const match of markdownReferenceText(value).matchAll(expression)) {
+    const reference = match[4]
+      ? `/repos/${repository}/issues/${match[4]}`
+      : `/repos/${match[1]}/${match[2]}/issues/${match[3]}`;
+    if (!seen.has(reference)) {
+      seen.add(reference);
+      references.push(reference);
+    }
+  }
+  return references;
+}
+
+function markdownReferenceText(markdown) {
+  return issueMarkdown(markdown).content.text({
+    includeCode: false,
+    includeKeyboardInput: true,
+    includeImageAlt: false,
+    includeLinkTargets: true,
+  }).text;
 }
 
 export function identifyContract(sections) {
