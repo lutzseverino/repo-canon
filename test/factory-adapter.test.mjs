@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { writeFileSync } from "node:fs";
+import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { installedValidator } from "./helpers/installed-validator.mjs";
@@ -12,7 +12,9 @@ import {
   createFactory,
   createStandardsRunner,
   imageName,
+  readCodexUsage,
   readSettings,
+  sandboxMounts,
 } from "../.sandcastle/adapter.ts";
 
 // The factory's adapter, run against a stateful GitHub CLI fake and a fake
@@ -801,6 +803,7 @@ test("the host's settings come from its environment", () => {
       usageThreshold: 80,
       timeLimitMinutes: 240,
       pollSeconds: 60,
+      codexLogin: null,
     },
   );
   const defaults = readSettings({
@@ -808,9 +811,186 @@ test("the host's settings come from its environment", () => {
     FACTORY_CAPS: "codex=1",
     FACTORY_USAGE_THRESHOLD: "90",
     FACTORY_TIME_LIMIT_MINUTES: "60",
+    FACTORY_CODEX_LOGIN: "",
   });
   assert.equal(defaults.retryModel, null);
   assert.equal(defaults.pollSeconds, 300);
+  assert.equal(defaults.codexLogin, null);
+});
+
+const required = {
+  FACTORY_DEFAULT_MODEL: "gpt-5.5",
+  FACTORY_CAPS: "codex=1",
+  FACTORY_USAGE_THRESHOLD: "90",
+  FACTORY_TIME_LIMIT_MINUTES: "60",
+};
+
+// A Codex ChatGPT login whose refresh token is a placeholder, as the host
+// writes it. Nothing here is a real credential.
+const login = JSON.stringify({
+  auth_mode: "chatgpt",
+  tokens: {
+    access_token: "secret-access-token",
+    id_token: "secret-id-token",
+    account_id: "secret-account",
+    refresh_token: "placeholder",
+  },
+});
+
+test("a readable Codex login file at an absolute path is accepted", (t) => {
+  const host = fixture({ "codex/auth.json": login });
+  t.after(host.close);
+  const path = join(host.root, "codex", "auth.json");
+  assert.equal(
+    readSettings({ ...required, FACTORY_CODEX_LOGIN: path }).codexLogin,
+    path,
+  );
+});
+
+test("an unusable Codex login file is refused by its path", (t) => {
+  const host = fixture({ "codex/auth.json": login });
+  t.after(host.close);
+  const refusal = (path) => {
+    try {
+      readSettings({ ...required, FACTORY_CODEX_LOGIN: path });
+    } catch (error) {
+      assert.match(error.message, /^The factory host settings are unusable:/);
+      assert.doesNotMatch(error.message, /secret/);
+      return error.message.split("\n").slice(1);
+    }
+    assert.fail(`${path} was accepted`);
+  };
+  assert.deepEqual(refusal("codex/auth.json"), [
+    "- FACTORY_CODEX_LOGIN: set it to an absolute path, not codex/auth.json",
+  ]);
+  const missing = join(host.root, "codex", "missing.json");
+  assert.deepEqual(refusal(missing), [
+    `- FACTORY_CODEX_LOGIN: ${missing} does not exist; set it to the Codex login file`,
+  ]);
+  const directory = join(host.root, "codex");
+  assert.deepEqual(refusal(directory), [
+    `- FACTORY_CODEX_LOGIN: ${directory} is not a regular file; set it to the Codex login file`,
+  ]);
+});
+
+test("a Codex login file the factory's user cannot read is refused", (t) => {
+  if (process.getuid?.() === 0) return t.skip("root reads every file");
+  const host = fixture({ "codex/auth.json": login });
+  t.after(host.close);
+  const path = join(host.root, "codex", "auth.json");
+  chmodSync(path, 0o000);
+  assert.throws(
+    () => readSettings({ ...required, FACTORY_CODEX_LOGIN: path }),
+    {
+      message: [
+        "The factory host settings are unusable:",
+        `- FACTORY_CODEX_LOGIN: ${path} is not readable by the factory's user; let it read the file`,
+      ].join("\n"),
+    },
+  );
+});
+
+test("only a run on Codex mounts the Codex login, read-only in its default home", () => {
+  const path = "/run/factory/codex/auth.json";
+  assert.deepEqual(sandboxMounts("codex", path), [
+    {
+      hostPath: path,
+      sandboxPath: "/home/agent/.codex/auth.json",
+      readonly: true,
+    },
+  ]);
+  assert.deepEqual(sandboxMounts("claude-code", path), []);
+  assert.deepEqual(sandboxMounts("codex", null), []);
+});
+
+// A stand-in for `codex app-server` that records the Codex home it was given,
+// writes state there as Codex does, and answers, refuses, or never replies.
+function fakeCodex(root, behavior) {
+  const seen = join(root, "seen.json");
+  const executable = join(root, "fake-codex");
+  writeFileSync(
+    executable,
+    `#!${process.execPath}
+const fs = require("node:fs");
+const path = require("node:path");
+const home = process.env.CODEX_HOME ?? null;
+// Only the factory's own copies are read, never a real Codex home.
+const copied = home !== null && path.basename(home).startsWith("factory-codex-");
+const auth = copied && path.join(home, "auth.json");
+fs.writeFileSync(${JSON.stringify(seen)}, JSON.stringify(copied ? {
+  home,
+  args: process.argv.slice(2),
+  homeMode: fs.statSync(home).mode & 0o777,
+  authMode: fs.statSync(auth).mode & 0o777,
+  auth: fs.readFileSync(auth, "utf8"),
+} : { home, args: process.argv.slice(2) }));
+if (copied) fs.mkdirSync(path.join(home, "sessions"));
+const reply = (message) => process.stdout.write(JSON.stringify(message) + "\\n");
+require("node:readline").createInterface({ input: process.stdin }).on("line", (line) => {
+  const message = JSON.parse(line);
+  if (${JSON.stringify(behavior)} === "hang") return;
+  if (message.method === "initialize") reply({ id: 0, result: {} });
+  else if (message.method !== "account/rateLimits/read") return;
+  else if (${JSON.stringify(behavior)} === "refuse")
+    reply({ id: 1, error: { message: "not signed in" } });
+  else reply({ id: 1, result: { rateLimits: { primary: { usedPercent: 42 } } } });
+});
+`,
+  );
+  chmodSync(executable, 0o755);
+  return {
+    executable,
+    seen: () => JSON.parse(readFileSync(seen, "utf8")),
+  };
+}
+
+test("each Codex usage read signs in from a private copy of the login that it removes", async (t) => {
+  const host = fixture({ "codex/auth.json": login });
+  t.after(host.close);
+  const path = join(host.root, "codex", "auth.json");
+  chmodSync(path, 0o444);
+  const codex = fakeCodex(host.root, "answer");
+  assert.equal(await readCodexUsage(path, codex.executable), 42);
+  const first = codex.seen();
+  assert.deepEqual(first.args, ["app-server"]);
+  assert.equal(first.homeMode, 0o700);
+  assert.equal(first.authMode, 0o600);
+  assert.equal(first.auth, login);
+  assert.equal(existsSync(first.home), false);
+  assert.equal(readFileSync(path, "utf8"), login);
+
+  assert.equal(await readCodexUsage(path, codex.executable), 42);
+  assert.notEqual(codex.seen().home, first.home);
+  assert.equal(existsSync(codex.seen().home), false);
+});
+
+test("a Codex usage read removes its login copy after an error or a timeout", async (t) => {
+  const host = fixture({ "codex/auth.json": login });
+  t.after(host.close);
+  const path = join(host.root, "codex", "auth.json");
+  for (const [behavior, message] of [
+    ["refuse", /not signed in/],
+    ["hang", /timed out/],
+  ]) {
+    const codex = fakeCodex(host.root, behavior);
+    await assert.rejects(
+      readCodexUsage(path, codex.executable, 500),
+      (error) => {
+        assert.match(error.message, message);
+        assert.doesNotMatch(error.message, /secret/);
+        return true;
+      },
+    );
+    assert.equal(existsSync(codex.seen().home), false, behavior);
+  }
+});
+
+test("without a Codex login the usage read keeps the host's Codex home", async (t) => {
+  const host = fixture({});
+  t.after(host.close);
+  const codex = fakeCodex(host.root, "answer");
+  assert.equal(await readCodexUsage(null, codex.executable), 42);
+  assert.equal(codex.seen().home, process.env.CODEX_HOME ?? null);
 });
 
 test("unusable host settings are refused with every correction", () => {

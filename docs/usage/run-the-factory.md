@@ -25,6 +25,27 @@ credentials, into each sandbox. The file stays on the host;
 `.sandcastle/.gitignore` keeps it, the run logs, and Sandcastle's worktrees
 out of Git.
 
+A Business or Enterprise Codex workspace can give its agents
+`CODEX_ACCESS_TOKEN` through `.sandcastle/.env`. A personal ChatGPT plan has no
+such variable, so the host keeps a Codex login file and names it in
+`FACTORY_CODEX_LOGIN`:
+
+- The file is a Codex ChatGPT-sign-in `auth.json` holding the access token, ID
+  token, and account ID.
+- Its `refresh_token` key holds a placeholder, so no sandbox can rotate the
+  login. Codex ignores a file without the key.
+- The host renews the login and rewrites the file. The factory never renews or
+  rotates it.
+- The factory's user must be able to read the file.
+
+Every run on Codex, including a standards update, gets the file as a read-only
+mount at `/home/agent/.codex/auth.json`, the sandbox's default Codex home; the
+rest of that home stays writable and private to the sandbox. The mount is made
+at each launch, so a file the host replaces reaches the next run, while a
+running sandbox keeps the copy it started with. Runs on Claude Code get no
+mount. The file's contents never appear in `docker run` arguments, factory
+output, or run logs; errors name only its path.
+
 ## Sandbox image
 
 Every run starts in the repository's own image, built from
@@ -53,8 +74,12 @@ and the factory refuses to start until the required ones are usable.
 | `FACTORY_USAGE_THRESHOLD`    | Yes      | The usage percentage at or above which a provider launches nothing                   |
 | `FACTORY_TIME_LIMIT_MINUTES` | Yes      | How long a run may take before it is stopped and fails, at most 35791 minutes        |
 | `FACTORY_POLL_SECONDS`       | No       | The seconds between passes, at most 2147483                                          |
+| `FACTORY_CODEX_LOGIN`        | No       | The absolute path of the Codex login file that Codex runs and usage reads use        |
 
-A provider that `FACTORY_CAPS` omits launches nothing.
+A provider that `FACTORY_CAPS` omits launches nothing. When
+`FACTORY_CODEX_LOGIN` is set, the factory refuses to start unless it names a
+readable regular file by an absolute path. It checks the file only then, not
+before each launch.
 
 ## Pickup
 
@@ -126,8 +151,10 @@ A provider launches a run only while fewer agents than its cap run there and its
 usage is below the threshold. An issue held by a gate stays on the frontier.
 
 - Codex usage is read through the Codex app-server's `account/rateLimits/read`,
-  as the fuller of its rate-limit windows. The host needs the `codex` CLI
-  signed in.
+  as the fuller of its rate-limit windows. The host needs the `codex` CLI. With
+  `FACTORY_CODEX_LOGIN` set, each read signs in from a private copy of that
+  file, removed when the read ends; otherwise the CLI must be signed in as the
+  factory's user.
 - Claude Code publishes no usage read. The factory reads it best-effort with
   the `CLAUDE_CODE_OAUTH_TOKEN` in its environment.
 - An unreadable usage reading gates the provider by count only.
