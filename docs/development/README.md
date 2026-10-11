@@ -42,7 +42,10 @@ contact GitHub or establish live remote setup. Run
 `npm run test:planning-skill-fixtures` for the planning-skill harness. Run
 `npm run test:factory` for the factory's decision core, driven by snapshots,
 and its adapter, driven by a stateful GitHub CLI fake and a fake Sandcastle
-launcher. The
+launcher. Run
+`node --test test/babysit-wait.test.mjs` for the `babysit` wait script's
+decision, driven by fixtures from Codex's comments, and its silence, driven by
+a GitHub CLI fake. The
 public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 

@@ -176,6 +176,11 @@ proceeds when findings cannot be filed.
 
 Merge a pull request once every required check passes on its latest head and
 every review thread is answered with its fix or a reasoned decline.
+When Codex does not review the latest head, because it is unavailable or no
+review arrives within 30 minutes of the latest review request (the head's push
+or a later `@codex review` comment), the pull request merges once those
+conditions hold, and the merging agent comments on it that Codex did not review
+that head and why.
 Squash-merge pull requests into their base branch, using the PR title as the
 commit subject and its description as the body. Preserve issue references and
 breaking-change explanations in the final message.

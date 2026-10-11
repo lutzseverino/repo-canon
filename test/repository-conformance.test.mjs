@@ -272,8 +272,28 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
   assert.match(frontmatter, /^description: \S/m);
   assert.doesNotMatch(frontmatter, /disable-model-invocation/);
   assert.deepEqual(
-    readdirSync(join(root, ".agents/skills/babysit"), { recursive: true }),
-    ["SKILL.md"],
+    readdirSync(join(root, ".agents/skills/babysit"), {
+      recursive: true,
+    }).sort(),
+    ["SKILL.md", "wait.mjs"],
+  );
+});
+
+test("babysit waits only through its script, and the guide owns the no-review rule", () => {
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  assert.match(babysit, /wait\.mjs <number>/);
+  assert.match(babysit, /600000 ms/);
+  assert.match(babysit, /longest wait/);
+  assert.match(babysit, /`5`: still waiting; run it again/);
+  assert.match(
+    readFileSync(join(root, ".agents/skills/babysit/wait.mjs"), "utf8"),
+    /One invocation covers 9 minutes waited: a typical wait takes one, and the\n\/\/ worst case, the 30-minute review bound plus checks, takes at most four\./,
+  );
+  assert.doesNotMatch(babysit, /--watch|watch tool|poll for reviews/);
+  assert.doesNotMatch(babysit, /comments on it that Codex/);
+  assert.match(
+    flowedText("CONTRIBUTING.md"),
+    /the merging agent comments on it that Codex did not review that head and why/,
   );
 });
 
