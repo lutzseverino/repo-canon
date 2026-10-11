@@ -94,7 +94,10 @@ repeated.
   converges by judgment, through the guide's
   [decline grounds](CONTRIBUTING.md#merging) and `babysit`'s re-request
   condition; no round cap or severity threshold bounds it, and the factory's
-  time limit is the hard stop. Its
+  time limit is the hard stop. It waits through one bundled script that polls
+  silently and bounds Codex's review at 30 minutes, run in the foreground on
+  every host; a host's watch tool stalls on Codex's clean pass, and Claude
+  Code's background notification has no Codex equivalent. Its
   source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
   other original exact files; only vendored material has a separate source
   path.

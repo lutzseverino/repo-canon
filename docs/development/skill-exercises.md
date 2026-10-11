@@ -9,7 +9,8 @@ engineering, productivity, and planning skills, which together cover all 27
 pinned Matt Pocock skills. HumanLayer's `show-me` reuses an engineering
 repository, as [its scenario](#humanlayer-show-me) describes. Repo Canon's own
 `babysit` skill acts on a live pull request, so no builder covers it; exercise
-it on a pull request in a disposable GitHub repository.
+it on a pull request in a disposable GitHub repository. Its wait script has
+its own fixtures, which the [development guide](README.md) names.
 
 Building and testing the fixtures is a prerequisite, not an exercise. An
 exercise is an agent session that invokes the skill in a fixture repository
