@@ -95,7 +95,7 @@ repeated.
   [decline grounds](CONTRIBUTING.md#merging) and `babysit`'s re-request
   condition; no round cap or severity threshold bounds it, and the factory's
   time limit is the hard stop. It waits through one bundled script that polls
-  silently and bounds Codex's review at 30 minutes, run in the foreground on
+  silently and bounds the wait for Codex's review, run in the foreground on
   every host; a host's watch tool stalls on Codex's clean pass, and Claude
   Code's background notification has no Codex equivalent. Its
   source is its installed path, `.agents/skills/babysit`, as for Repo Canon's

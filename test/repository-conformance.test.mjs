@@ -285,7 +285,10 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   assert.match(babysit, /600000 ms/);
   assert.match(babysit, /longest wait/);
   assert.match(babysit, /`5`: still waiting; run it again/);
-  assert.match(babysit, /one invocation, the worst case at most four/);
+  assert.match(
+    readFileSync(join(root, ".agents/skills/babysit/wait.mjs"), "utf8"),
+    /One invocation covers 9 minutes waited: a typical wait takes one, and the\n\/\/ worst case, the 30-minute review bound plus checks, takes at most four\./,
+  );
   assert.doesNotMatch(babysit, /--watch|watch tool|poll for reviews/);
   assert.doesNotMatch(babysit, /comments on it that Codex/);
   assert.match(

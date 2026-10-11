@@ -9,7 +9,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "oxlint --deny-warnings",
-    "check": "for file in .sandcastle/*.ts operations/*.mjs operations/lib/*.mjs discovery/*.mjs scripts/*.mjs scripts/release/*.mjs scripts/support/*.mjs .github/scripts/*.mjs test/*.test.mjs test/helpers/*.mjs test/fixtures/*.mjs; do node --check \"$file\" || exit 1; done",
+    "check": "for file in .sandcastle/*.ts operations/*.mjs operations/lib/*.mjs discovery/*.mjs scripts/*.mjs scripts/release/*.mjs scripts/support/*.mjs .github/scripts/*.mjs test/*.test.mjs test/helpers/*.mjs test/fixtures/*.mjs .agents/skills/babysit/*.mjs; do node --check \"$file\" || exit 1; done",
     "test": "node --test test/*.test.mjs",
     "release:inputs": "node scripts/release/inputs.mjs",
     "release:check-merge": "node scripts/release/check-merge.mjs",

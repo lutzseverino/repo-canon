@@ -16,14 +16,16 @@
 //        [--interval <seconds>]
 //
 // The default limit, 540 seconds, keeps one invocation inside Claude Code's
-// 10-minute foreground limit. A typical wait takes one invocation; the worst
-// case, the 30-minute review bound plus checks, takes at most four.
+// 10-minute foreground limit, with each look at GitHub bounded to 45 seconds.
+// One invocation covers 9 minutes waited: a typical wait takes one, and the
+// worst case, the 30-minute review bound plus checks, takes at most four.
 import { execFile } from "node:child_process";
+import { realpathSync } from "node:fs";
 
 const codexBot = "chatgpt-codex-connector[bot]";
 const summaryMarker = "<!-- codex-pull-request-review-summary -->";
 const unavailableReply = "create an environment for this repo";
-const reviewRequest = /@codex review\b/i;
+const reviewRequest = /@codex (security )?review\b/i;
 const reviewBoundMs = 30 * 60_000;
 
 const settledCodes = {
@@ -126,22 +128,24 @@ const codexPhrases = {
 };
 
 // The lines the script prints for a decided outcome.
+// A failing check is listed even while the script still waits.
 export const report = (outcome, head) => {
   const sha = head.slice(0, 7);
+  const count = outcome.failing.length;
+  const failed = `${count} check${count === 1 ? "" : "s"} failed`;
+  let line;
   if (outcome.code === 5) {
     const pending = [
       outcome.checksPending && "checks",
       outcome.codex === "pending" && "Codex",
     ].filter(Boolean);
-    return [`${sha}: still waiting on ${pending.join(" and ")}; run again`];
+    const waiting = `still waiting on ${pending.join(" and ")}; run again`;
+    line = count === 0 ? waiting : `${failed}, ${waiting}`;
+  } else {
+    line = `${count === 0 ? "checks passed" : failed}, ${codexPhrases[outcome.codex]}`;
   }
-  const count = outcome.failing.length;
-  const checks =
-    count === 0
-      ? "checks passed"
-      : `${count} check${count === 1 ? "" : "s"} failed`;
   return [
-    `${sha}: ${checks}, ${codexPhrases[outcome.codex]}`,
+    `${sha}: ${line}`,
     ...outcome.failing.map((check) => `${check.name} ${check.link}`),
   ];
 };
@@ -194,7 +198,7 @@ const gh = (args) =>
     execFile(
       "gh",
       args,
-      { maxBuffer: 64 * 1024 * 1024, timeout: 60_000 },
+      { maxBuffer: 64 * 1024 * 1024, timeout: 15_000 },
       (error, stdout, stderr) => {
         if (!error) return resolve(JSON.parse(stdout));
         const message =
@@ -232,18 +236,20 @@ const parseArguments = (argv) => {
 // recorded its push, else its committer date, and never before the pull
 // request opened; it is cached per head.
 const look = async (number, pushTimes) => {
-  const pull = await gh([
-    "pr",
-    "view",
-    number,
-    "--json",
-    "headRefOid,headRefName,createdAt,statusCheckRollup",
-  ]);
-  const pages = await gh([
-    "api",
-    `repos/{owner}/{repo}/issues/${number}/comments?per_page=100`,
-    "--paginate",
-    "--slurp",
+  const [pull, pages] = await Promise.all([
+    gh([
+      "pr",
+      "view",
+      number,
+      "--json",
+      "headRefOid,headRefName,createdAt,statusCheckRollup",
+    ]),
+    gh([
+      "api",
+      `repos/{owner}/{repo}/issues/${number}/comments?per_page=100`,
+      "--paginate",
+      "--slurp",
+    ]),
   ]);
   const comments = pages.flat().map((comment) => ({
     login: comment.user?.login,
@@ -308,4 +314,6 @@ const main = async () => {
   }
 };
 
-if (import.meta.main) process.exitCode = await main();
+if (process.argv[1] && realpathSync(process.argv[1]) === import.meta.filename) {
+  process.exitCode = await main();
+}

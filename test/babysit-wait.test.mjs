@@ -180,6 +180,18 @@ test("the invocation limit is exit 5 and names what is still pending", () => {
   ]);
 });
 
+test("the invocation limit lists checks that already failed", () => {
+  const outcome = decision({
+    checks: [{ name: "lint", state: "fail", link: "https://ci/2" }],
+    now: Date.parse("2026-10-11T05:49:00Z"),
+  });
+  assert.equal(outcome.code, 5);
+  assert.deepEqual(report(outcome, "f7bb671a07642acc"), [
+    "f7bb671: 1 check failed, still waiting on Codex; run again",
+    "lint https://ci/2",
+  ]);
+});
+
 test("each settled outcome reports one line", () => {
   const head = "f7bb671a07642acc";
   assert.deepEqual(
@@ -213,9 +225,14 @@ test("the latest request is the later of the head's request and a re-request", (
     createdAt: "2026-10-11T04:40:00Z",
     body: "Fixed. @codex review",
   });
+  comments.push({
+    login: "lutzseverino",
+    createdAt: "2026-10-11T04:45:00Z",
+    body: "@codex security review",
+  });
   assert.equal(
     reviewRequestedAt(head, comments),
-    Date.parse("2026-10-11T04:40:00Z"),
+    Date.parse("2026-10-11T04:45:00Z"),
   );
 });
 
