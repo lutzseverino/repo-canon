@@ -218,7 +218,7 @@ const outsideIndex = (path) => ({
   path,
   decision: "exclude",
   reason:
-    "A README.md outside the documentation roots, which the documentation check would read as a documentation root's index.",
+    "A README.md outside the documentation roots, which the documentation check would read as a documentation root's index. If it is a Project README, the `project-readmes` declaration's proposal covers it.",
   evidence: [path],
 });
 const unsupported = (path, directory) =>

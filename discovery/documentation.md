@@ -32,7 +32,8 @@ repository root's glossary and context map, and each context glossary that
 context map lists. Paths other declarations own, and paths Repository Standards
 reserves, stay out, and so does every `README.md` outside the roots, which the
 documentation check would read as a root's index; such a README cannot enter
-this scope, even as a move source.
+this scope, even as a move source. If it is a Project README, the
+`project-readmes` declaration's proposal covers it.
 
 Decide only the cases in its unresolved questions, and remove each question once
 it is decided:
