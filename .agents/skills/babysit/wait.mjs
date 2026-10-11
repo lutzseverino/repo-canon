@@ -186,8 +186,8 @@ const failedConclusions = new Set([
   "ERROR",
 ]);
 
-// Turns `gh pr view`'s status check rollup into check states, keeping the
-// latest run of each check.
+// Turns `gh pr view`'s status check rollup into check states. Any unfinished
+// run keeps its check pending; otherwise the latest-started run wins.
 export const checkStates = (rollup) => {
   const latest = new Map();
   for (const item of rollup ?? []) {
@@ -195,17 +195,26 @@ export const checkStates = (rollup) => {
     const name = isRun ? item.name : item.context;
     const key = `${item.workflowName ?? ""}/${name}`;
     const known = latest.get(key);
-    if (known && (known.startedAt ?? "") > (item.startedAt ?? "")) continue;
     const result = isRun
       ? item.status === "COMPLETED"
         ? item.conclusion
         : "PENDING"
       : item.state;
+    const pending = ["PENDING", "EXPECTED"].includes(result);
+    if (known) {
+      const knownPending = known.check.state === "pending";
+      if (knownPending && !pending) continue;
+      if (
+        knownPending === pending &&
+        (known.startedAt ?? "") > (item.startedAt ?? "")
+      )
+        continue;
+    }
     latest.set(key, {
       startedAt: item.startedAt,
       check: {
         name,
-        state: ["PENDING", "EXPECTED"].includes(result)
+        state: pending
           ? "pending"
           : failedConclusions.has(result)
             ? "fail"

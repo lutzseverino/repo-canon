@@ -454,6 +454,135 @@ test("check states follow the latest run of each check", () => {
   );
 });
 
+const checkRun = (overrides) => ({
+  __typename: "CheckRun",
+  name: "Validate example",
+  workflowName: "CI",
+  startedAt: "2026-10-11T23:00:00Z",
+  status: "COMPLETED",
+  conclusion: "SUCCESS",
+  detailsUrl: "fixture:previous",
+  ...overrides,
+});
+
+test("queued reruns keep prior successes and failures pending in either order", () => {
+  for (const startedAt of [null, undefined, "", "0001-01-01T00:00:00Z"]) {
+    const queued = checkRun({
+      startedAt,
+      status: "QUEUED",
+      conclusion: null,
+      detailsUrl: "fixture:queued",
+    });
+    for (const conclusion of ["SUCCESS", "FAILURE"]) {
+      const previous = checkRun({ conclusion });
+      for (const rollup of [
+        [previous, queued],
+        [queued, previous],
+      ]) {
+        assert.deepEqual(checkStates(rollup), [
+          {
+            name: "Validate example",
+            state: "pending",
+            link: "fixture:queued",
+          },
+        ]);
+      }
+    }
+  }
+});
+
+test("an older unfinished run keeps a newer completed run pending", () => {
+  const unfinished = checkRun({
+    status: "IN_PROGRESS",
+    conclusion: null,
+    detailsUrl: "fixture:unfinished",
+  });
+  const completed = checkRun({ startedAt: "2026-10-11T23:10:00Z" });
+  for (const rollup of [
+    [unfinished, completed],
+    [completed, unfinished],
+  ]) {
+    assert.deepEqual(checkStates(rollup), [
+      {
+        name: "Validate example",
+        state: "pending",
+        link: "fixture:unfinished",
+      },
+    ]);
+  }
+});
+
+test("completed runs use the later start's state and link in either order", () => {
+  for (const [earlierConclusion, laterConclusion, state] of [
+    ["FAILURE", "SUCCESS", "pass"],
+    ["SUCCESS", "FAILURE", "fail"],
+  ]) {
+    const later = checkRun({
+      startedAt: "2026-10-11T23:10:00Z",
+      conclusion: laterConclusion,
+      detailsUrl: "fixture:later",
+    });
+    for (const startedAt of [
+      "2026-10-11T23:00:00Z",
+      null,
+      undefined,
+      "",
+      "0001-01-01T00:00:00Z",
+    ]) {
+      const earlier = checkRun({ startedAt, conclusion: earlierConclusion });
+      for (const rollup of [
+        [earlier, later],
+        [later, earlier],
+      ]) {
+        assert.deepEqual(checkStates(rollup), [
+          { name: "Validate example", state, link: "fixture:later" },
+        ]);
+      }
+    }
+  }
+});
+
+test("pending and expected commit statuses hold their context pending", () => {
+  const completed = {
+    __typename: "StatusContext",
+    context: "deploy",
+    state: "SUCCESS",
+    startedAt: "2026-10-11T23:00:00Z",
+    targetUrl: "fixture:previous",
+  };
+  for (const state of ["PENDING", "EXPECTED"]) {
+    const unfinished = {
+      ...completed,
+      state,
+      startedAt: null,
+      targetUrl: "fixture:unfinished",
+    };
+    for (const rollup of [
+      [completed, unfinished],
+      [unfinished, completed],
+    ]) {
+      assert.deepEqual(checkStates(rollup), [
+        { name: "deploy", state: "pending", link: "fixture:unfinished" },
+      ]);
+    }
+  }
+});
+
+test("unfinished runs hold only their own workflow and check", () => {
+  assert.deepEqual(
+    checkStates([
+      checkRun({ status: "QUEUED", startedAt: null }),
+      checkRun({ workflowName: "Other CI", conclusion: "FAILURE" }),
+      checkRun({ name: "Other check" }),
+    ]),
+    [
+      { name: "Validate example", state: "pending", link: "fixture:previous" },
+      { name: "Validate example", state: "fail", link: "fixture:previous" },
+      { name: "Other check", state: "pass", link: "fixture:previous" },
+    ],
+  );
+});
+
 // Runs the script against a fake `gh` and returns everything it wrote, with
 // the time of its first write.
 const run = (state, args) => {
@@ -527,6 +656,29 @@ test("the script writes nothing while it waits, then one line at its limit", asy
     result.stdout,
     "f7bb671: still waiting on checks and Codex; run again\n",
   );
+  assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
+});
+
+test("a reviewed head with a queued rerun waits silently until its limit", async () => {
+  const result = await run(
+    {
+      ...pendingPullRequest,
+      checks: [
+        checkRun(),
+        checkRun({
+          status: "QUEUED",
+          conclusion: null,
+          startedAt: null,
+          detailsUrl: "fixture:queued",
+        }),
+      ],
+      comments: [summary(completedCell(new Date().toISOString()), "f7bb671")],
+    },
+    ["12", "--limit", "2", "--interval", "0.2"],
+  );
+  assert.equal(result.code, 5);
+  assert.equal(result.stderr, "");
+  assert.equal(result.stdout, "f7bb671: still waiting on checks; run again\n");
   assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
 });
 
