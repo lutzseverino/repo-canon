@@ -69,6 +69,8 @@ category names, and the test for a Markdown document. Its candidates are:
 - each file under a root that another declaration owns, excluded;
 - each `README.md` outside the roots, excluded, because the documentation check
   reads every README in the confirmed scope as a documentation root's index.
+  Such a README cannot enter this scope, even as a move source. If it is a
+  Project README, the `project-readmes` declaration's proposal covers it.
 
 Every other case is an unresolved question, one kind for each case that the
 [discovery guidance](../../discovery/documentation.md) leaves to the agent.
