@@ -8,6 +8,9 @@ export type Issue = {
   number: number;
   createdAt: string;
   labels: string[];
+  // Whether its contract is a specification, which runs orchestrated over
+  // its tickets.
+  specification: boolean;
   parent: number | null;
   subIssues: { number: number; state: "open" | "closed"; labels: string[] }[];
   blockedBy: { number: number; state: "open" | "closed" }[];
@@ -203,7 +206,9 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
       continue;
     }
     const mode: Mode =
-      issue.subIssues.length > 0 || issue.labels.includes(labels.orchestrated)
+      issue.specification ||
+      issue.subIssues.length > 0 ||
+      issue.labels.includes(labels.orchestrated)
         ? "orchestrated"
         : "direct";
     const model = issueModel(issue, snapshot.settings);
@@ -421,6 +426,8 @@ function exclusion(issue: Issue): string | null {
     (blocker) => blocker.state === "open",
   );
   if (blockers.length > 0) return `blocked by ${references(blockers)}`;
+  if (issue.specification && issue.subIssues.length === 0)
+    return "specification has no tickets yet";
   const unready = issue.subIssues.filter(
     (child) => child.state === "open" && !child.labels.includes(labels.ready),
   );

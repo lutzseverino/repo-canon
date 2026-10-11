@@ -11,6 +11,7 @@ function issue(number, labels = ["ready-for-agent"], details = {}) {
     number,
     createdAt: `2026-10-0${Math.min(number, 9)}T00:00:00Z`,
     labels,
+    specification: false,
     parent: null,
     subIssues: [],
     blockedBy: [],
@@ -150,6 +151,43 @@ test("a specification runs orchestrated once it and every open child are ready",
   assert.equal(skipOf(decisions, 4), "children not ready for agent: #8");
   assert.equal(skipOf(decisions, 5), "child of specification #3");
   assert.equal(skipOf(decisions, 7), "child of specification #4");
+});
+
+test("a specification without tickets waits for them instead of running directly", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        issue(3, ["ready-for-agent"], { specification: true }),
+        issue(4, ["ready-for-agent"]),
+      ],
+    }),
+  );
+  assert.equal(skipOf(decisions, 3), "specification has no tickets yet");
+  assert.ok(
+    !decisions.some(
+      (decision) => decision.kind !== "skip" && decision.issue === 3,
+    ),
+  );
+  assert.deepEqual(
+    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
+    [{ issue: 4, mode: "direct" }],
+  );
+});
+
+test("a specification runs orchestrated once its tickets exist and are ready", () => {
+  const [, launch] = decideFactory(
+    snapshot({
+      issues: [
+        issue(3, ["ready-for-agent"], {
+          specification: true,
+          subIssues: [
+            { number: 5, state: "open", labels: ["ready-for-agent"] },
+          ],
+        }),
+      ],
+    }),
+  );
+  assert.equal(launch.mode, "orchestrated");
 });
 
 test("the oldest ready issue launches first", () => {

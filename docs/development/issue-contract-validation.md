@@ -41,7 +41,10 @@ visible content. For category-labeled triaged requests, the latest Agent Brief
 is the contract and contract-like headings in the intake body remain context.
 Native specifications and implementation tickets remain authoritative when the
 issue does not carry a triage category. Wayfinder labels select the Wayfinder
-contract before either form. A category-labeled `wontfix` outcome does not
+contract before either form. The rule that identifies a contract's kind from
+these labels and the body's headings lives in
+`operations/lib/issue-contract-kind.mjs`, which the factory also uses to
+recognize a specification. A category-labeled `wontfix` outcome does not
 require an Agent Brief.
 Native parent and blocking relationships are read from GitHub. Explicit issue
 links in rendered `Parent` and `Blocked by` section content are used

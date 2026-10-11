@@ -4,6 +4,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { isSpecification } from "../operations/lib/issue-contract-kind.mjs";
 import {
   decideFactory,
   decideUpdate,
@@ -218,6 +219,7 @@ const issuesQuery = `query($owner: String!, $name: String!, $endCursor: String) 
       nodes {
         number
         createdAt
+        body
         labels(first: 100) { nodes { name } }
         parent { number }
         subIssues(first: 100) { nodes { number state labels(first: 100) { nodes { name } } } }
@@ -511,6 +513,10 @@ export function createFactory(settings: Settings, ports: Ports) {
         number: node.number,
         createdAt: node.createdAt,
         labels: names(node.labels),
+        specification: isSpecification({
+          labels: names(node.labels),
+          body: node.body,
+        }),
         parent: node.parent?.number ?? null,
         subIssues: node.subIssues.nodes.map((child: any) => ({
           number: child.number,

@@ -8,7 +8,8 @@ their rationale. They stay beside `standards.yaml`, the source they explain.
 Repo Canon owns a file only when every adopting repository should hold the
 same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
 and pull request templates, the skill setup files under `docs/agents`, the
-trusted validation workflows with their scripts, the vendored rendered-Markdown
+trusted validation workflows with their scripts, the issue contract runtime
+that the issue contract validator shares with the factory, the vendored rendered-Markdown
 runtime and parsers with their notices, the pinned skills with their
 upstream license notice, Repo Canon's own `babysit` skill, and the factory's
 `.sandcastle/` files. It is installed
@@ -101,7 +102,8 @@ repeated.
   [ADR 0011](docs/adr/0011-ship-the-factory-with-the-standard.md) decides.
   `.sandcastle/` holds a repository-agnostic entry, adapter, and pure decision
   core, with the two prompt templates, as exact files whose source is their
-  installed path. It runs Sandcastle through a pinned `npx`, so an adopting
+  installed path. The adapter recognizes a specification by the issue contract
+  validator's rule, which it imports from their shared runtime. It runs Sandcastle through a pinned `npx`, so an adopting
   repository gains no dependency. Runs start in the repository's own sandbox
   image, Repo Canon's base followed by the toolchain the adopting agent takes
   from the development guide, as the
