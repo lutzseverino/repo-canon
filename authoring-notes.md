@@ -89,7 +89,11 @@ repeated.
   a pull request, an adoption pull request included, and when it may merge,
   and the installed `AGENTS.md` points every change through `pr` and
   `babysit`. The model-invocable `babysit` skill watches the pull request,
-  settles its findings, and merges it, stating no rule the guide holds. Its
+  settles its findings, and merges it, stating no rule the guide holds. Review
+  converges by judgment, through the guide's
+  [decline grounds](CONTRIBUTING.md#merging) and `babysit`'s re-request
+  condition; no round cap or severity threshold bounds it, and the factory's
+  time limit is the hard stop. Its
   source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
   other original exact files; only vendored material has a separate source
   path.
