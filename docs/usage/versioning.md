@@ -71,4 +71,4 @@ ordinary `0.x` release remains an initial-development version; publication does
 not establish a `1.0` compatibility promise.
 
 Follow [Adopt Repo Canon](adopt-repo-canon.md) to inspect the selected version
-and confirm its repository-specific adoption scope.
+and review its repository-specific adoption scope.
