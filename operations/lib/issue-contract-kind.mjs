@@ -1,6 +1,6 @@
-// Identifies the kind of an issue's contract from its labels and body. The
-// issue-contract validator and the factory share it, so they agree on which
-// issues are specifications.
+// Identifies the kind of an issue's contract from its labels and body, with
+// the issue Markdown parsing it rests on. The issue-contract validator and
+// the factory share it, so they agree on which issues are specifications.
 import { interpretMarkdown } from "./rendered-markdown.mjs";
 
 export const categoryLabels = new Set(["bug", "enhancement"]);

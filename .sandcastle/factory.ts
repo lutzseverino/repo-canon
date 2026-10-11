@@ -420,14 +420,14 @@ function oldestFirst(issues: Issue[]): Issue[] {
 
 function exclusion(issue: Issue): string | null {
   if (issue.parent !== null) return `child of specification #${issue.parent}`;
-  if (issue.specification && issue.subIssues.length === 0)
-    return "specification has no tickets yet";
   if (issue.labels.includes(labels.failed))
     return `labelled ${labels.failed}; remove the label to run it again`;
   const blockers = issue.blockedBy.filter(
     (blocker) => blocker.state === "open",
   );
   if (blockers.length > 0) return `blocked by ${references(blockers)}`;
+  if (issue.specification && issue.subIssues.length === 0)
+    return "specification has no tickets yet";
   const unready = issue.subIssues.filter(
     (child) => child.state === "open" && !child.labels.includes(labels.ready),
   );
