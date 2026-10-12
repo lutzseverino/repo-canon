@@ -53,7 +53,7 @@ export type Run = {
   ended: null | {
     timedOut: boolean;
     pullRequest: PullRequestState;
-    refusedWorkflowPush?: string[];
+    unpushedWorkflowChanges?: string[];
   };
 };
 
@@ -318,14 +318,14 @@ function settle(run: Run, snapshot: Snapshot): Decision[] | Retry {
     return [{ kind: "release", issue: run.issue }];
   if (!run.ended.timedOut && run.ended.pullRequest === "open")
     return [{ kind: "keep", issue: run.issue }];
-  if (!run.ended.timedOut && run.ended.refusedWorkflowPush?.length)
+  if (!run.ended.timedOut && run.ended.unpushedWorkflowChanges?.length)
     return [
       {
         kind: "fail",
         issue: run.issue,
         failure:
-          "the factory's GitHub App can't push changes to GitHub workflow files",
-        workflowPaths: run.ended.refusedWorkflowPush,
+          "the run's branch has workflow changes the factory's GitHub App can't push",
+        workflowPaths: run.ended.unpushedWorkflowChanges,
         log: run.log,
       },
     ];

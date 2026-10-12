@@ -1183,36 +1183,40 @@ test("a report without the confirmation contract cannot authorize adoption", asy
   );
 });
 
-test("a refused workflow push fails either attempt without a retry", () => {
+test("an unpushed workflow change fails either attempt without a retry", () => {
   for (const attempt of [1, 2]) {
     const decisions = decideFactory(
       snapshot({
+        issues: [issue(4, ["ready-for-agent", "factory:running"])],
         runs: [
           run(4, {
             attempt,
             ended: {
               timedOut: false,
               pullRequest: "none",
-              refusedWorkflowPush: [".github/workflows/ci.yml"],
+              unpushedWorkflowChanges: [".github/workflows/ci.yml"],
             },
           }),
         ],
       }),
     );
-    assert.deepEqual(decisions, [
-      {
-        kind: "fail",
-        issue: 4,
-        failure:
-          "the factory's GitHub App can't push changes to GitHub workflow files",
-        workflowPaths: [".github/workflows/ci.yml"],
-        log: "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
-      },
-    ]);
+    assert.deepEqual(
+      decisions.filter((decision) => decision.kind !== "skip"),
+      [
+        {
+          kind: "fail",
+          issue: 4,
+          failure:
+            "the run's branch has workflow changes the factory's GitHub App can't push",
+          workflowPaths: [".github/workflows/ci.yml"],
+          log: "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
+        },
+      ],
+    );
   }
 });
 
-test("timeouts ignore a refused workflow push and keep their retry", () => {
+test("timeouts ignore an unpushed workflow change and keep their retry", () => {
   const decisions = decideFactory(
     snapshot({
       issues: [issue(4, ["ready-for-agent", "factory:running"])],
@@ -1221,7 +1225,7 @@ test("timeouts ignore a refused workflow push and keep their retry", () => {
           ended: {
             timedOut: true,
             pullRequest: "none",
-            refusedWorkflowPush: [".github/workflows/ci.yml"],
+            unpushedWorkflowChanges: [".github/workflows/ci.yml"],
           },
         }),
       ],
@@ -1238,7 +1242,7 @@ test("timeouts ignore a refused workflow push and keep their retry", () => {
           ended: {
             timedOut: true,
             pullRequest: "none",
-            refusedWorkflowPush: [".github/workflows/ci.yml"],
+            unpushedWorkflowChanges: [".github/workflows/ci.yml"],
           },
         }),
       ],

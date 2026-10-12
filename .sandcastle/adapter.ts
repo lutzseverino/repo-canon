@@ -361,7 +361,7 @@ export function createFactory(settings: Settings, ports: Ports) {
     exited: boolean;
   } | null = null;
 
-  async function refusedWorkflowPush(
+  async function unpushedWorkflowChanges(
     branch: string,
     base: string,
   ): Promise<string[]> {
@@ -373,7 +373,27 @@ export function createFactory(settings: Settings, ports: Ports) {
       ])
     ).trim();
     if (!head) return [];
-    const commits = (await ports.git(["rev-list", `${base}..${head}`]))
+    const remote = (
+      await ports.git([
+        "ls-remote",
+        "--heads",
+        "origin",
+        `refs/heads/${branch}`,
+      ])
+    )
+      .trim()
+      .split(/\s+/)[0];
+    if (remote)
+      await ports.git(["fetch", "--quiet", "--no-tags", "origin", remote]);
+    const commits = (
+      await ports.git([
+        "rev-list",
+        head,
+        "--not",
+        base,
+        ...(remote ? [remote] : []),
+      ])
+    )
       .trim()
       .split("\n")
       .filter(Boolean);
@@ -391,22 +411,6 @@ export function createFactory(settings: Settings, ports: Ports) {
         ".github/workflows/",
       ]);
       for (const path of changed.split("\0").filter(Boolean)) paths.add(path);
-    }
-    if (!paths.size) return [];
-    const remote = (
-      await ports.git([
-        "ls-remote",
-        "--heads",
-        "origin",
-        `refs/heads/${branch}`,
-      ])
-    )
-      .trim()
-      .split(/\s+/)[0];
-    if (remote) {
-      await ports.git(["fetch", "--quiet", "--no-tags", "origin", remote]);
-      if (!(await ports.git(["rev-list", head, "--not", remote])).trim())
-        return [];
     }
     return [...paths].sort();
   }
@@ -549,7 +553,7 @@ export function createFactory(settings: Settings, ports: Ports) {
     if (!hasPullRequest) {
       ports.report(`update run ended without a pull request; log: ${run.log}`);
       try {
-        const paths = await refusedWorkflowPush(run.branch, run.base);
+        const paths = await unpushedWorkflowChanges(run.branch, run.base);
         if (paths.length) await fileUpdateIssue(run.inspection, paths);
       } catch (error) {
         // Keep this candidate until its Git check and owner handoff finish.
@@ -942,11 +946,11 @@ export function createFactory(settings: Settings, ports: Ports) {
           !run.ended.timedOut &&
           ["none", "closed"].includes(run.ended.pullRequest)
         ) {
-          const paths = await refusedWorkflowPush(
+          const paths = await unpushedWorkflowChanges(
             runBranch(run.issue),
             run.base,
           );
-          if (paths.length) run.ended.refusedWorkflowPush = paths;
+          if (paths.length) run.ended.unpushedWorkflowChanges = paths;
         }
       }
     }
@@ -1016,13 +1020,13 @@ function updateMarker(selection: Selection): string {
 function triageBody(
   inspection: Inspection,
   marker: string,
-  refusedPaths: string[] = [],
+  unpushedPaths: string[] = [],
 ): string {
   const { selection } = inspection;
   const workflows = [
     ...workflowChanges(inspection),
-    ...refusedPaths.map((target) => ({
-      change: "refused workflow push",
+    ...unpushedPaths.map((target) => ({
+      change: "unpushed workflow change",
       target,
     })),
   ];
