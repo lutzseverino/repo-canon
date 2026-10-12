@@ -6,13 +6,20 @@ created, edited, or deleted issue comments. Pull request comments are ignored.
 The workflow checks out the default branch explicitly and treats issue and
 comment Markdown only as data.
 
+The adapter fetches the issue itself before reading its discussion, timeline,
+relationships, edit revision, or actor roles. If that fetched issue is closed,
+it skips validation with exit status 0, without writing labels or creating or
+updating a feedback comment. The fetched state decides the skip even when the
+triggering event says the issue was open.
+
 The validator is one file. It exports `decideIssueContract`, a synchronous
 decision that reads one snapshot and returns the label changes, the feedback
 comment write, and the exit status, with no network or file access, and
 `readinessTriggerUnrecorded`, a pure predicate over the same snapshot. Its
-GitHub adapter runs only when the workflow executes the file: it fetches the
-complete snapshot before deciding, waiting within a bound for the issue-event
-timeline to record a human readiness trigger, then applies the returned writes.
+GitHub adapter runs only when the workflow executes the file: for an open issue,
+it fetches the complete snapshot before deciding, waiting within a bound for the
+issue-event timeline to record a human readiness trigger, then applies the
+returned writes.
 One timeline helper inside the decision answers every question about whether
 one issue event came after another, and it orders events by one rule: the
 timeline's order decides when GitHub has recorded both events. Timestamps are
@@ -224,8 +231,9 @@ a readiness label. This notice-first sequence avoids relying on GitHub's
 second-resolution edit and label timestamps to order otherwise ambiguous events.
 The feedback comment's authoritative `updated_at` must strictly precede the
 review label event; a same-second attempt is rejected and must be reapplied.
-The validator re-fetches the issue, complete discussion, complete issue-event
-timeline, relationships, and direct-body edit revision before every decision.
+For an open issue, the validator re-fetches the issue, complete discussion,
+complete issue-event timeline, relationships, and direct-body edit revision
+before every decision.
 It also reads the repository role of every actor on a readiness-label event, of
 the recorded reviewer, and of an opening event's sender. On a `labeled` run, the
 opener's role is the one read for the creation label event's actor. A failed
@@ -280,11 +288,12 @@ Wayfinder maps and children reject readiness labels because their native
 eligibility uses open state, assignment, and blockers instead of the readiness
 workflow, and the validator never adds a workflow state to them.
 
-Incomplete, edited, replaced, stale, unauthorized, or multiply-ready contracts
-lose `ready-for-agent` and `ready-for-human`. Corrections update the same comment
-with a new revision and require fresh review. Structural success never grants
-readiness, and the validator never starts work; the factory picks up ready
-issues.
+On open issues, incomplete, edited, replaced, stale, unauthorized, or
+multiply-ready contracts lose `ready-for-agent` and `ready-for-human`.
+Corrections update the same comment with a new revision and require fresh
+review. Structural success never grants readiness, and the validator never
+starts work; the factory picks up ready issues. Reopening an issue whose contract
+changed while closed removes readiness and requires fresh review.
 
 The workflow needs `contents: read` to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access
@@ -337,7 +346,9 @@ and repeated events, their
 replacement by later review or contract edits,
 readiness removal and re-add
 ordering across paginated issue events, the one timeline ordering rule,
-contract edits, pull request exclusion, and hostile Markdown that must remain
-inert. The `CI` workflow runs the complete repository test suite with
-`npm test`. These fixtures exercise the authorization mechanism but do not
+contract edits, pull request exclusion, the closed-issue skip without label or
+feedback writes (including an open event whose fetched issue is closed),
+readiness invalidation when a changed contract is reopened, and hostile Markdown
+that must remain inert. The `CI` workflow runs the complete repository test suite
+with `npm test`. These fixtures exercise the authorization mechanism but do not
 claim that a reviewer made a sound semantic judgment.
