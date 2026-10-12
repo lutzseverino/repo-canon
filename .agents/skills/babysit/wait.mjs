@@ -7,13 +7,16 @@
 //
 //   0  checks settled and Codex reviewed the head
 //   1  usage or `gh` error
-//   2  one or more checks failed
+//   2  one or more checks failed, including a workflow whose latest run failed
+//      without a check
 //   3  checks settled and Codex is unavailable
 //   4  checks settled and Codex did not review this head
 //   5  still waiting at the invocation limit; run it again
 //
 // Checks settled means checks passed or no check arrived within 5 minutes
-// of a push GitHub recorded and no workflow run for the head is unfinished.
+// of a push GitHub recorded and no workflow run for the head is unfinished
+// or counted as failed.
+// A workflow whose latest run failed without a check counts as a failed check.
 //
 // Usage: node wait.mjs <number> [--repo <owner/name>] [--limit <seconds>]
 //        [--interval <seconds>]
@@ -119,8 +122,11 @@ const codexState = ({ head, requestedAt, pushedAt, comments, now }) => {
 };
 
 // Decides the outcome from one look at the pull request. `checks` holds
-// `{ name, state: "pass" | "fail" | "pending", link }`; `runs` holds the
-// head's GitHub Actions workflow runs as `{ status }`;
+// `{ name, state: "pass" | "fail" | "pending", link, workflowName? }`;
+// `runs` holds the head's GitHub Actions workflow runs as
+// `{ name, status, conclusion, run_started_at, html_url }`, with the latest
+// attempt's start in `run_started_at`. A workflow whose latest run failed
+// without a check joins the failed checks under its name and run link;
 // `requestedAt` is the latest review request; `pushedAt` is the head's push
 // time or its committer-date fallback, and `pushRecorded` says whether GitHub
 // recorded that push. The checks stay pending while the head has none and
@@ -144,9 +150,29 @@ export const decide = ({
   limitMs,
 }) => {
   const codex = codexState({ head, requestedAt, pushedAt, comments, now });
-  const failing = checks.filter((check) => check.state === "fail");
+  const checkedWorkflows = new Set(checks.map((check) => check.workflowName));
+  const latestRuns = new Map();
+  for (const run of runs) {
+    const known = latestRuns.get(run.name);
+    if (!known || run.run_started_at > known.run_started_at) {
+      latestRuns.set(run.name, run);
+    }
+  }
+  const failingRuns = [...latestRuns.values()]
+    .filter(
+      (run) =>
+        !checkedWorkflows.has(run.name) &&
+        run.status === "completed" &&
+        failedConclusions.has(run.conclusion?.toUpperCase()),
+    )
+    .map((run) => ({ name: run.name, state: "fail", link: run.html_url }));
+  const failing = [
+    ...checks.filter((check) => check.state === "fail"),
+    ...failingRuns,
+  ];
   const checksPending =
     (checks.length === 0 &&
+      failingRuns.length === 0 &&
       (!pushRecorded || now - pushedAt < checksBoundMs)) ||
     checks.some((check) => check.state === "pending") ||
     runs.some((run) => run.status !== "completed");
@@ -244,6 +270,7 @@ export const checkStates = (rollup) => {
             ? "fail"
             : "pass",
         link: isRun ? item.detailsUrl : item.targetUrl,
+        ...(isRun ? { workflowName: item.workflowName } : {}),
       },
     });
   }
@@ -350,7 +377,13 @@ const look = async (number, pushTimes) => {
     checks: checkStates(pull.statusCheckRollup),
     runs: runs
       .flatMap((page) => page.workflow_runs)
-      .map(({ status }) => ({ status })),
+      .map(({ name, status, conclusion, run_started_at, html_url }) => ({
+        name,
+        status,
+        conclusion,
+        run_started_at,
+        html_url,
+      })),
     requestedAt: reviewRequestedAt(Date.parse(pull.createdAt), comments),
     ...push,
     comments,

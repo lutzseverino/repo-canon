@@ -302,7 +302,7 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   );
   assert.match(
     babysit,
-    /"checks passed" also covers no check arriving within 5 minutes of a push GitHub recorded, with no unfinished workflow run for the head/,
+    /"checks passed" also covers no check arriving within 5 minutes of a push GitHub recorded, with no unfinished or failed workflow run for the head/,
   );
   assert.doesNotMatch(
     babysit,

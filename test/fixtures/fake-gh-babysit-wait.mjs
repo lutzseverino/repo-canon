@@ -6,6 +6,8 @@
 // with `fail`. `failActivity` fails only the activity read, and
 // `failActivityReads` fails its first reads; `recordAfter`
 // withholds its push for that many reads, counted in `activityReads`.
+// Workflow runs carry their name, status, conclusion, latest attempt's
+// `run_started_at` and `html_url`, as GitHub reports them.
 import { readFileSync, writeFileSync } from "node:fs";
 
 const state = JSON.parse(readFileSync(process.env.FAKE_GH_STATE, "utf8"));
