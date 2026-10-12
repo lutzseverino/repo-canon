@@ -345,16 +345,62 @@ test("each Codex state fixture reaches its state with passed checks", () => {
   }
 });
 
-test("a head with no checks keeps the checks pending in every Codex state", () => {
+test("a fresh head with no checks keeps the checks pending", () => {
   for (const overrides of Object.values(codexStates)) {
-    const look = { ...overrides, checks: [] };
-    assert.equal(decision(look).code, null);
-    const limited = decision({
-      ...look,
-      startedAt: (look.now ?? Date.parse("2026-10-11T05:43:00Z")) - 9 * minute,
-    });
-    assert.equal(limited.code, 5);
-    assert.match(report(limited, head)[0], /still waiting on checks/);
+    const now = overrides.now ?? Date.parse("2026-10-11T05:43:00Z");
+    for (const runs of [[], [{ status: "completed" }]]) {
+      for (const age of [0, 5 * minute - 1]) {
+        const look = { ...overrides, checks: [], runs, pushedAt: now - age };
+        assert.equal(decision(look).code, null);
+        const limited = decision({ ...look, startedAt: now - 9 * minute });
+        assert.equal(limited.code, 5);
+        assert.match(report(limited, head)[0], /still waiting on checks/);
+      }
+    }
+  }
+});
+
+test("no checks after 5 minutes settles like passed checks in every Codex state", () => {
+  for (const [state, overrides] of Object.entries(codexStates)) {
+    const pushedAt = overrides.pushedAt ?? Date.parse("2026-10-11T05:39:50Z");
+    const now = Math.max(
+      overrides.now ?? Date.parse("2026-10-11T05:43:00Z"),
+      pushedAt + 5 * minute,
+    );
+    const look = { ...overrides, now, startedAt: now };
+    // Keep the pending and reviewing fixtures inside their Codex bounds.
+    if (["pending", "reviewing"].includes(state))
+      look.requestedAt = now - minute;
+    const passed = decision(look);
+    assert.equal(passed.codex, state);
+    for (const runs of [[], [{ status: "completed" }]]) {
+      const outcome = decision({ ...look, checks: [], runs });
+      assert.equal(outcome.code, passed.code);
+      assert.equal(outcome.codex, state);
+      assert.deepEqual(outcome.failing, []);
+      if (passed.code === null) {
+        const limited = decision({
+          ...look,
+          checks: [],
+          runs,
+          startedAt: now - 9 * minute,
+        });
+        assert.equal(limited.code, 5);
+        assert.deepEqual(report(limited, head), [
+          `${head}: still waiting on Codex; run again`,
+        ]);
+      } else {
+        assert.deepEqual(
+          report(outcome, head),
+          report(passed, head).map((line) =>
+            line.replace(
+              "checks passed",
+              "no checks within 5 minutes of the push",
+            ),
+          ),
+        );
+      }
+    }
   }
 });
 
@@ -366,6 +412,28 @@ const unfinishedStatuses = [
   "pending",
   "in_progress",
 ];
+
+test("an unfinished run keeps an empty rollup pending however old the push", () => {
+  for (const status of unfinishedStatuses) {
+    const now = Date.parse("2026-10-11T10:00:00Z");
+    for (const age of [5 * minute, 4 * 60 * minute]) {
+      const look = {
+        checks: [],
+        runs: [{ status }],
+        now,
+        pushedAt: now - age,
+        startedAt: now,
+        comments: [summary(completed, "f7bb671")],
+      };
+      assert.equal(decision(look).code, null);
+      const limited = decision({ ...look, startedAt: now - 9 * minute });
+      assert.equal(limited.code, 5);
+      assert.deepEqual(report(limited, head), [
+        `${head}: still waiting on checks; run again`,
+      ]);
+    }
+  }
+});
 
 test("an unfinished workflow run for the head keeps passed checks pending", () => {
   for (const status of unfinishedStatuses) {
@@ -819,6 +887,26 @@ test("a fresh push with no checks yet waits silently until its limit", async () 
   assert.equal(result.stderr, "");
   assert.equal(result.stdout, `${head}: still waiting on checks; run again\n`);
   assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
+});
+
+test("an old push with no checks or runs settles at once", async () => {
+  const result = await run(
+    {
+      ...pendingPullRequest,
+      checks: [],
+      runs: [],
+      createdAt: new Date(Date.now() - 10 * minute).toISOString(),
+      pushedAt: new Date(Date.now() - 6 * minute).toISOString(),
+    },
+    ["12", "--limit", "2", "--interval", "0.2"],
+  );
+  assert.equal(result.code, 4);
+  assert.equal(result.stderr, "");
+  assert.equal(
+    result.stdout,
+    `${head}: no checks within 5 minutes of the push, Codex review not requested for this head\n`,
+  );
+  assert.ok(result.firstWrite < 1900, `wrote after ${result.firstWrite} ms`);
 });
 
 const metadataCheck = checkRun({
