@@ -1019,33 +1019,62 @@ function triageBody(
   refusedPaths: string[] = [],
 ): string {
   const { selection } = inspection;
+  const workflows = [
+    ...workflowChanges(inspection),
+    ...refusedPaths.map((target) => ({
+      change: "refused workflow push",
+      target,
+    })),
+  ];
   return [
     `<!-- ${marker} -->`,
     "### Problem",
     "",
-    `The available update to ${selection.standards.repository} ${selection.standards.version} (${selection.profile}) with CLI ${selection.cli.version} requires confirmation.`,
+    `The available update is ${selection.standards.repository} ${selection.standards.version} (${selection.profile}) with CLI ${selection.cli.version}.`,
     "",
-    ...[
-      ...inspection.confirmation.reasons,
-      ...workflowChanges(inspection),
-      ...refusedPaths.map((target) => ({
-        change: "refused workflow push",
-        target,
-      })),
-    ].map((reason) => `- ${reason.change}: \`${reason.target}\``),
-    "",
-    "### Desired outcome",
-    "",
-    "Triage whether to accept these changes before adopting the update.",
-    ...(workflowChanges(inspection).length || refusedPaths.length
+    ...(inspection.confirmation.required
+      ? ["This update requires confirmation.", ""]
+      : []),
+    ...(workflows.length
       ? [
-          "A person with Workflows permission must deliver the workflow changes; the factory's GitHub App can't push them.",
+          "Owner delivery is required because the factory's GitHub App has no Workflows permission.",
+          "",
         ]
       : []),
+    ...(inspection.confirmation.required
+      ? [
+          "### Confirmation reasons",
+          "",
+          ...inspection.confirmation.reasons.map(
+            (reason) => `- ${reason.change}: \`${reason.target}\``,
+          ),
+          "",
+        ]
+      : []),
+    ...(workflows.length
+      ? [
+          "### Workflow changes",
+          "",
+          ...workflows.map(
+            (reason) => `- ${reason.change}: \`${reason.target}\``,
+          ),
+          "",
+        ]
+      : []),
+    "### Desired outcome",
     "",
+    ...(inspection.confirmation.required
+      ? [
+          "Triage whether to accept these changes before adopting the update.",
+          "",
+        ]
+      : []),
+    ...(workflows.length
+      ? ["A person with Workflows permission must deliver this update.", ""]
+      : []),
     "### Additional context",
     "",
-    `Inspection identity: \`${inspection.identity}\`. Reinspect before confirming; project content may have changed.`,
+    `Inspection identity: \`${inspection.identity}\`. Reinspect before adopting; project content may have changed.`,
   ].join("\n");
 }
 
