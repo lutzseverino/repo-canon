@@ -2116,6 +2116,8 @@ for (const scenario of [
   "absent",
   "behind",
   "pushed",
+  "pushed workflow with local docs",
+  "pushed workflow with local workflow",
   "contains",
   "ordinary",
   "removed",
@@ -2143,6 +2145,25 @@ for (const scenario of [
     );
     repo.command(["add", "."]);
     repo.command(["commit", "--quiet", "-m", "change"]);
+    if (
+      [
+        "pushed workflow with local docs",
+        "pushed workflow with local workflow",
+      ].includes(scenario)
+    ) {
+      repo.command(["push", "--quiet", "origin", "HEAD"]);
+      writeFileSync(
+        join(
+          repo.root,
+          scenario === "pushed workflow with local docs"
+            ? "README.md"
+            : ".github/workflows/old.yml",
+        ),
+        "local change\n",
+      );
+      repo.command(["add", "."]);
+      repo.command(["commit", "--quiet", "-m", "local change"]);
+    }
     if (scenario === "removed") {
       repo.command(["rm", ".github/workflows/old.yml"]);
       repo.command(["commit", "--quiet", "-m", "delete workflow"]);
@@ -2169,19 +2190,35 @@ for (const scenario of [
     await settled();
     const decisions = await run.tick();
     if (
-      ["absent", "behind", "removed", "reverted", "base advanced"].includes(
-        scenario,
-      )
+      [
+        "absent",
+        "behind",
+        "pushed workflow with local workflow",
+        "removed",
+        "reverted",
+        "base advanced",
+      ].includes(scenario)
     ) {
       assert.equal(decisions[0].kind, "fail");
-      assert.deepEqual(decisions[0].workflowPaths, [
-        ".github/workflows/new.yml",
-        ...(scenario === "removed" ? [".github/workflows/old.yml"] : []),
-      ]);
+      const paths =
+        scenario === "pushed workflow with local workflow"
+          ? [".github/workflows/old.yml"]
+          : [
+              ".github/workflows/new.yml",
+              ...(scenario === "removed" ? [".github/workflows/old.yml"] : []),
+            ];
+      assert.deepEqual(decisions[0].workflowPaths, paths);
       const issue = run.github.find(4);
       assert.ok(issue.labels.includes("factory:failed"));
-      assert.match(issue.comments[0], /GitHub App can't push/);
-      assert.match(issue.comments[0], /\.github\/workflows\/new.yml/);
+      assert.ok(
+        issue.comments[0].includes(
+          "the run's branch has workflow changes the factory's GitHub App can't push",
+        ),
+      );
+      for (const path of paths)
+        assert.ok(issue.comments[0].includes(`- Workflow: \`${path}\``));
+      if (scenario === "pushed workflow with local workflow")
+        assert.doesNotMatch(issue.comments[0], /\.github\/workflows\/new.yml/);
       assert.match(issue.comments[0], /claude-code\/claude-sonnet-5-5@high/);
       assert.ok(issue.comments[0].includes(run.sandcastle.launched[0].log));
       assert.match(issue.comments[0], /person with Workflows permission/);
@@ -2194,7 +2231,7 @@ for (const scenario of [
   });
 }
 
-test("an update's uninspected workflow changes file an owner issue and hold the next daily check", async (t) => {
+test("an update's unpushed workflow changes file an owner issue and hold the next daily check", async (t) => {
   const repo = gitRepositories(t);
   const run = factory({
     issues: [],
@@ -2219,11 +2256,11 @@ test("an update's uninspected workflow changes file an owner issue and hold the 
   )[1];
   assert.match(
     workflows,
-    /refused workflow push: `\.github\/workflows\/old.yml`/,
+    /unpushed workflow change: `\.github\/workflows\/old.yml`/,
   );
   assert.match(
     workflows,
-    /refused workflow push: `\.github\/workflows\/new.yml`/,
+    /unpushed workflow change: `\.github\/workflows\/new.yml`/,
   );
   assert.match(
     body,
@@ -2234,5 +2271,30 @@ test("an update's uninspected workflow changes file an owner issue and hold the 
   run.time.now = new Date("2026-10-10T12:00:00Z");
   await run.tick();
   assert.equal(run.github.state.created.length, 1);
+  assert.equal(run.sandcastle.launched.length, 1);
+});
+
+test("an ended update with pushed workflow changes and only local docs files no owner issue", async (t) => {
+  const repo = gitRepositories(t);
+  const run = factory({
+    issues: [],
+    root: repo.root,
+    git: repo.git,
+    updates: { outdated: available },
+  });
+  await run.tick();
+  const [launch] = run.sandcastle.launched;
+  repo.command(["checkout", "--quiet", "-b", launch.branch]);
+  writeFileSync(join(repo.root, ".github/workflows/old.yml"), "changed\n");
+  repo.command(["add", "."]);
+  repo.command(["commit", "--quiet", "-m", "workflow change"]);
+  repo.command(["push", "--quiet", "origin", "HEAD"]);
+  writeFileSync(join(repo.root, "README.md"), "local docs\n");
+  repo.command(["add", "."]);
+  repo.command(["commit", "--quiet", "-m", "local docs"]);
+  launch.finish();
+  await settled();
+  await run.tick();
+  assert.equal(run.github.state.created.length, 0);
   assert.equal(run.sandcastle.launched.length, 1);
 });
