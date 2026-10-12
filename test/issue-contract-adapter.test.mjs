@@ -314,6 +314,141 @@ test("pull request comments are ignored before any API access", async () => {
   assert.equal(result.requests.length, 0);
 });
 
+test("editing a closed ready issue leaves labels and feedback untouched", async () => {
+  const issue = {
+    number: 42,
+    body: ticketBody,
+    labels: [{ name: "ready-for-agent" }],
+    state: "closed",
+  };
+  const result = await exercise({
+    issue: { ...issue, body: ticketBody.replace("- [ ]", "- [x]") },
+    comments: [approvedTicketFeedback(issue)],
+    bodyLastEditedAt: "2026-09-14T17:02:00Z",
+    issueEvents: [readinessReview],
+    event: { action: "edited", issue: { number: 42, state: "closed" } },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.deepEqual(writes(result), []);
+  assert.equal(result.code, 0, result.stderr);
+  assert.equal(result.stderr, "");
+  assert.equal(
+    result.stdout,
+    "Skipped closed issue; issue contract validation handles open issues only.\n",
+  );
+  assert.deepEqual(
+    result.requests.map(({ method, url }) => [method, url]),
+    [["GET", "/repos/example/repository/issues/42"]],
+  );
+});
+
+test("commenting on a closed ready issue writes no labels or feedback", async (context) => {
+  for (const hasFeedback of [false, true]) {
+    await context.test(
+      hasFeedback ? "existing feedback" : "no feedback",
+      async () => {
+        const issue = {
+          number: 42,
+          body: ticketBody,
+          labels: [{ name: "ready-for-agent" }],
+          state: "closed",
+        };
+        const result = await exercise({
+          issue,
+          comments: hasFeedback ? [approvedTicketFeedback(issue)] : [],
+          issueEvents: [readinessReview],
+          event: {
+            action: "created",
+            issue: { number: 42, state: "closed" },
+            comment: {
+              id: 14,
+              body: "Finished.",
+              user: { login: "maintainer" },
+            },
+          },
+          permissions: {
+            maintainer: { permission: "admin", role_name: "admin" },
+          },
+        });
+
+        assert.deepEqual(writes(result), []);
+        assert.equal(result.code, 0, result.stderr);
+        assert.match(result.stdout, /^Skipped closed issue;/);
+        assert.deepEqual(
+          result.requests.map(({ method, url }) => [method, url]),
+          [["GET", "/repos/example/repository/issues/42"]],
+        );
+      },
+    );
+  }
+});
+
+test("an edit received while open is skipped when the fetched issue is closed", async () => {
+  const issue = {
+    number: 42,
+    body: ticketBody,
+    labels: [{ name: "ready-for-agent" }],
+    state: "open",
+  };
+  const result = await exercise({
+    issue: {
+      ...issue,
+      body: ticketBody.replace("- [ ]", "- [x]"),
+      state: "closed",
+    },
+    comments: [approvedTicketFeedback(issue)],
+    bodyLastEditedAt: "2026-09-14T17:02:00Z",
+    issueEvents: [readinessReview],
+    event: { action: "edited", issue },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.deepEqual(writes(result), []);
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /^Skipped closed issue;/);
+  assert.deepEqual(
+    result.requests.map(({ method, url }) => [method, url]),
+    [["GET", "/repos/example/repository/issues/42"]],
+  );
+});
+
+test("reopening an issue with a changed contract invalidates readiness", async () => {
+  const issue = {
+    number: 42,
+    body: ticketBody,
+    labels: [{ name: "ready-for-agent" }],
+    state: "closed",
+  };
+  const reopenedIssue = {
+    ...issue,
+    body: ticketBody.replace("- [ ]", "- [x]"),
+    state: "open",
+  };
+  const result = await exercise({
+    issue: reopenedIssue,
+    comments: [approvedTicketFeedback(issue)],
+    bodyLastEditedAt: "2026-09-14T17:02:00Z",
+    issueEvents: [readinessReview],
+    event: { action: "reopened", issue: reopenedIssue },
+    permissions: { maintainer: { permission: "admin", role_name: "admin" } },
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /exact contract revision/);
+  const applied = writes(result);
+  assert.deepEqual(
+    applied.map(([method, url]) => [method, url]),
+    [
+      ["DELETE", "/repos/example/repository/issues/42/labels/ready-for-agent"],
+      ["POST", "/repos/example/repository/issues/42/labels"],
+      ["PATCH", "/repos/example/repository/issues/comments/13"],
+    ],
+  );
+  assert.deepEqual(applied[1][2], { labels: ["needs-triage"] });
+  assert.match(applied[2][2].body, /Issue contract awaiting review/);
+});
+
 test("the adapter reads every page and the role of each login a decision can consult", async (context) => {
   await context.test(
     "every discussion and timeline page and each readiness-label actor",
