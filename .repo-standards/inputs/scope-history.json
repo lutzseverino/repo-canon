@@ -1,7 +1,7 @@
 {
   "format": "repo-standards/scope-history/v5",
   "evidence": "historical",
-  "inspection": "sha256:ac1781d9e4c15e00a4d88e65281de70ce8e6f4e63d463a8d167e6b5b6cdeb058",
+  "inspection": "sha256:441b8150aee9949662cb02a74d7de9aa361cd759876321cf78e338f6a6949e36",
   "resolved": {
     "description": "The complete Repo Canon standards profile",
     "declarations": [
@@ -1354,13 +1354,13 @@
     ]
   },
   "discovery": {
-    "identity": "sha256:85647b5c3283862d0a0f56b5dbb5de431ff81d3efe7abb6505db6cad83035f39",
+    "identity": "sha256:10446fab38eb262c383a6b0a67b8735700a9c2cfcf307b4c9a9f74011e0975b0",
     "proposal": {
       "format": "repo-standards/scope/v2",
       "declarations": [
         {
           "id": "documentation",
-          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Reviewed current manifests, maintained source-authoring constraints, source payloads, release docs and third-party notices. authoring-notes.md remains maintained source guidance in its established author layout. guidance/ and discovery/ are delivered standards payloads; vendor/ is pinned third-party source. None is an additional documentation root. No new moves or link repairs are needed.",
+          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Reviewed root documents: include authoring-notes.md beside the source as project-specific authoring guidance; license notices, shipped guidance/discovery inputs and vendor snapshots stay at their source locations. No additional documentation roots, moves or link repairs are needed.",
           "candidates": [
             {
               "path": "GLOSSARY.md",
@@ -1373,7 +1373,7 @@
             {
               "path": "THIRD_PARTY_NOTICES.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "License notice belongs beside licensed source, not a documentation category.",
               "evidence": [
                 "THIRD_PARTY_NOTICES.md"
               ]
@@ -1381,24 +1381,15 @@
             {
               "path": "authoring-notes.md",
               "decision": "include",
-              "reason": "Maintained source-authoring constraints and rationale referenced by docs/agents/project.md; preserve its established source-author layout, not an event record.",
+              "reason": "Maintained source authoring decisions intentionally beside standards.yaml; project guidance links here.",
               "evidence": [
-                "authoring-notes.md",
-                "docs/agents/project.md"
-              ]
-            },
-            {
-              "path": "discovery",
-              "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
-              "evidence": [
-                "discovery"
+                "authoring-notes.md"
               ]
             },
             {
               "path": "discovery/documentation.md",
               "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
+              "reason": "Shipped standards guidance or discovery input referenced by standards.yaml, not adopting-repository documentation.",
               "evidence": [
                 "discovery/documentation.md"
               ]
@@ -1406,7 +1397,7 @@
             {
               "path": "discovery/github-repository-configuration.md",
               "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
+              "reason": "Shipped standards guidance or discovery input referenced by standards.yaml, not adopting-repository documentation.",
               "evidence": [
                 "discovery/github-repository-configuration.md"
               ]
@@ -1414,7 +1405,7 @@
             {
               "path": "discovery/project-readmes.md",
               "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
+              "reason": "Shipped standards guidance or discovery input referenced by standards.yaml, not adopting-repository documentation.",
               "evidence": [
                 "discovery/project-readmes.md"
               ]
@@ -1716,17 +1707,9 @@
               ]
             },
             {
-              "path": "guidance",
-              "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
-              "evidence": [
-                "guidance"
-              ]
-            },
-            {
               "path": "guidance/documentation.md",
               "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
+              "reason": "Shipped standards guidance or discovery input referenced by standards.yaml, not adopting-repository documentation.",
               "evidence": [
                 "guidance/documentation.md"
               ]
@@ -1734,7 +1717,7 @@
             {
               "path": "guidance/factory-sandbox-image.md",
               "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
+              "reason": "Shipped standards guidance or discovery input referenced by standards.yaml, not adopting-repository documentation.",
               "evidence": [
                 "guidance/factory-sandbox-image.md"
               ]
@@ -1742,7 +1725,7 @@
             {
               "path": "guidance/github-repository-configuration.md",
               "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
+              "reason": "Shipped standards guidance or discovery input referenced by standards.yaml, not adopting-repository documentation.",
               "evidence": [
                 "guidance/github-repository-configuration.md"
               ]
@@ -1750,7 +1733,7 @@
             {
               "path": "guidance/project-readmes.md",
               "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
+              "reason": "Shipped standards guidance or discovery input referenced by standards.yaml, not adopting-repository documentation.",
               "evidence": [
                 "guidance/project-readmes.md"
               ]
@@ -1758,7 +1741,7 @@
             {
               "path": "guidance/repository-license.md",
               "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
+              "reason": "Shipped standards guidance or discovery input referenced by standards.yaml, not adopting-repository documentation.",
               "evidence": [
                 "guidance/repository-license.md"
               ]
@@ -1766,17 +1749,9 @@
             {
               "path": "guidance/repository-readme.md",
               "decision": "exclude",
-              "reason": "Standards source payload and guidance delivered to adopters, not this repository documentation.",
+              "reason": "Shipped standards guidance or discovery input referenced by standards.yaml, not adopting-repository documentation.",
               "evidence": [
                 "guidance/repository-readme.md"
-              ]
-            },
-            {
-              "path": "vendor",
-              "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
-              "evidence": [
-                "vendor"
               ]
             },
             {
@@ -1790,15 +1765,23 @@
             {
               "path": "vendor/humanlayer-skills/skills/show-me/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/humanlayer-skills/skills/show-me/SKILL.md"
               ]
             },
             {
+              "path": "vendor/marked/README.md",
+              "decision": "exclude",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
+              "evidence": [
+                "vendor/marked/README.md"
+              ]
+            },
+            {
               "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/ask-matt/PHASE-BOUNDARIES.md"
               ]
@@ -1806,7 +1789,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/ask-matt/SKILL.md"
               ]
@@ -1814,7 +1797,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md"
               ]
@@ -1822,7 +1805,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md"
               ]
@@ -1830,7 +1813,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md"
               ]
@@ -1838,7 +1821,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md"
               ]
@@ -1846,7 +1829,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md"
               ]
@@ -1854,7 +1837,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md"
               ]
@@ -1862,7 +1845,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/GLOSSARY-FORMAT.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/domain-modeling/GLOSSARY-FORMAT.md"
               ]
@@ -1870,7 +1853,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md"
               ]
@@ -1878,7 +1861,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md"
               ]
@@ -1886,7 +1869,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/implement-spec/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/implement-spec/SKILL.md"
               ]
@@ -1894,7 +1877,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md"
               ]
@@ -1902,7 +1885,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md"
               ]
@@ -1910,7 +1893,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md"
               ]
@@ -1918,7 +1901,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/pr/CREDITS.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/pr/CREDITS.md"
               ]
@@ -1926,7 +1909,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/pr/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/pr/SKILL.md"
               ]
@@ -1934,7 +1917,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md"
               ]
@@ -1942,7 +1925,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md"
               ]
@@ -1950,7 +1933,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/prototype/UI.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/prototype/UI.md"
               ]
@@ -1958,7 +1941,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/research/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/research/SKILL.md"
               ]
@@ -1966,7 +1949,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/retro/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/retro/SKILL.md"
               ]
@@ -1974,7 +1957,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md"
               ]
@@ -1982,7 +1965,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
               ]
@@ -1990,7 +1973,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md"
               ]
@@ -1998,7 +1981,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md"
               ]
@@ -2006,7 +1989,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md"
               ]
@@ -2014,7 +1997,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md"
               ]
@@ -2022,7 +2005,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md"
               ]
@@ -2030,7 +2013,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md"
               ]
@@ -2038,7 +2021,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/tdd/tests.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/tdd/tests.md"
               ]
@@ -2046,7 +2029,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md"
               ]
@@ -2054,7 +2037,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md"
               ]
@@ -2062,7 +2045,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md"
               ]
@@ -2070,7 +2053,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md"
               ]
@@ -2078,7 +2061,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md"
               ]
@@ -2086,7 +2069,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md"
               ]
@@ -2094,7 +2077,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/wizard/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/wizard/SKILL.md"
               ]
@@ -2102,7 +2085,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/grill-me/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/grill-me/SKILL.md"
               ]
@@ -2110,7 +2093,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md"
               ]
@@ -2118,7 +2101,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/handoff/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/handoff/SKILL.md"
               ]
@@ -2126,7 +2109,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/GLOSSARY-FORMAT.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/GLOSSARY-FORMAT.md"
               ]
@@ -2134,7 +2117,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/LEARNING-RECORD-FORMAT.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/LEARNING-RECORD-FORMAT.md"
               ]
@@ -2142,7 +2125,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/MISSION-FORMAT.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/MISSION-FORMAT.md"
               ]
@@ -2150,7 +2133,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/RESOURCES-FORMAT.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/RESOURCES-FORMAT.md"
               ]
@@ -2158,7 +2141,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/SKILL.md"
               ]
@@ -2166,7 +2149,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/to-questionnaire/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/to-questionnaire/SKILL.md"
               ]
@@ -2174,7 +2157,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/wait-what/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/wait-what/SKILL.md"
               ]
@@ -2182,7 +2165,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md"
               ]
@@ -2190,9 +2173,17 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md",
               "decision": "exclude",
-              "reason": "Pinned upstream material and license/provenance notices; preserve original location and contents.",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md"
+              ]
+            },
+            {
+              "path": "vendor/parse5/README.md",
+              "decision": "exclude",
+              "reason": "Pinned upstream skill source or license/provenance material, preserved in vendor; not project documentation.",
+              "evidence": [
+                "vendor/parse5/README.md"
               ]
             }
           ],
@@ -2200,14 +2191,85 @@
         },
         {
           "id": "github-repository-configuration",
-          "coverage": "Only remote configuration is governed. The origin is https://github.com/lutzseverino/repo-canon; the maintainer authorized this update and its declared repeat-safe operations. No project-content paths apply.",
+          "coverage": "Intentional empty project-content scope. The authorized self-adoption includes repeat-safe remote setup for the unambiguous origin lutzseverino/repo-canon; preserve unrelated settings and stop if an overwrite needs confirmation.",
           "candidates": [],
           "unresolved": []
         },
         {
           "id": "project-readmes",
-          "coverage": "Reviewed package.json, docs/development/README.md, source directories and README inventory. This is a single root package without workspaces or separate maintained Projects below it. The operations, discovery, scripts and factory components share root development commands; tests are fixtures and vendor is pinned third-party material. Documentation READMEs are indexes. The Project README scope is intentionally empty.",
-          "candidates": [],
+          "coverage": "Repo Canon is one standards source developed from the root package.json and docs/development/README.md. Operations, discovery, scripts and factory are integrated components with root validation commands, not independently developed Projects; test trees are fixtures, vendor contains preserved upstream snapshots, and docs are documentation. There are no maintained non-root Projects needing a Project README.",
+          "candidates": [
+            {
+              "path": ".sandcastle",
+              "decision": "exclude",
+              "reason": "Integrated standards-source component validated by the root package scripts, without separate Project development commands.",
+              "evidence": [
+                ".sandcastle",
+                "docs/development/README.md",
+                "package.json"
+              ]
+            },
+            {
+              "path": "discovery",
+              "decision": "exclude",
+              "reason": "Integrated standards-source component validated by the root package scripts, without separate Project development commands.",
+              "evidence": [
+                "discovery",
+                "docs/development/README.md",
+                "package.json"
+              ]
+            },
+            {
+              "path": "docs",
+              "decision": "exclude",
+              "reason": "Documentation organization, not a Project.",
+              "evidence": [
+                "docs",
+                "docs/development/README.md",
+                "package.json"
+              ]
+            },
+            {
+              "path": "operations",
+              "decision": "exclude",
+              "reason": "Integrated standards-source component validated by the root package scripts, without separate Project development commands.",
+              "evidence": [
+                "docs/development/README.md",
+                "operations",
+                "package.json"
+              ]
+            },
+            {
+              "path": "scripts",
+              "decision": "exclude",
+              "reason": "Integrated standards-source component validated by the root package scripts, without separate Project development commands.",
+              "evidence": [
+                "docs/development/README.md",
+                "package.json",
+                "scripts"
+              ]
+            },
+            {
+              "path": "test",
+              "decision": "exclude",
+              "reason": "Test fixtures and harnesses, not maintained Projects.",
+              "evidence": [
+                "docs/development/README.md",
+                "package.json",
+                "test"
+              ]
+            },
+            {
+              "path": "vendor",
+              "decision": "exclude",
+              "reason": "Preserved upstream source snapshots, not a maintained Project.",
+              "evidence": [
+                "docs/development/README.md",
+                "package.json",
+                "vendor"
+              ]
+            }
+          ],
           "unresolved": []
         }
       ]
@@ -2372,7 +2434,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "01cd4cdde1dce3e74a8759f61c2328dc26612f78009f3126717543b1277c1311",
+          "sha256": "37b12e072ef8794c190a14e7ef71ea39f50e117e5ce76579d207ee2b19757870",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -2471,12 +2533,12 @@
         },
         ".agents/skills/babysit/SKILL.md": {
           "type": "file",
-          "sha256": "b79467f82f54f64186b54894b25c9b47e500cf53b2c88e128519f53ba6b6082e",
+          "sha256": "56238e57d96eab56fd422ba3d1be45875eab304f1a79acd9c8cb4b03e619e09b",
           "executable": false
         },
         ".agents/skills/babysit/wait.mjs": {
           "type": "file",
-          "sha256": "c3ba206e74d3cc95caee0eaec1daddfc92b6812531818b99935782fc62534be2",
+          "sha256": "5fb0546e4fedcb8462b0522e27176105a065486e2d184f644aec581af51d0b8f",
           "executable": false
         },
         ".agents/skills/code-review/SKILL.md": {
@@ -3095,7 +3157,7 @@
         },
         "CONTRIBUTING.md": {
           "type": "file",
-          "sha256": "84b7d3188157f82574efcbebfc9e9d6f338140e1600d9d30fcfaa297754b2aef",
+          "sha256": "4c40b422177119c96e4752532bd1e0050aeaee766d9a007ac354bbdc6c0b6d76",
           "executable": false
         },
         "GLOSSARY.md": {
@@ -3110,7 +3172,7 @@
         },
         "README.md": {
           "type": "file",
-          "sha256": "56fd106847eb7aa9c772654c3b73de34b5ff32ab668d796278adcc85dd6d7668",
+          "sha256": "47ead35b75ed912f136841f898944803609b23240c06484a087bb3aebb8588b1",
           "executable": false
         },
         "THIRD_PARTY_NOTICES.md": {
@@ -3310,7 +3372,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "01cd4cdde1dce3e74a8759f61c2328dc26612f78009f3126717543b1277c1311",
+          "sha256": "37b12e072ef8794c190a14e7ef71ea39f50e117e5ce76579d207ee2b19757870",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -3485,7 +3547,7 @@
         },
         "test/babysit-wait.test.mjs": {
           "type": "file",
-          "sha256": "26abb60c8b4a414fffd6dd9e09ba96f46b51c3b37af50d39d3ea2c86e266da1a",
+          "sha256": "611c190e1ead669a4ac8db1019917a6209a8c9c1822c7463b881af3cfedc24b9",
           "executable": false
         },
         "test/documentation-check.test.mjs": {
@@ -3525,7 +3587,7 @@
         },
         "test/fixtures/fake-gh-babysit-wait.mjs": {
           "type": "file",
-          "sha256": "03712f4c77598a9bef4103d30c086a0658e27d3e54322bf268e212fd63345f4b",
+          "sha256": "ec4f3873cf31e284b6ded2d815ea0d7d2ff5ad83914faed248eadf53cb83471c",
           "executable": false
         },
         "test/fixtures/fake-gh-pr-settings.mjs": {
@@ -3645,7 +3707,7 @@
         },
         "test/repository-conformance.test.mjs": {
           "type": "file",
-          "sha256": "57f6a0c7f7616e5126b6ecc80a2cda38abb9c0ae92e0f4787ed74ad00af6159a",
+          "sha256": "06ca8d2f1645c60241595d3a61af944b2936f2222e34a107c023edfa5e242c31",
           "executable": false
         },
         "test/repository-license.test.mjs": {
