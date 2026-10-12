@@ -75,6 +75,35 @@ local setup, and development commands.
 Add or update tests for changed behavior where applicable. Run the required
 checks documented in the development guide before requesting review.
 
+## Findings
+
+Every agent run records findings: implementation (direct or orchestrated,
+inside or outside the factory), release, review, and adoption or update. A
+finding is a defect, gap, or stale instruction the run observed outside the
+work it is responsible for. Fix defects inside the change's responsibility in
+the change. An adoption run's own contextual work in the adopting repository
+is not a finding.
+
+Before filing, check for an open issue that already reports the finding and
+link it instead of creating a duplicate. Otherwise, open one issue per finding
+through the target repository's issue forms, labelled `needs-triage`. File it
+in the repository responsible for the affected material or tooling. Each issue
+cites the run's pull request or issue and distinguishes what the run observed
+from what it only read in code. Leave the issues to triage.
+
+Link every filed or existing issue in this order:
+
+1. A run with a pull request links them from a comment on that pull request.
+   For adoption, use its check-outcomes comment.
+2. A run without a pull request links them from the issue it was working on,
+   if there is one, such as a release run's planning issue.
+3. Only a run with neither a pull request nor an issue lists them in its final
+   message.
+
+If filing fails, list each unfiled finding in the same place the links would
+go, name its target repository, and state that it was not filed. Findings never
+block or delay the run's pull request or other work.
+
 ## Titles and commits
 
 Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
@@ -145,32 +174,17 @@ byte, starting with its `# Repository Standards adoption record` heading. The
 record's Operations table lists the standards source's fixes and checks with
 their results. Post one check-outcomes comment with the repository's own
 validation outcomes, confirmation that the run-state conditions for opening
-the pull request hold, and findings links or unfiled findings as described
-below. The record stays the body; for a breaking (`!`) title, add Impact and
-Migration sections after the record.
+the pull request hold, and findings links or unfiled findings under the
+[findings rule](#findings). The record stays the body; for a breaking (`!`)
+title, add Impact and Migration sections after the record.
 
-A finding is a defect, gap, or stale instruction the adoption or update run
-observed in the standards or tooling it used. The run's own contextual work in
-the adopting repository is not a finding. File each finding in the right
-repository:
+For adoption or update findings, use these target repositories:
 
 - For the standards source's guidance, discovery, checks, fixes, installed
   files, or drafter, use the source repository identified by the source URL in
   the adoption record's Selection.
 - For the Repository Standards CLI or the `adopt-standards` skill, use
   `lutzseverino/repo-standards`.
-
-Before filing, check for an open issue that already reports the finding and
-link it instead of creating a duplicate. Otherwise, open one issue per finding
-through the target repository's issue forms, labelled `needs-triage`. Cite the
-adoption pull request and distinguish what the run observed from what it only
-read in code. Link every filed or existing issue from the check-outcomes
-comment.
-
-If an issue cannot be created in its target repository, list each unfiled
-finding in that comment, name its target repository, and state that it was not
-filed. Findings never block or delay the adoption pull request; it still
-proceeds when findings cannot be filed.
 
 ### Merging
 
@@ -193,8 +207,10 @@ it is outside the change's ticket or scope; when it guards a rule another layer
 owns, such as by duplicating that layer's validation; or when it guards against
 the owner misconfiguring files only the owner writes, or a component corrupting
 state it owns itself, which lie outside the threat model. Answer a decline with
-its reason in its review thread. Open a follow-up issue for a declined finding
-only when it is worth keeping, and leave it to triage.
+its reason in its review thread. Record real findings declined because they
+are outside the change's ticket or scope, or because another layer owns the
+rule they guard, under the [findings rule](#findings). Do not file findings
+declined because they do not hold or lie outside the threat model.
 
 ## Documentation
 
