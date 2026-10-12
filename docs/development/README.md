@@ -92,6 +92,9 @@ step: `npm test` already runs it on every pull request.
   outcomes, prerequisites, and focused fixture command.
 - [Sandbox image check](sandbox-image-check.md): the base image, operation
   protocol, outcomes, and focused fixture command.
+- [Sandbox image build workflow](sandbox-image-workflow.md): the shipped
+  pull request job, change detection, factory build contract, permissions,
+  and executable fixtures.
 - [Documentation and Project README checks](documentation-check.md): concrete
   scope, structural outcomes, prerequisites, and focused fixture commands.
 - [Documentation scope drafter](documentation-scope-drafter.md): drafting the

@@ -28,10 +28,11 @@ does not imply a release or successful adoption.
 | Delivery through review to merge                      | `skill-babysit`                                                                                                                                             | Repo Canon's own `.agents/skills/babysit`, whose source is its installed path; it follows the installed contribution guidance                                                                                                | Exact whole skill directory                                                                                         |
 | The factory                                           | `factory-*`                                                                                                                                                 | Repo Canon's own `.sandcastle/` files, whose source is their installed path: the entry, adapter, and decision core, and the ignore file for Sandcastle's local state                                                         | Exact files                                                                                                         |
 | Factory sandbox image                                 | `factory-sandbox-image`                                                                                                                                     | `guidance/factory-sandbox-image.md`; `sandbox-image-base` check, which retains the base image `operations/sandbox-image-base.Dockerfile`                                                                                     | Project-owned contextual `.sandcastle/Dockerfile`                                                                   |
+| Sandbox image build                                   | `factory-sandbox-image-workflow`                                                                                                                            | `.github/workflows/sandbox-image.yml`; builds the image on pull requests changing `.sandcastle/` or the workflow                                                                                                             | Exact file                                                                                                          |
 | Upstream skill license notice                         | `mattpocock-skills-license`                                                                                                                                 | `vendor/mattpocock-skills/LICENSE`, installed at `.agents/skills/LICENSE.mattpocock-skills` beside the copied skills                                                                                                         | Exact file outside every skill directory                                                                            |
 | HumanLayer skill license notice                       | `humanlayer-skills-license`                                                                                                                                 | `vendor/humanlayer-skills/LICENSE`, installed at `.agents/skills/LICENSE.humanlayer-skills` beside the copied skills                                                                                                         | Exact file outside every skill directory                                                                            |
 
-The resolved profile contains 65 declarations: 30 exact files, three contextual
+The resolved profile contains 66 declarations: 31 exact files, three contextual
 files, three repository declarations, and 29 exact skill directories. It has
 four checks and two fixes. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
@@ -85,7 +86,7 @@ and validates every profile.
 ## Validation boundary
 
 Installed public CLI 6.0.0 under Node.js 24 returns `valid: true`, no errors,
-one `complete` profile, and 65 declarations for the source, matching the
+one `complete` profile, and 66 declarations for the source, matching the
 inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@6.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why

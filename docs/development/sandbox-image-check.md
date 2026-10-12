@@ -10,8 +10,8 @@ factory sets to the host user's at build time. Its
 the file with the base and add the repository's toolchain from its development
 guide after it.
 
-`operations/check-sandbox-image.mjs` is the read-only check that the file still
-builds from the base. It consumes `repo-standards/operation/v2` on standard
+`operations/check-sandbox-image.mjs` is the read-only text check that the file
+retains the base. It consumes `repo-standards/operation/v2` on standard
 input, accepts only a checks operation whose allowed target is
 `.sandcastle/Dockerfile`, and returns one `repo-standards/result/v2` object on
 standard output. It requires Node.js 24, with the same `node --version`
@@ -29,6 +29,12 @@ The result statuses have distinct meanings:
   `CMD` after it, or end the additions as the base's user.
 - A malformed request or an unexpected target writes an error to standard error,
   exits nonzero, and emits no result.
+
+The shipped [sandbox image build workflow](sandbox-image-workflow.md) builds
+the image on pull requests that change anything under `.sandcastle/` or the
+workflow itself. A successful build proves the toolchain commands execute;
+choosing the right toolchain remains an agent judgment. This workflow
+complements the text check without changing its protocol or outcomes.
 
 The check reads the additions as Dockerfile instructions: it joins continued
 lines, skipping comment and blank lines inside them, compares keywords without
