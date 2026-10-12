@@ -62,6 +62,15 @@ and with the host user's IDs for the sandbox's `agent` user. When the build
 fails, the factory launches nothing, leaves the issues unclaimed on the
 frontier, and logs the error.
 
+The shipped [sandbox image build workflow](../development/sandbox-image-workflow.md)
+also builds the image on pull requests that change anything under
+`.sandcastle/` or the workflow itself, without a build context and with the
+runner user's IDs. A broken toolchain command fails that pull request's
+`Sandbox image` job and shows the build output before the factory uses it.
+Other pull requests pass the job without building. The workflow runs nothing
+inside the built image; the agent still chooses the right toolchain from the
+development guide.
+
 ## Host settings
 
 The host sets these in the factory's environment. Repo Canon ships no values,

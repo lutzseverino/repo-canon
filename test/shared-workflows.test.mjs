@@ -22,11 +22,12 @@ function actionPins(workflow, action) {
   );
 }
 
-test("every shared workflow pins the same checkout and setup-node versions", () => {
+test("shared workflows pin the same checkout and setup-node versions when used", () => {
   const paths = sharedWorkflows();
   for (const expected of [
     ".github/workflows/issue-contracts.yml",
     ".github/workflows/pr-metadata.yml",
+    ".github/workflows/sandbox-image.yml",
   ]) {
     assert.ok(paths.includes(expected), `standards.yaml declares ${expected}`);
   }
@@ -35,7 +36,8 @@ test("every shared workflow pins the same checkout and setup-node versions", () 
     const pins = new Set();
     for (const path of paths) {
       const workflowPins = actionPins(workflow(path), action);
-      assert.ok(workflowPins.length > 0, `${path} uses ${action}`);
+      if (action === "actions/checkout")
+        assert.ok(workflowPins.length > 0, `${path} uses ${action}`);
       for (const pin of workflowPins) {
         assert.match(
           pin,
@@ -56,7 +58,8 @@ test("every shared workflow pins the same checkout and setup-node versions", () 
 test("every shared workflow disables package-manager caching", () => {
   for (const path of sharedWorkflows()) {
     const text = workflow(path);
-    assert.match(text, /package-manager-cache: false/, path);
+    if (actionPins(text, "actions/setup-node").length > 0)
+      assert.match(text, /package-manager-cache: false/, path);
     assert.doesNotMatch(text, /npm (?:ci|install)/, path);
   }
 });

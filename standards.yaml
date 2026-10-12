@@ -90,6 +90,11 @@ defaults:
             version: ">=24.0.0 <25.0.0"
           timeout-seconds: 30
 
+    factory-sandbox-image-workflow:
+      kind: file
+      target: .github/workflows/sandbox-image.yml
+      exact: .github/workflows/sandbox-image.yml
+
     feature-request-template:
       kind: file
       target: .github/ISSUE_TEMPLATE/feature-request.yml
