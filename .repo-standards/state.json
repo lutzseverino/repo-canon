@@ -15,8 +15,8 @@
         "id": "canonical-labels"
       },
       "operationIndex": 0,
-      "before": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
-      "after": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
+      "before": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
+      "after": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -35,8 +35,8 @@
         "id": "pull-request-integration"
       },
       "operationIndex": 1,
-      "before": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
-      "after": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
+      "before": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
+      "after": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -73,6 +73,7 @@
             "docs/development/release.md",
             "docs/development/repository-readme-check.md",
             "docs/development/sandbox-image-check.md",
+            "docs/development/sandbox-image-workflow.md",
             "docs/development/skill-exercises.md",
             "docs/development/source-profile.md",
             "docs/development/upstream-compatibility.md",
@@ -111,8 +112,8 @@
           "directories": []
         }
       },
-      "before": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
-      "after": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
+      "before": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
+      "after": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -149,6 +150,7 @@
             "docs/development/release.md",
             "docs/development/repository-readme-check.md",
             "docs/development/sandbox-image-check.md",
+            "docs/development/sandbox-image-workflow.md",
             "docs/development/skill-exercises.md",
             "docs/development/source-profile.md",
             "docs/development/upstream-compatibility.md",
@@ -187,8 +189,8 @@
           "directories": []
         }
       },
-      "before": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
-      "after": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
+      "before": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
+      "after": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -225,6 +227,7 @@
             "docs/development/release.md",
             "docs/development/repository-readme-check.md",
             "docs/development/sandbox-image-check.md",
+            "docs/development/sandbox-image-workflow.md",
             "docs/development/skill-exercises.md",
             "docs/development/source-profile.md",
             "docs/development/upstream-compatibility.md",
@@ -243,8 +246,8 @@
         "id": "documentation-navigation"
       },
       "operationIndex": 2,
-      "before": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
-      "after": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
+      "before": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
+      "after": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -265,8 +268,8 @@
         "id": "sandbox-image-base"
       },
       "operationIndex": 3,
-      "before": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
-      "after": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
+      "before": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
+      "after": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -285,8 +288,8 @@
         "id": "project-readme-structure"
       },
       "operationIndex": 4,
-      "before": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
-      "after": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
+      "before": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
+      "after": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -307,8 +310,8 @@
         "id": "repository-readme-structure"
       },
       "operationIndex": 5,
-      "before": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
-      "after": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
+      "before": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
+      "after": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -345,6 +348,7 @@
             "docs/development/release.md",
             "docs/development/repository-readme-check.md",
             "docs/development/sandbox-image-check.md",
+            "docs/development/sandbox-image-workflow.md",
             "docs/development/skill-exercises.md",
             "docs/development/source-profile.md",
             "docs/development/upstream-compatibility.md",
@@ -383,8 +387,8 @@
           "directories": []
         }
       },
-      "before": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
-      "after": "sha256:c01084a08c4838ea36b4d4c4fb97dcf96d2040ec8986b1154ceb04a1e1870891",
+      "before": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
+      "after": "sha256:c846a6bee33d68e1de66d75665fd50bb644e0d20c6f4136407e3c53f92333451",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -521,10 +525,10 @@
   "retryHistory": [],
   "changeSet": [],
   "lastComplete": {
-    "run": "dc426dcd-77ce-4655-8fb8-266f9fa10ed9",
-    "inspection": "sha256:2080b92343e1f7c95e0bbc057abb783dfea60a5993d00b09ab9d7a0efa13df8d",
-    "completedAt": "2026-10-12T03:09:33.503Z",
-    "head": "4649cdcccd9fd03d9a380c1d50bcc6a1ecbdf8ad"
+    "run": "4fc37d62-0c9b-4629-8a60-101f3f512973",
+    "inspection": "sha256:dec54dbb8b9ce290dbad0968f8a0a730d4e372db7521ef01a25afb304ee90922",
+    "completedAt": "2026-10-12T18:55:39.029Z",
+    "head": "9f5b29bbdf71ad9603c0fb5f2b70d3b8ff855a77"
   },
   "baselines": {
     "docs/agents/README.md": {
@@ -548,19 +552,23 @@
       "executable": false
     },
     ".sandcastle/adapter.ts": {
-      "sha256": "fe89956d204b7047cf992f24f297823bac6456ea6e92e4cc3a71cd58c36e1231",
+      "sha256": "dd649f49e13e072b160c19619a74d28d9fefdd9689a06c4e898d227f91ff036c",
       "executable": false
     },
     ".sandcastle/factory.ts": {
-      "sha256": "ae37bf7a0560893374e3c4a4f67fbc6f3b26ad6f8f8c7c8ec7367a6a60fc4cb2",
+      "sha256": "df0208bb8de5d48180449b0c77983c3828207dd9bb7f0a4a69567819bbe6faf4",
       "executable": false
     },
     ".sandcastle/main.ts": {
-      "sha256": "bbc8fcc396b6745de5bff6d9c59d412dff340c4c8b1611cea1742c582f7049f5",
+      "sha256": "ad0cd80ad2d86a1ad855aa7f6ff48118af4eff6cf87dbb866d590551c1dc1620",
       "executable": false
     },
     ".sandcastle/.gitignore": {
       "sha256": "95f8dff762dbd253b540e84c6f40919cdac8c5a7f5a0fab1150d501e4cc8edb4",
+      "executable": false
+    },
+    ".github/workflows/sandbox-image.yml": {
+      "sha256": "6f424ecd4512b723d09e4930b342e7ac56767d752573cff62ef2923adaeaec22",
       "executable": false
     },
     ".github/ISSUE_TEMPLATE/feature-request.yml": {
@@ -580,7 +588,7 @@
       "executable": false
     },
     "scripts/validate-issue-contract.mjs": {
-      "sha256": "d33894f51d4b12b3357f0ddbc714b12477d42b0afd0d34a4d1ecf564d83f5163",
+      "sha256": "ff9aea07640827ba4074e74c2b8f0ecaec32047e32d435a630c42eb03f5d4b8c",
       "executable": false
     },
     ".github/workflows/issue-contracts.yml": {
@@ -652,11 +660,11 @@
       "executable": false
     },
     ".agents/skills/babysit/SKILL.md": {
-      "sha256": "207c1f16973c66e601f357c6ccf3d395de0a9f7725d8a164a9a40e520aa3b7e6",
+      "sha256": "eebfa0487ceb788e590d150a54e5b88051f649b3d01b40ec777d2cb82ed30e25",
       "executable": false
     },
     ".agents/skills/babysit/wait.mjs": {
-      "sha256": "b7d0b2f58a663c352a8a4301c20524cc15d59bec6423aa315fe87e2a17ceb44a",
+      "sha256": "a2274402df4d4f3f13f7f8e94545a6924b2c0bbcf9b3bb4c5f1c551650304138",
       "executable": false
     },
     ".agents/skills/code-review/SKILL.md": {
@@ -1290,41 +1298,44 @@
     {
       "format": "repo-standards/assessment/v3",
       "scope": {
-        "inspection": "sha256:2080b92343e1f7c95e0bbc057abb783dfea60a5993d00b09ab9d7a0efa13df8d",
-        "afterFixes": "sha256:c6ea1468ebc8f0ed83b0afb88ba497ceda71c76db345b6aa7705f30d2112a811"
+        "inspection": "sha256:dec54dbb8b9ce290dbad0968f8a0a730d4e372db7521ef01a25afb304ee90922",
+        "afterFixes": "sha256:31d23f5aa94e6a3d2b1abc25db74f453026282386f9c2b919cfb0bb09ddb3f76"
       },
-      "run": "dc426dcd-77ce-4655-8fb8-266f9fa10ed9",
-      "selection": "sha256:2b1c499a8f6276fd2c7e31086fde7019c8c2938028d7cf2817ef67a1bcf3a0a2",
-      "snapshot": "sha256:c6ea1468ebc8f0ed83b0afb88ba497ceda71c76db345b6aa7705f30d2112a811",
+      "run": "4fc37d62-0c9b-4629-8a60-101f3f512973",
+      "selection": "sha256:ba7f1506b229bafdbe458468e7eb64ac96b623d15bd88c167ae5a0ce1ec55a18",
+      "snapshot": "sha256:31d23f5aa94e6a3d2b1abc25db74f453026282386f9c2b919cfb0bb09ddb3f76",
       "declarations": [
         {
           "id": "documentation",
           "status": "satisfied",
-          "explanation": "The maintained documentation already uses usage, development, adr and agents categories, directory indexes and the development entry point; the root glossary and authoring decisions retain their intentional homes. No migration or link repair is required.",
+          "explanation": "The existing categorized documentation is current and useful for maintainers and users; no migration or edits are needed. The confirmed scope covers the sole docs root, glossary, authoring notes, and newly shipped sandbox build documentation.",
           "changedPaths": [],
           "evidence": [
-            "docs/README.md names the four categories; docs/adr/README.md, docs/usage/README.md and docs/development/README.md index their maintained topics.",
-            "docs/development/README.md documents Node.js 24, npm ci, focused tests, formatting, lint and syntax validation, consistent with package.json.",
-            "authoring-notes.md states its home beside standards.yaml; docs/agents/project.md links it and preserves source-specific constraints; GLOSSARY.md defines self-adoption and publication separately."
+            "docs/README.md explains each category; docs/development/README.md opens with Setup and validation and lists maintained development topics, including sandbox-image-workflow.md.",
+            "docs/usage/run-the-factory.md explains the sandbox job, workflow permission handoff and daily updates; sandbox-image-workflow.md documents the no-context build and conditional trigger.",
+            "GLOSSARY.md defines self-adoption and Project membership; authoring-notes.md records maintained decisions, rather than a per-run record. ADRs remain indexed and preserve their decisions.",
+            "Fresh drafter coverage and package.json review find no other docs root, migrations, missing indexes or independent nested Project."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Rechecked included and excluded candidates against the post-fix and refreshed tree. No content edits occurred and the reviewed coverage still holds; no additional paths are needed.",
+              "explanation": "Rechecked included and excluded candidates, missing README membership, documentation roots and destinations against the post-fix and refreshed tree. No project content edits occurred, coverage still holds, and no additional paths are needed.",
               "evidence": [
-                "docs/README.md names the four categories; docs/adr/README.md, docs/usage/README.md and docs/development/README.md index their maintained topics.",
-                "docs/development/README.md documents Node.js 24, npm ci, focused tests, formatting, lint and syntax validation, consistent with package.json.",
-                "authoring-notes.md states its home beside standards.yaml; docs/agents/project.md links it and preserves source-specific constraints; GLOSSARY.md defines self-adoption and publication separately."
+                "docs/README.md explains each category; docs/development/README.md opens with Setup and validation and lists maintained development topics, including sandbox-image-workflow.md.",
+                "docs/usage/run-the-factory.md explains the sandbox job, workflow permission handoff and daily updates; sandbox-image-workflow.md documents the no-context build and conditional trigger.",
+                "GLOSSARY.md defines self-adoption and Project membership; authoring-notes.md records maintained decisions, rather than a per-run record. ADRs remain indexed and preserve their decisions.",
+                "Fresh drafter coverage and package.json review find no other docs root, migrations, missing indexes or independent nested Project."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Rechecked included and excluded candidates against the post-fix and refreshed tree. No content edits occurred and the reviewed coverage still holds; no additional paths are needed.",
+              "explanation": "Rechecked included and excluded candidates, missing README membership, documentation roots and destinations against the post-fix and refreshed tree. No project content edits occurred, coverage still holds, and no additional paths are needed.",
               "evidence": [
-                "docs/README.md names the four categories; docs/adr/README.md, docs/usage/README.md and docs/development/README.md index their maintained topics.",
-                "docs/development/README.md documents Node.js 24, npm ci, focused tests, formatting, lint and syntax validation, consistent with package.json.",
-                "authoring-notes.md states its home beside standards.yaml; docs/agents/project.md links it and preserves source-specific constraints; GLOSSARY.md defines self-adoption and publication separately."
+                "docs/README.md explains each category; docs/development/README.md opens with Setup and validation and lists maintained development topics, including sandbox-image-workflow.md.",
+                "docs/usage/run-the-factory.md explains the sandbox job, workflow permission handoff and daily updates; sandbox-image-workflow.md documents the no-context build and conditional trigger.",
+                "GLOSSARY.md defines self-adoption and Project membership; authoring-notes.md records maintained decisions, rather than a per-run record. ADRs remain indexed and preserve their decisions.",
+                "Fresh drafter coverage and package.json review find no other docs root, migrations, missing indexes or independent nested Project."
               ],
               "additionalPaths": []
             }
@@ -1333,38 +1344,39 @@
         {
           "id": "factory-sandbox-image",
           "status": "satisfied",
-          "explanation": "The existing image preserves the shipped base and adds exactly the public CLI needed for source validation, ending as the agent user.",
+          "explanation": "The Dockerfile preserves the complete retained base and adds exactly the required pinned Repository Standards CLI as its toolchain; no edits are needed.",
           "changedPaths": [],
           "evidence": [
-            ".sandcastle/Dockerfile starts with operations/sandbox-image-base.Dockerfile byte for byte.",
-            "docs/development/README.md requires public Repository Standards CLI 6.0.0; the image installs @lutzseverino/repo-standards@6.0.0 after USER root and returns to USER ${AGENT_UID}:${AGENT_GID}."
+            ".sandcastle/Dockerfile begins byte-for-byte with the retained operations/sandbox-image-base.Dockerfile.",
+            "docs/development/README.md Setup and validation requires Node.js 24, Git >=2.32.0, npm and public Repository Standards CLI 6.0.0; the base supplies the runtimes and Git, and the additions install CLI 6.0.0 with --ignore-scripts as root and return to ${AGENT_UID}:${AGENT_GID}.",
+            "GitHub Sandbox image run 38288263811 succeeded in building the identical Dockerfile at commit 02f58e387cca5de95b579a2861e3a871d6e25af8. This adoption changes only retained state, so its existing job is expected to skip building."
           ]
         },
         {
           "id": "github-repository-configuration",
           "status": "satisfied",
-          "explanation": "Authorized remote setup has verified canonical labels and squash-only PR integration; its empty local content scope is intentional.",
+          "explanation": "Remote configuration matches the canonical settings, with intentional empty local scope. Neither fix required confirmation or mutation.",
           "changedPaths": [],
           "evidence": [
-            "The canonical-labels fix returned unchanged for lutzseverino/repo-canon.",
-            "The pull-request-integration fix returned unchanged for lutzseverino/repo-canon, with no confirmation or deferred requirement."
+            "canonical-labels returned unchanged for lutzseverino/repo-canon.",
+            "pull-request-integration returned unchanged for lutzseverino/repo-canon; Git remotes and authenticated owner resolve the same repository."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Rechecked included and excluded candidates against the post-fix and refreshed tree. No content edits occurred and the reviewed coverage still holds; no additional paths are needed.",
+              "explanation": "Rechecked included and excluded candidates, missing README membership, documentation roots and destinations against the post-fix and refreshed tree. No project content edits occurred, coverage still holds, and no additional paths are needed.",
               "evidence": [
-                "The canonical-labels fix returned unchanged for lutzseverino/repo-canon.",
-                "The pull-request-integration fix returned unchanged for lutzseverino/repo-canon, with no confirmation or deferred requirement."
+                "canonical-labels returned unchanged for lutzseverino/repo-canon.",
+                "pull-request-integration returned unchanged for lutzseverino/repo-canon; Git remotes and authenticated owner resolve the same repository."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Rechecked included and excluded candidates against the post-fix and refreshed tree. No content edits occurred and the reviewed coverage still holds; no additional paths are needed.",
+              "explanation": "Rechecked included and excluded candidates, missing README membership, documentation roots and destinations against the post-fix and refreshed tree. No project content edits occurred, coverage still holds, and no additional paths are needed.",
               "evidence": [
-                "The canonical-labels fix returned unchanged for lutzseverino/repo-canon.",
-                "The pull-request-integration fix returned unchanged for lutzseverino/repo-canon, with no confirmation or deferred requirement."
+                "canonical-labels returned unchanged for lutzseverino/repo-canon.",
+                "pull-request-integration returned unchanged for lutzseverino/repo-canon; Git remotes and authenticated owner resolve the same repository."
               ],
               "additionalPaths": []
             }
@@ -1373,28 +1385,28 @@
         {
           "id": "project-readmes",
           "status": "satisfied",
-          "explanation": "The repository is one root standards-source Project; no non-root Project needs a README.",
+          "explanation": "The repository has one root project and no independently maintained nested Project requiring a README. The empty scope is intentional.",
           "changedPaths": [],
           "evidence": [
-            "package.json owns development and validation for operations, discovery, scripts and the integrated factory; docs/development/README.md names the shared commands.",
-            "test holds fixtures and harnesses, vendor preserves upstream material, and docs holds documentation; none has independent Project development commands."
+            "package.json owns the shared validation commands for operations, scripts, discovery and integrated factory; docs/development/README.md documents them.",
+            "test contains fixtures and harnesses; vendor preserves upstream snapshots and dependency provenance; docs contains documentation. Existing vendor READMEs describe provenance rather than independent project commands."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Rechecked included and excluded candidates against the post-fix and refreshed tree. No content edits occurred and the reviewed coverage still holds; no additional paths are needed.",
+              "explanation": "Rechecked included and excluded candidates, missing README membership, documentation roots and destinations against the post-fix and refreshed tree. No project content edits occurred, coverage still holds, and no additional paths are needed.",
               "evidence": [
-                "package.json owns development and validation for operations, discovery, scripts and the integrated factory; docs/development/README.md names the shared commands.",
-                "test holds fixtures and harnesses, vendor preserves upstream material, and docs holds documentation; none has independent Project development commands."
+                "package.json owns the shared validation commands for operations, scripts, discovery and integrated factory; docs/development/README.md documents them.",
+                "test contains fixtures and harnesses; vendor preserves upstream snapshots and dependency provenance; docs contains documentation. Existing vendor READMEs describe provenance rather than independent project commands."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Rechecked included and excluded candidates against the post-fix and refreshed tree. No content edits occurred and the reviewed coverage still holds; no additional paths are needed.",
+              "explanation": "Rechecked included and excluded candidates, missing README membership, documentation roots and destinations against the post-fix and refreshed tree. No project content edits occurred, coverage still holds, and no additional paths are needed.",
               "evidence": [
-                "package.json owns development and validation for operations, discovery, scripts and the integrated factory; docs/development/README.md names the shared commands.",
-                "test holds fixtures and harnesses, vendor preserves upstream material, and docs holds documentation; none has independent Project development commands."
+                "package.json owns the shared validation commands for operations, scripts, discovery and integrated factory; docs/development/README.md documents them.",
+                "test contains fixtures and harnesses; vendor preserves upstream snapshots and dependency provenance; docs contains documentation. Existing vendor READMEs describe provenance rather than independent project commands."
               ],
               "additionalPaths": []
             }
@@ -1403,21 +1415,22 @@
         {
           "id": "repository-license",
           "status": "satisfied",
-          "explanation": "The root has one clear MIT License with the maintainer copyright notice; no competing root license needs reconciliation.",
+          "explanation": "The existing root MIT License is clear and matches the selected license; there is no competing root license to reconcile.",
           "changedPaths": [],
           "evidence": [
-            "LICENSE is the MIT License, Copyright (c) 2026 Jasper Lutz Severino.",
-            "Root LICENSE* inventory contains only LICENSE; third-party notices retain upstream terms separately."
+            "LICENSE is the only root LICENSE* file and contains the MIT License, Copyright (c) 2026 Jasper Lutz Severino.",
+            "THIRD_PARTY_NOTICES.md and vendored licenses preserve upstream material terms separately."
           ]
         },
         {
           "id": "repository-readme",
           "status": "satisfied",
-          "explanation": "The existing README accurately presents Repo Canon, user installation, features and inspection, with the required pointer sections.",
+          "explanation": "README.md accurately introduces Repo Canon and its install and inspection route, with ordered applicable sections, technology badges and pointer sections; no edits are needed.",
           "changedPaths": [],
           "evidence": [
-            "README.md has the centered Repo Canon title and description, JavaScript and Node.js 24 badges, unversioned global CLI installation and a v0.9.4 inspection example.",
-            "The ordered Features, Usage, Documentation, Contributing and License sections describe the source and link to docs/README.md, CONTRIBUTING.md and MIT LICENSE."
+            "README.md has a centered title and description, JavaScript and Node.js 24 badges matching the .mjs/.ts sources and package.json engines.",
+            "Installation uses an unversioned external global CLI install; Usage inspects the published v0.10.0 complete profile with CLI 6.0.0 or newer, matching the released manifest.",
+            "Features describe declared configuration, validators, 28 upstream skills plus babysit, and the factory. Documentation, Contributing and MIT License sections are plain links to existing targets."
           ]
         }
       ]

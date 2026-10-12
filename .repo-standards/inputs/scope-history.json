@@ -1,7 +1,7 @@
 {
   "format": "repo-standards/scope-history/v5",
   "evidence": "historical",
-  "inspection": "sha256:2080b92343e1f7c95e0bbc057abb783dfea60a5993d00b09ab9d7a0efa13df8d",
+  "inspection": "sha256:dec54dbb8b9ce290dbad0968f8a0a730d4e372db7521ef01a25afb304ee90922",
   "resolved": {
     "description": "The complete Repo Canon standards profile",
     "declarations": [
@@ -96,6 +96,7 @@
             "docs/development/release.md",
             "docs/development/repository-readme-check.md",
             "docs/development/sandbox-image-check.md",
+            "docs/development/sandbox-image-workflow.md",
             "docs/development/skill-exercises.md",
             "docs/development/source-profile.md",
             "docs/development/upstream-compatibility.md",
@@ -174,6 +175,14 @@
         "kind": "file",
         "target": ".sandcastle/Dockerfile",
         "guidance": "guidance/factory-sandbox-image.md"
+      },
+      {
+        "id": "factory-sandbox-image-workflow",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".github/workflows/sandbox-image.yml",
+        "exact": ".github/workflows/sandbox-image.yml"
       },
       {
         "id": "feature-request-template",
@@ -835,6 +844,14 @@
         "guidance": "guidance/factory-sandbox-image.md"
       },
       {
+        "id": "factory-sandbox-image-workflow",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".github/workflows/sandbox-image.yml",
+        "exact": ".github/workflows/sandbox-image.yml"
+      },
+      {
         "id": "feature-request-template",
         "checks": [],
         "fixes": [],
@@ -1354,13 +1371,13 @@
     ]
   },
   "discovery": {
-    "identity": "sha256:b601a4814a762c3fdefd07082b58b251631d4c6b0b0ae50cba106987478d6bd7",
+    "identity": "sha256:1897d8b4c725174f40d50544501ed9390754dfc83a76aefb6933f219b0a2322d",
     "proposal": {
       "format": "repo-standards/scope/v2",
       "declarations": [
         {
           "id": "documentation",
-          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Reviewed current root package scripts, project guidance, authoring notes, source declarations and vendor provenance: docs is the only documentation root; authoring-notes.md stays beside standards.yaml by its explicit purpose. License notices, authored discovery/guidance inputs and preserved vendor snapshots stay outside documentation categories. No moves, new indexes or link repairs are needed.",
+          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them. Reviewed source declarations, current package scripts, project guidance, vendor provenance and authoring decisions: docs is the sole documentation root; authoring-notes.md remains beside standards.yaml as project guidance requires. Vendor snapshots, license notices, and guidance/discovery source inputs are excluded. No moves or new indexes are needed; sandbox-image-workflow.md is now maintained development documentation.",
           "candidates": [
             {
               "path": "GLOSSARY.md",
@@ -1373,7 +1390,7 @@
             {
               "path": "THIRD_PARTY_NOTICES.md",
               "decision": "exclude",
-              "reason": "Redistribution license notices stay beside the licensed source.",
+              "reason": "Redistribution notices accompany licensed source at the root.",
               "evidence": [
                 "THIRD_PARTY_NOTICES.md"
               ]
@@ -1381,7 +1398,7 @@
             {
               "path": "authoring-notes.md",
               "decision": "include",
-              "reason": "Maintained confirmed authoring decisions intentionally beside standards.yaml; docs/agents/project.md names this home.",
+              "reason": "Maintained authoring decisions intentionally beside standards.yaml, as docs/agents/project.md requires.",
               "evidence": [
                 "authoring-notes.md"
               ]
@@ -1389,7 +1406,7 @@
             {
               "path": "discovery/documentation.md",
               "decision": "exclude",
-              "reason": "Authored standards input referenced by standards.yaml, not adopter documentation.",
+              "reason": "Authored standards inputs referenced by standards.yaml, rather than adopter documentation.",
               "evidence": [
                 "discovery/documentation.md"
               ]
@@ -1397,7 +1414,7 @@
             {
               "path": "discovery/github-repository-configuration.md",
               "decision": "exclude",
-              "reason": "Authored standards input referenced by standards.yaml, not adopter documentation.",
+              "reason": "Authored standards inputs referenced by standards.yaml, rather than adopter documentation.",
               "evidence": [
                 "discovery/github-repository-configuration.md"
               ]
@@ -1405,7 +1422,7 @@
             {
               "path": "discovery/project-readmes.md",
               "decision": "exclude",
-              "reason": "Authored standards input referenced by standards.yaml, not adopter documentation.",
+              "reason": "Authored standards inputs referenced by standards.yaml, rather than adopter documentation.",
               "evidence": [
                 "discovery/project-readmes.md"
               ]
@@ -1643,6 +1660,14 @@
               ]
             },
             {
+              "path": "docs/development/sandbox-image-workflow.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/development/sandbox-image-workflow.md"
+              ]
+            },
+            {
               "path": "docs/development/skill-exercises.md",
               "decision": "include",
               "reason": "A file under the documentation root `docs`.",
@@ -1709,7 +1734,7 @@
             {
               "path": "guidance/documentation.md",
               "decision": "exclude",
-              "reason": "Authored standards input referenced by standards.yaml, not adopter documentation.",
+              "reason": "Authored standards inputs referenced by standards.yaml, rather than adopter documentation.",
               "evidence": [
                 "guidance/documentation.md"
               ]
@@ -1717,7 +1742,7 @@
             {
               "path": "guidance/factory-sandbox-image.md",
               "decision": "exclude",
-              "reason": "Authored standards input referenced by standards.yaml, not adopter documentation.",
+              "reason": "Authored standards inputs referenced by standards.yaml, rather than adopter documentation.",
               "evidence": [
                 "guidance/factory-sandbox-image.md"
               ]
@@ -1725,7 +1750,7 @@
             {
               "path": "guidance/github-repository-configuration.md",
               "decision": "exclude",
-              "reason": "Authored standards input referenced by standards.yaml, not adopter documentation.",
+              "reason": "Authored standards inputs referenced by standards.yaml, rather than adopter documentation.",
               "evidence": [
                 "guidance/github-repository-configuration.md"
               ]
@@ -1733,7 +1758,7 @@
             {
               "path": "guidance/project-readmes.md",
               "decision": "exclude",
-              "reason": "Authored standards input referenced by standards.yaml, not adopter documentation.",
+              "reason": "Authored standards inputs referenced by standards.yaml, rather than adopter documentation.",
               "evidence": [
                 "guidance/project-readmes.md"
               ]
@@ -1741,7 +1766,7 @@
             {
               "path": "guidance/repository-license.md",
               "decision": "exclude",
-              "reason": "Authored standards input referenced by standards.yaml, not adopter documentation.",
+              "reason": "Authored standards inputs referenced by standards.yaml, rather than adopter documentation.",
               "evidence": [
                 "guidance/repository-license.md"
               ]
@@ -1749,7 +1774,7 @@
             {
               "path": "guidance/repository-readme.md",
               "decision": "exclude",
-              "reason": "Authored standards input referenced by standards.yaml, not adopter documentation.",
+              "reason": "Authored standards inputs referenced by standards.yaml, rather than adopter documentation.",
               "evidence": [
                 "guidance/repository-readme.md"
               ]
@@ -1765,7 +1790,7 @@
             {
               "path": "vendor/humanlayer-skills/skills/show-me/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/humanlayer-skills/skills/show-me/SKILL.md"
               ]
@@ -1773,7 +1798,7 @@
             {
               "path": "vendor/marked/README.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/marked/README.md"
               ]
@@ -1781,7 +1806,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/ask-matt/PHASE-BOUNDARIES.md"
               ]
@@ -1789,7 +1814,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/ask-matt/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/ask-matt/SKILL.md"
               ]
@@ -1797,7 +1822,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md"
               ]
@@ -1805,7 +1830,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md"
               ]
@@ -1813,7 +1838,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md"
               ]
@@ -1821,7 +1846,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md"
               ]
@@ -1829,7 +1854,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md"
               ]
@@ -1837,7 +1862,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md"
               ]
@@ -1845,7 +1870,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/GLOSSARY-FORMAT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/domain-modeling/GLOSSARY-FORMAT.md"
               ]
@@ -1853,7 +1878,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md"
               ]
@@ -1861,7 +1886,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md"
               ]
@@ -1869,7 +1894,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/implement-spec/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/implement-spec/SKILL.md"
               ]
@@ -1877,7 +1902,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md"
               ]
@@ -1885,7 +1910,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md"
               ]
@@ -1893,7 +1918,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md"
               ]
@@ -1901,7 +1926,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/pr/CREDITS.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/pr/CREDITS.md"
               ]
@@ -1909,7 +1934,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/pr/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/pr/SKILL.md"
               ]
@@ -1917,7 +1942,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md"
               ]
@@ -1925,7 +1950,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md"
               ]
@@ -1933,7 +1958,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/prototype/UI.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/prototype/UI.md"
               ]
@@ -1941,7 +1966,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/research/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/research/SKILL.md"
               ]
@@ -1949,7 +1974,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/retro/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/retro/SKILL.md"
               ]
@@ -1957,7 +1982,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md"
               ]
@@ -1965,7 +1990,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
               ]
@@ -1973,7 +1998,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md"
               ]
@@ -1981,7 +2006,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md"
               ]
@@ -1989,7 +2014,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md"
               ]
@@ -1997,7 +2022,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md"
               ]
@@ -2005,7 +2030,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md"
               ]
@@ -2013,7 +2038,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md"
               ]
@@ -2021,7 +2046,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/tdd/tests.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/tdd/tests.md"
               ]
@@ -2029,7 +2054,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md"
               ]
@@ -2037,7 +2062,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md"
               ]
@@ -2045,7 +2070,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md"
               ]
@@ -2053,7 +2078,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md"
               ]
@@ -2061,7 +2086,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md"
               ]
@@ -2069,7 +2094,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md"
               ]
@@ -2077,7 +2102,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/engineering/wizard/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/engineering/wizard/SKILL.md"
               ]
@@ -2085,7 +2110,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/grill-me/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/grill-me/SKILL.md"
               ]
@@ -2093,7 +2118,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md"
               ]
@@ -2101,7 +2126,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/handoff/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/handoff/SKILL.md"
               ]
@@ -2109,7 +2134,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/GLOSSARY-FORMAT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/GLOSSARY-FORMAT.md"
               ]
@@ -2117,7 +2142,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/LEARNING-RECORD-FORMAT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/LEARNING-RECORD-FORMAT.md"
               ]
@@ -2125,7 +2150,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/MISSION-FORMAT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/MISSION-FORMAT.md"
               ]
@@ -2133,7 +2158,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/RESOURCES-FORMAT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/RESOURCES-FORMAT.md"
               ]
@@ -2141,7 +2166,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/teach/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/teach/SKILL.md"
               ]
@@ -2149,7 +2174,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/to-questionnaire/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/to-questionnaire/SKILL.md"
               ]
@@ -2157,7 +2182,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/wait-what/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/wait-what/SKILL.md"
               ]
@@ -2165,7 +2190,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md"
               ]
@@ -2173,7 +2198,7 @@
             {
               "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md"
               ]
@@ -2181,7 +2206,7 @@
             {
               "path": "vendor/parse5/README.md",
               "decision": "exclude",
-              "reason": "Preserved upstream snapshot or dependency provenance; not repository documentation.",
+              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
               "evidence": [
                 "vendor/parse5/README.md"
               ]
@@ -2191,18 +2216,18 @@
         },
         {
           "id": "github-repository-configuration",
-          "coverage": "Intentional empty project-content scope. The authorized self-adoption includes repeat-safe remote setup for the unambiguous origin lutzseverino/repo-canon; preserve unrelated settings and stop if an overwrite needs confirmation.",
+          "coverage": "Intentionally empty local scope: only the authored operations configure remote GitHub settings on lutzseverino/repo-canon. The maintainer authorized this update and existing setup preservation.",
           "candidates": [],
           "unresolved": []
         },
         {
           "id": "project-readmes",
-          "coverage": "Repo Canon is one standards source developed from the root package.json and docs/development/README.md. Operations, discovery, scripts and factory are integrated components with root validation commands, not independently developed Projects; test trees are fixtures, vendor contains preserved upstream snapshots, and docs are documentation. There are no maintained non-root Projects needing a Project README.",
+          "coverage": "Reviewed the root package.json, development guide, factory instructions and vendor README provenance. The root package owns all maintenance and validation; integrated operations, factory, discovery and scripts have no independent Project commands; test fixtures, vendored snapshots and documentation are excluded. No missing Project README is needed.",
           "candidates": [
             {
               "path": ".sandcastle",
               "decision": "exclude",
-              "reason": "Integrated standards-source component validated by the root package scripts, without separate Project development commands.",
+              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development commands; no independent Project with its own development commands.",
               "evidence": [
                 ".sandcastle",
                 "docs/development/README.md",
@@ -2212,7 +2237,7 @@
             {
               "path": "discovery",
               "decision": "exclude",
-              "reason": "Integrated standards-source component validated by the root package scripts, without separate Project development commands.",
+              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development commands; no independent Project with its own development commands.",
               "evidence": [
                 "discovery",
                 "docs/development/README.md",
@@ -2222,7 +2247,7 @@
             {
               "path": "docs",
               "decision": "exclude",
-              "reason": "Documentation organization, not a Project.",
+              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development commands; no independent Project with its own development commands.",
               "evidence": [
                 "docs",
                 "docs/development/README.md",
@@ -2232,7 +2257,7 @@
             {
               "path": "operations",
               "decision": "exclude",
-              "reason": "Integrated standards-source component validated by the root package scripts, without separate Project development commands.",
+              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development commands; no independent Project with its own development commands.",
               "evidence": [
                 "docs/development/README.md",
                 "operations",
@@ -2242,7 +2267,7 @@
             {
               "path": "scripts",
               "decision": "exclude",
-              "reason": "Integrated standards-source component validated by the root package scripts, without separate Project development commands.",
+              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development commands; no independent Project with its own development commands.",
               "evidence": [
                 "docs/development/README.md",
                 "package.json",
@@ -2252,7 +2277,7 @@
             {
               "path": "test",
               "decision": "exclude",
-              "reason": "Test fixtures and harnesses, not maintained Projects.",
+              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development commands; no independent Project with its own development commands.",
               "evidence": [
                 "docs/development/README.md",
                 "package.json",
@@ -2262,7 +2287,7 @@
             {
               "path": "vendor",
               "decision": "exclude",
-              "reason": "Preserved upstream source snapshots, not a maintained Project.",
+              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development commands; no independent Project with its own development commands.",
               "evidence": [
                 "docs/development/README.md",
                 "package.json",
@@ -2359,7 +2384,7 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "76ae00d13d89d4f6de3742b900553c83a6047827eb6dfb188578b2875b7d4850",
+          "sha256": "b5511d1a3de7916fdb9402b9897d51f13c4a000e3f92119e0df9f8d192d2afbf",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
@@ -2409,7 +2434,12 @@
         },
         "docs/development/sandbox-image-check.md": {
           "type": "file",
-          "sha256": "f2405bbe784a1c026084c70622201ae46abac1301c56d67f5aa2a4f1b667a2c4",
+          "sha256": "edc43c6d1e86139e6dfea8d1553ec14330dd1736e46b0a7c0074fc22c8f45cad",
+          "executable": false
+        },
+        "docs/development/sandbox-image-workflow.md": {
+          "type": "file",
+          "sha256": "9571d13207b248ee14577717522d16ae23e323a9cad32698ab2035253d504cb3",
           "executable": false
         },
         "docs/development/skill-exercises.md": {
@@ -2419,7 +2449,7 @@
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "1793e74234cdbac0e0e9d7e551821a8a1e80a5ce88a2b3b7852f9379f9100a0a",
+          "sha256": "ce567bf203eaaac22837d26ed702bb1e53b4619866a38dc0d2bae155217df23a",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
@@ -2434,7 +2464,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "7af580c02fe43f3b16adc886cc4a069f74a88d6b8119fc19b334671e7dac92f6",
+          "sha256": "54d0a042c98a7a70c8ee92726418f83e14b497057beae172713b014f86d9b4a8",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -2444,7 +2474,7 @@
         },
         "docs/usage/run-the-factory.md": {
           "type": "file",
-          "sha256": "d9ab1e29edea5f2f46662297040cf3d12d4f32b9e8c4ec209b98c298337991cb",
+          "sha256": "0695523530597e12359eb38e1b3ed9026b0fbd2d670e49a6f3f0566b3eb3098b",
           "executable": false
         },
         "docs/usage/versioning.md": {
@@ -2533,12 +2563,12 @@
         },
         ".agents/skills/babysit/SKILL.md": {
           "type": "file",
-          "sha256": "207c1f16973c66e601f357c6ccf3d395de0a9f7725d8a164a9a40e520aa3b7e6",
+          "sha256": "eebfa0487ceb788e590d150a54e5b88051f649b3d01b40ec777d2cb82ed30e25",
           "executable": false
         },
         ".agents/skills/babysit/wait.mjs": {
           "type": "file",
-          "sha256": "b7d0b2f58a663c352a8a4301c20524cc15d59bec6423aa315fe87e2a17ceb44a",
+          "sha256": "a2274402df4d4f3f13f7f8e94545a6924b2c0bbcf9b3bb4c5f1c551650304138",
           "executable": false
         },
         ".agents/skills/code-review/SKILL.md": {
@@ -3110,6 +3140,11 @@
           "sha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82",
           "executable": false
         },
+        ".github/workflows/sandbox-image.yml": {
+          "type": "file",
+          "sha256": "6f424ecd4512b723d09e4930b342e7ac56767d752573cff62ef2923adaeaec22",
+          "executable": false
+        },
         ".gitignore": {
           "type": "file",
           "sha256": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
@@ -3137,17 +3172,17 @@
         },
         ".sandcastle/adapter.ts": {
           "type": "file",
-          "sha256": "fe89956d204b7047cf992f24f297823bac6456ea6e92e4cc3a71cd58c36e1231",
+          "sha256": "dd649f49e13e072b160c19619a74d28d9fefdd9689a06c4e898d227f91ff036c",
           "executable": false
         },
         ".sandcastle/factory.ts": {
           "type": "file",
-          "sha256": "ae37bf7a0560893374e3c4a4f67fbc6f3b26ad6f8f8c7c8ec7367a6a60fc4cb2",
+          "sha256": "df0208bb8de5d48180449b0c77983c3828207dd9bb7f0a4a69567819bbe6faf4",
           "executable": false
         },
         ".sandcastle/main.ts": {
           "type": "file",
-          "sha256": "bbc8fcc396b6745de5bff6d9c59d412dff340c4c8b1611cea1742c582f7049f5",
+          "sha256": "ad0cd80ad2d86a1ad855aa7f6ff48118af4eff6cf87dbb866d590551c1dc1620",
           "executable": false
         },
         "AGENTS.md": {
@@ -3172,7 +3207,7 @@
         },
         "README.md": {
           "type": "file",
-          "sha256": "11e34f59057882ead079b7fb41a2f3fb6e221d2a90b6407372e5bc62e1ccaaaf",
+          "sha256": "88e01d0482791d40b21ac3aa9e757db84b4ec8580b5e0dbd1cd0e8a1b74b3613",
           "executable": false
         },
         "THIRD_PARTY_NOTICES.md": {
@@ -3297,7 +3332,7 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "76ae00d13d89d4f6de3742b900553c83a6047827eb6dfb188578b2875b7d4850",
+          "sha256": "b5511d1a3de7916fdb9402b9897d51f13c4a000e3f92119e0df9f8d192d2afbf",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
@@ -3347,7 +3382,12 @@
         },
         "docs/development/sandbox-image-check.md": {
           "type": "file",
-          "sha256": "f2405bbe784a1c026084c70622201ae46abac1301c56d67f5aa2a4f1b667a2c4",
+          "sha256": "edc43c6d1e86139e6dfea8d1553ec14330dd1736e46b0a7c0074fc22c8f45cad",
+          "executable": false
+        },
+        "docs/development/sandbox-image-workflow.md": {
+          "type": "file",
+          "sha256": "9571d13207b248ee14577717522d16ae23e323a9cad32698ab2035253d504cb3",
           "executable": false
         },
         "docs/development/skill-exercises.md": {
@@ -3357,7 +3397,7 @@
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "1793e74234cdbac0e0e9d7e551821a8a1e80a5ce88a2b3b7852f9379f9100a0a",
+          "sha256": "ce567bf203eaaac22837d26ed702bb1e53b4619866a38dc0d2bae155217df23a",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
@@ -3372,7 +3412,7 @@
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "7af580c02fe43f3b16adc886cc4a069f74a88d6b8119fc19b334671e7dac92f6",
+          "sha256": "54d0a042c98a7a70c8ee92726418f83e14b497057beae172713b014f86d9b4a8",
           "executable": false
         },
         "docs/usage/prepare-agent-guidance.md": {
@@ -3382,7 +3422,7 @@
         },
         "docs/usage/run-the-factory.md": {
           "type": "file",
-          "sha256": "d9ab1e29edea5f2f46662297040cf3d12d4f32b9e8c4ec209b98c298337991cb",
+          "sha256": "0695523530597e12359eb38e1b3ed9026b0fbd2d670e49a6f3f0566b3eb3098b",
           "executable": false
         },
         "docs/usage/versioning.md": {
@@ -3397,7 +3437,7 @@
         },
         "guidance/factory-sandbox-image.md": {
           "type": "file",
-          "sha256": "6db7bebb27083ce42c9725f7ec7fa0d7e2dd8b86710902acf774da061d096dc1",
+          "sha256": "1a9a5996be07f8565cdcee79b32d43ec07403c29d587806bec51e8eb6dddf0aa",
           "executable": false
         },
         "guidance/github-repository-configuration.md": {
@@ -3537,17 +3577,17 @@
         },
         "scripts/validate-issue-contract.mjs": {
           "type": "file",
-          "sha256": "d33894f51d4b12b3357f0ddbc714b12477d42b0afd0d34a4d1ecf564d83f5163",
+          "sha256": "ff9aea07640827ba4074e74c2b8f0ecaec32047e32d435a630c42eb03f5d4b8c",
           "executable": false
         },
         "standards.yaml": {
           "type": "file",
-          "sha256": "a0fed90de07c5f5db2d247bf5e093ec7b19a5586b6ab45ca2aba48538d000738",
+          "sha256": "5a56552cc4b59689e1ed0fb3789a799afb6c79391033234890e56218ebb20418",
           "executable": false
         },
         "test/babysit-wait.test.mjs": {
           "type": "file",
-          "sha256": "5824efdef4fcb5a8396a4a004a7445a2df0331931c20bf0c516e56b9d4c96fc9",
+          "sha256": "2d5f9dca83efa884cc64b5cae85ed1cfaa514f192bd44c4297a490cdcec59b2a",
           "executable": false
         },
         "test/documentation-check.test.mjs": {
@@ -3572,12 +3612,12 @@
         },
         "test/factory-adapter.test.mjs": {
           "type": "file",
-          "sha256": "df8bc76670518d4d5ca71ee2282b999948596934e91f942241b0bac20f7b1b9a",
+          "sha256": "38bfc5ee3aedfb44ab5eb08ae7aa7fde94d89897e6363bf1cdd042128f42badc",
           "executable": false
         },
         "test/factory.test.mjs": {
           "type": "file",
-          "sha256": "1df83b8c4a1c0b38bbfe44f9138fa3b89628ed5e2e01756471524ed485112180",
+          "sha256": "31427f4a960c5f49f1d6793b69d5bc2cc4073159eba8c0f116fe9e3cda5baeac",
           "executable": false
         },
         "test/fixture-builder-provenance.test.mjs": {
@@ -3587,7 +3627,7 @@
         },
         "test/fixtures/fake-gh-babysit-wait.mjs": {
           "type": "file",
-          "sha256": "b824d963d1e4073c3bf63c01c82f1892d192158b376ecabe8cec64ebceda42b0",
+          "sha256": "e0728bb481824e6a48019b6c9c59bb506c4b8bfd72133fa38eaa9d806dc6ee19",
           "executable": false
         },
         "test/fixtures/fake-gh-pr-settings.mjs": {
@@ -3662,7 +3702,7 @@
         },
         "test/issue-contract-adapter.test.mjs": {
           "type": "file",
-          "sha256": "801e8a3b3a109f792a55434703d7d4e8f56251f3ef34b7559da26079ac6c3638",
+          "sha256": "a62c8c8f3aa7453183dbfa5726d320366ad4915e667aabdceb7208224a6e6252",
           "executable": false
         },
         "test/issue-contracts.test.mjs": {
@@ -3707,7 +3747,7 @@
         },
         "test/repository-conformance.test.mjs": {
           "type": "file",
-          "sha256": "15f48e1707be99270ae0406ddb14b4dfd3552464b83826bd9f382dd9c9488ba8",
+          "sha256": "1837b00df15bad779c47d227bbbdb16dac01ac336381d7f6650431da923ba533",
           "executable": false
         },
         "test/repository-license.test.mjs": {
@@ -3725,9 +3765,14 @@
           "sha256": "07a150f15caedbb0402320d0d808c6268aa9fe0c58c126523cfbd1d3d543e58e",
           "executable": false
         },
+        "test/sandbox-image-workflow.test.mjs": {
+          "type": "file",
+          "sha256": "68b373a9b3dea5230c8818fb40f560c5fda5f7ac544c3a80dc666c30cc6c3f0e",
+          "executable": false
+        },
         "test/shared-workflows.test.mjs": {
           "type": "file",
-          "sha256": "ed7ab07faeb6fc6b97ba0e56a2a35ca306f9f71d10e32738edfda2f3076d86a3",
+          "sha256": "15bda54be6e182555cdb484ee3f639d1d321cda39fd83fb6d6ef1bf5ecc5c53e",
           "executable": false
         },
         "vendor/humanlayer-skills/LICENSE": {
@@ -4559,7 +4604,8 @@
         ".github/workflows": [
           ".github/workflows/ci.yml",
           ".github/workflows/issue-contracts.yml",
-          ".github/workflows/pr-metadata.yml"
+          ".github/workflows/pr-metadata.yml",
+          ".github/workflows/sandbox-image.yml"
         ],
         ".sandcastle": [
           ".sandcastle/.gitignore",
@@ -4614,6 +4660,7 @@
           "docs/development/release.md",
           "docs/development/repository-readme-check.md",
           "docs/development/sandbox-image-check.md",
+          "docs/development/sandbox-image-workflow.md",
           "docs/development/skill-exercises.md",
           "docs/development/source-profile.md",
           "docs/development/upstream-compatibility.md"
@@ -4695,6 +4742,7 @@
           "test/repository-license.test.mjs",
           "test/repository-readme-check.test.mjs",
           "test/sandbox-image-check.test.mjs",
+          "test/sandbox-image-workflow.test.mjs",
           "test/shared-workflows.test.mjs"
         ],
         "test/fixtures": [
@@ -5966,5 +6014,13 @@
       }
     }
   },
-  "scopeChanges": []
+  "scopeChanges": [
+    {
+      "id": "documentation",
+      "additions": [
+        "docs/development/sandbox-image-workflow.md"
+      ],
+      "removals": []
+    }
+  ]
 }
