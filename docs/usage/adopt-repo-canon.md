@@ -54,7 +54,7 @@ describes.
 
 ## Inspect the published source
 
-The latest [published release, `v0.9.3`](https://github.com/lutzseverino/repo-canon/releases/tag/v0.9.3),
+The latest [published release, `v0.9.4`](https://github.com/lutzseverino/repo-canon/releases/tag/v0.9.4),
 requires CLI 6.0.0 or newer and uses operation/result v2. Before updating an
 existing adoption, review the breaking standards changes and migration steps of
 each release since the adopted one.
@@ -62,7 +62,7 @@ Run the first inspection from the adopting repository:
 
 ```sh
 project_root=/path/to/adopting-project
-source_tag=v0.9.3
+source_tag=v0.9.4
 
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
