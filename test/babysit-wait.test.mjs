@@ -617,6 +617,128 @@ test("workflows sharing a display name do not supersede each other", () => {
 
 const runUrl = (id) => `https://github.com/owner/repo/actions/runs/${id}`;
 
+test("an older passing check does not hide a later run's startup failure", () => {
+  const older = { ...failedRun, conclusion: "success", html_url: runUrl(21) };
+  const latest = {
+    ...failedRun,
+    conclusion: "startup_failure",
+    run_started_at: "2026-10-11T05:41:00Z",
+    html_url: runUrl(23),
+  };
+  const outcome = decision({
+    checks: [
+      {
+        name: "test",
+        workflowName: "CI",
+        state: "pass",
+        link: `${runUrl(21)}/job/1`,
+        checkRunStartedAt: "2026-10-11T05:40:01Z",
+      },
+    ],
+    runs: [older, latest],
+    comments: codexStates.unavailable.comments,
+  });
+  assert.equal(outcome.code, 2);
+  assert.deepEqual(outcome.failing, [
+    { name: "CI", state: "fail", link: runUrl(23) },
+  ]);
+});
+
+test("a prior attempt's passing check does not hide a failed rerun", () => {
+  const latest = {
+    ...failedRun,
+    conclusion: "startup_failure",
+    run_attempt: 2,
+    run_started_at: "2026-10-11T05:41:00Z",
+    html_url: runUrl(21),
+  };
+  const outcome = decision({
+    checks: [
+      {
+        name: "test",
+        workflowName: "CI",
+        state: "pass",
+        link: `${runUrl(21)}/job/1`,
+        checkRunStartedAt: "2026-10-11T05:40:01Z",
+      },
+    ],
+    runs: [latest],
+  });
+  assert.equal(outcome.code, 2);
+  assert.deepEqual(outcome.failing, [
+    { name: "CI", state: "fail", link: runUrl(21) },
+  ]);
+});
+
+test("a failed check from the latest run or attempt is listed once", () => {
+  const older = { ...failedRun, conclusion: "success", html_url: runUrl(21) };
+  for (const id of [21, 23]) {
+    const latest = {
+      ...failedRun,
+      run_started_at: "2026-10-11T05:41:00Z",
+      html_url: runUrl(id),
+    };
+    for (const checkRunStartedAt of [
+      "2026-10-11T05:41:00Z",
+      "2026-10-11T05:41:01Z",
+    ]) {
+      const checks = [
+        {
+          name: "test",
+          workflowName: "CI",
+          state: "fail",
+          link: `${runUrl(id)}/job/2`,
+          checkRunStartedAt,
+        },
+      ];
+      const outcome = decision({
+        checks,
+        runs: id === 21 ? [latest] : [older, latest],
+      });
+      assert.equal(outcome.code, 2);
+      assert.deepEqual(outcome.failing, checks);
+    }
+  }
+});
+
+test("a latest successful run clears an older failure alongside leftover checks", () => {
+  const older = { ...failedRun, html_url: runUrl(21) };
+  const latest = {
+    ...failedRun,
+    conclusion: "success",
+    run_started_at: "2026-10-11T05:41:00Z",
+    html_url: runUrl(23),
+  };
+  const outcome = decision({
+    checks: [
+      {
+        name: "test",
+        workflowName: "CI",
+        state: "pass",
+        link: `${runUrl(21)}/job/1`,
+        checkRunStartedAt: "2026-10-11T05:40:01Z",
+      },
+    ],
+    runs: [older, latest],
+    comments: codexStates.reviewed.comments,
+  });
+  assert.equal(outcome.code, 0);
+  assert.deepEqual(outcome.failing, []);
+});
+
+test("a check with no start time does not settle a failed run", () => {
+  for (const link of [`${runUrl(21)}/job/1`, "https://ci/job"]) {
+    const outcome = decision({
+      checks: [{ name: "test", workflowName: "CI", state: "pass", link }],
+      runs: [{ ...failedRun, html_url: runUrl(21) }],
+    });
+    assert.equal(outcome.code, 2);
+    assert.deepEqual(outcome.failing, [
+      { name: "CI", state: "fail", link: runUrl(21) },
+    ]);
+  }
+});
+
 test("checks represent only their own workflow when display names are shared", () => {
   const failed = { ...failedRun, html_url: runUrl(21) };
   const successful = {
@@ -637,6 +759,7 @@ test("checks represent only their own workflow when display names are shared", (
             workflowName: "CI",
             state,
             link: `${runUrl(id)}/job/1`,
+            checkRunStartedAt: "2026-10-11T05:40:00Z",
           },
         ];
         const outcome = decision({ checks, runs });
@@ -672,6 +795,7 @@ test("a check from an older run still represents its workflow ID", () => {
       workflowName: "CI",
       state: "fail",
       link: `${runUrl(21)}/attempts/1`,
+      checkRunStartedAt: "2026-10-11T05:41:00Z",
     },
   ];
   const outcome = decision({ checks, runs: [older, latest, unrelated] });
@@ -692,7 +816,13 @@ test("an ambiguous workflow name alone does not hide a failed run", () => {
 test("a workflow with a check uses only that check's outcome", () => {
   for (const state of ["pass", "fail", "pending"]) {
     const checks = [
-      { name: "test", workflowName: "CI", state, link: "https://ci/job" },
+      {
+        name: "test",
+        workflowName: "CI",
+        state,
+        link: "https://ci/job",
+        checkRunStartedAt: "2026-10-11T05:40:00Z",
+      },
     ];
     const look = { checks, comments: codexStates.reviewed.comments };
     assert.deepEqual(decision({ ...look, runs: [failedRun] }), decision(look));
@@ -952,12 +1082,14 @@ test("check states follow the latest run of each check", () => {
         state: "pending",
         link: "https://ci/new",
         workflowName: "ci",
+        checkRunStartedAt: "2026-10-11T05:10:00Z",
       },
       {
         name: "docs",
         state: "pass",
         link: "https://ci/docs",
         workflowName: "ci",
+        checkRunStartedAt: "2026-10-11T05:00:00Z",
       },
       { name: "deploy", state: "fail", link: "https://deploy" },
     ],
@@ -995,6 +1127,7 @@ test("queued reruns keep prior successes and failures pending in either order", 
             state: "pending",
             link: "fixture:queued",
             workflowName: "CI",
+            checkRunStartedAt: startedAt,
           },
         ]);
       }
@@ -1019,6 +1152,7 @@ test("an older unfinished run keeps a newer completed run pending", () => {
         state: "pending",
         link: "fixture:unfinished",
         workflowName: "CI",
+        checkRunStartedAt: "2026-10-11T23:00:00Z",
       },
     ]);
   }
@@ -1052,6 +1186,7 @@ test("completed runs use the later start's state and link in either order", () =
             state,
             link: "fixture:later",
             workflowName: "CI",
+            checkRunStartedAt: "2026-10-11T23:10:00Z",
           },
         ]);
       }
@@ -1098,18 +1233,21 @@ test("unfinished runs hold only their own workflow and check", () => {
         state: "pending",
         link: "fixture:previous",
         workflowName: "CI",
+        checkRunStartedAt: null,
       },
       {
         name: "Validate example",
         state: "fail",
         link: "fixture:previous",
         workflowName: "Other CI",
+        checkRunStartedAt: "2026-10-11T23:00:00Z",
       },
       {
         name: "Other check",
         state: "pass",
         link: "fixture:previous",
         workflowName: "CI",
+        checkRunStartedAt: "2026-10-11T23:00:00Z",
       },
     ],
   );
@@ -1295,6 +1433,46 @@ test("the script reports a completed failed workflow with no check (#293)", asyn
     result.stdout,
     `${head}: 1 check failed, Codex unavailable\nCI ${failedRun.html_url}\n`,
   );
+});
+
+test("the script uses check start times to settle later runs and attempts (#296)", async () => {
+  const older = { ...failedRun, conclusion: "success", html_url: runUrl(21) };
+  for (const id of [21, 23]) {
+    for (const currentCheck of [false, true]) {
+      const latest = {
+        ...failedRun,
+        conclusion: currentCheck ? "failure" : "startup_failure",
+        run_started_at: "2026-10-11T05:41:00Z",
+        html_url: runUrl(id),
+      };
+      const checkLink = `${runUrl(currentCheck ? id : 21)}/job/1`;
+      const result = await run(
+        {
+          ...pendingPullRequest,
+          checks: [
+            checkRun({
+              startedAt: currentCheck
+                ? "2026-10-11T05:41:01Z"
+                : "2026-10-11T05:40:01Z",
+              conclusion: currentCheck ? "FAILURE" : "SUCCESS",
+              detailsUrl: checkLink,
+            }),
+          ],
+          runs: id === 21 ? [latest] : [older, latest],
+          createdAt: "2026-10-11T05:00:00Z",
+          pushedAt: "2026-10-11T05:20:00Z",
+          comments: [unavailable("2026-10-11T05:40:00Z")],
+        },
+        ["12", "--limit", "0.4", "--interval", "0.1"],
+      );
+      assert.equal(result.code, 2);
+      assert.equal(result.stderr, "");
+      assert.equal(
+        result.stdout,
+        `${head}: 1 check failed, Codex unavailable\n${currentCheck ? `Validate example ${checkLink}` : `CI ${runUrl(id)}`}\n`,
+      );
+    }
+  }
 });
 
 test("the script keeps failures of workflows sharing a display name", async () => {

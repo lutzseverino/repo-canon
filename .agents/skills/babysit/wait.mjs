@@ -8,7 +8,7 @@
 //   0  checks settled and Codex reviewed the head
 //   1  usage or `gh` error
 //   2  one or more checks failed, including a workflow whose latest run failed
-//      without a check
+//      with no check from that run or attempt
 //   3  checks settled and Codex is unavailable
 //   4  checks settled and Codex did not review this head
 //   5  still waiting at the invocation limit; run it again
@@ -16,7 +16,8 @@
 // Checks settled means checks passed or no check arrived within 5 minutes
 // of a push GitHub recorded and no workflow run for the head is unfinished
 // or counted as failed.
-// A workflow whose latest run failed without a check counts as a failed check.
+// A workflow whose latest run failed with no check from that run or attempt
+// counts as a failed check.
 //
 // Usage: node wait.mjs <number> [--repo <owner/name>] [--limit <seconds>]
 //        [--interval <seconds>]
@@ -129,13 +130,15 @@ const workflowRunLink = (link) =>
   /^(.*\/actions\/runs\/\d+)(?:[/?#]|$)/.exec(link ?? "")?.[1];
 
 // Decides the outcome from one look at the pull request. `checks` holds
-// `{ name, state: "pass" | "fail" | "pending", link, workflowName? }`;
+// `{ name, state: "pass" | "fail" | "pending", link, workflowName?,
+//    checkRunStartedAt? }`, with the check run's start in `checkRunStartedAt`;
 // `runs` holds the head's GitHub Actions workflow runs as
 // `{ workflow_id, name, status, conclusion, run_started_at, html_url }`, with
 // the latest attempt's start in `run_started_at`. Check links identify their
 // workflow through its runs; a workflow name also identifies it when unique.
-// A workflow whose latest run failed without a check joins the failed checks
-// under its name and run link;
+// A check settles that workflow's latest run only if it started at or after
+// the run's latest attempt. A workflow whose latest run failed with no check
+// from that run or attempt joins the failed checks under its name and run link;
 // `requestedAt` is the latest review request; `pushedAt` is the head's push
 // time or its committer-date fallback, and `pushRecorded` says whether GitHub
 // recorded that push. The checks stay pending while the head has none and
@@ -178,8 +181,15 @@ export const decide = ({
     if (!check.workflowName) continue;
     const linkedId = workflowsByLink.get(workflowRunLink(check.link));
     const namedIds = workflowsByName.get(check.workflowName);
-    if (linkedId !== undefined) checkedWorkflows.add(linkedId);
-    else if (namedIds?.size === 1) checkedWorkflows.add([...namedIds][0]);
+    const workflowId =
+      linkedId ?? (namedIds?.size === 1 ? [...namedIds][0] : undefined);
+    const run = latestRuns.get(workflowId);
+    if (
+      run &&
+      Date.parse(check.checkRunStartedAt) >= Date.parse(run.run_started_at)
+    ) {
+      checkedWorkflows.add(workflowId);
+    }
   }
   const failingRuns = [...latestRuns.values()]
     .filter(
@@ -293,7 +303,12 @@ export const checkStates = (rollup) => {
             ? "fail"
             : "pass",
         link: isRun ? item.detailsUrl : item.targetUrl,
-        ...(isRun ? { workflowName: item.workflowName } : {}),
+        ...(isRun
+          ? {
+              workflowName: item.workflowName,
+              checkRunStartedAt: item.startedAt,
+            }
+          : {}),
       },
     });
   }
