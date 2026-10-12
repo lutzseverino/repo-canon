@@ -300,7 +300,14 @@ test("babysit waits only through its script, and the guide owns the no-review ru
     babysit,
     /When pushed fixes change enough to warrant another look/,
   );
-  assert.doesNotMatch(babysit, /5 minutes|30 minutes/);
+  assert.match(
+    babysit,
+    /"checks passed" also covers no check arriving within 5 minutes of the push, with no unfinished workflow run for the head/,
+  );
+  assert.doesNotMatch(
+    babysit,
+    /5 minutes of the latest review request|30 minutes/,
+  );
   const guide = flowedText("CONTRIBUTING.md");
   assert.match(
     guide,
