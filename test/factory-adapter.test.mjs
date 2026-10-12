@@ -1547,6 +1547,13 @@ test("confirmation-required updates file one triage issue naming every reason in
   const [issue] = run.github.state.created;
   assert.equal(issue.label, "needs-triage");
   assert.match(issue.title, /v0.6.0 with CLI 6.0.0/);
+  assert.match(issue.body, /This update requires confirmation\./);
+  assert.match(issue.body, /### Confirmation reasons\n/);
+  assert.match(
+    issue.body,
+    /Triage whether to accept these changes before adopting the update\./,
+  );
+  assert.doesNotMatch(issue.body, /Workflows permission|### Workflow changes/);
   assert.match(issue.body, /discarded-edit: `CONTRIBUTING.md`/);
   assert.match(issue.body, /discarded-edit: `AGENTS.md`/);
   assert.match(issue.body, /sha256:candidate/);
@@ -2000,7 +2007,7 @@ test("triage issues filed while a candidate waits for capacity hold it before im
   assert.match(run.reports.join("\n"), /update held by triage issue #10/);
 });
 
-test("workflow-changing updates file one owner issue with workflow and discarded-edit reasons", async () => {
+test("workflow-only updates ask for owner delivery without confirmation", async () => {
   const run = factory({
     issues: [],
     updates: {
@@ -2015,10 +2022,6 @@ test("workflow-changing updates file one owner issue with workflow and discarded
           { target: ".github/workflows/skill.yml", action: "replace" },
         ],
         removed: [{ target: ".github/workflows/old.yml" }],
-        confirmation: {
-          required: false,
-          reasons: [{ change: "discarded-edit", target: "AGENTS.md" }],
-        },
       },
     },
   });
@@ -2030,14 +2033,60 @@ test("workflow-changing updates file one owner issue with workflow and discarded
     "replace: `.github/workflows/ci.yml`",
     "replace: `.github/workflows/skill.yml`",
     "remove: `.github/workflows/old.yml`",
-    "discarded-edit: `AGENTS.md`",
   ])
     assert.ok(issue.body.includes(reason));
   assert.match(issue.body, /Workflows permission/);
+  assert.match(
+    issue.body,
+    /person with Workflows permission must deliver this update/,
+  );
+  assert.match(issue.body, /factory's GitHub App has no Workflows permission/);
+  assert.match(issue.body, /### Workflow changes\n/);
+  assert.doesNotMatch(
+    issue.body,
+    /confirmation|confirming|Triage whether to accept/,
+  );
+  assert.match(issue.body, /Inspection identity: `sha256:candidate`/);
+  assert.match(issue.body, /Reinspect before adopting/);
   run.time.now = new Date("2026-10-10T12:00:00Z");
   await run.tick();
   assert.equal(run.github.state.created.length, 1);
   assert.equal(run.sandcastle.launched.length, 0);
+});
+
+test("updates needing confirmation and owner delivery keep their reasons and instructions apart", async () => {
+  const run = factory({
+    issues: [],
+    updates: {
+      outdated: available,
+      inspection: {
+        ...routineInspection,
+        confirmation: {
+          required: true,
+          reasons: [{ change: "discarded-edit", target: "AGENTS.md" }],
+        },
+        exact: [{ target: ".github/workflows/ci.yml", action: "replace" }],
+      },
+    },
+  });
+  await run.tick();
+  const [issue] = run.github.state.created;
+  assert.match(issue.body, /This update requires confirmation\./);
+  assert.match(issue.body, /factory's GitHub App has no Workflows permission/);
+  const confirmation = issue.body.match(
+    /### Confirmation reasons\n([\s\S]*?)\n### Workflow changes/,
+  )[1];
+  const workflows = issue.body.match(
+    /### Workflow changes\n([\s\S]*?)\n### Desired outcome/,
+  )[1];
+  assert.match(confirmation, /discarded-edit: `AGENTS.md`/);
+  assert.doesNotMatch(confirmation, /\.github\/workflows|Workflows permission/);
+  assert.match(workflows, /replace: `\.github\/workflows\/ci.yml`/);
+  assert.doesNotMatch(workflows, /discarded-edit|AGENTS\.md/);
+  assert.match(
+    issue.body,
+    /Triage whether to accept these changes before adopting the update\.\n\nA person with Workflows permission must deliver this update\./,
+  );
 });
 
 function gitRepositories(t) {
@@ -2157,17 +2206,31 @@ test("an update's uninspected workflow changes file an owner issue and hold the 
   const [launch] = run.sandcastle.launched;
   repo.command(["checkout", "--quiet", "-b", launch.branch]);
   writeFileSync(join(repo.root, ".github/workflows/old.yml"), "changed\n");
+  writeFileSync(join(repo.root, ".github/workflows/new.yml"), "new\n");
   repo.command(["add", "."]);
   repo.command(["commit", "--quiet", "-m", "operation changes workflow"]);
   launch.finish();
   await settled();
   await run.tick();
   assert.equal(run.github.state.created.length, 1);
+  const { body } = run.github.state.created[0];
+  const workflows = body.match(
+    /### Workflow changes\n([\s\S]*?)\n### Desired outcome/,
+  )[1];
   assert.match(
-    run.github.state.created[0].body,
+    workflows,
     /refused workflow push: `\.github\/workflows\/old.yml`/,
   );
-  assert.match(run.github.state.created[0].body, /Workflows permission/);
+  assert.match(
+    workflows,
+    /refused workflow push: `\.github\/workflows\/new.yml`/,
+  );
+  assert.match(
+    body,
+    /person with Workflows permission must deliver this update/,
+  );
+  assert.match(body, /factory's GitHub App has no Workflows permission/);
+  assert.doesNotMatch(body, /confirmation|confirming|Triage whether to accept/);
   run.time.now = new Date("2026-10-10T12:00:00Z");
   await run.tick();
   assert.equal(run.github.state.created.length, 1);
