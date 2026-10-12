@@ -2,8 +2,8 @@
 
 // Waits for a pull request's checks and Codex's review of its head commit,
 // polling GitHub with `gh`. It prints nothing while waiting and one line when
-// it exits, plus one line per failing check, and its exit code names the
-// outcome:
+// it exits, starting with the head's full SHA, plus one line per failing
+// check, and its exit code names the outcome:
 //
 //   0  checks passed and Codex reviewed the head
 //   1  usage or `gh` error
@@ -114,14 +114,19 @@ const codexState = ({ head, requestedAt, pushedAt, comments, now }) => {
 };
 
 // Decides the outcome from one look at the pull request. `checks` holds
-// `{ name, state: "pass" | "fail" | "pending", link }`; `requestedAt` is the
-// latest review request and `pushedAt` the head's push. A failed check ends
-// the wait unless Codex is reviewing, so its findings arrive with the
-// failures. It returns `code: null` while the outcome is unsettled and the
-// invocation limit is not reached.
+// `{ name, state: "pass" | "fail" | "pending", link }`; `runs` holds the
+// head's GitHub Actions workflow runs as `{ status }`;
+// `requestedAt` is the latest review request and `pushedAt` the head's push.
+// The checks stay pending while the head has none, or while any check or run
+// is unfinished: a new head's checks and a queued rerun can be missing from
+// the rollup while their runs are already listed. A failed check ends the wait
+// unless Codex is reviewing, so its findings arrive with the failures. It
+// returns `code: null` while the outcome is unsettled and the invocation limit
+// is not reached.
 export const decide = ({
   head,
   checks,
+  runs = [],
   requestedAt,
   pushedAt,
   comments,
@@ -131,7 +136,10 @@ export const decide = ({
 }) => {
   const codex = codexState({ head, requestedAt, pushedAt, comments, now });
   const failing = checks.filter((check) => check.state === "fail");
-  const checksPending = checks.some((check) => check.state === "pending");
+  const checksPending =
+    checks.length === 0 ||
+    checks.some((check) => check.state === "pending") ||
+    runs.some((run) => run.status !== "completed");
   if (!checksPending && failing.length > 0 && codex !== "reviewing") {
     return { code: 2, codex, failing };
   }
@@ -156,7 +164,6 @@ const codexPhrases = {
 // The lines the script prints for a decided outcome.
 // A failing check is listed even while the script still waits.
 export const report = (outcome, head) => {
-  const sha = head.slice(0, 7);
   const count = outcome.failing.length;
   const failed = `${count} check${count === 1 ? "" : "s"} failed`;
   let line;
@@ -171,7 +178,7 @@ export const report = (outcome, head) => {
     line = `${count === 0 ? "checks passed" : failed}, ${codexPhrases[outcome.codex]}`;
   }
   return [
-    `${sha}: ${line}`,
+    `${head}: ${line}`,
     ...outcome.failing.map((check) => `${check.name} ${check.link}`),
   ];
 };
@@ -267,9 +274,24 @@ const parseArguments = (argv) => {
   return { number: positional[0], ...options };
 };
 
-// Reads one look at the pull request. The head's push time is when GitHub
-// recorded its push, else its committer date, and never before the pull
-// request opened; it is cached per head.
+// When GitHub recorded the push of the pull request's head, else its
+// committer date, and never before the pull request opened.
+const pushTime = async (pull) => {
+  const head = pull.headRefOid;
+  const activity = await gh([
+    "api",
+    `repos/{owner}/{repo}/activity?ref=${encodeURIComponent(`refs/heads/${pull.headRefName}`)}&per_page=100`,
+  ]).catch(() => []);
+  const pushedAt =
+    activity.find((entry) => entry.after === head)?.timestamp ??
+    (await gh(["api", `repos/{owner}/{repo}/commits/${head}`])).commit
+      .committer.date;
+  return Math.max(Date.parse(pushedAt), Date.parse(pull.createdAt));
+};
+
+// Reads one look at the pull request. The head's workflow runs are read by
+// its SHA, which also finds `pull_request_target` runs; its push time is
+// cached per head.
 const look = async (number, pushTimes) => {
   const [pull, pages] = await Promise.all([
     gh([
@@ -292,25 +314,24 @@ const look = async (number, pushTimes) => {
     body: comment.body ?? "",
   }));
   const head = pull.headRefOid;
-  if (!pushTimes.has(head)) {
-    const activity = await gh([
+  const [runs, pushedAt] = await Promise.all([
+    gh([
       "api",
-      `repos/{owner}/{repo}/activity?ref=${encodeURIComponent(`refs/heads/${pull.headRefName}`)}&per_page=100`,
-    ]).catch(() => []);
-    const pushedAt =
-      activity.find((entry) => entry.after === head)?.timestamp ??
-      (await gh(["api", `repos/{owner}/{repo}/commits/${head}`])).commit
-        .committer.date;
-    pushTimes.set(
-      head,
-      Math.max(Date.parse(pushedAt), Date.parse(pull.createdAt)),
-    );
-  }
+      `repos/{owner}/{repo}/actions/runs?head_sha=${head}&per_page=100`,
+      "--paginate",
+      "--slurp",
+    ]),
+    pushTimes.get(head) ?? pushTime(pull),
+  ]);
+  pushTimes.set(head, pushedAt);
   return {
     head,
     checks: checkStates(pull.statusCheckRollup),
+    runs: runs
+      .flatMap((page) => page.workflow_runs)
+      .map(({ status }) => ({ status })),
     requestedAt: reviewRequestedAt(Date.parse(pull.createdAt), comments),
-    pushedAt: pushTimes.get(head),
+    pushedAt,
     comments,
   };
 };

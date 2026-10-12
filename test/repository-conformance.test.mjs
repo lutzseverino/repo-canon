@@ -294,6 +294,10 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   assert.match(babysit, /`4` for the reason its line gives/);
   assert.match(
     babysit,
+    /`gh pr merge <number> --squash --match-head-commit <SHA>`, where `<SHA>` is the full SHA that starts the wait's latest line\. If GitHub refuses because the head no longer matches, return to step 1\./,
+  );
+  assert.match(
+    babysit,
     /When pushed fixes change enough to warrant another look/,
   );
   assert.doesNotMatch(babysit, /5 minutes|30 minutes/);

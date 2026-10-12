@@ -25,5 +25,8 @@ conditions and the wording rules.
 4. When pushed fixes change enough to warrant another look, comment
    `@codex review` to re-request review of the new head. After any push or
    re-request, return to step 1.
-5. Squash-merge once the merge conditions hold on the latest head.
+5. Once the merge conditions hold on the latest head, squash-merge with
+   `gh pr merge <number> --squash --match-head-commit <SHA>`, where `<SHA>` is
+   the full SHA that starts the wait's latest line. If GitHub refuses because
+   the head no longer matches, return to step 1.
 6. Stop.
