@@ -11,7 +11,9 @@ by proving the image builds before the factory's first launch.
 Every `pull_request` run has one `Sandbox image` job on `ubuntu-latest`.
 There is no event path filter: pull requests with unrelated changes report
 success without invoking Docker. The job checks out the pull request's head
-with full history and compares its base and head commits. Any added, modified,
+with full history and compares its head with the merge base of its base and
+head commits. Changes made only on the base branch do not trigger a build on
+an unrelated pull request. Any added, modified,
 deleted, or renamed path under `.sandcastle/`, or the workflow file itself,
 triggers a build. Paths are null-delimited, and rename detection is disabled
 so moving a file out of `.sandcastle/` still counts as removing it.
@@ -46,7 +48,8 @@ node --test test/sandbox-image-workflow.test.mjs test/shared-workflows.test.mjs
 
 The fixtures execute the workflow's shell step in disposable Git repositories
 and capture Docker's arguments and standard input at its process boundary.
-They cover unrelated changes, Dockerfile and workflow changes, nested paths
+They cover unrelated changes, base-only fixes on a diverged branch,
+Dockerfile and workflow changes, nested paths
 with unusual names, a removed Dockerfile, build failure diagnostics, and an
 unavailable comparison revision. When Docker is available, a fixture builds
 a Dockerfile with a deliberately missing toolchain executable and verifies

@@ -26,6 +26,15 @@ function fixture(t, changes, dockerfile = "FROM scratch\n") {
     mkdirSync(dirname(join(repository, path)), { recursive: true });
     writeFileSync(join(repository, path), contents);
   };
+  const commit = (changes, message) => {
+    for (const [path, contents] of Object.entries(changes)) {
+      if (contents === null) rmSync(join(repository, path));
+      else write(path, contents);
+    }
+    git("add", "-A");
+    git("commit", "--quiet", "-m", message);
+    return git("rev-parse", "HEAD");
+  };
   git("init", "--quiet");
   git("config", "user.email", "fixture@example.invalid");
   git("config", "user.name", "Fixture");
@@ -35,21 +44,21 @@ function fixture(t, changes, dockerfile = "FROM scratch\n") {
   git("add", ".");
   git("commit", "--quiet", "-m", "Base");
   const base = git("rev-parse", "HEAD");
-  for (const [path, contents] of Object.entries(changes)) {
-    if (contents === null) rmSync(join(repository, path));
-    else write(path, contents);
-  }
-  git("add", "-A");
-  git("commit", "--quiet", "-m", "Pull request");
+  const head = commit(changes, "Pull request");
   const env = {
     ...process.env,
     BASE_SHA: base,
-    HEAD_SHA: git("rev-parse", "HEAD"),
+    HEAD_SHA: head,
     RUNNER_TEMP: directory,
   };
   return {
     directory,
     env,
+    advanceBase(changes) {
+      git("checkout", "--quiet", "--detach", base);
+      env.BASE_SHA = commit(changes, "Advance base");
+      git("checkout", "--quiet", "--detach", head);
+    },
     run() {
       const script = workflow().match(/\n {8}run: \|\n([\s\S]+)$/)?.[1];
       assert.ok(script, "the workflow has an executable build step");
@@ -101,6 +110,26 @@ test("unrelated pull requests succeed without invoking Docker", (t) => {
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /No sandbox image changes/);
   assert.throws(capture, { code: "ENOENT" });
+});
+
+test("base-only sandbox fixes do not trigger a build on an unrelated stale pull request", (t) => {
+  const f = fixture(t, { "README.md": "updated readme\n" });
+  f.advanceBase({ ".sandcastle/Dockerfile": "FROM scratch\n# base fix\n" });
+  const capture = stubDocker(f, 17);
+  const result = f.run();
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /No sandbox image changes/);
+  assert.throws(capture, { code: "ENOENT" });
+});
+
+test("pull request sandbox changes still build when the base branch advances", (t) => {
+  const dockerfile = "FROM scratch\n# pull request toolchain\n";
+  const f = fixture(t, { ".sandcastle/Dockerfile": dockerfile });
+  f.advanceBase({ "README.md": "base-only readme update\n" });
+  const capture = stubDocker(f);
+  const result = f.run();
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(capture().input, dockerfile);
 });
 
 for (const path of [

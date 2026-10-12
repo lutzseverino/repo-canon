@@ -23,7 +23,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          git diff --name-only --no-renames -z "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/sandbox-image-paths"
+          git diff --name-only --no-renames -z "$BASE_SHA...$HEAD_SHA" > "$RUNNER_TEMP/sandbox-image-paths"
           changed=false
           while IFS= read -r -d '' path; do
             case "$path" in
