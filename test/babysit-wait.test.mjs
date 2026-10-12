@@ -825,12 +825,9 @@ const metadataCheck = checkRun({
   name: "PR metadata",
   workflowName: "PR metadata validation",
 });
-const metadataRun = (status) => ({
-  name: "PR metadata validation",
-  event: "pull_request_target",
-  status,
-});
-const testRun = (status) => ({ name: "CI", event: "pull_request", status });
+const metadataRun = (status) =>
+  workflowRun("PR metadata validation", "pull_request_target", status);
+const testRun = (status) => workflowRun("CI", "pull_request", status);
 
 test("a queued rerun missing from the rollup waits silently until its limit", async () => {
   // The rollup drops a check while its rerun is queued; its run still lists it.

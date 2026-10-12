@@ -115,7 +115,7 @@ const codexState = ({ head, requestedAt, pushedAt, comments, now }) => {
 
 // Decides the outcome from one look at the pull request. `checks` holds
 // `{ name, state: "pass" | "fail" | "pending", link }`; `runs` holds the
-// head's GitHub Actions workflow runs as `{ name, event, status }`;
+// head's GitHub Actions workflow runs as `{ status }`;
 // `requestedAt` is the latest review request and `pushedAt` the head's push.
 // The checks stay pending while the head has none, or while any check or run
 // is unfinished: a new head's checks and a queued rerun can be missing from
@@ -329,7 +329,7 @@ const look = async (number, pushTimes) => {
     checks: checkStates(pull.statusCheckRollup),
     runs: runs
       .flatMap((page) => page.workflow_runs)
-      .map(({ name, event, status }) => ({ name, event, status })),
+      .map(({ status }) => ({ status })),
     requestedAt: reviewRequestedAt(Date.parse(pull.createdAt), comments),
     pushedAt,
     comments,
