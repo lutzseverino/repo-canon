@@ -31,7 +31,10 @@ import { realpathSync } from "node:fs";
 
 const codexBot = "chatgpt-codex-connector[bot]";
 const summaryMarker = "<!-- codex-pull-request-review-summary -->";
-const unavailableReply = "create an environment for this repo";
+const unavailableReplies = [
+  "create an environment for this repo",
+  "create a Codex account",
+];
 const reviewRequest = /@codex (security )?review\b/i;
 const responseBoundMs = 5 * 60_000;
 const reviewBoundMs = 30 * 60_000;
@@ -105,7 +108,7 @@ const codexState = ({ head, requestedAt, pushedAt, comments, now }) => {
   if (
     codexComments.some(
       (comment) =>
-        comment.body.includes(unavailableReply) &&
+        unavailableReplies.some((reply) => comment.body.includes(reply)) &&
         Date.parse(comment.createdAt) >= requestedAt,
     )
   ) {

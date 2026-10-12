@@ -51,6 +51,13 @@ const unavailable = (createdAt) => ({
   body: "To use Codex here, [create an environment for this repo](https://chatgpt.com/codex/cloud/settings/environments).",
 });
 
+// Codex's reply on lutzseverino/homelab#115 when the requester has no linked account.
+const accountRequired = (createdAt) => ({
+  login: codex,
+  createdAt,
+  body: "To use Codex here, [create a Codex account and connect to github](https://chatgpt.com/codex/cloud/settings/connectors).",
+});
+
 const passed = [{ name: "check", state: "pass", link: "https://ci/1" }];
 
 const decision = (overrides) =>
@@ -239,6 +246,53 @@ test("an unavailable reply before the latest request is ignored", () => {
     decision({ comments: [unavailable("2026-10-11T05:00:00Z")] }).code,
     null,
   );
+});
+
+test("the account reply at or after the latest request is unavailable (#299)", () => {
+  for (const createdAt of ["2026-10-12T16:35:03Z", "2026-10-12T16:35:08Z"]) {
+    const outcome = decision({
+      requestedAt: Date.parse("2026-10-12T16:35:03Z"),
+      comments: [accountRequired(createdAt)],
+      now: Date.parse("2026-10-12T16:35:30Z"),
+      startedAt: Date.parse("2026-10-12T16:35:10Z"),
+    });
+    assert.equal(outcome.code, 3);
+    assert.equal(outcome.codex, "unavailable");
+    assert.deepEqual(report(outcome, head), [
+      `${head}: checks passed, Codex unavailable`,
+    ]);
+  }
+});
+
+test("an account reply before the latest request is ignored", () => {
+  const outcome = decision({
+    requestedAt: Date.parse("2026-10-12T16:36:00Z"),
+    comments: [accountRequired("2026-10-12T16:35:08Z")],
+    now: Date.parse("2026-10-12T16:36:30Z"),
+    startedAt: Date.parse("2026-10-12T16:36:10Z"),
+  });
+  assert.equal(outcome.code, null);
+  assert.equal(outcome.codex, "pending");
+});
+
+test("an account reply from someone other than Codex is ignored", () => {
+  const outcome = decision({
+    comments: [
+      { ...accountRequired("2026-10-11T05:40:00Z"), login: "someone-else" },
+    ],
+  });
+  assert.equal(outcome.code, null);
+  assert.equal(outcome.codex, "pending");
+});
+
+test("an account reply waits until pending checks settle", () => {
+  const outcome = decision({
+    checks: [{ name: "check", state: "pending", link: "https://ci/1" }],
+    comments: [accountRequired("2026-10-11T05:40:00Z")],
+  });
+  assert.equal(outcome.code, null);
+  assert.equal(outcome.codex, "unavailable");
+  assert.equal(outcome.checksPending, true);
 });
 
 test("30 minutes after the latest request is not reviewing, across invocations", () => {
