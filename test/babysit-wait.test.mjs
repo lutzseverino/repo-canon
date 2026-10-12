@@ -561,6 +561,80 @@ test("workflows sharing a display name do not supersede each other", () => {
   }
 });
 
+const runUrl = (id) => `https://github.com/owner/repo/actions/runs/${id}`;
+
+test("checks represent only their own workflow when display names are shared", () => {
+  const failed = { ...failedRun, html_url: runUrl(21) };
+  const successful = {
+    ...failedRun,
+    workflow_id: 4,
+    conclusion: "success",
+    html_url: runUrl(22),
+  };
+  for (const runs of [
+    [failed, successful],
+    [successful, failed],
+  ]) {
+    for (const state of ["pass", "fail", "pending"]) {
+      for (const id of [21, 22]) {
+        const checks = [
+          {
+            name: "test",
+            workflowName: "CI",
+            state,
+            link: `${runUrl(id)}/job/1`,
+          },
+        ];
+        const outcome = decision({ checks, runs });
+        assert.deepEqual(outcome.failing, [
+          ...checks.filter((check) => check.state === "fail"),
+          ...(id === 22 ? [{ ...failedWorkflow, link: failed.html_url }] : []),
+        ]);
+        assert.equal(
+          outcome.code,
+          state === "pending" ? null : id === 22 || state === "fail" ? 2 : null,
+        );
+      }
+    }
+  }
+});
+
+test("a check from an older run still represents its workflow ID", () => {
+  const older = { ...failedRun, conclusion: "success", html_url: runUrl(21) };
+  const latest = {
+    ...failedRun,
+    html_url: runUrl(23),
+    run_started_at: "2026-10-11T05:41:00Z",
+  };
+  const unrelated = {
+    ...failedRun,
+    workflow_id: 4,
+    conclusion: "success",
+    html_url: runUrl(22),
+  };
+  const checks = [
+    {
+      name: "test",
+      workflowName: "CI",
+      state: "fail",
+      link: `${runUrl(21)}/attempts/1`,
+    },
+  ];
+  const outcome = decision({ checks, runs: [older, latest, unrelated] });
+  assert.equal(outcome.code, 2);
+  assert.deepEqual(outcome.failing, checks);
+});
+
+test("an ambiguous workflow name alone does not hide a failed run", () => {
+  const successful = { ...failedRun, workflow_id: 4, conclusion: "success" };
+  const outcome = decision({
+    checks: [{ ...passed[0], workflowName: "CI" }],
+    runs: [failedRun, successful],
+  });
+  assert.equal(outcome.code, 2);
+  assert.deepEqual(outcome.failing, [failedWorkflow]);
+});
+
 test("a workflow with a check uses only that check's outcome", () => {
   for (const state of ["pass", "fail", "pending"]) {
     const checks = [
@@ -1194,6 +1268,41 @@ test("the script keeps failures of workflows sharing a display name", async () =
     result.stdout,
     `${head}: 1 check failed, Codex unavailable\nCI ${failedRun.html_url}\n`,
   );
+});
+
+test("the script matches checks to same-named workflows by their run links", async () => {
+  for (const id of [21, 22]) {
+    const result = await run(
+      {
+        ...pendingPullRequest,
+        checks: [
+          checkRun({
+            detailsUrl: `${runUrl(id)}/job/1`,
+            conclusion: id === 21 ? "FAILURE" : "SUCCESS",
+          }),
+        ],
+        runs: [
+          { ...failedRun, html_url: runUrl(21) },
+          {
+            ...failedRun,
+            workflow_id: 4,
+            conclusion: "success",
+            html_url: runUrl(22),
+          },
+        ],
+        createdAt: "2026-10-11T05:00:00Z",
+        pushedAt: "2026-10-11T05:20:00Z",
+        comments: [unavailable("2026-10-11T05:40:00Z")],
+      },
+      ["12", "--limit", "0.4", "--interval", "0.1"],
+    );
+    assert.equal(result.code, 2);
+    assert.equal(result.stderr, "");
+    assert.equal(
+      result.stdout,
+      `${head}: 1 check failed, Codex unavailable\n${id === 21 ? `Validate example ${runUrl(21)}/job/1` : `CI ${runUrl(21)}`}\n`,
+    );
+  }
 });
 
 test("the script uses a workflow's checks without hiding another workflow's failure", async () => {

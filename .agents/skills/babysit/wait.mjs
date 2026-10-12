@@ -121,12 +121,18 @@ const codexState = ({ head, requestedAt, pushedAt, comments, now }) => {
   return "pending";
 };
 
+// A job or attempt link and its run link share this Actions run URL.
+const workflowRunLink = (link) =>
+  /^(.*\/actions\/runs\/\d+)(?:[/?#]|$)/.exec(link ?? "")?.[1];
+
 // Decides the outcome from one look at the pull request. `checks` holds
 // `{ name, state: "pass" | "fail" | "pending", link, workflowName? }`;
 // `runs` holds the head's GitHub Actions workflow runs as
 // `{ workflow_id, name, status, conclusion, run_started_at, html_url }`, with
-// the latest attempt's start in `run_started_at`. A workflow whose latest run failed
-// without a check joins the failed checks under its name and run link;
+// the latest attempt's start in `run_started_at`. Check links identify their
+// workflow through its runs; a workflow name also identifies it when unique.
+// A workflow whose latest run failed without a check joins the failed checks
+// under its name and run link;
 // `requestedAt` is the latest review request; `pushedAt` is the head's push
 // time or its committer-date fallback, and `pushRecorded` says whether GitHub
 // recorded that push. The checks stay pending while the head has none and
@@ -150,18 +156,32 @@ export const decide = ({
   limitMs,
 }) => {
   const codex = codexState({ head, requestedAt, pushedAt, comments, now });
-  const checkedWorkflows = new Set(checks.map((check) => check.workflowName));
   const latestRuns = new Map();
+  const workflowsByLink = new Map();
+  const workflowsByName = new Map();
   for (const run of runs) {
     const known = latestRuns.get(run.workflow_id);
     if (!known || run.run_started_at > known.run_started_at) {
       latestRuns.set(run.workflow_id, run);
     }
+    const link = workflowRunLink(run.html_url);
+    if (link) workflowsByLink.set(link, run.workflow_id);
+    const ids = workflowsByName.get(run.name) ?? new Set();
+    ids.add(run.workflow_id);
+    workflowsByName.set(run.name, ids);
+  }
+  const checkedWorkflows = new Set();
+  for (const check of checks) {
+    if (!check.workflowName) continue;
+    const linkedId = workflowsByLink.get(workflowRunLink(check.link));
+    const namedIds = workflowsByName.get(check.workflowName);
+    if (linkedId !== undefined) checkedWorkflows.add(linkedId);
+    else if (namedIds?.size === 1) checkedWorkflows.add([...namedIds][0]);
   }
   const failingRuns = [...latestRuns.values()]
     .filter(
       (run) =>
-        !checkedWorkflows.has(run.name) &&
+        !checkedWorkflows.has(run.workflow_id) &&
         run.status === "completed" &&
         failedConclusions.has(run.conclusion?.toUpperCase()),
     )
