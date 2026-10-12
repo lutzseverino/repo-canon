@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 // A GitHub CLI fake for the babysit wait script. It answers the pull request
-// view, the paginated issue comments, the push activity and the head commit
-// from the state file, and fails every call with `fail`.
+// view, the paginated issue comments, the head's paginated workflow runs, the
+// push activity and the head commit from the state file, and fails every call
+// with `fail`.
 import { readFileSync } from "node:fs";
 
 const state = JSON.parse(readFileSync(process.env.FAKE_GH_STATE, "utf8"));
@@ -29,6 +30,9 @@ if (args[0] === "pr" && args[1] === "view") {
       body,
     })),
   ]);
+} else if (args[0] === "api" && args[1].includes("/actions/runs?")) {
+  const runs = state.runs ?? [];
+  write([{ total_count: runs.length, workflow_runs: runs }]);
 } else if (args[0] === "api" && args[1].includes("/activity?")) {
   write(
     state.pushedAt ? [{ after: state.head, timestamp: state.pushedAt }] : [],
