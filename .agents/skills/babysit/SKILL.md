@@ -23,9 +23,12 @@ conditions and the wording rules.
 
 2. Verify each failing check and review finding against the source.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
-   every review thread as it requires.
+   every review thread as it requires, following its
+   [comment rules](../../../CONTRIBUTING.md#comments).
 4. When pushed fixes change enough to warrant another look, comment
-   `@codex review` to re-request review of the new head. After any push or
+   to re-request review of the new head, using the wording in
+   [Merging](../../../CONTRIBUTING.md#merging) and following the
+   [comment rules](../../../CONTRIBUTING.md#comments). After any push or
    re-request, return to step 1.
 5. Once the merge conditions hold on the latest head, squash-merge with
    `gh pr merge <number> --squash --match-head-commit <SHA>`, where `<SHA>` is
