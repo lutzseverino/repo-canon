@@ -13,7 +13,7 @@
 //   5  still waiting at the invocation limit; run it again
 //
 // Checks settled means checks passed or no check arrived within 5 minutes
-// of the push and no workflow run for the head is unfinished.
+// of a push GitHub recorded and no workflow run for the head is unfinished.
 //
 // Usage: node wait.mjs <number> [--repo <owner/name>] [--limit <seconds>]
 //        [--interval <seconds>]
@@ -22,6 +22,7 @@
 // 10-minute foreground limit, with each look at GitHub bounded to 45 seconds.
 // One invocation covers 9 minutes waited: a typical wait takes one, and the
 // worst case, the 30-minute review bound plus checks, takes at most four.
+// A head with no recorded push and no check or run never settles its checks.
 import { execFile } from "node:child_process";
 import { realpathSync } from "node:fs";
 
@@ -120,10 +121,12 @@ const codexState = ({ head, requestedAt, pushedAt, comments, now }) => {
 // Decides the outcome from one look at the pull request. `checks` holds
 // `{ name, state: "pass" | "fail" | "pending", link }`; `runs` holds the
 // head's GitHub Actions workflow runs as `{ status }`;
-// `requestedAt` is the latest review request and `pushedAt` the head's push.
-// The checks stay pending while the head has none within 5 minutes of its
-// push, or while any check or run is unfinished: a new head's checks and a
-// queued rerun can be missing from the rollup while their runs are already
+// `requestedAt` is the latest review request; `pushedAt` is the head's push
+// time or its committer-date fallback, and `pushRecorded` says whether GitHub
+// recorded that push. The checks stay pending while the head has none and
+// its push is unrecorded or less than 5 minutes old, or while any check or run
+// is unfinished: a new head's checks and a queued rerun can be missing from
+// the rollup while their runs are already
 // listed. A failed check ends the wait unless Codex is reviewing, so its
 // findings arrive with the failures. It
 // returns `code: null` while the outcome is unsettled and the invocation limit
@@ -134,6 +137,7 @@ export const decide = ({
   runs = [],
   requestedAt,
   pushedAt,
+  pushRecorded,
   comments,
   now,
   startedAt,
@@ -142,7 +146,8 @@ export const decide = ({
   const codex = codexState({ head, requestedAt, pushedAt, comments, now });
   const failing = checks.filter((check) => check.state === "fail");
   const checksPending =
-    (checks.length === 0 && now - pushedAt < checksBoundMs) ||
+    (checks.length === 0 &&
+      (!pushRecorded || now - pushedAt < checksBoundMs)) ||
     checks.some((check) => check.state === "pending") ||
     runs.some((run) => run.status !== "completed");
   if (!checksPending && failing.length > 0 && codex !== "reviewing") {
@@ -286,24 +291,28 @@ const parseArguments = (argv) => {
   return { number: positional[0], ...options };
 };
 
-// When GitHub recorded the push of the pull request's head, else its
-// committer date, and never before the pull request opened.
+// Whether GitHub recorded the push of the pull request's head, with its time
+// for Codex: the recorded time, else the committer date, never before opening.
 const pushTime = async (pull) => {
   const head = pull.headRefOid;
   const activity = await gh([
     "api",
     `repos/{owner}/{repo}/activity?ref=${encodeURIComponent(`refs/heads/${pull.headRefName}`)}&per_page=100`,
   ]).catch(() => []);
+  const recorded = activity.find((entry) => entry.after === head);
   const pushedAt =
-    activity.find((entry) => entry.after === head)?.timestamp ??
+    recorded?.timestamp ??
     (await gh(["api", `repos/{owner}/{repo}/commits/${head}`])).commit
       .committer.date;
-  return Math.max(Date.parse(pushedAt), Date.parse(pull.createdAt));
+  return {
+    pushedAt: Math.max(Date.parse(pushedAt), Date.parse(pull.createdAt)),
+    pushRecorded: Boolean(recorded),
+  };
 };
 
 // Reads one look at the pull request. The head's workflow runs are read by
 // its SHA, which also finds `pull_request_target` runs; its push time is
-// cached per head.
+// cached per head only when GitHub recorded it.
 const look = async (number, pushTimes) => {
   const [pull, pages] = await Promise.all([
     gh([
@@ -326,7 +335,7 @@ const look = async (number, pushTimes) => {
     body: comment.body ?? "",
   }));
   const head = pull.headRefOid;
-  const [runs, pushedAt] = await Promise.all([
+  const [runs, push] = await Promise.all([
     gh([
       "api",
       `repos/{owner}/{repo}/actions/runs?head_sha=${head}&per_page=100`,
@@ -335,7 +344,7 @@ const look = async (number, pushTimes) => {
     ]),
     pushTimes.get(head) ?? pushTime(pull),
   ]);
-  pushTimes.set(head, pushedAt);
+  if (push.pushRecorded) pushTimes.set(head, push);
   return {
     head,
     checks: checkStates(pull.statusCheckRollup),
@@ -343,7 +352,7 @@ const look = async (number, pushTimes) => {
       .flatMap((page) => page.workflow_runs)
       .map(({ status }) => ({ status })),
     requestedAt: reviewRequestedAt(Date.parse(pull.createdAt), comments),
-    pushedAt,
+    ...push,
     comments,
   };
 };
