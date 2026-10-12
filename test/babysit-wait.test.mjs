@@ -458,6 +458,7 @@ test("no checks after 5 minutes settles like passed checks in every Codex state"
 
 const workflowRun = (name, event, status, overrides = {}) => ({
   name,
+  workflow_id: { CI: 1, "PR metadata validation": 2, Other: 3 }[name],
   event,
   status,
   conclusion: status === "completed" ? "success" : null,
@@ -540,6 +541,23 @@ test("only the latest-started workflow run can fail, in either order", () => {
           : [],
       );
     }
+  }
+});
+
+test("workflows sharing a display name do not supersede each other", () => {
+  const successful = {
+    ...failedRun,
+    workflow_id: 4,
+    conclusion: "success",
+    run_started_at: "2026-10-11T05:41:00Z",
+  };
+  for (const runs of [
+    [failedRun, successful],
+    [successful, failedRun],
+  ]) {
+    const outcome = decision({ checks: [], runs });
+    assert.equal(outcome.code, 2);
+    assert.deepEqual(outcome.failing, [failedWorkflow]);
   }
 });
 
@@ -1145,6 +1163,33 @@ test("the script reports a completed failed workflow with no check (#293)", asyn
   );
   assert.equal(result.code, 2);
   assert.equal(result.stderr, "");
+  assert.equal(
+    result.stdout,
+    `${head}: 1 check failed, Codex unavailable\nCI ${failedRun.html_url}\n`,
+  );
+});
+
+test("the script keeps failures of workflows sharing a display name", async () => {
+  const result = await run(
+    {
+      ...pendingPullRequest,
+      checks: [],
+      runs: [
+        failedRun,
+        {
+          ...failedRun,
+          workflow_id: 4,
+          conclusion: "success",
+          run_started_at: "2026-10-11T05:41:00Z",
+        },
+      ],
+      createdAt: "2026-10-11T05:00:00Z",
+      pushedAt: "2026-10-11T05:20:00Z",
+      comments: [unavailable("2026-10-11T05:40:00Z")],
+    },
+    ["12", "--limit", "0.4", "--interval", "0.1"],
+  );
+  assert.equal(result.code, 2);
   assert.equal(
     result.stdout,
     `${head}: 1 check failed, Codex unavailable\nCI ${failedRun.html_url}\n`,

@@ -124,8 +124,8 @@ const codexState = ({ head, requestedAt, pushedAt, comments, now }) => {
 // Decides the outcome from one look at the pull request. `checks` holds
 // `{ name, state: "pass" | "fail" | "pending", link, workflowName? }`;
 // `runs` holds the head's GitHub Actions workflow runs as
-// `{ name, status, conclusion, run_started_at, html_url }`, with the latest
-// attempt's start in `run_started_at`. A workflow whose latest run failed
+// `{ workflow_id, name, status, conclusion, run_started_at, html_url }`, with
+// the latest attempt's start in `run_started_at`. A workflow whose latest run failed
 // without a check joins the failed checks under its name and run link;
 // `requestedAt` is the latest review request; `pushedAt` is the head's push
 // time or its committer-date fallback, and `pushRecorded` says whether GitHub
@@ -153,9 +153,9 @@ export const decide = ({
   const checkedWorkflows = new Set(checks.map((check) => check.workflowName));
   const latestRuns = new Map();
   for (const run of runs) {
-    const known = latestRuns.get(run.name);
+    const known = latestRuns.get(run.workflow_id);
     if (!known || run.run_started_at > known.run_started_at) {
-      latestRuns.set(run.name, run);
+      latestRuns.set(run.workflow_id, run);
     }
   }
   const failingRuns = [...latestRuns.values()]
@@ -377,13 +377,16 @@ const look = async (number, pushTimes) => {
     checks: checkStates(pull.statusCheckRollup),
     runs: runs
       .flatMap((page) => page.workflow_runs)
-      .map(({ name, status, conclusion, run_started_at, html_url }) => ({
-        name,
-        status,
-        conclusion,
-        run_started_at,
-        html_url,
-      })),
+      .map(
+        ({ workflow_id, name, status, conclusion, run_started_at, html_url }) => ({
+          workflow_id,
+          name,
+          status,
+          conclusion,
+          run_started_at,
+          html_url,
+        }),
+      ),
     requestedAt: reviewRequestedAt(Date.parse(pull.createdAt), comments),
     ...push,
     comments,
