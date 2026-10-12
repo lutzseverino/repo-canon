@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -59,6 +59,7 @@ const decision = (overrides) =>
     checks: passed,
     requestedAt: Date.parse("2026-10-11T05:39:50Z"),
     pushedAt: Date.parse("2026-10-11T05:39:50Z"),
+    pushRecorded: true,
     comments: [],
     now: Date.parse("2026-10-11T05:43:00Z"),
     startedAt: Date.parse("2026-10-11T05:40:00Z"),
@@ -342,6 +343,57 @@ const codexStates = {
 test("each Codex state fixture reaches its state with passed checks", () => {
   for (const [state, overrides] of Object.entries(codexStates)) {
     assert.equal(decision(overrides).codex, state);
+  }
+});
+
+test("no recorded push keeps empty checks pending in every Codex state", () => {
+  for (const [state, overrides] of Object.entries(codexStates)) {
+    const now = overrides.now ?? Date.parse("2026-10-11T05:43:00Z");
+    for (const age of [60 * minute, 24 * 60 * minute]) {
+      const look = {
+        ...overrides,
+        pushedAt: now - age,
+        pushRecorded: false,
+        checks: [],
+        runs: [],
+      };
+      // An old fallback still follows the existing Codex request rules.
+      if (state === "not requested") look.requestedAt = now - age - minute;
+      const outcome = decision(look);
+      assert.equal(outcome.codex, state);
+      assert.equal(outcome.code, null);
+      assert.equal(outcome.checksPending, true);
+      const limited = decision({ ...look, startedAt: now - 9 * minute });
+      assert.equal(limited.code, 5);
+      assert.match(report(limited, head)[0], /still waiting on checks/);
+    }
+  }
+});
+
+test("no recorded push preserves non-empty checks and unfinished run outcomes", () => {
+  for (const overrides of Object.values(codexStates)) {
+    for (const checks of [
+      passed,
+      failedChecks,
+      [{ name: "test", state: "pending", link: "https://ci/3" }],
+    ]) {
+      for (const runs of [[], [{ status: "queued" }]]) {
+        const look = { ...overrides, checks, runs };
+        assert.deepEqual(
+          decision({ ...look, pushRecorded: false }),
+          decision(look),
+        );
+      }
+    }
+    const unfinished = {
+      ...overrides,
+      checks: [],
+      runs: [{ status: "queued" }],
+    };
+    assert.deepEqual(
+      decision({ ...unfinished, pushRecorded: false }),
+      decision(unfinished),
+    );
   }
 });
 
@@ -776,9 +828,11 @@ const run = (state, args) => {
     child.stdout.on("data", (chunk) => record(chunk, (s) => (stdout += s)));
     child.stderr.on("data", (chunk) => record(chunk, (s) => (stderr += s)));
     child.on("close", (code) => {
+      const { activityReads } = JSON.parse(readFileSync(statePath, "utf8"));
       rmSync(directory, { recursive: true, force: true });
       resolve({
         code,
+        activityReads,
         stdout,
         stderr,
         firstWrite,
@@ -907,6 +961,57 @@ test("an old push with no checks or runs settles at once", async () => {
     `${head}: no checks within 5 minutes of the push, Codex review not requested for this head\n`,
   );
   assert.ok(result.firstWrite < 1900, `wrote after ${result.firstWrite} ms`);
+});
+
+test("an unrecorded push with old dates waits silently until its limit", async () => {
+  for (const failActivity of [false, true]) {
+    const result = await run(
+      {
+        ...pendingPullRequest,
+        checks: [],
+        runs: [],
+        createdAt: "2026-10-11T05:00:00Z",
+        committedAt: "2026-10-11T05:10:00Z",
+        pushedAt: failActivity ? "2026-10-11T05:20:00Z" : null,
+        failActivity,
+      },
+      ["12", "--limit", "2", "--interval", "0.2"],
+    );
+    assert.equal(result.code, 5);
+    assert.equal(result.stderr, "");
+    assert.equal(
+      result.stdout,
+      `${head}: still waiting on checks; run again\n`,
+    );
+    assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
+  }
+});
+
+test("a push recorded after the first look settles within the invocation", async () => {
+  for (const failActivityReads of [0, 1]) {
+    const result = await run(
+      {
+        ...pendingPullRequest,
+        checks: [],
+        runs: [],
+        createdAt: "2026-10-11T05:00:00Z",
+        committedAt: "2026-10-11T05:10:00Z",
+        pushedAt: "2026-10-11T05:20:00Z",
+        activityReads: 0,
+        recordAfter: 1,
+        failActivityReads,
+      },
+      ["12", "--limit", "3", "--interval", "0.2"],
+    );
+    assert.equal(result.code, 4);
+    assert.equal(result.stderr, "");
+    assert.equal(
+      result.stdout,
+      `${head}: no checks within 5 minutes of the push, Codex review not requested for this head\n`,
+    );
+    assert.equal(result.activityReads, 2);
+    assert.ok(result.elapsed < 2900, `settled after ${result.elapsed} ms`);
+  }
 });
 
 const metadataCheck = checkRun({

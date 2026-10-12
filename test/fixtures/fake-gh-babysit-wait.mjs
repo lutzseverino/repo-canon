@@ -3,8 +3,10 @@
 // A GitHub CLI fake for the babysit wait script. It answers the pull request
 // view, the paginated issue comments, the head's paginated workflow runs, the
 // push activity and the head commit from the state file, and fails every call
-// with `fail`.
-import { readFileSync } from "node:fs";
+// with `fail`. `failActivity` fails only the activity read, and
+// `failActivityReads` fails its first reads; `recordAfter`
+// withholds its push for that many reads, counted in `activityReads`.
+import { readFileSync, writeFileSync } from "node:fs";
 
 const state = JSON.parse(readFileSync(process.env.FAKE_GH_STATE, "utf8"));
 const args = process.argv.slice(2);
@@ -34,9 +36,20 @@ if (args[0] === "pr" && args[1] === "view") {
   const runs = state.runs ?? [];
   write([{ total_count: runs.length, workflow_runs: runs }]);
 } else if (args[0] === "api" && args[1].includes("/activity?")) {
-  write(
-    state.pushedAt ? [{ after: state.head, timestamp: state.pushedAt }] : [],
-  );
+  const read = state.activityReads ?? 0;
+  if (
+    state.recordAfter !== undefined ||
+    state.failActivityReads !== undefined
+  ) {
+    state.activityReads = read + 1;
+    writeFileSync(process.env.FAKE_GH_STATE, JSON.stringify(state));
+  }
+  if (state.failActivity || read < state.failActivityReads) {
+    process.stderr.write("gh: Server Error (HTTP 502)\n");
+    process.exit(1);
+  }
+  const recorded = state.pushedAt && read >= (state.recordAfter ?? 0);
+  write(recorded ? [{ after: state.head, timestamp: state.pushedAt }] : []);
 } else if (args[0] === "api" && args[1].includes("/commits/")) {
   write({ commit: { committer: { date: state.committedAt } } });
 } else {
