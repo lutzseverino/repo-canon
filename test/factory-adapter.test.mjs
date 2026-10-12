@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
 import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -315,6 +315,8 @@ function factory({
   hostSettings = {},
   clock,
   updates = {},
+  root = "/srv/factory",
+  git = async (args) => (args[0] === "rev-parse" ? "fake-base" : ""),
 }) {
   const github = fakeGitHub(issues);
   const sandcastle = fakeSandcastle();
@@ -326,6 +328,7 @@ function factory({
     { ...settings, ...hostSettings },
     {
       gh: github.gh,
+      git,
       standards: async (args, version) => {
         commands.push({ args, version });
         if (updates.error) throw updates.error;
@@ -355,7 +358,7 @@ function factory({
         return usage[provider] ?? null;
       },
       now: () => time.now,
-      root: "/srv/factory",
+      root,
       report: (line) => reports.push(line),
     },
   );
@@ -1995,4 +1998,178 @@ test("triage issues filed while a candidate waits for capacity hold it before im
   assert.equal(run.sandcastle.launched.length, 0);
   assert.equal(run.docker.builds.length, 0);
   assert.match(run.reports.join("\n"), /update held by triage issue #10/);
+});
+
+test("workflow-changing updates file one owner issue with workflow and discarded-edit reasons", async () => {
+  const run = factory({
+    issues: [],
+    updates: {
+      outdated: available,
+      inspection: {
+        ...routineInspection,
+        exact: [
+          { target: ".github/workflows/new.yml", action: "create" },
+          { target: ".github/workflows/ci.yml", action: "replace" },
+        ],
+        systemSkills: [
+          { target: ".github/workflows/skill.yml", action: "replace" },
+        ],
+        removed: [{ target: ".github/workflows/old.yml" }],
+        confirmation: {
+          required: false,
+          reasons: [{ change: "discarded-edit", target: "AGENTS.md" }],
+        },
+      },
+    },
+  });
+  await run.tick();
+  const [issue] = run.github.state.created;
+  assert.ok(issue, "workflow changes need an owner issue");
+  for (const reason of [
+    "create: `.github/workflows/new.yml`",
+    "replace: `.github/workflows/ci.yml`",
+    "replace: `.github/workflows/skill.yml`",
+    "remove: `.github/workflows/old.yml`",
+    "discarded-edit: `AGENTS.md`",
+  ])
+    assert.ok(issue.body.includes(reason));
+  assert.match(issue.body, /Workflows permission/);
+  run.time.now = new Date("2026-10-10T12:00:00Z");
+  await run.tick();
+  assert.equal(run.github.state.created.length, 1);
+  assert.equal(run.sandcastle.launched.length, 0);
+});
+
+function gitRepositories(t) {
+  const checkout = fixture({
+    "README.md": "base\n",
+    ".github/workflows/old.yml": "old\n",
+  });
+  const remote = fixture({});
+  t.after(checkout.close);
+  t.after(remote.close);
+  const git = (args) =>
+    execFileSync("git", args, {
+      cwd: checkout.root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  execFileSync("git", ["init", "--bare", "--quiet", remote.root]);
+  git(["config", "user.email", "factory@example.test"]);
+  git(["config", "user.name", "Factory fixture"]);
+  git(["add", "."]);
+  git(["commit", "--quiet", "-m", "base"]);
+  git(["remote", "add", "origin", remote.root]);
+  return { root: checkout.root, git: async (args) => git(args), command: git };
+}
+
+for (const scenario of [
+  "absent",
+  "behind",
+  "pushed",
+  "contains",
+  "ordinary",
+  "removed",
+  "reverted",
+  "base advanced",
+]) {
+  test(`ended issue detection reads real Git with remote ${scenario}`, async (t) => {
+    const repo = gitRepositories(t);
+    const run = factory({
+      issues: [{ number: 4 }],
+      root: repo.root,
+      git: repo.git,
+      hostSettings: { retryModel: "gpt-5.5" },
+    });
+    await run.tick();
+    repo.command(["checkout", "--quiet", "-b", "factory/issue-4"]);
+    if (scenario === "behind")
+      repo.command(["push", "--quiet", "origin", "HEAD"]);
+    writeFileSync(
+      join(
+        repo.root,
+        scenario === "ordinary" ? "README.md" : ".github/workflows/new.yml",
+      ),
+      "changed\n",
+    );
+    repo.command(["add", "."]);
+    repo.command(["commit", "--quiet", "-m", "change"]);
+    if (scenario === "removed") {
+      repo.command(["rm", ".github/workflows/old.yml"]);
+      repo.command(["commit", "--quiet", "-m", "delete workflow"]);
+    }
+    if (scenario === "reverted") repo.command(["revert", "--no-edit", "HEAD"]);
+    if (scenario === "base advanced") {
+      repo.command(["checkout", "--quiet", "--detach", "factory/issue-4"]);
+    }
+    if (["pushed", "contains"].includes(scenario))
+      repo.command(["push", "--quiet", "origin", "HEAD"]);
+    if (scenario === "contains") {
+      const head = repo.command(["rev-parse", "HEAD"]).trim();
+      repo.command([
+        "commit",
+        "--quiet",
+        "--allow-empty",
+        "-m",
+        "remote successor",
+      ]);
+      repo.command(["push", "--quiet", "origin", "HEAD"]);
+      repo.command(["reset", "--hard", head]);
+    }
+    run.sandcastle.launched[0].finish();
+    await settled();
+    const decisions = await run.tick();
+    if (
+      ["absent", "behind", "removed", "reverted", "base advanced"].includes(
+        scenario,
+      )
+    ) {
+      assert.equal(decisions[0].kind, "fail");
+      assert.deepEqual(decisions[0].workflowPaths, [
+        ".github/workflows/new.yml",
+        ...(scenario === "removed" ? [".github/workflows/old.yml"] : []),
+      ]);
+      const issue = run.github.find(4);
+      assert.ok(issue.labels.includes("factory:failed"));
+      assert.match(issue.comments[0], /GitHub App can't push/);
+      assert.match(issue.comments[0], /\.github\/workflows\/new.yml/);
+      assert.match(issue.comments[0], /claude-code\/claude-sonnet-5-5@high/);
+      assert.ok(issue.comments[0].includes(run.sandcastle.launched[0].log));
+      assert.match(issue.comments[0], /person with Workflows permission/);
+      assert.equal(run.sandcastle.launched.length, 1);
+    } else {
+      assert.equal(decisions[0].kind, "launch");
+      assert.equal(decisions[0].attempt, 2);
+      run.sandcastle.launched[1].finish();
+    }
+  });
+}
+
+test("an update's uninspected workflow changes file an owner issue and hold the next daily check", async (t) => {
+  const repo = gitRepositories(t);
+  const run = factory({
+    issues: [],
+    root: repo.root,
+    git: repo.git,
+    updates: { outdated: available },
+  });
+  await run.tick();
+  const [launch] = run.sandcastle.launched;
+  repo.command(["checkout", "--quiet", "-b", launch.branch]);
+  writeFileSync(join(repo.root, ".github/workflows/old.yml"), "changed\n");
+  repo.command(["add", "."]);
+  repo.command(["commit", "--quiet", "-m", "operation changes workflow"]);
+  launch.finish();
+  await settled();
+  await run.tick();
+  assert.equal(run.github.state.created.length, 1);
+  assert.match(
+    run.github.state.created[0].body,
+    /refused workflow push: `\.github\/workflows\/old.yml`/,
+  );
+  assert.match(run.github.state.created[0].body, /Workflows permission/);
+  run.time.now = new Date("2026-10-10T12:00:00Z");
+  await run.tick();
+  assert.equal(run.github.state.created.length, 1);
+  assert.equal(run.sandcastle.launched.length, 1);
 });

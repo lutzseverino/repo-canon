@@ -1182,3 +1182,101 @@ test("a report without the confirmation contract cannot authorize adoption", asy
     "wait-update",
   );
 });
+
+test("a refused workflow push fails either attempt without a retry", () => {
+  for (const attempt of [1, 2]) {
+    const decisions = decideFactory(
+      snapshot({
+        runs: [
+          run(4, {
+            attempt,
+            ended: {
+              timedOut: false,
+              pullRequest: "none",
+              refusedWorkflowPush: [".github/workflows/ci.yml"],
+            },
+          }),
+        ],
+      }),
+    );
+    assert.deepEqual(decisions, [
+      {
+        kind: "fail",
+        issue: 4,
+        failure:
+          "the factory's GitHub App can't push changes to GitHub workflow files",
+        workflowPaths: [".github/workflows/ci.yml"],
+        log: "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
+      },
+    ]);
+  }
+});
+
+test("timeouts ignore a refused workflow push and keep their retry", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [issue(4, ["ready-for-agent", "factory:running"])],
+      runs: [
+        run(4, {
+          ended: {
+            timedOut: true,
+            pullRequest: "none",
+            refusedWorkflowPush: [".github/workflows/ci.yml"],
+          },
+        }),
+      ],
+    }),
+  );
+  assert.equal(decisions.length, 1);
+  assert.equal(decisions[0].kind, "launch");
+  assert.equal(decisions[0].attempt, 2);
+  const [failure] = decideFactory(
+    snapshot({
+      runs: [
+        run(4, {
+          attempt: 2,
+          ended: {
+            timedOut: true,
+            pullRequest: "none",
+            refusedWorkflowPush: [".github/workflows/ci.yml"],
+          },
+        }),
+      ],
+    }),
+  );
+  assert.equal(
+    failure.failure,
+    "the run exceeded the time limit of 240 minutes",
+  );
+});
+
+test("workflow changes in update inspections go to the owner, while matches are adopted", async () => {
+  const { decideUpdate } = await import("../.sandcastle/factory.ts");
+  for (const [field, action] of [
+    ["exact", "create"],
+    ["exact", "replace"],
+    ["systemSkills", "create"],
+    ["systemSkills", "replace"],
+    ["removed", "remove"],
+  ]) {
+    const inspection = {
+      ...inspectedUpdate,
+      [field]: [{ target: ".github/workflows/ci.yml", action }],
+    };
+    assert.equal(
+      decideUpdate(availableUpdate, inspection).kind,
+      "triage-update",
+      `${field} ${action}`,
+    );
+  }
+  assert.equal(
+    decideUpdate(availableUpdate, {
+      ...inspectedUpdate,
+      exact: [
+        { target: ".github/workflows/ci.yml", action: "match" },
+        { target: "ci.yml", action: "replace" },
+      ],
+    }).kind,
+    "adopt-update",
+  );
+});

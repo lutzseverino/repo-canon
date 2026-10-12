@@ -25,6 +25,10 @@ credentials, into each sandbox. The file stays on the host;
 `.sandcastle/.gitignore` keeps it, the run logs, and Sandcastle's worktrees
 out of Git.
 
+The factory's GitHub App deliberately has no Workflows permission. Sandbox
+agents cannot change the CI that gates their own merges; a person with Workflows
+permission delivers changes to GitHub workflow files.
+
 A Business or Enterprise Codex workspace can give its agents
 `CODEX_ACCESS_TOKEN` through `.sandcastle/.env`. A personal ChatGPT plan has no
 such variable, so the host keeps a Codex login file and names it in
@@ -199,6 +203,15 @@ claim, comments the failure, the model, and the run's log, and labels the issue
 on the host; a failed claim that no run holds names neither. The factory skips
 a failed issue until someone removes `factory:failed`.
 
+An ended run that did not time out and has no open pull request is a refused
+workflow push when its local branch has commits changing files under
+`.github/workflows/`, relative to the base it started from, and the remote
+branch is absent or does not contain its local head. The host checks only Git
+state, without reading run logs. Such a run fails once without a retry on either
+attempt. Its failure comment names the permission reason, workflow paths,
+model and log, and directs a person with Workflows permission to deliver the
+change. Timeouts and other failures keep their usual retry behavior.
+
 ## Daily updates
 
 Once per 24 hours, starting with the first pass, the factory runs the project's
@@ -213,7 +226,12 @@ check is logged and tried on the next daily check; it does not stop issue work.
 
 The decision core classifies the inspection's `confirmation` report. When it
 requires confirmation, the adapter files a `needs-triage` issue naming the
-selection, inspection identity, and every reason. It does not create another
+selection, inspection identity, and every reason. It also files that owner issue
+when an `exact` or system-skill target under `.github/workflows/` would be
+created or replaced, or a target there would be removed, even without discarded
+edits. Workflow reasons list each target and its action alongside any
+discarded-edit reasons. Workflow targets that already match need no owner
+issue. It does not create another
 issue for that candidate while an earlier one exists, including a closed one.
 Any such marker issue also holds routine adoption of the same candidate before
 image builds, including issues filed by an agent when a later fix requires
@@ -239,6 +257,10 @@ reserve no update slot. Held candidates
 are reconsidered on the next daily check, without image builds or repeated
 pull request reads between checks. After an update agent exits, the host checks
 its exact branch for a pull request. An ended run without a pull request is
-logged with its log path and may run again at the next daily check. Daily checks
+logged with its log path and may run again at the next daily check. If an update
+operation or agent made workflow changes the inspection did not show, the same
+Git check on that update's branch detects a refused workflow push and files
+the marked owner issue for its candidate. That issue prevents another daily
+run of the candidate. Daily checks
 continue during a long adoption without queuing its candidate again; a different
 candidate may wait for the active run to exit.
