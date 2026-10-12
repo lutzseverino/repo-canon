@@ -113,7 +113,10 @@ repeated.
   from the development guide, as the
   [sandbox image guidance](guidance/factory-sandbox-image.md) states. The factory checks for updates daily: routine updates run through adoption
   to a pull request that `babysit` merges, and confirmation-required changes
-  become issues for triage. The host
+  become issues for triage. An update that would create, replace, or remove a
+  target under `.github/workflows/` becomes a `needs-triage` issue for the owner
+  instead of running through adoption, because the factory's GitHub App has no
+  Workflows permission. The host
   sets the default and retry models, the per-provider caps, the usage
   threshold, and the time limit; Repo Canon ships none of them. The canonical
   labels carry the claim, failure, and run-mode labels but no `model:` labels.
