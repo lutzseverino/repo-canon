@@ -42,7 +42,13 @@ or posting an Agent Brief, wait for the issue-contract workflow's revision
 notice before applying readiness. Editing a contract removes its readiness. The
 workflow keeps one workflow state label on an issue: authorized readiness or a
 newly applied state replaces the previous one, and an issue left with none gets
-`needs-triage`.
+`needs-triage` on every run, even if it has never carried a state. This applies
+to open intake requests, specifications, tickets, and unrecognized issues;
+Wayfinder maps and children stay outside workflow states. The validator's own
+`needs-triage` is a fallback and never supersedes authorized readiness bound to
+the current revision, even when applied after its review. A person's later
+workflow state still supersedes readiness. A closed issue loses `needs-triage`
+and keeps its other labels and feedback unchanged.
 A specification or ticket can be ready while its blockers are open. A parent (a
 specification or any issue with sub-issues) never runs; its readiness releases
 its tickets, which each also need their own readiness. Apply the parent's

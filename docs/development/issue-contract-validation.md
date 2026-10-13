@@ -1,21 +1,27 @@
 # Issue contract validation
 
 The `Issue contracts` workflow validates issue structure from the repository's
-trusted default-branch code. It runs for issue body and label changes and for
-created, edited, or deleted issue comments. Pull request comments are ignored.
+trusted default-branch code. It runs when issues open, reopen, or close, for
+issue body and label changes, and for created, edited, or deleted issue comments.
+Pull request comments are ignored.
 The workflow checks out the default branch explicitly and treats issue and
 comment Markdown only as data.
 
 The adapter fetches the issue itself before reading its discussion, timeline,
 relationships, edit revision, or actor roles. If that fetched issue is closed,
-it skips validation with exit status 0, without writing labels or creating or
-updating a feedback comment. The fetched state decides the skip even when the
-triggering event says the issue was open.
+it removes `needs-triage` if present and skips validation with exit status 0.
+It makes no other write or context read: other labels and the feedback comment
+stay untouched, and discussion, timeline, relationships, edit revision, and
+roles are not fetched. This applies to every issue kind, Wayfinder included,
+and every close reason. The fetched state decides this path whatever the
+trigger, even when the triggering event says the issue was open.
 
 The validator is one file. It exports `decideIssueContract`, a synchronous
 decision that reads one snapshot and returns the label changes, the feedback
-comment write, and the exit status, with no network or file access, and
-`readinessTriggerUnrecorded`, a pure predicate over the same snapshot. Its
+comment write, and the exit status, with no network or file access. Its closed
+path needs only the fetched issue, and its open path needs the contract snapshot.
+The file also exports `readinessTriggerUnrecorded`, a pure predicate over the same
+snapshot. Its
 GitHub adapter runs only when the workflow executes the file: for an open issue,
 it fetches the complete snapshot before deciding, waiting within a bound for the
 issue-event timeline to record a human readiness trigger, then applies the
@@ -311,19 +317,26 @@ supported issue or comment event.
 
 ### Workflow state
 
-Every run of an issue that uses workflow state works out the one workflow state
-label the issue should carry and removes the others. The number of workflow
-states is never a structural error.
+Every run on an open issue that uses workflow state works out the one workflow
+state label the issue should carry and removes the others. Intake forms, triaged
+requests, direct specifications and tickets, and unrecognized issues all use
+workflow states. Wayfinder maps and children, including ones that fail structure,
+never gain a workflow state. Pull requests remain ignored. The number of
+workflow states is never a structural error.
 
 - A carried readiness label that is authorized and bound to the current
   revision, as an active approval or a valid grant, is the state. Every
   non-readiness state labeled before its review in the event timeline, or
   applied with the issue at creation, such as a form label, is removed. A label
   applied at creation is one the issue was opened with or whose application
-  carries the issue's creation timestamp.
+  carries the issue's creation timestamp. The validator's own `needs-triage`
+  application (actor `github-actions[bot]`) is a fallback for a stateless issue
+  and never supersedes this readiness: it is removed even when the timeline
+  records it after the review. This also handles an opening run that read a
+  bare snapshot and wrote its fallback after an authorized creation review.
 - A non-readiness state applied after the review supersedes it, whatever its
-  timestamp: the validator keeps the latest such state, removes readiness and
-  every other state, and publishes the revision as awaiting review. A carried
+  timestamp, except for the validator's own `needs-triage` fallback: the validator
+  keeps the latest such state, removes readiness and every other state, and publishes the revision as awaiting review. A carried
   state whose application the timeline has not recorded counts as later than
   every recorded event only when its latest recorded change is a removal or
   nothing. A label the issue was opened with is the exception.
@@ -333,8 +346,9 @@ states is never a structural error.
 - Among non-readiness states, the one applied latest in the timeline stays.
   Several whose applications the timeline has not recorded cannot be ordered,
   so they all stay until a later run reads a timeline that orders them.
-- An issue left with no workflow state gets `needs-triage` once it has carried
-  one, as its labels or timeline show. The run keeps the recorded review state,
+- An open issue left with no workflow state gets `needs-triage`, whether or not
+  it has carried one before, on any trigger. Opening and reopening a bare issue
+  therefore need no special case. The run keeps the recorded review state,
   so an unchanged feedback comment is not rewritten and readiness applied
   afterwards at the same revision is decided as if `needs-triage` had never been
   removed. Removing readiness, or losing it to invalidation, therefore returns a
@@ -402,8 +416,10 @@ and repeated events, their
 replacement by later review or contract edits,
 readiness removal and re-add
 ordering across paginated issue events, the one timeline ordering rule,
-contract edits, pull request exclusion, the closed-issue skip without label or
-feedback writes (including an open event whose fetched issue is closed),
+contract edits, pull request exclusion, first state assignment to bare open
+issues, the validator's fallback applied after a creation review in either run
+order, and closed-issue removal of only `needs-triage` without further context
+reads (including an open event whose fetched issue is closed),
 readiness invalidation when a changed contract is reopened, and hostile Markdown
 that must remain inert. The `CI` workflow runs the complete repository test suite
 with `npm test`. These fixtures exercise the authorization mechanism but do not

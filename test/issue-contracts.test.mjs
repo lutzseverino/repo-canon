@@ -275,6 +275,7 @@ structureTable("issue structure decides the contract and its corrections", [
       labels: [],
       expected: {
         exitCode: 0,
+        add: ["needs-triage"],
         feedback: "create",
         message: /valid implementation ticket/i,
       },
@@ -285,6 +286,7 @@ structureTable("issue structure decides the contract and its corrections", [
       labels: [],
       expected: {
         exitCode: 0,
+        add: ["needs-triage"],
         feedback: "create",
         message: /valid specification/i,
       },
@@ -384,7 +386,7 @@ structureTable("issue structure decides the contract and its corrections", [
       },
     },
     expected: example.valid
-      ? { exitCode: 0, feedback: "create" }
+      ? { exitCode: 0, add: ["needs-triage"], feedback: "create" }
       : {
           exitCode: 1,
           remove: ["ready-for-agent"],
@@ -646,7 +648,6 @@ structureTable("issue structure decides the contract and its corrections", [
       body: "Free-form request declined with an explanation.",
       labels: [{ name: "enhancement" }, { name: "wontfix" }],
       comments: [],
-      state: "closed",
       feedback: null,
     },
   ].map((example) => ({
@@ -664,6 +665,7 @@ structureTable("issue structure decides the contract and its corrections", [
     },
     expected: {
       exitCode: 0,
+      add: example.labels.length === 0 ? ["needs-triage"] : [],
       feedback: example.feedback,
       message: new RegExp(`valid ${example.name}`, "i"),
     },
@@ -1040,7 +1042,7 @@ decisionTable(
           },
         },
       },
-      expected: { exitCode: 0, feedback: "create" },
+      expected: { exitCode: 0, add: ["needs-triage"], feedback: "create" },
     },
     {
       name: "only the first link under Parent is the parent reference",
@@ -1066,6 +1068,7 @@ decisionTable(
       },
       expected: {
         exitCode: 1,
+        add: ["needs-triage"],
         feedback: "create",
         message:
           /^Could not resolve the `Parent` issue reference \/repos\/example\/repository\/issues\/7\.$/,
@@ -1083,6 +1086,7 @@ decisionTable(
       },
       expected: {
         exitCode: 1,
+        add: ["needs-triage"],
         feedback: "create",
         message: new RegExp(
           ["993", "41", "43"]
@@ -1175,6 +1179,7 @@ decisionTable("the feedback comment is maintained once", [
     },
     expected: {
       exitCode: 0,
+      add: ["needs-triage"],
       feedback: 9,
       feedbackBody: /fresh authorized review/i,
     },
@@ -4702,4 +4707,248 @@ decisionTable(
       },
     },
   ],
+);
+
+decisionTable("bare open issues receive their first workflow state", [
+  ...["opened", "reopened", "edited", "created", "labeled"].map((action) => ({
+    name: `a bare native ticket gets needs-triage from ${action}`,
+    snapshot: {
+      issue: { number: 42, body: ticketBody, labels: [], state: "open" },
+      event: { action, issue: { number: 42, labels: [] } },
+    },
+    expected: { exitCode: 0, add: ["needs-triage"], feedback: "create" },
+  })),
+  ...[
+    { name: "specification", body: specificationBody, feedback: "create" },
+    { name: "bug form", body: bugBody, labels: ["bug"] },
+    { name: "feature form", body: featureBody, labels: ["enhancement"] },
+    {
+      name: "triaged request",
+      body: featureBody,
+      labels: ["enhancement"],
+      comments: [
+        { id: 12, body: completeAgentBrief, user: { login: "triager" } },
+      ],
+      feedback: "create",
+    },
+    {
+      name: "unrecognized issue",
+      body: "An unrecognized issue.",
+      exitCode: 1,
+      feedback: "create",
+      message: /use one supported issue contract/i,
+    },
+  ].map(
+    ({
+      name,
+      body,
+      labels = [],
+      comments = [],
+      exitCode = 0,
+      feedback = null,
+      message,
+    }) => ({
+      name: `a bare ${name} gets needs-triage`,
+      snapshot: {
+        issue: {
+          number: 42,
+          body,
+          labels: labels.map((name) => ({ name })),
+          state: "open",
+        },
+        comments,
+      },
+      expected: { exitCode, add: ["needs-triage"], feedback, message },
+    }),
+  ),
+  ...[
+    { name: "map", body: mapBody, label: "wayfinder:map" },
+    {
+      name: "child",
+      body: "## Question\n\nWhich cache?",
+      label: "wayfinder:research",
+      parent: { number: 7, labels: [{ name: "wayfinder:map" }] },
+    },
+    {
+      name: "malformed map",
+      body: "Incomplete.",
+      label: "wayfinder:map",
+      exitCode: 1,
+      feedback: "create",
+    },
+    {
+      name: "malformed child",
+      body: "Incomplete.",
+      label: "wayfinder:research",
+      exitCode: 1,
+      feedback: "create",
+    },
+  ].map(
+    ({ name, body, label, parent = null, exitCode = 0, feedback = null }) => ({
+      name: `a bare Wayfinder ${name} gains no workflow state`,
+      snapshot: {
+        issue: { number: 42, body, labels: [{ name: label }], state: "open" },
+        parent,
+        event: { action: "opened", issue: { number: 42 } },
+      },
+      expected: { exitCode, feedback },
+    }),
+  ),
+]);
+
+decisionTable(
+  "the validator's fallback never supersedes authorized readiness",
+  ["github-actions[bot]", "maintainer"].map((actor) => ({
+    name: `needs-triage applied after the review by ${actor}`,
+    snapshot: supersessionSnapshot({
+      labels: ["ready-for-agent", "needs-triage"],
+      issueEvents: [
+        readinessReview,
+        {
+          id: 102,
+          event: "labeled",
+          label: { name: "needs-triage" },
+          actor: { login: actor },
+          created_at: "2026-09-14T17:05:00Z",
+        },
+      ],
+      event: commentEdited,
+    }),
+    expected:
+      actor === "github-actions[bot]"
+        ? {
+            exitCode: 0,
+            remove: ["needs-triage"],
+            message: /ready-for-agent bound/,
+          }
+        : supersededBy("needs-triage"),
+  })),
+);
+
+decisionTable("closed issues only lose needs-triage", [
+  {
+    name: "a closed issue needs no contract snapshot to remove needs-triage",
+    snapshot: {
+      issue: {
+        number: 42,
+        body: "Unrecognized body.",
+        labels: [
+          "needs-triage",
+          "ready-for-agent",
+          "needs-info",
+          "wontfix",
+        ].map((name) => ({ name })),
+        state: "closed",
+        state_reason: "completed",
+      },
+      event: { action: "closed", issue: { number: 42 } },
+    },
+    expected: { exitCode: 0, remove: ["needs-triage"] },
+    check: () =>
+      assertDecision(
+        decideIssueContract({
+          issue: { state: "closed", labels: ["needs-triage"] },
+        }),
+        { exitCode: 0, remove: ["needs-triage"] },
+      ),
+  },
+  ...[
+    ["native ticket", ticketBody, []],
+    ["specification", specificationBody, []],
+    ["form intake", bugBody, ["bug"]],
+    ["Wayfinder map", mapBody, ["wayfinder:map"]],
+    ["Wayfinder child", "Incomplete.", ["wayfinder:research"]],
+  ].flatMap(([kind, body, kindLabels]) =>
+    [true, false].map((needsTriage) => ({
+      name: `a closed ${kind} ${needsTriage ? "loses needs-triage" : "has no label or feedback writes"}`,
+      snapshot: {
+        issue: {
+          number: 42,
+          body,
+          state: "closed",
+          labels: [
+            ...kindLabels,
+            "ready-for-agent",
+            "ready-for-human",
+            "needs-info",
+            "wontfix",
+            ...(needsTriage ? ["needs-triage"] : []),
+          ].map((name) => ({ name })),
+        },
+        comments: [
+          {
+            id: 13,
+            body: "<!-- repo-canon:issue-contract-feedback -->\nKeep this feedback.",
+            user: bot,
+          },
+        ],
+        event: commentEdited,
+      },
+      expected: { exitCode: 0, remove: needsTriage ? ["needs-triage"] : [] },
+    })),
+  ),
+]);
+
+decisionTable(
+  "creation readiness survives a fallback written from a bare snapshot",
+  [
+    ["ticket", ticketBody],
+    ["specification", specificationBody],
+  ].flatMap(([kind, body]) =>
+    [
+      ...runOrders.map((order) => ({
+        order,
+        createdLabels: ["ready-for-agent"],
+        name: order.join(" then "),
+      })),
+      {
+        order: ["labeled", "opened"],
+        createdLabels: [],
+        name: "a separate creation-second label call",
+      },
+    ].map(({ order, createdLabels, name }) => ({
+      name: `a ${kind} keeps readiness with ${name}`,
+      run: () => {
+        let snapshot = createdWithReadiness({
+          run: "opened",
+          labels: createdLabels,
+          currentLabels: [],
+          issueEvents: [],
+        });
+        snapshot.issue.body = body;
+        const fallback = decideIssueContract(snapshotFor(snapshot));
+        assertDecision(fallback, {
+          exitCode: 0,
+          add: ["needs-triage"],
+          feedback: "create",
+        });
+        snapshot = afterWrites(snapshot, fallback);
+        snapshot.issue.labels.push({ name: "ready-for-agent" });
+        // The opening run fetched a bare snapshot before readiness became
+        // visible, then wrote its fallback after the creation-second review.
+        snapshot.issueEvents = [creationLabel(), ...snapshot.issueEvents];
+        for (const run of order) {
+          snapshot.event = createdWithReadiness({
+            run,
+            labels: createdLabels,
+          }).event;
+          snapshot.event.issue.body = body;
+          const decision = decideIssueContract(snapshotFor(snapshot));
+          assertDecision(
+            decision,
+            run === order[0]
+              ? {
+                  exitCode: 0,
+                  remove: ["needs-triage"],
+                  feedback: 99,
+                  message: /ready-for-agent bound/,
+                }
+              : { exitCode: 0 },
+          );
+          snapshot = afterWrites(snapshot, decision);
+        }
+        assert.deepEqual(snapshot.issue.labels, [{ name: "ready-for-agent" }]);
+      },
+    })),
+  ),
 );

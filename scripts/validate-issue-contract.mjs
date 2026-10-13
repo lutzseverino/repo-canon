@@ -109,6 +109,19 @@ const wayfinderChildFields = new Set(["parent", "question"]);
 // Returns the labels to remove and add, the feedback comment write (`null` for
 // none, a `null` `commentId` to create it), and the exit code with its message.
 export function decideIssueContract(snapshot) {
+  if (snapshot.issue.state === "closed") {
+    const needsTriage = (snapshot.issue.labels ?? []).some(
+      (label) => labelName(label) === "needs-triage",
+    );
+    return issueDecision({
+      exitCode: 0,
+      message: needsTriage
+        ? "Skipped closed issue validation; removed needs-triage."
+        : "Skipped closed issue; issue contract validation handles open issues only.",
+      removeLabels: needsTriage ? ["needs-triage"] : [],
+    });
+  }
+
   const { comments } = snapshot;
   const result = assessStructure(snapshot);
   const previousFeedback = findFeedback(comments);
@@ -1154,7 +1167,7 @@ function readinessLabels(labels) {
 // The label writes that leave the issue one workflow state: the `kept` states
 // when the decision names them, otherwise the non-readiness state applied
 // latest. States the timeline cannot order yet all stay. An issue left with
-// none returns to `needs-triage` once it has carried a workflow state.
+// none gets `needs-triage`, whether or not it has carried a state before.
 function settledStates(labels, timeline, kept = null) {
   const states = [...labels].filter((label) => workflowLabels.has(label));
   const staying =
@@ -1162,11 +1175,7 @@ function settledStates(labels, timeline, kept = null) {
     timeline.latestApplied(states.filter((label) => !readyLabels.has(label)));
   return {
     removeLabels: states.filter((label) => !staying.includes(label)),
-    addLabels:
-      staying.length > 0 ||
-      (states.length === 0 && !timeline.recordsWorkflowState())
-        ? []
-        : ["needs-triage"],
+    addLabels: staying.length > 0 ? [] : ["needs-triage"],
   };
 }
 
@@ -1178,6 +1187,7 @@ function stateAppliedAfterReview(labels, reviewEventId, timeline) {
       (label) =>
         workflowLabels.has(label) &&
         !readyLabels.has(label) &&
+        !timeline.isValidatorFallback(label) &&
         timeline.appliedAfter(label, reviewEventId),
     ),
   );
@@ -1408,21 +1418,23 @@ function issueTimeline({ event, issue, issueEvents }) {
       };
     },
 
+    // The validator's fallback only fills a missing state; it never
+    // supersedes readiness. A removal followed by an unrecorded application
+    // cannot establish the actor, so it still follows the ordering rule.
+    isValidatorFallback(label) {
+      return (
+        label === "needs-triage" &&
+        latestChangeIsApplication(label) &&
+        lastApplication(label)?.event.actor?.login === "github-actions[bot]"
+      );
+    },
+
     // Whether the label's application follows the review, whatever its
     // timestamp.
     appliedAfter(label, reviewEventId) {
       const reviewPosition = position(reviewEventId);
       return (
         reviewPosition !== null && applicationPosition(label) > reviewPosition
-      );
-    },
-
-    // Whether the timeline records any workflow state application.
-    recordsWorkflowState() {
-      return issueEvents.some(
-        (candidate) =>
-          candidate.event === "labeled" &&
-          workflowLabels.has(candidate.label?.name),
       );
     },
 
@@ -1594,9 +1606,10 @@ async function runIssueContractValidation(environment) {
     return;
   }
   if (issue.state === "closed") {
-    console.log(
-      "Skipped closed issue; issue contract validation handles open issues only.",
-    );
+    const decision = decideIssueContract({ issue });
+    for (const label of decision.removeLabels)
+      await api.removeLabel(issueNumber, label);
+    console.log(decision.message);
     return;
   }
 

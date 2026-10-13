@@ -103,6 +103,7 @@ test("the issue contract workflow covers issue and comment changes using default
     "opened",
     "edited",
     "reopened",
+    "closed",
     "labeled",
     "unlabeled",
     "created",
