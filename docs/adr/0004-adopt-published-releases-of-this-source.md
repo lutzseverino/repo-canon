@@ -1,5 +1,8 @@
 # Adopt published releases of this source
 
+Status: its `complete` profile is replaced by the standard and factory
+profiles of [ADR 0017](0017-make-the-factory-an-optional-profile.md).
+
 Repo Canon adopts its own standards through the public Repository Standards
 CLI, pinned to a published Repo Canon release and the `complete` profile, never
 by reading its working tree. This keeps the source repository on the exact path

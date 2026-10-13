@@ -3,8 +3,10 @@
 Status: its run-mode selection is superseded by
 [ADR 0012](0012-run-each-ticket-as-its-own-factory-run.md), how it ships and
 runs by [ADR 0013](0013-install-the-factory-on-the-host-from-its-own-releases.md),
-and the labels and prompt it knows by
-[ADR 0014](0014-name-every-factory-convention-in-configuration.md).
+the labels and prompt it knows by
+[ADR 0014](0014-name-every-factory-convention-in-configuration.md), and every
+adopting repository carrying it by
+[ADR 0017](0017-make-the-factory-an-optional-profile.md).
 
 Every adopting repository carries the factory as exact files in `.sandcastle/`,
 which a generic host service runs. The factory takes each ready issue on the
