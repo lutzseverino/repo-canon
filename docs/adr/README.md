@@ -36,4 +36,8 @@ involve real alternatives.
   merge.
 - [Ship the factory with the standard](0011-ship-the-factory-with-the-standard.md):
   every adopting repository carries `.sandcastle/`, which replaces orchestrator
-  prompts, and labels choose each run's mode and model.
+  prompts, and labels choose each run's mode and model; its run-mode selection
+  is superseded by ADR 0012.
+- [Run each ticket of a specification as its own factory run](0012-run-each-ticket-as-its-own-factory-run.md):
+  every factory run is a direct run, a parent never runs, and its readiness
+  releases its tickets, each on its own `model:` label.

@@ -31,7 +31,6 @@ const skillNames = [
   "triage",
   "wayfinder",
   "implement",
-  "implement-spec",
   "pr",
   "prototype",
   "wizard",
@@ -354,15 +353,7 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
 {
   const root = createRepository(
     "delivery",
-    [
-      "implement",
-      "implement-spec",
-      "pr",
-      "tdd",
-      "code-review",
-      "prototype",
-      "wizard",
-    ],
+    ["implement", "pr", "tdd", "code-review", "prototype", "wizard"],
     {
       agents:
         "# Agent guidance\n\nRead the native ticket, glossary, and development commands. Use tests at the public `scheduleDelivery()` seam. Prototype work stays on a throwaway branch. Wizards must never contact production during this exercise.\n",
@@ -463,7 +454,7 @@ Implement scheduleDelivery through the existing public interface.
 A dispatcher can prioritize urgent Parcels while preserving the input.
 
 ## Implementation Decisions
-The native child ticket is [Prioritize urgent Parcels](issues/01-prioritize-parcels.md). It has no blockers and is ready-for-agent. Keep this local exercise on one integration branch; resolve its ticket through the local tracker. Publish nothing.
+The native child ticket is [Prioritize urgent Parcels](issues/01-prioritize-parcels.md). It has no blockers and is ready-for-agent. Implement the ticket on its own branch and resolve it through the local tracker. Publish nothing.
 
 ## Testing Decisions
 Use the agreed scheduleDelivery seam and the existing failing tests.
@@ -485,7 +476,7 @@ Draft a local PR body after implementing the ticket. Do not open a pull request.
   );
   repositories.delivery = {
     path: root,
-    skills: ["implement", "implement-spec", "pr", "prototype", "wizard"],
+    skills: ["implement", "pr", "prototype", "wizard"],
     initial: commit(root, "chore: establish delivery exercises"),
   };
 }

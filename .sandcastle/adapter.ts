@@ -35,7 +35,6 @@ import {
   type Decision,
   type Issue,
   type IssueId,
-  type Mode,
   type Provider,
   type PullRequestState,
   type Run,
@@ -270,9 +269,8 @@ export function createStandardsRunner(
   };
 }
 
-export function prompt(provider: Provider, mode: Mode, issue: number): string {
-  const skill = mode === "direct" ? "implement" : "implement-spec";
-  return `${skillPrefixes[provider]}${skill} #${issue}`;
+export function prompt(provider: Provider, issue: number): string {
+  return `${skillPrefixes[provider]}implement #${issue}`;
 }
 
 // A page holds 25 issues so the query stays within GitHub's limit of 500,000
@@ -287,7 +285,7 @@ const issuesQuery = `query($owner: String!, $name: String!, $endCursor: String) 
         body
         labels(first: 100) { nodes { name } }
         parent { number repository { nameWithOwner } }
-        subIssues(first: 100) { nodes { number repository { nameWithOwner } state labels(first: 100) { nodes { name } } } }
+        subIssues(first: 100) { nodes { number repository { nameWithOwner } state } }
         blockedBy(first: 100) { nodes { number state } }
         labelEvents: timelineItems(itemTypes: [LABELED_EVENT], last: 100) { nodes { ... on LabeledEvent { createdAt label { name } } } }
         linkEvents: timelineItems(itemTypes: [SUB_ISSUE_ADDED_EVENT], last: 1) { nodes { ... on SubIssueAddedEvent { createdAt subIssue { number repository { nameWithOwner } } } } }
@@ -704,7 +702,6 @@ export function createFactory(settings: Settings, ports: Ports) {
           subIssues: node.subIssues.nodes.map((child: any) => ({
             number: nodeId(child, local),
             state: state(child.state),
-            labels: names(child.labels),
           })),
           blockedBy: node.blockedBy.nodes.map((blocker: any) => ({
             number: blocker.number,
@@ -820,7 +817,6 @@ export function createFactory(settings: Settings, ports: Ports) {
         const run: HostRun = {
           base,
           issue,
-          mode: decision.mode,
           provider: decision.provider,
           model: decision.model,
           effort: decision.effort,
@@ -844,7 +840,7 @@ export function createFactory(settings: Settings, ports: Ports) {
           .launch({
             issue,
             branch: runBranch(issue),
-            prompt: prompt(run.provider, run.mode, issue),
+            prompt: prompt(run.provider, issue),
             provider: run.provider,
             model: run.model,
             effort: run.effort,

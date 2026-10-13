@@ -322,11 +322,6 @@ defaults:
       name: implement
       source: vendor/mattpocock-skills/skills/engineering/implement
 
-    skill-implement-spec:
-      kind: skill
-      name: implement-spec
-      source: vendor/mattpocock-skills/skills/engineering/implement-spec
-
     skill-improve-codebase-architecture:
       kind: skill
       name: improve-codebase-architecture

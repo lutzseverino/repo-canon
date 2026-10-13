@@ -63,13 +63,16 @@ repeated.
   documentation check enforce the index entry form, one index per document,
   the development guide's order, and scope coverage, with each check defined
   once in the shared documentation model.
-- Include all regular Matt Pocock skills. Upstream's promoted set at tag
-  `v1.3.1`, commit
+- Include every regular Matt Pocock skill but `implement-spec`. Upstream's
+  promoted set at tag `v1.3.1`, commit
   `24fe0ef7737efae15c87225755e9f6f5965e4888` consists of 20 engineering and seven
   productivity skills, matching its plugin manifest. The set includes `pr`,
   `implement-spec`, and `retro`; upstream removed `resolving-merge-conflicts`.
   Experimental skills are excluded; the upstream in-progress, misc, and deprecated categories are
-  outside the regular set. No additional regular-skill exclusions are agreed.
+  outside the regular set. `implement-spec` stays vendored but is not
+  declared, because every factory run is a direct run, as
+  [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md)
+  decides. No additional regular-skill exclusions are agreed.
 - The standards source manages reviewed, pinned upstream skill snapshots and
   distributes changes through standards releases. Keep upstream skill content
   intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
@@ -102,7 +105,9 @@ repeated.
   other original exact files; only vendored material has a separate source
   path.
 - The factory ships with the standard, as
-  [ADR 0011](docs/adr/0011-ship-the-factory-with-the-standard.md) decides.
+  [ADR 0011](docs/adr/0011-ship-the-factory-with-the-standard.md) decides,
+  and every run is a direct run of one ticket, as
+  [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
   `.sandcastle/` holds a repository-agnostic entry, adapter, and pure decision
   core as exact files whose source is their
   installed path. The adapter recognizes a specification, and a ticket's
@@ -119,7 +124,7 @@ repeated.
   Workflows permission. The host
   sets the default and retry models, the per-provider caps, the usage
   threshold, and the time limit; Repo Canon ships none of them. The canonical
-  labels carry the claim, failure, and run-mode labels but no `model:` labels.
+  labels carry the claim and failure labels but no `model:` labels.
   [Run the factory](docs/usage/run-the-factory.md) describes its behavior.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the

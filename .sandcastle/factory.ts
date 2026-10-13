@@ -2,7 +2,6 @@
 // repository and the factory host to the decisions the adapter carries out.
 
 export type Provider = "claude-code" | "codex";
-export type Mode = "direct" | "orchestrated";
 
 // An issue's number in this repository, or `<owner>/<name>#<n>` in another.
 export type IssueId = number | string;
@@ -11,8 +10,7 @@ export type Issue = {
   number: number;
   createdAt: string;
   labels: string[];
-  // Whether its contract is a specification, which runs orchestrated over
-  // its tickets.
+  // Whether its contract is a specification, a parent that never runs.
   specification: boolean;
   // When `ready-for-agent` was last applied, or null when it is unknown.
   readyAt: string | null;
@@ -22,7 +20,7 @@ export type Issue = {
   parentReference: IssueId | null;
   // When a native sub-issue was last added, and which, or null when none was.
   latestLink: { ticket: IssueId | null; at: string } | null;
-  subIssues: { number: IssueId; state: "open" | "closed"; labels: string[] }[];
+  subIssues: { number: IssueId; state: "open" | "closed" }[];
   blockedBy: { number: number; state: "open" | "closed" }[];
 };
 
@@ -43,7 +41,6 @@ export type PullRequestState =
 // A run the factory host started. `ended` is null while its agent runs.
 export type Run = {
   issue: number;
-  mode: Mode;
   provider: Provider;
   model: string;
   effort: string;
@@ -168,7 +165,6 @@ function runningCounts(snapshot: Snapshot): Map<Provider, number> {
 export type Launch = {
   kind: "launch";
   issue: number;
-  mode: Mode;
   provider: Provider;
   model: string;
   effort: string;
@@ -194,7 +190,6 @@ export const labels = {
   ready: "ready-for-agent",
   running: "factory:running",
   failed: "factory:failed",
-  orchestrated: "run:orchestrated",
 };
 
 // Each provider's agent CLI and the reasoning efforts it accepts.
@@ -250,12 +245,6 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
       decisions.push({ kind: "skip", issue: issue.number, reason });
       continue;
     }
-    const mode: Mode =
-      issue.specification ||
-      issue.subIssues.length > 0 ||
-      issue.labels.includes(labels.orchestrated)
-        ? "orchestrated"
-        : "direct";
     const model = issueModel(issue, snapshot.settings);
     if ("error" in model) {
       decisions.push({
@@ -265,9 +254,7 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
       });
       continue;
     }
-    const gated =
-      ticketModelExclusion(issue, model, snapshot.settings) ??
-      gate(model.provider, running, snapshot);
+    const gated = gate(model.provider, running, snapshot);
     if (gated) {
       decisions.push({ kind: "skip", issue: issue.number, reason: gated });
       continue;
@@ -278,7 +265,6 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
       {
         kind: "launch",
         issue: issue.number,
-        mode,
         ...model,
         attempt: 1,
       },
@@ -369,7 +355,6 @@ function relaunch(
     {
       kind: "launch",
       issue: issue.number,
-      mode: retry.run.mode,
       ...retry.model,
       attempt: 2,
     },
@@ -430,41 +415,6 @@ function issueModel(
   return parseModel(settings.defaultModel);
 }
 
-// At pickup, a parent runs every ticket on its own model. Explicit ticket
-// labels must agree; unlabelled and closed tickets hold nothing. Retries keep
-// the host's retry model and do not pass through this guard.
-function ticketModelExclusion(
-  issue: Issue,
-  model: Model,
-  settings: Settings,
-): string | null {
-  const conflicts: string[] = [];
-  for (const ticket of issue.subIssues) {
-    if (
-      ticket.state !== "open" ||
-      !ticket.labels.some((label) => label.startsWith("model:"))
-    )
-      continue;
-    const named = issueModel(ticket, settings);
-    if ("error" in named) {
-      conflicts.push(`${reference(ticket.number)}: ${named.error}`);
-    } else if (
-      named.provider !== model.provider ||
-      named.model !== model.model ||
-      named.effort !== model.effort
-    ) {
-      conflicts.push(`${reference(ticket.number)}: ${modelName(named)}`);
-    }
-  }
-  return conflicts.length > 0
-    ? `tickets hold the parent on run model ${modelName(model)}: ${conflicts.join("; ")}; label the parent and its tickets with one model, or remove the tickets' model: labels`
-    : null;
-}
-
-function modelName({ provider, model, effort }: Model): string {
-  return `${provider}/${model}@${effort}`;
-}
-
 // A model is `<slug>` or `<provider>/<slug>`, with an optional `@<effort>`.
 // A bare slug routes by its vendor prefix.
 export function parseModel(value: string): Model | { error: string } {
@@ -514,6 +464,8 @@ function oldestFirst(issues: Issue[]): Issue[] {
 // An issue's exclusion from pickup, given the open issues, which may hold it
 // or name it as their parent.
 function exclusion(issue: Issue, openIssues: Issue[]): string | null {
+  if (isParent(issue))
+    return `${issue.specification ? "a specification" : "an issue with sub-issues"} never runs; its readiness releases its tickets`;
   const held = parentExclusion(issue, openIssues);
   if (held) return held;
   if (issue.labels.includes(labels.failed))
@@ -522,51 +474,62 @@ function exclusion(issue: Issue, openIssues: Issue[]): string | null {
     (blocker) => blocker.state === "open",
   );
   if (blockers.length > 0) return `blocked by ${references(blockers)}`;
-  // Only a specification holds the tickets that name it without a link.
-  const unlinked = issue.specification
-    ? openIssues.filter(
-        (other) =>
-          other.nativeParent === null &&
-          other.parentReference === issue.number &&
-          !issue.subIssues.some((child) => child.number === other.number),
-      )
-    : [];
-  if (unlinked.length > 0)
-    return `tickets name it as their parent but are not linked to it yet: ${references(unlinked)}`;
-  if (issue.specification && issue.subIssues.length === 0)
-    return "specification has no tickets yet";
-  const link = issue.latestLink;
-  if (
-    issue.subIssues.length > 0 &&
-    link &&
-    (issue.readyAt === null || Date.parse(issue.readyAt) <= Date.parse(link.at))
-  )
-    return `readiness predates its latest ticket${link.ticket === null ? "" : ` ${reference(link.ticket)}`}; remove and re-apply ${labels.ready} once its tickets are published`;
-  const unready = issue.subIssues.filter(
-    (child) => child.state === "open" && !child.labels.includes(labels.ready),
-  );
-  if (unready.length > 0)
-    return `children not ready for agent: ${references(unready)}`;
   return null;
 }
 
-// A sub-issue runs as part of its native parent while that parent is open in
-// this repository. An issue with no native parent runs as part of the open
-// specification in this repository that its `Parent` section names. Any other
-// parent leaves it to run on its own.
+// A parent is a specification or any issue with native sub-issues.
+function isParent(issue: Issue): boolean {
+  return issue.specification || issue.subIssues.length > 0;
+}
+
+// A sub-issue waits on its native parent while that parent is open in this
+// repository. An issue with no native parent whose `Parent` section names an
+// open parent in this repository is an unlinked ticket and never runs. Any
+// other parent leaves it to run on its own.
 function parentExclusion(issue: Issue, openIssues: Issue[]): string | null {
   const findOpen = (id: IssueId | null) =>
     openIssues.find((other) => other.number === id);
   if (issue.nativeParent !== null) {
     const parent = findOpen(issue.nativeParent);
     if (!parent) return null;
-    const name = reference(parent.number);
-    return `sub-issue of ${parent.specification ? "specification " : ""}${name}; it runs as part of ${name} once ${name} is ready for agent`;
+    const held = parentHold(parent, openIssues);
+    return held
+      ? `sub-issue of ${parent.specification ? "specification " : ""}${reference(parent.number)}, ${held}`
+      : null;
   }
   const named = findOpen(issue.parentReference);
-  return named?.specification
-    ? `names specification ${reference(named.number)} as its parent but is not linked to it yet`
+  return named && isParent(named)
+    ? `names ${reference(named.number)} as its parent but is not linked to it yet; add it to ${reference(named.number)} as a sub-issue`
     : null;
+}
+
+// A parent's readiness releases its sub-issues once it was applied after its
+// latest ticket link, while no open blocker and no unlinked ticket holds it.
+function parentHold(parent: Issue, openIssues: Issue[]): string | null {
+  const name = reference(parent.number);
+  if (!parent.labels.includes(labels.ready))
+    return `which is not ready for agent; apply ${labels.ready} to ${name} once its tickets are published`;
+  const link = parent.latestLink;
+  if (
+    link &&
+    (parent.readyAt === null ||
+      Date.parse(parent.readyAt) <= Date.parse(link.at))
+  )
+    return `whose readiness predates its latest ticket${link.ticket === null ? "" : ` ${reference(link.ticket)}`}; remove and re-apply ${labels.ready} on ${name} once its tickets are published`;
+  const blockers = parent.blockedBy.filter(
+    (blocker) => blocker.state === "open",
+  );
+  if (blockers.length > 0)
+    return `which is blocked by ${references(blockers)}; it waits until ${name}'s blockers close`;
+  const unlinked = openIssues.filter(
+    (other) =>
+      other.nativeParent === null &&
+      other.parentReference === parent.number &&
+      !parent.subIssues.some((child) => child.number === other.number),
+  );
+  if (unlinked.length > 0)
+    return `which tickets name as their parent without being linked to it: ${references(unlinked)}; add them to ${name} as sub-issues`;
+  return null;
 }
 
 function references(issues: { number: IssueId }[]): string {

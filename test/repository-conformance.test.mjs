@@ -145,7 +145,7 @@ function snapshotFiles(directory, prefix = "") {
   });
 }
 
-test("the shipped Matt Pocock set and bytes match the v1.3.1 plugin manifest", () => {
+test("the vendored Matt Pocock bytes match the v1.3.1 plugin manifest, and all but implement-spec ship", () => {
   assert.deepEqual(
     snapshotFiles(snapshotRoot).sort(),
     Object.keys(upstreamSnapshot.files).sort(),
@@ -171,7 +171,14 @@ test("the shipped Matt Pocock set and bytes match the v1.3.1 plugin manifest", (
   ]
     .map((match) => `./${match[1]}`)
     .sort();
-  assert.deepEqual(shipped, [...manifest.skills].sort());
+  // Every factory run is a direct run, so the vendored `implement-spec` is not
+  // installed.
+  assert.deepEqual(
+    shipped,
+    manifest.skills
+      .filter((path) => path !== "./skills/engineering/implement-spec")
+      .sort(),
+  );
   assert.ok(
     !shipped.some((path) => path.endsWith("/resolving-merge-conflicts")),
   );

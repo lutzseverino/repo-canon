@@ -73,11 +73,6 @@ const canonicalLabels = [
     color: "b60205",
     description: "The factory run failed; remove to run it again",
   },
-  {
-    name: "run:orchestrated",
-    color: "c5def5",
-    description: "The factory runs an orchestrator over this ticket",
-  },
 ];
 
 function readLabels(identity, projectRoot) {

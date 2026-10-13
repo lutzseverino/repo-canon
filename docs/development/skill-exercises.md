@@ -122,13 +122,12 @@ npm run test:planning-skill-fixtures
 ```
 
 The builder writes `manifest.json` under its root and prints that path. Five
-repositories cover eleven skills: `setup` for `setup-matt-pocock-skills` and
+repositories cover ten skills: `setup` for `setup-matt-pocock-skills` and
 `triage`; `adoption-preparation` for the preparation that precedes whole-file
 ownership of `AGENTS.md`; `planning` for `grill-with-docs`, `to-spec`, and
 `to-tickets`; `triage-wayfinder` for `triage` and `wayfinder`; and `delivery`
-for `implement`, `implement-spec`, `pr`, `prototype`, and `wizard`. The latter
-includes a local specification and child ticket for the integration branch
-exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
+for `implement`, `pr`, `prototype`, and `wizard`. The latter
+includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
 support skills that exercised skills depend on, such as the productivity
 `grilling` skill that `grill-with-docs` uses.
 

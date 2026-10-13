@@ -1,5 +1,8 @@
 # Ship the factory with the standard
 
+Status: its run-mode selection is superseded by
+[ADR 0012](0012-run-each-ticket-as-its-own-factory-run.md).
+
 Every adopting repository carries the factory as exact files in `.sandcastle/`,
 which a generic host service runs. The factory takes each ready issue on the
 frontier to a pull request that `babysit` merges, and starts each agent with

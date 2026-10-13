@@ -47,7 +47,6 @@ function snapshot({
 function run(issueNumber, details = {}) {
   return {
     issue: issueNumber,
-    mode: "direct",
     provider: "claude-code",
     model: "claude-sonnet-5-5",
     effort: "high",
@@ -76,7 +75,6 @@ test("a ready issue runs directly on the host's default model", () => {
     {
       kind: "launch",
       issue: 4,
-      mode: "direct",
       provider: "claude-code",
       model: "claude-sonnet-5-5",
       effort: "high",
@@ -85,11 +83,13 @@ test("a ready issue runs directly on the host's default model", () => {
   ]);
 });
 
-test("run:orchestrated starts an orchestrator over the ticket", () => {
-  const [, launch] = decideFactory(
-    snapshot({ issues: [issue(4, ["ready-for-agent", "run:orchestrated"])] }),
+test("a run:orchestrated label leaves the issue to run like any other", () => {
+  assert.deepEqual(
+    decideFactory(
+      snapshot({ issues: [issue(4, ["ready-for-agent", "run:orchestrated"])] }),
+    ),
+    decideFactory(snapshot({ issues: [issue(4)] })),
   );
-  assert.equal(launch.mode, "orchestrated");
 });
 
 test("only issues carrying ready-for-agent reach the frontier", () => {
@@ -129,150 +129,246 @@ test("claimed, failed and blocked issues are skipped with their reasons", () => 
   );
 });
 
-test("a specification runs orchestrated once it and every open child are ready", () => {
-  const child = (number, labels, state = "open") => ({ number, state, labels });
-  const decisions = decideFactory(
-    snapshot({
-      issues: [
-        issue(3, ["ready-for-agent"], {
-          subIssues: [child(5, ["ready-for-agent"]), child(6, [], "closed")],
-        }),
-        issue(4, ["ready-for-agent"], {
-          subIssues: [child(7, ["ready-for-agent"]), child(8, ["needs-info"])],
-        }),
-        issue(5, ["ready-for-agent"], { nativeParent: 3 }),
-        issue(7, ["ready-for-agent"], { nativeParent: 4 }),
-      ],
-    }),
-  );
-  assert.deepEqual(
-    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-    [{ issue: 3, mode: "orchestrated" }],
-  );
-  assert.equal(skipOf(decisions, 4), "children not ready for agent: #8");
-  assert.equal(
-    skipOf(decisions, 5),
-    "sub-issue of #3; it runs as part of #3 once #3 is ready for agent",
-  );
-  assert.equal(
-    skipOf(decisions, 7),
-    "sub-issue of #4; it runs as part of #4 once #4 is ready for agent",
-  );
-});
-
-test("a specification without tickets waits for them instead of running directly", () => {
-  const decisions = decideFactory(
-    snapshot({
-      issues: [
-        issue(3, ["ready-for-agent"], { specification: true }),
-        issue(4, ["ready-for-agent"]),
-      ],
-    }),
-  );
-  assert.equal(skipOf(decisions, 3), "specification has no tickets yet");
-  assert.ok(
-    !decisions.some(
-      (decision) => decision.kind !== "skip" && decision.issue === 3,
-    ),
-  );
-  assert.deepEqual(
-    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-    [{ issue: 4, mode: "direct" }],
-  );
-});
-
-test("a specification runs orchestrated once its tickets exist and are ready", () => {
-  const [, launch] = decideFactory(
-    snapshot({
-      issues: [
-        issue(3, ["ready-for-agent"], {
-          specification: true,
-          subIssues: [
-            { number: 5, state: "open", labels: ["ready-for-agent"] },
-          ],
-        }),
-      ],
-    }),
-  );
-  assert.equal(launch.mode, "orchestrated");
-});
-
-// A specification's readiness covers its ticket graph: it counts only when it
-// was applied after the latest of its tickets was linked.
-function graph(readyAt, subIssues = []) {
+// A parent's readiness releases its tickets: it counts only when it was
+// applied after the latest of its tickets was linked.
+function parent(readyAt, details = {}) {
   return issue(3, ["ready-for-agent"], {
     specification: true,
     readyAt,
     latestLink: { ticket: 6, at: "2026-10-09T10:05:00Z" },
     subIssues: [
-      { number: 5, state: "open", labels: ["ready-for-agent"] },
-      { number: 6, state: "open", labels: ["ready-for-agent"] },
-      { number: 4, state: "closed", labels: [] },
-      ...subIssues,
+      { number: 5, state: "open" },
+      { number: 6, state: "open" },
+      { number: 4, state: "closed" },
     ],
+    ...details,
   });
 }
 
-test("a specification whose readiness predates its latest ticket waits for readiness again", () => {
+const released = "2026-10-09T10:06:00Z";
+
+function tickets(labels = ["ready-for-agent"]) {
+  return [
+    issue(5, labels, { nativeParent: 3 }),
+    issue(6, labels, { nativeParent: 3 }),
+  ];
+}
+
+test("a specification or other parent with sub-issues never launches", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        parent(released),
+        issue(4, ["ready-for-agent"], { specification: true }),
+        issue(7, ["ready-for-agent", "wayfinder:map"], {
+          subIssues: [{ number: 8, state: "closed" }],
+        }),
+        issue(9, ["ready-for-agent"], {
+          nativeParent: 3,
+          subIssues: [{ number: 10, state: "open" }],
+        }),
+      ],
+    }),
+  );
+  assert.deepEqual(launches(decisions), []);
+  assert.ok(decisions.every((decision) => decision.kind === "skip"));
+  for (const number of [3, 4])
+    assert.equal(
+      skipOf(decisions, number),
+      "a specification never runs; its readiness releases its tickets",
+    );
+  for (const number of [7, 9])
+    assert.equal(
+      skipOf(decisions, number),
+      "an issue with sub-issues never runs; its readiness releases its tickets",
+    );
+});
+
+test("a ready sub-issue runs once its parent is ready after its latest ticket link", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        parent(released),
+        ...tickets(),
+        issue(7, ["needs-triage"], { nativeParent: 3 }),
+      ],
+    }),
+  );
+  assert.deepEqual(
+    decisions.filter((decision) => decision.issue !== 3),
+    [
+      { kind: "claim", issue: 5 },
+      {
+        kind: "launch",
+        issue: 5,
+        provider: "claude-code",
+        model: "claude-sonnet-5-5",
+        effort: "high",
+        attempt: 1,
+      },
+      { kind: "claim", issue: 6 },
+      {
+        kind: "launch",
+        issue: 6,
+        provider: "claude-code",
+        model: "claude-sonnet-5-5",
+        effort: "high",
+        attempt: 1,
+      },
+    ],
+  );
+});
+
+test("a sub-issue waits while its parent is not ready for agent", () => {
+  for (const labels of [[], ["needs-triage"]]) {
+    const decisions = decideFactory(
+      snapshot({
+        issues: [parent(released, { labels }), ...tickets()],
+      }),
+    );
+    assert.deepEqual(launches(decisions), []);
+    for (const number of [5, 6])
+      assert.equal(
+        skipOf(decisions, number),
+        "sub-issue of specification #3, which is not ready for agent; apply ready-for-agent to #3 once its tickets are published",
+      );
+  }
+});
+
+// `to-tickets` labels a ticket ready before it links the next one, so a ticket
+// can be ready while its parent's readiness covers only part of the set.
+test("a ticket stays held until its parent's readiness is re-applied after its latest link", () => {
   for (const readyAt of [
     "2026-10-09T10:02:00Z",
     "2026-10-09T10:05:00Z",
     null,
   ]) {
-    const decisions = decideFactory(snapshot({ issues: [graph(readyAt)] }));
-    assert.deepEqual(decisions, [
-      {
-        kind: "skip",
-        issue: 3,
-        reason:
-          "readiness predates its latest ticket #6; remove and re-apply ready-for-agent once its tickets are published",
-      },
-    ]);
+    const decisions = decideFactory(
+      snapshot({ issues: [parent(readyAt), ...tickets()] }),
+    );
+    assert.deepEqual(launches(decisions), [], `readiness at ${readyAt}`);
+    for (const number of [5, 6])
+      assert.equal(
+        skipOf(decisions, number),
+        "sub-issue of specification #3, whose readiness predates its latest ticket #6; remove and re-apply ready-for-agent on #3 once its tickets are published",
+      );
   }
 });
 
-test("a specification made ready after its latest ticket was linked runs orchestrated", () => {
-  const decisions = decideFactory(
-    snapshot({ issues: [graph("2026-10-09T10:06:00Z")] }),
+test("a sub-issue waits while its parent has an open native blocker", () => {
+  const blocked = decideFactory(
+    snapshot({
+      issues: [
+        parent(released, {
+          blockedBy: [
+            { number: 1, state: "open" },
+            { number: 2, state: "closed" },
+          ],
+        }),
+        ...tickets(),
+      ],
+    }),
   );
-  assert.deepEqual(decisions[0], { kind: "claim", issue: 3 });
+  assert.deepEqual(launches(blocked), []);
+  assert.equal(
+    skipOf(blocked, 5),
+    "sub-issue of specification #3, which is blocked by #1; it waits until #3's blockers close",
+  );
+  const unblocked = decideFactory(
+    snapshot({
+      issues: [
+        parent(released, { blockedBy: [{ number: 1, state: "closed" }] }),
+        ...tickets(),
+      ],
+    }),
+  );
   assert.deepEqual(
-    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-    [{ issue: 3, mode: "orchestrated" }],
+    launches(unblocked).map((launch) => launch.issue),
+    [5, 6],
   );
 });
 
-// A ticket that names an open specification in its `Parent` section counts as
-// its ticket before it is linked.
-test("a ticket naming a specification it is not linked to holds both back", () => {
+// A ticket that names an open parent in its `Parent` section counts as its
+// ticket before it is linked.
+test("a ticket naming a parent it is not linked to holds itself and the parent's sub-issues", () => {
   const decisions = decideFactory(
     snapshot({
       issues: [
-        graph("2026-10-09T10:06:00Z"),
+        parent(released),
+        ...tickets(),
         issue(7, ["ready-for-agent"], { parentReference: 3 }),
         issue(8, ["needs-triage"], { parentReference: 3 }),
         issue(9),
       ],
     }),
   );
-  assert.equal(
-    skipOf(decisions, 3),
-    "tickets name it as their parent but are not linked to it yet: #7, #8",
-  );
+  for (const number of [5, 6])
+    assert.equal(
+      skipOf(decisions, number),
+      "sub-issue of specification #3, which tickets name as their parent without being linked to it: #7, #8; add them to #3 as sub-issues",
+    );
   assert.equal(
     skipOf(decisions, 7),
-    "names specification #3 as its parent but is not linked to it yet",
+    "names #3 as its parent but is not linked to it yet; add it to #3 as a sub-issue",
   );
   assert.deepEqual(
-    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-    [{ issue: 9, mode: "direct" }],
+    launches(decisions).map((launch) => launch.issue),
+    [9],
   );
 });
 
-// Only an open specification in this repository runs over the tickets that
-// name it, so any other `Parent` reference leaves the ticket to run alone.
-test("a ticket naming anything but an open specification runs directly", () => {
-  for (const parentReference of [4, 5]) {
+test("a ticket naming an open parent with sub-issues is held until it is linked", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        issue(4, ["wayfinder:map"], {
+          subIssues: [{ number: 5, state: "open" }],
+        }),
+        issue(5, ["ready-for-agent"], { nativeParent: 4 }),
+        issue(7, ["ready-for-agent"], { parentReference: 4 }),
+      ],
+    }),
+  );
+  assert.deepEqual(launches(decisions), []);
+  assert.equal(
+    skipOf(decisions, 7),
+    "names #4 as its parent but is not linked to it yet; add it to #4 as a sub-issue",
+  );
+});
+
+test("a ready ticket whose blocker edge exists runs only after its blocker closes", () => {
+  const blocker = (state) =>
+    issue(6, ["ready-for-agent"], {
+      nativeParent: 3,
+      blockedBy: [{ number: 5, state }],
+    });
+  const waiting = decideFactory(
+    snapshot({
+      issues: [
+        parent(released),
+        issue(5, ["ready-for-agent"], { nativeParent: 3 }),
+        blocker("open"),
+      ],
+    }),
+  );
+  assert.deepEqual(
+    launches(waiting).map((launch) => launch.issue),
+    [5],
+  );
+  assert.equal(skipOf(waiting, 6), "blocked by #5");
+  const after = decideFactory(
+    snapshot({ issues: [parent(released), blocker("closed")] }),
+  );
+  assert.deepEqual(
+    launches(after).map((launch) => launch.issue),
+    [6],
+  );
+});
+
+// Only an open parent in this repository holds the tickets that name it, so
+// any other `Parent` reference leaves the ticket to run alone.
+test("a ticket naming anything but an open parent runs directly", () => {
+  for (const parentReference of [4, 5, "acme/gadgets#3"]) {
     const decisions = decideFactory(
       snapshot({
         issues: [
@@ -282,8 +378,8 @@ test("a ticket naming anything but an open specification runs directly", () => {
       }),
     );
     assert.deepEqual(
-      launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-      [{ issue: 7, mode: "direct" }],
+      launches(decisions).map((launch) => launch.issue),
+      [7],
       `Parent ${parentReference}`,
     );
   }
@@ -299,44 +395,35 @@ test("a ready planning issue does not wait for the tickets that name it", () => 
     }),
   );
   assert.deepEqual(
-    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-    [
-      { issue: 4, mode: "direct" },
-      { issue: 7, mode: "direct" },
-    ],
+    launches(decisions).map((launch) => launch.issue),
+    [4, 7],
   );
 });
 
-// A sub-issue runs as part of its open native parent, whatever kind of issue
-// that is, and the native parent outranks the `Parent` section.
-test("a sub-issue of an open parent in this repository waits for the parent", () => {
+// A sub-issue waits on its open native parent, whatever kind of issue that
+// is, and the native parent outranks the `Parent` section.
+test("a sub-issue of any open parent in this repository waits for that parent", () => {
   const decisions = decideFactory(
     snapshot({
       issues: [
-        graph("2026-10-09T10:06:00Z"),
         issue(4, ["wayfinder:map"], {
-          subIssues: [{ number: 8, state: "open", labels: [] }],
+          subIssues: [
+            { number: 7, state: "open" },
+            { number: 8, state: "open" },
+          ],
         }),
-        issue(5, ["ready-for-agent"], { nativeParent: 3 }),
         issue(7, ["ready-for-agent"], { nativeParent: 4 }),
         issue(8, ["ready-for-agent"], { nativeParent: 4, parentReference: 9 }),
-        issue(9, ["needs-triage"], { specification: true }),
+        issue(9, ["ready-for-agent"], { specification: true }),
       ],
     }),
-  );
-  assert.equal(
-    skipOf(decisions, 5),
-    "sub-issue of specification #3; it runs as part of #3 once #3 is ready for agent",
   );
   for (const number of [7, 8])
     assert.equal(
       skipOf(decisions, number),
-      "sub-issue of #4; it runs as part of #4 once #4 is ready for agent",
+      "sub-issue of #4, which is not ready for agent; apply ready-for-agent to #4 once its tickets are published",
     );
-  assert.deepEqual(
-    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-    [{ issue: 3, mode: "orchestrated" }],
-  );
+  assert.deepEqual(launches(decisions), []);
 });
 
 test("a sub-issue of a closed parent or one in another repository runs directly", () => {
@@ -344,17 +431,14 @@ test("a sub-issue of a closed parent or one in another repository runs directly"
     const decisions = decideFactory(
       snapshot({
         issues: [
-          graph("2026-10-09T10:06:00Z"),
+          parent(released, { labels: [] }),
           issue(7, ["ready-for-agent"], { nativeParent, parentReference: 3 }),
         ],
       }),
     );
     assert.deepEqual(
-      launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-      [
-        { issue: 3, mode: "orchestrated" },
-        { issue: 7, mode: "direct" },
-      ],
+      launches(decisions).map((launch) => launch.issue),
+      [7],
       `native parent ${nativeParent}`,
     );
   }
@@ -364,56 +448,22 @@ test("another repository's sub-issue does not stand in for a local ticket with i
   const decisions = decideFactory(
     snapshot({
       issues: [
-        graph("2026-10-09T10:06:00Z", [
-          {
-            number: "acme/gadgets#7",
-            state: "open",
-            labels: ["ready-for-agent"],
-          },
-        ]),
+        parent(released, {
+          subIssues: [
+            { number: 5, state: "open" },
+            { number: "acme/gadgets#7", state: "open" },
+          ],
+        }),
+        issue(5, ["ready-for-agent"], { nativeParent: 3 }),
         issue(7, ["ready-for-agent"], { parentReference: 3 }),
       ],
     }),
   );
   assert.equal(
-    skipOf(decisions, 3),
-    "tickets name it as their parent but are not linked to it yet: #7",
+    skipOf(decisions, 5),
+    "sub-issue of specification #3, which tickets name as their parent without being linked to it: #7; add them to #3 as sub-issues",
   );
   assert.deepEqual(launches(decisions), []);
-});
-
-test("an unready sub-issue in another repository is named by its repository", () => {
-  const decisions = decideFactory(
-    snapshot({
-      issues: [
-        graph("2026-10-09T10:06:00Z", [
-          { number: "acme/gadgets#7", state: "open", labels: [] },
-        ]),
-      ],
-    }),
-  );
-  assert.equal(
-    skipOf(decisions, 3),
-    "children not ready for agent: acme/gadgets#7",
-  );
-});
-
-test("a ticket naming another repository's issue as its parent runs directly", () => {
-  const decisions = decideFactory(
-    snapshot({
-      issues: [
-        graph("2026-10-09T10:06:00Z"),
-        issue(7, ["ready-for-agent"], { parentReference: "acme/gadgets#3" }),
-      ],
-    }),
-  );
-  assert.deepEqual(
-    launches(decisions).map(({ issue, mode }) => ({ issue, mode })),
-    [
-      { issue: 3, mode: "orchestrated" },
-      { issue: 7, mode: "direct" },
-    ],
-  );
 });
 
 test("the oldest ready issue launches first", () => {
@@ -509,215 +559,71 @@ test("an unusable model label skips the issue with a correction", () => {
   assert.equal(skipOf(decisions, 5), "model codex/ names no model");
 });
 
-test("an open ticket naming another provider, model or effort holds its parent unclaimed", () => {
-  for (const ticketModel of [
-    "codex/claude-opus-5-5@high",
-    "claude-sonnet-5-5",
-    "claude-opus-5-5@xhigh",
-  ]) {
-    for (const specification of [false, true]) {
-      const decisions = decideFactory(
-        snapshot({
-          issues: [
-            issue(3, ["ready-for-agent", "model:claude-opus-5-5"], {
-              specification,
-              subIssues: [
-                {
-                  number: 5,
-                  state: "open",
-                  labels: ["ready-for-agent", `model:${ticketModel}`],
-                },
-              ],
-            }),
-          ],
-        }),
-      );
-      assert.equal(decisions.length, 1);
-      assert.equal(decisions[0].kind, "skip");
-      const reason = skipOf(decisions, 3);
-      assert.match(reason, /#5/);
-      assert.ok(reason.includes(ticketModel));
-      assert.ok(reason.includes("claude-code/claude-opus-5-5@high"));
-      assert.match(
-        reason,
-        /label the parent and its tickets with one model, or remove the tickets' model: labels/,
-      );
-    }
-  }
-});
-
-test("unlabelled tickets and equivalent model labels let the parent launch", () => {
-  for (const [parentModel, ticketModel] of [
-    ["claude-opus-5-5", "claude-code/claude-opus-5-5@high"],
-    ["claude-code/claude-opus-5-5@high", "claude-opus-5-5"],
-    ["gpt-5.5", "codex/gpt-5.5@high"],
-    ["codex/gpt-5.5@low", "gpt-5.5@low"],
-    [null, "claude-code/claude-sonnet-5-5@high"],
-  ]) {
-    const decisions = decideFactory(
-      snapshot({
-        issues: [
-          issue(
-            3,
-            [
-              "ready-for-agent",
-              ...(parentModel ? [`model:${parentModel}`] : []),
-            ],
-            {
-              specification: true,
-              subIssues: [
-                { number: 5, state: "open", labels: ["ready-for-agent"] },
-                {
-                  number: "owner/other#6",
-                  state: "open",
-                  labels: ["ready-for-agent", `model:${ticketModel}`],
-                },
-              ],
-            },
-          ),
-        ],
-      }),
-    );
-    assert.equal(decisions[0].kind, "claim");
-    assert.equal(launches(decisions)[0].mode, "orchestrated");
-  }
-});
-
-test("closed tickets' conflicting or unusable model labels never hold the parent", () => {
+test("each ticket launches on its own model label or the host default", () => {
   const decisions = decideFactory(
     snapshot({
       issues: [
-        issue(3, ["ready-for-agent"], {
-          specification: true,
+        parent(released, {
+          labels: ["ready-for-agent", "model:gpt-5.5"],
           subIssues: [
-            { number: 5, state: "open", labels: ["ready-for-agent"] },
-            { number: 6, state: "closed", labels: ["model:gpt-5.5"] },
-            { number: 7, state: "closed", labels: ["model:gemini-3"] },
-            {
-              number: 8,
-              state: "closed",
-              labels: ["model:gpt-5.5", "model:claude-opus-5-5"],
-            },
+            { number: 5, state: "open" },
+            { number: 6, state: "open" },
+            { number: 7, state: "open" },
           ],
         }),
+        issue(5, ["ready-for-agent", "model:claude-opus-5-5@xhigh"], {
+          nativeParent: 3,
+        }),
+        issue(6, ["ready-for-agent", "model:codex/o5@low"], {
+          nativeParent: 3,
+        }),
+        issue(7, ["ready-for-agent"], { nativeParent: 3 }),
       ],
     }),
   );
-  assert.equal(decisions[0].kind, "claim");
-  assert.equal(launches(decisions)[0].issue, 3);
+  assert.deepEqual(
+    launches(decisions).map(({ issue, provider, model, effort }) => ({
+      issue,
+      provider,
+      model,
+      effort,
+    })),
+    [
+      {
+        issue: 5,
+        provider: "claude-code",
+        model: "claude-opus-5-5",
+        effort: "xhigh",
+      },
+      { issue: 6, provider: "codex", model: "o5", effort: "low" },
+      {
+        issue: 7,
+        provider: "claude-code",
+        model: "claude-sonnet-5-5",
+        effort: "high",
+      },
+    ],
+  );
 });
 
-test("an open ticket's unusable or several model labels give its direct-issue correction", () => {
-  for (const modelLabels of [
-    ["model:gemini-3"],
-    ["model:cursor/composer-2"],
-    ["model:gpt-5.5@max"],
-    ["model:codex/"],
-    ["model:gpt-5.5", "model:claude-opus-5-5"],
-  ]) {
-    const decisions = decideFactory(
-      snapshot({
-        issues: [
-          issue(3, ["ready-for-agent"], {
-            subIssues: [
-              {
-                number: "owner/other#5",
-                state: "open",
-                labels: ["ready-for-agent", ...modelLabels],
-              },
-            ],
-          }),
-          issue(5, ["ready-for-agent", ...modelLabels]),
-        ],
-      }),
-    );
-    assert.deepEqual(launches(decisions), []);
-    assert.equal(decisions.length, 2);
-    assert.ok(skipOf(decisions, 3).includes("owner/other#5"));
-    assert.ok(skipOf(decisions, 3).includes(skipOf(decisions, 5)));
-  }
-});
-
-test("one skip reason lists every conflicting ticket against the host default", () => {
+test("a ticket's unusable model label skips only that ticket", () => {
   const decisions = decideFactory(
     snapshot({
       issues: [
-        issue(3, ["ready-for-agent"], {
-          subIssues: [
-            {
-              number: 5,
-              state: "open",
-              labels: ["ready-for-agent", "model:gpt-5.5"],
-            },
-            {
-              number: "owner/other#6",
-              state: "open",
-              labels: ["ready-for-agent", "model:claude-sonnet-5-5@low"],
-            },
-            {
-              number: 7,
-              state: "open",
-              labels: ["ready-for-agent", "model:gemini-3"],
-            },
-          ],
-        }),
+        parent(released),
+        issue(5, ["ready-for-agent", "model:gemini-3"], { nativeParent: 3 }),
+        issue(6, ["ready-for-agent"], { nativeParent: 3 }),
       ],
     }),
   );
-  assert.equal(decisions.length, 1);
-  assert.equal(decisions[0].kind, "skip");
-  const reason = skipOf(decisions, 3);
-  for (const detail of [
-    "#5",
-    "codex/gpt-5.5@high",
-    "owner/other#6",
-    "claude-code/claude-sonnet-5-5@low",
-    "#7",
-    "model gemini-3 names no provider",
-    "claude-code/claude-sonnet-5-5@high",
-  ])
-    assert.ok(reason.includes(detail), reason);
-});
-
-test("an orchestrated ticket without sub-issues runs on its own labelled model", () => {
-  const [, launch] = decideFactory(
-    snapshot({
-      issues: [
-        issue(3, ["ready-for-agent", "run:orchestrated", "model:gpt-5.5"]),
-      ],
-    }),
+  assert.equal(
+    skipOf(decisions, 5),
+    "model gemini-3 names no provider; label it model:<provider>/gemini-3 with claude-code or codex",
   );
-  assert.equal(launch.mode, "orchestrated");
-  assert.equal(launch.model, "gpt-5.5");
-});
-
-test("a parent retry still launches on the retry model despite its tickets' labels", () => {
-  const decisions = decideFactory(
-    snapshot({
-      issues: [
-        issue(3, ["ready-for-agent", "factory:running"], {
-          subIssues: [
-            {
-              number: 5,
-              state: "open",
-              labels: ["ready-for-agent", "model:claude-sonnet-5-5"],
-            },
-          ],
-        }),
-      ],
-      runs: [
-        run(3, {
-          mode: "orchestrated",
-          ended: { timedOut: false, pullRequest: "none" },
-        }),
-      ],
-    }),
+  assert.deepEqual(
+    launches(decisions).map((launch) => launch.issue),
+    [6],
   );
-  assert.equal(decisions.length, 1);
-  assert.equal(decisions[0].kind, "launch");
-  assert.equal(decisions[0].attempt, 2);
-  assert.equal(decisions[0].model, "claude-opus-5-5");
-  assert.equal(decisions[0].effort, "xhigh");
 });
 
 test("a provider launches only while fewer agents than its cap run there", () => {
@@ -820,10 +726,9 @@ test("a run over the time limit is stopped", () => {
 test("a failed first run retries once on the host's retry model, keeping its claim", () => {
   const decisions = decideFactory(
     snapshot({
-      issues: [issue(4, [...claimed, "run:orchestrated", "model:gpt-5.5"])],
+      issues: [issue(4, [...claimed, "model:gpt-5.5"])],
       runs: [
         run(4, {
-          mode: "orchestrated",
           provider: "codex",
           model: "gpt-5.5",
           ended: { timedOut: false, pullRequest: "none" },
@@ -835,7 +740,6 @@ test("a failed first run retries once on the host's retry model, keeping its cla
     {
       kind: "launch",
       issue: 4,
-      mode: "orchestrated",
       provider: "claude-code",
       model: "claude-opus-5-5",
       effort: "xhigh",
@@ -1070,8 +974,10 @@ test("a retry follows the same parent rules as a first launch", () => {
   const decisions = decideFactory(
     snapshot({
       issues: [
-        issue(4, ["wayfinder:map"]),
-        issue(5, claimed, { parentReference: 4 }),
+        issue(4, ["wayfinder:map"], {
+          subIssues: [{ number: 6, state: "open" }],
+        }),
+        issue(5, claimed, { parentReference: 9 }),
         issue(6, claimed, { nativeParent: 4 }),
       ],
       runs: [run(5, { ended }), run(6, { ended })],
@@ -1091,22 +997,23 @@ test("a retry follows the same parent rules as a first launch", () => {
         issue: 6,
         attempt: undefined,
         failure:
-          "the run ended without an open pull request, and its retry did not launch: sub-issue of #4; it runs as part of #4 once #4 is ready for agent",
+          "the run ended without an open pull request, and its retry did not launch: sub-issue of #4, which is not ready for agent; apply ready-for-agent to #4 once its tickets are published",
       },
     ],
   );
 });
 
-test("a retry over a ticket graph that changed since its readiness fails it", () => {
+test("a retry of a ticket whose parent's set changed since its readiness fails it", () => {
+  const ended = { timedOut: false, pullRequest: "none" };
   const decisions = decideFactory(
     snapshot({
-      issues: [graph("2026-10-09T10:02:00Z")],
-      runs: [
-        run(3, {
-          mode: "orchestrated",
-          ended: { timedOut: false, pullRequest: "none" },
+      issues: [
+        parent("2026-10-09T10:02:00Z", {
+          labels: ["ready-for-agent", "factory:running"],
         }),
+        issue(5, claimed, { nativeParent: 3 }),
       ],
+      runs: [run(3, { ended }), run(5, { ended })],
     }),
   );
   assert.deepEqual(
@@ -1116,7 +1023,13 @@ test("a retry over a ticket graph that changed since its readiness fails it", ()
         kind: "fail",
         issue: 3,
         failure:
-          "the run ended without an open pull request, and its retry did not launch: readiness predates its latest ticket #6; remove and re-apply ready-for-agent once its tickets are published",
+          "the run ended without an open pull request, and its retry did not launch: a specification never runs; its readiness releases its tickets",
+      },
+      {
+        kind: "fail",
+        issue: 5,
+        failure:
+          "the run ended without an open pull request, and its retry did not launch: sub-issue of specification #3, whose readiness predates its latest ticket #6; remove and re-apply ready-for-agent on #3 once its tickets are published",
       },
     ],
   );

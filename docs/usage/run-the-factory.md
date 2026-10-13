@@ -99,27 +99,26 @@ before each launch.
 
 The frontier is every open issue that carries `ready-for-agent`, has no open
 native blocker, and carries neither `factory:running` nor `factory:failed`.
-The oldest issue launches first.
+The oldest issue launches first. Every run is a direct run: one agent started
+with only `/implement #<n>` for Claude Code or `$implement #<n>` for Codex,
+which takes its issue to one pull request.
 
-- **Direct run**: one agent started with only `/implement #<n>` for Claude Code
-  or `$implement #<n>` for Codex. An issue runs directly by default.
-- **Orchestrated run**: one agent started with only `/implement-spec #<n>` for
-  Claude Code or `$implement-spec #<n>` for Codex. A ticket labelled
-  `run:orchestrated` runs this way.
-- **Specification**: an issue whose contract is a specification, as the issue
-  contract validator identifies it. Like any issue with native sub-issues, it
-  runs over its tickets: always orchestrated, and only once it and every open
-  sub-issue carry `ready-for-agent`. A specification without tickets waits until
-  they exist. An issue that runs over its tickets needs `ready-for-agent`
-  applied after its latest sub-issue was linked; until it is removed and added
-  back, the issue waits.
+- **Parent**: an open issue in this repository whose contract is a
+  specification, as the issue contract validator identifies it, or that has
+  native sub-issues. The factory never launches it; its readiness releases its
+  tickets.
 - **Sub-issue**: an issue whose native parent is open in this repository. The
-  factory never picks it up; it runs as part of its parent's orchestrated run
-  once the parent is ready.
+  factory picks it up only while that parent carries `ready-for-agent` applied
+  after its latest sub-issue was linked, has no open native blocker, and is
+  named by no unlinked ticket. The sub-issue also needs its own
+  `ready-for-agent` and passes its own checks, so its own native blockers order
+  it among its siblings. Readiness applied before or in the same second as the
+  latest link holds every sub-issue until it is removed and added back. Each
+  skip reason names the parent and the correction.
 - **Unlinked ticket**: an open issue with no native parent whose `Parent`
-  section first names an open specification in this repository, as the issue
-  contract validator identifies it. The factory never picks it up, and it holds
-  back that specification until the ticket is linked as its sub-issue.
+  section first names an open parent in this repository, as the issue contract
+  validator identifies it. The factory never picks it up, and it holds back
+  that parent's sub-issues until it is linked as a sub-issue.
 
 A native parent that is closed or in another repository holds nothing, and
 neither does a `Parent` section next to a native parent or one naming any other
@@ -130,9 +129,11 @@ Each skipped ready issue is logged with its reason.
 
 ## Models
 
-The factory runs the picked-up issue on its `model:` label's model, as the
-contribution guide's [Readiness section](../../CONTRIBUTING.md#readiness)
-describes; without one, the host's default model runs.
+The factory runs each picked-up issue on its own `model:` label's model, as
+the contribution guide's [Readiness section](../../CONTRIBUTING.md#readiness)
+describes; without one, the host's default model runs. A parent's label
+chooses no model for its sub-issues, and sub-issues naming different models
+run side by side.
 
 - A bare `claude-*` slug runs on Claude Code and a bare `gpt-*` slug on Codex.
   The providers are named `claude-code` and `codex`.
@@ -140,24 +141,6 @@ describes; without one, the host's default model runs.
   `medium`, `high`, `xhigh`, and `max`; Codex accepts all but `max`.
 - An issue with an unusable or more than one `model:` label is skipped with the
   correction.
-
-An orchestrated run over tickets uses the parent's label, or the host's
-default model without one, for every ticket. A ticket's label does not choose
-a separate model inside that run. At pickup, each open native sub-issue's
-`model:` label, including one in another repository, must name the run's
-provider, model and effort. Equivalent spellings agree after parsing:
-`model:claude-opus-5-5` and `model:claude-code/claude-opus-5-5@high` agree.
-An unlabelled ticket does not conflict, and closed tickets never hold the
-parent.
-
-A ticket naming another model holds its parent unclaimed, including when
-only the effort differs. One skip reason lists every conflicting ticket and
-its model, names the run's model, and gives the correction: label the parent
-and its tickets with one model, or remove the tickets' `model:` labels.
-An open ticket with an unusable or several `model:` labels also holds the
-parent with that ticket's correction. A retry still uses the host's retry
-model. A `run:orchestrated` ticket without sub-issues uses its own label as
-the run's model.
 
 ## Gates
 
