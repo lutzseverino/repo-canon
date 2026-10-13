@@ -676,6 +676,28 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   );
 });
 
+test("both babysit exit-1 instructions defer permission refusals to Credentials", () => {
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  const instructions = [
+    /- `1`: (.*?) 2\. Verify/.exec(babysit)?.[1] ?? "",
+    /; `1` means (.*?) 6\. Stop/.exec(babysit)?.[1] ?? "",
+  ];
+  for (const instruction of instructions) {
+    assert.match(
+      instruction,
+      /follow \[Credentials\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#credentials\) for a permission refusal instead of retrying/,
+    );
+    assert.match(
+      instruction,
+      /otherwise fix the invocation or other `gh` error and run it again/,
+    );
+  }
+  assert.doesNotMatch(
+    babysit,
+    /`gh` access|only the credentials|another identity|other identities|search(?:ing)? for credentials|ask(?:s|ing)? the owner|factory:needs-input/,
+  );
+});
+
 test("the installed agent guidance ends every change as a babysat pull request", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   assert.ok(declarations.includes("target: AGENTS.md\n      exact: AGENTS.md"));

@@ -20,7 +20,9 @@ conditions and the wording rules.
      unavailable, `4` for the reason its line gives); go to step 2 and follow
      `CONTRIBUTING.md` for merging without that review.
    - `5`: still waiting; run it again.
-   - `1`: fix the invocation or `gh` access and run it again.
+   - `1`: follow [Credentials](../../../CONTRIBUTING.md#credentials) for a
+     permission refusal instead of retrying; otherwise fix the invocation or
+     other `gh` error and run it again.
 
 2. Verify each failing check and review finding against the source.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
@@ -34,8 +36,10 @@ conditions and the wording rules.
 5. Once the merge conditions hold on the latest head, run
    `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
    the full SHA that starts the wait's latest line. Exit `0` means merged;
-   `2` means the head changed, so return to step 1; `1` means fix the invocation
-   or `gh` error and retry.
+   `2` means the head changed, so return to step 1; `1` means follow
+   [Credentials](../../../CONTRIBUTING.md#credentials) for a permission refusal
+   instead of retrying; otherwise fix the invocation or other `gh` error and
+   run it again.
 6. Stop.
 
 ## Reviewer configuration
