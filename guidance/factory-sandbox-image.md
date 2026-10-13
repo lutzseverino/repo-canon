@@ -21,7 +21,7 @@ The factory builds the image without a build context, so install with `RUN`
 from package sources, not `COPY` or `ADD` from the repository. Leave the
 project's own dependencies, such as `npm ci`, to the run, which installs them in
 its worktree as the development guide says. The factory's
-[sandbox image contract](https://github.com/lutzseverino/repo-canon/blob/main/factory/docs/usage/sandbox-image.md)
+[sandbox image contract](https://github.com/lutzseverino/repo-canon/blob/scriptorium-v1.0.1/factory/docs/usage/sandbox-image.md)
 states the full contract.
 
 When the repository still has a `.sandcastle/Dockerfile` from an earlier Repo

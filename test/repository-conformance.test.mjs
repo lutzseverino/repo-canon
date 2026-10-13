@@ -35,6 +35,107 @@ function trackedFiles() {
     .filter(Boolean);
 }
 
+// Read every source reference in the authored manifest, across both profiles.
+// Directory references select their descendants; adopter target paths do not.
+function sourceInputFiles() {
+  const manifest = readFileSync(join(root, "standards.yaml"), "utf8");
+  const paths = new Set(["standards.yaml"]);
+  for (const [, path] of manifest.matchAll(
+    /^\s+(?:exact|guidance|discovery|source|script): (\S+)$/gm,
+  ))
+    paths.add(path);
+  for (const [, resources] of manifest.matchAll(
+    /^\s+resources:\n((?: +-[^\n]+\n)+)/gm,
+  ))
+    for (const [, path] of resources.matchAll(/^ +- (\S+)$/gm)) paths.add(path);
+
+  return [...paths].flatMap((path) =>
+    lstatSync(join(root, path)).isDirectory()
+      ? snapshotFiles(join(root, path)).map((file) => `${path}/${file}`)
+      : [path],
+  );
+}
+
+function pinnedDocumentReference(reference, { tags, branches }) {
+  if (/^[a-f0-9]{40}\//i.test(reference)) return true;
+  const longestTag = Math.max(
+    0,
+    ...tags
+      .filter((tag) => reference.startsWith(`${tag}/`))
+      .map((tag) => tag.length),
+  );
+  return (
+    longestTag > 0 &&
+    !branches.some(
+      (branch) =>
+        reference.startsWith(`${branch}/`) && branch.length >= longestTag,
+    )
+  );
+}
+
+test("GitHub document pins accept tags and full commits, and reject branches", () => {
+  const refs = {
+    tags: ["scriptorium-v1.0.1", "release/candidate", "ambiguous"],
+    branches: ["main", "release", "scriptorium-v1.0.1/next", "ambiguous"],
+  };
+  for (const reference of [
+    "scriptorium-v1.0.1/factory/docs/usage/sandbox-image.md",
+    "release/candidate/docs/README.md",
+    "f0b6f1083b439a60059d3627a1bd9b03ddaadf88/docs/README.md",
+  ])
+    assert.ok(pinnedDocumentReference(reference, refs), reference);
+  for (const reference of [
+    "main/docs/README.md",
+    "feature/contract/docs/README.md",
+    "scriptorium-v2.0.0/docs/README.md",
+    "scriptorium-v1.0.1-extra/docs/README.md",
+    "f0b6f10/docs/README.md",
+    "scriptorium-v1.0.1/next/docs/README.md",
+    "ambiguous/docs/README.md",
+  ])
+    assert.ok(!pinnedDocumentReference(reference, refs), reference);
+});
+
+test("every lutzseverino GitHub document link in source inputs is pinned", () => {
+  const refsByRepository = new Map();
+  for (const path of sourceInputFiles()) {
+    const text = readFileSync(join(root, path), "utf8");
+    for (const [url, repository, encodedReference] of text.matchAll(
+      /https?:\/\/github\.com\/lutzseverino\/([\w.-]+)\/(?:blob|tree)\/([^\s<>"'`()[\]{}]+)/gi,
+    )) {
+      const reference = decodeURIComponent(encodedReference);
+      if (/^[a-f0-9]{40}\//i.test(reference)) continue;
+      if (!refsByRepository.has(repository)) {
+        // Ref names alone cannot distinguish a tag from an arbitrary branch.
+        // Read published refs without using another GitHub identity.
+        const refs = execFileSync(
+          "git",
+          [
+            "ls-remote",
+            "--refs",
+            `https://github.com/lutzseverino/${repository}.git`,
+            "refs/tags/*",
+            "refs/heads/*",
+          ],
+          { encoding: "utf8", timeout: 30_000 },
+        );
+        refsByRepository.set(repository, {
+          tags: [...refs.matchAll(/\trefs\/tags\/(.+)$/gm)].map(
+            ([, tag]) => tag,
+          ),
+          branches: [...refs.matchAll(/\trefs\/heads\/(.+)$/gm)].map(
+            ([, branch]) => branch,
+          ),
+        });
+      }
+      assert.ok(
+        pinnedDocumentReference(reference, refsByRepository.get(repository)),
+        `${path}: pin ${url} to a published tag or full commit SHA`,
+      );
+    }
+  }
+});
+
 function flowedText(path) {
   return readFileSync(join(root, path), "utf8").replaceAll(/\s+/g, " ");
 }

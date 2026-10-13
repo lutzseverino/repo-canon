@@ -74,6 +74,10 @@ fails if any tracked file reaches the CLI's 8 MiB per-file observation limit,
 which would make the repository uninspectable before any report. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
 CI step: `npm test` already runs it on every pull request.
+The same suite checks every declared source input across both profiles for
+branch-following GitHub document links to `lutzseverino` repositories. It
+accepts full commit SHAs and reads published tag and branch refs with
+`git ls-remote`, so this check requires network access to those repositories.
 
 ## Documents
 
