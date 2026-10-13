@@ -49,17 +49,18 @@ _Avoid_: Intake report, any comment, inferred scope
 **Readiness**:
 The reviewed state of an implementation contract that an authorized reviewer
 considers sufficiently specified for work. It grants the work to an agent; the
-factory picks up ready issues on the frontier. The readiness of an issue that
-runs over its tickets (a specification or any issue with sub-issues) covers
-them, so it is applied after they are published, once the latest ticket link
-appears in the issue's timeline. Readiness recorded in the same second as that
-link holds the issue and needs re-applying, as does readiness when a ticket is
+factory picks up ready issues on the frontier. A parent (a specification or
+any issue with sub-issues) never runs; its readiness releases its tickets, so
+it is applied after they are published, once the latest ticket link appears in
+the parent's timeline. Readiness recorded in the same second as that link holds
+the tickets and needs re-applying, as does readiness when a ticket is
 published later.
 _Avoid_: Passing structural validation
 
 **Factory**:
 The unattended service that takes each ready issue on the frontier to a merged
-pull request, in the run mode and with the model its labels name.
+pull request of its own, with the model its label names. It never runs a
+parent; a parent's readiness releases its tickets, each as its own run.
 _Avoid_: Pipeline, orchestrator
 
 **Frontier**:
@@ -67,12 +68,6 @@ The open issues the factory may pick up: those carrying `ready-for-agent`, with
 no open native blocker, and neither claimed nor marked failed. An issue a gate
 holds stays on the frontier.
 _Avoid_: Backlog, queue
-
-**Run mode**:
-How the factory runs an issue: direct, one agent taking it to one pull
-request, or orchestrated, an orchestrator over a ticket or a specification
-whose implementer and reviewer are different agents.
-_Avoid_: Run type, pipeline
 
 **Direct change**:
 A change made without a ticket, at the maintainer's request in a thread or as

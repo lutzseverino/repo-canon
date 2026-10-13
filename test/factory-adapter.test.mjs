@@ -172,7 +172,6 @@ function fakeGitHub(issues) {
                           nameWithOwner: child.repository ?? "acme/widgets",
                         },
                         state: child.state ?? "OPEN",
-                        labels: names(child.labels),
                       })),
                     },
                     blockedBy: {
@@ -452,46 +451,50 @@ for (const [provider, model, prefix] of [
   ["claude-code", "claude-sonnet-5-5", "/"],
   ["codex", "gpt-5.5", "$"],
 ]) {
-  for (const [mode, skill] of [
-    ["direct", "implement"],
-    ["orchestrated", "implement-spec"],
-  ]) {
-    test(`${provider} launches a ${mode} run with exactly ${prefix}${skill} #<n>`, async () => {
-      const run = factory({
-        issues: [
-          {
-            number: 4,
-            labels: [
-              "ready-for-agent",
-              ...(mode === "orchestrated" ? ["run:orchestrated"] : []),
-            ],
-          },
-        ],
-        hostSettings: { defaultModel: model },
-      });
-      await run.tick();
-      assert.deepEqual(
-        run.sandcastle.launched.map(({ provider, prompt }) => ({
-          provider,
-          prompt,
-        })),
-        [{ provider, prompt: `${prefix}${skill} #4` }],
-      );
+  test(`${provider} launches every run with exactly ${prefix}implement #<n>`, async () => {
+    const run = factory({
+      issues: [
+        { number: 4 },
+        { number: 5, labels: ["ready-for-agent", "run:orchestrated"] },
+      ],
+      hostSettings: {
+        defaultModel: model,
+        caps: { "claude-code": 2, codex: 2 },
+      },
     });
-  }
+    await run.tick();
+    assert.deepEqual(
+      run.sandcastle.launched.map(({ provider, prompt }) => ({
+        provider,
+        prompt,
+      })),
+      [
+        { provider, prompt: `${prefix}implement #4` },
+        { provider, prompt: `${prefix}implement #5` },
+      ],
+    );
+  });
 }
 
-test("a specification is launched with exactly /implement-spec #<n>", async () => {
+test("a parent is never launched, and its ready sub-issue launches with /implement #<n>", async () => {
   const run = factory({
     issues: [
-      { number: 3, subIssues: [{ number: 5, labels: ["ready-for-agent"] }] },
+      { number: 3, subIssues: [{ number: 5 }] },
+      { number: 5, parent: 3 },
     ],
   });
   await run.tick();
   assert.deepEqual(
     run.sandcastle.launched.map((launch) => launch.prompt),
-    ["/implement-spec #3"],
+    ["/implement #5"],
   );
+  assert.ok(
+    run.reports.includes(
+      "#3 skipped: an issue with sub-issues never runs; its readiness releases its tickets",
+    ),
+    run.reports.join("\n"),
+  );
+  assert.deepEqual(run.github.find(3).labels, ["ready-for-agent"]);
 });
 
 const specificationBody = `## Problem Statement
@@ -520,7 +523,7 @@ Export widgets as CSV.
 None - can start immediately
 `;
 
-test("a specification body waits for its tickets, then launches /implement-spec #<n>", async () => {
+test("a specification body never launches, while a bug report with that body runs", async () => {
   const run = factory({
     issues: [
       { number: 3, body: specificationBody },
@@ -542,19 +545,22 @@ test("a specification body waits for its tickets, then launches /implement-spec 
       { issue: 5, prompt: "/implement #5" },
     ],
   );
-  run.github.find(3).subIssues.push({
-    number: 6,
-    labels: ["ready-for-agent"],
-  });
+  run.github.find(3).subIssues.push({ number: 6 });
   await run.tick();
-  assert.equal(run.sandcastle.launched.at(-1).prompt, "/implement-spec #3");
+  assert.equal(run.sandcastle.launched.length, 2);
+  assert.ok(
+    run.reports.includes(
+      "#3 skipped: a specification never runs; its readiness releases its tickets",
+    ),
+    run.reports.join("\n"),
+  );
 });
 
-// A specification's readiness counts once it postdates its latest linked
-// ticket, and a published ticket counts by its `Parent` section before it is
-// linked. A native parent outranks the `Parent` section, and a parent in
-// another repository holds nothing.
-test("a specification waits for its published tickets to be linked and for readiness after them", async () => {
+// A specification's readiness releases its tickets once it postdates its
+// latest linked ticket, and a published ticket counts by its `Parent` section
+// before it is linked. A native parent outranks the `Parent` section, and a
+// parent in another repository holds nothing.
+test("a specification's tickets wait for their links and for its readiness after them", async () => {
   const run = factory({
     issues: [
       {
@@ -565,19 +571,13 @@ test("a specification waits for its published tickets to be linked and for readi
           { label: "documentation", at: "2026-10-09T11:00:00Z" },
         ],
         // Another repository's #6 is no stand-in for this repository's.
-        subIssues: [
-          { number: 5, labels: ["ready-for-agent"] },
-          {
-            number: 6,
-            repository: "acme/gadgets",
-            labels: ["ready-for-agent"],
-          },
-        ],
+        subIssues: [{ number: 5 }, { number: 6, repository: "acme/gadgets" }],
         linkEvents: [
           { number: 5, at: "2026-10-09T09:00:00Z" },
           { number: 6, repository: "acme/gadgets", at: "2026-10-09T09:30:00Z" },
         ],
       },
+      { number: 5, parent: 3, body: ticketBody },
       {
         number: 6,
         body: `## Parent\n\nhttps://github.com/acme/widgets/issues/3\n\n${ticketBody}`,
@@ -597,7 +597,7 @@ test("a specification waits for its published tickets to be linked and for readi
       {
         number: 12,
         labels: ["wayfinder:map"],
-        subIssues: [{ number: 11, labels: ["ready-for-agent"] }],
+        subIssues: [{ number: 11 }],
       },
     ],
     hostSettings: { caps: { "claude-code": 4 } },
@@ -607,50 +607,42 @@ test("a specification waits for its published tickets to be linked and for readi
     run.sandcastle.launched.map(({ prompt }) => prompt),
     ["/implement #8", "/implement #9", "/implement #10"],
   );
-  assert.ok(
-    run.reports.includes(
-      "#3 skipped: tickets name it as their parent but are not linked to it yet: #6, #7",
-    ),
-    run.reports.join("\n"),
-  );
-  for (const number of [6, 7])
-    assert.ok(
-      run.reports.includes(
-        `#${number} skipped: names specification #3 as its parent but is not linked to it yet`,
-      ),
-      run.reports.join("\n"),
-    );
-  assert.ok(
-    run.reports.includes(
-      "#11 skipped: sub-issue of #12; it runs as part of #12 once #12 is ready for agent",
-    ),
-    run.reports.join("\n"),
-  );
+  for (const report of [
+    "#5 skipped: sub-issue of specification #3, which tickets name as their parent without being linked to it: #6, #7; add them to #3 as sub-issues",
+    "#6 skipped: names #3 as its parent but is not linked to it yet; add it to #3 as a sub-issue",
+    "#7 skipped: names #3 as its parent but is not linked to it yet; add it to #3 as a sub-issue",
+    "#11 skipped: sub-issue of #12, which is not ready for agent; apply ready-for-agent to #12 once its tickets are published",
+  ])
+    assert.ok(run.reports.includes(report), run.reports.join("\n"));
 
   const spec = run.github.find(3);
   for (const [number, at] of [
     [6, "2026-10-09T10:30:00Z"],
     [7, "2026-10-09T10:31:00Z"],
   ]) {
-    spec.subIssues.push({ number, labels: ["ready-for-agent"] });
+    spec.subIssues.push({ number });
     spec.linkEvents.push({ number, at });
     run.github.find(number).parent = 3;
   }
   await run.tick();
   assert.equal(run.sandcastle.launched.length, 3);
-  assert.ok(
-    run.reports.includes(
-      "#3 skipped: readiness predates its latest ticket #7; remove and re-apply ready-for-agent once its tickets are published",
-    ),
-    run.reports.join("\n"),
-  );
+  for (const number of [5, 6, 7])
+    assert.ok(
+      run.reports.includes(
+        `#${number} skipped: sub-issue of specification #3, whose readiness predates its latest ticket #7; remove and re-apply ready-for-agent on #3 once its tickets are published`,
+      ),
+      run.reports.join("\n"),
+    );
 
   spec.labelEvents.push({
     label: "ready-for-agent",
     at: "2026-10-09T11:30:00Z",
   });
   await run.tick();
-  assert.equal(run.sandcastle.launched.at(-1).prompt, "/implement-spec #3");
+  assert.deepEqual(
+    run.sandcastle.launched.slice(3).map(({ prompt }) => prompt),
+    ["/implement #5"],
+  );
 });
 
 // An adopter receives the adapter and every module it imports as exact files,
@@ -658,7 +650,7 @@ test("a specification waits for its published tickets to be linked and for readi
 test("the adapter loads from an adopting repository's installed files", async (t) => {
   const adapter = installedValidator(t, ".sandcastle/adapter.ts");
   const { prompt } = await import(pathToFileURL(adapter).href);
-  assert.equal(prompt("codex", "orchestrated", 3), "$implement-spec #3");
+  assert.equal(prompt("codex", 3), "$implement #3");
 });
 
 test("a run that exits without an open pull request fails its issue", async () => {
@@ -683,7 +675,7 @@ test("a run that exits without an open pull request fails its issue", async () =
 
 test("a failed first run uses the retry provider's skill prefix", async () => {
   const run = factory({
-    issues: [{ number: 4, labels: ["ready-for-agent", "run:orchestrated"] }],
+    issues: [{ number: 4 }],
     hostSettings: { retryModel: "gpt-5.5@xhigh" },
   });
   await run.tick();
@@ -700,14 +692,14 @@ test("a failed first run uses the retry provider's skill prefix", async () => {
     })),
     [
       {
-        prompt: "/implement-spec #4",
+        prompt: "/implement #4",
         provider: "claude-code",
         model: "claude-sonnet-5-5",
         effort: "high",
         log: "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
       },
       {
-        prompt: "$implement-spec #4",
+        prompt: "$implement #4",
         provider: "codex",
         model: "gpt-5.5",
         effort: "xhigh",
@@ -717,7 +709,6 @@ test("a failed first run uses the retry provider's skill prefix", async () => {
   );
   assert.deepEqual(run.github.find(4).labels, [
     "ready-for-agent",
-    "run:orchestrated",
     "factory:running",
   ]);
 });

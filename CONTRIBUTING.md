@@ -29,6 +29,10 @@ Before implementing, read the whole issue, its discussion, its parent
 specification, and its blockers, and clarify contradictions. Start a ticket
 only after its blockers are closed.
 
+Every ticket merges into its base branch on its own, with its checks passing.
+Expand–contract batches that can't each stay green become a single ticket, not
+tickets sharing an integration branch.
+
 When adding a native blocker, pass the blocking issue's numeric database ID as
 `issue_id`, not its issue number or `node_id`.
 
@@ -38,32 +42,23 @@ Applying `ready-for-agent` or `ready-for-human` is the review action and needs
 the repository `admin`, `maintain`, or `triage` role. After revising a contract
 or posting an Agent Brief, wait for the issue-contract workflow's revision
 notice before applying readiness. Editing a contract removes its readiness. A
-specification or ticket can be ready while its blockers are open. The
-readiness of an issue that runs over its tickets (a specification or any issue
-with sub-issues) covers them: apply it after they are published, and apply it
-again when a ticket is published later. To re-apply readiness the issue still
-carries, remove `ready-for-agent` and add it back. Apply that readiness only once
-the latest ticket link appears in the issue's timeline. Readiness recorded in
-the same second as that link holds the issue; the factory's skip reason says to
-remove `ready-for-agent` and add it back.
+specification or ticket can be ready while its blockers are open. A parent (a
+specification or any issue with sub-issues) never runs; its readiness releases
+its tickets, which each also need their own readiness. Apply the parent's
+readiness after its tickets are published, and again when a ticket is
+published later. To re-apply readiness the parent still carries, remove
+`ready-for-agent` and add it back. Apply that readiness only once the latest
+ticket link appears in the parent's timeline. Readiness recorded in the same
+second as that link holds the tickets; the factory's skip reason says to remove
+`ready-for-agent` and add it back.
 
-The factory picks up ready issues. Without a `model:` label it runs the
-factory's default model. Name a stronger model with `model:<slug>` or
-`model:<provider>/<slug>`, optionally followed by `@<effort>`, when the work
-needs design judgment, has an ambiguous scope, or makes a long cross-cutting
-change; create the label if the repository lacks it. A `claude-*` or `gpt-*`
-slug needs no provider. Add `run:orchestrated` to a ticket for an implementer
-and a reviewer that are different agents; a specification always runs that
-way.
-
-An orchestrated run over tickets uses the parent's `model:` label, or the
-host's default model without one, for every ticket. A ticket's label does not
-choose a separate model inside that run. At pickup, an open ticket naming a
-different provider, model or effort holds its parent unclaimed; label the
-parent and its tickets with one model, or remove the tickets' `model:` labels.
-Equivalent spellings name the same model after parsing, with `high` as the
-default effort. An open ticket with an unusable or several `model:` labels
-also holds its parent, with the ticket's correction in the skip reason.
+The factory picks up ready issues and runs each ticket on its own. Without a
+`model:` label a ticket runs the factory's default model; a parent's label
+chooses none of its tickets' models. Name a stronger model with
+`model:<slug>` or `model:<provider>/<slug>`, optionally followed by
+`@<effort>`, when the work needs design judgment, has an ambiguous scope, or
+makes a long cross-cutting change; create the label if the repository lacks
+it. A `claude-*` or `gpt-*` slug needs no provider.
 
 ## Development setup
 
@@ -77,8 +72,8 @@ checks documented in the development guide before requesting review.
 
 ## Findings
 
-Every agent run records findings: implementation (direct or orchestrated,
-inside or outside the factory), release, review, and adoption or update. A
+Every agent run records findings: implementation (inside or outside the
+factory), release, review, and adoption or update. A
 finding is a defect, gap, or stale instruction the run observed outside the
 work it is responsible for. Fix defects inside the change's responsibility in
 the change. An adoption run's own contextual work in the adopting repository

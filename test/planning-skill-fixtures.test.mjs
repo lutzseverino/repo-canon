@@ -45,7 +45,6 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
     "grill-with-docs",
     "grilling",
     "implement",
-    "implement-spec",
     "pr",
     "prototype",
     "research",
@@ -67,14 +66,13 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
       "triage",
       "wayfinder",
       "implement",
-      "implement-spec",
       "pr",
       "prototype",
       "wizard",
     ],
   );
   const deliveryScenario = manifest.repositories.delivery;
-  assert.ok(deliveryScenario.skills.includes("implement-spec"));
+  assert.ok(deliveryScenario.skills.includes("implement"));
   assert.ok(deliveryScenario.skills.includes("pr"));
   assert.match(
     readFileSync(

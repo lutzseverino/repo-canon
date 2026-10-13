@@ -5,10 +5,14 @@ The managed snapshot is mattpocock/skills tag `v1.3.1`, commit
 regular skills. Their complete directories are vendored under
 `vendor/mattpocock-skills/skills`, with the upstream MIT notice retained at
 `vendor/mattpocock-skills/LICENSE` and installed beside the copied skills as
-`.agents/skills/LICENSE.mattpocock-skills`. Repo Canon configuration adapts
-conventions without editing upstream skill content.
+`.agents/skills/LICENSE.mattpocock-skills`. Repo Canon declares 26 of them and
+leaves `implement-spec` vendored but uninstalled, because every factory run is
+a direct run, as
+[ADR 0012](../adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
+Repo Canon configuration adapts conventions without editing upstream skill
+content.
 
-## Included skills
+## Vendored skills
 
 | Category     | Skills                                                                                                                                                                                                                                                             |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -139,7 +143,8 @@ rg -n '24fe0ef7737efae15c87225755e9f6f5965e4888|all 27|27 (managed|promoted|regu
 Update the tag, commit, and per-file SHA-256 values in
 `test/fixtures/mattpocock-v1.3.1.json` from the independent upstream checkout,
 renaming the fixture and its test reference for a new tag. The repository
-conformance suite compares the shipped set to the pinned manifest, checks every
+conformance suite compares the shipped set to the pinned manifest without
+`implement-spec`, checks every
 vendored byte against those digests, and compares the installed setup files to
 their seeds. The manifest is provenance, not an installed adopter file.
 

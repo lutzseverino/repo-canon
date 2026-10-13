@@ -12,8 +12,8 @@ stopped at an opened pull request, so nothing owned the review and merge that
 followed, and an agent needed a hand-written prompt to finish a change, as the
 [factory specification](https://github.com/lutzseverino/repo-canon/issues/195)
 records. An agent started with only its provider's invocation of `implement`
-(or `implement-spec` for an orchestrated run) and `#<n>` must find every rule in
-the repository: `/` for Claude Code, `$` for Codex. Two alternatives were
+and `#<n>` must find every rule in the repository: `/` for Claude Code, `$` for
+Codex. Two alternatives were
 rejected: extending the delivery skill through review and merge, because a
 longer skill would restate more of the
 guide and give the rules two homes; and carrying the rules in each run's
