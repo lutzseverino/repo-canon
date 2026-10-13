@@ -54,22 +54,58 @@ any issue with sub-issues) never runs; its readiness releases its tickets, so
 it is applied after they are published, once the latest ticket link appears in
 the parent's timeline. Readiness recorded in the same second as that link holds
 the tickets and needs re-applying, as does readiness when a ticket is
-published later.
+published later. The factory accepts readiness only from a person whose current
+repository role its host configuration authorizes, applied after the issue's
+last edit.
 _Avoid_: Passing structural validation
 
 **Factory**:
-The unattended service that takes each ready issue on the frontier to a merged
+The unattended service, installed once on a host, that takes each ready issue
+on the frontier of every repository its host configuration lists to a merged
 pull request of its own, with the model its label names. It never runs a
-parent; a parent's readiness releases its tickets, each as its own run.
+parent; a parent's readiness releases its tickets, each as its own run. It is
+a product of its own, separate from Repo Canon and Repository Standards.
 _Avoid_: Pipeline, orchestrator
 
 **Frontier**:
-The open issues the factory may pick up: those carrying `ready-for-agent`, with
-no open native blocker, and neither claimed, marked failed, nor waiting for the
-owner's answer under `factory:needs-input`. An issue a gate holds stays on the
+The open issues the factory may pick up: those carrying readiness it accepts,
+with no open native blocker, and neither claimed, marked failed, nor waiting
+for the owner's answer under `factory:needs-input`. An issue a gate holds stays on the
 frontier; one waiting for the owner's answer returns when the owner answers
 and removes the label.
 _Avoid_: Backlog, queue
+
+**Factory release**:
+A version of the factory, published from this repository under its own version
+numbers, that a host installs.
+_Avoid_: Repo Canon release, source publication
+
+**Host configuration**:
+The factory operator's settings for one host: the repositories it serves, its
+providers and their caps, its models, and the repository roles whose readiness
+it accepts.
+_Avoid_: Factory settings, environment
+
+**Factory configuration**:
+A repository's own statement of the labels, model label prefix and prompt the
+factory uses there.
+_Avoid_: Factory settings, host configuration
+
+**Provider**:
+An agent CLI and the subscription behind it, on which the factory runs a
+model, such as Claude Code or Codex.
+_Avoid_: Vendor, worker
+
+**Run outcome**:
+How a factory run ended, read from GitHub and the run's branch: done, awaiting
+merge, needs input, or failed.
+_Avoid_: Result, status
+
+**Pull request reviewer**:
+An external account, named by the repository, whose review of a pull request's
+latest head the merge waits for. A repository that names none merges without
+waiting.
+_Avoid_: Codex, when meaning the role; review bot
 
 **Direct change**:
 A change made without a ticket, at the maintainer's request in a thread or as
