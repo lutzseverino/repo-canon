@@ -520,3 +520,33 @@ test("review converges on fixes and reasoned declines the guide allows", () => {
     /ticket or scope|another layer|only the owner writes/,
   );
 });
+
+test("the contribution guide limits each run to its credentials and stops at permission refusals", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  const credentials =
+    /## Credentials ([^#]+)## Comments/.exec(guide)?.[1] ?? "";
+  assert.match(
+    credentials,
+    /An agent run uses only the credentials it was given\./,
+  );
+  assert.equal(
+    [
+      ...guide.matchAll(
+        /An agent run uses only the credentials it was given\./g,
+      ),
+    ].length,
+    1,
+  );
+  assert.match(
+    credentials,
+    /It never looks for, tests, or uses another identity, whether a token, a CLI login, an environment variable, a connector, or an app, including one reached through the agent provider's own login\./,
+  );
+  assert.match(
+    credentials,
+    /Searching for one, such as listing credential environment variables or probing other `gh` configurations, counts as looking\./,
+  );
+  assert.match(
+    credentials,
+    /When a push, merge, or API call is refused for permission, the refusal stands: the agent stops and asks the owner, as for any answer only the owner can give, and never retries under another identity\./,
+  );
+});
