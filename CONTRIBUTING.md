@@ -216,6 +216,12 @@ declined because they do not hold or lie outside the threat model.
 
 ## Comments
 
+When an agent needs an answer only the owner can give, post the question as one
+issue comment under these rules, add `factory:needs-input`, and stop without a
+pull request. The owner answers and removes the label to return the issue to
+the frontier as a fresh first attempt. If the answer changes the implementation
+contract, edit the contract; that drops readiness and requires review again.
+
 An agent comments on an issue or pull request to record a decision, an outcome,
 or a question that needs an answer, never to narrate progress. Consolidate
 everything the agent has to say on one occasion into one comment.

@@ -73,6 +73,12 @@ const canonicalLabels = [
     color: "b60205",
     description: "The factory run failed; remove to run it again",
   },
+  {
+    name: "factory:needs-input",
+    color: "d4c5f9",
+    description:
+      "Waiting for the owner's answer; answer and remove to run again",
+  },
 ];
 
 function readLabels(identity, projectRoot) {

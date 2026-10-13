@@ -804,6 +804,73 @@ test("an unreadable usage reading gates by count only", () => {
 
 const claimed = ["ready-for-agent", "factory:running"];
 
+for (const attempt of [1, 2])
+  for (const timedOut of [false, true])
+    for (const pullRequest of ["none", "closed", "merged-issue-open"])
+      test(`attempt ${attempt} needing input releases its claim with ${pullRequest} pull request, timed out: ${timedOut}`, () => {
+        const decisions = decideFactory(
+          snapshot({
+            issues: [issue(4, [...claimed, "factory:needs-input"])],
+            runs: [run(4, { attempt, ended: { timedOut, pullRequest } })],
+          }),
+        );
+        assert.deepEqual(decisions, [
+          { kind: "release", issue: 4 },
+          {
+            kind: "skip",
+            issue: 4,
+            reason:
+              "labelled factory:needs-input; answer the question and remove the label to run it again",
+          },
+        ]);
+      });
+
+test("a ready issue needing input is skipped until the owner answers and removes the label", () => {
+  assert.deepEqual(
+    decideFactory(
+      snapshot({
+        issues: [issue(4, ["ready-for-agent", "factory:needs-input"])],
+      }),
+    ),
+    [
+      {
+        kind: "skip",
+        issue: 4,
+        reason:
+          "labelled factory:needs-input; answer the question and remove the label to run it again",
+      },
+    ],
+  );
+  assert.deepEqual(
+    launches(decideFactory(snapshot({ issues: [issue(4)] }))).map(
+      ({ issue, attempt }) => ({ issue, attempt }),
+    ),
+    [{ issue: 4, attempt: 1 }],
+  );
+});
+
+test("an ended run's open pull request keeps its claim with or without a needs-input label", () => {
+  for (const attempt of [1, 2])
+    for (const timedOut of [false, true])
+      for (const needsInput of [false, true]) {
+        const decisions = decideFactory(
+          snapshot({
+            issues: [
+              issue(
+                4,
+                needsInput ? [...claimed, "factory:needs-input"] : claimed,
+              ),
+            ],
+            runs: [
+              run(4, { attempt, ended: { timedOut, pullRequest: "open" } }),
+            ],
+          }),
+        );
+        assert.deepEqual(decisions[0], { kind: "keep", issue: 4 });
+        assert.deepEqual(launches(decisions), []);
+      }
+});
+
 test("a run over the time limit is stopped", () => {
   const decisions = decideFactory(
     snapshot({
@@ -892,12 +959,12 @@ test("a run that ends without an open pull request fails once retried or unretry
   assert.equal(unretryable[0].kind, "fail");
 });
 
-test("a run that exceeded the time limit fails even with an open pull request", () => {
+test("a retried run that exceeded the time limit fails without an open pull request", () => {
   const decisions = decideFactory(
     snapshot({
       issues: [issue(4, claimed)],
       runs: [
-        run(4, { attempt: 2, ended: { timedOut: true, pullRequest: "open" } }),
+        run(4, { attempt: 2, ended: { timedOut: true, pullRequest: "none" } }),
       ],
     }),
   );
@@ -950,6 +1017,21 @@ test("a claim no run holds stays while its pull request is open and is released 
     { kind: "release", issue: 5 },
     { kind: "skip", issue: 4, reason: "claimed by a running factory run" },
   ]);
+});
+
+test("a needs-input claim left by an earlier factory process releases unless its pull request is open", () => {
+  for (const pullRequest of ["none", "closed", "merged-issue-open", "open"]) {
+    const decisions = decideFactory(
+      snapshot({
+        issues: [issue(4, [...claimed, "factory:needs-input"])],
+        claims: [{ issue: 4, pullRequest }],
+      }),
+    );
+    assert.deepEqual(
+      decisions.filter(({ kind }) => kind !== "skip"),
+      pullRequest === "open" ? [] : [{ kind: "release", issue: 4 }],
+    );
+  }
 });
 
 test("a claim that neither a run nor an open pull request holds fails its issue", () => {

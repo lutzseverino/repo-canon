@@ -126,7 +126,8 @@ repeated.
   Workflows permission. The host
   sets the default and retry models, the per-provider caps, the usage
   threshold, and the time limit; Repo Canon ships none of them. The canonical
-  labels carry the claim and failure labels but no `model:` labels.
+  labels carry the claim, failure, and `factory:needs-input` labels but no
+  `model:` labels.
   [Run the factory](docs/usage/run-the-factory.md) describes its behavior.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the

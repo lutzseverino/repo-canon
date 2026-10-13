@@ -191,6 +191,7 @@ export const labels = {
   ready: "ready-for-agent",
   running: "factory:running",
   failed: "factory:failed",
+  needsInput: "factory:needs-input",
 };
 
 // Each provider's agent CLI and the reasoning efforts it accepts.
@@ -238,7 +239,8 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
     else decisions.push(...settled);
   }
   for (const claim of snapshot.claims)
-    if (!closing.has(claim.issue)) decisions.push(...settleClaim(claim));
+    if (!closing.has(claim.issue))
+      decisions.push(...settleClaim(claim, snapshot));
   for (const issue of oldestFirst(snapshot.issues)) {
     if (closing.has(issue.number)) {
       decisions.push({
@@ -256,6 +258,7 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
     }
     if (!issue.labels.includes(labels.ready)) continue;
     const reason =
+      needsInputExclusion(issue) ??
       (issue.labels.includes(labels.running)
         ? "claimed by a running factory run"
         : null) ??
@@ -302,8 +305,9 @@ type Retry = { run: Run; failure: string; model: Model };
 
 // A running run over the time limit is stopped. An ended run releases its
 // claim once its issue closes and keeps it while the pull request is open. A
-// failed first run may retry once on the retry model; any other failure fails
-// the issue.
+// run needing the owner's input releases its claim without retry or failure.
+// A failed first run may retry once on the retry model; any other failure
+// fails the issue.
 function settle(run: Run, snapshot: Snapshot): Decision[] | Retry {
   const limit = snapshot.settings.timeLimitMinutes;
   const overtime = `the time limit of ${limit} minutes`;
@@ -313,6 +317,8 @@ function settle(run: Run, snapshot: Snapshot): Decision[] | Retry {
       ? [{ kind: "stop", issue: run.issue, reason: `exceeded ${overtime}` }]
       : [];
   }
+  if (run.ended.pullRequest !== "open" && needsInput(run.issue, snapshot))
+    return [{ kind: "release", issue: run.issue }];
   if (run.ended.pullRequest === "merged-issue-open")
     return [
       {
@@ -324,7 +330,7 @@ function settle(run: Run, snapshot: Snapshot): Decision[] | Retry {
     ];
   if (!run.ended.timedOut && run.ended.pullRequest === "merged")
     return [{ kind: "release", issue: run.issue }];
-  if (!run.ended.timedOut && run.ended.pullRequest === "open")
+  if (run.ended.pullRequest === "open")
     return [{ kind: "keep", issue: run.issue }];
   if (!run.ended.timedOut && run.ended.unpushedWorkflowChanges?.length)
     return [
@@ -393,10 +399,14 @@ function unretried({ run, failure }: Retry, reason: string): Decision {
 }
 
 // A claim no run holds stays while its pull request is open and is released
-// once its issue closes. Any other claim, such as one left by a factory
-// restart, fails its issue.
-function settleClaim({ issue, pullRequest }: Claim): Decision[] {
+// once its issue closes or needs input. Any other claim, such as one left by
+// a factory restart, fails its issue.
+function settleClaim(
+  { issue, pullRequest }: Claim,
+  snapshot: Snapshot,
+): Decision[] {
   if (pullRequest === "open") return [];
+  if (needsInput(issue, snapshot)) return [{ kind: "release", issue }];
   if (pullRequest === "merged") return [{ kind: "release", issue }];
   const failure =
     pullRequest === "merged-issue-open"
@@ -405,6 +415,13 @@ function settleClaim({ issue, pullRequest }: Claim): Decision[] {
         ? "its pull request closed without merging"
         : "no factory run or open pull request holds its claim";
   return [{ kind: "fail", issue, failure, log: null }];
+}
+
+function needsInput(number: number, snapshot: Snapshot): boolean {
+  return snapshot.issues.some(
+    (issue) =>
+      issue.number === number && issue.labels.includes(labels.needsInput),
+  );
 }
 
 // A launch needs fewer running agents than the provider's cap and, when its
@@ -486,6 +503,8 @@ function oldestFirst(issues: Issue[]): Issue[] {
 // An issue's exclusion from pickup, given the open issues, which may hold it
 // or name it as their parent.
 function exclusion(issue: Issue, openIssues: Issue[]): string | null {
+  const needsInput = needsInputExclusion(issue);
+  if (needsInput) return needsInput;
   if (isParent(issue))
     return `${issue.specification ? "a specification" : "an issue with sub-issues"} never runs; its readiness releases its tickets`;
   const held = parentExclusion(issue, openIssues);
@@ -497,6 +516,12 @@ function exclusion(issue: Issue, openIssues: Issue[]): string | null {
   );
   if (blockers.length > 0) return `blocked by ${references(blockers)}`;
   return null;
+}
+
+function needsInputExclusion(issue: Issue): string | null {
+  return issue.labels.includes(labels.needsInput)
+    ? `labelled ${labels.needsInput}; answer the question and remove the label to run it again`
+    : null;
 }
 
 // A parent is a specification or any issue with native sub-issues.

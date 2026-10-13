@@ -65,8 +65,10 @@ _Avoid_: Pipeline, orchestrator
 
 **Frontier**:
 The open issues the factory may pick up: those carrying `ready-for-agent`, with
-no open native blocker, and neither claimed nor marked failed. An issue a gate
-holds stays on the frontier.
+no open native blocker, and neither claimed, marked failed, nor waiting for the
+owner's answer under `factory:needs-input`. An issue a gate holds stays on the
+frontier; one waiting for the owner's answer returns when the owner answers
+and removes the label.
 _Avoid_: Backlog, queue
 
 **Direct change**:
