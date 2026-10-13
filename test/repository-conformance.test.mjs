@@ -382,17 +382,93 @@ function vendoredSkillSources() {
     .map(({ source }) => source.slice("vendor/mattpocock-skills/".length));
 }
 
-test("adoption declares exactly the workflow skills and no HumanLayer material", () => {
+test("adoption declares exactly the workflow skills and no show-me skill", () => {
   assert.deepEqual(
     declaredSkills()
       .map(({ name }) => name)
       .sort(),
     workflowSkills,
   );
-  for (const path of ["standards.yaml", "THIRD_PARTY_NOTICES.md"]) {
-    assert.doesNotMatch(readFileSync(join(root, path), "utf8"), /humanlayer/i);
+  assert.ok(!existsSync(join(root, "vendor/humanlayer-skills/skills/show-me")));
+});
+
+test("both profiles install HumanLayer's pinned upstream license beside the skills", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  const defaults = /^defaults:\n([\s\S]*?)^profiles:\n/m.exec(declarations)[1];
+  assert.match(
+    defaults,
+    /^ {4}humanlayer-skills-license:\n {6}kind: file\n {6}target: \.agents\/skills\/LICENSE\.humanlayer-skills\n {6}exact: vendor\/humanlayer-skills\/LICENSE$/m,
+  );
+  for (const profile of ["standard", "factory"]) {
+    assert.doesNotMatch(
+      profileDeclarations(declarations, profile),
+      /humanlayer-skills-license/,
+      `${profile} inherits the default license declaration unchanged`,
+    );
   }
-  assert.ok(!existsSync(join(root, "vendor/humanlayer-skills")));
+
+  const directory = join(root, "vendor/humanlayer-skills");
+  assert.deepEqual(snapshotFiles(directory).sort(), [
+    "LICENSE",
+    "UPSTREAM.json",
+  ]);
+  assert.deepEqual(
+    JSON.parse(readFileSync(join(directory, "UPSTREAM.json"), "utf8")),
+    {
+      repository: "https://github.com/humanlayer/skills",
+      commit: "653b6411c1f70c275a18e37673b042ff99f67ceb",
+      path: "LICENSE",
+    },
+  );
+  // Digest from the pinned upstream LICENSE, independently downloaded and
+  // compared with the copy shipped in v0.10.1. Never derive it from vendor/.
+  assert.equal(
+    createHash("sha256")
+      .update(readFileSync(join(directory, "LICENSE")))
+      .digest("hex"),
+    "5f13c18ea00ea5c1384f41745feeca774079164f7f59a92e4ac0899ad217b26f",
+  );
+});
+
+test("third-party notices cover the reproduced pr Summary and its installed HumanLayer notice", () => {
+  const notices = flowedText("THIRD_PARTY_NOTICES.md");
+  assert.match(
+    notices,
+    /`pr` skill's Summary section reproduces material from HumanLayer's `show-me` skill/,
+  );
+  assert.match(
+    notices,
+    /\[MIT License and copyright notice\]\(vendor\/humanlayer-skills\/LICENSE\)/,
+  );
+  assert.match(
+    notices,
+    /Adoption installs the same notice beside the copied skills, at `\.agents\/skills\/LICENSE\.humanlayer-skills` in the adopting repository/,
+  );
+});
+
+test("operations retaining third-party notices also retain every linked license", () => {
+  const notices = readFileSync(join(root, "THIRD_PARTY_NOTICES.md"), "utf8");
+  const licenses = [...notices.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)].map(
+    ([, path]) => path,
+  );
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  const resources = [
+    ...declarations.matchAll(/^([ ]+)resources:\n((?:\1 {2}- [^\n]+\n)+)/gm),
+  ]
+    .map(([, , block]) =>
+      [...block.matchAll(/- ([^\n]+)/g)].map(([, path]) => path),
+    )
+    .filter((paths) => paths.includes("THIRD_PARTY_NOTICES.md"));
+  assert.ok(resources.length > 0, "at least one operation retains the notices");
+  for (const paths of resources) {
+    for (const license of licenses) {
+      assert.ok(
+        paths.includes(license),
+        `retain ${license} with third-party notices`,
+      );
+      assert.ok(existsSync(join(root, license)), `${license} exists`);
+    }
+  }
 });
 
 test("the vendored Matt Pocock tree holds only declared skills and setup seeds, matching v1.3.1", () => {
