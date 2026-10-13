@@ -6,7 +6,7 @@ import { test, type TestContext } from "node:test";
 import type { RunOptions } from "@ai-hero/sandcastle";
 import type { DockerOptions } from "@ai-hero/sandcastle/sandboxes/docker";
 import { sandboxEnvironment } from "../src/github-token.ts";
-import { createHost } from "../src/host.ts";
+import { createHost, type HostPorts } from "../src/host.ts";
 import type { HostConfiguration } from "../src/host-configuration.ts";
 import { createRegistry } from "../src/providers.ts";
 import { directory } from "./fakes.ts";
@@ -220,13 +220,14 @@ function fakeGitHub(
 }
 
 // Sandcastle that records each run, with the token the sandbox would read,
-// until the test finishes it.
+// until the test finishes it or its sandbox is removed.
 function fakeSandcastle() {
   const launched: {
     options: RunOptions;
     docker: DockerOptions;
     hosts: string;
     finish(error?: Error): void;
+    removed: boolean;
   }[] = [];
   let docker: DockerOptions;
   return {
@@ -248,6 +249,7 @@ function fakeSandcastle() {
               ? readFileSync(join(github.hostPath, "hosts.yml"), "utf8")
               : "",
             finish: (error) => (error ? reject(error) : resolve(undefined)),
+            removed: false,
           });
           options.signal?.addEventListener("abort", () =>
             reject(options.signal!.reason),
@@ -257,6 +259,8 @@ function fakeSandcastle() {
     },
   };
 }
+
+const value = (args: string[], flag: string) => args[args.indexOf(flag) + 1];
 
 const settled = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -323,8 +327,16 @@ function host(
   const builds: string[] = [];
   const reports: string[] = [];
   const clock = { now: new Date("2026-10-09T12:00:00Z") };
-  const instance = createHost(resolved, registry, {
-    gh: github.gh,
+  // Sandbox removals and issue edits, in order.
+  const events: string[] = [];
+  const ports: HostPorts = {
+    async gh(token, args) {
+      if (args[0] === "issue" && args[1] === "edit")
+        events.push(
+          `edit ${value(args, "--repo")}#${args[2]} ${args.slice(5).join(" ")}`,
+        );
+      return github.gh(token, args);
+    },
     git: async (_token, cwd, args) => git(cwd, args),
     async token(repository) {
       const token = tokenOf[repository];
@@ -340,12 +352,22 @@ function host(
     readUsage: async () => null,
     launch: (provider, request) =>
       registry.providers.get(provider)!.launch(request),
+    // The sandboxes are the launches whose agents have not finished; a
+    // removed one never finishes.
+    stopSandboxes() {
+      events.push("stop sandboxes");
+      for (const launch of launched) launch.removed = true;
+    },
     now: () => clock.now,
     report: (line) => reports.push(line),
-  });
+  };
+  const instance = createHost(resolved, registry, ports);
   const state = resolved.stateDirectory;
   return {
     ...instance,
+    // A new process on the same host, state directory and GitHub.
+    restart: () => createHost(resolved, registry, ports),
+    events,
     github,
     launched,
     builds,
@@ -1081,4 +1103,179 @@ test("configuration follows a changed remote default branch on the next pass", a
     run.launched[1].options.prompt,
     "$ship #4\n\nFirst attempt failure: the run ended without an open pull request",
   );
+});
+
+const recordOf = (state: string, issue: number, attempt: number) =>
+  JSON.parse(
+    readFileSync(
+      join(
+        state,
+        `repositories/acme/widgets/runs/issue-${issue}-attempt-${attempt}.json`,
+      ),
+      "utf8",
+    ),
+  );
+
+test("the first pass removes the sandboxes an earlier process left before it claims anything", async (t) => {
+  const run = host(t, {
+    repositories: { "acme/widgets": [{ number: 4 }] },
+    remotes: { "acme/widgets": remote(t, factoryFiles) },
+  });
+  await run.tick();
+  await run.tick();
+  assert.deepEqual(run.events, [
+    "stop sandboxes",
+    "edit acme/widgets#4 --add-label factory:running",
+  ]);
+});
+
+test("a stop signal records the running runs as interrupted and removes their sandboxes without waiting for them", async (t) => {
+  const run = host(t, {
+    repositories: {
+      "acme/widgets": [{ number: 4 }, { number: 5, labels: [] }],
+    },
+    remotes: { "acme/widgets": remote(t, factoryFiles) },
+  });
+  await run.tick();
+  const [launch] = run.launched;
+  const tokens = launch.docker.mounts!.find(
+    (mount) => mount.sandboxPath === "/run/factory/github",
+  )!.hostPath;
+  run.clock.now = new Date("2026-10-09T12:30:00Z");
+  run.interrupt();
+  assert.deepEqual(run.events, [
+    "stop sandboxes",
+    "edit acme/widgets#4 --add-label factory:running",
+    "stop sandboxes",
+  ]);
+  assert.equal(launch.removed, true);
+  assert.equal(existsSync(tokens), false);
+  const interrupted = {
+    attempt: 1,
+    ended: { interrupted: true },
+    exited: true,
+    exitedAt: "2026-10-09T12:30:00.000Z",
+    interrupted: true,
+    settled: false,
+  };
+  const pick = (record: Record<string, unknown>) =>
+    Object.fromEntries(
+      Object.keys(interrupted).map((name) => [name, record[name]]),
+    );
+  assert.deepEqual(pick(recordOf(run.state, 4, 1)), interrupted);
+  // The process claims and launches nothing more, and an agent that ends
+  // after the signal leaves its interrupted record as it is.
+  run.github.find("acme/widgets", 5).labels.push("ready-for-agent");
+  assert.deepEqual(await run.tick(), []);
+  assert.deepEqual(run.github.find("acme/widgets", 5).labels, [
+    "ready-for-agent",
+  ]);
+  assert.equal(run.launched.length, 1);
+  launch.finish();
+  await settled();
+  assert.deepEqual(pick(recordOf(run.state, 4, 1)), interrupted);
+});
+
+test("after a restart an interrupted run relaunches as the same attempt on its branch", async (t) => {
+  const run = host(t, {
+    repositories: { "acme/widgets": [{ number: 4 }] },
+    remotes: { "acme/widgets": remote(t, factoryFiles) },
+  });
+  await run.tick();
+  const firstLog = (run.launched[0].options.logging as { path: string }).path;
+  writeFileSync(firstLog, "first attempt\n");
+  run.launched[0].finish(new Error("agent crashed"));
+  await settled();
+  await run.tick();
+  const retried = run.launched[1];
+  run.interrupt();
+
+  const restarted = run.restart();
+  const decisions = await restarted.tick();
+  assert.deepEqual(decisions, [
+    {
+      kind: "launch",
+      repository: "acme/widgets",
+      issue: 4,
+      provider: "codex",
+      model: "gpt-5.5",
+      effort: "high",
+      attempt: 2,
+      retry: {
+        failure: "the run ended without an open pull request",
+        log: firstLog,
+      },
+      relaunch: true,
+    },
+  ]);
+  assert.deepEqual(run.events, [
+    "stop sandboxes",
+    "edit acme/widgets#4 --add-label factory:running",
+    "stop sandboxes",
+    "stop sandboxes",
+  ]);
+  const relaunched = run.launched[2];
+  assert.equal(relaunched.options.agent.name, "codex");
+  assert.equal(relaunched.options.prompt, retried.options.prompt);
+  assert.deepEqual(relaunched.options.branchStrategy, {
+    type: "branch",
+    branch: "factory/issue-4",
+  });
+  assert.deepEqual(relaunched.options.logging, retried.options.logging);
+  assert.deepEqual(run.github.find("acme/widgets", 4).labels, [
+    "ready-for-agent",
+    "factory:running",
+  ]);
+  assert.equal(recordOf(run.state, 4, 1).settled, true);
+  const record = recordOf(run.state, 4, 2);
+  assert.equal(record.attempt, 2);
+  assert.equal(record.interrupted, false);
+
+  // The relaunch ends as the second attempt, so it fails without a retry.
+  relaunched.finish();
+  await settled();
+  await restarted.tick();
+  assert.match(
+    run.github.find("acme/widgets", 4).comments[0],
+    /`codex\/gpt-5\.5@high`, attempt 2/,
+  );
+  assert.equal(run.launched.length, 3);
+});
+
+test("recovered runs retain configured state labels while invalid configuration pauses relaunch", async (t) => {
+  const configuration = {
+    ...conventions,
+    labels: {
+      ready: "queued",
+      running: "working",
+      failed: "broken",
+      needsInput: "question",
+    },
+  };
+  const bare = remote(t, {
+    ...factoryFiles,
+    ".factory/config.json": JSON.stringify(configuration),
+  });
+  const run = host(t, {
+    repositories: { "acme/widgets": [{ number: 4, labels: ["queued"] }] },
+    remotes: { "acme/widgets": bare },
+  });
+  await run.tick();
+  run.interrupt();
+  const work = join(dirname(bare), "work");
+  write(work, { ".factory/config.json": "{}" });
+  git(work, ["commit", "--quiet", "-am", "invalid configuration"]);
+  git(work, ["push", "--quiet", bare, "main"]);
+  const restarted = run.restart();
+  const decisions = await restarted.tick();
+  assert.equal(decisions[0]?.kind, "skip");
+  assert.equal(run.status().repositories[0].state, "paused");
+  assert.equal(run.launched.length, 1);
+  run.github.find("acme/widgets", 4).labels.push("question");
+  await restarted.tick();
+  assert.deepEqual(run.github.find("acme/widgets", 4).labels, [
+    "queued",
+    "question",
+  ]);
+  assert.equal(run.launched.length, 1);
 });

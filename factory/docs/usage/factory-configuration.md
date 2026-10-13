@@ -55,7 +55,8 @@ the factory.
 Missing, unreadable, non-JSON or invalid configuration pauses only that
 repository. A missing Dockerfile also pauses it. The factory claims and
 launches nothing there, keeps settling existing runs using the last valid
-configuration, and continues serving the other repositories. A later valid
+configuration, and continues serving the other repositories. Run records retain
+configuration for interrupted runs recovered after a restart. A later valid
 configuration resumes pickup on the next pass. Without a valid configuration
 at startup, the factory cannot identify that repository's labels and makes
 no issue writes there. Pause reasons appear in the process log and the
