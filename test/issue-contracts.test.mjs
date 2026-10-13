@@ -394,6 +394,27 @@ structureTable("issue structure decides the contract and its corrections", [
         },
   })),
   {
+    name: "readiness beside wontfix without an Agent Brief is removed with a structural error",
+    snapshot: {
+      issue: {
+        number: 42,
+        body: bugBody,
+        labels: [
+          { name: "bug" },
+          { name: "wontfix" },
+          { name: "ready-for-agent" },
+        ],
+        state: "open",
+      },
+    },
+    expected: {
+      exitCode: 1,
+      remove: ["ready-for-agent"],
+      feedback: "create",
+      message: /Add a reviewed Agent Brief before applying a readiness label/,
+    },
+  },
+  {
     name: "a Wayfinder map accepts an empty initial Decisions so far section",
     snapshot: {
       issue: {
@@ -3789,6 +3810,21 @@ decisionTable(
         remove: [removed],
         message: /awaiting authorized review/i,
       },
+    })),
+    ...[
+      ["needs-info", "wontfix", /valid triaged wontfix request/i],
+      ["wontfix", "needs-info", /valid triaged Agent Brief; awaiting/i],
+    ].map(([earlier, later, message]) => ({
+      name: `wontfix beside needs-info is decided by the state applied later: ${later}`,
+      snapshot: triagedSnapshot({
+        labels: ["bug", "needs-info", "wontfix"],
+        events: [
+          triagedUnlabel(3, "needs-triage", "2026-10-13T10:00:00Z"),
+          triagedLabel(4, earlier, "2026-10-13T10:00:01Z"),
+          triagedLabel(5, later, "2026-10-13T10:00:02Z"),
+        ],
+      }),
+      expected: { exitCode: 0, remove: [earlier], message },
     })),
     ...[
       [

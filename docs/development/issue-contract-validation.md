@@ -23,9 +23,10 @@ returned writes.
 The decision reads the issue's current state: its labels, body and body
 revision, comments with the feedback record, timeline, and reviewer roles. The
 triggering event never supplies labels, body, or comments. It supplies only
-what current state cannot show: a deleted Agent Brief, the labels an `opened`
-issue was created with, and a human readiness trigger the timeline has not
-recorded yet. Two runs that read the same state therefore make the same
+what current state cannot show: a deleted Agent Brief, the creation review's
+facts (the labels an `opened` issue was created with, and whether a `labeled`
+run's sender is the issue's opener), and a human readiness trigger the
+timeline has not recorded yet. Two runs that read the same state therefore make the same
 decision, and a run on the state its own writes produced changes nothing.
 One timeline helper inside the decision answers every question about whether
 one issue event came after another, and it orders events by one rule: the
@@ -338,8 +339,10 @@ states is never a structural error.
   heading remains, to `needs-triage` unless another non-readiness state remains.
 
 A category-labeled triaged request with `wontfix` is a `wontfix` outcome unless
-it also carries readiness and an Agent Brief; then `wontfix` is ordered against
-the review like any other state.
+a non-readiness state applied later replaces `wontfix`, or the issue also
+carries readiness and an Agent Brief, which orders `wontfix` against the review
+like any other state. Readiness beside a `wontfix` outcome without an Agent
+Brief is a structural error.
 
 ## Running the fixtures
 
