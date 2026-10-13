@@ -782,6 +782,42 @@ test("the guide's triage disclaimer matches the pinned skill and passes the issu
   assert.match(decision.message, /valid triaged Agent Brief/i);
 });
 
+test("pull requests close finished issues and leave partial work linked without closing", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  const pullRequests =
+    /## Pull requests (.*?)### Opening a pull request/.exec(guide)?.[1] ?? "";
+  assert.match(
+    pullRequests,
+    /A pull request that finishes its issue links it with a closing reference, such as `Closes #123`, so merging it closes the issue/,
+  );
+  assert.match(
+    pullRequests,
+    /A pull request that does only part of an issue's work links it without a closing reference, such as `Part of #123`/,
+  );
+  assert.match(
+    pullRequests,
+    /A closing reference closes the issue only when the pull request merges into the default branch; with another base branch, whoever merges closes the issue after the merge/,
+  );
+  assert.match(
+    pullRequests,
+    /In a repository a factory serves, a merged pull request that leaves its issue open fails the run for good, without a retry; if the work finished the issue, close it/,
+  );
+});
+
+test("the pull request template distinguishes finished issues from partial work", () => {
+  const template = flowedText(".github/PULL_REQUEST_TEMPLATE.md");
+  const relatedIssue = /## Related issue (.*)/.exec(template)?.[1] ?? "";
+  assert.match(
+    relatedIssue,
+    /Link the issue with a closing reference, such as Closes #123, if the pull request finishes it; for partial work, use a nonclosing reference, such as Part of #123/,
+  );
+  assert.doesNotMatch(relatedIssue, /when appropriate/);
+  assert.match(
+    relatedIssue,
+    /For work without a ticket, write Direct change: followed by its reason instead/,
+  );
+});
+
 test("owner questions stay on the issue and leave an open pull request unmerged", () => {
   const guide = flowedText("CONTRIBUTING.md");
   const comments = /## Comments (.*?)## Documentation/.exec(guide)?.[1] ?? "";
@@ -806,7 +842,11 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
   assert.match(
     comments,
-    /close it before removing the label\. Wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
+    /With no open pull request, the owner answers and removes the label to return the issue to the frontier as a fresh first attempt/,
+  );
+  assert.match(
+    comments,
+    /The owner either finishes the pull request by merging it, for example after pushing the refused change, so that the merge closes the issue under the \[pull request rules\]\(#pull-requests\), or hands it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
   );
   assert.match(
     comments,

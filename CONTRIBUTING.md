@@ -160,6 +160,15 @@ record who did the work.
 
 Keep each pull request focused. Describe the problem and resulting change,
 report the checks you ran and their outcomes, and link the relevant issue.
+A pull request that finishes its issue links it with a closing reference, such
+as `Closes #123`, so merging it closes the issue. A pull request that does only
+part of an issue's work links it without a closing reference, such as
+`Part of #123`. A closing reference closes the issue only when the pull request
+merges into the default branch; with another base branch, whoever merges closes
+the issue after the merge. In a repository a factory serves, a merged pull
+request that leaves its issue open fails the run for good, without a retry; if
+the work finished the issue, close it.
+
 A Direct change is work without a ticket, requested by the maintainer in a
 thread or making a minor correction, such as a typo, broken link, or formatting
 fix. Write `Direct change:` and a meaningful reason instead of the issue link.
@@ -277,11 +286,13 @@ This owner handoff ends the agent's babysitting of the pull request.
 With no open pull request, the owner answers and removes the label to return
 the issue to the frontier as a fresh first attempt. While the run's pull request
 is open, removing the label starts no run in a repository a factory serves.
-The owner finishes the pull request, for example by merging it or pushing the
-refused change, or can close it before removing the label. Wait for
-`factory:running` to disappear, then remove the label so a fresh first attempt
-continues its branch. If the answer changes the implementation contract, edit
-the contract; that drops readiness and requires review again.
+The owner either finishes the pull request by merging it, for example after
+pushing the refused change, so that the merge closes the issue under the
+[pull request rules](#pull-requests), or hands it back: close it before removing
+the label, wait for `factory:running` to disappear, then remove the label so a
+fresh first attempt continues its branch. If the answer changes the
+implementation contract, edit the contract; that drops readiness and requires
+review again.
 
 An agent that stops without a pull request and without a question under
 `factory:needs-input` comments one short paragraph on the issue explaining why
