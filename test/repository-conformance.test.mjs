@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
@@ -135,6 +135,18 @@ const upstreamSnapshot = JSON.parse(
   readFileSync(join(root, "test/fixtures/mattpocock-v1.3.1.json"), "utf8"),
 );
 const snapshotRoot = join(root, "vendor/mattpocock-skills");
+const upstreamManifest = JSON.parse(
+  readFileSync(join(snapshotRoot, ".claude-plugin/plugin.json"), "utf8"),
+);
+
+function declaredSkills() {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  return [
+    ...declarations.matchAll(
+      /^ {6}kind: skill\n {6}name: ([^\s]+)\n {6}source: ([^\s]+)/gm,
+    ),
+  ].map((match) => ({ name: match[1], source: match[2] }));
+}
 
 function snapshotFiles(directory, prefix = "") {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -159,29 +171,56 @@ test("the vendored Matt Pocock bytes match the v1.3.1 plugin manifest, and all b
       `${path} matches ${upstreamSnapshot.tag} (${upstreamSnapshot.commit})`,
     );
   }
-  const manifest = JSON.parse(
-    readFileSync(join(snapshotRoot, ".claude-plugin/plugin.json"), "utf8"),
-  );
-  assert.equal(manifest.version, "1.3.1");
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  const shipped = [
-    ...declarations.matchAll(
-      /source: vendor\/mattpocock-skills\/(skills\/[^\s]+)/g,
-    ),
-  ]
-    .map((match) => `./${match[1]}`)
+  assert.equal(upstreamManifest.version, "1.3.1");
+  const shipped = declaredSkills()
+    .filter(({ source }) => source.startsWith("vendor/mattpocock-skills/"))
+    .map(
+      ({ source }) => `./${source.slice("vendor/mattpocock-skills/".length)}`,
+    )
     .sort();
   // Every factory run is a direct run, so the vendored `implement-spec` is not
   // installed.
   assert.deepEqual(
     shipped,
-    manifest.skills
+    upstreamManifest.skills
       .filter((path) => path !== "./skills/engineering/implement-spec")
       .sort(),
   );
   assert.ok(
     !shipped.some((path) => path.endsWith("/resolving-merge-conflicts")),
   );
+});
+
+test("installed skill routes to uninstalled vendored skills have contribution overrides", () => {
+  const installed = declaredSkills();
+  const uninstalled = upstreamManifest.skills
+    .filter(
+      (path) =>
+        !installed.some(
+          ({ source }) =>
+            source === `vendor/mattpocock-skills/${path.slice(2)}`,
+        ),
+    )
+    .map((path) => basename(path));
+  const contributing = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
+
+  for (const { name, source } of installed) {
+    for (const path of snapshotFiles(join(root, source))) {
+      const content = readFileSync(join(root, source, path), "utf8");
+      for (const target of uninstalled) {
+        if (
+          new RegExp(`/${RegExp.escape(target)}(?![a-z0-9-])`).test(content)
+        ) {
+          assert.ok(
+            new RegExp(
+              `(?<![a-z0-9-])${RegExp.escape(target)}(?![a-z0-9-])`,
+            ).test(contributing),
+            `${name} (${source}/${path}) routes to uninstalled ${target}; CONTRIBUTING.md must name ${target} to override that route`,
+          );
+        }
+      }
+    }
+  }
 });
 
 test("the installed setup files retain the v1.3.1 seed bytes", () => {
