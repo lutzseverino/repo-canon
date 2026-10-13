@@ -28,11 +28,10 @@ function check(t, files, overrides) {
 
 const mit = "MIT License\n\nCopyright (c) 2026 Example\n";
 
-function entryReadme(description) {
-  return `<div align="center">
-<h1>Harbor</h1>
-<p align="center">${description}</p>
-</div>
+function entryReadme(description, { wrapped = true } = {}) {
+  const introduction = `<h1 align="center">Harbor</h1>
+<p align="center">${description}</p>`;
+  return `${wrapped ? `<div align="center">\n${introduction}\n</div>` : introduction}
 
 ## License
 
@@ -111,6 +110,8 @@ Our delivery grouping.
     ["A projection and run outcomes delivery service for operators.", "passed"],
     ["A project-based, multi‐project service for operators.", "passed"],
     ["A service for operators, one per project.", "failed", /Project/],
+    ["A per_project service for operators.", "failed", /Project/],
+    ["A \u20acproject fund for operators.", "passed"],
   ]) {
     await t.test(description, (t) => {
       const outcome = check(t, {
@@ -163,11 +164,18 @@ test("passes descriptions captured from existing repository introductions", asyn
       "utf8",
     ),
   );
-  for (const { repository, commit, source, description, glossaries } of cases) {
+  for (const {
+    repository,
+    commit,
+    source,
+    description,
+    wrapped,
+    glossaries,
+  } of cases) {
     await t.test(`${repository} at ${commit ?? source}`, (t) => {
       const outcome = check(t, {
         ...glossaries,
-        "README.md": entryReadme(description),
+        "README.md": entryReadme(description, { wrapped }),
         LICENSE: mit,
       });
       assert.equal(outcome.status, 0, outcome.stderr);

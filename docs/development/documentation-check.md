@@ -16,8 +16,8 @@ through the Repository Standards public operation protocol:
   that every existing documentation directory has a nonempty `README.md`,
   validates rendered local links in those trees and selected migration or
   link-repair files, and enforces the four
-  [documentation rules](#documentation-rules), including newcomer language in
-  the root usage index.
+  [documentation rules](#documentation-rules) and the entry document language
+  rule for the root usage index.
 
 The documentation operation reads the repository only through the
 documentation model in `operations/lib/documentation-model.mjs`. Given the

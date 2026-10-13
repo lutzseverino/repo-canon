@@ -50,15 +50,12 @@ repeated.
 - The Repository README's title, description, badges, section order, length,
   examples, Features items, and pointer sections are stated in the
   [Repository README guidance](guidance/repository-readme.md).
-- Entry documents, the Repository README and root usage index, first say what
-  the project is and who it is for, explain what adopting a repository tool
-  changes, and define project-specific terms before using them. Their
-  description and purpose are each one sentence containing no term defined in
-  root `GLOSSARY.md` or a context glossary listed by `GLOSSARY-MAP.md`, matched
-  case-insensitively as a whole word, where a hyphen-joined compound such as
-  `on-demand` is one word. The checks name the term and glossary;
-  ordinary-English uses of glossary terms still fail. These newly failing
-  checks ship with #368 and #346 in their shared breaking release.
+- The newcomer rules for entry documents are stated in the
+  [Repository README guidance](guidance/repository-readme.md) and the
+  [documentation guidance](guidance/documentation.md). Their glossary-term
+  check accepts that ordinary-English uses of glossary terms fail, and reports
+  such false positives as findings rather than widening the check. These newly
+  failing checks ship with #368 and #346 in their shared breaking release.
 - Project membership and Project README content are stated in the
   [Project README guidance](guidance/project-readmes.md).
 - The documentation rules are stated in

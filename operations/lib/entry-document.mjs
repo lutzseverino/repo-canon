@@ -74,13 +74,16 @@ export function glossaryTerms(projectRoot) {
   });
 }
 
-// A hyphen-joined compound is one word, so on-demand does not contain Demand.
+// A term is bounded by the text's ends, whitespace, or punctuation other than
+// a hyphen, so the hyphen-joined on-demand does not contain Demand.
+const termBoundary = String.raw`^|$|\s|(?![-\u2010\u2011])\p{P}`;
+
 export function glossaryCorrections(text, terms) {
   const normalized = text.replace(/\s+/g, " ");
   return terms.flatMap(({ term, glossary }) => {
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const wholeWord = new RegExp(
-      `(?<![\\p{L}\\p{N}_\\-\\u2010\\u2011])${escaped}(?![\\p{L}\\p{N}_\\-\\u2010\\u2011])`,
+      `(?<=${termBoundary})${escaped}(?=${termBoundary})`,
       "iu",
     );
     return wholeWord.test(normalized)

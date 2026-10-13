@@ -35,6 +35,7 @@ const categories = new Set(documentationCategories);
 // rather than listing it as an entry.
 const agentsIndex = `${repositoryDocumentationRoot}/agents/README.md`;
 const projectGuidance = `${repositoryDocumentationRoot}/agents/project.md`;
+const usageIndex = `${repositoryDocumentationRoot}/usage/README.md`;
 
 const setupAndValidation = "setup and validation";
 
@@ -481,9 +482,7 @@ export function documentationModel(
       left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
     ),
     indexes,
-    entryDocumentGlossary: indexes.some(
-      (index) => index.path === "docs/usage/README.md",
-    )
+    entryDocumentGlossary: indexes.some((index) => index.path === usageIndex)
       ? glossaryTerms(projectRoot)
       : [],
     links: sortedDocuments.flatMap((source) =>
@@ -552,8 +551,7 @@ export function documentationRuleViolations(model) {
     }
   }
 
-  const usagePath = "docs/usage/README.md";
-  const usagePurpose = indexes.get(usagePath)?.purpose;
+  const usagePurpose = indexes.get(usageIndex)?.purpose;
   if (usagePurpose) {
     for (const correction of glossaryCorrections(
       usagePurpose.text,
@@ -561,7 +559,7 @@ export function documentationRuleViolations(model) {
     )) {
       violation(
         documentationRules.entryDocumentLanguage,
-        usagePath,
+        usageIndex,
         correction,
       );
     }
