@@ -7,7 +7,9 @@ repository.
 Start with a centered title, followed by a one-sentence description that says
 what the project is and who it is for, before anything else, and badges. The
 description contains no term defined in the repository's root `GLOSSARY.md` or
-in a context glossary listed in its `GLOSSARY-MAP.md`. For a standards source
+in a context glossary listed in its `GLOSSARY-MAP.md`, matched
+case-insensitively as a whole word; a hyphen-joined compound, such as
+`on-demand`, is one word. For a standards source
 or another tool applied to a repository, explain what adopting it changes.
 Define a project-specific term before using it anywhere in the document.
 

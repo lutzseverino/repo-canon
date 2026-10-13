@@ -109,6 +109,8 @@ Our delivery grouping.
       /C&D.*GLOSSARY\.md/,
     ],
     ["A projection and run outcomes delivery service for operators.", "passed"],
+    ["A project-based, multi‐project service for operators.", "passed"],
+    ["A service for operators, one per project.", "failed", /Project/],
   ]) {
     await t.test(description, (t) => {
       const outcome = check(t, {

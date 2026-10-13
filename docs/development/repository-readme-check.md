@@ -22,7 +22,8 @@ index-purpose rule: terminal sentence punctuation and no internal sentence end
 before a capitalized word. It must contain no term defined in root
 `GLOSSARY.md` or a context glossary linked from the Contexts section of root
 `GLOSSARY-MAP.md`. The check reads the domain-modeling format's `**Term**:`
-paragraphs, matches case-insensitively at whole-word boundaries, and names both
+paragraphs, matches case-insensitively at whole-word boundaries, treating a
+hyphen-joined compound as one word, and names both
 the term and its defining glossary in each correction. It reads these files
 even when they belong to another declaration or lie outside this check's target;
 it never changes them. Repositories without glossaries pass this part.

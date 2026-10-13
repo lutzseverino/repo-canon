@@ -126,7 +126,8 @@ index, `docs/usage/README.md`: its purpose must contain no term from root
 `GLOSSARY.md` or a context glossary linked from the Contexts section of root
 `GLOSSARY-MAP.md`. The shared `operations/lib/entry-document.mjs` resource
 reads the domain-modeling glossary format and matches case-insensitively at
-whole-word boundaries; a correction names the term and defining glossary.
+whole-word boundaries, treating a hyphen-joined compound as one word; a
+correction names the term and defining glossary.
 The existing index entry form rule enforces its one-sentence purpose. This
 does not impose the glossary restriction on other indexes or on later prose.
 Repositories without glossaries pass this part. The
