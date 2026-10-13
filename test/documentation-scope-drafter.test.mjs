@@ -1278,14 +1278,24 @@ test("fails without a manifest it can read, naming the manifests it tried", (t) 
 });
 
 test("drafts this repository's own documentation scope", () => {
-  const outcome = draft(sourceRoot);
+  const outcome = draft(sourceRoot, ["--root", "factory/docs"]);
   assert.equal(outcome.status, 0, outcome.stderr);
   assertScopeProposal(outcome.proposal, sourceRoot);
   const [entry] = outcome.proposal.declarations;
   const documentation = keptFiles(sourceRoot)
-    .filter((path) => path.startsWith("docs/"))
+    .filter(
+      (path) => path.startsWith("docs/") || path.startsWith("factory/docs/"),
+    )
     .filter((path) => !exactOwnedAgentConfiguration.includes(path));
-  assert.deepEqual(included(entry), ["GLOSSARY.md", ...documentation].sort());
+  assert.deepEqual(
+    included(entry),
+    [
+      "GLOSSARY-MAP.md",
+      "GLOSSARY.md",
+      "factory/GLOSSARY.md",
+      ...documentation,
+    ].sort(),
+  );
   assert.ok(
     entry.unresolved.every((question) =>
       question.startsWith("Which of these Markdown files"),

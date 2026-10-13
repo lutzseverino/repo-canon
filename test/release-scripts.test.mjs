@@ -226,7 +226,7 @@ test("factory package changes are outside Repo Canon release inputs", (t) => {
   // or retained resource. The release fixture then exercises the input command
   // with a tracked factory subtree and an independent version stream.
   const standards = readFileSync(join(scripts, "../../standards.yaml"), "utf8");
-  assert.doesNotMatch(standards, /(?:[:\-]\s+|\[)factory(?:\/|[\s\],])/);
+  assert.doesNotMatch(standards, /(?:[:-]\s+|\[)factory(?:\/|[\s\],])/);
   const repository = releasedSource(t);
   repository.commit(
     {
