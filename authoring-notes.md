@@ -50,6 +50,12 @@ repeated.
 - The Repository README's title, description, badges, section order, length,
   examples, Features items, and pointer sections are stated in the
   [Repository README guidance](guidance/repository-readme.md).
+- The newcomer rules for entry documents are stated in the
+  [Repository README guidance](guidance/repository-readme.md) and the
+  [documentation guidance](guidance/documentation.md). Their glossary-term
+  check accepts that ordinary-English uses of glossary terms fail, and reports
+  such false positives as findings rather than widening the check. These newly
+  failing checks ship with #368 and #346 in their shared breaking release.
 - Project membership and Project README content are stated in the
   [Project README guidance](guidance/project-readmes.md).
 - The documentation rules are stated in

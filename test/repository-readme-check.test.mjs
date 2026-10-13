@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
@@ -26,6 +27,162 @@ function check(t, files, overrides) {
 }
 
 const mit = "MIT License\n\nCopyright (c) 2026 Example\n";
+
+function entryReadme(description, { wrapped = true } = {}) {
+  const introduction = `<h1 align="center">Harbor</h1>
+<p align="center">${description}</p>`;
+  return `${wrapped ? `<div align="center">\n${introduction}\n</div>` : introduction}
+
+## License
+
+[MIT License](LICENSE)
+`;
+}
+
+test("requires the Repository README description to be one sentence", (t) => {
+  const outcome = check(t, {
+    "README.md": entryReadme("A delivery service. It serves operators."),
+    LICENSE: mit,
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "failed");
+  assert.match(outcome.result.message, /description.*one sentence/);
+});
+
+test("names a root glossary term used in the description regardless of case", (t) => {
+  const outcome = check(t, {
+    "README.md": entryReadme("A FRONTIER explorer for operators."),
+    LICENSE: mit,
+    "GLOSSARY.md":
+      "# Harbor\n\n## Language\n\n**Frontier**:\nThe work awaiting a run.\n",
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "failed");
+  assert.match(outcome.result.message, /Frontier.*GLOSSARY\.md/);
+});
+
+test("checks only whole glossary terms from the root and mapped contexts", async (t) => {
+  const glossaries = {
+    "GLOSSARY.md": `# Harbor
+
+## Language
+
+**Project**:
+A maintained service.
+_Avoid_: App
+
+**C++**:
+Our delivery dialect.
+
+**C&amp;D**:
+Our delivery grouping.
+`,
+    "GLOSSARY-MAP.md": `# Glossary map
+
+## Contexts
+
+- [Harbor](./GLOSSARY.md): shared language.
+- [Runs](runs/GLOSSARY.md#language): execution language.
+
+## Relationships
+
+- [Unlisted](other/GLOSSARY.md): unrelated reference.
+`,
+    "runs/GLOSSARY.md":
+      "# Runs\n\n## Language\n\n**Run outcome**:\nHow a run ended.\n",
+    "other/GLOSSARY.md": "# Other\n\n**Delivery**:\nAn unrelated definition.\n",
+    "unmapped/GLOSSARY.md":
+      "# Unmapped\n\n**Service**:\nAn unmapped definition.\n",
+  };
+  for (const [description, status, diagnostic] of [
+    [
+      "A RUN\nOUTCOME viewer for operators.",
+      "failed",
+      /Run outcome.*runs\/GLOSSARY\.md/,
+    ],
+    ["A project for operators.", "failed", /Project.*GLOSSARY\.md/],
+    ["A C++ delivery service for operators.", "failed", /C\+\+.*GLOSSARY\.md/],
+    [
+      "A C&amp;D delivery service for operators.",
+      "failed",
+      /C&D.*GLOSSARY\.md/,
+    ],
+    ["A projection and run outcomes delivery service for operators.", "passed"],
+    ["A project-based, multi‐project service for operators.", "passed"],
+    ["A service for operators, one per project.", "failed", /Project/],
+    ["A per_project service for operators.", "failed", /Project/],
+    ["A \u20acproject fund for operators.", "passed"],
+  ]) {
+    await t.test(description, (t) => {
+      const outcome = check(t, {
+        ...glossaries,
+        "README.md": entryReadme(description),
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, status, outcome.result.message);
+      if (diagnostic) assert.match(outcome.result.message, diagnostic);
+    });
+  }
+});
+
+test("requires a rendered description immediately after the title", async (t) => {
+  for (const description of [
+    null,
+    "A service for operators",
+    "A service! Another service?",
+  ]) {
+    await t.test(String(description), (t) => {
+      const readme =
+        description === null
+          ? entryReadme("ignored").replace(
+              '<p align="center">ignored</p>',
+              "<!-- A service for operators. -->",
+            )
+          : entryReadme(description);
+      const outcome = check(t, { "README.md": readme, LICENSE: mit });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "failed");
+      assert.match(outcome.result.message, /description.*one sentence/);
+    });
+  }
+});
+
+test("passes a description in a repository without a glossary", (t) => {
+  const outcome = check(t, {
+    "README.md": entryReadme("A delivery service for operators."),
+    LICENSE: mit,
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "passed", outcome.result.message);
+});
+
+test("passes descriptions captured from existing repository introductions", async (t) => {
+  const cases = JSON.parse(
+    readFileSync(
+      new URL("./fixtures/entry-document-descriptions.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  for (const {
+    repository,
+    commit,
+    source,
+    description,
+    wrapped,
+    glossaries,
+  } of cases) {
+    await t.test(`${repository} at ${commit ?? source}`, (t) => {
+      const outcome = check(t, {
+        ...glossaries,
+        "README.md": entryReadme(description, { wrapped }),
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "passed", outcome.result.message);
+    });
+  }
+});
 
 // Usage, Features, then Installation breaks the general order rule only for
 // Features before Usage, and the Installation-first rule only for Installation
@@ -104,7 +261,7 @@ Set \`HARBOR_PORT\`.
 test("passes an all-rights-reserved notice with its matching License link", (t) => {
   const outcome = check(t, {
     "README.md":
-      '<h1 align="center">Harbor</h1>\n\n## License\n\n[All rights reserved](LICENSE)\n',
+      '<h1 align="center">Harbor</h1>\n\nA delivery service for operators.\n\n## License\n\n[All rights reserved](LICENSE)\n',
     LICENSE: "Copyright (c) 2026 Example\n\nAll rights reserved.\n",
   });
 
@@ -119,7 +276,7 @@ test("runs from its declared retained source layout", (t) => {
   );
   const project = fixture({
     "README.md":
-      '<h1 align="center">Harbor</h1>\n\n## License\n\n[MIT License](LICENSE)\n',
+      '<h1 align="center">Harbor</h1>\n\nA delivery service for operators.\n\n## License\n\n[MIT License](LICENSE)\n',
     LICENSE: mit,
   });
   t.after(project.close);

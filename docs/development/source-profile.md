@@ -46,7 +46,8 @@ with a skill directory.
 
 The documentation operation resources retain the shared rendered-Markdown
 module, the separate local-link module, the documentation model, the
-documentation scope drafter, and complete Marked and parse5 directories with
+entry-document sentence and glossary module, the documentation scope drafter,
+and complete Marked and parse5 directories with
 their notices. The agent runs the drafter during discovery; the CLI only
 retains it. Other operation resources retain the shared GitHub operation
 module, Repo Canon's MIT license and third-party notice, and the upstream skill

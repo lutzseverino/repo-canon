@@ -1,6 +1,13 @@
 # Usage
 
-This directory explains how maintainers prepare for and use Repo Canon.
+This directory helps maintainers apply Repo Canon's documentation, contribution,
+and coding-agent conventions to their repositories.
+
+Applying these conventions installs contribution and agent instructions, skills,
+templates, and validation workflows; this process is called adoption.
+Repository Standards is the tool that performs it. The factory is an unattended
+service that takes ready tickets through implementation and pull request review
+to merge.
 
 - [Adopt Repo Canon](adopt-repo-canon.md): prerequisites, publication boundary,
   inspection, scope review and correction, adoption commands, and recommended
