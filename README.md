@@ -1,17 +1,22 @@
 <div align="center">
   <h1>Repo Canon</h1>
-  <p>A standards source of documentation, contribution, and agent-workflow conventions for Repository Standards.</p>
+  <p>Shared documentation, contribution, and coding-agent conventions for maintainers who want consistent repositories.</p>
   <p>
     <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black" alt="JavaScript">
     <img src="https://img.shields.io/badge/Node.js-24-5FA04E?logo=node.js&logoColor=white" alt="Node.js 24">
   </p>
 </div>
 
+Applying Repo Canon installs contribution and agent instructions, skills,
+templates, and validation workflows into a repository. This process is called
+adoption.
+
 ## Installation
 
-Repo Canon is applied through Repository Standards CLI 6.0.0 or newer. On macOS
+Repository Standards is the tool that applies Repo Canon to a repository;
+use its CLI 6.0.0 or newer. On macOS
 or Linux, use Node.js 24, npm, and Git 2.32.0 or newer, and install the CLI outside
-the adopting project:
+the repository:
 
 ```sh
 npm install --global --ignore-scripts @lutzseverino/repo-standards
@@ -27,13 +32,13 @@ adopted one.
 ## Features
 
 - Install contribution guidance, agent configuration, and issue and PR templates.
-- Validate issue contracts and pull request metadata in GitHub workflows.
-- Copy seventeen of Matt Pocock's workflow skills into `.agents/skills/`.
+- Validate issue contracts (a change's agreed scope and acceptance criteria) and pull request metadata in GitHub workflows.
+- Copy seventeen of Matt Pocock's skills, those the shared workflow relies on, into `.agents/skills/`.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.
-- Ship a factory in `.sandcastle/` that takes each ready ticket to its own pull request, on the model its label names.
+- Ship a factory, an unattended ticket-running service, in `.sandcastle/` that takes each ready ticket to its own pull request, on the model its label names.
 - Set up triage labels, squash-only merging, and a required `PR metadata` check where GitHub's plan offers one.
-- Check the Repository README, Project READMEs, and documentation navigation.
-- Guide agents on the documentation tree, Project READMEs, and the Repository README.
+- Check the repository introduction, component introductions, and documentation navigation.
+- Guide agents on the documentation tree and repository and component introductions.
 
 ## Usage
 

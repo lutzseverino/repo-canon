@@ -16,7 +16,8 @@ through the Repository Standards public operation protocol:
   that every existing documentation directory has a nonempty `README.md`,
   validates rendered local links in those trees and selected migration or
   link-repair files, and enforces the four
-  [documentation rules](#documentation-rules).
+  [documentation rules](#documentation-rules), including newcomer language in
+  the root usage index.
 
 The documentation operation reads the repository only through the
 documentation model in `operations/lib/documentation-model.mjs`. Given the
@@ -27,7 +28,8 @@ documentation categories, its directories with their index paths and states
 (missing, empty, or present), and its confirmed category indexes; the
 development guide; the documents; each document under a root with the index
 that lists it and its scope membership; the purpose and items of each present
-index; and every rendered local link, marked broken or intact. The model also
+index; every rendered local link, marked broken or intact; and the glossary
+terms that the root usage index must avoid. The model also
 defines the documentation rules over that structure, and the check projects the
 structure and the rule violations onto its corrections, so a new documentation
 rule reads the model rather than walking the tree again. The model exports the
@@ -118,6 +120,19 @@ and by path within each rule. The model reads each rule mechanically:
 These rules make a repository that passed earlier releases fail when it does
 not follow them, as
 [ADR 0009](../adr/0009-enforce-documentation-rules-as-checks.md) records.
+
+The entry document language rule additionally checks only the root usage
+index, `docs/usage/README.md`: its purpose must contain no term from root
+`GLOSSARY.md` or a context glossary linked from the Contexts section of root
+`GLOSSARY-MAP.md`. The shared `operations/lib/entry-document.mjs` resource
+reads the domain-modeling glossary format and matches case-insensitively at
+whole-word boundaries; a correction names the term and defining glossary.
+The existing index entry form rule enforces its one-sentence purpose. This
+does not impose the glossary restriction on other indexes or on later prose.
+Repositories without glossaries pass this part. The
+[Repository README check](repository-readme-check.md) uses the same glossary
+and sentence rules and documents their limits; audience, the effect of
+applying a tool, and defining terms before later uses still require review.
 
 ## Outcomes and limits
 

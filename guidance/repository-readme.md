@@ -5,7 +5,13 @@ useful project facts and write the document for someone discovering the
 repository.
 
 Start with a centered title, followed by a one-sentence description that says
-what the project is, and badges. Badges cover the languages and runtimes a user
+what the project is and who it is for, before anything else, and badges. The
+description contains no term defined in the repository's root `GLOSSARY.md` or
+in a context glossary listed in its `GLOSSARY-MAP.md`. For a standards source
+or another tool applied to a repository, explain what adopting it changes.
+Define a project-specific term before using it anywhere in the document.
+
+Badges cover the languages and runtimes a user
 or contributor needs, not file formats, and a runtime badge carries the
 required major version. Preserve useful existing badges after verifying their
 labels and links against repository evidence. Do not add badges for every
@@ -37,7 +43,8 @@ file, and its label is the actual repository license name. The separate
 [Repository license guidance](repository-license.md).
 
 Report evidence for descriptions, commands, technology choices, badges, and
-links. The read-only structural check covers title centering, section order,
+links. The read-only structural check covers title centering, a one-sentence
+description free of glossary terms, section order,
 the required Contributing and Documentation sections when their targets exist,
 Contributing, Documentation, and License sections holding only their link as a
 plain paragraph, and consistency between a single root license file and the

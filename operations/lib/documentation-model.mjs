@@ -2,6 +2,11 @@ import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { sep } from "node:path";
 import { interpretMarkdown } from "./rendered-markdown.mjs";
 import { localLinks, resolvedLocalPath } from "./local-markdown-links.mjs";
+import {
+  glossaryCorrections,
+  glossaryTerms,
+  isOneSentence,
+} from "./entry-document.mjs";
 
 // The structure of a repository's documentation: its documentation roots and
 // categories, its directories and their documentation indexes, its documents,
@@ -10,7 +15,8 @@ import { localLinks, resolvedLocalPath } from "./local-markdown-links.mjs";
 // scope; the documentation scope drafter does, with these same definitions.
 // The model also defines the documentation rules that read this
 // structure: index entry form, one index per document, the development
-// guide's order, and scope coverage. The documentation check reports their
+// guide's order, scope coverage, and the root usage index's glossary-free
+// purpose. The documentation check reports their
 // violations together with its structural corrections.
 
 // The repository's documentation root, its development guide, and the
@@ -38,6 +44,7 @@ export const documentationRules = Object.freeze({
   oneIndex: "one index per document",
   developmentGuideOrder: "development guide order",
   scopeCoverage: "scope coverage",
+  entryDocumentLanguage: "entry document language",
 });
 
 function absolutePath(projectRoot, path) {
@@ -213,16 +220,6 @@ function isDeclared(path, declaredTargets) {
     declaredTargets.paths.includes(path) ||
     declaredTargets.directories.some((directory) => isInside(path, directory))
   );
-}
-
-const sentenceEnd = /[.!?]["'\u2019\u201d)\]]*$/u;
-const sentenceBoundary =
-  /[.!?]["'\u2019\u201d)\]]*\s+["'\u2018\u201c([]*\p{Lu}/u;
-
-// Rendered text is one sentence when it ends a sentence and no sentence ends
-// before a capitalized word inside it.
-function isOneSentence(text) {
-  return sentenceEnd.test(text) && !sentenceBoundary.test(text);
 }
 
 function headingLevel(block) {
@@ -484,6 +481,11 @@ export function documentationModel(
       left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
     ),
     indexes,
+    entryDocumentGlossary: indexes.some(
+      (index) => index.path === "docs/usage/README.md",
+    )
+      ? glossaryTerms(projectRoot)
+      : [],
     links: sortedDocuments.flatMap((source) =>
       documentLinks(projectRoot, source, render(source)),
     ),
@@ -546,6 +548,21 @@ export function documentationRuleViolations(model) {
         documentationRules.indexEntryForm,
         path,
         `write each entry as one "[Title](path): description" item; "${itemLabel(item)}" is not.`,
+      );
+    }
+  }
+
+  const usagePath = "docs/usage/README.md";
+  const usagePurpose = indexes.get(usagePath)?.purpose;
+  if (usagePurpose) {
+    for (const correction of glossaryCorrections(
+      usagePurpose.text,
+      model.entryDocumentGlossary,
+    )) {
+      violation(
+        documentationRules.entryDocumentLanguage,
+        usagePath,
+        correction,
       );
     }
   }

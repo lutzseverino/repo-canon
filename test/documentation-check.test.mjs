@@ -51,6 +51,88 @@ const rootDocumentation = {
   "docs/development/README.md": developmentGuide(),
 };
 
+function usageDocumentation(purpose) {
+  return {
+    ...rootDocumentation,
+    "docs/README.md": index(
+      "Documentation",
+      "This directory maps the documentation categories.",
+      [
+        [
+          "Development",
+          "development/README.md",
+          "building and validating the software.",
+        ],
+        ["Usage", "usage/README.md", "using the software."],
+      ],
+    ),
+    "docs/usage/README.md": index("Usage", purpose),
+  };
+}
+
+test("checks the root usage purpose against context glossary terms outside the confirmed scope", (t) => {
+  const files = {
+    ...usageDocumentation("Operators browse the RUN OUTCOME here."),
+    "GLOSSARY-MAP.md":
+      "# Glossary map\n\n## Contexts\n\n- [Runs](runs/GLOSSARY.md): execution language.\n",
+    "runs/GLOSSARY.md":
+      "# Runs\n\n## Language\n\n**Run outcome**:\nHow a run ended.\n",
+  };
+  const outcome = check(
+    t,
+    files,
+    Object.keys(files).filter((path) => path.startsWith("docs/")),
+  );
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "failed");
+  assert.match(
+    outcome.result.message,
+    /docs\/usage\/README\.md.*Run outcome.*runs\/GLOSSARY\.md/,
+  );
+});
+
+test("checks only the root usage purpose, allowing glossary terms in later prose and other indexes", (t) => {
+  const files = {
+    ...usageDocumentation(
+      "This directory helps operators use Harbor's delivery service.",
+    ),
+    "docs/usage/README.md": `${index("Usage", "This directory helps operators use Harbor's delivery service.")}\nA Frontier is the work awaiting a run.\n`,
+    "GLOSSARY.md":
+      "# Harbor\n\n**Frontier**:\nThe work awaiting a run.\n\n**Project**:\nA maintained service.\n",
+  };
+  const outcome = check(t, files);
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "passed", outcome.result.message);
+});
+
+test("rejects a root glossary term in the root usage purpose", (t) => {
+  const outcome = check(t, {
+    ...usageDocumentation(
+      "This directory helps operators browse the frontier.",
+    ),
+    "GLOSSARY.md": "# Harbor\n\n**Frontier**:\nThe work awaiting a run.\n",
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "failed");
+  assert.match(
+    outcome.result.message,
+    /docs\/usage\/README\.md.*Frontier.*GLOSSARY\.md/,
+  );
+});
+
+test("rejects a two-sentence root usage purpose even without a glossary", (t) => {
+  const outcome = check(
+    t,
+    usageDocumentation("This directory explains Harbor. Operators start here."),
+  );
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "failed");
+  assert.match(
+    outcome.result.message,
+    /docs\/usage\/README\.md.*purpose.*one sentence/,
+  );
+});
+
 test("passes indexed documentation with the mandatory development entry point", (t) => {
   const outcome = check(t, rootDocumentation);
 

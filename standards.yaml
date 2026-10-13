@@ -39,6 +39,7 @@ defaults:
               - operations/lib/rendered-markdown.mjs
               - operations/lib/local-markdown-links.mjs
               - operations/lib/documentation-model.mjs
+              - operations/lib/entry-document.mjs
               - discovery/draft-documentation-scope.mjs
               - vendor/marked
               - vendor/parse5
@@ -263,6 +264,7 @@ defaults:
             executable: node
             script: operations/check-repository-readme.mjs
             resources:
+              - operations/lib/entry-document.mjs
               - operations/lib/rendered-markdown.mjs
               - operations/lib/local-markdown-links.mjs
               - vendor/marked

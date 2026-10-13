@@ -16,9 +16,27 @@ one rendered Markdown and HTML representation. The operation keeps its
 README-specific title, ordering, centering, section-body, pointer-section, and
 License policies.
 
+The description is the rendered paragraph immediately after the title, allowing
+centered `div` wrappers. It must be one sentence by the shared deterministic
+index-purpose rule: terminal sentence punctuation and no internal sentence end
+before a capitalized word. It must contain no term defined in root
+`GLOSSARY.md` or a context glossary linked from the Contexts section of root
+`GLOSSARY-MAP.md`. The check reads the domain-modeling format's `**Term**:`
+paragraphs, matches case-insensitively at whole-word boundaries, and names both
+the term and its defining glossary in each correction. It reads these files
+even when they belong to another declaration or lie outside this check's target;
+it never changes them. Repositories without glossaries pass this part.
+
+`operations/lib/entry-document.mjs` is retained alongside both entry-document
+checks and the documentation scope drafter. The rule intentionally rejects a
+glossary term used in its ordinary-English sense, such as `Project`; report
+false positives as findings rather than widening the rule. Audience, the
+effects of adopting a tool, and defining terms before later uses still require
+review.
+
 The result statuses have distinct meanings:
 
-- `passed` means the checked structure is valid. Descriptions, badges, commands,
+- `passed` means the checked structure is valid. Description facts, badges, commands,
   license facts, and prose still need maintainer or agent review.
 - `failed` is a policy failure with concrete corrections, such as centering the
   title, restoring section order, reducing a pointer section to its link, or
