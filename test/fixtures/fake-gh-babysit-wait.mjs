@@ -8,7 +8,7 @@
 // withholds its push for that many reads, counted in `activityReads`.
 // Workflow runs carry their workflow ID, name, status, conclusion,
 // latest attempt's `run_started_at` and `html_url`, as GitHub reports them.
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, renameSync, writeFileSync } from "node:fs";
 
 const state = JSON.parse(readFileSync(process.env.FAKE_GH_STATE, "utf8"));
 const args = process.argv.slice(2);
@@ -44,7 +44,10 @@ if (args[0] === "pr" && args[1] === "view") {
     state.failActivityReads !== undefined
   ) {
     state.activityReads = read + 1;
-    writeFileSync(process.env.FAKE_GH_STATE, JSON.stringify(state));
+    // Replace the state atomically so concurrent reads see complete JSON.
+    const temporary = `${process.env.FAKE_GH_STATE}.${process.pid}.tmp`;
+    writeFileSync(temporary, JSON.stringify(state));
+    renameSync(temporary, process.env.FAKE_GH_STATE);
   }
   if (state.failActivity || read < state.failActivityReads) {
     process.stderr.write("gh: Server Error (HTTP 502)\n");
