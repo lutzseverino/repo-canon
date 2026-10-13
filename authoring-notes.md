@@ -73,6 +73,7 @@ repeated.
   declared, because every factory run is a direct run, as
   [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md)
   decides. No additional regular-skill exclusions are agreed.
+  `ask-matt` still routes to `implement-spec`; `CONTRIBUTING.md` overrides that route.
 - The standards source manages reviewed, pinned upstream skill snapshots and
   distributes changes through standards releases. Keep upstream skill content
   intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
@@ -158,7 +159,8 @@ repeated.
   requests, titles and commits, and documentation. Every other file cites it
   rather than repeating one of them. Agent implementation procedures belong in
   skills. Files Repo Canon authors do not restate them, and cite them only for
-  delivery: `AGENTS.md` names `pr` and `babysit`, and `CONTRIBUTING.md` names
+  delivery or to override routes to uninstalled skills: `AGENTS.md` names `pr`
+  and `babysit`, and `CONTRIBUTING.md` names
   `pr` for a pull request's body and `adopt-standards` for an unfinished
   adoption run. The skill setup files may cite them.
   CONTRIBUTING.md should be repository-agnostic exact content, copied

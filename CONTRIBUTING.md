@@ -29,6 +29,10 @@ Before implementing, read the whole issue, its discussion, its parent
 specification, and its blockers, and clarify contradictions. Start a ticket
 only after its blockers are closed.
 
+Implement a specification's tickets with the `implement` skill, one ticket per
+session. Repo Canon does not install `implement-spec`, so `ask-matt`'s route
+that builds a whole specification in one run does not apply.
+
 Every ticket merges into its base branch on its own, with its checks passing.
 Expand–contract batches that can't each stay green become a single ticket, not
 tickets sharing an integration branch.

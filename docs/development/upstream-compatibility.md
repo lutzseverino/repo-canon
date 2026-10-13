@@ -11,6 +11,7 @@ a direct run, as
 [ADR 0012](../adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
 Repo Canon configuration adapts conventions without editing upstream skill
 content.
+`ask-matt` still routes to `implement-spec`; `CONTRIBUTING.md` overrides that route.
 
 ## Vendored skills
 
