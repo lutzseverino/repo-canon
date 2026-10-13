@@ -385,7 +385,7 @@ test("the installed agent guidance ends every change as a babysat pull request",
   assert.ok(declarations.includes("target: AGENTS.md\n      exact: AGENTS.md"));
   assert.ok(
     flowedText("AGENTS.md").includes(
-      "Deliver every change as one pull request: open it as `CONTRIBUTING.md` says, write its body with `pr`, then `babysit` it until it merges.",
+      "Deliver every change as one pull request: open it and write its body as `CONTRIBUTING.md` says, using `pr` where it directs, then `babysit` it until it merges.",
     ),
   );
 });

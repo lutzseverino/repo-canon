@@ -10,8 +10,6 @@ templates. Specifications and implementation tickets live in the issue tracker;
 repository documents keep durable domain language, decisions, usage guidance,
 and development knowledge.
 
-Write multi-line issue bodies to a file and pass it with `--body-file`.
-
 Use short, descriptive issue titles in sentence case and the project's
 terminology. Name the observed failure for bugs, the desired capability for
 features, the action for implementation tickets, and the capability being
@@ -133,8 +131,6 @@ A Direct change is work without a ticket, requested by the maintainer in a
 thread or making a minor correction, such as a typo, broken link, or formatting
 fix. Write `Direct change:` and a meaningful reason instead of the issue link.
 
-Write multi-line pull request bodies to a file and pass it with `--body-file`.
-
 Keep the pull request template's sections in order: Summary, Evidence, Merge
 Danger, and Related issue. Include checks and outcomes in Evidence, and
 relevant limits in Merge Danger. Put any other material, such as scope, impact,
@@ -152,8 +148,10 @@ holds unrelated uncommitted edits, run them in a clean checkout of that commit,
 such as a temporary Git worktree. Run a check that reads a diff, such as
 `git diff --check`, over the whole change against the base.
 
-Write the body with the `pr` skill, in the pull request template's sections:
-the skill's Summary, Evidence and Merge Danger, then Related issue.
+For an ordinary pull request, write the body with the `pr` skill, in the pull
+request template's sections: the skill's Summary, Evidence and Merge Danger,
+then Related issue. For an adoption pull request, use the adoption record as
+described below.
 
 ### Adoption pull requests
 
@@ -282,6 +280,6 @@ as a tag, run ID, or commit permalink. Delete a superseded document other than
 an ADR rather than keeping it under a historical label, and repair the links to
 it.
 
-An ADR is never deleted. When a later ADR supersedes it, keep it and add a
-status line under its title that names and links the superseding ADR. A
-superseded ADR is maintained material, not a point-in-time record.
+An ADR is never deleted. When a later ADR supersedes it, keep it and mark it
+superseded, naming and linking the superseding ADR. A superseded ADR is
+maintained material, not a point-in-time record.
