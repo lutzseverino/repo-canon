@@ -571,6 +571,32 @@ test("the factory closes a ready specification with one ticket-list comment, onc
   assert.deepEqual(run.github.find(4).comments, []);
 });
 
+test("closing a parent retires an earlier timed-out or active run without failure comments", async () => {
+  for (const ended of [true, false]) {
+    const run = factory({ issues: [{ number: 3 }] });
+    await run.tick();
+    const spec = run.github.find(3);
+    spec.body = specificationBody;
+    spec.subIssues.push({ number: 5, state: "CLOSED" });
+    const launch = run.sandcastle.launched[0];
+    if (ended) {
+      run.time.now = new Date("2026-10-09T16:01:00Z");
+      launch.finish();
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    await run.tick();
+    assert.equal(spec.state, "CLOSED");
+    if (!ended) assert.equal(launch.signal.aborted, true);
+    await new Promise((resolve) => setImmediate(resolve));
+    await run.tick();
+    assert.equal(spec.comments.length, 1);
+    assert.match(spec.comments[0], /All sub-issues are closed/);
+    assert.equal(spec.labels.includes("factory:failed"), false);
+    assert.equal(spec.labels.includes("factory:running"), false);
+    assert.equal(run.sandcastle.launched.length, 1);
+  }
+});
+
 test("parents stay open until readiness, closed tickets and no open unlinked ticket coincide", async () => {
   const run = factory({
     issues: [

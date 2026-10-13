@@ -165,6 +165,31 @@ test("a ready parent closes once every native sub-issue is closed", () => {
   );
 });
 
+test("closing a parent takes precedence over settling its earlier run or claim", () => {
+  for (const state of [
+    { runs: [run(3, { ended: { timedOut: false, pullRequest: "none" } })] },
+    {
+      runs: [
+        run(3, { attempt: 2, ended: { timedOut: true, pullRequest: "none" } }),
+      ],
+    },
+    { runs: [run(3)] },
+    { claims: [{ issue: 3, pullRequest: "none" }] },
+  ]) {
+    assert.deepEqual(
+      decideFactory(
+        snapshot({
+          issues: [
+            parent(released, { subIssues: [{ number: 5, state: "closed" }] }),
+          ],
+          ...state,
+        }),
+      ),
+      [{ kind: "close", issue: 3, tickets: [5] }],
+    );
+  }
+});
+
 test("an open unlinked ticket holds a parent whose native sub-issues are closed", () => {
   const decisions = decideFactory(
     snapshot({

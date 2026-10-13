@@ -220,19 +220,27 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
   const decisions: Decision[] = [];
   const running = runningCounts(snapshot);
   const retries = new Map<number, Retry>();
+  const closing = new Set(
+    snapshot.issues
+      .filter(
+        (issue) =>
+          issue.labels.includes(labels.ready) &&
+          issue.subIssues.length > 0 &&
+          issue.subIssues.every((ticket) => ticket.state === "closed") &&
+          unlinkedTickets(issue, snapshot.issues).length === 0,
+      )
+      .map((issue) => issue.number),
+  );
   for (const run of snapshot.runs) {
+    if (closing.has(run.issue)) continue;
     const settled = settle(run, snapshot);
     if ("failure" in settled) retries.set(run.issue, settled);
     else decisions.push(...settled);
   }
-  for (const claim of snapshot.claims) decisions.push(...settleClaim(claim));
+  for (const claim of snapshot.claims)
+    if (!closing.has(claim.issue)) decisions.push(...settleClaim(claim));
   for (const issue of oldestFirst(snapshot.issues)) {
-    if (
-      issue.labels.includes(labels.ready) &&
-      issue.subIssues.length > 0 &&
-      issue.subIssues.every((ticket) => ticket.state === "closed") &&
-      unlinkedTickets(issue, snapshot.issues).length === 0
-    ) {
+    if (closing.has(issue.number)) {
       decisions.push({
         kind: "close",
         issue: issue.number,

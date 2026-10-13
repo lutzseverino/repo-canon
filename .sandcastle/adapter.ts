@@ -799,7 +799,7 @@ export function createFactory(settings: Settings, ports: Ports) {
   async function apply(decision: Decision, image: string) {
     const { issue } = decision;
     switch (decision.kind) {
-      case "close":
+      case "close": {
         await ports.gh([
           "issue",
           "close",
@@ -818,7 +818,12 @@ export function createFactory(settings: Settings, ports: Ports) {
             ),
           ].join("\n"),
         ]);
+        const run = runs.find((candidate) => candidate.issue === issue);
+        if (run && !run.exited)
+          run.controller.abort(new Error("its parent issue is closed"));
+        forget(issue);
         return;
+      }
       case "claim":
         await ports.gh([
           "issue",
