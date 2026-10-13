@@ -31,7 +31,9 @@ decision, and a run on the state its own writes produced changes nothing.
 One timeline helper inside the decision answers every question about whether
 one issue event came after another, and it orders events by one rule: the
 timeline's order decides when GitHub has recorded both events. A carried label
-whose application the timeline has not recorded follows every recorded event.
+whose application the timeline has not recorded follows every recorded event
+only when its latest recorded change is a removal or nothing. A label the issue
+was opened with is the exception.
 Timestamps are used only for what has no timeline position (the feedback
 comment and Agent Brief comments) and to recognize labels applied at creation.
 Agent Brief comments are ordered among themselves by comment ID: the latest
@@ -322,10 +324,9 @@ states is never a structural error.
 - A non-readiness state applied after the review supersedes it, whatever its
   timestamp: the validator keeps the latest such state, removes readiness and
   every other state, and publishes the revision as awaiting review. A carried
-  state whose application the timeline has not recorded, its latest recorded
-  change being a removal or nothing, counts as later than every recorded
-  event, so a lagging timeline cannot delete a newly applied state. A label the
-  issue was opened with is the exception.
+  state whose application the timeline has not recorded counts as later than
+  every recorded event only when its latest recorded change is a removal or
+  nothing. A label the issue was opened with is the exception.
 - Readiness that fails authorization or revision binding is removed and its
   rejection recorded. A structural failure removes readiness and lists its
   errors.
@@ -339,6 +340,22 @@ states is never a structural error.
   removed. Removing readiness, or losing it to invalidation, therefore returns a
   contract, or an unrecognized issue such as a contract edited until no contract
   heading remains, to `needs-triage` unless another non-readiness state remains.
+
+One lagging case is accepted as recorded, for workflow state. A state label
+removed and reapplied while the timeline records neither change is ordered at
+its earlier recorded application. Settlement can then remove the reapplied
+label in favor of another carried state, or order it before a review. This
+needs two workflow states carried at once and a removal and reapplication
+inside the timeline's lag. An issue normally carries one state; two can coexist
+before a run settles a new label, or when the validator restores `needs-triage`
+during a removal and reapplication. A `labeled` payload carries no issue-event
+ID, and the payload's issue update time is not used to match recorded events,
+as explained above. The run therefore cannot distinguish an older recorded
+application from an unrecorded reapplication, especially when the same person
+made both; deferring settlement on that guess would need the same timing
+signal. The change is visible in the issue's label history, no readiness is
+granted, and applying the label again once the timeline has caught up settles
+it.
 
 A category-labeled triaged request with `wontfix` is a `wontfix` outcome unless
 a non-readiness state applied later replaces `wontfix`, or the issue also
