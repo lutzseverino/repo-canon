@@ -107,6 +107,50 @@ Making an accepted standards source available as a permanent version that
 adopting maintainers can select.
 _Avoid_: Source acceptance, adoption
 
+**Rules**:
+The installed, human-readable statement of what a standard requires of a file
+or repository area, which its checks and assessments cite. Rules outlast the
+adoption run that installs them.
+_Avoid_: Guidance, when meaning lasting requirements; skill instructions
+
+**Adoption guidance**:
+A standard's one-time instructions for an adoption or update run, such as a
+migration, a question for the maintainer, or how to assess a declaration. It
+is kept with the run's inputs and never installed as rules.
+_Avoid_: Guidance, when meaning rules
+
+**Workflow skill**:
+A skill the standard installs because its output lands in the repository or
+the issue tracker, or because rules, a check, or another workflow skill rely on
+it. It is a method an agent follows and never defines a requirement.
+_Avoid_: Installed skill, rule, policy
+
+**Personal skill**:
+A skill whose output serves the person using it, such as a lesson or a
+questionnaire. A person installs it for themselves; the standard does not.
+_Avoid_: Optional skill
+
+**Remote setup**:
+The part of adoption that changes the hosting platform's settings for the
+repository, such as its labels and merge rules. It can be deferred, so that
+adoption completes locally without it.
+_Avoid_: GitHub setup, fixes, when meaning only the remote part
+
+**Entry document**:
+A first document a newcomer reads: the Repository README and the root usage
+index.
+_Avoid_: Landing page, front page
+
+**Standard profile**:
+The profile of Repo Canon that every adopting repository can select, carrying
+everything except the factory's repository files.
+_Avoid_: Complete profile, base profile
+
+**Factory profile**:
+The profile that adds the factory's repository files to the standard profile,
+for a repository that a factory serves.
+_Avoid_: Factory add-on, factory overlay
+
 **Adoption**:
 Applying a selected standards source to a repository within its confirmed
 scope and satisfying the source's requirements there.

@@ -52,3 +52,15 @@ involve real alternatives.
 - [Configure the pull request reviewer as repository data](0015-configure-the-pull-request-reviewer-as-repository-data.md):
   an optional data file names the reviewer `babysit` waits for, and its absence
   means no reviewer.
+- [Keep requirements in installed rules, and use skills as methods](0016-keep-requirements-in-installed-rules.md):
+  requirements live in installed rules that checks and assessments cite, and
+  installed skills, pinned upstream ones included, never define them.
+- [Make the factory an optional profile](0017-make-the-factory-an-optional-profile.md):
+  a standard profile for every adopting repository and a factory profile that
+  adds the factory's repository files.
+- [Install only workflow skills](0018-install-only-workflow-skills.md): the
+  standard installs skills that the workflow relies on, and people install
+  personal skills for themselves.
+- [Fork a pinned skill when its overrides outgrow it](0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md):
+  pinned skills stay verbatim until their overrides would restate most of the
+  procedure or exceed two, and then Repo Canon owns the skill with credit.
