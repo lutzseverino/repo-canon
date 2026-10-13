@@ -159,9 +159,9 @@ npm run release:verify -- "$version" "$release_commit" &&
 1. The annotated tag on `origin` peels to the release commit.
 2. The GitHub release is neither a draft nor a prerelease.
 3. In a disposable Git repository, the public CLI at the required minimum
-   version inspects the release with the `complete` profile, as
+   version inspects the release with each profile, `standard` and `factory`, as
    [Adopt Repo Canon](../usage/adopt-repo-canon.md#inspect-the-published-source)
-   describes. The report resolves the release commit and profile.
+   describes. Each report resolves the release commit and its profile.
 4. The Repository README and the adoption guide at the release commit name the
    version being verified, and every CLI version that the development guide,
    the source profile, and the authoring notes there name is the required

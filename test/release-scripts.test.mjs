@@ -32,7 +32,7 @@ if (command === 'source' && subcommand === 'validate') {
     console.log(JSON.stringify({ valid: false, errors: [{ message: 'Stub rejected the source.' }] }));
     process.exit(1);
   }
-  console.log(JSON.stringify({ valid: true, errors: [], profiles: { complete: { declarations } } }));
+  console.log(JSON.stringify({ valid: true, errors: [], profiles: { standard: { declarations } } }));
 } else if (command === 'inspect') {
   const args = process.argv.slice(2);
   const version = args[args.indexOf('--standards-version') + 1];
@@ -398,10 +398,13 @@ test("release:verify passes a published release that agrees with its commit", (t
     output,
     /pass: GitHub release v1\.0\.0 is neither a draft nor a prerelease/,
   );
-  assert.match(
-    output,
-    /pass: CLI 2\.0\.0 inspected v1\.0\.0 in a disposable repository/,
-  );
+  for (const profile of ["standard", "factory"])
+    assert.match(
+      output,
+      new RegExp(
+        `pass: CLI 2\\.0\\.0 inspected v1\\.0\\.0 in a disposable repository .* with the ${profile} profile`,
+      ),
+    );
   assert.match(output, /pass: the documents name v1\.0\.0/);
 });
 

@@ -12,6 +12,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 
 const workflowPath = ".github/workflows/sandbox-image.yml";
+const dockerfilePath = ".factory/Dockerfile";
 const workflow = () =>
   readFileSync(new URL(`../${workflowPath}`, import.meta.url), "utf8");
 
@@ -38,7 +39,7 @@ function fixture(t, changes, dockerfile = "FROM scratch\n") {
   git("init", "--quiet");
   git("config", "user.email", "fixture@example.invalid");
   git("config", "user.name", "Fixture");
-  write(".sandcastle/Dockerfile", dockerfile);
+  write(dockerfilePath, dockerfile);
   write(workflowPath, "original workflow\n");
   write("README.md", "original readme\n");
   git("add", ".");
@@ -108,23 +109,23 @@ test("unrelated pull requests succeed without invoking Docker", (t) => {
   const capture = stubDocker(f, 1);
   const result = f.run();
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /No sandbox image changes/);
+  assert.match(result.stdout, /No toolchain image changes/);
   assert.throws(capture, { code: "ENOENT" });
 });
 
-test("base-only sandbox fixes do not trigger a build on an unrelated stale pull request", (t) => {
+test("base-only toolchain fixes do not trigger a build on an unrelated stale pull request", (t) => {
   const f = fixture(t, { "README.md": "updated readme\n" });
-  f.advanceBase({ ".sandcastle/Dockerfile": "FROM scratch\n# base fix\n" });
+  f.advanceBase({ [dockerfilePath]: "FROM scratch\n# base fix\n" });
   const capture = stubDocker(f, 17);
   const result = f.run();
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /No sandbox image changes/);
+  assert.match(result.stdout, /No toolchain image changes/);
   assert.throws(capture, { code: "ENOENT" });
 });
 
-test("pull request sandbox changes still build when the base branch advances", (t) => {
+test("pull request toolchain changes still build when the base branch advances", (t) => {
   const dockerfile = "FROM scratch\n# pull request toolchain\n";
-  const f = fixture(t, { ".sandcastle/Dockerfile": dockerfile });
+  const f = fixture(t, { [dockerfilePath]: dockerfile });
   f.advanceBase({ "README.md": "base-only readme update\n" });
   const capture = stubDocker(f);
   const result = f.run();
@@ -132,47 +133,54 @@ test("pull request sandbox changes still build when the base branch advances", (
   assert.equal(capture().input, dockerfile);
 });
 
-for (const path of [
-  ".sandcastle/Dockerfile",
-  ".sandcastle/nested/tool\nwith a newline",
-  workflowPath,
-]) {
-  test(`a change to ${JSON.stringify(path)} builds the head Dockerfile without context`, (t) => {
+for (const path of [dockerfilePath, workflowPath]) {
+  test(`a change to ${path} builds only the head toolchain Dockerfile without context`, (t) => {
     const f = fixture(t, { [path]: "FROM scratch\n# updated\n" });
     const capture = stubDocker(f);
     const result = f.run();
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(capture(), {
-      args: [
-        "build",
-        "--build-arg",
-        `AGENT_UID=${process.getuid()}`,
-        "--build-arg",
-        `AGENT_GID=${process.getgid()}`,
-        "-",
-      ],
+      args: ["build", "-"],
       input:
-        path === ".sandcastle/Dockerfile"
+        path === dockerfilePath
           ? "FROM scratch\n# updated\n"
           : "FROM scratch\n",
     });
   });
 }
 
-test("renaming the Dockerfile outside .sandcastle fails instead of skipping the build", (t) => {
+// Only the Dockerfile builds the image, so other factory files, and paths
+// that merely start like it, need no build.
+for (const path of [
+  ".factory/config.json",
+  ".factory/Dockerfile.old",
+  ".factory/nested/tool\nwith a newline",
+  ".sandcastle/Dockerfile",
+]) {
+  test(`a change to ${JSON.stringify(path)} alone does not build`, (t) => {
+    const f = fixture(t, { [path]: "FROM scratch\n# unrelated\n" });
+    const capture = stubDocker(f, 1);
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /No toolchain image changes/);
+    assert.throws(capture, { code: "ENOENT" });
+  });
+}
+
+test("moving the Dockerfile out of .factory fails instead of skipping the build", (t) => {
   const f = fixture(t, {
-    ".sandcastle/Dockerfile": null,
+    [dockerfilePath]: null,
     Dockerfile: "FROM scratch\n",
   });
   stubDocker(f);
   const result = f.run();
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /\.sandcastle\/Dockerfile/);
+  assert.match(result.stderr, /\.factory\/Dockerfile/);
 });
 
 test("a failed Docker build fails the job and preserves its diagnostic", (t) => {
   const f = fixture(t, {
-    ".sandcastle/Dockerfile": 'FROM scratch\nRUN ["/missing-toolchain"]\n',
+    [dockerfilePath]: 'FROM scratch\nRUN ["/missing-toolchain"]\n',
   });
   stubDocker(f, 17);
   const result = f.run();
@@ -201,7 +209,7 @@ test("a real Docker toolchain failure fails the workflow step", (t) => {
     return;
   }
   const f = fixture(t, {
-    ".sandcastle/Dockerfile": 'FROM scratch\nRUN ["/missing-toolchain"]\n',
+    [dockerfilePath]: 'FROM scratch\nRUN ["/missing-toolchain"]\n',
   });
   const result = f.run();
   assert.notEqual(result.status, 0);
@@ -226,7 +234,8 @@ test("the shared workflow always reports on pull requests with read-only permiss
   );
   assert.ok(
     declarations.includes(
-      `factory-sandbox-image-workflow:\n      kind: file\n      target: ${workflowPath}\n      exact: ${workflowPath}\n`,
+      `factory-sandbox-image-workflow:\n        kind: file\n        target: ${workflowPath}\n        exact: ${workflowPath}\n`,
     ),
+    "the factory profile declares the workflow",
   );
 });

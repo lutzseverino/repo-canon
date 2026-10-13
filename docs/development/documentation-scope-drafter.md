@@ -13,15 +13,16 @@ confirm only when the complete inspection reports `confirmation.required` as
 ## Interface
 
 ```sh
-node discovery/draft-documentation-scope.mjs [--project <path>] [--root <path>]...
+node discovery/draft-documentation-scope.mjs [--project <path>] [--profile <name>] [--root <path>]...
 ```
 
 With Node.js 24, the agent can run it from either supported location. From the
-root of a clone of the standards source checked out at the selected commit:
+root of a clone of the standards source checked out at the selected commit,
+naming the selected profile:
 
 ```sh
 node discovery/draft-documentation-scope.mjs --project /path/to/adopting-repository \
-  > /tmp/documentation-scope.json
+  --profile standard > /tmp/documentation-scope.json
 ```
 
 Or from the adopting repository's root, using the retained copy under
@@ -35,7 +36,10 @@ node .repo-standards/inputs/source/discovery/draft-documentation-scope.mjs \
 
 `--project` names a path in the adopting repository and defaults to the
 current directory; like Repository Standards, the drafter drafts the top level
-of the Git working tree that holds it. Each `--root` names a directory that the
+of the Git working tree that holds it. `--profile` names the selected profile,
+whose declarations' targets the drafter leaves out, as
+[other declarations' targets](#other-declarations-targets) describes. Each
+`--root` names a directory that the
 agent decided is a documentation root, besides `docs`, which always is one. It
 must be a repository-relative directory that holds a file Git keeps, outside
 `docs`, every other root, and the paths Repository Standards reserves, and no
@@ -94,8 +98,10 @@ The drafter runs outside the CLI, so no operation request lists the other
 active declarations. It reads them from the manifest of the standards it ships
 with, taking each declaration's `kind`, `target`, `name`, and `exclude`:
 
-- From the source, it reads `standards.yaml` beside it at the selected commit,
-  whose one `complete` profile selects every default declaration unchanged.
+- From the source, it reads `standards.yaml` beside it at the selected commit
+  and resolves the profile that `--profile` names, `standard` or `factory`. A
+  manifest with one profile needs no `--profile`; with several, the drafter
+  fails without it, and it fails on a profile the manifest does not declare.
 - From the retained inputs, where no `standards.yaml` lies beside it in
   `.repo-standards/inputs/source`, it reads
   `.repo-standards/inputs/standards.yaml`, the manifest Repository Standards

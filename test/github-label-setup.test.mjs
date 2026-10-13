@@ -60,22 +60,6 @@ const canonicalLabels = [
     color: "bfd4f2",
     description: "Task in a planning map",
   },
-  {
-    name: "factory:running",
-    color: "0052cc",
-    description: "Claimed by a factory run",
-  },
-  {
-    name: "factory:failed",
-    color: "b60205",
-    description: "The factory run failed; remove to run it again",
-  },
-  {
-    name: "factory:needs-input",
-    color: "d4c5f9",
-    description:
-      "Waiting for the owner's answer; answer and remove to run again",
-  },
 ];
 
 function setup(t, options) {
@@ -89,14 +73,14 @@ test("provisions every canonical label in an empty repository and is unchanged o
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
-  assert.match(outcome.result.message, /created 15 labels/);
+  assert.match(outcome.result.message, /created 12 labels/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
   assertProjectUnchanged(before, scenario);
 
   const repeat = scenario.invoke();
   assert.equal(repeat.status, 0, repeat.stderr);
   assert.equal(repeat.result.status, "unchanged");
-  assert.equal(scenario.readState().mutations, 15);
+  assert.equal(scenario.readState().mutations, 12);
   assertProjectUnchanged(before, scenario);
 });
 
@@ -132,6 +116,43 @@ test("leaves the retired run:orchestrated label in place without provisioning it
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "unchanged");
   assert.deepEqual(scenario.readState().labels, [...canonicalLabels, retired]);
+});
+
+// The factory creates its own state labels from the repository's factory
+// configuration, so setup provisions none of them, and leaves the ones a
+// repository already has alone.
+test("creates no factory label and leaves existing factory labels in place", (t) => {
+  const empty = setup(t);
+  const created = empty.invoke();
+  assert.equal(created.status, 0, created.stderr);
+  assert.deepEqual(
+    empty.readState().labels.filter(({ name }) => name.startsWith("factory:")),
+    [],
+  );
+
+  const factoryLabels = [
+    {
+      name: "factory:running",
+      color: "0052cc",
+      description: "Claimed by a factory run",
+    },
+    {
+      name: "factory:paused",
+      color: "c5def5",
+      description: "The factory paused this run and resumes it by itself",
+    },
+  ];
+  const scenario = setup(t, {
+    state: { labels: [...structuredClone(canonicalLabels), ...factoryLabels] },
+  });
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "unchanged");
+  assert.deepEqual(scenario.readState().labels, [
+    ...canonicalLabels,
+    ...factoryLabels,
+  ]);
+  assert.equal(scenario.readState().mutations ?? 0, 0);
 });
 
 test("reconciles conflicting desired label values without replacing unrelated labels", (t) => {
@@ -199,13 +220,13 @@ test("reports partial effects and completes missing work after a transient API f
   assert.equal(first.status, 0, first.stderr);
   assert.equal(first.result.status, "blocked");
   assert.match(first.result.message, /created needs-triage/);
-  assert.match(first.result.message, /14 labels remain/);
+  assert.match(first.result.message, /11 labels remain/);
   assert.equal(scenario.readState().labels.length, 1);
 
   const retry = scenario.invoke();
   assert.equal(retry.status, 0, retry.stderr);
   assert.equal(retry.result.status, "changed");
-  assert.match(retry.result.message, /created 14 labels/);
+  assert.match(retry.result.message, /created 11 labels/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });
 
@@ -220,7 +241,7 @@ test("recovers after interruption by applying only labels still missing", (t) =>
   const retry = scenario.invoke();
   assert.equal(retry.status, 0, retry.stderr);
   assert.equal(retry.result.status, "changed");
-  assert.match(retry.result.message, /created 14 labels/);
+  assert.match(retry.result.message, /created 11 labels/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });
 
@@ -230,7 +251,7 @@ test("blocks when readback disagrees and reports the changes already applied", (
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "blocked");
-  assert.match(outcome.result.message, /created 15 labels/);
+  assert.match(outcome.result.message, /created 12 labels/);
   assert.match(outcome.result.message, /readback did not match/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });

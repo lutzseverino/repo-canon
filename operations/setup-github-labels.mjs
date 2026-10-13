@@ -63,22 +63,6 @@ const canonicalLabels = [
     color: "bfd4f2",
     description: "Task in a planning map",
   },
-  {
-    name: "factory:running",
-    color: "0052cc",
-    description: "Claimed by a factory run",
-  },
-  {
-    name: "factory:failed",
-    color: "b60205",
-    description: "The factory run failed; remove to run it again",
-  },
-  {
-    name: "factory:needs-input",
-    color: "d4c5f9",
-    description:
-      "Waiting for the owner's answer; answer and remove to run again",
-  },
 ];
 
 function readLabels(identity, projectRoot) {

@@ -97,37 +97,113 @@ test("the repository passes the Repository README check at its root", () => {
   assert.equal(outcome.result.status, "passed", outcome.result.message);
 });
 
-test("the repository passes the sandbox image check at its root", () => {
-  const outcome = invokeCheck(operation("check-sandbox-image.mjs"), root, {
-    operation: {
-      declaration: "factory-sandbox-image",
-      phase: "checks",
-      id: "sandbox-image-base",
-    },
-    allowedTargets: { paths: [".sandcastle/Dockerfile"], directories: [] },
-  });
+// The declarations of one profile in `standards.yaml`, as its block of text.
+function profileDeclarations(declarations, name) {
+  return new RegExp(
+    `^ {2}${name}:\\n {4}description: .+\\n {4}declarations:((?: \\{\\}|\\n(?: {6}.*\\n|\\n)*))`,
+    "m",
+  ).exec(declarations)?.[1];
+}
 
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "passed", outcome.result.message);
+// The factory's repository files, which only the factory profile installs.
+const factoryFiles = [
+  ".factory/config.json",
+  ".factory/Dockerfile",
+  ".github/workflows/sandbox-image.yml",
+];
+
+test("the standard profile installs no factory file, and the factory profile adds exactly the factory's", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.deepEqual(
+    [...declarations.matchAll(/^ {2}([a-z0-9-]+):\n {4}description:/gm)].map(
+      ([, name]) => name,
+    ),
+    ["standard", "factory"],
+  );
+  const defaults = /^defaults:\n([\s\S]*?)^profiles:\n/m.exec(declarations)[1];
+  assert.equal(profileDeclarations(declarations, "standard"), " {}");
+  for (const path of factoryFiles)
+    assert.ok(
+      !defaults.includes(path),
+      `the standard profile must not install ${path}`,
+    );
+
+  assert.equal(
+    profileDeclarations(declarations, "factory"),
+    `
+      factory-configuration:
+        kind: file
+        target: .factory/config.json
+        exact: .factory/config.json
+
+      factory-sandbox-image:
+        kind: file
+        target: .factory/Dockerfile
+        guidance: guidance/factory-sandbox-image.md
+
+      factory-sandbox-image-workflow:
+        kind: file
+        target: .github/workflows/sandbox-image.yml
+        exact: .github/workflows/sandbox-image.yml
+`,
+    "the factory profile adds the configuration exactly, the Dockerfile as contextual with its guidance, and the workflow exactly",
+  );
 });
 
-test("the sandbox image is a contextual declaration whose only target is the image", () => {
+test("the standards retire the in-repository factory, its sandbox base, and the issue-contract kind runtime", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  const declaration = declarations.match(
-    /^ {4}factory-sandbox-image:\n((?: {6}.+\n)+)/m,
-  )?.[1];
-  assert.ok(declaration, "the profile declares factory-sandbox-image");
-  assert.match(
-    declaration,
-    /^ {6}kind: file\n {6}target: \.sandcastle\/Dockerfile\n {6}guidance: guidance\/factory-sandbox-image\.md\n {6}checks:\n/,
+  for (const retired of [
+    ".sandcastle",
+    "sandbox-image-base",
+    "check-sandbox-image",
+    "issue-contract-kind",
+  ])
+    assert.ok(
+      !declarations.includes(retired),
+      `standards.yaml names ${retired}`,
+    );
+  for (const path of [
+    ".sandcastle",
+    "operations/check-sandbox-image.mjs",
+    "operations/sandbox-image-base.Dockerfile",
+    "operations/lib/issue-contract-kind.mjs",
+  ])
+    assert.ok(!existsSync(join(root, path)), `${path} is retired`);
+});
+
+test("standards.yaml declares no pull request reviewer file", () => {
+  assert.doesNotMatch(
+    readFileSync(join(root, "standards.yaml"), "utf8"),
+    /pull-request-reviewer\.json/,
   );
-  assert.doesNotMatch(declaration, /^ {6}(?:exact|fixes|discovery):/m);
-  assert.equal(
-    [...declarations.matchAll(/^\s+target: \.sandcastle\/Dockerfile$/gm)]
-      .length,
-    1,
-    "only factory-sandbox-image owns the image",
+});
+
+// The factory's own parser reads the shipped configuration, so it stays valid
+// for the package beside it.
+test("the factory configuration names Repo Canon's labels, model label prefix, and implement prompt", async () => {
+  const { readFactoryConfiguration } =
+    await import("../factory/src/factory-configuration.ts");
+  assert.deepEqual(
+    readFactoryConfiguration(join(root, ".factory/config.json")),
+    {
+      version: 1,
+      labels: {
+        ready: "ready-for-agent",
+        running: "factory:running",
+        failed: "factory:failed",
+        needsInput: "factory:needs-input",
+        paused: "factory:paused",
+      },
+      modelLabelPrefix: "model:",
+      prompt: "{skillPrefix}implement #{issue}",
+    },
   );
+});
+
+test("this repository's toolchain Dockerfile has one stage and needs no build context", () => {
+  const dockerfile = readFileSync(join(root, ".factory/Dockerfile"), "utf8");
+  assert.equal([...dockerfile.matchAll(/^FROM\s/gim)].length, 1);
+  assert.doesNotMatch(dockerfile, /^(?:COPY|ADD|ENTRYPOINT|CMD)\s/im);
 });
 
 test("no tracked file reaches the observation limit that would reject inspection", () => {
@@ -442,41 +518,5 @@ test("review converges on fixes and reasoned declines the guide allows", () => {
   assert.doesNotMatch(
     babysit,
     /ticket or scope|another layer|only the owner writes/,
-  );
-});
-
-test("adoption installs the factory's exact files, which name no repository", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  const factory = {
-    "factory-adapter": ".sandcastle/adapter.ts",
-    "factory-decision-core": ".sandcastle/factory.ts",
-    "factory-entry": ".sandcastle/main.ts",
-    "factory-gitignore": ".sandcastle/.gitignore",
-  };
-  for (const [id, path] of Object.entries(factory)) {
-    assert.ok(
-      declarations.includes(
-        `\n    ${id}:\n      kind: file\n      target: ${path}\n      exact: ${path}\n`,
-      ),
-      `${id} must install ${path} exactly`,
-    );
-  }
-  // The sandbox image is the repository's own, from its contextual declaration.
-  assert.deepEqual(
-    trackedFiles()
-      .filter((path) => path.startsWith(".sandcastle/"))
-      .sort(),
-    [...Object.values(factory), ".sandcastle/Dockerfile"].sort(),
-  );
-  for (const path of Object.values(factory)) {
-    assert.doesNotMatch(
-      readFileSync(join(root, path), "utf8"),
-      /repo-canon|lutzseverino/i,
-      `${path} must name no repository`,
-    );
-  }
-  assert.match(
-    readFileSync(join(root, ".sandcastle/main.ts"), "utf8"),
-    /\nconst sandcastleVersion = "\d+\.\d+\.\d+";\n/,
   );
 });

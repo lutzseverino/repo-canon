@@ -79,6 +79,19 @@ the brief.
 The factory runs an unlabelled ticket on the host's default model; a parent's
 label chooses none of its tickets' models.
 
+The factory accepts readiness only from a person. Readiness that an agent's
+tool applies through a GitHub App or bot account never starts a run, so the
+issue waits until a person applies readiness.
+
+In a repository a factory serves, `.factory/config.json` names the factory's
+labels: `ready-for-agent` is the ready label, an agent adds
+`factory:needs-input` with its question, and the factory adds `factory:running`
+while it holds an issue, `factory:failed` after a run fails for good, and
+`factory:paused` when it pauses a run. `factory:paused` means the factory
+paused the run and resumes it by itself, and its comment on the issue says why,
+so nobody removes the label by hand. Remove `factory:failed` to run the issue
+again once its failure note or the factory's comment is dealt with.
+
 ## Development setup
 
 See the [development guide](docs/development/README.md) for prerequisites,

@@ -2,10 +2,11 @@
 
 // Verifies a published release: its annotated tag on origin peels to the
 // release commit, its GitHub release is an ordinary release, the public CLI at
-// the required minimum version inspects it in a disposable repository and
-// resolves the release commit and profile, and the documents at the release
-// commit name the version being verified. Every CLI version that the
-// development and authoring documents there name is the required minimum.
+// the required minimum version inspects it with each profile in a disposable
+// repository and resolves the release commit and that profile, and the
+// documents at the release commit name the version being verified. Every CLI
+// version that the development and authoring documents there name is the
+// required minimum.
 
 import {
   cliFloor,
@@ -28,7 +29,7 @@ import {
 } from "./support.mjs";
 
 const sourceRepository = "https://github.com/lutzseverino/repo-canon";
-const profile = "complete";
+const profiles = ["standard", "factory"];
 
 function checkTag(version, releaseCommit) {
   const references = new Map();
@@ -86,7 +87,7 @@ function checkGitHubRelease(version) {
   };
 }
 
-function checkInspection(version, releaseCommit, read) {
+function checkInspection(version, releaseCommit, read, profile) {
   const floor = cliFloor(read(standardsPath));
   if (floor === null)
     return {
@@ -113,7 +114,7 @@ function checkInspection(version, releaseCommit, read) {
   if (child.status !== 0) {
     return {
       failures: [
-        `the inspection of ${version} failed: ${(child.stderr || child.stdout).trim()}`,
+        `the ${profile} inspection of ${version} failed: ${(child.stderr || child.stdout).trim()}`,
       ],
     };
   }
@@ -193,7 +194,9 @@ await runScript(
     const results = [
       report(() => checkTag(version, releaseCommit)),
       report(() => checkGitHubRelease(version)),
-      report(() => checkInspection(version, releaseCommit, read)),
+      ...profiles.map((profile) =>
+        report(() => checkInspection(version, releaseCommit, read, profile)),
+      ),
       report(() => checkDocuments(version, read)),
     ];
     if (results.includes(false))
