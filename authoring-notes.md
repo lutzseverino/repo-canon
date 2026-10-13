@@ -110,6 +110,12 @@ repeated.
   [ADR 0011](docs/adr/0011-ship-the-factory-with-the-standard.md) decides,
   and every run is a direct run of one ticket, as
   [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
+  This passage and the factory's other mentions in these notes describe the
+  source as released until the
+  [factory boundary specification](https://github.com/lutzseverino/repo-canon/issues/334)
+  cuts over: [ADR 0013](docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md)
+  and [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
+  supersede them, and the cutover rewrites them.
   `.sandcastle/` holds a repository-agnostic entry, adapter, and pure decision
   core as exact files whose source is their
   installed path. The adapter recognizes a specification, and a ticket's

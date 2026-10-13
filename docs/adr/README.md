@@ -37,7 +37,18 @@ involve real alternatives.
 - [Ship the factory with the standard](0011-ship-the-factory-with-the-standard.md):
   every adopting repository carries `.sandcastle/`, which replaces orchestrator
   prompts, and labels choose each run's mode and model; its run-mode selection
-  is superseded by ADR 0012.
+  is superseded by ADR 0012, and the rest by ADRs 0013 and 0014.
 - [Run each ticket of a specification as its own factory run](0012-run-each-ticket-as-its-own-factory-run.md):
   every factory run is a direct run, a parent never runs, and its readiness
-  releases its tickets, each on its own `model:` label.
+  releases its tickets, each on its own model label; its fixed prompt and
+  `model:` prefix are superseded by ADR 0014.
+- [Install the factory on the host from its own releases](0013-install-the-factory-on-the-host-from-its-own-releases.md):
+  the factory is released from `factory/` under its own versions, one process
+  on a host runs an auto-updating major for all its repositories, and a
+  repository carries only `.factory/`.
+- [Name every factory convention in configuration](0014-name-every-factory-convention-in-configuration.md):
+  the repository's factory configuration names its labels and prompt with no
+  defaults, and the factory checks readiness against roles the host names.
+- [Configure the pull request reviewer as repository data](0015-configure-the-pull-request-reviewer-as-repository-data.md):
+  an optional data file names the reviewer `babysit` waits for, and its absence
+  means no reviewer.
