@@ -272,6 +272,13 @@ const value = (args: string[], flag: string) => args[args.indexOf(flag) + 1];
 
 const settled = () => new Promise((resolve) => setImmediate(resolve));
 
+// Waits, on real time, for what file I/O finishes, such as a run's cleanup.
+async function until(condition: () => boolean) {
+  for (let wait = 0; wait < 500 && !condition(); wait++)
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.ok(condition(), "the condition held within 5 seconds");
+}
+
 // The raw log Sandcastle writes for a launch.
 function rawLog(options: RunOptions): string {
   assert.equal(options.logging?.type, "file");
@@ -512,8 +519,7 @@ test("a sandbox reads its repository's token from a mounted file that outlives n
     false,
   );
   launch.finish();
-  for (let wait = 0; wait < 100 && existsSync(github.hostPath); wait++)
-    await settled();
+  await until(() => !existsSync(github.hostPath));
   assert.equal(existsSync(github.hostPath), false);
 });
 
@@ -623,14 +629,9 @@ test("every printed token and delivered credential is redacted from the run log,
   await run.refreshTokens();
   appendFileSync(raw, "gh auth token: ghs_acme_widgets\n");
   // Complete lines reach the published log while the agent runs.
-  for (let wait = 0; wait < 200 && !existsSync(published); wait++)
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  for (
-    let wait = 0;
-    wait < 200 && readFileSync(published, "utf8") === "";
-    wait++
-  )
-    await new Promise((resolve) => setTimeout(resolve, 10));
+  await until(
+    () => existsSync(published) && readFileSync(published, "utf8") !== "",
+  );
   assert.equal(readFileSync(published, "utf8"), "gh auth token: <REDACTED>\n");
   appendFileSync(raw, "now ghs_second with claude-secret\nlast ghs_second");
   launch.finish(new Error("push failed for ghs_acme_widgets"));
@@ -638,6 +639,8 @@ test("every printed token and delivered credential is redacted from the run log,
   run.tokens["acme/widgets"] = new Error("ghs_second was revoked");
   run.clock.now = new Date("2026-10-09T13:00:00Z");
   await run.tick();
+  // The raw log goes with the run, once its end is published.
+  await until(() => !existsSync(dirname(raw)));
   assert.equal(
     readFileSync(published, "utf8"),
     [
@@ -645,13 +648,6 @@ test("every printed token and delivered credential is redacted from the run log,
       "now <REDACTED> with <REDACTED>",
       "last <REDACTED>",
     ].join("\n"),
-  );
-  for (let wait = 0; wait < 100 && existsSync(dirname(raw)); wait++)
-    await settled();
-  assert.equal(
-    existsSync(dirname(raw)),
-    false,
-    "the raw log goes with the run",
   );
   assert.ok(
     run.reports.includes(
