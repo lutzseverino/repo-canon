@@ -330,6 +330,8 @@ states is never a structural error.
   rejection recorded. A structural failure removes readiness and lists its
   errors.
 - Among non-readiness states, the one applied latest in the timeline stays.
+  Several whose applications the timeline has not recorded cannot be ordered,
+  so they all stay until a later run reads a timeline that orders them.
 - An issue left with no workflow state gets `needs-triage` once it has carried
   one, as its labels or timeline show. The run keeps the recorded review state,
   so an unchanged feedback comment is not rewritten and readiness applied

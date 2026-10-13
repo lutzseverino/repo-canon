@@ -175,14 +175,17 @@ export function decideIssueContract(snapshot) {
     });
   }
 
-  const supersedingState = readiness.approved
+  const supersedingStates = readiness.approved
     ? stateAppliedAfterReview(result.labels, readiness.reviewEventId, timeline)
-    : null;
-  if (supersedingState) {
+    : [];
+  if (supersedingStates.length > 0) {
+    const superseding = supersedingStates
+      .map((label) => `\`${label}\``)
+      .join(" and ");
     return issueDecision({
       exitCode: 0,
-      message: `Valid ${result.kind}; \`${supersedingState}\` superseded ${readiness.label}.`,
-      ...stateWrites(supersedingState),
+      message: `Valid ${result.kind}; ${superseding} superseded ${readiness.label}.`,
+      ...stateWrites(supersedingStates),
       feedback: feedbackChange(
         comments,
         awaitingReviewFeedback(
@@ -191,7 +194,10 @@ export function decideIssueContract(snapshot) {
           readiness.observedEventId,
           readiness.sourceInvalidation,
           {
-            reason: `\`${supersedingState}\` was applied after the review and supersedes its readiness.`,
+            reason:
+              supersedingStates.length === 1
+                ? `${superseding} was applied after the review and supersedes its readiness.`
+                : `${superseding} were applied after the review and supersede its readiness.`,
           },
         ),
       ),
@@ -201,7 +207,7 @@ export function decideIssueContract(snapshot) {
   return issueDecision({
     exitCode: 0,
     message: `Valid ${result.kind}${readiness.approved ? ` with ${readiness.label} bound to ${revision}` : "; awaiting authorized review"}.`,
-    ...stateWrites(readiness.approved ? readiness.label : null),
+    ...stateWrites(readiness.approved ? [readiness.label] : null),
     feedback: feedbackChange(
       comments,
       readiness.approved
@@ -284,7 +290,8 @@ function assessStructure(snapshot) {
     .filter((label) => workflowLabels.has(label) && !readyLabels.has(label));
   return validate({
     issue,
-    wontfixSettled: !timeline || timeline.latestApplied(states) === "wontfix",
+    wontfixSettled:
+      !timeline || timeline.latestApplied(states).includes("wontfix"),
     comments,
     blockedBy: relationships.blockedBy,
     parent: relationships.parent,
@@ -1144,25 +1151,26 @@ function readinessLabels(labels) {
   return [...labels].filter((label) => readyLabels.has(label));
 }
 
-// The label writes that leave the issue exactly one workflow state: `kept`
-// when the decision names it, otherwise the non-readiness state applied
-// latest. An issue left with none returns to `needs-triage` once it has
-// carried a workflow state.
+// The label writes that leave the issue one workflow state: the `kept` states
+// when the decision names them, otherwise the non-readiness state applied
+// latest. States the timeline cannot order yet all stay. An issue left with
+// none returns to `needs-triage` once it has carried a workflow state.
 function settledStates(labels, timeline, kept = null) {
   const states = [...labels].filter((label) => workflowLabels.has(label));
-  const state =
+  const staying =
     kept ??
     timeline.latestApplied(states.filter((label) => !readyLabels.has(label)));
   return {
-    removeLabels: states.filter((label) => label !== state),
+    removeLabels: states.filter((label) => !staying.includes(label)),
     addLabels:
-      state || (states.length === 0 && !timeline.recordsWorkflowState())
+      staying.length > 0 ||
+      (states.length === 0 && !timeline.recordsWorkflowState())
         ? []
         : ["needs-triage"],
   };
 }
 
-// The non-readiness state applied after the review, which supersedes it: the
+// The non-readiness states applied after the review, which supersede it: the
 // latest such state when there are several.
 function stateAppliedAfterReview(labels, reviewEventId, timeline) {
   return timeline.latestApplied(
@@ -1260,15 +1268,23 @@ function issueTimeline({ event, issue, issueEvents }) {
     return barrier === null ? null : issueEvents.slice(barrier);
   }
 
-  // Where a carried label was applied. One applied with the issue at its
-  // creation is at position zero. One whose application the timeline has not
-  // recorded, its latest change being a removal or nothing, follows every
-  // recorded event, unless the issue was opened with it.
+  // Where a carried label was applied, for ordering it against a review: its
+  // timeline position, with one applied at the issue's creation at zero.
   function applicationPosition(label) {
+    const position = timelinePosition(label);
+    return position !== Infinity && atCreation(lastApplication(label)?.at)
+      ? 0
+      : position;
+  }
+
+  // Where a carried label's application stands in the timeline: its position,
+  // zero for an unrecorded label the issue was opened with, and after every
+  // recorded event for any other label whose latest recorded change is a
+  // removal or nothing.
+  function timelinePosition(label) {
     if (!latestChangeIsApplication(label))
       return openedWith(label) ? 0 : Infinity;
-    const application = lastApplication(label);
-    return atCreation(application.at) ? 0 : application.position;
+    return lastApplication(label).position;
   }
 
   function openedWith(label) {
@@ -1421,15 +1437,19 @@ function issueTimeline({ event, issue, issueEvents }) {
 
     sentByOpener,
 
-    // The label applied latest, the first of those tied.
+    // The label applied latest, or every label tied for latest when the
+    // timeline has recorded none of their applications.
     latestApplied(labels) {
-      let latest = null;
+      let latest = [];
+      let latestPosition = -1;
       for (const label of labels) {
-        const applied = applicationPosition(label);
-        if (!latest || applied > latest.position)
-          latest = { label, position: applied };
+        const position = timelinePosition(label);
+        if (position > latestPosition) {
+          latest = [label];
+          latestPosition = position;
+        } else if (position === latestPosition) latest.push(label);
       }
-      return latest?.label ?? null;
+      return latest;
     },
   };
 }

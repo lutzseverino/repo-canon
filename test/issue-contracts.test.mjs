@@ -3811,6 +3811,28 @@ decisionTable(
         message: /awaiting authorized review/i,
       },
     })),
+    {
+      name: "two states whose applications the timeline has not recorded both stay until a run can order them",
+      snapshot: triagedSnapshot({
+        labels: ["bug", "needs-info", "wontfix"],
+        events: [triagedUnlabel(3, "needs-triage", "2026-10-13T10:00:00Z")],
+      }),
+      expected: { exitCode: 0, message: /valid triaged wontfix request/i },
+    },
+    {
+      name: "two unrecorded states applied after an approved review both supersede it",
+      snapshot: supersessionSnapshot({
+        labels: ["ready-for-agent", "needs-info", "wontfix"],
+        issueEvents: [readinessReview],
+        event: commentEdited,
+      }),
+      expected: {
+        ...supersededBy("needs-info"),
+        message: /`needs-info` and `wontfix` superseded ready-for-agent/,
+        feedbackBody:
+          /`needs-info` and `wontfix` were applied after the review and supersede its readiness/,
+      },
+    },
     ...[
       ["needs-info", "wontfix", /valid triaged wontfix request/i],
       ["wontfix", "needs-info", /valid triaged Agent Brief; awaiting/i],
