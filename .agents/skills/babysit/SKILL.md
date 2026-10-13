@@ -31,10 +31,11 @@ conditions and the wording rules.
    its `request.comment` and following the
    [comment rules](../../../CONTRIBUTING.md#comments). After any push or
    re-request, return to step 1.
-5. Once the merge conditions hold on the latest head, squash-merge with
-   `gh pr merge <number> --squash --match-head-commit <SHA>`, where `<SHA>` is
-   the full SHA that starts the wait's latest line. If GitHub refuses because
-   the head no longer matches, return to step 1.
+5. Once the merge conditions hold on the latest head, run
+   `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
+   the full SHA that starts the wait's latest line. Exit `0` means merged;
+   `2` means the head changed, so return to step 1; `1` means fix the invocation
+   or `gh` error and retry.
 6. Stop.
 
 ## Reviewer configuration

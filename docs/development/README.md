@@ -52,6 +52,8 @@ decision, driven by reviewer data fixtures (including real summary comments),
 and its silence, driven by
 a GitHub CLI fake. Run `node --test test/pull-request-reviewer-check.test.mjs`
 for the optional reviewer schema check, including retained operation resources.
+Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
+and head-change retry behavior against the same fake GitHub CLI.
 The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 
@@ -87,6 +89,8 @@ step: `npm test` already runs it on every pull request.
   enforcement, squash-only merge defaults, preservation, and recovery behavior.
 - [Pull request metadata validation](pr-metadata-validation.md): trusted check
   behavior, stable identity, permissions, and local verification.
+- [Babysit merge script](babysit-merge.md): explicit squash message, verbatim
+  body transport, head-change retry, and executable fixtures.
 - [Issue contract validation](issue-contract-validation.md): supported issue
   shapes, feedback behavior, workflow state, workflow permissions, and runnable
   fixtures.

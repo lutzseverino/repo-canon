@@ -21,11 +21,21 @@ if (state.fail) {
 
 if (args[0] === "pr" && args[1] === "view") {
   write({
+    title: state.title,
+    body: state.body,
     headRefOid: state.head,
     headRefName: state.branch,
     createdAt: state.createdAt,
     statusCheckRollup: state.checks,
   });
+} else if (args[0] === "pr" && args[1] === "merge") {
+  state.merge = { args, body: readFileSync(0, "utf8") };
+  if (state.mergeHead) state.head = state.mergeHead;
+  writeFileSync(process.env.FAKE_GH_STATE, JSON.stringify(state));
+  if (state.mergeHead || state.mergeFail) {
+    process.stderr.write("gh: merge refused\n");
+    process.exit(1);
+  }
 } else if (args[0] === "api" && args[1].includes("/comments?")) {
   write([
     state.comments.map(({ login, createdAt, body }) => ({
