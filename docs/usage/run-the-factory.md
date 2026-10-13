@@ -127,6 +127,14 @@ issue; such an issue runs as if it had no parent.
 The factory claims an issue with `factory:running` before it launches the run.
 Each skipped ready issue is logged with its reason.
 
+On each pass, the factory closes an open parent in this repository that carries
+`ready-for-agent`, has at least one native sub-issue, has every sub-issue
+closed, and is named by no open unlinked ticket in its `Parent` section. A
+sub-issue closed as completed or as not planned counts as closed, including
+one in another repository. The factory leaves one comment listing the
+parent's tickets and never closes or comments on that closed parent again.
+Parents without `ready-for-agent`, such as wayfinder maps, stay open.
+
 ## Models
 
 The factory runs each picked-up issue on its own `model:` label's model, as

@@ -173,6 +173,7 @@ export type Launch = {
 
 export type Decision =
   | { kind: "claim"; issue: number }
+  | { kind: "close"; issue: number; tickets: IssueId[] }
   | Launch
   | { kind: "skip"; issue: number; reason: string }
   | { kind: "stop"; issue: number; reason: string }
@@ -226,6 +227,19 @@ export function decideFactory(snapshot: Snapshot): Decision[] {
   }
   for (const claim of snapshot.claims) decisions.push(...settleClaim(claim));
   for (const issue of oldestFirst(snapshot.issues)) {
+    if (
+      issue.labels.includes(labels.ready) &&
+      issue.subIssues.length > 0 &&
+      issue.subIssues.every((ticket) => ticket.state === "closed") &&
+      unlinkedTickets(issue, snapshot.issues).length === 0
+    ) {
+      decisions.push({
+        kind: "close",
+        issue: issue.number,
+        tickets: issue.subIssues.map((ticket) => ticket.number),
+      });
+      continue;
+    }
     const retry = retries.get(issue.number);
     if (retry) {
       retries.delete(issue.number);
@@ -521,15 +535,19 @@ function parentHold(parent: Issue, openIssues: Issue[]): string | null {
   );
   if (blockers.length > 0)
     return `which is blocked by ${references(blockers)}; it waits until ${name}'s blockers close`;
-  const unlinked = openIssues.filter(
+  const unlinked = unlinkedTickets(parent, openIssues);
+  if (unlinked.length > 0)
+    return `which tickets name as their parent without being linked to it: ${references(unlinked)}; add them to ${name} as sub-issues`;
+  return null;
+}
+
+function unlinkedTickets(parent: Issue, openIssues: Issue[]): Issue[] {
+  return openIssues.filter(
     (other) =>
       other.nativeParent === null &&
       other.parentReference === parent.number &&
       !parent.subIssues.some((child) => child.number === other.number),
   );
-  if (unlinked.length > 0)
-    return `which tickets name as their parent without being linked to it: ${references(unlinked)}; add them to ${name} as sub-issues`;
-  return null;
 }
 
 function references(issues: { number: IssueId }[]): string {
