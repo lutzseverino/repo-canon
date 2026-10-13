@@ -2,23 +2,33 @@
 
 The managed snapshot is mattpocock/skills tag `v1.3.1`, commit
 `24fe0ef7737efae15c87225755e9f6f5965e4888`. Its promoted plugin set contains 27
-regular skills. Their complete directories are vendored under
-`vendor/mattpocock-skills/skills`, with the upstream MIT notice retained at
+regular skills. Repo Canon declares the 17 of them that are workflow skills, as
+[ADR 0018](../adr/0018-install-only-workflow-skills.md) decides, and vendors
+only their complete directories under `vendor/mattpocock-skills/skills`, plus
+the setup seeds that the skill setup files are installed from, as
+[ADR 0008](../adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
+decides. The upstream MIT notice is retained at
 `vendor/mattpocock-skills/LICENSE` and installed beside the copied skills as
-`.agents/skills/LICENSE.mattpocock-skills`. Repo Canon declares 26 of them and
-leaves `implement-spec` vendored but uninstalled, because every factory run is
-a direct run, as
+`.agents/skills/LICENSE.mattpocock-skills`. `implement-spec` is not vendored,
+because every factory run is a direct run, as
 [ADR 0012](../adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
 Repo Canon configuration adapts conventions without editing upstream skill
 content.
-`ask-matt` still routes to `implement-spec`; `CONTRIBUTING.md` overrides that route.
 
 ## Vendored skills
 
-| Category     | Skills                                                                                                                                                                                                                                                             |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Engineering  | ask-matt, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-with-docs, implement, implement-spec, improve-codebase-architecture, pr, prototype, research, retro, setup-matt-pocock-skills, tdd, to-spec, to-tickets, triage, wayfinder, wizard |
-| Productivity | grill-me, grilling, handoff, teach, to-questionnaire, wait-what, writing-for-agents                                                                                                                                                                                |
+| Category     | Skills                                                                                                                                                                                          |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engineering  | code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-with-docs, implement, improve-codebase-architecture, pr, prototype, research, tdd, to-spec, to-tickets, triage, wayfinder |
+| Productivity | grilling, writing-for-agents                                                                                                                                                                    |
+| Setup seeds  | `domain.md`, `issue-tracker-github.md`, `issue-tracker-gitlab.md`, `issue-tracker-local.md`, and `triage-labels.md` from `setup-matt-pocock-skills`, without its `SKILL.md` or metadata         |
+
+The undeclared promoted skills are left out: `ask-matt`, `grill-me`, and
+`setup-matt-pocock-skills` only set up or route the others, `implement-spec`
+builds a whole specification in one run, and `teach`, `to-questionnaire`,
+`wait-what`, `handoff`, `retro`, and `wizard` are personal skills that the
+[adoption guide](../usage/adopt-repo-canon.md#recommended-personal-skills)
+recommends installing at user scope.
 
 Experimental skills are excluded; the pinned tree has no top-level
 `experimental` skill category. The `in-progress`, `misc`, and `deprecated`
@@ -33,19 +43,20 @@ Sources: [promoted manifest](https://github.com/mattpocock/skills/blob/24fe0ef77
 ## Snapshot review and verification
 
 The pinned plugin manifest was reviewed against the inventory above. All 27
-promoted regular skills are present, and no experimental skill or skill from the
-upstream `in-progress`, `misc`, or `deprecated` categories is included. The
-vendored snapshot contains 79 files across the 27 full skill directories. Its
-plugin manifest is retained at
-`vendor/mattpocock-skills/.claude-plugin/plugin.json` as provenance. Every
-byte in those directories, including referenced templates, scripts, agent
-metadata, and supporting Markdown, matches the pinned commit. The retained
-`LICENSE` also matches that commit byte for byte.
+promoted regular skills are present upstream, and no experimental skill or skill
+from the upstream `in-progress`, `misc`, or `deprecated` categories is
+included. The vendored snapshot contains 55 files: the 17 complete skill
+directories, the five setup seeds, the retained `LICENSE`, and the plugin
+manifest, retained at `vendor/mattpocock-skills/.claude-plugin/plugin.json` as
+provenance. Every vendored byte, including referenced templates, scripts, agent
+metadata, and supporting Markdown, matches the pinned commit.
 
 Concrete local links from `SKILL.md` files resolve within their complete skill
-directories. The skills invoke only other selected regular skills. References
-to subagents, context controls, browsers, issue-tracker clients, and similar
-harness facilities describe runtime prerequisites; they are not missing source
+directories. The declared skills invoke only other declared skills, apart from
+routes to `setup-matt-pocock-skills` that fire only when the skill setup files
+are missing; the route test lists those as dormant. References to subagents,
+context controls, browsers, issue-tracker clients, and similar harness
+facilities describe runtime prerequisites; they are not missing source
 dependencies. This inventory and content review does not exercise any skill;
 the [skill exercise procedure](skill-exercises.md) does.
 
@@ -59,18 +70,19 @@ git clone https://github.com/mattpocock/skills.git "$upstream_checkout"
 git -C "$upstream_checkout" checkout --detach \
   24fe0ef7737efae15c87225755e9f6f5965e4888
 
-skills='engineering/ask-matt engineering/code-review engineering/codebase-design
+skills='engineering/code-review engineering/codebase-design
 engineering/diagnosing-bugs engineering/domain-modeling engineering/grill-with-docs
-engineering/implement engineering/implement-spec engineering/improve-codebase-architecture
-engineering/pr engineering/prototype engineering/research engineering/retro
-engineering/setup-matt-pocock-skills engineering/tdd engineering/to-spec
-engineering/to-tickets engineering/triage engineering/wayfinder engineering/wizard
-productivity/grill-me productivity/grilling productivity/handoff productivity/teach
-productivity/to-questionnaire productivity/wait-what productivity/writing-for-agents'
+engineering/implement engineering/improve-codebase-architecture engineering/pr
+engineering/prototype engineering/research engineering/tdd engineering/to-spec
+engineering/to-tickets engineering/triage engineering/wayfinder
+productivity/grilling productivity/writing-for-agents'
+seeds='domain.md issue-tracker-github.md issue-tracker-gitlab.md
+issue-tracker-local.md triage-labels.md'
+setup=skills/engineering/setup-matt-pocock-skills
 
 expected_snapshot="$(mktemp -d)"
 mkdir -p "$expected_snapshot/skills/engineering" \
-  "$expected_snapshot/skills/productivity"
+  "$expected_snapshot/skills/productivity" "$expected_snapshot/$setup"
 cp "$upstream_checkout/LICENSE" "$expected_snapshot/LICENSE"
 mkdir -p "$expected_snapshot/.claude-plugin"
 cp "$upstream_checkout/.claude-plugin/plugin.json" "$expected_snapshot/.claude-plugin/plugin.json"
@@ -79,6 +91,9 @@ for skill in $skills; do
   name="${skill#*/}"
   cp -R "$upstream_checkout/skills/$skill" \
     "$expected_snapshot/skills/$category/$name"
+done
+for seed in $seeds; do
+  cp "$upstream_checkout/$setup/$seed" "$expected_snapshot/$setup/$seed"
 done
 diff -ru "$expected_snapshot" vendor/mattpocock-skills
 ```
@@ -89,10 +104,12 @@ Managed skills change only through a reviewed Repo Canon standards update. An
 adopting repository's contributors do not update these files independently.
 For a proposed upstream pin, a standards maintainer checks out that exact
 commit, reviews the plugin manifest and the complete diff from the current pin,
-and stages only the promoted engineering and productivity directories plus
-`LICENSE` and `.claude-plugin/plugin.json`. The manifest-reading command uses
-the project's Node.js 24 authoring
-baseline; that maintainer prerequisite is separate from skill runtime:
+decides whether a new or changed promoted skill is a workflow skill under
+[ADR 0018](../adr/0018-install-only-workflow-skills.md), and stages only the
+declared skill directories, the setup seeds, `LICENSE`, and
+`.claude-plugin/plugin.json`. The staging commands reuse the `skills`, `seeds`,
+and `setup` lists from the byte comparison above, amended for the reviewed
+selection:
 
 ```bash
 set -eu
@@ -104,21 +121,10 @@ git -C "$next_upstream_checkout" diff \
   "24fe0ef7737efae15c87225755e9f6f5965e4888..$proposed_commit" -- \
   .claude-plugin/plugin.json LICENSE skills
 
-skills="$(node -e '
-const manifest = require(process.argv[1]);
-const selected = manifest.skills.map((entry) => {
-  const match = entry.match(/^\.\/skills\/(engineering|productivity)\/([a-z0-9-]+)$/);
-  if (!match) throw new Error(`unexpected promoted skill path: ${entry}`);
-  return `${match[1]}/${match[2]}`;
-});
-if (new Set(selected).size !== selected.length) {
-  throw new Error("duplicate promoted skill path");
-}
-process.stdout.write(selected.join("\n"));
-' "$next_upstream_checkout/.claude-plugin/plugin.json")"
 git rm -r vendor/mattpocock-skills
 mkdir -p vendor/mattpocock-skills/skills/engineering \
-  vendor/mattpocock-skills/skills/productivity
+  vendor/mattpocock-skills/skills/productivity \
+  "vendor/mattpocock-skills/$setup"
 cp "$next_upstream_checkout/LICENSE" vendor/mattpocock-skills/LICENSE
 mkdir -p vendor/mattpocock-skills/.claude-plugin
 cp "$next_upstream_checkout/.claude-plugin/plugin.json" vendor/mattpocock-skills/.claude-plugin/plugin.json
@@ -127,6 +133,9 @@ for skill in $skills; do
   name="${skill#*/}"
   cp -R "$next_upstream_checkout/skills/$skill" \
     "vendor/mattpocock-skills/skills/$category/$name"
+done
+for seed in $seeds; do
+  cp "$next_upstream_checkout/$setup/$seed" "vendor/mattpocock-skills/$setup/$seed"
 done
 git add vendor/mattpocock-skills
 ```
@@ -137,74 +146,25 @@ authoritative pin, inventory, and skill-count reference. This includes at least
 `docs/development/adoption-compatibility.md`; locate further references with:
 
 ```bash
-rg -n '24fe0ef7737efae15c87225755e9f6f5965e4888|all 27|27 (managed|promoted|regular|skill)|20 engineering|seven productivity' \
+rg -n '24fe0ef7737efae15c87225755e9f6f5965e4888|all 27|27 (managed|promoted|regular|skill)|17 (declared|workflow)|55 files|20 engineering|seven productivity' \
   authoring-notes.md docs
 ```
 
 Update the tag, commit, and per-file SHA-256 values in
 `test/fixtures/mattpocock-v1.3.1.json` from the independent upstream checkout,
-renaming the fixture and its test reference for a new tag. The repository
-conformance suite compares the shipped set to the pinned manifest without
-`implement-spec`, checks every
-vendored byte against those digests, and compares the installed setup files to
-their seeds. The manifest is provenance, not an installed adopter file.
+renaming the fixture and its test reference for a new tag. The fixture records
+every promoted file, vendored or not. The repository conformance suite compares
+the declared skills to the workflow skill list, checks that the vendored tree
+holds only declared skills and setup seeds and that every vendored byte matches
+those digests, checks that installed skills' routes to undeclared skills are
+dormant or overridden, and compares the installed setup files to their seeds.
+The manifest is provenance, not an installed adopter file.
 
 Rerun the byte comparison with the proposed commit, review all resource
 references and runtime prerequisites, and exercise the changed skills through
 the [skill exercise procedure](skill-exercises.md). Release review then decides
-whether to distribute the new snapshot.
-
-## HumanLayer snapshot and updates
-
-The second managed upstream is `humanlayer/skills`, pinned to commit
-`653b6411c1f70c275a18e37673b042ff99f67ceb`. Only its complete
-`plugins/show-me/skills/show-me` directory is selected, installed verbatim as
-`.agents/skills/show-me`. The two upstream files are `SKILL.md`, including its
-optional HTML-output instructions, and `agents/openai.yaml`, which preserves
-explicit invocation. The upstream root MIT `LICENSE` is copied unchanged to
-`vendor/humanlayer-skills/LICENSE` and installed as the sibling
-`.agents/skills/LICENSE.humanlayer-skills`.
-
-The [vendored provenance record](../../vendor/humanlayer-skills/README.md)
-names the upstream path and pin. The repository conformance suite verifies the
-complete file inventory and independent upstream SHA-256 hashes, the skill and
-license declarations, and the third-party notice. This proves the selected
-installation bytes; it does not exercise a host's HTML viewer. HTML output uses
-the host's file-writing and `open` capabilities as upstream describes them.
-No other HumanLayer skill or external resource is required by this snapshot.
-
-For either upstream, review an exact proposed commit and its diff, retain full
-selected skill directories and the root license, reconcile declarations and
-pin references, verify upstream bytes, and exercise changed behavior before
-release review. For Matt Pocock, use the manifest-driven procedure above; for
-HumanLayer, keep the selection limited to `show-me`. Reproduce its byte
-comparison from the repository root:
-
-```bash
-set -eu
-humanlayer_task_dir="$(mktemp -d /tmp/repo-canon-humanlayer.XXXXXX)"
-trap 'rm -rf "$humanlayer_task_dir"' EXIT
-git clone https://github.com/humanlayer/skills.git "$humanlayer_task_dir/upstream"
-git -C "$humanlayer_task_dir/upstream" checkout --detach \
-  653b6411c1f70c275a18e37673b042ff99f67ceb
-diff -ru "$humanlayer_task_dir/upstream/plugins/show-me/skills/show-me" \
-  vendor/humanlayer-skills/skills/show-me
-cmp "$humanlayer_task_dir/upstream/LICENSE" vendor/humanlayer-skills/LICENSE
-```
-
-To update HumanLayer, change the checkout command to the reviewed full commit
-SHA, review `git diff <current-pin>..<proposed-pin> -- LICENSE plugins/show-me`,
-replace `vendor/humanlayer-skills/skills/show-me` with the complete upstream
-directory, and copy the root `LICENSE`. Reconcile this document, the vendored
-provenance record, `authoring-notes.md`, the source-profile mapping, and the
-conformance suite's pin, inventory, and independently computed hashes. Review
-new resource references and runtime prerequisites, rerun the byte comparison
-and the development guide's required checks and all-profile source validation,
-and exercise both inline visuals and optional HTML output with a capable host
-as described in the [skill exercise procedure](skill-exercises.md). Neither
-upstream's vendored bytes may be edited to adapt Repo Canon conventions.
-
-Source: [pinned show-me directory](https://github.com/humanlayer/skills/tree/653b6411c1f70c275a18e37673b042ff99f67ceb/plugins/show-me/skills/show-me).
+whether to distribute the new snapshot. Vendored bytes are never edited to adapt
+Repo Canon conventions.
 
 ## Native issue shapes
 

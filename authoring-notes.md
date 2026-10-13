@@ -63,28 +63,34 @@ repeated.
   documentation check enforce the index entry form, one index per document,
   the development guide's order, and scope coverage, with each check defined
   once in the shared documentation model.
-- Include every regular Matt Pocock skill but `implement-spec`. Upstream's
+- Include only workflow skills, as
+  [ADR 0018](docs/adr/0018-install-only-workflow-skills.md) decides. Upstream's
   promoted set at tag `v1.3.1`, commit
   `24fe0ef7737efae15c87225755e9f6f5965e4888` consists of 20 engineering and seven
-  productivity skills, matching its plugin manifest. The set includes `pr`,
-  `implement-spec`, and `retro`; upstream removed `resolving-merge-conflicts`.
-  Experimental skills are excluded; the upstream in-progress, misc, and deprecated categories are
-  outside the regular set. `implement-spec` stays vendored but is not
-  declared, because every factory run is a direct run, as
-  [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md)
-  decides. No additional regular-skill exclusions are agreed.
-  `ask-matt` still routes to `implement-spec`; `CONTRIBUTING.md` overrides that route.
+  productivity skills, matching its plugin manifest; upstream removed
+  `resolving-merge-conflicts`. Experimental skills are excluded; the upstream
+  in-progress, misc, and deprecated categories are outside the regular set.
+  Repo Canon declares 17 of them: `code-review`, `codebase-design`,
+  `diagnosing-bugs`, `domain-modeling`, `grill-with-docs`, `grilling`,
+  `implement`, `improve-codebase-architecture`, `pr`, `prototype`, `research`,
+  `tdd`, `to-spec`, `to-tickets`, `triage`, `wayfinder`, and
+  `writing-for-agents`. `prototype` stays because `wayfinder` calls it. The
+  vendored tree holds only those skills and the setup seeds that the skill setup
+  files are installed from; `implement-spec` is not vendored, because every
+  factory run is a direct run, as
+  [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
+  Routes to `setup-matt-pocock-skills` stay dormant while the skill setup files
+  are installed; the route test lists them with that reason.
 - The standards source manages reviewed, pinned upstream skill snapshots and
   distributes changes through standards releases. Keep upstream skill content
   intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
-  guidance files, not in the skills or their setup files.
-- HumanLayer is a second managed upstream. Select only `show-me` from
-  `humanlayer/skills` commit `653b6411c1f70c275a18e37673b042ff99f67ceb`, at
-  `plugins/show-me/skills/show-me`. Retain its complete directory unchanged,
-  including optional HTML output and invocation metadata, and install its MIT
-  notice as `.agents/skills/LICENSE.humanlayer-skills`. Both upstreams follow
-  the [upstream-compatibility procedure](docs/development/upstream-compatibility.md);
-  neither is updated independently by adopting contributors.
+  guidance files, not in the skills or their setup files. The snapshot follows
+  the [upstream-compatibility procedure](docs/development/upstream-compatibility.md)
+  and is not updated independently by adopting contributors.
+- Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
+  maintainer to install from upstream at user scope; the
+  [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)
+  names the recommended ones.
 - Delivery belongs to this source, because Repository Standards leaves it to
   standards sources
   ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/main/docs/adr/0015-leave-delivery-to-standards-sources.md)).
@@ -236,7 +242,7 @@ repeated.
 
 ## Verified upstream facts
 
-- The 27 promoted skills are self-contained with respect to concrete internal
+- The 17 declared skills are self-contained with respect to concrete internal
   skill invocations and referenced resources; none requires an experimental,
   miscellaneous, or deprecated skill. Full directories must be retained.
   Harness facilities such as subagents and context controls remain runtime

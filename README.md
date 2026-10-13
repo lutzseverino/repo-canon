@@ -28,7 +28,7 @@ adopted one.
 
 - Install contribution guidance, agent configuration, and issue and PR templates.
 - Validate issue contracts and pull request metadata in GitHub workflows.
-- Copy twenty-seven upstream skills into `.agents/skills/`: twenty-six of Matt Pocock's engineering and productivity skills and HumanLayer's `show-me`.
+- Copy seventeen of Matt Pocock's workflow skills into `.agents/skills/`.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.
 - Ship a factory in `.sandcastle/` that takes each ready ticket to its own pull request, on the model its label names.
 - Set up triage labels, squash-only merging, and a required `PR metadata` check where GitHub's plan offers one.

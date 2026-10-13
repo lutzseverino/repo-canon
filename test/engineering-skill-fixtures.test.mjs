@@ -35,29 +35,25 @@ function build(t, env = process.env) {
   return { parent, root, manifest: JSON.parse(child.stdout) };
 }
 
-test("creates the engineering-skill repositories with the current regular skills and a retrospective", (t) => {
+test("creates the engineering-skill repositories with the declared engineering skills", (t) => {
   const { root, manifest } = build(t);
 
   assert.equal(manifest.format, "repo-canon/engineering-skill-fixtures/v1");
   assert.equal(manifest.root, root);
   assert.deepEqual(Object.keys(manifest.skills).sort(), [
-    "ask-matt",
     "code-review",
     "codebase-design",
     "diagnosing-bugs",
     "domain-modeling",
     "improve-codebase-architecture",
     "research",
-    "retro",
     "tdd",
-    "writing-for-agents",
   ]);
   assert.deepEqual(Object.keys(manifest.repositories).sort(), [
     "architecture",
     "debugging",
     "modeling-research",
-    "retrospective",
-    "routing-review",
+    "review",
     "tdd",
   ]);
 
@@ -83,14 +79,14 @@ test("creates the engineering-skill repositories with the current regular skills
     }
   }
 
-  const retrospective = manifest.repositories.retrospective;
+  const review = manifest.repositories.review;
   assert.match(
-    readFileSync(join(retrospective.path, "docs/session.md"), "utf8"),
-    /npm test/,
+    readFileSync(join(review.path, "docs/specification.md"), "utf8"),
+    /summarizeLedger\(entries\)/,
   );
   assert.equal(
-    readFileSync(join(retrospective.path, "GLOSSARY.md"), "utf8").startsWith(
-      "# Ordering",
+    readFileSync(join(review.path, "GLOSSARY.md"), "utf8").startsWith(
+      "# Ledger",
     ),
     true,
   );

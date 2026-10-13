@@ -56,7 +56,7 @@ The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 
 Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
-disposable local repositories used for the seven productivity skill exercises.
+disposable local repositories used for the two productivity skill exercises.
 [Skill exercises](skill-exercises.md) describes all three fixture builders and
 the harness that exercises the skills.
 
@@ -91,7 +91,7 @@ step: `npm test` already runs it on every pull request.
   shapes, feedback behavior, workflow state, workflow permissions, and runnable
   fixtures.
 - [Upstream skill compatibility](upstream-compatibility.md): the pinned
-  Matt Pocock and HumanLayer snapshots, their review and update steps, the native
+  Matt Pocock snapshot, its review and update steps, the native
   issue formats that
   automation must respect, and how shared instructions and configuration adapt
   upstream setup.

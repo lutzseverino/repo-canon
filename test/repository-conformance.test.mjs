@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { lstatSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
@@ -171,41 +171,123 @@ function snapshotFiles(directory, prefix = "") {
   });
 }
 
-test("the vendored Matt Pocock bytes match the v1.3.1 plugin manifest, and all but implement-spec ship", () => {
+// Adoption installs only workflow skills, as ADR 0018 decides: 17 pinned
+// upstream skills and Repo Canon's own babysit.
+const workflowSkills = [
+  "babysit",
+  "code-review",
+  "codebase-design",
+  "diagnosing-bugs",
+  "domain-modeling",
+  "grill-with-docs",
+  "grilling",
+  "implement",
+  "improve-codebase-architecture",
+  "pr",
+  "prototype",
+  "research",
+  "tdd",
+  "to-spec",
+  "to-tickets",
+  "triage",
+  "wayfinder",
+  "writing-for-agents",
+];
+
+// The skill setup files are installed from these seeds (ADR 0008), so they stay
+// vendored without the setup skill itself.
+const setupSeeds =
+  /^skills\/engineering\/setup-matt-pocock-skills\/(?!SKILL\.md$)[^/]+\.md$/;
+
+function vendoredSkillSources() {
+  return declaredSkills()
+    .filter(({ source }) => source.startsWith("vendor/mattpocock-skills/"))
+    .map(({ source }) => source.slice("vendor/mattpocock-skills/".length));
+}
+
+test("adoption declares exactly the workflow skills and no HumanLayer material", () => {
   assert.deepEqual(
-    snapshotFiles(snapshotRoot).sort(),
-    Object.keys(upstreamSnapshot.files).sort(),
+    declaredSkills()
+      .map(({ name }) => name)
+      .sort(),
+    workflowSkills,
   );
-  for (const [path, expected] of Object.entries(upstreamSnapshot.files)) {
+  for (const path of ["standards.yaml", "THIRD_PARTY_NOTICES.md"]) {
+    assert.doesNotMatch(readFileSync(join(root, path), "utf8"), /humanlayer/i);
+  }
+  assert.ok(!existsSync(join(root, "vendor/humanlayer-skills")));
+});
+
+test("the vendored Matt Pocock tree holds only declared skills and setup seeds, matching v1.3.1", () => {
+  assert.equal(upstreamManifest.version, "1.3.1");
+  const sources = vendoredSkillSources();
+  for (const source of sources) {
+    assert.ok(
+      upstreamManifest.skills.includes(`./${source}`),
+      `${source} is a skill of the pinned manifest`,
+    );
+  }
+  const retained = Object.keys(upstreamSnapshot.files).filter(
+    (path) =>
+      !path.startsWith("skills/") ||
+      setupSeeds.test(path) ||
+      sources.some((source) => path.startsWith(`${source}/`)),
+  );
+  assert.deepEqual(snapshotFiles(snapshotRoot).sort(), retained.sort());
+  for (const path of retained) {
     assert.equal(
       createHash("sha256")
         .update(readFileSync(join(snapshotRoot, path)))
         .digest("hex"),
-      expected,
+      upstreamSnapshot.files[path],
       `${path} matches ${upstreamSnapshot.tag} (${upstreamSnapshot.commit})`,
     );
   }
-  assert.equal(upstreamManifest.version, "1.3.1");
-  const shipped = declaredSkills()
-    .filter(({ source }) => source.startsWith("vendor/mattpocock-skills/"))
-    .map(
-      ({ source }) => `./${source.slice("vendor/mattpocock-skills/".length)}`,
-    )
-    .sort();
-  // Every factory run is a direct run, so the vendored `implement-spec` is not
-  // installed.
-  assert.deepEqual(
-    shipped,
-    upstreamManifest.skills
-      .filter((path) => path !== "./skills/engineering/implement-spec")
-      .sort(),
-  );
-  assert.ok(
-    !shipped.some((path) => path.endsWith("/resolving-merge-conflicts")),
-  );
 });
 
-test("installed skill routes to uninstalled vendored skills have contribution overrides", () => {
+// Routes from an installed skill to an uninstalled one that cannot fire in an
+// adopting repository. Any other such route needs a CONTRIBUTING.md override.
+const missingSetupFiles =
+  "fires only when the installed docs/agents skill setup files are missing";
+const dormantRoutes = [
+  {
+    skill: "code-review",
+    target: "setup-matt-pocock-skills",
+    reason: missingSetupFiles,
+  },
+  {
+    skill: "to-spec",
+    target: "setup-matt-pocock-skills",
+    reason: missingSetupFiles,
+  },
+  {
+    skill: "to-tickets",
+    target: "setup-matt-pocock-skills",
+    reason: missingSetupFiles,
+  },
+  {
+    skill: "triage",
+    target: "setup-matt-pocock-skills",
+    reason: missingSetupFiles,
+  },
+  {
+    skill: "wayfinder",
+    target: "setup-matt-pocock-skills",
+    reason: missingSetupFiles,
+  },
+];
+
+// A route is a `/name` invocation or a Skill tool call naming the skill in the
+// same sentence, such as `call the Skill tool twice, for "a" and "b"`.
+function routesTo(content, target) {
+  const name = RegExp.escape(target);
+  return (
+    new RegExp(`/${name}(?![a-z0-9-])`).test(content) ||
+    new RegExp(`Skill tool\\b[^.\\n]*?["\`]${name}["\`]`).test(content)
+  );
+}
+
+test("installed skill routes to uninstalled vendored skills are dormant or have contribution overrides", () => {
   const installed = declaredSkills();
   const uninstalled = upstreamManifest.skills
     .filter(
@@ -217,23 +299,40 @@ test("installed skill routes to uninstalled vendored skills have contribution ov
     )
     .map((path) => basename(path));
   const contributing = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
+  const firing = new Set();
 
   for (const { name, source } of installed) {
     for (const path of snapshotFiles(join(root, source))) {
       const content = readFileSync(join(root, source, path), "utf8");
-      for (const target of uninstalled) {
+      for (const target of uninstalled.filter((target) =>
+        routesTo(content, target),
+      )) {
+        firing.add(`${name} -> ${target}`);
         if (
-          new RegExp(`/${RegExp.escape(target)}(?![a-z0-9-])`).test(content)
+          dormantRoutes.some(
+            (route) => route.skill === name && route.target === target,
+          )
         ) {
-          assert.ok(
-            new RegExp(
-              `(?<![a-z0-9-])${RegExp.escape(target)}(?![a-z0-9-])`,
-            ).test(contributing),
-            `${name} (${source}/${path}) routes to uninstalled ${target}; CONTRIBUTING.md must name ${target} to override that route`,
-          );
+          continue;
         }
+        assert.ok(
+          new RegExp(
+            `(?<![a-z0-9-])${RegExp.escape(target)}(?![a-z0-9-])`,
+          ).test(contributing),
+          `${name} (${source}/${path}) routes to uninstalled ${target}; list the route as dormant with its reason, or CONTRIBUTING.md must name ${target} to override it`,
+        );
       }
     }
+  }
+  for (const { skill, target, reason } of dormantRoutes) {
+    assert.ok(
+      reason,
+      `the dormant ${skill} route to ${target} states its reason`,
+    );
+    assert.ok(
+      firing.has(`${skill} -> ${target}`),
+      `${skill} no longer routes to uninstalled ${target}; remove its dormant route`,
+    );
   }
 });
 
@@ -253,68 +352,6 @@ test("the installed setup files retain the v1.3.1 seed bytes", () => {
       readFileSync(join(root, source)),
     );
   }
-});
-
-test("adoption includes the complete show-me skill from its pinned HumanLayer upstream", () => {
-  const standards = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.match(
-    standards,
-    /\n {4}skill-show-me:\n {6}kind: skill\n {6}name: show-me\n {6}source: vendor\/humanlayer-skills\/skills\/show-me\n/,
-  );
-
-  // Independent hashes of the upstream files at this commit, including the
-  // SKILL.md instructions for optional HTML output. No network is needed in CI.
-  const pin = "653b6411c1f70c275a18e37673b042ff99f67ceb";
-  const upstreamPath = "plugins/show-me/skills/show-me";
-  const source = join(root, "vendor/humanlayer-skills/skills/show-me");
-  const files = readdirSync(source, { recursive: true })
-    .filter((path) => lstatSync(join(source, path)).isFile())
-    .sort();
-  const expected = {
-    "SKILL.md":
-      "434a2346cc95e313b0d367d477dda2e23ba642dd2181757415a09500664af100",
-    "agents/openai.yaml":
-      "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-  };
-  assert.deepEqual(files, Object.keys(expected));
-  for (const [path, digest] of Object.entries(expected)) {
-    assert.equal(
-      createHash("sha256")
-        .update(readFileSync(join(source, path)))
-        .digest("hex"),
-      digest,
-      `${path} must match humanlayer/skills at ${pin}:${upstreamPath}`,
-    );
-  }
-  const provenance = readFileSync(
-    join(root, "vendor/humanlayer-skills/README.md"),
-    "utf8",
-  );
-  assert.ok(
-    provenance.includes(
-      `https://github.com/humanlayer/skills/tree/${pin}/${upstreamPath}`,
-    ),
-  );
-});
-
-test("adoption retains the HumanLayer MIT notice beside the copied skills", () => {
-  const standards = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.match(
-    standards,
-    /\n {4}humanlayer-skills-license:\n {6}kind: file\n {6}target: \.agents\/skills\/LICENSE\.humanlayer-skills\n {6}exact: vendor\/humanlayer-skills\/LICENSE\n/,
-  );
-  assert.equal(
-    createHash("sha256")
-      .update(readFileSync(join(root, "vendor/humanlayer-skills/LICENSE")))
-      .digest("hex"),
-    "5f13c18ea00ea5c1384f41745feeca774079164f7f59a92e4ac0899ad217b26f",
-  );
-  const notices = readFileSync(join(root, "THIRD_PARTY_NOTICES.md"), "utf8");
-  assert.match(
-    notices,
-    /\[MIT License and copyright notice\]\(vendor\/humanlayer-skills\/LICENSE\)/,
-  );
-  assert.ok(notices.includes(".agents/skills/LICENSE.humanlayer-skills"));
 });
 
 test("adoption installs the model-invocable babysit skill in place of deliver", () => {

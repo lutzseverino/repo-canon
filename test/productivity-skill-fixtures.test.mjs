@@ -28,7 +28,7 @@ function build(t) {
   return JSON.parse(output);
 }
 
-test("builds scenario-specific repositories using every pinned productivity skill", (t) => {
+test("builds scenario-specific repositories using every declared productivity skill", (t) => {
   const manifest = build(t);
   assert.equal(manifest.format, "repo-canon/productivity-skill-fixtures/v1");
   assert.equal(
@@ -36,12 +36,7 @@ test("builds scenario-specific repositories using every pinned productivity skil
     "24fe0ef7737efae15c87225755e9f6f5965e4888",
   );
   assert.deepEqual(Object.keys(manifest.source.skills), [
-    "grill-me",
     "grilling",
-    "handoff",
-    "teach",
-    "to-questionnaire",
-    "wait-what",
     "writing-for-agents",
   ]);
 
@@ -71,19 +66,8 @@ test("builds scenario-specific repositories using every pinned productivity skil
   );
 });
 
-test("fixtures link whole skill directories and keep the handoff secret ignored", (t) => {
+test("fixtures link whole skill directories", (t) => {
   const { repositories } = build(t);
-  assert.ok(
-    readFileSync(
-      join(repositories.handoff.path, ".gitignore"),
-      "utf8",
-    ).includes(".exercise-secret"),
-  );
-  assert.ok(
-    existsSync(
-      join(repositories.teach.path, ".agents/skills/teach/RESOURCES-FORMAT.md"),
-    ),
-  );
   assert.ok(
     existsSync(
       join(

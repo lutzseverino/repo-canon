@@ -168,3 +168,28 @@ When contextual work needs a file outside the confirmed scope, or a confirmed
 path is mistaken, correct the scope as the CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/adoption.md#correct-a-confirmed-scope)
 describes.
+
+## Recommended personal skills
+
+Adoption installs only workflow skills, whose output the shared workflow keeps.
+Personal skills serve only the person using them, so Repo Canon leaves them to
+each maintainer. It recommends these:
+
+- `teach`: learn a new skill or concept within the workspace.
+- `to-questionnaire`: turn a decision you can't fully answer into a
+  questionnaire for someone else.
+- `wait-what`: have the agent re-pitch a message that did not land.
+- `handoff`: compact a conversation into a document another agent picks up.
+- `retro`: run a retrospective on a coding session.
+- `wizard`: generate a bash wizard for steps only a person can perform.
+- `show-me`: explain the current topic with diagrams and focused HTML.
+
+Install them at user scope with the upstream installer, so they follow you
+across repositories:
+
+```sh
+npx skills@latest add mattpocock/skills --global --skill teach \
+  --skill to-questionnaire --skill wait-what --skill handoff --skill retro \
+  --skill wizard
+npx skills@latest add humanlayer/skills --global --skill show-me
+```

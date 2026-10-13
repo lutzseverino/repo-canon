@@ -25,16 +25,13 @@ const skillsRoot = join(
   "vendor/mattpocock-skills/skills/engineering",
 );
 const skillNames = [
-  "ask-matt",
   "code-review",
   "codebase-design",
   "diagnosing-bugs",
   "domain-modeling",
   "improve-codebase-architecture",
   "research",
-  "retro",
   "tdd",
-  "writing-for-agents",
 ];
 const sharedFiles = [
   "AGENTS.md",
@@ -44,12 +41,6 @@ const sharedFiles = [
   "docs/agents/issue-tracker.md",
   "docs/agents/triage-labels.md",
 ];
-
-function skillPath(name) {
-  return name === "writing-for-agents"
-    ? join(sourceRoot, "vendor/mattpocock-skills/skills/productivity", name)
-    : join(skillsRoot, name);
-}
 
 function argument(name) {
   const index = process.argv.indexOf(name);
@@ -108,7 +99,11 @@ function createRepository(name, skills, { context, development }) {
   );
   mkdirSync(join(root, ".agents/skills"), { recursive: true });
   for (const skill of skills)
-    symlinkSync(skillPath(skill), join(root, ".agents/skills", skill), "dir");
+    symlinkSync(
+      join(skillsRoot, skill),
+      join(root, ".agents/skills", skill),
+      "dir",
+    );
   initializeFixtureRepository(root, {
     author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
   });
@@ -118,8 +113,8 @@ function createRepository(name, skills, { context, development }) {
 const repositories = {};
 
 {
-  const skills = ["ask-matt", "code-review"];
-  const root = createRepository("routing-review", skills, {
+  const skills = ["code-review"];
+  const root = createRepository("review", skills, {
     context: `# Ledger\n\nLanguage for balances recorded by the example ledger.\n\n## Language\n\n**Entry**:\n+A posted or pending amount recorded by the Ledger.\n_Avoid_: Row, item\n\n**Ledger summary**:\n+The posted and pending totals derived from Entries.\n_Avoid_: Report\n`,
     development: `# Development\n\nRun \`npm test\` with Node.js 24. Review changes against \`docs/specification.md\`.\n`,
   });
@@ -150,7 +145,7 @@ const repositories = {};
     `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { summarizeLedger } from '../src/ledger.mjs';\n\ntest('Ledger summary totals posted Entries', () => {\n  assert.deepEqual(summarizeLedger([{ state: 'posted', amount: 12 }]), { posted: 12, pending: 0 });\n});\n`,
   );
   const head = commit(root, "feat: summarize posted Ledger Entries");
-  repositories["routing-review"] = { path: root, skills, fixedPoint, head };
+  repositories.review = { path: root, skills, fixedPoint, head };
 }
 
 {
@@ -281,35 +276,12 @@ const repositories = {};
   repositories.tdd = { path: root, skills, head };
 }
 
-{
-  const skills = ["retro", "writing-for-agents"];
-  const root = createRepository("retrospective", skills, {
-    context: `# Ordering\n\n## Language\n\n**Order**:\nA customer request identified by a reference.\n_Avoid_: Payload\n`,
-    development: `# Development\n\nRun \`npm test\` with Node.js 24. The local session transcript is \`docs/session.md\`.\n`,
-  });
-  write(
-    root,
-    "src/order.mjs",
-    "export function orderReference(order) { return order.reference.trim(); }\n",
-  );
-  write(
-    root,
-    "docs/session.md",
-    `# Order reference session
-
-The agent changed orderReference to trim references, then committed without running npm test. A later run of npm test found that empty references were still accepted. The development guide already listed npm test, but there was no CI workflow or pre-commit check. Review this recorded session and suggest improvements to the repository environment. Do not apply them or publish anything.
-`,
-  );
-  const head = commit(root, "chore: establish retrospective exercise");
-  repositories.retrospective = { path: root, skills, head };
-}
-
 const provenance = identifyFixtureSource({
   sourceRoot,
   builderPath: scriptSourcePath,
   files: sharedFiles,
   directories: Object.fromEntries(
-    skillNames.map((name) => [name, skillPath(name)]),
+    skillNames.map((name) => [name, join(skillsRoot, name)]),
   ),
 });
 const skills = provenance.directories;
