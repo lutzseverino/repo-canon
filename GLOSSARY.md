@@ -75,11 +75,6 @@ frontier; one waiting for the owner's answer returns when the owner answers
 and removes the label.
 _Avoid_: Backlog, queue
 
-**Factory release**:
-A version of the factory, published from this repository under its own version
-numbers, that a host installs.
-_Avoid_: Repo Canon release, source publication
-
 **Host configuration**:
 The factory operator's settings for one host: the repositories it serves, its
 providers and their caps, its models, and the repository roles whose readiness
@@ -90,16 +85,6 @@ _Avoid_: Factory settings, environment
 A repository's own statement of the labels, model label prefix and prompt the
 factory uses there.
 _Avoid_: Factory settings, host configuration
-
-**Provider**:
-An agent CLI and the subscription behind it, on which the factory runs a
-model, such as Claude Code or Codex.
-_Avoid_: Vendor, worker
-
-**Run outcome**:
-How a factory run ended, read from GitHub and the run's branch: done, awaiting
-merge, needs input, or failed.
-_Avoid_: Result, status
 
 **Pull request reviewer**:
 An external account, named by the repository, whose review of a pull request's

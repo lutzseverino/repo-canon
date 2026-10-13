@@ -78,6 +78,23 @@ test("the named Repo Canon and CLI versions agree on main", () => {
   assert.deepEqual(versionDisagreements(reader(workingTree())), []);
 });
 
+test("factory release and tool versions stay outside Repo Canon version agreement", () => {
+  const files = workingTree();
+  files.set("factory/package.json", '{"version":"99.0.0"}');
+  files.set(
+    "factory/docs/development/README.md",
+    "Factory v99.0.0 uses Sandcastle 98.0.0 and TypeScript 97.0.0.",
+  );
+  const read = (path) => {
+    assert.ok(
+      !path.startsWith("factory/"),
+      `unexpected factory input: ${path}`,
+    );
+    return files.get(path);
+  };
+  assert.deepEqual(versionDisagreements(read), []);
+});
+
 test("changing any one named Repo Canon or CLI version fails the agreement", () => {
   const files = workingTree();
   const release = selectedRelease(files);
