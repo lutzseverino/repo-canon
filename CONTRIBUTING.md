@@ -222,6 +222,12 @@ pull request. The owner answers and removes the label to return the issue to
 the frontier as a fresh first attempt. If the answer changes the implementation
 contract, edit the contract; that drops readiness and requires review again.
 
+An agent that stops without a pull request and without a question under
+`factory:needs-input` comments one short paragraph on the issue explaining why
+it stopped, in its own words. Never paste log output, environment values or
+tokens into that note: this repository and repositories that adopt these rules
+may be public.
+
 An agent comments on an issue or pull request to record a decision, an outcome,
 or a question that needs an answer, never to narrate progress. Consolidate
 everything the agent has to say on one occasion into one comment.

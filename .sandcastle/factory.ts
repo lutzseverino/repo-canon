@@ -169,6 +169,7 @@ export type Launch = {
   model: string;
   effort: string;
   attempt: 1 | 2;
+  retry?: { failure: string; log: string };
 };
 
 export type Decision =
@@ -385,6 +386,7 @@ function relaunch(
       issue: issue.number,
       ...retry.model,
       attempt: 2,
+      retry: { failure: retry.failure, log: retry.run.log },
     },
   ];
 }

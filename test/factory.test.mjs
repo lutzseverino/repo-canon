@@ -914,6 +914,10 @@ test("a failed first run retries once on the host's retry model, keeping its cla
       model: "claude-opus-5-5",
       effort: "xhigh",
       attempt: 2,
+      retry: {
+        failure: "the run ended without an open pull request",
+        log: "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
+      },
     },
   ]);
 });

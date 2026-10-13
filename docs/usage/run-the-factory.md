@@ -100,9 +100,10 @@ before each launch.
 The frontier is every open issue that carries `ready-for-agent`, has no open
 native blocker, and carries none of `factory:running`, `factory:failed`, or
 `factory:needs-input`.
-The oldest issue launches first. Every run is a direct run: one agent started
-with only `/implement #<n>` for Claude Code or `$implement #<n>` for Codex,
-which takes its issue to one pull request.
+The oldest issue launches first. Every run is a direct run that takes its issue
+to one pull request. A first attempt starts with only `/implement #<n>` for
+Claude Code or `$implement #<n>` for Codex; a retry adds the failed attempt's
+context, as described below.
 
 - **Parent**: an open issue in this repository whose contract is a
   specification, as the issue contract validator identifies it, or that has
@@ -200,7 +201,16 @@ has failed, including one that exceeds the time limit. A run counts as over
 the limit by how long it ran, whether the factory stopped it or Sandcastle's idle timeout ended it. A failed first run retries once on the retry model, keeping the claim.
 The retry uses its provider's skill prefix, takes its issue's turn in
 oldest-first order, waits for its provider's gate, and launches only while the issue would still be picked up,
-apart from its own claim. When the run cannot retry, the factory removes the
+apart from its own claim. Its prompt starts with its provider's
+`implement #<n>` invocation, followed by the first attempt's failure reason
+and the last 200 lines of its log, cut to at most 16 KB of UTF-8 while keeping
+the last text. A missing or empty log leaves only the failure reason after the
+invocation. This is context; the repository's environment carries the rules,
+as [ADR 0010](../adr/0010-carry-delivery-rules-in-the-environment.md) decides.
+Sandcastle 0.12.0 checks out an existing `factory/issue-<n>` branch at its tip,
+so the retry continues from the first attempt's local commits.
+
+When the run cannot retry, the factory removes the
 claim, comments the failure, the model, and the run's log, and labels the issue
 `factory:failed`. Each run's log is `.sandcastle/logs/issue-<n>-attempt-<a>.log`
 on the host; a failed claim that no run holds names neither. The factory skips

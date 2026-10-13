@@ -269,8 +269,33 @@ export function createStandardsRunner(
   };
 }
 
-export function prompt(provider: Provider, issue: number): string {
-  return `${skillPrefixes[provider]}implement #${issue}`;
+export function prompt(
+  provider: Provider,
+  issue: number,
+  retry?: { failure: string; log: string },
+): string {
+  const invocation = `${skillPrefixes[provider]}implement #${issue}`;
+  if (!retry) return invocation;
+  let tail = "";
+  try {
+    const log = readFileSync(retry.log, "utf8");
+    const lines = log.split("\n");
+    const terminated = lines.at(-1) === "";
+    if (terminated) lines.pop();
+    tail = lines.slice(-200).join("\n") + (log && terminated ? "\n" : "");
+    const bytes = Buffer.from(tail);
+    let start = Math.max(0, bytes.length - 16 * 1024);
+    // Keep valid UTF-8 when the byte cap lands inside a character.
+    while (start < bytes.length && (bytes[start] & 0xc0) === 0x80) start++;
+    tail = bytes.subarray(start).toString("utf8");
+  } catch {
+    // A missing or unreadable first-attempt log does not prevent a retry.
+  }
+  return [
+    invocation,
+    `First attempt failure: ${retry.failure}`,
+    ...(tail ? [`First attempt log tail:\n${tail}`] : []),
+  ].join("\n\n");
 }
 
 // A page holds 25 issues so the query stays within GitHub's limit of 500,000
@@ -865,7 +890,7 @@ export function createFactory(settings: Settings, ports: Ports) {
           .launch({
             issue,
             branch: runBranch(issue),
-            prompt: prompt(run.provider, issue),
+            prompt: prompt(run.provider, issue, decision.retry),
             provider: run.provider,
             model: run.model,
             effort: run.effort,
