@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { marked } from "../../vendor/marked/marked.esm.js";
-import { interpretMarkdown, markdownInlineText } from "./rendered-markdown.mjs";
+import { interpretMarkdown } from "./rendered-markdown.mjs";
 import { localPathExists, resolvedLocalPath } from "./local-markdown-links.mjs";
 
 const sentenceEnd = /[.!?]["'\u2019\u201d)\]]*$/u;
@@ -66,7 +66,9 @@ export function glossaryTerms(projectRoot) {
       const [name, definition] = token.tokens ?? [];
       if (name?.type !== "strong" || !/^:\s/.test(definition?.text ?? ""))
         return [];
-      const term = markdownInlineText(name.tokens).replace(/\s+/g, " ").trim();
+      const term = (interpretMarkdown(name.raw).blocks[0]?.text ?? "")
+        .replace(/\s+/g, " ")
+        .trim();
       return term ? [{ term, glossary }] : [];
     });
   });

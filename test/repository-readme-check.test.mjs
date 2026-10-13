@@ -74,6 +74,9 @@ _Avoid_: App
 
 **C++**:
 Our delivery dialect.
+
+**C&amp;D**:
+Our delivery grouping.
 `,
     "GLOSSARY-MAP.md": `# Glossary map
 
@@ -100,6 +103,11 @@ Our delivery dialect.
     ],
     ["A project for operators.", "failed", /Project.*GLOSSARY\.md/],
     ["A C++ delivery service for operators.", "failed", /C\+\+.*GLOSSARY\.md/],
+    [
+      "A C&amp;D delivery service for operators.",
+      "failed",
+      /C&D.*GLOSSARY\.md/,
+    ],
     ["A projection and run outcomes delivery service for operators.", "passed"],
   ]) {
     await t.test(description, (t) => {
