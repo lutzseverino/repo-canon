@@ -85,11 +85,11 @@ never logs the command's output.
 
 ## Repository conventions
 
-Every repository uses the same conventions. The factory picks up issues
-labelled `ready-for-agent`, claims them with `factory:running`, and marks them
-`factory:failed` or reads `factory:needs-input`; it never adds or removes the
-ready label. A `model:` label names an issue's model. A run starts with the
-prompt `<skill prefix>implement #<n>` on the branch `factory/issue-<n>`.
+Each repository names its labels, model label prefix and prompt in
+`.factory/config.json`, read from its default branch on every pass. The
+[factory configuration schema](factory-configuration.md) documents those
+required fields and the repository's ownership of readiness. The factory
+knows no repository convention by default.
 
 ## Sandbox GitHub access
 
@@ -125,7 +125,9 @@ A repository is paused for a pass, claiming and launching nothing there, when:
 
 - its token command fails;
 - its clone does not update;
+- its `.factory/config.json` is missing or invalid;
 - it has no `.factory/Dockerfile`, or its sandbox image does not build;
+- its configured state labels cannot be created;
 - its GitHub reads fail.
 
 Its ended runs keep settling while its GitHub reads succeed, and the other

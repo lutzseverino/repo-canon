@@ -6,7 +6,11 @@ import { existsSync, readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { updateClone, unpushedChanges, type Git } from "./clone.ts";
-import { invocation, labels } from "./conventions.ts";
+import {
+  factoryConfigurationPath,
+  readFactoryConfiguration,
+  type FactoryConfiguration,
+} from "./factory-configuration.ts";
 import {
   decideFactory,
   type Claim,
@@ -72,6 +76,7 @@ type Pass = {
   github: RepositoryGitHub | null;
   image: string | null;
   read: Repository | null;
+  configuration: FactoryConfiguration | null;
 };
 
 export function createHost(
@@ -80,6 +85,8 @@ export function createHost(
   ports: HostPorts,
 ) {
   const runs: HostRun[] = [];
+  // A bad edit pauses pickup, but runs still settle with the last valid conventions.
+  const conventions = new Map<string, FactoryConfiguration>();
   const settings: Settings = {
     defaultModel: configuration.models.default,
     retryModel: configuration.models.retry,
@@ -117,6 +124,7 @@ export function createHost(
       github: null,
       image: null,
       read: null,
+      configuration: conventions.get(name) ?? null,
     };
     try {
       pass.token = await ports.token(name);
@@ -126,8 +134,6 @@ export function createHost(
     }
     const token = pass.token;
     const git: Git = (cwd, args) => ports.git(token, cwd, args);
-    const github = repositoryGitHub(name, (args) => ports.gh(token, args));
-    pass.github = github;
     const { clone } = directory(name);
     try {
       await updateClone(
@@ -136,9 +142,18 @@ export function createHost(
         ports.remoteUrl(name),
         configuration.gitIdentity,
       );
+      try {
+        pass.configuration = readFactoryConfiguration(
+          join(clone, factoryConfigurationPath),
+        );
+        conventions.set(name, pass.configuration);
+      } catch (error) {
+        pass.paused = `${error instanceof Error ? error.message : error}`;
+      }
       const dockerfile = join(clone, dockerfilePath);
-      if (!existsSync(dockerfile)) pass.paused = `it has no ${dockerfilePath}`;
-      else
+      if (pass.paused === null && !existsSync(dockerfile))
+        pass.paused = `it has no ${dockerfilePath}`;
+      else if (pass.paused === null)
         try {
           pass.image = await ports.buildImage(
             await readFile(dockerfile, "utf8"),
@@ -148,6 +163,16 @@ export function createHost(
         }
     } catch (error) {
       pass.paused = `its clone did not update: ${error}`;
+    }
+    if (!pass.configuration) return pass;
+    const github = repositoryGitHub(name, pass.configuration.labels, (args) =>
+      ports.gh(token, args),
+    );
+    pass.github = github;
+    try {
+      await github.createStateLabels();
+    } catch (error) {
+      pass.paused ??= `its state labels could not be created: ${error}`;
     }
     try {
       for (const run of runs.filter(
@@ -182,9 +207,15 @@ export function createHost(
       const issues = await github.readIssues();
       pass.read = {
         name,
+        configuration: pass.configuration,
         paused: pass.paused,
         issues,
-        claims: await readClaims(name, github, issues),
+        claims: await readClaims(
+          name,
+          github,
+          issues,
+          pass.configuration.labels,
+        ),
       };
     } catch (error) {
       pass.paused = `its GitHub reads failed: ${error}`;
@@ -198,6 +229,7 @@ export function createHost(
     name: string,
     github: RepositoryGitHub,
     issues: Issue[],
+    labels: FactoryConfiguration["labels"],
   ): Promise<Claim[]> {
     const held = (number: number) =>
       runs.some((run) => run.repository === name && run.issue === number);
@@ -289,6 +321,7 @@ export function createHost(
         cwd: paths.clone,
         image: pass.image!,
         prompt: prompt(
+          pass.configuration!.prompt,
           registry.providers.get(run.provider)!.skillPrefix,
           issue,
           decision.retry,
@@ -348,6 +381,7 @@ export function createHost(
         await github.fail(
           decision.issue,
           failureComment(
+            pass.configuration!.labels.failed,
             decision.failure,
             decision.log,
             find(decision),
@@ -433,11 +467,16 @@ export function createHost(
 }
 
 export function prompt(
+  template: string,
   skillPrefix: string,
   issue: number,
   retry?: { failure: string; log: string },
 ): string {
-  const start = invocation(skillPrefix, issue);
+  const start = template.replace(
+    /\{(skillPrefix|issue)\}/g,
+    (_match, field: string) =>
+      field === "skillPrefix" ? skillPrefix : String(issue),
+  );
   if (!retry) return start;
   let tail = "";
   try {
@@ -463,6 +502,7 @@ export function prompt(
 
 // A claim no run holds has no model or log to name.
 function failureComment(
+  failedLabel: string,
   failure: string,
   log: string | null,
   run?: HostRun,
@@ -488,6 +528,6 @@ function failureComment(
           "",
         ]
       : []),
-    `Remove \`${labels.failed}\` to let the factory pick this issue up again.`,
+    `Remove \`${failedLabel}\` to let the factory pick this issue up again.`,
   ].join("\n");
 }
