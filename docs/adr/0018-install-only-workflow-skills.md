@@ -1,10 +1,13 @@
 # Install only workflow skills
 
-Repo Canon installs a skill only when it is a workflow skill: its output lands
-in the repository or the issue tracker, or the rules, a check, or another
-workflow skill rely on it. Personal skills, whose output serves the person
-using them, such as `teach` and `to-questionnaire`, are left to each person to
-install from upstream, and Repo Canon stops vendoring them. Skills that only
+Repo Canon installs a skill only when it is a workflow skill: the shared
+workflow keeps its output, as committed artifacts or issue tracker items that
+others rely on, or the rules, a check, or another workflow skill rely on the
+skill. A file a person writes for themselves does not count, wherever it
+lands. Personal skills, whose output serves only the person using them, such
+as the lessons `teach` writes and the questionnaire `to-questionnaire` writes
+into the current directory, are left to each person to install from upstream,
+and Repo Canon stops vendoring them. Skills that only
 set up or route the others, `setup-matt-pocock-skills`, `ask-matt` and
 `grill-me`, are dropped as well. Repo Canon had installed every regular
 upstream skill but `implement-spec`, so each adopting repository carried

@@ -120,14 +120,16 @@ is kept with the run's inputs and never installed as rules.
 _Avoid_: Guidance, when meaning rules
 
 **Workflow skill**:
-A skill the standard installs because its output lands in the repository or
-the issue tracker, or because rules, a check, or another workflow skill rely on
-it. It is a method an agent follows and never defines a requirement.
+A skill the standard installs because the shared workflow keeps its output,
+as committed artifacts or issue tracker items that others rely on, or because
+rules, a check, or another workflow skill rely on it. It is a method an agent
+follows and never defines a requirement.
 _Avoid_: Installed skill, rule, policy
 
 **Personal skill**:
-A skill whose output serves the person using it, such as a lesson or a
-questionnaire. A person installs it for themselves; the standard does not.
+A skill whose output serves only the person using it, such as a lesson or a
+questionnaire, even when that file is written inside a repository. A person
+installs it for themselves; the standard does not.
 _Avoid_: Optional skill
 
 **Remote setup**:
