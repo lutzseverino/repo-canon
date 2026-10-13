@@ -634,6 +634,10 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
   assert.match(
     comments,
+    /This owner handoff ends the agent's babysitting of the pull request/,
+  );
+  assert.match(
+    comments,
     /Work without an issue asks on its pull request instead, with no label/,
   );
   assert.match(

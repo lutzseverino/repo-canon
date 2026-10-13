@@ -272,6 +272,7 @@ issue comment under these rules, add `factory:needs-input`, and stop without a
 pull request if none is open, or leaving the open pull request unmerged and
 linked from the question. Work without an issue asks on its pull request instead,
 with no label. The agent neither closes the pull request nor waits for the answer.
+This owner handoff ends the agent's babysitting of the pull request.
 
 With no open pull request, the owner answers and removes the label to return
 the issue to the frontier as a fresh first attempt. While the run's pull request
