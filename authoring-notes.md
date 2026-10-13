@@ -10,8 +10,9 @@ same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
 and pull request templates, the skill setup files under `docs/agents`, the
 trusted validation workflows with their scripts, the vendored rendered-Markdown
 runtime and parsers with their notices, the pinned skills with their upstream
-license notice, Repo Canon's own `babysit` skill, and, in the factory profile,
-the factory configuration and the sandbox image workflow. It is installed
+license notice, the HumanLayer license notice for material reproduced in the
+`pr` skill's Summary, Repo Canon's own `babysit` skill, and, in the factory
+profile, the factory configuration and the sandbox image workflow. It is installed
 identically in every adopting repository that selects its profile and changes
 only through a Repo Canon release.
 
