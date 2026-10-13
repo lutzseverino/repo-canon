@@ -57,20 +57,28 @@ Only the owner performs publication. In an up-to-date checkout of `main`,
 set `factory_version` to the chosen SemVer and `factory_pr` to the merged
 release pull request's number. Save the reviewed release notes in the task's
 scratch directory and set `factory_notes` to that file's absolute path.
-Read the merge commit and confirm the manifest and lockfile at that commit
-both name `factory_version`:
+Read the reviewed head and merge commit, fetch both, and confirm the manifest
+and lockfile at the merge commit both name `factory_version`:
 
 ```sh
+factory_reviewed_head=$(gh pr view "$factory_pr" --json headRefOid --template '{{.headRefOid}}')
 factory_merge=$(gh pr view "$factory_pr" --json mergeCommit --template '{{.mergeCommit.oid}}')
-git fetch origin main
+git fetch origin main "$factory_reviewed_head"
 git show "$factory_merge:factory/package.json"
 git show "$factory_merge:factory/package-lock.json"
 ```
+
+Compare the entire released `factory/` tree with the reviewed head before
+tagging. A squash merge can include a factory change that reached `main` after
+the release's last review. If the trees differ, stop and review the release
+again; checking the version in the manifests alone cannot detect those bytes.
+The diff guard below must succeed before the tag is created.
 
 Tag that exact merge commit and create an ordinary GitHub Release that is
 **not marked latest**, so Repo Canon's release remains GitHub's latest:
 
 ```sh
+git diff --exit-code "$factory_reviewed_head" "$factory_merge" -- factory/ &&
 git tag --annotate "factory-v$factory_version" "$factory_merge" \
   --message "Factory v$factory_version" &&
   git push origin "factory-v$factory_version" &&
