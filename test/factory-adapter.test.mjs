@@ -795,10 +795,15 @@ test("a run that exits without an open pull request fails its issue", async () =
   assert.equal(issue.comments.length, 1);
 });
 
-test("a failed first run uses the retry provider's skill prefix", async () => {
+test("a failed first run gives its retry the failure and log after the provider's invocation", async (t) => {
+  const host = fixture({
+    ".sandcastle/logs/issue-4-attempt-1.log": "started\nagent crashed\n",
+  });
+  t.after(host.close);
   const run = factory({
     issues: [{ number: 4 }],
     hostSettings: { retryModel: "gpt-5.5@xhigh" },
+    root: host.root,
   });
   await run.tick();
   run.sandcastle.launched[0].finish(new Error("agent crashed"));
@@ -818,14 +823,15 @@ test("a failed first run uses the retry provider's skill prefix", async () => {
         provider: "claude-code",
         model: "claude-sonnet-5-5",
         effort: "high",
-        log: "/srv/factory/.sandcastle/logs/issue-4-attempt-1.log",
+        log: join(host.root, ".sandcastle/logs/issue-4-attempt-1.log"),
       },
       {
-        prompt: "$implement #4",
+        prompt:
+          "$implement #4\n\nFirst attempt failure: the run ended without an open pull request\n\nFirst attempt log tail:\nstarted\nagent crashed\n",
         provider: "codex",
         model: "gpt-5.5",
         effort: "xhigh",
-        log: "/srv/factory/.sandcastle/logs/issue-4-attempt-2.log",
+        log: join(host.root, ".sandcastle/logs/issue-4-attempt-2.log"),
       },
     ],
   );
@@ -834,6 +840,77 @@ test("a failed first run uses the retry provider's skill prefix", async () => {
     "factory:running",
   ]);
 });
+
+test("a retry receives only the last 200 lines of the first attempt's log", async (t) => {
+  const host = fixture({
+    ".sandcastle/logs/issue-4-attempt-1.log":
+      "discard this\n" + "retained\n".repeat(199) + "final line\n",
+  });
+  t.after(host.close);
+  const run = factory({
+    issues: [{ number: 4 }],
+    hostSettings: { retryModel: "gpt-5.5" },
+    root: host.root,
+  });
+  await run.tick();
+  run.sandcastle.launched[0].finish();
+  await settled();
+  await run.tick();
+  assert.equal(
+    run.sandcastle.launched[1].prompt,
+    "$implement #4\n\nFirst attempt failure: the run ended without an open pull request\n\nFirst attempt log tail:\n" +
+      "retained\n".repeat(199) +
+      "final line\n",
+  );
+});
+
+test("a retry's log tail fits in 16 KB of UTF-8 and keeps the last text", async (t) => {
+  const host = fixture({
+    ".sandcastle/logs/issue-4-attempt-1.log":
+      "discard this\n" + "€".repeat(6000) + "\nfinal line",
+  });
+  t.after(host.close);
+  const run = factory({
+    issues: [{ number: 4 }],
+    hostSettings: { retryModel: "gpt-5.5" },
+    root: host.root,
+  });
+  await run.tick();
+  run.sandcastle.launched[0].finish();
+  await settled();
+  await run.tick();
+  const prompt = run.sandcastle.launched[1].prompt;
+  const tail = prompt.split("First attempt log tail:\n")[1];
+  assert.ok(Buffer.byteLength(tail) <= 16 * 1024);
+  assert.equal(tail, "€".repeat(5457) + "\nfinal line");
+});
+
+for (const log of [null, ""])
+  test(`a timed-out first run retries with the failure only when its log is ${log === null ? "missing" : "empty"}`, async (t) => {
+    const host = fixture(
+      log === null ? {} : { ".sandcastle/logs/issue-4-attempt-1.log": log },
+    );
+    t.after(host.close);
+    const run = factory({
+      issues: [{ number: 4 }],
+      hostSettings: {
+        defaultModel: "gpt-5.5",
+        retryModel: "claude-opus-5-5",
+        timeLimitMinutes: 1,
+      },
+      root: host.root,
+    });
+    await run.tick();
+    assert.equal(run.sandcastle.launched[0].prompt, "$implement #4");
+    run.time.now = new Date("2026-10-09T12:02:00Z");
+    run.sandcastle.launched[0].finish();
+    await settled();
+    await run.tick();
+    assert.equal(
+      run.sandcastle.launched[1].prompt,
+      "/implement #4\n\nFirst attempt failure: the run exceeded the time limit of 1 minutes",
+    );
+  });
 
 test("a run over the time limit without an open pull request is aborted and fails its issue", async () => {
   const run = factory({ issues: [{ number: 4 }] });
