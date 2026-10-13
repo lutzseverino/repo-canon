@@ -31,7 +31,7 @@ const mit = "MIT License\n\nCopyright (c) 2026 Example\n";
 function entryReadme(description) {
   return `<div align="center">
 <h1>Harbor</h1>
-<p>${description}</p>
+<p align="center">${description}</p>
 </div>
 
 ## License
@@ -133,7 +133,7 @@ test("requires a rendered description immediately after the title", async (t) =>
       const readme =
         description === null
           ? entryReadme("ignored").replace(
-              "<p>ignored</p>",
+              '<p align="center">ignored</p>',
               "<!-- A service for operators. -->",
             )
           : entryReadme(description);
@@ -161,8 +161,8 @@ test("passes descriptions captured from existing repository introductions", asyn
       "utf8",
     ),
   );
-  for (const { repository, commit, description, glossaries } of cases) {
-    await t.test(`${repository} at ${commit}`, (t) => {
+  for (const { repository, commit, source, description, glossaries } of cases) {
+    await t.test(`${repository} at ${commit ?? source}`, (t) => {
       const outcome = check(t, {
         ...glossaries,
         "README.md": entryReadme(description),
