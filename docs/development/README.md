@@ -6,9 +6,11 @@ Repo Canon standards source.
 ## Setup and validation
 
 Clone the repository with Git 2.32.0 or newer and use Node.js 24 and npm. Run
-`npm ci --include=dev` to install the pinned development dependencies. The source
-needs no typecheck or build step; parser dependencies are vendored. Adopters do
-not install development dependencies. GitHub planning uses authenticated `gh`
+`npm ci --include=dev` to install the pinned development dependencies. The
+standards source has no build step; parser dependencies are vendored. The factory package runs
+TypeScript through Node.js 24 type stripping and has its own typecheck and tests;
+follow the [factory development index](../../factory/docs/development/README.md)
+for its checks. Adopters do not install development dependencies. GitHub planning uses authenticated `gh`
 access. For source validation,
 install public Repository Standards CLI 6.0.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
@@ -25,7 +27,9 @@ Review affected links, issue-form fields, and consistency with the confirmed
 preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
 CI installs development dependencies and runs the format check, lint, the full
-`npm test` suite, and all-profile source validation. The lint step uses oxlint's defaults plus
+`npm test` suite, and all-profile source validation. A separate factory job
+installs the package dependencies and runs `tsc --noEmit` and its tests. The lint
+step uses oxlint's defaults plus
 ESLint's `recommended` rules that oxlint does not enable by default, with Node
 globals, as named in `.oxlintrc.json`. It excludes `vendor/`, `.repo-standards/`,
 and installed skills under `.agents/skills/`. Both warnings and errors fail the
@@ -57,12 +61,12 @@ disposable local repositories used for the seven productivity skill exercises.
 the harness that exercises the skills.
 
 This repository takes the same path every adopter takes, so the suite also runs
-the shipped Repository README, documentation, and sandbox image checks against
-this repository's own root through the
-operation request helper, with the documentation tree, the repository-root
-glossary [`GLOSSARY.md`](../../GLOSSARY.md), and the
-[authoring notes](../../authoring-notes.md) as its documentation scope, and
-the file declarations of `standards.yaml` as the other active declarations. The
+the shipped Repository README, Project README, documentation, and sandbox image
+checks against this repository's own root through the operation request helper, with the documentation tree, the root
+[glossary map](../../GLOSSARY-MAP.md), both context glossaries, the factory
+documentation tree, and the [authoring notes](../../authoring-notes.md) as its
+documentation scope. The Project README scope is `factory/README.md`, and
+`standards.yaml` supplies the other active file declarations. The
 same fixture fails if any tracked file reaches the CLI's 8 MiB per-file
 observation limit, which would make the repository uninspectable before any
 report. Run it alone with

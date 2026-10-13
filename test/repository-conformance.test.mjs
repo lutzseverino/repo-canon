@@ -11,16 +11,16 @@ import {
 } from "./helpers/documentation.mjs";
 import { invokeCheck } from "./helpers/operation.mjs";
 
-// This repository is an adopter of its own published standards, so the shipped
-// checks run against the real tree on every pull request instead of against
-// fixtures only. It has no Project READMEs, and an empty Project README scope
-// cannot fail, so that check runs against fixtures only. The documentation
-// check runs against this repository here and nowhere else. The documentation
-// paths below are the repository's documentation scope: the documentation tree,
-// the repository-root glossary, and the authoring notes. The source-side
-// guidance, the discovery instructions, and the vendored material stay out.
+// Run the shipped documentation checks against both contexts and the factory's
+// Project README. Source-side guidance, discovery instructions, and vendored
+// material stay out of the repository's documentation scope.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const rootDocuments = ["GLOSSARY.md", "authoring-notes.md"];
+const rootDocuments = [
+  "GLOSSARY.md",
+  "GLOSSARY-MAP.md",
+  "factory/GLOSSARY.md",
+  "authoring-notes.md",
+];
 
 // The CLI's discovery observation refuses any file larger than this, which would
 // reject the whole inspection before it reports anything.
@@ -47,7 +47,7 @@ function documentationScope() {
   const documentation = trackedFiles()
     .filter(
       (path) =>
-        path.startsWith("docs/") &&
+        (path.startsWith("docs/") || path.startsWith("factory/docs/")) &&
         path.toLocaleLowerCase("en-US").endsWith(".md"),
     )
     .filter((path) => !exactOwnedAgentConfiguration.includes(path));
@@ -63,6 +63,20 @@ test("the repository passes the documentation navigation check at its root", () 
     },
     declarations: fileDeclarations(),
     allowedTargets: { paths: documentationScope(), directories: [] },
+  });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "passed", outcome.result.message);
+});
+
+test("the factory passes the Project README check", () => {
+  const outcome = invokeCheck(operation("check-project-readmes.mjs"), root, {
+    operation: {
+      declaration: "project-readmes",
+      phase: "checks",
+      id: "project-readme-structure",
+    },
+    allowedTargets: { paths: ["factory/README.md"], directories: [] },
   });
 
   assert.equal(outcome.status, 0, outcome.stderr);

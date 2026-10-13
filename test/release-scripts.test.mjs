@@ -4,6 +4,7 @@ import {
   chmodSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -218,6 +219,30 @@ test("release:inputs reports an empty reviewed diff", (t) => {
 
   assert.equal(status, 0, output);
   assert.match(output, /No source input changed since v1\.0\.0\./);
+});
+
+test("factory package changes are outside Repo Canon release inputs", (t) => {
+  // The real manifest must not select the package as a file, skill, operation,
+  // or retained resource. The release fixture then exercises the input command
+  // with a tracked factory subtree and an independent version stream.
+  const standards = readFileSync(join(scripts, "../../standards.yaml"), "utf8");
+  assert.doesNotMatch(standards, /(?:[:-]\s+|\[)factory(?:\/|[\s\],])/);
+  const repository = releasedSource(t);
+  repository.commit(
+    {
+      "factory/package.json": { name: "factory", version: "99.0.0" },
+      "factory/src/main.ts": "export const factory = 'new runner';\n",
+      "factory/README.md": "# Factory\n",
+      "factory/docs/development/release.md": "# Factory releases\n",
+    },
+    "factory release only",
+  );
+
+  const { status, output } = repository.run("inputs.mjs", ["v1.0.0"]);
+
+  assert.equal(status, 0, output);
+  assert.match(output, /No source input changed since v1\.0\.0\./);
+  assert.doesNotMatch(output, /factory\//);
 });
 
 test("release:inputs fails clearly for a missing tag or CLI", (t) => {
