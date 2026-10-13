@@ -98,9 +98,11 @@ repeated.
   [decline grounds](CONTRIBUTING.md#merging) and `babysit`'s re-request
   condition; no round cap or severity threshold bounds it, and the factory's
   time limit is the hard stop. It waits through one bundled script that polls
-  silently and bounds the wait for Codex's review, run in the foreground on
-  every host; a host's watch tool stalls on Codex's clean pass, and Claude
-  Code's background notification has no Codex equivalent. Its
+  silently for checks and the reviewer named by the optional repository-owned
+  `.github/pull-request-reviewer.json`, run in the foreground on every host.
+  Without that file there is no reviewer wait. Repo Canon ships no reviewer
+  file or preset; this repository carries its own configuration, outside the
+  declarations. The factory never reads it. Its
   source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
   other original exact files; only vendored material has a separate source
   path.

@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -15,7 +21,13 @@ const root = new URL("..", import.meta.url).pathname;
 const script = join(root, ".agents/skills/babysit/wait.mjs");
 const fakeGh = join(root, "test/fixtures/fake-gh-babysit-wait.mjs");
 
-const codex = "chatgpt-codex-connector[bot]";
+const reviewerFixture = (name) =>
+  JSON.parse(
+    readFileSync(join(root, `test/fixtures/reviewers/${name}.json`), "utf8"),
+  );
+const codexReviewer = reviewerFixture("codex");
+const githubReviewer = reviewerFixture("github-review");
+const codex = codexReviewer.account;
 const minute = 60_000;
 const head = "f7bb671a07642acc7458fd7a885dfb0d7507f4c4";
 
@@ -63,6 +75,7 @@ const passed = [{ name: "check", state: "pass", link: "https://ci/1" }];
 const decision = (overrides) =>
   decide({
     head,
+    reviewer: codexReviewer,
     checks: passed,
     requestedAt: Date.parse("2026-10-11T05:39:50Z"),
     pushedAt: Date.parse("2026-10-11T05:39:50Z"),
@@ -77,7 +90,7 @@ const decision = (overrides) =>
 test("Completed for the head on a clean pass is reviewed (#257)", () => {
   const outcome = decision({ comments: [summary(completed, "f7bb671")] });
   assert.equal(outcome.code, 0);
-  assert.equal(outcome.codex, "reviewed");
+  assert.equal(outcome.reviewer, "reviewed");
 });
 
 test("Completed for the head after a manual request is reviewed (#233)", () => {
@@ -109,7 +122,7 @@ test("Completed for an older commit keeps waiting", () => {
 test("a review in progress for the head keeps waiting", () => {
   const outcome = decision({ comments: [summary(inProgress, "f7bb671")] });
   assert.equal(outcome.code, null);
-  assert.equal(outcome.codex, "reviewing");
+  assert.equal(outcome.reviewer, "pending");
 });
 
 test("a re-request on an unchanged head waits past the earlier Completed row", () => {
@@ -128,7 +141,7 @@ test("a re-request on an unchanged head waits past the earlier Completed row", (
     comments: [summary(completedCell("2026-10-11T05:50:00Z"), "f7bb671")],
   });
   assert.equal(outcome.code, 0);
-  assert.equal(outcome.codex, "reviewed");
+  assert.equal(outcome.reviewer, "reviewed");
 });
 
 test("a Completed row without its datetime is not reviewed", () => {
@@ -136,7 +149,7 @@ test("a Completed row without its datetime is not reviewed", () => {
     comments: [summary("✅ **Completed**", "f7bb671")],
   });
   assert.equal(outcome.code, null);
-  assert.equal(outcome.codex, "pending");
+  assert.equal(outcome.reviewer, "pending");
 });
 
 test("a push and a later re-request wait for the review after it (#265)", () => {
@@ -153,7 +166,7 @@ test("a push and a later re-request wait for the review after it (#265)", () => 
       body: "@codex review",
     },
   ];
-  const requestedAt = reviewRequestedAt(opened, comments);
+  const requestedAt = reviewRequestedAt(opened, comments, codexReviewer);
   assert.equal(requestedAt, Date.parse("2026-10-11T22:18:04Z"));
   const look = {
     head,
@@ -180,7 +193,7 @@ test("a push and a later re-request wait for the review after it (#265)", () => 
     now: Date.parse("2026-10-11T22:22:30Z"),
   });
   assert.equal(outcome.code, 0);
-  assert.equal(outcome.codex, "reviewed");
+  assert.equal(outcome.reviewer, "reviewed");
 });
 
 test("a head pushed after the latest request is not requested, at once", () => {
@@ -191,9 +204,9 @@ test("a head pushed after the latest request is not requested, at once", () => {
   };
   const outcome = decision(pushed);
   assert.equal(outcome.code, 4);
-  assert.equal(outcome.codex, "not requested");
+  assert.equal(outcome.reviewer, "not requested");
   assert.deepEqual(report(outcome, head), [
-    `${head}: checks passed, Codex review not requested for this head`,
+    `${head}: checks passed, review not requested for this head`,
   ]);
   const failed = decision({
     ...pushed,
@@ -201,7 +214,7 @@ test("a head pushed after the latest request is not requested, at once", () => {
   });
   assert.equal(failed.code, 2);
   assert.deepEqual(report(failed, head), [
-    `${head}: 1 check failed, Codex review not requested for this head`,
+    `${head}: 1 check failed, review not requested for this head`,
     "lint https://ci/2",
   ]);
 });
@@ -211,11 +224,11 @@ test("no Codex comment 5 minutes after the request is no response", () => {
   assert.equal(decision({ now: requestedAt + 4 * minute }).code, null);
   const outcome = decision({ now: requestedAt + 5 * minute });
   assert.equal(outcome.code, 4);
-  assert.equal(outcome.codex, "no response");
+  assert.equal(outcome.reviewer, "no response");
   assert.deepEqual(report(outcome, head), [
-    `${head}: checks passed, Codex did not respond within 5 minutes`,
+    `${head}: checks passed, reviewer did not respond within 5 minutes`,
   ]);
-  // Once Codex has commented on the pull request, only 30 minutes bound it.
+  // A response after the latest request leaves only the review bound.
   const answered = {
     comments: [summary(completed, "61e9ca4")],
     startedAt: requestedAt + 25 * minute,
@@ -226,7 +239,7 @@ test("no Codex comment 5 minutes after the request is no response", () => {
   );
   const bounded = decision({ ...answered, now: requestedAt + 30 * minute });
   assert.equal(bounded.code, 4);
-  assert.equal(bounded.codex, "not reviewing");
+  assert.equal(bounded.reviewer, "not reviewing");
 });
 
 test("the unavailable reply after the latest request is unavailable (#231)", () => {
@@ -238,7 +251,7 @@ test("the unavailable reply after the latest request is unavailable (#231)", () 
     startedAt: Date.parse("2026-10-11T03:39:10Z"),
   });
   assert.equal(outcome.code, 3);
-  assert.equal(outcome.codex, "unavailable");
+  assert.equal(outcome.reviewer, "unavailable");
 });
 
 test("an unavailable reply before the latest request is ignored", () => {
@@ -257,9 +270,9 @@ test("the account reply at or after the latest request is unavailable (#299)", (
       startedAt: Date.parse("2026-10-12T16:35:10Z"),
     });
     assert.equal(outcome.code, 3);
-    assert.equal(outcome.codex, "unavailable");
+    assert.equal(outcome.reviewer, "unavailable");
     assert.deepEqual(report(outcome, head), [
-      `${head}: checks passed, Codex unavailable`,
+      `${head}: checks passed, reviewer unavailable`,
     ]);
   }
 });
@@ -272,7 +285,7 @@ test("an account reply before the latest request is ignored", () => {
     startedAt: Date.parse("2026-10-12T16:36:10Z"),
   });
   assert.equal(outcome.code, null);
-  assert.equal(outcome.codex, "pending");
+  assert.equal(outcome.reviewer, "pending");
 });
 
 test("an account reply from someone other than Codex is ignored", () => {
@@ -282,7 +295,7 @@ test("an account reply from someone other than Codex is ignored", () => {
     ],
   });
   assert.equal(outcome.code, null);
-  assert.equal(outcome.codex, "pending");
+  assert.equal(outcome.reviewer, "pending");
 });
 
 test("an account reply waits until pending checks settle", () => {
@@ -291,7 +304,7 @@ test("an account reply waits until pending checks settle", () => {
     comments: [accountRequired("2026-10-11T05:40:00Z")],
   });
   assert.equal(outcome.code, null);
-  assert.equal(outcome.codex, "unavailable");
+  assert.equal(outcome.reviewer, "unavailable");
   assert.equal(outcome.checksPending, true);
 });
 
@@ -315,7 +328,7 @@ test("30 minutes after the latest request is not reviewing, across invocations",
   );
   const outcome = decision({ ...later, now: requestedAt + 30 * minute });
   assert.equal(outcome.code, 4);
-  assert.equal(outcome.codex, "not reviewing");
+  assert.equal(outcome.reviewer, "not reviewing");
 });
 
 const failedChecks = [
@@ -323,13 +336,13 @@ const failedChecks = [
   { name: "lint", state: "fail", link: "https://ci/2" },
 ];
 
-test("a failed check waits while Codex reviews, then is exit 2 once it settles", () => {
+test("a failed check exits 2 while the reviewer is mid-review", () => {
   assert.equal(
     decision({
       checks: failedChecks,
       comments: [summary(inProgress, "f7bb671")],
     }).code,
-    null,
+    2,
   );
   const outcome = decision({
     checks: failedChecks,
@@ -337,7 +350,7 @@ test("a failed check waits while Codex reviews, then is exit 2 once it settles",
   });
   assert.equal(outcome.code, 2);
   assert.deepEqual(report(outcome, head), [
-    `${head}: 1 check failed, Codex reviewed`,
+    `${head}: 1 check failed, reviewer reviewed`,
     "lint https://ci/2",
   ]);
   const requestedAt = Date.parse("2026-10-11T05:39:50Z");
@@ -351,7 +364,7 @@ test("a failed check waits while Codex reviews, then is exit 2 once it settles",
   assert.equal(late.code, 2);
   assert.equal(
     report(late, head)[0],
-    `${head}: 1 check failed, Codex did not review within 30 minutes`,
+    `${head}: 1 check failed, reviewer did not review within 30 minutes`,
   );
 });
 
@@ -361,9 +374,9 @@ test("a failed check with no summary row for the head is exit 2 at once", () => 
     comments: [summary(completed, "61e9ca4")],
   });
   assert.equal(outcome.code, 2);
-  assert.equal(outcome.codex, "pending");
+  assert.equal(outcome.reviewer, "pending");
   assert.deepEqual(report(outcome, head), [
-    `${head}: 1 check failed, Codex review pending`,
+    `${head}: 1 check failed, review pending`,
     "lint https://ci/2",
   ]);
 });
@@ -377,7 +390,7 @@ test("pending checks keep waiting after Codex settles", () => {
 });
 
 // One comment set per Codex state the wait can see, with the time it is seen.
-const codexStates = {
+const reviewerStates = {
   reviewed: { comments: [summary(completed, "f7bb671")] },
   unavailable: { comments: [unavailable("2026-10-11T05:40:00Z")] },
   "not requested": {
@@ -390,18 +403,18 @@ const codexStates = {
     startedAt: Date.parse("2026-10-11T06:05:00Z"),
     now: Date.parse("2026-10-11T06:10:00Z"),
   },
-  reviewing: { comments: [summary(inProgress, "f7bb671")] },
+
   pending: {},
 };
 
 test("each Codex state fixture reaches its state with passed checks", () => {
-  for (const [state, overrides] of Object.entries(codexStates)) {
-    assert.equal(decision(overrides).codex, state);
+  for (const [state, overrides] of Object.entries(reviewerStates)) {
+    assert.equal(decision(overrides).reviewer, state);
   }
 });
 
 test("no recorded push keeps empty checks pending in every Codex state", () => {
-  for (const [state, overrides] of Object.entries(codexStates)) {
+  for (const [state, overrides] of Object.entries(reviewerStates)) {
     const now = overrides.now ?? Date.parse("2026-10-11T05:43:00Z");
     for (const age of [60 * minute, 24 * 60 * minute]) {
       const look = {
@@ -414,7 +427,7 @@ test("no recorded push keeps empty checks pending in every Codex state", () => {
       // An old fallback still follows the existing Codex request rules.
       if (state === "not requested") look.requestedAt = now - age - minute;
       const outcome = decision(look);
-      assert.equal(outcome.codex, state);
+      assert.equal(outcome.reviewer, state);
       assert.equal(outcome.code, null);
       assert.equal(outcome.checksPending, true);
       const limited = decision({ ...look, startedAt: now - 9 * minute });
@@ -425,7 +438,7 @@ test("no recorded push keeps empty checks pending in every Codex state", () => {
 });
 
 test("no recorded push preserves non-empty checks and unfinished run outcomes", () => {
-  for (const overrides of Object.values(codexStates)) {
+  for (const overrides of Object.values(reviewerStates)) {
     for (const checks of [
       passed,
       failedChecks,
@@ -452,7 +465,7 @@ test("no recorded push preserves non-empty checks and unfinished run outcomes", 
 });
 
 test("a fresh head with no checks keeps the checks pending", () => {
-  for (const overrides of Object.values(codexStates)) {
+  for (const overrides of Object.values(reviewerStates)) {
     const now = overrides.now ?? Date.parse("2026-10-11T05:43:00Z");
     for (const runs of [[], [{ status: "completed" }]]) {
       for (const age of [0, 5 * minute - 1]) {
@@ -467,22 +480,21 @@ test("a fresh head with no checks keeps the checks pending", () => {
 });
 
 test("no checks after 5 minutes settles like passed checks in every Codex state", () => {
-  for (const [state, overrides] of Object.entries(codexStates)) {
+  for (const [state, overrides] of Object.entries(reviewerStates)) {
     const pushedAt = overrides.pushedAt ?? Date.parse("2026-10-11T05:39:50Z");
     const now = Math.max(
       overrides.now ?? Date.parse("2026-10-11T05:43:00Z"),
       pushedAt + 5 * minute,
     );
     const look = { ...overrides, now, startedAt: now };
-    // Keep the pending and reviewing fixtures inside their Codex bounds.
-    if (["pending", "reviewing"].includes(state))
-      look.requestedAt = now - minute;
+    // Keep the pending fixture inside its reviewer bounds.
+    if (state === "pending") look.requestedAt = now - minute;
     const passed = decision(look);
-    assert.equal(passed.codex, state);
+    assert.equal(passed.reviewer, state);
     for (const runs of [[], [{ status: "completed" }]]) {
       const outcome = decision({ ...look, checks: [], runs });
       assert.equal(outcome.code, passed.code);
-      assert.equal(outcome.codex, state);
+      assert.equal(outcome.reviewer, state);
       assert.deepEqual(outcome.failing, []);
       if (passed.code === null) {
         const limited = decision({
@@ -493,7 +505,7 @@ test("no checks after 5 minutes settles like passed checks in every Codex state"
         });
         assert.equal(limited.code, 5);
         assert.deepEqual(report(limited, head), [
-          `${head}: still waiting on Codex; run again`,
+          `${head}: still waiting on reviewer; run again`,
         ]);
       } else {
         assert.deepEqual(
@@ -527,7 +539,7 @@ const failedRun = workflowRun("CI", "pull_request", "completed", {
 const failedWorkflow = { name: "CI", state: "fail", link: failedRun.html_url };
 
 test("a failed workflow without checks fails in every Codex state", () => {
-  for (const [state, overrides] of Object.entries(codexStates)) {
+  for (const [state, overrides] of Object.entries(reviewerStates)) {
     const now = overrides.now ?? Date.parse("2026-10-11T05:43:00Z");
     for (const pushRecorded of [true, false]) {
       for (const conclusion of [
@@ -551,8 +563,8 @@ test("a failed workflow without checks fails in every Codex state", () => {
         if (state === "not requested")
           look.requestedAt = look.pushedAt - minute;
         const outcome = decision(look);
-        assert.equal(outcome.codex, state);
-        assert.equal(outcome.code, state === "reviewing" ? null : 2);
+        assert.equal(outcome.reviewer, state);
+        assert.equal(outcome.code, 2);
         assert.deepEqual(outcome.failing, [failedWorkflow]);
         assert.equal(outcome.noChecks, undefined);
       }
@@ -585,7 +597,7 @@ test("only the latest-started workflow run can fail, in either order", () => {
     ]) {
       const outcome = decision({
         runs,
-        comments: codexStates.reviewed.comments,
+        comments: reviewerStates.reviewed.comments,
       });
       assert.equal(outcome.code, laterConclusion === "failure" ? 2 : 0);
       assert.deepEqual(
@@ -636,7 +648,7 @@ test("an older passing check does not hide a later run's startup failure", () =>
       },
     ],
     runs: [older, latest],
-    comments: codexStates.unavailable.comments,
+    comments: reviewerStates.unavailable.comments,
   });
   assert.equal(outcome.code, 2);
   assert.deepEqual(outcome.failing, [
@@ -720,7 +732,7 @@ test("a latest successful run clears an older failure alongside leftover checks"
       },
     ],
     runs: [older, latest],
-    comments: codexStates.reviewed.comments,
+    comments: reviewerStates.reviewed.comments,
   });
   assert.equal(outcome.code, 0);
   assert.deepEqual(outcome.failing, []);
@@ -767,10 +779,7 @@ test("checks represent only their own workflow when display names are shared", (
           ...checks.filter((check) => check.state === "fail"),
           ...(id === 22 ? [{ ...failedWorkflow, link: failed.html_url }] : []),
         ]);
-        assert.equal(
-          outcome.code,
-          state === "pending" ? null : id === 22 || state === "fail" ? 2 : null,
-        );
+        assert.equal(outcome.code, id === 22 || state === "fail" ? 2 : null);
       }
     }
   }
@@ -824,7 +833,7 @@ test("a workflow with a check uses only that check's outcome", () => {
         checkRunStartedAt: "2026-10-11T05:40:00Z",
       },
     ];
-    const look = { checks, comments: codexStates.reviewed.comments };
+    const look = { checks, comments: reviewerStates.reviewed.comments };
     assert.deepEqual(decision({ ...look, runs: [failedRun] }), decision(look));
   }
 });
@@ -844,7 +853,7 @@ test("another workflow's checks or a status context do not hide a failed run", (
 
 test("non-failing workflow conclusions preserve the no-check outcomes", () => {
   for (const conclusion of ["success", "neutral", "skipped"]) {
-    for (const overrides of Object.values(codexStates)) {
+    for (const overrides of Object.values(reviewerStates)) {
       for (const pushRecorded of [true, false]) {
         const look = { ...overrides, checks: [], pushRecorded };
         assert.deepEqual(
@@ -856,7 +865,7 @@ test("non-failing workflow conclusions preserve the no-check outcomes", () => {
   }
 });
 
-test("any unfinished run holds a failed workflow pending, even if superseded", () => {
+test("a failed workflow exits despite any unfinished run", () => {
   const earlier = { ...failedRun, status: "in_progress", conclusion: null };
   const later = { ...failedRun, run_started_at: "2026-10-11T05:41:00Z" };
   for (const runs of [
@@ -864,8 +873,7 @@ test("any unfinished run holds a failed workflow pending, even if superseded", (
     [later, earlier],
   ]) {
     const outcome = decision({ checks: [], runs });
-    assert.equal(outcome.code, null);
-    assert.equal(outcome.checksPending, true);
+    assert.equal(outcome.code, 2);
     assert.deepEqual(outcome.failing, [failedWorkflow]);
   }
 });
@@ -909,11 +917,11 @@ test("an unfinished workflow run for the head keeps passed checks pending", () =
         workflowRun("Other", "pull_request", "completed"),
         unfinished,
       ];
-      for (const overrides of Object.values(codexStates)) {
+      for (const overrides of Object.values(reviewerStates)) {
         assert.equal(decision({ ...overrides, runs }).code, null);
       }
       const limited = decision({
-        ...codexStates.reviewed,
+        ...reviewerStates.reviewed,
         runs,
         now: Date.parse("2026-10-11T05:49:00Z"),
       });
@@ -930,12 +938,12 @@ test("completed workflow runs for the head leave the outcome unchanged", () => {
     workflowRun("CI", "pull_request", "completed"),
     workflowRun("PR metadata validation", "pull_request_target", "completed"),
   ];
-  for (const overrides of Object.values(codexStates)) {
+  for (const overrides of Object.values(reviewerStates)) {
     assert.deepEqual(decision({ ...overrides, runs }), decision(overrides));
   }
 });
 
-test("an unfinished workflow run for the head defers a failed check", () => {
+test("an unfinished workflow run does not defer a failed check", () => {
   const settled = {
     checks: failedChecks,
     comments: [summary(completed, "61e9ca4")],
@@ -954,7 +962,7 @@ test("an unfinished workflow run for the head defers a failed check", () => {
         workflowRun("PR metadata validation", "pull_request_target", "queued"),
       ],
     }).code,
-    null,
+    2,
   );
 });
 
@@ -965,19 +973,19 @@ test("the invocation limit is exit 5 and names what is still pending", () => {
   });
   assert.equal(outcome.code, 5);
   assert.deepEqual(report(outcome, head), [
-    `${head}: still waiting on Codex; run again`,
+    `${head}: still waiting on reviewer; run again`,
   ]);
 });
 
-test("the invocation limit lists checks that already failed", () => {
+test("failed checks exit 2 even at the invocation limit", () => {
   const outcome = decision({
     checks: [{ name: "lint", state: "fail", link: "https://ci/2" }],
     comments: [summary(inProgress, "f7bb671")],
     now: Date.parse("2026-10-11T05:49:00Z"),
   });
-  assert.equal(outcome.code, 5);
+  assert.equal(outcome.code, 2);
   assert.deepEqual(report(outcome, head), [
-    `${head}: 1 check failed, still waiting on Codex; run again`,
+    `${head}: 1 check failed, review pending`,
     "lint https://ci/2",
   ]);
 });
@@ -985,11 +993,11 @@ test("the invocation limit lists checks that already failed", () => {
 test("each settled outcome reports one line", () => {
   assert.deepEqual(
     report(decision({ comments: [summary(completed, "f7bb671")] }), head),
-    [`${head}: checks passed, Codex reviewed`],
+    [`${head}: checks passed, reviewer reviewed`],
   );
   assert.deepEqual(
     report(decision({ comments: [unavailable("2026-10-11T05:40:00Z")] }), head),
-    [`${head}: checks passed, Codex unavailable`],
+    [`${head}: checks passed, reviewer unavailable`],
   );
   assert.deepEqual(
     report(
@@ -999,7 +1007,7 @@ test("each settled outcome reports one line", () => {
       }),
       head,
     ),
-    [`${head}: checks passed, Codex did not review within 30 minutes`],
+    [`${head}: checks passed, reviewer did not review within 30 minutes`],
   );
 });
 
@@ -1015,11 +1023,11 @@ test("the latest request is the later of the opening and a re-request", () => {
   ];
   // Codex's own summary quotes "@codex review" and is no request.
   assert.equal(
-    reviewRequestedAt(opened, comments),
+    reviewRequestedAt(opened, comments, codexReviewer),
     Date.parse("2026-10-11T04:30:00Z"),
   );
   assert.equal(
-    reviewRequestedAt(opened, [summary(completed, "322f254")]),
+    reviewRequestedAt(opened, [summary(completed, "322f254")], codexReviewer),
     opened,
   );
   comments.push({
@@ -1033,8 +1041,8 @@ test("the latest request is the later of the opening and a re-request", () => {
     body: "@codex security review",
   });
   assert.equal(
-    reviewRequestedAt(opened, comments),
-    Date.parse("2026-10-11T04:45:00Z"),
+    reviewRequestedAt(opened, comments, codexReviewer),
+    Date.parse("2026-10-11T04:30:00Z"),
   );
 });
 
@@ -1255,8 +1263,15 @@ test("unfinished runs hold only their own workflow and check", () => {
 
 // Runs the script against a fake `gh` and returns everything it wrote, with
 // the time of its first write.
-const run = (state, args) => {
+const run = (state, args, reviewer = codexReviewer) => {
   const directory = mkdtempSync(join(tmpdir(), "babysit-wait-"));
+  if (reviewer) {
+    mkdirSync(join(directory, ".github"));
+    writeFileSync(
+      join(directory, ".github/pull-request-reviewer.json"),
+      JSON.stringify(reviewer),
+    );
+  }
   const statePath = join(directory, "state.json");
   writeFileSync(statePath, JSON.stringify(state));
   const gh = join(directory, "gh");
@@ -1264,6 +1279,7 @@ const run = (state, args) => {
   return new Promise((resolve) => {
     const started = Date.now();
     const child = spawn(process.execPath, [script, ...args], {
+      cwd: directory,
       env: {
         ...process.env,
         PATH: `${directory}:${process.env.PATH}`,
@@ -1326,7 +1342,7 @@ test("the script writes nothing while it waits, then one line at its limit", asy
   assert.equal(result.stderr, "");
   assert.equal(
     result.stdout,
-    `${head}: still waiting on checks and Codex; run again\n`,
+    `${head}: still waiting on checks and reviewer; run again\n`,
   );
   assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
 });
@@ -1377,7 +1393,7 @@ test("an already-settled outcome exits at once", async () => {
   assert.equal(result.code, 2);
   assert.equal(
     result.stdout,
-    `${head}: 1 check failed, Codex reviewed\ntest https://ci/1\n`,
+    `${head}: 1 check failed, reviewer reviewed\ntest https://ci/1\n`,
   );
   assert.ok(result.elapsed < 5000);
 });
@@ -1410,7 +1426,7 @@ test("an old push with no checks or runs settles at once", async () => {
   assert.equal(result.stderr, "");
   assert.equal(
     result.stdout,
-    `${head}: no checks within 5 minutes of the push, Codex review not requested for this head\n`,
+    `${head}: no checks within 5 minutes of the push, review not requested for this head\n`,
   );
   assert.ok(result.firstWrite < 1900, `wrote after ${result.firstWrite} ms`);
 });
@@ -1431,7 +1447,7 @@ test("the script reports a completed failed workflow with no check (#293)", asyn
   assert.equal(result.stderr, "");
   assert.equal(
     result.stdout,
-    `${head}: 1 check failed, Codex unavailable\nCI ${failedRun.html_url}\n`,
+    `${head}: 1 check failed, reviewer unavailable\nCI ${failedRun.html_url}\n`,
   );
 });
 
@@ -1469,7 +1485,7 @@ test("the script uses check start times to settle later runs and attempts (#296)
       assert.equal(result.stderr, "");
       assert.equal(
         result.stdout,
-        `${head}: 1 check failed, Codex unavailable\n${currentCheck ? `Validate example ${checkLink}` : `CI ${runUrl(id)}`}\n`,
+        `${head}: 1 check failed, reviewer unavailable\n${currentCheck ? `Validate example ${checkLink}` : `CI ${runUrl(id)}`}\n`,
       );
     }
   }
@@ -1498,7 +1514,7 @@ test("the script keeps failures of workflows sharing a display name", async () =
   assert.equal(result.code, 2);
   assert.equal(
     result.stdout,
-    `${head}: 1 check failed, Codex unavailable\nCI ${failedRun.html_url}\n`,
+    `${head}: 1 check failed, reviewer unavailable\nCI ${failedRun.html_url}\n`,
   );
 });
 
@@ -1532,7 +1548,7 @@ test("the script matches checks to same-named workflows by their run links", asy
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: 1 check failed, Codex unavailable\n${id === 21 ? `Validate example ${runUrl(21)}/job/1` : `CI ${runUrl(21)}`}\n`,
+      `${head}: 1 check failed, reviewer unavailable\n${id === 21 ? `Validate example ${runUrl(21)}/job/1` : `CI ${runUrl(21)}`}\n`,
     );
   }
 });
@@ -1560,7 +1576,7 @@ test("the script uses a workflow's checks without hiding another workflow's fail
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: 1 check failed, Codex unavailable\n${expected}\n`,
+      `${head}: 1 check failed, reviewer unavailable\n${expected}\n`,
     );
   }
 });
@@ -1605,11 +1621,11 @@ test("a push recorded after the first look settles within the invocation", async
       },
       ["12", "--limit", "3", "--interval", "0.2"],
     );
-    assert.equal(result.code, 4);
+    assert.equal(result.code, 4, result.stderr);
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: no checks within 5 minutes of the push, Codex review not requested for this head\n`,
+      `${head}: no checks within 5 minutes of the push, review not requested for this head\n`,
     );
     assert.equal(result.activityReads, 2);
     assert.ok(result.elapsed < 2900, `settled after ${result.elapsed} ms`);
@@ -1666,7 +1682,7 @@ test("the head's push time comes from GitHub's activity record", async () => {
   assert.equal(pushed.code, 4);
   assert.equal(
     pushed.stdout,
-    `${head}: checks passed, Codex review not requested for this head\n`,
+    `${head}: checks passed, review not requested for this head\n`,
   );
   // A later re-request makes the pushed head requested again.
   const rerequested = await run(
@@ -1688,7 +1704,7 @@ test("the head's push time comes from GitHub's activity record", async () => {
   assert.equal(rerequested.code, 5);
   assert.equal(
     rerequested.stdout,
-    `${head}: still waiting on Codex; run again\n`,
+    `${head}: still waiting on reviewer; run again\n`,
   );
   // Without an activity record, the head's committer date stands in, and a
   // push is never before the opening.
@@ -1705,7 +1721,7 @@ test("the head's push time comes from GitHub's activity record", async () => {
   assert.equal(committed.code, 4);
   assert.equal(
     committed.stdout,
-    `${head}: checks passed, Codex did not respond within 5 minutes\n`,
+    `${head}: checks passed, reviewer did not respond within 5 minutes\n`,
   );
 });
 
@@ -1718,4 +1734,198 @@ test("usage and gh errors exit 1 with one line", async () => {
   assert.equal(failure.code, 1);
   assert.equal(failure.stderr.trim().split("\n").length, 1);
   assert.match(failure.stderr, /HTTP 502/);
+});
+
+test("without a reviewer, settled checks exit 0 and report no reviewer state", () => {
+  const outcome = decision({ reviewer: null });
+  assert.equal(outcome.code, 0);
+  assert.equal(outcome.reviewer, undefined);
+  assert.deepEqual(report(outcome, head), [`${head}: checks passed`]);
+});
+
+test("a GitHub review by the configured account finishes only the exact head", () => {
+  const review = { user: { login: githubReviewer.account }, commit_id: head };
+  assert.equal(
+    decision({
+      reviewer: githubReviewer,
+      now: Date.parse("2026-10-11T05:40:50Z"),
+      reviews: [review],
+    }).code,
+    0,
+  );
+  assert.equal(
+    decision({
+      reviewer: githubReviewer,
+      now: Date.parse("2026-10-11T05:40:50Z"),
+      reviews: [{ ...review, commit_id: "older" }],
+    }).code,
+    null,
+  );
+  assert.equal(
+    decision({
+      reviewer: githubReviewer,
+      now: Date.parse("2026-10-11T05:40:50Z"),
+      reviews: [{ ...review, user: { login: "someone-else" } }],
+    }).code,
+    null,
+  );
+});
+
+test("the script with no file finishes settled checks without a reviewer", async () => {
+  const result = await run(
+    { ...pendingPullRequest, checks: [checkRun()] },
+    ["12"],
+    null,
+  );
+  assert.equal(result.code, 0);
+  assert.equal(result.stdout, `${head}: checks passed\n`);
+});
+
+test("the script reads a GitHub-review-only fixture and its paginated reviews", async () => {
+  const state = { ...pendingPullRequest, checks: [checkRun()] };
+  const unrequested = await run(state, ["12"], githubReviewer);
+  assert.equal(unrequested.code, 4);
+  const reviewed = await run(
+    {
+      ...state,
+      reviews: [{ user: { login: githubReviewer.account }, commit_id: head }],
+    },
+    ["12"],
+    githubReviewer,
+  );
+  assert.equal(reviewed.code, 0);
+  assert.equal(reviewed.stdout, `${head}: checks passed, reviewer reviewed\n`);
+});
+
+test("a failed check exits immediately while other checks are pending", () => {
+  const outcome = decision({
+    checks: [...failedChecks, { name: "slow", state: "pending" }],
+  });
+  assert.equal(outcome.code, 2);
+});
+
+test("only a whole trimmed request comment moves the request time", () => {
+  const opened = Date.parse("2026-10-11T05:39:50Z");
+  const comment = { login: "maintainer", createdAt: "2026-10-11T05:40:50Z" };
+  assert.equal(
+    reviewRequestedAt(
+      opened,
+      [{ ...comment, body: "Fixed; @codex review" }],
+      codexReviewer,
+    ),
+    opened,
+  );
+  assert.equal(
+    reviewRequestedAt(
+      opened,
+      [{ ...comment, body: " \n@codex review\n " }],
+      codexReviewer,
+    ),
+    Date.parse(comment.createdAt),
+  );
+  assert.equal(reviewRequestedAt(opened, [], githubReviewer), null);
+  assert.equal(
+    reviewRequestedAt(
+      opened,
+      [{ ...comment, body: githubReviewer.request.comment }],
+      githubReviewer,
+    ),
+    Date.parse(comment.createdAt),
+  );
+});
+
+test("responses before a request do not satisfy the configured response bound", () => {
+  const requestedAt = Date.parse("2026-10-11T05:39:50Z");
+  const look = {
+    reviewer: githubReviewer,
+    requestedAt,
+    now: requestedAt + 2 * minute,
+    comments: [
+      {
+        login: githubReviewer.account,
+        body: "Working",
+        createdAt: "2026-10-11T05:38:00Z",
+      },
+    ],
+  };
+  assert.equal(decision(look).reviewer, "no response");
+  const answered = {
+    ...look,
+    comments: [{ ...look.comments[0], createdAt: "2026-10-11T05:40:00Z" }],
+  };
+  assert.equal(decision(answered).code, null);
+  const bounded = decision({
+    ...answered,
+    startedAt: requestedAt + 9 * minute,
+    now: requestedAt + 10 * minute,
+  });
+  assert.equal(bounded.code, 4);
+  assert.deepEqual(report(bounded, head), [
+    `${head}: checks passed, reviewer did not review within 10 minutes`,
+  ]);
+});
+
+test("completion lines need the configured account, marker, head and timestamp", () => {
+  const valid = summary(completed, "f7bb671");
+  for (const comment of [
+    { ...valid, login: "someone-else" },
+    {
+      ...valid,
+      body: valid.body.replace(codexReviewer.finished.commentMarker, ""),
+    },
+    summary(completedCell("invalid"), "f7bb671"),
+  ])
+    assert.equal(decision({ comments: [comment] }).code, null);
+  const noRequest = decision({ requestedAt: null, comments: [valid] });
+  assert.equal(noRequest.code, 4);
+});
+
+test("without a reviewer the check grace period and invocation limit still apply", () => {
+  const now = Date.parse("2026-10-11T05:43:00Z");
+  assert.equal(
+    decision({ reviewer: null, checks: [], pushedAt: now - 5 * minute }).code,
+    0,
+  );
+  assert.equal(
+    decision({ reviewer: null, checks: [], pushedAt: now }).code,
+    null,
+  );
+  const limited = decision({
+    reviewer: null,
+    checks: [],
+    pushedAt: now,
+    startedAt: now - 9 * minute,
+  });
+  assert.deepEqual(report(limited, head), [
+    `${head}: still waiting on checks; run again`,
+  ]);
+  assert.equal(decision({ reviewer: null, checks: failedChecks }).code, 2);
+});
+
+test("an invalid reviewer file exits 1 with actionable feedback", async () => {
+  const result = await run(pendingPullRequest, ["12"], {
+    ...githubReviewer,
+    bounds: { responseMinutes: 0, reviewMinutes: 10 },
+  });
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /responseMinutes/);
+  assert.equal(result.stdout, "");
+});
+
+test("a response at the request timestamp does not satisfy the response bound", () => {
+  const requestedAt = Date.parse("2026-10-11T05:39:50Z");
+  const outcome = decision({
+    reviewer: githubReviewer,
+    requestedAt,
+    now: requestedAt + 2 * minute,
+    comments: [
+      {
+        login: githubReviewer.account,
+        body: "Working",
+        createdAt: "2026-10-11T05:39:50Z",
+      },
+    ],
+  });
+  assert.equal(outcome.code, 4);
+  assert.equal(outcome.reviewer, "no response");
 });

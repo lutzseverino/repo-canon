@@ -187,14 +187,18 @@ For adoption or update findings, use these target repositories:
 Merge a pull request once every required check passes on its latest head and
 every review thread is answered with its fix or a reasoned decline under the
 [comment rules](#comments).
-A review request is the pull request's opening, for the head it opened with,
-or a later `@codex review` comment under the [comment rules](#comments); a push is not one. When Codex does not
+The optional repository-owned `.github/pull-request-reviewer.json` configures
+its reviewer and wait bounds; [`babysit`](.agents/skills/babysit/SKILL.md)
+documents its schema. A review request is the pull request's opening when
+`request.onOpen` is true, or a later comment whose whole trimmed body equals
+`request.comment`; a push is not one. When the configured reviewer does not
 review the latest head, because it is unavailable, no review was requested
-after the head's push, Codex did not respond on the pull request within 5
-minutes of the latest review request, or no review arrived within 30 minutes
+after the head's push, it did not respond within `bounds.responseMinutes` of
+the latest review request, or no review arrived within `bounds.reviewMinutes`
 of it, the pull request merges once those conditions hold, and the merging
-agent comments on it that Codex did not review that head and why, under the
-[comment rules](#comments).
+agent comments on it that the configured reviewer did not review that head
+and why, under the [comment rules](#comments). Without the file, no reviewer
+wait or comment about an absent review is required.
 Squash-merge pull requests into their base branch, using the PR title as the
 commit subject and its description as the body. Preserve issue references and
 breaking-change explanations in the final message.
@@ -228,11 +232,12 @@ A review request comment is also exempt and holds only the request.
 Comments, issue and pull request titles, and their bodies never contain secret,
 token, or credential values. Write `<REDACTED>` in their place.
 
-Write an external reviewer's request phrase only in a comment that requests a
-review. For example, today's reviewer is Codex, whose phrase is named in
-[Merging](#merging). The phrase never appears in prose, quotations, or code
-spans in any comment, issue or pull request title, or body. To mention the
-request, describe it as "the review request comment".
+Write the configured reviewer's request phrase only in a comment that
+requests a review. That comment holds exactly `request.comment` from
+`.github/pull-request-reviewer.json`, with no disclaimer. The phrase never
+appears in prose, quotations, or code spans in any other comment, issue or
+pull request title, or body. To mention the request, describe it as "the review
+request comment".
 
 ## Documentation
 
