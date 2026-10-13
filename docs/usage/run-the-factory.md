@@ -98,7 +98,8 @@ before each launch.
 ## Pickup
 
 The frontier is every open issue that carries `ready-for-agent`, has no open
-native blocker, and carries neither `factory:running` nor `factory:failed`.
+native blocker, and carries none of `factory:running`, `factory:failed`, or
+`factory:needs-input`.
 The oldest issue launches first. Every run is a direct run: one agent started
 with only `/implement #<n>` for Claude Code or `$implement #<n>` for Codex,
 which takes its issue to one pull request.
@@ -172,20 +173,31 @@ requests opened after the run started count, so an earlier run's pull requests
 on the same branch don't decide it. A `factory:running` claim is held by a run the
 factory is tracking or by the issue's open pull request, so it stays while
 `babysit` works. On each pass, the factory settles every claim that neither
-holds: it removes the claim once the issue closed, and otherwise fails the
-issue. This covers a pull request closed without merging and a claim left by
+holds: it removes the claim once the issue closed or needs the owner's input,
+and otherwise fails the issue. This covers a pull request closed without merging and a claim left by
 an earlier factory process.
+
+The contribution guide's [Comments rules](../../CONTRIBUTING.md#comments)
+define the procedure for a run that needs the owner's answer. When a run ends
+without an open pull request and its issue carries `factory:needs-input`, on
+either attempt and even after a timeout, the factory removes `factory:running`
+without retrying, posting a failure comment, or adding `factory:failed`. An
+open pull request keeps the claim, whether the label is present or the run
+timed out. The factory skips a ready issue carrying `factory:needs-input`,
+with a reason telling the owner to answer and remove it. Removing the label
+allows pickup as a fresh first attempt, provided the issue is still ready and
+passes its other checks.
 
 A pull request that merged while its issue is still open, with none of its
 pull requests open, does not release the claim, since the factory would run the issue again. The factory fails the
-issue instead, whether its run just ended or no run holds the claim, and never
-retries it. The comment says the pull request merged without closing the
+issue instead, unless it carries `factory:needs-input`, whether its run just
+ended or no run holds the claim, and never retries it. The comment says the pull request merged without closing the
 issue: close the issue if that finished it, or remove `factory:failed` to run
 it again.
 
-A run that ends without an open pull request, or exceeds the time limit, has
-failed. A run counts as over the limit by how long it ran, whether the factory
-stopped it or Sandcastle's idle timeout ended it. A failed first run retries once on the retry model, keeping the claim.
+A run that ends without an open pull request and without `factory:needs-input`
+has failed, including one that exceeds the time limit. A run counts as over
+the limit by how long it ran, whether the factory stopped it or Sandcastle's idle timeout ended it. A failed first run retries once on the retry model, keeping the claim.
 The retry uses its provider's skill prefix, takes its issue's turn in
 oldest-first order, waits for its provider's gate, and launches only while the issue would still be picked up,
 apart from its own claim. When the run cannot retry, the factory removes the

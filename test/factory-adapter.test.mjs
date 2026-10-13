@@ -835,14 +835,13 @@ test("a failed first run uses the retry provider's skill prefix", async () => {
   ]);
 });
 
-test("a run over the time limit is aborted and fails its issue", async () => {
+test("a run over the time limit without an open pull request is aborted and fails its issue", async () => {
   const run = factory({ issues: [{ number: 4 }] });
   await run.tick();
   run.time.now = new Date("2026-10-09T16:00:01Z");
   await run.tick();
   assert.ok(run.sandcastle.launched[0].signal.aborted);
   await settled();
-  run.github.find(4).pullRequests.push("OPEN");
   await run.tick();
   const issue = run.github.find(4);
   assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
@@ -1331,7 +1330,7 @@ test("a merged pull request from an earlier run does not decide a later run's ou
   assert.deepEqual(retried.github.find(4).comments, []);
 });
 
-test("a retry keeps the open pull request from its timed-out first attempt", async () => {
+test("a timed-out first attempt keeps its open pull request claim without a retry", async () => {
   const run = factory({
     issues: [{ number: 4 }],
     hostSettings: { retryModel: "gpt-5.5", timeLimitMinutes: 1 },
@@ -1347,11 +1346,7 @@ test("a retry keeps the open pull request from its timed-out first attempt", asy
   assert.equal(run.sandcastle.launched[0].signal.aborted, true);
   await settled();
   await run.tick();
-  assert.equal(run.sandcastle.launched.length, 2);
-  assert.equal(run.sandcastle.launched[1].branch, "factory/issue-4");
-  run.time.now = new Date("2026-10-09T12:02:30Z");
-  run.sandcastle.launched[1].finish();
-  await settled();
+  assert.equal(run.sandcastle.launched.length, 1);
   await run.tick();
   assert.deepEqual(issue.labels, ["ready-for-agent", "factory:running"]);
   assert.deepEqual(issue.comments, []);
@@ -1384,22 +1379,22 @@ for (const branchPullRequests of [
     assert.match(issue.comments[0], /attempt-2\.log/);
   });
 
-test("a retry's time limit starts at its own launch even with an open pull request", async () => {
+test("a retry's time limit starts at its own launch and its open pull request holds the claim", async () => {
   const run = factory({
     issues: [{ number: 4 }],
     hostSettings: { retryModel: "gpt-5.5", timeLimitMinutes: 1 },
   });
   await run.tick();
   const issue = run.github.find(4);
-  issue.branchPullRequests.push({
-    state: "OPEN",
-    createdAt: "2026-10-09T12:00:30Z",
-  });
   run.time.now = new Date("2026-10-09T12:02:00Z");
   await run.tick();
   await settled();
   await run.tick();
   assert.equal(run.sandcastle.launched.length, 2);
+  issue.branchPullRequests.push({
+    state: "OPEN",
+    createdAt: "2026-10-09T12:02:15Z",
+  });
   run.time.now = new Date("2026-10-09T12:02:30Z");
   await run.tick();
   assert.equal(run.sandcastle.launched[1].signal.aborted, false);
@@ -1408,13 +1403,9 @@ test("a retry's time limit starts at its own launch even with an open pull reque
   assert.equal(run.sandcastle.launched[1].signal.aborted, true);
   await settled();
   await run.tick();
-  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
-  assert.equal(issue.comments.length, 1);
-  assert.match(
-    issue.comments[0],
-    /the run exceeded the time limit of 1 minutes/,
-  );
-  assert.match(issue.comments[0], /attempt-2\.log/);
+  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:running"]);
+  assert.deepEqual(issue.comments, []);
+  assert.equal(run.sandcastle.launched.length, 2);
 });
 
 test("an open pull request holds a claim even beside an earlier merged one", async () => {
@@ -1486,7 +1477,7 @@ test("a time limit a timer cannot wait is refused", () => {
   );
 });
 
-test("a run that Sandcastle ends at the time limit fails even with an open pull request", async () => {
+test("a run that Sandcastle ends at the time limit keeps its open pull request claim", async () => {
   const run = factory({ issues: [{ number: 4 }] });
   await run.tick();
   run.github.find(4).pullRequests.push("OPEN");
@@ -1495,11 +1486,9 @@ test("a run that Sandcastle ends at the time limit fails even with an open pull 
   await settled();
   await run.tick();
   const issue = run.github.find(4);
-  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:failed"]);
-  assert.match(
-    issue.comments[0],
-    /the run exceeded the time limit of 240 minutes/,
-  );
+  assert.deepEqual(issue.labels, ["ready-for-agent", "factory:running"]);
+  assert.deepEqual(issue.comments, []);
+  assert.equal(run.sandcastle.launched.length, 1);
 });
 
 test("a pull request from a fork never counts as the run's", async () => {
@@ -2411,3 +2400,39 @@ test("an ended update with pushed workflow changes and only local docs files no 
   assert.equal(run.github.state.created.length, 0);
   assert.equal(run.sandcastle.launched.length, 1);
 });
+
+for (const attempt of [1, 2])
+  for (const timedOut of [false, true])
+    test(`attempt ${attempt} needing input releases without retry or failure, timed out: ${timedOut}`, async () => {
+      const run = factory({
+        issues: [{ number: 4 }],
+        hostSettings: { retryModel: "gpt-5.5", timeLimitMinutes: 1 },
+      });
+      await run.tick();
+      if (attempt === 2) {
+        run.sandcastle.launched[0].finish();
+        await settled();
+        await run.tick();
+      }
+      const issue = run.github.find(4);
+      issue.labels.push("factory:needs-input");
+      if (timedOut) run.time.now = new Date("2026-10-09T12:02:00Z");
+      run.sandcastle.launched.at(-1).finish();
+      await settled();
+      await run.tick();
+      assert.deepEqual(issue.labels, [
+        "ready-for-agent",
+        "factory:needs-input",
+      ]);
+      assert.deepEqual(issue.comments, []);
+      assert.equal(run.sandcastle.launched.length, attempt);
+      await run.tick();
+      assert.equal(run.sandcastle.launched.length, attempt);
+      issue.labels = issue.labels.filter(
+        (label) => label !== "factory:needs-input",
+      );
+      await run.tick();
+      assert.equal(run.sandcastle.launched.length, attempt + 1);
+      assert.match(run.sandcastle.launched.at(-1).log, /attempt-1\.log$/);
+      run.sandcastle.launched.at(-1).finish();
+    });
