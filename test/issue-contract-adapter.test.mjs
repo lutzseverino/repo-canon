@@ -16,6 +16,7 @@ import {
   labeledBy,
   laggingReapplicationEvents,
   laggingSwapEvents,
+  mapBody,
   reapplicationEvents,
   reapplicationRun,
   readinessRetryEvents,
@@ -704,6 +705,68 @@ test("the adapter applies the decision's writes in order and exits with its stat
     );
     assert.deepEqual(applied[0][2], { labels: ["needs-triage"] });
     assert.match(applied[1][2].body, /awaiting review/i);
+  });
+});
+
+test("the adapter reads the timeline whenever the issue uses workflow state", async (context) => {
+  await context.test(
+    "an incomplete bug report keeps the workflow state applied latest",
+    async () => {
+      const result = await exercise({
+        issue: {
+          number: 42,
+          body: "## Steps to reproduce\n\n_No response_\n\n## Expected behavior\n\nWorks.\n\n## Actual behavior\n\nBroken.",
+          labels: [
+            { name: "bug" },
+            { name: "needs-info" },
+            { name: "needs-triage" },
+          ],
+          state: "open",
+        },
+        issueEvents: [
+          {
+            id: 101,
+            event: "labeled",
+            label: { name: "needs-triage" },
+            actor: { login: "reporter" },
+            created_at: "2026-09-14T16:00:00Z",
+          },
+          {
+            id: 102,
+            event: "labeled",
+            label: { name: "needs-info" },
+            actor: { login: "maintainer" },
+            created_at: "2026-09-14T17:00:00Z",
+          },
+        ],
+      });
+
+      assert.equal(result.code, 1);
+      assert.equal(eventReads(result), 1);
+      assert.deepEqual(permissionLookups(result), []);
+      assert.ok(!requested(result, "POST", "/graphql"));
+      assert.deepEqual(
+        writes(result).map(([method, url]) => [method, url]),
+        [
+          ["DELETE", "/repos/example/repository/issues/42/labels/needs-triage"],
+          ["POST", "/repos/example/repository/issues/42/comments"],
+        ],
+      );
+    },
+  );
+
+  await context.test("a Wayfinder map reads no timeline", async () => {
+    const result = await exercise({
+      issue: {
+        number: 42,
+        body: mapBody,
+        labels: [{ name: "wayfinder:map" }],
+        state: "open",
+      },
+    });
+
+    assert.equal(result.code, 0, result.stderr);
+    assert.equal(eventReads(result), 0);
   });
 });
 

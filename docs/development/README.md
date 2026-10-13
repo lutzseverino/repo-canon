@@ -88,7 +88,8 @@ step: `npm test` already runs it on every pull request.
 - [Pull request metadata validation](pr-metadata-validation.md): trusted check
   behavior, stable identity, permissions, and local verification.
 - [Issue contract validation](issue-contract-validation.md): supported issue
-  shapes, feedback behavior, workflow permissions, and runnable fixtures.
+  shapes, feedback behavior, workflow state, workflow permissions, and runnable
+  fixtures.
 - [Upstream skill compatibility](upstream-compatibility.md): the pinned
   Matt Pocock and HumanLayer snapshots, their review and update steps, the native
   issue formats that

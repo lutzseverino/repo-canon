@@ -20,21 +20,32 @@ GitHub adapter runs only when the workflow executes the file: for an open issue,
 it fetches the complete snapshot before deciding, waiting within a bound for the
 issue-event timeline to record a human readiness trigger, then applies the
 returned writes.
+The decision reads the issue's current state: its labels, body and body
+revision, comments with the feedback record, timeline, and reviewer roles. The
+triggering event never supplies labels, body, or comments. It supplies only
+what current state cannot show: a deleted Agent Brief, the creation review's
+facts (the labels an `opened` issue was created with, and whether a `labeled`
+run's sender is the issue's opener), and a human readiness trigger the
+timeline has not recorded yet. Two runs that read the same state therefore make the same
+decision, and a run on the state its own writes produced changes nothing.
 One timeline helper inside the decision answers every question about whether
 one issue event came after another, and it orders events by one rule: the
-timeline's order decides when GitHub has recorded both events. Timestamps are
-used only for what has no timeline position (the feedback comment, Agent Brief
-comments, and a label change the timeline has not recorded yet) and to
-recognize labels applied at creation. Agent Brief comments are ordered among
-themselves by comment ID: the latest Agent Brief is the Brief comment with the
-highest comment ID, for both the contract lookup and a deleted Brief.
+timeline's order decides when GitHub has recorded both events. A carried label
+whose application the timeline has not recorded follows every recorded event.
+Timestamps are used only for what has no timeline position (the feedback
+comment and Agent Brief comments) and to recognize labels applied at creation.
+Agent Brief comments are ordered among themselves by comment ID: the latest
+Agent Brief is the Brief comment with the highest comment ID, for both the
+contract lookup and a deleted Brief.
 
 The validator recognizes these contracts:
 
 - bug and feature request forms, including optional unanswered fields;
 - specification forms and native specifications;
 - implementation forms and native tickets, with an optional parent;
-- triaged requests whose latest Agent Brief uses the upstream AI preamble;
+- triaged requests whose latest Agent Brief uses the upstream AI preamble, with
+  the `Agent Brief` heading directly after it and any triage notes below the
+  brief;
 - Wayfinder maps, whose initial `Decisions so far` section alone may be empty;
   and
 - Wayfinder children with exactly one planning label and a parent map.
@@ -74,23 +85,31 @@ evidence, while image alt text does not establish a relationship. These retain
 the issue-specific edge behavior.
 
 Triaged bug and feature requests must carry exactly one category (`bug` or
-`enhancement`) and one workflow state. Direct specifications and implementation
+`enhancement`); the validator settles their workflow state, as described under
+[workflow state](#workflow-state). Direct specifications and implementation
 tickets do not need intake categories or an Agent Brief. Wayfinder planning
 labels remain separate from intake labels.
 
 ## Feedback and readiness
 
 The validator maintains one marked feedback comment. Incomplete contracts list
-the structural corrections there. Complete specifications, tickets, and Agent
+the structural corrections there. That notice carries the previous feedback's
+state line forward, so the recorded revision, observed event, and source
+invalidation survive a structural failure. A later structural pass replaces a
+"needs attention" notice, and only that notice, with a "structure corrected"
+notice that carries the same line. Complete specifications, tickets, and Agent
 Briefs publish a `sha256:` revision and wait for authorized review. The same
 comment records the reviewer, revision, and resulting readiness state after an
 accepted review event, so repeated workflow events can verify the association
 without reapproving or duplicating feedback. Awaiting-review state also records
 the latest readiness-label transition it observed. Approved state records the
-exact GitHub issue-event ID that supplied the review.
+exact GitHub issue-event ID that supplied the review. The observed transition
+is the latest readiness transition other than the validator's own removal of
+readiness, so the run after that cleanup records the same one.
 
-An unauthorized reviewer's readiness rejection records its "is not authorized
-to grant readiness" reason. Once a run has recorded that rejection, later runs
+Every readiness rejection records its reason, such as an unauthorized
+reviewer's "is not authorized to grant readiness", and so does a workflow state
+that supersedes a review. Once a run has recorded that rejection, later runs
 retain the reason while the contract revision is unchanged and no new readiness
 transition has occurred. If the opening run rejected from its payload before
 the timeline recorded the opener's creation label, that label appearing later
@@ -98,18 +117,14 @@ does not replace the reason. Timeline recognition of the opener's creation label
 requires its application in the same second the issue was created. The bot's
 removal of readiness as rejection cleanup also retains the reason.
 
-A creation rejection records which label the creation review rejected. A
-`labeled` trigger by the issue's opener for the rejected creation label is
-treated as that replay, retaining the reason even when both creation runs see
-empty history. A later readiness event or a contract edit replaces the
-rejection through the usual review or revision-notice path. A triggering human
-readiness transition replaces it even when the timeline has not recorded that
-transition yet, except for that creation-label replay. Other readiness errors,
-including multiple labels, stale readiness, unverifiable authority, and
-deleted-Agent-Brief invalidation, keep their existing feedback behavior, as do
-plain awaiting-review notices, structural corrections, and superseding workflow
-states. Feedback records from the previous validator without a rejection reason
-keep the plain notice.
+A creation rejection records which label the creation review rejected. That
+label's creation event, the first readiness transition when the rejection
+observed none, does not replace the reason, so it survives both creation runs
+in either order, even when they see empty history. A later readiness event or a
+contract edit replaces the rejection through the usual review or
+revision-notice path; a readiness transition the timeline has not recorded yet
+does not. Feedback records from the previous validator without a rejection
+reason keep the plain notice.
 
 The revision is computed from a versioned record containing the selected
 contract kind, exact contract bytes, source identity, and source edit revision.
@@ -254,36 +269,19 @@ does not revoke it again, and deleting an older superseded Brief does not affect
 the current source.
 The workflow's per-issue concurrency group serializes validator runs, so a run
 holding an older comment snapshot cannot overlap and overwrite a newer approval
-recorded by another run.
+recorded by another run. It keeps `cancel-in-progress: false`. While one run is
+in progress, GitHub keeps only the newest pending run for the issue, so the run
+for the latest event runs last, and because it decides from current state, its
+decision stands. Cancelling runs in progress could stop a run between its label
+writes and its feedback write, and could cancel the `deleted` run, the only run
+that knows about a deleted Agent Brief. A deleted Brief's invalidation is still
+lost when a newer event's run replaces that `deleted` run while it is pending.
 
 The event actor is authorized only when GitHub reports the repository `admin`,
 `maintain`, or `triage` role. The triage role is the explicit authorization for
 a triaging agent. A `write` role, `author_association`, login shape, bot identity,
-heading, preamble, or structural pass supplies no authority. An accepted review
-of a triaged request, specification, or implementation ticket replaces every
-non-readiness workflow state labeled before it in the event timeline or applied
-with the issue at creation, such as a form label, so the issue keeps exactly one
-workflow state. A label applied at creation is one the issue was opened with or
-whose application carries the issue's creation timestamp. A non-readiness state
-labeled after the review in the timeline supersedes the review instead,
-whatever its timestamp: the validator keeps the latest such state as
-the only workflow state, removes readiness and every other state, and publishes
-the revision as awaiting review. A present state whose latest recorded change
-in the event timeline is not its application also supersedes the review, so a
-lagging timeline cannot delete a newly applied state. The exceptions are a label
-the issue was opened with and a label that triggered the run with a payload time
-before the review or at the issue's creation. A triggering label whose recorded
-application precedes the review supersedes it only when the run has no payload
-time or its payload time falls in a strictly later second than the review, as
-when the timeline has not yet recorded a removal and re-application. A triaged
-request that carries two workflow states outside a
-readiness-label event also fails its label check and loses readiness. A
-repeated event on an approved specification or ticket removes a state left from
-before its review. Removing readiness, or
-losing it to invalidation, returns such a contract to `needs-triage` unless
-another non-readiness workflow state remains. An unrecognized issue that loses
-readiness, such as a contract edited until no contract heading remains, returns
-to `needs-triage` the same way.
+heading, preamble, or structural pass supplies no authority.
+
 Wayfinder maps and children reject readiness labels because their native
 eligibility uses open state, assignment, and blockers instead of the readiness
 workflow, and the validator never adds a workflow state to them.
@@ -308,6 +306,45 @@ checkout and Node.js setup actions as the PR metadata workflow.
 GitHub Actions does not expose issue-dependency changes as an `issues` workflow
 activity type, so the validator observes the latest relationships on each
 supported issue or comment event.
+
+### Workflow state
+
+Every run of an issue that uses workflow state works out the one workflow state
+label the issue should carry and removes the others. The number of workflow
+states is never a structural error.
+
+- A carried readiness label that is authorized and bound to the current
+  revision, as an active approval or a valid grant, is the state. Every
+  non-readiness state labeled before its review in the event timeline, or
+  applied with the issue at creation, such as a form label, is removed. A label
+  applied at creation is one the issue was opened with or whose application
+  carries the issue's creation timestamp.
+- A non-readiness state applied after the review supersedes it, whatever its
+  timestamp: the validator keeps the latest such state, removes readiness and
+  every other state, and publishes the revision as awaiting review. A carried
+  state whose application the timeline has not recorded, its latest recorded
+  change being a removal or nothing, counts as later than every recorded
+  event, so a lagging timeline cannot delete a newly applied state. A label the
+  issue was opened with is the exception.
+- Readiness that fails authorization or revision binding is removed and its
+  rejection recorded. A structural failure removes readiness and lists its
+  errors.
+- Among non-readiness states, the one applied latest in the timeline stays.
+  Several whose applications the timeline has not recorded cannot be ordered,
+  so they all stay until a later run reads a timeline that orders them.
+- An issue left with no workflow state gets `needs-triage` once it has carried
+  one, as its labels or timeline show. The run keeps the recorded review state,
+  so an unchanged feedback comment is not rewritten and readiness applied
+  afterwards at the same revision is decided as if `needs-triage` had never been
+  removed. Removing readiness, or losing it to invalidation, therefore returns a
+  contract, or an unrecognized issue such as a contract edited until no contract
+  heading remains, to `needs-triage` unless another non-readiness state remains.
+
+A category-labeled triaged request with `wontfix` is a `wontfix` outcome unless
+a non-readiness state applied later replaces `wontfix`, or the issue also
+carries readiness and an Agent Brief, which orders `wontfix` against the review
+like any other state. Readiness beside a `wontfix` outcome without an Agent
+Brief is a structural error.
 
 ## Running the fixtures
 
@@ -335,6 +372,8 @@ Together they exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, workflow-state replacement,
 superseding states, and return to review for triaged and direct contracts,
+the same decision from any trigger on the same state, every readiness and
+workflow-state row deciding nothing more on the state its own writes produced,
 repeat-safe feedback,
 timeline lag behind a fresh readiness label, including lag that ends at another
 reviewer's application of either readiness label,

@@ -98,7 +98,10 @@ function assertDecision(decision, expected) {
     assert.doesNotMatch(decision.feedback.body, pattern);
 }
 
-function decisionTable(title, rows) {
+// Unless `settles` is false, each snapshot row also decides again on the state
+// its own writes produced, from a comment edit, and that decision writes
+// nothing.
+function decisionTable(title, rows, { settles = true } = {}) {
   test(title, async (context) => {
     for (const row of rows) {
       await context.test(row.name, async () => {
@@ -106,9 +109,89 @@ function decisionTable(title, rows) {
         const decision = decideIssueContract(snapshotFor(row.snapshot));
         assertDecision(decision, row.expected);
         await row.check?.(decision);
+        if (settles) assertSettled(row.snapshot, decision);
       });
     }
   });
+}
+
+// The snapshot after a decision's writes: its labels changed, the bot's label
+// events appended to the timeline, and its feedback written a minute after the
+// latest recorded time, with a comment edit as the next trigger.
+function afterWrites(snapshot, decision, event = commentEdited) {
+  const issueEvents = snapshot.issueEvents ?? [];
+  const at = new Date(
+    Math.max(
+      Date.parse("2026-09-14T18:00:00Z"),
+      ...issueEvents.map(({ created_at: time }) => Date.parse(time) || 0),
+    ) + 60000,
+  )
+    .toISOString()
+    .replace(".000Z", "Z");
+  const lastId = Math.max(
+    0,
+    ...issueEvents.map(({ id }) => Number(id)).filter(Number.isFinite),
+  );
+  const labels = (snapshot.issue.labels ?? [])
+    .map((label) => label.name)
+    .filter((name) => !decision.removeLabels.includes(name))
+    .concat(decision.addLabels);
+  const comments = structuredClone(
+    snapshot.commentPages?.flat() ?? snapshot.comments ?? [],
+  );
+  applyFeedback(comments, decision);
+  const written = comments.find(
+    ({ id }) => decision.feedback && id === (decision.feedback.commentId ?? 99),
+  );
+  if (written) written.updated_at = at;
+  return {
+    ...snapshot,
+    issue: { ...snapshot.issue, labels: labels.map((name) => ({ name })) },
+    comments,
+    commentPages: undefined,
+    issueEvents: [
+      ...issueEvents,
+      ...[
+        ...decision.removeLabels.map((name) => ["unlabeled", name]),
+        ...decision.addLabels.map((name) => ["labeled", name]),
+      ].map(([action, name], index) => ({
+        id: lastId + 1 + index,
+        event: action,
+        label: { name },
+        actor: bot,
+        created_at: at,
+      })),
+    ],
+    event,
+  };
+}
+
+const commentEdited = {
+  action: "edited",
+  issue: { number: 42 },
+  comment: { id: 1, body: "Discussion." },
+  sender: { login: "reporter" },
+};
+
+// The structure table's corrections can depend on the labels its own run
+// removes, so its rows are not required to settle in one run.
+function structureTable(title, rows) {
+  decisionTable(title, rows, { settles: false });
+}
+
+function assertSettled(snapshot, decision) {
+  const again = decideIssueContract(
+    snapshotFor(afterWrites(snapshot, decision)),
+  );
+  assert.deepEqual(
+    {
+      removeLabels: again.removeLabels,
+      addLabels: again.addLabels,
+      feedback: again.feedback,
+    },
+    { removeLabels: [], addLabels: [], feedback: null },
+    again.message,
+  );
 }
 
 // Timeline events beside `readinessReview`: a workflow state the reporter
@@ -141,7 +224,7 @@ function applyFeedback(comments, decision) {
   else comments.push({ id: 99, body: feedback.body, user: bot });
 }
 
-decisionTable("issue structure decides the contract and its corrections", [
+structureTable("issue structure decides the contract and its corrections", [
   {
     name: "a complete public bug report is accepted without changing the issue",
     snapshot: {
@@ -285,7 +368,11 @@ decisionTable("issue structure decides the contract and its corrections", [
       valid: true,
     },
     { name: "HTML text", value: "<p>Add caching.</p>", valid: true },
-    { name: "code example", value: "```js\ncache.enable();\n```", valid: true },
+    {
+      name: "code example",
+      value: "```js\ncache.enable();\n```",
+      valid: true,
+    },
   ].map((example) => ({
     name: `required sections use rendered visible content: ${example.name}`,
     snapshot: {
@@ -306,6 +393,27 @@ decisionTable("issue structure decides the contract and its corrections", [
           message: /What to build/,
         },
   })),
+  {
+    name: "readiness beside wontfix without an Agent Brief is removed with a structural error",
+    snapshot: {
+      issue: {
+        number: 42,
+        body: bugBody,
+        labels: [
+          { name: "bug" },
+          { name: "wontfix" },
+          { name: "ready-for-agent" },
+        ],
+        state: "open",
+      },
+    },
+    expected: {
+      exitCode: 1,
+      remove: ["ready-for-agent"],
+      feedback: "create",
+      message: /Add a reviewed Agent Brief before applying a readiness label/,
+    },
+  },
   {
     name: "a Wayfinder map accepts an empty initial Decisions so far section",
     snapshot: {
@@ -328,7 +436,11 @@ decisionTable("issue structure decides the contract and its corrections", [
         state: "open",
       },
       blockedBy: [{ number: 41, state: "open" }],
-      parent: { number: 7, state: "open", labels: [{ name: "wayfinder:map" }] },
+      parent: {
+        number: 7,
+        state: "open",
+        labels: [{ name: "wayfinder:map" }],
+      },
     },
     expected: { exitCode: 0, message: /valid Wayfinder child/i },
   },
@@ -424,6 +536,64 @@ decisionTable("issue structure decides the contract and its corrections", [
       exitCode: 1,
       feedback: "create",
       message: /Start the Agent Brief comment/,
+      notMessage: /directly after the triage disclaimer/,
+    },
+  },
+  ...[
+    [
+      "a notes section",
+      completeAgentBrief.replace(
+        "\n\n## Agent Brief",
+        "\n\n## Triage\n\nVerified on main.\n\n## Agent Brief",
+      ),
+    ],
+    [
+      "notes inside the disclaimer's quote",
+      completeAgentBrief.replace(
+        "\n\n## Agent Brief",
+        "\n>\n> Verified on main.\n\n## Agent Brief",
+      ),
+    ],
+  ].map(([name, body]) => ({
+    name: `an Agent Brief comment with ${name} between the disclaimer and the brief says to move the notes below the brief`,
+    snapshot: {
+      issue: {
+        number: 42,
+        body: featureBody,
+        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        state: "open",
+      },
+      comments: [{ id: 12, user: { login: "maintainer" }, body }],
+    },
+    expected: {
+      exitCode: 1,
+      feedback: "create",
+      message:
+        /Put the `## Agent Brief` heading directly after the triage disclaimer and move other notes below the brief\./,
+      notMessage: /Start the Agent Brief comment/,
+    },
+  })),
+  {
+    name: "an Agent Brief comment accepts triage notes below the brief",
+    snapshot: {
+      issue: {
+        number: 42,
+        body: featureBody,
+        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        state: "open",
+      },
+      comments: [
+        {
+          id: 12,
+          user: { login: "maintainer" },
+          body: `${completeAgentBrief}\n\n## Triage notes\n\n- Verified on main.`,
+        },
+      ],
+    },
+    expected: {
+      exitCode: 0,
+      feedback: "create",
+      message: /valid triaged Agent Brief; awaiting authorized review/i,
     },
   },
   {
@@ -759,7 +929,11 @@ decisionTable("issue structure decides the contract and its corrections", [
             state: "open",
           },
           comments: [
-            { id: 1, body: completeAgentBrief, user: { login: "maintainer" } },
+            {
+              id: 1,
+              body: completeAgentBrief,
+              user: { login: "maintainer" },
+            },
           ],
           event: {
             action: "created",
@@ -1733,7 +1907,13 @@ decisionTable(
         ...supersessionSnapshot({
           labels: ["needs-triage", "ready-for-agent"],
           created_at: "2026-09-14T17:00:00Z",
-          issueEvents: [readinessReview],
+          issueEvents: [
+            readinessReview,
+            {
+              ...stateLabeled(102, "needs-triage"),
+              created_at: "2026-09-14T17:00:00Z",
+            },
+          ],
           event: labeledBy("maintainer", "needs-triage", {
             body: ticketBody,
             updated_at: "2026-09-14T17:00:00Z",
@@ -1867,19 +2047,9 @@ decisionTable(
           });
           assertDecision(second, {
             exitCode: 0,
-            feedback: 99,
             message: /awaiting authorized review/i,
-            feedbackBody: /awaiting review/i,
           });
-          if (opener.permission?.error) {
-            assert.doesNotMatch(comments[0].body, opener.rejection);
-            assert.doesNotMatch(
-              comments[0].body,
-              /last readiness attempt was rejected|rejectionReason/,
-            );
-          } else {
-            assert.match(comments[0].body, opener.rejection);
-          }
+          assert.match(comments[0].body, opener.rejection);
           assert.deepEqual(labels, ["needs-triage"]);
           assert.equal(comments.length, 1);
         },
@@ -2314,8 +2484,7 @@ decisionTable(
         });
         assert.equal(readinessTriggerUnrecorded(snapshotFor(opened)), false);
         const kept = decideIssueContract(snapshotFor(opened));
-        assertDecision(kept, { exitCode: 0, feedback: 99 });
-        applyFeedback(comments, kept);
+        assertDecision(kept, { exitCode: 0 });
         assert.match(comments[0].body, notAuthorized);
         assert.deepEqual(state.labels, ["needs-triage"]);
       },
@@ -2759,7 +2928,7 @@ decisionTable(
   "a recorded readiness rejection lasts until another review or contract change",
   [
     {
-      name: "a multiple-labels rejection is replaced by the next run's plain revision notice, unchanged by #157",
+      name: "a multiple-labels rejection survives the next run on the state its cleanup left",
       run: () => {
         const comments = [];
         const state = {
@@ -2785,14 +2954,16 @@ decisionTable(
         snapshot.issue.labels = state.labels.map((name) => ({ name }));
         snapshot.event = { action: "reopened", issue: { number: 42 } };
         const next = decideIssueContract(snapshotFor(snapshot));
-        assertDecision(next, { exitCode: 0, feedback: 99 });
-        assert.deepEqual(recordedState(next.feedback.body), {
+        assertDecision(next, { exitCode: 0 });
+        assert.deepEqual(recordedState(comments[0].body), {
           status: "awaiting-review",
           revision: bodyRevision(snapshot.issue),
           label: null,
           reviewer: null,
-          observedEventId: "203",
+          observedEventId: "102",
           sourceInvalidation: null,
+          rejectionReason:
+            "Apply only one readiness label to an implementation contract.",
         });
       },
     },
@@ -2820,13 +2991,10 @@ decisionTable(
       name: "unrelated and repeated runs retain the rejection after bot cleanup",
       run: () => {
         const snapshot = rejectedCreationSnapshot();
-        const cleanup = decideIssueContract(snapshotFor(snapshot));
-        assertDecision(cleanup, {
+        assertDecision(decideIssueContract(snapshotFor(snapshot)), {
           exitCode: 0,
-          feedback: 99,
-          feedbackBody: notAuthorized,
         });
-        applyFeedback(snapshot.comments, cleanup);
+        assert.match(snapshot.comments[0].body, notAuthorized);
         const retained = snapshot.comments[0].body;
         for (const event of [
           {
@@ -2931,18 +3099,6 @@ decisionTable(
         },
       },
       {
-        name: "a different readiness label triggered by the opener",
-        change: (snapshot) => {
-          snapshot.event = labeledBy("reporter", "ready-for-human");
-        },
-      },
-      {
-        name: "a readiness removal triggered by the opener",
-        change: (snapshot) => {
-          snapshot.event = { ...labeledBy("reporter"), action: "unlabeled" };
-        },
-      },
-      {
         name: "a later recorded readiness application by the opener",
         change: (snapshot) => {
           snapshot.issueEvents.push(
@@ -2953,17 +3109,6 @@ decisionTable(
             }),
           );
           snapshot.event = labeledBy("reporter");
-        },
-      },
-      {
-        name: "a maintainer's unlabeled event absent from the timeline",
-        change: (snapshot) => {
-          snapshot.event = {
-            ...labeledBy("maintainer", "ready-for-agent", {
-              updated_at: "2026-09-14T17:01:00Z",
-            }),
-            action: "unlabeled",
-          };
         },
       },
     ].map(({ name, change }) => ({
@@ -2981,6 +3126,28 @@ decisionTable(
           decision.feedback.body,
           /not authorized|last readiness attempt was rejected|rejectionReason/,
         );
+      },
+    })),
+    ...[
+      ["a different readiness label", labeledBy("reporter", "ready-for-human")],
+      [
+        "a readiness removal",
+        { ...labeledBy("reporter"), action: "unlabeled" },
+      ],
+      [
+        "a maintainer's readiness removal",
+        { ...labeledBy("maintainer"), action: "unlabeled" },
+      ],
+    ].map(([name, event]) => ({
+      name: `${name} the timeline has not recorded keeps the rejection, as any run on that state does`,
+      run: () => {
+        const snapshot = rejectedCreationSnapshot();
+        const unrelated = decideIssueContract(snapshotFor(snapshot));
+        snapshot.event = event;
+        const triggered = decideIssueContract(snapshotFor(snapshot));
+        assert.deepEqual(triggered, unrelated);
+        assertDecision(triggered, { exitCode: 0 });
+        assert.match(snapshot.comments[0].body, notAuthorized);
       },
     })),
   ],
@@ -3263,11 +3430,10 @@ decisionTable("workflow states are ordered against the review", [
           created_at: "2026-09-14T17:00:00Z",
         },
       ],
-      "2026-09-14T17:00:00Z",
       true,
     ],
     [
-      "recorded before the review with a delayed payload in the review's second",
+      "recorded before the review",
       [
         {
           id: 100,
@@ -3277,61 +3443,49 @@ decisionTable("workflow states are ordered against the review", [
           created_at: "2026-09-14T16:59:59Z",
         },
       ],
-      "2026-09-14T17:00:00Z",
       false,
     ],
+  ].flatMap(([name, stateEvents, superseded]) =>
     [
-      "re-applied after an unrecorded removal with a strictly later payload",
       [
-        {
-          id: 100,
-          event: "labeled",
-          label: { name: "needs-info" },
-          actor: { login: "maintainer" },
-          created_at: "2026-09-14T16:00:00Z",
-        },
+        "its own run with a later payload time",
+        labeledBy("maintainer", "needs-info", {
+          body: ticketBody,
+          updated_at: "2026-09-14T17:00:04Z",
+        }),
       ],
-      "2026-09-14T17:00:04Z",
-      true,
-    ],
-    [
-      "recorded before the review without a payload time",
       [
-        {
-          id: 100,
-          event: "labeled",
-          label: { name: "needs-info" },
-          actor: { login: "maintainer" },
-          created_at: "2026-09-14T16:59:59Z",
-        },
+        "its own run without a payload time",
+        labeledBy("maintainer", "needs-info", { body: ticketBody }),
       ],
-      undefined,
-      true,
-    ],
-  ].map(([name, stateEvents, payloadAt, superseded]) => ({
-    name: `a triggering workflow state is ordered by its latest recorded change: ${name}`,
-    snapshot: supersessionSnapshot({
-      labels: ["ready-for-agent", "needs-info"],
-      created_at: "2026-09-14T15:00:00Z",
-      issueEvents: [...stateEvents, readinessReview],
-      event: labeledBy("maintainer", "needs-info", {
-        body: ticketBody,
-        updated_at: payloadAt,
+      ["another event's run", { action: "reopened", issue: { number: 42 } }],
+    ].map(([run, event]) => ({
+      name: `a carried workflow state is ordered by its latest recorded change: ${name}, in ${run}`,
+      snapshot: supersessionSnapshot({
+        labels: ["ready-for-agent", "needs-info"],
+        created_at: "2026-09-14T15:00:00Z",
+        issueEvents: [...stateEvents, readinessReview],
+        event,
       }),
-    }),
-    expected: superseded
-      ? supersededBy("needs-info")
-      : {
-          exitCode: 0,
-          remove: ["needs-info"],
-          feedback: null,
-          message: /valid implementation ticket with ready-for-agent bound/i,
-        },
-  })),
+      expected: superseded
+        ? supersededBy("needs-info")
+        : {
+            exitCode: 0,
+            remove: ["needs-info"],
+            feedback: null,
+            message: /valid implementation ticket with ready-for-agent bound/i,
+          },
+    })),
+  ),
   {
     name: "removing readiness returns a direct contract to review",
     snapshot: (() => {
-      const issue = { number: 42, body: ticketBody, labels: [], state: "open" };
+      const issue = {
+        number: 42,
+        body: ticketBody,
+        labels: [],
+        state: "open",
+      };
       return {
         issue,
         comments: [approvedTicketFeedback(issue)],
@@ -3426,6 +3580,363 @@ decisionTable("workflow states are ordered against the review", [
     },
   },
 ]);
+
+// A triaged bug whose Agent Brief awaits review at its published revision, as
+// on #353: `bug` and `needs-triage` applied at creation, and `labels` and
+// `events` since. `maintainer` holds the admin role and `writer` the write
+// role.
+const triagedBrief = {
+  id: 12,
+  node_id: "COMMENT_12",
+  body: completeAgentBrief.replace(
+    "**Category:** enhancement",
+    "**Category:** bug",
+  ),
+  created_at: "2026-10-13T09:26:55Z",
+  updated_at: "2026-10-13T09:26:55Z",
+  user: { login: "maintainer" },
+};
+const briefNotice = {
+  id: 13,
+  body: feedbackState({
+    status: "awaiting-review",
+    revision: briefRevision(triagedBrief),
+    kind: "triaged Agent Brief",
+  }),
+  user: bot,
+  updated_at: "2026-10-13T09:27:05Z",
+};
+const triagedAt = "2026-10-13T05:55:15Z";
+const triagedLabel = (id, name, createdAt, actor = "maintainer") => ({
+  id,
+  event: "labeled",
+  label: { name },
+  actor: { login: actor },
+  created_at: createdAt,
+});
+const triagedUnlabel = (id, name, createdAt, actor = "maintainer") => ({
+  ...triagedLabel(id, name, createdAt, actor),
+  event: "unlabeled",
+});
+
+function triagedSnapshot({
+  labels,
+  events = [],
+  event = commentEdited,
+  brief = triagedBrief,
+}) {
+  return {
+    issue: {
+      number: 42,
+      body: bugBody,
+      labels: labels.map((name) => ({ name })),
+      state: "open",
+      created_at: triagedAt,
+    },
+    comments: [brief, briefNotice],
+    issueEvents: [
+      triagedLabel(1, "bug", triagedAt),
+      triagedLabel(2, "needs-triage", triagedAt),
+      ...events,
+    ],
+    permissions: { maintainer: role("admin"), writer: role("write") },
+    event,
+  };
+}
+
+const modelLabel = "model:claude-opus-5-5";
+const triggers = (applier = "maintainer") => [
+  ["a model label", labeledBy("maintainer", modelLabel)],
+  ["the readiness label", labeledBy(applier)],
+  ["a comment edit", commentEdited],
+];
+
+// The 10:00 round: the model label, then readiness after the notice.
+const firstRound = (event) =>
+  triagedSnapshot({
+    labels: ["bug", "needs-triage", modelLabel, "ready-for-agent"],
+    events: [
+      triagedLabel(3, modelLabel, "2026-10-13T10:00:48Z"),
+      triagedLabel(4, "ready-for-agent", "2026-10-13T10:00:49Z"),
+    ],
+    event,
+  });
+
+// The 10:02 round with the notice intact: readiness applied and
+// `needs-triage` removed in one edit.
+const secondRound = (event) =>
+  triagedSnapshot({
+    labels: ["bug", "ready-for-agent"],
+    events: [
+      triagedLabel(3, "ready-for-agent", "2026-10-13T10:02:27Z"),
+      triagedUnlabel(4, "needs-triage", "2026-10-13T10:02:28Z"),
+    ],
+    event,
+  });
+
+const approvedAtBrief = {
+  exitCode: 0,
+  feedback: 13,
+  message: /valid triaged Agent Brief with ready-for-agent bound/i,
+};
+const assertBindsBrief = (decision, reviewEventId) =>
+  assert.deepEqual(recordedState(decision.feedback.body), {
+    status: "approved",
+    revision: briefRevision(triagedBrief),
+    label: "ready-for-agent",
+    reviewer: "maintainer",
+    reviewEventId,
+    sourceInvalidation: null,
+  });
+
+decisionTable(
+  "every run settles the workflow state from the issue's current state",
+  [
+    ...triggers().map(([name, event]) => ({
+      name: `the 10:00 round approves readiness and removes needs-triage in the run for ${name}`,
+      snapshot: firstRound(event),
+      expected: { ...approvedAtBrief, remove: ["needs-triage"] },
+      check: (decision) => assertBindsBrief(decision, "4"),
+    })),
+    {
+      name: "the 10:00 round decides the same in every run, and no run writes after the first",
+      run: () => {
+        const decisions = triggers().map(([, event]) =>
+          decideIssueContract(snapshotFor(firstRound(event))),
+        );
+        for (const decision of decisions)
+          assert.deepEqual(decision, decisions[0]);
+        for (const [, event] of triggers())
+          assertDecision(
+            decideIssueContract(
+              snapshotFor(
+                afterWrites(firstRound(commentEdited), decisions[0], event),
+              ),
+            ),
+            { exitCode: 0 },
+          );
+      },
+    },
+    ...[
+      ["readiness", labeledBy("maintainer")],
+      [
+        "needs-triage",
+        { ...labeledBy("maintainer", "needs-triage"), action: "unlabeled" },
+      ],
+    ].map(([first, firstEvent]) => ({
+      name: `the 10:02 round approves readiness whichever run goes first: ${first}`,
+      run: () => {
+        const decision = decideIssueContract(
+          snapshotFor(secondRound(firstEvent)),
+        );
+        assertDecision(decision, approvedAtBrief);
+        assertBindsBrief(decision, "3");
+        const other =
+          firstEvent.action === "labeled"
+            ? {
+                ...labeledBy("maintainer", "needs-triage"),
+                action: "unlabeled",
+              }
+            : labeledBy("maintainer");
+        assertDecision(
+          decideIssueContract(
+            snapshotFor(afterWrites(secondRound(firstEvent), decision, other)),
+          ),
+          { exitCode: 0 },
+        );
+      },
+    })),
+    {
+      name: "removing needs-triage while the brief awaits review restores it and keeps the notice, and readiness afterwards is approved",
+      run: () => {
+        const removed = triagedSnapshot({
+          labels: ["bug"],
+          events: [triagedUnlabel(3, "needs-triage", "2026-10-13T10:02:27Z")],
+          event: {
+            ...labeledBy("maintainer", "needs-triage"),
+            action: "unlabeled",
+          },
+        });
+        const restore = decideIssueContract(snapshotFor(removed));
+        assertDecision(restore, {
+          exitCode: 0,
+          add: ["needs-triage"],
+          message: /awaiting authorized review/i,
+        });
+        const restored = afterWrites(removed, restore);
+        const ready = {
+          ...restored,
+          issue: {
+            ...restored.issue,
+            labels: [...restored.issue.labels, { name: "ready-for-agent" }],
+          },
+          issueEvents: [
+            ...restored.issueEvents,
+            triagedLabel(5, "ready-for-agent", "2026-10-13T10:05:00Z"),
+          ],
+          event: labeledBy("maintainer"),
+        };
+        const approval = decideIssueContract(snapshotFor(ready));
+        assertDecision(approval, {
+          ...approvedAtBrief,
+          remove: ["needs-triage"],
+        });
+        assertBindsBrief(approval, "5");
+      },
+    },
+    ...[
+      [
+        "needs-info applied after needs-triage",
+        [triagedLabel(3, "needs-info", "2026-10-13T10:00:00Z")],
+        "needs-triage",
+      ],
+      [
+        "needs-triage re-applied after needs-info",
+        [
+          triagedLabel(3, "needs-info", "2026-10-13T10:00:00Z"),
+          triagedUnlabel(4, "needs-triage", "2026-10-13T10:00:01Z"),
+          triagedLabel(5, "needs-triage", "2026-10-13T10:00:02Z"),
+        ],
+        "needs-info",
+      ],
+    ].map(([name, events, removed]) => ({
+      name: `of two non-readiness states, the one applied later stays: ${name}`,
+      snapshot: triagedSnapshot({
+        labels: ["bug", "needs-info", "needs-triage"],
+        events,
+      }),
+      expected: {
+        exitCode: 0,
+        remove: [removed],
+        message: /awaiting authorized review/i,
+      },
+    })),
+    {
+      name: "two states whose applications the timeline has not recorded both stay until a run can order them",
+      snapshot: triagedSnapshot({
+        labels: ["bug", "needs-info", "wontfix"],
+        events: [triagedUnlabel(3, "needs-triage", "2026-10-13T10:00:00Z")],
+      }),
+      expected: { exitCode: 0, message: /valid triaged wontfix request/i },
+    },
+    {
+      name: "two unrecorded states applied after an approved review both supersede it",
+      snapshot: supersessionSnapshot({
+        labels: ["ready-for-agent", "needs-info", "wontfix"],
+        issueEvents: [readinessReview],
+        event: commentEdited,
+      }),
+      expected: {
+        ...supersededBy("needs-info"),
+        message: /`needs-info` and `wontfix` superseded ready-for-agent/,
+        feedbackBody:
+          /`needs-info` and `wontfix` were applied after the review and supersede its readiness/,
+      },
+    },
+    ...[
+      ["needs-info", "wontfix", /valid triaged wontfix request/i],
+      ["wontfix", "needs-info", /valid triaged Agent Brief; awaiting/i],
+    ].map(([earlier, later, message]) => ({
+      name: `wontfix beside needs-info is decided by the state applied later: ${later}`,
+      snapshot: triagedSnapshot({
+        labels: ["bug", "needs-info", "wontfix"],
+        events: [
+          triagedUnlabel(3, "needs-triage", "2026-10-13T10:00:00Z"),
+          triagedLabel(4, earlier, "2026-10-13T10:00:01Z"),
+          triagedLabel(5, later, "2026-10-13T10:00:02Z"),
+        ],
+      }),
+      expected: { exitCode: 0, remove: [earlier], message },
+    })),
+    ...[
+      [
+        "unauthorized readiness",
+        "writer",
+        triagedBrief,
+        "2026-10-13T10:05:00Z",
+        /@writer is not authorized to grant readiness/,
+      ],
+      [
+        "readiness applied before the revision notice",
+        "maintainer",
+        triagedBrief,
+        "2026-10-13T09:27:00Z",
+        /Wait for the validator to publish the exact contract revision/,
+      ],
+      [
+        "readiness on an edited contract",
+        "maintainer",
+        { ...triagedBrief, updated_at: "2026-10-13T10:04:00Z" },
+        "2026-10-13T10:05:00Z",
+        /Wait for the validator to publish the exact contract revision/,
+      ],
+    ].flatMap(([name, applier, brief, appliedAt, message]) =>
+      triggers(applier).map(([trigger, event]) => ({
+        name: `${name} is removed and needs-triage restored in the run for ${trigger}`,
+        snapshot: triagedSnapshot({
+          labels: ["bug", "ready-for-agent"],
+          brief,
+          events: [
+            triagedUnlabel(3, "needs-triage", "2026-10-13T09:20:00Z"),
+            triagedLabel(4, "ready-for-agent", appliedAt, applier),
+          ],
+          event,
+        }),
+        expected: {
+          exitCode: 1,
+          remove: ["ready-for-agent"],
+          add: ["needs-triage"],
+          feedback: 13,
+          message,
+        },
+      })),
+    ),
+    {
+      name: "a structural failure keeps the recorded review, which a correction and readiness then use",
+      run: () => {
+        const failing = triagedSnapshot({
+          labels: ["bug", "enhancement", "needs-triage"],
+          events: [triagedLabel(3, "enhancement", "2026-10-13T10:00:00Z")],
+        });
+        const failure = decideIssueContract(snapshotFor(failing));
+        assertDecision(failure, {
+          exitCode: 1,
+          feedback: 13,
+          message: /Apply exactly one category label/,
+          feedbackBody: /needs attention/,
+        });
+        assert.deepEqual(
+          recordedState(failure.feedback.body),
+          recordedState(briefNotice.body),
+        );
+        const failed = afterWrites(failing, failure);
+        const corrected = {
+          ...failed,
+          issue: {
+            ...failed.issue,
+            labels: [
+              { name: "bug" },
+              { name: "needs-triage" },
+              { name: "ready-for-agent" },
+            ],
+          },
+          issueEvents: [
+            ...failed.issueEvents,
+            triagedUnlabel(4, "enhancement", "2026-10-13T19:00:00Z"),
+            triagedLabel(5, "ready-for-agent", "2026-10-13T19:00:01Z"),
+          ],
+          event: labeledBy("maintainer"),
+        };
+        const approval = decideIssueContract(snapshotFor(corrected));
+        assertDecision(approval, {
+          ...approvedAtBrief,
+          remove: ["needs-triage"],
+        });
+        assertBindsBrief(approval, "5");
+      },
+    },
+  ],
+);
 
 decisionTable("edits, replacements, and stale events invalidate readiness", [
   {
@@ -3667,7 +4178,11 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
         ],
         permissions: { triager: role("triage") },
         issueEvents: [reviewBy("triager")],
-        event: { action: "edited", issue: { number: 42 }, comment: { id: 12 } },
+        event: {
+          action: "edited",
+          issue: { number: 42 },
+          comment: { id: 12 },
+        },
       };
     })(),
     expected: {
