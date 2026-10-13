@@ -67,18 +67,13 @@ visible content. For category-labeled triaged requests, the latest Agent Brief
 is the contract and contract-like headings in the intake body remain context.
 Native specifications and implementation tickets remain authoritative when the
 issue does not carry a triage category. Wayfinder labels select the Wayfinder
-contract before either form. The rule that identifies a contract's kind from
-these labels and the body's headings lives in
-`operations/lib/issue-contract-kind.mjs`, which the factory also uses to
-recognize a specification. A category-labeled `wontfix` outcome does not
-require an Agent Brief.
+contract before either form. The validator alone identifies a contract's kind
+from these labels and the body's headings; the factory reads no issue body. A
+category-labeled `wontfix` outcome does not require an Agent Brief.
 Native parent and blocking relationships are read from GitHub. Explicit issue
 links in rendered `Parent` and `Blocked by` section content are used
 when native relationships are absent or the native dependency endpoint is
-unavailable. The `Parent` reference rule lives in
-`operations/lib/issue-contract-kind.mjs` too, and the factory uses it to count
-a published ticket as its parent's child before it is linked. An open blocker
-does not make a complete contract invalid.
+unavailable. An open blocker does not make a complete contract invalid.
 
 Rendered visibility, text, links, heading provenance, and outermost section
 regions come from the shared pure interpreted-document runtime installed at

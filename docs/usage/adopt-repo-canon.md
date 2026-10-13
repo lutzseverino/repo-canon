@@ -1,7 +1,19 @@
 # Adopt Repo Canon
 
-Repo Canon is designed to supply one `complete` Repository Standards v2 profile.
-Before using the commands below, read the notes of the
+Repo Canon supplies two Repository Standards v2 profiles:
+
+- `standard`: everything Repo Canon installs except the factory's repository
+  files. Select it for every repository that no factory serves.
+- `factory`: the standard profile plus the files a repository that a factory
+  serves carries: its factory configuration, `.factory/config.json`; its
+  toolchain image, `.factory/Dockerfile`; and the pull request workflow that
+  builds that image. Select it only for a repository that a host-installed
+  factory serves, as
+  [the factory's usage documentation](../../factory/docs/usage/README.md)
+  describes.
+
+The commands below select `standard`; for a repository a factory serves,
+replace it with `factory`. Before using the commands below, read the notes of the
 [published release](https://github.com/lutzseverino/repo-canon/releases) you
 select. Select only an owner-published stable SemVer tag.
 
@@ -67,7 +79,7 @@ source_tag=v0.10.1
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
   --standards-version "$source_tag" \
-  --profile complete \
+  --profile standard \
   --project "$project_root" \
   --json > /tmp/repo-canon-initial-inspection.json
 ```
@@ -90,7 +102,7 @@ Request the complete inspection with the proposal:
 "$repo_standards" inspect \
   --source https://github.com/lutzseverino/repo-canon \
   --standards-version "$source_tag" \
-  --profile complete \
+  --profile standard \
   --scope /path/to/reviewed-scope.json \
   --project "$project_root" \
   --json > /tmp/repo-canon-complete-inspection.json
@@ -112,7 +124,7 @@ inspection_identity=sha256:REPLACE_WITH_REVIEWED_IDENTITY
 "$repo_standards" start \
   --source https://github.com/lutzseverino/repo-canon \
   --standards-version "$source_tag" \
-  --profile complete \
+  --profile standard \
   --scope /path/to/reviewed-scope.json \
   --identity "$inspection_identity" \
   --project "$project_root" \

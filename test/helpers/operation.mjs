@@ -79,7 +79,7 @@ export function invokeCheck(script, root, overrides = {}) {
       version: "v0.0.0-test",
       commit: "0000000000000000000000000000000000000000",
     },
-    profile: "complete",
+    profile: "standard",
     declarations: [],
     overwriteAllowed: false,
     allowedTargets: { paths: ["README.md"], directories: [] },

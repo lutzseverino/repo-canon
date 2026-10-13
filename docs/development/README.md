@@ -44,9 +44,6 @@ invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
 `npm run test:issue-contracts` for the focused issue-contract fixtures and
 `npm run test:planning-skill-fixtures` for the planning-skill harness. Run
-`npm run test:factory` for the factory's decision core, driven by snapshots,
-and its adapter, driven by a stateful GitHub CLI fake and a fake Sandcastle
-launcher. Run
 `node --test test/babysit-wait.test.mjs` for the `babysit` wait script's
 decision, driven by reviewer data fixtures (including real summary comments),
 and its silence, driven by
@@ -63,17 +60,20 @@ disposable local repositories used for the two productivity skill exercises.
 the harness that exercises the skills.
 
 This repository takes the same path every adopter takes, so the suite also runs
-the shipped Repository README, Project README, documentation, and sandbox image
-checks against this repository's own root through the operation request helper, with the documentation tree, the root
-[glossary map](../../GLOSSARY-MAP.md), both context glossaries, the factory
-documentation tree, and the [authoring notes](../../authoring-notes.md) as its
-documentation scope. The Project README scope is `factory/README.md`, and
-`standards.yaml` supplies the other active file declarations. The
-same fixture fails if any tracked file reaches the CLI's 8 MiB per-file
-observation limit, which would make the repository uninspectable before any
-report. Run it alone with
-`node --test test/repository-conformance.test.mjs`. It needs no separate CI
-step: `npm test` already runs it on every pull request.
+the shipped Repository README, Project README, and documentation checks against
+this repository's own root through the operation request helper, with the
+documentation tree, the root [glossary map](../../GLOSSARY-MAP.md), both context
+glossaries, the factory documentation tree, and the
+[authoring notes](../../authoring-notes.md) as its documentation scope. The
+Project README scope is `factory/README.md`, and `standards.yaml` supplies the
+other active file declarations. The same fixture asserts that only the
+`factory` profile declares the `.factory/` files and the sandbox image
+workflow, that `standards.yaml` declares no pull request reviewer file, and
+that the factory package's own parser accepts `.factory/config.json`. It also
+fails if any tracked file reaches the CLI's 8 MiB per-file observation limit,
+which would make the repository uninspectable before any report. Run it alone
+with `node --test test/repository-conformance.test.mjs`. It needs no separate
+CI step: `npm test` already runs it on every pull request.
 
 ## Documents
 
@@ -101,18 +101,17 @@ step: `npm test` already runs it on every pull request.
   upstream setup.
 - [Repository README check](repository-readme-check.md): operation protocol,
   outcomes, prerequisites, and focused fixture command.
-- [Sandbox image check](sandbox-image-check.md): the base image, operation
-  protocol, outcomes, and focused fixture command.
-- [Sandbox image build workflow](sandbox-image-workflow.md): the shipped
-  pull request job, change detection, factory build contract, permissions,
+- [Sandbox image build workflow](sandbox-image-workflow.md): the factory
+  profile's pull request job, change detection, toolchain build, permissions,
   and executable fixtures.
 - [Documentation and Project README checks](documentation-check.md): concrete
   scope, structural outcomes, prerequisites, and focused fixture commands.
 - [Documentation scope drafter](documentation-scope-drafter.md): drafting the
   documentation scope from a repository tree, its rules and questions, its
   source of other declarations' targets, and its fixtures.
-- [Standards source profile](source-profile.md): complete profile ownership,
-  declarations, executable prerequisites, and the validation boundary.
+- [Standards source profile](source-profile.md): the standard and factory
+  profiles' ownership, declarations, executable prerequisites, and the
+  validation boundary.
 - [Skill exercises](skill-exercises.md): the procedure, fixture builders,
   common harness, and scenarios for exercising the pinned skills and the
   `babysit` skill.

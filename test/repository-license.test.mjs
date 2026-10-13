@@ -11,7 +11,7 @@ test("the repository license has its own contextual file declaration", () => {
     /^ {4}repository-license:\n((?: {6}.+\n|\n)+)/m,
   )?.[1];
 
-  assert.ok(declaration, "the complete profile declares repository-license");
+  assert.ok(declaration, "standards.yaml declares repository-license");
   assert.deepEqual(
     declaration
       .trim()

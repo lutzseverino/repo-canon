@@ -32,10 +32,13 @@ const drafterPath = "discovery/draft-documentation-scope.mjs";
 const drafter = join(sourceRoot, drafterPath);
 const check = join(sourceRoot, "operations/check-documentation.mjs");
 
+// Drafts from this source with its standard profile selected, since its
+// manifest declares two profiles.
 function draft(root, args = [], script = drafter) {
+  const selection = script === drafter ? ["--profile", "standard"] : [];
   const child = spawnSync(
     process.execPath,
-    [script, "--project", root, ...args],
+    [script, "--project", root, ...selection, ...args],
     { encoding: "utf8" },
   );
   return {
@@ -925,63 +928,69 @@ function retainInputs(t, root, manifest) {
   return join(inputs, "source", drafterPath);
 }
 
-// The manifest Repository Standards 4.0.0 retains for this source's `complete`
-// profile: the source's metadata, empty defaults, and the profile's resolved
-// declarations under the profile. The profile selects every default
-// declaration unchanged, so they resolve to the defaults.
-function resolvedManifest() {
+// The manifest Repository Standards 4.0.0 retains for one of this source's
+// profiles: the source's metadata, empty defaults, and the profile's resolved
+// declarations under the profile. Each profile keeps every default
+// declaration and only adds its own.
+function resolvedManifest(profile) {
   const manifest = readFileSync(join(sourceRoot, "standards.yaml"), "utf8");
   const parts =
-    /^(?<head>[\s\S]*?)^defaults:\n {2}declarations:\n(?<declarations>[\s\S]*?)^profiles:\n {2}complete:\n {4}description: (?<description>.*)\n {4}declarations: \{\}\n$/m.exec(
+    /^(?<head>[\s\S]*?)^defaults:\n {2}declarations:\n(?<declarations>[\s\S]*?)^profiles:\n(?<profiles>[\s\S]*)$/m.exec(
       manifest,
     );
-  assert.ok(
-    parts,
-    "the source's one profile selects every default declaration unchanged",
-  );
-  const { head, declarations, description } = parts.groups;
+  assert.ok(parts, "the source declares defaults and then its profiles");
+  const selected = new RegExp(
+    `^ {2}${profile}:\\n {4}description: (?<description>.*)\\n {4}declarations:(?: \\{\\}\\n|\\n(?<added>(?: {6}.*\\n|\\n)*))`,
+    "m",
+  ).exec(parts.groups.profiles);
+  assert.ok(selected, `the source declares the ${profile} profile`);
+  const { head, declarations } = parts.groups;
+  const { description, added = "" } = selected.groups;
+  assert.doesNotMatch(added, /exclude/, "a profile only adds declarations");
   const nested = declarations.trimEnd().replace(/^(?=.)/gm, "  ");
-  return `${head}defaults:\n  declarations: {}\nprofiles:\n  complete:\n    description: ${description}\n    declarations:\n${nested}\n`;
+  return `${head}defaults:\n  declarations: {}\nprofiles:\n  ${profile}:\n    description: ${description}\n    declarations:\n${nested}\n${added}`;
 }
 
-test("the documented source and retained-copy commands draft the same scope without changing the repository", (t) => {
-  const project = fixture(conforming);
-  t.after(project.close);
-  retainInputs(t, project.root, resolvedManifest());
-  const before = snapshot(project.root);
+for (const profile of ["standard", "factory"]) {
+  test(`the documented source and retained-copy commands draft the same ${profile} scope without changing the repository`, (t) => {
+    const project = fixture(conforming);
+    t.after(project.close);
+    retainInputs(t, project.root, resolvedManifest(profile));
+    const before = snapshot(project.root);
 
-  const fromSource = spawnSync(
-    process.execPath,
-    [drafterPath, "--project", project.root],
-    {
-      cwd: sourceRoot,
-      encoding: "utf8",
-    },
-  );
-  assert.equal(fromSource.status, 0, fromSource.stderr);
-  assert.equal(fromSource.stderr, "");
-  assert.deepEqual(snapshot(project.root), before);
+    const fromSource = spawnSync(
+      process.execPath,
+      [drafterPath, "--project", project.root, "--profile", profile],
+      {
+        cwd: sourceRoot,
+        encoding: "utf8",
+      },
+    );
+    assert.equal(fromSource.status, 0, fromSource.stderr);
+    assert.equal(fromSource.stderr, "");
+    assert.deepEqual(snapshot(project.root), before);
 
-  const fromRetained = spawnSync(
-    process.execPath,
-    [`.repo-standards/inputs/source/${drafterPath}`],
-    {
-      cwd: project.root,
-      encoding: "utf8",
-    },
-  );
-  assert.equal(fromRetained.status, 0, fromRetained.stderr);
-  assert.equal(fromRetained.stderr, "");
-  assert.equal(fromRetained.stdout, fromSource.stdout);
-  assert.deepEqual(snapshot(project.root), before);
-  const proposal = JSON.parse(fromRetained.stdout);
-  assertScopeProposal(proposal, project.root);
-  assert.ok(
-    proposal.declarations[0].candidates.some((candidate) =>
-      candidate.reason.startsWith("Owned by"),
-    ),
-  );
-});
+    const fromRetained = spawnSync(
+      process.execPath,
+      [`.repo-standards/inputs/source/${drafterPath}`],
+      {
+        cwd: project.root,
+        encoding: "utf8",
+      },
+    );
+    assert.equal(fromRetained.status, 0, fromRetained.stderr);
+    assert.equal(fromRetained.stderr, "");
+    assert.equal(fromRetained.stdout, fromSource.stdout);
+    assert.deepEqual(snapshot(project.root), before);
+    const proposal = JSON.parse(fromRetained.stdout);
+    assertScopeProposal(proposal, project.root);
+    assert.ok(
+      proposal.declarations[0].candidates.some((candidate) =>
+        candidate.reason.startsWith("Owned by"),
+      ),
+    );
+  });
+}
 
 // The documentation declaration, with its check, in the form Repository
 // Standards 4.0.0 writes a resolved declaration.
@@ -1127,6 +1136,70 @@ ${documentationDeclaration(6)}
   const fromRetained = draft(project.root, [], retainedDrafter);
   assert.equal(fromRetained.status, 0, fromRetained.stderr);
   assert.equal(fromRetained.stdout, fromSource.stdout);
+});
+
+test("drafts the profile --profile selects from a source with several", (t) => {
+  const project = fixture({
+    "docs/README.md": "# Documentation\n",
+    "docs/development/README.md": developmentGuide(),
+    "docs/usage/README.md": "# Usage\n",
+    "docs/usage/guide.md": "# Guide\n",
+  });
+  t.after(project.close);
+  const sourceDrafter = copiedDrafter(t);
+  writeFileSync(
+    join(dirname(dirname(sourceDrafter)), "standards.yaml"),
+    `${header}defaults:
+  declarations:
+${documentationDeclaration(4)}
+profiles:
+  standard:
+    description: Standard
+    declarations: {}
+  extended:
+    description: Extended
+    declarations:
+      usage-guide:
+        kind: file
+        target: docs/usage/guide.md
+        exact: guide.md
+`,
+  );
+  const drafted = (profile) =>
+    draft(project.root, ["--profile", profile], sourceDrafter);
+
+  const standard = drafted("standard");
+  assert.equal(standard.status, 0, standard.stderr);
+  assert.deepEqual(
+    standard.proposal.declarations[0].candidates.find(
+      ({ path }) => path === "docs/usage/guide.md",
+    ),
+    underDocs("docs/usage/guide.md"),
+  );
+  const extended = drafted("extended");
+  assert.equal(extended.status, 0, extended.stderr);
+  assert.deepEqual(
+    extended.proposal.declarations[0].candidates.find(
+      ({ path }) => path === "docs/usage/guide.md",
+    ),
+    owned("docs/usage/guide.md", "usage-guide"),
+  );
+
+  const unnamed = draft(project.root, [], sourceDrafter);
+  assert.equal(unnamed.status, 1);
+  assert.match(
+    unnamed.stderr,
+    /declares 2 profiles \(`standard` and `extended`\); pass the selected one with --profile\./,
+  );
+  const unknown = drafted("complete");
+  assert.equal(unknown.status, 1);
+  assert.match(
+    unknown.stderr,
+    /declares no `complete` profile; it declares `standard` and `extended`\./,
+  );
+  const missing = draft(project.root, ["--profile"], sourceDrafter);
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /--profile needs a name\./);
 });
 
 test("fails without a manifest it can read, naming the manifests it tried", (t) => {

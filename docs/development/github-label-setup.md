@@ -4,27 +4,26 @@ The GitHub label setup is a repeat-safe Repository Standards fixes operation.
 It reads the adopting repository identity from Git remotes, verifies that the
 GitHub API resolves the same repository, and reconciles these labels:
 
-| Label                 | Color    | Description                                                    |
-| --------------------- | -------- | -------------------------------------------------------------- |
-| `needs-triage`        | `fbca04` | Requires review or renewed review                              |
-| `needs-info`          | `d4c5f9` | Waiting for information needed to evaluate the request         |
-| `ready-for-agent`     | `0e8a16` | Reviewed and sufficiently specified for agent implementation   |
-| `ready-for-human`     | `1d76db` | Reviewed and requires human implementation                     |
-| `wontfix`             | `ffffff` | Will not be actioned                                           |
-| `bug`                 | `d73a4a` | Something isn't working                                        |
-| `enhancement`         | `a2eeef` | New feature or request                                         |
-| `wayfinder:map`       | `5319e7` | Planning map for related work                                  |
-| `wayfinder:research`  | `bfd4f2` | Research question in a planning map                            |
-| `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                           |
-| `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                           |
-| `wayfinder:task`      | `bfd4f2` | Task in a planning map                                         |
-| `factory:running`     | `0052cc` | Claimed by a factory run                                       |
-| `factory:failed`      | `b60205` | The factory run failed; remove to run it again                 |
-| `factory:needs-input` | `d4c5f9` | Waiting for the owner's answer; answer and remove to run again |
+| Label                 | Color    | Description                                                  |
+| --------------------- | -------- | ------------------------------------------------------------ |
+| `needs-triage`        | `fbca04` | Requires review or renewed review                            |
+| `needs-info`          | `d4c5f9` | Waiting for information needed to evaluate the request       |
+| `ready-for-agent`     | `0e8a16` | Reviewed and sufficiently specified for agent implementation |
+| `ready-for-human`     | `1d76db` | Reviewed and requires human implementation                   |
+| `wontfix`             | `ffffff` | Will not be actioned                                         |
+| `bug`                 | `d73a4a` | Something isn't working                                      |
+| `enhancement`         | `a2eeef` | New feature or request                                       |
+| `wayfinder:map`       | `5319e7` | Planning map for related work                                |
+| `wayfinder:research`  | `bfd4f2` | Research question in a planning map                          |
+| `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                         |
+| `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                         |
+| `wayfinder:task`      | `bfd4f2` | Task in a planning map                                       |
 
-Matching labels are left alone. Missing labels are created freely. A label with
-a matching case-insensitive name but different casing, color, or description
-requires confirmation before updating. Other labels are never deleted or edited.
+It provisions no `factory:` label: a factory creates its own state labels from
+the repository's factory configuration. Matching labels are left alone. Missing
+labels are created freely. A label with a matching case-insensitive name but
+different casing, color, or description requires confirmation before updating.
+Other labels, existing `factory:` labels included, are never deleted or edited.
 
 ## Prerequisites and identity
 

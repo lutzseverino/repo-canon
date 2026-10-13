@@ -8,13 +8,12 @@ their rationale. They stay beside `standards.yaml`, the source they explain.
 Repo Canon owns a file only when every adopting repository should hold the
 same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
 and pull request templates, the skill setup files under `docs/agents`, the
-trusted validation workflows with their scripts, the issue contract runtime
-that the issue contract validator shares with the factory, the vendored rendered-Markdown
-runtime and parsers with their notices, the pinned skills with their
-upstream license notice, Repo Canon's own `babysit` skill, and the factory's
-`.sandcastle/` files. It is installed
-identically in every adopting repository and changes only through a Repo Canon
-release.
+trusted validation workflows with their scripts, the vendored rendered-Markdown
+runtime and parsers with their notices, the pinned skills with their upstream
+license notice, Repo Canon's own `babysit` skill, and, in the factory profile,
+the factory configuration and the sandbox image workflow. It is installed
+identically in every adopting repository that selects its profile and changes
+only through a Repo Canon release.
 
 `guidance/` and `discovery/` are source-side instructions for the agent that
 adopts Repo Canon, and `discovery/` also holds the documentation scope drafter
@@ -25,12 +24,13 @@ The repository license, READMEs, development documentation, glossaries, and
 project-specific agent guidance belong to the adopting repository, because
 they describe it and its projects. Repo Canon shapes them through contextual
 guidance and checks. The Repository license has the fixed target `LICENSE`,
-and the Repository README has the fixed target `README.md`. The factory's
-sandbox image has the fixed target `.sandcastle/Dockerfile`, because each
-repository's toolchain differs; Repo Canon ships its base, and a check keeps
-the base intact. Discovery proposes the concrete paths of Project READMEs at
-arbitrary locations and of documentation files, glossaries, and indexes,
-including documentation moves and link repairs.
+and the Repository README has the fixed target `README.md`. In the factory
+profile, the toolchain image has the fixed target `.factory/Dockerfile`, which
+holds only the repository's toolchain, because each repository's toolchain
+differs and the factory adds its own agent layer. Discovery proposes the
+concrete paths of Project READMEs at arbitrary locations and of documentation
+files, glossaries, and indexes, including documentation moves and link
+repairs.
 The complete inspection reports when adoption would discard edits. The
 maintainer confirms those changes before adoption writes them; routine updates
 proceed without additional confirmation. A fix that overwrites an existing
@@ -45,8 +45,11 @@ repeated.
   The GitHub identity is lutzseverino/repo-canon.
 - Scope: express the author's preferred standards for any repository whose
   maintainers choose to adopt them, including collaborative repositories and
-  repositories maintained by others. Start with one complete profile; no
-  ownership-based differences have been requested.
+  repositories maintained by others. The `standard` profile serves every
+  adopting repository, and the `factory` profile adds the factory's repository
+  files for a repository that a factory serves, as
+  [ADR 0017](docs/adr/0017-make-the-factory-an-optional-profile.md) decides;
+  no ownership-based differences have been requested.
 - The Repository README's title, description, badges, section order, length,
   examples, Features items, and pointer sections are stated in the
   [Repository README guidance](guidance/repository-readme.md).
@@ -119,35 +122,25 @@ repeated.
   source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
   other original exact files; only vendored material has a separate source
   path.
-- The factory ships with the standard, as
-  [ADR 0011](docs/adr/0011-ship-the-factory-with-the-standard.md) decides,
-  and every run is a direct run of one ticket, as
-  [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
-  This passage and the factory's other mentions in these notes describe the
-  source as released until the
-  [factory boundary specification](https://github.com/lutzseverino/repo-canon/issues/334)
-  cuts over: [ADR 0013](docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md)
-  and [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
-  supersede them, and the cutover rewrites them.
-  `.sandcastle/` holds a repository-agnostic entry, adapter, and pure decision
-  core as exact files whose source is their
-  installed path. The adapter recognizes a specification, and a ticket's
-  `Parent` reference, by the issue contract validator's rules, which it
-  imports from their shared runtime. It runs Sandcastle through a pinned
-  `npx`, so an adopting repository gains no dependency. Runs start in the repository's own sandbox
-  image, Repo Canon's base followed by the toolchain the adopting agent takes
-  from the development guide, as the
-  [sandbox image guidance](guidance/factory-sandbox-image.md) states. The factory checks for updates daily: routine updates run through adoption
-  to a pull request that `babysit` merges, and confirmation-required changes
-  become issues for triage. An update that would create, replace, or remove a
-  target under `.github/workflows/` becomes a `needs-triage` issue for the owner
-  instead of running through adoption, because the factory's GitHub App has no
-  Workflows permission. The host
-  sets the default and retry models, the per-provider caps, the usage
-  threshold, and the time limit; Repo Canon ships none of them. The canonical
-  labels carry the claim, failure, and `factory:needs-input` labels but no
-  `model:` labels.
-  [Run the factory](docs/usage/run-the-factory.md) describes its behavior.
+- The factory is a product of its own, installed on a host from its own
+  releases, as
+  [ADR 0013](docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md)
+  decides, and every run is a direct run of one ticket, as
+  [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md)
+  decides. Repo Canon ships none of its code. A repository the factory serves
+  selects the `factory` profile, which installs `.factory/config.json` as an
+  exact file: factory configuration version 1, naming Repo Canon's labels, the
+  `model:` label prefix, and the `implement` prompt, since the factory has no
+  default for any of them, as
+  [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
+  decides. The profile also installs the contextual `.factory/Dockerfile`,
+  toolchain only and Debian-based, as the
+  [toolchain image guidance](guidance/factory-sandbox-image.md) states, and the
+  pull request workflow that builds it. The factory creates its own state
+  labels from the configuration, so the canonical labels carry no `factory:`
+  label and no `model:` label. The
+  [factory's usage documentation](factory/docs/usage/README.md) describes its
+  behavior.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the
   standards source.
@@ -269,8 +262,9 @@ repeated.
 
 ## Source profile
 
-The complete `repo-standards/v2` source is `standards.yaml`, with one
-`complete` profile and the open-ended CLI compatibility minimum `>=6.0.0`. The
+The complete `repo-standards/v2` source is `standards.yaml`, with the
+`standard` and `factory` profiles and the open-ended CLI compatibility minimum
+`>=6.0.0`. The
 concise policy-to-declaration, material, operation, ownership, and prerequisite
 mapping is maintained in [the source profile](docs/development/source-profile.md).
 Contextual Project README and documentation scope uses separate assessment and
