@@ -420,7 +420,7 @@ This is a disposable local fixture.
     "docs/pr-evidence.md",
     `# Delivery pull request exercise
 
-Draft a local PR body after implementing the ticket. Do not open a pull request. Before: the urgent-Parcels test fails because input is mutated. After: npm test passes with input preserved and submission order stable. Use a minimal visual summary and describe the reversible ordering fix's merge danger.
+Draft a local PR body after implementing the ticket. Do not open a pull request. Before: the urgent-Parcels test fails because a standard Parcel is ordered ahead of urgent Parcels. After: npm test passes with input preserved and submission order stable. Use a minimal visual summary and describe the reversible ordering fix's merge danger.
 `,
   );
   repositories.delivery = {
