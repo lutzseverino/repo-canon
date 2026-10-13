@@ -685,7 +685,7 @@ test("both babysit exit-1 instructions defer permission refusals to Credentials"
   for (const instruction of instructions) {
     assert.match(
       instruction,
-      /follow \[Credentials\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#credentials\) for a permission refusal instead of retrying/,
+      /follow \[Credentials\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#credentials\) for a permission refusal; otherwise/,
     );
     assert.match(
       instruction,
@@ -694,7 +694,7 @@ test("both babysit exit-1 instructions defer permission refusals to Credentials"
   }
   assert.doesNotMatch(
     babysit,
-    /`gh` access|only the credentials|another identity|other identities|search(?:ing)? for credentials|ask(?:s|ing)? the owner|factory:needs-input/,
+    /`gh` access|instead of retrying|only the credentials|another identity|other identities|search(?:ing)? for credentials|ask(?:s|ing)? the owner|factory:needs-input/,
   );
 });
 

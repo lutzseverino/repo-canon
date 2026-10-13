@@ -21,8 +21,8 @@ conditions and the wording rules.
      `CONTRIBUTING.md` for merging without that review.
    - `5`: still waiting; run it again.
    - `1`: follow [Credentials](../../../CONTRIBUTING.md#credentials) for a
-     permission refusal instead of retrying; otherwise fix the invocation or
-     other `gh` error and run it again.
+     permission refusal; otherwise fix the invocation or other `gh` error and
+     run it again.
 
 2. Verify each failing check and review finding against the source.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
@@ -37,8 +37,8 @@ conditions and the wording rules.
    `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
    the full SHA that starts the wait's latest line. Exit `0` means merged;
    `2` means the head changed, so return to step 1; `1` means follow
-   [Credentials](../../../CONTRIBUTING.md#credentials) for a permission refusal
-   instead of retrying; otherwise fix the invocation or other `gh` error and
+   [Credentials](../../../CONTRIBUTING.md#credentials) for a permission refusal;
+   otherwise fix the invocation or other `gh` error and
    run it again.
 6. Stop.
 
