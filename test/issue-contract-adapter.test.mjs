@@ -1490,3 +1490,69 @@ test("the adapter waits, within its bound, for the timeline to record a human re
     });
   }
 });
+
+test("a closed issue only loses needs-triage on any trigger", async (context) => {
+  for (const [name, action, reason, eventState, kindLabels] of [
+    ["completed close", "closed", "completed", "closed", []],
+    ["not planned close", "closed", "not_planned", "closed", []],
+    ["duplicate close", "closed", "duplicate", "closed", []],
+    ["comment", "created", "completed", "closed", []],
+    ["edit received while open", "edited", "completed", "open", []],
+    ["Wayfinder map", "closed", "completed", "closed", ["wayfinder:map"]],
+    [
+      "Wayfinder child",
+      "labeled",
+      "completed",
+      "closed",
+      ["wayfinder:research"],
+    ],
+  ]) {
+    await context.test(name, async () => {
+      const issue = {
+        number: 42,
+        body: "Incomplete contract.",
+        labels: [
+          ...kindLabels,
+          "needs-triage",
+          "ready-for-agent",
+          "ready-for-human",
+          "needs-info",
+          "wontfix",
+        ].map((name) => ({ name })),
+        state: "closed",
+        state_reason: reason,
+      };
+      const result = await exercise({
+        issue,
+        comments: [approvedTicketFeedback(issue)],
+        event: { action, issue: { number: 42, state: eventState } },
+      });
+      assert.equal(result.code, 0, result.stderr);
+      assert.deepEqual(
+        result.requests.map(({ method, url }) => [method, url]),
+        [
+          ["GET", "/repos/example/repository/issues/42"],
+          ["DELETE", "/repos/example/repository/issues/42/labels/needs-triage"],
+        ],
+      );
+    });
+  }
+});
+
+test("reopening a bare native issue restores needs-triage", async () => {
+  const result = await exercise({
+    issue: { number: 42, body: ticketBody, labels: [], state: "open" },
+    event: { action: "reopened", issue: { number: 42, state: "open" } },
+  });
+  assert.equal(result.code, 0, result.stderr);
+  const applied = writes(result);
+  assert.deepEqual(
+    applied.map(([method, url]) => [method, url]),
+    [
+      ["POST", "/repos/example/repository/issues/42/labels"],
+      ["POST", "/repos/example/repository/issues/42/comments"],
+    ],
+  );
+  assert.deepEqual(applied[0][2], { labels: ["needs-triage"] });
+  assert.match(applied[1][2].body, /awaiting review/i);
+});
