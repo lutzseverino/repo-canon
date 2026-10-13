@@ -85,6 +85,10 @@ defaults:
               - LICENSE
               - THIRD_PARTY_NOTICES.md
               - vendor/mattpocock-skills/LICENSE
+              - vendor/humanlayer-skills/LICENSE
+              - vendor/marked/LICENSE
+              - vendor/parse5/LICENSE.parse5
+              - vendor/parse5/LICENSE.entities
             arguments: []
           prerequisite:
             version-arguments: ["--version"]
@@ -101,6 +105,11 @@ defaults:
             version-arguments: ["--version"]
             version: ">=24.0.0 <25.0.0"
           timeout-seconds: 30
+
+    humanlayer-skills-license:
+      kind: file
+      target: .agents/skills/LICENSE.humanlayer-skills
+      exact: vendor/humanlayer-skills/LICENSE
 
     implementation-ticket-template:
       kind: file

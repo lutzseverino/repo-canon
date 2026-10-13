@@ -33,10 +33,10 @@ release or successful adoption.
 | Toolchain image build, in the `factory` profile only                             | `factory-sandbox-image-workflow`                                                                                                                            | `.github/workflows/sandbox-image.yml`; builds `.factory/Dockerfile` on pull requests changing it or the workflow                                                                                                                                    | Exact file                                                                                                          |
 | Upstream skill license notice                                                    | `mattpocock-skills-license`                                                                                                                                 | `vendor/mattpocock-skills/LICENSE`, installed at `.agents/skills/LICENSE.mattpocock-skills` beside the copied skills                                                                                                                                | Exact file outside every skill directory                                                                            |
 
-The resolved `standard` profile contains 47 declarations: 24 exact files, two
+The resolved `standard` profile contains 48 declarations: 25 exact files, two
 contextual files, three repository declarations, and 18 exact skill
 directories. The `factory` profile adds one exact file, one contextual file,
-and the exact workflow, for 50 declarations. Each has four checks and two
+and the exact workflow, for 51 declarations. Each has four checks and two
 fixes. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
 trees, globs, or adopter-specific paths embedded in this source.
@@ -49,14 +49,21 @@ vendored upstream `LICENSE` byte for byte as the sibling file
 project. Skill names are lower-case kebab-case, so that name never collides
 with a skill directory.
 
+The `humanlayer-skills-license` exact file declaration likewise installs
+`vendor/humanlayer-skills/LICENSE` at
+`.agents/skills/LICENSE.humanlayer-skills`. It covers the material reproduced
+from HumanLayer's `show-me` in the `pr` skill's Summary section. The vendored
+`UPSTREAM.json` records the upstream repository, root `LICENSE` path, and
+pinned commit; no HumanLayer skill is vendored or installed.
+
 The documentation operation resources retain the shared rendered-Markdown
 module, the separate local-link module, the documentation model, the
 entry-document sentence and glossary module, the documentation scope drafter,
 and complete Marked and parse5 directories with
 their notices. The agent runs the drafter during discovery; the CLI only
 retains it. Other operation resources retain the shared GitHub operation
-module, Repo Canon's MIT license and third-party notice, and the upstream skill
-license. The rendered-Markdown runtime and parser files are also exact
+module, Repo Canon's MIT license and third-party notice, and every license
+linked by that notice. The rendered-Markdown runtime and parser files are also exact
 declarations because both trusted workflow validators import them from the
 adopting repository. Each executable therefore resolves the same relative
 import layout after installation or resource retention.
@@ -90,7 +97,7 @@ and validates every profile.
 ## Validation boundary
 
 Installed public CLI 6.0.0 under Node.js 24 returns `valid: true`, no errors,
-and the `standard` and `factory` profiles with 47 and 50 declarations for the
+and the `standard` and `factory` profiles with 48 and 51 declarations for the
 source, matching the inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@6.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
