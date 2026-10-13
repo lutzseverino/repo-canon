@@ -147,6 +147,109 @@ function parent(readyAt, details = {}) {
 
 const released = "2026-10-09T10:06:00Z";
 
+test("a ready parent closes once every native sub-issue is closed", () => {
+  assert.deepEqual(
+    decideFactory(
+      snapshot({
+        issues: [
+          parent(released, {
+            subIssues: [
+              { number: 5, state: "closed" },
+              { number: "acme/gadgets#6", state: "closed" },
+            ],
+          }),
+        ],
+      }),
+    ),
+    [{ kind: "close", issue: 3, tickets: [5, "acme/gadgets#6"] }],
+  );
+});
+
+test("closing a parent takes precedence over settling its earlier run or claim", () => {
+  for (const state of [
+    { runs: [run(3, { ended: { timedOut: false, pullRequest: "none" } })] },
+    {
+      runs: [
+        run(3, { attempt: 2, ended: { timedOut: true, pullRequest: "none" } }),
+      ],
+    },
+    { runs: [run(3)] },
+    { claims: [{ issue: 3, pullRequest: "none" }] },
+  ]) {
+    assert.deepEqual(
+      decideFactory(
+        snapshot({
+          issues: [
+            parent(released, { subIssues: [{ number: 5, state: "closed" }] }),
+          ],
+          ...state,
+        }),
+      ),
+      [{ kind: "close", issue: 3, tickets: [5] }],
+    );
+  }
+});
+
+test("an open unlinked ticket holds a parent whose native sub-issues are closed", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        parent(released, {
+          subIssues: [{ number: "acme/gadgets#6", state: "closed" }],
+        }),
+        issue(6, [], { parentReference: 3 }),
+      ],
+    }),
+  );
+  assert.equal(
+    decisions.some((decision) => decision.kind === "close"),
+    false,
+  );
+  assert.deepEqual(launches(decisions), []);
+});
+
+test("parents stay open without readiness, without tickets, or with an open ticket", () => {
+  const decisions = decideFactory(
+    snapshot({
+      issues: [
+        parent(released, {
+          labels: ["wayfinder:map"],
+          subIssues: [{ number: 5, state: "closed" }],
+        }),
+        issue(4, ["ready-for-agent"], { specification: true }),
+        parent(released, {
+          number: 7,
+          subIssues: [{ number: "acme/gadgets#8", state: "open" }],
+        }),
+      ],
+    }),
+  );
+  assert.equal(
+    decisions.some((decision) => decision.kind === "close"),
+    false,
+  );
+  assert.deepEqual(launches(decisions), []);
+});
+
+test("closing any ready parent does not require pickup gates", () => {
+  assert.deepEqual(
+    decideFactory(
+      snapshot({
+        issues: [
+          issue(3, ["ready-for-agent", "model:unusable"], {
+            readyAt: null,
+            latestLink: { ticket: 5, at: released },
+            subIssues: [{ number: 5, state: "closed" }],
+            blockedBy: [{ number: 2, state: "open" }],
+          }),
+        ],
+        settings: { caps: {} },
+      }),
+    ),
+    [{ kind: "close", issue: 3, tickets: [5] }],
+  );
+});
+
 function tickets(labels = ["ready-for-agent"]) {
   return [
     issue(5, labels, { nativeParent: 3 }),
@@ -161,7 +264,7 @@ test("a specification or other parent with sub-issues never launches", () => {
         parent(released),
         issue(4, ["ready-for-agent"], { specification: true }),
         issue(7, ["ready-for-agent", "wayfinder:map"], {
-          subIssues: [{ number: 8, state: "closed" }],
+          subIssues: [{ number: 8, state: "open" }],
         }),
         issue(9, ["ready-for-agent"], {
           nativeParent: 3,
