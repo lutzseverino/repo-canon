@@ -53,13 +53,25 @@ ticket link appears in the parent's timeline. Readiness recorded in the same
 second as that link holds the tickets; the factory's skip reason says to remove
 `ready-for-agent` and add it back.
 
-The factory picks up ready issues and runs each ticket on its own. Without a
-`model:` label a ticket runs the factory's default model; a parent's label
-chooses none of its tickets' models. Name a stronger model with
+The factory picks up ready issues and runs each ticket on its own. In a
+repository a factory serves, whoever applies `ready-for-agent` to a non-parent
+issue must apply exactly one `model:` label they chose, before readiness or
+together with it, even when it names the host's default model. A parent needs
+no `model:` label of its own, and `ready-for-human` needs none.
+
+Choose a stronger model when the work needs design judgment, has an ambiguous
+scope, or makes a long cross-cutting change. Name the chosen model with
 `model:<slug>` or `model:<provider>/<slug>`, optionally followed by
-`@<effort>`, when the work needs design judgment, has an ambiguous scope, or
-makes a long cross-cutting change; create the label if the repository lacks
-it. A `claude-*` or `gpt-*` slug needs no provider.
+`@<effort>`; create the label if the repository lacks it. A `claude-*` or
+`gpt-*` slug needs no provider.
+
+For a non-parent issue in a repository a factory serves, the triage notes after
+its Agent Brief suggest one `model:` label with a one-line reason, for the
+reviewer to apply or replace. The suggestion is a triage note, not a field of
+the brief.
+
+The factory runs an unlabelled ticket on the host's default model; a parent's
+label chooses none of its tickets' models.
 
 ## Development setup
 
