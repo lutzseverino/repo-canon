@@ -642,7 +642,7 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
   assert.match(
     comments,
-    /close it before removing the label so a fresh first attempt continues its branch/,
+    /close it before removing the label\. Wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
   );
   assert.match(
     comments,

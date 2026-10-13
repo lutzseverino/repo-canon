@@ -277,9 +277,10 @@ With no open pull request, the owner answers and removes the label to return
 the issue to the frontier as a fresh first attempt. While the run's pull request
 is open, removing the label starts no run in a repository a factory serves.
 The owner finishes the pull request, for example by merging it or pushing the
-refused change, or can close it before removing the label so a fresh first
-attempt continues its branch. If the answer changes the implementation contract,
-edit the contract; that drops readiness and requires review again.
+refused change, or can close it before removing the label. Wait for
+`factory:running` to disappear, then remove the label so a fresh first attempt
+continues its branch. If the answer changes the implementation contract, edit
+the contract; that drops readiness and requires review again.
 
 An agent that stops without a pull request and without a question under
 `factory:needs-input` comments one short paragraph on the issue explaining why
