@@ -59,7 +59,10 @@ Every field below is required except `finished`. Unknown fields are invalid.
   `at` groups. A matching line in a comment by `account` containing the marker
   completes a review when `sha` prefixes the head and `at` parses as a time at
   or after the latest request. A GitHub review by `account` on the exact head
-  also completes a review, even without `finished`.
+  also completes a review, even without `finished`, when it approves or
+  requests changes, has a nonempty body, or has an inline comment that starts
+  a new thread. A pending review never completes one. A `COMMENTED` review
+  with an empty body and only replies to existing threads never completes one.
 - `unavailable`: array of nonempty reply texts; an empty array is valid. A
   comment by `account` at or after the request containing one of these texts
   marks the reviewer unavailable. Any comment by `account` after the

@@ -1744,7 +1744,12 @@ test("without a reviewer, settled checks exit 0 and report no reviewer state", (
 });
 
 test("a GitHub review by the configured account finishes only the exact head", () => {
-  const review = { user: { login: githubReviewer.account }, commit_id: head };
+  const review = {
+    user: { login: githubReviewer.account },
+    commit_id: head,
+    state: "APPROVED",
+    body: "",
+  };
   assert.equal(
     decision({
       reviewer: githubReviewer,
@@ -1773,7 +1778,7 @@ test("a GitHub review by the configured account finishes only the exact head", (
 
 test("the script with no file finishes settled checks without a reviewer", async () => {
   const result = await run(
-    { ...pendingPullRequest, checks: [checkRun()] },
+    { ...pendingPullRequest, checks: [checkRun()], rejectReviewReads: true },
     ["12"],
     null,
   );
@@ -1788,7 +1793,14 @@ test("the script reads a GitHub-review-only fixture and its paginated reviews", 
   const reviewed = await run(
     {
       ...state,
-      reviews: [{ user: { login: githubReviewer.account }, commit_id: head }],
+      reviews: [
+        {
+          user: { login: githubReviewer.account },
+          commit_id: head,
+          state: "APPROVED",
+          body: "",
+        },
+      ],
     },
     ["12"],
     githubReviewer,
@@ -1928,4 +1940,108 @@ test("a response at the request timestamp does not satisfy the response bound", 
   });
   assert.equal(outcome.code, 4);
   assert.equal(outcome.reviewer, "no response");
+});
+
+const replyOnlyReview = {
+  id: 42,
+  user: { login: githubReviewer.account },
+  commit_id: head,
+  state: "COMMENTED",
+  body: "",
+  comments: [{ in_reply_to_id: 1 }, { in_reply_to_id: 2 }],
+};
+
+test("reply-only and empty reviews leave every reviewer state unchanged", () => {
+  for (const overrides of Object.values(reviewerStates)) {
+    for (const comments of [replyOnlyReview.comments, []]) {
+      const review = {
+        ...replyOnlyReview,
+        user: { login: codex },
+        comments,
+      };
+      assert.deepEqual(
+        decision({ ...overrides, reviews: [review] }),
+        decision(overrides),
+      );
+    }
+  }
+});
+
+test("submitted reviews complete with a verdict, body or new thread", () => {
+  for (const change of [
+    { state: "APPROVED" },
+    { state: "CHANGES_REQUESTED" },
+    { body: "Reviewed the change." },
+    { comments: [...replyOnlyReview.comments, {}] },
+  ]) {
+    const outcome = decision({
+      reviewer: githubReviewer,
+      pushedAt: Date.parse("2026-10-11T05:45:00Z"),
+      reviews: [{ ...replyOnlyReview, ...change }],
+    });
+    assert.equal(outcome.code, 0);
+    assert.equal(outcome.reviewer, "reviewed");
+  }
+});
+
+test("pending reviews never complete, even with a body and new thread", () => {
+  const look = { reviewer: githubReviewer };
+  assert.deepEqual(
+    decision({
+      ...look,
+      reviews: [
+        { ...replyOnlyReview, state: "PENDING", body: "Draft", comments: [{}] },
+      ],
+    }),
+    decision(look),
+  );
+});
+
+test("the script excludes a reply-only review after a push with no later request", async () => {
+  const review = { ...replyOnlyReview };
+  delete review.comments;
+  const state = {
+    ...pendingPullRequest,
+    createdAt: "2026-10-11T05:00:00Z",
+    checks: [checkRun()],
+    comments: [
+      {
+        login: "maintainer",
+        createdAt: "2026-10-11T05:01:00Z",
+        body: githubReviewer.request.comment,
+      },
+    ],
+    reviewPages: [
+      [{ ...review, id: 41, user: { login: "someone-else" } }],
+      [review],
+    ],
+    reviewCommentPages: [
+      [
+        { pull_request_review_id: 41 },
+        { pull_request_review_id: 42, in_reply_to_id: 1 },
+      ],
+      [{ pull_request_review_id: 42, in_reply_to_id: 2 }],
+    ],
+  };
+  const result = await run(state, ["12"], githubReviewer);
+  assert.equal(result.code, 4);
+  assert.equal(
+    result.stdout,
+    `${head}: checks passed, review not requested for this head\n`,
+  );
+  assert.equal(result.stderr, "");
+  // A new thread on a later page must belong to this review to complete it.
+  const reviewed = await run(
+    {
+      ...state,
+      reviewCommentPages: [
+        ...state.reviewCommentPages,
+        [{ pull_request_review_id: 42 }],
+      ],
+    },
+    ["12"],
+    githubReviewer,
+  );
+  assert.equal(reviewed.code, 0);
+  assert.equal(reviewed.stdout, `${head}: checks passed, reviewer reviewed\n`);
 });
