@@ -3,8 +3,8 @@
 The factory is a product of its own, kept in this repository's `factory/`
 directory and released there under its own version numbers as
 `factory-vX.Y.Z` tags. A host installs one major, updates to its newest
-release on its own, and runs one factory process for every repository its
-host configuration lists. A repository carries only its factory
+release on its own, and runs a single factory process that serves all the
+repositories its host configuration lists. A repository carries only its factory
 configuration and its sandbox Dockerfile in `.factory/`. Shipping the factory
 as exact files with the standard, as
 [ADR 0011](0011-ship-the-factory-with-the-standard.md) decided, made every

@@ -43,8 +43,8 @@ involve real alternatives.
   releases its tickets, each on its own `model:` label.
 - [Install the factory on the host from its own releases](0013-install-the-factory-on-the-host-from-its-own-releases.md):
   the factory is released from `factory/` under its own versions, one process
-  on a host runs an auto-updating major for all its repositories, and a repository carries only
-  `.factory/`.
+  on a host runs an auto-updating major for all its repositories, and a
+  repository carries only `.factory/`.
 - [Name every factory convention in configuration](0014-name-every-factory-convention-in-configuration.md):
   the repository's factory configuration names its labels and prompt with no
   defaults, and the factory checks readiness against roles the host names.
