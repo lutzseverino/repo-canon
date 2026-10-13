@@ -36,9 +36,10 @@ Canon or CLI versions.
 ## Prepare the release pull request
 
 Each release is one pull request into `main`, titled
-`<type>(factory): release vX.Y.Z`. Use `feat!` for a breaking release, `feat` for
-a compatible capability, `fix` for a compatible fix, or `chore` for maintenance
-only. The pull request updates `factory/package.json` and its lockfile together,
+`<type>(factory): release vX.Y.Z` for compatible releases: use `feat` for a
+capability, `fix` for a fix, or `chore` for maintenance only. A breaking release
+is titled `feat(factory)!: release vX.Y.Z`, with `!` after the scope. The pull
+request updates `factory/package.json` and its lockfile together,
 and carries the changes needed for the release. Nothing is committed for the
 release after it merges.
 
