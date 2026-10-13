@@ -287,7 +287,7 @@ With no open pull request, the owner answers and removes the label to return
 the issue to the frontier as a fresh first attempt. While the run's pull request
 is open, removing the label starts no run in a repository a factory serves.
 The owner either finishes the pull request by merging it, for example after
-pushing the refused change, so that the merge closes the issue under the
+pushing the refused change, and ensuring the issue is closed under the
 [pull request rules](#pull-requests), or hands it back: close it before removing
 the label, wait for `factory:running` to disappear, then remove the label so a
 fresh first attempt continues its branch. If the answer changes the

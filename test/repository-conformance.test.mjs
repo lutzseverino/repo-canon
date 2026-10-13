@@ -846,7 +846,7 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
   assert.match(
     comments,
-    /The owner either finishes the pull request by merging it, for example after pushing the refused change, so that the merge closes the issue under the \[pull request rules\]\(#pull-requests\), or hands it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
+    /The owner either finishes the pull request by merging it, for example after pushing the refused change, and ensuring the issue is closed under the \[pull request rules\]\(#pull-requests\), or hands it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
   );
   assert.match(
     comments,
