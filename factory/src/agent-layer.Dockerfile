@@ -35,9 +35,9 @@ RUN set -eu; \
     rm -rf /tmp/factory-tools
 
 # A run's provider login must add no GitHub identity beside the minted token,
-# so system policy, which outranks the agent's own configuration and flags,
-# turns off the account's apps and connectors. The layer owns these paths and
-# replaces whatever the toolchain image put there.
+# so the provider policy, system policy that outranks the agent's own
+# configuration and flags, turns off the account's apps and connectors. The
+# layer owns these paths and replaces whatever the toolchain image put there.
 RUN set -eu; \
     rm -rf /etc/codex /etc/claude-code; \
     install -d -m 0755 /etc/codex /etc/claude-code; \

@@ -53,30 +53,21 @@ function assertProviderPolicy(image: string): void {
   ).split("\n---\n");
   assertPinned(defaults!);
   assertPinned(overridden!);
+  // Under `sh -e` a command negated with `!` never stops the script, so each
+  // refused change exits explicitly when it succeeds.
   asAgent(
-    'test "$(id -un)" = agent; ' +
+    'refused() { if "$@" 2>/dev/null; then echo "agent could: $*" >&2; exit 1; fi; }; ' +
+      'test "$(id -un)" = agent; ' +
       'test "$(ls -A /etc/codex)" = requirements.toml; ' +
       'test "$(ls -A /etc/claude-code)" = managed-settings.json; ' +
       "for path in /etc/codex/requirements.toml /etc/claude-code/managed-settings.json; do " +
       'test -r "$path"; test "$(stat -c %U:%G:%a "$path")" = root:root:644; ' +
       'test "$(stat -c %U:%G:%a "${path%/*}")" = root:root:755; ' +
-      '! sh -c \'echo >> "$1"\' sh "$path" 2>/dev/null; ' +
-      '! rm -f "$path" 2>/dev/null; ! mv "$path" "$path.moved" 2>/dev/null; ' +
-      '! mv "${path%/*}" "${path%/*}.moved" 2>/dev/null; done',
+      'refused sh -c \'echo >> "$1"\' sh "$path"; refused rm -f "$path"; ' +
+      'refused mv "$path" "$path.moved"; refused mv "${path%/*}" "${path%/*}.moved"; done',
   );
   const settings = JSON.parse(
-    execFileSync(
-      "docker",
-      [
-        "run",
-        "--rm",
-        "--entrypoint",
-        "cat",
-        image,
-        "/etc/claude-code/managed-settings.json",
-      ],
-      { encoding: "utf8", timeout: 60_000 },
-    ),
+    asAgent("cat /etc/claude-code/managed-settings.json"),
   );
   assert.equal(settings.disableClaudeAiConnectors, true);
 }
