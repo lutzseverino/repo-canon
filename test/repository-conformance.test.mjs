@@ -622,6 +622,38 @@ test("review converges on fixes and reasoned declines the guide allows", () => {
   );
 });
 
+test("owner questions stay on the issue and leave an open pull request unmerged", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  const comments = /## Comments (.*?)## Documentation/.exec(guide)?.[1] ?? "";
+  assert.match(comments, /post the question as one issue comment/);
+  assert.match(comments, /add `factory:needs-input`, and stop/);
+  assert.match(comments, /without a pull request if none is open/);
+  assert.match(
+    comments,
+    /leaving the open pull request unmerged and linked from the question/,
+  );
+  assert.match(
+    comments,
+    /This owner handoff ends the agent's babysitting of the pull request/,
+  );
+  assert.match(
+    comments,
+    /Work without an issue asks on its pull request instead, with no label/,
+  );
+  assert.match(
+    comments,
+    /While the run's pull request is open, removing the label starts no run in a repository a factory serves/,
+  );
+  assert.match(
+    comments,
+    /close it before removing the label\. Wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
+  );
+  assert.match(
+    comments,
+    /If the answer changes the implementation contract, edit the contract; that drops readiness and requires review again/,
+  );
+});
+
 test("the contribution guide limits each run to its credentials and stops at permission refusals", () => {
   const guide = flowedText("CONTRIBUTING.md");
   const credentials =
