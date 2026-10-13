@@ -1,8 +1,8 @@
 # Install the factory on the host from its own releases
 
-The factory is a product of its own, kept in this repository's `factory/`
-directory and released there under its own version numbers as
-`factory-vX.Y.Z` tags. A host installs one major, updates to its newest
+The factory is a product of its own, named Scriptorium, kept in this
+repository's `factory/` directory and released there under its own version numbers as
+`scriptorium-vX.Y.Z` tags. A host installs one major, updates to its newest
 release on its own, and runs a single factory process that serves all the
 repositories its host configuration lists. A repository carries only its factory
 configuration and its sandbox Dockerfile in `.factory/`. Shipping the factory
@@ -28,7 +28,7 @@ because caps and usage gates bound a subscription, not a repository.
 - A factory fix is a factory release, and Repo Canon releases carry only
   standard changes. A breaking factory release is a new major, which the host
   adopts deliberately.
-- Only the owner creates or updates `factory-v*` tags, under a repository
+- Only the owner creates or updates `scriptorium-v*` tags, under a repository
   ruleset; agents never tag. A tag decides what code the host runs, so whoever
   could push one could run code on the host.
 - The factory owns its clones, worktrees, logs, sandbox images and credential
