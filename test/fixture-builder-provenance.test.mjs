@@ -45,7 +45,7 @@ const builders = [
     head: (manifest) => manifest.source.worktreeCommit,
     builderSha256: (manifest) => manifest.source.builderSha256,
     skills: (manifest) => manifest.source.skills,
-    laterCommit: "teach",
+    laterCommit: "grilling",
   },
   {
     name: "planning",

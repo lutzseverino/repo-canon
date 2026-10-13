@@ -1,14 +1,11 @@
 # Skill exercises
 
 This procedure exercises the pinned skills under `vendor/mattpocock-skills`
-and `vendor/humanlayer-skills` against disposable local Git repositories. Run
-it when a release changes a skill, as the
-[release procedure](release.md#when-selected-bytes-change) requires, for the
-changed skills. Three builders create the repositories: one each for the
-engineering, productivity, and planning skills, which together cover all 27
-pinned Matt Pocock skills. HumanLayer's `show-me` reuses an engineering
-repository, as [its scenario](#humanlayer-show-me) describes. Repo Canon's own
-`babysit` skill acts on a live pull request, so no builder covers it; exercise
+against disposable local Git repositories. Run it when a release changes a
+skill, as the [release procedure](release.md#when-selected-bytes-change)
+requires, for the changed skills. Three builders create the repositories: one
+each for the engineering, productivity, and planning skills, which together
+cover all 17 pinned workflow skills. Repo Canon's own `babysit` skill acts on a live pull request, so no builder covers it; exercise
 it on a pull request in a disposable GitHub repository. Its wait script has
 its own fixtures, which the [development guide](README.md) names.
 
@@ -69,13 +66,11 @@ node scripts/create-engineering-skill-fixtures.mjs
 npm run test:engineering-skill-fixtures
 ```
 
-The builder prints its JSON manifest. Six repositories exercise nine
-engineering skills:
-`routing-review` for `ask-matt` and `code-review`; `architecture` for
+The builder prints its JSON manifest. Five repositories exercise seven
+engineering skills: `review` for `code-review`; `architecture` for
 `codebase-design` and `improve-codebase-architecture`; `debugging` for
 `diagnosing-bugs`; `modeling-research` for `domain-modeling` and `research`;
-`tdd`; and `retrospective` for `retro`, with a recorded session and the support
-reference `writing-for-agents`. The scenarios supply a domain glossary,
+and `tdd`. The scenarios supply a domain glossary,
 applicable ADRs with their indexes, contributor commands, source, tests, requests, and
 specifications.
 
@@ -84,7 +79,7 @@ Opening the architecture report needs a browser; in a headless harness, render
 it with a local headless browser and inspect the result.
 
 The test verifies the shared and scenario guidance, domain and development
-context, ADR indexes, skill links and digests, the retrospective transcript, a
+context, ADR indexes, skill links and digests, the review specification, a
 build from a Repo Canon checkout without an `origin` remote, and an ordinary later
 commit under a host that requires signing with an unusable program.
 
@@ -96,19 +91,16 @@ npm run test:productivity-skill-fixtures
 ```
 
 The builder prints a `repo-canon/productivity-skill-fixtures/v1` manifest. Each
-of the seven skills has its own repository: `grill-me`, `grilling`, `handoff`,
-`teach`, `to-questionnaire`, `wait-what`, and `writing-for-agents`. The root
+of the two skills has its own repository: `grilling` and `writing-for-agents`.
+The root
 `AGENTS.md` is byte-for-byte the shared guidance, and the scenario constraints
 live in `docs/agents/project.md`; the `writing-for-agents` exercise edits that
 file.
 
-Several skills need a participant. Supply the participant's turns as explicit
-controlled inputs, and do not present them as a real user, approver, learner, or
-recipient. Both grilling skills must delegate repository fact-finding to a
-read-only sub-agent; facts gathered by the primary agent do not exercise them.
-The `handoff` repository contains an ignored fake secret that the handoff must
-not read or copy. The `teach` exercise needs web access to fetch its official
-sources.
+`grilling` needs a participant. Supply the participant's turns as explicit
+controlled inputs, and do not present them as a real user or approver. It must
+delegate repository fact-finding to a read-only sub-agent; facts gathered by the
+primary agent do not exercise it.
 
 The test verifies the exact shared guidance, the scenario prerequisites, intact
 skill links, disabled local signing, a clean initial Git state, and an ordinary
@@ -121,44 +113,21 @@ node scripts/create-planning-skill-fixtures.mjs
 npm run test:planning-skill-fixtures
 ```
 
-The builder writes `manifest.json` under its root and prints that path. Five
-repositories cover ten skills: `setup` for `setup-matt-pocock-skills` and
-`triage`; `adoption-preparation` for the preparation that precedes whole-file
-ownership of `AGENTS.md`; `planning` for `grill-with-docs`, `to-spec`, and
-`to-tickets`; `triage-wayfinder` for `triage` and `wayfinder`; and `delivery`
-for `implement`, `pr`, `prototype`, and `wizard`. The latter
+The builder writes `manifest.json` under its root and prints that path. Four
+repositories cover eight skills: `adoption-preparation`, which links no skill,
+for the preparation that precedes whole-file ownership of `AGENTS.md`;
+`planning` for `grill-with-docs`, `to-spec`, and `to-tickets`;
+`triage-wayfinder` for `triage` and `wayfinder`; and `delivery` for
+`implement`, `pr`, and `prototype`. The latter
 includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
 support skills that exercised skills depend on, such as the productivity
 `grilling` skill that `grill-with-docs` uses.
 
 The repositories use a local Markdown tracker. It cannot supply GitHub
 permissions, issue-event IDs, or native relationships; the
-[issue contract fixtures](issue-contract-validation.md) cover those. The
-`wizard` exercise stays static, such as `bash -n`, because completing its
-stages needs a human and remote configuration.
+[issue contract fixtures](issue-contract-validation.md) cover those.
 
 The test verifies every repository and skill link, the manifest identities,
 local signing, an ordinary later commit under hostile global signing, and the
 managed-update boundary: a synthetic change to a candidate copy of a vendored
 skill is detected while the vendored directory stays unchanged.
-
-## HumanLayer `show-me`
-
-`show-me` needs no builder of its own. Build the engineering fixtures, then
-link the vendored skill into the `architecture` repository, whose Order intake
-source and glossary give it a topic to explain:
-
-```bash
-node scripts/create-engineering-skill-fixtures.mjs --root <fixture-root>
-ln -s "$PWD/vendor/humanlayer-skills/skills/show-me" \
-  <fixture-root>/architecture/.agents/skills/show-me
-```
-
-The skill disallows implicit invocation, so each session invokes it by name.
-Run two sessions. In the first, ask for a visual explanation of the
-repository's control flow; the outcome is a short inline view, such as a call
-tree, file tree, or Mermaid diagram, next to brief text. In the second, ask for
-a visual comparison too dense for Mermaid; the outcome is one focused HTML file
-that the agent writes and opens. Opening it needs the host's `open` capability
-and a browser; in a headless harness, render the file with a local headless
-browser and inspect the result.

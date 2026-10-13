@@ -24,7 +24,6 @@ const scriptSourcePath = "scripts/create-planning-skill-fixtures.mjs";
 const skillsRoot = join(sourceRoot, "vendor/mattpocock-skills/skills");
 const upstreamCommit = "24fe0ef7737efae15c87225755e9f6f5965e4888";
 const skillNames = [
-  "setup-matt-pocock-skills",
   "grill-with-docs",
   "to-spec",
   "to-tickets",
@@ -33,7 +32,6 @@ const skillNames = [
   "implement",
   "pr",
   "prototype",
-  "wizard",
 ];
 const linkedSkillNames = [
   ...skillNames,
@@ -116,7 +114,10 @@ function skillPath(name) {
 
 function installLocalTracker(root) {
   cpSync(
-    join(skillPath("setup-matt-pocock-skills"), "issue-tracker-local.md"),
+    join(
+      skillsRoot,
+      "engineering/setup-matt-pocock-skills/issue-tracker-local.md",
+    ),
     join(root, "docs/agents/issue-tracker.md"),
   );
   write(
@@ -144,39 +145,12 @@ function installLocalTracker(root) {
 const repositories = {};
 
 {
-  const root = createRepository(
-    "setup",
-    ["setup-matt-pocock-skills", "triage"],
-    {
-      agents:
-        "# Parcel desk agent instructions\n\nKeep the `Parcel` term in user-facing text. Before changing code, read `docs/operator-notes.md`. Run `npm test` before committing.\n",
-      context:
-        "# Parcel desk\n\n## Language\n\n**Parcel**:\nA shipment accepted by the desk.\n_Avoid_: Package, item\n",
-    },
-  );
-  write(
-    root,
-    "docs/operator-notes.md",
-    "# Operator notes\n\nParcel records are retained for 30 days.\n",
-  );
-  repositories.setup = {
-    path: root,
-    skills: ["setup-matt-pocock-skills", "triage"],
-    initial: commit(root, "chore: establish setup exercise"),
-  };
-}
-
-{
-  const root = createRepository(
-    "adoption-preparation",
-    ["setup-matt-pocock-skills"],
-    {
-      agents:
-        "# Parcel API contributor instructions\n\nUse `Parcel` for accepted shipments. Read `docs/adr/0001-parcel-identifiers.md` before changing identifiers. Run `npm run verify-api` before committing API changes.\n",
-      context:
-        "# Parcel API\n\n## Language\n\n**Parcel**:\nA shipment accepted for delivery.\n_Avoid_: Package\n",
-    },
-  );
+  const root = createRepository("adoption-preparation", [], {
+    agents:
+      "# Parcel API contributor instructions\n\nUse `Parcel` for accepted shipments. Read `docs/adr/0001-parcel-identifiers.md` before changing identifiers. Run `npm run verify-api` before committing API changes.\n",
+    context:
+      "# Parcel API\n\n## Language\n\n**Parcel**:\nA shipment accepted for delivery.\n_Avoid_: Package\n",
+  });
   write(
     root,
     "docs/adr/README.md",
@@ -219,7 +193,7 @@ const repositories = {};
   );
   repositories["adoption-preparation"] = {
     path: root,
-    skills: ["setup-matt-pocock-skills"],
+    skills: [],
     initial: commit(root, "chore: establish adoption preparation exercise"),
   };
 }
@@ -353,10 +327,10 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
 {
   const root = createRepository(
     "delivery",
-    ["implement", "pr", "tdd", "code-review", "prototype", "wizard"],
+    ["implement", "pr", "tdd", "code-review", "prototype"],
     {
       agents:
-        "# Agent guidance\n\nRead the native ticket, glossary, and development commands. Use tests at the public `scheduleDelivery()` seam. Prototype work stays on a throwaway branch. Wizards must never contact production during this exercise.\n",
+        "# Agent guidance\n\nRead the native ticket, glossary, and development commands. Use tests at the public `scheduleDelivery()` seam. Prototype work stays on a throwaway branch.\n",
       context:
         "# Parcel delivery\n\n## Language\n\n**Delivery schedule**:\nThe ordered set of Parcels selected for dispatch.\n_Avoid_: Queue\n",
     },
@@ -416,31 +390,6 @@ test('urgent Parcels precede standard Parcels without mutating input', () => {
   );
   write(
     root,
-    ".env.example",
-    "PARCEL_API_URL=https://sandbox.example.invalid\nPARCEL_API_TOKEN=replace-me\n",
-  );
-  write(
-    root,
-    ".github/workflows/delivery.yml",
-    `name: Delivery smoke test
-on: workflow_dispatch
-jobs:
-  smoke:
-    runs-on: ubuntu-latest
-    steps:
-      - run: ./scripts/smoke-delivery.sh
-        env:
-          PARCEL_API_URL: \${{ vars.PARCEL_API_URL }}
-          PARCEL_API_TOKEN: \${{ secrets.PARCEL_API_TOKEN }}
-`,
-  );
-  write(
-    root,
-    "docs/sandbox-setup.md",
-    "# Sandbox setup\n\nThe fictional dashboard URL is `https://sandbox.example.invalid/settings/api`. A human creates a test token there. The wizard may author instructions and validate syntax but must not open the URL or set a real secret in this exercise.\n",
-  );
-  write(
-    root,
     ".scratch/delivery/spec.md",
     `# Stable Delivery schedules
 
@@ -476,7 +425,7 @@ Draft a local PR body after implementing the ticket. Do not open a pull request.
   );
   repositories.delivery = {
     path: root,
-    skills: ["implement", "pr", "prototype", "wizard"],
+    skills: ["implement", "pr", "prototype"],
     initial: commit(root, "chore: establish delivery exercises"),
   };
 }

@@ -125,7 +125,6 @@ defaults:
               - operations/lib/github-operation.mjs
               - LICENSE
               - THIRD_PARTY_NOTICES.md
-              - vendor/humanlayer-skills/LICENSE
               - vendor/mattpocock-skills/LICENSE
             arguments: []
           prerequisite:
@@ -143,11 +142,6 @@ defaults:
             version-arguments: ["--version"]
             version: ">=24.0.0 <25.0.0"
           timeout-seconds: 30
-
-    humanlayer-skills-license:
-      kind: file
-      target: .agents/skills/LICENSE.humanlayer-skills
-      exact: vendor/humanlayer-skills/LICENSE
 
     implementation-ticket-template:
       kind: file
@@ -279,11 +273,6 @@ defaults:
             version: ">=24.0.0 <25.0.0"
           timeout-seconds: 30
 
-    skill-ask-matt:
-      kind: skill
-      name: ask-matt
-      source: vendor/mattpocock-skills/skills/engineering/ask-matt
-
     skill-babysit:
       kind: skill
       name: babysit
@@ -309,11 +298,6 @@ defaults:
       name: domain-modeling
       source: vendor/mattpocock-skills/skills/engineering/domain-modeling
 
-    skill-grill-me:
-      kind: skill
-      name: grill-me
-      source: vendor/mattpocock-skills/skills/productivity/grill-me
-
     skill-grill-with-docs:
       kind: skill
       name: grill-with-docs
@@ -323,11 +307,6 @@ defaults:
       kind: skill
       name: grilling
       source: vendor/mattpocock-skills/skills/productivity/grilling
-
-    skill-handoff:
-      kind: skill
-      name: handoff
-      source: vendor/mattpocock-skills/skills/productivity/handoff
 
     skill-implement:
       kind: skill
@@ -354,35 +333,10 @@ defaults:
       name: research
       source: vendor/mattpocock-skills/skills/engineering/research
 
-    skill-retro:
-      kind: skill
-      name: retro
-      source: vendor/mattpocock-skills/skills/engineering/retro
-
-    skill-setup-matt-pocock-skills:
-      kind: skill
-      name: setup-matt-pocock-skills
-      source: vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills
-
-    skill-show-me:
-      kind: skill
-      name: show-me
-      source: vendor/humanlayer-skills/skills/show-me
-
     skill-tdd:
       kind: skill
       name: tdd
       source: vendor/mattpocock-skills/skills/engineering/tdd
-
-    skill-teach:
-      kind: skill
-      name: teach
-      source: vendor/mattpocock-skills/skills/productivity/teach
-
-    skill-to-questionnaire:
-      kind: skill
-      name: to-questionnaire
-      source: vendor/mattpocock-skills/skills/productivity/to-questionnaire
 
     skill-to-spec:
       kind: skill
@@ -399,20 +353,10 @@ defaults:
       name: triage
       source: vendor/mattpocock-skills/skills/engineering/triage
 
-    skill-wait-what:
-      kind: skill
-      name: wait-what
-      source: vendor/mattpocock-skills/skills/productivity/wait-what
-
     skill-wayfinder:
       kind: skill
       name: wayfinder
       source: vendor/mattpocock-skills/skills/engineering/wayfinder
-
-    skill-wizard:
-      kind: skill
-      name: wizard
-      source: vendor/mattpocock-skills/skills/engineering/wizard
 
     skill-writing-for-agents:
       kind: skill

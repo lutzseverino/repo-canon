@@ -32,7 +32,6 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
     "adoption-preparation",
     "delivery",
     "planning",
-    "setup",
     "triage-wayfinder",
   ]);
   assert.equal(
@@ -48,18 +47,15 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
     "pr",
     "prototype",
     "research",
-    "setup-matt-pocock-skills",
     "tdd",
     "to-spec",
     "to-tickets",
     "triage",
     "wayfinder",
-    "wizard",
   ]);
   assert.deepEqual(
     manifest.skills.map(({ name }) => name),
     [
-      "setup-matt-pocock-skills",
       "grill-with-docs",
       "to-spec",
       "to-tickets",
@@ -68,7 +64,6 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
       "implement",
       "pr",
       "prototype",
-      "wizard",
     ],
   );
   const deliveryScenario = manifest.repositories.delivery;
@@ -99,7 +94,7 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
 
   assert.equal(
     execFileSync("git", ["status", "--porcelain"], {
-      cwd: join(target, "setup"),
+      cwd: join(target, "adoption-preparation"),
       encoding: "utf8",
     }),
     "",
@@ -114,12 +109,5 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
         stdio: "pipe",
       }),
     /Command failed/,
-  );
-  assert.match(
-    readFileSync(
-      join(delivery, ".github", "workflows", "delivery.yml"),
-      "utf8",
-    ),
-    /secrets\.PARCEL_API_TOKEN/,
   );
 });
