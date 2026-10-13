@@ -1,5 +1,9 @@
 # Install skill setup files verbatim from upstream seeds
 
+Status: where Repo Canon's own rules live is superseded by
+[ADR 0016](0016-keep-requirements-in-installed-rules.md), which moves file rules
+from the contribution guide to installed rules.
+
 The issue tracker, triage label, and domain configurations under `docs/agents`
 are skill setup files: the installed skills read them as their per-repository
 configuration and look up named sections in them. Repo Canon declares each one

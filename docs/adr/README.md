@@ -6,7 +6,7 @@ involve real alternatives.
 
 - [Manage shared skills through standards releases](0001-manage-shared-skills-through-standards-releases.md):
   the source owns pinned snapshots of the upstream skills and distributes their
-  updates through its releases.
+  updates through its releases; ADR 0018 narrows them to workflow skills.
 - [Squash reviewed changes into the default branch](0002-squash-reviewed-changes.md):
   Conventional Commit titles and squash merges that keep the reviewed title and
   description as the final message.
@@ -15,7 +15,8 @@ involve real alternatives.
   conformance and workflow.
 - [Adopt published releases of this source](0004-adopt-published-releases-of-this-source.md):
   Repo Canon adopts its own standards from a published release through the
-  public CLI, never from its working tree.
+  public CLI, never from its working tree; ADR 0017 replaces its `complete`
+  profile.
 - [Require an open-ended minimum CLI version](0005-require-an-open-ended-minimum-cli-version.md):
   the required CLI names the oldest validated version with no upper bound.
 - [Keep point-in-time records with the event they record](0006-keep-point-in-time-records-with-their-event.md):
@@ -26,10 +27,12 @@ involve real alternatives.
   deleted.
 - [Install skill setup files verbatim from upstream seeds](0008-install-skill-setup-files-verbatim-from-upstream-seeds.md):
   the issue tracker, triage label, and domain configurations are the vendored
-  upstream setup seeds, installed byte for byte.
+  upstream setup seeds, installed byte for byte; ADR 0016 moves Repo Canon's
+  file rules out of the contribution guide.
 - [Enforce documentation rules as checks](0009-enforce-documentation-rules-as-checks.md):
   the documentation check enforces the index entry form, one index per
-  document, the development guide's order, and scope coverage.
+  document, the development guide's order, and scope coverage; ADR 0016 moves
+  the rules' one statement to installed rules.
 - [Carry delivery rules in the environment and keep skills short](0010-carry-delivery-rules-in-the-environment.md):
   the contribution guide and one `AGENTS.md` line carry delivery, the delivery
   skill is deleted, and the short `babysit` skill takes a pull request to its
