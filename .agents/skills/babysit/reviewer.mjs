@@ -110,7 +110,13 @@ export const reviewerState = (
   if (
     reviews.some(
       (review) =>
-        review.user?.login === reviewer.account && review.commit_id === head,
+        review.user?.login === reviewer.account &&
+        review.commit_id === head &&
+        review.state !== "PENDING" &&
+        (review.state === "APPROVED" ||
+          review.state === "CHANGES_REQUESTED" ||
+          Boolean(review.body?.trim()) ||
+          review.comments?.some((comment) => comment.in_reply_to_id == null)),
     )
   )
     return "reviewed";

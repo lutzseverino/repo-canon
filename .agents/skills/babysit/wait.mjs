@@ -310,7 +310,7 @@ const pushTime = async (pull) => {
 // its SHA, which also finds `pull_request_target` runs; its push time is
 // cached per head only when GitHub recorded it.
 const look = async (number, pushTimes, reviewer) => {
-  const [pull, pages, reviewPages] = await Promise.all([
+  const [pull, pages, reviewPages, reviewCommentPages] = await Promise.all([
     gh([
       "pr",
       "view",
@@ -334,12 +334,26 @@ const look = async (number, pushTimes, reviewer) => {
           "--slurp",
         ])
       : [],
+    reviewer
+      ? gh([
+          "api",
+          `repos/{owner}/{repo}/pulls/${number}/comments?per_page=100`,
+          "--paginate",
+          "--slurp",
+        ])
+      : [],
   ]);
   const comments = pages.flat().map((comment) => ({
     login: comment.user?.login,
     createdAt: comment.created_at,
     body: comment.body ?? "",
   }));
+  const commentsByReview = new Map();
+  for (const comment of reviewCommentPages.flat()) {
+    const comments = commentsByReview.get(comment.pull_request_review_id) ?? [];
+    comments.push(comment);
+    commentsByReview.set(comment.pull_request_review_id, comments);
+  }
   const head = pull.headRefOid;
   const [runs, push] = await Promise.all([
     gh([
@@ -374,7 +388,10 @@ const look = async (number, pushTimes, reviewer) => {
         }),
       ),
     reviewer,
-    reviews: reviewPages.flat(),
+    reviews: reviewPages.flat().map((review) => ({
+      ...review,
+      comments: commentsByReview.get(review.id) ?? [],
+    })),
     requestedAt: reviewRequestedAt(
       Date.parse(pull.createdAt),
       comments,

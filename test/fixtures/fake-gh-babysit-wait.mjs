@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // A GitHub CLI fake for the babysit wait script. It answers the pull request
-// view, the paginated issue comments, the head's paginated workflow runs, the
+// view, paginated issue comments, reviews and review comments, workflow runs, the
 // push activity and the head commit from the state file, and fails every call
 // with `fail`. `failActivity` fails only the activity read, and
 // `failActivityReads` fails its first reads; `recordAfter`
@@ -36,6 +36,24 @@ if (args[0] === "pr" && args[1] === "view") {
     process.stderr.write("gh: merge refused\n");
     process.exit(1);
   }
+} else if (
+  args[0] === "api" &&
+  (args[1].includes("/reviews?") ||
+    (args[1].includes("/pulls/") && args[1].includes("/comments?")))
+) {
+  if (state.rejectReviewReads) {
+    process.stderr.write("unexpected review or review comment read\n");
+    process.exit(2);
+  }
+  if (!args.includes("--paginate") || !args.includes("--slurp")) {
+    process.stderr.write("review reads must paginate and slurp\n");
+    process.exit(2);
+  }
+  write(
+    args[1].includes("/reviews?")
+      ? (state.reviewPages ?? [state.reviews ?? []])
+      : (state.reviewCommentPages ?? [state.reviewComments ?? []]),
+  );
 } else if (args[0] === "api" && args[1].includes("/comments?")) {
   write([
     state.comments.map(({ login, createdAt, body }) => ({
@@ -44,8 +62,6 @@ if (args[0] === "pr" && args[1] === "view") {
       body,
     })),
   ]);
-} else if (args[0] === "api" && args[1].includes("/reviews?")) {
-  write([state.reviews ?? []]);
 } else if (args[0] === "api" && args[1].includes("/actions/runs?")) {
   const runs = state.runs ?? [];
   write([{ total_count: runs.length, workflow_runs: runs }]);
