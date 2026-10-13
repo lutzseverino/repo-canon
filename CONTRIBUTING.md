@@ -45,8 +45,11 @@ When adding a native blocker, pass the blocking issue's numeric database ID as
 Applying `ready-for-agent` or `ready-for-human` is the review action and needs
 the repository `admin`, `maintain`, or `triage` role. After revising a contract
 or posting an Agent Brief, wait for the issue-contract workflow's revision
-notice before applying readiness. Editing a contract removes its readiness. A
-specification or ticket can be ready while its blockers are open. A parent (a
+notice before applying readiness. Editing a contract removes its readiness. The
+workflow keeps one workflow state label on an issue: authorized readiness or a
+newly applied state replaces the previous one, and an issue left with none gets
+`needs-triage`.
+A specification or ticket can be ready while its blockers are open. A parent (a
 specification or any issue with sub-issues) never runs; its readiness releases
 its tickets, which each also need their own readiness. Apply the parent's
 readiness after its tickets are published, and again when a ticket is
@@ -234,7 +237,9 @@ may be public.
 
 An agent comments on an issue or pull request to record a decision, an outcome,
 or a question that needs an answer, never to narrate progress. Consolidate
-everything the agent has to say on one occasion into one comment.
+everything the agent has to say on one occasion into one comment. In an Agent
+Brief comment, the brief's heading comes right after the triage disclaimer, and
+triage notes follow the brief.
 
 Every comment an agent writes on an issue or pull request starts with this AI
 disclaimer line:
