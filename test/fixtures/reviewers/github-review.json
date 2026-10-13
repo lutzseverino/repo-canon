@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "account": "review-bot[bot]",
+  "request": {
+    "comment": "@review-bot review",
+    "onOpen": false
+  },
+  "unavailable": [],
+  "bounds": {
+    "responseMinutes": 2,
+    "reviewMinutes": 10
+  }
+}

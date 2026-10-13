@@ -282,7 +282,7 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
     readdirSync(join(root, ".agents/skills/babysit"), {
       recursive: true,
     }).sort(),
-    ["SKILL.md", "wait.mjs"],
+    ["SKILL.md", "reviewer.mjs", "wait.mjs"],
   );
 });
 
@@ -294,10 +294,10 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   assert.match(babysit, /`5`: still waiting; run it again/);
   assert.match(
     readFileSync(join(root, ".agents/skills/babysit/wait.mjs"), "utf8"),
-    /One invocation covers 9 minutes waited: a typical wait takes one, and the\n\/\/ worst case, the 30-minute review bound plus checks, takes at most four\./,
+    /One invocation covers 9 minutes waited; repository data sets review bounds\./,
   );
   assert.doesNotMatch(babysit, /--watch|watch tool|poll for reviews/);
-  assert.doesNotMatch(babysit, /comments on it that Codex/);
+  assert.doesNotMatch(babysit, /comments on it that the configured reviewer/);
   assert.match(babysit, /`4` for the reason its line gives/);
   assert.match(
     babysit,
@@ -318,12 +318,12 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   const guide = flowedText("CONTRIBUTING.md");
   assert.match(
     guide,
-    /the merging agent comments on it that Codex did not review that head and why/,
+    /the merging agent comments on it that the configured reviewer did not review that head and why/,
   );
   assert.match(guide, /a push is not one/);
   assert.match(
     guide,
-    /it is unavailable, no review was requested after the head's push, Codex did not respond on the pull request within 5 minutes of the latest review request, or no review arrived within 30 minutes of it/,
+    /it is unavailable, no review was requested after the head's push, it did not respond within `bounds.responseMinutes` of the latest review request, or no review arrived within `bounds.reviewMinutes` of it/,
   );
 });
 

@@ -44,9 +44,11 @@ contact GitHub or establish live remote setup. Run
 and its adapter, driven by a stateful GitHub CLI fake and a fake Sandcastle
 launcher. Run
 `node --test test/babysit-wait.test.mjs` for the `babysit` wait script's
-decision, driven by fixtures from Codex's comments, and its silence, driven by
-a GitHub CLI fake. The
-public source-validation command and its boundary are described in
+decision, driven by reviewer data fixtures (including real summary comments),
+and its silence, driven by
+a GitHub CLI fake. Run `node --test test/pull-request-reviewer-check.test.mjs`
+for the optional reviewer schema check, including retained operation resources.
+The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 
 Run `npm run test:productivity-skill-fixtures` to rebuild and verify the

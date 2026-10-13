@@ -34,6 +34,8 @@ if (args[0] === "pr" && args[1] === "view") {
       body,
     })),
   ]);
+} else if (args[0] === "api" && args[1].includes("/reviews?")) {
+  write([state.reviews ?? []]);
 } else if (args[0] === "api" && args[1].includes("/actions/runs?")) {
   const runs = state.runs ?? [];
   write([{ total_count: runs.length, workflow_runs: runs }]);
