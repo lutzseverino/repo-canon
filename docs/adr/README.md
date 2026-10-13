@@ -40,7 +40,8 @@ involve real alternatives.
   is superseded by ADR 0012, and the rest by ADRs 0013 and 0014.
 - [Run each ticket of a specification as its own factory run](0012-run-each-ticket-as-its-own-factory-run.md):
   every factory run is a direct run, a parent never runs, and its readiness
-  releases its tickets, each on its own `model:` label.
+  releases its tickets, each on its own model label; its fixed prompt and
+  `model:` prefix are superseded by ADR 0014.
 - [Install the factory on the host from its own releases](0013-install-the-factory-on-the-host-from-its-own-releases.md):
   the factory is released from `factory/` under its own versions, one process
   on a host runs an auto-updating major for all its repositories, and a

@@ -1,5 +1,10 @@
 # Run each ticket of a specification as its own factory run
 
+Status: its fixed `implement` prompt and `model:` label prefix are superseded
+by [ADR 0014](0014-name-every-factory-convention-in-configuration.md), which
+moves both into the repository's factory configuration; running each ticket as
+its own run stands.
+
 Every factory run is a direct run: one agent, started with only its provider's
 invocation of `implement` and `#<n>`, takes one issue to one pull request. A
 parent, a specification or any issue with native sub-issues, never runs. Its
