@@ -142,6 +142,18 @@ test("every lutzseverino GitHub document link in source inputs is pinned", () =>
   }
 });
 
+test("no source input names the retained source layout", () => {
+  // Repository Standards runs and retains source inputs; they cite its
+  // commands, never where it keeps them.
+  for (const path of sourceInputFiles())
+    assert.ok(
+      !readFileSync(join(root, path), "utf8").includes(
+        ".repo-standards/inputs/source",
+      ),
+      `${path} names .repo-standards/inputs/source`,
+    );
+});
+
 function flowedText(path) {
   return readFileSync(join(root, path), "utf8").replaceAll(/\s+/g, " ");
 }

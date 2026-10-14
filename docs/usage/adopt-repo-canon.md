@@ -94,9 +94,9 @@ discovery for Project READMEs, documentation paths, and the intentionally empty
 project-content scope of remote configuration.
 
 Prepare a `repo-standards/scope/v2` proposal from the repository evidence and
-Repo Canon's discovery guidance. For the `documentation` declaration, that
-guidance has the agent run the documentation scope drafter shipped with the
-selected source and decide only its unresolved questions. The public CLI's
+Repo Canon's discovery guidance. For the `documentation` declaration, the
+first report already holds a draft in `discovery.draft`, which Repo Canon's
+documentation scope drafter wrote; decide only its unresolved questions. The public CLI's
 [inspection contract](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/inspection.md#discover-contextual-file-scope)
 defines the proposal fields; the CLI derives the evidence binding.
 

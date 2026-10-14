@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
-  cpSync,
+  copyFileSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
+  readlinkSync,
   rmSync,
   symlinkSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -32,71 +35,82 @@ const drafterPath = "discovery/draft-documentation-scope.mjs";
 const drafter = join(sourceRoot, drafterPath);
 const check = join(sourceRoot, "operations/check-documentation.mjs");
 
-// Drafts from this source with its standard profile selected, since its
-// manifest declares two profiles.
-function draft(root, args = [], script = drafter) {
-  const selection = script === drafter ? ["--profile", "standard"] : [];
-  const child = spawnSync(
-    process.execPath,
-    [script, "--project", root, ...selection, ...args],
-    { encoding: "utf8" },
-  );
+// The discovery request Repository Standards passes the drafter on standard
+// input, selecting this source's standard profile by default.
+const request = (root, overrides = {}) => ({
+  format: "repo-standards/discovery/v1",
+  declaration: "documentation",
+  projectRoot: root,
+  standards: {
+    repository: "https://github.com/lutzseverino/repo-canon",
+    version: "v0.0.0-test",
+    commit: "0000000000000000000000000000000000000000",
+  },
+  profile: "standard",
+  ...overrides,
+});
+
+// Runs the drafter as Repository Standards runs a discovery script: from the
+// copy, with no arguments and the request on standard input.
+function draft(
+  root,
+  { script = drafter, input = request(root), args = [], cwd = root } = {},
+) {
+  const child = spawnSync(process.execPath, [script, ...args], {
+    cwd,
+    encoding: "utf8",
+    input: typeof input === "string" ? input : `${JSON.stringify(input)}\n`,
+  });
   return {
     ...child,
     proposal: child.status === 0 ? JSON.parse(child.stdout) : null,
   };
 }
 
-// Drafts a fixture repository's scope, asserting that drafting changes
-// nothing and that the proposal has the scope proposal's shape.
-function drafted(t, files, args = [], prepare = () => {}) {
+// A project as Repository Standards copies it for a discovery script: the
+// files and directories Git keeps, without Git metadata or `.repo-standards`.
+function projectCopy(t, files, prepare = () => {}) {
   const project = fixture(files);
   t.after(project.close);
+  rmSync(join(project.root, ".git"), { recursive: true, force: true });
   prepare(project.root);
-  const before = snapshot(project.root);
-  const outcome = draft(project.root, args);
+  return project.root;
+}
+
+// Drafts a copy's scope, asserting that drafting changes nothing and that the
+// proposal has the scope proposal's shape.
+function drafted(t, files, prepare = () => {}, options = {}) {
+  const root = projectCopy(t, files, prepare);
+  const before = snapshot(root);
+  const outcome = draft(root, options);
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.stderr, "");
   assert.deepEqual(
-    snapshot(project.root),
+    snapshot(root),
     before,
-    "the drafter must not change project content",
+    "the drafter must not change the copy",
   );
-  assertScopeProposal(outcome.proposal, project.root);
+  assertScopeProposal(outcome.proposal, root);
   return {
-    root: project.root,
+    root,
     proposal: outcome.proposal,
     entry: outcome.proposal.declarations[0],
   };
 }
 
-// A regular file reached through real directories only, as the CLI observes it.
-function isObservedFile(root, path) {
-  const segments = path.split("/");
-  try {
-    return (
-      segments
-        .slice(0, -1)
-        .every((_, index) =>
-          lstatSync(join(root, ...segments.slice(0, index + 1))).isDirectory(),
-        ) && lstatSync(join(root, path)).isFile()
-    );
-  } catch {
-    return false;
-  }
+// The regular files of a copy reached through real directories only, which
+// the CLI's discovery observation holds.
+function copiedFiles(root, directory = "") {
+  return readdirSync(join(root, directory), { withFileTypes: true }).flatMap(
+    (entry) => {
+      const path = directory ? `${directory}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) return copiedFiles(root, path);
+      return entry.isFile() ? [path] : [];
+    },
+  );
 }
 
-function keptFiles(root) {
-  return execFileSync(
-    "git",
-    ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
-    { cwd: root, encoding: "utf8" },
-  )
-    .split("\0")
-    .filter((path) => path && isObservedFile(root, path));
-}
-
-// The Repository Standards 4.0.0 scope proposal (`repo-standards/scope/v2`):
+// The Repository Standards scope proposal (`repo-standards/scope/v2`):
 // exactly these fields, nonempty text, include or exclude decisions, no
 // duplicate entries, and evidence paths that the discovery observation holds
 // as eligible files or directories. Every candidate cites evidence, apart from
@@ -131,7 +145,7 @@ function assertScopeProposal(proposal, root) {
   unique(entry.unresolved);
   unique(entry.candidates.map((candidate) => candidate.path));
 
-  const files = keptFiles(root);
+  const files = copiedFiles(root);
   const directories = new Set(
     files.flatMap((path) =>
       path
@@ -190,7 +204,7 @@ const included = (entry) =>
     .filter((candidate) => candidate.decision === "include")
     .map((candidate) => candidate.path);
 
-function checkDraftedScope(root, entry) {
+function checkDraftedScope(root, paths) {
   return invokeCheck(check, root, {
     operation: {
       declaration: "documentation",
@@ -198,12 +212,12 @@ function checkDraftedScope(root, entry) {
       id: "documentation-navigation",
     },
     declarations: fileDeclarations(),
-    allowedTargets: { paths: included(entry), directories: [] },
+    allowedTargets: { paths, directories: [] },
   });
 }
 
-const coverage = (roots) =>
-  `Drafted from the repository tree by \`discovery/draft-documentation-scope.mjs\`: every file Git keeps under the documentation ${roots.includes(" and ") ? "roots" : "root"} ${roots}, a new index for each of ${roots.includes(" and ") ? "their" : "its"} directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them.`;
+const coverage =
+  "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation root `docs`, a new index for each of its directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, and so is each README.md outside the documentation roots. Link-repair files and move destinations enter when the work needs them.";
 
 const underDocs = (path) => ({
   path,
@@ -225,11 +239,13 @@ const outsideIndex = (path) => ({
   evidence: [path],
 });
 const unsupported = (path, directory) =>
-  `Repository Standards accepts the new \`${path}\` only with evidence inside \`${directory}\`, where Git keeps no file yet. Should that directory's first content be committed in a separate reviewed change before drafting again?`;
+  `Repository Standards accepts the new \`${path}\` only with evidence inside \`${directory}\`, where Git keeps no file yet. Should that directory's first content be committed in a separate reviewed change before adopting again?`;
+const rootQuestion = (candidate, directories, outer = "") =>
+  `Is \`${candidate}\` a documentation root${outer}? Its ${directories} Markdown documents. If it is, include its files and a new index for each of its directories without one, as this draft does for \`docs\`. If it is not, its README.md files stay out of this scope.`;
 
 // A repository that follows every documentation rule, with the installed
-// agent configuration, a domain glossary, a Project README, and ignored
-// output.
+// agent configuration, a domain glossary, and a Project README. Its copy holds
+// its `.gitignore` but not the output it ignores.
 const conforming = {
   ".gitignore": "build/\n",
   "AGENTS.md": "# Agents\n",
@@ -278,7 +294,6 @@ const conforming = {
   "docs/agents/project.md": "# Project guidance\n",
   "packages/widget/README.md": "# Widget package\n",
   "packages/widget/index.js": "export {};\n",
-  "build/report.md": "# Report\n",
 };
 
 test("drafts the expected scope of a conforming repository", (t) => {
@@ -289,7 +304,7 @@ test("drafts the expected scope of a conforming repository", (t) => {
     declarations: [
       {
         id: "documentation",
-        coverage: coverage("`docs`"),
+        coverage,
         candidates: [
           {
             path: "GLOSSARY.md",
@@ -398,20 +413,22 @@ test("drafts the root indexes of a repository without documentation and asks for
 });
 
 test("leaves the cases no rule decides as unresolved questions", (t) => {
-  const { entry } = drafted(t, {
-    ".gitignore": "docs/usage/draft.md\ndocs/cache/\n",
-    "docs/README.md": "# Documentation\n",
-    "docs/overview.md": "# Overview\n",
-    "docs/usage/install.md": "# Install\n",
-    "docs/usage/draft.md": "# Draft\n",
-    "docs/cache/index.md": "# Cache\n",
-    "notes.md": "# Notes\n",
-    "guides/setup.md": "# Setup\n",
-    "packages/app/README.md": "# App\n",
-    "packages/app/docs/usage/guide.md": "# Guide\n",
-    "packages/app/docs/adr/0001-start.md": "# Start\n",
-    "src/legacy/GLOSSARY.md": "# Legacy\n",
-  });
+  const { entry } = drafted(
+    t,
+    {
+      "docs/README.md": "# Documentation\n",
+      "docs/overview.md": "# Overview\n",
+      "docs/usage/install.md": "# Install\n",
+      "notes.md": "# Notes\n",
+      "guides/setup.md": "# Setup\n",
+      "packages/app/README.md": "# App\n",
+      "packages/app/docs/usage/guide.md": "# Guide\n",
+      "packages/app/docs/adr/0001-start.md": "# Start\n",
+      "src/legacy/GLOSSARY.md": "# Legacy\n",
+    },
+    // The copy holds a directory whose files Git ignores, but not the files.
+    (root) => mkdirSync(join(root, "docs/cache")),
+  );
 
   assert.deepEqual(entry.candidates, [
     underDocs("docs/README.md"),
@@ -434,14 +451,16 @@ test("leaves the cases no rule decides as unresolved questions", (t) => {
     outsideIndex("packages/app/README.md"),
   ]);
   assert.deepEqual(entry.unresolved, [
-    "Git ignores `docs/usage/draft.md`, which lies under the documentation root `docs`. Should it be removed, moved outside the root, or kept by Git and drafted again?",
-    "Is `packages/app/docs` a documentation root? Its `packages/app/docs/adr` and `packages/app/docs/usage` directories hold Markdown documents. If it is, draft again with `--root packages/app/docs`.",
+    rootQuestion(
+      "packages/app/docs",
+      "`packages/app/docs/adr` and `packages/app/docs/usage` directories hold",
+    ),
     "Is `src/legacy/GLOSSARY.md` a domain glossary or context map of this repository? Include it if it is.",
     unsupported("docs/development/README.md", "docs/development"),
     "Which of these Markdown files at the repository root are documentation this scope must cover, such as a document to move into a documentation category: `notes.md`? Include each one, with its destination when it moves.",
     "Which of these Markdown files under `guides` are documentation this scope must cover, such as a document to move into a documentation category: `guides/setup.md`? Include each one, with its destination when it moves.",
     "Which of these Markdown files under `packages` are documentation this scope must cover, such as a document to move into a documentation category: `packages/app/docs/adr/0001-start.md` and `packages/app/docs/usage/guide.md`? Include each one, with its destination when it moves.",
-    "`docs/cache` under the documentation root `docs` holds no file that Git keeps, but the documentation check reads it. Should it be removed, or kept by Git and drafted again?",
+    "`docs/cache` under the documentation root `docs` holds no file that Git keeps, but the documentation check reads it. Should it be removed, or should Git keep a file in it?",
     "`docs/overview.md` lies directly under the documentation root `docs`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory's index; the files Git keeps in it are already included.",
   ]);
 });
@@ -455,7 +474,6 @@ test("asks about a stray directory and a symbolic link under a root without draf
       "docs/api/endpoints.md": "# Endpoints\n",
       "docs/usage/README.md": "# Usage\n",
     },
-    [],
     (root) => symlinkSync("README.md", join(root, "docs/usage/alias.md")),
   );
 
@@ -471,82 +489,6 @@ test("asks about a stray directory and a symbolic link under a root without draf
   ]);
 });
 
-test("drafts a documentation root the agent decided on", (t) => {
-  const files = {
-    "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": developmentGuide(),
-    "packages/app/README.md": "# App\n",
-    "packages/app/docs/usage/guide.md": "# Guide\n",
-    "packages/app/docs/adr/README.md": "# Decisions\n",
-  };
-  const { entry } = drafted(t, files, ["--root", "packages/app/docs/"]);
-
-  assert.equal(entry.coverage, coverage("`docs` and `packages/app/docs`"));
-  assert.deepEqual(
-    entry.candidates.filter((candidate) =>
-      candidate.path.startsWith("packages/"),
-    ),
-    [
-      outsideIndex("packages/app/README.md"),
-      {
-        path: "packages/app/docs/README.md",
-        decision: "include",
-        reason:
-          "The index of the documentation root `packages/app/docs`, to create.",
-        evidence: ["packages/app/docs"],
-      },
-      {
-        path: "packages/app/docs/adr/README.md",
-        decision: "include",
-        reason: "A file under the documentation root `packages/app/docs`.",
-        evidence: ["packages/app/docs/adr/README.md"],
-      },
-      {
-        path: "packages/app/docs/usage/README.md",
-        decision: "include",
-        reason:
-          "The index of the documentation directory `packages/app/docs/usage`, to create.",
-        evidence: ["packages/app/docs/usage"],
-      },
-      {
-        path: "packages/app/docs/usage/guide.md",
-        decision: "include",
-        reason: "A file under the documentation root `packages/app/docs`.",
-        evidence: ["packages/app/docs/usage/guide.md"],
-      },
-    ],
-  );
-  assert.deepEqual(entry.unresolved, []);
-});
-
-test("asks for a category when a decided root has none", (t) => {
-  const { entry } = drafted(
-    t,
-    {
-      "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide(),
-      "packages/app/handbook/notes.md": "# Notes\n",
-      "packages/app/handbook/guides/first-run.md": "# First run\n",
-      "packages/app/handbook/guides/usage/tips.md": "# Tips\n",
-    },
-    ["--root", "packages/app/handbook"],
-  );
-
-  assert.deepEqual(included(entry), [
-    "docs/README.md",
-    "docs/development/README.md",
-    "packages/app/handbook/README.md",
-    "packages/app/handbook/guides/README.md",
-    "packages/app/handbook/guides/first-run.md",
-    "packages/app/handbook/guides/usage/README.md",
-    "packages/app/handbook/guides/usage/tips.md",
-    "packages/app/handbook/notes.md",
-  ]);
-  assert.deepEqual(entry.unresolved, [
-    "The documentation check cannot tell that `packages/app/handbook` is a documentation root without a usage, development, adr, or agents directory index. Which category will hold its documents? Include that category's `README.md`.",
-  ]);
-});
-
 test("leaves out the paths that other declarations and Repository Standards own", (t) => {
   const { entry } = drafted(t, {
     "docs/README.md": "# Documentation\n",
@@ -556,7 +498,11 @@ test("leaves out the paths that other declarations and Repository Standards own"
     "THIRD_PARTY_NOTICES.md": "# Notices\n",
     ".github/PULL_REQUEST_TEMPLATE.md": "## Summary\n",
     ".agents/skills/tdd/SKILL.md": "# TDD\n",
-    ".agents/skills/adopt-standards/SKILL.md": "# Adopt\n",
+    ".agents/skills/repository-standards/SKILL.md": "# Repository Standards\n",
+    ".agents/skills/repository-standards/usage/README.md": "# Usage\n",
+    ".agents/skills/author-standards/references/README.md": "# References\n",
+    ".claude/skills/repository-standards/SKILL.md": "# Repository Standards\n",
+    ".claude/skills/author-standards/usage/guide.md": "# Guide\n",
     ".repo-standards/inputs/source/docs/usage/guide.md": "# Guide\n",
     "vendor/marked/README.md": "# Marked\n",
     "vendor/marked/usage/README.md": "# Usage\n",
@@ -573,128 +519,62 @@ test("leaves out the paths that other declarations and Repository Standards own"
   assert.deepEqual(entry.unresolved, [
     "Which of these Markdown files at the repository root are documentation this scope must cover, such as a document to move into a documentation category: `THIRD_PARTY_NOTICES.md`? Include each one, with its destination when it moves.",
   ]);
+  assert.equal(entry.coverage, coverage);
 });
 
-test("leaves the installed standards-updates skill out of the whole proposal", (t) => {
-  const { proposal } = drafted(t, {
+test("leaves the retired system skills out of the proposal and says why", (t) => {
+  const retired = [
+    ".agents/skills/adopt-standards",
+    ".agents/skills/standards-updates",
+  ];
+  const { proposal, entry } = drafted(
+    t,
+    {
+      "docs/README.md": "# Documentation\n",
+      "docs/development/README.md": developmentGuide(),
+      ".agents/skills/adopt-standards/SKILL.md": "# Adopt\n",
+      ".agents/skills/adopt-standards/references/README.md": "# References\n",
+      ".agents/skills/adopt-standards/usage/guide.md": "# Guide\n",
+      ".agents/skills/standards-updates/SKILL.md": "# Standards updates\n",
+    },
+    (root) => {
+      mkdirSync(join(root, ".claude/skills"), { recursive: true });
+      for (const path of retired)
+        symlinkSync(
+          `../../${path}`,
+          join(root, ".claude/skills", path.split("/").at(-1)),
+        );
+    },
+  );
+
+  assert.deepEqual(included(entry), [
+    "docs/README.md",
+    "docs/development/README.md",
+  ]);
+  assert.deepEqual(entry.unresolved, []);
+  assert.equal(
+    entry.coverage,
+    `${coverage} The retired Repository Standards skills \`.agents/skills/adopt-standards\`, \`.agents/skills/standards-updates\`, \`.claude/skills/adopt-standards\`, and \`.claude/skills/standards-updates\` are left out too, because the run that drafts this scope removes them.`,
+  );
+  assert.doesNotMatch(
+    JSON.stringify({ ...entry, coverage: "" }),
+    /adopt-standards|standards-updates/,
+    "questions, targets, and evidence must leave out the retired skills",
+  );
+
+  const one = drafted(t, {
     "docs/README.md": "# Documentation\n",
     "docs/development/README.md": developmentGuide(),
     ".agents/skills/standards-updates/SKILL.md": "# Standards updates\n",
   });
-
-  assert.doesNotMatch(
-    JSON.stringify(proposal),
-    /\.agents\/skills\/standards-updates/,
-    "questions, targets, and evidence must leave out the reserved skill",
+  assert.equal(
+    one.entry.coverage,
+    `${coverage} The retired Repository Standards skill \`.agents/skills/standards-updates\` is left out too, because the run that drafts this scope removes it.`,
   );
+  assert.ok(proposal);
 });
 
-test("asks whether a parent of reserved skills is a documentation root without drafting the skills", (t) => {
-  const { entry } = drafted(
-    t,
-    {
-      "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide(),
-      ".agents/skills/usage/README.md": "# Usage\n",
-      ".agents/skills/adopt-standards/SKILL.md": "# Adopt\n",
-      ".agents/skills/standards-updates/SKILL.md": "# Standards updates\n",
-    },
-    ["--root", ".agents/skills"],
-  );
-
-  assert.deepEqual(entry.unresolved, [
-    "`.agents/skills/adopt-standards` lies directly under the documentation root `.agents/skills`, outside the usage, development, adr, and agents categories, but its files belong to other declarations or to Repository Standards, so this scope cannot move it. Is `.agents/skills` a documentation root after all?",
-    "`.agents/skills/standards-updates` lies directly under the documentation root `.agents/skills`, outside the usage, development, adr, and agents categories, but its files belong to other declarations or to Repository Standards, so this scope cannot move it. Is `.agents/skills` a documentation root after all?",
-  ]);
-  for (const candidate of entry.candidates) {
-    for (const path of [candidate.path, ...candidate.evidence]) {
-      assert.doesNotMatch(
-        path,
-        /^\.agents\/skills\/(adopt-standards|standards-updates)(\/|$)/,
-        "targets and evidence must leave out the reserved skills",
-      );
-    }
-  }
-});
-
-test("excludes each file of an owned directory under a decided root", (t) => {
-  const { entry } = drafted(
-    t,
-    {
-      "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide(),
-      ".agents/usage/README.md": "# Usage\n",
-      ".agents/skills/tdd/SKILL.md": "# TDD\n",
-      ".agents/skills/tdd/tests.md": "# Tests\n",
-      ".agents/skills/adopt-standards/SKILL.md": "# Adopt\n",
-    },
-    ["--root", ".agents"],
-  );
-
-  assert.deepEqual(
-    entry.candidates.filter((candidate) =>
-      candidate.path.startsWith(".agents/"),
-    ),
-    [
-      {
-        path: ".agents/README.md",
-        decision: "include",
-        reason: "The index of the documentation root `.agents`, to create.",
-        evidence: [".agents"],
-      },
-      owned(".agents/skills/tdd/SKILL.md", "skill-tdd"),
-      owned(".agents/skills/tdd/tests.md", "skill-tdd"),
-      {
-        path: ".agents/usage/README.md",
-        decision: "include",
-        reason: "A file under the documentation root `.agents`.",
-        evidence: [".agents/usage/README.md"],
-      },
-    ],
-  );
-  const ownedOnly =
-    "`.agents/skills` lies directly under the documentation root `.agents`, outside the usage, development, adr, and agents categories, but its files belong to other declarations or to Repository Standards, so this scope cannot move it. Is `.agents` a documentation root after all?";
-  assert.deepEqual(entry.unresolved, [ownedOnly]);
-
-  const reservedOnly = drafted(
-    t,
-    {
-      "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide(),
-      ".agents/usage/README.md": "# Usage\n",
-      ".agents/skills/adopt-standards/SKILL.md": "# Adopt\n",
-    },
-    ["--root", ".agents"],
-  );
-  assert.deepEqual(
-    reservedOnly.entry.unresolved,
-    [ownedOnly],
-    "a directory of reserved paths is not asked to be removed",
-  );
-
-  const ignoredOnly = drafted(
-    t,
-    {
-      ".gitignore": ".agents/skills/mine/\n",
-      "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide(),
-      ".agents/usage/README.md": "# Usage\n",
-      ".agents/skills/mine/notes.md": "# Notes\n",
-    },
-    ["--root", ".agents"],
-    (root) => mkdirSync(join(root, ".agents/empty")),
-  );
-  assert.deepEqual(
-    ignoredOnly.entry.unresolved,
-    [
-      "`.agents/empty` under the documentation root `.agents` holds no file that Git keeps, but the documentation check reads it. Should it be removed, or kept by Git and drafted again?",
-      "`.agents/skills` under the documentation root `.agents` holds no file that Git keeps, but the documentation check reads it. Should it be removed, or kept by Git and drafted again?",
-    ],
-    "a directory without reserved or owned files is asked about as any other",
-  );
-});
-
-test("asks about entries that block a root or an index, and survives a dirty working tree", (t) => {
+test("asks about entries that block a root or an index", (t) => {
   const fileGuide = drafted(t, {
     "docs/README.md": "# Documentation\n",
     "docs/development": "Not a directory.\n",
@@ -725,51 +605,17 @@ test("asks about entries that block a root or an index, and survives a dirty wor
   assert.deepEqual(directoryIndex.entry.unresolved, [
     "`docs/usage/README.md` must be a file, the documentation index of its directory, but it is a directory. Should it be removed or renamed?",
   ]);
-
-  const outside = mkdtempSync(join(tmpdir(), "repo-canon-outside-"));
-  t.after(() => rmSync(outside, { recursive: true, force: true }));
-  mkdirSync(join(outside, "usage"));
-  writeFileSync(join(outside, "usage/guide.md"), "# Guide\n");
-  const dirty = fixture({
-    "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": developmentGuide(),
-    "docs/usage/guide.md": "# Guide\n",
-    "handbook/usage/guide.md": "# Guide\n",
-  });
-  t.after(dirty.close);
-  execFileSync("git", ["add", "--all"], { cwd: dirty.root });
-  rmSync(join(dirty.root, "docs/usage"), { recursive: true });
-  writeFileSync(join(dirty.root, "docs/usage"), "Now a file.\n");
-  rmSync(join(dirty.root, "handbook"), { recursive: true });
-  symlinkSync(outside, join(dirty.root, "handbook"));
-
-  const outcome = draft(dirty.root);
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assertScopeProposal(outcome.proposal, dirty.root);
-  const [entry] = outcome.proposal.declarations;
-  assert.deepEqual(included(entry), [
-    "docs/README.md",
-    "docs/development/README.md",
-    "docs/usage",
-  ]);
-  assert.deepEqual(entry.unresolved, [
-    "`docs/usage` lies directly under the documentation root `docs`, outside the usage, development, adr, and agents categories. Which category does it move to? Include each destination path and any new directory's index; the files Git keeps in it are already included.",
-  ]);
-  const throughLink = draft(dirty.root, ["--root", "handbook"]);
-  assert.equal(throughLink.status, 1);
-  assert.match(
-    throughLink.stderr,
-    /--root handbook is not a directory that holds a file Git keeps/,
-  );
 });
 
 test("over conforming repositories the drafted scope passes the documentation check", (t) => {
   const single = drafted(t, conforming);
   assert.equal(
-    checkDraftedScope(single.root, single.entry).result.status,
+    checkDraftedScope(single.root, included(single.entry)).result.status,
     "passed",
   );
 
+  // A context-local documentation root is a question; answering it as the
+  // question says gives a scope that passes.
   const contexts = {
     "docs/README.md": index(
       "Documentation",
@@ -798,20 +644,36 @@ test("over conforming repositories the drafted scope passes the documentation ch
     ),
     "src/ordering/docs/adr/0001-event-sourcing.md": "# Event sourcing\n",
   };
-  const decided = drafted(t, contexts, ["--root", "src/ordering/docs"]);
-  assert.deepEqual(decided.entry.unresolved, []);
-  const outcome = checkDraftedScope(decided.root, decided.entry);
+  const asked = drafted(t, contexts);
+  assert.deepEqual(asked.entry.unresolved, [
+    rootQuestion(
+      "src/ordering/docs",
+      "`src/ordering/docs/adr` directory holds",
+    ),
+    "Which of these Markdown files under `src` are documentation this scope must cover, such as a document to move into a documentation category: `src/ordering/docs/adr/0001-event-sourcing.md`? Include each one, with its destination when it moves.",
+  ]);
+  assert.ok(
+    asked.entry.candidates.every(
+      (candidate) => !candidate.path.startsWith("src/ordering/docs/"),
+    ),
+    "the root question decides the candidate root's READMEs",
+  );
+  const answered = [
+    ...included(asked.entry),
+    ...Object.keys(contexts).filter((path) =>
+      path.startsWith("src/ordering/docs/"),
+    ),
+  ];
+  const outcome = checkDraftedScope(asked.root, answered);
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "passed", outcome.result.message);
 });
 
-test("asks about every ignored file under a root and qualifies nested candidate roots", (t) => {
+test("qualifies nested candidate roots", (t) => {
   const { entry } = drafted(t, {
-    ".gitignore": "*.png\n",
     "docs/README.md": "# Documentation\n",
     "docs/development/README.md": developmentGuide(),
     "docs/usage/README.md": "# Usage\n",
-    "docs/usage/diagram.png": "png\n",
     "pkg/a/docs/usage/guide.md": "# Guide\n",
     "pkg/a/docs/usage/agents/notes.md": "# Notes\n",
   });
@@ -821,179 +683,101 @@ test("asks about every ignored file under a root and qualifies nested candidate 
       (question) => !question.startsWith("Which of these"),
     ),
     [
-      "Git ignores `docs/usage/diagram.png`, which lies under the documentation root `docs`. Should it be removed, moved outside the root, or kept by Git and drafted again?",
-      "Is `pkg/a/docs/usage` a documentation root, if `pkg/a/docs` is not? Its `pkg/a/docs/usage/agents` directory holds Markdown documents. If it is, draft again with `--root pkg/a/docs/usage`.",
-      "Is `pkg/a/docs` a documentation root? Its `pkg/a/docs/usage` directory holds Markdown documents. If it is, draft again with `--root pkg/a/docs`.",
+      rootQuestion(
+        "pkg/a/docs/usage",
+        "`pkg/a/docs/usage/agents` directory holds",
+        ", if `pkg/a/docs` is not",
+      ),
+      rootQuestion("pkg/a/docs", "`pkg/a/docs/usage` directory holds"),
     ],
   );
 });
 
-test("drafts the Git working tree that holds the project, as Repository Standards inspects it", (t) => {
-  const project = fixture(conforming);
-  t.after(project.close);
-  const fromRoot = draft(project.root);
-  const fromSubdirectory = draft(join(project.root, "packages/widget"));
-  assert.equal(fromSubdirectory.status, 0, fromSubdirectory.stderr);
-  assert.equal(fromSubdirectory.stdout, fromRoot.stdout);
+test("drafts the copy the request names from any working directory", (t) => {
+  const root = projectCopy(t, conforming);
+  const fromCopy = draft(root);
+  const elsewhere = draft(root, { cwd: tmpdir() });
+  assert.equal(elsewhere.status, 0, elsewhere.stderr);
+  assert.equal(elsewhere.stdout, fromCopy.stdout);
 });
 
-test("rejects invalid arguments, roots, and projects with a process error", (t) => {
-  const project = fixture({
-    ".gitignore": "vendor/lib/\n",
-    "docs/README.md": "# Documentation\n",
-    "packages/app/docs/usage/guide.md": "# Guide\n",
-    "packages/app/docs/usage/more/notes.md": "# Notes\n",
-    "vendor/lib/docs/usage/guide.md": "# Guide\n",
-    "vendor/marked/README.md": "# Marked\n",
-    "vendor/marked/notes.md": "# Notes\n",
-  });
-  t.after(project.close);
-  const outside = mkdtempSync(join(tmpdir(), "repo-canon-outside-"));
-  t.after(() => rmSync(outside, { recursive: true, force: true }));
-  mkdirSync(join(outside, "handbook"));
-  writeFileSync(join(outside, "handbook/notes.md"), "# Notes\n");
-  symlinkSync(outside, join(project.root, "link"));
-  for (const [args, message] of [
+test("rejects arguments and requests it cannot read with a process error", (t) => {
+  const root = projectCopy(t, conforming);
+  for (const [options, message] of [
     [
-      ["--root", "docs"],
-      /--root docs cannot be used: docs is always a documentation root/,
-    ],
-    [["--root", "docs/usage"], /--root docs\/usage cannot be used/],
-    [
-      ["--root", "../outside"],
-      /--root \.\.\/outside must be a repository-relative directory path/,
-    ],
-    [["--root", "/absolute"], /must be a repository-relative directory path/],
-    [
-      ["--root", "packages/missing"],
-      /--root packages\/missing is not a directory that holds a file Git keeps/,
+      { args: ["--root", "docs"] },
+      /Unknown argument --root\. The drafter takes no arguments/,
     ],
     [
-      ["--root", "link/handbook"],
-      /--root link\/handbook is not a directory that holds a file Git keeps/,
+      { input: "" },
+      /Standard input must hold a repo-standards\/discovery\/v1 request/,
     ],
     [
-      ["--root", ".git"],
-      /--root \.git is not a directory that holds a file Git keeps/,
+      { input: "{" },
+      /Standard input must hold a repo-standards\/discovery\/v1 request/,
     ],
     [
-      ["--root", "vendor/lib/docs"],
-      /--root vendor\/lib\/docs is not a directory that holds a file Git keeps/,
+      { input: "null" },
+      /Standard input must hold a repo-standards\/discovery\/v1 request/,
     ],
     [
-      ["--root", "packages/app/docs", "--root", "packages/app/docs/usage"],
-      /--root packages\/app\/docs\/usage lies inside --root packages\/app\/docs/,
+      { input: request(root, { format: "repo-standards/operation/v2" }) },
+      /Standard input must hold a repo-standards\/discovery\/v1 request/,
     ],
-    [["--root", ".repo-standards"], /reserves/],
     [
-      ["--root", "vendor/marked"],
-      /--root vendor\/marked cannot be used: the marked-provenance declaration owns it or its README\.md/,
+      { input: request(root, { declaration: "project-readmes" }) },
+      /names the `project-readmes` declaration; the drafter drafts `documentation`/,
     ],
-    [["--root"], /--root needs a path/],
-    [["--scope", "x"], /Unknown argument --scope/],
+    [
+      { input: request("relative/copy") },
+      /projectRoot must be an absolute path/,
+    ],
+    [
+      { input: request(root, { projectRoot: undefined }) },
+      /projectRoot must be an absolute path/,
+    ],
+    [
+      { input: request(root, { profile: 1 }) },
+      /profile must be a profile name/,
+    ],
   ]) {
-    const outcome = draft(project.root, args);
-    assert.equal(outcome.status, 1, args.join(" "));
+    const outcome = draft(root, options);
+    assert.equal(outcome.status, 1, JSON.stringify(options));
     assert.equal(outcome.stdout, "");
     assert.match(outcome.stderr, message);
   }
-
-  const notGit = mkdtempSync(join(tmpdir(), "repo-canon-not-git-"));
-  t.after(() => rmSync(notGit, { recursive: true, force: true }));
-  const outcome = draft(notGit);
-  assert.equal(outcome.status, 1);
-  assert.match(outcome.stderr, /Cannot find the Git working tree/);
 });
 
-// A copy of the drafter with the documentation check's resources, outside any
-// retained inputs, where it reads the `standards.yaml` beside it.
-function copiedDrafter(t) {
-  return join(
-    dirname(dirname(retainedCheck(t, "operations/check-documentation.mjs"))),
-    drafterPath,
-  );
-}
-
-// The documentation check's resources, which hold the drafter, as Repository
-// Standards 4.0.0 retains them in an adopting repository: under
-// `.repo-standards/inputs/source`, beside the manifest it resolved to the
-// selected profile, `.repo-standards/inputs/standards.yaml`.
-function retainInputs(t, root, manifest) {
-  const inputs = join(root, ".repo-standards/inputs");
-  cpSync(dirname(dirname(copiedDrafter(t))), join(inputs, "source"), {
-    recursive: true,
-  });
-  if (manifest !== undefined)
-    writeFileSync(join(inputs, "standards.yaml"), manifest);
-  return join(inputs, "source", drafterPath);
-}
-
-// The manifest Repository Standards 4.0.0 retains for one of this source's
-// profiles: the source's metadata, empty defaults, and the profile's resolved
-// declarations under the profile. Each profile keeps every default
-// declaration and only adds its own.
-function resolvedManifest(profile) {
-  const manifest = readFileSync(join(sourceRoot, "standards.yaml"), "utf8");
-  const parts =
-    /^(?<head>[\s\S]*?)^defaults:\n {2}declarations:\n(?<declarations>[\s\S]*?)^profiles:\n(?<profiles>[\s\S]*)$/m.exec(
-      manifest,
-    );
-  assert.ok(parts, "the source declares defaults and then its profiles");
-  const selected = new RegExp(
-    `^ {2}${profile}:\\n {4}description: (?<description>.*)\\n {4}declarations:(?: \\{\\}\\n|\\n(?<added>(?: {6}.*\\n|\\n)*))`,
-    "m",
-  ).exec(parts.groups.profiles);
-  assert.ok(selected, `the source declares the ${profile} profile`);
-  const { head, declarations } = parts.groups;
-  const { description, added = "" } = selected.groups;
-  assert.doesNotMatch(added, /exclude/, "a profile only adds declarations");
-  const nested = declarations.trimEnd().replace(/^(?=.)/gm, "  ");
-  return `${head}defaults:\n  declarations: {}\nprofiles:\n  ${profile}:\n    description: ${description}\n    declarations:\n${nested}\n${added}`;
-}
+// The drafter and only its declared resources, as Repository Standards retains
+// them: `standards.yaml` lies beside it there too.
+const retainedDrafter = (t) => retainedCheck(t, drafterPath);
 
 for (const profile of ["standard", "factory"]) {
-  test(`the documented source and retained-copy commands draft the same ${profile} scope without changing the repository`, (t) => {
-    const project = fixture(conforming);
-    t.after(project.close);
-    retainInputs(t, project.root, resolvedManifest(profile));
-    const before = snapshot(project.root);
+  test(`the acquired and the retained source draft the same ${profile} scope without changing the copy`, (t) => {
+    const root = projectCopy(t, conforming);
+    const before = snapshot(root);
+    const input = request(root, { profile });
 
-    const fromSource = spawnSync(
-      process.execPath,
-      [drafterPath, "--project", project.root, "--profile", profile],
-      {
-        cwd: sourceRoot,
-        encoding: "utf8",
-      },
-    );
+    const fromSource = draft(root, { input });
     assert.equal(fromSource.status, 0, fromSource.stderr);
     assert.equal(fromSource.stderr, "");
-    assert.deepEqual(snapshot(project.root), before);
+    assert.deepEqual(snapshot(root), before);
 
-    const fromRetained = spawnSync(
-      process.execPath,
-      [`.repo-standards/inputs/source/${drafterPath}`],
-      {
-        cwd: project.root,
-        encoding: "utf8",
-      },
-    );
+    const fromRetained = draft(root, { script: retainedDrafter(t), input });
     assert.equal(fromRetained.status, 0, fromRetained.stderr);
     assert.equal(fromRetained.stderr, "");
     assert.equal(fromRetained.stdout, fromSource.stdout);
-    assert.deepEqual(snapshot(project.root), before);
-    const proposal = JSON.parse(fromRetained.stdout);
-    assertScopeProposal(proposal, project.root);
+    assert.deepEqual(snapshot(root), before);
+    assertScopeProposal(fromRetained.proposal, root);
     assert.ok(
-      proposal.declarations[0].candidates.some((candidate) =>
+      fromRetained.proposal.declarations[0].candidates.some((candidate) =>
         candidate.reason.startsWith("Owned by"),
       ),
     );
   });
 }
 
-// The documentation declaration, with its check, in the form Repository
-// Standards 4.0.0 writes a resolved declaration.
+// The documentation declaration, with its check.
 const documentationDeclaration = (indent) =>
   [
     "documentation:",
@@ -1023,11 +807,11 @@ name: widget-standards
 description: Widget repository standards, with a description long enough to
   fold onto a second line
 requires:
-  repo-standards: ">=4.0.0"
+  repo-standards: ">=7.0.0"
 `;
 
 test("reads the declarations that the selected profile resolves to", (t) => {
-  const files = {
+  const root = projectCopy(t, {
     "-notes.md": "# Notes\n",
     "docs/README.md": "# Documentation\n",
     "docs/development/README.md": developmentGuide(),
@@ -1036,23 +820,12 @@ test("reads the declarations that the selected profile resolves to", (t) => {
     "docs/usage/dropped.md": "# Dropped\n",
     "docs/usage/kept.md": "# Kept\n",
     "docs/usage/replaced.md": "# Replaced\n",
-  };
-  const expected = [
-    underDocs("docs/README.md"),
-    underDocs("docs/development/README.md"),
-    underDocs("docs/usage/README.md"),
-    owned("docs/usage/added's.md", "added-guide"),
-    underDocs("docs/usage/dropped.md"),
-    underDocs("docs/usage/kept.md"),
-    owned("docs/usage/replaced.md", "usage-guide"),
-  ];
+  });
 
   // A source whose profile replaces, excludes, and adds to its defaults.
-  const project = fixture(files);
-  t.after(project.close);
-  const sourceDrafter = copiedDrafter(t);
+  const script = retainedDrafter(t);
   writeFileSync(
-    join(dirname(dirname(sourceDrafter)), "standards.yaml"),
+    join(dirname(dirname(script)), "standards.yaml"),
     `---
 ${header}
 defaults:
@@ -1060,6 +833,12 @@ defaults:
     documentation:
       kind: repository
       discovery: discovery/documentation.md
+      discovery-script:
+        run:
+          executable: node
+          script: discovery/draft-documentation-scope.mjs
+          resources:
+          - standards.yaml
       checks:
       - id: documentation-navigation
         run:
@@ -1097,58 +876,44 @@ profiles:
         exact: notes.md
 `,
   );
-  const fromSource = draft(project.root, [], sourceDrafter);
-  assert.equal(fromSource.status, 0, fromSource.stderr);
-  assert.deepEqual(fromSource.proposal.declarations[0].candidates, expected);
-  assert.deepEqual(fromSource.proposal.declarations[0].unresolved, []);
+  const outcome = draft(root, {
+    script,
+    input: request(root, { profile: "complete" }),
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.deepEqual(outcome.proposal.declarations[0].candidates, [
+    underDocs("docs/README.md"),
+    underDocs("docs/development/README.md"),
+    underDocs("docs/usage/README.md"),
+    owned("docs/usage/added's.md", "added-guide"),
+    underDocs("docs/usage/dropped.md"),
+    underDocs("docs/usage/kept.md"),
+    owned("docs/usage/replaced.md", "usage-guide"),
+  ]);
+  assert.deepEqual(outcome.proposal.declarations[0].unresolved, []);
 
-  // The retained manifest of the same selection.
-  const retainedDrafter = retainInputs(
-    t,
-    project.root,
-    `${header}defaults:
-  declarations: {}
-profiles:
-  complete:
-    description: The complete widget standards profile
-    declarations:
-      added-guide:
-        checks: []
-        fixes: []
-        kind: file
-        target: docs/usage/added's.md
-        exact: added.md
-${documentationDeclaration(6)}
-      notes:
-        checks: []
-        fixes: []
-        kind: file
-        target: -notes.md
-        exact: notes.md
-      usage-guide:
-        checks: []
-        fixes: []
-        kind: file
-        target: docs/usage/replaced.md
-        exact: replaced.md
-`,
+  const unnamed = draft(root, {
+    script,
+    input: request(root, { profile: undefined }),
+  });
+  assert.equal(unnamed.status, 0, unnamed.stderr);
+  assert.equal(
+    unnamed.stdout,
+    outcome.stdout,
+    "a manifest with one profile needs no profile name",
   );
-  const fromRetained = draft(project.root, [], retainedDrafter);
-  assert.equal(fromRetained.status, 0, fromRetained.stderr);
-  assert.equal(fromRetained.stdout, fromSource.stdout);
 });
 
-test("drafts the profile --profile selects from a source with several", (t) => {
-  const project = fixture({
+test("drafts the profile the request selects from a source with several", (t) => {
+  const root = projectCopy(t, {
     "docs/README.md": "# Documentation\n",
     "docs/development/README.md": developmentGuide(),
     "docs/usage/README.md": "# Usage\n",
     "docs/usage/guide.md": "# Guide\n",
   });
-  t.after(project.close);
-  const sourceDrafter = copiedDrafter(t);
+  const script = retainedDrafter(t);
   writeFileSync(
-    join(dirname(dirname(sourceDrafter)), "standards.yaml"),
+    join(dirname(dirname(script)), "standards.yaml"),
     `${header}defaults:
   declarations:
 ${documentationDeclaration(4)}
@@ -1166,7 +931,7 @@ profiles:
 `,
   );
   const drafted = (profile) =>
-    draft(project.root, ["--profile", profile], sourceDrafter);
+    draft(root, { script, input: request(root, { profile }) });
 
   const standard = drafted("standard");
   assert.equal(standard.status, 0, standard.stderr);
@@ -1185,55 +950,36 @@ profiles:
     owned("docs/usage/guide.md", "usage-guide"),
   );
 
-  const unnamed = draft(project.root, [], sourceDrafter);
-  assert.equal(unnamed.status, 1);
-  assert.match(
-    unnamed.stderr,
-    /declares 2 profiles \(`standard` and `extended`\); pass the selected one with --profile\./,
-  );
+  for (const profile of [undefined, null]) {
+    const unnamed = drafted(profile);
+    assert.equal(unnamed.status, 1);
+    assert.match(
+      unnamed.stderr,
+      /declares 2 profiles \(`standard` and `extended`\); the request must name the selected one\./,
+    );
+  }
   const unknown = drafted("complete");
   assert.equal(unknown.status, 1);
   assert.match(
     unknown.stderr,
     /declares no `complete` profile; it declares `standard` and `extended`\./,
   );
-  const missing = draft(project.root, ["--profile"], sourceDrafter);
-  assert.equal(missing.status, 1);
-  assert.match(missing.stderr, /--profile needs a name\./);
 });
 
-test("fails without a manifest it can read, naming the manifests it tried", (t) => {
-  const project = fixture(conforming);
-  t.after(project.close);
+test("fails without a manifest it can read beside it", (t) => {
+  const root = projectCopy(t, conforming);
+  const script = retainedDrafter(t);
+  const beside = join(dirname(dirname(script)), "standards.yaml");
 
-  const retainedDrafter = retainInputs(t, project.root);
-  const sourceManifest = join(
-    project.root,
-    ".repo-standards/inputs/source/standards.yaml",
-  );
-  const retainedManifest = join(
-    project.root,
-    ".repo-standards/inputs/standards.yaml",
-  );
-  const withoutManifest = draft(project.root, [], retainedDrafter);
+  unlinkSync(beside);
+  const withoutManifest = draft(root, { script });
   assert.equal(withoutManifest.status, 1);
   assert.equal(withoutManifest.stdout, "");
   assert.ok(
     withoutManifest.stderr.includes(
-      `Cannot read a standards manifest at ${sourceManifest} or ${retainedManifest}`,
+      `Cannot read the standards manifest ${beside} beside the drafter.`,
     ),
     withoutManifest.stderr,
-  );
-
-  const sourceDrafter = copiedDrafter(t);
-  const besideSource = join(dirname(dirname(sourceDrafter)), "standards.yaml");
-  const outsideInputs = draft(project.root, [], sourceDrafter);
-  assert.equal(outsideInputs.status, 1);
-  assert.ok(
-    outsideInputs.stderr.includes(
-      `Cannot read a standards manifest at ${besideSource};`,
-    ),
-    outsideInputs.stderr,
   );
 
   const withDefaults = (declarations) =>
@@ -1339,45 +1085,91 @@ test("fails without a manifest it can read, naming the manifests it tried", (t) 
       "has a line under profiles.complete that the drafter cannot read",
     ],
   ]) {
-    writeFileSync(besideSource, manifest);
-    const outcome = draft(project.root, [], sourceDrafter);
+    writeFileSync(beside, manifest);
+    const outcome = draft(root, {
+      script,
+      input: request(root, { profile: undefined }),
+    });
     assert.equal(outcome.status, 1, manifest);
     assert.equal(outcome.stdout, "");
     assert.ok(
-      outcome.stderr.includes(`${besideSource} ${message}`),
+      outcome.stderr.includes(`${beside} ${message}`),
       `${manifest}\n${outcome.stderr}`,
     );
   }
 });
 
-test("drafts this repository's own documentation scope", () => {
-  const outcome = draft(sourceRoot, ["--root", "factory/docs"]);
+// The files of this repository that Git keeps, copied as Repository Standards
+// copies a project for a discovery script.
+function repositoryCopy(t) {
+  const copy = mkdtempSync(join(tmpdir(), "repo-canon-copy-"));
+  t.after(() => rmSync(copy, { recursive: true, force: true }));
+  const paths = execFileSync(
+    "git",
+    ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+    { cwd: sourceRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  )
+    .split("\0")
+    .filter((path) => path && !path.startsWith(".repo-standards/"));
+  for (const path of paths) {
+    const from = join(sourceRoot, path);
+    const state = lstatSync(from, { throwIfNoEntry: false });
+    if (!state) continue;
+    mkdirSync(dirname(join(copy, path)), { recursive: true });
+    if (state.isSymbolicLink())
+      symlinkSync(readlinkSync(from), join(copy, path));
+    else copyFileSync(from, join(copy, path));
+  }
+  return copy;
+}
+
+test("drafts this repository's own documentation scope", (t) => {
+  const root = repositoryCopy(t);
+  const outcome = draft(root, { input: request(root, { profile: "factory" }) });
   assert.equal(outcome.status, 0, outcome.stderr);
-  assertScopeProposal(outcome.proposal, sourceRoot);
+  assertScopeProposal(outcome.proposal, root);
   const [entry] = outcome.proposal.declarations;
-  const documentation = keptFiles(sourceRoot)
-    .filter(
-      (path) => path.startsWith("docs/") || path.startsWith("factory/docs/"),
-    )
-    .filter((path) => !exactOwnedAgentConfiguration.includes(path));
+  const files = copiedFiles(root).filter(
+    (path) => !exactOwnedAgentConfiguration.includes(path),
+  );
+  const factoryDocumentation = files.filter((path) =>
+    path.startsWith("factory/docs/"),
+  );
   assert.deepEqual(
     included(entry),
     [
       "GLOSSARY-MAP.md",
       "GLOSSARY.md",
       "factory/GLOSSARY.md",
-      ...documentation,
+      ...files.filter((path) => path.startsWith("docs/")),
     ].sort(),
   );
+  const [rootQuestions, otherQuestions] = [true, false].map((asked) =>
+    entry.unresolved.filter(
+      (question) => question.startsWith("Is `factory/docs`") === asked,
+    ),
+  );
+  assert.equal(rootQuestions.length, 1, entry.unresolved.join("\n"));
   assert.ok(
-    entry.unresolved.every((question) =>
+    otherQuestions.every((question) =>
       question.startsWith("Which of these Markdown files"),
     ),
-    entry.unresolved.join("\n"),
+    otherQuestions.join("\n"),
   );
   assert.ok(
-    entry.unresolved.some((question) =>
+    otherQuestions.some((question) =>
       question.includes("`authoring-notes.md`"),
     ),
   );
+
+  // Answering the root question and the authoring notes' gives the scope the
+  // repository's own documentation check passes.
+  const answered = [
+    ...included(entry),
+    ...factoryDocumentation,
+    "authoring-notes.md",
+  ];
+  const check = checkDraftedScope(root, answered);
+  assert.equal(check.status, 0, check.stderr);
+  assert.equal(check.result.status, "passed", check.result.message);
 });
