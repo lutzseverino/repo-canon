@@ -59,7 +59,7 @@ references, and GFM tables receive the same link treatment. Final source
 declarations retain `operations/lib/rendered-markdown.mjs`, the mechanically
 separated `operations/lib/local-markdown-links.mjs`, and the Marked and parse5
 resources and notices alongside each operation, and the documentation model
-and the documentation scope drafter alongside the documentation operation. The
+alongside the documentation operation and the documentation scope drafter. The
 shared document owns rendered structure, including the ordered top-level
 blocks of the document and of each heading's section with their tag, rendered
 text, links at any depth, and nested blocks; Project README title policy

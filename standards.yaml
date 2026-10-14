@@ -31,6 +31,23 @@ defaults:
       guidance: guidance/documentation.md
       rules: rules/documentation.md
       discovery: discovery/documentation.md
+      discovery-script:
+        run:
+          executable: node
+          script: discovery/draft-documentation-scope.mjs
+          resources:
+            - standards.yaml
+            - operations/lib/rendered-markdown.mjs
+            - operations/lib/local-markdown-links.mjs
+            - operations/lib/documentation-model.mjs
+            - operations/lib/entry-document.mjs
+            - vendor/marked
+            - vendor/parse5
+          arguments: []
+        prerequisite:
+          version-arguments: ["--version"]
+          version: ">=24.0.0 <25.0.0"
+        timeout-seconds: 60
       checks:
         - id: documentation-navigation
           run:
@@ -41,7 +58,6 @@ defaults:
               - operations/lib/local-markdown-links.mjs
               - operations/lib/documentation-model.mjs
               - operations/lib/entry-document.mjs
-              - discovery/draft-documentation-scope.mjs
               - vendor/marked
               - vendor/parse5
             arguments: []

@@ -24,7 +24,7 @@ release or successful adoption.
 | Repository license                                                               | `repository-license`                                                                                                                                        | `rules/repository-license.md` and `guidance/repository-license.md`; contextual assessment only, with no fixes or checks                                                                                                                             | Project-owned contextual `LICENSE`                                                                                  |
 | Repository README                                                                | `repository-readme`                                                                                                                                         | `rules/repository-readme.md` and `guidance/repository-readme.md`; `repository-readme-structure` check                                                                                                                                               | Project-owned contextual `README.md`                                                                                |
 | Maintained Project READMEs                                                       | `project-readmes`                                                                                                                                           | `rules/project-readmes.md`, separate adoption and discovery guidance; `project-readme-structure` check                                                                                                                                              | Project-owned paths confirmed through v2 discovery                                                                  |
-| Documentation, glossaries, and project agent guidance                            | `documentation`                                                                                                                                             | `rules/documentation.md`, separate adoption and discovery guidance; `documentation-navigation` check                                                                                                                                                | Project-owned individual source, destination, index, glossary, and link-repair paths confirmed through v2 discovery |
+| Documentation, glossaries, and project agent guidance                            | `documentation`                                                                                                                                             | `rules/documentation.md`, separate adoption and discovery guidance; the documentation scope drafter as its discovery script; `documentation-navigation` check                                                                                       | Project-owned individual source, destination, index, glossary, and link-repair paths confirmed through v2 discovery |
 | GitHub labels, required check, squash settings, and optional reviewer validation | `github-repository-configuration`                                                                                                                           | Separate guidance and intentionally empty project-content discovery; repeat-safe `canonical-labels` and `pull-request-integration` remote setup fixes with read-only readiness probes, and the read-only `pull-request-reviewer` check              | Remote settings and validation of repository-owned optional reviewer data; no project-content paths                 |
 | Pinned workflow skills                                                           | `skill-*` except `skill-babysit` (17 declarations)                                                                                                          | Full directories of the workflow skills under `vendor/mattpocock-skills`, pinned at tag `v1.3.1` (`24fe0ef7737efae15c87225755e9f6f5965e4888`); upstream notice retained by the configuration operation and installed by `mattpocock-skills-license` | Exact whole skill directories                                                                                       |
 | Delivery through review to merge                                                 | `skill-babysit`                                                                                                                                             | Repo Canon's own `.agents/skills/babysit`, whose source is its installed path; it follows the installed contribution guidance                                                                                                                       | Exact whole skill directory                                                                                         |
@@ -37,8 +37,8 @@ release or successful adoption.
 The resolved `standard` profile contains 48 declarations: 25 exact files, two
 contextual files, three repository declarations, and 18 exact skill
 directories. The `factory` profile adds one exact file, one contextual file,
-and the exact workflow, for 51 declarations. Each has four checks and two
-fixes. Exact targets are individual and disjoint from all
+and the exact workflow, for 51 declarations. Each has four checks, two fixes,
+and one discovery script. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
 trees, globs, or adopter-specific paths embedded in this source.
 
@@ -59,10 +59,11 @@ pinned commit; no HumanLayer skill is vendored or installed.
 
 The documentation operation resources retain the shared rendered-Markdown
 module, the separate local-link module, the documentation model, the
-entry-document sentence and glossary module, the documentation scope drafter,
-and complete Marked and parse5 directories with
-their notices. The agent runs the drafter during discovery; the CLI only
-retains it. Other operation resources retain the shared GitHub operation
+entry-document sentence and glossary module, and complete Marked and parse5
+directories with their notices. The documentation declaration's discovery
+script, the documentation scope drafter, retains the same modules and
+`standards.yaml`; inspection runs it read-only to draft the documentation
+scope. Other operation resources retain the shared GitHub operation
 module, Repo Canon's MIT license and third-party notice, and every license
 linked by that notice. The rendered-Markdown runtime and parser files are also exact
 declarations because both trusted workflow validators import them from the
