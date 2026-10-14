@@ -237,8 +237,6 @@ const outsideIndex = (path) => ({
     "A README.md outside the documentation roots, which the documentation check would read as a documentation root's index. If it is a Project README, the `project-readmes` declaration's proposal covers it.",
   evidence: [path],
 });
-const unsupported = (path, directory) =>
-  `Repository Standards accepts the new \`${path}\` only with evidence inside \`${directory}\`, where Git keeps no file yet. Should that directory's first content be committed in a separate reviewed change before adopting again?`;
 const rootQuestion = (candidate, directories, outer = "") =>
   `Is \`${candidate}\` a documentation root${outer}? Its ${directories} Markdown documents. If it is, include its files and a new index for each of its directories without one, as this draft does for \`docs\`. If it is not, its README.md files stay out of this scope.`;
 
@@ -331,6 +329,24 @@ test("drafts the expected scope of a conforming repository", (t) => {
   });
 });
 
+test("drafts a missing development guide without an evidence question", (t) => {
+  const { entry } = drafted(t, {
+    "docs/usage/guide.md": "# Guide\n",
+  });
+
+  assert.deepEqual(
+    entry.candidates.find(({ path }) => path === "docs/development/README.md"),
+    {
+      path: "docs/development/README.md",
+      decision: "include",
+      reason:
+        "The development guide, which the contribution guide requires, to create.",
+      evidence: [],
+    },
+  );
+  assert.deepEqual(entry.unresolved, []);
+});
+
 test("drafts new indexes, the development guide, and context glossaries the rules decide", (t) => {
   const { proposal } = drafted(t, {
     "docs/README.md": "# Documentation\n",
@@ -382,33 +398,32 @@ test("drafts new indexes, the development guide, and context glossaries the rule
     contextGlossary("src/billing/GLOSSARY.md"),
     contextGlossary("src/ordering/GLOSSARY.md"),
   ]);
-  assert.deepEqual(proposal.declarations[0].unresolved, [
-    unsupported("docs/development/README.md", "docs/development"),
-  ]);
+  assert.deepEqual(proposal.declarations[0].unresolved, []);
 });
 
-test("drafts the root indexes of a repository without documentation and asks for their evidence", (t) => {
-  const { entry } = drafted(t, { "README.md": "# Widget\n" });
+test("drafts root indexes without evidence questions when docs has no kept files", (t) => {
+  for (const existingDirectory of [false, true]) {
+    const { entry } = drafted(t, { "README.md": "# Widget\n" }, (root) => {
+      if (existingDirectory) mkdirSync(join(root, "docs"));
+    });
 
-  assert.deepEqual(entry.candidates, [
-    {
-      path: "docs/README.md",
-      decision: "include",
-      reason: "The index of the documentation root `docs`, to create.",
-      evidence: [],
-    },
-    {
-      path: "docs/development/README.md",
-      decision: "include",
-      reason:
-        "The development guide, which the contribution guide requires, to create.",
-      evidence: [],
-    },
-  ]);
-  assert.deepEqual(entry.unresolved, [
-    unsupported("docs/README.md", "docs"),
-    unsupported("docs/development/README.md", "docs/development"),
-  ]);
+    assert.deepEqual(entry.candidates, [
+      {
+        path: "docs/README.md",
+        decision: "include",
+        reason: "The index of the documentation root `docs`, to create.",
+        evidence: [],
+      },
+      {
+        path: "docs/development/README.md",
+        decision: "include",
+        reason:
+          "The development guide, which the contribution guide requires, to create.",
+        evidence: [],
+      },
+    ]);
+    assert.deepEqual(entry.unresolved, []);
+  }
 });
 
 test("leaves the cases no rule decides as unresolved questions", (t) => {
@@ -455,7 +470,6 @@ test("leaves the cases no rule decides as unresolved questions", (t) => {
       "`packages/app/docs/adr` and `packages/app/docs/usage` directories hold",
     ),
     "Is `src/legacy/GLOSSARY.md` a domain glossary or context map of this repository? Include it if it is.",
-    unsupported("docs/development/README.md", "docs/development"),
     "Which of these Markdown files at the repository root are documentation this scope must cover, such as a document to move into a documentation category: `notes.md`? Include each one, with its destination when it moves.",
     "Which of these Markdown files under `guides` are documentation this scope must cover, such as a document to move into a documentation category: `guides/setup.md`? Include each one, with its destination when it moves.",
     "Which of these Markdown files under `packages` are documentation this scope must cover, such as a document to move into a documentation category: `packages/app/docs/adr/0001-start.md` and `packages/app/docs/usage/guide.md`? Include each one, with its destination when it moves.",

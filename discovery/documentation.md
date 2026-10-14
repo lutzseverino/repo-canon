@@ -35,9 +35,6 @@ is decided:
 - What becomes of a directory under a root without a file that Git keeps, a
   symbolic link under a root, or an entry that blocks a root or an index, such
   as a file named `docs`.
-- Whether to commit the first content of a documentation root or of a directory
-  under one that has none, in a separate reviewed change, so that its new index
-  has the evidence Repository Standards requires.
 
 Then add each intended new path that the work needs and the draft cannot know: a
 move destination, with the index of any new directory; and a file whose link to
