@@ -68,11 +68,6 @@ function oneOccurrenceChanged(text, literal, replacement) {
   return variants;
 }
 
-// The release the Repository README selects, read independently of the checker.
-function selectedRelease(files) {
-  return files.get(readme).match(/releases\/tag\/(v\d+\.\d+\.\d+)/)[1];
-}
-
 // The CLI floor, read independently of the checker.
 function cliFloor(files) {
   return files.get(standards).match(/repo-standards: ">=(\d+\.\d+\.\d+)"/)[1];
@@ -99,40 +94,60 @@ test("factory release and tool versions stay outside Repo Canon version agreemen
   assert.deepEqual(versionDisagreements(read), []);
 });
 
-test("changing any one named Repo Canon or CLI version fails the agreement", () => {
+test("changing any one named CLI version in the adoption guide or CI fails the agreement", () => {
   const files = workingTree();
-  const release = selectedRelease(files);
   const floor = cliFloor(files);
-  for (const { paths, named, literal, replacement } of [
-    {
-      paths: [readme, adoptionGuide],
-      named: release,
-      literal: release,
-      replacement: "v99.0.0",
-    },
-    {
-      paths: [adoptionGuide, ciWorkflow],
-      named: `CLI ${floor}`,
-      literal: floor,
-      replacement: "99.0.0",
-    },
-  ]) {
-    for (const path of paths) {
-      const variants = oneOccurrenceChanged(
-        files.get(path),
-        literal,
-        replacement,
+  for (const path of [adoptionGuide, ciWorkflow]) {
+    const variants = oneOccurrenceChanged(files.get(path), floor, "99.0.0");
+    assert.ok(variants.length > 0, `${path} names CLI ${floor}`);
+    for (const variant of variants) {
+      const changed = new Map(files).set(path, variant);
+      assert.notDeepEqual(
+        versionDisagreements(reader(changed)),
+        [],
+        `${path} with one ${floor} changed`,
       );
-      assert.ok(variants.length > 0, `${path} names ${named}`);
-      for (const variant of variants) {
-        const changed = new Map(files).set(path, variant);
-        assert.notDeepEqual(
-          versionDisagreements(reader(changed)),
-          [],
-          `${path} with one ${literal} changed`,
-        );
-      }
     }
+  }
+});
+
+test("the public copy names no Repo Canon version", () => {
+  const files = workingTree();
+  for (const path of [readme, adoptionGuide]) {
+    const changed = new Map(files).set(
+      path,
+      `${files.get(path)}\nSelect the [\`v99.0.0\` release](https://github.com/lutzseverino/repo-canon/releases/tag/v99.0.0).\n`,
+    );
+    const problems = versionDisagreements(reader(changed));
+    assert.ok(
+      problems.some(
+        (problem) =>
+          problem.startsWith(`${path}:`) &&
+          problem.includes("names Repo Canon v99.0.0"),
+      ),
+      `${path}: ${problems.join("\n")}`,
+    );
+  }
+});
+
+test("the Repository README names no CLI version, even the floor", () => {
+  const files = workingTree();
+  const floor = cliFloor(files);
+  for (const mention of [
+    `Use Repository Standards CLI ${floor} or newer.`,
+    `Run \`npx @lutzseverino/repo-standards@${floor} adopt\`.`,
+  ]) {
+    const changed = new Map(files).set(
+      readme,
+      `${files.get(readme)}\n${mention}\n`,
+    );
+    assert.match(
+      versionDisagreements(reader(changed)).join("\n"),
+      new RegExp(
+        `README\\.md:\\d+ names CLI ${floor.replaceAll(".", "\\.")}; the Repository README names no CLI version`,
+      ),
+      mention,
+    );
   }
 });
 
@@ -242,15 +257,16 @@ test("other tools named with versions are not taken for the CLI", () => {
   );
 });
 
-test("a document that names no Repo Canon version fails the agreement", () => {
+test("the adoption guide must name a CLI version", () => {
   const files = workingTree();
-  const release = selectedRelease(files);
+  const floor = cliFloor(files);
   const changed = new Map(files).set(
-    readme,
-    files.get(readme).replaceAll(release, "the latest release"),
+    adoptionGuide,
+    files.get(adoptionGuide).replaceAll(`v${floor}`, "main"),
   );
-  assert.match(
-    versionDisagreements(reader(changed)).join("\n"),
-    /README\.md names no Repo Canon version/,
+  assert.ok(
+    versionDisagreements(reader(changed)).includes(
+      `${adoptionGuide} names no CLI version.`,
+    ),
   );
 });

@@ -369,9 +369,9 @@ function publishedRelease(t, documents = {}) {
     {
       "declarations.json": previousDeclarations,
       "README.md":
-        "Select the [`v1.0.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v1.0.0).\n",
+        "Run `npx @lutzseverino/repo-standards adopt https://github.com/lutzseverino/repo-canon`.\n",
       "docs/usage/adopt-repo-canon.md":
-        "This guide selects `v1.0.0` with public CLI 7.0.0.\n",
+        "See the CLI's [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md).\n",
       "standards.yaml":
         'format: repo-standards/v2\nrequires:\n  repo-standards: ">=7.0.0"\n',
       ...developmentDocuments("7.0.0"),
@@ -434,7 +434,10 @@ test("release:verify passes a published release that agrees with its commit", (t
           "github-repository-configuration/pull-request-integration deferred\\.",
       ),
     );
-  assert.match(output, /pass: the documents name v1\.0\.0/);
+  assert.match(
+    output,
+    /pass: the public copy at the release commit names no Repo Canon version and its README no CLI version, and every CLI version the adoption guide and the development and authoring documents name is the required minimum 7\.0\.0\./,
+  );
 });
 
 // Runs release:verify of v1.0.0 with the fake adoption's scenario, and returns
@@ -575,19 +578,51 @@ test("release:verify fails a lightweight tag", (t) => {
   assert.match(output, /fail: tag v1\.0\.2 on origin is not an annotated tag/);
 });
 
-test("release:verify fails when the documents name another version", (t) => {
-  const { run, releaseCommit, environment } = publishedRelease(t);
+test("release:verify fails when the public copy names a Repo Canon or CLI version", (t) => {
+  const { run, releaseCommit, environment } = publishedRelease(t, {
+    "README.md":
+      "Select the [`v1.0.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v1.0.0) with CLI 7.0.0.\n",
+    "docs/usage/adopt-repo-canon.md":
+      "This guide selects `v1.0.0` with public CLI 7.0.0.\n",
+  });
 
   const { status, output } = run(
     "verify.mjs",
-    ["v1.0.1", releaseCommit],
+    ["v1.0.0", releaseCommit],
     environment,
   );
 
   assert.notEqual(status, 0);
   assert.match(
     output,
-    /fail: README\.md:1 names Repo Canon v1\.0\.0, not v1\.0\.1\./,
+    /fail: README\.md:1 names Repo Canon v1\.0\.0; the public copy names no Repo Canon version\./,
+  );
+  assert.match(
+    output,
+    /fail: README\.md:1 names CLI 7\.0\.0; the Repository README names no CLI version\./,
+  );
+  assert.match(
+    output,
+    /fail: docs\/usage\/adopt-repo-canon\.md:1 names Repo Canon v1\.0\.0; the public copy names no Repo Canon version\./,
+  );
+});
+
+test("release:verify fails when the adoption guide names another CLI version", (t) => {
+  const { run, releaseCommit, environment } = publishedRelease(t, {
+    "docs/usage/adopt-repo-canon.md":
+      "See the CLI's [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/adoption.md).\n",
+  });
+
+  const { status, output } = run(
+    "verify.mjs",
+    ["v1.0.0", releaseCommit],
+    environment,
+  );
+
+  assert.notEqual(status, 0);
+  assert.match(
+    output,
+    /fail: docs\/usage\/adopt-repo-canon\.md:1 names CLI 7\.1\.0, not the standards\.yaml floor 7\.0\.0\./,
   );
 });
 

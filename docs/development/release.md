@@ -57,11 +57,13 @@ change what adopters receive.
 
 Each release is one pull request into `main`, and nothing is committed for the
 release after it merges. It carries the changes the release itself needs, such
-as documents that name the latest release or its required CLI version, and
-it closes the issue that plans the release. The version-agreement test in
-`npm test` fails until the Repository README and the
-[adoption guide](../usage/adopt-repo-canon.md) name one Repo Canon version, and
-until the CLI version named in them, CI, the [development guide](README.md), the
+as documents that name a moved required CLI version, and it closes the issue
+that plans the release. The Repository README and the
+[adoption guide](../usage/adopt-repo-canon.md) name no Repo Canon version,
+because `adopt` offers the published releases, so a release needs no change to
+them. The version-agreement test in `npm test` fails when either names a Repo
+Canon version or the Repository README names a CLI version, and until the CLI
+version named in the adoption guide, CI, the [development guide](README.md), the
 [source profile](source-profile.md), and the
 [authoring notes](../../authoring-notes.md), plus the toolchain image's
 `.factory/Dockerfile`, equals the floor of the `requires` minimum in
@@ -160,9 +162,8 @@ npm run release:verify -- "$version" "$release_commit" &&
 1. The annotated tag on `origin` peels to the release commit.
 2. The GitHub release is neither a draft nor a prerelease.
 3. In a disposable Git repository, the public CLI at the required minimum
-   version inspects the release with each profile, `standard` and `factory`, as
-   [Adopt Repo Canon](../usage/adopt-repo-canon.md#inspect-the-published-source)
-   describes. Each report resolves the release commit and its profile.
+   version inspects the release with each profile, `standard` and `factory`,
+   through `inspect`. Each report resolves the release commit and its profile.
 4. With each profile, the same CLI adopts the release into a fixture
    repository through `adopt` with an answers file, as an agent does without a
    terminal. The fixture is a disposable Git repository with one commit, built
@@ -179,10 +180,10 @@ npm run release:verify -- "$version" "$release_commit" &&
    change, so one appearing fails it too. `npm test` checks the fixture against
    the drafter and the contextual checks before a release, because `adopt`
    acquires only published stable tags.
-5. The Repository README and the adoption guide at the release commit name the
-   version being verified, and every CLI version that the development guide,
-   the source profile, and the authoring notes there name is the required
-   minimum.
+5. The Repository README and the adoption guide at the release commit name no
+   Repo Canon version, the Repository README names no CLI version, and every
+   CLI version that the adoption guide, the development guide, the source
+   profile, and the authoring notes there name is the required minimum.
 
 The verification paragraph appended to the release notes names the release
 commit and the release pull request, confirms the tag and release state, and

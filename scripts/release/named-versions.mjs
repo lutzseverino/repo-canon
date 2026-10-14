@@ -1,5 +1,6 @@
 // Finds the Repo Canon and Repository Standards CLI versions that the
-// maintained documents and CI name, and reports where they disagree.
+// maintained documents and CI name, and reports where they disagree or where
+// the public copy names a version it must not.
 //
 // Every version in these files is classified, so a new mention is checked
 // rather than skipped. A `v`-prefixed version, or one that follows `stable`,
@@ -59,29 +60,23 @@ function location(mention) {
   return `${mention.path}:${mention.line}`;
 }
 
-function repoCanonMentions(read) {
-  const mentions = [];
+// Reports every version the public copy names that it must not: the
+// Repository README and the adoption guide name no Repo Canon version, because
+// `adopt` offers the releases, and the Repository README names no CLI version,
+// because its one-line `adopt` command carries none.
+export function publicCopyVersionProblems(read) {
   const problems = [];
   for (const path of [readmePath, adoptionGuidePath]) {
-    const found = namedVersions(path, read(path)).filter(
-      (mention) => mention.kind === "repo-canon",
-    );
-    if (found.length === 0)
-      problems.push(`${path} names no Repo Canon version.`);
-    mentions.push(...found);
-  }
-  return { mentions, problems };
-}
-
-// Reports every Repo Canon version named in the Repository README and the
-// adoption guide that is not `expected`, a version such as `v0.3.1`.
-export function repoCanonVersionMismatches(read, expected) {
-  const { mentions, problems } = repoCanonMentions(read);
-  for (const mention of mentions) {
-    if (`v${mention.version}` !== expected) {
-      problems.push(
-        `${location(mention)} names Repo Canon v${mention.version}, not ${expected}.`,
-      );
+    for (const mention of namedVersions(path, read(path))) {
+      if (mention.kind === "repo-canon") {
+        problems.push(
+          `${location(mention)} names Repo Canon v${mention.version}; the public copy names no Repo Canon version.`,
+        );
+      } else if (path === readmePath) {
+        problems.push(
+          `${location(mention)} names CLI ${mention.version}; the Repository README names no CLI version.`,
+        );
+      }
     }
   }
   return problems;
@@ -117,34 +112,18 @@ export function cliVersionMismatches(read, paths) {
 }
 
 // Reports every disagreement between the named versions. `read(path)` returns
-// the text of a repository file. The Repository README and the adoption guide
-// name one Repo Canon version; the CLI version they, CI, the development and
-// authoring documents, and the toolchain image name is the floor of the
-// `requires` minimum in `standards.yaml`.
+// the text of a repository file. The public copy names only the versions
+// `publicCopyVersionProblems` allows; the CLI version the adoption guide, CI,
+// the development and authoring documents, and the toolchain image name is the
+// floor of the `requires` minimum in `standards.yaml`.
 export function versionDisagreements(read) {
-  const { mentions, problems } = repoCanonMentions(read);
-  const repoCanonVersions = [
-    ...new Set(mentions.map((mention) => mention.version)),
-  ];
-  if (repoCanonVersions.length > 1) {
-    const named = repoCanonVersions.map((version) => {
-      const places = mentions
-        .filter((mention) => mention.version === version)
-        .map(location);
-      return `v${version} at ${places.join(", ")}`;
-    });
-    problems.push(
-      `The documents name more than one Repo Canon version: ${named.join("; ")}.`,
-    );
-  }
-
+  const problems = publicCopyVersionProblems(read);
   const floor = cliFloor(read(standardsPath));
   if (floor === null) {
     problems.push(missingFloor);
     return problems;
   }
   for (const path of [
-    readmePath,
     adoptionGuidePath,
     ciWorkflowPath,
     ...developmentDocumentPaths,

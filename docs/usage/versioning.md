@@ -70,5 +70,5 @@ The supported CLI requires a published GitHub release with a version such as
 ordinary `0.x` release remains an initial-development version; publication does
 not establish a `1.0` compatibility promise.
 
-Follow [Adopt Repo Canon](adopt-repo-canon.md) to inspect the selected version
-and review its repository-specific adoption scope.
+`adopt` offers these releases, newest first; [Adopt Repo Canon](adopt-repo-canon.md)
+covers the choices it asks about.
