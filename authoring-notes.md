@@ -166,8 +166,9 @@ repeated.
   skills. Files Repo Canon authors do not restate them, and cite them only for
   delivery or to override routes to uninstalled skills: `AGENTS.md` names `pr`
   and `babysit`, and `CONTRIBUTING.md` names
-  `pr` for a pull request's body and `adopt-standards` for an unfinished
-  adoption run. The skill setup files may cite them.
+  `pr` for a pull request's body and `repo-standards adopt` for finishing or
+  recovering an adoption run, using the pinned runtime once a run has started.
+  The skill setup files may cite them.
   CONTRIBUTING.md should be repository-agnostic exact content, copied
   identically between adopting repositories. Its fixed link to
   docs/development/README.md delegates project-specific setup and required
@@ -193,7 +194,7 @@ repeated.
   [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
   decides. Project-specific guidance remains separate. AGENTS.md is an
   identical standards-owned pointer file. Repository Standards owns the update
-  notice through its `standards-updates` system skill
+  notice through its `repository-standards` system skill
   ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
   Create the optional project guidance document, docs/agents/project.md, only
   when it has useful content.
