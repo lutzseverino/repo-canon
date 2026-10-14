@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
+  cpSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -10,17 +11,28 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
+import { files as adoptionFixture } from "../scripts/release/adoption-fixture.mjs";
+import { fileDeclarations } from "./helpers/documentation.mjs";
+import { exactFiles } from "./helpers/installed-validator.mjs";
+import { invokeCheck } from "./helpers/operation.mjs";
 
 // The release scripts run against disposable repositories. The public CLI and
 // `gh` are external boundaries, so stubs stand in for them: the CLI stub
-// reports the declarations a commit's `declarations.json` lists, and the `gh`
-// stub reports the release state it is given.
+// reports the declarations a commit's `declarations.json` lists and delegates
+// `adopt` and `status` to the fake adoption, and the `gh` stub reports the
+// release state it is given.
 const scripts = join(
   resolve(dirname(fileURLToPath(import.meta.url)), ".."),
   "scripts/release",
 );
+const fakeAdopt = pathToFileURL(
+  join(
+    dirname(fileURLToPath(import.meta.url)),
+    "fixtures/fake-repo-standards-adopt.mjs",
+  ),
+).href;
 
 const cliStub = `#!/usr/bin/env node
 const { readFileSync } = require('node:fs');
@@ -47,6 +59,8 @@ if (command === 'source' && subcommand === 'validate') {
     },
     sourceResolved: { declarations: [{ id: 'agent-guidance' }] },
   }));
+} else if (command === 'adopt' || command === 'status') {
+  import(${JSON.stringify(fakeAdopt)});
 } else {
   process.exit(2);
 }
@@ -410,7 +424,111 @@ test("release:verify passes a published release that agrees with its commit", (t
         `pass: CLI 7\\.0\\.0 inspected v1\\.0\\.0 in a disposable repository .* with the ${profile} profile`,
       ),
     );
+  for (const profile of ["standard", "factory"])
+    assert.match(
+      output,
+      new RegExp(
+        `pass: CLI 7\\.0\\.0 adopted v1\\.0\\.0 with the ${profile} profile into a fixture repository ` +
+          "through adopt with an answers file; status reports the run ready to commit, with remote setup " +
+          "github-repository-configuration/canonical-labels and " +
+          "github-repository-configuration/pull-request-integration deferred\\.",
+      ),
+    );
   assert.match(output, /pass: the documents name v1\.0\.0/);
+});
+
+// Runs release:verify of v1.0.0 with the fake adoption's scenario, and returns
+// its result with the answers of each adopt call.
+function verifyAdoption(t, scenario) {
+  const { run, releaseCommit, environment } = publishedRelease(t);
+  const log = join(
+    mkdtempSync(join(tmpdir(), "repo-canon-adopt-log-")),
+    "answers.jsonl",
+  );
+  t.after(() => rmSync(dirname(log), { recursive: true, force: true }));
+  writeFileSync(log, "");
+  const result = run("verify.mjs", ["v1.0.0", releaseCommit], {
+    ...environment,
+    FAKE_ADOPT: scenario,
+    FAKE_ADOPT_LOG: log,
+  });
+  const calls = readFileSync(log, "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  return { ...result, calls };
+}
+
+test("release:verify adopts the release with the verified version, the drafted scope, and deferred remote setup", (t) => {
+  const { status, output, calls } = verifyAdoption(t, "complete");
+
+  assert.equal(status, 0, output);
+  const started = calls.filter(
+    (answers) => answers.inspection === "sha256:complete",
+  );
+  assert.equal(started.length, 2, "one start per profile");
+  for (const answers of started) {
+    assert.equal(answers.version, "v1.0.0");
+    assert.equal(answers["remote-setup"], "defer");
+    assert.equal(
+      answers["scope:documentation"].coverage,
+      "Drafted from the repository tree.",
+    );
+  }
+  assert.deepEqual(
+    started.map((answers) => answers.profile),
+    ["standard", "factory"],
+  );
+  assert.ok(
+    calls.some((answers) => answers["assessment:factory-sandbox-image"]),
+    "the factory adoption assesses the toolchain image",
+  );
+});
+
+test("release:verify fails an adoption that an inspection blocker stops", (t) => {
+  const { status, output } = verifyAdoption(t, "blocked");
+
+  assert.notEqual(status, 0);
+  for (const profile of ["standard", "factory"])
+    assert.match(
+      output,
+      new RegExp(
+        `fail: the ${profile} adoption of v1\\.0\\.0 failed: the adoption is blocked: The project has uncommitted changes\\.`,
+      ),
+    );
+});
+
+test("release:verify fails, without starting, an adoption that would apply remote setup", (t) => {
+  const { status, output, calls } = verifyAdoption(t, "undeferred");
+
+  assert.notEqual(status, 0);
+  assert.match(
+    output,
+    /fail: the standard adoption of v1\.0\.0 failed: the inspection offers no deferral of remote setup github-repository-configuration\/pull-request-integration; starting would apply it\./,
+  );
+  assert.ok(calls.every((answers) => answers.inspection !== "sha256:complete"));
+});
+
+test("release:verify fails an adoption that asks to confirm a confirmation-required change", (t) => {
+  const { status, output, calls } = verifyAdoption(t, "confirmation");
+
+  assert.notEqual(status, 0);
+  assert.match(
+    output,
+    /fail: the standard adoption of v1\.0\.0 failed: the run asks to confirm a confirmation-required change \(confirmation\): The run replaces README\.md, discarding its edits\./,
+  );
+  assert.ok(calls.every((answers) => !answers.confirmation));
+  assert.ok(calls.every((answers) => answers.inspection !== "sha256:complete"));
+});
+
+test("release:verify fails an adoption whose checks fail after the assessment", (t) => {
+  const { status, output } = verifyAdoption(t, "failed-checks");
+
+  assert.notEqual(status, 0);
+  assert.match(
+    output,
+    /fail: the standard adoption of v1\.0\.0 failed: the run's checks failed: repository-readme\/repository-readme-structure: Make the Repository README description after its title one sentence\./,
+  );
 });
 
 test("release:verify fails a draft or prerelease", (t) => {
@@ -525,4 +643,102 @@ test("release:verify rejects a version that is not a stable release tag", (t) =>
     output,
     /v1\.0\.0-rc\.1 is not a stable release version such as v1\.2\.3/,
   );
+});
+
+// The real adoption runs only after publication, so the fixture is checked
+// here against the shipped drafter and checks: the documentation draft of each
+// profile has no open questions, and once the exact files are installed, every
+// contextual check passes with the drafted and the fixture's empty scopes.
+test("the adoption fixture passes the shipped contextual checks with its drafted scope", (t) => {
+  const sourceRoot = resolve(scripts, "../..");
+  const project = mkdtempSync(join(tmpdir(), "repo-canon-adoption-fixture-"));
+  t.after(() => rmSync(project, { recursive: true, force: true }));
+  for (const [path, content] of Object.entries(adoptionFixture)) {
+    mkdirSync(dirname(join(project, path)), { recursive: true });
+    writeFileSync(join(project, path), content);
+  }
+
+  const drafts = ["standard", "factory"].map((profile) => {
+    const child = spawnSync(
+      process.execPath,
+      [join(sourceRoot, "discovery/draft-documentation-scope.mjs")],
+      {
+        cwd: project,
+        encoding: "utf8",
+        input: JSON.stringify({
+          format: "repo-standards/discovery/v1",
+          declaration: "documentation",
+          projectRoot: project,
+          standards: {
+            repository: "https://github.com/lutzseverino/repo-canon",
+            version: "v0.0.0-test",
+            commit: "0".repeat(40),
+          },
+          profile,
+        }),
+      },
+    );
+    assert.equal(child.status, 0, child.stderr);
+    const [entry] = JSON.parse(child.stdout).declarations;
+    assert.deepEqual(entry.unresolved, [], profile);
+    return entry.candidates
+      .filter((candidate) => candidate.decision === "include")
+      .map((candidate) => candidate.path)
+      .sort();
+  });
+  assert.deepEqual(drafts[0], drafts[1]);
+  assert.deepEqual(drafts[0], ["docs/README.md", "docs/development/README.md"]);
+
+  for (const [target, source] of exactFiles()) {
+    mkdirSync(dirname(join(project, target)), { recursive: true });
+    cpSync(join(sourceRoot, source), join(project, target), {
+      recursive: true,
+    });
+  }
+  for (const [script, declaration, id, paths, declarations] of [
+    [
+      "check-documentation.mjs",
+      "documentation",
+      "documentation-navigation",
+      drafts[0],
+      fileDeclarations(),
+    ],
+    [
+      "check-repository-readme.mjs",
+      "repository-readme",
+      "repository-readme-structure",
+      ["README.md"],
+      [],
+    ],
+    [
+      "check-project-readmes.mjs",
+      "project-readmes",
+      "project-readme-structure",
+      [],
+      [],
+    ],
+    [
+      "check-pull-request-reviewer.mjs",
+      "github-repository-configuration",
+      "pull-request-reviewer",
+      [],
+      [],
+    ],
+  ]) {
+    const outcome = invokeCheck(
+      join(sourceRoot, "operations", script),
+      project,
+      {
+        operation: { declaration, phase: "checks", id },
+        declarations,
+        allowedTargets: { paths, directories: [] },
+      },
+    );
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(
+      outcome.result.status,
+      "passed",
+      `${script}: ${outcome.result.message}`,
+    );
+  }
 });
