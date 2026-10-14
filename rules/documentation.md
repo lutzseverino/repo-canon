@@ -16,7 +16,8 @@ directory README, its parent's. Other documents link to that index or cite a
 document in context, and never repeat the list. The installed
 `docs/agents/README.md` stays as is and cites the optional
 `docs/agents/project.md` in context. Project-specific agent constraints belong
-in that optional file. In the root documentation README, each
+in that optional file, governed by the `project-agent-guidance` rules.
+In the root documentation README, each
 category README's description states what belongs in that category. Keep
 durable research with its usage or development topic. Glossaries remain outside
 `docs`, at the repository or context root.

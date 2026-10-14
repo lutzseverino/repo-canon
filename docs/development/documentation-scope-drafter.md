@@ -50,7 +50,8 @@ Its candidates are:
 - `GLOSSARY.md` and `GLOSSARY-MAP.md` at the repository root, and each
   `GLOSSARY.md` that the root context map links to, or whose directory it links
   to, included;
-- each file under `docs` that another declaration owns, excluded;
+- each file under `docs` that another declaration owns, including the
+  contextual `docs/agents/project.md` under `project-agent-guidance`, excluded;
 - each `README.md` outside `docs` and outside every candidate root, excluded,
   because the documentation check reads every README in the confirmed scope as
   a documentation root's index. Such a README cannot enter this scope, even as a
@@ -134,8 +135,7 @@ resources and does not need the drafter.
 ## Limits
 
 The draft does not decide membership by itself. The drafter cannot know move
-destinations, link-repair files, whether repository-specific agent constraints
-need `docs/agents/project.md`, or anything an earlier confirmed scope decided,
+destinations, link-repair files, or anything an earlier confirmed scope decided,
 so an update asks its root questions again. It does not judge whether a file's
 content is useful or current.
 
@@ -154,6 +154,7 @@ input, and compare the whole proposal. They check its shape against the
 unresolved questions, the reserved and retired paths, and process errors, run
 the drafter from a retained source that holds only its declared resources and
 compare its proposal with the acquired source's, resolve a profile's
-declarations, and show that the drafted scope of a conforming fixture, and of a
+declarations, leave project agent guidance outside documentation scope in both
+profiles, and show that the drafted scope of a conforming fixture, and of a
 copy of this repository once its questions are answered, passes the
 documentation check.

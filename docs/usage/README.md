@@ -17,5 +17,3 @@ describes running it.
   commands, and recommended personal skills.
 - [Release versioning](versioning.md): version increments, breaking standards
   changes, and selecting an adoptable release.
-- [Prepare existing agent guidance](prepare-agent-guidance.md): preserve useful
-  project instructions before Repo Canon installs its shared `AGENTS.md`.
