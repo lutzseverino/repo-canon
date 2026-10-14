@@ -207,30 +207,35 @@ test("rejects the retired exception marker", () => {
   assert.match(result.stderr, /Link a related GitHub issue/);
 });
 
-function adoptionRecord() {
+function adoptionRecord({ deferredRemoteSetup = false } = {}) {
   return `# Repository Standards adoption record
+
+## Ready to commit
+
+Ready to commit: yes.
 
 ## Selection
 
 | Component | Value |
 | --- | --- |
-| CLI | \`4.0.0\` |
+| CLI | \`7.0.0\` |
 | Standards source | \`https://github.com/lutzseverino/repo-canon\` |
 | Standards version | \`v0.4.0\` |
 | Standards commit | \`0123456789abcdef0123456789abcdef01234567\` |
-| Profile | \`node\` |
+| Profile | \`standard\` |
 
 ## Operations
 
 | Phase | Declaration | Operation | Result | Message |
 | --- | --- | --- | --- | --- |
 | verification | \`documentation\` | \`documentation-navigation\` | passed | Documentation navigation is complete. |
+${deferredRemoteSetup ? "| fixes | `github-repository-configuration` | `canonical-labels` | deferred | GitHub authentication is unavailable. |\n" : ""}
 
 ## Changed paths
 
-| Path | Phase | Operation |
-| --- | --- | --- |
-| \`.github/scripts/validate-pr-metadata.mjs\` | installation | none |
+| Path | Phases |
+| --- | --- |
+| \`.github/scripts/validate-pr-metadata.mjs\` | installation |
 
 ## Scope changes
 
@@ -251,6 +256,10 @@ test("accepts a body that is exactly an adoption record", () => {
   const record = adoptionRecord();
   for (const [variant, body] of [
     ["record", record],
+    [
+      "record with deferred remote setup",
+      adoptionRecord({ deferredRemoteSetup: true }),
+    ],
     ["CRLF record", record.replace(/\n/g, "\r\n")],
     ["record after blank lines", `\n \t\n${record}`],
     [

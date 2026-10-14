@@ -198,12 +198,10 @@ described below.
 ### Adoption pull requests
 
 An adoption pull request holds one completed Repository Standards adoption or
-update run and nothing else: the run's `changeSet` paths and `.repo-standards/`.
-Before opening it, read `status --json` with the project's pinned
-`.repo-standards/runtime/node_modules/.bin/repo-standards`. Open it only when
-`active` is `null`, `lastComplete` is present, there is no `stateError`, and
-every `changeSet` path is among the uncommitted changes; otherwise finish or
-recover the run with the `adopt-standards` skill.
+update run and nothing else. Open it once the project's pinned
+`.repo-standards/runtime/node_modules/.bin/repo-standards status` reports the
+run ready to commit. Otherwise finish or recover the run with
+`repo-standards adopt`, using the pinned runtime once a run has started.
 
 Title it `chore: adopt <source> <version> with CLI <version>`, naming the
 source by the repository name in its URL and the versions from the record's
@@ -215,8 +213,8 @@ Its body is the adoption record: the output of `status --summary`, byte for
 byte, starting with its `# Repository Standards adoption record` heading. The
 record's Operations table lists the standards source's fixes and checks with
 their results. Post one check-outcomes comment with the repository's own
-validation outcomes, confirmation that the run-state conditions for opening
-the pull request hold, and findings links or unfiled findings under the
+validation outcomes, confirmation of the ready-to-commit verdict, and findings
+links or unfiled findings under the
 [findings rule](#findings). The record stays the body; for a breaking (`!`)
 title, add Impact and Migration sections after the record.
 Write the check-outcomes comment under the [comment rules](#comments).
@@ -226,7 +224,7 @@ For adoption or update findings, use these target repositories:
 - For the standards source's guidance, discovery, checks, fixes, installed
   files, or drafter, use the source repository identified by the source URL in
   the adoption record's Selection.
-- For the Repository Standards CLI or the `adopt-standards` skill, use
+- For the Repository Standards CLI and its `adopt` command, use
   `lutzseverino/repo-standards`.
 
 ### Merging
