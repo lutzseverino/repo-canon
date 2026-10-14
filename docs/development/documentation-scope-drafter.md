@@ -116,10 +116,9 @@ cites its directory when that directory holds such a file, and cites nothing
 otherwise. Repository Standards requires eligible evidence for existing and
 excluded candidates; every included missing file, including a README, is
 exempt because the CLI observes its absence. Evidence for a missing README need
-not come from its own directory. The drafter can still ask whether to commit a
-directory's first content separately; that is not required to establish
-absence evidence. Review whether the directory is meaningful documentation and
-include any intended content paths before the complete inspection.
+not come from its own directory. New indexes never produce evidence questions.
+Review whether the directory is meaningful documentation and include any
+intended content paths before the complete inspection.
 
 ## Retention
 

@@ -401,8 +401,6 @@ const questions = {
     `${code(directory)} must be a directory to hold its documentation index, but it is not. Should it be removed or renamed?`,
   notIndex: (path) =>
     `${code(path)} must be a file, the documentation index of its directory, but it is a directory. Should it be removed or renamed?`,
-  unsupported: (index, directory) =>
-    `Repository Standards accepts the new ${code(index)} only with evidence inside ${code(directory)}, where Git keeps no file yet. Should that directory's first content be committed in a separate reviewed change before adopting again?`,
 };
 
 // What the draft covers, and the retired skills it leaves out because the run
@@ -451,14 +449,6 @@ class Draft {
       .map((candidate) => candidate.path);
   }
 
-  // A new index that cites nothing lacks the evidence Repository Standards
-  // requires; a question says what it needs.
-  evidenceQuestions() {
-    return [...this.createdIndexes]
-      .filter(([path]) => this.candidates.get(path)?.evidence.length === 0)
-      .map(([path, directory]) => questions.unsupported(path, directory));
-  }
-
   proposal(retired) {
     return {
       format: proposalFormat,
@@ -470,7 +460,6 @@ class Draft {
           unresolved: [
             ...this.unresolved.values(),
             ...this.otherQuestions,
-            ...this.evidenceQuestions(),
           ].sort(),
         },
       ],
@@ -478,10 +467,9 @@ class Draft {
   }
 }
 
-// A new index for a directory. It cites its directory, which Repository
-// Standards requires to hold a file for a missing README; without one, the
-// index is still drafted, citing nothing. A directory path that is not a
-// directory cannot hold an index, which is a question.
+// A new index cites its directory when the copy holds a regular file there,
+// otherwise nothing: included missing files need no evidence. A directory path
+// that is not a directory cannot hold an index, which is a question.
 function createIndex(draft, context, directory) {
   const path = `${directory}/${directoryIndex}`;
   if (context.owner(path) || draft.candidates.has(path)) return;
