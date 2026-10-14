@@ -111,11 +111,10 @@ repeated.
   and the installed `AGENTS.md` points every change through `pr` and
   `babysit`. The model-invocable `babysit` skill watches the pull request,
   settles its findings, and merges it, stating no rule the guide holds. Review
-  converges by judgment, through the guide's
-  [decline grounds](CONTRIBUTING.md#merging) and `babysit`'s re-request
-  condition; no round cap or severity threshold bounds it, and the factory's
-  time limit is the hard stop. It waits through one bundled script that polls
-  silently for checks and the reviewer named by the optional repository-owned
+  follows the guide's [request and findings rules](CONTRIBUTING.md#merging),
+  with an optional total request bound in the repository's reviewer data.
+  It waits through one bundled script that polls silently for checks and the
+  reviewer named by the optional repository-owned
   `.github/pull-request-reviewer.json`, run in the foreground on every host.
   Without that file there is no reviewer wait. Repo Canon ships no reviewer
   file or preset; this repository carries its own configuration, outside the

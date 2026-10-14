@@ -238,14 +238,29 @@ The optional repository-owned `.github/pull-request-reviewer.json` configures
 its reviewer and wait bounds; [`babysit`](.agents/skills/babysit/SKILL.md)
 documents its schema. A review request is the pull request's opening when
 `request.onOpen` is true, or a later comment whose whole trimmed body equals
-`request.comment`; a push is not one. When the configured reviewer does not
-review the latest head, because it is unavailable, no review was requested
+`request.comment`; a push is not one.
+
+After the opening, an agent must post the review request comment for a new
+head only when its push fixes, fully or partly, a review finding these rules
+do not let it decline, and the request bound has not been reached. No other
+push gets a request: a push that only follows declines, changes only tests,
+documentation or wording, or only fixes a failing check gets none.
+The optional `bounds.reviewRequests` is a positive integer limiting the total
+review requests a pull request gets. Count the opening when `request.onOpen`
+is true and every comment whose whole trimmed body equals `request.comment`,
+whoever posted it. Once that count reaches the bound, no agent requests another
+review. Without the field there is no count bound.
+
+When the configured reviewer does not review the latest head, because it is
+unavailable, no review was requested
 after the head's push, it did not respond within `bounds.responseMinutes` of
 the latest review request, or no review arrived within `bounds.reviewMinutes`
 of it, the pull request merges once those conditions hold, and the merging
 agent comments on it that the configured reviewer did not review that head
-and why, under the [comment rules](#comments). Without the file, no reviewer
-wait or comment about an absent review is required.
+and why, under the [comment rules](#comments). For a head with no request after
+its push, the comment says whether the request rule required none or the bound
+was reached. Without the file, no reviewer wait or comment about an absent
+review is required.
 Squash-merge pull requests into their base branch, passing the subject
 `<title> (#<number>)` and the current PR body explicitly, with the body passed
 byte for byte through a file or stdin. GitHub's default squash message must
@@ -262,6 +277,12 @@ its reason in its review thread under the [comment rules](#comments). Record rea
 are outside the change's ticket or scope, or because another layer owns the
 rule they guard, under the [findings rule](#findings). Do not file findings
 declined because they do not hold or lie outside the threat model.
+
+These findings rules still apply after the request bound is reached: fix every
+finding the agent may not decline and push without another request; answer any
+review that arrives anyway. The bound creates no decline reason and no grouped
+follow-up issue; record findings one issue per finding under the
+[findings rule](#findings).
 
 ## Credentials
 

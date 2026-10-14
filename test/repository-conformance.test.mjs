@@ -654,8 +654,9 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   );
   assert.match(
     babysit,
-    /When pushed fixes change enough to warrant another look/,
+    /Apply the \[Merging request rule\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#merging\) to the new head/,
   );
+  assert.doesNotMatch(babysit, /warrant another look/);
   assert.match(
     babysit,
     /"checks passed" also covers no check arriving within 5 minutes of a push GitHub recorded, with no unfinished or failed workflow run for the head/,
@@ -719,7 +720,19 @@ test("review converges on fixes and reasoned declines the guide allows", () => {
   assert.match(guide, /files only the owner writes/);
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(babysit, /does not let you decline/);
-  assert.match(babysit, /warrant another look/);
+  assert.match(
+    guide,
+    /fixes, fully or partly, a review finding these rules do not let it decline/,
+  );
+  assert.match(guide, /Without the field there is no count bound/);
+  assert.match(
+    guide,
+    /fix every finding the agent may not decline and push without another request/,
+  );
+  assert.match(
+    guide,
+    /The bound creates no decline reason and no grouped follow-up issue/,
+  );
   assert.doesNotMatch(
     babysit,
     /ticket or scope|another layer|only the owner writes/,

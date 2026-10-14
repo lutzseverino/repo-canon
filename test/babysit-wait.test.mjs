@@ -1366,6 +1366,124 @@ const pendingPullRequest = {
   comments: [],
 };
 
+test("the wait names the reached request bound after a later push", async () => {
+  const reviewer = {
+    ...githubReviewer,
+    request: { ...githubReviewer.request, onOpen: true },
+    bounds: { ...githubReviewer.bounds, reviewRequests: 4 },
+  };
+  const result = await run(
+    {
+      ...pendingPullRequest,
+      createdAt: "2026-10-11T05:00:00Z",
+      pushedAt: "2026-10-11T05:10:00Z",
+      checks: [checkRun()],
+      comments: ["owner", "another-user", "automation[bot]"].map((login) => ({
+        login,
+        createdAt: "2026-10-11T05:05:00Z",
+        body: ` \n${reviewer.request.comment}\n `,
+      })),
+    },
+    ["12"],
+    reviewer,
+  );
+  assert.equal(result.code, 4);
+  assert.equal(result.stderr, "");
+  assert.equal(
+    result.stdout,
+    `${head}: checks passed, review not requested for this head; review request bound reached (4)\n`,
+  );
+});
+
+test("only exact request comments and enabled opening requests reach the bound", () => {
+  const comments = [
+    { login: "owner", createdAt: "2026-10-11T05:40:00Z", body: "review" },
+    { login: "other", createdAt: "2026-10-11T05:41:00Z", body: " \nreview\n " },
+    { login: "bot", createdAt: "2026-10-11T05:42:00Z", body: "Fixed. review" },
+  ];
+  for (const onOpen of [false, true]) {
+    const reviewer = {
+      ...githubReviewer,
+      request: { comment: "review", onOpen },
+      bounds: { ...githubReviewer.bounds, reviewRequests: 3 },
+    };
+    const look = {
+      reviewer,
+      comments,
+      requestedAt: reviewRequestedAt(
+        Date.parse("2026-10-11T05:39:00Z"),
+        comments,
+        reviewer,
+      ),
+      pushedAt: Date.parse("2026-10-11T05:42:00Z"),
+    };
+    assert.equal(decision(look).code, 4);
+    assert.equal(
+      decision(look).reviewer,
+      onOpen ? "request bound reached" : "not requested",
+    );
+    assert.equal(
+      decision({ ...look, reviewer: githubReviewer }).reviewer,
+      "not requested",
+    );
+  }
+});
+
+test("a reached bound still waits for checks and honors reviews and later requests", () => {
+  const reviewer = {
+    ...githubReviewer,
+    request: { ...githubReviewer.request, onOpen: true },
+    bounds: { ...githubReviewer.bounds, reviewRequests: 1 },
+  };
+  const look = {
+    reviewer,
+    pushedAt: Date.parse("2026-10-11T05:40:00Z"),
+  };
+  assert.equal(
+    decision({ ...look, checks: [{ ...passed[0], state: "pending" }] }).code,
+    null,
+  );
+  assert.equal(
+    decision({
+      ...look,
+      reviews: [
+        {
+          user: { login: reviewer.account },
+          commit_id: head,
+          state: "APPROVED",
+        },
+      ],
+    }).code,
+    0,
+  );
+  const comments = [
+    {
+      login: "owner",
+      createdAt: "2026-10-11T05:41:00Z",
+      body: reviewer.request.comment,
+    },
+  ];
+  const requestedAt = reviewRequestedAt(look.pushedAt, comments, reviewer);
+  assert.equal(
+    decision({ ...look, comments, requestedAt, now: requestedAt + 30_000 })
+      .reviewer,
+    "pending",
+  );
+});
+
+test("the wait rejects invalid review request bounds", async () => {
+  for (const reviewRequests of [0, -1, 1.5, "4", null, true, [], {}]) {
+    const reviewer = {
+      ...githubReviewer,
+      bounds: { ...githubReviewer.bounds, reviewRequests },
+    };
+    const result = await run(pendingPullRequest, ["12"], reviewer);
+    assert.equal(result.code, 1);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /reviewRequests must be a positive integer/);
+  }
+});
+
 test("the script writes nothing while it waits, then one line at its limit", async () => {
   const result = await run(pendingPullRequest, [
     "12",

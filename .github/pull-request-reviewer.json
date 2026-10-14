@@ -15,6 +15,7 @@
   ],
   "bounds": {
     "responseMinutes": 5,
-    "reviewMinutes": 30
+    "reviewMinutes": 30,
+    "reviewRequests": 4
   }
 }
