@@ -12,8 +12,7 @@ profile only installs the files a repository it serves carries, and
 [the factory's usage documentation](../../factory/docs/usage/README.md)
 describes running it.
 
-- [Adopt Repo Canon](adopt-repo-canon.md): choosing a profile, prerequisites,
-  publication boundary, inspection, scope review and correction, adoption
-  commands, and recommended personal skills.
+- [Adopt Repo Canon](adopt-repo-canon.md): choosing a profile, remote setup
+  prerequisites and deferral, and recommended personal skills.
 - [Release versioning](versioning.md): version increments, breaking standards
   changes, and selecting an adoptable release.

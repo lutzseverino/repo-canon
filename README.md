@@ -7,28 +7,26 @@
   </p>
 </div>
 
-Applying Repo Canon installs contribution and agent instructions, skills,
-templates, and validation workflows into a repository. This process is called
+Adopting Repo Canon installs contribution and agent instructions, rules,
+skills, templates, and validation workflows into a repository. This process is
+called adoption, and a profile is the set of conventions it applies. Rules are
+the installed requirements that a repository's files keep satisfying after
 adoption.
 
 ## Installation
 
-Repository Standards is the tool that applies Repo Canon to a repository;
-use its CLI 7.0.0 or newer. On macOS
-or Linux, use Node.js 24, npm, and Git 2.32.0 or newer, and install the CLI outside
-the repository:
+On macOS or Linux, use Node.js 24, npm, and Git 2.32.0 or newer. Repository
+Standards is the tool that applies Repo Canon, and `npx` runs it without a
+separate installation. From a clean, committed working tree of your
+repository, ask your agent to run this command, or run it yourself in a
+terminal:
 
 ```sh
-npm install --global --ignore-scripts @lutzseverino/repo-standards
-repo-standards --version
+npx @lutzseverino/repo-standards adopt https://github.com/lutzseverino/repo-canon
 ```
 
-Select an owner-published release compatible with that CLI, and the `standard`
-profile, or the `factory` profile for a repository that a host-installed factory
-serves. The latest [`v0.13.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.13.0)
-works with CLI 7.0.0. Before updating an existing adoption, read the
-breaking standards changes and migration steps of each release since the
-adopted one.
+In a terminal, `adopt` asks its questions and guides your edits. For an
+agent, it prints an answers file to fill in with you and its next steps.
 
 ## Features
 
@@ -39,24 +37,26 @@ adopted one.
 - Offer a `factory` profile that adds the factory configuration and toolchain image a host-installed factory, an unattended ticket-running service, needs to serve the repository.
 - Set up triage labels, squash-only merging, and a required `PR metadata` check where GitHub's plan offers one.
 - Check the repository introduction, component introductions, and documentation navigation.
-- Guide agents on the documentation tree and repository and component introductions.
+- Install rules for the documentation tree, the repository and component introductions, the license, and the GitHub configuration.
 
 ## Usage
 
-Inspect the published release before adoption. The report is read-only and
-authorizes nothing:
+Adoption installs Repo Canon's files, skills, and rules, then has you or your
+agent bring the README, license, documentation, and agent instructions in line
+with the rules. Your repository-specific agent instructions move to
+`docs/agents/project.md`. It also sets up GitHub labels and merge rules; this
+remote setup can be deferred when GitHub access is missing, so adoption
+completes locally. Review the changes `adopt` leaves and commit them.
+
+Pick the `standard` profile, or `factory` for a repository a factory serves;
+the [adoption guide](docs/usage/adopt-repo-canon.md) explains the choice and
+what remote setup needs. To update, read the
+[release notes](https://github.com/lutzseverino/repo-canon/releases) since your
+adopted release, then run the command without the URL:
 
 ```sh
-repo-standards inspect \
-  --source https://github.com/lutzseverino/repo-canon \
-  --standards-version v0.13.0 --profile standard \
-  --project /path/to/adopting-project --json
+npx @lutzseverino/repo-standards adopt
 ```
-
-Review the report and scope, and complete the adoption as the
-[adoption guide](docs/usage/adopt-repo-canon.md) describes. It lists the
-remaining prerequisites, the exact CLI installation to retain through adoption,
-and the authenticated `gh` access the two GitHub setup fixes need.
 
 ## Documentation
 

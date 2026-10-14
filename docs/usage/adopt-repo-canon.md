@@ -1,6 +1,16 @@
 # Adopt Repo Canon
 
-Repo Canon supplies two Repository Standards v2 profiles:
+The [Repository README](../../README.md#installation) gives the one-line `adopt`
+command that adopts Repo Canon and every later update. `adopt` asks each
+question adoption needs; this guide covers the choices behind three of them:
+the profile, remote setup, and the personal skills adoption leaves to you. The
+CLI's
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md)
+describes `adopt` itself, at a terminal and through an agent.
+
+## Choose a profile
+
+Repo Canon supplies two profiles:
 
 - `standard`: everything Repo Canon installs except the factory's repository
   files. Select it for every repository that no factory serves.
@@ -12,183 +22,43 @@ Repo Canon supplies two Repository Standards v2 profiles:
   [the factory's usage documentation](../../factory/docs/usage/README.md)
   describes.
 
-The commands below select `standard`; for a repository a factory serves,
-replace it with `factory`. Before using the commands below, read the notes of the
-[published release](https://github.com/lutzseverino/repo-canon/releases) you
-select. Select only an owner-published stable SemVer tag.
+Every update offers the profiles again, so a repository switches profile by
+answering differently when a factory starts or stops serving it.
 
-Source authoring, publication, and adoption are separate stages:
+## Remote setup
 
-1. Repo Canon maintainers edit and validate the local source. The
-   [development guide](../development/README.md) gives the repository checks,
-   and the [source profile](../development/source-profile.md) gives exact public
-   CLI validation.
-2. The owner publishes a stable Repo Canon source version through the
-   [release procedure](../development/release.md), which reviews and validates
-   its source inputs before publication.
-3. An adopting maintainer inspects the published version, reviews its complete
-   project-specific scope, and then starts adoption, confirming only when the
-   inspection requires it. Adoption writes project
-   content and can change GitHub settings, so review the inspection before
-   starting. The
-   [first real adoption](https://github.com/lutzseverino/repo-canon/blob/b759f28cff401431fdd93901abd4f65f9b8dcb00/docs/development/real-adoption.md) records how one
-   repository completed these stages, including the migration effort and the
-   defects it surfaced.
+Remote setup is the part of adoption that changes the repository's settings on
+GitHub. Repo Canon has two remote setup fixes:
 
-## Prerequisites
+- Canonical labels creates and reconciles the triage and planning labels. Its
+  account needs write, maintain, or admin access to the repository.
+- Pull request integration requires the `PR metadata` check and sets
+  squash-only merging. Its account needs admin access.
 
-Use macOS or Linux with Node.js 24, npm, and Git 2.32.0 or newer. Use public CLI
-7.0.0 or newer; 7.0.0 is the current source-validation baseline. Install a pinned
-CLI in a persistent directory outside the adopting repository so inspection,
-start, and recovery use the same executable:
+Both also need Git 2.18.0 or newer, GitHub CLI 2.57.0 or newer signed in to
+`github.com` with `gh auth login`, and repository-local `github.com` remotes
+that all name the same repository. Before writing anything, `adopt` probes
+each fix read-only and reports it not ready, with the reason, when one of these
+is missing.
+
+Resolve the reason and run `adopt` again, or defer the fix so adoption
+completes locally without it; `status` and the adoption record list what was
+deferred. Every later `adopt`, whether it updates or applies the adopted
+version and profile again, probes again and applies a deferred fix once its
+probe is ready. Once the reason is resolved, run `adopt` in the adopted
+repository without the URL:
 
 ```sh
-adoption_cli="$HOME/.local/share/repo-standards/cli-7.0.0"
-mkdir -p "$adoption_cli"
-npm install --prefix "$adoption_cli" --ignore-scripts --save-exact \
-  --no-audit --no-fund @lutzseverino/repo-standards@7.0.0
-repo_standards="$adoption_cli/node_modules/.bin/repo-standards"
-"$repo_standards" --version
+npx @lutzseverino/repo-standards adopt
 ```
 
-The CLI runtime stays outside the project. Retain it until adoption completes.
-
-Repo Canon's two setup fixes also require Git 2.18.0 or newer, GitHub CLI 2.57.0
-or newer, an unambiguous `github.com` remote, an authenticated `gh` account, and
-write access for labels plus admin access for required checks and merge
-settings. Both fixes are remote setup: inspection probes each one read-only and
-reports it not ready, with the reason, when one of those is missing. Resolve
-the reason and inspect again, or add `--defer-remote-setup` to `start` to
-complete adoption without it; every later update probes again and applies it
-once ready. Keep the repository clean and committed. Adoption preserves useful
-repository-specific `AGENTS.md` instructions through the contextual
-`project-agent-guidance` declaration, as
-[adoption compatibility](../development/adoption-compatibility.md#preserving-project-instructions)
-describes. Records with retired formats in `.repo-standards` or as run records in Git's
-directory cannot be read by CLI 7.0.0; such a repository adopts fresh, as the CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
-describes.
-
-## Inspect the published source
-
-The latest [published release, `v0.13.0`](https://github.com/lutzseverino/repo-canon/releases/tag/v0.13.0),
-works with CLI 7.0.0 and uses operation/result v2. Before updating an
-existing adoption, review the breaking standards changes and migration steps of
-each release since the adopted one.
-Run the first inspection from the adopting repository:
-
-```sh
-project_root=/path/to/adopting-project
-source_tag=v0.13.0
-
-"$repo_standards" inspect \
-  --source https://github.com/lutzseverino/repo-canon \
-  --standards-version "$source_tag" \
-  --profile standard \
-  --project "$project_root" \
-  --json > /tmp/repo-canon-initial-inspection.json
-```
-
-This first report presents the exact files, skills, operations, current project
-state, and discovery evidence. It does not authorize a write. Repo Canon uses
-discovery for Project READMEs, documentation paths, and the intentionally empty
-project-content scope of remote configuration.
-
-Prepare a `repo-standards/scope/v2` proposal from the repository evidence and
-Repo Canon's discovery guidance. For the `documentation` declaration, the
-first report already holds a draft in `discovery.draft`, which Repo Canon's
-documentation scope drafter wrote; decide only its unresolved questions. The public CLI's
-[inspection contract](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/inspection.md#discover-contextual-file-scope)
-defines the proposal fields; the CLI derives the evidence binding.
-
-Request the complete inspection with the proposal:
-
-```sh
-"$repo_standards" inspect \
-  --source https://github.com/lutzseverino/repo-canon \
-  --standards-version "$source_tag" \
-  --profile standard \
-  --scope /path/to/reviewed-scope.json \
-  --project "$project_root" \
-  --json > /tmp/repo-canon-complete-inspection.json
-```
-
-Read the full report, including resolved scope, exact replacements and the
-edits they discard, repository state, prerequisite status, and every operation.
-A changed project or proposal changes the inspection identity and requires
-another review.
-
-## Review and complete adoption
-
-After reviewing the complete inspection, pass its exact `identity` and the
-same scope proposal to `start`:
-
-```sh
-inspection_identity=sha256:REPLACE_WITH_REVIEWED_IDENTITY
-
-"$repo_standards" start \
-  --source https://github.com/lutzseverino/repo-canon \
-  --standards-version "$source_tag" \
-  --profile standard \
-  --scope /path/to/reviewed-scope.json \
-  --identity "$inspection_identity" \
-  --project "$project_root" \
-  --json
-```
-
-When the report's `confirmation.required` is `true`, obtain the maintainer's
-confirmation of those changes and add `--confirmed` to `start`. When it is
-`false`, start with the identity alone; `--confirmed` is rejected when the
-inspection does not require it.
-
-The fixes run before contextual work. They reconcile canonical GitHub labels,
-the `PR metadata` required check, and squash settings, then verify the remote
-result. They create missing settings freely. Before changing an existing
-chosen value, a fix returns `confirmation-required` without mutation, naming
-the current and proposed values. After the maintainer confirms that overwrite,
-run `resume --confirmed --project "$project_root" --json`. Confirmation applies
-to that fix only; a later fix asks separately when it needs to overwrite.
-The required check is plan-gated: on a private repository whose GitHub
-plan offers neither branch protection nor rulesets, the fix reports it
-unavailable and adoption completes without it. A first adoption defers the
-required check, because GitHub runs the PR metadata validation workflow only
-from the default branch, which carries it only once the adoption merges: the
-fix applies the squash settings, reports the check deferred, and adoption
-completes without it. After the adoption merges, the next update, including one
-with an unchanged selection, requires the check. A `blocked` operation or
-incomplete run names the remaining work and does not count as adoption. Repeat
-an interrupted run with `resume --retry` only after reviewing its retained
-effects.
-
-For contextual work, follow the returned request within the confirmed paths,
-refresh the observation with `resume`, and submit the required
-`repo-standards/assessment/v3` file:
-
-```sh
-"$repo_standards" resume --project "$project_root" --json
-"$repo_standards" resume \
-  --assessment /path/to/reviewed-assessment.json \
-  --project "$project_root" --json
-"$repo_standards" status --project "$project_root"
-"$repo_standards" status --project "$project_root" --json
-```
-
-Plain `status` prints the Markdown adoption record with its ready-to-commit
-verdict; `status --json` returns `repo-standards/status/v8` for scripts.
-
-Completion requires exact bytes and modes, full skill inventories, retained
-inputs and runtime, a current contextual assessment, all checks, unchanged Git
-HEAD and index, and successful operation results. Review and commit the adoption
-outputs through the project's normal workflow. Remote readback is point-in-time
-evidence; the fixes provide repeatability and preservation, without a remote
-rollback or freshness guarantee.
-
-## Correct a confirmed scope
-
-When contextual work needs a file outside the confirmed scope, or a confirmed
-path is mistaken, correct the scope as the CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md#correct-a-confirmed-scope)
-describes.
+Before changing a setting that already has a value, either fix asks for
+confirmation, naming the current and proposed values. The `PR metadata`
+requirement waits for the adoption to merge, because GitHub runs its workflow
+only from the default branch: the first adoption applies the merge settings
+and leaves the check unrequired, and the next `adopt` after the merge requires
+it. On a private repository whose GitHub plan offers neither branch protection
+nor rulesets, the check is unavailable, and adoption completes without it.
 
 ## Recommended personal skills
 

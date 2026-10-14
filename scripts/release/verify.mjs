@@ -5,16 +5,18 @@
 // the required minimum version inspects it with each profile in a disposable
 // repository and resolves the release commit and that profile, the same CLI
 // adopts it with each profile into a fixture repository through `adopt` with
-// an answers file, deferring remote setup, and the documents at the release
-// commit name the version being verified. Every CLI version that the
-// development and authoring documents there name is the required minimum.
+// an answers file, deferring remote setup, and the public copy at the release
+// commit names no Repo Canon version and its README no CLI version. Every CLI
+// version that the adoption guide and the development and authoring documents
+// name there is the required minimum.
 
 import { checkAdoption } from "./adoption.mjs";
 import {
+  adoptionGuidePath,
   cliFloor,
   cliVersionMismatches,
   developmentDocumentPaths,
-  repoCanonVersionMismatches,
+  publicCopyVersionProblems,
   standardsPath,
 } from "./named-versions.mjs";
 import {
@@ -170,16 +172,20 @@ function checkFixtureAdoption(version, read, profile) {
   );
 }
 
-function checkDocuments(version, read) {
+function checkDocuments(read) {
   const failures = [
-    ...repoCanonVersionMismatches(read, version),
-    ...cliVersionMismatches(read, developmentDocumentPaths),
+    ...publicCopyVersionProblems(read),
+    ...cliVersionMismatches(read, [
+      adoptionGuidePath,
+      ...developmentDocumentPaths,
+    ]),
   ];
   if (failures.length > 0) return { failures };
   return {
     pass:
-      `the documents name ${version} at the release commit, and every CLI version the development ` +
-      `and authoring documents name is the required minimum ${cliFloor(read(standardsPath))}.`,
+      `the public copy at the release commit names no Repo Canon version and its README no CLI version, ` +
+      `and every CLI version the adoption guide and the development and authoring documents name is ` +
+      `the required minimum ${cliFloor(read(standardsPath))}.`,
   };
 }
 
@@ -216,7 +222,7 @@ await runScript(
       ...profiles.map((profile) =>
         report(() => checkFixtureAdoption(version, read, profile)),
       ),
-      report(() => checkDocuments(version, read)),
+      report(() => checkDocuments(read)),
     ];
     if (results.includes(false))
       fail(`${version} did not verify; see the failed checks above.`);

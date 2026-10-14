@@ -87,6 +87,8 @@ accepts full commit SHAs and reads published tag and branch refs with
 
 ## Documents
 
+- [Authoring and publication](authoring-and-publication.md): the separate
+  stages of source authoring, publication, and adoption.
 - [Release procedure](release.md): released bytes, the reviewed diff, the rule
   for changed selected bytes, the single release pull request, release notes,
   and publication and verification, with the read-only release scripts.
