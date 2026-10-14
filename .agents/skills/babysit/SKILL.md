@@ -6,6 +6,8 @@ description: Babysit an opened pull request through checks and review until it m
 Take the pull request to its merge. `CONTRIBUTING.md` holds the merge
 conditions and the wording rules.
 
+The bundled scripts require Node.js 24.
+
 Before the first wait, apply the
 [Merging request rule](../../../CONTRIBUTING.md#merging) to the pull request's
 head, using step 4 to post any required request.

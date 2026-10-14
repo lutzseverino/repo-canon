@@ -635,6 +635,16 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
   );
 });
 
+test("babysit names the Node.js major required by the factory image guidance", () => {
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  const guidance = flowedText("guidance/factory-sandbox-image.md");
+  const skillMajor = /scripts require Node\.js (\d+)/.exec(babysit)?.[1];
+  const imageMajor = /currently Node\.js (\d+)/.exec(guidance)?.[1];
+  assert.ok(skillMajor, "babysit states its scripts' Node.js major");
+  assert.ok(imageMajor, "factory image guidance states the supported major");
+  assert.equal(skillMajor, imageMajor);
+});
+
 test("babysit waits only through its script, and the guide owns the no-review rule", () => {
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(babysit, /wait\.mjs <number>/);
