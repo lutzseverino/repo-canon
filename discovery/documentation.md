@@ -39,15 +39,36 @@ is decided:
   under one that has none, in a separate reviewed change, so that its new index
   has the evidence Repository Standards requires.
 
+An update drafts afresh: the drafter cannot see the previous confirmed scope,
+so its draft asks again every question that scope may have settled. That scope
+holds the maintainer's earlier decisions. Find it in the retained
+`.repo-standards/inputs/scope-history.json`, format
+`repo-standards/scope-history/v5`, which `inspect --json` reports as
+`historicalScope`: the `documentation` entry of its discovery proposal, with its
+candidates and coverage. Answer each unresolved question it decides as it
+decided:
+
+- A root it included stays a root, with its files and a new index for each of
+  its directories without one.
+- A Markdown file it included or excluded keeps that decision, and so does a
+  file added since to a directory whose Markdown its coverage includes or
+  excludes as a whole.
+- A glossary or context map it included stays included.
+
+Also keep each path it included that still exists and that no rule now assigns
+elsewhere. `docs/agents/project.md` stays out even if it included it: the
+`project-agent-guidance` declaration now owns that path, and removing it from
+documentation scope preserves its content. Show the carried answers to the
+maintainer with the inspection, each naming the earlier decision it comes from,
+and ask them only the questions the previous scope does not decide, such as one
+about a directory added since. `adopt` accepts the entry only once every
+question is answered.
+
 Then add each intended new path that the work needs and the draft cannot know: a
 move destination, with the index of any new directory; and a file whose link to
 documentation needs repair. Keep all declarations' paths disjoint: a Project
 README under a documentation root belongs to one declaration only. A move
 requires authority for its source, destination, and affected link repairs.
-
-If an update's previous documentation scope includes `docs/agents/project.md`,
-use the fresh draft without it. The `project-agent-guidance` declaration now
-owns that path; removing it from documentation scope preserves its content.
 
 The draft does not decide membership by itself. The maintainer's request to
 adopt or update is consent to the drafted and reviewed scope. Ask them to
