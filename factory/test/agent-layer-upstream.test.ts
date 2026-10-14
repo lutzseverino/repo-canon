@@ -79,9 +79,10 @@ test("both architectures' pins match upstream release digests", async (t) => {
       String((error as { stderr?: unknown }).stderr ?? "");
     if (
       !process.env.CI &&
-      /ENOTFOUND|EAI_AGAIN|ENETUNREACH|ECONNREFUSED|ETIMEDOUT|no such host|network is unreachable|connection refused|TLS handshake timeout/.test(
-        detail,
-      )
+      ((error as { name?: string }).name === "TimeoutError" ||
+        /ENOTFOUND|EAI_AGAIN|ENETUNREACH|ECONNREFUSED|ETIMEDOUT|no such host|network is unreachable|connection refused|TLS handshake timeout/.test(
+          detail,
+        ))
     ) {
       t.skip("upstream network unavailable locally");
       return;
