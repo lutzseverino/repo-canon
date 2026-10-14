@@ -38,6 +38,8 @@ if (command === 'source' && subcommand === 'validate') {
   const version = args[args.indexOf('--standards-version') + 1];
   const profile = args[args.indexOf('--profile') + 1];
   console.log(JSON.stringify({
+    format: 'repo-standards/inspection/v8',
+    remoteSetup: [],
     selection: {
       cli: { version: process.env.STUB_CLI_VERSION },
       standards: { version, commit: process.env.STUB_RESOLVED_COMMIT },
@@ -125,7 +127,7 @@ function fixture(t) {
           ...process.env,
           PATH: `${bin}:${process.env.PATH}`,
           REPO_STANDARDS_PREFIX: prefix,
-          STUB_CLI_VERSION: "2.0.0",
+          STUB_CLI_VERSION: "7.0.0",
           ...environment,
         },
       },
@@ -352,10 +354,10 @@ function publishedRelease(t, documents = {}) {
       "README.md":
         "Select the [`v1.0.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v1.0.0).\n",
       "docs/usage/adopt-repo-canon.md":
-        "This guide selects `v1.0.0` with public CLI 2.0.0.\n",
+        "This guide selects `v1.0.0` with public CLI 7.0.0.\n",
       "standards.yaml":
-        'format: repo-standards/v2\nrequires:\n  repo-standards: ">=2.0.0"\n',
-      ...developmentDocuments("2.0.0"),
+        'format: repo-standards/v2\nrequires:\n  repo-standards: ">=7.0.0"\n',
+      ...developmentDocuments("7.0.0"),
       ...documents,
     },
     "release",
@@ -402,7 +404,7 @@ test("release:verify passes a published release that agrees with its commit", (t
     assert.match(
       output,
       new RegExp(
-        `pass: CLI 2\\.0\\.0 inspected v1\\.0\\.0 in a disposable repository .* with the ${profile} profile`,
+        `pass: CLI 7\\.0\\.0 inspected v1\\.0\\.0 in a disposable repository .* with the ${profile} profile`,
       ),
     );
   assert.match(output, /pass: the documents name v1\.0\.0/);
@@ -470,7 +472,7 @@ test("release:verify fails when the documents name another version", (t) => {
 
 test("release:verify fails when a development or authoring document names another CLI version", (t) => {
   const { "docs/development/source-profile.md": sourceProfile } =
-    developmentDocuments("2.1.0");
+    developmentDocuments("7.1.0");
   const { run, releaseCommit, environment } = publishedRelease(t, {
     "docs/development/source-profile.md": sourceProfile,
   });
@@ -482,10 +484,10 @@ test("release:verify fails when a development or authoring document names anothe
   );
 
   assert.notEqual(status, 0);
-  assert.match(output, /pass: CLI 2\.0\.0 inspected v1\.0\.0/);
+  assert.match(output, /pass: CLI 7\.0\.0 inspected v1\.0\.0/);
   assert.match(
     output,
-    /fail: docs\/development\/source-profile\.md:1 names CLI 2\.1\.0, not the standards\.yaml floor 2\.0\.0\./,
+    /fail: docs\/development\/source-profile\.md:1 names CLI 7\.1\.0, not the standards\.yaml floor 7\.0\.0\./,
   );
 });
 
@@ -495,14 +497,14 @@ test("release:verify fails an inspection that does not resolve the release commi
   const { status, output } = run("verify.mjs", ["v1.0.0", releaseCommit], {
     ...environment,
     STUB_RESOLVED_COMMIT: "e".repeat(40),
-    STUB_CLI_VERSION: "2.1.0",
+    STUB_CLI_VERSION: "7.1.0",
   });
 
   assert.notEqual(status, 0);
   assert.match(output, /fail: .*resolved commit e{40}, not the release commit/);
   assert.match(
     output,
-    /fail: .*used CLI 2\.1\.0, not the required minimum 2\.0\.0/,
+    /fail: .*used CLI 7\.1\.0, not the required minimum 7\.0\.0/,
   );
 });
 

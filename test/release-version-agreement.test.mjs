@@ -18,9 +18,13 @@ import {
 // needs no network access and no tags.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-// The development and authoring documents that name the CLI as the validation
-// baseline or the install version.
-const developmentDocuments = [developmentGuide, sourceProfile, authoringNotes];
+// The documents and toolchain image that name the validation or install CLI.
+const validationInputs = [
+  developmentGuide,
+  sourceProfile,
+  authoringNotes,
+  ".factory/Dockerfile",
+];
 
 // A sentence naming versions that are not the CLI: other tools, the Node.js
 // version constraint, and a stable baseline.
@@ -34,7 +38,7 @@ function workingTree() {
     adoptionGuide,
     ciWorkflow,
     standards,
-    ...developmentDocuments,
+    ...validationInputs,
   ]) {
     files.set(path, readFileSync(join(root, path), "utf8"));
   }
@@ -132,10 +136,10 @@ test("changing any one named Repo Canon or CLI version fails the agreement", () 
   }
 });
 
-test("changing any one CLI version in the development and authoring documents fails the agreement", () => {
+test("changing any one CLI version in the validation inputs fails the agreement", () => {
   const files = workingTree();
   const floor = cliFloor(files);
-  for (const path of developmentDocuments) {
+  for (const path of validationInputs) {
     const variants = oneOccurrenceChanged(files.get(path), floor, "99.0.0");
     assert.ok(variants.length > 0, `${path} names CLI ${floor}`);
     for (const variant of variants) {
@@ -149,9 +153,27 @@ test("changing any one CLI version in the development and authoring documents fa
   }
 });
 
-test("versions of other tools and the stable baseline in the development and authoring documents keep the agreement", () => {
+test("the toolchain image must name a pinned CLI version", () => {
   const files = workingTree();
-  for (const path of developmentDocuments) {
+  const path = ".factory/Dockerfile";
+  for (const content of [
+    "FROM node:24-bookworm\n",
+    "FROM node:24-bookworm\nRUN npm install --global @lutzseverino/repo-standards\n",
+    "FROM node:24-bookworm\nRUN npm install --global @lutzseverino/repo-standards@latest\n",
+  ]) {
+    const changed = new Map(files).set(path, content);
+    assert.ok(
+      versionDisagreements(reader(changed)).includes(
+        ".factory/Dockerfile names no CLI version.",
+      ),
+      content,
+    );
+  }
+});
+
+test("versions of other tools and the stable baseline in the validation inputs keep the agreement", () => {
+  const files = workingTree();
+  for (const path of validationInputs) {
     const changed = new Map(files).set(
       path,
       `${files.get(path)}\n${otherVersionsSentence}\n`,
@@ -162,7 +184,7 @@ test("versions of other tools and the stable baseline in the development and aut
 
 test("a version of a tool the agreement does not name fails as a CLI version", () => {
   const files = workingTree();
-  for (const path of developmentDocuments) {
+  for (const path of validationInputs) {
     const changed = new Map(files).set(
       path,
       `${files.get(path)}\nUse Docker 99.0.0 or newer.\n`,

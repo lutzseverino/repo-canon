@@ -14,7 +14,7 @@ adoption.
 ## Installation
 
 Repository Standards is the tool that applies Repo Canon to a repository;
-use its CLI 6.0.0 or newer. On macOS
+use its CLI 7.0.0 or newer. On macOS
 or Linux, use Node.js 24, npm, and Git 2.32.0 or newer, and install the CLI outside
 the repository:
 
@@ -26,7 +26,7 @@ repo-standards --version
 Select an owner-published release compatible with that CLI, and the `standard`
 profile, or the `factory` profile for a repository that a host-installed factory
 serves. The latest [`v0.13.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.13.0)
-requires CLI 6.0.0 or newer. Before updating an existing adoption, read the
+works with CLI 7.0.0. Before updating an existing adoption, read the
 breaking standards changes and migration steps of each release since the
 adopted one.
 

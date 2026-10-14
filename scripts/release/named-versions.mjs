@@ -118,9 +118,9 @@ export function cliVersionMismatches(read, paths) {
 
 // Reports every disagreement between the named versions. `read(path)` returns
 // the text of a repository file. The Repository README and the adoption guide
-// name one Repo Canon version; the CLI version they, CI, and the development
-// and authoring documents name is the floor of the `requires` minimum in
-// `standards.yaml`.
+// name one Repo Canon version; the CLI version they, CI, the development and
+// authoring documents, and the toolchain image name is the floor of the
+// `requires` minimum in `standards.yaml`.
 export function versionDisagreements(read) {
   const { mentions, problems } = repoCanonMentions(read);
   const repoCanonVersions = [
@@ -148,10 +148,13 @@ export function versionDisagreements(read) {
     adoptionGuidePath,
     ciWorkflowPath,
     ...developmentDocumentPaths,
+    ".factory/Dockerfile",
   ]) {
     const cliMentions = cliMentionsIn(read, path);
     if (
-      (path === adoptionGuidePath || path === ciWorkflowPath) &&
+      (path === adoptionGuidePath ||
+        path === ciWorkflowPath ||
+        path === ".factory/Dockerfile") &&
       cliMentions.length === 0
     ) {
       problems.push(`${path} names no CLI version.`);

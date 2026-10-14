@@ -63,8 +63,9 @@ it closes the issue that plans the release. The version-agreement test in
 [adoption guide](../usage/adopt-repo-canon.md) name one Repo Canon version, and
 until the CLI version named in them, CI, the [development guide](README.md), the
 [source profile](source-profile.md), and the
-[authoring notes](../../authoring-notes.md) equals the floor of the `requires`
-minimum in `standards.yaml`.
+[authoring notes](../../authoring-notes.md), plus the toolchain image's
+`.factory/Dockerfile`, equals the floor of the `requires` minimum in
+`standards.yaml`.
 
 Title it `<type>: release vX.Y.Z`. The type follows the release's
 classification under [release versioning](../usage/versioning.md). Use the
