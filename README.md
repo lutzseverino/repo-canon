@@ -49,9 +49,8 @@ remote setup can be deferred when GitHub access is missing, so adoption
 completes locally. Review the changes `adopt` leaves and commit them.
 
 Pick the `standard` profile, or `factory` for a repository a factory serves;
-the
-[adoption guide](docs/usage/adopt-repo-canon.md) explains the choice and what
-remote setup needs. To update, read the
+the [adoption guide](docs/usage/adopt-repo-canon.md) explains the choice and
+what remote setup needs. To update, read the
 [release notes](https://github.com/lutzseverino/repo-canon/releases) since your
 adopted release, then run the command without the URL:
 
