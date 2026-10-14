@@ -69,8 +69,9 @@ Every field below is required except `finished`. Unknown fields are invalid.
   with an empty body and only replies to existing threads never completes one.
 - `unavailable`: array of nonempty reply texts; an empty array is valid. A
   comment by `account` at or after the request containing one of these texts
-  marks the reviewer unavailable. Any comment by `account` after the
-  request counts as a response.
+  marks the reviewer unavailable. Any comment by `account` at or after the
+  request counts as a response, except a request comment, which is never a
+  response.
 - `bounds.responseMinutes` and `bounds.reviewMinutes`: positive finite numbers
   measured from the latest request.
 

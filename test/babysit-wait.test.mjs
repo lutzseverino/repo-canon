@@ -242,6 +242,42 @@ test("no Codex comment 5 minutes after the request is no response", () => {
   assert.equal(bounded.reviewer, "not reviewing");
 });
 
+test("an account reply in the request's second is a response (#423)", () => {
+  const requestedAt = Date.parse("2026-10-13T23:00:00Z");
+  const at = {
+    requestedAt,
+    pushedAt: requestedAt,
+    now: Date.parse("2026-10-13T23:05:00Z"),
+    startedAt: requestedAt + minute,
+  };
+  const acknowledged = decision({
+    ...at,
+    comments: [{ login: codex, createdAt: "2026-10-13T23:00:00Z", body: "👀" }],
+  });
+  assert.equal(acknowledged.code, null);
+  assert.equal(acknowledged.reviewer, "pending");
+  assert.equal(decision(at).reviewer, "no response");
+  // The account's own request comment is a request, not its response.
+  const selfRequested = decision({
+    ...at,
+    comments: [
+      {
+        login: codex,
+        createdAt: "2026-10-13T23:00:00Z",
+        body: " @codex review\n",
+      },
+    ],
+  });
+  assert.equal(selfRequested.code, 4);
+  assert.equal(selfRequested.reviewer, "no response");
+  // A reply before the latest request still isn't a response.
+  const earlier = decision({
+    ...at,
+    comments: [{ login: codex, createdAt: "2026-10-13T22:59:59Z", body: "👀" }],
+  });
+  assert.equal(earlier.reviewer, "no response");
+});
+
 test("the unavailable reply after the latest request is unavailable (#231)", () => {
   const outcome = decision({
     head: "1bbe726cfa6e37b68a9ccb929e8c7c244f2a004f",
@@ -1924,7 +1960,7 @@ test("an invalid reviewer file exits 1 with actionable feedback", async () => {
   assert.equal(result.stdout, "");
 });
 
-test("a response at the request timestamp does not satisfy the response bound", () => {
+test("a response at the request timestamp satisfies the response bound (#423)", () => {
   const requestedAt = Date.parse("2026-10-11T05:39:50Z");
   const outcome = decision({
     reviewer: githubReviewer,
@@ -1938,8 +1974,8 @@ test("a response at the request timestamp does not satisfy the response bound", 
       },
     ],
   });
-  assert.equal(outcome.code, 4);
-  assert.equal(outcome.reviewer, "no response");
+  assert.equal(outcome.code, null);
+  assert.equal(outcome.reviewer, "pending");
 });
 
 const replyOnlyReview = {
