@@ -15,8 +15,8 @@
         "id": "canonical-labels"
       },
       "operationIndex": 0,
-      "before": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
-      "after": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
+      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -35,8 +35,8 @@
         "id": "pull-request-integration"
       },
       "operationIndex": 1,
-      "before": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
-      "after": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
+      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -70,9 +70,9 @@
             "docs/adr/0018-install-only-workflow-skills.md",
             "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
             "docs/adr/README.md",
-            "docs/agents/project.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
+            "docs/development/authoring-and-publication.md",
             "docs/development/babysit-merge.md",
             "docs/development/documentation-check.md",
             "docs/development/documentation-scope-drafter.md",
@@ -88,7 +88,6 @@
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
-            "docs/usage/prepare-agent-guidance.md",
             "docs/usage/versioning.md",
             "factory/GLOSSARY.md",
             "factory/docs/README.md",
@@ -113,6 +112,12 @@
           "paths": [],
           "directories": []
         },
+        "project-agent-guidance": {
+          "paths": [
+            "docs/agents/project.md"
+          ],
+          "directories": []
+        },
         "project-readmes": {
           "paths": [
             "factory/README.md"
@@ -132,8 +137,8 @@
           "directories": []
         }
       },
-      "before": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
-      "after": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
+      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -167,9 +172,9 @@
             "docs/adr/0018-install-only-workflow-skills.md",
             "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
             "docs/adr/README.md",
-            "docs/agents/project.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
+            "docs/development/authoring-and-publication.md",
             "docs/development/babysit-merge.md",
             "docs/development/documentation-check.md",
             "docs/development/documentation-scope-drafter.md",
@@ -185,7 +190,6 @@
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
-            "docs/usage/prepare-agent-guidance.md",
             "docs/usage/versioning.md",
             "factory/GLOSSARY.md",
             "factory/docs/README.md",
@@ -210,6 +214,12 @@
           "paths": [],
           "directories": []
         },
+        "project-agent-guidance": {
+          "paths": [
+            "docs/agents/project.md"
+          ],
+          "directories": []
+        },
         "project-readmes": {
           "paths": [
             "factory/README.md"
@@ -229,8 +239,8 @@
           "directories": []
         }
       },
-      "before": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
-      "after": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
+      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -264,9 +274,9 @@
             "docs/adr/0018-install-only-workflow-skills.md",
             "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
             "docs/adr/README.md",
-            "docs/agents/project.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
+            "docs/development/authoring-and-publication.md",
             "docs/development/babysit-merge.md",
             "docs/development/documentation-check.md",
             "docs/development/documentation-scope-drafter.md",
@@ -282,7 +292,6 @@
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
-            "docs/usage/prepare-agent-guidance.md",
             "docs/usage/versioning.md",
             "factory/GLOSSARY.md",
             "factory/docs/README.md",
@@ -304,8 +313,8 @@
         "id": "documentation-navigation"
       },
       "operationIndex": 2,
-      "before": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
-      "after": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
+      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -324,8 +333,8 @@
         "id": "pull-request-reviewer"
       },
       "operationIndex": 3,
-      "before": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
-      "after": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
+      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -346,8 +355,8 @@
         "id": "project-readme-structure"
       },
       "operationIndex": 4,
-      "before": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
-      "after": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
+      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -368,8 +377,8 @@
         "id": "repository-readme-structure"
       },
       "operationIndex": 5,
-      "before": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
-      "after": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
+      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -403,9 +412,9 @@
             "docs/adr/0018-install-only-workflow-skills.md",
             "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
             "docs/adr/README.md",
-            "docs/agents/project.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
+            "docs/development/authoring-and-publication.md",
             "docs/development/babysit-merge.md",
             "docs/development/documentation-check.md",
             "docs/development/documentation-scope-drafter.md",
@@ -421,7 +430,6 @@
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
-            "docs/usage/prepare-agent-guidance.md",
             "docs/usage/versioning.md",
             "factory/GLOSSARY.md",
             "factory/docs/README.md",
@@ -446,6 +454,12 @@
           "paths": [],
           "directories": []
         },
+        "project-agent-guidance": {
+          "paths": [
+            "docs/agents/project.md"
+          ],
+          "directories": []
+        },
         "project-readmes": {
           "paths": [
             "factory/README.md"
@@ -465,8 +479,8 @@
           "directories": []
         }
       },
-      "before": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
-      "after": "sha256:2e8d148d25105fcfabcc2460f729df45f2bd757ba2291ca0c913840eaf702365",
+      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -603,275 +617,89 @@
   "retryHistory": [],
   "changeSet": [
     {
-      "path": ".agents/skills/ask-matt/PHASE-BOUNDARIES.md",
+      "path": ".agents/skills/adopt-standards/SKILL.md",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/ask-matt/SKILL.md",
+      "path": ".agents/skills/adopt-standards/agents/openai.yaml",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/ask-matt/agents/openai.yaml",
+      "path": ".agents/skills/adopt-standards/references/assessment.md",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/grill-me/SKILL.md",
+      "path": ".agents/skills/adopt-standards/references/discovery.md",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/grill-me/agents/openai.yaml",
+      "path": ".agents/skills/adopt-standards/references/recovery.md",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/handoff/SKILL.md",
+      "path": ".agents/skills/adopt-standards/references/review.md",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/handoff/agents/openai.yaml",
+      "path": ".agents/skills/repository-standards/SKILL.md",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/implement-spec/SKILL.md",
+      "path": ".agents/skills/repository-standards/agents/openai.yaml",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/implement-spec/agents/openai.yaml",
+      "path": ".agents/skills/standards-updates/SKILL.md",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/retro/SKILL.md",
+      "path": ".agents/skills/standards-updates/agents/openai.yaml",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/retro/agents/openai.yaml",
+      "path": ".claude/skills/adopt-standards",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/setup-matt-pocock-skills/SKILL.md",
+      "path": ".claude/skills/repository-standards",
       "phases": [
         "installation"
       ]
     },
     {
-      "path": ".agents/skills/setup-matt-pocock-skills/agents/openai.yaml",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/setup-matt-pocock-skills/domain.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/setup-matt-pocock-skills/issue-tracker-github.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/setup-matt-pocock-skills/issue-tracker-gitlab.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/setup-matt-pocock-skills/issue-tracker-local.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/setup-matt-pocock-skills/triage-labels.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/show-me/SKILL.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/show-me/agents/openai.yaml",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/teach/GLOSSARY-FORMAT.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/teach/LEARNING-RECORD-FORMAT.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/teach/MISSION-FORMAT.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/teach/RESOURCES-FORMAT.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/teach/SKILL.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/teach/agents/openai.yaml",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/to-questionnaire/SKILL.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/to-questionnaire/agents/openai.yaml",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/wait-what/SKILL.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/wait-what/agents/openai.yaml",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/wizard/SKILL.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/wizard/agents/openai.yaml",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/wizard/template.sh",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/ask-matt",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/grill-me",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/handoff",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/implement-spec",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/retro",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/setup-matt-pocock-skills",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/show-me",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/teach",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/to-questionnaire",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/wait-what",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/wizard",
+      "path": ".claude/skills/standards-updates",
       "phases": [
         "installation"
       ]
     }
   ],
   "lastComplete": {
-    "run": "2e3e4e8f-1bd2-4f9c-b04c-5c5e4d980380",
-    "inspection": "sha256:a708277671b276d6e905ff1392e117aa1fa2f8373e4f639c38d1030e47d21b26",
-    "completedAt": "2026-10-14T13:12:49.780Z",
-    "head": "dd480fa81c297196a59cc26e134400ed1295f1a7"
+    "run": "6abd20c8-d320-4225-a371-059945be9cfe",
+    "inspection": "sha256:b33418b87c9b785b0ee7ed51c274b7bef2b8bf91133963e08cea396ebce49c4d",
+    "completedAt": "2026-10-14T21:34:42.457Z",
+    "head": "36ceacb70365b81706d27cb0ab5ab7ba1af39dfc"
   },
   "baselines": {
     "docs/agents/README.md": {
@@ -887,7 +715,7 @@
       "executable": false
     },
     "CONTRIBUTING.md": {
-      "sha256": "c25bf00e0380c8ea900f794f68e7f45c0027eae4614f3588d0dc606fec188645",
+      "sha256": "a1e6d09d5957e84812609c295f5a0fdbf9777ac9e005338758b74940c4bec7cc",
       "executable": false
     },
     "docs/agents/domain.md": {
@@ -899,7 +727,7 @@
       "executable": false
     },
     ".github/workflows/sandbox-image.yml": {
-      "sha256": "71f03ceb1ed50d8d82563c0ef971926cb52bb241b1eb8041f9f7c26e6679722e",
+      "sha256": "598ab9931a8cfc63a3e1d2487fb151eca9b134a5e9a4e3bfa20d4b87b96399b3",
       "executable": false
     },
     ".github/ISSUE_TEMPLATE/feature-request.yml": {
@@ -919,7 +747,7 @@
       "executable": false
     },
     ".github/workflows/issue-contracts.yml": {
-      "sha256": "440fa7d07a8bbf9f5efe5232b2f863d5767a3ff8616b340f078af1bb1a88439f",
+      "sha256": "edcc96d6d8e040a55cd30ea2109d1291322a85bb66ea9d3a5dbbb43fa00a4588",
       "executable": false
     },
     "docs/agents/issue-tracker.md": {
@@ -963,7 +791,7 @@
       "executable": false
     },
     ".github/workflows/pr-metadata.yml": {
-      "sha256": "597e2f3433f75fa25a2a24c9db6be3432c91740a2638ecb3541e549c518e6c82",
+      "sha256": "cb718da096023298e44b962dbb60a42fb0dce52ec0c98f25b9a6307d9e94eac3",
       "executable": false
     },
     ".github/PULL_REQUEST_TEMPLATE.md": {
@@ -975,19 +803,23 @@
       "executable": false
     },
     ".agents/skills/babysit/SKILL.md": {
-      "sha256": "b6900b4378f0b8b9c46b6c7c6b56cad36e62b4f740e59b835559f21baaeda5f3",
+      "sha256": "f17de7f5068281d3ef188e08861d106d9ef3aff377f76e62f792284d9c89feca",
       "executable": false
     },
     ".agents/skills/babysit/merge.mjs": {
       "sha256": "f1ba69545f9e7234666e76e1bb64283378419f9e6af963753d141107438b8d3e",
       "executable": false
     },
+    ".agents/skills/babysit/pull-request-reviewer.mjs": {
+      "sha256": "661a5832f8386352d9f9f7e4f58c6f467a63b56b6b49edb41514266a4ed858d1",
+      "executable": false
+    },
     ".agents/skills/babysit/reviewer.mjs": {
-      "sha256": "43c0834119e5caad5478abe6216e46ccd9813d8019a2097e7d0bc8616ff94373",
+      "sha256": "bda1879ccbf256b0da6ab17857e158555068bde14f4f277307ba3d99a110275d",
       "executable": false
     },
     ".agents/skills/babysit/wait.mjs": {
-      "sha256": "041dd8a31517f0592b2a16d72030d7a95f94d7b643f676f52929895f92eacc46",
+      "sha256": "93e4f0658510fb799009bf7681ff1844679ed496db648fb6fd8fe90ec9d72124",
       "executable": false
     },
     ".agents/skills/code-review/SKILL.md": {
@@ -1190,35 +1022,11 @@
       "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d",
       "executable": false
     },
-    ".agents/skills/adopt-standards/SKILL.md": {
-      "sha256": "8abd386956435fec093e74982de0687bd5d9b4be6e77ef28bc3a670f1c415224",
+    ".agents/skills/repository-standards/SKILL.md": {
+      "sha256": "d181a5dd3e3e2e5d5d5a3c5c86f170da4361d567321b8f82340a128920ad388d",
       "executable": false
     },
-    ".agents/skills/adopt-standards/agents/openai.yaml": {
-      "sha256": "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "executable": false
-    },
-    ".agents/skills/adopt-standards/references/assessment.md": {
-      "sha256": "b0e4fdafd427a18ba834deaa98e4a695884d5e9cd0f959df7f5fbd469e07d881",
-      "executable": false
-    },
-    ".agents/skills/adopt-standards/references/discovery.md": {
-      "sha256": "0170d35348f3b671a1c28da5ca624e32bc71bae32198f16bd42d3b419fb9c980",
-      "executable": false
-    },
-    ".agents/skills/adopt-standards/references/recovery.md": {
-      "sha256": "27d88ef16bccb4538b25c40068b57eb9eeb769320fb1a87b78a33057e7924e06",
-      "executable": false
-    },
-    ".agents/skills/adopt-standards/references/review.md": {
-      "sha256": "9a369755463ded9523d50bf1a338490d156860c7b3516ca27b465427d113bf61",
-      "executable": false
-    },
-    ".agents/skills/standards-updates/SKILL.md": {
-      "sha256": "3262164c280f6d05c33fcfed23934dc17955038680ad19a89fef26a5cb4e0999",
-      "executable": false
-    },
-    ".agents/skills/standards-updates/agents/openai.yaml": {
+    ".agents/skills/repository-standards/agents/openai.yaml": {
       "sha256": "8619a54e8c098122a7f3881394f84ca89b684366e848233a29ad18b6ec363935",
       "executable": false
     }
@@ -1227,6 +1035,7 @@
     ".agents/skills/babysit": [
       "SKILL.md",
       "merge.mjs",
+      "pull-request-reviewer.mjs",
       "reviewer.mjs",
       "wait.mjs"
     ],
@@ -1312,22 +1121,13 @@
       "SKILL.md",
       "agents/openai.yaml"
     ],
-    ".agents/skills/adopt-standards": [
-      "SKILL.md",
-      "agents/openai.yaml",
-      "references/assessment.md",
-      "references/discovery.md",
-      "references/recovery.md",
-      "references/review.md"
-    ],
-    ".agents/skills/standards-updates": [
+    ".agents/skills/repository-standards": [
       "SKILL.md",
       "agents/openai.yaml"
     ]
   },
   "links": {
-    ".claude/skills/adopt-standards": "../../.agents/skills/adopt-standards",
-    ".claude/skills/standards-updates": "../../.agents/skills/standards-updates",
+    ".claude/skills/repository-standards": "../../.agents/skills/repository-standards",
     ".claude/skills/babysit": "../../.agents/skills/babysit",
     ".claude/skills/code-review": "../../.agents/skills/code-review",
     ".claude/skills/codebase-design": "../../.agents/skills/codebase-design",
@@ -1437,42 +1237,43 @@
     {
       "format": "repo-standards/assessment/v3",
       "scope": {
-        "inspection": "sha256:a708277671b276d6e905ff1392e117aa1fa2f8373e4f639c38d1030e47d21b26",
-        "afterFixes": "sha256:4f6a95f0fde2caf67ca5125ac33ee81957df6dde4a891de8832ab59c76077203"
+        "inspection": "sha256:b33418b87c9b785b0ee7ed51c274b7bef2b8bf91133963e08cea396ebce49c4d",
+        "afterFixes": "sha256:fa215454f8531191a44e6741fb558f2234e21f57edcbb5ca8e50fe323be8c0fa"
       },
-      "run": "2e3e4e8f-1bd2-4f9c-b04c-5c5e4d980380",
-      "selection": "sha256:7cad71149b53257c9ca476ec8ecaf13b436c6f09913397a5c5c0493d3e17a3d3",
-      "snapshot": "sha256:4f6a95f0fde2caf67ca5125ac33ee81957df6dde4a891de8832ab59c76077203",
+      "run": "6abd20c8-d320-4225-a371-059945be9cfe",
+      "selection": "sha256:16c78b5f18dfcde3f01a965d1588942518e9bfbdb2068e375c5751e70b74b7e3",
+      "snapshot": "sha256:fa215454f8531191a44e6741fb558f2234e21f57edcbb5ca8e50fe323be8c0fa",
       "declarations": [
         {
           "id": "documentation",
           "status": "satisfied",
-          "explanation": "The confirmed documentation targets already follow the v0.12.0 documentation guidance, because this repository authored that release; no edit was needed. The two documentation roots, docs and factory/docs, each have a root README index and usage, development and adr categories with README indexes, every document is listed in exactly one index, the root development guide has its purpose, Setup and validation section and index, and both glossaries plus GLOSSARY-MAP.md stay outside docs. The root usage index purpose is one sentence and uses no glossary term.",
+          "explanation": "The confirmed documentation targets already follow the v0.14.0 documentation rules, because this repository authored that release; no edit was needed. Both documentation roots, docs and factory/docs, have a root README index and usage, development and adr categories with README indexes; every document under them is listed in exactly one index; the development guide starts with its purpose, then Setup and validation, then its Documents index; and both glossaries and GLOSSARY-MAP.md stay outside the roots. Following the first migration, no project file links to CONTRIBUTING.md#documentation. Following the second, docs/agents/project.md left this scope for the project-agent-guidance declaration with its content unchanged, and the retired docs/usage/prepare-agent-guidance.md no longer exists.",
           "changedPaths": [],
           "evidence": [
-            "docs/README.md, docs/usage/README.md, docs/development/README.md and docs/adr/README.md index every document under docs; factory/docs/README.md and its usage, development and adr indexes cover the factory documentation tree.",
+            "git grep -n 'CONTRIBUTING.md#documentation' outside .repo-standards, test and vendor finds no matches.",
+            "docs/README.md lists the Usage, Development, Architecture decisions and Agent configuration category indexes; docs/usage/README.md, docs/development/README.md and docs/adr/README.md index every document in their directories; factory/docs/README.md and its usage, development and adr indexes cover the factory documentation tree.",
             "docs/development/README.md starts with its purpose, then Setup and validation, then its Documents index.",
             "GLOSSARY-MAP.md lists GLOSSARY.md and factory/GLOSSARY.md as the Repo Canon and Factory contexts.",
-            "Superseded ADRs such as docs/adr/0004 and docs/adr/0011 are kept and marked superseded, naming their superseding ADRs.",
-            "authoring-notes.md stays beside standards.yaml as docs/agents/project.md requires.",
-            "The repository's own conformance test ran the shipped documentation-navigation check over this scope and it passed (node --test test/repository-conformance.test.mjs)."
+            "docs/agents/README.md, the installed index, cites the optional project.md in context, as the rules require.",
+            "Superseded ADRs such as docs/adr/0004 are kept with a status naming their superseding ADR.",
+            "authoring-notes.md stays at the repository root, linked from docs/agents/project.md and the development guide."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The drafter's candidates with docs and factory/docs as roots, plus authoring-notes.md, cover every maintained document; installation and fixes added no documentation file and only removed retired skills outside this scope.",
+              "explanation": "The confirmed scope matches the repository after fixes and now: the fixes changed only remote GitHub settings (both reported unchanged), and no contextual edit added, moved or removed a documentation file, so no path outside the scope needs coverage.",
               "evidence": [
-                "Redrafted with discovery/draft-documentation-scope.mjs --profile factory --root factory/docs; its remaining questions were decided as recorded in the proposal.",
-                "Retired installed skills, vendor snapshots, guidance and discovery source inputs, and THIRD_PARTY_NOTICES.md are not maintained project documentation."
+                "The canonical-labels and pull-request-integration fixes reported unchanged and wrote no project files.",
+                "git status shows no change under docs, factory/docs, the glossaries or authoring-notes.md."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "The current project matches the post-fix snapshot; no contextual edit was made, so coverage is unchanged and complete.",
+              "explanation": "The confirmed scope matches the repository after fixes and now: the fixes changed only remote GitHub settings (both reported unchanged), and no contextual edit added, moved or removed a documentation file, so no path outside the scope needs coverage.",
               "evidence": [
-                "The refreshed work request snapshot equals the post-fix snapshot.",
-                "git status shows only installation removals and .repo-standards changes."
+                "The canonical-labels and pull-request-integration fixes reported unchanged and wrote no project files.",
+                "git status shows no change under docs, factory/docs, the glossaries or authoring-notes.md."
               ],
               "additionalPaths": []
             }
@@ -1481,68 +1282,84 @@
         {
           "id": "factory-sandbox-image",
           "status": "satisfied",
-          "explanation": ".factory/Dockerfile installs only the toolchain on a Debian-based Node.js 24 image: it starts from node:24-bookworm, which provides Node.js 24 and npm, and installs the Repository Standards CLI 6.0.0 globally with RUN from the npm registry. It adds no agent tooling, user, ENTRYPOINT or CMD, needs no build context, and leaves npm ci to the run. v0.12.0's Node.js 24 requirement is therefore already met and the file is unchanged.",
+          "explanation": "The existing .factory/Dockerfile already meets the factory toolchain image rules; no edit was needed. It starts from node:24-bookworm, a Debian-based Node image that provides Node.js 24 and npm, which the development guide's Setup and validation section requires and the installed babysit scripts need, and installs the public Repository Standards CLI 7.0.0 globally, which the same section names for source validation. Git and the GitHub CLI come from the factory's agent layer. It installs with RUN from package sources only, with no COPY, ADD, user creation, ENTRYPOINT, CMD or project dependency install.",
           "changedPaths": [],
           "evidence": [
-            "docs/development/README.md Setup and validation names Node.js 24 and npm, and public Repository Standards CLI 6.0.0 for source validation; Git and the GitHub CLI come from the factory's layer.",
-            ".agents/skills/babysit/SKILL.md runs wait.mjs and merge.mjs with node, which node:24-bookworm provides at major 24.",
-            "Sandbox image run 38447194749 built this identical file (git diff ff875c8..HEAD -- .factory/Dockerfile is empty) on a GitHub-hosted runner from docker.io/library/node:24-bookworm and wrote the image successfully.",
-            "node --version was not run inside the built image here, because no Docker daemon is available locally; the base image tag fixes Node.js at major 24."
+            ".factory/Dockerfile: FROM node:24-bookworm; RUN npm install --global --ignore-scripts @lutzseverino/repo-standards@7.0.0.",
+            "docs/development/README.md Setup and validation: Node.js 24 and npm, Git 2.32.0 or newer, authenticated gh, and public Repository Standards CLI 7.0.0 for source validation.",
+            ".agents/skills/babysit/SKILL.md states that its bundled scripts require Node.js 24."
           ]
         },
         {
           "id": "github-repository-configuration",
           "status": "satisfied",
-          "explanation": "The two fixes returned unchanged: canonical labels and the squash-only PR integration with the required PR metadata check already match on lutzseverino/repo-canon. The repository-owned .github/pull-request-reviewer.json is a valid version 1 file with the optional reviewRequests bound, and this declaration writes no project content.",
+          "explanation": "The GitHub repository settings meet the rules. The canonical-labels and pull-request-integration fixes both ran and reported that the labels and the PR integration already match the canonical configuration, so nothing was deferred. The repository-owned .github/pull-request-reviewer.json names the Codex connector with request, finished, unavailable and bounds fields; the pull-request-reviewer check validates its schema. Installed workflow runners: the repository is public and the repository-level REPO_CANON_RUNS_ON variable is absent, so the setting is unset and the installed jobs use the hosted ubuntu-latest default. The owner is a user account, not an organization, so no organization-level value can be inherited. The run neither set nor changed the variable.",
           "changedPaths": [],
           "evidence": [
-            "canonical-labels: GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
-            "pull-request-integration: GitHub PR integration already matches the canonical configuration for lutzseverino/repo-canon.",
-            ".github/pull-request-reviewer.json names chatgpt-codex-connector[bot], request.onOpen true, and bounds responseMinutes 5, reviewMinutes 30, reviewRequests 4."
+            "canonical-labels fix result: unchanged, GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
+            "pull-request-integration fix result: unchanged, GitHub PR integration already matches the canonical configuration for lutzseverino/repo-canon.",
+            "gh repo view --json visibility,owner: PUBLIC, owner lutzseverino.",
+            "gh variable list --json name,value: [] (no repository-level variables); gh api orgs/lutzseverino: 404 Not Found, so lutzseverino is not an organization.",
+            ".github/pull-request-reviewer.json: version 1, account chatgpt-codex-connector[bot], request.onOpen true, bounds responseMinutes 5, reviewMinutes 30, reviewRequests 4."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The empty local scope is intentional: only the authored operations change remote settings, and the reviewer check only reads the reviewer file.",
+              "explanation": "The empty local scope stays intentional after fixes and now: both fixes changed only remote settings, and the reviewer check reads the repository-owned reviewer file without writing it.",
               "evidence": [
-                "The origin remote resolves unambiguously to github.com/lutzseverino/repo-canon, and the maintainer requested this update."
+                "Both fixes reported unchanged and wrote no project files.",
+                "The Git remotes name only lutzseverino/repo-canon."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Nothing changed after the fixes; the empty scope remains correct.",
+              "explanation": "The empty local scope stays intentional after fixes and now: both fixes changed only remote settings, and the reviewer check reads the repository-owned reviewer file without writing it.",
               "evidence": [
-                "The refreshed work request snapshot equals the post-fix snapshot."
+                "Both fixes reported unchanged and wrote no project files.",
+                "The Git remotes name only lutzseverino/repo-canon."
               ],
               "additionalPaths": []
             }
           }
         },
         {
-          "id": "project-readmes",
+          "id": "project-agent-guidance",
           "status": "satisfied",
-          "explanation": "factory/README.md is Scriptorium's Project README: a plain title, a developer-facing description, development commands with their working directory, configuration and providers, and links to the shared development guide, CONTRIBUTING.md and the factory documentation. Its content matches the package. No edit was needed.",
+          "explanation": "The AGENTS.md that adoption replaced, read with git show HEAD:AGENTS.md, is byte-identical to the installed v0.14.0 AGENTS.md: it holds only the standard's shared instructions and already points to docs/agents/project.md, so there are no further repository-specific instructions to recover. The existing docs/agents/project.md already holds only Repo Canon's own constraints: read the authoring notes before changing a convention, the adoption compatibility guide before changing declarations or preparing adoption, and the release procedure before a release, and preserve pinned upstream skill contents and their notices. It restates no installed rule, CONTRIBUTING.md requirement or skill setup file, and nothing contradicts the standard, so no edit and no maintainer decision were needed.",
           "changedPaths": [],
           "evidence": [
-            "factory/package.json defines @lutzseverino/scriptorium with typecheck and test scripts, matching the README's npm ci, npm run typecheck and npm test from factory/.",
-            "The README links ../docs/development/README.md and ../CONTRIBUTING.md for shared setup and delivery instead of duplicating them.",
-            "The shipped project-readme-structure check passed for factory/README.md in test/repository-conformance.test.mjs."
+            "git show HEAD:AGENTS.md | diff - AGENTS.md reports no difference.",
+            "docs/agents/project.md links ../../authoring-notes.md, ../development/adoption-compatibility.md, ../development/release.md and ../../THIRD_PARTY_NOTICES.md, all of which exist.",
+            "docs/agents/project.md is unchanged by this run."
+          ]
+        },
+        {
+          "id": "project-readmes",
+          "status": "satisfied",
+          "explanation": "factory/README.md, the only Project README, already meets the rules; no edit was needed. It has a plain title, describes Scriptorium as the host-installed factory with its own release stream, gives its development commands with their working directory (from factory/), explains its configuration and providers, links its documentation and glossary, and links the root docs/development/README.md and CONTRIBUTING.md with visible text instead of duplicating them.",
+          "changedPaths": [],
+          "evidence": [
+            "factory/README.md: # Scriptorium; Development section runs npm ci --include=dev, npm run typecheck and npm test from factory/.",
+            "factory/package.json, factory/docs and factory/GLOSSARY.md establish the factory as a separately released Project.",
+            "factory/README.md links ../docs/development/README.md as 'shared setup and validation' and ../CONTRIBUTING.md as 'contribution guidelines'."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "factory is the only Project besides the root: it has its own manifest, commands, tests, glossary and release stream; the other top-level directories are integrated into the root package.",
+              "explanation": "The confirmed Project README scope stays valid after fixes and now: the factory package remains the only Project besides the root, and the new top-level rules directory holds authored standards inputs with no Project commands.",
               "evidence": [
-                "Root package.json scripts own operations, discovery, scripts and test; vendor holds pinned snapshots."
+                "package.json and factory/package.json are the repository's only package manifests outside vendor, fixtures and the pinned runtime under .repo-standards.",
+                "No contextual edit added or removed a Project."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "No Project was added or removed after the fixes.",
+              "explanation": "The confirmed Project README scope stays valid after fixes and now: the factory package remains the only Project besides the root, and the new top-level rules directory holds authored standards inputs with no Project commands.",
               "evidence": [
-                "The refreshed work request snapshot equals the post-fix snapshot."
+                "package.json and factory/package.json are the repository's only package manifests outside vendor, fixtures and the pinned runtime under .repo-standards.",
+                "No contextual edit added or removed a Project."
               ],
               "additionalPaths": []
             }
@@ -1551,25 +1368,28 @@
         {
           "id": "repository-license",
           "status": "satisfied",
-          "explanation": "LICENSE holds the single, clear MIT License with the maintainer's copyright notice, and there is no other root license file.",
+          "explanation": "The root LICENSE already holds a single, clear MIT License with the maintainer's copyright notice, and no other root license file sits beside it; it stays unchanged. The README's License link names the MIT License and points at LICENSE.",
           "changedPaths": [],
           "evidence": [
             "LICENSE begins 'MIT License' and 'Copyright (c) 2026 Jasper Lutz Severino'.",
-            "ls LICENSE* at the root lists only LICENSE."
+            "ls LICENSE* at the root lists only LICENSE.",
+            "README.md License section: [MIT License](LICENSE)."
           ]
         },
         {
           "id": "repository-readme",
           "status": "satisfied",
-          "explanation": "README.md already follows the v0.12.0 guidance: a centered title, a one-sentence description of what Repo Canon is and who it is for, JavaScript and Node.js 24 badges, an explanation of what adoption changes, then Installation, Features, Usage, Documentation, Contributing and License in order, with pointer sections holding only their link. Its facts match the release: CLI 6.0.0 or newer, the standard and factory profiles, the v0.12.0 release link and seventeen workflow skills plus babysit.",
+          "explanation": "README.md already meets the Repository README rules; no edit was needed. It opens with a centered title and a one-sentence description, then JavaScript and Node.js 24 badges; explains what adopting Repo Canon changes and defines adoption, profile and rules before using them; keeps Installation, Features, Usage, Documentation, Contributing and License in order; gives the unversioned one-line adopt command, a representative update command, verb-led one-line Features, and pointer-only Documentation, Contributing and License sections. Its facts match the repository: seventeen Matt Pocock skills are installed besides babysit, and the CLI, profiles and remote setup deferral match v0.14.0.",
           "changedPaths": [],
           "evidence": [
-            "The shipped repository-readme-structure check passed in test/repository-conformance.test.mjs.",
-            "The Installation section installs the CLI with no version number and points it at the project through inspect with --profile standard.",
-            "The License section links LICENSE as MIT License, matching the license file."
+            "README.md title block: centered h1 'Repo Canon' and its description paragraph, then the badges.",
+            "Installation: npx @lutzseverino/repo-standards adopt https://github.com/lutzseverino/repo-canon, with Node.js 24, npm and Git 2.32.0 prerequisites matching the development guide.",
+            ".agents/skills holds seventeen Matt Pocock skills plus babysit and repository-standards, matching the Features line.",
+            "Documentation, Contributing and License sections each hold only their link: docs/README.md, CONTRIBUTING.md and LICENSE (MIT License)."
           ]
         }
       ]
     }
-  ]
+  ],
+  "deferred": []
 }

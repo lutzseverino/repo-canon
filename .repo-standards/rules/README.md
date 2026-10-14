@@ -1,0 +1,71 @@
+# Installed rules
+
+These rules come from https://github.com/lutzseverino/repo-canon v0.14.0, profile factory.
+Repository Standards installs and verifies them; adopt again to change them.
+Run `repo-standards rules <path>` to print the rules that cover a path.
+
+- [`documentation`](documentation.md) covers:
+  - `GLOSSARY-MAP.md`
+  - `GLOSSARY.md`
+  - `authoring-notes.md`
+  - `docs/README.md`
+  - `docs/adr/0001-manage-shared-skills-through-standards-releases.md`
+  - `docs/adr/0002-squash-reviewed-changes.md`
+  - `docs/adr/0003-follow-product-release-versioning.md`
+  - `docs/adr/0004-adopt-published-releases-of-this-source.md`
+  - `docs/adr/0005-require-an-open-ended-minimum-cli-version.md`
+  - `docs/adr/0006-keep-point-in-time-records-with-their-event.md`
+  - `docs/adr/0007-keep-superseded-adrs.md`
+  - `docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md`
+  - `docs/adr/0009-enforce-documentation-rules-as-checks.md`
+  - `docs/adr/0010-carry-delivery-rules-in-the-environment.md`
+  - `docs/adr/0011-ship-the-factory-with-the-standard.md`
+  - `docs/adr/0012-run-each-ticket-as-its-own-factory-run.md`
+  - `docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md`
+  - `docs/adr/0014-name-every-factory-convention-in-configuration.md`
+  - `docs/adr/0015-configure-the-pull-request-reviewer-as-repository-data.md`
+  - `docs/adr/0016-keep-requirements-in-installed-rules.md`
+  - `docs/adr/0017-make-the-factory-an-optional-profile.md`
+  - `docs/adr/0018-install-only-workflow-skills.md`
+  - `docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md`
+  - `docs/adr/README.md`
+  - `docs/development/README.md`
+  - `docs/development/adoption-compatibility.md`
+  - `docs/development/authoring-and-publication.md`
+  - `docs/development/babysit-merge.md`
+  - `docs/development/documentation-check.md`
+  - `docs/development/documentation-scope-drafter.md`
+  - `docs/development/github-label-setup.md`
+  - `docs/development/github-pr-integration-setup.md`
+  - `docs/development/issue-contract-validation.md`
+  - `docs/development/pr-metadata-validation.md`
+  - `docs/development/release.md`
+  - `docs/development/repository-readme-check.md`
+  - `docs/development/sandbox-image-workflow.md`
+  - `docs/development/skill-exercises.md`
+  - `docs/development/source-profile.md`
+  - `docs/development/upstream-compatibility.md`
+  - `docs/usage/README.md`
+  - `docs/usage/adopt-repo-canon.md`
+  - `docs/usage/versioning.md`
+  - `factory/GLOSSARY.md`
+  - `factory/docs/README.md`
+  - `factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md`
+  - `factory/docs/adr/README.md`
+  - `factory/docs/development/README.md`
+  - `factory/docs/development/release.md`
+  - `factory/docs/usage/README.md`
+  - `factory/docs/usage/factory-configuration.md`
+  - `factory/docs/usage/host.md`
+  - `factory/docs/usage/sandbox-image.md`
+- [`factory-sandbox-image`](factory-sandbox-image.md) covers:
+  - `.factory/Dockerfile`
+- [`github-repository-configuration`](github-repository-configuration.md) covers the whole repository.
+- [`project-agent-guidance`](project-agent-guidance.md) covers:
+  - `docs/agents/project.md`
+- [`project-readmes`](project-readmes.md) covers:
+  - `factory/README.md`
+- [`repository-license`](repository-license.md) covers:
+  - `LICENSE`
+- [`repository-readme`](repository-readme.md) covers:
+  - `README.md`
