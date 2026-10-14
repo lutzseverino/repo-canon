@@ -134,9 +134,12 @@ resources and does not need the drafter.
 ## Limits
 
 The draft does not decide membership by itself. The drafter cannot know move
-destinations, link-repair files, or anything an earlier confirmed scope decided,
-so an update asks its root questions again. It does not judge whether a file's
-content is useful or current.
+destinations, link-repair files, or anything an earlier confirmed scope decided:
+inspection passes it no previous scope. An update therefore asks again every
+question an earlier confirmed scope may have settled, about roots, Markdown
+files outside them, and glossaries alike, and the update rule in the
+[discovery guidance](../../discovery/documentation.md) answers them from that
+scope. It does not judge whether a file's content is useful or current.
 
 ## Validation
 
