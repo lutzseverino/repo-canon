@@ -22,6 +22,26 @@ function actionPins(workflow, action) {
   );
 }
 
+test("every installed workflow job selects repository runner labels with the hosted default", () => {
+  const expected =
+    "${{ vars.REPO_CANON_RUNS_ON && fromJSON(vars.REPO_CANON_RUNS_ON) || 'ubuntu-latest' }}";
+  for (const path of sharedWorkflows()) {
+    const jobs = workflow(path).match(
+      /^jobs:\n([\s\S]*?)(?=^\S|$(?![\s\S]))/m,
+    )?.[1];
+    assert.ok(jobs, `${path} declares jobs`);
+    const blocks = jobs.split(/(?=^ {2}\S)/m).filter((block) => block.trim());
+    assert.ok(blocks.length > 0, `${path} declares at least one job`);
+    for (const block of blocks) {
+      const job = block.split("\n", 1)[0].trim();
+      const runners = [...block.matchAll(/^ {4}runs-on: (.*)$/gm)].map(
+        ([, value]) => value,
+      );
+      assert.deepEqual(runners, [expected], `${path}: ${job}`);
+    }
+  }
+});
+
 test("shared workflows pin the same checkout and setup-node versions when used", () => {
   const paths = sharedWorkflows();
   for (const expected of [
