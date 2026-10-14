@@ -162,7 +162,18 @@ const previousDeclarations = [
     guidance: "guidance.md",
     rules: "rules.md",
     checks: [{ id: "check", run: { script: "check.mjs", resources: ["lib"] } }],
-    fixes: [],
+    fixes: [
+      {
+        id: "fix",
+        run: { script: "fix.mjs" },
+        "remote-setup": {
+          probe: { run: { script: "probe.mjs", resources: ["probe-lib"] } },
+        },
+      },
+    ],
+    "discovery-script": {
+      run: { script: "draft.mjs", resources: ["draft-lib"] },
+    },
   },
 ];
 const candidateDeclarations = previousDeclarations.filter(
@@ -181,6 +192,11 @@ function releasedSource(t) {
       "rules.md": "rules\n",
       "check.mjs": "check\n",
       "lib/support.mjs": "support\n",
+      "fix.mjs": "fix\n",
+      "probe.mjs": "probe\n",
+      "probe-lib/support.mjs": "probe support\n",
+      "draft.mjs": "draft\n",
+      "draft-lib/support.mjs": "draft support\n",
       "notes.md": "not an input\n",
     },
     "previous release",
@@ -202,6 +218,8 @@ test("release:inputs lists the inputs, the dropped inputs, and the diff stat fro
       "declarations.json": candidateDeclarations,
       "dropped.md": null,
       "lib/support.mjs": "changed support\n",
+      "probe.mjs": "changed probe\n",
+      "draft-lib/support.mjs": "changed draft support\n",
       "notes.md": "changed, but not an input\n",
     },
     "candidate",
@@ -212,9 +230,14 @@ test("release:inputs lists the inputs, the dropped inputs, and the diff stat fro
   assert.equal(status, 0, output);
   for (const path of [
     "check.mjs",
+    "draft-lib",
+    "draft.mjs",
+    "fix.mjs",
     "guidance.md",
     "kept.md",
     "lib",
+    "probe-lib",
+    "probe.mjs",
     "rules.md",
     "skill",
     "standards.yaml",
@@ -222,7 +245,9 @@ test("release:inputs lists the inputs, the dropped inputs, and the diff stat fro
     assert.match(output, new RegExp(`^  ${path.replaceAll(".", "\\.")}$`, "m"));
   }
   assert.match(output, /no longer selects[^\n]*\n {2}dropped\.md$/m);
-  assert.match(output, /lib\/support\.mjs \| 2 \+-/);
+  assert.match(output, /^ lib\/support\.mjs\s+\| 2 \+-/m);
+  assert.match(output, /probe\.mjs\s+\| 2 \+-/);
+  assert.match(output, /draft-lib\/support\.mjs\s+\| 2 \+-/);
   assert.match(output, /dropped\.md\s+\| 1 -/);
   assert.doesNotMatch(output, /notes\.md/);
 });
