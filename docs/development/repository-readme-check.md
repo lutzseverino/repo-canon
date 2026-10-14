@@ -29,7 +29,8 @@ even when they belong to another declaration or lie outside this check's target;
 it never changes them. Repositories without glossaries pass this part.
 
 `operations/lib/entry-document.mjs` is retained alongside both entry-document
-checks and the documentation scope drafter. The rule intentionally rejects a
+checks and the documentation scope drafter, the documentation declaration's
+discovery script. The rule intentionally rejects a
 glossary term used in its ordinary-English sense, such as `Project`; report
 false positives as findings rather than widening the rule. Audience, the
 effects of adopting a tool, and defining terms before later uses still require

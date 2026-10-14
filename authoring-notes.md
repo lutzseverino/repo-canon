@@ -23,8 +23,9 @@ Rules hold no one-time step and cite no retained source path; where one
 declaration's rules depend on another's, they name that declaration's rules.
 `guidance/` and `discovery/` are source-side instructions for the one-time
 adoption, written for a person as well as an agent, and `discovery/` also holds
-the documentation scope drafter that agent runs. They are not installed in the
-adopting repository; the CLI only retains them with the other source inputs.
+the documentation scope drafter, which inspection runs as the documentation
+declaration's discovery script. They are not installed in the adopting
+repository; the CLI retains them with the other source inputs.
 
 The repository license, READMEs, development documentation, glossaries, and
 project-specific agent guidance belong to the adopting repository, because
