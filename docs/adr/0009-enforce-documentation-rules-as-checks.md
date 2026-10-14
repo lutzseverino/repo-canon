@@ -26,7 +26,7 @@ tree and infer roots and indexes again.
 - This is a breaking standards change: a repository that conformed before can
   now fail the documentation check, and must bring its indexes, development
   guide, and documentation scope in line with the
-  [contribution guide](../../CONTRIBUTING.md#documentation) to conform again.
+  [documentation rules](../../rules/documentation.md) to conform again.
 - The installed agents index cites the optional `project.md` in context rather
   than listing it, and the one-index rule accepts that citation.
 - Scope coverage counts a document that another active declaration owns, such

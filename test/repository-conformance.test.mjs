@@ -282,7 +282,7 @@ test("the standards retire the in-repository factory, its sandbox base, and the 
 // its decided outcome, as ADR 0016 decides. A guidance split moves a
 // declaration's entry to `rules` or `both`.
 const requirementOutcomes = {
-  documentation: "guidance",
+  documentation: "both",
   "factory-sandbox-image": "guidance",
   "github-repository-configuration": "guidance",
   "project-readmes": "both",
@@ -315,6 +315,13 @@ test("each declaration with rules or adoption guidance has its decided outcome",
       ]),
   );
   assert.deepEqual(outcomes, requirementOutcomes);
+});
+
+test("the contribution guide leaves documentation rules to the documentation declaration", () => {
+  assert.doesNotMatch(
+    readFileSync(join(root, "CONTRIBUTING.md"), "utf8"),
+    /^## Documentation$/m,
+  );
 });
 
 test("the source keeps every declaration's rules in one place, named by the declaration", () => {
@@ -902,8 +909,7 @@ test("review converges on fixes and reasoned declines the guide allows", () => {
 
 test("comment disclaimers show exact blockquote source followed by a blank line", () => {
   const guide = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
-  const comments =
-    /## Comments\n([\s\S]*?)## Documentation/.exec(guide)?.[1] ?? "";
+  const comments = /## Comments\n([\s\S]*?)(?=\n## |$)/.exec(guide)?.[1] ?? "";
   assert.match(
     comments.replaceAll(/\s+/g, " "),
     /disclaimer line, `>` included, followed by a blank line/,
@@ -994,7 +1000,7 @@ test("the pull request template distinguishes finished issues from partial work"
 
 test("owner questions stay on the issue and leave an open pull request unmerged", () => {
   const guide = flowedText("CONTRIBUTING.md");
-  const comments = /## Comments (.*?)## Documentation/.exec(guide)?.[1] ?? "";
+  const comments = /## Comments (.*?)(?= ## |$)/.exec(guide)?.[1] ?? "";
   assert.match(comments, /post the question as one issue comment/);
   assert.match(comments, /add `factory:needs-input`, and stop/);
   assert.match(comments, /without a pull request if none is open/);

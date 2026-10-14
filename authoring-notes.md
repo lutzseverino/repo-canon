@@ -61,14 +61,14 @@ repeated.
   [Repository README rules](rules/repository-readme.md).
 - The newcomer rules for entry documents are stated in the
   [Repository README rules](rules/repository-readme.md) and the
-  [documentation guidance](guidance/documentation.md). Their glossary-term
+  [documentation rules](rules/documentation.md). Their glossary-term
   check accepts that ordinary-English uses of glossary terms fail, and reports
   such false positives as findings rather than widening the check. These newly
   failing checks ship with #368 and #346 in their shared breaking release.
 - Project membership and Project README content are stated in the
   [Project README rules](rules/project-readmes.md).
-- The documentation rules are stated in
-  [`CONTRIBUTING.md`](CONTRIBUTING.md#documentation), with the adoption steps in
+- The documentation requirements are stated in
+  [documentation rules](rules/documentation.md), with the adoption steps in
   the [documentation guidance](guidance/documentation.md) and the scope in the
   [documentation discovery guidance](discovery/documentation.md).
   [ADR 0006](docs/adr/0006-keep-point-in-time-records-with-their-event.md) and
@@ -99,7 +99,7 @@ repeated.
 - The standards source manages reviewed, pinned upstream skill snapshots and
   distributes changes through standards releases. Keep upstream skill content
   intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
-  guidance files, not in the skills or their setup files. The snapshot follows
+  rules files, not in the skills or their setup files. The snapshot follows
   the [upstream-compatibility procedure](docs/development/upstream-compatibility.md)
   and is not updated independently by adopting contributors.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
@@ -166,7 +166,7 @@ repeated.
   demonstrate complete coverage before claiming monorepo adoption support.
 - CONTRIBUTING.md is the one home of Repo Canon's contribution rules: issues
   and implementation contracts, readiness, development setup, validation, pull
-  requests, titles and commits, and documentation. Every other file cites it
+  requests, and titles and commits. Every other file cites it
   rather than repeating one of them. Agent implementation procedures belong in
   skills. Files Repo Canon authors do not restate them, and cite them only for
   delivery or to override routes to uninstalled skills: `AGENTS.md` names `pr`

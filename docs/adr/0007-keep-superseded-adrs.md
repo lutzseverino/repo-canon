@@ -19,7 +19,7 @@ keeps them under exactly the historical label the documentation rules forbid.
 
 - ADR directories grow with every reversal, and their indexes keep listing
   superseded ADRs.
-- The [contribution guide](../../CONTRIBUTING.md#documentation) states the rule
+- The [documentation rules](../../rules/documentation.md) state the rule
   and its exception to deleting superseded documents.
 - It adds no migration work. A repository that deleted a superseded ADR before
   this decision needs no restoration; Git history retains the deleted record.

@@ -29,6 +29,7 @@ defaults:
     documentation:
       kind: repository
       guidance: guidance/documentation.md
+      rules: rules/documentation.md
       discovery: discovery/documentation.md
       checks:
         - id: documentation-navigation

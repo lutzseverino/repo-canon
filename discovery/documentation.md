@@ -25,7 +25,7 @@ node .repo-standards/inputs/source/discovery/draft-documentation-scope.mjs \
 Either way, the drafter reads the repository without changing it and writes a
 Repository Standards scope proposal whose one entry is the `documentation`
 declaration's; the entries of the other discovery declarations join it in the
-proposal. The documentation rules in the `CONTRIBUTING.md` this source installs
+proposal. The `documentation` rules this source installs
 decide its candidates: every file Git keeps under each documentation root, the
 index of each root and of each directory under one, the development guide, the
 repository root's glossary and context map, and each context glossary that
