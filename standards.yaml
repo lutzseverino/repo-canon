@@ -396,6 +396,7 @@ profiles:
       factory-sandbox-image:
         kind: file
         target: .factory/Dockerfile
+        rules: rules/factory-sandbox-image.md
         guidance: guidance/factory-sandbox-image.md
 
       factory-sandbox-image-workflow:
