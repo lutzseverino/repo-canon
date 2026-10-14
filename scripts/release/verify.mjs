@@ -3,11 +3,13 @@
 // Verifies a published release: its annotated tag on origin peels to the
 // release commit, its GitHub release is an ordinary release, the public CLI at
 // the required minimum version inspects it with each profile in a disposable
-// repository and resolves the release commit and that profile, and the
-// documents at the release commit name the version being verified. Every CLI
-// version that the development and authoring documents there name is the
-// required minimum.
+// repository and resolves the release commit and that profile, the same CLI
+// adopts it with each profile into a fixture repository through `adopt` with
+// an answers file, deferring remote setup, and the documents at the release
+// commit name the version being verified. Every CLI version that the
+// development and authoring documents there name is the required minimum.
 
+import { checkAdoption } from "./adoption.mjs";
 import {
   cliFloor,
   cliVersionMismatches,
@@ -87,14 +89,18 @@ function checkGitHubRelease(version) {
   };
 }
 
-function checkInspection(version, releaseCommit, read, profile) {
+// The CLI version the release requires: the floor of its open-ended minimum.
+function requiredCli(read) {
   const floor = cliFloor(read(standardsPath));
   if (floor === null)
-    return {
-      failures: [
-        `${standardsPath} at the release commit declares no open-ended CLI minimum.`,
-      ],
-    };
+    fail(
+      `${standardsPath} at the release commit declares no open-ended CLI minimum.`,
+    );
+  return floor;
+}
+
+function checkInspection(version, releaseCommit, read, profile) {
+  const floor = requiredCli(read);
   const cli = repoStandardsCli();
   const child = withTemporaryDirectory("repo-canon-verify-", (project) => {
     git(["init", "--quiet", project]);
@@ -154,6 +160,16 @@ function checkInspection(version, releaseCommit, read, profile) {
   };
 }
 
+function checkFixtureAdoption(version, read, profile) {
+  return checkAdoption(
+    repoStandardsCli(),
+    sourceRepository,
+    version,
+    profile,
+    requiredCli(read),
+  );
+}
+
 function checkDocuments(version, read) {
   const failures = [
     ...repoCanonVersionMismatches(read, version),
@@ -196,6 +212,9 @@ await runScript(
       report(() => checkGitHubRelease(version)),
       ...profiles.map((profile) =>
         report(() => checkInspection(version, releaseCommit, read, profile)),
+      ),
+      ...profiles.map((profile) =>
+        report(() => checkFixtureAdoption(version, read, profile)),
       ),
       report(() => checkDocuments(version, read)),
     ];

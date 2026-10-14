@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const sourceRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 // The source of each exact file that `standards.yaml` installs, by its target.
-function exactFiles() {
+export function exactFiles() {
   const lines = readFileSync(join(sourceRoot, "standards.yaml"), "utf8").split(
     "\n",
   );

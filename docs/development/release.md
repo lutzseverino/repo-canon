@@ -163,16 +163,34 @@ npm run release:verify -- "$version" "$release_commit" &&
    version inspects the release with each profile, `standard` and `factory`, as
    [Adopt Repo Canon](../usage/adopt-repo-canon.md#inspect-the-published-source)
    describes. Each report resolves the release commit and its profile.
-4. The Repository README and the adoption guide at the release commit name the
+4. With each profile, the same CLI adopts the release into a fixture
+   repository through `adopt` with an answers file, as an agent does without a
+   terminal. The fixture is a disposable Git repository with one commit, built
+   from `scripts/release/adoption-fixture.mjs`, whose files already satisfy the
+   rules of the contextual declarations. It has no Git remote, so the GitHub
+   remote setup probes report not ready. The check fills `version` and
+   `profile`, accepts the documentation drafter's scope and answers the other
+   scopes for the fixture, answers `remote-setup` with `defer`, names the
+   printed `inspection`, and submits each contextual declaration's assessment,
+   until the outcome is `complete`. `status` must then report the run ready to
+   commit and list both GitHub remote setup fixes as deferred. A blocker, a
+   remote setup not offered for deferral, a failed check, or a run that does not
+   complete fails the check. The check never confirms a confirmation-required
+   change, so one appearing fails it too. `npm test` checks the fixture against
+   the drafter and the contextual checks before a release, because `adopt`
+   acquires only published stable tags.
+5. The Repository README and the adoption guide at the release commit name the
    version being verified, and every CLI version that the development guide,
    the source profile, and the authoring notes there name is the required
    minimum.
 
 The verification paragraph appended to the release notes names the release
 commit and the release pull request, confirms the tag and release state, and
-reports the CLI version and inspection result that `release:verify` prints.
-The release scripts change no repository or GitHub state; the tag, the release,
-and its notes are published only by the commands written out above.
+reports the CLI version with the inspection and fixture adoption results that
+`release:verify` prints. The release scripts change no repository or GitHub
+state: the fixture adoption runs in a temporary directory and has no remote to
+change. The tag, the release, and its notes are published only by the commands
+written out above.
 
 A published tag is never moved, deleted, or retargeted. A correction receives
 a new version. Earlier releases keep their notes.
