@@ -71,7 +71,10 @@ other active file declarations. The same fixture asserts that only the
 workflow, that `standards.yaml` declares no pull request reviewer file, and
 that the factory package's own parser accepts `.factory/config.json`. It also
 fails if any tracked file reaches the CLI's 8 MiB per-file observation limit,
-which would make the repository uninspectable before any report. Run it alone
+which would make the repository uninspectable before any report. It lists each
+declaration that has rules or adoption guidance with its decided outcome, keeps
+every rules file in `rules/`, rejects a rules file holding a one-time step's
+marker phrase, and keeps rules paths out of `AGENTS.md`. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
 CI step: `npm test` already runs it on every pull request.
 The same suite checks every declared source input across both profiles for

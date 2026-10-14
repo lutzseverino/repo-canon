@@ -7,7 +7,7 @@ number, and the notes it describes are written here.
 ## Released bytes and reviewed diff
 
 The source inputs are `standards.yaml` and every path its declarations select:
-exact files, guidance, discovery, operation scripts and resources, and the
+exact files, guidance, rules, discovery, operation scripts and resources, and the
 complete directories of skill declarations. The Repository README is a
 contextual target, not an input. Documentation, tests, fixtures, and CI are
 not inputs either.

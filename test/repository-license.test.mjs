@@ -21,8 +21,9 @@ test("the repository license has its own contextual file declaration", () => {
       "kind: file",
       "target: LICENSE",
       "guidance: guidance/repository-license.md",
+      "rules: rules/repository-license.md",
     ],
-    "the license is contextual, with guidance only and no checks or fixes",
+    "the license is contextual, with adoption guidance and rules and no checks or fixes",
   );
   assert.equal(
     [...manifest.matchAll(/^\s+target: LICENSE$/gm)].length,

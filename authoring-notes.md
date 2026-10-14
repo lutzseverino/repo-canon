@@ -16,15 +16,20 @@ profile, the factory configuration and the sandbox image workflow. It is install
 identically in every adopting repository that selects its profile and changes
 only through a Repo Canon release.
 
-`guidance/` and `discovery/` are source-side instructions for the agent that
-adopts Repo Canon, and `discovery/` also holds the documentation scope drafter
-that agent runs. They are not installed in the adopting repository; the CLI
-only retains them with the other source inputs.
+`rules/` holds each declaration's lasting rules, which adoption installs in
+the adopting repository and an agent changing a covered file later reads, as
+[ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md) decides.
+Rules hold no one-time step and cite no retained source path; where one
+declaration's rules depend on another's, they name that declaration's rules.
+`guidance/` and `discovery/` are source-side instructions for the one-time
+adoption, written for a person as well as an agent, and `discovery/` also holds
+the documentation scope drafter that agent runs. They are not installed in the
+adopting repository; the CLI only retains them with the other source inputs.
 
 The repository license, READMEs, development documentation, glossaries, and
 project-specific agent guidance belong to the adopting repository, because
-they describe it and its projects. Repo Canon shapes them through contextual
-guidance and checks. The Repository license has the fixed target `LICENSE`,
+they describe it and its projects. Repo Canon shapes them through rules,
+adoption guidance, and checks. The Repository license has the fixed target `LICENSE`,
 and the Repository README has the fixed target `README.md`. In the factory
 profile, the toolchain image has the fixed target `.factory/Dockerfile`, which
 holds only the repository's toolchain, because each repository's toolchain
@@ -53,15 +58,15 @@ repeated.
   no ownership-based differences have been requested.
 - The Repository README's title, description, badges, section order, length,
   examples, Features items, and pointer sections are stated in the
-  [Repository README guidance](guidance/repository-readme.md).
+  [Repository README rules](rules/repository-readme.md).
 - The newcomer rules for entry documents are stated in the
-  [Repository README guidance](guidance/repository-readme.md) and the
+  [Repository README rules](rules/repository-readme.md) and the
   [documentation guidance](guidance/documentation.md). Their glossary-term
   check accepts that ordinary-English uses of glossary terms fail, and reports
   such false positives as findings rather than widening the check. These newly
   failing checks ship with #368 and #346 in their shared breaking release.
 - Project membership and Project README content are stated in the
-  [Project README guidance](guidance/project-readmes.md).
+  [Project README rules](rules/project-readmes.md).
 - The documentation rules are stated in
   [`CONTRIBUTING.md`](CONTRIBUTING.md#documentation), with the adoption steps in
   the [documentation guidance](guidance/documentation.md) and the scope in the

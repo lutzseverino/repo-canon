@@ -47,7 +47,7 @@ function sourceInputFiles() {
   const manifest = readFileSync(join(root, "standards.yaml"), "utf8");
   const paths = new Set(["standards.yaml"]);
   for (const [, path] of manifest.matchAll(
-    /^\s+(?:exact|guidance|discovery|source|script): (\S+)$/gm,
+    /^\s+(?:exact|guidance|rules|discovery|source|script): (\S+)$/gm,
   ))
     paths.add(path);
   for (const [, resources] of manifest.matchAll(
@@ -276,6 +276,122 @@ test("the standards retire the in-repository factory, its sandbox base, and the 
     "operations/lib/issue-contract-kind.mjs",
   ])
     assert.ok(!existsSync(join(root, path)), `${path} is retired`);
+});
+
+// Each declaration with rules or adoption guidance, across both profiles, and
+// its decided outcome, as ADR 0016 decides. A guidance split moves a
+// declaration's entry to `rules` or `both`.
+const requirementOutcomes = {
+  documentation: "guidance",
+  "factory-sandbox-image": "guidance",
+  "github-repository-configuration": "guidance",
+  "project-readmes": "both",
+  "repository-license": "both",
+  "repository-readme": "both",
+};
+
+// Every declaration in `standards.yaml`, with the source files its `guidance`
+// and `rules` fields name.
+function manifestDeclarations() {
+  const manifest = readFileSync(join(root, "standards.yaml"), "utf8");
+  return [
+    ...manifest.matchAll(
+      /^( +)([a-z0-9-]+):\n(\1 {2}kind: .*\n(?:\1 {2}.*\n)*)/gm,
+    ),
+  ].map(([, indent, id, body]) => {
+    const field = (name) =>
+      new RegExp(`^${indent} {2}${name}: (\\S+)$`, "m").exec(body)?.[1];
+    return { id, guidance: field("guidance"), rules: field("rules") };
+  });
+}
+
+test("each declaration with rules or adoption guidance has its decided outcome", () => {
+  const outcomes = Object.fromEntries(
+    manifestDeclarations()
+      .filter(({ guidance, rules }) => guidance || rules)
+      .map(({ id, guidance, rules }) => [
+        id,
+        guidance && rules ? "both" : rules ? "rules" : "guidance",
+      ]),
+  );
+  assert.deepEqual(outcomes, requirementOutcomes);
+});
+
+test("the source keeps every declaration's rules in one place, named by the declaration", () => {
+  const rules = manifestDeclarations().filter(({ rules }) => rules);
+  for (const { id, rules: path } of rules)
+    assert.equal(path, `rules/${id}.md`, `${id} keeps its rules in rules/`);
+  assert.deepEqual(
+    readdirSync(join(root, "rules")).sort(),
+    rules.map(({ id }) => `${id}.md`).sort(),
+    "rules/ holds only declared rules",
+  );
+  assert.ok(
+    !documentationScope().some((path) => path.startsWith("rules/")),
+    "rules stay outside this repository's documentation scope",
+  );
+});
+
+// Phrases that mark a one-time adoption step, which belongs in adoption
+// guidance and never in rules: an assessment instruction, a question for the
+// maintainer, a migration, or a step of the adoption run.
+const oneTimeStepMarkers = [
+  /\bassess\b[^.]*?\bas\b/i,
+  /\bask(?:s|ing)? (?:the )?maintainers?\b/i,
+  /\buntil the maintainer answers\b/i,
+  /\bduring (?:an|the) (?:update|adoption)\b/i,
+  /\bmigrat(?:e|es|ion|ions)\b/i,
+  /\bbefore adoption continues\b/i,
+  /\bstops the run\b/i,
+];
+
+function oneTimeSteps(text) {
+  const flowed = text.replaceAll(/\s+/g, " ");
+  return oneTimeStepMarkers
+    .map((marker) => marker.exec(flowed)?.[0])
+    .filter(Boolean);
+}
+
+test("the one-time step markers find each kind of step", () => {
+  for (const [text, step] of [
+    [
+      "Assess `repository-license` as\n`blocked`.",
+      "Assess `repository-license` as",
+    ],
+    ["Otherwise, ask the maintainer to name it.", "ask the maintainer"],
+    ["During an update, move the file.", "During an update"],
+    ["Until the maintainer answers, wait.", "Until the maintainer answers"],
+  ])
+    assert.deepEqual(oneTimeSteps(text), [step], text);
+  assert.deepEqual(
+    oneTimeSteps("Assess purpose against evidence. Keep it as it is."),
+    [],
+  );
+});
+
+test("no rules file holds a one-time adoption step", () => {
+  for (const { id, rules } of manifestDeclarations().filter(
+    ({ rules }) => rules,
+  ))
+    assert.deepEqual(
+      oneTimeSteps(readFileSync(join(root, rules), "utf8")),
+      [],
+      `${id}'s rules hold one-time steps; move them to its adoption guidance`,
+    );
+});
+
+test("a rules file holding a one-time step fails the marker test", () => {
+  const rules = `${readFileSync(join(root, "rules/repository-license.md"), "utf8")}
+Assess \`repository-license\` as \`satisfied\` once \`LICENSE\` meets these rules.
+`;
+  assert.notDeepEqual(oneTimeSteps(rules), []);
+});
+
+test("AGENTS.md names no rules path", () => {
+  assert.doesNotMatch(
+    readFileSync(join(root, "AGENTS.md"), "utf8"),
+    /\.repo-standards\/rules|(?:^|[\s(`"'/])rules\/[\w.-]+|repo-standards rules\b/m,
+  );
 });
 
 test("standards.yaml declares no pull request reviewer file", () => {
