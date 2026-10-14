@@ -5,7 +5,7 @@ whenever the request is opened, edited, synchronized, reopened, or marked ready
 for review. Its stable check-run name is `PR metadata`.
 Its `validate` job runs on `ubuntu-latest` unless the `REPO_CANON_RUNS_ON`
 variable names other runner labels as a JSON array. Unset or empty keeps the
-hosted default; the [runner guidance](../../guidance/github-repository-configuration.md#installed-workflow-runners)
+hosted default; the [runner rules](../../rules/github-repository-configuration.md#installed-workflow-runners)
 describes prerequisites, inheritance, and fallback.
 
 Unless it is an adoption record, described below, the description must contain

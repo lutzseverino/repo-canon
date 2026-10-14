@@ -48,7 +48,9 @@ contact GitHub or establish live remote setup. Run
 decision, driven by reviewer data fixtures (including real summary comments),
 and its silence, driven by
 a GitHub CLI fake. Run `node --test test/pull-request-reviewer-check.test.mjs`
-for the optional reviewer schema check, including retained operation resources.
+for the optional reviewer schema check, including retained operation resources;
+the check's parser, `operations/lib/pull-request-reviewer.mjs`, has a
+byte-identical copy in `babysit`'s directory for the wait.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
 and head-change retry behavior against the same fake GitHub CLI.
 The public source-validation command and its boundary are described in
@@ -74,7 +76,8 @@ fails if any tracked file reaches the CLI's 8 MiB per-file observation limit,
 which would make the repository uninspectable before any report. It lists each
 declaration that has rules or adoption guidance with its decided outcome, keeps
 every rules file in `rules/`, rejects a rules file holding a one-time step's
-marker phrase, and keeps rules paths out of `AGENTS.md`. Run it alone
+marker phrase, and keeps rules paths out of `AGENTS.md`. It also keeps the two
+copies of the reviewer parser identical. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
 CI step: `npm test` already runs it on every pull request.
 The same suite checks every declared source input across both profiles for

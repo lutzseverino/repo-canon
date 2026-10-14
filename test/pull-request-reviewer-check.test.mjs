@@ -74,6 +74,11 @@ test("the optional reviewer check rejects invalid schema", (t) => {
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "failed");
   assert.match(outcome.result.message, /version/);
+  assert.match(
+    outcome.result.message,
+    /match the github-repository-configuration rules/,
+  );
+  assert.doesNotMatch(outcome.result.message, /babysit/);
 });
 
 test("reviewer validation works using only retained resources", (t) => {
