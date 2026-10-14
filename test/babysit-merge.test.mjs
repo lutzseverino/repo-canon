@@ -79,6 +79,28 @@ test("returns retry without merging if the head changed after the wait", (t) => 
   assert.equal(result.state.merge, undefined);
 });
 
+test("refuses a merge queue without attempting a merge", (t) => {
+  const result = run(t, {
+    title: "fix: current title",
+    body: "Current body",
+    isMergeQueueEnabled: true,
+  });
+  assert.equal(result.status, 3, result.stderr);
+  assert.match(result.stderr, /merge queue.*explicit squash message/i);
+  assert.equal(result.state.merge, undefined);
+});
+
+test("needs the owner when a successful merge call leaves the PR open", (t) => {
+  const result = run(t, {
+    title: "fix: current title",
+    body: "Current body",
+    mergeState: "OPEN",
+  });
+  assert.equal(result.status, 3, result.stderr);
+  assert.match(result.stderr, /pull request did not merge.*owner/i);
+  assert.ok(result.state.merge);
+});
+
 test("reports access and merge failures without requesting a retry", (t) => {
   for (const state of [
     { fail: true },
