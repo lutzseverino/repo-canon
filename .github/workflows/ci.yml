@@ -64,4 +64,6 @@ jobs:
       - name: Typecheck factory
         run: npm run typecheck
       - name: Run factory tests
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: npm test
