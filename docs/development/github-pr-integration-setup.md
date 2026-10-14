@@ -84,6 +84,23 @@ matches the remote-derived owner and repository, uses the API-reported default
 branch, and pins every API request to `github.com` even when `GH_HOST` names an
 enterprise server.
 
+## Readiness probe
+
+The fix is [remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md#remote-setup).
+Its readiness probe, `operations/probe-github-pr-integration.mjs`, runs during
+inspection, before anything is written, through the
+[probe protocol](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md#remote-setup-probes).
+It runs the fix's own preparation and role check from
+`operations/lib/github-operation.mjs`: the tool versions, the remote identity
+and GitHub's confirmation of it, authentication, and admin access. It returns
+`ready` when all of them hold, and otherwise `not-ready` with the message the
+fix would block with, such as the `gh auth login` command that signs in. It
+makes only `gh auth status` and read-only API calls and changes nothing in the
+project or on GitHub. It does not read branch protection, rulesets, or the
+workflow file, so the plan-gated and deferred `PR metadata` requirement stays
+the fix's decision. An adopter can defer a remote setup that is not ready; the
+next adoption or update probes again and runs the fix once the probe is ready.
+
 ## Results and recovery
 
 The operation implements the public
@@ -143,3 +160,7 @@ GitHub or mutating live settings:
 ```sh
 npm run test:github-pr-integration
 ```
+
+The [label setup](github-label-setup.md#results-and-recovery) document
+describes the probe fixtures, which `npm run test:github-pr-integration` also
+runs.

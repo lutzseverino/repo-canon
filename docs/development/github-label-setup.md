@@ -43,6 +43,22 @@ remote-derived owner and repository. Every API call is pinned to `github.com`,
 so a `GH_HOST` environment override cannot redirect verification or mutation to
 a GitHub Enterprise host.
 
+## Readiness probe
+
+The fix is [remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md#remote-setup).
+Its readiness probe, `operations/probe-github-labels.mjs`, runs during
+inspection, before anything is written, through the
+[probe protocol](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md#remote-setup-probes).
+It runs the fix's own preparation and role check from
+`operations/lib/github-operation.mjs`: the tool versions, the remote identity
+and GitHub's confirmation of it, authentication, and write, maintain, or admin
+access. It returns `ready` when all of them hold, and otherwise `not-ready`
+with the message the fix would block with, such as the `gh auth login` command
+that signs in. It makes only `gh auth status` and read-only API calls, never
+reads the labels, and changes nothing in the project or on GitHub. An adopter
+can defer a remote setup that is not ready; the next adoption or update probes
+again and runs the fix once the probe is ready.
+
 ## Results and recovery
 
 The operation implements the public
@@ -72,4 +88,13 @@ fixture. They never call GitHub or change live repository settings:
 
 ```sh
 node --test test/github-label-setup.test.mjs
+```
+
+The probe fixtures run a copy of each probe holding only its declared
+resources. They show `not-ready` for a missing `gh`, an ambiguous remote, no
+authentication, and an insufficient role, and `ready` for a sufficient role,
+with no project change and no API call other than a read:
+
+```sh
+node --test test/github-setup-probes.test.mjs
 ```
