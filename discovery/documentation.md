@@ -7,8 +7,7 @@ runs read-only during inspection and proposes the declaration's scope entry.
 `scope:documentation` field of its answers file, whose proposed answer is the
 draft. Nobody runs the drafter by hand.
 
-The documentation rules in the `CONTRIBUTING.md` this source installs decide
-the draft's candidates: every file Git keeps under the `docs` documentation
+The `documentation` rules this source installs decide the draft's candidates: every file Git keeps under the `docs` documentation
 root, the index of the root and of each directory under it, the development
 guide, the repository root's glossary and context map, and each context
 glossary that context map lists. Paths other declarations own, and paths

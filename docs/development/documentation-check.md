@@ -72,8 +72,8 @@ documentation model and the Project README check both build on it.
 ## Documentation rules
 
 The model checks four of the
-[documentation rules](../../CONTRIBUTING.md#documentation), which the
-contribution guide states. Each failure names the file and the rule it breaks,
+[documentation rules](../../rules/documentation.md). Each failure names the file
+and the rule it breaks,
 in the form `<file> breaks the <rule> rule: <correction>`. The check reports
 these failures after its other corrections, grouped by rule in the order below
 and by path within each rule. The model reads each rule mechanically:
