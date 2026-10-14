@@ -9,7 +9,12 @@ needs it.
 
 ## Pull request behavior
 
-Every `pull_request` run has one `Sandbox image` job on `ubuntu-latest`.
+Every `pull_request` run has one `Sandbox image` job (`build`) on
+`ubuntu-latest` unless the `REPO_CANON_RUNS_ON` variable names other runner
+labels as a JSON array. Unset or empty keeps the hosted default; the
+[runner guidance](../../guidance/github-repository-configuration.md#installed-workflow-runners)
+describes prerequisites, inheritance, and fallback, including the Docker CLI
+and daemon this job needs.
 There is no event path filter: pull requests with unrelated changes report
 success without invoking Docker. The job checks out the pull request's head
 with full history and compares its head with the merge base of its base and
