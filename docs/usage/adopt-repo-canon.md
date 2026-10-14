@@ -56,7 +56,11 @@ The CLI runtime stays outside the project. Retain it until adoption completes.
 Repo Canon's two setup fixes also require Git 2.18.0 or newer, GitHub CLI 2.57.0
 or newer, an unambiguous `github.com` remote, an authenticated `gh` account, and
 write access for labels plus admin access for required checks and merge
-settings. Keep the repository clean and committed. If useful existing
+settings. Both fixes are remote setup: inspection probes each one read-only and
+reports it not ready, with the reason, when one of those is missing. Resolve
+the reason and inspect again, or add `--defer-remote-setup` to `start` to
+complete adoption without it; every later update probes again and applies it
+once ready. Keep the repository clean and committed. If useful existing
 `AGENTS.md` instructions need to survive replacement, follow
 [Prepare existing agent guidance](prepare-agent-guidance.md), commit that change,
 and inspect the prepared commit afresh. Records with retired formats in `.repo-standards` or as run records in Git's

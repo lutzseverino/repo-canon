@@ -73,5 +73,20 @@ They must not imply remote freshness or rollback guarantees from local
 inspection. They run during adoption; authoring exercises use disposable
 fixtures and do not mutate live GitHub settings.
 
+Both fixes declare `remote-setup` with a readiness probe, so adoption can
+complete locally without GitHub access. Inspection runs each probe before any
+write. A probe reuses its fix's preparation and role check read-only: it is
+`ready` when `gh` meets the fix's minimum version, the remotes name one
+github.com repository that GitHub confirms, `gh` is authenticated, and the
+account has the fix's role, and `not-ready` otherwise with the reason the fix
+would block with. The adopter can defer a remote setup that is not ready; the
+record and `status` list it, and every later run probes again and applies it
+once ready. A probe reads no setting its fix reconciles, so overwrite
+confirmation and the plan-gated `PR metadata` requirement stay with the fixes.
+The [label setup](github-label-setup.md#readiness-probe) and
+[PR integration setup](github-pr-integration-setup.md#readiness-probe)
+documents describe each probe.
+
 Sources: [script protocol](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md),
+[remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md#remote-setup),
 [architecture](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/development/architecture.md).

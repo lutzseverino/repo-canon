@@ -94,6 +94,18 @@ defaults:
             version-arguments: ["--version"]
             version: ">=24.0.0 <25.0.0"
           timeout-seconds: 30
+          remote-setup:
+            probe:
+              run:
+                executable: node
+                script: operations/probe-github-labels.mjs
+                resources:
+                  - operations/lib/github-operation.mjs
+                arguments: []
+              prerequisite:
+                version-arguments: ["--version"]
+                version: ">=24.0.0 <25.0.0"
+              timeout-seconds: 30
         - id: pull-request-integration
           run:
             executable: node
@@ -105,6 +117,18 @@ defaults:
             version-arguments: ["--version"]
             version: ">=24.0.0 <25.0.0"
           timeout-seconds: 30
+          remote-setup:
+            probe:
+              run:
+                executable: node
+                script: operations/probe-github-pr-integration.mjs
+                resources:
+                  - operations/lib/github-operation.mjs
+                arguments: []
+              prerequisite:
+                version-arguments: ["--version"]
+                version: ">=24.0.0 <25.0.0"
+              timeout-seconds: 30
 
     humanlayer-skills-license:
       kind: file

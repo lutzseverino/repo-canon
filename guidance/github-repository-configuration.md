@@ -20,6 +20,31 @@ missing settings, and read the result back. Review blocked and partial results
 before retrying. Operation evidence describes the state at execution time; it
 does not provide remote freshness, rollback, or an ownership baseline.
 
+## Remote setup
+
+The `canonical-labels` and `pull-request-integration` fixes are remote setup:
+they change GitHub's settings for the repository, not project files. Each has
+a read-only readiness probe that inspection runs before anything is written.
+A probe is ready only when its fix could run:
+
+- GitHub CLI (`gh`) 2.57.0 or newer and Git 2.18.0 or newer are installed;
+- the repository-local Git remotes name exactly one github.com repository, and
+  GitHub resolves that same repository;
+- `gh` has an authenticated active account for github.com;
+- that account has write, maintain, or admin access for `canonical-labels`,
+  and admin access for `pull-request-integration`.
+
+Otherwise the probe is not ready and its reason names what to do, such as
+installing `gh`, resolving the remotes, or signing in with
+`gh auth login --hostname github.com`. Resolve the reason and inspect again, or
+defer that remote setup and complete adoption locally: answer `defer` to
+`adopt`'s remote setup question. The adoption record and `status` list each
+deferred remote setup with its reason. Every later `adopt`, including one that
+applies the unchanged selection again, probes again and applies a deferred
+remote setup once its probe is ready. A probe changes nothing, locally or on
+GitHub, and does not read the labels, rules, or settings its fix reconciles,
+so a ready fix can still return `confirmation-required` or `blocked`.
+
 The optional repository-owned `.github/pull-request-reviewer.json` configures
 pull request review waits, as [`babysit`](../.agents/skills/babysit/SKILL.md)
 documents. Its read-only check passes without the file and validates the schema

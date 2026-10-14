@@ -88,9 +88,11 @@ accepts full commit SHAs and reads published tag and branch refs with
   mapping, validation baseline, adoption preparation requirements, and the
   route for GitHub repository settings.
 - [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
-  identity and permission prerequisites, protocol outcomes, and fixture coverage.
+  identity and permission prerequisites, its readiness probe, protocol
+  outcomes, and fixture coverage.
 - [GitHub PR integration setup](github-pr-integration-setup.md): required-check
-  enforcement, squash-only merge defaults, preservation, and recovery behavior.
+  enforcement, squash-only merge defaults, its readiness probe, preservation,
+  and recovery behavior.
 - [Pull request metadata validation](pr-metadata-validation.md): trusted check
   behavior, stable identity, permissions, and local verification.
 - [Babysit merge script](babysit-merge.md): explicit squash message, verbatim

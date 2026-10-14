@@ -3,7 +3,7 @@
 // operation.
 import {
   prepareGithubRepository,
-  readFixesRequest,
+  readOperationRequest,
   writeOperationResult,
 } from "../../operations/lib/github-operation.mjs";
 
@@ -11,7 +11,7 @@ const operationName = "GitHub operation fixture";
 
 try {
   const prepared = prepareGithubRepository(
-    readFixesRequest(operationName),
+    readOperationRequest(operationName, "fixes"),
     operationName,
   );
   if (prepared.blocked) writeOperationResult("blocked", prepared.blocked);
