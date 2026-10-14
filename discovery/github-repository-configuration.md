@@ -20,7 +20,10 @@ empty as **unset** (the hosted default), a valid non-empty JSON array of
 non-empty label strings as **valid** (list its labels), and every other value
 as **invalid** (state why). Invalid JSON or an unusable `runs-on` value fails
 every installed job during GitHub's runner evaluation, before any steps run.
-Do not call invalid values a supported fallback.
+The expression does not validate the array schema: parsed falsy JSON such as
+`false`, `0`, `null`, or `""` also selects the hosted default. Classify these
+as invalid regardless of that runtime result; do not call invalid values a
+supported fallback.
 
 An organization-level variable can supply the value when the repository-level
 one is absent; a repository-level value takes precedence. If an inherited

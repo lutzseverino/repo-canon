@@ -44,7 +44,9 @@ variable as unset, valid with its labels, or invalid, following the
 Disclose uncertainty about an organization-level value the run cannot read.
 Never rely on invalid values falling back: malformed JSON or an unusable
 `runs-on` value makes every installed job fail during GitHub's evaluation,
-before any steps run.
+before any steps run. The expression does not validate the value's schema:
+parsed falsy JSON such as `false`, `0`, `null`, or `""` also selects the hosted
+default, but the assessment still reports those values as invalid.
 
 The runners need `git`, `bash`, and network access for Node.js setup through
 `actions/setup-node`. The factory profile's sandbox-image job also needs a
@@ -52,6 +54,16 @@ The runners need `git`, `bash`, and network access for Node.js setup through
 online runner waits in the queue for up to 24 hours and then fails.
 Issue-contract feedback, and therefore readiness review, waits for those
 runners too.
+
+The sandbox-image job executes pull request workflow and Dockerfile content,
+including content from forks. For repositories accepting untrusted pull
+requests, keep the hosted default or select isolated, ephemeral self-hosted
+runners with no secrets or sensitive network access. This applies to private
+and internal repository forks too. A read-only workflow token does not prevent
+untrusted code from compromising a persistent runner and later jobs. Every
+runner matching the variable's labels must be suitable for that workload;
+runner isolation is a host provisioning responsibility. See GitHub's
+[self-hosted runner security guidance](https://docs.github.com/en/actions/reference/security/secure-use#hardening-for-self-hosted-runners).
 
 If the self-hosted runners are unavailable, return to GitHub-hosted runners by
 deleting the variable or setting it to `["ubuntu-latest"]`, without editing
