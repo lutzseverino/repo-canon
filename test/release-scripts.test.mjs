@@ -146,6 +146,7 @@ const previousDeclarations = [
     id: "checked",
     kind: "repository",
     guidance: "guidance.md",
+    rules: "rules.md",
     checks: [{ id: "check", run: { script: "check.mjs", resources: ["lib"] } }],
     fixes: [],
   },
@@ -163,6 +164,7 @@ function releasedSource(t) {
       "dropped.md": "dropped\n",
       "skill/SKILL.md": "skill\n",
       "guidance.md": "guidance\n",
+      "rules.md": "rules\n",
       "check.mjs": "check\n",
       "lib/support.mjs": "support\n",
       "notes.md": "not an input\n",
@@ -199,6 +201,7 @@ test("release:inputs lists the inputs, the dropped inputs, and the diff stat fro
     "guidance.md",
     "kept.md",
     "lib",
+    "rules.md",
     "skill",
     "standards.yaml",
   ]) {

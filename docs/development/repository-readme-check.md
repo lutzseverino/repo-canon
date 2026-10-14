@@ -1,7 +1,7 @@
 # Repository README check
 
 `operations/check-repository-readme.mjs` is the read-only structural check for
-the [Repository README guidance](../../guidance/repository-readme.md). It consumes
+the [Repository README rules](../../rules/repository-readme.md). It consumes
 `repo-standards/operation/v2` on standard input, accepts only a checks operation
 whose allowed target is the root `README.md`, and returns one
 `repo-standards/result/v2` object on standard output.
@@ -73,10 +73,11 @@ agent semantic judgment. A missing, empty, or ambiguous set of root license
 files returns `blocked` for owner clarification.
 
 The contextual `repository-license` declaration owns only `LICENSE`. Its
-[guidance](../../guidance/repository-license.md) establishes the license decision
-before this check runs: it preserves a clear existing license, asks the
-maintainer when a decision is needed, and records a decision to grant no license
-as a copyright notice with all rights reserved. An unanswered decision or an
+[rules](../../rules/repository-license.md) state what that file holds, including
+a copyright notice with all rights reserved when the maintainer grants no
+license. Its [adoption guidance](../../guidance/repository-license.md)
+establishes the license decision before this check runs: it preserves a clear
+existing license and asks the maintainer when a decision is needed. An unanswered decision or an
 alternative root license file blocks that declaration's assessment before
 checks. Once resolved, adoption can write `LICENSE` and the README's License
 link in the same run, within their separate declarations' targets.

@@ -108,13 +108,19 @@ export function withTemporaryDirectory(prefix, body) {
 }
 
 // Paths that the resolved declarations select: `standards.yaml` and each
-// declaration's exact file, guidance, discovery, skill directory, and operation
-// scripts and resources.
+// declaration's exact file, guidance, rules, discovery, skill directory, and
+// operation scripts and resources.
 function selectedPaths(validation) {
   const paths = new Set(["standards.yaml"]);
   for (const profile of Object.values(validation.profiles)) {
     for (const declaration of profile.declarations) {
-      for (const field of ["exact", "guidance", "discovery", "source"]) {
+      for (const field of [
+        "exact",
+        "guidance",
+        "rules",
+        "discovery",
+        "source",
+      ]) {
         if (declaration[field] != null) paths.add(declaration[field]);
       }
       for (const operation of [

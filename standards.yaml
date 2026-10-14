@@ -189,6 +189,7 @@ defaults:
     project-readmes:
       kind: repository
       guidance: guidance/project-readmes.md
+      rules: rules/project-readmes.md
       discovery: discovery/project-readmes.md
       checks:
         - id: project-readme-structure
@@ -215,11 +216,13 @@ defaults:
       kind: file
       target: LICENSE
       guidance: guidance/repository-license.md
+      rules: rules/repository-license.md
 
     repository-readme:
       kind: file
       target: README.md
       guidance: guidance/repository-readme.md
+      rules: rules/repository-readme.md
       checks:
         - id: repository-readme-structure
           run:
