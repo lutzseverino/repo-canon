@@ -240,10 +240,16 @@ documents its schema. A review request is the pull request's opening when
 `request.onOpen` is true, or a later comment whose whole trimmed body equals
 `request.comment`; a push is not one.
 
-After the opening, an agent must post the review request comment for a new
-head only when its push fixes, fully or partly, a review finding these rules
-do not let it decline, and the request bound has not been reached. No other
-push gets a request: a push that only follows declines, changes only tests,
+When `request.onOpen` is false and the pull request has had no review request,
+an agent must post the review request comment for its head before it first
+waits on the pull request. The request bound cannot stop this first request,
+since none has been counted yet.
+
+After that first request, an agent must post the review request comment for a
+new head when its push fixes, fully or partly, a review finding these rules do
+not let it decline, and the request bound has not been reached.
+
+No other push gets a request: a push that only follows declines, changes only tests,
 documentation or wording, or only fixes a failing check gets none.
 The optional `bounds.reviewRequests` is a positive integer limiting the total
 review requests a pull request gets. Count the opening when `request.onOpen`

@@ -6,6 +6,10 @@ description: Babysit an opened pull request through checks and review until it m
 Take the pull request to its merge. `CONTRIBUTING.md` holds the merge
 conditions and the wording rules.
 
+Before the first wait, apply the
+[Merging request rule](../../../CONTRIBUTING.md#merging) to the pull request's
+head, using step 4 to post any required request.
+
 1. Wait with `node <this skill's directory>/wait.mjs <number>`, run in the
    repository root in the foreground until it exits; it waits for the checks
    and the configured reviewer's review of the head, silently. Use a command
@@ -28,9 +32,9 @@ conditions and the wording rules.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
    every review thread as it requires, following its
    [comment rules](../../../CONTRIBUTING.md#comments).
-4. Apply the [Merging request rule](../../../CONTRIBUTING.md#merging) to the
-   new head. When it requires a request, comment using the configured reviewer's
-   `request.comment` and following the
+4. Apply the [Merging request rule](../../../CONTRIBUTING.md#merging) to each
+   new head after a fix push. When it requires a request, comment using the
+   configured reviewer's `request.comment` and following the
    [comment rules](../../../CONTRIBUTING.md#comments). After any push or
    re-request, return to step 1.
 5. Once the merge conditions hold on the latest head, run
