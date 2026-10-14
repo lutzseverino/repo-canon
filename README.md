@@ -25,7 +25,7 @@ repo-standards --version
 
 Select an owner-published release compatible with that CLI, and the `standard`
 profile, or the `factory` profile for a repository that a host-installed factory
-serves. The latest [`v0.11.1` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.11.1)
+serves. The latest [`v0.12.0` release](https://github.com/lutzseverino/repo-canon/releases/tag/v0.12.0)
 requires CLI 6.0.0 or newer. Before updating an existing adoption, read the
 breaking standards changes and migration steps of each release since the
 adopted one.
@@ -49,7 +49,7 @@ authorizes nothing:
 ```sh
 repo-standards inspect \
   --source https://github.com/lutzseverino/repo-canon \
-  --standards-version v0.11.1 --profile standard \
+  --standards-version v0.12.0 --profile standard \
   --project /path/to/adopting-project --json
 ```
 
