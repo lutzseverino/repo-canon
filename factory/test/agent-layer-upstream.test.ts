@@ -80,7 +80,7 @@ test("both architectures' pins match upstream release digests", async (t) => {
     if (
       !process.env.CI &&
       ((error as { name?: string }).name === "TimeoutError" ||
-        /ENOTFOUND|EAI_AGAIN|ENETUNREACH|ECONNREFUSED|ETIMEDOUT|no such host|network is unreachable|connection refused|TLS handshake timeout/.test(
+        /ENOTFOUND|EAI_AGAIN|ENETUNREACH|ECONNREFUSED|ETIMEDOUT|no such host|network is unreachable|connection refused|TLS handshake timeout|error connecting to [^\r\n]+[\s\S]*check your internet connection/.test(
           detail,
         ))
     ) {
