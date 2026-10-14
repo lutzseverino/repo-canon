@@ -79,6 +79,7 @@ defaults:
     github-repository-configuration:
       kind: repository
       guidance: guidance/github-repository-configuration.md
+      rules: rules/github-repository-configuration.md
       discovery: discovery/github-repository-configuration.md
       checks:
         - id: pull-request-reviewer
@@ -86,7 +87,7 @@ defaults:
             executable: node
             script: operations/check-pull-request-reviewer.mjs
             resources:
-              - .agents/skills/babysit/reviewer.mjs
+              - operations/lib/pull-request-reviewer.mjs
             arguments: []
           prerequisite:
             version-arguments: ["--version"]

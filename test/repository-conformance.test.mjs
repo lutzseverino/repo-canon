@@ -297,7 +297,7 @@ test("the standards retire the in-repository factory, its sandbox base, and the 
 const requirementOutcomes = {
   documentation: "both",
   "factory-sandbox-image": "both",
-  "github-repository-configuration": "guidance",
+  "github-repository-configuration": "both",
   "project-readmes": "both",
   "repository-license": "both",
   "repository-readme": "both",
@@ -405,6 +405,100 @@ test("a rules file holding a one-time step fails the marker test", () => {
 Assess \`repository-license\` as \`satisfied\` once \`LICENSE\` meets these rules.
 `;
   assert.notDeepEqual(oneTimeSteps(rules), []);
+});
+
+test("the GitHub rules state the reviewer file's schema, and babysit only cites them", () => {
+  const rules = flowedText("rules/github-repository-configuration.md");
+  for (const field of [
+    "version",
+    "account",
+    "request.comment",
+    "request.onOpen",
+    "finished",
+    "commentMarker",
+    "unavailable",
+    "bounds.responseMinutes",
+    "bounds.reviewMinutes",
+    "bounds.reviewRequests",
+  ])
+    assert.ok(rules.includes(`\`${field}\``), `the rules state ${field}`);
+  assert.match(
+    rules,
+    /Every field is required except `finished` and `bounds\.reviewRequests`/,
+  );
+  assert.match(rules, /A review of the pull request's head is complete when/);
+  assert.match(rules, /marks the reviewer unavailable/);
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  assert.doesNotMatch(babysit, /^## /m);
+  assert.doesNotMatch(babysit, /commentMarker|responseMinutes|"version"/);
+  assert.match(
+    babysit,
+    /whose schema the `github-repository-configuration` rules state/,
+  );
+  const guide = flowedText("CONTRIBUTING.md");
+  assert.match(
+    guide,
+    /the `github-repository-configuration` rules state its schema/,
+  );
+  assert.doesNotMatch(guide, /`babysit`\]\([^)]*\) documents its schema/);
+});
+
+test("neither the GitHub rules nor babysit names a particular reviewer", () => {
+  const { account } = JSON.parse(
+    readFileSync(join(root, ".github/pull-request-reviewer.json"), "utf8"),
+  );
+  for (const path of [
+    "rules/github-repository-configuration.md",
+    ".agents/skills/babysit/SKILL.md",
+  ]) {
+    const text = readFileSync(join(root, path), "utf8");
+    assert.ok(!text.includes(account), `${path} names ${account}`);
+    assert.doesNotMatch(text, /codex|copilot|coderabbit/i, path);
+  }
+});
+
+test("the reviewer check and babysit validate the reviewer file with one parser", () => {
+  const parser = "operations/lib/pull-request-reviewer.mjs";
+  assert.equal(
+    readFileSync(
+      join(root, ".agents/skills/babysit/pull-request-reviewer.mjs"),
+      "utf8",
+    ),
+    readFileSync(join(root, parser), "utf8"),
+    `babysit's pull-request-reviewer.mjs is a byte-identical copy of ${parser}`,
+  );
+  assert.doesNotMatch(
+    readFileSync(
+      join(root, "operations/check-pull-request-reviewer.mjs"),
+      "utf8",
+    ),
+    /\.agents\/skills/,
+  );
+  const manifest = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.match(
+    manifest,
+    /script: operations\/check-pull-request-reviewer\.mjs\n {12}resources:\n {14}- operations\/lib\/pull-request-reviewer\.mjs\n {12}arguments/,
+  );
+});
+
+test("the GitHub rules hold the runner variable, and its guidance the assessment", () => {
+  const rules = flowedText("rules/github-repository-configuration.md");
+  for (const requirement of [
+    /Every installed job reads `vars\.REPO_CANON_RUNS_ON`\. Unset or empty selects `ubuntu-latest`/,
+    /a JSON array of runner label strings/,
+    /Set the variable only when the repository has matching runners/,
+    /The runners need `git`, `bash`, and network access/,
+    /deleting the variable or setting it to `\["ubuntu-latest"\]`/,
+    /a repository-level value takes precedence/,
+  ])
+    assert.match(rules, requirement);
+  const guidance = flowedText("guidance/github-repository-configuration.md");
+  assert.match(
+    guidance,
+    /Assess the repository's visibility and the repository-level `REPO_CANON_RUNS_ON` variable as unset, valid with its labels, or invalid/,
+  );
+  assert.match(guidance, /never sets, changes, or deletes the variable/);
+  assert.doesNotMatch(guidance, /The runners need/);
 });
 
 test("AGENTS.md names no rules path", () => {
@@ -767,7 +861,13 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
     readdirSync(join(root, ".agents/skills/babysit"), {
       recursive: true,
     }).sort(),
-    ["SKILL.md", "merge.mjs", "reviewer.mjs", "wait.mjs"],
+    [
+      "SKILL.md",
+      "merge.mjs",
+      "pull-request-reviewer.mjs",
+      "reviewer.mjs",
+      "wait.mjs",
+    ],
   );
 });
 
@@ -806,10 +906,7 @@ test("babysit waits only through its script, and the guide owns the no-review ru
     babysit,
     /4\. Apply the \[Merging request rule\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#merging\) to each new head after a fix push/,
   );
-  assert.doesNotMatch(
-    babysit.split("## Reviewer configuration")[0],
-    /onOpen|reviewRequests|fully or partly/,
-  );
+  assert.doesNotMatch(babysit, /onOpen|reviewRequests|fully or partly/);
   assert.doesNotMatch(babysit, /warrant another look/);
   assert.match(
     babysit,

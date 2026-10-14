@@ -233,8 +233,8 @@ Merge a pull request once every required check passes on its latest head and
 every review thread is answered with its fix or a reasoned decline under the
 [comment rules](#comments).
 The optional repository-owned `.github/pull-request-reviewer.json` configures
-its reviewer and wait bounds; [`babysit`](.agents/skills/babysit/SKILL.md)
-documents its schema. A review request is the pull request's opening when
+its reviewer and wait bounds; the `github-repository-configuration` rules
+state its schema. A review request is the pull request's opening when
 `request.onOpen` is true, or a later comment whose whole trimmed body equals
 `request.comment`; a push is not one.
 

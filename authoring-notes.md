@@ -122,7 +122,10 @@ repeated.
   It waits through one bundled script that polls silently for checks and the
   reviewer named by the optional repository-owned
   `.github/pull-request-reviewer.json`, run in the foreground on every host.
-  Without that file there is no reviewer wait. Repo Canon ships no reviewer
+  The
+  [GitHub repository configuration rules](rules/github-repository-configuration.md)
+  state that file's schema, which the reviewer check and the wait validate with
+  byte-identical copies of one parser. Without that file there is no reviewer wait. Repo Canon ships no reviewer
   file or preset; this repository carries its own configuration, outside the
   declarations. The factory never reads it. Its
   source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
@@ -206,8 +209,8 @@ repeated.
   when it has useful content.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
   changes. The
-  [GitHub repository configuration guidance](guidance/github-repository-configuration.md)
-  makes PR validation a required merge check wherever GitHub offers branch
+  [GitHub repository configuration rules](rules/github-repository-configuration.md)
+  make PR validation a required merge check wherever GitHub offers branch
   protection or rulesets for the repository. It is a plan-gated requirement:
   on a private repository whose plan offers neither, it is unavailable rather
   than optional, and adoption completes without it. GitHub runs the PR
