@@ -46,7 +46,7 @@ a GitHub Enterprise host.
 ## Results and recovery
 
 The operation implements the public
-[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v6.0.0/docs/usage/script-protocol.md)
+[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md)
 boundary with an empty project-content target scope. It returns `changed` only
 after final readback confirms all canonical labels and `unchanged` when the
 first read already matches. Results use `repo-standards/result/v2`.
