@@ -654,7 +654,15 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   );
   assert.match(
     babysit,
-    /Apply the \[Merging request rule\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#merging\) to the new head/,
+    /Before the first wait, apply the \[Merging request rule\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#merging\) to the pull request's head, using step 4 to post any required request\. 1\. Wait with/,
+  );
+  assert.match(
+    babysit,
+    /4\. Apply the \[Merging request rule\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#merging\) to each new head after a fix push/,
+  );
+  assert.doesNotMatch(
+    babysit.split("## Reviewer configuration")[0],
+    /onOpen|reviewRequests|fully or partly/,
   );
   assert.doesNotMatch(babysit, /warrant another look/);
   assert.match(
@@ -709,6 +717,26 @@ test("the installed agent guidance ends every change as a babysat pull request",
   );
 });
 
+test("the guide requires a first review request before waiting when opening is not a request", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  assert.match(
+    guide,
+    /A review request is the pull request's opening when `request.onOpen` is true, or a later comment whose whole trimmed body equals `request.comment`; a push is not one/,
+  );
+  assert.match(
+    guide,
+    /When `request.onOpen` is false and the pull request has had no review request, an agent must post the review request comment for its head before it first waits on the pull request/,
+  );
+  assert.match(
+    guide,
+    /The request bound cannot stop this first request, since none has been counted yet/,
+  );
+  assert.match(
+    guide,
+    /Count the opening when `request.onOpen` is true and every comment whose whole trimmed body equals `request.comment`, whoever posted it/,
+  );
+});
+
 test("review converges on fixes and reasoned declines the guide allows", () => {
   const guide = flowedText("CONTRIBUTING.md");
   assert.ok(
@@ -722,9 +750,16 @@ test("review converges on fixes and reasoned declines the guide allows", () => {
   assert.match(babysit, /does not let you decline/);
   assert.match(
     guide,
-    /fixes, fully or partly, a review finding these rules do not let it decline/,
+    /After that first request, an agent must post the review request comment for a new head when its push fixes, fully or partly, a review finding these rules do not let it decline, and the request bound has not been reached/,
   );
-  assert.match(guide, /Without the field there is no count bound/);
+  assert.match(
+    guide,
+    /No other push gets a request: a push that only follows declines, changes only tests, documentation or wording, or only fixes a failing check gets none/,
+  );
+  assert.match(
+    guide,
+    /Once that count reaches the bound, no agent requests another review\. Without the field there is no count bound/,
+  );
   assert.match(
     guide,
     /fix every finding the agent may not decline and push without another request/,
