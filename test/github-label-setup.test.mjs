@@ -73,7 +73,10 @@ test("provisions every canonical label in an empty repository and is unchanged o
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
-  assert.match(outcome.result.message, /created 12 labels/);
+  assert.equal(
+    outcome.result.message,
+    `GitHub label setup changed acme/widgets: created ${canonicalLabels.length} labels. Readback confirmed all ${canonicalLabels.length} canonical labels; unrelated labels were preserved.`,
+  );
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
   assertProjectUnchanged(before, scenario);
 
@@ -172,7 +175,10 @@ test("reconciles conflicting desired label values without replacing unrelated la
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
-  assert.match(outcome.result.message, /updated needs-triage/);
+  assert.equal(
+    outcome.result.message,
+    `GitHub label setup changed acme/widgets: updated needs-triage. Readback confirmed all ${canonicalLabels.length} canonical labels; unrelated labels were preserved.`,
+  );
   assert.deepEqual(scenario.readState().labels, [
     canonicalLabels[0],
     ...canonicalLabels.slice(1),

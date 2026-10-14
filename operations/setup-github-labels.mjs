@@ -253,7 +253,7 @@ function setupLabels(request) {
   }
   result(
     "changed",
-    `GitHub label setup changed ${inferred.identity}: ${effects}. Readback confirmed all 15 canonical labels; unrelated labels were preserved.`,
+    `GitHub label setup changed ${inferred.identity}: ${effects}. Readback confirmed all ${canonicalLabels.length} canonical labels; unrelated labels were preserved.`,
   );
 }
 
