@@ -60,10 +60,11 @@ settings. Both fixes are remote setup: inspection probes each one read-only and
 reports it not ready, with the reason, when one of those is missing. Resolve
 the reason and inspect again, or add `--defer-remote-setup` to `start` to
 complete adoption without it; every later update probes again and applies it
-once ready. Keep the repository clean and committed. If useful existing
-`AGENTS.md` instructions need to survive replacement, follow
-[Prepare existing agent guidance](prepare-agent-guidance.md), commit that change,
-and inspect the prepared commit afresh. Records with retired formats in `.repo-standards` or as run records in Git's
+once ready. Keep the repository clean and committed. Adoption preserves useful
+repository-specific `AGENTS.md` instructions through the contextual
+`project-agent-guidance` declaration, as
+[adoption compatibility](../development/adoption-compatibility.md#preserving-project-instructions)
+describes. Records with retired formats in `.repo-standards` or as run records in Git's
 directory cannot be read by CLI 7.0.0; such a repository adopts fresh, as the CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md#adopt-fresh-from-a-retired-format)
 describes.

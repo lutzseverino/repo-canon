@@ -19,7 +19,6 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
   developmentGuide,
-  exactOwnedAgentConfiguration,
   fileDeclarations,
   index,
 } from "./helpers/documentation.mjs";
@@ -318,7 +317,7 @@ test("drafts the expected scope of a conforming repository", (t) => {
           owned("docs/agents/README.md", "agent-configuration-index"),
           owned("docs/agents/domain.md", "domain-configuration"),
           owned("docs/agents/issue-tracker.md", "issue-tracker-configuration"),
-          underDocs("docs/agents/project.md"),
+          owned("docs/agents/project.md", "project-agent-guidance"),
           owned("docs/agents/triage-labels.md", "triage-label-configuration"),
           underDocs("docs/development/README.md"),
           underDocs("docs/usage/README.md"),
@@ -608,11 +607,19 @@ test("asks about entries that block a root or an index", (t) => {
 });
 
 test("over conforming repositories the drafted scope passes the documentation check", (t) => {
-  const single = drafted(t, conforming);
-  assert.equal(
-    checkDraftedScope(single.root, included(single.entry)).result.status,
-    "passed",
-  );
+  for (const profile of ["standard", "factory"]) {
+    const root = projectCopy(t, conforming);
+    const outcome = draft(root, { input: request(root, { profile }) });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    const [entry] = outcome.proposal.declarations;
+    assert.ok(
+      !included(entry).includes("docs/agents/project.md"),
+      `${profile} leaves project agent guidance outside documentation scope`,
+    );
+    const checked = checkDraftedScope(root, included(entry));
+    assert.equal(checked.status, 0, checked.stderr);
+    assert.equal(checked.result.status, "passed", checked.result.message);
+  }
 
   // A context-local documentation root is a question; answering it as the
   // question says gives a scope that passes.
@@ -1130,7 +1137,7 @@ test("drafts this repository's own documentation scope", (t) => {
   assertScopeProposal(outcome.proposal, root);
   const [entry] = outcome.proposal.declarations;
   const files = copiedFiles(root).filter(
-    (path) => !exactOwnedAgentConfiguration.includes(path),
+    (path) => !fileDeclarations().some(({ target }) => path === target),
   );
   const factoryDocumentation = files.filter((path) =>
     path.startsWith("factory/docs/"),

@@ -31,7 +31,8 @@ The repository license, READMEs, development documentation, glossaries, and
 project-specific agent guidance belong to the adopting repository, because
 they describe it and its projects. Repo Canon shapes them through rules,
 adoption guidance, and checks. The Repository license has the fixed target `LICENSE`,
-and the Repository README has the fixed target `README.md`. In the factory
+and the Repository README has the fixed target `README.md`. Project-specific
+agent guidance has the fixed target `docs/agents/project.md`. In the factory
 profile, the toolchain image has the fixed target `.factory/Dockerfile`, which
 holds only the repository's toolchain, because each repository's toolchain
 differs and the factory adds its own agent layer. Discovery proposes the
@@ -244,11 +245,11 @@ repeated.
   body supplied by `babysit`. The standard declares no per-tool attribution
   settings. Published history stays unchanged because tags and adopters' locks
   pin existing commits.
-- When an existing AGENTS.md contains useful project-specific instructions,
-  preserve and reconcile them into docs/agents/project.md in a separate
-  preparation change, committed through the project's normal workflow before
-  a fresh inspection and adoption. This is the chosen existing-tool route;
-  integrated preparation support is not required for this standards source.
+- The contextual `project-agent-guidance` declaration preserves useful
+  repository-specific AGENTS.md instructions during adoption, under its
+  [adoption guidance](guidance/project-agent-guidance.md) and
+  [rules](rules/project-agent-guidance.md). It owns docs/agents/project.md
+  separately from documentation scope; an update drafts that scope without it.
 - Adoption uses repeat-safe authored operations to configure GitHub labels,
   required checks, and squash defaults, as the
   [GitHub repository configuration guidance](guidance/github-repository-configuration.md)

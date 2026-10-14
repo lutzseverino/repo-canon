@@ -228,6 +228,12 @@ defaults:
       target: .github/workflows/pr-metadata.yml
       exact: .github/workflows/pr-metadata.yml
 
+    project-agent-guidance:
+      kind: file
+      target: docs/agents/project.md
+      guidance: guidance/project-agent-guidance.md
+      rules: rules/project-agent-guidance.md
+
     project-readmes:
       kind: repository
       guidance: guidance/project-readmes.md

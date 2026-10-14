@@ -33,24 +33,25 @@ targets, and an empty scope retains its declaration and operations.
 Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/author-format.md),
 [inspection](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/inspection.md),
 and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md)
-contracts when implementing. Discovery supplies scope resolution; the separate
-AGENTS preparation and authored GitHub setup routes below remain necessary.
+contracts when implementing. Discovery supplies scope resolution; contextual
+project agent guidance and authored GitHub setup use the routes below.
 The [release procedure](release.md) states what each release requires.
 
-## Preserving project instructions before replacement
+## Preserving project instructions
 
-Inspection exposes the current and proposed AGENTS.md contents. The CLI then
-installs exact content before running fixes or returning contextual work, so
-neither phase can write preserved project instructions before replacement.
-Recovering old content from Git afterward would miss the accepted ordering.
+Both profiles declare `docs/agents/project.md` as the contextual
+`project-agent-guidance` file, with its own
+[rules](../../rules/project-agent-guidance.md) and
+[adoption guidance](../../guidance/project-agent-guidance.md). Adoption installs
+the exact `AGENTS.md`, then the contextual work reads its replaced content from
+`HEAD` and reconciles useful repository-specific instructions with any existing
+project guidance. No separate preparation change is needed. A contradiction
+with the standard requires the maintainer's answer and leaves the declaration
+blocked until then. Projects with no useful instructions receive no empty file.
 
-The selected route is a separate preparation change: reconcile useful
-instructions into `docs/agents/project.md`, commit through the project's normal
-workflow, and inspect the prepared repository again before adoption. This uses
-no author adoption hook or automatic product commit. Unresolved contradictions
-block preparation. Projects with no useful existing instructions receive no
-empty project guidance file. Integrated preparation support is not required
-for the selected workflow.
+The `documentation` declaration leaves this target outside its scope. An
+adopter whose previous confirmed documentation scope includes it uses a fresh
+draft without it on update; the file remains under `project-agent-guidance`.
 
 Sources: [inspection](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/inspection.md),
 [adoption sequence](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/src/adoption.ts).

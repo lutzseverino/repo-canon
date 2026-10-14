@@ -113,8 +113,9 @@ and by path within each rule. The model reads each rule mechanically:
   declaration's target, a repository declaration's confirmed paths and
   directories, and a skill's `.agents/skills/<name>` directory. Repository
   Standards rejects a path that two declarations own, so the installed exact
-  files under `docs/agents` can never be in the documentation scope and are
-  covered by their own declarations. Other files under a root, such as images,
+  files under `docs/agents` and the contextual `docs/agents/project.md` can never
+  be in the documentation scope and are covered by their own declarations.
+  Other files under a root, such as images,
   belong in the confirmed scope by the discovery guidance but are not checked.
 
 These rules make a repository that passed earlier releases fail when it does

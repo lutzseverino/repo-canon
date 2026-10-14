@@ -11,10 +11,7 @@ import {
   featureBody,
   repository,
 } from "./helpers/issue-contracts.mjs";
-import {
-  exactOwnedAgentConfiguration,
-  fileDeclarations,
-} from "./helpers/documentation.mjs";
+import { fileDeclarations } from "./helpers/documentation.mjs";
 import { invokeCheck } from "./helpers/operation.mjs";
 
 // Run the shipped documentation checks against both contexts and the factory's
@@ -169,7 +166,9 @@ function documentationScope() {
         (path.startsWith("docs/") || path.startsWith("factory/docs/")) &&
         path.toLocaleLowerCase("en-US").endsWith(".md"),
     )
-    .filter((path) => !exactOwnedAgentConfiguration.includes(path));
+    .filter(
+      (path) => !fileDeclarations().some(({ target }) => path === target),
+    );
   return [...documentation, ...rootDocuments].sort();
 }
 
@@ -298,6 +297,7 @@ const requirementOutcomes = {
   documentation: "both",
   "factory-sandbox-image": "both",
   "github-repository-configuration": "both",
+  "project-agent-guidance": "both",
   "project-readmes": "both",
   "repository-license": "both",
   "repository-readme": "both",

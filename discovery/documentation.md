@@ -10,7 +10,8 @@ draft. Nobody runs the drafter by hand.
 The `documentation` rules this source installs decide the draft's candidates: every file Git keeps under the `docs` documentation
 root, the index of the root and of each directory under it, the development
 guide, the repository root's glossary and context map, and each context
-glossary that context map lists. Paths other declarations own, and paths
+glossary that context map lists. Paths other declarations own, including
+`docs/agents/project.md` under `project-agent-guidance`, and paths
 Repository Standards reserves, stay out, and so does every `README.md` outside
 the documentation roots, which the documentation check would read as a root's
 index; such a README cannot enter this scope, even as a move source. If it is a
@@ -39,11 +40,14 @@ is decided:
   has the evidence Repository Standards requires.
 
 Then add each intended new path that the work needs and the draft cannot know: a
-move destination, with the index of any new directory; `docs/agents/project.md`
-when repository-specific constraints require it; and a file whose link to
+move destination, with the index of any new directory; and a file whose link to
 documentation needs repair. Keep all declarations' paths disjoint: a Project
 README under a documentation root belongs to one declaration only. A move
 requires authority for its source, destination, and affected link repairs.
+
+If an update's previous documentation scope includes `docs/agents/project.md`,
+use the fresh draft without it. The `project-agent-guidance` declaration now
+owns that path; removing it from documentation scope preserves its content.
 
 The draft does not decide membership by itself. The maintainer's request to
 adopt or update is consent to the drafted and reviewed scope. Ask them to
