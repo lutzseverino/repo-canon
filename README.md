@@ -9,8 +9,9 @@
 
 Adopting Repo Canon installs contribution and agent instructions, rules,
 skills, templates, and validation workflows into a repository. This process is
-called adoption. Rules are the installed requirements that a repository's
-files keep satisfying after adoption.
+called adoption, and a profile is the set of conventions it applies. Rules are
+the installed requirements that a repository's files keep satisfying after
+adoption.
 
 ## Installation
 
@@ -47,8 +48,8 @@ with the rules. Your repository-specific agent instructions move to
 remote setup can be deferred when GitHub access is missing, so adoption
 completes locally. Review the changes `adopt` leaves and commit them.
 
-A profile is the set of conventions you adopt. Pick `standard`, or `factory`
-for a repository a factory serves; the
+Pick the `standard` profile, or `factory` for a repository a factory serves;
+the
 [adoption guide](docs/usage/adopt-repo-canon.md) explains the choice and what
 remote setup needs. To update, read the
 [release notes](https://github.com/lutzseverino/repo-canon/releases) since your
