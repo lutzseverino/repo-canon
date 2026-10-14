@@ -153,6 +153,24 @@ test("changing any one CLI version in the validation inputs fails the agreement"
   }
 });
 
+test("the toolchain image must name a pinned CLI version", () => {
+  const files = workingTree();
+  const path = ".factory/Dockerfile";
+  for (const content of [
+    "FROM node:24-bookworm\n",
+    "FROM node:24-bookworm\nRUN npm install --global @lutzseverino/repo-standards\n",
+    "FROM node:24-bookworm\nRUN npm install --global @lutzseverino/repo-standards@latest\n",
+  ]) {
+    const changed = new Map(files).set(path, content);
+    assert.ok(
+      versionDisagreements(reader(changed)).includes(
+        ".factory/Dockerfile names no CLI version.",
+      ),
+      content,
+    );
+  }
+});
+
 test("versions of other tools and the stable baseline in the validation inputs keep the agreement", () => {
   const files = workingTree();
   for (const path of validationInputs) {

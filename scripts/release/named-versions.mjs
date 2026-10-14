@@ -152,7 +152,9 @@ export function versionDisagreements(read) {
   ]) {
     const cliMentions = cliMentionsIn(read, path);
     if (
-      (path === adoptionGuidePath || path === ciWorkflowPath) &&
+      (path === adoptionGuidePath ||
+        path === ciWorkflowPath ||
+        path === ".factory/Dockerfile") &&
       cliMentions.length === 0
     ) {
       problems.push(`${path} names no CLI version.`);
