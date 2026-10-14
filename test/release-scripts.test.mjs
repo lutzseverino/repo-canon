@@ -13,7 +13,10 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
-import { files as adoptionFixture } from "../scripts/release/adoption-fixture.mjs";
+import {
+  assessments as adoptionAssessments,
+  files as adoptionFixture,
+} from "../scripts/release/adoption-fixture.mjs";
 import { fileDeclarations } from "./helpers/documentation.mjs";
 import { exactFiles } from "./helpers/installed-validator.mjs";
 import { invokeCheck } from "./helpers/operation.mjs";
@@ -703,6 +706,24 @@ test("release:verify rejects a version that is not a stable release tag", (t) =>
     output,
     /v1\.0\.0-rc\.1 is not a stable release version such as v1\.2\.3/,
   );
+});
+
+// Every declaration with adoption guidance is assessed during adoption, in
+// one profile or both, so the fixture answers each of them.
+test("the adoption fixture assesses every declaration with adoption guidance", () => {
+  const lines = readFileSync(
+    join(scripts, "../../standards.yaml"),
+    "utf8",
+  ).split("\n");
+  const assessed = [];
+  let declaration = null;
+  for (const [index, line] of lines.entries()) {
+    const name = line.match(/^\s+([a-z0-9-]+):$/)?.[1];
+    if (name && /^\s+kind: /.test(lines[index + 1] ?? "")) declaration = name;
+    if (/^\s+guidance: /.test(line)) assessed.push(declaration);
+  }
+  assert.ok(assessed.includes("project-agent-guidance"));
+  assert.deepEqual(Object.keys(adoptionAssessments).sort(), assessed.sort());
 });
 
 // The real adoption runs only after publication, so the fixture is checked

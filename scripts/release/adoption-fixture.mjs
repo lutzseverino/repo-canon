@@ -188,6 +188,15 @@ export const assessments = {
       ),
     },
   },
+  "project-agent-guidance": {
+    status: "satisfied",
+    explanation:
+      "The fixture's HEAD has no AGENTS.md, so adoption replaced no repository-specific agent instructions, and docs/agents/project.md stays absent.",
+    evidence: [
+      "The fixture's only commit has no AGENTS.md.",
+      "The fixture has no docs/agents/project.md.",
+    ],
+  },
   "repository-license": {
     status: "satisfied",
     explanation:
