@@ -258,6 +258,7 @@ test("the standard profile installs no factory file, and the factory profile add
       factory-sandbox-image:
         kind: file
         target: .factory/Dockerfile
+        rules: rules/factory-sandbox-image.md
         guidance: guidance/factory-sandbox-image.md
 
       factory-sandbox-image-workflow:
@@ -265,7 +266,7 @@ test("the standard profile installs no factory file, and the factory profile add
         target: .github/workflows/sandbox-image.yml
         exact: .github/workflows/sandbox-image.yml
 `,
-    "the factory profile adds the configuration exactly, the Dockerfile as contextual with its guidance, and the workflow exactly",
+    "the factory profile adds the configuration exactly, the Dockerfile as contextual with its rules and adoption guidance, and the workflow exactly",
   );
 });
 
@@ -295,7 +296,7 @@ test("the standards retire the in-repository factory, its sandbox base, and the 
 // declaration's entry to `rules` or `both`.
 const requirementOutcomes = {
   documentation: "both",
-  "factory-sandbox-image": "guidance",
+  "factory-sandbox-image": "both",
   "github-repository-configuration": "guidance",
   "project-readmes": "both",
   "repository-license": "both",
@@ -770,13 +771,13 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
   );
 });
 
-test("babysit names the Node.js major required by the factory image guidance", () => {
+test("babysit names the Node.js major required by the factory image rules", () => {
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  const guidance = flowedText("guidance/factory-sandbox-image.md");
+  const rules = flowedText("rules/factory-sandbox-image.md");
   const skillMajor = /scripts require Node\.js (\d+)/.exec(babysit)?.[1];
-  const imageMajor = /currently Node\.js (\d+)/.exec(guidance)?.[1];
+  const imageMajor = /currently Node\.js (\d+)/.exec(rules)?.[1];
   assert.ok(skillMajor, "babysit states its scripts' Node.js major");
-  assert.ok(imageMajor, "factory image guidance states the supported major");
+  assert.ok(imageMajor, "factory image rules state the supported major");
   assert.equal(skillMajor, imageMajor);
 });
 

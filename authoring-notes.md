@@ -141,7 +141,7 @@ repeated.
   [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
   decides. The profile also installs the contextual `.factory/Dockerfile`,
   toolchain only and Debian-based, as the
-  [toolchain image guidance](guidance/factory-sandbox-image.md) states, and the
+  [toolchain image rules](rules/factory-sandbox-image.md) state, and the
   pull request workflow that builds it. The factory creates its own state
   labels from the configuration, so the canonical labels carry no `factory:`
   label and no `model:` label. The
