@@ -5,7 +5,11 @@ This directory explains how to develop and release the factory package.
 ## Setup and validation
 
 Follow the repository's [shared setup](../../../docs/development/README.md)
-and [contribution guidelines](../../../CONTRIBUTING.md). From `factory/`, run
+and [contribution guidelines](../../../CONTRIBUTING.md). Install GitHub CLI
+and authenticate it with your existing GitHub login before running package
+tests: the upstream digest comparison uses authenticated `gh api` requests
+for public release metadata. Missing CLI or authentication fails that check;
+only an unavailable local network may skip it. From `factory/`, run
 `npm ci --include=dev`, `npm run typecheck`, and `npm test`. CI runs both package
 checks on Node.js 24 beside the repository checks.
 
