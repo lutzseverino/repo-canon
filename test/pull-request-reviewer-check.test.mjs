@@ -45,6 +45,28 @@ test("the optional reviewer check passes a valid review-only file", (t) => {
   assert.equal(check(t, { [target]: valid }).result.status, "passed");
 });
 
+test("the optional reviewer check accepts a positive review request bound", (t) => {
+  const reviewer = JSON.parse(valid);
+  reviewer.bounds.reviewRequests = 4;
+  assert.equal(
+    check(t, { [target]: JSON.stringify(reviewer) }).result.status,
+    "passed",
+  );
+});
+
+test("the optional reviewer check rejects invalid review request bounds", (t) => {
+  for (const reviewRequests of [0, -1, 1.5, "4", null, true, [], {}]) {
+    const reviewer = JSON.parse(valid);
+    reviewer.bounds.reviewRequests = reviewRequests;
+    const outcome = check(t, { [target]: JSON.stringify(reviewer) });
+    assert.equal(outcome.result.status, "failed");
+    assert.match(
+      outcome.result.message,
+      /reviewRequests must be a positive integer/,
+    );
+  }
+});
+
 test("the optional reviewer check rejects invalid schema", (t) => {
   const outcome = check(t, {
     [target]: JSON.stringify({ ...JSON.parse(valid), version: 2 }),

@@ -28,9 +28,9 @@ conditions and the wording rules.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
    every review thread as it requires, following its
    [comment rules](../../../CONTRIBUTING.md#comments).
-4. When pushed fixes change enough to warrant another look, comment
-   to re-request review of the new head when a reviewer is configured, using
-   its `request.comment` and following the
+4. Apply the [Merging request rule](../../../CONTRIBUTING.md#merging) to the
+   new head. When it requires a request, comment using the configured reviewer's
+   `request.comment` and following the
    [comment rules](../../../CONTRIBUTING.md#comments). After any push or
    re-request, return to step 1.
 5. Once the merge conditions hold on the latest head, run
@@ -52,7 +52,8 @@ only. Repo Canon installs no file or preset; its check validates the file when
 present. The factory does not read it. Without the file, the wait reports only
 checks.
 
-Every field below is required except `finished`. Unknown fields are invalid.
+Every field below is required except `finished` and `bounds.reviewRequests`.
+Unknown fields are invalid.
 
 - `version`: `1`.
 - `account`: the reviewer's nonempty GitHub login, including `[bot]` when part
@@ -77,6 +78,8 @@ Every field below is required except `finished`. Unknown fields are invalid.
   response.
 - `bounds.responseMinutes` and `bounds.reviewMinutes`: positive finite numbers
   measured from the latest request.
+- `bounds.reviewRequests`: optional positive integer; the total request bound
+  defined in [Merging](../../../CONTRIBUTING.md#merging).
 
 For example, a repository that uses Codex can configure:
 
