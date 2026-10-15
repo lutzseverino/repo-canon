@@ -145,7 +145,7 @@ function installLocalTracker(root) {
 const repositories = {};
 
 {
-  const root = createRepository("adoption-preparation", [], {
+  const root = createRepository("project-agent-guidance", [], {
     agents:
       "# Parcel API contributor instructions\n\nUse `Parcel` for accepted shipments. Read `docs/adr/0001-parcel-identifiers.md` before changing identifiers. Run `npm run verify-api` before committing API changes.\n",
     context:
@@ -182,7 +182,7 @@ const repositories = {};
     "package.json",
     `${JSON.stringify(
       {
-        name: "repo-canon-adoption-preparation-exercise",
+        name: "repo-canon-project-agent-guidance-exercise",
         private: true,
         type: "module",
         scripts: { test: "node --test", "verify-api": "node --test" },
@@ -191,10 +191,10 @@ const repositories = {};
       2,
     )}\n`,
   );
-  repositories["adoption-preparation"] = {
+  repositories["project-agent-guidance"] = {
     path: root,
     skills: [],
-    initial: commit(root, "chore: establish adoption preparation exercise"),
+    initial: commit(root, "chore: establish project-agent-guidance exercise"),
   };
 }
 

@@ -106,7 +106,7 @@ The test verifies the exact shared guidance, the scenario prerequisites, intact
 skill links, disabled local signing, a clean initial Git state, and an ordinary
 later commit under hostile global signing.
 
-## Planning and adoption-preparation skills
+## Planning skills and project-agent-guidance contextual work
 
 ```bash
 node scripts/create-planning-skill-fixtures.mjs
@@ -114,8 +114,10 @@ npm run test:planning-skill-fixtures
 ```
 
 The builder writes `manifest.json` under its root and prints that path. Four
-repositories cover eight skills: `adoption-preparation`, which links no skill,
-for the preparation that precedes whole-file ownership of `AGENTS.md`;
+repositories cover eight skills: `project-agent-guidance`, which links no skill,
+supplies existing project-specific `AGENTS.md` instructions for the
+`project-agent-guidance` contextual work described in
+[adoption compatibility](adoption-compatibility.md#preserving-project-instructions);
 `planning` for `grill-with-docs`, `to-spec`, and `to-tickets`;
 `triage-wayfinder` for `triage` and `wayfinder`; and `delivery` for
 `implement`, `pr`, and `prototype`. The latter

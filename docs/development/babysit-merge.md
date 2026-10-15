@@ -34,4 +34,5 @@ use the same fake `gh` as the wait tests and cover the explicit message,
 verbatim body, head changes, empty bodies, invalid arguments, access errors,
 merge refusals, merge queue refusal, and successful calls that leave the PR
 unmerged. The whole skill directory is installed by its exact skill
-declaration, including both scripts and the reviewer module.
+declaration, including its scripts and the `reviewer.mjs` and
+`pull-request-reviewer.mjs` modules.
