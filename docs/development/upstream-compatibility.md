@@ -197,9 +197,9 @@ Sources: [to-spec](https://github.com/mattpocock/skills/blob/24fe0ef7737efae15c8
 
 Upstream setup provides a reusable Agent skills section, not the complete
 shared AGENTS.md chosen here. It ordinarily preserves surrounding repository
-instructions. The author's whole-file ownership choice therefore uses the
-separate preparation workflow described in
-[adoption compatibility](adoption-compatibility.md#preserving-project-instructions-before-replacement).
+instructions. The author's whole-file ownership choice therefore relies on the
+`project-agent-guidance` contextual declaration described in
+[adoption compatibility](adoption-compatibility.md#preserving-project-instructions).
 
 The GitHub seed infers repository identity from remotes. Domain conventions
 support lazy glossaries and ADRs, including multiple contexts. Triage supplies

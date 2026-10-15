@@ -93,7 +93,7 @@ accepts full commit SHAs and reads published tag and branch refs with
   for changed selected bytes, the single release pull request, release notes,
   and publication and verification, with the read-only release scripts.
 - [Adoption compatibility](adoption-compatibility.md): the supported v2
-  mapping, validation baseline, adoption preparation requirements, and the
+  mapping, validation baseline, preserving project instructions, and the
   route for GitHub repository settings.
 - [GitHub label setup](github-label-setup.md): repeat-safe label provisioning,
   identity and permission prerequisites, its readiness probe, protocol

@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-test("planning and adoption fixture builder creates runnable bounded scenarios", (t) => {
+test("planning and project-agent-guidance fixture builder creates runnable bounded scenarios", (t) => {
   const parent = mkdtempSync(join(tmpdir(), "repo-canon-planning-test-"));
   t.after(() => rmSync(parent, { recursive: true, force: true }));
   const target = join(parent, "fixtures");
@@ -29,9 +29,9 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
   );
 
   assert.deepEqual(Object.keys(manifest.repositories).sort(), [
-    "adoption-preparation",
     "delivery",
     "planning",
+    "project-agent-guidance",
     "triage-wayfinder",
   ]);
   assert.equal(
@@ -94,7 +94,7 @@ test("planning and adoption fixture builder creates runnable bounded scenarios",
 
   assert.equal(
     execFileSync("git", ["status", "--porcelain"], {
-      cwd: join(target, "adoption-preparation"),
+      cwd: join(target, "project-agent-guidance"),
       encoding: "utf8",
     }),
     "",
