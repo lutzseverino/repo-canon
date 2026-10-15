@@ -15,9 +15,16 @@ glossary that context map lists. Paths other declarations own, including
 Repository Standards reserves, stay out, and so does every `README.md` outside
 the documentation roots, which the documentation check would read as a root's
 index; such a README cannot enter this scope, even as a move source. If it is a
-Project README, the `project-readmes` declaration's proposal covers it. During
-an update from Repository Standards 6.x, the retired `adopt-standards` and
-`standards-updates` skills stay out too, because the same run removes them.
+Project README, the `project-readmes` declaration's proposal covers it.
+
+Directories named `adopt-standards` or `standards-updates` at either
+`.agents/skills/` or `.claude/skills/` receive ordinary handling under these
+rules and the selected declarations' ownership. Their Markdown outside a
+documentation root enters the ordinary membership questions, whether it is an
+unedited leftover from Repository Standards CLI 6.x, an edited copy, or a
+project-owned skill. The drafter makes no removal claim. An adopter updating
+from CLI 6.x may see one extra membership question, once. This is a compatible
+fix for the next Repo Canon patch, with no new mandatory migration.
 
 Decide only the cases in its unresolved questions, resolving genuine membership
 questions with the maintainer, and remove each question from the entry once it
