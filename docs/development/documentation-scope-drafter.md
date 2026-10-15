@@ -101,11 +101,17 @@ directory. The repository declarations with discovery own paths that only their
 own proposals name. The drafter also leaves out the paths Repository Standards
 7.0.0 reserves: `.repo-standards` and the `repository-standards` and
 `author-standards` system skills, at both `.agents/skills/` and
-`.claude/skills/`. During an update from Repository Standards 6.x, the copy
-still holds that version's `adopt-standards` and `standards-updates` system
-skills, at either location, and the same run removes them. The drafter leaves
-them out of the proposal without a question, and its coverage names each one
-present and why.
+`.claude/skills/`.
+
+The names `adopt-standards` and `standards-updates` have no special handling at
+either skill location. Project-owned skills, edited copies, and unedited CLI
+6.x leftovers receive the ordinary membership questions for their Markdown
+outside a documentation root, subject to the selected declarations' ownership.
+The drafter does not claim that adoption removes them. An adopter updating from
+CLI 6.x may see one extra membership question, once; this is a compatible fix
+for the next Repo Canon patch, with no new mandatory migration. Answers that
+the previous confirmed scope decides still carry forward as the
+[discovery guidance](../../discovery/documentation.md) describes.
 
 ## Evidence
 
@@ -153,7 +159,9 @@ They run the drafter as inspection does, over copies of fixture repositories
 without Git metadata, with a `repo-standards/discovery/v1` request on standard
 input, and compare the whole proposal. They check its shape against the
 `repo-standards/scope/v2` rules and that the copy is unchanged, cover the
-unresolved questions, the reserved and retired paths, and process errors, run
+unresolved questions, reserved paths, ordinary handling of retired skill names
+(including an unedited CLI 6.x leftover and an edited copy), symbolic links, and
+process errors, run
 the drafter from a retained source that holds only its declared resources and
 compare its proposal with the acquired source's, resolve a profile's
 declarations, leave project agent guidance outside documentation scope in both

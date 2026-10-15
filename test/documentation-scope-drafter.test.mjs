@@ -535,57 +535,64 @@ test("leaves out the paths that other declarations and Repository Standards own"
   assert.equal(entry.coverage, coverage);
 });
 
-test("leaves the retired system skills out of the proposal and says why", (t) => {
-  const retired = [
-    ".agents/skills/adopt-standards",
-    ".agents/skills/standards-updates",
-  ];
-  const { proposal, entry } = drafted(
-    t,
-    {
-      "docs/README.md": "# Documentation\n",
-      "docs/development/README.md": developmentGuide(),
-      ".agents/skills/adopt-standards/SKILL.md": "# Adopt\n",
-      ".agents/skills/adopt-standards/references/README.md": "# References\n",
-      ".agents/skills/adopt-standards/usage/guide.md": "# Guide\n",
-      ".agents/skills/standards-updates/SKILL.md": "# Standards updates\n",
-    },
-    (root) => {
+for (const location of [".agents", ".claude"]) {
+  for (const name of ["adopt-standards", "standards-updates"]) {
+    test(`asks the ordinary membership question for a project-owned ${location}/skills/${name}`, (t) => {
+      const path = `${location}/skills/${name}/SKILL.md`;
+      const { root, entry } = drafted(t, {
+        ...conforming,
+        [path]: "# Project skill\n\nProject-owned instructions.\n",
+      });
+
+      assert.deepEqual(entry.unresolved, [
+        `Which of these Markdown files under \`${location}\` are documentation this scope must cover, such as a document to move into a documentation category: \`${path}\`? Include each one, with its destination when it moves.`,
+      ]);
+      assert.equal(entry.coverage, coverage);
+      assert.equal(
+        JSON.stringify(draft(root).proposal.declarations[0]),
+        JSON.stringify(entry),
+      );
+    });
+  }
+}
+
+// Exact bytes of the CLI 6.x skill retained from Repo Canon v0.13.0;
+// the fixture records its source so no tag or network access is needed here.
+const cli6Skill = JSON.parse(
+  readFileSync(
+    new URL("./fixtures/cli-6-standards-updates.json", import.meta.url),
+    "utf8",
+  ),
+).files;
+
+for (const edited of [false, true]) {
+  test(`asks about an ${edited ? "edited" : "unedited"} CLI 6.x leftover without traversing its skill link`, (t) => {
+    const files = Object.fromEntries(
+      Object.entries(cli6Skill).map(([path, content]) => [
+        `.agents/skills/standards-updates/${path}`,
+        content +
+          (edited && path === "SKILL.md"
+            ? "\nProject-specific update instructions.\n"
+            : ""),
+      ]),
+    );
+    const { root, entry } = drafted(t, { ...conforming, ...files }, (root) => {
       mkdirSync(join(root, ".claude/skills"), { recursive: true });
-      for (const path of retired)
-        symlinkSync(
-          `../../${path}`,
-          join(root, ".claude/skills", path.split("/").at(-1)),
-        );
-    },
-  );
+      symlinkSync(
+        "../../.agents/skills/standards-updates",
+        join(root, ".claude/skills/standards-updates"),
+      );
+    });
 
-  assert.deepEqual(included(entry), [
-    "docs/README.md",
-    "docs/development/README.md",
-  ]);
-  assert.deepEqual(entry.unresolved, []);
-  assert.equal(
-    entry.coverage,
-    `${coverage} The retired Repository Standards skills \`.agents/skills/adopt-standards\`, \`.agents/skills/standards-updates\`, \`.claude/skills/adopt-standards\`, and \`.claude/skills/standards-updates\` are left out too, because the run that drafts this scope removes them.`,
-  );
-  assert.doesNotMatch(
-    JSON.stringify({ ...entry, coverage: "" }),
-    /adopt-standards|standards-updates/,
-    "questions, targets, and evidence must leave out the retired skills",
-  );
-
-  const one = drafted(t, {
-    "docs/README.md": "# Documentation\n",
-    "docs/development/README.md": developmentGuide(),
-    ".agents/skills/standards-updates/SKILL.md": "# Standards updates\n",
+    assert.deepEqual(entry.unresolved, [
+      "Which of these Markdown files under `.agents` are documentation this scope must cover, such as a document to move into a documentation category: `.agents/skills/standards-updates/SKILL.md`? Include each one, with its destination when it moves.",
+    ]);
+    assert.equal(entry.coverage, coverage);
+    const fromRetained = draft(root, { script: retainedDrafter(t) });
+    assert.equal(fromRetained.status, 0, fromRetained.stderr);
+    assert.deepEqual(fromRetained.proposal.declarations[0], entry);
   });
-  assert.equal(
-    one.entry.coverage,
-    `${coverage} The retired Repository Standards skill \`.agents/skills/standards-updates\` is left out too, because the run that drafts this scope removes it.`,
-  );
-  assert.ok(proposal);
-});
+}
 
 test("asks about entries that block a root or an index", (t) => {
   const fileGuide = drafted(t, {
