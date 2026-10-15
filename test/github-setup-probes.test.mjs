@@ -90,6 +90,89 @@ function assertProbe(outcome, status, message) {
 }
 
 for (const probe of probes) {
+  test(`${probe.name} keeps connection failures stable across probes and fixes`, (t) => {
+    const scenario = probeScenario(t, probe);
+    const expected = `${probe.name} could not reach GitHub to verify acme/widgets; check the connection and retry. For full details, run gh api repos/acme/widgets.`;
+    for (const repositoryError of [
+      "dial tcp 10.20.30.40:443: i/o timeout (at 12345)",
+      "proxyconnect tcp: dial tcp 10.90.80.70:3128: connection refused (at 67890)",
+    ]) {
+      scenario.updateState({ repositoryError });
+      assertProbe(scenario.invoke(), "not-ready", expected);
+      const fix = setup(t, probe.fix, { state: { repositoryError } });
+      fix.before = snapshot(fix.project.root);
+      assertProbe(fix.invoke(), "blocked", expected);
+      assertNoWrites(fix);
+    }
+    assertNoWrites(scenario);
+  });
+
+  test(`${probe.name} reports fixed HTTP failure reasons in probes and fixes`, async (t) => {
+    for (const { error, status, next } of [
+      {
+        error: "gh: Not Found (HTTP 404)",
+        status: 404,
+        next: "Confirm the repository exists and the signed-in gh account can read it.",
+      },
+      {
+        error: "gh: Bad credentials (HTTP 401)",
+        status: 401,
+        next: "Sign in again with gh auth login --hostname github.com.",
+      },
+      {
+        error: "gh: API rate limit exceeded for fixture-account (HTTP 403)",
+        status: 403,
+        next: "Retry after the GitHub API rate limit resets.",
+      },
+      {
+        error: "gh: Too Many Requests (HTTP 429)",
+        status: 429,
+        next: "Retry after the GitHub API rate limit resets.",
+      },
+      {
+        error: "gh: Server Error (HTTP 503)",
+        status: 503,
+        next: "Retry later.",
+      },
+      {
+        error: "gh: Resource not accessible by integration (HTTP 403)",
+        status: 403,
+        next: "Retry later.",
+      },
+    ]) {
+      await t.test(error, (st) => {
+        const scenario = probeScenario(st, probe);
+        const fix = setup(st, probe.fix);
+        fix.before = snapshot(fix.project.root);
+        const expected = `${probe.name} could not verify acme/widgets: GitHub returned HTTP ${status}. ${next} For full details, run gh api repos/acme/widgets.`;
+        for (const detail of [
+          "trace at 12345 via proxy-one.invalid:3128",
+          "trace at 67890 via rate-limit-proxy.invalid:8080 (HTTP 401)",
+        ]) {
+          const repositoryError = `${detail}\n${error}`;
+          scenario.updateState({ repositoryError });
+          fix.updateState({ repositoryError });
+          assertProbe(scenario.invoke(), "not-ready", expected);
+          assertProbe(fix.invoke(), "blocked", expected);
+        }
+        assertNoWrites(scenario);
+        assertNoWrites(fix);
+      });
+    }
+  });
+
+  test(`${probe.name} preserves the invalid JSON reason in probes and fixes`, (t) => {
+    const state = { repositoryResponse: "unparseable response from proxy" };
+    const scenario = probeScenario(t, probe, { state });
+    const fix = setup(t, probe.fix, { state });
+    fix.before = snapshot(fix.project.root);
+    const expected = `${probe.name} could not verify acme/widgets; repository access is incomplete (invalid JSON response).`;
+    assertProbe(scenario.invoke(), "not-ready", expected);
+    assertProbe(fix.invoke(), "blocked", expected);
+    assertNoWrites(scenario);
+    assertNoWrites(fix);
+  });
+
   test(`${probe.name} probe reports not-ready with an actionable reason and writes nothing`, async (t) => {
     await t.test("missing gh", (st) => {
       const scenario = probeScenario(st, probe);

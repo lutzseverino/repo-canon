@@ -52,3 +52,14 @@ if (!endpoint) {
   process.stderr.write("fixture expected a repos/... endpoint\n");
   process.exit(2);
 }
+
+if (method === "GET" && /^repos\/[^/]+\/[^/?]+$/.test(endpoint)) {
+  if (state.repositoryError !== undefined) {
+    process.stderr.write(`${state.repositoryError}\n`);
+    process.exit(1);
+  }
+  if (state.repositoryResponse !== undefined) {
+    process.stdout.write(state.repositoryResponse);
+    process.exit(0);
+  }
+}

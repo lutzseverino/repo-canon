@@ -101,6 +101,11 @@ workflow file, so the plan-gated and deferred `PR metadata` requirement stays
 the fix's decision. An adopter can defer a remote setup that is not ready; the
 next adoption or update probes again and runs the fix once the probe is ready.
 
+Repository-read failures use the same
+[stable reasons and recovery steps](github-label-setup.md#readiness-probe)
+as label setup, with a command for full diagnostics. Raw `gh` error text
+never enters a probe reason or its matching blocked message.
+
 ## Results and recovery
 
 The operation implements the public
@@ -143,8 +148,9 @@ with an unchanged selection, requires the check as usual.
 
 Missing or incompatible tools, uncertain identity, authentication failure,
 insufficient permission, an unreadable rule configuration, an API failure, or
-a readback mismatch returns `blocked`, with GitHub's error text from `gh`
-when the failure came from an API call. A mutation failure names confirmed
+a readback mismatch returns `blocked`. API failures after preparation include
+GitHub's error text from `gh`; the preparation's repository read uses the
+stable reasons above. A mutation failure names confirmed
 partial effects and the work that remains. Each retry reads current remote
 state and performs only missing changes, including after process interruption.
 Readback is point-in-time evidence: the operation supplies no freshness,

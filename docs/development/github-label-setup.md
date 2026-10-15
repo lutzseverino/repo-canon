@@ -59,6 +59,16 @@ reads the labels, and changes nothing in the project or on GitHub. An adopter
 can defer a remote setup that is not ready; the next adoption or update probes
 again and runs the fix once the probe is ready.
 
+When the repository API read fails, the probe and fix use a stable reason
+based on the HTTP status or a connection failure, without embedding `gh`'s
+error text. The reason gives a recovery step: confirm repository access for
+404, sign in again for 401, wait for the rate limit to reset for a rate-limit
+403 or 429, or retry later for other HTTP failures. Connection failures ask
+to check the connection and retry. Each names `gh api repos/OWNER/REPO` to run
+for full diagnostics. An unparseable response retains its invalid JSON reason.
+This keeps changing host, account, and trace details out of the inspection
+identity and any recorded reason for deferred remote setup.
+
 ## Results and recovery
 
 The operation implements the public
@@ -93,7 +103,9 @@ node --test test/github-label-setup.test.mjs
 The probe fixtures run a copy of each probe holding only its declared
 resources. They show `not-ready` for a missing `gh`, an ambiguous remote, no
 authentication, and an insufficient role, and `ready` for a sufficient role,
-with no project change and no API call other than a read:
+with no project change and no API call other than a read. They also verify
+stable repository-read failure reasons across changing stderr, HTTP recovery
+steps, the invalid JSON reason, and matching blocked messages from both fixes:
 
 ```sh
 node --test test/github-setup-probes.test.mjs
