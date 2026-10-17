@@ -105,7 +105,8 @@ and validates every profile.
 
 ## Validation boundary
 
-Installed public CLI 7.2.0 under Node.js 24 or 26 returns `valid: true`, no errors,
+Public CLI 7.2.0 was validated independently on stable Node.js 24 and 26.
+Both runs return `valid: true`, no errors,
 and the `standard` and `factory` profiles with 49 and 53 declarations for the
 source, matching the inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@7.2.0`, the oldest version the requirement admits;
