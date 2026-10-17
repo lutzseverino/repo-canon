@@ -2,7 +2,8 @@
 
 The `babysit` skill runs `.agents/skills/babysit/merge.mjs` after its wait and
 review steps establish the merge conditions in
-[the contribution guide](../../CONTRIBUTING.md#merging).
+[the contribution guide](../../CONTRIBUTING.md#merging) and the
+`github-repository-configuration` rules.
 
 Run `node .agents/skills/babysit/merge.mjs <number> <head SHA>` from the
 repository root, passing the full SHA reported by the wait script. The merge

@@ -50,7 +50,9 @@ Agent Brief comments are ordered among themselves by comment ID: the latest
 Agent Brief is the Brief comment with the highest comment ID, for both the
 contract lookup and a deleted Brief.
 
-The validator recognizes these contracts:
+The validator recognizes these contracts, and the
+`github-repository-configuration` rules state the Agent Brief and Wayfinder
+shapes for adopters:
 
 - bug and feature request forms, including optional unanswered fields;
 - specification forms and native specifications;
