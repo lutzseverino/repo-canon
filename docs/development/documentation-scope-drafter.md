@@ -99,7 +99,7 @@ collection, or a double-quoted value with a backslash escape fail.
 A file declaration owns its target and a skill its `.agents/skills/<name>`
 directory. The repository declarations with discovery own paths that only their
 own proposals name. The drafter also leaves out the paths Repository Standards
-7.0.0 reserves: `.repo-standards` and the `repository-standards` and
+7.1.0 reserves: `.repo-standards` and the `repository-standards` and
 `author-standards` system skills, at both `.agents/skills/` and
 `.claude/skills/`.
 
@@ -108,8 +108,7 @@ either skill location. Project-owned skills, edited copies, and unedited CLI
 6.x leftovers receive the ordinary membership questions for their Markdown
 outside a documentation root, subject to the selected declarations' ownership.
 The drafter does not claim that adoption removes them. An adopter updating from
-CLI 6.x may see one extra membership question, once; this is a compatible fix
-for the next Repo Canon patch, with no new mandatory migration. Answers that
+CLI 6.x may see one extra membership question, once. Answers that
 the previous confirmed scope decides still carry forward as the
 [discovery guidance](../../discovery/documentation.md) describes.
 

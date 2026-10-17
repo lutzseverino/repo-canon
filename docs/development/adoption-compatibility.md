@@ -50,8 +50,10 @@ with the standard requires the maintainer's answer and leaves the declaration
 blocked until then. Projects with no useful instructions receive no empty file.
 
 The `documentation` declaration leaves this target outside its scope. An
-adopter whose previous confirmed documentation scope includes it uses a fresh
-draft without it on update; the file remains under `project-agent-guidance`.
+update whose previous confirmed documentation scope includes it keeps it out
+while carrying that scope's other answers, as the
+[documentation discovery guidance](../../discovery/documentation.md) describes;
+the file remains under `project-agent-guidance`.
 
 Sources: [inspection](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/inspection.md),
 [adoption sequence](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/src/adoption.ts).
