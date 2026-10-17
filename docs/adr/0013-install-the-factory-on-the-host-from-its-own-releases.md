@@ -1,5 +1,9 @@
 # Install the factory on the host from its own releases
 
+Status: its location in this repository's `factory/` directory, its rejection
+of a separate repository, and its trigger for moving are superseded by
+[ADR 0020](0020-release-the-factory-from-its-own-repository.md).
+
 The factory is a product of its own, named Scriptorium, kept in this
 repository's `factory/` directory and released there under its own version numbers as
 `scriptorium-vX.Y.Z` tags. A host installs one major, updates to its newest

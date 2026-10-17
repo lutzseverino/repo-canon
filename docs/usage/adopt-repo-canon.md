@@ -19,7 +19,7 @@ Repo Canon supplies two profiles:
   toolchain image, `.factory/Dockerfile`; and the pull request workflow that
   builds that image. Select it only for a repository that a host-installed
   factory serves, as
-  [the factory's usage documentation](../../factory/docs/usage/README.md)
+  [the factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/main/docs/usage/README.md)
   describes.
 
 Every update offers the profiles again, so a repository switches profile by
