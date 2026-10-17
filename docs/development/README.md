@@ -89,8 +89,13 @@ fails if any tracked file reaches the CLI's 8 MiB per-file observation limit,
 which would make the repository uninspectable before any report. It lists each
 declaration that has rules or adoption guidance with its decided outcome, keeps
 every rules file in `rules/`, rejects a rules file holding a one-time step's
-marker phrase, and keeps rules paths out of `AGENTS.md`. It also keeps the two
-copies of the reviewer parser identical. Run it alone
+marker phrase, and keeps rules paths out of `AGENTS.md`. It also holds
+`CONTRIBUTING.md` and `AGENTS.md` to fixed word budgets, counting each
+maximal run of non-whitespace characters as a word; a document over its limit
+fails naming the document, its count, and the limit. The limits are constants
+in the test, so raising one is an explicit edit in the same pull request. No
+budget covers declaration rules or retained adoption guidance. It also keeps
+the two copies of the reviewer parser identical. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
 CI step: `npm test` already runs it on every pull request.
 The same suite checks every declared source input across both profiles for
