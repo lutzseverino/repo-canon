@@ -12,7 +12,7 @@ TypeScript through Node.js 24 type stripping and has its own typecheck and tests
 follow the [factory development index](../../factory/docs/development/README.md)
 for its checks. Adopters do not install development dependencies. GitHub planning uses authenticated `gh`
 access. For source validation,
-install public Repository Standards CLI 7.0.0 outside the checkout using the
+install public Repository Standards CLI 7.1.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 

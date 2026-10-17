@@ -45,10 +45,10 @@ a GitHub Enterprise host.
 
 ## Readiness probe
 
-The fix is [remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md#remote-setup).
+The fix is [remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/adoption.md#remote-setup).
 Its readiness probe, `operations/probe-github-labels.mjs`, runs during
 inspection, before anything is written, through the
-[probe protocol](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md#remote-setup-probes).
+[probe protocol](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/script-protocol.md#remote-setup-probes).
 It runs the fix's own preparation and role check from
 `operations/lib/github-operation.mjs`: the tool versions, the remote identity
 and GitHub's confirmation of it, authentication, and write, maintain, or admin
@@ -72,7 +72,7 @@ identity and any recorded reason for deferred remote setup.
 ## Results and recovery
 
 The operation implements the public
-[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md)
+[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/script-protocol.md)
 boundary with an empty project-content target scope. It returns `changed` only
 after final readback confirms all canonical labels and `unchanged` when the
 first read already matches. Results use `repo-standards/result/v2`.

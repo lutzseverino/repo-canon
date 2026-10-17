@@ -5,7 +5,7 @@ command that adopts Repo Canon and every later update. `adopt` asks each
 question adoption needs; this guide covers the choices behind three of them:
 the profile, remote setup, and the personal skills adoption leaves to you. The
 CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md)
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/adoption.md)
 describes `adopt` itself, at a terminal and through an agent.
 
 ## Choose a profile

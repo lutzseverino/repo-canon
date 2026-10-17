@@ -10,7 +10,7 @@ during inspection and asks its unresolved questions, as the
 ## Interface
 
 The drafter follows Repository Standards'
-[discovery script protocol](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md#discovery-scripts).
+[discovery script protocol](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/script-protocol.md#discovery-scripts).
 Inspection runs it with Node.js 24 and no arguments, in a temporary copy of the
 project that holds the files Git keeps, tracked or not ignored, without Git
 metadata or `.repo-standards`. Its script path lies in the acquired source, or
