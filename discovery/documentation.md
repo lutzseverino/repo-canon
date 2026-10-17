@@ -23,8 +23,7 @@ rules and the selected declarations' ownership. Their Markdown outside a
 documentation root enters the ordinary membership questions, whether it is an
 unedited leftover from Repository Standards CLI 6.x, an edited copy, or a
 project-owned skill. The drafter makes no removal claim. An adopter updating
-from CLI 6.x may see one extra membership question, once. This is a compatible
-fix for the next Repo Canon patch, with no new mandatory migration.
+from CLI 6.x may see one extra membership question, once.
 
 Decide only the cases in its unresolved questions, resolving genuine membership
 questions with the maintainer, and remove each question from the entry once it

@@ -86,10 +86,10 @@ enterprise server.
 
 ## Readiness probe
 
-The fix is [remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md#remote-setup).
+The fix is [remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/adoption.md#remote-setup).
 Its readiness probe, `operations/probe-github-pr-integration.mjs`, runs during
 inspection, before anything is written, through the
-[probe protocol](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md#remote-setup-probes).
+[probe protocol](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/script-protocol.md#remote-setup-probes).
 It runs the fix's own preparation and role check from
 `operations/lib/github-operation.mjs`: the tool versions, the remote identity
 and GitHub's confirmation of it, authentication, and admin access. It returns
@@ -109,7 +109,7 @@ never enters a probe reason or its matching blocked message.
 ## Results and recovery
 
 The operation implements the public
-[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/script-protocol.md)
+[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/script-protocol.md)
 boundary with an empty project-content target scope. It returns `changed` only
 after a final readback confirms required-check enforcement and every merge
 setting. It returns `unchanged` when the first read already matches. Results use
