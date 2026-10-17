@@ -135,7 +135,9 @@ repeated.
 - The factory is a product of its own, installed on a host from its own
   releases, as
   [ADR 0013](docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md)
-  decides, and every run is a direct run of one ticket, as
+  decides, and released from its own repository, as
+  [ADR 0020](docs/adr/0020-release-the-factory-from-its-own-repository.md)
+  decides; every run is a direct run of one ticket, as
   [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md)
   decides. Repo Canon ships none of its code. A repository the factory serves
   selects the `factory` profile, which installs `.factory/config.json` as an
@@ -149,7 +151,7 @@ repeated.
   pull request workflow that builds it. The factory creates its own state
   labels from the configuration, so the canonical labels carry no `factory:`
   label and no `model:` label. The
-  [factory's usage documentation](factory/docs/usage/README.md) describes its
+  [factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/main/docs/usage/README.md) describes its
   behavior.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the

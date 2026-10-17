@@ -1160,43 +1160,25 @@ test("drafts this repository's own documentation scope", (t) => {
   const files = copiedFiles(root).filter(
     (path) => !fileDeclarations().some(({ target }) => path === target),
   );
-  const factoryDocumentation = files.filter((path) =>
-    path.startsWith("factory/docs/"),
-  );
   assert.deepEqual(
     included(entry),
-    [
-      "GLOSSARY-MAP.md",
-      "GLOSSARY.md",
-      "factory/GLOSSARY.md",
-      ...files.filter((path) => path.startsWith("docs/")),
-    ].sort(),
+    ["GLOSSARY.md", ...files.filter((path) => path.startsWith("docs/"))].sort(),
   );
-  const [rootQuestions, otherQuestions] = [true, false].map((asked) =>
-    entry.unresolved.filter(
-      (question) => question.startsWith("Is `factory/docs`") === asked,
-    ),
-  );
-  assert.equal(rootQuestions.length, 1, entry.unresolved.join("\n"));
   assert.ok(
-    otherQuestions.every((question) =>
+    entry.unresolved.every((question) =>
       question.startsWith("Which of these Markdown files"),
     ),
-    otherQuestions.join("\n"),
+    entry.unresolved.join("\n"),
   );
   assert.ok(
-    otherQuestions.some((question) =>
+    entry.unresolved.some((question) =>
       question.includes("`authoring-notes.md`"),
     ),
   );
 
-  // Answering the root question and the authoring notes' gives the scope the
-  // repository's own documentation check passes.
-  const answered = [
-    ...included(entry),
-    ...factoryDocumentation,
-    "authoring-notes.md",
-  ];
+  // Answering the authoring notes' question gives the scope the repository's
+  // own documentation check passes.
+  const answered = [...included(entry), "authoring-notes.md"];
   const check = checkDraftedScope(root, answered);
   assert.equal(check.status, 0, check.stderr);
   assert.equal(check.result.status, "passed", check.result.message);

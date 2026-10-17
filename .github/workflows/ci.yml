@@ -42,28 +42,3 @@ jobs:
           "$REPO_STANDARDS_PREFIX/node_modules/.bin/repo-standards" --version
           "$REPO_STANDARDS_PREFIX/node_modules/.bin/repo-standards" \
             source validate "$PWD" --json
-
-  factory:
-    name: Factory typecheck and tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: factory
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          persist-credentials: false
-      - name: Use Node.js 24
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: 24
-          package-manager-cache: false
-      - name: Install factory dependencies
-        run: npm ci --include=dev
-      - name: Typecheck factory
-        run: npm run typecheck
-      - name: Run factory tests
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: npm test

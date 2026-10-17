@@ -14,16 +14,11 @@ import {
 import { fileDeclarations } from "./helpers/documentation.mjs";
 import { invokeCheck } from "./helpers/operation.mjs";
 
-// Run the shipped documentation checks against both contexts and the factory's
-// Project README. Source-side guidance, discovery instructions, and vendored
-// material stay out of the repository's documentation scope.
+// Run the shipped documentation checks against the repository's documentation.
+// Source-side guidance, discovery instructions, and vendored material stay out
+// of the repository's documentation scope.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const rootDocuments = [
-  "GLOSSARY.md",
-  "GLOSSARY-MAP.md",
-  "factory/GLOSSARY.md",
-  "authoring-notes.md",
-];
+const rootDocuments = ["GLOSSARY.md", "authoring-notes.md"];
 
 // The CLI's discovery observation refuses any file larger than this, which would
 // reject the whole inspection before it reports anything.
@@ -163,7 +158,7 @@ function documentationScope() {
   const documentation = trackedFiles()
     .filter(
       (path) =>
-        (path.startsWith("docs/") || path.startsWith("factory/docs/")) &&
+        path.startsWith("docs/") &&
         path.toLocaleLowerCase("en-US").endsWith(".md"),
     )
     .filter(
@@ -181,20 +176,6 @@ test("the repository passes the documentation navigation check at its root", () 
     },
     declarations: fileDeclarations(),
     allowedTargets: { paths: documentationScope(), directories: [] },
-  });
-
-  assert.equal(outcome.status, 0, outcome.stderr);
-  assert.equal(outcome.result.status, "passed", outcome.result.message);
-});
-
-test("the factory passes the Project README check", () => {
-  const outcome = invokeCheck(operation("check-project-readmes.mjs"), root, {
-    operation: {
-      declaration: "project-readmes",
-      phase: "checks",
-      id: "project-readme-structure",
-    },
-    allowedTargets: { paths: ["factory/README.md"], directories: [] },
   });
 
   assert.equal(outcome.status, 0, outcome.stderr);
@@ -515,26 +496,30 @@ test("standards.yaml declares no pull request reviewer file", () => {
   );
 });
 
-// The factory's own parser reads the shipped configuration, so it stays valid
-// for the package beside it.
-test("the factory configuration names Repo Canon's labels, model label prefix, and implement prompt", async () => {
-  const { readFactoryConfiguration } =
-    await import("../factory/src/factory-configuration.ts");
-  assert.deepEqual(
-    readFactoryConfiguration(join(root, ".factory/config.json")),
-    {
-      version: 1,
-      labels: {
-        ready: "ready-for-agent",
-        running: "factory:running",
-        failed: "factory:failed",
-        needsInput: "factory:needs-input",
-        paused: "factory:paused",
-      },
-      modelLabelPrefix: "model:",
-      prompt: "{skillPrefix}implement #{issue}",
-    },
+// The shipped configuration targets factory configuration version 1, whose
+// schema Scriptorium documents: exactly these fields, five distinct state
+// labels, and a prompt naming the issue. Scriptorium's own tests parse the copy
+// it adopts, so this repository imports no factory code.
+test("the factory configuration names Repo Canon's labels, model label prefix, and implement prompt", () => {
+  const configuration = JSON.parse(
+    readFileSync(join(root, ".factory/config.json"), "utf8"),
   );
+  const labels = Object.values(configuration.labels);
+  assert.equal(new Set(labels).size, labels.length);
+  assert.ok(labels.every((label) => typeof label === "string" && label));
+  assert.match(configuration.prompt, /\{issue\}/);
+  assert.deepEqual(configuration, {
+    version: 1,
+    labels: {
+      ready: "ready-for-agent",
+      running: "factory:running",
+      failed: "factory:failed",
+      needsInput: "factory:needs-input",
+      paused: "factory:paused",
+    },
+    modelLabelPrefix: "model:",
+    prompt: "{skillPrefix}implement #{issue}",
+  });
 });
 
 test("this repository's toolchain Dockerfile has one stage and needs no build context", () => {
