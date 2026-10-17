@@ -18,7 +18,7 @@ export function index(title, purpose, entries = []) {
 // validation section, then its index.
 export function developmentGuide(
   entries = [],
-  setup = "Install Node.js 24, then run `npm test` from the repository root.",
+  setup = "Install Node.js 24 or 26, then run `npm test` from the repository root.",
 ) {
   const items = entries.map(
     ([entryTitle, path, description]) =>

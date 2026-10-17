@@ -7,7 +7,7 @@ Take the pull request to its merge. `CONTRIBUTING.md` and the
 `github-repository-configuration` rules hold the merge conditions and the
 wording rules.
 
-The bundled scripts require Node.js 24. The wait reads the optional
+The bundled scripts require Node.js 24 or 26. The wait reads the optional
 `.github/pull-request-reviewer.json`, whose schema the
 `github-repository-configuration` rules state; without the file, it reports
 only checks.

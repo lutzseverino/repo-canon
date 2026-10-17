@@ -306,7 +306,7 @@ The workflow needs `contents: read` to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access
 must expose collaborator roles, and `GITHUB_GRAPHQL_URL` must be available for
 direct-body edit revisions; both are standard GitHub Actions facilities. Node.js
-24 is the runtime. The adapter recognizes that the workflow executed the file
+24 is the default runtime; the validator also supports stable Node.js 26. The adapter recognizes that the workflow executed the file
 through `import.meta.main`; on 24 releases before 24.2, which lack it, it
 compares the resolved script path with the validator's own path instead. The
 validator has no package dependencies, so the job installs none and disables

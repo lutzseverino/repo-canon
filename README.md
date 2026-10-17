@@ -3,7 +3,7 @@
   <p>Shared documentation, contribution, and coding-agent conventions for maintainers who want consistent repositories.</p>
   <p>
     <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black" alt="JavaScript">
-    <img src="https://img.shields.io/badge/Node.js-24-5FA04E?logo=node.js&logoColor=white" alt="Node.js 24">
+    <img src="https://img.shields.io/badge/Node.js-24%20%7C%2026-5FA04E?logo=node.js&logoColor=white" alt="Node.js 24 or 26">
   </p>
 </div>
 
@@ -15,7 +15,7 @@ adoption.
 
 ## Installation
 
-On macOS or Linux, use Node.js 24, npm, and Git 2.32.0 or newer. To adopt Repo
+On macOS or Linux, use Node.js 24 or 26, npm, and Git 2.32.0 or newer. To adopt Repo
 Canon, give your coding agent this prompt in your repository:
 
 ```text

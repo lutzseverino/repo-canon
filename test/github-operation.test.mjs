@@ -3,6 +3,7 @@ import { chmodSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { retainedCheck } from "./helpers/operation.mjs";
 import {
   fakeNodeVersion,
   githubLabelSetup,
@@ -105,7 +106,7 @@ test("blocks for unavailable or incompatible tools and unauthenticated access", 
     ]);
     assert.equal(outcome.status, 0, outcome.stderr);
     assert.equal(outcome.result.status, "blocked");
-    assert.match(outcome.result.message, /requires Node\.js 24/);
+    assert.match(outcome.result.message, /requires stable Node\.js 24 or 26/);
   });
 
   await t.test("missing Git", (st) => {
@@ -217,3 +218,70 @@ test("each GitHub operation stops at a blocked preparation and rejects protocol 
       assert.equal(scenario.readState().mutations ?? 0, 0);
     });
 });
+
+// Run the public fixes and their retained probes through the same runtime gate.
+for (const fix of [githubLabelSetup, githubPrIntegrationSetup]) {
+  for (const phase of ["fixes", "probes"]) {
+    test(`${fix.operation.id} ${phase} accepts only stable Node.js 24 and 26`, async (t) => {
+      for (const version of [
+        "24.0.0",
+        "24.21.0",
+        "26.0.0",
+        "26.12.0",
+        "22.22.0",
+        "23.11.0",
+        "25.0.0",
+        "27.0.0",
+        "28.0.0",
+        "24.0.0-rc.1",
+        "26.0.0-rc.1",
+        "26.12.0-nightly20261017",
+      ]) {
+        await t.test(version, (st) => {
+          const supported = ["24.0.0", "24.21.0", "26.0.0", "26.12.0"].includes(
+            version,
+          );
+          const subject = {
+            ...fix,
+            script: retainedCheck(
+              st,
+              phase === "fixes"
+                ? `operations/${fix === githubLabelSetup ? "setup-github-labels" : "setup-github-pr-integration"}.mjs`
+                : `operations/${fix === githubLabelSetup ? "probe-github-labels" : "probe-github-pr-integration"}.mjs`,
+            ),
+            operation: { ...fix.operation, phase },
+          };
+          const scenario = setup(st, subject);
+          const outcome = scenario.invoke(
+            { overwriteAllowed: true },
+            { FAKE_NODE_VERSION: version },
+            ["--import", fakeNodeVersion],
+          );
+          assert.equal(outcome.status, 0, outcome.stderr);
+          assert.equal(
+            outcome.result.status,
+            supported
+              ? phase === "fixes"
+                ? "changed"
+                : "ready"
+              : phase === "fixes"
+                ? "blocked"
+                : "not-ready",
+          );
+          if (supported) {
+            assert.ok(scenario.readState().apiHosts.length > 0);
+          } else {
+            assert.match(
+              outcome.result.message,
+              /requires stable Node\.js 24 or 26/,
+            );
+            assert.deepEqual(scenario.readState().apiHosts ?? [], []);
+            assert.equal(scenario.readState().mutations ?? 0, 0);
+          }
+          if (phase === "probes")
+            assert.equal(scenario.readState().mutations ?? 0, 0);
+        });
+      }
+    });
+  }
+}
