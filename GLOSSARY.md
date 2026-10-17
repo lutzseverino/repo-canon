@@ -145,11 +145,11 @@ _Avoid_: Landing page, front page
 
 **Standard profile**:
 The profile of Repo Canon that every adopting repository can select, carrying
-everything except the factory's repository files.
+everything except the factory's repository files and workflow rules.
 _Avoid_: Complete profile, base profile
 
 **Factory profile**:
-The profile that adds the factory's repository files to the standard profile,
+The profile that adds the factory's repository files and workflow rules to the standard profile,
 for a repository that a factory serves.
 _Avoid_: Factory add-on, factory overlay
 

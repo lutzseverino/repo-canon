@@ -8,7 +8,7 @@ templates, and validation workflows; this process is called adoption.
 Repository Standards is the tool that performs it. The factory is an unattended
 service, installed on a host, that takes ready tickets through implementation
 and pull request review to merge. It is a product of its own: the factory
-profile only installs the files a repository it serves carries, and
+profile installs the repository files and workflow rules a repository it serves needs, and
 [the factory's usage documentation](../../factory/docs/usage/README.md)
 describes running it.
 

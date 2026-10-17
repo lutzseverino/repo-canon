@@ -106,6 +106,12 @@ Install Node.js 24. Wordtally has no dependencies to install. Run
 // The documentation declaration's script drafts its entry, which the
 // verification accepts.
 export const scopes = {
+  "factory-workflow": {
+    coverage:
+      "Factory workflow rules govern all work in the repository and own no project content, so the scope is intentionally empty.",
+    candidates: [],
+    unresolved: [],
+  },
   "github-repository-configuration": {
     coverage:
       "The declaration configures GitHub remotely and owns no project files; the fixture has no Git remote and no pull request reviewer file, so its scope is intentionally empty.",
@@ -129,6 +135,25 @@ const unchangedScope = (explanation, evidence) => ({
 });
 
 export const assessments = {
+  "factory-workflow": {
+    status: "satisfied",
+    explanation:
+      "The fixture has no tracker activity to reconcile; adoption installs the factory workflow rules for later work.",
+    evidence: [
+      "The disposable fixture has no Git remote or current tracker activity.",
+      "Adoption installs the factory-workflow rules alongside the exact contribution guide.",
+    ],
+    scopeValidity: {
+      afterFixes: unchangedScope(
+        "The workflow owns no project content, so the empty scope is complete.",
+        ["Factory policy governs tracker work, not content paths."],
+      ),
+      current: unchangedScope(
+        "Contextual work changes no workflow scope; it remains empty.",
+        ["No content path or directory belongs to this declaration."],
+      ),
+    },
+  },
   documentation: {
     status: "satisfied",
     explanation:
