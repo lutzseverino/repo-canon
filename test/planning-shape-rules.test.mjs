@@ -10,6 +10,7 @@ import { featureBody, repository } from "./helpers/issue-contracts.mjs";
 // issue-contract validator enforces. These fixtures build issues from the
 // rules' own statements, so the rules and the validator cannot drift apart.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const flowed = (text) => text.replaceAll(/\s+/g, " ");
 const rules = readFileSync(
   join(root, "rules/github-repository-configuration.md"),
   "utf8",
@@ -19,10 +20,9 @@ const briefRules =
     rules,
   )?.[1];
 // The Wayfinder section is the rules' last.
-const mapRules =
-  /^## Wayfinder maps and children\n([\s\S]*)$/m
-    .exec(rules)?.[1]
-    .replaceAll(/\s+/g, " ") ?? "";
+const mapRules = flowed(
+  /^## Wayfinder maps and children\n([\s\S]*)$/m.exec(rules)?.[1] ?? "",
+);
 
 const briefStart = /^```markdown\n(> [^\n]+\n\n## Agent Brief)\n```$/m.exec(
   briefRules ?? "",
@@ -37,7 +37,7 @@ const codeIn = (pattern, text) =>
   );
 const placeholders = codeIn(
   /Empty content, template comments, (.*?) are placeholders/,
-  (briefRules ?? "").replaceAll(/\s+/g, " "),
+  flowed(briefRules ?? ""),
 );
 const mapSections = /Its body has the sections (.*?)\. /
   .exec(mapRules)?.[1]
@@ -134,7 +134,12 @@ test("an Agent Brief missing any field the rules name, or holding a placeholder,
     "TODO",
     "[describe the bug]",
   ]);
-  for (const placeholder of [...placeholders, "<!-- template -->", ""])
+  for (const placeholder of [
+    ...placeholders,
+    "<!-- template -->",
+    "\n- [ ]",
+    "",
+  ])
     rejected(
       decideBrief(
         brief({
@@ -171,12 +176,14 @@ test("the disclaimer, a blank line and the heading start the brief, and notes fo
 
 test("the Markdown variations the rules accept pass, and code or comments never form a brief", () => {
   assert.match(
-    briefRules.replaceAll(/\s+/g, " "),
-    /Heading level and the casing of the heading and field names do not matter, and the disclaimer's emphasis may use `\*` or `_`/,
+    flowed(briefRules),
+    /Heading level, heading style and the casing of the heading and field names do not matter, and the workflow also accepts the disclaimer emphasized with `_` or without the blank line before the heading/,
   );
   for (const start of [
     briefStart.replace("## Agent Brief", "### agent brief"),
     briefStart.replace(/\*(This[^*]+)\*/, "_$1_"),
+    briefStart.replace("\n\n## ", "\n## "),
+    briefStart.replace("## Agent Brief", "Agent Brief\n==========="),
   ])
     accepted(decideBrief(brief({ start })), "triaged Agent Brief");
   accepted(
@@ -213,8 +220,8 @@ test("the brief's Category is bug or enhancement and equals the issue's one cate
 
 test("the latest Agent Brief comment, by comment ID, is the contract", () => {
   assert.match(
-    briefRules.replaceAll(/\s+/g, " "),
-    /The latest Agent Brief comment, the one with the highest comment ID, is the contract/,
+    flowed(readFileSync(join(root, "CONTRIBUTING.md"), "utf8")),
+    /A triaged request's contract is its latest Agent Brief comment/,
   );
   const briefs = (complete, incomplete) =>
     decide({
@@ -321,7 +328,7 @@ test("a Wayfinder child carries exactly one child label the rules name, a Questi
   );
 });
 
-test("a native parent is canonical, a Parent section is the fallback, and a Part of line links nothing", () => {
+test("a native parent is canonical and wins over a Parent section, which is the fallback, and a Part of line links nothing", () => {
   assert.match(
     mapRules,
     /on GitHub the native parent relationship is canonical\. For compatibility, the workflow also accepts the first issue reference in the child's `Parent` section when the native relationship is absent/,
@@ -334,6 +341,15 @@ test("a native parent is canonical, a Parent section is the fallback, and a Part
       relatedIssues: { "/repos/example/repository/issues/7": mapIssue },
     }),
     "Wayfinder child",
+  );
+  rejected(
+    decide({
+      body: `## Parent\n\n#7\n\n${question}`,
+      labels: [childLabels[0]],
+      parent: { number: 8, state: "open", labels: [] },
+      relatedIssues: { "/repos/example/repository/issues/7": mapIssue },
+    }),
+    "Link the Wayfinder child to an issue labeled `wayfinder:map`.",
   );
   rejected(
     decide({

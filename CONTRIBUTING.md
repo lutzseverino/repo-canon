@@ -34,9 +34,9 @@ tickets sharing an integration branch.
 ## Readiness
 
 Applying `ready-for-agent` or `ready-for-human` is the review action, and the
-`github-repository-configuration` rules name the roles it needs. After revising a contract
-or posting an Agent Brief, wait for the issue-contract workflow's revision
-notice before applying readiness. Editing a contract removes its readiness. The
+`github-repository-configuration` rules name the roles it needs. After
+revising a contract or posting an Agent Brief, wait for the issue-contract
+workflow's revision notice before applying readiness. Editing a contract removes its readiness. The
 workflow keeps one workflow state label on an issue: authorized readiness or a
 newly applied state replaces the previous one, and an issue left with none gets
 `needs-triage` on every run, even if it has never carried a state. This applies

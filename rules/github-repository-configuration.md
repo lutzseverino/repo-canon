@@ -214,8 +214,9 @@ file, no reviewer wait or comment about an absent review is required.
 ## Pull request head with no check
 
 A pull request head that has no check counts as having its checks passed once
-5 minutes have passed since a push of that head that GitHub recorded, and only
-while no workflow run for the head is unfinished or counted as failed. A
+5 minutes have passed since the later of the pull request's opening and a push
+of that head that GitHub recorded, and only while no workflow run for the head
+is unfinished or counted as failed. A
 workflow whose latest run failed with no check from that run or attempt counts
 as a failed check. A head with no recorded push and no check or workflow run
 never settles its checks: they neither pass nor fail. The `babysit` skill's
@@ -223,8 +224,8 @@ wait applies this rule.
 
 ## Readiness roles
 
-Applying `ready-for-agent` or `ready-for-human`, the review action, needs the
-repository `admin`, `maintain`, or `triage` role. The `triage` role is the
+Applying `ready-for-agent` or `ready-for-human` needs the repository `admin`,
+`maintain`, or `triage` role. The `triage` role is the
 explicit authorization for a triaging agent. A `write` role, an author
 association, a bot identity, or a passing structure check supplies no
 authority, and the issue-contract workflow removes readiness that an actor
@@ -265,24 +266,26 @@ is not a placeholder:
 - Out of scope
 
 Category is `bug` or `enhancement`, and the issue's one category label is the
-same. Empty content, template comments, GitHub's `_No response_`, `TBD`,
-`TODO` and bracketed prompts such as `[describe the bug]` are placeholders.
-Heading level and the casing of the heading and field names do not matter, and
-the disclaimer's emphasis may use `*` or `_`. Contract syntax inside code or
-HTML comments is example content, not part of the brief. The latest Agent Brief
-comment, the one with the highest comment ID, is the contract.
+same. Empty content, template comments, empty task list items, GitHub's
+`_No response_`, `TBD`, `TODO` and bracketed prompts such as
+`[describe the bug]` are placeholders. Heading level, heading style and the
+casing of the heading and field names do not matter, and the workflow also
+accepts the disclaimer emphasized with `_` or without the blank line before
+the heading. Contract syntax inside code or HTML comments is example content,
+not part of the brief.
 
 ## Wayfinder maps and children
 
-The issue-contract workflow enforces these shapes for Wayfinder planning
-issues; the `wayfinder` skill is a method for charting and working a map.
+The issue-contract workflow enforces these labels, sections and parents for
+Wayfinder planning issues; the `wayfinder` skill is a method for charting and
+working a map.
 
 A map carries `wayfinder:map` and no Wayfinder child label. Its body has the
 sections Destination, Notes, Decisions so far, Not yet specified, and Out of
 scope. Each needs content that is not a placeholder, except Decisions so far,
 which may be empty. The map lists no open children: they are found by querying
 its open sub-issues. Decisions so far indexes closed children, one line each,
-by title and link.
+by title and link. The workflow does not check these two index conventions.
 
 A child carries exactly one of `wayfinder:research`, `wayfinder:prototype`,
 `wayfinder:grilling`, and `wayfinder:task`, and never `wayfinder:map` with it.

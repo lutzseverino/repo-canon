@@ -17,7 +17,7 @@
     "test:engineering-skill-fixtures": "node --test test/engineering-skill-fixtures.test.mjs",
     "test:planning-skill-fixtures": "node --test test/planning-skill-fixtures.test.mjs",
     "test:github-pr-integration": "node --test test/github-pr-integration-setup.test.mjs test/github-operation.test.mjs test/github-setup-probes.test.mjs",
-    "test:issue-contracts": "node --test test/issue-contracts.test.mjs test/issue-contract-adapter.test.mjs",
+    "test:issue-contracts": "node --test test/issue-contracts.test.mjs test/issue-contract-adapter.test.mjs test/planning-shape-rules.test.mjs",
     "test:productivity-skill-fixtures": "node --test test/productivity-skill-fixtures.test.mjs"
   },
   "devDependencies": {

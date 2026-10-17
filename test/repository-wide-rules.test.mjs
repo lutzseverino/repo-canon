@@ -21,8 +21,12 @@ import {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sourceUrl = "https://github.com/fixture/repo-canon";
 const version = "v1.0.0";
-// Declarations whose rules govern all work, with empty confirmed scope.
-const repositoryWide = ["github-repository-configuration", "factory-workflow"];
+// Declarations whose rules govern all work, with empty confirmed scope, and
+// the profiles that select them.
+const repositoryWide = {
+  "github-repository-configuration": ["standard", "factory"],
+  "factory-workflow": ["factory"],
+};
 
 // Exercise the published CLI, with its real acquisition, adoption, installation
 // and rules lookup. Only GitHub HTTP and Git transport use disposable fixtures.
@@ -186,8 +190,8 @@ test("public CLI 7.1.0 installs the GitHub rules for the whole repository in bot
         JSON.stringify(report),
       );
       for (const entry of report.contextual ?? [])
-        if (repositoryWide.includes(entry.id)) {
-          if (entry.id === "factory-workflow") assert.equal(profile, "factory");
+        if (repositoryWide[entry.id]) {
+          assert.ok(repositoryWide[entry.id].includes(profile), entry.id);
           assert.deepEqual(entry.allowedTargets, {
             paths: [],
             directories: [],
@@ -207,8 +211,8 @@ test("public CLI 7.1.0 installs the GitHub rules for the whole repository in bot
         )
           answer = null;
         assert.notEqual(answer, undefined, question.id);
-        if (repositoryWide.includes(name) && kind === "scope") {
-          if (name === "factory-workflow") assert.equal(profile, "factory");
+        if (repositoryWide[name] && kind === "scope") {
+          assert.ok(repositoryWide[name].includes(profile), name);
           assert.deepEqual(answer.candidates, []);
           assert.deepEqual(answer.unresolved, []);
         }
@@ -226,12 +230,11 @@ test("public CLI 7.1.0 installs the GitHub rules for the whole repository in bot
         ...(path ? [path] : []),
       );
       assert.equal(child.status, 0, JSON.stringify(lookup));
-      for (const declaration of repositoryWide) {
+      for (const [declaration, profiles] of Object.entries(repositoryWide)) {
         const rules = lookup.rules.filter(
           (rule) => rule.declaration === declaration,
         );
-        const expected =
-          declaration === "factory-workflow" && profile !== "factory" ? 0 : 1;
+        const expected = profiles.includes(profile) ? 1 : 0;
         assert.equal(rules.length, expected, `${profile} ${declaration}`);
         if (!expected) continue;
         assert.equal(rules[0].coverage, "repository");

@@ -117,8 +117,9 @@ repeated.
   a pull request, an adoption pull request included, and when it may merge,
   and the installed `AGENTS.md` points every change through `pr` and
   `babysit`. The model-invocable `babysit` skill watches the pull request,
-  settles its findings, and merges it, stating no rule the guide holds. Review
-  follows the guide's [findings rules](CONTRIBUTING.md#merging) and the
+  settles its findings, and merges it, stating no rule the guide or installed
+  rules hold. Review follows the guide's
+  [review finding rules](CONTRIBUTING.md#merging) and the
   request rule in the
   [GitHub repository configuration rules](rules/github-repository-configuration.md),
   with an optional total request bound in the repository's reviewer data.
@@ -207,7 +208,8 @@ repeated.
   model gates in the [factory workflow rules](rules/factory-workflow.md), the
   GitHub roles, native blocker mechanics, and the Agent Brief and Wayfinder
   shapes the validator enforces in the
-  [GitHub repository configuration rules](rules/github-repository-configuration.md), and the mechanism that
+  [GitHub repository configuration rules](rules/github-repository-configuration.md),
+  and the mechanism that
   enforces them in
   [issue contract validation](docs/development/issue-contract-validation.md).
 - The skill setup files under docs/agents are installed verbatim from the

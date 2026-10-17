@@ -938,7 +938,7 @@ test("babysit waits only through its script, and the GitHub rules own the no-che
   );
   const rules = flowedText("rules/github-repository-configuration.md");
   for (const requirement of [
-    /A pull request head that has no check counts as having its checks passed once 5 minutes have passed since a push of that head that GitHub recorded, and only while no workflow run for the head is unfinished or counted as failed/,
+    /A pull request head that has no check counts as having its checks passed once 5 minutes have passed since the later of the pull request's opening and a push of that head that GitHub recorded, and only while no workflow run for the head is unfinished or counted as failed/,
     /A workflow whose latest run failed with no check from that run or attempt counts as a failed check/,
     /A head with no recorded push and no check or workflow run never settles its checks: they neither pass nor fail/,
     /The merging agent then comments on it that the configured reviewer did not review that head and why, under the contribution guide's comment rules/,
@@ -947,7 +947,7 @@ test("babysit waits only through its script, and the GitHub rules own the no-che
     /Without the file, no reviewer wait or comment about an absent review is required/,
   ])
     assert.match(rules, requirement);
-  const minutes = /once (\d+) minutes have passed since a push/.exec(
+  const minutes = /once (\d+) minutes have passed since the later/.exec(
     rules,
   )?.[1];
   assert.match(
@@ -1064,7 +1064,7 @@ test("the GitHub rules hold the readiness roles and native blocker mechanics, an
     /They apply to all work in the repository, including tracker work that changes no file/,
   );
   for (const requirement of [
-    /Applying `ready-for-agent` or `ready-for-human`, the review action, needs the repository `admin`, `maintain`, or `triage` role/,
+    /Applying `ready-for-agent` or `ready-for-human` needs the repository `admin`, `maintain`, or `triage` role/,
     /A `write` role, an author association, a bot identity, or a passing structure check supplies no authority/,
     /When adding a native blocker, pass the blocking issue's numeric database ID as `issue_id`, not its issue number or `node_id`/,
   ])

@@ -53,10 +53,10 @@ issue-contract structure, exact revision association, actor authority,
 invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
 `npm run test:issue-contracts` for the focused issue-contract fixtures and
-`npm run test:planning-skill-fixtures` for the planning-skill harness. Run
-`node --test test/planning-shape-rules.test.mjs` to check that the Agent Brief
-and Wayfinder shapes the GitHub rules state agree with the validator's accepted
-and rejected issues. Run
+`npm run test:planning-skill-fixtures` for the planning-skill harness. The
+issue-contract group includes `test/planning-shape-rules.test.mjs`, which
+checks that the Agent Brief and Wayfinder shapes the GitHub rules state agree
+with the validator's accepted and rejected issues. Run
 `node --test test/babysit-wait.test.mjs` for the `babysit` wait script's
 decision, driven by reviewer data fixtures (including real summary comments),
 and its silence, driven by
