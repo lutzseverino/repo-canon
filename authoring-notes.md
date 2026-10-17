@@ -143,7 +143,10 @@ repeated.
   `model:` label prefix, and the `implement` prompt, since the factory has no
   default for any of them, as
   [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
-  decides. The profile also installs the contextual `.factory/Dockerfile`,
+  decides. The profile installs the repository-wide
+  [factory workflow rules](rules/factory-workflow.md), with intentionally empty
+  confirmed content scope, so tracker work reads them even when it changes no
+  file. The profile also installs the contextual `.factory/Dockerfile`,
   toolchain only and Debian-based, as the
   [toolchain image rules](rules/factory-sandbox-image.md) state, and the
   pull request workflow that builds it. The factory creates its own state
@@ -196,7 +199,8 @@ repeated.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   states what the check enforces.
 - The readiness rules are stated in
-  [`CONTRIBUTING.md`](CONTRIBUTING.md#readiness), and the mechanism that
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#readiness), with factory-only parent and
+  model gates in the [factory workflow rules](rules/factory-workflow.md), and the mechanism that
   enforces them in
   [issue contract validation](docs/development/issue-contract-validation.md).
 - The skill setup files under docs/agents are installed verbatim from the

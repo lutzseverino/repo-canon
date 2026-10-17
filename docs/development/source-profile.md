@@ -4,7 +4,8 @@
 [ADR 0017](../adr/0017-make-the-factory-an-optional-profile.md) decides. The
 `standard` profile selects every default declaration unchanged, for every
 adopting repository. The `factory` profile adds the factory's repository files
-to it, for a repository a factory serves. The source identity is `repo-canon`,
+and repository-wide workflow rules to it, for a repository a factory serves.
+The source identity is `repo-canon`,
 and its compatibility contract is the open-ended minimum
 `requires.repo-standards: ">=7.1.0"`. Public CLI 7.1.0 is the oldest version
 this source was validated against; the range gates which CLI versions may
@@ -29,6 +30,7 @@ release or successful adoption.
 | GitHub labels, required check, squash settings, and optional reviewer validation | `github-repository-configuration`                                                                                                                           | `rules/github-repository-configuration.md`, separate adoption guidance, and intentionally empty project-content discovery; repeat-safe `canonical-labels` and `pull-request-integration` remote setup fixes with read-only readiness probes, and the read-only `pull-request-reviewer` check | Remote settings and validation of repository-owned optional reviewer data; no project-content paths                 |
 | Pinned workflow skills                                                           | `skill-*` except `skill-babysit` (17 declarations)                                                                                                          | Full directories of the workflow skills under `vendor/mattpocock-skills`, pinned at tag `v1.3.1` (`24fe0ef7737efae15c87225755e9f6f5965e4888`); upstream notice retained by the configuration operation and installed by `mattpocock-skills-license`                                          | Exact whole skill directories                                                                                       |
 | Delivery through review to merge                                                 | `skill-babysit`                                                                                                                                             | Repo Canon's own `.agents/skills/babysit`, whose source is its installed path; it follows the installed contribution guidance                                                                                                                                                                | Exact whole skill directory                                                                                         |
+| Factory workflow, in the `factory` profile only                                  | `factory-workflow`                                                                                                                                          | `rules/factory-workflow.md`, separate adoption guidance, and discovery confirming no content paths or directories                                                                                                                                                                            | Whole repository, with intentionally empty confirmed scope                                                          |
 | Factory configuration, in the `factory` profile only                             | `factory-configuration`                                                                                                                                     | Repo Canon's own `.factory/config.json`, whose source is its installed path: factory configuration version 1 with Repo Canon's labels, `model:` label prefix, and `implement` prompt                                                                                                         | Exact file                                                                                                          |
 | Factory toolchain image, in the `factory` profile only                           | `factory-sandbox-image`                                                                                                                                     | `rules/factory-sandbox-image.md` and `guidance/factory-sandbox-image.md`; contextual assessment only, with no fixes or checks                                                                                                                                                                | Project-owned contextual `.factory/Dockerfile`                                                                      |
 | Toolchain image build, in the `factory` profile only                             | `factory-sandbox-image-workflow`                                                                                                                            | `.github/workflows/sandbox-image.yml`; builds `.factory/Dockerfile` on pull requests changing it or the workflow                                                                                                                                                                             | Exact file                                                                                                          |
@@ -38,7 +40,7 @@ release or successful adoption.
 The resolved `standard` profile contains 49 declarations: 25 exact files, three
 contextual files, three repository declarations, and 18 exact skill
 directories. The `factory` profile adds one exact file, one contextual file,
-and the exact workflow, for 52 declarations. Each has four checks, two fixes,
+the exact workflow, and one repository declaration, for 53 declarations. Each has four checks, two fixes,
 and one discovery script. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
 trees, globs, or adopter-specific paths embedded in this source.
@@ -103,7 +105,7 @@ and validates every profile.
 ## Validation boundary
 
 Installed public CLI 7.1.0 under Node.js 24 returns `valid: true`, no errors,
-and the `standard` and `factory` profiles with 49 and 52 declarations for the
+and the `standard` and `factory` profiles with 49 and 53 declarations for the
 source, matching the inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@7.1.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why

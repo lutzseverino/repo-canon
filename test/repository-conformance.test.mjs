@@ -240,6 +240,7 @@ test("the standard profile installs no factory file, and the factory profile add
   );
   const defaults = /^defaults:\n([\s\S]*?)^profiles:\n/m.exec(declarations)[1];
   assert.equal(profileDeclarations(declarations, "standard"), " {}");
+  assert.ok(!defaults.includes("factory-workflow"));
   for (const path of factoryFiles)
     assert.ok(
       !defaults.includes(path),
@@ -253,6 +254,12 @@ test("the standard profile installs no factory file, and the factory profile add
         kind: file
         target: .factory/config.json
         exact: .factory/config.json
+
+      factory-workflow:
+        kind: repository
+        rules: rules/factory-workflow.md
+        guidance: guidance/factory-workflow.md
+        discovery: discovery/factory-workflow.md
 
       factory-sandbox-image:
         kind: file
@@ -295,6 +302,7 @@ test("the standards retire the in-repository factory, its sandbox base, and the 
 // declaration's entry to `rules` or `both`.
 const requirementOutcomes = {
   documentation: "both",
+  "factory-workflow": "both",
   "factory-sandbox-image": "both",
   "github-repository-configuration": "both",
   "project-agent-guidance": "both",
@@ -1088,9 +1096,10 @@ test("pull requests close finished issues and leave partial work linked without 
     pullRequests,
     /A closing reference closes the issue only when the pull request merges into the default branch; with another base branch, whoever merges closes the issue after the merge/,
   );
+  assert.match(pullRequests, /If the work finished the issue, close it/);
   assert.match(
-    pullRequests,
-    /In a repository a factory serves, a merged pull request that leaves its issue open fails the run for good, without a retry; if the work finished the issue, close it/,
+    flowedText("rules/factory-workflow.md"),
+    /A merged pull request that leaves its issue open fails the factory run for good, without a retry/,
   );
 });
 
@@ -1112,7 +1121,7 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   const guide = flowedText("CONTRIBUTING.md");
   const comments = /## Comments (.*?)(?= ## |$)/.exec(guide)?.[1] ?? "";
   assert.match(comments, /post the question as one issue comment/);
-  assert.match(comments, /add `factory:needs-input`, and stop/);
+  assert.doesNotMatch(guide, /factory|`model:/);
   assert.match(comments, /without a pull request if none is open/);
   assert.match(
     comments,
@@ -1124,24 +1133,53 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
   assert.match(
     comments,
-    /Work without an issue asks on its pull request instead, with no label/,
+    /Work without an issue asks on its pull request instead/,
   );
+  const rules = flowedText("rules/factory-workflow.md");
+  assert.match(rules, /add `factory:needs-input` to the issue/);
   assert.match(
-    comments,
+    rules,
     /While the run's pull request is open, removing the label starts no run in a repository a factory serves/,
   );
   assert.match(
-    comments,
+    rules,
     /With no open pull request, the owner answers and removes the label to return the issue to the frontier as a fresh first attempt/,
   );
   assert.match(
-    comments,
-    /The owner either finishes the pull request by merging it, for example after pushing the refused change, and ensuring the issue is closed under the \[pull request rules\]\(#pull-requests\), or hands it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
+    rules,
+    /The owner either finishes the pull request by merging it, for example after pushing the refused change, and ensuring the issue is closed under the contribution guide's pull request rules, or hands it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
   );
   assert.match(
     comments,
     /If the answer changes the implementation contract, edit the contract; that drops readiness and requires review again/,
   );
+});
+
+test("factory workflow rules preserve readiness, models, state recovery and safe stop notes", () => {
+  const rules = flowedText("rules/factory-workflow.md");
+  for (const requirement of [
+    /A parent \(a specification or any issue with sub-issues\) never runs/,
+    /its tickets, which each also need their own readiness/,
+    /again when a ticket is published later/,
+    /remove `ready-for-agent` and add it back/,
+    /only once the latest ticket link appears in the parent's timeline/,
+    /Readiness recorded in the same second as that link holds the tickets/,
+    /exactly one `model:` label they chose, before readiness or together with it, even when it names the host's default model/,
+    /A parent needs no `model:` label of its own, and `ready-for-human` needs none/,
+    /`model:<slug>` or `model:<provider>\/<slug>`, optionally followed by `@<effort>`/,
+    /create the label if the repository lacks it/,
+    /A `claude-\*` or `gpt-\*` slug needs no provider/,
+    /triage notes after its Agent Brief suggest one `model:` label with a one-line reason/,
+    /runs an unlabelled ticket on the host's default model/,
+    /accepts readiness only from a person/,
+    /an agent adds `factory:needs-input` with its question/,
+    /the factory adds `factory:running` while it holds an issue, `factory:failed` after a run fails for good, and `factory:paused` when it pauses a run/,
+    /resumes it by itself.*nobody removes the label by hand/,
+    /Remove `factory:failed` to run the issue again once its failure note or the factory's comment is dealt with/,
+    /stops without a pull request and without a question under `factory:needs-input` comments one short paragraph/,
+    /Never paste log output, environment values or tokens into that note/,
+  ])
+    assert.match(rules, requirement);
 });
 
 test("the contribution guide limits each run to its credentials and stops at permission refusals", () => {

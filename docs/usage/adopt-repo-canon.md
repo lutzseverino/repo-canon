@@ -13,11 +13,13 @@ describes `adopt` itself, at a terminal and through an agent.
 Repo Canon supplies two profiles:
 
 - `standard`: everything Repo Canon installs except the factory's repository
-  files. Select it for every repository that no factory serves.
+  files and workflow rules. Select it for every repository that no factory serves.
 - `factory`: the standard profile plus the files a repository that a factory
   serves carries: its factory configuration, `.factory/config.json`; its
   toolchain image, `.factory/Dockerfile`; and the pull request workflow that
-  builds that image. Select it only for a repository that a host-installed
+  builds that image. It also installs repository-wide factory workflow rules
+  for readiness, model selection, state labels and owner handoffs, with an
+  intentionally empty content scope. Select it only for a repository that a host-installed
   factory serves, as
   [the factory's usage documentation](../../factory/docs/usage/README.md)
   describes.

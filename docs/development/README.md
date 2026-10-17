@@ -26,6 +26,14 @@ Run focused tests for the changed behavior, `npm run format:check`,
 Review affected links, issue-form fields, and consistency with the confirmed
 preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
+Run `node --test test/factory-workflow-rules.test.mjs` for a fresh adoption of
+both profiles and repository-wide rules lookup with public CLI 7.1.0. It uses
+the release fixture's answers and a disposable source containing only declared
+inputs; GitHub HTTP responses and Git transport use local fixtures, with no
+in-tree factory dependency. Set `REPO_STANDARDS_PREFIX` to reuse that public
+CLI installation, or the test installs it outside the checkout. Runtime
+preparation also needs npm registry access.
+
 CI installs development dependencies and runs the format check, lint, the full
 `npm test` suite, and all-profile source validation. A separate factory job
 installs the package dependencies and runs `tsc --noEmit` and its tests. The lint

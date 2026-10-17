@@ -394,12 +394,18 @@ profiles:
     declarations: {}
 
   factory:
-    description: The standard profile plus the factory's repository files, for a repository a factory serves
+    description: The standard profile plus the factory's repository files and workflow rules, for a repository a factory serves
     declarations:
       factory-configuration:
         kind: file
         target: .factory/config.json
         exact: .factory/config.json
+
+      factory-workflow:
+        kind: repository
+        rules: rules/factory-workflow.md
+        guidance: guidance/factory-workflow.md
+        discovery: discovery/factory-workflow.md
 
       factory-sandbox-image:
         kind: file

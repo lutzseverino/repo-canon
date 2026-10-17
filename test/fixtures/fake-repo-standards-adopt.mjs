@@ -40,11 +40,6 @@ const remoteSetup = ["canonical-labels", "pull-request-integration"].map(
     reason: "No unambiguous github.com repository was found in Git remotes.",
   }),
 );
-const discovered = [
-  "documentation",
-  "github-repository-configuration",
-  "project-readmes",
-];
 const draft = {
   coverage: "Drafted from the repository tree.",
   candidates: [
@@ -100,6 +95,12 @@ if (process.env.FAKE_ADOPT_LOG)
   );
 
 const profile = state?.profile ?? given.get("profile") ?? null;
+const discovered = [
+  "documentation",
+  "github-repository-configuration",
+  "project-readmes",
+  ...(profile === "factory" ? ["factory-workflow"] : []),
+];
 const report = (outcome, asked, rest = {}) => ({
   format: "repo-standards/adopt/v1",
   outcome,
