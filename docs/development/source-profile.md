@@ -105,13 +105,14 @@ and validates every profile.
 
 ## Validation boundary
 
-Public CLI 7.2.0 was validated independently on stable Node.js 24 and 26.
-Both runs return `valid: true`, no errors,
+Public CLI 7.2.0 on stable Node.js 24 or 26 returns `valid: true`, no errors,
 and the `standard` and `factory` profiles with 49 and 53 declarations for the
 source, matching the inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@7.2.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
-the requirement is a minimum.
+the requirement is a minimum. The
+[release validation record](https://github.com/lutzseverino/repo-canon/pull/527)
+identifies the two runtime runs and their outcomes.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
