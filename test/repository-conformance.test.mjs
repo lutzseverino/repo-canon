@@ -521,6 +521,66 @@ test("AGENTS.md names no rules path", () => {
   );
 });
 
+// Word budgets keep growth of the two entry documents visible in review. A word
+// is a maximal run of non-whitespace characters in the file's UTF-8 text, so
+// Markdown syntax, punctuation, and code spans count as written and no word is
+// split or merged by hyphens, slashes, or backticks. Each limit is the document's
+// count after the last held rules move (#517, #518). Raising one is a deliberate
+// edit here in the same pull request; never derive a limit from the document.
+const wordBudgets = {
+  "CONTRIBUTING.md": 1970,
+  "AGENTS.md": 105,
+};
+
+function wordCount(text) {
+  return text.match(/\S+/gu)?.length ?? 0;
+}
+
+// The failure for a document over its budget, naming the document, its actual
+// count, and its limit; null when the count is at or under the limit.
+function wordBudgetFailure(document, text, limit) {
+  const count = wordCount(text);
+  return count > limit
+    ? `${document} is over its word budget: ${count} words, limit ${limit}`
+    : null;
+}
+
+test("word counts split on whitespace only", () => {
+  assert.equal(wordCount(""), 0);
+  assert.equal(wordCount(" \n\t \r\n\u00a0\u3000 "), 0);
+  assert.equal(wordCount("one"), 1);
+  assert.equal(wordCount("  one \t two\nthree\r\n\nfour  "), 4);
+  assert.equal(wordCount("well-known `a/b.md` (see [x](y))"), 4);
+  assert.equal(wordCount("# Title\n\n- item\n"), 4);
+});
+
+test("a word budget passes at its limit and fails above it with the document, count, and limit", () => {
+  assert.equal(wordBudgetFailure("A.md", "", 0), null);
+  assert.equal(wordBudgetFailure("A.md", "   \n", 0), null);
+  assert.equal(wordBudgetFailure("A.md", "one two three", 3), null);
+  assert.equal(wordBudgetFailure("A.md", "one two", 3), null);
+  assert.equal(
+    wordBudgetFailure("A.md", "one two three four", 3),
+    "A.md is over its word budget: 4 words, limit 3",
+  );
+  assert.equal(
+    wordBudgetFailure("B.md", "one two", 1),
+    "B.md is over its word budget: 2 words, limit 1",
+  );
+});
+
+test("CONTRIBUTING.md and AGENTS.md stay within their word budgets", () => {
+  for (const [document, limit] of Object.entries(wordBudgets))
+    assert.equal(
+      wordBudgetFailure(
+        document,
+        readFileSync(join(root, document), "utf8"),
+        limit,
+      ),
+      null,
+    );
+});
+
 test("standards.yaml declares no pull request reviewer file", () => {
   assert.doesNotMatch(
     readFileSync(join(root, "standards.yaml"), "utf8"),
