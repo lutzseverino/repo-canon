@@ -29,7 +29,7 @@ const validationInputs = [
 // A sentence naming versions that are not the CLI: other tools, the Node.js
 // version constraint, and a stable baseline.
 const otherVersionsSentence =
-  "Use Git 99.0.0, GitHub CLI 99.0.0, Marked 99.0.0, parse5 99.0.0, and `node --version` constrained to `>=99.0.0 <100.0.0` since the stable `99.0.0` baseline.";
+  "Use Git 99.0.0, GitHub CLI 99.0.0, Marked 99.0.0, parse5 99.0.0, and `node --version` constrained to `>=99.0.0 <100.0.0 || >=102.0.0 <103.0.0` since the stable `99.0.0` baseline.";
 
 function workingTree() {
   const files = new Map();

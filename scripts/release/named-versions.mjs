@@ -29,7 +29,7 @@ const versionPattern = /(?<![\w.])(v?)(\d+\.\d+\.\d+)(?!\.?\d)/g;
 const cliDocumentationLink =
   /github\.com\/lutzseverino\/repo-standards\/(?:blob|tree)\/$/;
 const otherTool =
-  /\b(?:Git|GitHub CLI|Marked|parse5)\s+$|`node --version`\s+constrained\s+to\s+`>=(?:\d+\.\d+\.\d+\s+<)?$/;
+  /\b(?:Git|GitHub CLI|Marked|parse5)\s+$|`node --version`\s+constrained\s+to\s+`>=(?:\d+\.\d+\.\d+\s+<\d+\.\d+\.\d+\s+\|\|\s+>=)*(?:\d+\.\d+\.\d+\s+<)?$/;
 const repoCanonBaseline = /\bstable\s+`?$/;
 const requiresBlock = /^requires:[ \t]*\r?\n((?:[ \t]+\S.*(?:\r?\n|$))+)/m;
 const requiresFloor =
@@ -39,7 +39,10 @@ const requiresFloor =
 export function namedVersions(path, text) {
   const versions = [];
   for (const match of text.matchAll(versionPattern)) {
-    const before = text.slice(Math.max(0, match.index - 80), match.index);
+    const before = text.slice(
+      text.lastIndexOf("\n", match.index - 1) + 1,
+      match.index,
+    );
     if (otherTool.test(before)) continue;
     const releaseTag = match[1] === "v" && !cliDocumentationLink.test(before);
     const kind =
