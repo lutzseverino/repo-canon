@@ -7,7 +7,7 @@ adopting repository. The `factory` profile adds the factory's repository files
 and repository-wide workflow rules to it, for a repository a factory serves.
 The source identity is `repo-canon`,
 and its compatibility contract is the open-ended minimum
-`requires.repo-standards: ">=7.1.0"`. Public CLI 7.1.0 is the oldest version
+`requires.repo-standards: ">=7.2.0"`. Public CLI 7.2.0 is the oldest version
 this source was validated against; the range gates which CLI versions may
 select it and is never re-validated afterwards. Neither profile implies a
 release or successful adoption.
@@ -75,8 +75,9 @@ import layout after installation or resource retention.
 
 ## Executable prerequisites
 
-All authored operations execute with Node.js 24. Their manifest prerequisite is
-`node --version` constrained to `>=24.0.0 <25.0.0`, with a 30-second timeout.
+All authored operations execute with stable Node.js 24 or 26. Their manifest prerequisite is
+`node --version` constrained to `>=24.0.0 <25.0.0 || >=26.0.0 <27.0.0`, with a 30-second timeout.
+Node.js 22, odd majors, prereleases, and untested future majors are excluded.
 The GitHub configuration operations additionally verify Git 2.18.0 or newer,
 GitHub CLI 2.57.0 or newer, one unambiguous github.com remote, authenticated
 access, and the required repository permissions before mutation. Both GitHub
@@ -85,7 +86,7 @@ verification read-only, with the same Node.js prerequisite and timeout, before
 inspection writes anything. Marked and
 parse5 are retained resources, so adopters do not install parser packages.
 
-Source maintainers need Node.js 24, npm, Git, and a pinned public Repository
+Source maintainers need Node.js 24 or 26, npm, Git, and a pinned public Repository
 Standards CLI that satisfies the requirement. Install the CLI outside this
 repository and validate every profile without filtering:
 
@@ -93,7 +94,7 @@ repository and validate every profile without filtering:
 cli_prefix="$(mktemp -d)"
 npm install --prefix "$cli_prefix" --ignore-scripts \
   --registry=https://registry.npmjs.org \
-  @lutzseverino/repo-standards@7.1.0
+  @lutzseverino/repo-standards@7.2.0
 "$cli_prefix/node_modules/.bin/repo-standards" --version
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
@@ -104,10 +105,10 @@ and validates every profile.
 
 ## Validation boundary
 
-Installed public CLI 7.1.0 under Node.js 24 returns `valid: true`, no errors,
+Installed public CLI 7.2.0 under Node.js 24 or 26 returns `valid: true`, no errors,
 and the `standard` and `factory` profiles with 49 and 53 declarations for the
 source, matching the inventory above. Local validation and CI install
-`@lutzseverino/repo-standards@7.1.0`, the oldest version the requirement admits;
+`@lutzseverino/repo-standards@7.2.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
 the requirement is a minimum.
 

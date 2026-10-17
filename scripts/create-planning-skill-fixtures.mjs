@@ -79,7 +79,7 @@ function createRepository(name, skills, { agents, context }) {
   write(
     root,
     "docs/development/README.md",
-    "# Development\n\nUse Node.js 24. Run `npm test` and `git diff --check`. This repository is a disposable local exercise and must not contact a remote service.\n",
+    "# Development\n\nUse Node.js 24 or 26. Run `npm test` and `git diff --check`. This repository is a disposable local exercise and must not contact a remote service.\n",
   );
   write(
     root,

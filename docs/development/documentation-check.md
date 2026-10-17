@@ -171,7 +171,7 @@ or adoption.
 
 ## Prerequisites and validation
 
-The executable is Node.js 24, declared as `>=24 <25`; use `node --version` for
+The executable is Node.js 24 or 26, declared as `>=24 <25 || >=26 <27`; use `node --version` for
 the prerequisite probe. No package installation is needed because the parser
 builds are retained source resources. Run the focused fixture suites from the
 repository root:

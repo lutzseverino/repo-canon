@@ -5,14 +5,14 @@ Repo Canon standards source.
 
 ## Setup and validation
 
-Clone the repository with Git 2.32.0 or newer and use Node.js 24 and npm. Run
+Clone the repository with Git 2.32.0 or newer and use Node.js 24 or 26 and npm. Run
 `npm ci --include=dev` to install the pinned development dependencies. The
 standards source has no build step; parser dependencies are vendored. The factory package runs
 TypeScript through Node.js 24 type stripping and has its own typecheck and tests;
 follow the [factory development index](../../factory/docs/development/README.md)
 for its checks. Adopters do not install development dependencies. GitHub planning uses authenticated `gh`
 access. For source validation,
-install public Repository Standards CLI 7.1.0 outside the checkout using the
+install public Repository Standards CLI 7.2.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 
@@ -27,7 +27,7 @@ Review affected links, issue-form fields, and consistency with the confirmed
 preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
 Run `node --test test/repository-wide-rules.test.mjs` for a fresh adoption of
-both profiles and repository-wide rules lookup with public CLI 7.1.0: the
+both profiles and repository-wide rules lookup with public CLI 7.2.0: the
 GitHub rules in both profiles and the factory workflow rules only in the
 factory profile. It uses
 the release fixture's answers and a disposable source containing only declared
@@ -36,7 +36,9 @@ in-tree factory dependency. Set `REPO_STANDARDS_PREFIX` to reuse that public
 CLI installation, or the test installs it outside the checkout. Runtime
 preparation also needs npm registry access.
 
-CI installs development dependencies and runs the format check, lint, the full
+Node.js 24 remains the default toolchain and installed automation runtime.
+Compatibility CI runs on both Node.js 24 and 26, installs development
+dependencies and runs the format check, lint, the full
 `npm test` suite, and all-profile source validation. A separate factory job
 installs the package dependencies and runs `tsc --noEmit` and its tests. The lint
 step uses oxlint's defaults plus

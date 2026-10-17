@@ -103,7 +103,7 @@ repositories["writing-for-agents"] = createRepository(
   {
     context: `# Catalog sync\n\nLanguage for synchronizing product catalogs.\n\n## Language\n\n**Catalog snapshot**:\nThe complete supplier catalog observed during one synchronization.\n_Avoid_: Data dump\n`,
     project: `# Catalog sync agent guidance\n\nThis disposable fixture needs clear routing. Always be careful and thorough. Always inspect everything before doing anything. Read docs/agents/sync.md before changing synchronization behavior. Read docs/agents/fixtures.md before changing supplier fixtures. Read both files whenever doing catalog work. Make sure to follow all relevant instructions and do not forget the tests.\n`,
-    development: `# Development\n\nUse Node.js 24. Run \`npm test\` for JavaScript changes. Documentation-only pointer edits use \`git diff --check\`.\n`,
+    development: `# Development\n\nUse Node.js 24 or 26. Run \`npm test\` for JavaScript changes. Documentation-only pointer edits use \`git diff --check\`.\n`,
     files: {
       "docs/agents/sync.md": `# Synchronization behavior\n\nPreserve supplier ordering in each Catalog snapshot. Run \`npm test\` after behavior changes.\n`,
       "docs/agents/fixtures.md": `# Supplier fixtures\n\nKeep fixture supplier names fictional and use the reserved \`.example\` domain.\n`,

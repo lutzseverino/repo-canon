@@ -110,7 +110,7 @@ repeated.
   names the recommended ones.
 - Delivery belongs to this source, because Repository Standards leaves it to
   standards sources
-  ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/adr/0015-leave-delivery-to-standards-sources.md)).
+  ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/adr/0015-leave-delivery-to-standards-sources.md)).
   The environment carries delivery, as
   [ADR 0010](docs/adr/0010-carry-delivery-rules-in-the-environment.md)
   decides: [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests) says how to open
@@ -218,7 +218,7 @@ repeated.
   decides. Project-specific guidance remains separate. AGENTS.md is an
   identical standards-owned pointer file. Repository Standards owns the update
   notice through its `repository-standards` system skill
-  ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
+  ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
   Create the optional project guidance document, docs/agents/project.md, only
   when it has useful content.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
@@ -289,7 +289,7 @@ repeated.
 
 The complete `repo-standards/v2` source is `standards.yaml`, with the
 `standard` and `factory` profiles and the open-ended CLI compatibility minimum
-`>=7.1.0`. The
+`>=7.2.0`. The
 concise policy-to-declaration, material, operation, ownership, and prerequisite
 mapping is maintained in [the source profile](docs/development/source-profile.md).
 Contextual Project README and documentation scope uses separate assessment and
@@ -297,7 +297,7 @@ discovery guidance and resolves to individual adopter-reviewed paths.
 
 [Adoption compatibility](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface. Use installed public
-CLI 7.1.0 as the current validation baseline; claim only compatibility
+CLI 7.2.0 as the current validation baseline; claim only compatibility
 demonstrated against the released source bytes.
 
 ## License

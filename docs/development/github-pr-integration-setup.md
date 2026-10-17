@@ -70,7 +70,7 @@ title, description, issue references, and any breaking-change explanation.
 
 ## Prerequisites and identity
 
-The operation requires Node.js 24, Git 2.18.0 or newer, and GitHub CLI 2.57.0
+The operation requires Node.js 24 or 26, Git 2.18.0 or newer, and GitHub CLI 2.57.0
 or newer. `gh` must have an authenticated active account for `github.com`, and
 that account must have admin access to edit branch or ruleset policy and
 repository merge settings. The `PR metadata validation` workflow must be on the
@@ -86,10 +86,10 @@ enterprise server.
 
 ## Readiness probe
 
-The fix is [remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/adoption.md#remote-setup).
+The fix is [remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/adoption.md#remote-setup).
 Its readiness probe, `operations/probe-github-pr-integration.mjs`, runs during
 inspection, before anything is written, through the
-[probe protocol](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/script-protocol.md#remote-setup-probes).
+[probe protocol](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/script-protocol.md#remote-setup-probes).
 It runs the fix's own preparation and role check from
 `operations/lib/github-operation.mjs`: the tool versions, the remote identity
 and GitHub's confirmation of it, authentication, and admin access. It returns
@@ -109,7 +109,7 @@ never enters a probe reason or its matching blocked message.
 ## Results and recovery
 
 The operation implements the public
-[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v7.1.0/docs/usage/script-protocol.md)
+[`repo-standards/operation/v2`](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/script-protocol.md)
 boundary with an empty project-content target scope. It returns `changed` only
 after a final readback confirms required-check enforcement and every merge
 setting. It returns `unchanged` when the first read already matches. Results use

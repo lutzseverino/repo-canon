@@ -31,7 +31,7 @@ const repositoryWide = {
 // Exercise the published CLI, with its real acquisition, adoption, installation
 // and rules lookup. Only GitHub HTTP and Git transport use disposable fixtures.
 // No Scriptorium implementation or host is needed.
-test("public CLI 7.1.0 installs the GitHub rules for the whole repository in both profiles, and factory workflow rules only in the factory profile", (t) => {
+test("public CLI 7.2.0 installs the GitHub rules for the whole repository in both profiles, and factory workflow rules only in the factory profile", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const prefix = process.env.REPO_STANDARDS_PREFIX ?? join(directory, "cli");
@@ -44,14 +44,14 @@ test("public CLI 7.1.0 installs the GitHub rules for the whole repository in bot
         prefix,
         "--ignore-scripts",
         "--registry=https://registry.npmjs.org",
-        "@lutzseverino/repo-standards@7.1.0",
+        "@lutzseverino/repo-standards@7.2.0",
       ],
       { stdio: "pipe" },
     );
   const cli = join(prefix, "node_modules/.bin/repo-standards");
   assert.equal(
     execFileSync(cli, ["--version"], { encoding: "utf8" }).trim(),
-    "7.1.0",
+    "7.2.0",
   );
   const validation = JSON.parse(
     execFileSync(cli, ["source", "validate", root, "--json"], {
@@ -59,6 +59,28 @@ test("public CLI 7.1.0 installs the GitHub rules for the whole repository in bot
     }),
   );
   assert.equal(validation.valid, true);
+  // Every authored Node prerequisite must retain the same stable-major union,
+  // including discovery and the two nested remote-setup probes.
+  const prerequisites = new Map();
+  for (const profile of Object.values(validation.profiles))
+    for (const declaration of profile.declarations) {
+      const fixes = declaration.fixes ?? [];
+      for (const operation of [
+        ...(declaration.checks ?? []),
+        ...fixes,
+        ...fixes.map((fix) => fix["remote-setup"]?.probe),
+        declaration["discovery-script"],
+      ].filter(Boolean))
+        if (operation.run.executable === "node")
+          prerequisites.set(
+            operation.run.script,
+            operation.prerequisite.version,
+          );
+    }
+  assert.equal(prerequisites.size, 9);
+  for (const [script, range] of prerequisites)
+    assert.equal(range, ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0", script);
+
   const source = join(directory, "source");
   mkdirSync(source);
   // Copy only source inputs, excluding the old in-tree product even while it

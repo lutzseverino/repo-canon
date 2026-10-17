@@ -243,7 +243,7 @@ export const assessments = {
   "factory-sandbox-image": {
     status: "satisfied",
     explanation:
-      "The toolchain image starts from node:24-bookworm, which provides the Node.js 24 the development guide and the babysit scripts need.",
+      "The toolchain image starts from node:24-bookworm, which provides the supported Node.js 24 selected by the development guide and compatible with the babysit scripts.",
     evidence: [
       ".factory/Dockerfile holds only FROM node:24-bookworm.",
       `${developmentGuide} requires only Node.js 24.`,
