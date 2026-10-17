@@ -32,9 +32,11 @@ and waiting for the Node.js 26 work to land first, because nothing under
 
 - Repo Canon keeps the `factory` profile, its `.factory/` files and toolchain
   image rules, and the root boundary terms: Factory, Frontier, Readiness, Host
-  configuration, Factory configuration and Factory profile. The factory's
-  internal language and decisions moved with it, so this repository returns to
-  a single glossary context.
+  configuration, Factory configuration, Standard profile, Factory profile and
+  Pull request reviewer. The factory's internal language and decisions moved
+  with it, so this repository returns to a single glossary context; its
+  [ADR 0001](https://github.com/lutzseverino/scriptorium/blob/main/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md),
+  which kept the package here, stays there, marked superseded.
 - `scriptorium-v1.0.0` through `scriptorium-v1.0.5` and their releases stay in
   this repository at their original objects, under its tag ruleset, and are
   never moved, deleted or republished. No further factory release is published

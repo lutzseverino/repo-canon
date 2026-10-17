@@ -497,16 +497,20 @@ test("standards.yaml declares no pull request reviewer file", () => {
 });
 
 // The shipped configuration targets factory configuration version 1, whose
-// schema Scriptorium documents: exactly these fields, five distinct state
-// labels, and a prompt naming the issue. Scriptorium's own tests parse the copy
-// it adopts, so this repository imports no factory code.
+// schema Scriptorium documents: exactly these fields, five labels distinct
+// ignoring case, and a prompt holding both `{skillPrefix}` and `{issue}`. This
+// repository imports no factory code; the exact shape pins the file.
 test("the factory configuration names Repo Canon's labels, model label prefix, and implement prompt", () => {
   const configuration = JSON.parse(
     readFileSync(join(root, ".factory/config.json"), "utf8"),
   );
   const labels = Object.values(configuration.labels);
-  assert.equal(new Set(labels).size, labels.length);
-  assert.ok(labels.every((label) => typeof label === "string" && label));
+  assert.ok(labels.every((label) => typeof label === "string" && label.trim()));
+  assert.equal(
+    new Set(labels.map((label) => label.toLowerCase())).size,
+    labels.length,
+  );
+  assert.match(configuration.prompt, /\{skillPrefix\}/);
   assert.match(configuration.prompt, /\{issue\}/);
   assert.deepEqual(configuration, {
     version: 1,
