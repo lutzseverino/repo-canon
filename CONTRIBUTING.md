@@ -31,13 +31,10 @@ Every ticket merges into its base branch on its own, with its checks passing.
 Expand–contract batches that can't each stay green become a single ticket, not
 tickets sharing an integration branch.
 
-When adding a native blocker, pass the blocking issue's numeric database ID as
-`issue_id`, not its issue number or `node_id`.
-
 ## Readiness
 
-Applying `ready-for-agent` or `ready-for-human` is the review action and needs
-the repository `admin`, `maintain`, or `triage` role. After revising a contract
+Applying `ready-for-agent` or `ready-for-human` is the review action, and the
+`github-repository-configuration` rules name the roles it needs. After revising a contract
 or posting an Agent Brief, wait for the issue-contract workflow's revision
 notice before applying readiness. Editing a contract removes its readiness. The
 workflow keeps one workflow state label on an issue: authorized readiness or a
@@ -186,40 +183,10 @@ For adoption or update findings, use these target repositories:
 
 Merge a pull request once every required check passes on its latest head and
 every review thread is answered with its fix or a reasoned decline under the
-[comment rules](#comments).
-The optional repository-owned `.github/pull-request-reviewer.json` configures
-its reviewer and wait bounds; the `github-repository-configuration` rules
-state its schema. A review request is the pull request's opening when
-`request.onOpen` is true, or a later comment whose whole trimmed body equals
-`request.comment`; a push is not one.
-
-When `request.onOpen` is false and the pull request has had no review request,
-an agent must post the review request comment for its head before it first
-waits on the pull request. The request bound cannot stop this first request,
-since none has been counted yet.
-
-After that first request, an agent must post the review request comment for a
-new head when its push fixes, fully or partly, a review finding these rules do
-not let it decline, and the request bound has not been reached.
-
-No other push gets a request: a push that only follows declines, changes only tests,
-documentation or wording, or only fixes a failing check gets none.
-The optional `bounds.reviewRequests` is a positive integer limiting the total
-review requests a pull request gets. Count the opening when `request.onOpen`
-is true and every comment whose whole trimmed body equals `request.comment`,
-whoever posted it. Once that count reaches the bound, no agent requests another
-review. Without the field there is no count bound.
-
-When the configured reviewer does not review the latest head, because it is
-unavailable, no review was requested
-after the head's push, it did not respond within `bounds.responseMinutes` of
-the latest review request, or no review arrived within `bounds.reviewMinutes`
-of it, the pull request merges once those conditions hold, and the merging
-agent comments on it that the configured reviewer did not review that head
-and why, under the [comment rules](#comments). For a head with no request after
-its push, the comment says whether the request rule required none or the bound
-was reached. Without the file, no reviewer wait or comment about an absent
-review is required.
+[comment rules](#comments). The `github-repository-configuration` rules state
+when a head with no check counts as passed, and, for the optional
+repository-owned `.github/pull-request-reviewer.json`, its schema, review
+requests, and merging with or without the configured reviewer's review.
 Squash-merge pull requests into their base branch, passing the subject
 `<title> (#<number>)` and the current PR body explicitly, with the body passed
 byte for byte through a file or stdin. GitHub's default squash message must
@@ -236,12 +203,6 @@ its reason in its review thread under the [comment rules](#comments). Record rea
 are outside the change's ticket or scope, or because another layer owns the
 rule they guard, under the [findings rule](#findings). Do not file findings
 declined because they do not hold or lie outside the threat model.
-
-These findings rules still apply after the request bound is reached: fix every
-finding the agent may not decline and push without another request; answer any
-review that arrives anyway. The bound creates no decline reason and no grouped
-follow-up issue; record findings one issue per finding under the
-[findings rule](#findings).
 
 ## Credentials
 
@@ -268,9 +229,7 @@ drops readiness and requires review again.
 
 An agent comments on an issue or pull request to record a decision, an outcome,
 or a question that needs an answer, never to narrate progress. Consolidate
-everything the agent has to say on one occasion into one comment. In an Agent
-Brief comment, the brief's heading comes right after the triage disclaimer, and
-triage notes follow the brief.
+everything the agent has to say on one occasion into one comment.
 
 Every comment an agent writes on an issue or pull request starts with this AI
 disclaimer line, `>` included, followed by a blank line:
@@ -287,14 +246,8 @@ During triage, use the triage skill's line in the same form instead:
 ```
 
 Issue and pull request titles and bodies are exempt: their own format rules govern them.
-A review request comment is also exempt and holds only the request.
+A review request comment follows the `github-repository-configuration` rules
+instead.
 
 Comments, issue and pull request titles, and their bodies never contain secret,
 token, or credential values. Write `<REDACTED>` in their place.
-
-Write the configured reviewer's request phrase only in a comment that
-requests a review. That comment holds exactly `request.comment` from
-`.github/pull-request-reviewer.json`, with no disclaimer. The phrase never
-appears in prose, quotations, or code spans in any other comment, issue or
-pull request title, or body. To mention the request, describe it as "the review
-request comment".

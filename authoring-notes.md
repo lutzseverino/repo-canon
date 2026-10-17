@@ -118,14 +118,16 @@ repeated.
   and the installed `AGENTS.md` points every change through `pr` and
   `babysit`. The model-invocable `babysit` skill watches the pull request,
   settles its findings, and merges it, stating no rule the guide holds. Review
-  follows the guide's [request and findings rules](CONTRIBUTING.md#merging),
+  follows the guide's [findings rules](CONTRIBUTING.md#merging) and the
+  request rule in the
+  [GitHub repository configuration rules](rules/github-repository-configuration.md),
   with an optional total request bound in the repository's reviewer data.
   It waits through one bundled script that polls silently for checks and the
   reviewer named by the optional repository-owned
   `.github/pull-request-reviewer.json`, run in the foreground on every host.
-  The
-  [GitHub repository configuration rules](rules/github-repository-configuration.md)
-  state that file's schema, which the reviewer check and the wait validate with
+  Those rules
+  also state when a head with no check counts as passed, and that file's
+  schema, which the reviewer check and the wait validate with
   byte-identical copies of one parser. Without that file there is no reviewer wait. Repo Canon ships no reviewer
   file or preset; this repository carries its own configuration, outside the
   declarations. The factory never reads it. Its
@@ -174,7 +176,9 @@ repeated.
   demonstrate complete coverage before claiming monorepo adoption support.
 - CONTRIBUTING.md is the one home of Repo Canon's contribution rules: issues
   and implementation contracts, readiness, development setup, validation, pull
-  requests, and titles and commits. Every other file cites it
+  requests, and titles and commits. GitHub specifics and factory-only workflow
+  live instead in the installed rules of the declarations they belong to,
+  which apply to the whole repository. Every other file cites it
   rather than repeating one of them. Agent implementation procedures belong in
   skills. Files Repo Canon authors do not restate them, and cite them only for
   delivery or to override routes to uninstalled skills: `AGENTS.md` names `pr`
@@ -200,7 +204,10 @@ repeated.
   states what the check enforces.
 - The readiness rules are stated in
   [`CONTRIBUTING.md`](CONTRIBUTING.md#readiness), with factory-only parent and
-  model gates in the [factory workflow rules](rules/factory-workflow.md), and the mechanism that
+  model gates in the [factory workflow rules](rules/factory-workflow.md), the
+  GitHub roles, native blocker mechanics, and the Agent Brief and Wayfinder
+  shapes the validator enforces in the
+  [GitHub repository configuration rules](rules/github-repository-configuration.md), and the mechanism that
   enforces them in
   [issue contract validation](docs/development/issue-contract-validation.md).
 - The skill setup files under docs/agents are installed verbatim from the
@@ -272,8 +279,9 @@ repeated.
   The seeds do not provision remote labels or repository branch rules.
 - Upstream recognizes an Agent Brief heading but provides no approval marker,
   approved-revision selector, or revision invalidation mechanism. Repo Canon's
-  readiness rules are its own convention and live in `CONTRIBUTING.md` and its
-  automation, preserving upstream skill content.
+  readiness rules are its own convention and live in `CONTRIBUTING.md`, the
+  GitHub repository configuration rules, and its automation, preserving
+  upstream skill content.
 
 ## Source profile
 

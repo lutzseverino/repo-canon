@@ -108,8 +108,9 @@ adopting maintainers can select.
 _Avoid_: Source acceptance, adoption
 
 **Rules**:
-The installed, human-readable statement of what a standard requires of a file
-or repository area, which its checks and assessments cite. Rules outlast the
+The installed, human-readable statement of what a standard requires of a file,
+a repository area, or work in the whole repository, such as tracker work that
+changes no file, which its checks and assessments cite. Rules outlast the
 adoption run that installs them.
 _Avoid_: Guidance, when meaning lasting requirements; skill instructions
 

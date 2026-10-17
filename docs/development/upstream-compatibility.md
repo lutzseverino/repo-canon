@@ -179,7 +179,9 @@ formats. Validation must recognize the applicable contract and workflow.
 | Wayfinder map                | Destination, Notes, Decisions so far, Not yet specified, Out of scope. An initially empty decisions section is valid; label wayfinder:map.                                                                          |
 | Wayfinder child              | Question; one wayfinder research/prototype/grilling/task label. Eligibility uses open state, assignment, and blockers rather than requiring intake labels or a brief.                                               |
 
-Recognize GitHub form heading levels and harmless casing differences. Optional
+The `github-repository-configuration` rules state the Agent Brief and
+Wayfinder shapes the validator enforces, citing `triage` and `wayfinder` as
+methods. Recognize GitHub form heading levels and harmless casing differences. Optional
 unanswered fields are not missing required content. Native parent/dependency
 relationships can carry information outside the body.
 

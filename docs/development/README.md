@@ -26,8 +26,10 @@ Run focused tests for the changed behavior, `npm run format:check`,
 Review affected links, issue-form fields, and consistency with the confirmed
 preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
-Run `node --test test/factory-workflow-rules.test.mjs` for a fresh adoption of
-both profiles and repository-wide rules lookup with public CLI 7.1.0. It uses
+Run `node --test test/repository-wide-rules.test.mjs` for a fresh adoption of
+both profiles and repository-wide rules lookup with public CLI 7.1.0: the
+GitHub rules in both profiles and the factory workflow rules only in the
+factory profile. It uses
 the release fixture's answers and a disposable source containing only declared
 inputs; GitHub HTTP responses and Git transport use local fixtures, with no
 in-tree factory dependency. Set `REPO_STANDARDS_PREFIX` to reuse that public
@@ -52,6 +54,9 @@ invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
 `npm run test:issue-contracts` for the focused issue-contract fixtures and
 `npm run test:planning-skill-fixtures` for the planning-skill harness. Run
+`node --test test/planning-shape-rules.test.mjs` to check that the Agent Brief
+and Wayfinder shapes the GitHub rules state agree with the validator's accepted
+and rejected issues. Run
 `node --test test/babysit-wait.test.mjs` for the `babysit` wait script's
 decision, driven by reviewer data fixtures (including real summary comments),
 and its silence, driven by

@@ -446,9 +446,14 @@ test("the GitHub rules state the reviewer file's schema, and babysit only cites 
   const guide = flowedText("CONTRIBUTING.md");
   assert.match(
     guide,
-    /the `github-repository-configuration` rules state its schema/,
+    /The `github-repository-configuration` rules state when a head with no check counts as passed, and, for the optional repository-owned `\.github\/pull-request-reviewer\.json`, its schema, review requests, and merging with or without the configured reviewer's review/,
   );
   assert.doesNotMatch(guide, /`babysit`\]\([^)]*\) documents its schema/);
+  assert.match(
+    rules,
+    /`bounds\.reviewRequests`: optional positive integer; the total request bound defined under \[review requests\]\(#review-requests\)/,
+  );
+  assert.doesNotMatch(rules, /contribution guide's Merging section/);
 });
 
 test("neither the GitHub rules nor babysit names a particular reviewer", () => {
@@ -889,7 +894,7 @@ test("babysit names the Node.js major required by the factory image rules", () =
   assert.equal(skillMajor, imageMajor);
 });
 
-test("babysit waits only through its script, and the guide owns the no-review rule", () => {
+test("babysit waits only through its script, and the GitHub rules own the no-check and no-review rules", () => {
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(babysit, /wait\.mjs <number>/);
   assert.match(babysit, /600000 ms/);
@@ -908,31 +913,56 @@ test("babysit waits only through its script, and the guide owns the no-review ru
   );
   assert.match(
     babysit,
-    /Before the first wait, apply the \[Merging request rule\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#merging\) to the pull request's head, using step 4 to post any required request\. 1\. Wait with/,
+    /Before the first wait, apply the `github-repository-configuration` rules' review request rule to the pull request's head, using step 4 to post any required request\. 1\. Wait with/,
   );
   assert.match(
     babysit,
-    /4\. Apply the \[Merging request rule\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#merging\) to each new head after a fix push/,
+    /4\. Apply the review request rule to each new head after a fix push\. When it requires a request, post the review request comment as the `github-repository-configuration` rules describe/,
   );
-  assert.doesNotMatch(babysit, /onOpen|reviewRequests|fully or partly/);
-  assert.doesNotMatch(babysit, /warrant another look/);
   assert.match(
     babysit,
-    /"checks passed" also covers no check arriving within 5 minutes of a push GitHub recorded, with no unfinished or failed workflow run for the head/,
+    /"checks passed" also covers a head with no check that the `github-repository-configuration` rules count as passed/,
+  );
+  assert.match(
+    babysit,
+    /follow the `github-repository-configuration` rules for merging without that review/,
   );
   assert.doesNotMatch(
     babysit,
-    /5 minutes of the latest review request|30 minutes/,
+    /onOpen|reviewRequests|fully or partly|CONTRIBUTING\.md#merging/,
+  );
+  assert.doesNotMatch(babysit, /warrant another look/);
+  assert.doesNotMatch(
+    babysit,
+    /5 minutes|minutes of the latest review request|30 minutes|unfinished/,
+  );
+  const rules = flowedText("rules/github-repository-configuration.md");
+  for (const requirement of [
+    /A pull request head that has no check counts as having its checks passed once 5 minutes have passed since a push of that head that GitHub recorded, and only while no workflow run for the head is unfinished or counted as failed/,
+    /A workflow whose latest run failed with no check from that run or attempt counts as a failed check/,
+    /A head with no recorded push and no check or workflow run never settles its checks: they neither pass nor fail/,
+    /The merging agent then comments on it that the configured reviewer did not review that head and why, under the contribution guide's comment rules/,
+    /it is unavailable, no review was requested after the head's push, it did not respond within `bounds.responseMinutes` of the latest review request, or no review arrived within `bounds.reviewMinutes` of it/,
+    /For a head with no request after its push, the comment says whether the request rule required none or the bound was reached/,
+    /Without the file, no reviewer wait or comment about an absent review is required/,
+  ])
+    assert.match(rules, requirement);
+  const minutes = /once (\d+) minutes have passed since a push/.exec(
+    rules,
+  )?.[1];
+  assert.match(
+    readFileSync(join(root, ".agents/skills/babysit/wait.mjs"), "utf8"),
+    new RegExp(`const checksBoundMs = ${minutes} \\* 60_000;`),
+    "the wait's no-check bound is the rules' bound",
   );
   const guide = flowedText("CONTRIBUTING.md");
   assert.match(
     guide,
-    /the merging agent comments on it that the configured reviewer did not review that head and why/,
+    /Merge a pull request once every required check passes on its latest head and every review thread is answered with its fix or a reasoned decline/,
   );
-  assert.match(guide, /a push is not one/);
-  assert.match(
+  assert.doesNotMatch(
     guide,
-    /it is unavailable, no review was requested after the head's push, it did not respond within `bounds.responseMinutes` of the latest review request, or no review arrived within `bounds.reviewMinutes` of it/,
+    /merging agent comments|bounds\.responseMinutes|bounds\.reviewMinutes|5 minutes/,
   );
 });
 
@@ -968,24 +998,15 @@ test("the installed agent guidance ends every change as a babysat pull request",
   );
 });
 
-test("the guide requires a first review request before waiting when opening is not a request", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  assert.match(
-    guide,
-    /A review request is the pull request's opening when `request.onOpen` is true, or a later comment whose whole trimmed body equals `request.comment`; a push is not one/,
-  );
-  assert.match(
-    guide,
+test("the GitHub rules require a first review request before waiting when opening is not a request", () => {
+  const rules = flowedText("rules/github-repository-configuration.md");
+  for (const requirement of [
+    /a review request is the pull request's opening when `request.onOpen` is true, or a later comment whose whole trimmed body equals `request.comment`; a push is never one/,
     /When `request.onOpen` is false and the pull request has had no review request, an agent must post the review request comment for its head before it first waits on the pull request/,
-  );
-  assert.match(
-    guide,
     /The request bound cannot stop this first request, since none has been counted yet/,
-  );
-  assert.match(
-    guide,
     /Count the opening when `request.onOpen` is true and every comment whose whole trimmed body equals `request.comment`, whoever posted it/,
-  );
+  ])
+    assert.match(rules, requirement);
 });
 
 test("review converges on fixes and reasoned declines the guide allows", () => {
@@ -999,30 +1020,69 @@ test("review converges on fixes and reasoned declines the guide allows", () => {
   assert.match(guide, /files only the owner writes/);
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(babysit, /does not let you decline/);
-  assert.match(
-    guide,
-    /After that first request, an agent must post the review request comment for a new head when its push fixes, fully or partly, a review finding these rules do not let it decline, and the request bound has not been reached/,
-  );
-  assert.match(
-    guide,
+  const rules = flowedText("rules/github-repository-configuration.md");
+  for (const requirement of [
+    /After that first request, an agent must post the review request comment for a new head when its push fixes, fully or partly, a review finding the contribution guide does not let it decline, and the request bound has not been reached/,
     /No other push gets a request: a push that only follows declines, changes only tests, documentation or wording, or only fixes a failing check gets none/,
-  );
-  assert.match(
-    guide,
+    /The optional `bounds.reviewRequests` limits the total review requests a pull request gets/,
     /Once that count reaches the bound, no agent requests another review\. Without the field there is no count bound/,
-  );
-  assert.match(
+    /The bound creates no reason to decline a real finding and no grouped follow-up issue/,
+    /fix every finding the contribution guide does not let the agent decline and push without another request, and answer any review that arrives anyway/,
+  ])
+    assert.match(rules, requirement);
+  assert.doesNotMatch(
     guide,
-    /fix every finding the agent may not decline and push without another request/,
-  );
-  assert.match(
-    guide,
-    /The bound creates no decline reason and no grouped follow-up issue/,
+    /request\.onOpen|request\.comment|reviewRequests|fully or partly|request bound/,
   );
   assert.doesNotMatch(
     babysit,
     /ticket or scope|another layer|only the owner writes/,
   );
+});
+
+test("the GitHub rules keep the request phrase out of other text and exempt the request comment from the disclaimer", () => {
+  const rules = flowedText("rules/github-repository-configuration.md");
+  for (const requirement of [
+    /Write the configured reviewer's request phrase only in a comment that requests a review/,
+    /That comment holds exactly `request.comment`, with no AI disclaimer: it is exempt from the contribution guide's disclaimer rule/,
+    /The phrase never appears in prose, quotations, or code spans in any other comment, issue or pull request title, or body/,
+    /describe it as "the review request comment"/,
+  ])
+    assert.match(rules, requirement);
+  const guide = flowedText("CONTRIBUTING.md");
+  assert.match(
+    guide,
+    /A review request comment follows the `github-repository-configuration` rules instead/,
+  );
+  assert.doesNotMatch(guide, /request phrase/);
+});
+
+test("the GitHub rules hold the readiness roles and native blocker mechanics, and the guide keeps general readiness", () => {
+  const rules = flowedText("rules/github-repository-configuration.md");
+  assert.match(
+    rules,
+    /They apply to all work in the repository, including tracker work that changes no file/,
+  );
+  for (const requirement of [
+    /Applying `ready-for-agent` or `ready-for-human`, the review action, needs the repository `admin`, `maintain`, or `triage` role/,
+    /A `write` role, an author association, a bot identity, or a passing structure check supplies no authority/,
+    /When adding a native blocker, pass the blocking issue's numeric database ID as `issue_id`, not its issue number or `node_id`/,
+  ])
+    assert.match(rules, requirement);
+  const guide = flowedText("CONTRIBUTING.md");
+  assert.doesNotMatch(
+    guide,
+    /issue_id|node_id|`admin`|`maintain`|`triage` role/,
+  );
+  for (const requirement of [
+    /Applying `ready-for-agent` or `ready-for-human` is the review action, and the `github-repository-configuration` rules name the roles it needs/,
+    /After revising a contract or posting an Agent Brief, wait for the issue-contract workflow's revision notice before applying readiness\. Editing a contract removes its readiness/,
+    /A specification or ticket can be ready while its blockers are open/,
+    /Start a ticket only after its blockers are closed/,
+    /A triaged request's contract is its latest Agent Brief comment/,
+  ])
+    assert.match(guide, requirement);
+  assert.doesNotMatch(guide, /brief's heading comes right after/);
 });
 
 test("comment disclaimers show exact blockquote source followed by a blank line", () => {

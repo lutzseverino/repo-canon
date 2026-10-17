@@ -21,11 +21,13 @@ import {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sourceUrl = "https://github.com/fixture/repo-canon";
 const version = "v1.0.0";
+// Declarations whose rules govern all work, with empty confirmed scope.
+const repositoryWide = ["github-repository-configuration", "factory-workflow"];
 
 // Exercise the published CLI, with its real acquisition, adoption, installation
 // and rules lookup. Only GitHub HTTP and Git transport use disposable fixtures.
 // No Scriptorium implementation or host is needed.
-test("public CLI 7.1.0 installs factory workflow rules for the whole repository only in the factory profile", (t) => {
+test("public CLI 7.1.0 installs the GitHub rules for the whole repository in both profiles, and factory workflow rules only in the factory profile", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const prefix = process.env.REPO_STANDARDS_PREFIX ?? join(directory, "cli");
@@ -183,16 +185,14 @@ test("public CLI 7.1.0 installs factory workflow rules for the whole repository 
         ["answers-required", "contextual"].includes(report.outcome),
         JSON.stringify(report),
       );
-      const workflow = report.contextual?.find(
-        (entry) => entry.id === "factory-workflow",
-      );
-      if (workflow) {
-        assert.equal(profile, "factory");
-        assert.deepEqual(workflow.allowedTargets, {
-          paths: [],
-          directories: [],
-        });
-      }
+      for (const entry of report.contextual ?? [])
+        if (repositoryWide.includes(entry.id)) {
+          if (entry.id === "factory-workflow") assert.equal(profile, "factory");
+          assert.deepEqual(entry.allowedTargets, {
+            paths: [],
+            directories: [],
+          });
+        }
       const questions = report.answers.questions.map((question) => {
         const [kind, name] = question.id.split(":");
         let answer = question.answer;
@@ -207,8 +207,8 @@ test("public CLI 7.1.0 installs factory workflow rules for the whole repository 
         )
           answer = null;
         assert.notEqual(answer, undefined, question.id);
-        if (name === "factory-workflow" && kind === "scope") {
-          assert.equal(profile, "factory");
+        if (repositoryWide.includes(name) && kind === "scope") {
+          if (name === "factory-workflow") assert.equal(profile, "factory");
           assert.deepEqual(answer.candidates, []);
           assert.deepEqual(answer.unresolved, []);
         }
@@ -226,19 +226,22 @@ test("public CLI 7.1.0 installs factory workflow rules for the whole repository 
         ...(path ? [path] : []),
       );
       assert.equal(child.status, 0, JSON.stringify(lookup));
-      const workflow = lookup.rules.filter(
-        (rule) => rule.declaration === "factory-workflow",
-      );
-      assert.equal(workflow.length, profile === "factory" ? 1 : 0);
-      if (profile === "factory") {
-        assert.equal(workflow[0].coverage, "repository");
+      for (const declaration of repositoryWide) {
+        const rules = lookup.rules.filter(
+          (rule) => rule.declaration === declaration,
+        );
+        const expected =
+          declaration === "factory-workflow" && profile !== "factory" ? 0 : 1;
+        assert.equal(rules.length, expected, `${profile} ${declaration}`);
+        if (!expected) continue;
+        assert.equal(rules[0].coverage, "repository");
         assert.equal(
-          workflow[0].content,
-          readFileSync(join(root, "rules/factory-workflow.md"), "utf8"),
+          rules[0].content,
+          readFileSync(join(root, `rules/${declaration}.md`), "utf8"),
         );
         assert.equal(
-          readFileSync(join(project, workflow[0].path), "utf8"),
-          workflow[0].content,
+          readFileSync(join(project, rules[0].path), "utf8"),
+          rules[0].content,
         );
       }
       assert.ok(
