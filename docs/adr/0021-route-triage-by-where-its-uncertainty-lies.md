@@ -2,7 +2,8 @@
 
 Triage sorts each intake request by where the answer to its open questions
 lives, not by its category label. A code-bound request, whose expected result
-is clear and whose remaining questions the code or logs can answer, is
+is clear and whose remaining questions the code, logs, or a
+reproduction can answer, is
 researched by a research run that writes its Agent Brief; the orchestrating
 agent then reviews that brief independently and accepts it by applying
 readiness. An intent-bound request, whose missing answer is the owner's intent,

@@ -510,7 +510,7 @@ test("AGENTS.md names no rules path", () => {
 // edit here in the same pull request; never derive a limit from the document.
 const wordBudgets = {
   // Raised from 1970 for the Triage section (#500).
-  "CONTRIBUTING.md": 2246,
+  "CONTRIBUTING.md": 2263,
   "AGENTS.md": 105,
 };
 
@@ -970,8 +970,9 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /It is intent-bound when an open question needs the owner's intent, a policy, or a trade-off they choose/,
     /including for a bug/,
     /Missing evidence or access never licenses inventing policy/,
-    /a research run verifies the claim and posts the Agent Brief/,
-    /an agent first gathers the facts from the code/,
+    /the research run verifies the claim and posts the Agent Brief/,
+    /The orchestrating agent runs triage and starts a research run, a separate agent, for each request/,
+    /it first gathers the facts from the code/,
     /short rounds of numbered questions, each with a recommended answer, records the owner's decisions on the issue, and has the brief written from them/,
     /A recorded decision is not asked again/,
     /The orchestrating agent, never the run that wrote the brief, then reviews/,
@@ -979,13 +980,13 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /an implementation choice, an option list, or a fallback value, does not hold/,
     /an unanswered required question blocks acceptance/,
     /accepts a brief that holds by applying readiness to its revision, records its blockers, and tells the owner with links/,
-    /When the revision notice never arrives, or its credentials cannot apply readiness, it hands the brief to the owner/,
+    /When the revision notice never arrives, or its credentials cannot apply readiness, it leaves readiness to the owner/,
   ])
     assert.match(triage, requirement);
   const github = flowedText("rules/github-repository-configuration.md");
   for (const requirement of [
     /An orchestrating agent that accepts an Agent Brief applies its readiness only when the credentials it was given hold one of these roles, and only after the issue-contract workflow's revision notice for the brief revision it reviewed/,
-    /With other credentials, or without that notice, it applies no readiness and hands the brief to the owner/,
+    /With other credentials, or without that notice, it applies no readiness and leaves readiness to the owner/,
     /The run that wrote the brief never applies its readiness/,
     /an edit to the brief removes it until the new revision is reviewed/,
   ])
@@ -995,7 +996,7 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /An orchestrating agent that accepts the brief is that reviewer: it chooses the label itself/,
     /the research run that suggested it applies no label/,
     /The factory accepts readiness only from a person/,
-    /tells the owner, with links, that the brief it accepted waits for a person's readiness/,
+    /tells the owner, with links, that the brief it accepted waits for a person's readiness, even when its own readiness stands under the GitHub rules/,
     /It never reports that its own readiness started a run/,
   ])
     assert.match(factory, requirement);
@@ -1005,12 +1006,12 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /### Intent-bound path/,
     /### Accept a brief that holds/,
     /Passing the issue-contract check proves the shape, never that the brief holds/,
-    /It never applies readiness or a `model:` label and never decides that its own brief holds/,
+    /Leave readiness, labels, and the judgment of its brief to yourself/,
+    /Every research run, on either path, does two checks first/,
     /Call the Skill tool twice, for "grilling" and "domain-modeling"/,
     /Skip every question a recorded owner decision already answers/,
-    /A required question still unanswered blocks acceptance/,
-    /If no notice arrives, do not apply readiness/,
-    /Never retry under another identity/,
+    /accept only once every one they must answer is answered/,
+    /If no notice arrives, leave readiness to the owner/,
   ])
     assert.match(skill, method);
   // The owner's amendment withdrew the rule that the owner finishes every

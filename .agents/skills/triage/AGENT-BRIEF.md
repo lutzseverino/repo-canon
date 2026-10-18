@@ -50,7 +50,7 @@ Implementation choices that don't change what users or operators see stay with t
 
 ## Triage notes
 
-Post triage notes after the brief, in the same comment, never between the disclaimer and the `## Agent Brief` heading:
+The triage notes that accompany a brief follow it in the same comment, never between the disclaimer and the `## Agent Brief` heading. Fact-finding and owner decisions posted before the brief exists are separate triage notes comments. A brief's notes cover:
 
 - **Path**: code-bound or intent-bound, with a one-line reason.
 - **Verification**: what was checked and how (reproduction, code path, tests run), and where the redundancy search looked.

@@ -44,8 +44,8 @@ The factory accepts readiness only from a person. Readiness that an agent's
 tool applies through a GitHub App or bot account never starts a run, so the
 issue waits until a person applies readiness. An orchestrating agent working
 through such an account tells the owner, with links, that the brief it accepted
-waits for a person's readiness, whether or not the GitHub rules let that
-account apply readiness. It never reports that its own readiness started a run.
+waits for a person's readiness, even when its own readiness stands under the
+GitHub rules. It never reports that its own readiness started a run.
 
 ## State labels
 

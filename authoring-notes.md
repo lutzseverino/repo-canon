@@ -119,8 +119,8 @@ repeated.
   [ADR 0019](docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md):
   its source is its installed path, `.agents/skills/triage`, its `CREDITS.md`
   names the upstream commit and what changed, and the forked material keeps
-  the upstream notice. The owner first asked that the owner finish every
-  brief, then withdrew that rule the same day; no rule restores it.
+  the upstream notice. The owner first approved a rule that the owner finish
+  every brief, then replaced it the same day; no rule restores it.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
   maintainer to install from upstream at user scope; the
   [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)
@@ -195,7 +195,7 @@ repeated.
   the delivered v2 discovery interface for arbitrary Project README targets;
   demonstrate complete coverage before claiming monorepo adoption support.
 - CONTRIBUTING.md is the one home of Repo Canon's contribution rules: issues
-  and implementation contracts, readiness, development setup, validation, pull
+  and implementation contracts, triage, readiness, development setup, validation, pull
   requests, and titles and commits. GitHub specifics and factory-only workflow
   live instead in the installed rules of the declarations they belong to,
   which apply to the whole repository. Every other file cites it
@@ -302,7 +302,7 @@ repeated.
   approved-revision selector, or revision invalidation mechanism. Repo Canon's
   readiness rules are its own convention and live in `CONTRIBUTING.md`, the
   GitHub repository configuration rules, and its automation, preserving
-  upstream skill content.
+  pinned upstream skill content.
 
 ## Source profile
 
