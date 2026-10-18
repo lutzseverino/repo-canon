@@ -28,7 +28,8 @@ preferences. A single fixture runs with
 Run `node --test test/repository-wide-rules.test.mjs` for a fresh adoption of
 both profiles and repository-wide rules lookup with public CLI 7.2.0: the
 GitHub rules in both profiles and the factory workflow rules only in the
-factory profile. It uses
+factory profile. It also checks that adoption installs the contribution guide
+and the `triage` fork byte for byte. It uses
 the release fixture's answers and a disposable source containing only declared
 inputs; GitHub HTTP responses and Git transport use local fixtures, with no
 in-tree factory dependency. Set `REPO_STANDARDS_PREFIX` to reuse that public
@@ -145,5 +146,5 @@ accepts full commit SHAs and reads published tag and branch refs with
   profiles' ownership, declarations, executable prerequisites, and the
   validation boundary.
 - [Skill exercises](skill-exercises.md): the procedure, fixture builders,
-  common harness, and scenarios for exercising the pinned skills and the
-  `babysit` skill.
+  common harness, and scenarios for exercising the pinned skills, the `triage`
+  fork, and the `babysit` skill.

@@ -509,7 +509,8 @@ test("AGENTS.md names no rules path", () => {
 // count after the last held rules move (#517, #518). Raising one is a deliberate
 // edit here in the same pull request; never derive a limit from the document.
 const wordBudgets = {
-  "CONTRIBUTING.md": 1970,
+  // Raised from 1970 for the Triage section (#500).
+  "CONTRIBUTING.md": 2263,
   "AGENTS.md": 105,
 };
 
@@ -646,8 +647,8 @@ function snapshotFiles(directory, prefix = "") {
   });
 }
 
-// Adoption installs only workflow skills, as ADR 0018 decides: 17 pinned
-// upstream skills and Repo Canon's own babysit.
+// Adoption installs only workflow skills, as ADR 0018 decides: 16 pinned
+// upstream skills, Repo Canon's own babysit, and its triage fork (ADR 0021).
 const workflowSkills = [
   "babysit",
   "code-review",
@@ -817,11 +818,6 @@ const dormantRoutes = [
     reason: missingSetupFiles,
   },
   {
-    skill: "triage",
-    target: "setup-matt-pocock-skills",
-    reason: missingSetupFiles,
-  },
-  {
     skill: "wayfinder",
     target: "setup-matt-pocock-skills",
     reason: missingSetupFiles,
@@ -840,15 +836,10 @@ function routesTo(content, target) {
 
 test("installed skill routes to uninstalled vendored skills are dormant or have contribution overrides", () => {
   const installed = declaredSkills();
+  // A forked skill is installed under its upstream name from its own source.
   const uninstalled = upstreamManifest.skills
-    .filter(
-      (path) =>
-        !installed.some(
-          ({ source }) =>
-            source === `vendor/mattpocock-skills/${path.slice(2)}`,
-        ),
-    )
-    .map((path) => basename(path));
+    .map((path) => basename(path))
+    .filter((name) => !installed.some((skill) => skill.name === name));
   const contributing = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
   const firing = new Set();
 
@@ -931,6 +922,113 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
       "wait.mjs",
     ],
   );
+});
+
+test("adoption installs Repo Canon's triage fork, which credits its upstream and leaves the pin", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.match(
+    declarations,
+    /\n {4}skill-triage:\n {6}kind: skill\n {6}name: triage\n {6}source: \.agents\/skills\/triage\n/,
+  );
+  const fork = join(root, ".agents/skills/triage");
+  assert.deepEqual(snapshotFiles(fork).sort(), [
+    "AGENT-BRIEF.md",
+    "CREDITS.md",
+    "OUT-OF-SCOPE.md",
+    "SKILL.md",
+    "agents/openai.yaml",
+  ]);
+  assert.ok(
+    !existsSync(join(snapshotRoot, "skills/engineering/triage")),
+    "the forked skill leaves the vendored snapshot",
+  );
+  // The files the fork keeps unchanged still match the pinned upstream bytes.
+  for (const path of ["OUT-OF-SCOPE.md", "agents/openai.yaml"])
+    assert.equal(
+      createHash("sha256")
+        .update(readFileSync(join(fork, path)))
+        .digest("hex"),
+      upstreamSnapshot.files[`skills/engineering/triage/${path}`],
+      `${path} is unchanged from ${upstreamSnapshot.tag}`,
+    );
+  const credits = flowedText(".agents/skills/triage/CREDITS.md");
+  assert.ok(credits.includes(upstreamSnapshot.commit));
+  assert.match(credits, /tag `v1\.3\.1`/);
+  assert.match(credits, /`\.agents\/skills\/LICENSE\.mattpocock-skills`/);
+  assert.match(
+    flowedText("THIRD_PARTY_NOTICES.md"),
+    /Repo Canon's `triage` skill is a fork of the collection's `triage` skill and keeps the forked material under the same notice/,
+  );
+});
+
+test("the guide, the installed rules and the triage skill route by uncertainty and accept only reviewed briefs", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  const triage = /## Triage (.*?) ## Readiness/.exec(guide)?.[1] ?? "";
+  for (const requirement of [
+    /routes an intake request by where its uncertainty lies, not by its category label/,
+    /A request is code-bound when its expected result is clear/,
+    /It is intent-bound when an open question needs the owner's intent, a policy, or a trade-off they choose/,
+    /including for a bug/,
+    /Missing evidence or access never licenses inventing policy/,
+    /the research run verifies the claim and posts the Agent Brief/,
+    /The orchestrating agent runs triage and starts a research run, a separate agent, for each request/,
+    /it first gathers the facts from the code/,
+    /short rounds of numbered questions, each with a recommended answer, records the owner's decisions on the issue, and has the brief written from them/,
+    /A recorded decision is not asked again/,
+    /The orchestrating agent, never the run that wrote the brief, then reviews/,
+    /Passing the structure check never makes a brief hold/,
+    /an implementation choice, an option list, or a fallback value, does not hold/,
+    /an unanswered required question blocks acceptance/,
+    /accepts a brief that holds by applying readiness to its revision, records its blockers, and tells the owner with links/,
+    /When the revision notice never arrives, or its credentials cannot apply readiness, it leaves readiness to the owner/,
+  ])
+    assert.match(triage, requirement);
+  const github = flowedText("rules/github-repository-configuration.md");
+  for (const requirement of [
+    /An orchestrating agent that accepts an Agent Brief applies its readiness only when the credentials it was given hold one of these roles, and only after the issue-contract workflow's revision notice for the brief revision it reviewed/,
+    /With other credentials, or without that notice, it applies no readiness and leaves readiness to the owner/,
+    /The run that wrote the brief never applies its readiness/,
+    /an edit to the brief removes it until the new revision is reviewed/,
+  ])
+    assert.match(github, requirement);
+  const factory = flowedText("rules/factory-workflow.md");
+  for (const requirement of [
+    /An orchestrating agent that accepts the brief is that reviewer: it chooses the label itself/,
+    /the research run that suggested it applies no label/,
+    /The factory accepts readiness only from a person/,
+    /tells the owner, with links, that the brief it accepted waits for a person's readiness, even when its own readiness stands under the GitHub rules/,
+    /It never reports that its own readiness started a run/,
+  ])
+    assert.match(factory, requirement);
+  const skill = flowedText(".agents/skills/triage/SKILL.md");
+  for (const method of [
+    /### Code-bound path/,
+    /### Intent-bound path/,
+    /### Accept a brief that holds/,
+    /Passing the issue-contract check proves the shape, never that the brief holds/,
+    /Leave readiness, labels, and the judgment of its brief to yourself/,
+    /Every research run, on either path, does two checks first/,
+    /Call the Skill tool twice, for "grilling" and "domain-modeling"/,
+    /Skip every question a recorded owner decision already answers/,
+    /accept only once every one they must answer is answered/,
+    /If no notice arrives, leave readiness to the owner/,
+  ])
+    assert.match(skill, method);
+  // The owner's amendment withdrew the rule that the owner finishes every
+  // brief; nothing restates it.
+  for (const document of [
+    "CONTRIBUTING.md",
+    "rules/github-repository-configuration.md",
+    "rules/factory-workflow.md",
+    ".agents/skills/triage/SKILL.md",
+    ".agents/skills/triage/AGENT-BRIEF.md",
+  ])
+    assert.doesNotMatch(
+      flowedText(document),
+      /owner (?:must )?finish(?:es)? (?:every|each|the) brief|never applies readiness or `model:` labels to a briefed issue/i,
+      document,
+    );
+  assert.doesNotMatch(skill, /setup-matt-pocock-skills/);
 });
 
 test("babysit and the factory image rules name both supported Node.js majors", () => {
@@ -1145,20 +1243,20 @@ test("comment disclaimers show exact blockquote source followed by a blank line"
   );
 });
 
-test("the guide's triage disclaimer matches the pinned skill and passes the issue-contract check", () => {
+test("the guide's triage disclaimer matches the triage skill and passes the issue-contract check", () => {
   const guide = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
   const triageLine =
     /^```markdown\n(> \*This was generated by AI during triage\.\*)\n```$/m.exec(
       guide,
     )?.[1];
   const skill = readFileSync(
-    join(root, "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md"),
+    join(root, ".agents/skills/triage/SKILL.md"),
     "utf8",
   );
-  const pinnedLine = /^```\n(> [^\n]+)\n```$/m.exec(skill)?.[1];
+  const skillLine = /^```\n(> [^\n]+)\n```$/m.exec(skill)?.[1];
   assert.ok(triageLine);
-  assert.ok(pinnedLine);
-  assert.equal(triageLine, pinnedLine);
+  assert.ok(skillLine);
+  assert.equal(triageLine, skillLine);
 
   const decision = decideIssueContract({
     repository,

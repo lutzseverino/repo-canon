@@ -11,7 +11,7 @@ and pull request templates, the skill setup files under `docs/agents`, the
 trusted validation workflows with their scripts, the vendored rendered-Markdown
 runtime and parsers with their notices, the pinned skills with their upstream
 license notice, the HumanLayer license notice for material reproduced in the
-`pr` skill's Summary, Repo Canon's own `babysit` skill, and, in the factory
+`pr` skill's Summary, Repo Canon's own `babysit` and `triage` skills, and, in the factory
 profile, the factory configuration and the sandbox image workflow. It is installed
 identically in every adopting repository that selects its profile and changes
 only through a Repo Canon release.
@@ -87,11 +87,12 @@ repeated.
   productivity skills, matching its plugin manifest; upstream removed
   `resolving-merge-conflicts`. Experimental skills are excluded; the upstream
   in-progress, misc, and deprecated categories are outside the regular set.
-  Repo Canon declares 17 of them: `code-review`, `codebase-design`,
+  Repo Canon installs 17 of them: `code-review`, `codebase-design`,
   `diagnosing-bugs`, `domain-modeling`, `grill-with-docs`, `grilling`,
   `implement`, `improve-codebase-architecture`, `pr`, `prototype`, `research`,
   `tdd`, `to-spec`, `to-tickets`, `triage`, `wayfinder`, and
-  `writing-for-agents`. `prototype` stays because `wayfinder` calls it. The
+  `writing-for-agents`, 16 from the pin and `triage` as Repo Canon's own fork.
+  `prototype` stays because `wayfinder` calls it. The
   vendored tree holds only those skills and the setup seeds that the skill setup
   files are installed from; `implement-spec` is not vendored, because every
   factory run is a direct run, as
@@ -99,11 +100,27 @@ repeated.
   Routes to `setup-matt-pocock-skills` stay dormant while the skill setup files
   are installed; the route test lists them with that reason.
 - The standards source manages reviewed, pinned upstream skill snapshots and
-  distributes changes through standards releases. Keep upstream skill content
-  intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
+  distributes changes through standards releases. Keep pinned upstream skill
+  content intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
   rules files, not in the skills or their setup files. The snapshot follows
   the [upstream-compatibility procedure](docs/development/upstream-compatibility.md)
   and is not updated independently by adopting contributors.
+- Triage routes each request by where its uncertainty lies, as
+  [ADR 0021](docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md)
+  decides: research and independent acceptance by the orchestrating agent for
+  a code-bound request, and fact-finding and a grilling session with the owner
+  before the brief for an intent-bound one. The routing and acceptance rules
+  live in [`CONTRIBUTING.md`](CONTRIBUTING.md#triage), the readiness
+  credentials in the
+  [GitHub repository configuration rules](rules/github-repository-configuration.md),
+  and the model choice and person-only factory readiness in the
+  [factory workflow rules](rules/factory-workflow.md). The method restates
+  most of the pinned `triage` procedure, so `triage` is forked under
+  [ADR 0019](docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md):
+  its source is its installed path, `.agents/skills/triage`, its `CREDITS.md`
+  names the upstream commit and what changed, and the forked material keeps
+  the upstream notice. The owner first approved a rule that the owner finish
+  every brief, then replaced it the same day; no rule restores it.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
   maintainer to install from upstream at user scope; the
   [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)
@@ -178,7 +195,7 @@ repeated.
   the delivered v2 discovery interface for arbitrary Project README targets;
   demonstrate complete coverage before claiming monorepo adoption support.
 - CONTRIBUTING.md is the one home of Repo Canon's contribution rules: issues
-  and implementation contracts, readiness, development setup, validation, pull
+  and implementation contracts, triage, readiness, development setup, validation, pull
   requests, and titles and commits. GitHub specifics and factory-only workflow
   live instead in the installed rules of the declarations they belong to,
   which apply to the whole repository. Every other file cites it
@@ -273,7 +290,7 @@ repeated.
 
 ## Verified upstream facts
 
-- The 17 declared skills are self-contained with respect to concrete internal
+- The 17 installed workflow skills are self-contained with respect to concrete internal
   skill invocations and referenced resources; none requires an experimental,
   miscellaneous, or deprecated skill. Full directories must be retained.
   Harness facilities such as subagents and context controls remain runtime
@@ -285,7 +302,7 @@ repeated.
   approved-revision selector, or revision invalidation mechanism. Repo Canon's
   readiness rules are its own convention and live in `CONTRIBUTING.md`, the
   GitHub repository configuration rules, and its automation, preserving
-  upstream skill content.
+  pinned upstream skill content.
 
 ## Source profile
 

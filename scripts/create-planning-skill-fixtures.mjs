@@ -147,6 +147,8 @@ function createRepository(
 }
 
 function skillPath(name) {
+  // Repo Canon's own fork of triage is its installed source, not vendored.
+  if (name === "triage") return join(sourceRoot, ".agents/skills/triage");
   const category = name === "grilling" ? "productivity" : "engineering";
   const path = join(skillsRoot, category, name);
   if (!existsSync(path))
@@ -370,7 +372,7 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
       context:
         "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n",
       exercise:
-        "## Task\n\nUse triage on .scratch/receipts/issues/01-export-receipts.md. Then assess the parent and ticket release records in .scratch/receipts/review-inputs.md. Record the readiness actions needed as local Markdown; perform no real factory or GitHub operation.\n\n## Expected outcome\n\nLookup exposes both GitHub repository configuration and factory workflow rules. The Agent Brief follows the GitHub shape and order; a model label suggestion and its reason follow in triage notes, outside the brief. Explain the difference between that suggestion and a person applying exactly one chosen model label before or with ticket readiness. The parent requires no model and never runs. Parent readiness in the same second as the latest ticket link does not release tickets; remove and reapply it later. A later ticket requires another parent readiness application. Tickets also require their own readiness and closed blockers. Cite the factory rules' Parent readiness and Model selection sections in the local outcome.\n",
+        "## Task\n\nUse triage on .scratch/receipts/issues/01-export-receipts.md. Then assess the parent and ticket release records in .scratch/receipts/review-inputs.md. Record the readiness actions needed as local Markdown; perform no real factory or GitHub operation.\n\n## Expected outcome\n\nLookup exposes both GitHub repository configuration and factory workflow rules. The Agent Brief follows the GitHub shape and order; a model label suggestion and its reason follow in triage notes, outside the brief. Explain the difference between that suggestion and whoever accepts the brief, a person or the orchestrating agent, applying exactly one chosen model label before or with ticket readiness. The parent requires no model and never runs. Parent readiness in the same second as the latest ticket link does not release tickets; remove and reapply it later. A later ticket requires another parent readiness application. Tickets also require their own readiness and closed blockers. Cite the factory rules' Parent readiness and Model selection sections in the local outcome.\n",
     },
   );
   write(
@@ -397,6 +399,151 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
     path: root,
     skills: ["triage"],
     initial: commit(root, "chore: establish factory planning exercise"),
+  };
+}
+
+{
+  const root = createRepository(
+    "triage-routing",
+    ["triage", "grilling", "domain-modeling"],
+    {
+      profile: "factory",
+      agents:
+        "# Agent guidance\n\nRead docs/agents/project.md and docs/exercise.md before tracker work. This is a local simulation of a repository a factory serves.\n",
+      context:
+        "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Retry window**:\nThe period after a failed Parcel dispatch in which dispatch is retried.\n_Avoid_: Timeout\n",
+      exercise:
+        "## Task\n\nYou are the orchestrating agent. Use triage on the three requests in .scratch/routing/issues/, with .scratch/routing/review-inputs.md as the controlled inputs. Sort all three. Take 01 and 02 through their paths to acceptance; for 03, record its path and reason only. Start a separate research run with a fresh context for each request you research; when the harness cannot nest sub-agents, the operator runs it and relays its messages verbatim. The operator also plays the owner and supplies revision notices; neither is a real person or GitHub event.\n\n## Expected outcome\n\n01 is code-bound: its expected result is documented. 02 is labeled bug but intent-bound, because its fix needs a Retry window nobody chose. 03 is an intent-bound feature request. Classification follows where the uncertainty lies, not the label.\n\nFor 01, the published revision r1 passes the GitHub rules' Agent Brief shape yet does not hold. The orchestrating agent checks it against the issue and code itself, names the defects it finds (an untestable criterion, scope the request never asked for, a wrong code path, and the missing dependency on 05), and sends them to the research run, which revises the brief. Only after the revision notice for the corrected revision does it accept that exact revision: it applies ready-for-agent with exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links. r1's readiness would never have been valid, and the research run applies no label.\n\nFor 02, the research run gathers code facts first and writes no brief. The orchestrating agent then asks the owner short rounds of numbered questions, each with a recommended answer, and never re-asks the recorded decision on transient failures. It records the answers on the issue before the brief is written from them, and refuses any brief that leaves a choice to the implementing agent, lists options, or carries a value the owner did not choose, returning that question to the owner instead.\n\nAlso record, without acting on them, what the orchestrating agent does when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness. Cite the contribution guide's Triage and Readiness sections, the GitHub rules' Readiness roles section, and the factory rules' Model selection section in the local outcome.\n",
+    },
+  );
+  write(
+    root,
+    "docs/usage/receipts.md",
+    "# Delivery receipt export\n\nExport the Delivery receipts of one UTC date as CSV with the header `parcel_reference,delivered_at,signer_name`. A date with no deliveries returns a CSV holding only that header row.\n",
+  );
+  write(
+    root,
+    "src/receipts.mjs",
+    `const header = "parcel_reference,delivered_at,signer_name";
+
+export function exportReceipts(receipts, date) {
+  const rows = receipts.filter(({ deliveredAt }) => deliveredAt.startsWith(date));
+  if (rows.length === 0) throw new Error(\`No Delivery receipts for \${date}\`);
+  return [header, ...rows.map((row) => [row.reference, row.deliveredAt, row.signer].join(","))].join("\\n");
+}
+`,
+  );
+  write(
+    root,
+    "src/dispatch.mjs",
+    `// Minutes after the first failure during which a transient carrier failure is retried.
+const RETRY_WINDOW_MINUTES = 5;
+
+export function shouldRetry(failure, minutesSinceFirstFailure) {
+  if (failure.kind !== "transient") return false;
+  return minutesSinceFirstFailure < RETRY_WINDOW_MINUTES;
+}
+`,
+  );
+  write(
+    root,
+    "docs/operations/carrier-incidents.md",
+    "# Carrier incidents\n\nLast quarter, 90% of carrier incidents cleared within 20 minutes and the longest lasted three hours. Once dispatch stops retrying, operators replay failed Parcels by hand. Operators have said they would prefer one hour of retries.\n",
+  );
+  write(
+    root,
+    ".scratch/routing/issues/01-empty-date-export-fails.md",
+    `# Exporting a date with no deliveries fails
+
+Status: needs-triage
+Category: bug
+Blocked by: None
+
+## Request
+
+Exporting Delivery receipts for a UTC date with no deliveries fails with "No Delivery receipts for 2026-10-04". The receipt export documentation says such a date returns a header-only CSV.
+
+## Comments
+
+### Agent Brief comment, revision r1 (controlled input)
+
+> *This was generated by AI during triage.*
+
+## Agent Brief
+
+**Category:** bug
+**Summary:** Empty-date receipt exports should return a header-only CSV instead of failing
+
+**Current behavior:**
+Exporting a date with no Delivery receipts fails because the CSV writer cannot write zero rows.
+
+**Desired behavior:**
+An empty date returns a CSV holding only the header row. Add a \`skipEmpty\` option that returns no file at all for an empty date.
+
+**Key interfaces:**
+- \`exportReceipts(receipts, date)\`: returns CSV text for every date
+
+**Acceptance criteria:**
+- [ ] Empty exports work correctly
+- [ ] \`skipEmpty\` suppresses the file for an empty date
+
+**Out of scope:**
+- PDF export
+
+## Triage Notes
+
+- Path: code-bound; the documentation states the expected result.
+- Model: suggest \`model:claude-haiku-4-5-20251001\`, a one-function fix.
+- Dependencies: none.
+
+### Revision notice (controlled input)
+
+The issue-contract workflow published revision r1 as a valid triaged Agent Brief awaiting review.
+`,
+  );
+  write(
+    root,
+    ".scratch/routing/issues/02-dispatch-retry-gives-up.md",
+    `# Dispatch stops retrying before carriers recover
+
+Status: needs-triage
+Category: bug
+Blocked by: None
+
+## Request
+
+Dispatch stops retrying a Parcel five minutes after a transient carrier failure, but carrier incidents usually last longer, so operators replay Parcels by hand. Retries should continue long enough for carriers to recover.
+
+## Comments
+
+### Triage notes (earlier session)
+
+> *This was generated by AI during triage.*
+
+Owner decisions:
+
+1. Only transient carrier failures are retried; validation failures never are. (Owner, 2026-10-10, in the earlier owner thread.)
+`,
+  );
+  write(
+    root,
+    ".scratch/routing/issues/03-pdf-receipts.md",
+    "# Offer Delivery receipts as PDF\n\nStatus: needs-triage\nCategory: enhancement\nBlocked by: None\n\n## Request\n\nOperators want to send customers a PDF of a Delivery receipt, with the signer's name, instead of the CSV.\n",
+  );
+  write(
+    root,
+    ".scratch/routing/issues/05-shared-csv-writer.md",
+    "# 05: Move receipt export to the shared CSV writer\n\nStatus: ready-for-agent\nModel: model:claude-sonnet-5-5\nBlocked by: None\n\n## What to build\n\nReplace the receipt export's inline CSV building with the shared exports CSV writer. Every later change to receipt CSV output lands after this ticket, so it is made once, in the shared writer.\n",
+  );
+  write(
+    root,
+    ".scratch/routing/review-inputs.md",
+    "# Controlled review inputs\n\nThese are simulated participant inputs, not GitHub events or actual authority.\n\n- The orchestrating agent works through a person's account, which the owner delegated to this session and which holds the repository `triage` role. The research run has no credentials of its own.\n- A revision notice exists only once the participant supplies it for that revision. Revision r1 of 01's brief already has one.\n- The owner answers only the questions put to them in this session. Recorded owner decisions on an issue stand.\n- Ticket 05 is open and ready; it is not yet a native blocker of any issue.\n\nRecord every readiness, model label, blocker and owner notification as local Markdown in the issue files. Do not launch a factory.\n",
+  );
+  repositories["triage-routing"] = {
+    path: root,
+    skills: ["triage"],
+    initial: commit(root, "chore: establish triage routing exercise"),
   };
 }
 

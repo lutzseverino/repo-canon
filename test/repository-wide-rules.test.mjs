@@ -31,7 +31,7 @@ const repositoryWide = {
 // Exercise the published CLI, with its real acquisition, adoption, installation
 // and rules lookup. Only GitHub HTTP and Git transport use disposable fixtures.
 // No Scriptorium implementation or host is needed.
-test("public CLI 7.2.0 installs the GitHub rules for the whole repository in both profiles, and factory workflow rules only in the factory profile", (t) => {
+test("public CLI 7.2.0 installs the triage fork and the GitHub rules for the whole repository in both profiles, and factory workflow rules only in the factory profile", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const prefix = process.env.REPO_STANDARDS_PREFIX ?? join(directory, "cli");
@@ -246,6 +246,21 @@ test("public CLI 7.2.0 installs the GitHub rules for the whole repository in bot
     }
     assert.equal(report.outcome, "complete", JSON.stringify(report));
     assert.equal(invoke("status").report.readyToCommit, true);
+    // Adoption installs the source's triage fork and the contribution guide
+    // whose rules it carries out, byte for byte.
+    for (const path of [
+      "CONTRIBUTING.md",
+      ".agents/skills/triage/AGENT-BRIEF.md",
+      ".agents/skills/triage/CREDITS.md",
+      ".agents/skills/triage/OUT-OF-SCOPE.md",
+      ".agents/skills/triage/SKILL.md",
+      ".agents/skills/triage/agents/openai.yaml",
+    ])
+      assert.deepEqual(
+        readFileSync(join(project, path)),
+        readFileSync(join(root, path)),
+        `${profile} installs ${path}`,
+      );
     for (const path of [null, "wordtally.mjs", ".factory/config.json"]) {
       const { report: lookup, child } = invoke(
         "rules",

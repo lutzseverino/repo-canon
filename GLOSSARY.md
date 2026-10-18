@@ -46,6 +46,29 @@ agent-brief comment for a triaged request or in a directly authored
 specification or implementation ticket.
 _Avoid_: Intake report, any comment, inferred scope
 
+**Code-bound request**:
+An intake request whose expected result is clear and whose remaining questions
+the code, logs, or a reproduction can answer, so research writes its Agent
+Brief.
+_Avoid_: Bug, when meaning the triage path
+
+**Intent-bound request**:
+An intake request whose missing answer is the owner's intent, a policy, or a
+trade-off they choose, whatever its category label, so its Agent Brief is
+written from the owner's recorded decisions.
+_Avoid_: Feature request, when meaning the triage path
+
+**Orchestrating agent**:
+The agent a maintainer runs to triage requests, which starts their research
+runs, reviews each brief independently, puts intent questions to the owner,
+and accepts a brief that holds by applying readiness.
+_Avoid_: Factory, research run
+
+**Research run**:
+The sub-agent that gathers the facts for one request and, once nothing of the
+owner's intent is open, writes its Agent Brief. It never accepts its own brief.
+_Avoid_: Orchestrating agent, reviewer
+
 **Readiness**:
 The reviewed state of an implementation contract that an authorized reviewer
 considers sufficiently specified for work. It grants the work to an agent; the

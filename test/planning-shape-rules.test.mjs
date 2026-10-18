@@ -98,15 +98,15 @@ const rejected = (decision, error) => {
   );
 };
 
-test("the rules state the Agent Brief start, the pinned triage disclaimer, and every enforced field", () => {
+test("the rules state the Agent Brief start, the triage skill's disclaimer, and every enforced field", () => {
   assert.ok(briefStart, "the rules show the brief's first lines");
-  const pinned = readFileSync(
-    join(root, "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md"),
+  const skill = readFileSync(
+    join(root, ".agents/skills/triage/SKILL.md"),
     "utf8",
   );
   assert.equal(
     briefStart.split("\n")[0],
-    /^```\n(> [^\n]+)\n```$/m.exec(pinned)?.[1],
+    /^```\n(> [^\n]+)\n```$/m.exec(skill)?.[1],
   );
   assert.deepEqual(briefFields, [
     "Category",
