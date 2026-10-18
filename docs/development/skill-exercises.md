@@ -21,8 +21,8 @@ command from the Repo Canon root.
 
 Each builder creates its repositories under a new temporary directory, or under
 `--root <path>`, which must not exist yet. Each repository has real Git history,
-the exact shared `AGENTS.md`, `CONTRIBUTING.md`, and `docs/agents`
-configuration, scenario-specific project guidance in `docs/agents/project.md`,
+shared contribution and tracker guidance, scenario-specific project guidance
+in `docs/agents/project.md`,
 and repository-scoped `.agents/skills` symbolic links to the complete
 skill directories it needs. The repositories set `commit.gpgsign=false` in
 repository-local configuration and have no remote.
@@ -113,23 +113,65 @@ node scripts/create-planning-skill-fixtures.mjs
 npm run test:planning-skill-fixtures
 ```
 
-The builder writes `manifest.json` under its root and prints that path. Four
+The builder writes `manifest.json` under its root and prints that path. Five
 repositories cover eight skills: `project-agent-guidance`, which links no skill,
 supplies existing project-specific `AGENTS.md` instructions for the
 `project-agent-guidance` contextual work described in
 [adoption compatibility](adoption-compatibility.md#preserving-project-instructions);
 `planning` for `grill-with-docs`, `to-spec`, and `to-tickets`;
-`triage-wayfinder` for `triage` and `wayfinder`; and `delivery` for
-`implement`, `pr`, and `prototype`. The latter
+`triage-wayfinder` for `triage` and `wayfinder`; `factory-planning` for
+factory-profile triage and readiness decisions; and `delivery` for
+`implement`, `pr`, and `prototype`. The delivery repository
 includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
 support skills that exercised skills depend on, such as the productivity
 `grilling` skill that `grill-with-docs` uses.
 
-The repositories use a local Markdown tracker. It cannot supply GitHub
+Every repository has a `docs/exercise.md` task and expected outcomes. Start
+there, read the repository-scoped `repository-standards` skill, and run:
+
+```bash
+node .agents/skills/repository-standards/rules.mjs
+node .agents/skills/repository-standards/rules.mjs <path-to-change>
+```
+
+This exercise-only adapter reads a self-contained local index under
+`.repo-standards/rules/`; its README links the canonical rules copied from the
+source checkout. Both commands expose repository-wide requirements, including
+tracker work that changes no file. The adapter and rules are copied rather
+than linked, so lookup needs only Node.js and stays local. It does not install
+the production CLI or exercise adoption, available-update discovery, or full
+adopting-repository conformance. Root guidance points to this adapter; the
+upstream workflow skills remain intact.
+
+All scenarios explicitly use `standard`, except `factory-planning`, which
+alone uses `factory`. Standard scenarios expose GitHub repository configuration
+rules without factory workflow rules. The factory scenario exposes both and
+asks the agent to triage a ticket and assess controlled parent/ticket review
+records. Its outcomes cover a model suggestion after the Agent Brief, the
+person's model selection before ticket readiness, the parent never running,
+and renewed parent readiness after the latest ticket link, including a link
+in the same second and a later ticket. No factory is launched.
+
+Check produced briefs against the discovered GitHub rules' shape and ordering,
+and readiness decisions against those rules and `CONTRIBUTING.md`. Record the
+rule paths and sections used with each observed outcome. Review inputs are
+explicit participant-controlled simulations: a contract revision must lose
+readiness until renewed review. All issue and PR artifacts remain Markdown;
+exercise sessions require no remote contact, package downloads, publishing,
+real issue/PR writes or factory operations.
+
+The local Markdown tracker cannot supply GitHub
 permissions, issue-event IDs, or native relationships; the
 [issue contract fixtures](issue-contract-validation.md) cover those.
 
-The test verifies every repository and skill link, the manifest identities,
+The manifest records each scenario's profile and applicable rule source paths,
+plus hashes of both canonical rules, every lookup input and the local tracker
+seed under `source.inputFiles`. Linked workflow skill digests remain under
+`source.linkedSkillDirectories`.
+
+The tests verify every repository and skill link, the manifest identities,
+canonical rule bytes, local index and lookup discovery, profile isolation,
+lookup after relocation with an empty command search path, missing rule failure,
 local signing, an ordinary later commit under hostile global signing, and the
 managed-update boundary: a synthetic change to a candidate copy of a vendored
 skill is detected while the vendored directory stays unchanged.
