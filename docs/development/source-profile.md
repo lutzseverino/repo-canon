@@ -112,8 +112,8 @@ source, matching the inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@7.2.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
 the requirement is a minimum. The
-[release validation record](https://github.com/lutzseverino/repo-canon/pull/527)
-identifies the two runtime runs and their outcomes.
+[release validation record](https://github.com/lutzseverino/repo-canon/releases/tag/v0.16.0)
+identifies the reviewed source and its validation outcomes.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
