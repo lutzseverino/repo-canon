@@ -220,7 +220,7 @@ function repositoryReadFailure(operationName, identity, outcome) {
   const status = httpError?.[2];
   const diagnostic = `For full details, run gh api --hostname github.com ${apiEndpoint(identity)}.`;
   if (!status) {
-    return `${operationName} could not reach GitHub to verify ${identity}; check the connection and retry. ${diagnostic}`;
+    return `${operationName} could not verify ${identity}; retry after investigating the failure. ${diagnostic}`;
   }
   let next = "Retry later.";
   if (status === "404") {
