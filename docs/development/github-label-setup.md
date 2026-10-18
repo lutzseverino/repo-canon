@@ -64,8 +64,10 @@ based on the HTTP status or a connection failure, without embedding `gh`'s
 error text. The reason gives a recovery step: confirm repository access for
 404, sign in again for 401, wait for the rate limit to reset for a rate-limit
 403 or 429, or retry later for other HTTP failures. Connection failures ask
-to check the connection and retry. Each names `gh api repos/OWNER/REPO` to run
-for full diagnostics. An unparseable response retains its invalid JSON reason.
+to check the connection and retry. Each names
+`gh api --hostname github.com repos/OWNER/REPO` to run for full diagnostics
+against the verified repository, even when `GH_HOST` names another host. An
+unparseable response retains its invalid JSON reason.
 This keeps changing host, account, and trace details out of the inspection
 identity and any recorded reason for deferred remote setup.
 

@@ -218,7 +218,7 @@ function repositoryReadFailure(operationName, identity, outcome) {
   // identities and deferred setup records. Only classify gh's error text.
   const httpError = outcome.stderr.match(/^gh: (.*) \(HTTP (\d{3})\)/m);
   const status = httpError?.[2];
-  const diagnostic = `For full details, run gh api ${apiEndpoint(identity)}.`;
+  const diagnostic = `For full details, run gh api --hostname github.com ${apiEndpoint(identity)}.`;
   if (!status) {
     return `${operationName} could not reach GitHub to verify ${identity}; check the connection and retry. ${diagnostic}`;
   }

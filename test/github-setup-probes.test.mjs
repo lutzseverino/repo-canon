@@ -90,24 +90,32 @@ function assertProbe(outcome, status, message) {
 }
 
 for (const probe of probes) {
-  test(`${probe.name} keeps connection failures stable across probes and fixes`, (t) => {
+  test(`${probe.name} keeps connection failure diagnostics pinned to github.com across probes and fixes`, (t) => {
     const scenario = probeScenario(t, probe);
-    const expected = `${probe.name} could not reach GitHub to verify acme/widgets; check the connection and retry. For full details, run gh api repos/acme/widgets.`;
+    const expected = `${probe.name} could not reach GitHub to verify acme/widgets; check the connection and retry. For full details, run gh api --hostname github.com repos/acme/widgets.`;
     for (const repositoryError of [
       "dial tcp 10.20.30.40:443: i/o timeout (at 12345)",
       "proxyconnect tcp: dial tcp 10.90.80.70:3128: connection refused (at 67890)",
     ]) {
       scenario.updateState({ repositoryError });
-      assertProbe(scenario.invoke(), "not-ready", expected);
+      assertProbe(
+        scenario.invoke({}, { GH_HOST: "enterprise.example" }),
+        "not-ready",
+        expected,
+      );
       const fix = setup(t, probe.fix, { state: { repositoryError } });
       fix.before = snapshot(fix.project.root);
-      assertProbe(fix.invoke(), "blocked", expected);
+      assertProbe(
+        fix.invoke({}, { GH_HOST: "enterprise.example" }),
+        "blocked",
+        expected,
+      );
       assertNoWrites(fix);
     }
     assertNoWrites(scenario);
   });
 
-  test(`${probe.name} reports fixed HTTP failure reasons in probes and fixes`, async (t) => {
+  test(`${probe.name} pins stable HTTP failure diagnostics to github.com in probes and fixes`, async (t) => {
     for (const { error, status, next } of [
       {
         error: "gh: Not Found (HTTP 404)",
@@ -144,7 +152,7 @@ for (const probe of probes) {
         const scenario = probeScenario(st, probe);
         const fix = setup(st, probe.fix);
         fix.before = snapshot(fix.project.root);
-        const expected = `${probe.name} could not verify acme/widgets: GitHub returned HTTP ${status}. ${next} For full details, run gh api repos/acme/widgets.`;
+        const expected = `${probe.name} could not verify acme/widgets: GitHub returned HTTP ${status}. ${next} For full details, run gh api --hostname github.com repos/acme/widgets.`;
         for (const detail of [
           "trace at 12345 via proxy-one.invalid:3128",
           "trace at 67890 via rate-limit-proxy.invalid:8080 (HTTP 401)",
@@ -152,8 +160,16 @@ for (const probe of probes) {
           const repositoryError = `${detail}\n${error}`;
           scenario.updateState({ repositoryError });
           fix.updateState({ repositoryError });
-          assertProbe(scenario.invoke(), "not-ready", expected);
-          assertProbe(fix.invoke(), "blocked", expected);
+          assertProbe(
+            scenario.invoke({}, { GH_HOST: "enterprise.example" }),
+            "not-ready",
+            expected,
+          );
+          assertProbe(
+            fix.invoke({}, { GH_HOST: "enterprise.example" }),
+            "blocked",
+            expected,
+          );
         }
         assertNoWrites(scenario);
         assertNoWrites(fix);
