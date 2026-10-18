@@ -48,6 +48,11 @@ const sharedSourceFiles = [
   "docs/agents/domain.md",
   "docs/agents/issue-tracker.md",
   "docs/agents/triage-labels.md",
+  "rules/github-repository-configuration.md",
+  "rules/factory-workflow.md",
+  "scripts/support/repository-standards/SKILL.md",
+  "scripts/support/repository-standards/rules.mjs",
+  "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
 ];
 
 function argument(name) {
@@ -70,10 +75,18 @@ function write(root, path, content) {
   writeFileSync(target, content);
 }
 
-function createRepository(name, skills, { agents, context }) {
+function createRepository(
+  name,
+  skills,
+  { agents, context, exercise, profile = "standard" },
+) {
   const root = join(fixtureRoot, name);
   mkdirSync(root, { recursive: true });
-  write(root, "AGENTS.md", agents);
+  write(
+    root,
+    "AGENTS.md",
+    `${agents}\nBefore any work, read and use [.agents/skills/repository-standards/SKILL.md](.agents/skills/repository-standards/SKILL.md) for local installed-rules lookup.\n`,
+  );
   cpSync(join(sourceRoot, "CONTRIBUTING.md"), join(root, "CONTRIBUTING.md"));
   write(root, "GLOSSARY.md", context);
   write(
@@ -98,6 +111,35 @@ function createRepository(name, skills, { agents, context }) {
   mkdirSync(join(root, ".agents/skills"), { recursive: true });
   for (const skill of skills)
     symlinkSync(skillPath(skill), join(root, ".agents/skills", skill), "dir");
+  cpSync(
+    join(sourceRoot, "scripts/support/repository-standards"),
+    join(root, ".agents/skills/repository-standards"),
+    { recursive: true },
+  );
+  const declarations = ["github-repository-configuration"];
+  if (profile === "factory") declarations.push("factory-workflow");
+  const rules = declarations.map((declaration) => {
+    const input = `rules/${declaration}.md`;
+    const path = `.repo-standards/${input}`;
+    write(root, path, readFileSync(join(sourceRoot, input)));
+    return { declaration, coverage: "repository", path, input };
+  });
+  write(
+    root,
+    ".repo-standards/rules/index.json",
+    `${JSON.stringify({ profile, rules }, null, 2)}\n`,
+  );
+  write(
+    root,
+    ".repo-standards/rules/README.md",
+    `# Installed exercise rules\n\nProfile: ${profile}. These canonical rules apply to the whole repository, including tracker work.\n\nRun \`node .agents/skills/repository-standards/rules.mjs [path]\` from the fixture root.\n\n${rules.map(({ declaration }) => `- [${declaration}](${declaration}.md) covers the whole repository.`).join("\n")}\n`,
+  );
+  installLocalTracker(root);
+  write(
+    root,
+    "docs/exercise.md",
+    `# ${name} exercise\n\nProfile: ${profile}. Read the local repository-standards skill and run its lookup before starting. Record the selected profile and rule paths with the outcome. Read each exercised skill's SKILL.md.\n\n${exercise}\n\n## Rules verification\n\nCheck produced planning artifacts against the copied GitHub rules' Agent Brief and Wayfinder sections where applicable, and readiness against CONTRIBUTING.md and the GitHub rules' Readiness roles section. For a triage brief, verify its disclaimer, heading order, all required non-placeholder fields, matching category, and notes after the brief. Use local controlled reviewer inputs to record revision invalidation and renewed review, without claiming real authorization or issue-event validation.\n\nRecord observed outcomes and the rule sections used. Fixture construction alone is not a skill exercise.\n`,
+  );
   initializeFixtureRepository(root, {
     author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
   });
@@ -138,7 +180,7 @@ function installLocalTracker(root) {
   write(
     root,
     "docs/agents/project.md",
-    "# Exercise guidance\n\nThis repository is disposable. Use the local Markdown tracker and do not contact GitHub, publish branches, or send messages. Preserve Repo Canon contract terminology and the distinction between readiness and implementation eligibility.\n",
+    "# Exercise guidance\n\nThis repository is disposable. Use the local Markdown tracker for all issue and PR artifacts. Keep rule discovery local with the repository-standards exercise skill. Do not contact remote services, download packages, publish branches, send messages, or run a real factory or adoption. Preserve Repo Canon contract terminology and the distinction between readiness and implementation eligibility. Simulate reviews, labels, revision notices and event times as local Markdown records supplied by the participant; these are not real hosting-platform authority or automation.\n",
   );
 }
 
@@ -146,6 +188,8 @@ const repositories = {};
 
 {
   const root = createRepository("project-agent-guidance", [], {
+    exercise:
+      "## Task\n\nAssess candidate/AGENTS.md as project-agent-guidance contextual work. Preserve the Parcel API instructions in docs/agents/project.md and use the shared candidate as the root pointer.\n\n## Expected outcome\n\nProject instructions retain the Parcel terminology, identifier ADR and verify-api command. The standard-profile lookup exposes GitHub repository rules; no factory rules apply. All tracker and delivery artifacts stay local.\n",
     agents:
       "# Parcel API contributor instructions\n\nUse `Parcel` for accepted shipments. Read `docs/adr/0001-parcel-identifiers.md` before changing identifiers. Run `npm run verify-api` before committing API changes.\n",
     context:
@@ -161,17 +205,6 @@ const repositories = {};
     "docs/adr/0001-parcel-identifiers.md",
     "# Keep Parcel identifiers opaque\n\nParcel identifiers are opaque strings supplied by the carrier.\n",
   );
-  for (const path of [
-    "README.md",
-    "domain.md",
-    "issue-tracker.md",
-    "triage-labels.md",
-  ]) {
-    cpSync(
-      join(sourceRoot, "docs/agents", path),
-      join(root, "docs/agents", path),
-    );
-  }
   write(
     root,
     "candidate/AGENTS.md",
@@ -203,13 +236,14 @@ const repositories = {};
     "planning",
     ["grill-with-docs", "to-spec", "to-tickets", "domain-modeling", "grilling"],
     {
+      exercise:
+        "## Task\n\nUse grill-with-docs, to-spec and to-tickets on docs/planning/intake-batch-discussion.md, with the participant supplying unresolved decisions. Write a native specification and separate tickets in the local tracker.\n\n## Expected outcome\n\nThe specification preserves atomic Intake batches and the accepted scope. Tickets form independently releasable slices, with explicit blockers. Record readiness separately from blocker eligibility using controlled local review inputs. Standard-profile work requires no factory model selection or parent release gate.\n",
       agents:
         "# Agent guidance\n\nRead `CONTRIBUTING.md`, `docs/agents/issue-tracker.md`, and `docs/agents/domain.md` before planning. Native specifications and tickets are implementation contracts. Readiness does not bypass blockers.\n",
       context:
         "# Parcel intake\n\n## Language\n\n**Parcel**:\nA shipment accepted for delivery.\n_Avoid_: Package, item\n\n**Intake batch**:\nA set of Parcel declarations submitted together and accepted or rejected as one unit.\n_Avoid_: Upload\n",
     },
   );
-  installLocalTracker(root);
   write(
     root,
     "docs/adr/README.md",
@@ -252,13 +286,14 @@ Operators need to submit up to 100 Parcel declarations as one Intake batch. The 
       "prototype",
     ],
     {
+      exercise:
+        "## Task\n\nTriage .scratch/triage/01-export-receipts.md, then use wayfinder to choose the next eligible child of .scratch/shipping-map/map.md. Use participant answers and local tracker records only.\n\n## Expected outcome\n\nThe CSV request gets an Agent Brief satisfying the discovered GitHub rules, with triage notes after the brief. Simulate an authorized review, then a contract revision: readiness drops until renewed review of that revision. The Wayfinder run selects child 02; child 03 remains blocked. Maps and children carry no readiness or workflow state. Standard-profile triage has no factory model suggestion requirement.\n",
       agents:
         "# Agent guidance\n\nRead the local tracker, triage labels, and domain documentation before tracker work. The latest Agent Brief is the candidate contract. A revision loses readiness until renewed authorized review. Wayfinder eligibility uses open state, assignment, and blockers.\n",
       context:
         "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Retry window**:\nThe period in which an operator may retry a failed Parcel dispatch.\n_Avoid_: Timeout\n",
     },
   );
-  installLocalTracker(root);
   write(
     root,
     ".scratch/triage/01-export-receipts.md",
@@ -326,16 +361,58 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
 
 {
   const root = createRepository(
+    "factory-planning",
+    ["triage", "grilling", "domain-modeling", "research", "prototype"],
+    {
+      profile: "factory",
+      agents:
+        "# Agent guidance\n\nRead docs/agents/project.md and docs/exercise.md before planning. This is a local simulation of a repository a factory serves.\n",
+      context:
+        "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n",
+      exercise:
+        "## Task\n\nUse triage on .scratch/receipts/issues/01-export-receipts.md. Then assess the parent and ticket release records in .scratch/receipts/review-inputs.md. Record the readiness actions needed as local Markdown; perform no real factory or GitHub operation.\n\n## Expected outcome\n\nLookup exposes both GitHub repository configuration and factory workflow rules. The Agent Brief follows the GitHub shape and order; a model label suggestion and its reason follow in triage notes, outside the brief. Explain the difference between that suggestion and a person applying exactly one chosen model label before or with ticket readiness. The parent requires no model and never runs. Parent readiness in the same second as the latest ticket link does not release tickets; remove and reapply it later. A later ticket requires another parent readiness application. Tickets also require their own readiness and closed blockers. Cite the factory rules' Parent readiness and Model selection sections in the local outcome.\n",
+    },
+  );
+  write(
+    root,
+    ".scratch/receipts/spec.md",
+    "# Export Delivery receipts\n\nA dispatcher needs a CSV of Delivery receipts for a UTC date. The separate tickets are [Export](issues/01-export-receipts.md) and [Operator summary](issues/02-summary.md). This parent never runs.\n",
+  );
+  write(
+    root,
+    ".scratch/receipts/issues/01-export-receipts.md",
+    "# Export Delivery receipts\n\nStatus: needs-triage\nCategory: enhancement\nParent: ../spec.md\nBlocked by: None\n\n## Request\n\nExport parcel reference, delivered timestamp and signer name as CSV for one UTC date. Sort by Parcel reference; timestamps remain ISO 8601 UTC. An empty date produces a header-only CSV. PDF and scheduled exports are outside scope.\n",
+  );
+  write(
+    root,
+    ".scratch/receipts/issues/02-summary.md",
+    "# Summarize Delivery receipt exports\n\nStatus: needs-triage\nParent: ../spec.md\nBlocked by: 01\n\n## Request\n\nShow operators the count exported after the CSV is available.\n",
+  );
+  write(
+    root,
+    ".scratch/receipts/review-inputs.md",
+    "# Controlled review inputs\n\nThese are simulated participant inputs, not GitHub events or actual authority.\n\n- The reviewer is a person with repository admin authority. The participant supplies the approved brief revision after triage.\n- Ticket 01 is linked at 2026-10-18T10:00:00Z. The parent receives ready-for-agent at 2026-10-18T10:00:00Z and still carries it.\n- Ticket 02 is published later and linked at 2026-10-18T11:00:00Z, after a renewed parent review at 10:01:00Z.\n- Both tickets are open and unassigned. Ticket 01 has no blockers. Ticket 02 remains blocked by the open ticket 01. Neither ticket has a model label yet.\n\nRecord the model and readiness sequence locally, including what a contract edit would invalidate. Do not launch a factory.\n",
+  );
+  repositories["factory-planning"] = {
+    path: root,
+    skills: ["triage"],
+    initial: commit(root, "chore: establish factory planning exercise"),
+  };
+}
+
+{
+  const root = createRepository(
     "delivery",
     ["implement", "pr", "tdd", "code-review", "prototype"],
     {
+      exercise:
+        "## Task\n\nUse implement on .scratch/delivery/issues/01-prioritize-parcels.md at the agreed scheduleDelivery seam, code-review against the initial commit, and pr to draft a local body using docs/pr-evidence.md. Exercise prototype separately on docs/prototype-question.md on a throwaway branch.\n\n## Expected outcome\n\nDelivery tests pass with stable urgent-first ordering and unchanged input. The local PR draft records before/after evidence and merge danger. The prototype exposes the three states and cancellation cases. Rule lookup uses the standard profile; no branch, issue or PR is published.\n",
       agents:
         "# Agent guidance\n\nRead the native ticket, glossary, and development commands. Use tests at the public `scheduleDelivery()` seam. Prototype work stays on a throwaway branch.\n",
       context:
         "# Parcel delivery\n\n## Language\n\n**Delivery schedule**:\nThe ordered set of Parcels selected for dispatch.\n_Avoid_: Queue\n",
     },
   );
-  installLocalTracker(root);
   write(
     root,
     ".scratch/delivery/issues/01-prioritize-parcels.md",
@@ -454,7 +531,20 @@ const manifest = {
     name,
     sha256: provenance.directories[name].sha256,
   })),
-  repositories,
+  repositories: Object.fromEntries(
+    Object.entries(repositories).map(([name, repository]) => {
+      const { profile, rules } = JSON.parse(
+        readFileSync(
+          join(repository.path, ".repo-standards/rules/index.json"),
+          "utf8",
+        ),
+      );
+      return [
+        name,
+        { ...repository, profile, ruleInputs: rules.map(({ input }) => input) },
+      ];
+    }),
+  ),
 };
 write(fixtureRoot, "manifest.json", `${JSON.stringify(manifest, null, 2)}\n`);
 
