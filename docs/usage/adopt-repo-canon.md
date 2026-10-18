@@ -21,7 +21,7 @@ Repo Canon supplies two profiles:
   for readiness, model selection, state labels and owner handoffs, with an
   intentionally empty content scope. Select it only for a repository that a host-installed
   factory serves, as
-  [the factory's usage documentation](../../factory/docs/usage/README.md)
+  [the factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/main/docs/usage/README.md)
   describes.
 
 Every update offers the profiles again, so a repository switches profile by

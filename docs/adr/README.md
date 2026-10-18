@@ -49,7 +49,8 @@ involve real alternatives.
 - [Install the factory on the host from its own releases](0013-install-the-factory-on-the-host-from-its-own-releases.md):
   the factory is released from `factory/` under its own versions, one process
   on a host runs an auto-updating major for all its repositories, and a
-  repository carries only `.factory/`.
+  repository carries only `.factory/`; ADR 0020 moves it to its own
+  repository.
 - [Name every factory convention in configuration](0014-name-every-factory-convention-in-configuration.md):
   the repository's factory configuration names its labels and prompt with no
   defaults, and the factory checks readiness against roles the host names.
@@ -68,3 +69,7 @@ involve real alternatives.
 - [Fork a pinned skill when its overrides outgrow it](0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md):
   pinned skills stay verbatim until their overrides would restate most of the
   procedure or exceed two, and then Repo Canon owns the skill with credit.
+- [Release the factory from its own repository](0020-release-the-factory-from-its-own-repository.md):
+  Scriptorium moved with its history to `lutzseverino/scriptorium`, while Repo
+  Canon keeps the factory profile, the boundary terms, and the published
+  `scriptorium-v1.0.0` to `scriptorium-v1.0.5` releases.
