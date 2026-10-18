@@ -366,7 +366,7 @@ defaults:
     skill-triage:
       kind: skill
       name: triage
-      source: vendor/mattpocock-skills/skills/engineering/triage
+      source: .agents/skills/triage
 
     skill-wayfinder:
       kind: skill

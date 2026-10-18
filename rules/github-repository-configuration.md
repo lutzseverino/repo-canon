@@ -231,6 +231,14 @@ association, a bot identity, or a passing structure check supplies no
 authority, and the issue-contract workflow removes readiness that an actor
 without one of these roles applied.
 
+An orchestrating agent that accepts an Agent Brief applies its readiness only
+when the credentials it was given hold one of these roles, and only after the
+issue-contract workflow's revision notice for the brief revision it reviewed.
+With other credentials, or without that notice, it applies no readiness and
+hands the brief to the owner. The run that wrote the brief never applies its
+readiness. Readiness it applies is bound to that revision like any other, so
+an edit to the brief removes it until the new revision is reviewed.
+
 ## Native blockers
 
 GitHub's native issue dependencies are the canonical blocking relationship.

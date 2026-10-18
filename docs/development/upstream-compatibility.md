@@ -2,9 +2,10 @@
 
 The managed snapshot is mattpocock/skills tag `v1.3.1`, commit
 `24fe0ef7737efae15c87225755e9f6f5965e4888`. Its promoted plugin set contains 27
-regular skills. Repo Canon declares the 17 of them that are workflow skills, as
-[ADR 0018](../adr/0018-install-only-workflow-skills.md) decides, and vendors
-only their complete directories under `vendor/mattpocock-skills/skills`, plus
+regular skills. Repo Canon installs the 17 of them that are workflow skills, as
+[ADR 0018](../adr/0018-install-only-workflow-skills.md) decides. It declares 16
+from the pin and vendors only their complete directories under
+`vendor/mattpocock-skills/skills`, plus
 the setup seeds that the skill setup files are installed from, as
 [ADR 0008](../adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
 decides. The upstream MIT notice is retained at
@@ -13,15 +14,19 @@ decides. The upstream MIT notice is retained at
 because every factory run is a direct run, as
 [ADR 0012](../adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
 Repo Canon configuration adapts conventions without editing upstream skill
-content.
+content. The 17th, `triage`, is Repo Canon's own fork at `.agents/skills/triage`,
+as [ADR 0021](../adr/0021-route-triage-by-where-its-uncertainty-lies.md)
+decides under
+[ADR 0019](../adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md);
+it left the pin, and its `CREDITS.md` names this commit as its upstream.
 
 ## Vendored skills
 
-| Category     | Skills                                                                                                                                                                                          |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engineering  | code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-with-docs, implement, improve-codebase-architecture, pr, prototype, research, tdd, to-spec, to-tickets, triage, wayfinder |
-| Productivity | grilling, writing-for-agents                                                                                                                                                                    |
-| Setup seeds  | `domain.md`, `issue-tracker-github.md`, `issue-tracker-gitlab.md`, `issue-tracker-local.md`, and `triage-labels.md` from `setup-matt-pocock-skills`, without its `SKILL.md` or metadata         |
+| Category     | Skills                                                                                                                                                                                  |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engineering  | code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-with-docs, implement, improve-codebase-architecture, pr, prototype, research, tdd, to-spec, to-tickets, wayfinder |
+| Productivity | grilling, writing-for-agents                                                                                                                                                            |
+| Setup seeds  | `domain.md`, `issue-tracker-github.md`, `issue-tracker-gitlab.md`, `issue-tracker-local.md`, and `triage-labels.md` from `setup-matt-pocock-skills`, without its `SKILL.md` or metadata |
 
 The undeclared promoted skills are left out: `ask-matt`, `grill-me`, and
 `setup-matt-pocock-skills` only set up or route the others, `implement-spec`
@@ -45,7 +50,7 @@ Sources: [promoted manifest](https://github.com/mattpocock/skills/blob/24fe0ef77
 The pinned plugin manifest was reviewed against the inventory above. All 27
 promoted regular skills are present upstream, and no experimental skill or skill
 from the upstream `in-progress`, `misc`, or `deprecated` categories is
-included. The vendored snapshot contains 55 files: the 17 complete skill
+included. The vendored snapshot contains 51 files: the 16 complete skill
 directories, the five setup seeds, the retained `LICENSE`, and the plugin
 manifest, retained at `vendor/mattpocock-skills/.claude-plugin/plugin.json` as
 provenance. Every vendored byte, including referenced templates, scripts, agent
@@ -74,8 +79,8 @@ skills='engineering/code-review engineering/codebase-design
 engineering/diagnosing-bugs engineering/domain-modeling engineering/grill-with-docs
 engineering/implement engineering/improve-codebase-architecture engineering/pr
 engineering/prototype engineering/research engineering/tdd engineering/to-spec
-engineering/to-tickets engineering/triage engineering/wayfinder
-productivity/grilling productivity/writing-for-agents'
+engineering/to-tickets engineering/wayfinder productivity/grilling
+productivity/writing-for-agents'
 seeds='domain.md issue-tracker-github.md issue-tracker-gitlab.md
 issue-tracker-local.md triage-labels.md'
 setup=skills/engineering/setup-matt-pocock-skills
@@ -146,7 +151,7 @@ authoritative pin, inventory, and skill-count reference. This includes at least
 `docs/development/adoption-compatibility.md`; locate further references with:
 
 ```bash
-rg -n '24fe0ef7737efae15c87225755e9f6f5965e4888|all 27|27 (managed|promoted|regular|skill)|17 (declared|workflow)|55 files|20 engineering|seven productivity' \
+rg -n '24fe0ef7737efae15c87225755e9f6f5965e4888|all 27|27 (managed|promoted|regular|skill)|1[67] (declared|workflow)|51 files|20 engineering|seven productivity' \
   authoring-notes.md docs
 ```
 
@@ -163,7 +168,9 @@ The manifest is provenance, not an installed adopter file.
 Rerun the byte comparison with the proposed commit, review all resource
 references and runtime prerequisites, and exercise the changed skills through
 the [skill exercise procedure](skill-exercises.md). Release review then decides
-whether to distribute the new snapshot. Vendored bytes are never edited to adapt
+whether to distribute the new snapshot. Review upstream's `skills/engineering/triage` diff
+too, decide what to port into Repo Canon's fork, and update its `CREDITS.md`
+to the commit the fork then follows. Vendored bytes are never edited to adapt
 Repo Canon conventions.
 
 ## Native issue shapes

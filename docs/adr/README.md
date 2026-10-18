@@ -73,3 +73,7 @@ involve real alternatives.
   Scriptorium moved with its history to `lutzseverino/scriptorium`, while Repo
   Canon keeps the factory profile, the boundary terms, and the published
   `scriptorium-v1.0.0` to `scriptorium-v1.0.5` releases.
+- [Route triage by where its uncertainty lies](0021-route-triage-by-where-its-uncertainty-lies.md):
+  research and independent acceptance for code-bound requests, a grilling
+  session with the owner before the brief for intent-bound ones, and a Repo
+  Canon fork of `triage` to carry the method.

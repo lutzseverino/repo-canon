@@ -1,11 +1,11 @@
 # Skill exercises
 
 This procedure exercises the pinned skills under `vendor/mattpocock-skills`
-against disposable local Git repositories. Run it when a release changes a
+and Repo Canon's `triage` fork against disposable local Git repositories. Run it when a release changes a
 skill, as the [release procedure](release.md#when-selected-bytes-change)
 requires, for the changed skills. Three builders create the repositories: one
 each for the engineering, productivity, and planning skills, which together
-cover all 17 pinned workflow skills. Repo Canon's own `babysit` skill acts on a live pull request, so no builder covers it; exercise
+cover all 16 pinned workflow skills and the `triage` fork. Repo Canon's own `babysit` skill acts on a live pull request, so no builder covers it; exercise
 it on a pull request in a disposable GitHub repository. Its wait script has
 its own fixtures, which the [development guide](README.md) names.
 
@@ -113,14 +113,15 @@ node scripts/create-planning-skill-fixtures.mjs
 npm run test:planning-skill-fixtures
 ```
 
-The builder writes `manifest.json` under its root and prints that path. Five
+The builder writes `manifest.json` under its root and prints that path. Six
 repositories cover eight skills: `project-agent-guidance`, which links no skill,
 supplies existing project-specific `AGENTS.md` instructions for the
 `project-agent-guidance` contextual work described in
 [adoption compatibility](adoption-compatibility.md#preserving-project-instructions);
 `planning` for `grill-with-docs`, `to-spec`, and `to-tickets`;
 `triage-wayfinder` for `triage` and `wayfinder`; `factory-planning` for
-factory-profile triage and readiness decisions; and `delivery` for
+factory-profile triage and readiness decisions; `triage-routing` for routing
+by uncertainty and brief acceptance; and `delivery` for
 `implement`, `pr`, and `prototype`. The delivery repository
 includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
 support skills that exercised skills depend on, such as the productivity
@@ -143,14 +144,30 @@ the production CLI or exercise adoption, available-update discovery, or full
 adopting-repository conformance. Root guidance points to this adapter; the
 upstream workflow skills remain intact.
 
-All scenarios explicitly use `standard`, except `factory-planning`, which
-alone uses `factory`. Standard scenarios expose GitHub repository configuration
+All scenarios explicitly use `standard`, except `factory-planning` and
+`triage-routing`, which use `factory`. Standard scenarios expose GitHub repository configuration
 rules without factory workflow rules. The factory scenario exposes both and
 asks the agent to triage a ticket and assess controlled parent/ticket review
 records. Its outcomes cover a model suggestion after the Agent Brief, the
 person's model selection before ticket readiness, the parent never running,
 and renewed parent readiness after the latest ticket link, including a link
 in the same second and a later ticket. No factory is launched.
+
+The `triage-routing` scenario has the agent act as the orchestrating agent on
+three requests: a bug whose documentation states the expected result, a bug
+whose fix needs a Retry window nobody chose, and a feature request. Each
+research run is a separate session with a fresh context; when the harness
+cannot nest sub-agents, the operator runs it and relays its messages verbatim.
+The operator also plays the owner and supplies revision notices, as controlled
+inputs. The bug's seeded first brief revision passes the Agent Brief shape but
+not review, so its outcomes cover the challenge, the research run's
+correction, and acceptance of the corrected revision with a chosen model label
+and a recorded blocker. The second bug's outcomes cover fact-finding before
+numbered owner questions with recommendations, a recorded owner decision
+reused rather than asked again, and refusal of a brief that leaves owner
+intent open. The scenario also records the handoffs for credentials without a
+readiness role, a GitHub App account, a missing revision notice, and an edit
+after readiness.
 
 Check produced briefs against the discovered GitHub rules' shape and ordering,
 and readiness decisions against those rules and `CONTRIBUTING.md`. Record the
@@ -169,7 +186,8 @@ plus hashes of both canonical rules, every lookup input and the local tracker
 seed under `source.inputFiles`. Linked workflow skill digests remain under
 `source.linkedSkillDirectories`.
 
-The tests verify every repository and skill link, the manifest identities,
+The tests verify every repository and skill link, `triage` linking the fork,
+the seeded revision passing the issue-contract check, the manifest identities,
 canonical rule bytes, local index and lookup discovery, profile isolation,
 lookup after relocation with an empty command search path, missing rule failure,
 local signing, an ordinary later commit under hostile global signing, and the

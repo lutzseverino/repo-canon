@@ -33,14 +33,19 @@ scope, or makes a long cross-cutting change. Name the chosen model with
 For a non-parent issue in a repository a factory serves, the triage notes after
 its Agent Brief suggest one `model:` label with a one-line reason, for the
 reviewer to apply or replace. The suggestion is a triage note, not a field of
-the brief.
+the brief. An orchestrating agent that accepts the brief is that reviewer: it
+chooses the label itself, weighing the suggestion, and the research run that
+suggested it applies no label.
 
 The factory runs an unlabelled ticket on the host's default model; a parent's
 label chooses none of its tickets' models.
 
 The factory accepts readiness only from a person. Readiness that an agent's
 tool applies through a GitHub App or bot account never starts a run, so the
-issue waits until a person applies readiness.
+issue waits until a person applies readiness. An orchestrating agent working
+through such an account tells the owner, with links, that the brief it accepted
+waits for a person's readiness, whether or not the GitHub rules let that
+account apply readiness. It never reports that its own readiness started a run.
 
 ## State labels
 

@@ -43,7 +43,8 @@ agent, it prints an answers file to fill in with you and its next steps.
 
 - Install contribution guidance, agent configuration, and issue and PR templates.
 - Validate issue contracts (a change's agreed scope and acceptance criteria) and pull request metadata in GitHub workflows.
-- Copy seventeen of [Matt Pocock's skills](https://github.com/mattpocock/skills), those the shared workflow relies on, into `.agents/skills/`.
+- Copy sixteen of [Matt Pocock's skills](https://github.com/mattpocock/skills), those the shared workflow relies on, into `.agents/skills/`.
+- Ship a `triage` skill, forked from his, that routes each request by where its uncertainty lies: independent review of researched briefs, or owner questions first.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.
 - Offer a `factory` profile that adds factory workflow rules, configuration and the toolchain image a host-installed factory, an unattended ticket-running service, needs to serve the repository.
 - Set up triage labels, squash-only merging, and a required `PR metadata` check where GitHub's plan offers one.
