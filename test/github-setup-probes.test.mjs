@@ -90,12 +90,14 @@ function assertProbe(outcome, status, message) {
 }
 
 for (const probe of probes) {
-  test(`${probe.name} keeps connection failure diagnostics pinned to github.com across probes and fixes`, (t) => {
+  test(`${probe.name} gives stable neutral diagnostics for non-HTTP failures across probes and fixes`, (t) => {
     const scenario = probeScenario(t, probe);
-    const expected = `${probe.name} could not reach GitHub to verify acme/widgets; check the connection and retry. For full details, run gh api --hostname github.com repos/acme/widgets.`;
+    const expected = `${probe.name} could not verify acme/widgets; retry after investigating the failure. For full details, run gh api --hostname github.com repos/acme/widgets.`;
     for (const repositoryError of [
       "dial tcp 10.20.30.40:443: i/o timeout (at 12345)",
       "proxyconnect tcp: dial tcp 10.90.80.70:3128: connection refused (at 67890)",
+      "gh failed for fixture-account via host-one.invalid (trace 12345)",
+      "gh failed for another-account via host-two.invalid (trace 67890)",
     ]) {
       scenario.updateState({ repositoryError });
       assertProbe(
@@ -113,6 +115,20 @@ for (const probe of probes) {
       assertNoWrites(fix);
     }
     assertNoWrites(scenario);
+  });
+
+  test(`${probe.name} gives neutral diagnostics for process output buffer failures without mutation`, (t) => {
+    // Exceed spawnSync's output buffer during the repository read (ENOBUFS),
+    // rather than returning a CLI exit failure or invalid JSON response.
+    const state = { repositoryResponse: "x".repeat(2 * 1024 * 1024) };
+    const scenario = probeScenario(t, probe, { state });
+    const fix = setup(t, probe.fix, { state });
+    fix.before = snapshot(fix.project.root);
+    const expected = `${probe.name} could not verify acme/widgets; retry after investigating the failure. For full details, run gh api --hostname github.com repos/acme/widgets.`;
+    assertProbe(scenario.invoke(), "not-ready", expected);
+    assertProbe(fix.invoke(), "blocked", expected);
+    assertNoWrites(scenario);
+    assertNoWrites(fix);
   });
 
   test(`${probe.name} pins stable HTTP failure diagnostics to github.com in probes and fixes`, async (t) => {

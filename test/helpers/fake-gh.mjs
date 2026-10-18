@@ -59,7 +59,7 @@ if (method === "GET" && /^repos\/[^/]+\/[^/?]+$/.test(endpoint)) {
     process.exit(1);
   }
   if (state.repositoryResponse !== undefined) {
-    process.stdout.write(state.repositoryResponse);
+    writeFileSync(1, state.repositoryResponse);
     process.exit(0);
   }
 }
