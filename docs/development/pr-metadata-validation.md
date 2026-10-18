@@ -105,7 +105,7 @@ reports on pull requests opened after the workflow merges there; the
 [PR integration setup](github-pr-integration-setup.md) defers requiring it
 until then.
 
-Run the executable checks with Node.js 24:
+Run the executable checks with Node.js 24 or 26:
 
 ```sh
 node --test test/pr-metadata.test.mjs test/shared-workflows.test.mjs

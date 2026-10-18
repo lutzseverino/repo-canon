@@ -510,6 +510,11 @@ test("release:verify adopts the release with the verified version, the drafted s
     started.map((answers) => answers.profile),
     ["standard", "factory"],
   );
+  const factory = started.find((answers) => answers.profile === "factory");
+  assert.deepEqual(factory["scope:factory-workflow"].candidates, []);
+  assert.deepEqual(factory["scope:factory-workflow"].unresolved, []);
+  assert.ok(calls.some((answers) => answers["assessment:factory-workflow"]));
+  assert.ok(!started[0]["scope:factory-workflow"]);
   assert.ok(
     calls.some((answers) => answers["assessment:factory-sandbox-image"]),
     "the factory adoption assesses the toolchain image",

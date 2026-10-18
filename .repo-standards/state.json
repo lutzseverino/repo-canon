@@ -15,8 +15,8 @@
         "id": "canonical-labels"
       },
       "operationIndex": 0,
-      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
-      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -35,8 +35,8 @@
         "id": "pull-request-integration"
       },
       "operationIndex": 1,
-      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
-      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -108,6 +108,10 @@
           ],
           "directories": []
         },
+        "factory-workflow": {
+          "paths": [],
+          "directories": []
+        },
         "github-repository-configuration": {
           "paths": [],
           "directories": []
@@ -137,8 +141,8 @@
           "directories": []
         }
       },
-      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
-      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -210,6 +214,10 @@
           ],
           "directories": []
         },
+        "factory-workflow": {
+          "paths": [],
+          "directories": []
+        },
         "github-repository-configuration": {
           "paths": [],
           "directories": []
@@ -239,8 +247,8 @@
           "directories": []
         }
       },
-      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
-      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -313,8 +321,8 @@
         "id": "documentation-navigation"
       },
       "operationIndex": 2,
-      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
-      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -333,8 +341,8 @@
         "id": "pull-request-reviewer"
       },
       "operationIndex": 3,
-      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
-      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -355,8 +363,8 @@
         "id": "project-readme-structure"
       },
       "operationIndex": 4,
-      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
-      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -377,8 +385,8 @@
         "id": "repository-readme-structure"
       },
       "operationIndex": 5,
-      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
-      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -450,6 +458,10 @@
           ],
           "directories": []
         },
+        "factory-workflow": {
+          "paths": [],
+          "directories": []
+        },
         "github-repository-configuration": {
           "paths": [],
           "directories": []
@@ -479,8 +491,8 @@
           "directories": []
         }
       },
-      "before": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
-      "after": "sha256:48cf701fa9ae36b110f1dd7bef5c1847632bc26b0c01790be95b6089096a3071",
+      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -615,91 +627,12 @@
     }
   ],
   "retryHistory": [],
-  "changeSet": [
-    {
-      "path": ".agents/skills/adopt-standards/SKILL.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/adopt-standards/agents/openai.yaml",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/adopt-standards/references/assessment.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/adopt-standards/references/discovery.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/adopt-standards/references/recovery.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/adopt-standards/references/review.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/repository-standards/SKILL.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/repository-standards/agents/openai.yaml",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/standards-updates/SKILL.md",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".agents/skills/standards-updates/agents/openai.yaml",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/adopt-standards",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/repository-standards",
-      "phases": [
-        "installation"
-      ]
-    },
-    {
-      "path": ".claude/skills/standards-updates",
-      "phases": [
-        "installation"
-      ]
-    }
-  ],
+  "changeSet": [],
   "lastComplete": {
-    "run": "6abd20c8-d320-4225-a371-059945be9cfe",
-    "inspection": "sha256:b33418b87c9b785b0ee7ed51c274b7bef2b8bf91133963e08cea396ebce49c4d",
-    "completedAt": "2026-10-14T21:34:42.457Z",
-    "head": "36ceacb70365b81706d27cb0ab5ab7ba1af39dfc"
+    "run": "2d5886b5-630f-463d-8e19-c3da8921b356",
+    "inspection": "sha256:3af047c331b44ad76ac8d1a669f25803189a609c3584cac732abdfcefb320f8e",
+    "completedAt": "2026-10-17T23:19:16.674Z",
+    "head": "803ebec5a180f5a0df852ebb1954d93fffc50e5b"
   },
   "baselines": {
     "docs/agents/README.md": {
@@ -715,7 +648,7 @@
       "executable": false
     },
     "CONTRIBUTING.md": {
-      "sha256": "a1e6d09d5957e84812609c295f5a0fdbf9777ac9e005338758b74940c4bec7cc",
+      "sha256": "4ed2b1336f77e4af7bc8c86b9497d6696c14a38b5d7a98f5a97df4d0c71aedd2",
       "executable": false
     },
     "docs/agents/domain.md": {
@@ -803,7 +736,7 @@
       "executable": false
     },
     ".agents/skills/babysit/SKILL.md": {
-      "sha256": "f17de7f5068281d3ef188e08861d106d9ef3aff377f76e62f792284d9c89feca",
+      "sha256": "5e3a33c571b8d09983b6a18600ecf7b218b487c5ea111712728fe1a808241387",
       "executable": false
     },
     ".agents/skills/babysit/merge.mjs": {
@@ -1023,7 +956,7 @@
       "executable": false
     },
     ".agents/skills/repository-standards/SKILL.md": {
-      "sha256": "d181a5dd3e3e2e5d5d5a3c5c86f170da4361d567321b8f82340a128920ad388d",
+      "sha256": "4e331d32a27f003027cfbcfce376f49c8e0743142dc6cd653fe7e31052f61450",
       "executable": false
     },
     ".agents/skills/repository-standards/agents/openai.yaml": {
@@ -1237,43 +1170,39 @@
     {
       "format": "repo-standards/assessment/v3",
       "scope": {
-        "inspection": "sha256:b33418b87c9b785b0ee7ed51c274b7bef2b8bf91133963e08cea396ebce49c4d",
-        "afterFixes": "sha256:fa215454f8531191a44e6741fb558f2234e21f57edcbb5ca8e50fe323be8c0fa"
+        "inspection": "sha256:3af047c331b44ad76ac8d1a669f25803189a609c3584cac732abdfcefb320f8e",
+        "afterFixes": "sha256:9d31a7245f542e39817d86748de7c2dab03a49be0a675f9cf4ead036a620ed97"
       },
-      "run": "6abd20c8-d320-4225-a371-059945be9cfe",
-      "selection": "sha256:16c78b5f18dfcde3f01a965d1588942518e9bfbdb2068e375c5751e70b74b7e3",
-      "snapshot": "sha256:fa215454f8531191a44e6741fb558f2234e21f57edcbb5ca8e50fe323be8c0fa",
+      "run": "2d5886b5-630f-463d-8e19-c3da8921b356",
+      "selection": "sha256:9a0c5ac2e41ea30f24f643fecb96f8baa16247b3c536c3b389515e9270952141",
+      "snapshot": "sha256:9d31a7245f542e39817d86748de7c2dab03a49be0a675f9cf4ead036a620ed97",
       "declarations": [
         {
           "id": "documentation",
           "status": "satisfied",
-          "explanation": "The confirmed documentation targets already follow the v0.14.0 documentation rules, because this repository authored that release; no edit was needed. Both documentation roots, docs and factory/docs, have a root README index and usage, development and adr categories with README indexes; every document under them is listed in exactly one index; the development guide starts with its purpose, then Setup and validation, then its Documents index; and both glossaries and GLOSSARY-MAP.md stay outside the roots. Following the first migration, no project file links to CONTRIBUTING.md#documentation. Following the second, docs/agents/project.md left this scope for the project-agent-guidance declaration with its content unchanged, and the retired docs/usage/prepare-agent-guidance.md no longer exists.",
+          "explanation": "Existing documentation retains the confirmed category and index layout and accurate setup; no contextual edit is required.",
           "changedPaths": [],
           "evidence": [
-            "git grep -n 'CONTRIBUTING.md#documentation' outside .repo-standards, test and vendor finds no matches.",
-            "docs/README.md lists the Usage, Development, Architecture decisions and Agent configuration category indexes; docs/usage/README.md, docs/development/README.md and docs/adr/README.md index every document in their directories; factory/docs/README.md and its usage, development and adr indexes cover the factory documentation tree.",
-            "docs/development/README.md starts with its purpose, then Setup and validation, then its Documents index.",
-            "GLOSSARY-MAP.md lists GLOSSARY.md and factory/GLOSSARY.md as the Repo Canon and Factory contexts.",
-            "docs/agents/README.md, the installed index, cites the optional project.md in context, as the rules require.",
-            "Superseded ADRs such as docs/adr/0004 are kept with a status naming their superseding ADR.",
-            "authoring-notes.md stays at the repository root, linked from docs/agents/project.md and the development guide."
+            "Reviewed docs/README.md and docs/development/README.md against the retained documentation rules. The previous scope decisions remain applicable; no moves or link repairs are needed.",
+            "The update changes installed guidance and rules, rather than the documented product commands.",
+            "factory/docs remains the previously confirmed documentation root; authoring-notes.md and both context glossaries remain covered. Source guidance, rules and vendored snapshots remain excluded under the recorded decision."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The confirmed scope matches the repository after fixes and now: the fixes changed only remote GitHub settings (both reported unchanged), and no contextual edit added, moved or removed a documentation file, so no path outside the scope needs coverage.",
+              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
               "evidence": [
-                "The canonical-labels and pull-request-integration fixes reported unchanged and wrote no project files.",
-                "git status shows no change under docs, factory/docs, the glossaries or authoring-notes.md."
+                "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation roots `docs` and `factory/docs`, a new index for each of their directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, including `docs/agents/project.md`, which the `project-agent-guidance` declaration now owns, and so is each README.md outside the documentation roots. The retired Repository Standards skills are left out because this run removes them. Open questions decided as in the previously confirmed scope: `factory/docs` is a documentation root, as the repository conformance test's scope and the factory package's own documentation tree establish, and every directory under it already has an index; `authoring-notes.md` stays in place at the root and is covered; `THIRD_PARTY_NOTICES.md` is license notices, `discovery`, `guidance` and `rules` hold authored standards source inputs referenced by standards.yaml, and `vendor` holds preserved upstream snapshots, so all of those are excluded. No moves, new indexes or link repairs are needed.",
+                "No contextual content edits were necessary."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "The confirmed scope matches the repository after fixes and now: the fixes changed only remote GitHub settings (both reported unchanged), and no contextual edit added, moved or removed a documentation file, so no path outside the scope needs coverage.",
+              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
               "evidence": [
-                "The canonical-labels and pull-request-integration fixes reported unchanged and wrote no project files.",
-                "git status shows no change under docs, factory/docs, the glossaries or authoring-notes.md."
+                "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation roots `docs` and `factory/docs`, a new index for each of their directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, including `docs/agents/project.md`, which the `project-agent-guidance` declaration now owns, and so is each README.md outside the documentation roots. The retired Repository Standards skills are left out because this run removes them. Open questions decided as in the previously confirmed scope: `factory/docs` is a documentation root, as the repository conformance test's scope and the factory package's own documentation tree establish, and every directory under it already has an index; `authoring-notes.md` stays in place at the root and is covered; `THIRD_PARTY_NOTICES.md` is license notices, `discovery`, `guidance` and `rules` hold authored standards source inputs referenced by standards.yaml, and `vendor` holds preserved upstream snapshots, so all of those are excluded. No moves, new indexes or link repairs are needed.",
+                "No contextual content edits were necessary."
               ],
               "additionalPaths": []
             }
@@ -1282,42 +1211,70 @@
         {
           "id": "factory-sandbox-image",
           "status": "satisfied",
-          "explanation": "The existing .factory/Dockerfile already meets the factory toolchain image rules; no edit was needed. It starts from node:24-bookworm, a Debian-based Node image that provides Node.js 24 and npm, which the development guide's Setup and validation section requires and the installed babysit scripts need, and installs the public Repository Standards CLI 7.0.0 globally, which the same section names for source validation. Git and the GitHub CLI come from the factory's agent layer. It installs with RUN from package sources only, with no COPY, ADD, user creation, ENTRYPOINT, CMD or project dependency install.",
+          "explanation": "The existing Debian-based toolchain supplies the supported Node.js 24 delivery runtime and the tools its development guide requires.",
           "changedPaths": [],
           "evidence": [
-            ".factory/Dockerfile: FROM node:24-bookworm; RUN npm install --global --ignore-scripts @lutzseverino/repo-standards@7.0.0.",
-            "docs/development/README.md Setup and validation: Node.js 24 and npm, Git 2.32.0 or newer, authenticated gh, and public Repository Standards CLI 7.0.0 for source validation.",
-            ".agents/skills/babysit/SKILL.md states that its bundled scripts require Node.js 24."
+            "Reviewed .factory/Dockerfile and docs/development/README.md against factory-sandbox-image rules and the installed babysit skill, which now supports stable Node.js 24 or 26.",
+            "The toolchain installs no project dependencies, agent user or entrypoint and needs no repository build context."
           ]
         },
         {
-          "id": "github-repository-configuration",
+          "id": "factory-workflow",
           "status": "satisfied",
-          "explanation": "The GitHub repository settings meet the rules. The canonical-labels and pull-request-integration fixes both ran and reported that the labels and the PR integration already match the canonical configuration, so nothing was deferred. The repository-owned .github/pull-request-reviewer.json names the Codex connector with request, finished, unavailable and bounds fields; the pull-request-reviewer check validates its schema. Installed workflow runners: the repository is public and the repository-level REPO_CANON_RUNS_ON variable is absent, so the setting is unset and the installed jobs use the hosted ubuntu-latest default. The owner is a user account, not an organization, so no organization-level value can be inherited. The run neither set nor changed the variable.",
+          "explanation": "The relocated rules agree with the repository factory configuration and tracker workflow; no reconciliation or tracker mutation is needed.",
           "changedPaths": [],
           "evidence": [
-            "canonical-labels fix result: unchanged, GitHub labels already match the canonical configuration for lutzseverino/repo-canon.",
-            "pull-request-integration fix result: unchanged, GitHub PR integration already matches the canonical configuration for lutzseverino/repo-canon.",
-            "gh repo view --json visibility,owner: PUBLIC, owner lutzseverino.",
-            "gh variable list --json name,value: [] (no repository-level variables); gh api orgs/lutzseverino: 404 Not Found, so lutzseverino is not an organization.",
-            ".github/pull-request-reviewer.json: version 1, account chatgpt-codex-connector[bot], request.onOpen true, bounds responseMinutes 5, reviewMinutes 30, reviewRequests 4."
+            "Reviewed installed factory-workflow rules for parent readiness, model selection, state labels, owner handoff and recovery, stop notes and issue closure.",
+            ".factory/config.json retains the ready-for-agent and factory state labels, model: prefix and implement prompt. Read-only review of open issue labels found no workflow conflict; existing planning and owner-handoff work is outside this update.",
+            "The confirmed content scope is intentionally empty because these rules govern all work, including tracker work changing no files."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The empty local scope stays intentional after fixes and now: both fixes changed only remote settings, and the reviewer check reads the repository-owned reviewer file without writing it.",
+              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
               "evidence": [
-                "Both fixes reported unchanged and wrote no project files.",
-                "The Git remotes name only lutzseverino/repo-canon."
+                "Intentionally empty content scope. The factory workflow declaration governs work throughout this factory-profile repository, including tracker work that changes no files. .factory/config.json stays owned by its separate exact declaration.",
+                "No contextual content edits were necessary."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "The empty local scope stays intentional after fixes and now: both fixes changed only remote settings, and the reviewer check reads the repository-owned reviewer file without writing it.",
+              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
               "evidence": [
-                "Both fixes reported unchanged and wrote no project files.",
-                "The Git remotes name only lutzseverino/repo-canon."
+                "Intentionally empty content scope. The factory workflow declaration governs work throughout this factory-profile repository, including tracker work that changes no files. .factory/config.json stays owned by its separate exact declaration.",
+                "No contextual content edits were necessary."
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "github-repository-configuration",
+          "status": "satisfied",
+          "explanation": "The repository-wide GitHub rules and unchanged remote setup agree with the repository configuration.",
+          "changedPaths": [],
+          "evidence": [
+            "Both canonical-labels and pull-request-integration fixes returned unchanged. Existing .github/pull-request-reviewer.json remains the repository-owned reviewer choice.",
+            "Authenticated gh reports PUBLIC visibility and no repository-level REPO_CANON_RUNS_ON variable: classified unset, selecting the hosted default. The owner is a personal User account, so there is no organization-level inheritance.",
+            "Read the relocated readiness role, native blocker, review request, no-check merge, Agent Brief and Wayfinder requirements in installed github-repository-configuration rules. Empty content scope is intentional; this assessment changes no remote setting."
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "evidence": [
+                "Intentionally empty local scope: the authored remote setup fixes configure GitHub settings on lutzseverino/repo-canon, the only repository the Git remotes name, and the reviewer check reads the repository-owned .github/pull-request-reviewer.json without writing it. Observed with authenticated gh: the repository is PUBLIC, and the repository-level REPO_CANON_RUNS_ON variable is absent, so the setting is unset and the installed jobs use the hosted ubuntu-latest default. The owner, lutzseverino, is a user account rather than an organization, so no organization-level value can be inherited. The maintainer requested this update; discovery and assessment set no variable.",
+                "No contextual content edits were necessary."
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "evidence": [
+                "Intentionally empty local scope: the authored remote setup fixes configure GitHub settings on lutzseverino/repo-canon, the only repository the Git remotes name, and the reviewer check reads the repository-owned .github/pull-request-reviewer.json without writing it. Observed with authenticated gh: the repository is PUBLIC, and the repository-level REPO_CANON_RUNS_ON variable is absent, so the setting is unset and the installed jobs use the hosted ubuntu-latest default. The owner, lutzseverino, is a user account rather than an organization, so no organization-level value can be inherited. The maintainer requested this update; discovery and assessment set no variable.",
+                "No contextual content edits were necessary."
               ],
               "additionalPaths": []
             }
@@ -1326,40 +1283,38 @@
         {
           "id": "project-agent-guidance",
           "status": "satisfied",
-          "explanation": "The AGENTS.md that adoption replaced, read with git show HEAD:AGENTS.md, is byte-identical to the installed v0.14.0 AGENTS.md: it holds only the standard's shared instructions and already points to docs/agents/project.md, so there are no further repository-specific instructions to recover. The existing docs/agents/project.md already holds only Repo Canon's own constraints: read the authoring notes before changing a convention, the adoption compatibility guide before changing declarations or preparing adoption, and the release procedure before a release, and preserve pinned upstream skill contents and their notices. It restates no installed rule, CONTRIBUTING.md requirement or skill setup file, and nothing contradicts the standard, so no edit and no maintainer decision were needed.",
+          "explanation": "Useful repository-specific guidance is preserved without duplicating the shared rules.",
           "changedPaths": [],
           "evidence": [
-            "git show HEAD:AGENTS.md | diff - AGENTS.md reports no difference.",
-            "docs/agents/project.md links ../../authoring-notes.md, ../development/adoption-compatibility.md, ../development/release.md and ../../THIRD_PARTY_NOTICES.md, all of which exist.",
-            "docs/agents/project.md is unchanged by this run."
+            "Reviewed HEAD:AGENTS.md and current AGENTS.md: it contains shared pointers, with no additional project instructions to recover.",
+            "docs/agents/project.md remains unchanged where present and absent where there are no useful project-specific instructions."
           ]
         },
         {
           "id": "project-readmes",
           "status": "satisfied",
-          "explanation": "factory/README.md, the only Project README, already meets the rules; no edit was needed. It has a plain title, describes Scriptorium as the host-installed factory with its own release stream, gives its development commands with their working directory (from factory/), explains its configuration and providers, links its documentation and glossary, and links the root docs/development/README.md and CONTRIBUTING.md with visible text instead of duplicating them.",
+          "explanation": "The existing confirmed Project membership and READMEs remain correct.",
           "changedPaths": [],
           "evidence": [
-            "factory/README.md: # Scriptorium; Development section runs npm ci --include=dev, npm run typecheck and npm test from factory/.",
-            "factory/package.json, factory/docs and factory/GLOSSARY.md establish the factory as a separately released Project.",
-            "factory/README.md links ../docs/development/README.md as 'shared setup and validation' and ../CONTRIBUTING.md as 'contribution guidelines'."
+            "Reviewed the root and factory package manifests, the development guides, the glossary map and vendor README provenance. The factory directory is Scriptorium, a separately released package with its own package.json, scripts, tests, glossary and documentation tree, so it is a Project with its existing factory/README.md. The root package owns all other maintenance and validation; operations, discovery, guidance, rules and scripts have no independent Project commands; test fixtures, vendored snapshots and documentation are excluded. No missing Project README is needed.",
+            "Reviewed the root manifests and development guide; this update adds no Project or development command."
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The confirmed Project README scope stays valid after fixes and now: the factory package remains the only Project besides the root, and the new top-level rules directory holds authored standards inputs with no Project commands.",
+              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
               "evidence": [
-                "package.json and factory/package.json are the repository's only package manifests outside vendor, fixtures and the pinned runtime under .repo-standards.",
-                "No contextual edit added or removed a Project."
+                "Reviewed the root and factory package manifests, the development guides, the glossary map and vendor README provenance. The factory directory is Scriptorium, a separately released package with its own package.json, scripts, tests, glossary and documentation tree, so it is a Project with its existing factory/README.md. The root package owns all other maintenance and validation; operations, discovery, guidance, rules and scripts have no independent Project commands; test fixtures, vendored snapshots and documentation are excluded. No missing Project README is needed.",
+                "No contextual content edits were necessary."
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "The confirmed Project README scope stays valid after fixes and now: the factory package remains the only Project besides the root, and the new top-level rules directory holds authored standards inputs with no Project commands.",
+              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
               "evidence": [
-                "package.json and factory/package.json are the repository's only package manifests outside vendor, fixtures and the pinned runtime under .repo-standards.",
-                "No contextual edit added or removed a Project."
+                "Reviewed the root and factory package manifests, the development guides, the glossary map and vendor README provenance. The factory directory is Scriptorium, a separately released package with its own package.json, scripts, tests, glossary and documentation tree, so it is a Project with its existing factory/README.md. The root package owns all other maintenance and validation; operations, discovery, guidance, rules and scripts have no independent Project commands; test fixtures, vendored snapshots and documentation are excluded. No missing Project README is needed.",
+                "No contextual content edits were necessary."
               ],
               "additionalPaths": []
             }
@@ -1368,24 +1323,20 @@
         {
           "id": "repository-license",
           "status": "satisfied",
-          "explanation": "The root LICENSE already holds a single, clear MIT License with the maintainer's copyright notice, and no other root license file sits beside it; it stays unchanged. The README's License link names the MIT License and points at LICENSE.",
+          "explanation": "The existing maintainer-selected license remains unchanged and the repository README links to it accurately.",
           "changedPaths": [],
           "evidence": [
-            "LICENSE begins 'MIT License' and 'Copyright (c) 2026 Jasper Lutz Severino'.",
-            "ls LICENSE* at the root lists only LICENSE.",
-            "README.md License section: [MIT License](LICENSE)."
+            "LICENSE retains the MIT License and Copyright (c) 2026 Jasper Lutz Severino; the README license pointer agrees."
           ]
         },
         {
           "id": "repository-readme",
           "status": "satisfied",
-          "explanation": "README.md already meets the Repository README rules; no edit was needed. It opens with a centered title and a one-sentence description, then JavaScript and Node.js 24 badges; explains what adopting Repo Canon changes and defines adoption, profile and rules before using them; keeps Installation, Features, Usage, Documentation, Contributing and License in order; gives the unversioned one-line adopt command, a representative update command, verb-led one-line Features, and pointer-only Documentation, Contributing and License sections. Its facts match the repository: seventeen Matt Pocock skills are installed besides babysit, and the CLI, profiles and remote setup deferral match v0.14.0.",
+          "explanation": "The existing repository entry document remains accurate and satisfies its installed rules.",
           "changedPaths": [],
           "evidence": [
-            "README.md title block: centered h1 'Repo Canon' and its description paragraph, then the badges.",
-            "Installation: npx @lutzseverino/repo-standards adopt https://github.com/lutzseverino/repo-canon, with Node.js 24, npm and Git 2.32.0 prerequisites matching the development guide.",
-            ".agents/skills holds seventeen Matt Pocock skills plus babysit and repository-standards, matching the Features line.",
-            "Documentation, Contributing and License sections each hold only their link: docs/README.md, CONTRIBUTING.md and LICENSE (MIT License)."
+            "Reviewed README.md: centered title and description, applicable runtime badge, project purpose and usage, and documentation, contribution and license pointers remain correct.",
+            "No application behavior, installation path or repository toolchain changes in this adoption."
           ]
         }
       ]

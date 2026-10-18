@@ -15,7 +15,7 @@ and produces an observed outcome.
 
 ## Common harness
 
-The builders need only Node.js 24 and Git. The agent harness is a prerequisite
+The builders need only Node.js 24 or 26 and Git. The agent harness is a prerequisite
 of the exercise, not of the builders, and no builder calls it. Run every
 command from the Repo Canon root.
 

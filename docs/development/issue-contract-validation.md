@@ -50,7 +50,9 @@ Agent Brief comments are ordered among themselves by comment ID: the latest
 Agent Brief is the Brief comment with the highest comment ID, for both the
 contract lookup and a deleted Brief.
 
-The validator recognizes these contracts:
+The validator recognizes these contracts, and the
+`github-repository-configuration` rules state the Agent Brief and Wayfinder
+shapes for adopters:
 
 - bug and feature request forms, including optional unanswered fields;
 - specification forms and native specifications;
@@ -304,7 +306,7 @@ The workflow needs `contents: read` to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access
 must expose collaborator roles, and `GITHUB_GRAPHQL_URL` must be available for
 direct-body edit revisions; both are standard GitHub Actions facilities. Node.js
-24 is the runtime. The adapter recognizes that the workflow executed the file
+24 is the default runtime; the validator also supports stable Node.js 26. The adapter recognizes that the workflow executed the file
 through `import.meta.main`; on 24 releases before 24.2, which lack it, it
 compares the resolved script path with the validator's own path instead. The
 validator has no package dependencies, so the job installs none and disables

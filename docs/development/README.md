@@ -5,13 +5,13 @@ Repo Canon standards source.
 
 ## Setup and validation
 
-Clone the repository with Git 2.32.0 or newer and use Node.js 24 and npm. Run
+Clone the repository with Git 2.32.0 or newer and use Node.js 24 or 26 and npm. Run
 `npm ci --include=dev` to install the pinned development dependencies. The
 standards source has no build step; parser dependencies are vendored. The
 factory is developed in [its own repository](https://github.com/lutzseverino/scriptorium). Adopters do not install
 development dependencies. GitHub planning uses authenticated `gh`
 access. For source validation,
-install public Repository Standards CLI 7.0.0 outside the checkout using the
+install public Repository Standards CLI 7.2.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 
@@ -25,7 +25,19 @@ Run focused tests for the changed behavior, `npm run format:check`,
 Review affected links, issue-form fields, and consistency with the confirmed
 preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
-CI installs development dependencies and runs the format check, lint, the full
+Run `node --test test/repository-wide-rules.test.mjs` for a fresh adoption of
+both profiles and repository-wide rules lookup with public CLI 7.2.0: the
+GitHub rules in both profiles and the factory workflow rules only in the
+factory profile. It uses
+the release fixture's answers and a disposable source containing only declared
+inputs; GitHub HTTP responses and Git transport use local fixtures, with no
+in-tree factory dependency. Set `REPO_STANDARDS_PREFIX` to reuse that public
+CLI installation, or the test installs it outside the checkout. Runtime
+preparation also needs npm registry access.
+
+Node.js 24 remains the default toolchain and installed automation runtime.
+Compatibility CI runs on both Node.js 24 and 26, installs development
+dependencies and runs the format check, lint, the full
 `npm test` suite, and all-profile source validation. The lint
 step uses oxlint's defaults plus
 ESLint's `recommended` rules that oxlint does not enable by default, with Node
@@ -41,7 +53,10 @@ issue-contract structure, exact revision association, actor authority,
 invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
 `npm run test:issue-contracts` for the focused issue-contract fixtures and
-`npm run test:planning-skill-fixtures` for the planning-skill harness. Run
+`npm run test:planning-skill-fixtures` for the planning-skill harness. The
+issue-contract group includes `test/planning-shape-rules.test.mjs`, which
+checks that the Agent Brief and Wayfinder shapes the GitHub rules state agree
+with the validator's accepted and rejected issues. Run
 `node --test test/babysit-wait.test.mjs` for the `babysit` wait script's
 decision, driven by reviewer data fixtures (including real summary comments),
 and its silence, driven by
@@ -74,8 +89,13 @@ fails if any tracked file reaches the CLI's 8 MiB per-file observation limit,
 which would make the repository uninspectable before any report. It lists each
 declaration that has rules or adoption guidance with its decided outcome, keeps
 every rules file in `rules/`, rejects a rules file holding a one-time step's
-marker phrase, and keeps rules paths out of `AGENTS.md`. It also keeps the two
-copies of the reviewer parser identical. Run it alone
+marker phrase, and keeps rules paths out of `AGENTS.md`. It also holds
+`CONTRIBUTING.md` and `AGENTS.md` to fixed word budgets, counting each
+maximal run of non-whitespace characters as a word; a document over its limit
+fails naming the document, its count, and the limit. The limits are constants
+in the test, so raising one is an explicit edit in the same pull request. No
+budget covers declaration rules or retained adoption guidance. It also keeps
+the two copies of the reviewer parser identical. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
 CI step: `npm test` already runs it on every pull request.
 The same suite checks every declared source input across both profiles for

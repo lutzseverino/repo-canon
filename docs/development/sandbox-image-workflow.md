@@ -47,7 +47,7 @@ the build. It adds no required check to the pull request integration ruleset.
 
 ## Validation
 
-Run the workflow fixtures with Node.js 24:
+Run the workflow fixtures with Node.js 24 or 26:
 
 ```sh
 node --test test/sandbox-image-workflow.test.mjs test/shared-workflows.test.mjs

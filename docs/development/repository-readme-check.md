@@ -6,8 +6,8 @@ the [Repository README rules](../../rules/repository-readme.md). It consumes
 whose allowed target is the root `README.md`, and returns one
 `repo-standards/result/v2` object on standard output.
 
-The operation requires Node.js 24. Its integration metadata is `node` with
-`["--version"]`, version range `>=24.0.0 <25.0.0`, retained resource directories
+The operation requires Node.js 24 or 26. Its integration metadata is `node` with
+`["--version"]`, version range `>=24.0.0 <25.0.0 || >=26.0.0 <27.0.0`, retained resource directories
 `vendor/marked` and `vendor/parse5`, the shared rendered-Markdown and local-link
 modules, and a 30-second timeout. It uses the vendored Marked 18.0.13 lexer,
 parse5 8.0.1 fragment parser, and shared
@@ -83,7 +83,7 @@ alternative root license file blocks that declaration's assessment before
 checks. Once resolved, adoption can write `LICENSE` and the README's License
 link in the same run, within their separate declarations' targets.
 
-Run the public-boundary fixtures with Node.js 24:
+Run the public-boundary fixtures with Node.js 24 or 26:
 
 ```sh
 node --test test/repository-readme-check.test.mjs

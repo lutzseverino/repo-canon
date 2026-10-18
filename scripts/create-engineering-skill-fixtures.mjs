@@ -116,7 +116,7 @@ const repositories = {};
   const skills = ["code-review"];
   const root = createRepository("review", skills, {
     context: `# Ledger\n\nLanguage for balances recorded by the example ledger.\n\n## Language\n\n**Entry**:\n+A posted or pending amount recorded by the Ledger.\n_Avoid_: Row, item\n\n**Ledger summary**:\n+The posted and pending totals derived from Entries.\n_Avoid_: Report\n`,
-    development: `# Development\n\nRun \`npm test\` with Node.js 24. Review changes against \`docs/specification.md\`.\n`,
+    development: `# Development\n\nRun \`npm test\` with Node.js 24 or 26. Review changes against \`docs/specification.md\`.\n`,
   });
   write(
     root,
@@ -152,7 +152,7 @@ const repositories = {};
   const skills = ["codebase-design", "improve-codebase-architecture"];
   const root = createRepository("architecture", skills, {
     context: `# Ordering\n\nLanguage for accepting Orders into fulfillment.\n\n## Language\n\n**Order**:\n+A customer request accepted for fulfillment.\n_Avoid_: Payload, request\n\n**Order intake**:\n+The validation and normalization that turns submitted data into an Order.\n_Avoid_: Pipeline\n`,
-    development: `# Development\n\nRun \`npm test\` with Node.js 24. Architecture work must read \`GLOSSARY.md\` and \`docs/adr\` first.\n`,
+    development: `# Development\n\nRun \`npm test\` with Node.js 24 or 26. Architecture work must read \`GLOSSARY.md\` and \`docs/adr\` first.\n`,
   });
   write(
     root,
@@ -200,7 +200,7 @@ const repositories = {};
   const skills = ["diagnosing-bugs"];
   const root = createRepository("debugging", skills, {
     context: `# Billing\n\nLanguage for producing Invoices.\n\n## Language\n\n**Invoice**:\n+A request for payment containing ordered Invoice lines.\n_Avoid_: Bill\n\n**Invoice line**:\n+One charged description in an Invoice.\n_Avoid_: Row, item\n`,
-    development: `# Development\n\nRun \`npm test\` with Node.js 24. A diagnosis must preserve the public \`renderInvoice(lines)\` interface.\n`,
+    development: `# Development\n\nRun \`npm test\` with Node.js 24 or 26. A diagnosis must preserve the public \`renderInvoice(lines)\` interface.\n`,
   });
   write(
     root,
@@ -230,7 +230,7 @@ const repositories = {};
   const skills = ["domain-modeling", "research"];
   const root = createRepository("modeling-research", skills, {
     context: `# Subscriptions\n\nLanguage for subscriber access and payment responsibility.\n\n## Language\n\n**Account**:\n+A record used for both login access and subscription billing.\n_Avoid_: None\n`,
-    development: `# Development\n\nRun \`npm test\` with Node.js 24. Durable technical research belongs in this directory and must cite primary sources.\n`,
+    development: `# Development\n\nRun \`npm test\` with Node.js 24 or 26. Durable technical research belongs in this directory and must cite primary sources.\n`,
   });
   write(
     root,
@@ -260,7 +260,7 @@ const repositories = {};
   const skills = ["tdd"];
   const root = createRepository("tdd", skills, {
     context: `# Billing\n\nLanguage for identifying Invoices.\n\n## Language\n\n**Invoice reference**:\n+The stable, human-readable identifier printed on an Invoice.\n_Avoid_: Invoice ID, number\n`,
-    development: `# Development\n\nRun \`npm test\` with Node.js 24. Tests use public interfaces and known literal expectations.\n`,
+    development: `# Development\n\nRun \`npm test\` with Node.js 24 or 26. Tests use public interfaces and known literal expectations.\n`,
   });
   write(
     root,

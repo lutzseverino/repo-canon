@@ -5,7 +5,7 @@ command that adopts Repo Canon and every later update. `adopt` asks each
 question adoption needs; this guide covers the choices behind three of them:
 the profile, remote setup, and the personal skills adoption leaves to you. The
 CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/usage/adoption.md)
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/adoption.md)
 describes `adopt` itself, at a terminal and through an agent.
 
 ## Choose a profile
@@ -13,11 +13,13 @@ describes `adopt` itself, at a terminal and through an agent.
 Repo Canon supplies two profiles:
 
 - `standard`: everything Repo Canon installs except the factory's repository
-  files. Select it for every repository that no factory serves.
+  files and workflow rules. Select it for every repository that no factory serves.
 - `factory`: the standard profile plus the files a repository that a factory
   serves carries: its factory configuration, `.factory/config.json`; its
   toolchain image, `.factory/Dockerfile`; and the pull request workflow that
-  builds that image. Select it only for a repository that a host-installed
+  builds that image. It also installs repository-wide factory workflow rules
+  for readiness, model selection, state labels and owner handoffs, with an
+  intentionally empty content scope. Select it only for a repository that a host-installed
   factory serves, as
   [the factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/main/docs/usage/README.md)
   describes.

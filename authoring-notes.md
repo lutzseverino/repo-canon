@@ -110,22 +110,25 @@ repeated.
   names the recommended ones.
 - Delivery belongs to this source, because Repository Standards leaves it to
   standards sources
-  ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/adr/0015-leave-delivery-to-standards-sources.md)).
+  ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/adr/0015-leave-delivery-to-standards-sources.md)).
   The environment carries delivery, as
   [ADR 0010](docs/adr/0010-carry-delivery-rules-in-the-environment.md)
   decides: [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests) says how to open
   a pull request, an adoption pull request included, and when it may merge,
   and the installed `AGENTS.md` points every change through `pr` and
   `babysit`. The model-invocable `babysit` skill watches the pull request,
-  settles its findings, and merges it, stating no rule the guide holds. Review
-  follows the guide's [request and findings rules](CONTRIBUTING.md#merging),
+  settles its findings, and merges it, stating no rule the guide or installed
+  rules hold. Review follows the guide's
+  [review finding rules](CONTRIBUTING.md#merging) and the
+  request rule in the
+  [GitHub repository configuration rules](rules/github-repository-configuration.md),
   with an optional total request bound in the repository's reviewer data.
   It waits through one bundled script that polls silently for checks and the
   reviewer named by the optional repository-owned
   `.github/pull-request-reviewer.json`, run in the foreground on every host.
-  The
-  [GitHub repository configuration rules](rules/github-repository-configuration.md)
-  state that file's schema, which the reviewer check and the wait validate with
+  Those rules
+  also state when a head with no check counts as passed, and that file's
+  schema, which the reviewer check and the wait validate with
   byte-identical copies of one parser. Without that file there is no reviewer wait. Repo Canon ships no reviewer
   file or preset; this repository carries its own configuration, outside the
   declarations. The factory never reads it. Its
@@ -145,7 +148,10 @@ repeated.
   `model:` label prefix, and the `implement` prompt, since the factory has no
   default for any of them, as
   [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
-  decides. The profile also installs the contextual `.factory/Dockerfile`,
+  decides. The profile installs the repository-wide
+  [factory workflow rules](rules/factory-workflow.md), with intentionally empty
+  confirmed content scope, so tracker work reads them even when it changes no
+  file. The profile also installs the contextual `.factory/Dockerfile`,
   toolchain only and Debian-based, as the
   [toolchain image rules](rules/factory-sandbox-image.md) state, and the
   pull request workflow that builds it. The factory creates its own state
@@ -173,7 +179,9 @@ repeated.
   demonstrate complete coverage before claiming monorepo adoption support.
 - CONTRIBUTING.md is the one home of Repo Canon's contribution rules: issues
   and implementation contracts, readiness, development setup, validation, pull
-  requests, and titles and commits. Every other file cites it
+  requests, and titles and commits. GitHub specifics and factory-only workflow
+  live instead in the installed rules of the declarations they belong to,
+  which apply to the whole repository. Every other file cites it
   rather than repeating one of them. Agent implementation procedures belong in
   skills. Files Repo Canon authors do not restate them, and cite them only for
   delivery or to override routes to uninstalled skills: `AGENTS.md` names `pr`
@@ -198,7 +206,12 @@ repeated.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   states what the check enforces.
 - The readiness rules are stated in
-  [`CONTRIBUTING.md`](CONTRIBUTING.md#readiness), and the mechanism that
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#readiness), with factory-only parent and
+  model gates in the [factory workflow rules](rules/factory-workflow.md), the
+  GitHub roles, native blocker mechanics, and the Agent Brief and Wayfinder
+  shapes the validator enforces in the
+  [GitHub repository configuration rules](rules/github-repository-configuration.md),
+  and the mechanism that
   enforces them in
   [issue contract validation](docs/development/issue-contract-validation.md).
 - The skill setup files under docs/agents are installed verbatim from the
@@ -207,7 +220,7 @@ repeated.
   decides. Project-specific guidance remains separate. AGENTS.md is an
   identical standards-owned pointer file. Repository Standards owns the update
   notice through its `repository-standards` system skill
-  ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v7.0.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
+  ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
   Create the optional project guidance document, docs/agents/project.md, only
   when it has useful content.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
@@ -270,14 +283,15 @@ repeated.
   The seeds do not provision remote labels or repository branch rules.
 - Upstream recognizes an Agent Brief heading but provides no approval marker,
   approved-revision selector, or revision invalidation mechanism. Repo Canon's
-  readiness rules are its own convention and live in `CONTRIBUTING.md` and its
-  automation, preserving upstream skill content.
+  readiness rules are its own convention and live in `CONTRIBUTING.md`, the
+  GitHub repository configuration rules, and its automation, preserving
+  upstream skill content.
 
 ## Source profile
 
 The complete `repo-standards/v2` source is `standards.yaml`, with the
 `standard` and `factory` profiles and the open-ended CLI compatibility minimum
-`>=7.0.0`. The
+`>=7.2.0`. The
 concise policy-to-declaration, material, operation, ownership, and prerequisite
 mapping is maintained in [the source profile](docs/development/source-profile.md).
 Contextual Project README and documentation scope uses separate assessment and
@@ -285,7 +299,7 @@ discovery guidance and resolves to individual adopter-reviewed paths.
 
 [Adoption compatibility](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface. Use installed public
-CLI 7.0.0 as the current validation baseline; claim only compatibility
+CLI 7.2.0 as the current validation baseline; claim only compatibility
 demonstrated against the released source bytes.
 
 ## License

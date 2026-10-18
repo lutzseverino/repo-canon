@@ -1,0 +1,386 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { test } from "node:test";
+import { decideIssueContract } from "../scripts/validate-issue-contract.mjs";
+import { featureBody, repository } from "./helpers/issue-contracts.mjs";
+
+// The installed GitHub rules state the Agent Brief and Wayfinder shapes the
+// issue-contract validator enforces. These fixtures build issues from the
+// rules' own statements, so the rules and the validator cannot drift apart.
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const flowed = (text) => text.replaceAll(/\s+/g, " ");
+const rules = readFileSync(
+  join(root, "rules/github-repository-configuration.md"),
+  "utf8",
+);
+const briefRules =
+  /^## Agent Brief\n\nThe issue-contract([\s\S]*?)^## Wayfinder/m.exec(
+    rules,
+  )?.[1];
+// The Wayfinder section is the rules' last.
+const mapRules = flowed(
+  /^## Wayfinder maps and children\n([\s\S]*)$/m.exec(rules)?.[1] ?? "",
+);
+
+const briefStart = /^```markdown\n(> [^\n]+\n\n## Agent Brief)\n```$/m.exec(
+  briefRules ?? "",
+)?.[1];
+const briefFields = [...(briefRules ?? "").matchAll(/^- (.+)$/gm)].map(
+  ([, name]) => name,
+);
+// The inline code values in the first group `pattern` captures from `text`.
+const codeIn = (pattern, text) =>
+  [...(pattern.exec(text)?.[1] ?? "").matchAll(/`([^`]+)`/g)].map(
+    ([, value]) => value,
+  );
+const placeholders = codeIn(
+  /Empty content, template comments, (.*?) are placeholders/,
+  flowed(briefRules ?? ""),
+);
+const mapSections = /Its body has the sections (.*?)\. /
+  .exec(mapRules)?.[1]
+  .split(/, (?:and )?/);
+const childLabels = codeIn(
+  /A child carries exactly one of (.*?), and never/,
+  mapRules,
+);
+
+const fieldValue = (name) => `${name} for the fixture.`;
+const brief = ({
+  start = briefStart,
+  fields = briefFields,
+  category = "enhancement",
+  value = fieldValue,
+  after = "",
+} = {}) =>
+  `${start}\n\n${fields
+    .map(
+      (name) => `**${name}:** ${name === "Category" ? category : value(name)}`,
+    )
+    .join("\n\n")}${after}`;
+
+const decide = ({ body = featureBody, labels, comments = [], ...rest }) =>
+  decideIssueContract({
+    repository,
+    event: { issue: { number: 42 } },
+    issue: {
+      number: 42,
+      node_id: "ISSUE_42",
+      body,
+      labels: labels.map((name) => ({ name })),
+      state: "open",
+    },
+    comments,
+    issueEvents: [],
+    blockedBy: [],
+    parent: null,
+    relatedIssues: {},
+    permissions: {},
+    ...rest,
+  });
+const decideBrief = (body, labels = ["enhancement", "needs-triage"]) =>
+  decide({
+    labels,
+    comments: [{ id: 12, user: { login: "triager" }, body }],
+  });
+const accepted = (decision, kind) => {
+  assert.equal(decision.exitCode, 0, decision.message);
+  assert.match(decision.message, new RegExp(`valid ${kind}`, "i"));
+};
+const rejected = (decision, error) => {
+  assert.equal(decision.exitCode, 1, decision.message);
+  assert.ok(
+    decision.feedback?.body?.includes(error) ??
+      decision.message.includes(error),
+    `${error}\n${decision.message}\n${decision.feedback?.body}`,
+  );
+};
+
+test("the rules state the Agent Brief start, the pinned triage disclaimer, and every enforced field", () => {
+  assert.ok(briefStart, "the rules show the brief's first lines");
+  const pinned = readFileSync(
+    join(root, "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md"),
+    "utf8",
+  );
+  assert.equal(
+    briefStart.split("\n")[0],
+    /^```\n(> [^\n]+)\n```$/m.exec(pinned)?.[1],
+  );
+  assert.deepEqual(briefFields, [
+    "Category",
+    "Summary",
+    "Current behavior",
+    "Desired behavior",
+    "Key interfaces",
+    "Acceptance criteria",
+    "Out of scope",
+  ]);
+  assert.match(briefRules, /the `triage` skill is a method/);
+  accepted(decideBrief(brief()), "triaged Agent Brief");
+});
+
+test("an Agent Brief missing any field the rules name, or holding a placeholder, is rejected", () => {
+  for (const name of briefFields) {
+    rejected(
+      decideBrief(brief({ fields: briefFields.filter((n) => n !== name) })),
+      `Complete the Agent Brief \`${name}\` field.`,
+    );
+  }
+  assert.deepEqual(placeholders, [
+    "_No response_",
+    "TBD",
+    "TODO",
+    "[describe the bug]",
+  ]);
+  for (const placeholder of [
+    ...placeholders,
+    "<!-- template -->",
+    "\n- [ ]",
+    "",
+  ])
+    rejected(
+      decideBrief(
+        brief({
+          value: (name) =>
+            name === "Summary" ? placeholder : fieldValue(name),
+        }),
+      ),
+      "Complete the Agent Brief `Summary` field.",
+    );
+});
+
+test("the disclaimer, a blank line and the heading start the brief, and notes follow it", () => {
+  rejected(
+    decideBrief(brief({ start: briefStart.replace(/^> [^\n]+\n\n/, "") })),
+    "Start the Agent Brief comment with `> *This was generated by AI during triage.*`.",
+  );
+  rejected(
+    decideBrief(
+      brief({
+        start: briefStart.replace("\n\n## ", "\n\nTriage notes.\n\n## "),
+      }),
+    ),
+    "Put the `## Agent Brief` heading directly after the triage disclaimer and move other notes below the brief.",
+  );
+  rejected(
+    decideBrief(`Triage notes.\n\n${brief()}`),
+    "Start the Agent Brief comment with",
+  );
+  accepted(
+    decideBrief(brief({ after: "\n\n## Triage notes\n\nA recommendation." })),
+    "triaged Agent Brief",
+  );
+});
+
+test("the Markdown variations the rules accept pass, and code or comments never form a brief", () => {
+  assert.match(
+    flowed(briefRules),
+    /Heading level, heading style and the casing of the heading and field names do not matter, and the workflow also accepts the disclaimer emphasized with `_` or without the blank line before the heading/,
+  );
+  for (const start of [
+    briefStart.replace("## Agent Brief", "### agent brief"),
+    briefStart.replace(/\*(This[^*]+)\*/, "_$1_"),
+    briefStart.replace("\n\n## ", "\n## "),
+    briefStart.replace("## Agent Brief", "Agent Brief\n==========="),
+  ])
+    accepted(decideBrief(brief({ start })), "triaged Agent Brief");
+  accepted(
+    decideBrief(brief().replace("**Summary:**", "**summary:**")),
+    "triaged Agent Brief",
+  );
+  for (const hidden of [
+    `\`\`\`markdown\n${brief()}\n\`\`\``,
+    `<!--\n${brief()}\n-->`,
+  ]) {
+    const decision = decideBrief(hidden);
+    assert.doesNotMatch(decision.message, /valid triaged Agent Brief/i);
+  }
+});
+
+test("the brief's Category is bug or enhancement and equals the issue's one category label", () => {
+  accepted(
+    decideBrief(brief({ category: "bug" }), ["bug"]),
+    "triaged Agent Brief",
+  );
+  rejected(
+    decideBrief(brief({ category: "feature" })),
+    "Set the Agent Brief `Category` to `bug` or `enhancement`.",
+  );
+  rejected(
+    decideBrief(brief({ category: "bug" }), ["enhancement"]),
+    "Apply the Agent Brief's `bug` category label.",
+  );
+  rejected(
+    decideBrief(brief(), ["enhancement", "bug"]),
+    "Apply exactly one category label: `bug` or `enhancement`.",
+  );
+});
+
+test("the latest Agent Brief comment, by comment ID, is the contract", () => {
+  assert.match(
+    flowed(readFileSync(join(root, "CONTRIBUTING.md"), "utf8")),
+    /A triaged request's contract is its latest Agent Brief comment/,
+  );
+  const briefs = (complete, incomplete) =>
+    decide({
+      labels: ["enhancement"],
+      comments: [
+        { id: complete, user: { login: "triager" }, body: brief() },
+        {
+          id: incomplete,
+          user: { login: "triager" },
+          body: brief({ fields: briefFields.slice(0, 2) }),
+        },
+      ],
+    });
+  accepted(briefs(13, 12), "triaged Agent Brief");
+  rejected(
+    briefs(12, 13),
+    "Complete the Agent Brief `Current behavior` field.",
+  );
+});
+
+const map = (sections = mapSections, empty = "Decisions so far") =>
+  sections
+    .map((name) => `## ${name}\n\n${name === empty ? "" : `${name} text.`}`)
+    .join("\n\n");
+const mapIssue = {
+  number: 7,
+  state: "open",
+  labels: [{ name: "wayfinder:map" }],
+};
+
+test("the rules state the Wayfinder map sections, and a map with empty Decisions so far passes", () => {
+  assert.deepEqual(mapSections, [
+    "Destination",
+    "Notes",
+    "Decisions so far",
+    "Not yet specified",
+    "Out of scope",
+  ]);
+  assert.match(mapRules, /except Decisions so far, which may be empty/);
+  assert.match(mapRules, /the `wayfinder` skill is a method/);
+  assert.match(mapRules, /found by querying its open sub-issues/);
+  assert.match(
+    mapRules,
+    /indexes closed children, one line each, by title and link/,
+  );
+  const decision = decide({ body: map(), labels: ["wayfinder:map"] });
+  accepted(decision, "Wayfinder map");
+  assert.deepEqual(decision.addLabels, []);
+  for (const name of mapSections.filter((n) => n !== "Decisions so far")) {
+    rejected(
+      decide({
+        body: map(mapSections.filter((n) => n !== name)),
+        labels: ["wayfinder:map"],
+      }),
+      `Add the \`${name}\` section.`,
+    );
+    rejected(
+      decide({ body: map(mapSections, name), labels: ["wayfinder:map"] }),
+      `Replace the placeholder under \`${name}\` with the required information.`,
+    );
+  }
+  rejected(
+    decide({ body: map(), labels: ["wayfinder:map", childLabels[0]] }),
+    "Keep `wayfinder:map` separate from Wayfinder child labels.",
+  );
+});
+
+test("a Wayfinder child carries exactly one child label the rules name, a Question, and a map parent", () => {
+  assert.deepEqual(childLabels, [
+    "wayfinder:research",
+    "wayfinder:prototype",
+    "wayfinder:grilling",
+    "wayfinder:task",
+  ]);
+  const body = "## Question\n\nWhich cache fits?";
+  for (const label of childLabels)
+    accepted(
+      decide({ body, labels: [label], parent: mapIssue }),
+      "Wayfinder child",
+    );
+  rejected(
+    decide({ body, labels: childLabels.slice(0, 2), parent: mapIssue }),
+    "Apply exactly one Wayfinder child label and do not combine it with `wayfinder:map`.",
+  );
+  rejected(
+    decide({
+      body: "## Question\n\nTBD",
+      labels: [childLabels[0]],
+      parent: mapIssue,
+    }),
+    "Replace the placeholder under `Question` with the required information.",
+  );
+  rejected(
+    decide({ body, labels: [childLabels[0]] }),
+    "Link the Wayfinder child to its parent map using the native parent relationship or a `Parent` section.",
+  );
+  rejected(
+    decide({
+      body,
+      labels: [childLabels[0]],
+      parent: { number: 8, state: "open", labels: [] },
+    }),
+    "Link the Wayfinder child to an issue labeled `wayfinder:map`.",
+  );
+});
+
+test("a native parent is canonical and wins over a Parent section, which is the fallback, and a Part of line links nothing", () => {
+  assert.match(
+    mapRules,
+    /on GitHub the native parent relationship is canonical\. For compatibility, the workflow also accepts the first issue reference in the child's `Parent` section when the native relationship is absent/,
+  );
+  const question = "## Question\n\nWhich cache fits?";
+  accepted(
+    decide({
+      body: `## Parent\n\n#7\n\n${question}`,
+      labels: [childLabels[0]],
+      relatedIssues: { "/repos/example/repository/issues/7": mapIssue },
+    }),
+    "Wayfinder child",
+  );
+  rejected(
+    decide({
+      body: `## Parent\n\n#7\n\n${question}`,
+      labels: [childLabels[0]],
+      parent: { number: 8, state: "open", labels: [] },
+      relatedIssues: { "/repos/example/repository/issues/7": mapIssue },
+    }),
+    "Link the Wayfinder child to an issue labeled `wayfinder:map`.",
+  );
+  rejected(
+    decide({
+      body: `Part of #7\n\n${question}`,
+      labels: [childLabels[0]],
+      relatedIssues: { "/repos/example/repository/issues/7": mapIssue },
+    }),
+    "Link the Wayfinder child to its parent map",
+  );
+});
+
+test("Wayfinder maps and children reject readiness and never gain a workflow state", () => {
+  assert.match(
+    mapRules,
+    /Maps and children carry no readiness and no workflow state label\. Their eligibility uses open state, assignment and native blockers/,
+  );
+  const readiness =
+    "Remove readiness labels from Wayfinder planning issues; their eligibility uses open state, assignment, and blockers.";
+  for (const ready of ["ready-for-agent", "ready-for-human"]) {
+    const mapDecision = decide({
+      body: map(),
+      labels: ["wayfinder:map", ready],
+    });
+    rejected(mapDecision, readiness);
+    assert.deepEqual(mapDecision.addLabels, []);
+    const childDecision = decide({
+      body: "## Question\n\nWhich cache fits?",
+      labels: [childLabels[0], ready],
+      parent: mapIssue,
+    });
+    rejected(childDecision, readiness);
+    assert.deepEqual(childDecision.addLabels, []);
+  }
+});
