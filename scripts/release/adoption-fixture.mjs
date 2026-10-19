@@ -39,11 +39,16 @@ operations/lib/rendered-markdown.mjs linguist-vendored
 .agents/skills/diagnosing-bugs/** linguist-vendored
 # END Repo Canon linguist-vendored
 `,
-  "README.md": `<h1 align="center">Wordtally</h1>
+  "README.md": `<div align="center">
+
+<h1>Wordtally</h1>
 
 Wordtally is a command-line word counter for writers who check the length of plain-text drafts.
 
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Node.js 24](https://img.shields.io/badge/Node.js-24-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+
+</div>
 
 ## Installation
 
@@ -251,9 +256,10 @@ export const assessments = {
   "repository-readme": {
     status: "satisfied",
     explanation:
-      "README.md has a centered title, a one-sentence description, a Node.js 24 badge, and Installation, Usage, Documentation, Contributing, and License sections in order.",
+      "README.md has one centered header with its title, one-sentence description and JavaScript and Node.js 24 badges, and Installation, Usage, Documentation, Contributing, and License sections in order.",
     evidence: [
       "README.md describes Wordtally as a command-line word counter for writers.",
+      "Its badges cover the JavaScript in wordtally.mjs and the Node.js 24 required by docs/development/README.md.",
       "Its Documentation, Contributing, and License sections each hold one link.",
     ],
   },
