@@ -55,7 +55,11 @@ npx @lutzseverino/repo-standards adopt
 ```
 
 Before changing a setting that already has a value, either fix asks for
-confirmation, naming the current and proposed values. The `PR metadata`
+confirmation, naming the current and proposed values. Settings still at
+GitHub's stock values for a new repository need no confirmation: a label named
+`wontfix` that still has GitHub's default color and description, and merge
+settings that are all at GitHub's stock values. A single other value makes the
+merge settings count as chosen. The `PR metadata`
 requirement waits for the adoption to merge, because GitHub runs its workflow
 only from the default branch: the first adoption applies the merge settings
 and leaves the check unrequired, and the next `adopt` after the merge requires
