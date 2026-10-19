@@ -44,7 +44,7 @@ export const githubPrIntegrationSetup = {
   },
   state: {
     settings: {
-      allow_squash_merge: false,
+      allow_squash_merge: true,
       allow_merge_commit: true,
       allow_rebase_merge: true,
       squash_merge_commit_title: "COMMIT_OR_PR_TITLE",

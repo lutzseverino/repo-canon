@@ -937,25 +937,129 @@ test("asks before changing existing settings with no remote or project mutation"
     });
 });
 
-test("checks every merge setting before changing any remote configuration", async (t) => {
-  for (const [setting, value] of Object.entries(
-    githubPrIntegrationSetup.state.settings,
-  )) {
-    if (!Object.hasOwn(matchingSettings, setting)) continue;
-    await t.test(setting, (st) => {
+const stockSettings = {
+  allow_squash_merge: true,
+  allow_merge_commit: true,
+  allow_rebase_merge: true,
+  squash_merge_commit_title: "COMMIT_OR_PR_TITLE",
+  squash_merge_commit_message: "COMMIT_MESSAGES",
+};
+
+const enforcementPaths = [
+  { name: "full", state: {}, mutations: ["create required-check ruleset"] },
+  { name: "deferred", state: { workflow: "absent" }, mutations: [] },
+  {
+    name: "plan limited",
+    state: {
+      private: true,
+      forbidden: { protection: planLimit, rulesets: planLimit },
+    },
+    mutations: [],
+  },
+];
+
+test("applies stock merge settings without confirmation on every path", async (t) => {
+  for (const { name, state, mutations } of enforcementPaths)
+    await t.test(name, (st) => {
       const scenario = setup(st, {
-        state: { settings: { ...matchingSettings, [setting]: value } },
+        state: { ...state, settings: stockSettings },
       });
-      const outcome = scenario.invoke();
+      const before = snapshot(scenario.project.root);
+      const outcome = scenario.invoke({ overwriteAllowed: false });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "changed");
+      assert.match(outcome.result.message, /GitHub's stock values/);
+      const after = scenario.readState();
+      assert.deepEqual(after.settings, matchingSettings);
+      assert.deepEqual(after.mutationLog, [
+        ...mutations,
+        "update squash settings",
+      ]);
+      assert.equal(after.rulesets.length, mutations.length);
+      assertProjectUnchanged(before, scenario);
+
+      const repeat = scenario.invoke({ overwriteAllowed: false });
+      assert.equal(repeat.result.status, "unchanged");
+      assert.doesNotMatch(repeat.result.message, /stock values/);
+    });
+});
+
+test("asks about every present differing field unless all five are stock", async (t) => {
+  const chosen = {
+    allow_squash_merge: false,
+    allow_merge_commit: false,
+    allow_rebase_merge: false,
+    squash_merge_commit_title: "PR_TITLE",
+    squash_merge_commit_message: "BLANK",
+  };
+  for (const { name, state } of enforcementPaths)
+    for (const [setting, value] of Object.entries(chosen))
+      await t.test(`${name}: ${setting}`, (st) => {
+        const settings = { ...stockSettings, [setting]: value };
+        const scenario = setup(st, { state: { ...state, settings } });
+        const outcome = scenario.invoke({ overwriteAllowed: false });
+        assert.equal(outcome.status, 0, outcome.stderr);
+        assert.equal(outcome.result.status, "confirmation-required");
+        for (const [field, current] of Object.entries(settings)) {
+          const line = `repository.${field} is ${JSON.stringify(current)}; the standard sets ${JSON.stringify(matchingSettings[field])}`;
+          assert.equal(
+            outcome.result.message.includes(line),
+            current !== matchingSettings[field],
+            line,
+          );
+        }
+        assert.deepEqual(writes(scenario.readState()), []);
+        assert.deepEqual(scenario.readState().settings, settings);
+      });
+});
+
+test("falls back to asking when a compared merge setting is absent", async (t) => {
+  for (const setting of Object.keys(stockSettings))
+    await t.test(setting, (st) => {
+      const { [setting]: _omitted, ...settings } = stockSettings;
+      const scenario = setup(st, { state: { settings } });
+      const outcome = scenario.invoke({ overwriteAllowed: false });
       assert.equal(outcome.result.status, "confirmation-required");
-      assert.ok(
-        outcome.result.message.includes(
-          `repository.${setting} is ${JSON.stringify(value)}; the standard sets ${JSON.stringify(matchingSettings[setting])}`,
-        ),
-      );
+      assert.ok(!outcome.result.message.includes(`repository.${setting} `));
       assert.deepEqual(writes(scenario.readState()), []);
     });
-  }
+});
+
+test("asks only about required checks while stock merge settings wait", async (t) => {
+  for (const { name, state, values } of [
+    {
+      name: "classic contexts",
+      state: {
+        branchProtection: classicProtection({
+          strict: true,
+          contexts: ["build"],
+        }),
+      },
+      values: ["main", "contexts", "build", "PR metadata"],
+    },
+    {
+      name: "managed ruleset",
+      state: { rulesets: [canonicalRuleset({ enforcement: "disabled" })] },
+      values: [rulesetName, "enforcement", "disabled", "active"],
+    },
+  ])
+    await t.test(name, (st) => {
+      const scenario = setup(st, {
+        state: { ...state, settings: stockSettings },
+      });
+      const outcome = scenario.invoke({ overwriteAllowed: false });
+      assert.equal(outcome.result.status, "confirmation-required");
+      for (const value of values)
+        assert.ok(outcome.result.message.includes(value), value);
+      assert.ok(!outcome.result.message.includes("repository."));
+      assert.deepEqual(writes(scenario.readState()), []);
+      assert.deepEqual(scenario.readState().settings, stockSettings);
+
+      const confirmed = scenario.invoke({ overwriteAllowed: true });
+      assert.equal(confirmed.result.status, "changed");
+      assert.deepEqual(scenario.readState().settings, matchingSettings);
+      assert.equal(scenario.invoke().result.status, "unchanged");
+    });
 });
 
 test("creates missing enforcement alongside matching existing merge settings without confirmation", (t) => {

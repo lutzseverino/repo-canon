@@ -122,7 +122,36 @@ ruleset's enforcement, conditions, or rules. When `overwriteAllowed` is
 `false`, any such difference returns `confirmation-required`, naming each
 setting and its current and proposed values. It makes no mutation, including
 creating missing enforcement or merge settings. This guard also applies to
-merge settings when enforcement is deferred or unavailable. After the
+merge settings when enforcement is deferred or unavailable.
+
+Merge settings still at GitHub's stock values for a new repository are the
+exception: nobody chose them, so the standard applies without confirmation on
+every path. The stock values are:
+
+| Setting               | Stock value          | Required value |
+| --------------------- | -------------------- | -------------- |
+| Squash merging        | `true`               | `true`         |
+| Merge commits         | `true`               | `false`        |
+| Rebase merging        | `true`               | `false`        |
+| Squash commit title   | `COMMIT_OR_PR_TITLE` | `PR_TITLE`     |
+| Squash commit message | `COMMIT_MESSAGES`    | `PR_BODY`      |
+
+GitHub documents `true` as the default of the three `allow_*` fields in its
+[repository creation endpoints](https://docs.github.com/en/rest/repos/repos#create-an-organization-repository),
+and its [commit squashing](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/configuring-commit-squashing-for-pull-requests)
+page describes the default squash message as the commit's title and message for
+one commit, otherwise the pull request title and the list of commits, which the
+API reports as `COMMIT_OR_PR_TITLE` and `COMMIT_MESSAGES`. The rule applies
+only when the repository response holds all five fields and each equals its
+stock value. If one is absent or differs, every present field that differs from
+the standard needs confirmation as above, so a repository with merge commits
+turned off but rebase merging still on is asked about rebase merging and the
+squash title and message. A stock set that waits on a required-check change that
+needs confirmation is not mutated either, and the confirmation names only the
+required-check changes. The `changed` message states when the merge settings
+were at stock values. A maintainer who deliberately keeps all five stock values
+looks like an untouched repository, so the fix applies the standard without
+asking and reports it. After the
 maintainer confirms, `resume --confirmed` invokes the fix with
 `overwriteAllowed: true`; it re-reads the remote and applies the plan while
 preserving unrelated policy.
