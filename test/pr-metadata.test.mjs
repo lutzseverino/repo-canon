@@ -207,7 +207,12 @@ test("rejects the retired exception marker", () => {
   assert.match(result.stderr, /Link a related GitHub issue/);
 });
 
-function adoptionRecord({ deferredRemoteSetup = false } = {}) {
+const adoptionTitle = "chore: adopt repo-canon v0.4.0 with CLI 7.0.0";
+
+function adoptionRecord({
+  deferredRemoteSetup = false,
+  abandonedRuns = false,
+} = {}) {
   return `# Repository Standards adoption record
 
 ## Ready to commit
@@ -249,28 +254,99 @@ No scope changes.
 | Inspection | \`sha256:abc\` |
 | HEAD at start | \`0123456789abcdef0123456789abcdef01234567\` |
 | Completed at | 2026-10-01T00:00:00.000Z |
-`;
+${
+  abandonedRuns
+    ? `
+## Abandoned runs
+
+| Run | Inspection | Phase | Reason |
+| --- | --- | --- | --- |
+| \`run-0\` | \`sha256:def\` | fixes | The maintainer abandoned the run. |
+`
+    : ""
+}`;
 }
 
-test("accepts a body that is exactly an adoption record", () => {
+// The shape of a record the CLI rendered for an adoption pull request:
+// escaped inline markup in a message and an empty scope changes table.
+const renderedAdoptionRecord = `# Repository Standards adoption record
+
+## Ready to commit
+
+Ready to commit: yes.
+
+## Selection
+
+| Component | Value |
+| --- | --- |
+| CLI | \`8.0.0\` |
+| Standards source | \`https://github.com/lutzseverino/repo-canon\` |
+| Standards version | \`v0.16.0\` |
+| Standards commit | \`7f16041b8626a8119281b2e872f539b782fd83b8\` |
+| Profile | \`factory\` |
+
+## Operations
+
+| Phase | Declaration | Operation | Result | Message |
+| --- | --- | --- | --- | --- |
+| fixes | \`github-repository-configuration\` | \`pull-request-integration\` | unchanged | Requiring \\\`PR metadata\\\` is deferred because the default branch \\\`main\\\` does not carry the workflow yet. |
+| checks | \`documentation\` | \`documentation-navigation\` | passed | Documentation navigation is valid. |
+
+## Changed paths
+
+| Path | Phases |
+| --- | --- |
+| \`.factory/Dockerfile\` | agent |
+| \`.github/scripts/validate-pr-metadata.mjs\` | installation |
+
+## Scope changes
+
+| Declaration | Added | Removed |
+| --- | --- | --- |
+
+## Identities
+
+| Record | Value |
+| --- | --- |
+| Run | \`23226a68-14d7-4654-be39-2b48bea73fe7\` |
+| Inspection | \`sha256:d6a340538b4d8d97d0937132af1c2817f1b4839a2693dcfaf8d4d420777a091f\` |
+| HEAD at start | \`64b725a80edf9e3f85f77307147dbde8b251086b\` |
+| Completed at | 2026-10-19T03:51:52.933Z |
+`;
+
+test("accepts a complete, ready adoption record under its adoption title", () => {
   const record = adoptionRecord();
-  for (const [variant, body] of [
-    ["record", record],
+  for (const [variant, title, body] of [
+    ["record", adoptionTitle, record],
     [
       "record with deferred remote setup",
+      adoptionTitle,
       adoptionRecord({ deferredRemoteSetup: true }),
     ],
-    ["CRLF record", record.replace(/\n/g, "\r\n")],
-    ["record after blank lines", `\n \t\n${record}`],
+    ["CRLF record", adoptionTitle, record.replace(/\n/g, "\r\n")],
+    ["record after blank lines", adoptionTitle, `\n \t\n${record}`],
     [
       "record heading with trailing spaces",
+      adoptionTitle,
       record.replace("record\n", "record \t\n"),
     ],
+    [
+      "record with abandoned runs",
+      adoptionTitle,
+      adoptionRecord({ abandonedRuns: true }),
+    ],
+    [
+      "record rendered by the CLI",
+      "chore: adopt repo-canon v0.16.0 with CLI 8.0.0",
+      renderedAdoptionRecord,
+    ],
+    [
+      "record whose source URL ends in .git and a slash",
+      adoptionTitle,
+      record.replace("repo-canon`", "repo-canon.git/`"),
+    ],
   ]) {
-    const result = runEvent({
-      title: "chore: update Repo Canon to v0.4.0",
-      body,
-    });
+    const result = runEvent({ title, body });
     assert.equal(result.status, 0, `${variant}: ${result.stderr}`);
     assert.match(result.stdout, /validation passed/, variant);
     assert.match(result.summary, /adoption record/, variant);
@@ -287,19 +363,24 @@ test("still validates the title of an adoption record body", () => {
   assert.doesNotMatch(result.stderr, /Add a Summary section/);
 
   const breaking = runEvent({
-    title: "chore!: update Repo Canon to v0.4.0",
+    title: "chore!: adopt repo-canon v0.4.0 with CLI 7.0.0",
     body: adoptionRecord(),
   });
   assert.equal(breaking.status, 1);
   assert.match(breaking.stderr, /under an Impact/);
   assert.match(breaking.stderr, /under a Migration/);
   assert.doesNotMatch(breaking.stderr, /Add a Summary section/);
+  assert.doesNotMatch(breaking.stderr, /Title the adoption pull request/);
 });
 
 test("accepts a breaking adoption record followed by Impact and Migration", () => {
-  const result = runEvent({
-    title: "chore!: adopt repo-canon v0.6.0 with CLI 5.1.0",
-    body: `${adoptionRecord()}
+  for (const record of [
+    adoptionRecord(),
+    adoptionRecord({ abandonedRuns: true }),
+  ]) {
+    const result = runEvent({
+      title: "chore!: adopt repo-canon v0.4.0 with CLI 7.0.0",
+      body: `${record}
 ## Impact
 
 The factory's claim labels change, so open claims need relabelling.
@@ -308,9 +389,276 @@ The factory's claim labels change, so open claims need relabelling.
 
 Relabel each open factory:running issue before the factory restarts.
 `,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.summary, /adoption record/);
+  }
+});
+
+const sectionOrderError =
+  /List the adoption record's level-2 sections as Ready to commit, Selection, Operations, Changed paths, Scope changes and Identities/;
+const readyError = /State Ready to commit: yes\. in the adoption record/;
+const selectionError =
+  /Give the adoption record's Selection section one Markdown table with one CLI, one Standards source and one Standards version row/;
+
+function assertRecordFailure(result, variant, expected) {
+  assert.equal(result.status, 1, variant);
+  for (const pattern of expected) assert.match(result.stderr, pattern, variant);
+  for (const pattern of [sectionOrderError, readyError, selectionError]) {
+    if (!expected.includes(pattern))
+      assert.doesNotMatch(result.stderr, pattern, variant);
+  }
+  assert.doesNotMatch(result.stderr, /Add a Summary section/, variant);
+  assert.doesNotMatch(result.stderr, /validation passed/, variant);
+}
+
+test("rejects a heading-first body that is not an adoption record", () => {
+  for (const [variant, body] of [
+    ["record heading alone", "# Repository Standards adoption record\n"],
+    [
+      "record heading followed by other text",
+      `# Repository Standards adoption record
+
+## Summary
+
+Fix an unrelated bug.
+`,
+    ],
+  ]) {
+    const result = runEvent({ title: "fix: unrelated change", body });
+    assertRecordFailure(result, variant, [
+      sectionOrderError,
+      readyError,
+      selectionError,
+    ]);
+  }
+});
+
+test("rejects an adoption record that is not complete and ready to commit", () => {
+  const record = adoptionRecord();
+  const notReady = record.replace(
+    "Ready to commit: yes.",
+    "Ready to commit: no.\n\n- The working tree has unrelated changes.",
+  );
+  assertRecordFailure(
+    runEvent({ title: adoptionTitle, body: notReady }),
+    "no",
+    [readyError],
+  );
+  assertRecordFailure(
+    runEvent({
+      title: adoptionTitle,
+      body: record.replace("Ready to commit: yes.", "Ready to commit: yes"),
+    }),
+    "missing period",
+    [readyError],
+  );
+  assertRecordFailure(
+    runEvent({
+      title: adoptionTitle,
+      body: record.replace("Ready to commit: yes.", "> Ready to commit: yes."),
+    }),
+    "statement in a quote",
+    [readyError],
+  );
+
+  const incomplete = runEvent({
+    title: adoptionTitle,
+    body: `# Repository Standards adoption record
+
+## Ready to commit
+
+Ready to commit: no.
+
+- No complete adoption is recorded.
+
+No complete adoption is recorded.
+`,
   });
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.summary, /adoption record/);
+  assertRecordFailure(incomplete, "incomplete", [
+    sectionOrderError,
+    readyError,
+    selectionError,
+  ]);
+});
+
+test("rejects an adoption record without its sections once and in order", () => {
+  const record = adoptionRecord();
+  const variants = [
+    ...[
+      "Ready to commit",
+      "Selection",
+      "Operations",
+      "Changed paths",
+      "Scope changes",
+      "Identities",
+    ].map((section) => [
+      `missing ${section}`,
+      record.replace(`## ${section}\n`, ""),
+    ]),
+    [
+      "duplicated Operations",
+      record.replace(
+        "## Changed paths",
+        "## Operations\n\nAgain.\n\n## Changed paths",
+      ),
+    ],
+    [
+      "reordered Operations and Changed paths",
+      record
+        .replace("## Operations", "## Placeholder")
+        .replace("## Changed paths", "## Operations")
+        .replace("## Placeholder", "## Changed paths"),
+    ],
+    ["extra Notes section", `${record}\n## Notes\n\nReviewed by hand.\n`],
+    [
+      "Notes between record sections",
+      record.replace("## Identities", "## Notes\n\nReviewed.\n\n## Identities"),
+    ],
+    ["second level-1 heading", `${record}\n# Notes\n\nReviewed by hand.\n`],
+    [
+      "Abandoned runs before Identities",
+      record.replace(
+        "## Identities",
+        "## Abandoned runs\n\nNone.\n\n## Identities",
+      ),
+    ],
+    ["level-1 Identities", record.replace("## Identities", "# Identities")],
+    ["Impact without Migration", `${record}\n## Impact\n\nLabels change.\n`],
+    [
+      "Migration without Impact",
+      `${record}\n## Migration\n\nRelabel issues.\n`,
+    ],
+    [
+      "Migration before Impact",
+      `${record}\n## Migration\n\nRelabel issues.\n\n## Impact\n\nLabels change.\n`,
+    ],
+    [
+      "Identities only in a code fence",
+      record.replace("## Identities\n", "```markdown\n## Identities\n```\n"),
+    ],
+    [
+      "Identities only in an HTML comment",
+      record.replace("## Identities\n", "<!--\n## Identities\n-->\n"),
+    ],
+    [
+      "Identities only in hidden HTML",
+      record.replace(
+        "## Identities\n",
+        "<div hidden>\n\n## Identities\n\n</div>\n",
+      ),
+    ],
+  ];
+  for (const [variant, body] of variants) {
+    const result = runEvent({ title: adoptionTitle, body });
+    const expected = [sectionOrderError];
+    if (variant === "missing Ready to commit") expected.push(readyError);
+    // Without its heading, the next section's table joins the Selection.
+    if (["missing Selection", "missing Operations"].includes(variant))
+      expected.push(selectionError);
+    assertRecordFailure(result, variant, expected);
+  }
+
+  const readyInComment = runEvent({
+    title: adoptionTitle,
+    body: record.replace(
+      "## Ready to commit\n\nReady to commit: yes.\n",
+      "<!--\n## Ready to commit\n\nReady to commit: yes.\n-->\n",
+    ),
+  });
+  assertRecordFailure(readyInComment, "Ready to commit in a comment", [
+    sectionOrderError,
+    readyError,
+  ]);
+});
+
+test("rejects an adoption record without the Selection values its title needs", () => {
+  const record = adoptionRecord();
+  for (const [variant, body] of [
+    ["missing CLI row", record.replace("| CLI | `7.0.0` |\n", "")],
+    [
+      "missing Standards source row",
+      record.replace(/\| Standards source \|[^\n]*\n/, ""),
+    ],
+    [
+      "missing Standards version row",
+      record.replace("| Standards version | `v0.4.0` |\n", ""),
+    ],
+    [
+      "CLI value outside inline code",
+      record.replace("| CLI | `7.0.0` |", "| CLI | 7.0.0 |"),
+    ],
+    [
+      "Standards version with text beside its code",
+      record.replace("`v0.4.0` |", "`v0.4.0` (latest) |"),
+    ],
+    [
+      "duplicated CLI row",
+      record.replace(
+        "| CLI | `7.0.0` |",
+        "| CLI | `7.0.0` |\n| CLI | `7.0.0` |",
+      ),
+    ],
+    [
+      "Standards source without a repository name",
+      record.replace("`https://github.com/lutzseverino/repo-canon`", "`.git`"),
+    ],
+    [
+      "CLI name in hidden HTML",
+      record.replace("| CLI |", "| <span hidden>x</span>CLI |"),
+    ],
+    [
+      "Selection rows in a hidden table",
+      record.replace(
+        /\| CLI \|[\s\S]*?\| Standards version \|[^\n]*\n/,
+        (rows) =>
+          `\n<div hidden>\n\n| Component | Value |\n| --- | --- |\n${rows}\n</div>\n`,
+      ),
+    ],
+    [
+      "Selection with text beside its table",
+      record.replace(
+        "## Selection\n",
+        "## Selection\n\nThe selected source.\n",
+      ),
+    ],
+    [
+      "Selection rows only in a code fence",
+      record.replace(
+        /\| Component \| Value \|[\s\S]*?\| Profile [^\n]*\n/,
+        (table) => `\`\`\`markdown\n${table}\`\`\`\n`,
+      ),
+    ],
+  ]) {
+    const result = runEvent({ title: adoptionTitle, body });
+    assertRecordFailure(result, variant, [selectionError]);
+    assert.doesNotMatch(result.stderr, /Title the adoption pull request/);
+  }
+});
+
+test("rejects an adoption record whose title does not match its Selection", () => {
+  for (const title of [
+    "fix: adopt repo-canon v0.4.0 with CLI 7.0.0",
+    "chore(standards): adopt repo-canon v0.4.0 with CLI 7.0.0",
+    "chore: adopt repo-standards v0.4.0 with CLI 7.0.0",
+    "chore: adopt repo-canon v0.5.0 with CLI 7.0.0",
+    "chore: adopt repo-canon v0.4.0 with CLI 7.1.0",
+    "chore: update Repo Canon to v0.4.0",
+    "fix: unrelated change",
+  ]) {
+    const result = runEvent({ title, body: adoptionRecord() });
+    assertRecordFailure(result, title, []);
+    assert.match(
+      result.stderr,
+      /Title the adoption pull request chore: adopt repo-canon v0\.4\.0 with CLI 7\.0\.0, or chore!: adopt repo-canon v0\.4\.0 with CLI 7\.0\.0 for a breaking adoption/,
+      title,
+    );
+    assert.equal(
+      result.stderr.match(/Title the adoption pull request/g).length,
+      1,
+      title,
+    );
+  }
 });
 
 test("validates a body whose record heading is not its first content as an ordinary body", () => {
@@ -335,14 +683,12 @@ test("validates a body whose record heading is not its first content as an ordin
       record.replace("adoption record", "adoption record draft"),
     ],
   ]) {
-    const result = runEvent({
-      title: "chore: update Repo Canon to v0.4.0",
-      body,
-    });
+    const result = runEvent({ title: adoptionTitle, body });
     assert.equal(result.status, 1, variant);
     assert.match(result.stderr, /Add a Summary section/, variant);
     assert.match(result.stderr, /Add an Evidence section/, variant);
     assert.match(result.stderr, /Add a Related issue section/, variant);
+    assert.doesNotMatch(result.stderr, /adoption/, variant);
   }
 
   const ordinary = runEvent({ body: `${validBody()}\n${record}` });
@@ -841,13 +1187,14 @@ test("rejects co-author trailers in titles and raw bodies of every kind", (t) =>
     "  co-authored-by: build-worker[bot] <bot@example.com>",
     "\tCO-AUTHORED-BY: Imaginary Model",
   ]) {
-    for (const body of [
-      validBody(line),
-      validBody(`\n\`\`\`text\n${line}\n\`\`\``),
-      `${adoptionRecord()}\n${line}`,
+    for (const [title, body] of [
+      [undefined, validBody(line)],
+      [undefined, validBody(`\n\`\`\`text\n${line}\n\`\`\``)],
+      [adoptionTitle, `${adoptionRecord()}\n${line}`],
     ]) {
-      const result = runEvent({ body, validatorPath });
+      const result = runEvent({ title, body, validatorPath });
       assert.equal(result.status, 1, line);
+      assert.doesNotMatch(result.stderr, /adoption/, line);
       assert.match(
         result.stderr,
         /Remove the co-author trailer.*CONTRIBUTING\.md/,
@@ -869,13 +1216,14 @@ test("rejects attribution lines after Markdown markers and symbols", () => {
     "1. Generated by another-agent",
     "* Generated with unknown-tool",
   ]) {
-    for (const body of [
-      validBody(line),
-      validBody(`\n\`\`\`text\n${line}\n\`\`\``),
-      `${adoptionRecord()}\n${line}`,
+    for (const [title, body] of [
+      [undefined, validBody(line)],
+      [undefined, validBody(`\n\`\`\`text\n${line}\n\`\`\``)],
+      [adoptionTitle, `${adoptionRecord()}\n${line}`],
     ]) {
-      const result = runEvent({ body });
+      const result = runEvent({ title, body });
       assert.equal(result.status, 1, line);
+      assert.doesNotMatch(result.stderr, /adoption/, line);
       assert.match(
         result.stderr,
         /Remove the attribution line.*CONTRIBUTING\.md/,

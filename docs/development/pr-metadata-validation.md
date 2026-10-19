@@ -37,13 +37,45 @@ count. References inside HTML elements with the `hidden` attribute do not count.
 A GitHub issue URL used as a visible Markdown or HTML link destination does count.
 
 A body whose first line, after any blank lines, is exactly
-`# Repository Standards adoption record`, apart from trailing spaces or tabs, is
-a Repository Standards adoption record, a complete body for an adoption or
-update pull request. It needs no Summary, Evidence, Merge Danger, or Related
-issue section, and the title rules below still apply. The heading counts only
-as that exact first line: text, an HTML comment, or a code fence before it, indentation,
-another heading level, or other wording makes the body an ordinary description,
+`# Repository Standards adoption record`, apart from trailing spaces or tabs,
+claims to be a Repository Standards adoption record, the complete body of an
+adoption or update pull request. The heading counts only as that exact first
+line: text, an HTML comment, or a code fence before it, indentation, another
+heading level, or other wording makes the body an ordinary description,
 validated as above.
+
+A body that claims to be a record needs no Summary, Evidence, Merge Danger, or
+Related issue section only when it is a complete, ready record under its
+adoption title, as the
+[contribution guide](../../CONTRIBUTING.md#adoption-pull-requests) describes:
+
+- After the record heading, the only level-1 or level-2 headings are the
+  level-2 sections `Ready to commit`, `Selection`, `Operations`,
+  `Changed paths`, `Scope changes`, and `Identities`, each once and in that
+  order, optionally followed by `Abandoned runs`, then optionally by `Impact`
+  and `Migration` together. Headings are recognized from rendered Markdown, as
+  above, so headings in code, HTML comments, or hidden HTML do not count.
+- The first block of the `Ready to commit` section is the paragraph
+  `Ready to commit: yes.`
+- The `Selection` section is one Markdown table, with no other content that
+  could hide or replace its rows. It holds one `CLI`, one `Standards source`,
+  and one `Standards version` row, each named exactly in its first cell and
+  with only an inline-code value.
+- The title is exactly
+  `chore: adopt <name> <standards version> with CLI <cli version>`, or the
+  same with `chore!:`. `<name>` is the last path segment of the
+  `Standards source` value, without a trailing `/` or `.git`, and both versions
+  are the `Selection` values verbatim.
+
+Such a body never falls back to the ordinary sections: the check fails with one
+error for each unmet condition, and a title mismatch names the expected title.
+Without the `Selection` values, or with a `Standards source` that yields no
+name, the check reports the `Selection` error instead of a title error, since
+it cannot derive the expected title.
+The title rules below, including `Impact` and `Migration` for `chore!:`, and the
+attribution check still apply to a record. The check cannot tell whether the
+record is the CLI's output or matches the repository's `.repo-standards` state;
+review confirms both.
 
 Titles use `type(scope): description`, with an optional scope and an optional
 `!` immediately before the colon. The allowed lowercase types are `feat`,
