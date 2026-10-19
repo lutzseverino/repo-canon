@@ -2,7 +2,9 @@
 
 Status: where Repo Canon's own rules live is superseded by
 [ADR 0016](0016-keep-requirements-in-installed-rules.md), which moves file rules
-from the contribution guide to installed rules.
+from the contribution guide to installed rules. Its assumption of one GitHub
+tracker seed for every platform is superseded by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md); verbatim
+installation from the selected upstream seed stands.
 
 The issue tracker, triage label, and domain configurations under `docs/agents`
 are skill setup files: the installed skills read them as their per-repository
@@ -20,6 +22,13 @@ adding back the sections the skills read, because every upstream snapshot would
 need a manual comparison to find sections the skills newly expect; and
 customizing the seeds for Repo Canon, because any edit makes the files diverge
 from the snapshot the skills were written against.
+
+## Platform amendment
+
+[ADR 0023](0023-reach-the-hosting-platform-through-postern.md) makes the GitHub tracker seed the GitHub platform's seed.
+Other platforms select their own seed through the platform choice within a
+profile. Published files remain GitHub-shaped until a second adapter exists;
+this amendment changes neither the current seed nor its verbatim installation.
 
 ## Consequences
 

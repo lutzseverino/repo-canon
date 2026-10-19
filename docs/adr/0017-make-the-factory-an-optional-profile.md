@@ -1,5 +1,8 @@
 # Make the factory an optional profile
 
+Status: its hosting-platform profile-multiplication assumption is superseded
+by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md); the two profiles and their purpose stand.
+
 Repo Canon offers two profiles: the standard profile, which every adopting
 repository can select, and the factory profile, which adds the factory's
 repository files, `.factory/config.json`, `.factory/Dockerfile`, and the
@@ -27,5 +30,9 @@ optional part does not justify combining profiles.
 - Rules that only a factory needs, such as re-applying a parent's readiness
   and model labels, leave `CONTRIBUTING.md` for the factory profile's rules
   once installed rules exist.
-- A second optional dimension, such as a hosting platform or a project stack,
-  would multiply whole profiles; that is the point to revisit composition.
+- The original concern that a second optional dimension would multiply whole
+  profiles is resolved for hosting platforms by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md): an adopting
+  repository chooses the platform separately inside each profile, through
+  Repository Standards. A project-stack dimension would still be a reason to
+  revisit composition. Published files remain GitHub-shaped until a second
+  adapter exists.

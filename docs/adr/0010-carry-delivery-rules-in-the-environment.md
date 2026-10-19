@@ -20,6 +20,12 @@ guide and give the rules two homes; and carrying the rules in each run's
 prompt, because a prompt is rewritten per run and reaches only the agents given
 it.
 
+## Platform clarification
+
+[ADR 0023](0023-reach-the-hosting-platform-through-postern.md) keeps pull request as the canonical term; GitLab calls it a
+merge request. The environment still carries delivery rules and the skills
+still stay short, on every platform.
+
 ## Consequences
 
 - `CONTRIBUTING.md` holds the delivery procedure and the merge conditions, and

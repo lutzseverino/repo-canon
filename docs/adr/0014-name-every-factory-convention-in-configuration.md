@@ -22,7 +22,12 @@ who may spend the operator's subscriptions is the operator's policy.
   labels from that configuration, and the repository owns its ready label.
 - Readiness applied by a bot or GitHub App never dispatches an agent. Tickets an
   agent publishes wait for a person to apply readiness.
-- The factory reads native GitHub links only. A specification is any issue with
-  sub-issues, and an issue's `Parent` section means nothing to the factory.
-- Agents tell the factory things only through GitHub: comments, labels, pull
-  requests, and the run's branch. The factory reads no file an agent writes.
+- The factory reads relationships from the issue tracker port, as
+  [ADR 0023](0023-reach-the-hosting-platform-through-postern.md) clarifies without reversing configuration ownership.
+  The adapter reads native links where offered, and `Parent` and `Blocked by`
+  sections otherwise, with section names supplied by the consumer and no
+  default. A specification is any issue with child issues; the factory core
+  never parses an issue body.
+- Agents tell the factory things through the hosting platform: comments,
+  labels, pull requests, and the run's branch. The factory reads no file an
+  agent writes.

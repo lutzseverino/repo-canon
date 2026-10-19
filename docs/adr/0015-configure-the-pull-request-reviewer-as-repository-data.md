@@ -15,6 +15,14 @@ were rejected: shipping a Codex preset with the standard, because it would
 keep the owner's reviewer in every adopter; and reviewer code adapters,
 because data covers the one reviewer that exists.
 
+## Platform clarification
+
+[ADR 0023](0023-reach-the-hosting-platform-through-postern.md) retains the optional repository-owned reviewer configuration
+and the factory's independence from it. The `.github/` location and GitHub's
+review states are the GitHub case; other platforms supply their own location
+and review evidence through the platform adapter. Published files remain
+GitHub-shaped until a second adapter exists.
+
 ## Consequences
 
 - The owner's repositories each carry their own Codex file, outside the
