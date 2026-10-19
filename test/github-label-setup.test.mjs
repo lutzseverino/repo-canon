@@ -291,6 +291,56 @@ test("asks before updating drifted labels and creates nothing until confirmed", 
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });
 
+test("updates a label still at GitHub's stock values without confirmation and creates missing labels", (t) => {
+  const stock = {
+    name: "wontfix",
+    color: "ffffff",
+    description: "This will not be worked on",
+  };
+  const scenario = setup(t, { state: { labels: [stock] } });
+  const outcome = scenario.invoke({ overwriteAllowed: false });
+
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "changed");
+  assert.match(outcome.result.message, /updated wontfix/);
+  assert.match(outcome.result.message, /created 11 labels/);
+  assert.deepEqual(
+    scenario.readState().labels.find(({ name }) => name === "wontfix"),
+    canonicalLabels[4],
+  );
+  assert.equal(scenario.readState().labels.length, canonicalLabels.length);
+});
+
+test("asks about a label that differs from both the standard and GitHub's stock values", (t) => {
+  for (const labels of [
+    [{ ...canonicalLabels[4], description: "Closed without a fix" }],
+    [
+      {
+        ...canonicalLabels[4],
+        color: "000000",
+        description: "This will not be worked on",
+      },
+    ],
+    [
+      {
+        ...canonicalLabels[4],
+        description: "This will not be worked on",
+        color: "ffffff",
+        name: "Wontfix",
+      },
+    ],
+  ]) {
+    const scenario = setup(t, { state: { labels } });
+    const outcome = scenario.invoke({ overwriteAllowed: false });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, "confirmation-required");
+    assert.match(outcome.result.message, /label wontfix\./i);
+    assert.ok(outcome.result.message.includes("Will not be actioned"));
+    assert.equal(scenario.readState().mutations ?? 0, 0);
+    assert.deepEqual(scenario.readState().labels, labels);
+  }
+});
+
 test("treats hexadecimal colour casing as matching without confirmation", (t) => {
   const labels = canonicalLabels.map((label) => ({
     ...label,

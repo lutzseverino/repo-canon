@@ -180,10 +180,11 @@ described below.
 ### Adoption pull requests
 
 An adoption pull request holds one completed Repository Standards adoption or
-update run and nothing else. Open it once the project's pinned
-`.repo-standards/runtime/node_modules/.bin/repo-standards status` reports the
-run ready to commit. Otherwise finish or recover the run with
-`repo-standards adopt`, using the pinned runtime once a run has started.
+update run and nothing else. Record the verdict of the project's pinned
+`.repo-standards/runtime/node_modules/.bin/repo-standards status` as ready to
+commit before committing; once committed, `status` reports not ready.
+Otherwise finish or recover the run with `repo-standards adopt`, using the
+pinned runtime once a run has started.
 
 Title it `chore: adopt <source> <version> with CLI <version>`, naming the
 source by the repository name in its URL and the versions from the record's
@@ -195,7 +196,7 @@ Its body is the adoption record: the output of `status --summary`, byte for
 byte, starting with its `# Repository Standards adoption record` heading. The
 record's Operations table lists the standards source's fixes and checks with
 their results. Post one check-outcomes comment with the repository's own
-validation outcomes, confirmation of the ready-to-commit verdict, and findings
+validation outcomes, confirmation of the recorded ready-to-commit verdict, and findings
 links or unfiled findings under the
 [findings rule](#findings). The record stays the body; for a breaking (`!`)
 title, add Impact and Migration sections after the record.
