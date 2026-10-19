@@ -32,7 +32,7 @@ const repositoryWide = {
 // Exercise the published CLI, with its real acquisition, adoption, installation
 // and rules lookup. Only GitHub HTTP and Git transport use disposable fixtures.
 // No Scriptorium implementation or host is needed.
-test("public CLI 7.2.0 installs the triage fork and the GitHub rules for the whole repository in both profiles, and factory workflow rules only in the factory profile", (t) => {
+test("public CLI 8.1.0 installs the triage fork and the GitHub rules for the whole repository in both profiles, and factory workflow rules only in the factory profile", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const prefix = process.env.REPO_STANDARDS_PREFIX ?? join(directory, "cli");
@@ -45,14 +45,14 @@ test("public CLI 7.2.0 installs the triage fork and the GitHub rules for the who
         prefix,
         "--ignore-scripts",
         "--registry=https://registry.npmjs.org",
-        "@lutzseverino/repo-standards@7.2.0",
+        "@lutzseverino/repo-standards@8.1.0",
       ],
       { stdio: "pipe" },
     );
   const cli = join(prefix, "node_modules/.bin/repo-standards");
   assert.equal(
     execFileSync(cli, ["--version"], { encoding: "utf8" }).trim(),
-    "7.2.0",
+    "8.1.0",
   );
   const validation = JSON.parse(
     execFileSync(cli, ["source", "validate", root, "--json"], {
