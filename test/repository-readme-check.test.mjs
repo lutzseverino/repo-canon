@@ -39,6 +39,160 @@ function entryReadme(description, { wrapped = true } = {}) {
 `;
 }
 
+test("rejects Postern's title-only centered header with a description correction", (t) => {
+  // Postern at 3ff9017ebf9384e5e27d4790519d03511c9ab2c7, before postern#10.
+  const outcome = check(t, {
+    "README.md": `<h1 align="center">Postern</h1>
+
+Postern is a Node.js library that gives developers building tools one interface to code hosting platforms such as GitHub, for issues, pull requests, releases and access, and reports only facts the platform states.
+
+[![Node.js 24 or 26](https://img.shields.io/badge/Node.js-24%20or%2026-339933?logo=nodedotjs)](https://nodejs.org/)
+
+## License
+
+[MIT License](LICENSE)
+`,
+    LICENSE: mit,
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "failed");
+  assert.match(
+    outcome.result.message,
+    /Center the Repository README description/,
+  );
+  assert.match(outcome.result.message, /Center the Repository README badges/);
+});
+
+test("rejects left-aligned badges after a centered description", async (t) => {
+  for (const badges of [
+    "[![Node.js](node.svg)](https://nodejs.org/)",
+    '<p><img src="typescript.svg" alt="TypeScript"></p>',
+    '<p><img align="center" src="typescript.svg"><a href="https://nodejs.org/"><img src="node.svg"></a></p>',
+    '<p align="center"><img src="typescript.svg"></p>\n\n![Node.js](node.svg)',
+  ]) {
+    await t.test(badges, (t) => {
+      const outcome = check(t, {
+        "README.md": entryReadme("A delivery service for operators.", {
+          wrapped: false,
+        }).replace("## License", `${badges}\n\n## License`),
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "failed");
+      assert.match(
+        outcome.result.message,
+        /Center the Repository README badges/,
+      );
+      assert.doesNotMatch(
+        outcome.result.message,
+        /Center the Repository README description/,
+      );
+    });
+  }
+});
+
+test("accepts centered header blocks in HTML, Markdown and mixed forms", async (t) => {
+  for (const header of [
+    `<div align="center"><h1>Harbor</h1><p>A delivery service for operators.</p>
+<p><img src="typescript.svg" alt="TypeScript"><a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24"></a></p></div>`,
+    `<h1 align="center">Harbor</h1><p align="CENTER">A delivery service for operators.</p>
+<p align="CeNtEr"><img src="typescript.svg" alt="TypeScript"><a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24"></a></p>`,
+    `<div align="CENTER">
+
+# Harbor
+
+<p align="center">A delivery service for operators.</p>
+
+![TypeScript](typescript.svg) [![Node.js 24](node.svg)](https://nodejs.org/)
+
+<div><p><img src="other.svg" alt="Other"></p></div>
+
+</div>`,
+    `<div align="center"><h1>Harbor</h1><p>A delivery service for operators.</p>
+<img src="typescript.svg" alt="TypeScript"><a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24"></a></div>`,
+    `<h1 align="center">Harbor</h1><p align="center">A delivery service for operators.</p>
+<p><img align="CENTER" src="typescript.svg" alt="TypeScript"></p>
+<p align="center"><a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24"></a></p>`,
+    `<div align="center"><h1>Harbor</h1><p>A delivery service for operators.</p></div>`,
+  ]) {
+    await t.test(header, (t) => {
+      const outcome = check(t, {
+        "README.md": `${header}\n\n## License\n\n[MIT License](LICENSE)\n`,
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "passed", outcome.result.message);
+    });
+  }
+});
+
+test("rejects misleading or hidden centering for descriptions and badges", async (t) => {
+  for (const [name, wrap] of [
+    ["centerpiece", (content) => `<div align="centerpiece">${content}</div>`],
+    [
+      "paragraph centerpiece",
+      (content) => content.replaceAll("<p>", '<p align="centerpiece">'),
+    ],
+    [
+      "paragraph data-align",
+      (content) => content.replaceAll("<p>", '<p data-align="center">'),
+    ],
+    ["data-align", (content) => `<div data-align="center">${content}</div>`],
+    [
+      "comment",
+      (content) => `<!-- <div align="center"> -->${content}<!-- </div> -->`,
+    ],
+    [
+      "hidden",
+      (content) => `<div hidden align="center">${content}</div>${content}`,
+    ],
+    [
+      "hidden paragraph",
+      (content) => `<p hidden align="center">Ignored</p>${content}`,
+    ],
+  ]) {
+    await t.test(name, (t) => {
+      const outcome = check(t, {
+        "README.md": `<h1 align="center">Harbor</h1>\n${wrap('<p>A delivery service for operators.</p><p><a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24"></a></p>')}\n\n## License\n\n[MIT License](LICENSE)\n`,
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "failed");
+      assert.match(
+        outcome.result.message,
+        /Center the Repository README description/,
+      );
+      assert.match(
+        outcome.result.message,
+        /Center the Repository README badges/,
+      );
+    });
+  }
+});
+
+test("stops checking badges at the next heading or other rendered content", async (t) => {
+  for (const content of [
+    "More information.",
+    "## Details",
+    '<a href="guide.md">Guide</a>',
+    '<a href="guide.md"><img src="guide.svg"> Guide</a>',
+    "---",
+    "`![Example](example.svg)`",
+  ]) {
+    await t.test(content, (t) => {
+      const outcome = check(t, {
+        "README.md": entryReadme("A delivery service for operators.").replace(
+          "## License",
+          `${content}\n\n![Example](example.svg)\n\n## License`,
+        ),
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "passed", outcome.result.message);
+    });
+  }
+});
+
 test("requires the Repository README description to be one sentence", (t) => {
   const outcome = check(t, {
     "README.md": entryReadme("A delivery service. It serves operators."),
@@ -203,9 +357,9 @@ test("passes an applicable Repository README without changing content", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue-backed service for reliable message delivery.
+<p align="center">A queue-backed service for reliable message delivery.</p>
 
-![Node.js](https://img.shields.io/badge/Node.js-24-green)
+<p align="center"><img src="https://img.shields.io/badge/Node.js-24-green" alt="Node.js 24"></p>
 
 [docs]: docs/README.md#usage
 [license]: LICENSE
@@ -261,7 +415,7 @@ Set \`HARBOR_PORT\`.
 test("passes an all-rights-reserved notice with its matching License link", (t) => {
   const outcome = check(t, {
     "README.md":
-      '<h1 align="center">Harbor</h1>\n\nA delivery service for operators.\n\n## License\n\n[All rights reserved](LICENSE)\n',
+      '<h1 align="center">Harbor</h1>\n\n<p align="center">A delivery service for operators.</p>\n\n## License\n\n[All rights reserved](LICENSE)\n',
     LICENSE: "Copyright (c) 2026 Example\n\nAll rights reserved.\n",
   });
 
@@ -276,7 +430,7 @@ test("runs from its declared retained source layout", (t) => {
   );
   const project = fixture({
     "README.md":
-      '<h1 align="center">Harbor</h1>\n\nA delivery service for operators.\n\n## License\n\n[MIT License](LICENSE)\n',
+      '<h1 align="center">Harbor</h1>\n\n<p align="center">A delivery service for operators.</p>\n\n## License\n\n[MIT License](LICENSE)\n',
     LICENSE: mit,
   });
   t.after(project.close);
@@ -293,7 +447,7 @@ test("allows omitted recognized sections and useful interleaved sections", (t) =
 
 </div>
 
-A small tool for inspecting queues.
+<p align="center">A small tool for inspecting queues.</p>
 
 \`\`\`text
 ## License
@@ -329,7 +483,7 @@ test("reports concrete title and section-order corrections as a policy failure",
 
 # Harbor
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## Usage
 
@@ -366,7 +520,7 @@ test("asks to keep one of each recognized section and to create a missing README
       files: {
         "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## Usage
 
@@ -402,7 +556,7 @@ test("orders recognized sections across Markdown heading forms", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 Usage
 -----
@@ -437,7 +591,7 @@ test("orders and validates sections rendered with HTML headings", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 <h2>Usage</h2>
 
@@ -471,7 +625,7 @@ test("leaves the repository license identity to semantic review", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## License
 
@@ -497,7 +651,7 @@ test("rejects empty or uncentered rendered titles", async (t) => {
       const readme = !example.centeredBlock
         ? `${example.title}
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## License
 
@@ -509,7 +663,7 @@ ${example.title}
 
 </div>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## License
 
@@ -534,7 +688,7 @@ test("ignores headings hidden in HTML comments and raw-text elements", (t) => {
 
 <h1 align="center"><script>Draft</script></h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 <!-- <h2>License</h2> -->
 
@@ -559,7 +713,7 @@ test("preserves centering through nested HTML blocks", (t) => {
 
 </div>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## License
 
@@ -592,7 +746,7 @@ test("does not accept navigation links hidden in code or pointing elsewhere", as
       const outcome = check(st, {
         "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## Documentation
 
@@ -618,7 +772,7 @@ test("asks for a label on an unnamed pointer link", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## Documentation
 
@@ -720,7 +874,7 @@ test("rejects pointer sections holding anything besides their link", async (t) =
   ])
     await t.test(example.name, (st) => {
       const outcome = check(st, {
-        "README.md": `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n${pointers
+        "README.md": `<h1 align="center">Harbor</h1>\n\n<p align="center">A queue inspector.</p>\n\n${pointers
           .map(
             ({ section, target }) =>
               `## ${section}\n\n${example.body(target)}\n`,
@@ -742,7 +896,7 @@ test("keeps pointer sections link-only even when their target is absent", (t) =>
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## Documentation
 
@@ -773,7 +927,7 @@ Pull requests are welcome.
 
 test("passes pointer sections holding only their link in any rendered form", async (t) => {
   const pointerLinks = (body) =>
-    `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## Documentation\n\n${body("docs/README.md")}\n## Contributing\n\n${body("CONTRIBUTING.md")}\n## License\n\n${body("LICENSE")}`;
+    `<h1 align="center">Harbor</h1>\n\n<p align="center">A queue inspector.</p>\n\n## Documentation\n\n${body("docs/README.md")}\n## Contributing\n\n${body("CONTRIBUTING.md")}\n## License\n\n${body("LICENSE")}`;
   for (const example of [
     {
       name: "a Markdown paragraph",
@@ -796,7 +950,7 @@ test("passes pointer sections holding only their link in any rendered form", asy
       name: "a comment, a fragment, an HTML heading, and emphasis",
       readme: `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## Documentation
 
@@ -815,7 +969,7 @@ A queue inspector.
     {
       name: "one rendered HTML fragment",
       readme: `<div align="center"><a href="/"><h1>Harbor</h1></a></div>
-<p>A queue inspector.</p>
+<p align="center">A queue inspector.</p>
 <h2>Documentation</h2><p><a href="docs/README.md#usage">Documentation</a></p>
 <h2>Contributing</h2><p><a href="CONTRIBUTING.md">Contributing</a></p>
 <a href="#license"><h2>License</h2></a><p><a href="LICENSE">MIT License</a></p>
@@ -884,7 +1038,7 @@ test("judges pointer links by every block around them, including blocks shared w
   ])
     await t.test(example.name, (st) => {
       const outcome = check(st, {
-        "README.md": `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n${pointers
+        "README.md": `<h1 align="center">Harbor</h1>\n\n<p align="center">A queue inspector.</p>\n\n${pointers
           .map(([name, target]) => example.layout(name, `[Guide](${target})`))
           .join("\n")}`,
         LICENSE: mit,
@@ -919,7 +1073,7 @@ test("a div shared by several sections holds each pointer link for its own secti
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 <div>
 
@@ -950,7 +1104,7 @@ test("assigns an anchor split around the next heading to that heading", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## Contributing
 
@@ -988,7 +1142,7 @@ test("ignores named anchors and hidden media around pointer links", async (t) =>
   ])
     await t.test(example.name, (st) => {
       const outcome = check(st, {
-        "README.md": `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n## Contributing\n\n${example.contributing}\n## License\n\n[MIT License](LICENSE) <a id="end"></a>\n`,
+        "README.md": `<h1 align="center">Harbor</h1>\n\n<p align="center">A queue inspector.</p>\n\n## Contributing\n\n${example.contributing}\n## License\n\n[MIT License](LICENSE) <a id="end"></a>\n`,
         LICENSE: mit,
         "CONTRIBUTING.md": "# Contributing\n",
       });
@@ -1002,7 +1156,7 @@ test("requires pointer sections whose targets exist", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## License
 
@@ -1029,7 +1183,7 @@ test("does not treat links inside section headings as section content", (t) => {
   const outcome = check(t, {
     "README.md": `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## [Contributing](CONTRIBUTING.md)
 
@@ -1077,7 +1231,7 @@ test("reports malformed license sections against the repository license file", a
   ])
     await t.test(example.name, (st) => {
       const outcome = check(st, {
-        "README.md": `<h1 align="center">Harbor</h1>\n\nA queue inspector.\n\n${example.body}`,
+        "README.md": `<h1 align="center">Harbor</h1>\n\n<p align="center">A queue inspector.</p>\n\n${example.body}`,
         LICENSE: mit,
       });
       assert.equal(outcome.status, 0, outcome.stderr);
@@ -1098,7 +1252,7 @@ test("blocks when licensing is missing or ambiguous instead of selecting a licen
       name: "another filename linked from the License section",
       readme: `<h1 align="center">Harbor</h1>
 
-A queue inspector.
+<p align="center">A queue inspector.</p>
 
 ## License
 
@@ -1129,7 +1283,7 @@ A queue inspector.
       const outcome = check(st, {
         "README.md":
           example.readme ??
-          "# Harbor\n\nA queue inspector.\n\n## Usage\n\nRun it.\n\n## Features\n\nFast.\n\n## Installation\n\nInstall it.\n",
+          '# Harbor\n\n<p align="center">A queue inspector.</p>\n\n## Usage\n\nRun it.\n\n## Features\n\nFast.\n\n## Installation\n\nInstall it.\n',
         ...example.files,
       });
       assert.equal(outcome.status, 0, outcome.stderr);

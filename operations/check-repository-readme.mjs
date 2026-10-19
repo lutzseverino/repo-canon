@@ -6,7 +6,7 @@ import {
   glossaryCorrections,
   glossaryTerms,
   isOneSentence,
-  readmeDescription,
+  readmeDescriptionBlock,
 } from "./lib/entry-document.mjs";
 
 const resultFormat = "repo-standards/result/v2";
@@ -152,17 +152,36 @@ function checkPointerSection(
   }
 }
 
+// Links remain single semantic elements for existing consumers; their children
+// expose the images they wrap. Stop at the first non-image rendered content.
+function headerBadges(document, description) {
+  if (!description) return [];
+  const elements = document.content.elements;
+  const start = elements.indexOf(description.elements.at(-1)) + 1;
+  const badges = [];
+  for (const element of elements.slice(start)) {
+    const images = element.type === "link" ? element.elements : [element];
+    if (!images.length || images.some((image) => image.type !== "image")) break;
+    badges.push(...images);
+  }
+  return badges;
+}
+
 function checkStructure(projectRoot, markdown, license) {
   if (markdown === null) return ["Create the root README.md."];
   const corrections = [];
   const document = interpretMarkdown(markdown);
   const parsedHeadings = document.headings;
   const title = parsedHeadings.find((heading) => heading.level === 1) ?? null;
-  const description = readmeDescription(document);
+  const descriptionBlock = readmeDescriptionBlock(document);
+  const description = descriptionBlock?.text ?? null;
   if (description === null || !isOneSentence(description)) {
     corrections.push(
       "Make the Repository README description after its title one sentence.",
     );
+  }
+  if (descriptionBlock && !descriptionBlock.centered) {
+    corrections.push("Center the Repository README description paragraph.");
   }
   if (description !== null) {
     corrections.push(
@@ -174,6 +193,14 @@ function checkStructure(projectRoot, markdown, license) {
   if (!title?.centered) {
     corrections.push(
       "Center the Repository README title in a nonempty HTML h1 or a centered block.",
+    );
+  }
+
+  if (
+    headerBadges(document, descriptionBlock).some((badge) => !badge.centered)
+  ) {
+    corrections.push(
+      "Center the Repository README badges after its description.",
     );
   }
 

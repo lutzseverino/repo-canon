@@ -213,3 +213,50 @@ test("exports the Markdown token-span and inline-text helpers", () => {
     /Could not locate parsed Markdown token after offset 0/,
   );
 });
+
+test("blocks and linked images expose centering without changing title policy", () => {
+  const document = interpretMarkdown(`<div align="CENTER">
+<h1>Harbor</h1><p>A delivery service for operators.</p>
+<a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24"></a>
+</div>
+<p align="center"><a href="https://example.com/"><img src="runtime.svg"></a></p>
+<p><img align="center" src="own.svg"><img data-align="center" src="data.svg"></p>
+<div align="centerpiece"><img src="left.svg"></div>
+<!-- <div align="center"> --><p>Left aligned.</p><!-- </div> -->
+<div hidden align="center"><p>Hidden.</p><img src="hidden.svg"></div>
+<p align="center"><h1>Uncentered title</h1></p>
+`);
+  const [
+    wrapper,
+    centeredParagraph,
+    plainParagraph,
+    falseCenter,
+    leftParagraph,
+  ] = document.blocks;
+  assert.equal(wrapper.centered, true);
+  assert.equal(wrapper.blocks[1].centered, true);
+  assert.equal(centeredParagraph.centered, true);
+  assert.equal(plainParagraph.centered, false);
+  assert.equal(falseCenter.centered, false);
+  assert.equal(leftParagraph.centered, false);
+  assert.deepEqual(
+    document.content.elements
+      .flatMap((element) =>
+        element.type === "link" ? element.elements : [element],
+      )
+      .filter((element) => element.type === "image")
+      .map((image) => [image.target, image.centered]),
+    [
+      ["node.svg", true],
+      ["runtime.svg", true],
+      ["own.svg", true],
+      ["data.svg", false],
+      ["left.svg", false],
+    ],
+  );
+  assert.equal(wrapper.elements[1], wrapper.blocks[1].elements[0]);
+  assert.deepEqual(
+    document.headings.map((heading) => heading.centered),
+    [true, false],
+  );
+});
