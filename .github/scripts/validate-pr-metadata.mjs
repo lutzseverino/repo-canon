@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
 import { appendFileSync, readFileSync } from "node:fs";
-import {
-  interpretMarkdown,
-  markdownInlineText,
-} from "../../operations/lib/rendered-markdown.mjs";
+import { interpretMarkdown } from "../../operations/lib/rendered-markdown.mjs";
 import { marked } from "../../vendor/marked/marked.esm.js";
 
 const allowedTypes = [
@@ -49,6 +46,11 @@ const recognizedSections = new Set([
   "impact",
   "migration",
 ]);
+const sectionOptions = {
+  hierarchy: "matching",
+  nameSource: "rendered",
+  stripTrailingColon: true,
+};
 const adoptionRecordHeading = "# Repository Standards adoption record";
 const recordSections = [
   "Ready to commit",
@@ -58,7 +60,6 @@ const recordSections = [
   "Scope changes",
   "Identities",
 ];
-const recordClosingSections = ["Abandoned runs", "Impact", "Migration"];
 const selectionComponents = ["CLI", "Standards source", "Standards version"];
 const issueUrl =
   /https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*\b/i;
@@ -149,65 +150,57 @@ function headingKey(name) {
     .toLocaleLowerCase("en-US");
 }
 
-// The record's level-1 and level-2 headings after its own heading are the
-// record sections once and in order, then any closing sections in order.
-function hasRecordSections(keys) {
+// The record's headings after its own heading are level-2 record sections once
+// and in order, then optionally Abandoned runs, then optionally Impact and
+// Migration together.
+function hasRecordSections(headings) {
+  const keys = headings.map((heading) => headingKey(heading.name));
   const required = recordSections.map(headingKey);
-  const closing = recordClosingSections.map(headingKey);
-  if (required.some((key, index) => keys[index] !== key)) return false;
-  let next = 0;
-  for (const key of keys.slice(required.length)) {
-    const index = closing.indexOf(key, next);
-    if (index < 0) return false;
-    next = index + 1;
-  }
-  return true;
+  if (
+    headings.some((heading) => heading.level !== 2) ||
+    required.some((key, index) => keys[index] !== key)
+  )
+    return false;
+  const closing = keys.slice(required.length);
+  if (closing[0] === "abandoned runs") closing.shift();
+  return (
+    closing.length === 0 ||
+    (closing.length === 2 &&
+      closing[0] === "impact" &&
+      closing[1] === "migration")
+  );
 }
 
-// Each Selection component the title names, from the one row whose first cell
-// names it and whose value cell holds only inline code.
-function selectionValues(document) {
+// The Selection section is one Markdown table, so no HTML can hide its rows.
+// Each component the title names has one row whose first cell is exactly its
+// name and whose value cell holds only inline code.
+function adoptionSelection(document) {
   const occurrences =
-    document
-      .sections(["selection"], {
-        hierarchy: "matching",
-        nameSource: "rendered",
-        stripTrailingColon: true,
-      })
-      .get("selection") ?? [];
+    document.sections(["selection"], sectionOptions).get("selection") ?? [];
   if (occurrences.length !== 1) return null;
-  const rows = marked
+  const blocks = marked
     .lexer(occurrences[0].source)
-    .filter((token) => token.type === "table")
-    .flatMap((table) => table.rows);
-  const values = new Map();
-  for (const component of selectionComponents) {
-    const matches = rows.filter(
-      ([name]) => markdownInlineText(name?.tokens).trim() === component,
-    );
-    const value = matches[0]?.[1]?.tokens.filter(
+    .filter((token) => token.type !== "space");
+  if (blocks.length !== 1 || blocks[0].type !== "table") return null;
+  const values = selectionComponents.map((component) => {
+    const rows = blocks[0].rows.filter(([name]) => name?.text === component);
+    const value = rows[0]?.[1]?.tokens.filter(
       (token) => token.type !== "text" || token.text.trim(),
     );
-    if (
-      matches.length !== 1 ||
-      value?.length !== 1 ||
-      value[0].type !== "codespan"
-    )
-      return null;
-    values.set(component, value[0].text);
-  }
-  return values;
-}
-
-function adoptionTitles(values) {
-  const name = values
-    .get("Standards source")
+    return rows.length === 1 &&
+      value?.length === 1 &&
+      value[0].type === "codespan"
+      ? value[0].text
+      : null;
+  });
+  if (values.includes(null)) return null;
+  const [cliVersion, source, standardsVersion] = values;
+  const name = source
     .replace(/\/+$/, "")
     .replace(/\.git$/, "")
     .split("/")
     .at(-1);
-  const description = `adopt ${name} ${values.get("Standards version")} with CLI ${values.get("CLI")}`;
-  return [`chore: ${description}`, `chore!: ${description}`];
+  return name ? { name, standardsVersion, cliVersion } : null;
 }
 
 // An adoption record replaces the required sections only when it is complete,
@@ -216,33 +209,37 @@ function validateAdoptionRecord(title, document, errors) {
   const headings = document.headings
     .slice(1)
     .filter((heading) => heading.level <= 2);
-  if (!hasRecordSections(headings.map((heading) => headingKey(heading.name)))) {
+  if (!hasRecordSections(headings)) {
     errors.push(
-      `List the adoption record's level-2 sections as ${recordSections.slice(0, -1).join(", ")} and ${recordSections.at(-1)}, each once and in that order, optionally followed by ${recordClosingSections.join(", then ")}, with no other level-1 or level-2 heading.`,
+      `List the adoption record's level-2 sections as ${recordSections.slice(0, -1).join(", ")} and ${recordSections.at(-1)}, each once and in that order, optionally followed by Abandoned runs, then by Impact and Migration together, with no other level-1 or level-2 heading.`,
     );
   }
 
   const ready = headings.find(
-    (heading) => headingKey(heading.name) === "ready to commit",
+    (heading) =>
+      heading.level === 2 && headingKey(heading.name) === "ready to commit",
   );
-  const statement = ready?.body.blocks[0]?.text.replace(/\s+/g, " ").trim();
-  if (statement !== "Ready to commit: yes.") {
+  const [statement] = ready?.body.blocks ?? [];
+  if (
+    statement?.tag !== "p" ||
+    statement.text.replace(/\s+/g, " ").trim() !== "Ready to commit: yes."
+  ) {
     errors.push(
       "State Ready to commit: yes. in the adoption record's Ready to commit section; open an adoption pull request only once its run is ready to commit.",
     );
   }
 
-  const values = selectionValues(document);
-  if (values === null) {
+  const selection = adoptionSelection(document);
+  if (selection === null) {
     errors.push(
-      `Give the adoption record's Selection table ${selectionComponents.slice(0, -1).join(", ")} and ${selectionComponents.at(-1)} rows, each once with an inline-code value.`,
+      `Give the adoption record's Selection section one Markdown table with one ${selectionComponents.slice(0, -1).join(", one ")} and one ${selectionComponents.at(-1)} row, each with only an inline-code value, and a Standards source ending in a repository name.`,
     );
     return;
   }
-  const titles = adoptionTitles(values);
-  if (!titles.includes(title)) {
+  const description = `adopt ${selection.name} ${selection.standardsVersion} with CLI ${selection.cliVersion}`;
+  if (title !== `chore: ${description}` && title !== `chore!: ${description}`) {
     errors.push(
-      `Title the adoption pull request ${titles[0]}, or ${titles[1]} for a breaking adoption, from its Selection table.`,
+      `Title the adoption pull request chore: ${description}, or chore!: ${description} for a breaking adoption, from its Selection table.`,
     );
   }
 }
@@ -408,11 +405,7 @@ function main() {
   validateAttribution(pullRequest.title, "title", errors);
   validateAttribution(body, "body", errors);
   const document = interpretMarkdown(body);
-  const sections = document.sections(recognizedSections, {
-    hierarchy: "matching",
-    nameSource: "rendered",
-    stripTrailingColon: true,
-  });
+  const sections = document.sections(recognizedSections, sectionOptions);
   const adoptionRecord = claimsAdoptionRecord(body);
   if (adoptionRecord) {
     validateAdoptionRecord(pullRequest.title, document, errors);

@@ -49,18 +49,18 @@ Related issue section only when it is a complete, ready record under its
 adoption title, as the
 [contribution guide](../../CONTRIBUTING.md#adoption-pull-requests) describes:
 
-- After the record heading, its level-1 and level-2 headings are
-  `Ready to commit`, `Selection`, `Operations`, `Changed paths`,
-  `Scope changes`, and `Identities`, each once and in that order, optionally
-  followed by `Abandoned runs`, then `Impact`, then `Migration`. No other
-  level-1 or level-2 heading is allowed. Headings are recognized from rendered
-  Markdown, as above, so headings in code, HTML comments, or hidden HTML do not
-  count.
-- The first block of the `Ready to commit` section reads
+- After the record heading, the only level-1 or level-2 headings are the
+  level-2 sections `Ready to commit`, `Selection`, `Operations`,
+  `Changed paths`, `Scope changes`, and `Identities`, each once and in that
+  order, optionally followed by `Abandoned runs`, then optionally by `Impact`
+  and `Migration` together. Headings are recognized from rendered Markdown, as
+  above, so headings in code, HTML comments, or hidden HTML do not count.
+- The first block of the `Ready to commit` section is the paragraph
   `Ready to commit: yes.`
-- The `Selection` section's Markdown tables hold one `CLI`, one
-  `Standards source`, and one `Standards version` row, each with only an
-  inline-code value. Rows in code or HTML comments do not count.
+- The `Selection` section is one Markdown table, with no other content that
+  could hide or replace its rows. It holds one `CLI`, one `Standards source`,
+  and one `Standards version` row, each named exactly in its first cell and
+  with only an inline-code value.
 - The title is exactly
   `chore: adopt <name> <standards version> with CLI <cli version>`, or the
   same with `chore!:`. `<name>` is the last path segment of the
@@ -69,6 +69,9 @@ adoption title, as the
 
 Such a body never falls back to the ordinary sections: the check fails with one
 error for each unmet condition, and a title mismatch names the expected title.
+Without the `Selection` values, or with a `Standards source` that yields no
+name, the check reports the `Selection` error instead of a title error, since
+it cannot derive the expected title.
 The title rules below, including `Impact` and `Migration` for `chore!:`, and the
 attribution check still apply to a record. The check cannot tell whether the
 record is the CLI's output or matches the repository's `.repo-standards` state;

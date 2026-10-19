@@ -399,7 +399,7 @@ const sectionOrderError =
   /List the adoption record's level-2 sections as Ready to commit, Selection, Operations, Changed paths, Scope changes and Identities/;
 const readyError = /State Ready to commit: yes\. in the adoption record/;
 const selectionError =
-  /Give the adoption record's Selection table CLI, Standards source and Standards version rows/;
+  /Give the adoption record's Selection section one Markdown table with one CLI, one Standards source and one Standards version row/;
 
 function assertRecordFailure(result, variant, expected) {
   assert.equal(result.status, 1, variant);
@@ -451,6 +451,14 @@ test("rejects an adoption record that is not complete and ready to commit", () =
       body: record.replace("Ready to commit: yes.", "Ready to commit: yes"),
     }),
     "missing period",
+    [readyError],
+  );
+  assertRecordFailure(
+    runEvent({
+      title: adoptionTitle,
+      body: record.replace("Ready to commit: yes.", "> Ready to commit: yes."),
+    }),
+    "statement in a quote",
     [readyError],
   );
 
@@ -515,6 +523,12 @@ test("rejects an adoption record without its sections once and in order", () => 
         "## Abandoned runs\n\nNone.\n\n## Identities",
       ),
     ],
+    ["level-1 Identities", record.replace("## Identities", "# Identities")],
+    ["Impact without Migration", `${record}\n## Impact\n\nLabels change.\n`],
+    [
+      "Migration without Impact",
+      `${record}\n## Migration\n\nRelabel issues.\n`,
+    ],
     [
       "Migration before Impact",
       `${record}\n## Migration\n\nRelabel issues.\n\n## Impact\n\nLabels change.\n`,
@@ -539,7 +553,9 @@ test("rejects an adoption record without its sections once and in order", () => 
     const result = runEvent({ title: adoptionTitle, body });
     const expected = [sectionOrderError];
     if (variant === "missing Ready to commit") expected.push(readyError);
-    if (variant === "missing Selection") expected.push(selectionError);
+    // Without its heading, the next section's table joins the Selection.
+    if (["missing Selection", "missing Operations"].includes(variant))
+      expected.push(selectionError);
     assertRecordFailure(result, variant, expected);
   }
 
@@ -581,6 +597,29 @@ test("rejects an adoption record without the Selection values its title needs", 
       record.replace(
         "| CLI | `7.0.0` |",
         "| CLI | `7.0.0` |\n| CLI | `7.0.0` |",
+      ),
+    ],
+    [
+      "Standards source without a repository name",
+      record.replace("`https://github.com/lutzseverino/repo-canon`", "`.git`"),
+    ],
+    [
+      "CLI name in hidden HTML",
+      record.replace("| CLI |", "| <span hidden>x</span>CLI |"),
+    ],
+    [
+      "Selection rows in a hidden table",
+      record.replace(
+        /\| CLI \|[\s\S]*?\| Standards version \|[^\n]*\n/,
+        (rows) =>
+          `\n<div hidden>\n\n| Component | Value |\n| --- | --- |\n${rows}\n</div>\n`,
+      ),
+    ],
+    [
+      "Selection with text beside its table",
+      record.replace(
+        "## Selection\n",
+        "## Selection\n\nThe selected source.\n",
       ),
     ],
     [
@@ -633,7 +672,7 @@ test("validates a body whose record heading is not its first content as an ordin
     ],
     ["record in a code fence", `\`\`\`markdown\n${record}\`\`\`\n`],
     ["indented record heading", `  ${record}`],
-    ["non-breaking space before the record", ` \n${record}`],
+    ["non-breaking space before the record", `\u00a0\n${record}`],
     ["second-level record heading", `#${record}`],
     [
       "differently cased record heading",
