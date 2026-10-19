@@ -6,10 +6,10 @@ product leaves a gap.
 
 ## Supported source and discovery route
 
-Use `repo-standards/v2` and the installed public CLI 7.2.0 with Node.js 24 or 26 as
+Use `repo-standards/v2` and the installed public CLI 8.1.0 with Node.js 24 or 26 as
 the current validation and adoption baseline. Declare a minimum that was
 actually validated against the released source bytes: `requires.repo-standards`
-is the open-ended minimum `>=7.2.0`.
+is the open-ended minimum `>=8.1.0`.
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) states the
 requirement as a minimum rather than an exact version, because the requirement
 gates selection only and an exact one strands adopters. Format version and CLI
@@ -23,19 +23,34 @@ releases above the floor.
 | Project READMEs at arbitrary locations, including missing files | Repository declarations with separate `guidance` and `discovery` references; an agent resolves membership from repository evidence.                                                                                                                                                                                                                                                                                                          |
 | Documentation reorganization around exact shared files          | Individual contextual source, destination, directory-index introduction, and link-repair paths; exact files remain outside contextual scope.                                                                                                                                                                                                                                                                                                 |
 | Scope review before adoption                                    | First `inspect` returns discovery evidence; `inspect --scope` validates a `repo-standards/scope/v2` proposal, whose `documentation` entry the first `inspect` drafts by running the [documentation scope drafter](documentation-scope-drafter.md), the declaration's discovery script. Review the complete inspection and pass the same proposal to `start --scope --identity`; add `--confirmed` only when `confirmation.required` is true. |
-| Files discovered during an active adoption                      | A confirmed scope never changes during a run; the CLI's [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/adoption.md#correct-a-confirmed-scope) describes correcting it.                                                                                                                                                                                                                               |
+| Files discovered during an active adoption                      | A confirmed scope never changes during a run; the CLI's [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/usage/adoption.md#correct-a-confirmed-scope) describes correcting it.                                                                                                                                                                                                                               |
 | Scope changes after complete adoption                           | Every later update, including one with unchanged pins, inspects with a fresh proposal and a fresh inspection identity. Removed paths leave governance without deleting content.                                                                                                                                                                                                                                                              |
 
 The inspection contract below defines scope proposals. Directory trees, globs,
 root write scope, and subtraction of exact descendants are not discovered
 targets, and an empty scope retains its declaration and operations.
 
-Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/author-format.md),
-[inspection](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/inspection.md),
-and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/script-protocol.md)
+Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/usage/author-format.md),
+[inspection](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/usage/inspection.md),
+and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/usage/script-protocol.md)
 contracts when implementing. Discovery supplies scope resolution; contextual
 project agent guidance and authored GitHub setup use the routes below.
 The [release procedure](release.md) states what each release requires.
+
+## Required check invocation support
+
+The minimum CLI supplies `invocation: "run"` for adoption/update checks and
+`invocation: "check"` for standalone checks. The documentation check proves
+scope membership only during runs; content rules remain active between runs.
+An absent field conservatively preserves run-time coverage, but cannot provide
+the required standalone behavior, so the minimum is 8.1.0.
+
+The contextual root `.gitattributes` declaration owns installed Repo Canon
+files only. Repository Standards owns attributes for `.repo-standards/`.
+Its separately merged product-state attributes feature (repo-standards#323)
+is not part of the 8.1.0 contract and is not required by this source. Do not
+create or edit product state to imitate it; it arrives through a CLI release
+that includes that feature, independently of this source update.
 
 ## Preserving project instructions
 
@@ -55,8 +70,8 @@ while carrying that scope's other answers, as the
 [documentation discovery guidance](../../discovery/documentation.md) describes;
 the file remains under `project-agent-guidance`.
 
-Sources: [inspection](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/inspection.md),
-[adoption sequence](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/src/adoption.ts).
+Sources: [inspection](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/usage/inspection.md),
+[adoption sequence](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/src/adoption.ts).
 
 ## GitHub repository settings
 
@@ -90,6 +105,6 @@ The [label setup](github-label-setup.md#readiness-probe) and
 [PR integration setup](github-pr-integration-setup.md#readiness-probe)
 documents describe each probe.
 
-Sources: [script protocol](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/script-protocol.md),
-[remote setup](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/usage/adoption.md#remote-setup),
-[architecture](https://github.com/lutzseverino/repo-standards/blob/v7.2.0/docs/development/architecture.md).
+Sources: [script protocol](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/usage/script-protocol.md),
+[remote setup](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/usage/adoption.md#remote-setup),
+[architecture](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/development/architecture.md).

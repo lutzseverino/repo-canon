@@ -7,8 +7,11 @@ adopting repository. The `factory` profile adds the factory's repository files
 and repository-wide workflow rules to it, for a repository a factory serves.
 The source identity is `repo-canon`,
 and its compatibility contract is the open-ended minimum
-`requires.repo-standards: ">=7.2.0"`. Public CLI 7.2.0 is the oldest version
-this source was validated against; the range gates which CLI versions may
+`requires.repo-standards: ">=8.1.0"`. Public CLI 8.1.0 is the oldest version
+this source was validated against. Its check request `invocation` field lets
+`documentation-navigation` prove scope coverage only during adoption runs,
+while standalone checks continue checking content. Older CLIs omit that field
+and would still enforce frozen scope between runs. The range gates which CLI versions may
 select it and is never re-validated afterwards. Neither profile implies a
 release or successful adoption.
 
@@ -96,7 +99,7 @@ repository and validate every profile without filtering:
 cli_prefix="$(mktemp -d)"
 npm install --prefix "$cli_prefix" --ignore-scripts \
   --registry=https://registry.npmjs.org \
-  @lutzseverino/repo-standards@7.2.0
+  @lutzseverino/repo-standards@8.1.0
 "$cli_prefix/node_modules/.bin/repo-standards" --version
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
@@ -107,14 +110,13 @@ and validates every profile.
 
 ## Validation boundary
 
-Public CLI 7.2.0 on stable Node.js 24 or 26 returns `valid: true`, no errors,
+Public CLI 8.1.0 on stable Node.js 24 or 26 returns `valid: true`, no errors,
 and the `standard` and `factory` profiles with 50 and 54 declarations for the
 source, matching the inventory above. Local validation and CI install
-`@lutzseverino/repo-standards@7.2.0`, the oldest version the requirement admits;
+`@lutzseverino/repo-standards@8.1.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
-the requirement is a minimum. The
-[release validation record](https://github.com/lutzseverino/repo-canon/pull/536)
-identifies the two runtime runs and their outcomes.
+the requirement is a minimum. The release pull request records local validation outcomes and separate CI
+evidence for both runtimes in its Evidence section.
 
 Source validation checks schema, all profiles, references, operation metadata,
 reserved identities, and determinable target conflicts. It executes no
