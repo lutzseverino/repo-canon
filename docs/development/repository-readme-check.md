@@ -28,6 +28,26 @@ the term and its defining glossary in each correction. It reads these files
 even when they belong to another declaration or lie outside this check's target;
 it never changes them. Repositories without glossaries pass this part.
 
+The title, description and badges form one centered header block. Each element
+is centered by its own `align="center"` or an ancestor `div` with that attribute;
+a `p align="center"` centers its content too. Attribute names and values are
+case-insensitive, but `data-align` and values such as `centerpiece` do not
+count. HTML comments and hidden elements contribute no rendered content or
+centering. Both a single centered `div` and individually centered title,
+description and badge paragraphs pass. Title detection is unchanged.
+
+The check uses the same description paragraph as the sentence and glossary
+checks. Badges are the consecutive images after that paragraph, optionally
+wrapped in links, stopping at any other rendered content or the next heading.
+They can be Markdown images, HTML `img` elements, or a mix, in one or several
+paragraphs or directly inside a `div`. Every badge must be centered. A header
+without badges passes; badge presence and coverage remain contextual. Title,
+description and badge failures each produce their own concrete correction.
+
+The shared rendered-Markdown model adds centering and ordered semantic elements
+to blocks, centering to images, and child elements to links. Existing consumers
+keep their heading, section and text behavior.
+
 `operations/lib/entry-document.mjs` is retained alongside both entry-document
 checks and the documentation scope drafter, the documentation declaration's
 discovery script. The rule intentionally rejects a
@@ -41,8 +61,8 @@ The result statuses have distinct meanings:
 - `passed` means the checked structure is valid. Description facts, badges, commands,
   license facts, and prose still need maintainer or agent review.
 - `failed` is a policy failure with concrete corrections, such as centering the
-  title, restoring section order, reducing a pointer section to its link, or
-  fixing the License link. It is returned by a successful process so Repository
+  title, description or badges, restoring section order, reducing a pointer
+  section to its link, or fixing the License link. It is returned by a successful process so Repository
   Standards can collect ordinary check evidence.
 - `blocked` means a missing, multiple, or unnamed root `LICENSE` file requires
   owner clarification. The operation does not choose a license.
@@ -89,8 +109,13 @@ Run the public-boundary fixtures with Node.js 24 or 26:
 node --test test/repository-readme-check.test.mjs
 ```
 
-The fixtures cover all recognized sections, omitted and interleaved sections,
-Markdown and HTML heading forms, nested centering, hidden examples, missing,
+The fixtures cover the two accepted centered header forms, Markdown inside a
+div with blank lines, direct and link-wrapped HTML badges, mixed Markdown and
+HTML badges, multiple badge paragraphs, partial centering, and no badges. They
+include Postern's title-only centered header before postern#10, misleading
+centering attributes, commented and hidden centering, and badge detection
+stopping at other rendered content. They also cover all recognized sections,
+omitted and interleaved sections, Markdown and HTML heading forms, nested centering, hidden examples, missing,
 link-only, and extra-content Contributing and Documentation sections, pointer
 links hidden in code, resolving elsewhere, outside a paragraph, or wrapped in
 lists, quotations, tables, or images, pointer links sharing a div, quotation,

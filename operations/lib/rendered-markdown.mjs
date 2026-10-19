@@ -58,6 +58,24 @@ function attribute(node, name) {
   );
 }
 
+function isCentered(node, { paragraphContent = false } = {}) {
+  if (attribute(node, "align")?.toLocaleLowerCase("en-US") === "center")
+    return true;
+  for (
+    let ancestor = node.parentNode;
+    ancestor;
+    ancestor = ancestor.parentNode
+  ) {
+    if (
+      (ancestor.tagName === "div" ||
+        (paragraphContent && ancestor.tagName === "p")) &&
+      attribute(ancestor, "align")?.toLocaleLowerCase("en-US") === "center"
+    )
+      return true;
+  }
+  return false;
+}
+
 function visibility(additionalNonRenderedElements) {
   const nonRenderedElements = new Set([
     ...defaultNonRenderedElements,
@@ -196,6 +214,11 @@ function semanticElements(
         text: renderedText(node, isHidden).trim(),
         target: attribute(node, "href"),
         containsMedia: containsMedia(node, isHidden),
+        elements: semanticElements(
+          { childNodes: node.childNodes },
+          isHidden,
+          markdownHeadingMarker,
+        ),
       };
       if (!containsHeading(node, isHidden)) {
         elements.push(link);
@@ -210,6 +233,7 @@ function semanticElements(
         type: "image",
         text: attribute(node, "alt") ?? "",
         target: attribute(node, "src") ?? "",
+        centered: isCentered(node, { paragraphContent: true }),
       });
       return;
     }
@@ -256,7 +280,12 @@ function sectionBlocks({ fragment, elements, spans, isHidden }, start, end) {
       return [
         {
           tag: child.tagName,
+          centered: isCentered(child),
           text: text(child).trim(),
+          elements: elements.slice(
+            Math.max(span[0], start),
+            Math.min(span[1], end),
+          ),
           links: elements
             .slice(Math.max(span[0], start), Math.min(span[1], end))
             .filter(
