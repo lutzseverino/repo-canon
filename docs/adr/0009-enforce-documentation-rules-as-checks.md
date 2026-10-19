@@ -2,7 +2,10 @@
 
 Status: the contribution guide as the documentation rules' one statement is
 superseded by [ADR 0016](0016-keep-requirements-in-installed-rules.md), which
-moves them to the documentation declaration's installed rules.
+moves them to the documentation declaration's installed rules. Scope coverage
+as a check on every invocation is superseded by
+[ADR 0022](0022-prove-documentation-scope-coverage-only-in-runs.md), which
+proves it only in runs.
 
 The documentation check enforces four documentation rules that were previously
 contextual: the index entry form (a one-sentence purpose, then one

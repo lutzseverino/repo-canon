@@ -15,7 +15,7 @@ const script = fileURLToPath(
   new URL("../operations/check-documentation.mjs", import.meta.url),
 );
 
-function check(t, files, paths = Object.keys(files)) {
+function check(t, files, paths = Object.keys(files), overrides = {}) {
   const project = fixture(files);
   t.after(project.close);
   const before = snapshot(project.root);
@@ -26,6 +26,7 @@ function check(t, files, paths = Object.keys(files)) {
       id: "navigation",
     },
     allowedTargets: { paths, directories: [] },
+    ...overrides,
   });
   assert.deepEqual(
     snapshot(project.root),
@@ -1261,4 +1262,103 @@ test("names the file and the rule in every documentation rule failure", (t) => {
     "docs/development/README.md breaks the development guide order rule: give its purpose, then a Setup and validation section, then its index.",
     "docs/usage/README.md breaks the scope coverage rule: include it in the confirmed documentation scope.",
   ]);
+});
+
+const withoutInstall = (files) =>
+  Object.keys(files).filter((path) => path !== "docs/usage/install.md");
+
+test("the scope coverage rule applies unless the invocation is check", (t) => {
+  const files = {
+    ...usageIndexed,
+    "docs/usage/README.md": index(
+      "Usage",
+      "This directory explains how to use the project.",
+      [["Install", "install.md", "prerequisites and installation."]],
+    ),
+    "docs/usage/install.md": "# Install\n",
+  };
+  for (const overrides of [{}, { invocation: "run" }, { invocation: "CHECK" }])
+    assert.equal(
+      failures(check(t, files, withoutInstall(files), overrides)),
+      "Documentation navigation needs correction: docs/usage/install.md breaks the scope coverage rule: include it in the confirmed documentation scope.",
+      JSON.stringify(overrides),
+    );
+  passes(check(t, files, withoutInstall(files), { invocation: "check" }));
+});
+
+test("a check invocation still applies every other rule to a document outside the confirmed scope", (t) => {
+  const unlisted = {
+    ...usageIndexed,
+    "docs/usage/README.md": index(
+      "Usage",
+      "This directory explains how to use the project.",
+    ),
+    "docs/usage/install.md": "# Install\n",
+  };
+  assert.equal(
+    failures(
+      check(t, unlisted, withoutInstall(unlisted), { invocation: "check" }),
+    ),
+    "Documentation navigation needs correction: docs/usage/install.md breaks the one index per document rule: list it in docs/usage/README.md.",
+  );
+
+  const malformed = {
+    ...usageIndexed,
+    "docs/usage/README.md":
+      "# Usage\n\nThis directory explains how to use the project.\n\n- [Install](install.md)\n- [Missing](missing.md): a missing page.\n",
+    "docs/usage/install.md": "# Install\n",
+  };
+  const message = failures(
+    check(t, malformed, withoutInstall(malformed), { invocation: "check" }),
+  );
+  assert.match(message, /index entry form rule/);
+  assert.match(message, /docs\/usage\/README\.md links to missing missing\.md/);
+  assert.doesNotMatch(message, /scope coverage/);
+});
+
+test("a check invocation asks for no inclusion of an unconfirmed guide or root index but keeps their other corrections", (t) => {
+  const files = {
+    "docs/README.md": "# Documentation\n",
+    "docs/development/README.md": "# Development\n",
+  };
+  const unconfirmedGuide = failures(
+    check(t, files, ["docs/README.md"], { invocation: "check" }),
+  );
+  assert.doesNotMatch(unconfirmedGuide, /confirmed documentation scope/);
+  assert.match(unconfirmedGuide, /development guide order rule/);
+  assert.match(
+    failures(check(t, files, ["docs/README.md"])),
+    /Include docs\/development\/README\.md in the confirmed documentation scope/,
+  );
+
+  const unconfirmedIndex = failures(
+    check(t, files, ["docs/development/README.md"], { invocation: "check" }),
+  );
+  assert.doesNotMatch(unconfirmedIndex, /confirmed documentation scope/);
+  assert.match(
+    unconfirmedIndex,
+    /docs\/README\.md breaks the index entry form rule/,
+  );
+  assert.match(
+    failures(check(t, files, ["docs/development/README.md"])),
+    /Include docs\/README\.md in the confirmed documentation scope/,
+  );
+});
+
+test("a directory target is a process error with every invocation", (t) => {
+  const project = fixture({ "docs/development/README.md": "# Development\n" });
+  t.after(project.close);
+  for (const overrides of [
+    {},
+    { invocation: "check" },
+    { invocation: "run" },
+  ]) {
+    const outcome = invokeCheck(script, project.root, {
+      allowedTargets: { paths: ["docs"], directories: [] },
+      ...overrides,
+    });
+    assert.notEqual(outcome.status, 0, JSON.stringify(overrides));
+    assert.equal(outcome.stdout, "");
+    assert.match(outcome.stderr, /individual repository-relative file paths/);
+  }
 });
