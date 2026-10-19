@@ -509,8 +509,9 @@ test("AGENTS.md names no rules path", () => {
 // count after the last held rules move (#517, #518). Raising one is a deliberate
 // edit here in the same pull request; never derive a limit from the document.
 const wordBudgets = {
-  // Raised from 1970 for the Triage section (#500).
-  "CONTRIBUTING.md": 2263,
+  // Raised from 1970 for the Triage section (#500), then from 2263 for the
+  // adoption pull request's pre-commit verdict (#540).
+  "CONTRIBUTING.md": 2271,
   "AGENTS.md": 105,
 };
 

@@ -25,9 +25,10 @@ unedited leftover from Repository Standards CLI 6.x, an edited copy, or a
 project-owned skill. The drafter makes no removal claim. An adopter updating
 from CLI 6.x may see one extra membership question, once.
 
-Decide only the cases in its unresolved questions, resolving genuine membership
-questions with the maintainer, and remove each question from the entry once it
-is decided:
+Decide only the cases in its unresolved questions yourself, from the
+project's evidence and the previous scope, and remove each question from the
+entry once it is decided. Record the reason for each decision in its
+scope entry; none is a question for the maintainer:
 
 - Whether a directory is a documentation root. For each one that is, include
   its files, with a new index for each of its directories without one, as the
@@ -61,11 +62,11 @@ decided:
 Also keep each path it included that still exists and that no rule now assigns
 elsewhere. `docs/agents/project.md` stays out even if it included it: the
 `project-agent-guidance` declaration now owns that path, and removing it from
-documentation scope preserves its content. Show the carried answers to the
-maintainer with the inspection, each naming the earlier decision it comes from,
-and ask them only the questions the previous scope does not decide, such as one
-about a directory added since. `adopt` accepts the entry only once every
-question is answered.
+documentation scope preserves its content. Report the carried answers in
+your handoff, each naming the earlier decision it comes from, and decide the
+questions the previous scope does not decide, such as one about a directory
+added since, as above. `adopt` accepts the entry only once every question is
+answered.
 
 Then add each intended new path that the work needs and the draft cannot know: a
 move destination, with the index of any new directory; and a file whose link to
@@ -73,6 +74,6 @@ documentation needs repair. Keep all declarations' paths disjoint: a Project
 README under a documentation root belongs to one declaration only. A move
 requires authority for its source, destination, and affected link repairs.
 
-The draft does not decide membership by itself. The maintainer's request to
-adopt or update is consent to the drafted and reviewed scope. Ask them to
+The draft does not decide membership by itself; you do. The maintainer's
+request to adopt or update is consent to the drafted and reviewed scope. Ask them to
 confirm only when `adopt` asks its `confirmation` question.

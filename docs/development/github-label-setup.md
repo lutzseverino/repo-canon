@@ -22,7 +22,13 @@ GitHub API resolves the same repository, and reconciles these labels:
 It provisions no `factory:` label: a factory creates its own state labels from
 the repository's factory configuration. Matching labels are left alone. Missing
 labels are created freely. A label with a matching case-insensitive name but
-different casing, color, or description requires confirmation before updating.
+different casing, color, or description requires confirmation before updating,
+unless the label is still at both of GitHub's
+[documented default values](https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/managing-labels#about-default-labels)
+for its name: the repository never chose it, so it is updated without
+confirmation. Today only `wontfix`, whose default description is "This will not
+be worked on", differs from the table. A custom default set by an owner or
+organization counts as chosen.
 Other labels, existing `factory:` labels included, are never deleted or edited.
 
 ## Prerequisites and identity
@@ -83,8 +89,8 @@ first read already matches. Results use `repo-standards/result/v2`.
 
 When any existing canonical label differs and `overwriteAllowed` is `false`,
 the fix returns `confirmation-required` naming every differing label field,
-its current value, and the standard's value. It makes no mutation, including
-creating missing labels. After the maintainer confirms, `resume --confirmed`
+its current value, and the standard's value. A label at GitHub's default values
+is not among them. It makes no mutation, including creating missing labels. After the maintainer confirms, `resume --confirmed`
 invokes the fix with `overwriteAllowed: true`; it re-reads the remote, applies
 the changes, and verifies them. Colour casing alone is treated as equivalent.
 

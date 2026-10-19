@@ -19,7 +19,7 @@ On macOS or Linux, use Node.js 24 or 26, npm, and Git 2.32.0 or newer. To adopt 
 Canon, give your coding agent this prompt in your repository:
 
 ```text
-Run `npx @lutzseverino/repo-standards adopt https://github.com/lutzseverino/repo-canon` in this repository and follow what it prints.
+Run `npx --yes @lutzseverino/repo-standards adopt https://github.com/lutzseverino/repo-canon --json` in this repository and follow what it prints.
 ```
 
 [Repository Standards](https://github.com/lutzseverino/repo-standards) is the

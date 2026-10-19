@@ -1,7 +1,7 @@
 # Documentation scope drafter
 
 `discovery/draft-documentation-scope.mjs` drafts an adopting repository's
-documentation scope from its tree, so that the maintainer decides only what no
+documentation scope from its tree, so that the adopting agent decides only what no
 rule decides and two runs draft the same scope from the same tree. It is the
 `documentation` declaration's discovery script: `repo-standards adopt` runs it
 during inspection and asks its unresolved questions, as the
@@ -60,7 +60,7 @@ Its candidates are:
 
 Every other case is an unresolved question, one kind for each case that the
 [discovery guidance](../../discovery/documentation.md) leaves to the
-maintainer, worded so that the answer completes the entry without drafting
+adopting agent, worded so that the answer completes the entry without drafting
 again. Candidate roots are directories outside `docs` whose `usage`,
 `development`, `adr`, or `agents` directories hold Markdown documents, and that
 no other declaration owns, nor their `README.md`; a candidate inside another is
