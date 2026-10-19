@@ -495,6 +495,23 @@ test("the GitHub rules hold the runner variable, and its guidance the assessment
   assert.doesNotMatch(guidance, /The runners need/);
 });
 
+test("the GitHub guidance leaves the reviewer file to a separate commit after the run", () => {
+  const guidance = flowedText("guidance/github-repository-configuration.md");
+  const section = guidance.slice(
+    guidance.indexOf("## Pull request reviewer"),
+    guidance.indexOf("## Installed workflow runners"),
+  );
+  assert.match(section, /not adoption output/);
+  assert.match(section, /the run leaves the file untouched/);
+  assert.match(
+    section,
+    /in a separate commit after the run completes, following the schema in the rules/,
+  );
+  assert.match(section, /never in the adoption commit or pull request/);
+  assert.doesNotMatch(section, /Decide whether the repository adds/);
+  assert.doesNotMatch(section, /choose a reviewer, or leave the file absent/);
+});
+
 test("AGENTS.md names no rules path", () => {
   assert.doesNotMatch(
     readFileSync(join(root, "AGENTS.md"), "utf8"),
