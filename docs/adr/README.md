@@ -32,7 +32,8 @@ involve real alternatives.
 - [Enforce documentation rules as checks](0009-enforce-documentation-rules-as-checks.md):
   the documentation check enforces the index entry form, one index per
   document, the development guide's order, and scope coverage; ADR 0016 moves
-  the rules' one statement to installed rules.
+  the rules' one statement to installed rules, and ADR 0022 proves scope
+  coverage only in runs.
 - [Carry delivery rules in the environment and keep skills short](0010-carry-delivery-rules-in-the-environment.md):
   the contribution guide and one `AGENTS.md` line carry delivery, the delivery
   skill is deleted, and the short `babysit` skill takes a pull request to its
@@ -77,3 +78,7 @@ involve real alternatives.
   research and independent acceptance for code-bound requests, a grilling
   session with the owner before the brief for intent-bound ones, and a Repo
   Canon fork of `triage` to carry the method.
+- [Prove documentation scope coverage only in runs](0022-prove-documentation-scope-coverage-only-in-runs.md):
+  between runs the confirmed scope is frozen, so the documentation check
+  reports no scope-membership correction when invoked as `check`, and the next
+  update brings new documents into scope.

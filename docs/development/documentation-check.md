@@ -117,6 +117,14 @@ and by path within each rule. The model reads each rule mechanically:
   be in the documentation scope and are covered by their own declarations.
   Other files under a root, such as images,
   belong in the confirmed scope by the discovery guidance but are not checked.
+  Scope coverage is run-only: when the request's `invocation` is exactly
+  `"check"`, as `repo-standards check` sends it, the check reports no scope
+  coverage violation and no correction to include the development guide or a
+  root index in the confirmed documentation scope, because the confirmed scope
+  changes only through a new run. With `invocation` missing or any other value,
+  both apply. Every other correction applies in both cases, and root inference
+  still reads the confirmed paths. See
+  [ADR 0022](../adr/0022-prove-documentation-scope-coverage-only-in-runs.md).
 
 These rules make a repository that passed earlier releases fail when it does
 not follow them, as
