@@ -31,6 +31,14 @@ SOFTWARE.
 
 // The fixture's files, by repository-relative path.
 export const files = {
+  ".gitattributes": `* text=auto eol=lf
+# BEGIN Repo Canon linguist-vendored
+scripts/validate-issue-contract.mjs linguist-vendored
+operations/lib/rendered-markdown.mjs linguist-vendored
+.agents/skills/babysit/** linguist-vendored
+.agents/skills/diagnosing-bugs/** linguist-vendored
+# END Repo Canon linguist-vendored
+`,
   "README.md": `<h1 align="center">Wordtally</h1>
 
 Wordtally is a command-line word counter for writers who check the length of plain-text drafts.
@@ -135,6 +143,15 @@ const unchangedScope = (explanation, evidence) => ({
 });
 
 export const assessments = {
+  "git-attributes": {
+    status: "satisfied",
+    explanation:
+      "The root .gitattributes marks the installed counted files linguist-vendored with exact paths and individual installed skill directories, preserving the repository's text and line-ending setting.",
+    evidence: [
+      ".gitattributes covers scripts/validate-issue-contract.mjs, operations/lib/rendered-markdown.mjs, and the babysit and diagnosing-bugs skill directories.",
+      "The block matches no Wordtally source or .repo-standards path; vendor/ and .github/ already have Linguist's default exclusion.",
+    ],
+  },
   "factory-workflow": {
     status: "satisfied",
     explanation:

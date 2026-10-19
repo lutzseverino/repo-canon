@@ -32,7 +32,12 @@ project-specific agent guidance belong to the adopting repository, because
 they describe it and its projects. Repo Canon shapes them through rules,
 adoption guidance, and checks. The Repository license has the fixed target `LICENSE`,
 and the Repository README has the fixed target `README.md`. Project-specific
-agent guidance has the fixed target `docs/agents/project.md`. In the factory
+agent guidance has the fixed target `docs/agents/project.md`. The root
+`.gitattributes` also belongs to the adopting repository; the contextual
+`git-attributes` declaration shapes Repo Canon's language-statistics entries
+through its [rules](rules/git-attributes.md) and
+[adoption guidance](guidance/git-attributes.md), preserving project content.
+In the factory
 profile, the toolchain image has the fixed target `.factory/Dockerfile`, which
 holds only the repository's toolchain, because each repository's toolchain
 differs and the factory adds its own agent layer. Discovery proposes the

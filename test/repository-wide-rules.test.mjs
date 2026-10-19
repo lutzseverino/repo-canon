@@ -5,6 +5,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -59,6 +60,19 @@ test("public CLI 7.2.0 installs the triage fork and the GitHub rules for the who
     }),
   );
   assert.equal(validation.valid, true);
+  for (const profile of Object.values(validation.profiles)) {
+    const attributes = profile.declarations.find(
+      (declaration) => declaration.id === "git-attributes",
+    );
+    assert.ok(attributes, "both profiles select git-attributes");
+    assert.equal(attributes.kind, "file");
+    assert.equal(attributes.target, ".gitattributes");
+    assert.equal(attributes.rules, "rules/git-attributes.md");
+    assert.equal(attributes.guidance, "guidance/git-attributes.md");
+    assert.equal(attributes.exact, undefined);
+    assert.deepEqual(attributes.checks, []);
+    assert.deepEqual(attributes.fixes, []);
+  }
   // Every authored Node prerequisite must retain the same stable-major union,
   // including discovery and the two nested remote-setup probes.
   const prerequisites = new Map();
@@ -176,6 +190,18 @@ test("public CLI 7.2.0 installs the triage fork and the GitHub rules for the who
       mkdirSync(dirname(join(project, path)), { recursive: true });
       writeFileSync(join(project, path), content);
     }
+    const originalAttributes =
+      "* text=auto eol=lf\n*.bat text eol=crlf\n# Project-owned attributes\n";
+    writeFileSync(join(project, ".gitattributes"), originalAttributes);
+    const ownScripts = [
+      "scripts/own.mjs",
+      "operations/own.mjs",
+      ".agents/skills/own/scripts/run.sh",
+    ];
+    for (const path of ownScripts) {
+      mkdirSync(dirname(join(project, path)), { recursive: true });
+      writeFileSync(join(project, path), "# Repository-owned source\n");
+    }
     git(project, "init", "--quiet");
     git(project, "add", "--all");
     git(
@@ -211,7 +237,7 @@ test("public CLI 7.2.0 installs the triage fork and the GitHub rules for the who
         ["answers-required", "contextual"].includes(report.outcome),
         JSON.stringify(report),
       );
-      for (const entry of report.contextual ?? [])
+      for (const entry of report.contextual ?? []) {
         if (repositoryWide[entry.id]) {
           assert.ok(repositoryWide[entry.id].includes(profile), entry.id);
           assert.deepEqual(entry.allowedTargets, {
@@ -219,6 +245,25 @@ test("public CLI 7.2.0 installs the triage fork and the GitHub rules for the who
             directories: [],
           });
         }
+        if (entry.id === "git-attributes") {
+          assert.deepEqual(entry.allowedTargets, {
+            paths: [".gitattributes"],
+            directories: [],
+          });
+          // Perform the contextual edit from the guidance's worked example,
+          // rather than introducing an automatic fix into the source.
+          const guidance = readFileSync(
+            join(root, "guidance/git-attributes.md"),
+            "utf8",
+          );
+          const block = /```gitattributes\n([\s\S]*?)\n\s*```/.exec(guidance);
+          assert.ok(block, "the guidance gives a worked attributes block");
+          writeFileSync(
+            join(project, ".gitattributes"),
+            originalAttributes + block[1].replaceAll(/^ {3}/gm, "") + "\n",
+          );
+        }
+      }
       const questions = report.answers.questions.map((question) => {
         const [kind, name] = question.id.split(":");
         let answer = question.answer;
@@ -246,6 +291,41 @@ test("public CLI 7.2.0 installs the triage fork and the GitHub rules for the who
     }
     assert.equal(report.outcome, "complete", JSON.stringify(report));
     assert.equal(invoke("status").report.readyToCommit, true);
+    assert.ok(
+      readFileSync(join(project, ".gitattributes"), "utf8").startsWith(
+        originalAttributes,
+      ),
+      `${profile} preserves every repository-owned attribute line`,
+    );
+    const countedFiles = [
+      "scripts/validate-issue-contract.mjs",
+      "operations/lib/rendered-markdown.mjs",
+      ...readdirSync(join(project, ".agents/skills/babysit"))
+        .filter((name) => name.endsWith(".mjs"))
+        .map((name) => `.agents/skills/babysit/${name}`),
+      ".agents/skills/diagnosing-bugs/scripts/hitl-loop.template.sh",
+    ];
+    for (const [paths, expected] of [
+      [countedFiles, "set"],
+      [ownScripts, "unspecified"],
+    ]) {
+      for (const path of paths) assert.ok(readFileSync(join(project, path)));
+      assert.deepEqual(
+        git(project, "check-attr", "linguist-vendored", "--", ...paths).split(
+          "\n",
+        ),
+        paths.map((path) => `${path}: linguist-vendored: ${expected}`),
+        `${profile} attributes for installed and repository-owned source`,
+      );
+    }
+    const attributesLookup = invoke("rules", ".gitattributes");
+    assert.equal(attributesLookup.child.status, 0);
+    assert.equal(
+      attributesLookup.report.rules.find(
+        (rule) => rule.declaration === "git-attributes",
+      ).content,
+      readFileSync(join(root, "rules/git-attributes.md"), "utf8"),
+    );
     // Adoption installs the source's triage fork and the contribution guide
     // whose rules it carries out, byte for byte.
     for (const path of [

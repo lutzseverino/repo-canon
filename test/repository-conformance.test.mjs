@@ -285,12 +285,32 @@ const requirementOutcomes = {
   documentation: "both",
   "factory-workflow": "both",
   "factory-sandbox-image": "both",
+  "git-attributes": "both",
   "github-repository-configuration": "both",
   "project-agent-guidance": "both",
   "project-readmes": "both",
   "repository-license": "both",
   "repository-readme": "both",
 };
+
+test("self-adoption leaves Repo Canon's own installed source unvendored", () => {
+  const paths = [
+    "scripts/validate-issue-contract.mjs",
+    "operations/lib/rendered-markdown.mjs",
+    ...readdirSync(join(root, ".agents/skills/babysit"))
+      .filter((name) => name.endsWith(".mjs"))
+      .map((name) => `.agents/skills/babysit/${name}`),
+  ];
+  const attributes = execFileSync(
+    "git",
+    ["-C", root, "check-attr", "linguist-vendored", "--", ...paths],
+    { encoding: "utf8" },
+  );
+  assert.deepEqual(
+    attributes.trim().split("\n"),
+    paths.map((path) => `${path}: linguist-vendored: unspecified`),
+  );
+});
 
 // Every declaration in `standards.yaml`, with the source files its `guidance`
 // and `rules` fields name.
