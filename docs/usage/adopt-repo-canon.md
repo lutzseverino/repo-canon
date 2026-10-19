@@ -27,6 +27,21 @@ Repo Canon supplies two profiles:
 Every update offers the profiles again, so a repository switches profile by
 answering differently when a factory starts or stops serving it.
 
+## Language statistics
+
+Both profiles include the contextual `git-attributes` declaration. On adoption
+or update, it adds `linguist-vendored` entries to the root `.gitattributes` for
+Repo Canon's installed code that GitHub would otherwise count as yours. It
+preserves your existing lines and limits entries to installed files or
+individual installed skill directories. Later updates remove obsolete Repo
+Canon entries when the selected declarations stop installing those paths.
+Repository Standards handles its own `.repo-standards/` state separately.
+
+Repo Canon's own repository needs no entries for its own code. When nothing
+needs an entry, adoption creates no `.gitattributes`. GitHub reads committed
+attributes, so the language bar changes after the adoption reaches the default
+branch.
+
 ## Remote setup
 
 Remote setup is the part of adoption that changes the repository's settings on

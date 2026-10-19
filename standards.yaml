@@ -76,6 +76,12 @@ defaults:
       target: .github/ISSUE_TEMPLATE/feature-request.yml
       exact: .github/ISSUE_TEMPLATE/feature-request.yml
 
+    git-attributes:
+      kind: file
+      target: .gitattributes
+      guidance: guidance/git-attributes.md
+      rules: rules/git-attributes.md
+
     github-repository-configuration:
       kind: repository
       guidance: guidance/github-repository-configuration.md
