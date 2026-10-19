@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
 import { appendFileSync, readFileSync } from "node:fs";
-import { interpretMarkdown } from "../../operations/lib/rendered-markdown.mjs";
+import {
+  interpretMarkdown,
+  markdownInlineText,
+} from "../../operations/lib/rendered-markdown.mjs";
+import { marked } from "../../vendor/marked/marked.esm.js";
 
 const allowedTypes = [
   "feat",
@@ -46,6 +50,16 @@ const recognizedSections = new Set([
   "migration",
 ]);
 const adoptionRecordHeading = "# Repository Standards adoption record";
+const recordSections = [
+  "Ready to commit",
+  "Selection",
+  "Operations",
+  "Changed paths",
+  "Scope changes",
+  "Identities",
+];
+const recordClosingSections = ["Abandoned runs", "Impact", "Migration"];
+const selectionComponents = ["CLI", "Standards source", "Standards version"];
 const issueUrl =
   /https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*\b/i;
 
@@ -116,14 +130,121 @@ function hasDirectChangeReason(content) {
   return marker !== null && isMeaningful(marker[1]);
 }
 
-// A Repository Standards adoption record is a complete update pull request
-// body only when its exact heading is the body's first line, after any blank
-// lines and apart from trailing spaces or tabs.
-function isAdoptionRecord(body) {
+// A body claims to be a Repository Standards adoption record when its exact
+// heading is the body's first line, after any blank lines and apart from
+// trailing spaces or tabs.
+function claimsAdoptionRecord(body) {
   const firstLine = body
     .split(/\r\n?|\n/)
     .find((line) => !/^[ \t]*$/.test(line));
   return firstLine?.replace(/[ \t]+$/, "") === adoptionRecordHeading;
+}
+
+function headingKey(name) {
+  return name
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/:$/, "")
+    .trim()
+    .toLocaleLowerCase("en-US");
+}
+
+// The record's level-1 and level-2 headings after its own heading are the
+// record sections once and in order, then any closing sections in order.
+function hasRecordSections(keys) {
+  const required = recordSections.map(headingKey);
+  const closing = recordClosingSections.map(headingKey);
+  if (required.some((key, index) => keys[index] !== key)) return false;
+  let next = 0;
+  for (const key of keys.slice(required.length)) {
+    const index = closing.indexOf(key, next);
+    if (index < 0) return false;
+    next = index + 1;
+  }
+  return true;
+}
+
+// Each Selection component the title names, from the one row whose first cell
+// names it and whose value cell holds only inline code.
+function selectionValues(document) {
+  const occurrences =
+    document
+      .sections(["selection"], {
+        hierarchy: "matching",
+        nameSource: "rendered",
+        stripTrailingColon: true,
+      })
+      .get("selection") ?? [];
+  if (occurrences.length !== 1) return null;
+  const rows = marked
+    .lexer(occurrences[0].source)
+    .filter((token) => token.type === "table")
+    .flatMap((table) => table.rows);
+  const values = new Map();
+  for (const component of selectionComponents) {
+    const matches = rows.filter(
+      ([name]) => markdownInlineText(name?.tokens).trim() === component,
+    );
+    const value = matches[0]?.[1]?.tokens.filter(
+      (token) => token.type !== "text" || token.text.trim(),
+    );
+    if (
+      matches.length !== 1 ||
+      value?.length !== 1 ||
+      value[0].type !== "codespan"
+    )
+      return null;
+    values.set(component, value[0].text);
+  }
+  return values;
+}
+
+function adoptionTitles(values) {
+  const name = values
+    .get("Standards source")
+    .replace(/\/+$/, "")
+    .replace(/\.git$/, "")
+    .split("/")
+    .at(-1);
+  const description = `adopt ${name} ${values.get("Standards version")} with CLI ${values.get("CLI")}`;
+  return [`chore: ${description}`, `chore!: ${description}`];
+}
+
+// An adoption record replaces the required sections only when it is complete,
+// ready to commit, and titled from its own Selection.
+function validateAdoptionRecord(title, document, errors) {
+  const headings = document.headings
+    .slice(1)
+    .filter((heading) => heading.level <= 2);
+  if (!hasRecordSections(headings.map((heading) => headingKey(heading.name)))) {
+    errors.push(
+      `List the adoption record's level-2 sections as ${recordSections.slice(0, -1).join(", ")} and ${recordSections.at(-1)}, each once and in that order, optionally followed by ${recordClosingSections.join(", then ")}, with no other level-1 or level-2 heading.`,
+    );
+  }
+
+  const ready = headings.find(
+    (heading) => headingKey(heading.name) === "ready to commit",
+  );
+  const statement = ready?.body.blocks[0]?.text.replace(/\s+/g, " ").trim();
+  if (statement !== "Ready to commit: yes.") {
+    errors.push(
+      "State Ready to commit: yes. in the adoption record's Ready to commit section; open an adoption pull request only once its run is ready to commit.",
+    );
+  }
+
+  const values = selectionValues(document);
+  if (values === null) {
+    errors.push(
+      `Give the adoption record's Selection table ${selectionComponents.slice(0, -1).join(", ")} and ${selectionComponents.at(-1)} rows, each once with an inline-code value.`,
+    );
+    return;
+  }
+  const titles = adoptionTitles(values);
+  if (!titles.includes(title)) {
+    errors.push(
+      `Title the adoption pull request ${titles[0]}, or ${titles[1]} for a breaking adoption, from its Selection table.`,
+    );
+  }
 }
 
 function validateSections(sections, errors) {
@@ -292,8 +413,10 @@ function main() {
     nameSource: "rendered",
     stripTrailingColon: true,
   });
-  const adoptionRecord = isAdoptionRecord(body);
-  if (!adoptionRecord) {
+  const adoptionRecord = claimsAdoptionRecord(body);
+  if (adoptionRecord) {
+    validateAdoptionRecord(pullRequest.title, document, errors);
+  } else {
     validateSections(sections, errors);
   }
 
