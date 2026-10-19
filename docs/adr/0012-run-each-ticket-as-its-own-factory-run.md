@@ -3,7 +3,8 @@
 Status: its fixed `implement` prompt and `model:` label prefix are superseded
 by [ADR 0014](0014-name-every-factory-convention-in-configuration.md), which
 moves both into the repository's factory configuration; running each ticket as
-its own run stands.
+its own run stands. Its GitHub-specific native sub-issue and blocker
+assumptions are superseded by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md).
 
 Every factory run is a direct run: one agent, started with only its provider's
 invocation of `implement` and `#<n>`, takes one issue to one pull request. A
@@ -23,6 +24,14 @@ the factory had to hold a parent whose tickets named different models
 orchestrator turns that the factory starts between ticket workers, the option
 recorded on #261, because it adds a second kind of run, state between turns,
 and an integration branch to keep green.
+
+## Platform amendment
+
+Under [ADR 0023](0023-reach-the-hosting-platform-through-postern.md), the issue tracker port's `parent` and `blockedBy`
+relationships identify parents, tickets and blockers. The adapter reads native
+links where offered and consumer-named body sections otherwise. One direct
+run per ticket and parent readiness releasing tickets remain the decision;
+GitHub's native relationships are its platform's implementation.
 
 ## Consequences
 

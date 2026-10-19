@@ -15,10 +15,13 @@ two adopting repositories had already diverged under that freedom.
 
 ## Consequences
 
-- Records depend on GitHub and the repository's maintainers for permanence.
-  Anyone with write access can edit release notes or delete a release; only an
-  immutable release also locks its assets and tag against replacement. CI
-  artifacts expire, so no conclusion may rest on an artifact alone.
+- Records depend on the hosting platform and the repository's maintainers for
+  permanence, as [ADR 0023](0023-reach-the-hosting-platform-through-postern.md)
+  clarifies without changing their placement. On GitHub, anyone with write
+  access can edit release notes or delete a release; only an immutable release
+  also locks its assets and tag against replacement. Other platforms offer
+  their own guarantees. CI artifacts expire, so no conclusion may rest on an
+  artifact alone.
 - Records already committed are removed from the tree. Git history retains them,
   and a maintained document that still needs one cites a commit permalink.
   Files that tests pin remain as test fixtures. Published releases and their

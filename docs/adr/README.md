@@ -82,3 +82,6 @@ involve real alternatives.
   between runs the confirmed scope is frozen, so the documentation check
   reports no scope-membership correction when invoked as `check`, and the next
   update brings new documents into scope.
+- [Reach the hosting platform through Postern](0023-reach-the-hosting-platform-through-postern.md):
+  an independent package supplies four ports and platform facts, while consumer
+  policy, platform choice, distribution and timing guarantees stay explicit.

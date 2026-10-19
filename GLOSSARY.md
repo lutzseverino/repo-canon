@@ -71,15 +71,12 @@ _Avoid_: Orchestrating agent, reviewer
 
 **Readiness**:
 The reviewed state of an implementation contract that an authorized reviewer
-considers sufficiently specified for work. It grants the work to an agent; the
-factory picks up ready issues on the frontier. A parent (a specification or
-any issue with sub-issues) never runs; its readiness releases its tickets, so
-it is applied after they are published, once the latest ticket link appears in
-the parent's timeline. Readiness recorded in the same second as that link holds
-the tickets and needs re-applying, as does readiness when a ticket is
-published later. The factory accepts readiness only from a person whose current
-repository role its host configuration authorizes, applied after the issue's
-last edit.
+considers sufficiently specified for work, granting it to an agent; the
+factory accepts it only from a person whose current repository role the host
+configuration authorizes, after the issue's last edit. A parent never runs:
+its readiness releases its tickets only after the latest ticket link, must be
+re-applied for a later link or one recorded at the same time, and is subject
+to the hosting platform's available timing evidence.
 _Avoid_: Passing structural validation
 
 **Factory**:
@@ -108,6 +105,21 @@ _Avoid_: Factory settings, environment
 A repository's own statement of the labels, model label prefix and prompt the
 factory uses there.
 _Avoid_: Factory settings, host configuration
+
+**Hosting platform**:
+The service that hosts a repository and its collaboration features, including
+issues, pull requests and releases; platform is the short form.
+_Avoid_: Forge
+
+**Platform adapter**:
+The implementation of the hosting platform package's ports for one platform,
+reporting that platform's facts and available capabilities.
+_Avoid_: Platform policy, general API client
+
+**Pull request**:
+A proposed branch change submitted for review and merge into a repository;
+GitLab calls it a merge request.
+_Avoid_: Change request
 
 **Pull request reviewer**:
 An external account, named by the repository, whose review of a pull request's
@@ -183,9 +195,9 @@ scope and satisfying the source's requirements there.
 _Avoid_: Publication, copying shared files
 
 **Plan-gated requirement**:
-A source requirement that GitHub offers only for some repository plans or
-visibilities. Adoption satisfies it wherever GitHub offers it; where GitHub
-does not, it is unavailable rather than optional.
+A source requirement that a hosting platform offers only for some repository
+plans or visibilities. Adoption satisfies it wherever the platform offers it;
+where it does not, the requirement is unavailable rather than optional.
 _Avoid_: Optional requirement, exception, waiver
 
 **Adopting repository**:
