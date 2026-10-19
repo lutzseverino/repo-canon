@@ -56,6 +56,26 @@ const completedCell = (datetime) =>
 const completed = completedCell("2026-10-11T05:42:32.812517Z");
 const inProgress = "⏳ **In progress**";
 
+// A "@codex security review" row as Codex adds it to the same summary table.
+const securityRow = (status, commit) =>
+  `| 🔒 **Security Review** | ${status} | \`${commit}\` | Manual request |`;
+const codeReviewRow = (comment) =>
+  comment.body.split("\n").find((line) => line.includes("**Code Review**"));
+const withSecurityReview = (
+  comment,
+  status,
+  commit,
+  { keepCode = true } = {},
+) => ({
+  ...comment,
+  body: comment.body.replace(
+    codeReviewRow(comment),
+    [keepCode ? codeReviewRow(comment) : null, securityRow(status, commit)]
+      .filter(Boolean)
+      .join("\n"),
+  ),
+});
+
 // Codex's reply on #231 when the repository has no Codex environment.
 const unavailable = (createdAt) => ({
   login: codex,
@@ -142,6 +162,63 @@ test("a re-request on an unchanged head waits past the earlier Completed row", (
   });
   assert.equal(outcome.code, 0);
   assert.equal(outcome.reviewer, "reviewed");
+});
+
+test("a completed Security Review row does not finish the review", () => {
+  const securityDone = completedCell("2026-10-11T05:42:32.812517Z");
+  for (const code of [inProgress, completedCell("2026-10-11T05:42:32Z")]) {
+    const stale = code === inProgress ? "f7bb671" : "61e9ca4";
+    const outcome = decision({
+      comments: [
+        withSecurityReview(summary(code, stale), securityDone, "f7bb671"),
+      ],
+    });
+    assert.equal(outcome.code, null);
+    assert.equal(outcome.reviewer, "pending");
+  }
+  const absent = decision({
+    comments: [
+      withSecurityReview(
+        summary(completed, "f7bb671"),
+        securityDone,
+        "f7bb671",
+        { keepCode: false },
+      ),
+    ],
+  });
+  assert.equal(absent.code, null);
+  assert.equal(absent.reviewer, "pending");
+});
+
+test("completed Code Review and Security Review rows finish on the Code Review row", () => {
+  const codeAt = "2026-10-11T05:42:32.812517Z";
+  const comment = withSecurityReview(
+    summary(completedCell(codeAt), "f7bb671"),
+    completedCell("2026-10-11T05:41:00.000000Z"),
+    "61e9ca4",
+  );
+  const outcome = decision({ comments: [comment] });
+  assert.equal(outcome.code, 0);
+  assert.equal(outcome.reviewer, "reviewed");
+  const pattern = new RegExp(codexReviewer.finished.line, "u");
+  const matches = comment.body
+    .split("\n")
+    .map((line) => pattern.exec(line)?.groups)
+    .filter(Boolean);
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].sha, "f7bb671");
+  assert.equal(matches[0].at, codeAt);
+});
+
+test("the Codex fixture keeps the configured completion pattern", () => {
+  const configured = JSON.parse(
+    readFileSync(join(root, ".github/pull-request-reviewer.json"), "utf8"),
+  );
+  assert.equal(codexReviewer.finished.line, configured.finished.line);
+  assert.equal(
+    codexReviewer.finished.commentMarker,
+    configured.finished.commentMarker,
+  );
 });
 
 test("a Completed row without its datetime is not reviewed", () => {
