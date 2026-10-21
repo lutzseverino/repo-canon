@@ -1,7 +1,9 @@
 # Make the factory an optional profile
 
 Status: its hosting-platform profile-multiplication assumption is superseded
-by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md); the two profiles and their purpose stand.
+by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md), and its
+project-stack consequence is amended by
+[ADR 0024](0024-scope-each-stack-to-the-projects-that-use-it.md); the two profiles and their purpose stand.
 
 Repo Canon offers two profiles: the standard profile, which every adopting
 repository can select, and the factory profile, which adds the factory's
@@ -33,6 +35,7 @@ optional part does not justify combining profiles.
 - The original concern that a second optional dimension would multiply whole
   profiles is resolved for hosting platforms by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md): an adopting
   repository chooses the platform separately inside each profile, through
-  Repository Standards. A project-stack dimension would still be a reason to
-  revisit composition. Published files remain GitHub-shaped until a second
+  Repository Standards. [ADR 0024](0024-scope-each-stack-to-the-projects-that-use-it.md)
+  resolves the project-stack dimension: stacks are discovered declarations
+  scoped per Project, so they need no profile composition. Published files remain GitHub-shaped until a second
   adapter exists.

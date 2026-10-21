@@ -85,3 +85,6 @@ involve real alternatives.
 - [Reach the hosting platform through Postern](0023-reach-the-hosting-platform-through-postern.md):
   an independent package supplies four ports and platform facts, while consumer
   policy, platform choice, distribution and timing guarantees stay explicit.
+- [Scope each stack to the Projects that use it](0024-scope-each-stack-to-the-projects-that-use-it.md):
+  opt-in stacks are discovered declarations scoped per Project, starting with
+  the recommended `typescript-node` tools while installation waits for optional discovery.
