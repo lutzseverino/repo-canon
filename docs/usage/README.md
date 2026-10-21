@@ -16,3 +16,5 @@ describes running it.
   prerequisites and deferral, and recommended personal skills.
 - [Release versioning](versioning.md): version increments, breaking standards
   changes, and selecting an adoptable release.
+- [Recommended stacks](stacks.md): a stack is a named set of development tools;
+  recommended tools for CLIs and libraries, workspace scope, and future installation.

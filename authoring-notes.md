@@ -61,7 +61,9 @@ repeated.
   repositories maintained by others. The `standard` profile serves every
   adopting repository, and the `factory` profile adds the factory's repository
   files for a repository that a factory serves, as
-  [ADR 0017](docs/adr/0017-make-the-factory-an-optional-profile.md) decides;
+  [ADR 0017](docs/adr/0017-make-the-factory-an-optional-profile.md) decides,
+  with opt-in stacks scoped per Project as
+  [ADR 0024](docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md) decides;
   no ownership-based differences have been requested.
 - The Repository README's title, description, badges, section order, length,
   examples, Features items, and pointer sections are stated in the

@@ -14,6 +14,13 @@ A maintained app, service, library, or tool with its own responsibility and
 development commands, including an internal workspace package.
 _Avoid_: Any directory, fixture, generated output
 
+**Stack**:
+The named set of development tools, each at an exact major version, that a
+Project uses, such as its package manager, runtime, compiler, linter, formatter
+and test runner. Repo Canon declares each stack as a discovered declaration
+whose scope is the Projects that use it, and a Project uses at most one.
+_Avoid_: Stack profile, stack choice, framework
+
 **Project README**:
 The developer-facing introduction to one project within a monorepo.
 _Avoid_: Repository README when referring to a component document
