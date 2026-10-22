@@ -28,6 +28,7 @@ through contextual work; this declaration has no deterministic fix or check.
    ```gitattributes
    # BEGIN Repo Canon linguist-vendored
    scripts/validate-issue-contract.mjs linguist-vendored
+   scripts/validate.mjs linguist-vendored
    operations/lib/rendered-markdown.mjs linguist-vendored
    .agents/skills/babysit/** linguist-vendored
    .agents/skills/diagnosing-bugs/** linguist-vendored
