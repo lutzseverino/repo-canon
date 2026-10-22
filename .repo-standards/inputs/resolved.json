@@ -66,7 +66,6 @@
       "rules": "rules/documentation.md",
       "targets": {
         "paths": [
-          "GLOSSARY-MAP.md",
           "GLOSSARY.md",
           "authoring-notes.md",
           "docs/README.md",
@@ -89,6 +88,11 @@
           "docs/adr/0017-make-the-factory-an-optional-profile.md",
           "docs/adr/0018-install-only-workflow-skills.md",
           "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
+          "docs/adr/0020-release-the-factory-from-its-own-repository.md",
+          "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md",
+          "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md",
+          "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
+          "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
           "docs/adr/README.md",
           "docs/development/README.md",
           "docs/development/adoption-compatibility.md",
@@ -108,17 +112,8 @@
           "docs/development/upstream-compatibility.md",
           "docs/usage/README.md",
           "docs/usage/adopt-repo-canon.md",
-          "docs/usage/versioning.md",
-          "factory/GLOSSARY.md",
-          "factory/docs/README.md",
-          "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md",
-          "factory/docs/adr/README.md",
-          "factory/docs/development/README.md",
-          "factory/docs/development/release.md",
-          "factory/docs/usage/README.md",
-          "factory/docs/usage/factory-configuration.md",
-          "factory/docs/usage/host.md",
-          "factory/docs/usage/sandbox-image.md"
+          "docs/usage/stacks.md",
+          "docs/usage/versioning.md"
         ],
         "directories": []
       }
@@ -175,6 +170,15 @@
       "kind": "file",
       "target": ".github/ISSUE_TEMPLATE/feature-request.yml",
       "exact": ".github/ISSUE_TEMPLATE/feature-request.yml"
+    },
+    {
+      "id": "git-attributes",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": ".gitattributes",
+      "guidance": "guidance/git-attributes.md",
+      "rules": "rules/git-attributes.md"
     },
     {
       "id": "github-repository-configuration",
@@ -448,9 +452,7 @@
       "guidance": "guidance/project-readmes.md",
       "rules": "rules/project-readmes.md",
       "targets": {
-        "paths": [
-          "factory/README.md"
-        ],
+        "paths": [],
         "directories": []
       }
     },
@@ -637,7 +639,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "triage",
-      "source": "vendor/mattpocock-skills/skills/engineering/triage"
+      "source": ".agents/skills/triage"
     },
     {
       "id": "skill-wayfinder",

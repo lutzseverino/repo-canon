@@ -1,7 +1,7 @@
 {
   "format": "repo-standards/scope-history/v5",
   "evidence": "historical",
-  "inspection": "sha256:3af047c331b44ad76ac8d1a669f25803189a609c3584cac732abdfcefb320f8e",
+  "inspection": "sha256:7a03c77f67d0f4c19fe888bf774837519dd680a7d7649772f007275135f469c0",
   "resolved": {
     "description": "The standard profile plus the factory's repository files and workflow rules, for a repository a factory serves",
     "declarations": [
@@ -70,7 +70,6 @@
         "rules": "rules/documentation.md",
         "targets": {
           "paths": [
-            "GLOSSARY-MAP.md",
             "GLOSSARY.md",
             "authoring-notes.md",
             "docs/README.md",
@@ -93,6 +92,11 @@
             "docs/adr/0017-make-the-factory-an-optional-profile.md",
             "docs/adr/0018-install-only-workflow-skills.md",
             "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
+            "docs/adr/0020-release-the-factory-from-its-own-repository.md",
+            "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md",
+            "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md",
+            "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
+            "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
             "docs/adr/README.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
@@ -112,17 +116,8 @@
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
-            "docs/usage/versioning.md",
-            "factory/GLOSSARY.md",
-            "factory/docs/README.md",
-            "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md",
-            "factory/docs/adr/README.md",
-            "factory/docs/development/README.md",
-            "factory/docs/development/release.md",
-            "factory/docs/usage/README.md",
-            "factory/docs/usage/factory-configuration.md",
-            "factory/docs/usage/host.md",
-            "factory/docs/usage/sandbox-image.md"
+            "docs/usage/stacks.md",
+            "docs/usage/versioning.md"
           ],
           "directories": []
         }
@@ -179,6 +174,15 @@
         "kind": "file",
         "target": ".github/ISSUE_TEMPLATE/feature-request.yml",
         "exact": ".github/ISSUE_TEMPLATE/feature-request.yml"
+      },
+      {
+        "id": "git-attributes",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".gitattributes",
+        "guidance": "guidance/git-attributes.md",
+        "rules": "rules/git-attributes.md"
       },
       {
         "id": "github-repository-configuration",
@@ -452,9 +456,7 @@
         "guidance": "guidance/project-readmes.md",
         "rules": "rules/project-readmes.md",
         "targets": {
-          "paths": [
-            "factory/README.md"
-          ],
+          "paths": [],
           "directories": []
         }
       },
@@ -641,7 +643,7 @@
         "fixes": [],
         "kind": "skill",
         "name": "triage",
-        "source": "vendor/mattpocock-skills/skills/engineering/triage"
+        "source": ".agents/skills/triage"
       },
       {
         "id": "skill-wayfinder",
@@ -817,6 +819,15 @@
         "kind": "file",
         "target": ".github/ISSUE_TEMPLATE/feature-request.yml",
         "exact": ".github/ISSUE_TEMPLATE/feature-request.yml"
+      },
+      {
+        "id": "git-attributes",
+        "checks": [],
+        "fixes": [],
+        "kind": "file",
+        "target": ".gitattributes",
+        "guidance": "guidance/git-attributes.md",
+        "rules": "rules/git-attributes.md"
       },
       {
         "id": "github-repository-configuration",
@@ -1271,7 +1282,7 @@
         "fixes": [],
         "kind": "skill",
         "name": "triage",
-        "source": "vendor/mattpocock-skills/skills/engineering/triage"
+        "source": ".agents/skills/triage"
       },
       {
         "id": "skill-wayfinder",
@@ -1308,22 +1319,14 @@
     ]
   },
   "discovery": {
-    "identity": "sha256:52123c0a3a73b82b8fc46884916ad1b5090a962419f8b33a66d19348dab7309f",
+    "identity": "sha256:707898f81572c2f37ce54fece9be952fd64d67c5d45bc9389f1a2a8eee3ff30d",
     "proposal": {
       "format": "repo-standards/scope/v2",
       "declarations": [
         {
           "id": "documentation",
-          "coverage": "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation roots `docs` and `factory/docs`, a new index for each of their directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, including `docs/agents/project.md`, which the `project-agent-guidance` declaration now owns, and so is each README.md outside the documentation roots. The retired Repository Standards skills are left out because this run removes them. Open questions decided as in the previously confirmed scope: `factory/docs` is a documentation root, as the repository conformance test's scope and the factory package's own documentation tree establish, and every directory under it already has an index; `authoring-notes.md` stays in place at the root and is covered; `THIRD_PARTY_NOTICES.md` is license notices, `discovery`, `guidance` and `rules` hold authored standards source inputs referenced by standards.yaml, and `vendor` holds preserved upstream snapshots, so all of those are excluded. No moves, new indexes or link repairs are needed.",
+          "coverage": "Every maintained document under docs except paths another declaration owns, the root glossary, and authoring-notes.md. Source inputs under discovery/, guidance/, rules/, scripts/support/ and vendor/ are authored adoption material or pinned third-party content, not repository documentation. No removed factory tree is maintained.",
           "candidates": [
-            {
-              "path": "GLOSSARY-MAP.md",
-              "decision": "include",
-              "reason": "The context map at the repository root.",
-              "evidence": [
-                "GLOSSARY-MAP.md"
-              ]
-            },
             {
               "path": "GLOSSARY.md",
               "decision": "include",
@@ -1335,41 +1338,56 @@
             {
               "path": "THIRD_PARTY_NOTICES.md",
               "decision": "exclude",
-              "reason": "Redistribution notices that accompany licensed source at the root, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
-                "THIRD_PARTY_NOTICES.md"
+                "THIRD_PARTY_NOTICES.md",
+                "docs/development/README.md"
               ]
             },
             {
               "path": "authoring-notes.md",
               "decision": "include",
-              "reason": "Maintained authoring decisions, kept in place at the repository root beside standards.yaml; the project agent guidance and the development guide link it there.",
+              "reason": "Maintained authoring decisions, explicitly included by the current development guide and conformance fixture.",
               "evidence": [
-                "authoring-notes.md"
+                "authoring-notes.md",
+                "docs/development/README.md",
+                "test/repository-conformance.test.mjs"
               ]
             },
             {
               "path": "discovery/documentation.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
-                "discovery/documentation.md"
+                "discovery/documentation.md",
+                "docs/development/README.md"
+              ]
+            },
+            {
+              "path": "discovery/factory-workflow.md",
+              "decision": "exclude",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
+              "evidence": [
+                "discovery/factory-workflow.md",
+                "docs/development/README.md"
               ]
             },
             {
               "path": "discovery/github-repository-configuration.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
-                "discovery/github-repository-configuration.md"
+                "discovery/github-repository-configuration.md",
+                "docs/development/README.md"
               ]
             },
             {
               "path": "discovery/project-readmes.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
-                "discovery/project-readmes.md"
+                "discovery/project-readmes.md",
+                "docs/development/README.md"
               ]
             },
             {
@@ -1530,6 +1548,46 @@
               "reason": "A file under the documentation root `docs`.",
               "evidence": [
                 "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md"
+              ]
+            },
+            {
+              "path": "docs/adr/0020-release-the-factory-from-its-own-repository.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/adr/0020-release-the-factory-from-its-own-repository.md"
+              ]
+            },
+            {
+              "path": "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md"
+              ]
+            },
+            {
+              "path": "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md"
+              ]
+            },
+            {
+              "path": "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/adr/0023-reach-the-hosting-platform-through-postern.md"
+              ]
+            },
+            {
+              "path": "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md"
               ]
             },
             {
@@ -1725,6 +1783,14 @@
               ]
             },
             {
+              "path": "docs/usage/stacks.md",
+              "decision": "include",
+              "reason": "A file under the documentation root `docs`.",
+              "evidence": [
+                "docs/usage/stacks.md"
+              ]
+            },
+            {
               "path": "docs/usage/versioning.md",
               "decision": "include",
               "reason": "A file under the documentation root `docs`.",
@@ -1733,499 +1799,479 @@
               ]
             },
             {
-              "path": "factory/GLOSSARY.md",
-              "decision": "include",
-              "reason": "A context glossary that `GLOSSARY-MAP.md` lists.",
-              "evidence": [
-                "GLOSSARY-MAP.md",
-                "factory/GLOSSARY.md"
-              ]
-            },
-            {
-              "path": "factory/README.md",
-              "decision": "exclude",
-              "reason": "A README.md outside the documentation roots, which the documentation check would read as a documentation root's index. If it is a Project README, the `project-readmes` declaration's proposal covers it.",
-              "evidence": [
-                "factory/README.md"
-              ]
-            },
-            {
-              "path": "factory/docs/README.md",
-              "decision": "include",
-              "reason": "A file under the documentation root `factory/docs`, the factory package's own documentation tree.",
-              "evidence": [
-                "factory/docs/README.md"
-              ]
-            },
-            {
-              "path": "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md",
-              "decision": "include",
-              "reason": "A file under the documentation root `factory/docs`, the factory package's own documentation tree.",
-              "evidence": [
-                "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md"
-              ]
-            },
-            {
-              "path": "factory/docs/adr/README.md",
-              "decision": "include",
-              "reason": "A file under the documentation root `factory/docs`, the factory package's own documentation tree.",
-              "evidence": [
-                "factory/docs/adr/README.md"
-              ]
-            },
-            {
-              "path": "factory/docs/development/README.md",
-              "decision": "include",
-              "reason": "A file under the documentation root `factory/docs`, the factory package's own documentation tree.",
-              "evidence": [
-                "factory/docs/development/README.md"
-              ]
-            },
-            {
-              "path": "factory/docs/development/release.md",
-              "decision": "include",
-              "reason": "A file under the documentation root `factory/docs`, the factory package's own documentation tree.",
-              "evidence": [
-                "factory/docs/development/release.md"
-              ]
-            },
-            {
-              "path": "factory/docs/usage/README.md",
-              "decision": "include",
-              "reason": "A file under the documentation root `factory/docs`, the factory package's own documentation tree.",
-              "evidence": [
-                "factory/docs/usage/README.md"
-              ]
-            },
-            {
-              "path": "factory/docs/usage/factory-configuration.md",
-              "decision": "include",
-              "reason": "A file under the documentation root `factory/docs`, the factory package's own documentation tree.",
-              "evidence": [
-                "factory/docs/usage/factory-configuration.md"
-              ]
-            },
-            {
-              "path": "factory/docs/usage/host.md",
-              "decision": "include",
-              "reason": "A file under the documentation root `factory/docs`, the factory package's own documentation tree.",
-              "evidence": [
-                "factory/docs/usage/host.md"
-              ]
-            },
-            {
-              "path": "factory/docs/usage/sandbox-image.md",
-              "decision": "include",
-              "reason": "A file under the documentation root `factory/docs`, the factory package's own documentation tree.",
-              "evidence": [
-                "factory/docs/usage/sandbox-image.md"
-              ]
-            },
-            {
               "path": "guidance/documentation.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "guidance/documentation.md"
               ]
             },
             {
               "path": "guidance/factory-sandbox-image.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "guidance/factory-sandbox-image.md"
+              ]
+            },
+            {
+              "path": "guidance/factory-workflow.md",
+              "decision": "exclude",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
+              "evidence": [
+                "docs/development/README.md",
+                "guidance/factory-workflow.md"
+              ]
+            },
+            {
+              "path": "guidance/git-attributes.md",
+              "decision": "exclude",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
+              "evidence": [
+                "docs/development/README.md",
+                "guidance/git-attributes.md"
               ]
             },
             {
               "path": "guidance/github-repository-configuration.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "guidance/github-repository-configuration.md"
               ]
             },
             {
               "path": "guidance/project-agent-guidance.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "guidance/project-agent-guidance.md"
               ]
             },
             {
               "path": "guidance/project-readmes.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "guidance/project-readmes.md"
               ]
             },
             {
               "path": "guidance/repository-license.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "guidance/repository-license.md"
               ]
             },
             {
               "path": "guidance/repository-readme.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "guidance/repository-readme.md"
               ]
             },
             {
               "path": "rules/documentation.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "rules/documentation.md"
               ]
             },
             {
               "path": "rules/factory-sandbox-image.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "rules/factory-sandbox-image.md"
+              ]
+            },
+            {
+              "path": "rules/factory-workflow.md",
+              "decision": "exclude",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
+              "evidence": [
+                "docs/development/README.md",
+                "rules/factory-workflow.md"
+              ]
+            },
+            {
+              "path": "rules/git-attributes.md",
+              "decision": "exclude",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
+              "evidence": [
+                "docs/development/README.md",
+                "rules/git-attributes.md"
               ]
             },
             {
               "path": "rules/github-repository-configuration.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "rules/github-repository-configuration.md"
               ]
             },
             {
               "path": "rules/project-agent-guidance.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "rules/project-agent-guidance.md"
               ]
             },
             {
               "path": "rules/project-readmes.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "rules/project-readmes.md"
               ]
             },
             {
               "path": "rules/repository-license.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "rules/repository-license.md"
               ]
             },
             {
               "path": "rules/repository-readme.md",
               "decision": "exclude",
-              "reason": "Authored standards source input referenced by standards.yaml, rather than adopter documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "rules/repository-readme.md"
+              ]
+            },
+            {
+              "path": "scripts/support/repository-standards/SKILL.md",
+              "decision": "exclude",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
+              "evidence": [
+                "docs/development/README.md",
+                "scripts/support/repository-standards/SKILL.md"
               ]
             },
             {
               "path": "vendor/marked/README.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/marked/README.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/code-review/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/codebase-design/DEEPENING.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/codebase-design/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/domain-modeling/ADR-FORMAT.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/GLOSSARY-FORMAT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/domain-modeling/GLOSSARY-FORMAT.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/grill-with-docs/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/implement/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/pr/CREDITS.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/pr/CREDITS.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/pr/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/pr/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/prototype/LOGIC.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/prototype/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/prototype/UI.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/prototype/UI.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/research/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/research/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/tdd/mocking.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/tdd/tests.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/tdd/tests.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/to-spec/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/to-tickets/SKILL.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md",
-              "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md",
-              "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md"
-              ]
-            },
-            {
-              "path": "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md",
-              "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
-              "evidence": [
-                "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/productivity/grilling/SKILL.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md"
               ]
             },
             {
               "path": "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/mattpocock-skills/skills/productivity/writing-for-agents/SKILL.md"
               ]
             },
             {
               "path": "vendor/parse5/README.md",
               "decision": "exclude",
-              "reason": "Preserved upstream skill or dependency snapshot with provenance and licenses, rather than project documentation.",
+              "reason": "License/provenance material or declared source input; not maintained repository documentation. Preserve it in its authoring or upstream layout.",
               "evidence": [
+                "docs/development/README.md",
                 "vendor/parse5/README.md"
               ]
             }
@@ -2234,112 +2280,20 @@
         },
         {
           "id": "factory-workflow",
-          "coverage": "Intentionally empty content scope. The factory workflow declaration governs work throughout this factory-profile repository, including tracker work that changes no files. .factory/config.json stays owned by its separate exact declaration.",
+          "coverage": "Intentionally empty content scope: factory workflow rules govern the whole repository and tracker work; factory configuration is a separate exact declaration.",
           "candidates": [],
           "unresolved": []
         },
         {
           "id": "github-repository-configuration",
-          "coverage": "Intentionally empty local scope: the authored remote setup fixes configure GitHub settings on lutzseverino/repo-canon, the only repository the Git remotes name, and the reviewer check reads the repository-owned .github/pull-request-reviewer.json without writing it. Observed with authenticated gh: the repository is PUBLIC, and the repository-level REPO_CANON_RUNS_ON variable is absent, so the setting is unset and the installed jobs use the hosted ubuntu-latest default. The owner, lutzseverino, is a user account rather than an organization, so no organization-level value can be inherited. The maintainer requested this update; discovery and assessment set no variable.",
+          "coverage": "Intentionally empty content scope for GitHub configuration rules. This run updates local adoption only and must not change remote settings; remote state is read and assessed. The repository-local origin identifies lutzseverino/repo-canon.",
           "candidates": [],
           "unresolved": []
         },
         {
           "id": "project-readmes",
-          "coverage": "Reviewed the root and factory package manifests, the development guides, the glossary map and vendor README provenance. The factory directory is Scriptorium, a separately released package with its own package.json, scripts, tests, glossary and documentation tree, so it is a Project with its existing factory/README.md. The root package owns all other maintenance and validation; operations, discovery, guidance, rules and scripts have no independent Project commands; test fixtures, vendored snapshots and documentation are excluded. No missing Project README is needed.",
-          "candidates": [
-            {
-              "path": "discovery",
-              "decision": "exclude",
-              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development guide, with no independent Project commands.",
-              "evidence": [
-                "discovery",
-                "docs/development/README.md",
-                "package.json"
-              ]
-            },
-            {
-              "path": "docs",
-              "decision": "exclude",
-              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development guide, with no independent Project commands.",
-              "evidence": [
-                "docs",
-                "docs/development/README.md",
-                "package.json"
-              ]
-            },
-            {
-              "path": "factory/README.md",
-              "decision": "include",
-              "reason": "Scriptorium, the host-installed factory, is a separately released package with its own manifest, commands, tests and documentation.",
-              "evidence": [
-                "GLOSSARY-MAP.md",
-                "factory/README.md",
-                "factory/docs/development/README.md",
-                "factory/package.json"
-              ]
-            },
-            {
-              "path": "guidance",
-              "decision": "exclude",
-              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development guide, with no independent Project commands.",
-              "evidence": [
-                "docs/development/README.md",
-                "guidance",
-                "package.json"
-              ]
-            },
-            {
-              "path": "operations",
-              "decision": "exclude",
-              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development guide, with no independent Project commands.",
-              "evidence": [
-                "docs/development/README.md",
-                "operations",
-                "package.json"
-              ]
-            },
-            {
-              "path": "rules",
-              "decision": "exclude",
-              "reason": "Authored standards source rules under the root package and shared development guide, with no independent Project commands.",
-              "evidence": [
-                "docs/development/README.md",
-                "package.json",
-                "rules"
-              ]
-            },
-            {
-              "path": "scripts",
-              "decision": "exclude",
-              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development guide, with no independent Project commands.",
-              "evidence": [
-                "docs/development/README.md",
-                "package.json",
-                "scripts"
-              ]
-            },
-            {
-              "path": "test",
-              "decision": "exclude",
-              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development guide, with no independent Project commands.",
-              "evidence": [
-                "docs/development/README.md",
-                "package.json",
-                "test"
-              ]
-            },
-            {
-              "path": "vendor",
-              "decision": "exclude",
-              "reason": "Integrated source, fixtures, provenance or documentation under the root package and shared development guide, with no independent Project commands.",
-              "evidence": [
-                "docs/development/README.md",
-                "package.json",
-                "vendor"
-              ]
-            }
-          ],
+          "coverage": "There are no concrete Project README targets. Repo Canon is one standards source at the repository root, whose root README is separately governed. The factory runtime moved to Scriptorium; test fixtures, vendor inputs and source operation directories are not maintained independent Projects.",
+          "candidates": [],
           "unresolved": []
         }
       ]
@@ -2347,19 +2301,14 @@
     "absence": [],
     "named": {
       "targets": {
-        "GLOSSARY-MAP.md": {
-          "type": "file",
-          "sha256": "2d62bd464e547a58747b4a64f430d54bce146254ea7b13b849b9fb2e21cbec1a",
-          "executable": false
-        },
         "GLOSSARY.md": {
           "type": "file",
-          "sha256": "c207631fbd957e48e2ba451c0d46886191b43b23405ab3fda9c9c5b1fc670329",
+          "sha256": "ac04e02912400b548f3692fd477e0ad89274cc02f9c3622ecbe351073e3218a5",
           "executable": false
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "6d1b2b4bb4f8da960a5ff113cba92a7560cf1b1b85c5843b9e31547f9e48763b",
+          "sha256": "3cfd13ed29af980422ac97a5a3ca51cff0ffc756fcb0d20af6f63498784d6517",
           "executable": false
         },
         "docs/README.md": {
@@ -2389,12 +2338,12 @@
         },
         "docs/adr/0005-require-an-open-ended-minimum-cli-version.md": {
           "type": "file",
-          "sha256": "833a2ee4022498fdd338b7dce3f90b3decb89828df5c8ba4955d73a8c0373836",
+          "sha256": "f492075f6d29f1e16bd67bba4807a73fec00f5302e656f3c5a5489d0ec90259f",
           "executable": false
         },
         "docs/adr/0006-keep-point-in-time-records-with-their-event.md": {
           "type": "file",
-          "sha256": "5955e3055f4259e5c39d8a3dea5a4cdcfd5eac7da666dae925af78b56a4f1e65",
+          "sha256": "5313fc106c1984c3202f3a68a917ad053c8548e35e495d1cba993789edaefaff",
           "executable": false
         },
         "docs/adr/0007-keep-superseded-adrs.md": {
@@ -2404,17 +2353,17 @@
         },
         "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md": {
           "type": "file",
-          "sha256": "1be43802fb6750b671cbe87181f148edb17ab61415a527a19644449aca04bb69",
+          "sha256": "3be9d237f301fc909d42585d6d2a53bd14f9a6a0cf2e32076fd0392f908b897e",
           "executable": false
         },
         "docs/adr/0009-enforce-documentation-rules-as-checks.md": {
           "type": "file",
-          "sha256": "394faed331cb3f8eedac0a09595718402c49dce08d1b0be3237fb22de5e37017",
+          "sha256": "323d9f29e3df3376e3aee239b6623a5e7353b47532465ce156603366ae27618f",
           "executable": false
         },
         "docs/adr/0010-carry-delivery-rules-in-the-environment.md": {
           "type": "file",
-          "sha256": "67a280140f48c0bd8798e4f0711fb9331fa299147b97e93a03698b3fad16b1f9",
+          "sha256": "e1c10d3908690c941c45bf11cd38fc2265feedd767c85a9fa7638821e4c30386",
           "executable": false
         },
         "docs/adr/0011-ship-the-factory-with-the-standard.md": {
@@ -2424,22 +2373,22 @@
         },
         "docs/adr/0012-run-each-ticket-as-its-own-factory-run.md": {
           "type": "file",
-          "sha256": "dc1694fb24d731f9cb4776881d46c1929891004b4b53c113f332099bc062654e",
+          "sha256": "dfd4cacf1ce07c2e6b3ffe03fb138dbc665653e84ef78f59fe00390d5da0a06b",
           "executable": false
         },
         "docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md": {
           "type": "file",
-          "sha256": "075217064f405d7f3ff27477c74f8590674dfc0fde1f941c0e2376bd8069088f",
+          "sha256": "52a97b3f1ac96ed1d5e7a4b13927f17adbdcaf99007295f3489722e87ee8e11c",
           "executable": false
         },
         "docs/adr/0014-name-every-factory-convention-in-configuration.md": {
           "type": "file",
-          "sha256": "8e11e2f49e6b7f14cce2c0f6082a9b53f38faea1b6bc03eea25ed5cf49c7b771",
+          "sha256": "515b65a662c4696897e3c31800282d6f04d8a0e1fa1166f16664a31fa360632a",
           "executable": false
         },
         "docs/adr/0015-configure-the-pull-request-reviewer-as-repository-data.md": {
           "type": "file",
-          "sha256": "d30234803a85a2a9ce3c2d31e2f6c2fa12dabe011425c1bab398d45860995cae",
+          "sha256": "e94a23a3e16c8991ef6f7e2ebc97eede395f60bb89b571864daee447d1688861",
           "executable": false
         },
         "docs/adr/0016-keep-requirements-in-installed-rules.md": {
@@ -2449,7 +2398,7 @@
         },
         "docs/adr/0017-make-the-factory-an-optional-profile.md": {
           "type": "file",
-          "sha256": "3aadd25ee231b43dbd8346284cf26928a58324e1eb3132955fa9c6f6a39004c4",
+          "sha256": "2f4afdf097fcd85a7e7d9454b888005b69b2e4e0bebe4d7bb4bb29a0c29adfce",
           "executable": false
         },
         "docs/adr/0018-install-only-workflow-skills.md": {
@@ -2462,19 +2411,44 @@
           "sha256": "9cbda64d594807bb697c4aec8bc2f35819e5706269b731ceec2e8d178c12adc8",
           "executable": false
         },
+        "docs/adr/0020-release-the-factory-from-its-own-repository.md": {
+          "type": "file",
+          "sha256": "cb33452afec56e6a87b9d7285fcd777d483ec1c707f57073df12416a85f2c246",
+          "executable": false
+        },
+        "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md": {
+          "type": "file",
+          "sha256": "6b4c3b1d6da71c0d1069605ac23cd3105199d30f76d786f3c524db18be9d098c",
+          "executable": false
+        },
+        "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md": {
+          "type": "file",
+          "sha256": "9820a7f1e1284baaca1ce70f15855d0b9aa77be31380e025c01a1e236300f3d2",
+          "executable": false
+        },
+        "docs/adr/0023-reach-the-hosting-platform-through-postern.md": {
+          "type": "file",
+          "sha256": "e1a135baedcac9f60dbc173cd968fd2624e896c8649675b336fc552c141026c4",
+          "executable": false
+        },
+        "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md": {
+          "type": "file",
+          "sha256": "0c64d08042ff7dd7185845fb7cc53b08031a597d20126d6c3315d331870918ea",
+          "executable": false
+        },
         "docs/adr/README.md": {
           "type": "file",
-          "sha256": "b56f96a9422939124eab31c8ad373faac93feb2a92819361ccbaa656ed3b54f1",
+          "sha256": "6736abb96ec3b207cd8d57654a43e6d22f8469a163f1817f401ec334f75813ce",
           "executable": false
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "52f7150a67d6ec308a8551cb3d73985aa2ead8abc6ed71fd27549f981b97d3ae",
+          "sha256": "b54b3717ce63a8a2a0a7cc5702cf5ed6c3823bfe4ae6245932eac57809ab91cc",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
           "type": "file",
-          "sha256": "41bc5a048f2ec8a37a3b3baee2b7a40a671b2c8459a50b4a2ebeb08fa31ab5f4",
+          "sha256": "46ae2844a7d3807234725283704959c59821351bbbd23638c4062e97a5687a02",
           "executable": false
         },
         "docs/development/authoring-and-publication.md": {
@@ -2489,22 +2463,22 @@
         },
         "docs/development/documentation-check.md": {
           "type": "file",
-          "sha256": "5fb4d7407f598560a08d5f1134611f0c58ac3a9ecb32001c001022d91992aa98",
+          "sha256": "a1ac88808fec107c7196255bbf0d6503ee501a91ce4c55f996149a938bd81134",
           "executable": false
         },
         "docs/development/documentation-scope-drafter.md": {
           "type": "file",
-          "sha256": "6b2605bf5129e6569565310ab929ff5cea1f808ef7ba9dac0630cab082a24577",
+          "sha256": "a8fcb1a3416c45f43ec45f9515ec6805d7fa5486cf997cf70181d025eccb56af",
           "executable": false
         },
         "docs/development/github-label-setup.md": {
           "type": "file",
-          "sha256": "0dcfa37e861fb0d6914134137e3894e9eeac0039ffd5fcf806d61a8953ad8d64",
+          "sha256": "dc8cbb4b6d80ab29a65f9ba08066a513651693e6d0ea3fbda2fede6c8d32c590",
           "executable": false
         },
         "docs/development/github-pr-integration-setup.md": {
           "type": "file",
-          "sha256": "3da971d5540fc5e0d91d60ed6d1dfdea3eefdaadebc79f4af1ee2d69b178b8d2",
+          "sha256": "57a543c04156f70ef0d390a46f811d5ec84521400ffac080968fabf898279124",
           "executable": false
         },
         "docs/development/issue-contract-validation.md": {
@@ -2514,7 +2488,7 @@
         },
         "docs/development/pr-metadata-validation.md": {
           "type": "file",
-          "sha256": "290f54c34bb87bdb7626897a3ec1663e9cf42c078508c7f5838efd241ba70b74",
+          "sha256": "3624be459aabe0ba44a0c6fd5f1b1c5ba104158e57221169e3902df6edaf1990",
           "executable": false
         },
         "docs/development/release.md": {
@@ -2524,7 +2498,7 @@
         },
         "docs/development/repository-readme-check.md": {
           "type": "file",
-          "sha256": "f97d5d4450ab58132cb770591b9e78b61c79a9d96ed9f36811784c48910e389f",
+          "sha256": "01f6b4234a1e7f8484ea6dd29573afcc81fd87d9d404491a69f7876ba967b8f6",
           "executable": false
         },
         "docs/development/sandbox-image-workflow.md": {
@@ -2534,87 +2508,37 @@
         },
         "docs/development/skill-exercises.md": {
           "type": "file",
-          "sha256": "ee2cbde0a32bec3348b601333d11115f04eeb968732625b4d9550c210152ccd4",
+          "sha256": "bea302aabe9a2f938b1afca2cf0935e8332cf041bb6210a379855d3ee8c5dcaa",
           "executable": false
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "3a73483b9e7490f0f3050e441e001a88b77383f84716238cbff9ea9c68e82b08",
+          "sha256": "fd38a4761c32c297cbe664d3062792248722d6552079bd33b476cd8c7e6efbd4",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
           "type": "file",
-          "sha256": "fc68b76b81874f0857e0646e82e65225836fdc907f77b3e619b31456b860e412",
+          "sha256": "48c852efd34a3bbf35c250bee6c4390efe2c5f1734ccd36f1470e3f766ed724b",
           "executable": false
         },
         "docs/usage/README.md": {
           "type": "file",
-          "sha256": "fde16755eff593bbfa1de99dee4805617a4130be3831fc1209c8b391148c6c0e",
+          "sha256": "0e29bc4834fc57fe26344543a1e95e75189044ff0ba4f7738a1bb94e20668d34",
           "executable": false
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "adc6f1e9720c2925c20f886bfb46961b2df4fe27cb3138e9baab4c55afde93e9",
+          "sha256": "e66752fb86e828315128c25f8659c30bed32902f0818f83082f0cdcd16c69ff0",
+          "executable": false
+        },
+        "docs/usage/stacks.md": {
+          "type": "file",
+          "sha256": "26edfe5677ad9cca96186eb774e28ca1de56356027e7c58fb7ad0e1cab1f4c56",
           "executable": false
         },
         "docs/usage/versioning.md": {
           "type": "file",
-          "sha256": "86cfff321b8b41d4f065b290124a72248461bc2729e23ed56ab26b1d5e9a251f",
-          "executable": false
-        },
-        "factory/GLOSSARY.md": {
-          "type": "file",
-          "sha256": "459bd62b949e54b5c2bfa96fb3d5f5995230e1439db01c39d25f47d2c98df920",
-          "executable": false
-        },
-        "factory/README.md": {
-          "type": "file",
-          "sha256": "178441e5a7a2570992475479385be8b2769a0758b01dc9b5731e2c407fc65b69",
-          "executable": false
-        },
-        "factory/docs/README.md": {
-          "type": "file",
-          "sha256": "01f8ebc7ab853ead931c11c3c8f9cd35c18d6fd02723c176288223311f1b13fc",
-          "executable": false
-        },
-        "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md": {
-          "type": "file",
-          "sha256": "0b8cdbe06faf82d1bd058bbd5e7b6450e71f7389374366d16f428eb558e9026a",
-          "executable": false
-        },
-        "factory/docs/adr/README.md": {
-          "type": "file",
-          "sha256": "d5f799ec666803078a361afc5e94a7cb3b5628c8f311d903d143fb1fc362be83",
-          "executable": false
-        },
-        "factory/docs/development/README.md": {
-          "type": "file",
-          "sha256": "e61c4c046b5ebdde10243aec0e2f19d18239b6aa8be7f3ee6be2edbbfaf368a4",
-          "executable": false
-        },
-        "factory/docs/development/release.md": {
-          "type": "file",
-          "sha256": "45e22f2d86c4fa9ca8f4556162e1332e227073f2d69bd161a35743d2c8e760b4",
-          "executable": false
-        },
-        "factory/docs/usage/README.md": {
-          "type": "file",
-          "sha256": "b6ea9e106218d2bd2bcaf4cdecc3524c79bdb207cf3342f7db6ff98da3685105",
-          "executable": false
-        },
-        "factory/docs/usage/factory-configuration.md": {
-          "type": "file",
-          "sha256": "eff45b64ab6e0adbedfc980bdb137803b0a254b79fc8496193d9ade2daf8e5d9",
-          "executable": false
-        },
-        "factory/docs/usage/host.md": {
-          "type": "file",
-          "sha256": "2c0eca4ebce2d18839a57b0b868f118ae01465daa54175d6b4700b4c66485319",
-          "executable": false
-        },
-        "factory/docs/usage/sandbox-image.md": {
-          "type": "file",
-          "sha256": "5f13327ccee9e9762e2ead8ce6c6e151b2d0f9ef1541b9cef833d5b43b58cc2b",
+          "sha256": "fa82bea042b1a0e09dfee0af47b75b260f6e2df0cc8e210aaf03157a6ce98433",
           "executable": false
         }
       }
@@ -2623,7 +2547,7 @@
       {
         "id": "documentation",
         "source": "discovery/documentation.md",
-        "sha256": "0e84c6f5a53f8799568bef21f593c9544a7177428bbda6c8d5be0c594af1f9f7",
+        "sha256": "b5afdb18c1eff4c49661f853b731ec57c505817e5235cdcbc6ebaca1e33250ef",
         "executable": false
       },
       {
@@ -2889,7 +2813,12 @@
         },
         ".agents/skills/triage/AGENT-BRIEF.md": {
           "type": "file",
-          "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f",
+          "sha256": "f308022030970cefcc69167df642641e4a5419f5e8c4fe34c7453f5aa17b2d32",
+          "executable": false
+        },
+        ".agents/skills/triage/CREDITS.md": {
+          "type": "file",
+          "sha256": "6193dee40b565d8b6da1c527005ea6ae5881ef6c5e451b6c63405dafd1ef9196",
           "executable": false
         },
         ".agents/skills/triage/OUT-OF-SCOPE.md": {
@@ -2899,7 +2828,7 @@
         },
         ".agents/skills/triage/SKILL.md": {
           "type": "file",
-          "sha256": "917b0baf74be583e74f110857ed45df2766617f75c00baf61fd136d7af515edf",
+          "sha256": "b271b22439d2ce8a1c19367723b24d17a2034446b3ff6804c54bbdd81368c548",
           "executable": false
         },
         ".agents/skills/triage/agents/openai.yaml": {
@@ -3010,7 +2939,7 @@
         },
         ".factory/Dockerfile": {
           "type": "file",
-          "sha256": "08ab4f6b33ab158f6ccf5bbce05d43e7828803f93d50eaed0ea17ac3124e28f0",
+          "sha256": "5b5e78ced24a8f55002a9ee719f351198e640446e5a21b88380877a015016da9",
           "executable": false
         },
         ".factory/config.json": {
@@ -3045,17 +2974,17 @@
         },
         ".github/pull-request-reviewer.json": {
           "type": "file",
-          "sha256": "78c1125ebb681ef048b189b4419f2d56f12a4bccd251d6491b58626d6539021f",
+          "sha256": "23871284e178d7da40b87e9b42c4fbc292aac47a781c95543375a084f133a428",
           "executable": false
         },
         ".github/scripts/validate-pr-metadata.mjs": {
           "type": "file",
-          "sha256": "967c93f5cb5057d50e1fd7b7315fd520ae10558e47f45ef5d286e79ab5fadcf0",
+          "sha256": "ae4c826c5d3480c04a03bcd8743432b18926e0cb76f895b846f1b43f47ab0b43",
           "executable": false
         },
         ".github/workflows/ci.yml": {
           "type": "file",
-          "sha256": "f9f6702dc93f36eac1d3bcd627d54f9ef2cb6ec63d8fab0f187057f940778712",
+          "sha256": "53312ecbe4d4e8ced32978e4e50803cdd684f187157e03f7a76db19802cba0fb",
           "executable": false
         },
         ".github/workflows/issue-contracts.yml": {
@@ -3095,17 +3024,12 @@
         },
         "CONTRIBUTING.md": {
           "type": "file",
-          "sha256": "4ed2b1336f77e4af7bc8c86b9497d6696c14a38b5d7a98f5a97df4d0c71aedd2",
-          "executable": false
-        },
-        "GLOSSARY-MAP.md": {
-          "type": "file",
-          "sha256": "2d62bd464e547a58747b4a64f430d54bce146254ea7b13b849b9fb2e21cbec1a",
+          "sha256": "7d9c4b6905dc5e4ee3be791dc7db38383e30a89ae9339690142f6c6babaa1b56",
           "executable": false
         },
         "GLOSSARY.md": {
           "type": "file",
-          "sha256": "c207631fbd957e48e2ba451c0d46886191b43b23405ab3fda9c9c5b1fc670329",
+          "sha256": "ac04e02912400b548f3692fd477e0ad89274cc02f9c3622ecbe351073e3218a5",
           "executable": false
         },
         "LICENSE": {
@@ -3115,22 +3039,22 @@
         },
         "README.md": {
           "type": "file",
-          "sha256": "1b340b4fb1496a7a91887508382be6573417fe989d4ddc4418ea90535a195187",
+          "sha256": "f47339f6a985f03a710fd813911c15419855993a2841c9b99400115bfffc5afd",
           "executable": false
         },
         "THIRD_PARTY_NOTICES.md": {
           "type": "file",
-          "sha256": "c965b0ba5a0c768dbd06578f873d2bc55f4946a7f2a92c34d5a3fbf2f5fbe644",
+          "sha256": "6ca74ae0a2d1475d1e2c5759e1bf616828d1bd2783f371332aed9721cb7da019",
           "executable": false
         },
         "authoring-notes.md": {
           "type": "file",
-          "sha256": "6d1b2b4bb4f8da960a5ff113cba92a7560cf1b1b85c5843b9e31547f9e48763b",
+          "sha256": "3cfd13ed29af980422ac97a5a3ca51cff0ffc756fcb0d20af6f63498784d6517",
           "executable": false
         },
         "discovery/documentation.md": {
           "type": "file",
-          "sha256": "0e84c6f5a53f8799568bef21f593c9544a7177428bbda6c8d5be0c594af1f9f7",
+          "sha256": "b5afdb18c1eff4c49661f853b731ec57c505817e5235cdcbc6ebaca1e33250ef",
           "executable": false
         },
         "discovery/draft-documentation-scope.mjs": {
@@ -3180,12 +3104,12 @@
         },
         "docs/adr/0005-require-an-open-ended-minimum-cli-version.md": {
           "type": "file",
-          "sha256": "833a2ee4022498fdd338b7dce3f90b3decb89828df5c8ba4955d73a8c0373836",
+          "sha256": "f492075f6d29f1e16bd67bba4807a73fec00f5302e656f3c5a5489d0ec90259f",
           "executable": false
         },
         "docs/adr/0006-keep-point-in-time-records-with-their-event.md": {
           "type": "file",
-          "sha256": "5955e3055f4259e5c39d8a3dea5a4cdcfd5eac7da666dae925af78b56a4f1e65",
+          "sha256": "5313fc106c1984c3202f3a68a917ad053c8548e35e495d1cba993789edaefaff",
           "executable": false
         },
         "docs/adr/0007-keep-superseded-adrs.md": {
@@ -3195,17 +3119,17 @@
         },
         "docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md": {
           "type": "file",
-          "sha256": "1be43802fb6750b671cbe87181f148edb17ab61415a527a19644449aca04bb69",
+          "sha256": "3be9d237f301fc909d42585d6d2a53bd14f9a6a0cf2e32076fd0392f908b897e",
           "executable": false
         },
         "docs/adr/0009-enforce-documentation-rules-as-checks.md": {
           "type": "file",
-          "sha256": "394faed331cb3f8eedac0a09595718402c49dce08d1b0be3237fb22de5e37017",
+          "sha256": "323d9f29e3df3376e3aee239b6623a5e7353b47532465ce156603366ae27618f",
           "executable": false
         },
         "docs/adr/0010-carry-delivery-rules-in-the-environment.md": {
           "type": "file",
-          "sha256": "67a280140f48c0bd8798e4f0711fb9331fa299147b97e93a03698b3fad16b1f9",
+          "sha256": "e1c10d3908690c941c45bf11cd38fc2265feedd767c85a9fa7638821e4c30386",
           "executable": false
         },
         "docs/adr/0011-ship-the-factory-with-the-standard.md": {
@@ -3215,22 +3139,22 @@
         },
         "docs/adr/0012-run-each-ticket-as-its-own-factory-run.md": {
           "type": "file",
-          "sha256": "dc1694fb24d731f9cb4776881d46c1929891004b4b53c113f332099bc062654e",
+          "sha256": "dfd4cacf1ce07c2e6b3ffe03fb138dbc665653e84ef78f59fe00390d5da0a06b",
           "executable": false
         },
         "docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md": {
           "type": "file",
-          "sha256": "075217064f405d7f3ff27477c74f8590674dfc0fde1f941c0e2376bd8069088f",
+          "sha256": "52a97b3f1ac96ed1d5e7a4b13927f17adbdcaf99007295f3489722e87ee8e11c",
           "executable": false
         },
         "docs/adr/0014-name-every-factory-convention-in-configuration.md": {
           "type": "file",
-          "sha256": "8e11e2f49e6b7f14cce2c0f6082a9b53f38faea1b6bc03eea25ed5cf49c7b771",
+          "sha256": "515b65a662c4696897e3c31800282d6f04d8a0e1fa1166f16664a31fa360632a",
           "executable": false
         },
         "docs/adr/0015-configure-the-pull-request-reviewer-as-repository-data.md": {
           "type": "file",
-          "sha256": "d30234803a85a2a9ce3c2d31e2f6c2fa12dabe011425c1bab398d45860995cae",
+          "sha256": "e94a23a3e16c8991ef6f7e2ebc97eede395f60bb89b571864daee447d1688861",
           "executable": false
         },
         "docs/adr/0016-keep-requirements-in-installed-rules.md": {
@@ -3240,7 +3164,7 @@
         },
         "docs/adr/0017-make-the-factory-an-optional-profile.md": {
           "type": "file",
-          "sha256": "3aadd25ee231b43dbd8346284cf26928a58324e1eb3132955fa9c6f6a39004c4",
+          "sha256": "2f4afdf097fcd85a7e7d9454b888005b69b2e4e0bebe4d7bb4bb29a0c29adfce",
           "executable": false
         },
         "docs/adr/0018-install-only-workflow-skills.md": {
@@ -3253,9 +3177,34 @@
           "sha256": "9cbda64d594807bb697c4aec8bc2f35819e5706269b731ceec2e8d178c12adc8",
           "executable": false
         },
+        "docs/adr/0020-release-the-factory-from-its-own-repository.md": {
+          "type": "file",
+          "sha256": "cb33452afec56e6a87b9d7285fcd777d483ec1c707f57073df12416a85f2c246",
+          "executable": false
+        },
+        "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md": {
+          "type": "file",
+          "sha256": "6b4c3b1d6da71c0d1069605ac23cd3105199d30f76d786f3c524db18be9d098c",
+          "executable": false
+        },
+        "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md": {
+          "type": "file",
+          "sha256": "9820a7f1e1284baaca1ce70f15855d0b9aa77be31380e025c01a1e236300f3d2",
+          "executable": false
+        },
+        "docs/adr/0023-reach-the-hosting-platform-through-postern.md": {
+          "type": "file",
+          "sha256": "e1a135baedcac9f60dbc173cd968fd2624e896c8649675b336fc552c141026c4",
+          "executable": false
+        },
+        "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md": {
+          "type": "file",
+          "sha256": "0c64d08042ff7dd7185845fb7cc53b08031a597d20126d6c3315d331870918ea",
+          "executable": false
+        },
         "docs/adr/README.md": {
           "type": "file",
-          "sha256": "b56f96a9422939124eab31c8ad373faac93feb2a92819361ccbaa656ed3b54f1",
+          "sha256": "6736abb96ec3b207cd8d57654a43e6d22f8469a163f1817f401ec334f75813ce",
           "executable": false
         },
         "docs/agents/README.md": {
@@ -3285,12 +3234,12 @@
         },
         "docs/development/README.md": {
           "type": "file",
-          "sha256": "52f7150a67d6ec308a8551cb3d73985aa2ead8abc6ed71fd27549f981b97d3ae",
+          "sha256": "b54b3717ce63a8a2a0a7cc5702cf5ed6c3823bfe4ae6245932eac57809ab91cc",
           "executable": false
         },
         "docs/development/adoption-compatibility.md": {
           "type": "file",
-          "sha256": "41bc5a048f2ec8a37a3b3baee2b7a40a671b2c8459a50b4a2ebeb08fa31ab5f4",
+          "sha256": "46ae2844a7d3807234725283704959c59821351bbbd23638c4062e97a5687a02",
           "executable": false
         },
         "docs/development/authoring-and-publication.md": {
@@ -3305,22 +3254,22 @@
         },
         "docs/development/documentation-check.md": {
           "type": "file",
-          "sha256": "5fb4d7407f598560a08d5f1134611f0c58ac3a9ecb32001c001022d91992aa98",
+          "sha256": "a1ac88808fec107c7196255bbf0d6503ee501a91ce4c55f996149a938bd81134",
           "executable": false
         },
         "docs/development/documentation-scope-drafter.md": {
           "type": "file",
-          "sha256": "6b2605bf5129e6569565310ab929ff5cea1f808ef7ba9dac0630cab082a24577",
+          "sha256": "a8fcb1a3416c45f43ec45f9515ec6805d7fa5486cf997cf70181d025eccb56af",
           "executable": false
         },
         "docs/development/github-label-setup.md": {
           "type": "file",
-          "sha256": "0dcfa37e861fb0d6914134137e3894e9eeac0039ffd5fcf806d61a8953ad8d64",
+          "sha256": "dc8cbb4b6d80ab29a65f9ba08066a513651693e6d0ea3fbda2fede6c8d32c590",
           "executable": false
         },
         "docs/development/github-pr-integration-setup.md": {
           "type": "file",
-          "sha256": "3da971d5540fc5e0d91d60ed6d1dfdea3eefdaadebc79f4af1ee2d69b178b8d2",
+          "sha256": "57a543c04156f70ef0d390a46f811d5ec84521400ffac080968fabf898279124",
           "executable": false
         },
         "docs/development/issue-contract-validation.md": {
@@ -3330,7 +3279,7 @@
         },
         "docs/development/pr-metadata-validation.md": {
           "type": "file",
-          "sha256": "290f54c34bb87bdb7626897a3ec1663e9cf42c078508c7f5838efd241ba70b74",
+          "sha256": "3624be459aabe0ba44a0c6fd5f1b1c5ba104158e57221169e3902df6edaf1990",
           "executable": false
         },
         "docs/development/release.md": {
@@ -3340,7 +3289,7 @@
         },
         "docs/development/repository-readme-check.md": {
           "type": "file",
-          "sha256": "f97d5d4450ab58132cb770591b9e78b61c79a9d96ed9f36811784c48910e389f",
+          "sha256": "01f6b4234a1e7f8484ea6dd29573afcc81fd87d9d404491a69f7876ba967b8f6",
           "executable": false
         },
         "docs/development/sandbox-image-workflow.md": {
@@ -3350,397 +3299,37 @@
         },
         "docs/development/skill-exercises.md": {
           "type": "file",
-          "sha256": "ee2cbde0a32bec3348b601333d11115f04eeb968732625b4d9550c210152ccd4",
+          "sha256": "bea302aabe9a2f938b1afca2cf0935e8332cf041bb6210a379855d3ee8c5dcaa",
           "executable": false
         },
         "docs/development/source-profile.md": {
           "type": "file",
-          "sha256": "3a73483b9e7490f0f3050e441e001a88b77383f84716238cbff9ea9c68e82b08",
+          "sha256": "fd38a4761c32c297cbe664d3062792248722d6552079bd33b476cd8c7e6efbd4",
           "executable": false
         },
         "docs/development/upstream-compatibility.md": {
           "type": "file",
-          "sha256": "fc68b76b81874f0857e0646e82e65225836fdc907f77b3e619b31456b860e412",
+          "sha256": "48c852efd34a3bbf35c250bee6c4390efe2c5f1734ccd36f1470e3f766ed724b",
           "executable": false
         },
         "docs/usage/README.md": {
           "type": "file",
-          "sha256": "fde16755eff593bbfa1de99dee4805617a4130be3831fc1209c8b391148c6c0e",
+          "sha256": "0e29bc4834fc57fe26344543a1e95e75189044ff0ba4f7738a1bb94e20668d34",
           "executable": false
         },
         "docs/usage/adopt-repo-canon.md": {
           "type": "file",
-          "sha256": "adc6f1e9720c2925c20f886bfb46961b2df4fe27cb3138e9baab4c55afde93e9",
+          "sha256": "e66752fb86e828315128c25f8659c30bed32902f0818f83082f0cdcd16c69ff0",
+          "executable": false
+        },
+        "docs/usage/stacks.md": {
+          "type": "file",
+          "sha256": "26edfe5677ad9cca96186eb774e28ca1de56356027e7c58fb7ad0e1cab1f4c56",
           "executable": false
         },
         "docs/usage/versioning.md": {
           "type": "file",
-          "sha256": "86cfff321b8b41d4f065b290124a72248461bc2729e23ed56ab26b1d5e9a251f",
-          "executable": false
-        },
-        "factory/GLOSSARY.md": {
-          "type": "file",
-          "sha256": "459bd62b949e54b5c2bfa96fb3d5f5995230e1439db01c39d25f47d2c98df920",
-          "executable": false
-        },
-        "factory/README.md": {
-          "type": "file",
-          "sha256": "178441e5a7a2570992475479385be8b2769a0758b01dc9b5731e2c407fc65b69",
-          "executable": false
-        },
-        "factory/docs/README.md": {
-          "type": "file",
-          "sha256": "01f8ebc7ab853ead931c11c3c8f9cd35c18d6fd02723c176288223311f1b13fc",
-          "executable": false
-        },
-        "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md": {
-          "type": "file",
-          "sha256": "0b8cdbe06faf82d1bd058bbd5e7b6450e71f7389374366d16f428eb558e9026a",
-          "executable": false
-        },
-        "factory/docs/adr/README.md": {
-          "type": "file",
-          "sha256": "d5f799ec666803078a361afc5e94a7cb3b5628c8f311d903d143fb1fc362be83",
-          "executable": false
-        },
-        "factory/docs/development/README.md": {
-          "type": "file",
-          "sha256": "e61c4c046b5ebdde10243aec0e2f19d18239b6aa8be7f3ee6be2edbbfaf368a4",
-          "executable": false
-        },
-        "factory/docs/development/release.md": {
-          "type": "file",
-          "sha256": "45e22f2d86c4fa9ca8f4556162e1332e227073f2d69bd161a35743d2c8e760b4",
-          "executable": false
-        },
-        "factory/docs/usage/README.md": {
-          "type": "file",
-          "sha256": "b6ea9e106218d2bd2bcaf4cdecc3524c79bdb207cf3342f7db6ff98da3685105",
-          "executable": false
-        },
-        "factory/docs/usage/factory-configuration.md": {
-          "type": "file",
-          "sha256": "eff45b64ab6e0adbedfc980bdb137803b0a254b79fc8496193d9ade2daf8e5d9",
-          "executable": false
-        },
-        "factory/docs/usage/host.md": {
-          "type": "file",
-          "sha256": "2c0eca4ebce2d18839a57b0b868f118ae01465daa54175d6b4700b4c66485319",
-          "executable": false
-        },
-        "factory/docs/usage/sandbox-image.md": {
-          "type": "file",
-          "sha256": "5f13327ccee9e9762e2ead8ce6c6e151b2d0f9ef1541b9cef833d5b43b58cc2b",
-          "executable": false
-        },
-        "factory/package-lock.json": {
-          "type": "file",
-          "sha256": "133f70e8cdf9adc0beafc55842e4a80e82118e0847bce3823b31fbba0d375269",
-          "executable": false
-        },
-        "factory/package.json": {
-          "type": "file",
-          "sha256": "95ac55d487943b2400b0ee025dffff4f51a5c8601ba941c5a71b5366e5a7bc6d",
-          "executable": false
-        },
-        "factory/src/agent-layer.Dockerfile": {
-          "type": "file",
-          "sha256": "15d5f1c7e40a4060e9a3b638597a18562cc53f342f599bba68692c9d2625c14f",
-          "executable": false
-        },
-        "factory/src/clone.ts": {
-          "type": "file",
-          "sha256": "e23410d2fc80b08b583e8490476f897f6ddb8e42e2493a0dee5b85f596227f8b",
-          "executable": false
-        },
-        "factory/src/factory-configuration.ts": {
-          "type": "file",
-          "sha256": "571e61793c88c62ec9399352d76fc71df99b8097d8c85ea733a98f06606a3b9e",
-          "executable": false
-        },
-        "factory/src/factory.ts": {
-          "type": "file",
-          "sha256": "54bdd84b69197ca18aff31485f8dde74f02d8c11442103be32c79bb453de8038",
-          "executable": false
-        },
-        "factory/src/github-token.ts": {
-          "type": "file",
-          "sha256": "817a9d75d15fe50344c8264429788e4bc916f7fba48c6da0da5741ccf88ef98b",
-          "executable": false
-        },
-        "factory/src/github.ts": {
-          "type": "file",
-          "sha256": "793ee0a677ad4c1e0d457b1566829abbe0ff7c51c50c730337df5487ab34481d",
-          "executable": false
-        },
-        "factory/src/host-configuration.ts": {
-          "type": "file",
-          "sha256": "27f7242d3258e71e2faeeb00b1600c8a0b373a7ca1b4c5ca2949a0017c8254a3",
-          "executable": false
-        },
-        "factory/src/host.ts": {
-          "type": "file",
-          "sha256": "3775bd28bf23a85a85f3d40fe6a651ce06f3eacf8d7765a1f1b4ba2c8dbc3d7e",
-          "executable": false
-        },
-        "factory/src/main.ts": {
-          "type": "file",
-          "sha256": "90fc67f1c5372749c80085b91cba52a628ba42cd3fbab91d18746c00cd97b3fd",
-          "executable": false
-        },
-        "factory/src/pause.ts": {
-          "type": "file",
-          "sha256": "9725e5259e8772e83a29b5e71bc586567f0ea3f06821f3148813d8b97fa3b745",
-          "executable": false
-        },
-        "factory/src/providers.ts": {
-          "type": "file",
-          "sha256": "4b445eb143d49e399a5bf0c58481fbeae0bb83df45b0927546d957908109e7e9",
-          "executable": false
-        },
-        "factory/src/providers/claude-code.ts": {
-          "type": "file",
-          "sha256": "3d220de9f17d38e083a6c74f6f06f002ddb1244318c0664fc88151bb9d140779",
-          "executable": false
-        },
-        "factory/src/providers/codex.ts": {
-          "type": "file",
-          "sha256": "237ae1e285d519338d949f8499be1bebf5d80fe2115265c1ccf46de010f81464",
-          "executable": false
-        },
-        "factory/src/providers/launch.ts": {
-          "type": "file",
-          "sha256": "f58c0e5f7d222af6c5914ca2ca139600d041c79274527bc4c8be34611644770c",
-          "executable": false
-        },
-        "factory/src/providers/limit.ts": {
-          "type": "file",
-          "sha256": "a05506b96795194af535993a22f2e564067f09bb17af55c08cf499dbde039535",
-          "executable": false
-        },
-        "factory/src/providers/usage.ts": {
-          "type": "file",
-          "sha256": "4a2a4b5de270e7371bdc90889f64597ddbc4b03bc978ed800d97f5b5d32fa7b0",
-          "executable": false
-        },
-        "factory/src/readiness.ts": {
-          "type": "file",
-          "sha256": "31f3bf5cfae040fec82025b8f945ea450bada24f4f572e31acb692145e3acb1f",
-          "executable": false
-        },
-        "factory/src/redaction.ts": {
-          "type": "file",
-          "sha256": "afebdb2416b05c38cf5362bedc77b763311db2e67703732ef5b24cebf4a65632",
-          "executable": false
-        },
-        "factory/src/run-log.ts": {
-          "type": "file",
-          "sha256": "5c7c1344e32724d6ac2f9916ee5c96d8c8c09328d775d5c75438a718066de9e4",
-          "executable": false
-        },
-        "factory/src/run-outcome.ts": {
-          "type": "file",
-          "sha256": "34c56c9bf5f39d9537e7c1f408bc6743ea650c3226b6526d925ce1879f03f075",
-          "executable": false
-        },
-        "factory/src/sandbox-image.ts": {
-          "type": "file",
-          "sha256": "0665f2241a42e432708dcdb9dfe27a049bd6a4954ef3e29e23bf8f04f6e9f46b",
-          "executable": false
-        },
-        "factory/src/status.ts": {
-          "type": "file",
-          "sha256": "1264f2ad195dfe6af34998368ecd6d6f8bca61a0463942909017ff5a2e65968d",
-          "executable": false
-        },
-        "factory/src/usage.ts": {
-          "type": "file",
-          "sha256": "6c54d4852be5d5e4c6553e62f2ddaec8224d48d7915225bcdee6b07e5dd2e821",
-          "executable": false
-        },
-        "factory/test/agent-layer-fixture.ts": {
-          "type": "file",
-          "sha256": "bb1e7c9823723abc833d3dd05f6b150d54b06add335e55c402f98ad94b098a29",
-          "executable": false
-        },
-        "factory/test/agent-layer-upstream.test.ts": {
-          "type": "file",
-          "sha256": "971f3acdd0d8397806c8da3916f0cef71e1b7bc011f46b52ae916b45cd3b4e2e",
-          "executable": false
-        },
-        "factory/test/agent-layer.test.ts": {
-          "type": "file",
-          "sha256": "1b0116d664bd70fa6479ba7d752058950a50954d09f84fad7739b7db6707500c",
-          "executable": false
-        },
-        "factory/test/boundary.test.ts": {
-          "type": "file",
-          "sha256": "22ffcb730d81aa91d4ec6c9296b5157ccc9215eeee0b855d5d9e7d6a5fb395b0",
-          "executable": false
-        },
-        "factory/test/claude-code.test.ts": {
-          "type": "file",
-          "sha256": "5a2a8d9c2da0a7d4abe77087f921ed2875daf8e4b7c9935e6b2e69f3be043675",
-          "executable": false
-        },
-        "factory/test/codex.test.ts": {
-          "type": "file",
-          "sha256": "a2263833d574be43afbcd2664d6f8343fc349566636d3c01867f03cc94d0e792",
-          "executable": false
-        },
-        "factory/test/factory-configuration.test.ts": {
-          "type": "file",
-          "sha256": "c36bc55644060102516bfda27aca4624a57172a8e5585d42845220b21f8a71ad",
-          "executable": false
-        },
-        "factory/test/factory.test.ts": {
-          "type": "file",
-          "sha256": "5bc5d9bd12d2b58fd8e5ffbc647e9ff18cbd0bb3b6ca66005f77b7812c47e6ce",
-          "executable": false
-        },
-        "factory/test/fakes.ts": {
-          "type": "file",
-          "sha256": "2e2262c7e95a9aa74be9ff19b8260ec40d26397b06a92bd037574353237c1a49",
-          "executable": false
-        },
-        "factory/test/fixtures/claude-usage.json": {
-          "type": "file",
-          "sha256": "88154809c3187cef799936fb2c3a61753213d26f4516bb2badd2e59200166f9a",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/array.json": {
-          "type": "file",
-          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/empty.json": {
-          "type": "file",
-          "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/malformed-objects.json": {
-          "type": "file",
-          "sha256": "0307f9331c47ad6adac514a0f01da601cd43e69fcb105f4d078bb2126d2d9329",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/malformed.json": {
-          "type": "file",
-          "sha256": "bfc4ec676cbd2f59203ec9685f971e36d167507a2ac84e2ddb8bacd2c3a74a5e",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/missing-labels.json": {
-          "type": "file",
-          "sha256": "f292965e3043460f4380380527f6177f22fff01971ecb64a97feb48d8fa0f594",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/missing.json": {
-          "type": "file",
-          "sha256": "a76747054004936f5ddae8dc9f340ebd9f21c52b62589c11f82345d5226c49c7",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/null.json": {
-          "type": "file",
-          "sha256": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/overlapping-labels.json": {
-          "type": "file",
-          "sha256": "ba71bd9679329c372da9792fe59e656c8dea917ddd937c2c98d12d90c8c02cb7",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/unknown.json": {
-          "type": "file",
-          "sha256": "56a11ad027e04744d770ea0300ed3b457a7c127f8520c2609012be03be1f9ba6",
-          "executable": false
-        },
-        "factory/test/fixtures/factory-configuration/valid.json": {
-          "type": "file",
-          "sha256": "1e504e3d04787e11ca808deea0994dc10d8f12c2fff2726c68dabd85b7425133",
-          "executable": false
-        },
-        "factory/test/fixtures/host-configuration/malformed.json": {
-          "type": "file",
-          "sha256": "0baf0102afb969cc73946b3cfe0f0b2944bf524d6e203efab920fbe8fa52ef67",
-          "executable": false
-        },
-        "factory/test/fixtures/host-configuration/missing.json": {
-          "type": "file",
-          "sha256": "0d361b2f85f8fa7ab71a62df3aea15e83149e1552f3dba1dcd6b28141dedc43d",
-          "executable": false
-        },
-        "factory/test/fixtures/host-configuration/unknown.json": {
-          "type": "file",
-          "sha256": "d5977171357a811ccb0aa422f0d73f9d991213242f86b41075e9ff6f512d2185",
-          "executable": false
-        },
-        "factory/test/fixtures/host-configuration/unresolvable-models.json": {
-          "type": "file",
-          "sha256": "5a316d50aeb781d9753a45c69aacd8d96918d89b71de6c1ef69a9f4396562b9a",
-          "executable": false
-        },
-        "factory/test/fixtures/host-configuration/valid.json": {
-          "type": "file",
-          "sha256": "d4171ddadedc2bd27f4d1ed34bb6a4bdb471631b72106ee174023b3f12fa9a4f",
-          "executable": false
-        },
-        "factory/test/github-token.test.ts": {
-          "type": "file",
-          "sha256": "0e05ea26367884ce0e00bbca32a1375bd55f392637aab1c7358b223956a17551",
-          "executable": false
-        },
-        "factory/test/host-configuration.test.ts": {
-          "type": "file",
-          "sha256": "9df769e390eaa19587756b02f66ad998c5e1752640078d71f5346f87406d2340",
-          "executable": false
-        },
-        "factory/test/host.test.ts": {
-          "type": "file",
-          "sha256": "918bf2142531748f0f2e5f1060236c06f093a50661052bd4f79e5b6e7b6882c8",
-          "executable": false
-        },
-        "factory/test/pause.test.ts": {
-          "type": "file",
-          "sha256": "5b60db0ffa2bb43c0c800b4f369a0d7e5449c8d57b4055f188e73642ecfa986f",
-          "executable": false
-        },
-        "factory/test/providers.test.ts": {
-          "type": "file",
-          "sha256": "08431bfa04d7de8a5b4e1b75ac833978ba1734d1050a2157ec5a5550f2ba0d9c",
-          "executable": false
-        },
-        "factory/test/redaction.test.ts": {
-          "type": "file",
-          "sha256": "59e322e565d1ec21e8f46cc0a838ef52f751c52ee5af860fe8217875befe1e3e",
-          "executable": false
-        },
-        "factory/test/run-log.test.ts": {
-          "type": "file",
-          "sha256": "05d863ab793e033552f2db79d9343f0cc941e255d2f6d7f0f10f3101e7582efa",
-          "executable": false
-        },
-        "factory/test/sandbox-image-build.test.ts": {
-          "type": "file",
-          "sha256": "8de7c8444e1deff5967253229cd9005e9c0be6364a70c0ca8aa80594bc8b47b0",
-          "executable": false
-        },
-        "factory/test/sandbox-image.test.ts": {
-          "type": "file",
-          "sha256": "96eae74cf590375740098d23c85305427bc785414a455bfb9508bde55046ce1a",
-          "executable": false
-        },
-        "factory/test/sandcastle.test.ts": {
-          "type": "file",
-          "sha256": "f7dbc43f098e0a73b99f9f85b8e35e1e1b6a0ae787903f012033dc86569f4abc",
-          "executable": false
-        },
-        "factory/test/usage.test.ts": {
-          "type": "file",
-          "sha256": "8d737ceee670c6c17eb19a533401cdbbe6a4104d17b5b2ec96a732e726c68af2",
-          "executable": false
-        },
-        "factory/tsconfig.json": {
-          "type": "file",
-          "sha256": "9b3c16a657856ebc509993e6d363459ae218241c5e37157147c590dc01b73a06",
+          "sha256": "fa82bea042b1a0e09dfee0af47b75b260f6e2df0cc8e210aaf03157a6ce98433",
           "executable": false
         },
         "guidance/documentation.md": {
@@ -3758,9 +3347,14 @@
           "sha256": "41f077815b16fb3d9ff3bac40aab8faf4793c1cdf60bf1095e833c5144d200e3",
           "executable": false
         },
+        "guidance/git-attributes.md": {
+          "type": "file",
+          "sha256": "c59a49399cafd1a041f025c0a6ed7168accd49c1a4a2a4a42d9599b8e7b4f352",
+          "executable": false
+        },
         "guidance/github-repository-configuration.md": {
           "type": "file",
-          "sha256": "63191b726a80239a8fb1d8ecfc3fe182afaf53a26d37ce08cafe459c3a617397",
+          "sha256": "e3a665efa3c83001e760c068b7292d0ad26e5802e78e57e9b4f3153017a70f28",
           "executable": false
         },
         "guidance/project-agent-guidance.md": {
@@ -3780,12 +3374,12 @@
         },
         "guidance/repository-readme.md": {
           "type": "file",
-          "sha256": "04cfc59edc876a1a18155eb2c21658a8aaf2b40df27e521d09c7ec0fb434b639",
+          "sha256": "7fa40975fd226155ed578bddda6f56735088f90e667e8ce4bbcad30753ac4bb8",
           "executable": false
         },
         "operations/check-documentation.mjs": {
           "type": "file",
-          "sha256": "c94a576f09e960743d8921b4d54b3daa6d5ef375d572d783f133b53691cb6b1f",
+          "sha256": "dd94d2363cbe9055ddaeea21912832493910c30fec77957bdab9747b13ac194b",
           "executable": false
         },
         "operations/check-project-readmes.mjs": {
@@ -3800,7 +3394,7 @@
         },
         "operations/check-repository-readme.mjs": {
           "type": "file",
-          "sha256": "5487400a3eae51dca7b18d2050799172afafb3722ce780d4288426a85c8c6e52",
+          "sha256": "239f171f9001399ee5d8ac8b70dee260a8a4d0286aabbf50382c5432063cd502",
           "executable": false
         },
         "operations/lib/documentation-model.mjs": {
@@ -3810,12 +3404,12 @@
         },
         "operations/lib/entry-document.mjs": {
           "type": "file",
-          "sha256": "7756460392aed9a726dc137191a2ea870034885ae8dc30b24fba3577096b149d",
+          "sha256": "e6cc26f432c535a5fb8c221c71ed7f69d02ae4ff7a597d87542ec9db0f647a99",
           "executable": false
         },
         "operations/lib/github-operation.mjs": {
           "type": "file",
-          "sha256": "b393276e6a8a33ec45ca6dc450136f4ec8368815679db9a6b99b17c3f9cbab20",
+          "sha256": "0d990a42f5e856364088b88fa85122c4694b08445e6ba4eaa653d7645e05e08b",
           "executable": false
         },
         "operations/lib/local-markdown-links.mjs": {
@@ -3830,7 +3424,7 @@
         },
         "operations/lib/rendered-markdown.mjs": {
           "type": "file",
-          "sha256": "b885d1cd1650e61c616b6f2917b4074bc752282626b4d5eee01df4d5a923b267",
+          "sha256": "710997b67b6595e453792340479f0508a5e69f0d41ae087c24cce7692b37c3db",
           "executable": false
         },
         "operations/probe-github-labels.mjs": {
@@ -3845,12 +3439,12 @@
         },
         "operations/setup-github-labels.mjs": {
           "type": "file",
-          "sha256": "d23858154d396d2476c401da1d7a8be8921790109b43810dafa9a249e947d5e0",
+          "sha256": "459e4ee17bd90de326646a64fe3c78736706c0fedda05d564d237e7fcd45901b",
           "executable": false
         },
         "operations/setup-github-pr-integration.mjs": {
           "type": "file",
-          "sha256": "7276b9f2c99c7f8a88cf6348e8f14548d4c133c3eee813a7a1eadb36f92b0e45",
+          "sha256": "e7cbca73864fed11c2e619bfb3fe2b141974263504183021ee16e4a73b07ca0b",
           "executable": false
         },
         "package-lock.json": {
@@ -3875,12 +3469,17 @@
         },
         "rules/factory-workflow.md": {
           "type": "file",
-          "sha256": "40cc000c8d7b61140cbb597757f3c6ddc97cfe77536aeed514d9607d75ce4397",
+          "sha256": "843af2abf8a7630bb62897097a057770762f9a49c292c884fa3a206b0ebc4292",
+          "executable": false
+        },
+        "rules/git-attributes.md": {
+          "type": "file",
+          "sha256": "ab620ee13b0524c558e1223e1e1819106929cd28b66d1bf90f3c487dc8dd0609",
           "executable": false
         },
         "rules/github-repository-configuration.md": {
           "type": "file",
-          "sha256": "d40bff6ca87da9dd5222bdd52b6fb572904d40f1e621f2407e1e8d28acc87c8b",
+          "sha256": "cce5eb543ba67502251d0d602caaf33fb5ee4062269937c9487bd69258d7139e",
           "executable": false
         },
         "rules/project-agent-guidance.md": {
@@ -3900,7 +3499,7 @@
         },
         "rules/repository-readme.md": {
           "type": "file",
-          "sha256": "aa9570c4e752a733e33a117cfecdd995844cd3698d4fafe652619b51cbff40a6",
+          "sha256": "f452546f39dcf5e34f197630ed5f7dae9a16dab47970e44a4532d9b65e9711ab",
           "executable": false
         },
         "scripts/create-engineering-skill-fixtures.mjs": {
@@ -3910,7 +3509,7 @@
         },
         "scripts/create-planning-skill-fixtures.mjs": {
           "type": "file",
-          "sha256": "7fcbbbd334346091cd0da7b4075783fdcfb864f1e06311e5c6e514e9c23bd00d",
+          "sha256": "5a600e41e280f3a24fec0593d10a0025b045efb4aed46e7e02bf9ecb10e27aa0",
           "executable": false
         },
         "scripts/create-productivity-skill-fixtures.mjs": {
@@ -3920,7 +3519,7 @@
         },
         "scripts/release/adoption-fixture.mjs": {
           "type": "file",
-          "sha256": "dc28ca32f2bed4a09bd1cee1476a2ee613a016dd3f13f8c948b219da335955e4",
+          "sha256": "06571dbdf0fe995f30b54a57f678866caa4868c7f803f8ad4083d81edb7a7560",
           "executable": false
         },
         "scripts/release/adoption.mjs": {
@@ -3958,6 +3557,16 @@
           "sha256": "61b4e6f4f6c066b725790632de78adf3719f763048389df653dd5f1ac06af462",
           "executable": false
         },
+        "scripts/support/repository-standards/SKILL.md": {
+          "type": "file",
+          "sha256": "943ac43ebf5e7ab1dd8f9dcf59e4833dedc19514cbc9f52cb1f54eb5f4e68e7b",
+          "executable": false
+        },
+        "scripts/support/repository-standards/rules.mjs": {
+          "type": "file",
+          "sha256": "f1c35d033d4b1bbc7a28e8a63553e848e9b9cd114231dba1d8560c49bf2c1c15",
+          "executable": false
+        },
         "scripts/validate-issue-contract.mjs": {
           "type": "file",
           "sha256": "f7e604f218f7aab8eaa53e537aa8bdd079f9208be4f8866b5333278d92d9ea3e",
@@ -3965,7 +3574,7 @@
         },
         "standards.yaml": {
           "type": "file",
-          "sha256": "9c8ef68a8d93f114f33b8f7ed1017b2336c8ca1a799160560a33ed58eae59d8c",
+          "sha256": "c82b974f3469552648c28f9b71065d4f8ecfd5bbf4cfdeae11e364286f070dae",
           "executable": false
         },
         "test/babysit-merge.test.mjs": {
@@ -3975,12 +3584,12 @@
         },
         "test/babysit-wait.test.mjs": {
           "type": "file",
-          "sha256": "16d92f1c6a3b183d413a09ae254c25c7eceb28d8f47e04a9d5ff852d3b4fb375",
+          "sha256": "a78607134b173c1b0e5cd0cde41166992850d77a9a607592f4fca5f6d0e1cf3f",
           "executable": false
         },
         "test/documentation-check.test.mjs": {
           "type": "file",
-          "sha256": "e58d0208af0ed707bab1ae9332d4f995a4116c91737b99863730a0addd318f43",
+          "sha256": "dc521c20fa29be91e9b558282adb61f037800ea4f09d620eb288ef5baa4c89f0",
           "executable": false
         },
         "test/documentation-model.test.mjs": {
@@ -3990,7 +3599,7 @@
         },
         "test/documentation-scope-drafter.test.mjs": {
           "type": "file",
-          "sha256": "d78fec1fb888b80aefa4011a88751e1ce167910b0155f86a1adb33343de39320",
+          "sha256": "84d4633a9c20ec534750fbd23fa0a849febc9c5947862b771244cb40a382caa0",
           "executable": false
         },
         "test/engineering-skill-fixtures.test.mjs": {
@@ -4055,7 +3664,7 @@
         },
         "test/fixtures/reviewers/codex.json": {
           "type": "file",
-          "sha256": "556b981cb82beee87a3759dac0f8d3723ed6805e69d9f03f3abbdf743cc72c51",
+          "sha256": "0ef25c9c8abf367924209d9ea032b1d3c7ff70351f94d74f65cd5560821a300c",
           "executable": false
         },
         "test/fixtures/reviewers/github-review.json": {
@@ -4065,7 +3674,7 @@
         },
         "test/github-label-setup.test.mjs": {
           "type": "file",
-          "sha256": "6d882cddee4130f9b6fdb2aa0c84df2d04b38e3535968b9060f22e1b60906e19",
+          "sha256": "3be7e304c8371d987447b87be9460b1de55488b2e08eaafd1efa103ad47e4c13",
           "executable": false
         },
         "test/github-operation.test.mjs": {
@@ -4075,12 +3684,12 @@
         },
         "test/github-pr-integration-setup.test.mjs": {
           "type": "file",
-          "sha256": "47a70876c56a92e60a781aec9fa586eaf3853aac639fbb022f1a71ccdf66c796",
+          "sha256": "500e246ffb9e3c999b44d609ac88e58127f83b0bc4fff0c0bc956474cfdd4a32",
           "executable": false
         },
         "test/github-setup-probes.test.mjs": {
           "type": "file",
-          "sha256": "4b189b0824f82ed9afa108451c9bd37fb0270e8cd833247649b58256ff7244e0",
+          "sha256": "327081ab88b37bf74c4a9ecbf0be4299c86f21e6fd743736ffbf5cefccc7187a",
           "executable": false
         },
         "test/helpers/documentation.mjs": {
@@ -4090,12 +3699,12 @@
         },
         "test/helpers/fake-gh.mjs": {
           "type": "file",
-          "sha256": "ea96294621c16c23562de58fbc18589c93cae80cf6f65ebeaf34dcb22b4bac92",
+          "sha256": "3119e959cc1fa7a39dcae7ae8261e7f6e71a4458198cf60efc81e99eec5257a8",
           "executable": false
         },
         "test/helpers/github-setup.mjs": {
           "type": "file",
-          "sha256": "40ec372373f597c3390d4d41cacf5f28f352b9834bc25a4ae43ad11069173b12",
+          "sha256": "f18731eed5994cb29c37dfb480dec7c4554a0ce73ccde79233b8b8df718e647b",
           "executable": false
         },
         "test/helpers/installed-validator.mjs": {
@@ -4125,17 +3734,17 @@
         },
         "test/planning-shape-rules.test.mjs": {
           "type": "file",
-          "sha256": "671525825c20575c59cd6d0841a439b7b20b0d5e127eb4c1e0187bf9b005f251",
+          "sha256": "ebc35528ff4569b253a12e693beb66b8f8cb1bc445c17431a867b09b340eac4c",
           "executable": false
         },
         "test/planning-skill-fixtures.test.mjs": {
           "type": "file",
-          "sha256": "5b079cb1ebb82ff0f5200613878050a9fe6dbcac73f43be4c8a8237c073dc538",
+          "sha256": "3fafa2b7d9a035c8e118524b07778470c918cb40bbfe6ebf89bc97d4c8604827",
           "executable": false
         },
         "test/pr-metadata.test.mjs": {
           "type": "file",
-          "sha256": "576177e07f3a44312e6ee3b792cbf515d0148cc020ad3d601aa7b883638cd9a2",
+          "sha256": "953a90ea1371f7be4d3137f1c9ff8d12fc52795ff5451e58d1a280dcafcf0219",
           "executable": false
         },
         "test/productivity-skill-fixtures.test.mjs": {
@@ -4165,12 +3774,12 @@
         },
         "test/rendered-markdown.test.mjs": {
           "type": "file",
-          "sha256": "f794b86bb1a11a7cee2471cfa8cf0e6a090e9ed96ee2953146b38d3fc0a36e61",
+          "sha256": "b6f3f407032328645a6927423875aa999ad2354c071263a78006da55411bde10",
           "executable": false
         },
         "test/repository-conformance.test.mjs": {
           "type": "file",
-          "sha256": "c3498bdc8aebb8e1069b94734957b0e66e1ed2980487cbeb515089881018adbe",
+          "sha256": "ceeb9c011b902e49ebb9cfd623cc63aaa2e6c7397742e67f82d03be42afb508b",
           "executable": false
         },
         "test/repository-license.test.mjs": {
@@ -4180,12 +3789,12 @@
         },
         "test/repository-readme-check.test.mjs": {
           "type": "file",
-          "sha256": "f7e04794d60014330cb7e84b7d6b97628f8094e3d7ef365de2230d1ac4f4c590",
+          "sha256": "497ca564f00a927940df8e75c6087b2a156ae2fda51d034a74d8fa363b6eb0d5",
           "executable": false
         },
         "test/repository-wide-rules.test.mjs": {
           "type": "file",
-          "sha256": "cc841aaa4d62d94228ba204186002d7d916a302b35158d1e54ee5cd66a61a8e7",
+          "sha256": "3e8b18b1e7a4e9bc4162fdb18149412298236953b314300d8295310e172b5c01",
           "executable": false
         },
         "test/sandbox-image-workflow.test.mjs": {
@@ -4443,26 +4052,6 @@
           "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090",
           "executable": false
         },
-        "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md": {
-          "type": "file",
-          "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f",
-          "executable": false
-        },
-        "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md": {
-          "type": "file",
-          "sha256": "1fbf9b432130c6380aa65813b55553cfda150309b27c595e183f8e335b8a190d",
-          "executable": false
-        },
-        "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md": {
-          "type": "file",
-          "sha256": "917b0baf74be583e74f110857ed45df2766617f75c00baf61fd136d7af515edf",
-          "executable": false
-        },
-        "vendor/mattpocock-skills/skills/engineering/triage/agents/openai.yaml": {
-          "type": "file",
-          "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c",
-          "executable": false
-        },
         "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md": {
           "type": "file",
           "sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1",
@@ -4530,7 +4119,6 @@
           ".prettierignore",
           "AGENTS.md",
           "CONTRIBUTING.md",
-          "GLOSSARY-MAP.md",
           "GLOSSARY.md",
           "LICENSE",
           "README.md",
@@ -4538,7 +4126,6 @@
           "authoring-notes.md",
           "discovery",
           "docs",
-          "factory",
           "guidance",
           "operations",
           "package-lock.json",
@@ -4703,6 +4290,7 @@
         ],
         ".agents/skills/triage": [
           ".agents/skills/triage/AGENT-BRIEF.md",
+          ".agents/skills/triage/CREDITS.md",
           ".agents/skills/triage/OUT-OF-SCOPE.md",
           ".agents/skills/triage/SKILL.md",
           ".agents/skills/triage/agents"
@@ -4809,6 +4397,11 @@
           "docs/adr/0017-make-the-factory-an-optional-profile.md",
           "docs/adr/0018-install-only-workflow-skills.md",
           "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
+          "docs/adr/0020-release-the-factory-from-its-own-repository.md",
+          "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md",
+          "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md",
+          "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
+          "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
           "docs/adr/README.md"
         ],
         "docs/agents": [
@@ -4839,117 +4432,14 @@
         "docs/usage": [
           "docs/usage/README.md",
           "docs/usage/adopt-repo-canon.md",
+          "docs/usage/stacks.md",
           "docs/usage/versioning.md"
-        ],
-        "factory": [
-          "factory/GLOSSARY.md",
-          "factory/README.md",
-          "factory/docs",
-          "factory/package-lock.json",
-          "factory/package.json",
-          "factory/src",
-          "factory/test",
-          "factory/tsconfig.json"
-        ],
-        "factory/docs": [
-          "factory/docs/README.md",
-          "factory/docs/adr",
-          "factory/docs/development",
-          "factory/docs/usage"
-        ],
-        "factory/docs/adr": [
-          "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md",
-          "factory/docs/adr/README.md"
-        ],
-        "factory/docs/development": [
-          "factory/docs/development/README.md",
-          "factory/docs/development/release.md"
-        ],
-        "factory/docs/usage": [
-          "factory/docs/usage/README.md",
-          "factory/docs/usage/factory-configuration.md",
-          "factory/docs/usage/host.md",
-          "factory/docs/usage/sandbox-image.md"
-        ],
-        "factory/src": [
-          "factory/src/agent-layer.Dockerfile",
-          "factory/src/clone.ts",
-          "factory/src/factory-configuration.ts",
-          "factory/src/factory.ts",
-          "factory/src/github-token.ts",
-          "factory/src/github.ts",
-          "factory/src/host-configuration.ts",
-          "factory/src/host.ts",
-          "factory/src/main.ts",
-          "factory/src/pause.ts",
-          "factory/src/providers",
-          "factory/src/providers.ts",
-          "factory/src/readiness.ts",
-          "factory/src/redaction.ts",
-          "factory/src/run-log.ts",
-          "factory/src/run-outcome.ts",
-          "factory/src/sandbox-image.ts",
-          "factory/src/status.ts",
-          "factory/src/usage.ts"
-        ],
-        "factory/src/providers": [
-          "factory/src/providers/claude-code.ts",
-          "factory/src/providers/codex.ts",
-          "factory/src/providers/launch.ts",
-          "factory/src/providers/limit.ts",
-          "factory/src/providers/usage.ts"
-        ],
-        "factory/test": [
-          "factory/test/agent-layer-fixture.ts",
-          "factory/test/agent-layer-upstream.test.ts",
-          "factory/test/agent-layer.test.ts",
-          "factory/test/boundary.test.ts",
-          "factory/test/claude-code.test.ts",
-          "factory/test/codex.test.ts",
-          "factory/test/factory-configuration.test.ts",
-          "factory/test/factory.test.ts",
-          "factory/test/fakes.ts",
-          "factory/test/fixtures",
-          "factory/test/github-token.test.ts",
-          "factory/test/host-configuration.test.ts",
-          "factory/test/host.test.ts",
-          "factory/test/pause.test.ts",
-          "factory/test/providers.test.ts",
-          "factory/test/redaction.test.ts",
-          "factory/test/run-log.test.ts",
-          "factory/test/sandbox-image-build.test.ts",
-          "factory/test/sandbox-image.test.ts",
-          "factory/test/sandcastle.test.ts",
-          "factory/test/usage.test.ts"
-        ],
-        "factory/test/fixtures": [
-          "factory/test/fixtures/claude-usage.json",
-          "factory/test/fixtures/factory-configuration",
-          "factory/test/fixtures/host-configuration"
-        ],
-        "factory/test/fixtures/factory-configuration": [
-          "factory/test/fixtures/factory-configuration/array.json",
-          "factory/test/fixtures/factory-configuration/empty.json",
-          "factory/test/fixtures/factory-configuration/malformed-objects.json",
-          "factory/test/fixtures/factory-configuration/malformed.json",
-          "factory/test/fixtures/factory-configuration/missing-labels.json",
-          "factory/test/fixtures/factory-configuration/missing.json",
-          "factory/test/fixtures/factory-configuration/null.json",
-          "factory/test/fixtures/factory-configuration/overlapping-labels.json",
-          "factory/test/fixtures/factory-configuration/unknown.json",
-          "factory/test/fixtures/factory-configuration/valid.json"
-        ],
-        "factory/test/fixtures/host-configuration": [
-          "factory/test/fixtures/host-configuration/malformed.json",
-          "factory/test/fixtures/host-configuration/missing.json",
-          "factory/test/fixtures/host-configuration/unknown.json",
-          "factory/test/fixtures/host-configuration/unresolvable-models.json",
-          "factory/test/fixtures/host-configuration/valid.json"
         ],
         "guidance": [
           "guidance/documentation.md",
           "guidance/factory-sandbox-image.md",
           "guidance/factory-workflow.md",
+          "guidance/git-attributes.md",
           "guidance/github-repository-configuration.md",
           "guidance/project-agent-guidance.md",
           "guidance/project-readmes.md",
@@ -4979,6 +4469,7 @@
           "rules/documentation.md",
           "rules/factory-sandbox-image.md",
           "rules/factory-workflow.md",
+          "rules/git-attributes.md",
           "rules/github-repository-configuration.md",
           "rules/project-agent-guidance.md",
           "rules/project-readmes.md",
@@ -5003,7 +4494,12 @@
           "scripts/release/verify.mjs"
         ],
         "scripts/support": [
-          "scripts/support/fixture-authoring.mjs"
+          "scripts/support/fixture-authoring.mjs",
+          "scripts/support/repository-standards"
+        ],
+        "scripts/support/repository-standards": [
+          "scripts/support/repository-standards/SKILL.md",
+          "scripts/support/repository-standards/rules.mjs"
         ],
         "test": [
           "test/babysit-merge.test.mjs",
@@ -5104,7 +4600,6 @@
           "vendor/mattpocock-skills/skills/engineering/tdd",
           "vendor/mattpocock-skills/skills/engineering/to-spec",
           "vendor/mattpocock-skills/skills/engineering/to-tickets",
-          "vendor/mattpocock-skills/skills/engineering/triage",
           "vendor/mattpocock-skills/skills/engineering/wayfinder"
         ],
         "vendor/mattpocock-skills/skills/engineering/code-review": [
@@ -5218,15 +4713,6 @@
         ],
         "vendor/mattpocock-skills/skills/engineering/to-tickets/agents": [
           "vendor/mattpocock-skills/skills/engineering/to-tickets/agents/openai.yaml"
-        ],
-        "vendor/mattpocock-skills/skills/engineering/triage": [
-          "vendor/mattpocock-skills/skills/engineering/triage/AGENT-BRIEF.md",
-          "vendor/mattpocock-skills/skills/engineering/triage/OUT-OF-SCOPE.md",
-          "vendor/mattpocock-skills/skills/engineering/triage/SKILL.md",
-          "vendor/mattpocock-skills/skills/engineering/triage/agents"
-        ],
-        "vendor/mattpocock-skills/skills/engineering/triage/agents": [
-          "vendor/mattpocock-skills/skills/engineering/triage/agents/openai.yaml"
         ],
         "vendor/mattpocock-skills/skills/engineering/wayfinder": [
           "vendor/mattpocock-skills/skills/engineering/wayfinder/SKILL.md",
@@ -5421,39 +4907,6 @@
         "docs/usage": {
           "type": "directory"
         },
-        "factory": {
-          "type": "directory"
-        },
-        "factory/docs": {
-          "type": "directory"
-        },
-        "factory/docs/adr": {
-          "type": "directory"
-        },
-        "factory/docs/development": {
-          "type": "directory"
-        },
-        "factory/docs/usage": {
-          "type": "directory"
-        },
-        "factory/src": {
-          "type": "directory"
-        },
-        "factory/src/providers": {
-          "type": "directory"
-        },
-        "factory/test": {
-          "type": "directory"
-        },
-        "factory/test/fixtures": {
-          "type": "directory"
-        },
-        "factory/test/fixtures/factory-configuration": {
-          "type": "directory"
-        },
-        "factory/test/fixtures/host-configuration": {
-          "type": "directory"
-        },
         "guidance": {
           "type": "directory"
         },
@@ -5473,6 +4926,9 @@
           "type": "directory"
         },
         "scripts/support": {
+          "type": "directory"
+        },
+        "scripts/support/repository-standards": {
           "type": "directory"
         },
         "test": {
@@ -5590,12 +5046,6 @@
           "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/to-tickets/agents": {
-          "type": "directory"
-        },
-        "vendor/mattpocock-skills/skills/engineering/triage": {
-          "type": "directory"
-        },
-        "vendor/mattpocock-skills/skills/engineering/triage/agents": {
           "type": "directory"
         },
         "vendor/mattpocock-skills/skills/engineering/wayfinder": {
@@ -5805,39 +5255,6 @@
         "docs/usage/.gitignore": {
           "type": "missing"
         },
-        "factory/.gitignore": {
-          "type": "missing"
-        },
-        "factory/docs/.gitignore": {
-          "type": "missing"
-        },
-        "factory/docs/adr/.gitignore": {
-          "type": "missing"
-        },
-        "factory/docs/development/.gitignore": {
-          "type": "missing"
-        },
-        "factory/docs/usage/.gitignore": {
-          "type": "missing"
-        },
-        "factory/src/.gitignore": {
-          "type": "missing"
-        },
-        "factory/src/providers/.gitignore": {
-          "type": "missing"
-        },
-        "factory/test/.gitignore": {
-          "type": "missing"
-        },
-        "factory/test/fixtures/.gitignore": {
-          "type": "missing"
-        },
-        "factory/test/fixtures/factory-configuration/.gitignore": {
-          "type": "missing"
-        },
-        "factory/test/fixtures/host-configuration/.gitignore": {
-          "type": "missing"
-        },
         "guidance/.gitignore": {
           "type": "missing"
         },
@@ -5857,6 +5274,9 @@
           "type": "missing"
         },
         "scripts/support/.gitignore": {
+          "type": "missing"
+        },
+        "scripts/support/repository-standards/.gitignore": {
           "type": "missing"
         },
         "test/.gitignore": {
@@ -5976,12 +5396,6 @@
         "vendor/mattpocock-skills/skills/engineering/to-tickets/agents/.gitignore": {
           "type": "missing"
         },
-        "vendor/mattpocock-skills/skills/engineering/triage/.gitignore": {
-          "type": "missing"
-        },
-        "vendor/mattpocock-skills/skills/engineering/triage/agents/.gitignore": {
-          "type": "missing"
-        },
         "vendor/mattpocock-skills/skills/engineering/wayfinder/.gitignore": {
           "type": "missing"
         },
@@ -6015,5 +5429,37 @@
       }
     }
   },
-  "scopeChanges": []
+  "scopeChanges": [
+    {
+      "id": "documentation",
+      "additions": [
+        "docs/adr/0020-release-the-factory-from-its-own-repository.md",
+        "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md",
+        "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md",
+        "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
+        "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
+        "docs/usage/stacks.md"
+      ],
+      "removals": [
+        "GLOSSARY-MAP.md",
+        "factory/GLOSSARY.md",
+        "factory/docs/README.md",
+        "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md",
+        "factory/docs/adr/README.md",
+        "factory/docs/development/README.md",
+        "factory/docs/development/release.md",
+        "factory/docs/usage/README.md",
+        "factory/docs/usage/factory-configuration.md",
+        "factory/docs/usage/host.md",
+        "factory/docs/usage/sandbox-image.md"
+      ]
+    },
+    {
+      "id": "project-readmes",
+      "additions": [],
+      "removals": [
+        "factory/README.md"
+      ]
+    }
+  ]
 }

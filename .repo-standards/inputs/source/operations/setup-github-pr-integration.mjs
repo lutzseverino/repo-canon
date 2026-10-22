@@ -22,10 +22,37 @@ const mergeSettings = {
   squash_merge_commit_message: "PR_BODY",
 };
 
+// GitHub's values for a new repository. Merge settings still at all of them
+// were never chosen, so the fix applies the standard without confirmation. One
+// other value, or one absent field, makes the whole set count as chosen.
+// https://docs.github.com/en/rest/repos/repos#create-an-organization-repository
+// https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/configuring-commit-squashing-for-pull-requests
+const stockMergeSettings = {
+  allow_squash_merge: true,
+  allow_merge_commit: true,
+  allow_rebase_merge: true,
+  squash_merge_commit_title: "COMMIT_OR_PR_TITLE",
+  squash_merge_commit_message: "COMMIT_MESSAGES",
+};
+const stockNote =
+  " The merge settings were at GitHub's stock values for a new repository, so no one had chosen them and they needed no confirmation.";
+
 function matchingMergeSettings(repository) {
   return Object.entries(mergeSettings).every(
     ([name, value]) => repository[name] === value,
   );
+}
+
+function atStockMergeSettings(repository) {
+  return Object.entries(stockMergeSettings).every(
+    ([name, value]) => repository[name] === value,
+  );
+}
+
+function mergeSettingChanges(repository) {
+  return atStockMergeSettings(repository)
+    ? []
+    : describeSettingChanges(repository, mergeSettings, "repository");
 }
 
 // GitHub refuses classic protection and rulesets with a 403 naming the upgrade
@@ -414,7 +441,7 @@ function setupMergeSettingsOnly(identity, repository, request, outcome) {
     requireOverwriteConfirmation(
       request,
       operationName,
-      describeSettingChanges(repository, mergeSettings, "repository"),
+      mergeSettingChanges(repository),
     )
   )
     return;
@@ -443,7 +470,7 @@ function setupMergeSettingsOnly(identity, repository, request, outcome) {
   }
   result(
     "changed",
-    `${operationName} changed ${identity}: ${effects.join(" and ")}. Final readback confirmed that ${outcome.changed}`,
+    `${operationName} changed ${identity}: ${effects.join(" and ")}. Final readback confirmed that ${outcome.changed}${atStockMergeSettings(repository) ? stockNote : ""}`,
   );
 }
 
@@ -562,11 +589,7 @@ function setupIntegration(request) {
     if (plan.kind !== "none") checkAction = { type: "ruleset", plan };
   }
   const settingsNeedUpdate = !matchingMergeSettings(repository);
-  const changes = describeSettingChanges(
-    repository,
-    mergeSettings,
-    "repository",
-  );
+  const changes = mergeSettingChanges(repository);
   if (checkAction?.type === "branch") {
     const contexts = branchBefore.value.statusChecks.contexts;
     changes.push(
@@ -715,7 +738,7 @@ function setupIntegration(request) {
   }
   result(
     "changed",
-    `${operationName} changed ${inferred.identity}: ${effects.join(" and ")}. Final readback confirmed ${checkName}, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved.`,
+    `${operationName} changed ${inferred.identity}: ${effects.join(" and ")}. Final readback confirmed ${checkName}, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved.${atStockMergeSettings(repository) ? stockNote : ""}`,
   );
 }
 

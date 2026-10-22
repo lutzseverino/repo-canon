@@ -15,8 +15,8 @@
         "id": "canonical-labels"
       },
       "operationIndex": 0,
-      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
-      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "before": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
+      "after": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -35,8 +35,8 @@
         "id": "pull-request-integration"
       },
       "operationIndex": 1,
-      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
-      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "before": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
+      "after": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -46,7 +46,6 @@
       "scope": {
         "documentation": {
           "paths": [
-            "GLOSSARY-MAP.md",
             "GLOSSARY.md",
             "authoring-notes.md",
             "docs/README.md",
@@ -69,6 +68,11 @@
             "docs/adr/0017-make-the-factory-an-optional-profile.md",
             "docs/adr/0018-install-only-workflow-skills.md",
             "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
+            "docs/adr/0020-release-the-factory-from-its-own-repository.md",
+            "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md",
+            "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md",
+            "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
+            "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
             "docs/adr/README.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
@@ -88,17 +92,8 @@
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
-            "docs/usage/versioning.md",
-            "factory/GLOSSARY.md",
-            "factory/docs/README.md",
-            "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md",
-            "factory/docs/adr/README.md",
-            "factory/docs/development/README.md",
-            "factory/docs/development/release.md",
-            "factory/docs/usage/README.md",
-            "factory/docs/usage/factory-configuration.md",
-            "factory/docs/usage/host.md",
-            "factory/docs/usage/sandbox-image.md"
+            "docs/usage/stacks.md",
+            "docs/usage/versioning.md"
           ],
           "directories": []
         },
@@ -112,6 +107,12 @@
           "paths": [],
           "directories": []
         },
+        "git-attributes": {
+          "paths": [
+            ".gitattributes"
+          ],
+          "directories": []
+        },
         "github-repository-configuration": {
           "paths": [],
           "directories": []
@@ -123,9 +124,7 @@
           "directories": []
         },
         "project-readmes": {
-          "paths": [
-            "factory/README.md"
-          ],
+          "paths": [],
           "directories": []
         },
         "repository-license": {
@@ -141,8 +140,8 @@
           "directories": []
         }
       },
-      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
-      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "before": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
+      "after": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -152,7 +151,6 @@
       "scope": {
         "documentation": {
           "paths": [
-            "GLOSSARY-MAP.md",
             "GLOSSARY.md",
             "authoring-notes.md",
             "docs/README.md",
@@ -175,6 +173,11 @@
             "docs/adr/0017-make-the-factory-an-optional-profile.md",
             "docs/adr/0018-install-only-workflow-skills.md",
             "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
+            "docs/adr/0020-release-the-factory-from-its-own-repository.md",
+            "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md",
+            "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md",
+            "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
+            "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
             "docs/adr/README.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
@@ -194,17 +197,8 @@
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
-            "docs/usage/versioning.md",
-            "factory/GLOSSARY.md",
-            "factory/docs/README.md",
-            "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md",
-            "factory/docs/adr/README.md",
-            "factory/docs/development/README.md",
-            "factory/docs/development/release.md",
-            "factory/docs/usage/README.md",
-            "factory/docs/usage/factory-configuration.md",
-            "factory/docs/usage/host.md",
-            "factory/docs/usage/sandbox-image.md"
+            "docs/usage/stacks.md",
+            "docs/usage/versioning.md"
           ],
           "directories": []
         },
@@ -218,6 +212,12 @@
           "paths": [],
           "directories": []
         },
+        "git-attributes": {
+          "paths": [
+            ".gitattributes"
+          ],
+          "directories": []
+        },
         "github-repository-configuration": {
           "paths": [],
           "directories": []
@@ -229,9 +229,7 @@
           "directories": []
         },
         "project-readmes": {
-          "paths": [
-            "factory/README.md"
-          ],
+          "paths": [],
           "directories": []
         },
         "repository-license": {
@@ -247,8 +245,8 @@
           "directories": []
         }
       },
-      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
-      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "before": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
+      "after": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -258,7 +256,6 @@
       "scope": {
         "documentation": {
           "paths": [
-            "GLOSSARY-MAP.md",
             "GLOSSARY.md",
             "authoring-notes.md",
             "docs/README.md",
@@ -281,6 +278,11 @@
             "docs/adr/0017-make-the-factory-an-optional-profile.md",
             "docs/adr/0018-install-only-workflow-skills.md",
             "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
+            "docs/adr/0020-release-the-factory-from-its-own-repository.md",
+            "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md",
+            "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md",
+            "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
+            "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
             "docs/adr/README.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
@@ -300,17 +302,8 @@
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
-            "docs/usage/versioning.md",
-            "factory/GLOSSARY.md",
-            "factory/docs/README.md",
-            "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md",
-            "factory/docs/adr/README.md",
-            "factory/docs/development/README.md",
-            "factory/docs/development/release.md",
-            "factory/docs/usage/README.md",
-            "factory/docs/usage/factory-configuration.md",
-            "factory/docs/usage/host.md",
-            "factory/docs/usage/sandbox-image.md"
+            "docs/usage/stacks.md",
+            "docs/usage/versioning.md"
           ],
           "directories": []
         }
@@ -321,8 +314,8 @@
         "id": "documentation-navigation"
       },
       "operationIndex": 2,
-      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
-      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "before": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
+      "after": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -341,8 +334,8 @@
         "id": "pull-request-reviewer"
       },
       "operationIndex": 3,
-      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
-      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "before": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
+      "after": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -351,9 +344,7 @@
       "phase": "checks",
       "scope": {
         "project-readmes": {
-          "paths": [
-            "factory/README.md"
-          ],
+          "paths": [],
           "directories": []
         }
       },
@@ -363,8 +354,8 @@
         "id": "project-readme-structure"
       },
       "operationIndex": 4,
-      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
-      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "before": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
+      "after": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -385,8 +376,8 @@
         "id": "repository-readme-structure"
       },
       "operationIndex": 5,
-      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
-      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "before": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
+      "after": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -396,7 +387,6 @@
       "scope": {
         "documentation": {
           "paths": [
-            "GLOSSARY-MAP.md",
             "GLOSSARY.md",
             "authoring-notes.md",
             "docs/README.md",
@@ -419,6 +409,11 @@
             "docs/adr/0017-make-the-factory-an-optional-profile.md",
             "docs/adr/0018-install-only-workflow-skills.md",
             "docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md",
+            "docs/adr/0020-release-the-factory-from-its-own-repository.md",
+            "docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md",
+            "docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md",
+            "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
+            "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
             "docs/adr/README.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
@@ -438,17 +433,8 @@
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
-            "docs/usage/versioning.md",
-            "factory/GLOSSARY.md",
-            "factory/docs/README.md",
-            "factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md",
-            "factory/docs/adr/README.md",
-            "factory/docs/development/README.md",
-            "factory/docs/development/release.md",
-            "factory/docs/usage/README.md",
-            "factory/docs/usage/factory-configuration.md",
-            "factory/docs/usage/host.md",
-            "factory/docs/usage/sandbox-image.md"
+            "docs/usage/stacks.md",
+            "docs/usage/versioning.md"
           ],
           "directories": []
         },
@@ -462,6 +448,12 @@
           "paths": [],
           "directories": []
         },
+        "git-attributes": {
+          "paths": [
+            ".gitattributes"
+          ],
+          "directories": []
+        },
         "github-repository-configuration": {
           "paths": [],
           "directories": []
@@ -473,9 +465,7 @@
           "directories": []
         },
         "project-readmes": {
-          "paths": [
-            "factory/README.md"
-          ],
+          "paths": [],
           "directories": []
         },
         "repository-license": {
@@ -491,8 +481,8 @@
           "directories": []
         }
       },
-      "before": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
-      "after": "sha256:9bd99d03fe32de95c99c86784b8ba4542208f1f1098a5ab4d7931d1e71cbf336",
+      "before": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
+      "after": "sha256:9d9ea98057e1862e51dd33d69cc5517766a4b544910c25585bdc95137ced1597",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -598,7 +588,7 @@
       "result": {
         "format": "repo-standards/result/v2",
         "status": "passed",
-        "message": "Project README structure and shared setup and contribution links are valid for 1 concrete target; Project membership, purpose, commands, configuration, documentation, and duplication of shared instructions still require maintainer or agent review."
+        "message": "Project README structure and shared setup and contribution links are valid for 0 concrete targets; Project membership, purpose, commands, configuration, documentation, and duplication of shared instructions still require maintainer or agent review."
       },
       "error": null,
       "stdout": ".repo-standards/local/operations/4.stdout",
@@ -629,10 +619,10 @@
   "retryHistory": [],
   "changeSet": [],
   "lastComplete": {
-    "run": "2d5886b5-630f-463d-8e19-c3da8921b356",
-    "inspection": "sha256:3af047c331b44ad76ac8d1a669f25803189a609c3584cac732abdfcefb320f8e",
-    "completedAt": "2026-10-17T23:19:16.674Z",
-    "head": "803ebec5a180f5a0df852ebb1954d93fffc50e5b"
+    "run": "3d21eebe-147c-42d6-9671-5c58d14581bf",
+    "inspection": "sha256:7a03c77f67d0f4c19fe888bf774837519dd680a7d7649772f007275135f469c0",
+    "completedAt": "2026-10-22T17:53:09.151Z",
+    "head": "e570942786dec51b1628b8fd2bbf3f196c381660"
   },
   "baselines": {
     "docs/agents/README.md": {
@@ -648,7 +638,7 @@
       "executable": false
     },
     "CONTRIBUTING.md": {
-      "sha256": "4ed2b1336f77e4af7bc8c86b9497d6696c14a38b5d7a98f5a97df4d0c71aedd2",
+      "sha256": "7d9c4b6905dc5e4ee3be791dc7db38383e30a89ae9339690142f6c6babaa1b56",
       "executable": false
     },
     "docs/agents/domain.md": {
@@ -720,7 +710,7 @@
       "executable": false
     },
     ".github/scripts/validate-pr-metadata.mjs": {
-      "sha256": "967c93f5cb5057d50e1fd7b7315fd520ae10558e47f45ef5d286e79ab5fadcf0",
+      "sha256": "ae4c826c5d3480c04a03bcd8743432b18926e0cb76f895b846f1b43f47ab0b43",
       "executable": false
     },
     ".github/workflows/pr-metadata.yml": {
@@ -732,7 +722,7 @@
       "executable": false
     },
     "operations/lib/rendered-markdown.mjs": {
-      "sha256": "b885d1cd1650e61c616b6f2917b4074bc752282626b4d5eee01df4d5a923b267",
+      "sha256": "710997b67b6595e453792340479f0508a5e69f0d41ae087c24cce7692b37c3db",
       "executable": false
     },
     ".agents/skills/babysit/SKILL.md": {
@@ -912,7 +902,11 @@
       "executable": false
     },
     ".agents/skills/triage/AGENT-BRIEF.md": {
-      "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f",
+      "sha256": "f308022030970cefcc69167df642641e4a5419f5e8c4fe34c7453f5aa17b2d32",
+      "executable": false
+    },
+    ".agents/skills/triage/CREDITS.md": {
+      "sha256": "6193dee40b565d8b6da1c527005ea6ae5881ef6c5e451b6c63405dafd1ef9196",
       "executable": false
     },
     ".agents/skills/triage/OUT-OF-SCOPE.md": {
@@ -920,7 +914,7 @@
       "executable": false
     },
     ".agents/skills/triage/SKILL.md": {
-      "sha256": "917b0baf74be583e74f110857ed45df2766617f75c00baf61fd136d7af515edf",
+      "sha256": "b271b22439d2ce8a1c19367723b24d17a2034446b3ff6804c54bbdd81368c548",
       "executable": false
     },
     ".agents/skills/triage/agents/openai.yaml": {
@@ -1041,6 +1035,7 @@
     ],
     ".agents/skills/triage": [
       "AGENT-BRIEF.md",
+      "CREDITS.md",
       "OUT-OF-SCOPE.md",
       "SKILL.md",
       "agents/openai.yaml"
@@ -1138,7 +1133,7 @@
       "result": {
         "format": "repo-standards/result/v2",
         "status": "passed",
-        "message": "Project README structure and shared setup and contribution links are valid for 1 concrete target; Project membership, purpose, commands, configuration, documentation, and duplication of shared instructions still require maintainer or agent review."
+        "message": "Project README structure and shared setup and contribution links are valid for 0 concrete targets; Project membership, purpose, commands, configuration, documentation, and duplication of shared instructions still require maintainer or agent review."
       },
       "error": null,
       "stdout": ".repo-standards/local/operations/4.stdout",
@@ -1170,39 +1165,41 @@
     {
       "format": "repo-standards/assessment/v3",
       "scope": {
-        "inspection": "sha256:3af047c331b44ad76ac8d1a669f25803189a609c3584cac732abdfcefb320f8e",
-        "afterFixes": "sha256:9d31a7245f542e39817d86748de7c2dab03a49be0a675f9cf4ead036a620ed97"
+        "inspection": "sha256:7a03c77f67d0f4c19fe888bf774837519dd680a7d7649772f007275135f469c0",
+        "afterFixes": "sha256:51c2e9c424fad6899de8c27ea1dfb1a45a4acb005d562078903470ce8e9c683b"
       },
-      "run": "2d5886b5-630f-463d-8e19-c3da8921b356",
-      "selection": "sha256:9a0c5ac2e41ea30f24f643fecb96f8baa16247b3c536c3b389515e9270952141",
-      "snapshot": "sha256:9d31a7245f542e39817d86748de7c2dab03a49be0a675f9cf4ead036a620ed97",
+      "run": "3d21eebe-147c-42d6-9671-5c58d14581bf",
+      "selection": "sha256:70b7ff8e4030a475b9d206bba2166797d323cde334f37d157e294817b8fac4d8",
+      "snapshot": "sha256:51c2e9c424fad6899de8c27ea1dfb1a45a4acb005d562078903470ce8e9c683b",
       "declarations": [
         {
           "id": "documentation",
           "status": "satisfied",
-          "explanation": "Existing documentation retains the confirmed category and index layout and accurate setup; no contextual edit is required.",
+          "explanation": "Maintained usage, development and ADR documents have the required audience and category/index structure; the new extraction/platform/stack decisions and stack guidance are covered without reintroducing factory content. Current evidence preserves exact agent configuration and root glossary/authoring notes.",
           "changedPaths": [],
           "evidence": [
-            "Reviewed docs/README.md and docs/development/README.md against the retained documentation rules. The previous scope decisions remain applicable; no moves or link repairs are needed.",
-            "The update changes installed guidance and rules, rather than the documented product commands.",
-            "factory/docs remains the previously confirmed documentation root; authoring-notes.md and both context glossaries remain covered. Source guidance, rules and vendored snapshots remain excluded under the recorded decision."
+            "docs/README.md and category indexes map their maintained files",
+            "docs/development/README.md names Node24/26,npm and CLI8.1 source-validation commands",
+            "ADRs0020–0024 and docs/usage/stacks.md match extraction and settled stack decisions; test/repository-conformance.test.mjs passed52/52 on this source"
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "explanation": "Current maintained docs,root glossary and authoring notes are covered; exact-owned agent files and source/vendor material are excluded; all stale factory paths were removed.",
               "evidence": [
-                "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation roots `docs` and `factory/docs`, a new index for each of their directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, including `docs/agents/project.md`, which the `project-agent-guidance` declaration now owns, and so is each README.md outside the documentation roots. The retired Repository Standards skills are left out because this run removes them. Open questions decided as in the previously confirmed scope: `factory/docs` is a documentation root, as the repository conformance test's scope and the factory package's own documentation tree establish, and every directory under it already has an index; `authoring-notes.md` stays in place at the root and is covered; `THIRD_PARTY_NOTICES.md` is license notices, `discovery`, `guidance` and `rules` hold authored standards source inputs referenced by standards.yaml, and `vendor` holds preserved upstream snapshots, so all of those are excluded. No moves, new indexes or link repairs are needed.",
-                "No contextual content edits were necessary."
+                "docs/README.md and category indexes map their maintained files",
+                "docs/development/README.md names Node24/26,npm and CLI8.1 source-validation commands",
+                "ADRs0020–0024 and docs/usage/stacks.md match extraction and settled stack decisions; test/repository-conformance.test.mjs passed52/52 on this source"
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "explanation": "Current maintained docs,root glossary and authoring notes are covered; exact-owned agent files and source/vendor material are excluded; all stale factory paths were removed.",
               "evidence": [
-                "Drafted from the repository tree by `discovery/draft-documentation-scope.mjs`: every file Git keeps under the documentation roots `docs` and `factory/docs`, a new index for each of their directories without one, the development guide, and the domain glossaries and context maps the rules identify. Paths other declarations own are left out, including `docs/agents/project.md`, which the `project-agent-guidance` declaration now owns, and so is each README.md outside the documentation roots. The retired Repository Standards skills are left out because this run removes them. Open questions decided as in the previously confirmed scope: `factory/docs` is a documentation root, as the repository conformance test's scope and the factory package's own documentation tree establish, and every directory under it already has an index; `authoring-notes.md` stays in place at the root and is covered; `THIRD_PARTY_NOTICES.md` is license notices, `discovery`, `guidance` and `rules` hold authored standards source inputs referenced by standards.yaml, and `vendor` holds preserved upstream snapshots, so all of those are excluded. No moves, new indexes or link repairs are needed.",
-                "No contextual content edits were necessary."
+                "docs/README.md and category indexes map their maintained files",
+                "docs/development/README.md names Node24/26,npm and CLI8.1 source-validation commands",
+                "ADRs0020–0024 and docs/usage/stacks.md match extraction and settled stack decisions; test/repository-conformance.test.mjs passed52/52 on this source"
               ],
               "additionalPaths": []
             }
@@ -1211,70 +1208,85 @@
         {
           "id": "factory-sandbox-image",
           "status": "satisfied",
-          "explanation": "The existing Debian-based toolchain supplies the supported Node.js 24 delivery runtime and the tools its development guide requires.",
+          "explanation": "The existing Debian-based Node24 image supplies npm and publicCLI8.1 required by the current development guide. It adds no agent,user,entrypoint or checkout-dependent dependency installation.",
           "changedPaths": [],
           "evidence": [
-            "Reviewed .factory/Dockerfile and docs/development/README.md against factory-sandbox-image rules and the installed babysit skill, which now supports stable Node.js 24 or 26.",
-            "The toolchain installs no project dependencies, agent user or entrypoint and needs no repository build context."
+            ".factory/Dockerfile: FROM node:24-bookworm and global @lutzseverino/repo-standards@8.1.0",
+            "docs/development/README.md Setup and validation requires Node24/26,npm,CLI8.1",
+            ".agents/skills/babysit/SKILL.md supports Node24/26"
           ]
         },
         {
           "id": "factory-workflow",
           "status": "satisfied",
-          "explanation": "The relocated rules agree with the repository factory configuration and tracker workflow; no reconciliation or tracker mutation is needed.",
+          "explanation": "Repository-wide workflow rules agree with current tracker conventions; this direct owner-authorized implementation applies no pickup readiness and preserves parent/model/recovery handling.",
           "changedPaths": [],
           "evidence": [
-            "Reviewed installed factory-workflow rules for parent readiness, model selection, state labels, owner handoff and recovery, stop notes and issue closure.",
-            ".factory/config.json retains the ready-for-agent and factory state labels, model: prefix and implement prompt. Read-only review of open issue labels found no workflow conflict; existing planning and owner-handoff work is outside this update.",
-            "The confirmed content scope is intentionally empty because these rules govern all work, including tracker work changing no files."
+            ".factory/config.json retains canonical label mappings and model prefix",
+            "CONTRIBUTING.md and installed factory-workflow rules read; owner specifically authorized direct Codex implementation without factory readiness"
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "explanation": "Intentionally empty content scope: rules govern repository work rather than files.",
               "evidence": [
-                "Intentionally empty content scope. The factory workflow declaration governs work throughout this factory-profile repository, including tracker work that changes no files. .factory/config.json stays owned by its separate exact declaration.",
-                "No contextual content edits were necessary."
+                ".factory/config.json retains canonical label mappings and model prefix",
+                "CONTRIBUTING.md and installed factory-workflow rules read; owner specifically authorized direct Codex implementation without factory readiness"
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "explanation": "Intentionally empty content scope: rules govern repository work rather than files.",
               "evidence": [
-                "Intentionally empty content scope. The factory workflow declaration governs work throughout this factory-profile repository, including tracker work that changes no files. .factory/config.json stays owned by its separate exact declaration.",
-                "No contextual content edits were necessary."
+                ".factory/config.json retains canonical label mappings and model prefix",
+                "CONTRIBUTING.md and installed factory-workflow rules read; owner specifically authorized direct Codex implementation without factory readiness"
               ],
               "additionalPaths": []
             }
           }
         },
         {
-          "id": "github-repository-configuration",
+          "id": "git-attributes",
           "status": "satisfied",
-          "explanation": "The repository-wide GitHub rules and unchanged remote setup agree with the repository configuration.",
+          "explanation": "Repo Canon self-adoption exception applies: its exact scripts and skills are its own source, so no vendored attributes or empty .gitattributes are needed. No repository-owned attribute file existed or was changed.",
           "changedPaths": [],
           "evidence": [
-            "Both canonical-labels and pull-request-integration fixes returned unchanged. Existing .github/pull-request-reviewer.json remains the repository-owned reviewer choice.",
-            "Authenticated gh reports PUBLIC visibility and no repository-level REPO_CANON_RUNS_ON variable: classified unset, selecting the hosted default. The owner is a personal User account, so there is no organization-level inheritance.",
-            "Read the relocated readiness role, native blocker, review request, no-check merge, Agent Brief and Wayfinder requirements in installed github-repository-configuration rules. Empty content scope is intentional; this assessment changes no remote setting."
+            "Resolved source declarations retain same installed exact bytes",
+            "git check-attr reports linguist-vendored unspecified for issue validator,rendered-Markdown runtime,babysit and diagnosing-bugs source"
+          ]
+        },
+        {
+          "id": "github-repository-configuration",
+          "status": "satisfied",
+          "explanation": "The public personal repository has no repository-level REPO_CANON_RUNS_ON variable, so its runner selection is unset. Both fixes completed unchanged; no labels,merge settings,protection,rulesets or variables were changed. Optional reviewer data is preserved.",
+          "changedPaths": [],
+          "evidence": [
+            "gh repo view: PUBLIC,lutzseverino/repo-canon; gh variable list: []",
+            "Preflight matched all12 canonical labels and squash-only merge settings",
+            "Existing active Repo Canon required PR checks ruleset includes PR metadata and Test",
+            "Installed .github/pull-request-reviewer.json schema remains valid; no organization inheritance applies to this personal repository"
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "explanation": "Intentionally empty content scope: remote configuration and read-only reviewer checks own no project content.",
               "evidence": [
-                "Intentionally empty local scope: the authored remote setup fixes configure GitHub settings on lutzseverino/repo-canon, the only repository the Git remotes name, and the reviewer check reads the repository-owned .github/pull-request-reviewer.json without writing it. Observed with authenticated gh: the repository is PUBLIC, and the repository-level REPO_CANON_RUNS_ON variable is absent, so the setting is unset and the installed jobs use the hosted ubuntu-latest default. The owner, lutzseverino, is a user account rather than an organization, so no organization-level value can be inherited. The maintainer requested this update; discovery and assessment set no variable.",
-                "No contextual content edits were necessary."
+                "gh repo view: PUBLIC,lutzseverino/repo-canon; gh variable list: []",
+                "Preflight matched all12 canonical labels and squash-only merge settings",
+                "Existing active Repo Canon required PR checks ruleset includes PR metadata and Test",
+                "Installed .github/pull-request-reviewer.json schema remains valid; no organization inheritance applies to this personal repository"
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "explanation": "Intentionally empty content scope: remote configuration and read-only reviewer checks own no project content.",
               "evidence": [
-                "Intentionally empty local scope: the authored remote setup fixes configure GitHub settings on lutzseverino/repo-canon, the only repository the Git remotes name, and the reviewer check reads the repository-owned .github/pull-request-reviewer.json without writing it. Observed with authenticated gh: the repository is PUBLIC, and the repository-level REPO_CANON_RUNS_ON variable is absent, so the setting is unset and the installed jobs use the hosted ubuntu-latest default. The owner, lutzseverino, is a user account rather than an organization, so no organization-level value can be inherited. The maintainer requested this update; discovery and assessment set no variable.",
-                "No contextual content edits were necessary."
+                "gh repo view: PUBLIC,lutzseverino/repo-canon; gh variable list: []",
+                "Preflight matched all12 canonical labels and squash-only merge settings",
+                "Existing active Repo Canon required PR checks ruleset includes PR metadata and Test",
+                "Installed .github/pull-request-reviewer.json schema remains valid; no organization inheritance applies to this personal repository"
               ],
               "additionalPaths": []
             }
@@ -1283,38 +1295,41 @@
         {
           "id": "project-agent-guidance",
           "status": "satisfied",
-          "explanation": "Useful repository-specific guidance is preserved without duplicating the shared rules.",
+          "explanation": "Existing project guidance preserves only Repo Canon-specific source-authoring/adoption/release and upstream-license constraints. HEAD AGENTS.md held no extra project-specific instructions to recover.",
           "changedPaths": [],
           "evidence": [
-            "Reviewed HEAD:AGENTS.md and current AGENTS.md: it contains shared pointers, with no additional project instructions to recover.",
-            "docs/agents/project.md remains unchanged where present and absent where there are no useful project-specific instructions."
+            "git show HEAD:AGENTS.md contains shared guidance and links project.md",
+            "docs/agents/project.md retains source-specific compatibility,release and third-party-content constraints"
           ]
         },
         {
           "id": "project-readmes",
           "status": "satisfied",
-          "explanation": "The existing confirmed Project membership and READMEs remain correct.",
+          "explanation": "There are no concrete Project README targets: the standards source is the root package,root README has its own declaration,and the factory runtime is now Scriptorium. Fixtures,vendor and operation organization directories are not maintained independent Projects.",
           "changedPaths": [],
           "evidence": [
-            "Reviewed the root and factory package manifests, the development guides, the glossary map and vendor README provenance. The factory directory is Scriptorium, a separately released package with its own package.json, scripts, tests, glossary and documentation tree, so it is a Project with its existing factory/README.md. The root package owns all other maintenance and validation; operations, discovery, guidance, rules and scripts have no independent Project commands; test fixtures, vendored snapshots and documentation are excluded. No missing Project README is needed.",
-            "Reviewed the root manifests and development guide; this update adds no Project or development command."
+            "Root package.json is the only maintained package manifest",
+            "docs/development/README.md explicitly states no Project README",
+            "ADR0020 records extraction; no factory directory exists"
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "explanation": "Intentionally empty concrete path set: no maintained non-root Project remains after factory extraction.",
               "evidence": [
-                "Reviewed the root and factory package manifests, the development guides, the glossary map and vendor README provenance. The factory directory is Scriptorium, a separately released package with its own package.json, scripts, tests, glossary and documentation tree, so it is a Project with its existing factory/README.md. The root package owns all other maintenance and validation; operations, discovery, guidance, rules and scripts have no independent Project commands; test fixtures, vendored snapshots and documentation are excluded. No missing Project README is needed.",
-                "No contextual content edits were necessary."
+                "Root package.json is the only maintained package manifest",
+                "docs/development/README.md explicitly states no Project README",
+                "ADR0020 records extraction; no factory directory exists"
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "The confirmed scope still covers the declaration after fixes and after contextual review; no additional content paths are needed.",
+              "explanation": "Intentionally empty concrete path set: no maintained non-root Project remains after factory extraction.",
               "evidence": [
-                "Reviewed the root and factory package manifests, the development guides, the glossary map and vendor README provenance. The factory directory is Scriptorium, a separately released package with its own package.json, scripts, tests, glossary and documentation tree, so it is a Project with its existing factory/README.md. The root package owns all other maintenance and validation; operations, discovery, guidance, rules and scripts have no independent Project commands; test fixtures, vendored snapshots and documentation are excluded. No missing Project README is needed.",
-                "No contextual content edits were necessary."
+                "Root package.json is the only maintained package manifest",
+                "docs/development/README.md explicitly states no Project README",
+                "ADR0020 records extraction; no factory directory exists"
               ],
               "additionalPaths": []
             }
@@ -1323,20 +1338,22 @@
         {
           "id": "repository-license",
           "status": "satisfied",
-          "explanation": "The existing maintainer-selected license remains unchanged and the repository README links to it accurately.",
+          "explanation": "Existing single root LICENSE remains the clear MIT license chosen by the maintainer; no competing root license file exists and README links it as MIT License.",
           "changedPaths": [],
           "evidence": [
-            "LICENSE retains the MIT License and Copyright (c) 2026 Jasper Lutz Severino; the README license pointer agrees."
+            "LICENSE: MIT text with Copyright2026 Jasper Lutz Severino",
+            "Root tracked files contain only LICENSE; README License points to LICENSE"
           ]
         },
         {
           "id": "repository-readme",
           "status": "satisfied",
-          "explanation": "The existing repository entry document remains accurate and satisfies its installed rules.",
+          "explanation": "README accurately describes the shared conventions,installation via publishedCLI,standard/factory choice and maintained feature set. Centered title,plain description and JavaScript/Node24|26 badges match manifests; usage and documentation/contribution/license pointers resolve. No stack or deployment claim is added.",
           "changedPaths": [],
           "evidence": [
-            "Reviewed README.md: centered title and description, applicable runtime badge, project purpose and usage, and documentation, contribution and license pointers remain correct.",
-            "No application behavior, installation path or repository toolchain changes in this adoption."
+            "README centered header then Installation,Features,Usage,Documentation,Contributing,License",
+            "package.json: JavaScript source,Node>=24<25||>=26<27",
+            "README links docs/README.md,CONTRIBUTING.md and MIT LICENSE; declared standard/factory content matches standards.yaml"
           ]
         }
       ]

@@ -31,6 +31,36 @@ Every ticket merges into its base branch on its own, with its checks passing.
 Expand–contract batches that can't each stay green become a single ticket, not
 tickets sharing an integration branch.
 
+## Triage
+
+Triage routes an intake request by where its uncertainty lies, not by its
+category label. A request is code-bound when its expected result is clear and
+code, logs, or a reproduction can answer the rest. It is intent-bound when an
+open question needs the owner's intent, a policy, or a trade-off they choose,
+as when its brief would otherwise leave an owner question, offer options, or
+set a value nobody chose, including for a bug. Missing evidence or access never
+licenses inventing policy.
+
+The orchestrating agent runs triage and starts a research run, a separate
+agent, for each request. For a code-bound request, the research run verifies
+the claim and posts the Agent Brief. For an intent-bound request, it first
+gathers the facts from the code. The orchestrating agent then asks the owner
+short rounds of numbered questions, each with a recommended answer, records the owner's decisions on the
+issue, and has the brief written from them. A recorded decision is not asked
+again.
+
+The orchestrating agent, never the run that wrote the brief, then reviews its
+evidence, scope, acceptance criteria, dependencies, and open questions. Passing
+the structure check never makes a brief hold. A brief that leaves owner intent
+open, or disguises it as an implementation choice, an option list, or a
+fallback value, does not hold: its questions return to the owner, and an
+unanswered required question blocks acceptance. Any other gap goes back to the
+research run for correction. The orchestrating agent accepts a brief that holds
+by applying readiness to its revision, records its blockers, and tells the
+owner with links. When the revision notice never arrives, or its credentials
+cannot apply readiness, it leaves readiness to the owner and tells them under
+the [comment rules](#comments) instead.
+
 ## Readiness
 
 Applying `ready-for-agent` or `ready-for-human` is the review action, and the
@@ -150,10 +180,11 @@ described below.
 ### Adoption pull requests
 
 An adoption pull request holds one completed Repository Standards adoption or
-update run and nothing else. Open it once the project's pinned
-`.repo-standards/runtime/node_modules/.bin/repo-standards status` reports the
-run ready to commit. Otherwise finish or recover the run with
-`repo-standards adopt`, using the pinned runtime once a run has started.
+update run and nothing else. Record the verdict of the project's pinned
+`.repo-standards/runtime/node_modules/.bin/repo-standards status` as ready to
+commit before committing; once committed, `status` reports not ready.
+Otherwise finish or recover the run with `repo-standards adopt`, using the
+pinned runtime once a run has started.
 
 Title it `chore: adopt <source> <version> with CLI <version>`, naming the
 source by the repository name in its URL and the versions from the record's
@@ -165,7 +196,7 @@ Its body is the adoption record: the output of `status --summary`, byte for
 byte, starting with its `# Repository Standards adoption record` heading. The
 record's Operations table lists the standards source's fixes and checks with
 their results. Post one check-outcomes comment with the repository's own
-validation outcomes, confirmation of the ready-to-commit verdict, and findings
+validation outcomes, confirmation of the recorded ready-to-commit verdict, and findings
 links or unfiled findings under the
 [findings rule](#findings). The record stays the body; for a breaking (`!`)
 title, add Impact and Migration sections after the record.

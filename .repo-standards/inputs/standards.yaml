@@ -3,7 +3,7 @@ name: repo-canon
 description: Repository documentation, contribution, agent workflow, and GitHub
   validation standards
 requires:
-  repo-standards: ">=7.2.0"
+  repo-standards: ">=8.1.0"
 defaults:
   declarations: {}
 profiles:
@@ -115,6 +115,13 @@ profiles:
         kind: file
         target: .github/ISSUE_TEMPLATE/feature-request.yml
         exact: .github/ISSUE_TEMPLATE/feature-request.yml
+      git-attributes:
+        checks: []
+        fixes: []
+        kind: file
+        target: .gitattributes
+        guidance: guidance/git-attributes.md
+        rules: rules/git-attributes.md
       github-repository-configuration:
         checks:
           - id: pull-request-reviewer
@@ -447,7 +454,7 @@ profiles:
         fixes: []
         kind: skill
         name: triage
-        source: vendor/mattpocock-skills/skills/engineering/triage
+        source: .agents/skills/triage
       skill-wayfinder:
         checks: []
         fixes: []

@@ -43,12 +43,16 @@ so a ready fix can still return `confirmation-required` or `blocked`.
 
 ## Pull request reviewer
 
-Decide whether the repository adds the optional
-`.github/pull-request-reviewer.json`, whose schema the rules state: choose a
-reviewer, or leave the file absent, according to the repository's own setup.
-The declaration owns no reviewer file or preset. Its read-only
-`pull-request-reviewer` check passes without the file and validates the schema
-when present.
+The optional `.github/pull-request-reviewer.json` is the repository's own
+configuration, not adoption output. The declaration owns no reviewer file or
+preset and its confirmed scope is empty, so the run leaves the file untouched:
+it neither creates nor changes it. Its read-only `pull-request-reviewer` check
+passes without the file and validates the schema when present.
+
+If the repository wants a reviewer, the agent or a maintainer adds or changes
+the file in a separate commit after the run completes, following the schema in
+the rules, never in the adoption commit or pull request. The check validates it
+on the next `check` or update.
 
 ## Installed workflow runners
 

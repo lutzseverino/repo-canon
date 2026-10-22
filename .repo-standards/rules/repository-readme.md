@@ -3,10 +3,26 @@
 The top-level `README.md` is the Repository README, the entry document for
 someone discovering the repository. Write it for that reader.
 
-Start with a centered title, followed by a one-sentence description that says
-what the project is and who it is for, before anything else, and badges. The
-description contains no term defined in the repository's root `GLOSSARY.md` or
-in a context glossary listed in its `GLOSSARY-MAP.md`, matched
+Start with one centered header block: the title, a one-sentence description
+that says what the project is and who it is for, then badges, in that order,
+before anything else. For example:
+
+```html
+<div align="center">
+  <h1>Harbor</h1>
+  <p>A delivery service for operators.</p>
+  <p>
+    <img src="typescript-badge.svg" alt="TypeScript" />
+    <a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24" /></a>
+  </p>
+</div>
+```
+
+Setting `align="center"` on each element is also accepted: the `h1`, the
+description `p`, and the badge `p` paragraphs.
+
+The description contains no term defined in the repository's root
+`GLOSSARY.md` or in a context glossary listed in its `GLOSSARY-MAP.md`, matched
 case-insensitively as a whole word; a hyphen-joined compound, such as
 `on-demand`, is one word. For a standards source or another tool applied to a
 repository, explain what adopting it changes. Define a project-specific term
