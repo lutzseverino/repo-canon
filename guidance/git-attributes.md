@@ -12,8 +12,8 @@ through contextual work; this declaration has no deterministic fix or check.
    [overrides documentation](https://github.com/github-linguist/linguist/blob/main/docs/overrides.md)
    and [default vendor list](https://github.com/github-linguist/linguist/blob/main/lib/linguist/vendor.yml).
    `vendor/` and `.github/` are already excluded. For the current profiles,
-   the counted files are the issue-contract validator, the rendered-Markdown
-   runtime, the babysit skill's `.mjs` files, and the diagnosing-bugs skill's
+   the counted files are the issue-contract validator, the common validator
+   command, the rendered-Markdown runtime, the babysit skill's `.mjs` files, and the diagnosing-bugs skill's
    shell template. Derive the inventory anew on each update; this example is
    not a replacement for the resolved selection.
 3. Read any existing `.gitattributes` before editing. Preserve every

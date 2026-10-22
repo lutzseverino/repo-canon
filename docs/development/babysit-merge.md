@@ -46,7 +46,7 @@ PullRequests owns PR reads, reviews, queue checks and merge writes; Access
 retains conversation comments, GitHub check links, workflow attempt times,
 push activity and inline review-comment facts that the neutral ports do not
 expose. Access reads use
-the expected head SHA and paginate. A failed read fails without a merge.
+the expected head SHA and paginate. A failed prerequisite read fails without a merge.
 
 Access supplement reads reject incomplete or unknown check, workflow, push and
 review-comment facts. Check contexts paginate at the immutable head SHA, so a
