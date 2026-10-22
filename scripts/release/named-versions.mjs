@@ -29,7 +29,7 @@ const versionPattern = /(?<![\w.])(v?)(\d+\.\d+\.\d+)(?!\.?\d)/g;
 const cliDocumentationLink =
   /github\.com\/lutzseverino\/repo-standards\/(?:blob|tree)\/$/;
 const otherTool =
-  /\b(?:Git|GitHub CLI|Marked|parse5)\s+$|`node --version`\s+constrained\s+to\s+`>=(?:\d+\.\d+\.\d+\s+<\d+\.\d+\.\d+\s+\|\|\s+>=)*(?:\d+\.\d+\.\d+\s+<)?$/;
+  /\b(?:Git|GitHub CLI|Marked|parse5|Postern)\s+$|`node --version`\s+constrained\s+to\s+`>=(?:\d+\.\d+\.\d+\s+<\d+\.\d+\.\d+\s+\|\|\s+>=)*(?:\d+\.\d+\.\d+\s+<)?$/;
 const repoCanonBaseline = /\bstable\s+`?$/;
 const requiresBlock = /^requires:[ \t]*\r?\n((?:[ \t]+\S.*(?:\r?\n|$))+)/m;
 const requiresFloor =

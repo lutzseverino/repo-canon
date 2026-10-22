@@ -1125,7 +1125,7 @@ function supersedingDeletedBrief(currentEvent, result) {
   }
   const deleted = currentEvent.comment;
   return latestAgentBrief([result.contract.comment, deleted]) === deleted
-    ? `deleted-comment:${deleted.node_id ?? deleted.id}`
+    ? `deleted-comment:${deleted.nodeId ?? deleted.id}`
     : null;
 }
 
@@ -1578,6 +1578,7 @@ export async function runIssueContractValidation(
   event,
   connection,
   resolveIssue,
+  pause = wait,
 ) {
   const tracker = connection.issueTracker;
   if (!event) {
@@ -1648,7 +1649,7 @@ export async function runIssueContractValidation(
       waited < triggerWaitBound && readinessTriggerUnrecorded(snapshot);
       waited += triggerWaitInterval
     ) {
-      await wait(triggerWaitInterval);
+      await pause(triggerWaitInterval);
       snapshot.issueEvents = await readTimeline();
     }
     for (const login of reviewerLogins(snapshot)) {

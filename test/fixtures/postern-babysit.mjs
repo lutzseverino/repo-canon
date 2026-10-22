@@ -3,9 +3,8 @@ import { connect } from "../../vendor/postern/postern.mjs";
 
 // The actual published adapter runs against an injected fetch transport. Each
 // request reads current fixture state, including a head changed during merge.
-export function fixtureConnection() {
-  const statePath = process.env.FAKE_GH_STATE;
-  const fetch = async (input, options = {}) => {
+export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
+  return async (input, options = {}) => {
     const state = JSON.parse(readFileSync(statePath, "utf8"));
     const url = new URL(input);
     const path = url.pathname;
@@ -144,8 +143,11 @@ export function fixtureConnection() {
     }
     return json({ message: `Unhandled fixture request ${path}` }, 404);
   };
-  return connect("https://github.com/example/repository", {
+}
+
+export function fixtureConnection(connectTo = connect) {
+  return connectTo("https://github.com/example/repository", {
     credential: "fixture-credential",
-    fetch,
+    fetch: fixtureFetch(),
   });
 }

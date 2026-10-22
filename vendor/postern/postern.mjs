@@ -1,4 +1,4 @@
-/*! @lutzseverino/postern 1.1.0 | MIT License | https://github.com/lutzseverino/postern */
+/*! @lutzseverino/postern 1.2.0 | MIT License | https://github.com/lutzseverino/postern */
 
 // src/errors.ts
 var platformErrorReasons = Object.freeze([
@@ -544,7 +544,11 @@ function issueTracker(transport, repo, coordinates, repository) {
       }
       if (event.name === "issue_comment") {
         const comment = object(payload.comment);
-        result.comment = { id: id(comment.id), body: text(comment.body) };
+        result.comment = {
+          id: id(comment.id),
+          nodeId: Object.hasOwn(comment, "node_id") ? word(comment.node_id) : null,
+          body: text(comment.body)
+        };
       }
       return result;
     },

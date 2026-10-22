@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Usage: node merge.mjs <number> <head SHA>, from the repository root.
-// Exit codes: 0 merged, 1 usage or gh error, 2 head changed; wait again,
+// Exit codes: 0 merged, 1 usage or platform error, 2 head changed; wait again,
 // 3 not merged; needs the owner.
 import { connectionFor, executedAsScript } from "./platform.mjs";
 
@@ -34,20 +34,36 @@ export async function main(argv = process.argv.slice(2), connection) {
   }
   try {
     await connection.pullRequests.squashMerge(Number(number), {
-      expectedHead: head, title: `${pullRequest.title} (#${number})`, body: pullRequest.body ?? "",
+      expectedHead: head,
+      title: `${pullRequest.title} (#${number})`,
+      body: pullRequest.body ?? "",
     });
   } catch (error) {
-    if ((await connection.pullRequests.pullRequest(Number(number))).headCommit !== head) return retry();
-    if (error.reason === "invalidResponse" && error.message === "GitHub answered the merge without merging.")
+    if (
+      (await connection.pullRequests.pullRequest(Number(number))).headCommit !==
+      head
+    )
+      return retry();
+    if (
+      error.reason === "invalidResponse" &&
+      error.message === "GitHub answered the merge without merging."
+    )
       return needsOwner("The pull request did not merge; needs the owner.");
     throw error;
   }
-  if ((await connection.pullRequests.pullRequest(Number(number))).state !== "merged") {
+  if (
+    (await connection.pullRequests.pullRequest(Number(number))).state !==
+    "merged"
+  ) {
     return needsOwner("The pull request did not merge; needs the owner.");
   }
 }
 
 if (import.meta.main ?? executedAsScript(import.meta.url)) {
-  try { await main(); }
-  catch (error) { console.error(error.message); process.exitCode = 1; }
+  try {
+    await main();
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
 }

@@ -17,26 +17,44 @@ export async function validate(input, connection, resolveIssue) {
 }
 
 export function executedAsScript(url) {
-  return (
-    Boolean(process.argv[1]) &&
-    realpathSync(process.argv[1]) === realpathSync(fileURLToPath(url))
-  );
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(url));
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw error;
+  }
 }
 
-if (import.meta.main ?? executedAsScript(import.meta.url)) {
-  const input = JSON.parse(await readFile(process.argv[2], "utf8"));
+export async function main(
+  argv = process.argv.slice(2),
+  connectionOptions = {},
+) {
+  if (argv.length !== 1)
+    throw new Error("Usage: node scripts/validate.mjs <neutral-input.json>");
+  const input = JSON.parse(await readFile(argv[0], "utf8"));
   const options = {
     credential: process.env.POSTERN_TOKEN,
+    ...connectionOptions,
     relationshipSections: { parent: "Parent", blockedBy: "Blocked by" },
   };
   const connection =
     input.kind === "issue-contract"
       ? connect(input.repository, options)
       : undefined;
-  process.exitCode = await validate(input, connection, (reference) =>
+  return validate(input, connection, (reference) =>
     connect(
-      `https://github.com/${reference.repository}`,
+      { ...connection.repository, path: reference.repository },
       options,
     ).issueTracker.issue(reference.number),
   );
+}
+
+if (import.meta.main ?? executedAsScript(import.meta.url)) {
+  try {
+    process.exitCode = await main();
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
 }

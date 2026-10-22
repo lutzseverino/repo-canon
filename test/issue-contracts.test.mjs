@@ -4884,3 +4884,49 @@ decisionTable(
     })),
   ),
 );
+
+// Missing global IDs retain main's numeric fallback, including fail-closed
+// mismatches with an old node-ID marker. No alias is inferred.
+test("deleted Briefs without a global identifier preserve numeric marker parity", () => {
+  for (const nodeId of [undefined, null]) {
+    const deleted = agentBrief(25, "2026-09-14T16:55:00Z");
+    const input = deletedBriefSnapshot(deleted);
+    input.event = {
+      platform: "github",
+      repository,
+      issue: 42,
+      kind: "commentDeleted",
+      actor: { login: "triager", bot: false },
+      label: null,
+      openingLabels: null,
+      bodyChanged: null,
+      comment: {
+        id: deleted.id,
+        body: deleted.body,
+        ...(nodeId === undefined ? {} : { nodeId }),
+      },
+    };
+    const first = decideIssueContract(snapshotFor(input));
+    assert.equal(first.exitCode, 1);
+    assert.deepEqual(first.removeLabels, ["ready-for-agent"]);
+    assert.equal(
+      recordedState(first.feedback.body).sourceInvalidation,
+      "deleted-comment:25",
+    );
+    for (const previous of [
+      "deleted-comment:25",
+      "deleted-comment:COMMENT_25",
+    ]) {
+      const state = recordedState(input.comments[1].body);
+      input.comments[1].body = feedbackState({
+        ...state,
+        kind: "triaged Agent Brief",
+        sourceInvalidation: previous,
+      });
+      const replay = decideIssueContract(snapshotFor(input));
+      assert.equal(replay.exitCode, previous === "deleted-comment:25" ? 0 : 1);
+      if (previous !== "deleted-comment:25")
+        assert.deepEqual(replay.removeLabels, ["ready-for-agent"]);
+    }
+  }
+});

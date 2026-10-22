@@ -18,29 +18,37 @@ line endings, and multiple paragraphs. No shell interprets the metadata.
 GitHub's default squash message therefore does not add co-author trailers.
 
 After a successful merge call, the script reads the PR's `state` through
-`PullRequests.pullRequest` and reports success only when it is `MERGED`.
+`PullRequests.pullRequest` and reports success only when it is `merged`.
 
 Exit `0` means merged. Exit `3` means not merged and needs the owner: either
 the base branch requires a merge queue, or a successful merge call left the
-PR in a state other than `MERGED`. The skill hands off with a question under
+PR in a state other than `merged`. The skill hands off with a question under
 [the contribution guide's comment rules](../../CONTRIBUTING.md#comments),
 without retrying the merge. Exit `2` means the head changed, either before the merge
 call or when a refused merge is followed by a read showing a different head;
 the skill returns to its wait step. Exit `1` reports an invalid invocation or
-a `gh` error, including a merge refusal with an unchanged head. Each platform request has a 45-second timeout.
+a platform error, including a merge refusal with an unchanged head. Each platform request has a 45-second timeout.
 
 Run `node --test test/babysit-merge.test.mjs` for the executable fixtures. They
 use the same injected Postern fetch transport as the wait tests and cover the explicit message,
 verbatim body, head changes, empty bodies, invalid arguments, access errors,
 merge refusals, merge queue refusal, and successful calls that leave the PR
 unmerged. The whole skill directory is installed by its exact skill
-declaration, including its scripts and the `reviewer.mjs` and
-`pull-request-reviewer.mjs` modules.
+declaration, including its scripts and the `platform.mjs`, `reviewer.mjs` and
+`pull-request-reviewer.mjs` modules. The bundle, license and provenance are
+separate exact file declarations at `vendor/postern/`, shared with the
+validators. Installed-layout fixtures execute the wait and merge without npm.
 
 The scripts read the currently authenticated GitHub CLI credential with
 `gh auth token --hostname github.com` and pass it to the exact
 [Postern bundle](../../vendor/postern/README.md). No credential is printed.
 PullRequests owns PR reads, reviews, queue checks and merge writes; Access
-retains GitHub check links, workflow attempt times, push activity and inline
-review-comment facts that the neutral ports do not expose. Access reads use
+retains conversation comments, GitHub check links, workflow attempt times,
+push activity and inline review-comment facts that the neutral ports do not
+expose. Access reads use
 the expected head SHA and paginate. A failed read fails without a merge.
+
+Access supplement reads reject incomplete or unknown check, workflow, push and
+review-comment facts. Check contexts paginate at the immutable head SHA, so a
+subsequent PR update cannot replace the checks for the head being considered.
+A missing `reviewCommits` capability fails the configured-reviewer wait.

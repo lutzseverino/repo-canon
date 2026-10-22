@@ -392,13 +392,13 @@ with Postern's injected fetch transport. They cover event parsing,
 pagination, the role lookups, the bounded wait for a readiness trigger's
 timeline event, the order of writes, the exit status, unavailable endpoints, and
 the path fallback for releases without `import.meta.main`. The wait fixtures
-preload a replacement for the `setTimeout` of `node:timers/promises`, the
-adapter's only wait, so they use no real time. They also show that importing
+inject the adapter's pause function, whose production default is
+`setTimeout` from `node:timers/promises`, so they use no real time. They also show that importing
 the validator runs no adapter and, where `import.meta.main` exists, makes no
-file-system or network call; without it, an import only resolves the two
-compared paths. One executes the validator from an
-installed layout containing only the validator, shared runtime, and declared
-parser resources.
+file-system or network call; without it, an import only resolves the compared script paths,
+ignoring an absent script path when imported from an evaluation. One executes the validator from an
+installed layout containing only the command, trigger, policy modules,
+shared runtime and declared parser and Postern resources.
 Together they exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, workflow-state replacement,
@@ -439,6 +439,15 @@ count as relationships. `Parent` and `Blocked by` sections retain their content
 requirements; links in those sections alone do not create relationships. The
 connection supplies `relationshipSections: { parent: "Parent", blockedBy: "Blocked by" }`
 for ports that use named sections.
+
+For a standalone run, `node scripts/validate.mjs <neutral-input.json>` reads
+a neutral object with `kind: "issue-contract"`, a Postern repository identity
+or remote URL in `repository`, and a normalized `event`. The command uses
+`POSTERN_TOKEN` as its supplied credential. The trusted GitHub trigger instead
+passes its workflow credential and normalized event to the same dispatch
+interface. Neither path substitutes a later event snapshot for current port
+reads. The PR metadata path uses `kind: "pr-metadata"` and
+`pullRequest: { title, body }`.
 
 The exact [published Postern bundle](../../vendor/postern/README.md), license
 and provenance are installed resources, shared by both validator paths and

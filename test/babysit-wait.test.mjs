@@ -10,6 +10,8 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
+import { installedValidator } from "./helpers/installed-validator.mjs";
 import {
   checkStates,
   decide,
@@ -1376,7 +1378,14 @@ test("unfinished runs hold only their own workflow and check", () => {
 
 // Runs the script against a fake `gh` and returns everything it wrote, with
 // the time of its first write.
-const run = (state, args, reviewer = codexReviewer) => {
+const run = (
+  state,
+  args,
+  reviewer = codexReviewer,
+  target = new URL("../.agents/skills/babysit/wait.mjs", import.meta.url),
+) => {
+  const targetURL = typeof target === "string" ? pathToFileURL(target) : target;
+  const bundleURL = new URL("../../../vendor/postern/postern.mjs", targetURL);
   const directory = mkdtempSync(join(tmpdir(), "babysit-wait-"));
   if (reviewer) {
     mkdirSync(join(directory, ".github"));
@@ -1394,7 +1403,7 @@ const run = (state, args, reviewer = codexReviewer) => {
       [
         "--input-type=module",
         "-e",
-        `import { main } from ${JSON.stringify(new URL("../.agents/skills/babysit/wait.mjs", import.meta.url).href)}; import { fixtureConnection } from ${JSON.stringify(fakePlatform)}; process.exitCode = await main(process.argv.slice(1), fixtureConnection());`,
+        `import { main } from ${JSON.stringify(targetURL.href)}; import { connect } from ${JSON.stringify(bundleURL.href)}; import { fixtureConnection } from ${JSON.stringify(fakePlatform)}; process.exitCode = await main(process.argv.slice(1), fixtureConnection(connect));`,
         "--",
         ...args,
       ],
@@ -2296,4 +2305,16 @@ test("the script excludes a reply-only review after a push with no later request
   );
   assert.equal(reviewed.code, 0);
   assert.equal(reviewed.stdout, `${head}: checks passed, reviewer reviewed\n`);
+});
+
+test("the installed wait runs against the published adapter without runtime packages", async (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/wait.mjs");
+  const result = await run(
+    { ...pendingPullRequest, checks: [checkRun()] },
+    ["12"],
+    null,
+    target,
+  );
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /checks passed/);
 });

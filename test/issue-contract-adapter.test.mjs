@@ -9,6 +9,7 @@ import {
   runIssueContractValidation,
 } from "../scripts/validate-issue-contract.mjs";
 import {
+  connect,
   PlatformError,
   platformErrorReasons,
 } from "../vendor/postern/postern.mjs";
@@ -42,6 +43,10 @@ async function exercise(
     blockedBy = [],
     failure = null,
     trigger,
+    command,
+    eventReads,
+    pause,
+    failurePath,
   } = {},
 ) {
   const root = await mkdtemp(join(tmpdir(), "postern-issue-"));
@@ -59,11 +64,17 @@ async function exercise(
     changes: {},
     repository: { full_name: repository },
     sender: account(),
-    issue: { ...current },
+    issue: {
+      ...current,
+      labels: current.labels.map((label) =>
+        typeof label === "string" ? { name: label } : label,
+      ),
+    },
     ...event,
   };
   await writeFile(eventPath, JSON.stringify(payload));
   const requests = [];
+  let timelineRead = 0;
   const comment = (value, index = 0) => ({
     id: index + 1,
     node_id: `COMMENT_${index + 1}`,
@@ -88,7 +99,7 @@ async function exercise(
         status,
         headers: { "content-type": "application/json", ...headers },
       });
-    if (failure)
+    if (failure && (!failurePath || failurePath(path, body)))
       return json({ message: `Read failed fixture-credential` }, failure);
     if (path === "/graphql") {
       const number = body.variables.number;
@@ -131,13 +142,17 @@ async function exercise(
         },
       });
     }
-    if (path.endsWith("/events"))
+    if (path.endsWith("/events")) {
+      const currentEvents = eventReads
+        ? eventReads[Math.min(timelineRead++, eventReads.length - 1)]
+        : events;
       return json(
-        events.map((entry) => ({
+        currentEvents.map((entry) => ({
           ...entry,
           actor: entry.actor ? { type: "User", ...entry.actor } : null,
         })),
       );
+    }
     if (path.endsWith("/permission")) {
       const login = decodeURIComponent(path.split("/").at(-2));
       return permissions[login]
@@ -145,7 +160,7 @@ async function exercise(
             permission: permissions[login],
             role_name: permissions[login],
           })
-        : json({ message: "Not Found" }, 404);
+        : json({ permission: "none" });
     }
     if (path.endsWith("/comments") && (options.method ?? "GET") === "GET") {
       const offset = Number(url.searchParams.get("page") ?? 1) - 1;
@@ -172,16 +187,54 @@ async function exercise(
   let code;
   let error;
   try {
-    code = await (trigger ?? githubValidation)(
-      "issue-contract",
-      {
-        GITHUB_EVENT_PATH: eventPath,
-        GITHUB_EVENT_NAME: event.comment ? "issue_comment" : "issues",
-        GITHUB_REPOSITORY: repository,
-        GITHUB_TOKEN: "fixture-credential",
-      },
-      { fetch },
-    );
+    if (pause || command) {
+      const connection = connect(`https://github.com/${repository}`, {
+        credential: "fixture-credential",
+        fetch,
+        relationshipSections: { parent: "Parent", blockedBy: "Blocked by" },
+      });
+      const normalized = await connection.issueTracker.issueEvent({
+        name: event.comment ? "issue_comment" : "issues",
+        payload,
+      });
+      if (command) {
+        const inputPath = join(root, "neutral.json");
+        await writeFile(
+          inputPath,
+          JSON.stringify({
+            kind: "issue-contract",
+            repository: connection.repository,
+            event: normalized,
+          }),
+        );
+        code = await command([inputPath], {
+          credential: "fixture-credential",
+          fetch,
+        });
+      } else {
+        code = await runIssueContractValidation(
+          normalized,
+          connection,
+          (reference) =>
+            connect(
+              { ...connection.repository, path: reference.repository },
+              { credential: "fixture-credential", fetch },
+            ).issueTracker.issue(reference.number),
+          pause,
+        );
+      }
+    } else {
+      code = await (trigger ?? githubValidation)(
+        "issue-contract",
+        {
+          GITHUB_EVENT_PATH: eventPath,
+          GITHUB_EVENT_NAME: event.comment ? "issue_comment" : "issues",
+          GITHUB_REPOSITORY: repository,
+          GITHUB_TOKEN: "fixture-credential",
+        },
+        { fetch },
+      );
+    }
   } catch (caught) {
     error = caught;
   }
@@ -343,4 +396,190 @@ test("unchanged direct and Agent Brief contracts keep pre-migration golden revis
     brief.feedback.body,
     /sha256:a3d73c28a7802d7c97278ec699b4f5a22760b3d0bb01f97354403e59dfa79d7c/,
   );
+});
+
+test("the installed neutral command resolves issue consumers without package installation", async (t) => {
+  const command = (await import(installedValidator(t, "scripts/validate.mjs")))
+    .main;
+  const result = await exercise(t, { command });
+  assert.equal(result.error, undefined);
+  assert.equal(result.code, 0);
+  assert.deepEqual(writes(result), []);
+});
+
+test("timeline lag retries authoritative label changes within the existing bound", async (t) => {
+  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  for (const recorded of [true, false]) {
+    const waits = [];
+    const result = await exercise(t, {
+      issue,
+      comments: [awaitingTicketFeedback(issue)],
+      event: {
+        action: "labeled",
+        sender: account("maintainer"),
+        label: { name: "ready-for-agent" },
+      },
+      permissions: { maintainer: "admin" },
+      eventReads: recorded ? [[], [], [readinessReview]] : [[]],
+      pause: async (duration) => {
+        waits.push(duration);
+      },
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, recorded ? 0 : 1);
+    assert.deepEqual(waits, Array(recorded ? 2 : 15).fill(2000));
+    const applied = writes(result);
+    if (recorded) assert.match(applied.at(-1).body.body, /readiness recorded/);
+    else {
+      assert.equal(applied[0].method, "DELETE");
+      assert.match(applied.at(-1).body.body, /timeline does not contain/);
+    }
+  }
+});
+
+test("late read failures abort before label or feedback mutation", async (t) => {
+  for (const path of ["/comments", "/events", "/permission"]) {
+    const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+    const result = await exercise(t, {
+      issue,
+      comments: [awaitingTicketFeedback(issue)],
+      events: [readinessReview],
+      event: {
+        action: "labeled",
+        sender: account("maintainer"),
+        label: { name: "ready-for-agent" },
+      },
+      permissions: { maintainer: "admin" },
+      failure: 403,
+      failurePath: (candidate) => candidate.endsWith(path),
+    });
+    assert.ok(result.error instanceof PlatformError, path);
+    assert.doesNotMatch(JSON.stringify(result.error), /fixture-credential/);
+    assert.deepEqual(writes(result), [], path);
+  }
+  const parentFailure = await exercise(t, {
+    issue: {
+      labels: ["wayfinder:task"],
+      body: "## Question\n\nWhich cache meets the target?",
+    },
+    parent: { number: 7, labels: ["wayfinder:map"] },
+    failure: 503,
+    failurePath: (path, body) =>
+      path === "/graphql" && body.variables.number === 7,
+  });
+  assert.ok(parentFailure.error instanceof PlatformError);
+  assert.deepEqual(writes(parentFailure), []);
+});
+
+test("comment global identifiers remain available through the actual published event adapter", async (t) => {
+  const current = {
+    id: 20,
+    node_id: "COMMENT_20",
+    body: completeAgentBrief,
+    user: account("triager"),
+  };
+  for (const [identity, marker] of [
+    ["COMMENT_25", "COMMENT_25"],
+    [undefined, "25"],
+  ]) {
+    const result = await exercise(t, {
+      issue: {
+        body: "Intake context",
+        labels: ["enhancement", "ready-for-agent"],
+      },
+      comments: [current],
+      events: [readinessReview],
+      permissions: { maintainer: "admin" },
+      event: {
+        action: "deleted",
+        comment: {
+          id: 25,
+          body: completeAgentBrief,
+          ...(identity === undefined ? {} : { node_id: identity }),
+        },
+      },
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 1);
+    assert.match(
+      writes(result).at(-1).body.body,
+      new RegExp(`deleted-comment:${marker}`),
+    );
+  }
+});
+
+test("opening labels and author facts authorize only the existing creation review", async (t) => {
+  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  for (const role of ["admin", "write"]) {
+    const result = await exercise(t, {
+      issue,
+      event: { action: "opened" },
+      permissions: { reporter: role },
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, role === "admin" ? 0 : 1);
+    const applied = writes(result);
+    if (role === "admin") {
+      assert.match(
+        applied.at(-1).body.body,
+        /"reviewEventId":"opened:ISSUE_42:2026-09-14T16:00:00Z"/,
+      );
+      assert.ok(!applied.some(({ method }) => method === "DELETE"));
+    } else assert.equal(applied[0].method, "DELETE");
+  }
+});
+
+test("native blockers supply relationship facts while named-section requirements remain", async (t) => {
+  const emptyBody = ticketBody.replace("None.", "_No response_");
+  const native = await exercise(t, {
+    issue: { body: emptyBody, labels: [] },
+    blockedBy: [{ number: 41, state: "open" }],
+  });
+  assert.equal(native.error, undefined);
+  assert.equal(native.code, 0);
+  const absent = await exercise(t, { issue: { body: emptyBody, labels: [] } });
+  assert.equal(absent.code, 1);
+  assert.match(
+    writes(absent).at(-1).body.body,
+    /placeholder under `Blocked by`/,
+  );
+  const missingSection = await exercise(t, {
+    issue: { body: emptyBody.replace(/## Blocked by[\s\S]*/, ""), labels: [] },
+    blockedBy: [{ number: 41, state: "open" }],
+  });
+  assert.equal(missingSection.code, 1);
+  assert.match(
+    writes(missingSection).at(-1).body.body,
+    /Add the `Blocked by` section/,
+  );
+  const bodyOnly = await exercise(t, {
+    issue: { body: ticketBody.replace("None.", "#999"), labels: [] },
+  });
+  assert.equal(bodyOnly.code, 0);
+  assert.equal(
+    bodyOnly.requests.filter(({ path }) => path === "/graphql").length,
+    1,
+  );
+});
+
+test("a retry read failure cannot apply a decision from an earlier timeline", async (t) => {
+  let reads = 0;
+  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  const result = await exercise(t, {
+    issue,
+    comments: [awaitingTicketFeedback(issue)],
+    events: [],
+    event: {
+      action: "labeled",
+      sender: account("maintainer"),
+      label: { name: "ready-for-agent" },
+    },
+    permissions: { maintainer: "admin" },
+    pause: async () => {},
+    failure: 503,
+    failurePath: (path) => path.endsWith("/events") && reads++ > 0,
+  });
+  assert.ok(result.error instanceof PlatformError);
+  assert.equal(reads, 2);
+  assert.deepEqual(writes(result), []);
 });

@@ -364,7 +364,11 @@ export function neutralEvent(event = {}) {
         : null,
     bodyChanged: event.changes ? Object.hasOwn(event.changes, "body") : null,
     comment: event.comment
-      ? { id: event.comment.id, body: event.comment.body }
+      ? {
+          id: event.comment.id,
+          nodeId: event.comment.node_id ?? null,
+          body: event.comment.body,
+        }
       : null,
   };
 }

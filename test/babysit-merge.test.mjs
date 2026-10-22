@@ -2,12 +2,21 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
+import { installedValidator } from "./helpers/installed-validator.mjs";
 
 const head = "a".repeat(40);
 
-function run(t, state, args = ["12", head]) {
+function run(
+  t,
+  state,
+  args = ["12", head],
+  target = new URL("../.agents/skills/babysit/merge.mjs", import.meta.url),
+) {
+  const targetURL = typeof target === "string" ? pathToFileURL(target) : target;
+  const bundleURL = new URL("../../../vendor/postern/postern.mjs", targetURL);
   const directory = mkdtempSync(join(tmpdir(), "babysit-merge-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const statePath = join(directory, "state.json");
@@ -17,7 +26,7 @@ function run(t, state, args = ["12", head]) {
     [
       "--input-type=module",
       "-e",
-      `import { main } from ${JSON.stringify(new URL("../.agents/skills/babysit/merge.mjs", import.meta.url).href)}; import { fixtureConnection } from ${JSON.stringify(new URL("./fixtures/postern-babysit.mjs", import.meta.url).href)}; try { await main(process.argv.slice(1), fixtureConnection()); } catch (error) { console.error(error.message); process.exitCode = 1; }`,
+      `import { main } from ${JSON.stringify(targetURL.href)}; import { connect } from ${JSON.stringify(bundleURL.href)}; import { fixtureConnection } from ${JSON.stringify(new URL("./fixtures/postern-babysit.mjs", import.meta.url).href)}; try { await main(process.argv.slice(1), fixtureConnection(connect)); } catch (error) { console.error(error.message); process.exitCode = 1; }`,
       "--",
       ...args,
     ],
@@ -34,7 +43,7 @@ function run(t, state, args = ["12", head]) {
   return { ...result, state: JSON.parse(readFileSync(statePath, "utf8")) };
 }
 
-test("squash-merges with the current title and verbatim body through stdin", (t) => {
+test("squash-merges with the current title and verbatim body through the port", (t) => {
   const body =
     "## Summary\r\n\r\nQuotes: \"double\", 'single', `backticks`, $HOME, $(touch unwanted).\r\n\r\n## Evidence\n\nMultiple paragraphs.\n\n";
   const result = run(t, {
@@ -120,4 +129,22 @@ test("preserves an empty body and rejects invalid invocations", (t) => {
     assert.match(invalid.stderr, /Usage:/);
     assert.equal(invalid.state.merge, undefined);
   }
+});
+
+test("installed babysit resolves declared bundle, license and provenance and merges without npm", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const root = join(dirname(target), "../../..");
+  for (const name of ["postern.mjs", "LICENSE", "README.md"])
+    assert.deepEqual(
+      readFileSync(join(root, "vendor/postern", name)),
+      readFileSync(new URL(`../vendor/postern/${name}`, import.meta.url)),
+    );
+  const result = run(
+    t,
+    { title: "fix: installed consumer", body: "Verbatim installed body" },
+    undefined,
+    target,
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.state.merge.body, "Verbatim installed body");
 });

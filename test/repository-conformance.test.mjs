@@ -296,6 +296,7 @@ const requirementOutcomes = {
 test("self-adoption leaves Repo Canon's own installed source unvendored", () => {
   const paths = [
     "scripts/validate-issue-contract.mjs",
+    "scripts/validate.mjs",
     "operations/lib/rendered-markdown.mjs",
     ...readdirSync(join(root, ".agents/skills/babysit"))
       .filter((name) => name.endsWith(".mjs"))
@@ -1162,7 +1163,7 @@ test("both babysit exit-1 instructions defer permission refusals to Credentials"
     );
     assert.match(
       instruction,
-      /otherwise fix the invocation or other `gh` error and run it again/,
+      /otherwise fix the invocation or other platform error and run it again/,
     );
   }
   assert.doesNotMatch(

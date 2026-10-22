@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 // Waits for a pull request's checks and the configured reviewer's review of
-// its head commit, polling GitHub with `gh`. It prints nothing while waiting and one line when
+// its head commit, polling through Postern. It prints nothing while waiting and one line when
 // it exits, starting with the head's full SHA, plus one line per failing
 // check, and its exit code names the outcome:
 //
 //   0  checks settled and the reviewer reviewed the head, or none is configured
-//   1  usage or `gh` error
+//   1  usage or platform error
 //   2  one or more checks failed, including a workflow whose latest run failed
 //      with no check from that run or attempt
 //   3  checks settled and the configured reviewer is unavailable
@@ -22,12 +22,22 @@
 // Usage: node wait.mjs <number> [--repo <owner/name>] [--limit <seconds>]
 //        [--interval <seconds>]
 //
-// The default limit, 540 seconds, keeps one invocation inside a 10-minute
-// foreground limit, with each look at GitHub bounded to 45 seconds.
+// The default polling limit is 540 seconds. Each platform request has a
+// 45-second timeout; paginated reads retain their request bounds.
 // One invocation covers 9 minutes waited; repository data sets review bounds.
 // Run from the repository root to read .github/pull-request-reviewer.json.
 // A head with no recorded push and no check or run never settles its checks.
-import { connectionFor, executedAsScript, requestData, pages, checkRollup } from "./platform.mjs";
+import {
+  connectionFor,
+  executedAsScript,
+  requestData,
+  pages,
+  checkRollup,
+  workflowRuns,
+  reviewComments,
+  pushActivity,
+  conversationComments,
+} from "./platform.mjs";
 
 import { readReviewer } from "./pull-request-reviewer.mjs";
 import {
@@ -199,7 +209,7 @@ const failedConclusions = new Set([
   "ERROR",
 ]);
 
-// Turns `gh pr view`'s status check rollup into check states. Any unfinished
+// Turns GitHub's status check rollup, read through Access, into check states. Any unfinished
 // run keeps its check pending; otherwise the latest-started run wins.
 export const checkStates = (rollup) => {
   const latest = new Map();
@@ -277,41 +287,75 @@ const parseArguments = (argv) => {
 const pushTime = async (pull, connection) => {
   const head = pull.headCommit;
   const path = `/repos/${connection.repository.path}`;
-  const activity = (await pages(connection, `${path}/activity?ref=${encodeURIComponent(`refs/heads/${pull.headBranch}`)}&per_page=100`)).flat();
+  const activity = pushActivity(
+    await pages(
+      connection,
+      `${path}/activity?ref=${encodeURIComponent(`refs/heads/${pull.headBranch}`)}&per_page=100`,
+    ),
+  );
   const recorded = activity.find((entry) => entry.after === head);
-  const pushedAt = recorded?.timestamp ??
-    (await requestData(connection, { path: `${path}/commits/${head}` })).commit.committer.date;
-  if (!Number.isFinite(Date.parse(pushedAt))) throw new Error("The head push time is unavailable.");
-  return { pushedAt: Math.max(Date.parse(pushedAt), Date.parse(pull.createdAt)), pushRecorded: Boolean(recorded) };
+  const pushedAt =
+    recorded?.timestamp ??
+    (await requestData(connection, { path: `${path}/commits/${head}` })).commit
+      .committer.date;
+  if (!Number.isFinite(Date.parse(pushedAt)))
+    throw new Error("The head push time is unavailable.");
+  return {
+    pushedAt: Math.max(Date.parse(pushedAt), Date.parse(pull.createdAt)),
+    pushRecorded: Boolean(recorded),
+  };
 };
 
 const look = async (number, pushTimes, reviewer, connection) => {
   const path = `/repos/${connection.repository.path}`;
   if (reviewer && !connection.pullRequests.capabilities.reviewCommits)
-    throw new Error("Review commits are unavailable; cannot establish latest-head review.");
+    throw new Error(
+      "Review commits are unavailable; cannot establish latest-head review.",
+    );
   const pull = await connection.pullRequests.pullRequest(Number(number));
-  const [rollup, comments, reviews, reviewCommentPages, runs, push] = await Promise.all([
-    checkRollup(connection, pull.headCommit),
-    reviewer ? connection.issueTracker.comments(Number(number)) : [],
-    reviewer ? connection.pullRequests.reviews(Number(number)) : [],
-    reviewer ? pages(connection, `${path}/pulls/${number}/comments?per_page=100`) : [],
-    pages(connection, `${path}/actions/runs?head_sha=${pull.headCommit}&per_page=100`),
-    pushTimes.get(pull.headCommit) ?? pushTime(pull, connection),
-  ]);
+  const [rollup, comments, reviews, reviewCommentPages, runs, push] =
+    await Promise.all([
+      checkRollup(connection, pull.headCommit),
+      reviewer
+        ? pages(connection, `${path}/issues/${number}/comments?per_page=100`)
+        : [],
+      reviewer ? connection.pullRequests.reviews(Number(number)) : [],
+      reviewer
+        ? pages(connection, `${path}/pulls/${number}/comments?per_page=100`)
+        : [],
+      pages(
+        connection,
+        `${path}/actions/runs?head_sha=${pull.headCommit}&per_page=100`,
+      ),
+      pushTimes.get(pull.headCommit) ?? pushTime(pull, connection),
+    ]);
   const commentsByReview = new Map();
-  for (const comment of reviewCommentPages.flat()) {
+  for (const comment of reviewComments(reviewCommentPages)) {
     const group = commentsByReview.get(comment.pull_request_review_id) ?? [];
     group.push(comment);
     commentsByReview.set(comment.pull_request_review_id, group);
   }
-  const neutralComments = comments.map((comment) => ({ login: comment.author?.login, createdAt: comment.createdAt, body: comment.body }));
+  const neutralComments = conversationComments(comments);
   if (push.pushRecorded) pushTimes.set(pull.headCommit, push);
   return {
-    head: pull.headCommit, checks: checkStates(rollup),
-    runs: runs.flatMap((page) => page.workflow_runs), reviewer,
-    reviews: reviews.map((review) => ({ user: review.author, commit_id: review.commit, state: review.state, body: review.body, comments: commentsByReview.get(review.id) ?? [] })),
-    requestedAt: reviewRequestedAt(Date.parse(pull.createdAt), neutralComments, reviewer),
-    ...push, comments: neutralComments,
+    head: pull.headCommit,
+    checks: checkStates(rollup),
+    runs: workflowRuns(runs),
+    reviewer,
+    reviews: reviews.map((review) => ({
+      user: review.author,
+      commit_id: review.commit,
+      state: review.state,
+      body: review.body,
+      comments: commentsByReview.get(review.id) ?? [],
+    })),
+    requestedAt: reviewRequestedAt(
+      Date.parse(pull.createdAt),
+      neutralComments,
+      reviewer,
+    ),
+    ...push,
+    comments: neutralComments,
   };
 };
 
@@ -326,8 +370,12 @@ export const main = async (argv = process.argv.slice(2), connection) => {
     process.stderr.write(`${error.message}\n`);
     return 1;
   }
-  try { connection ??= connectionFor(options.repo); }
-  catch (error) { process.stderr.write(`wait.mjs: ${error.message}\n`); return 1; }
+  try {
+    connection ??= connectionFor(options.repo);
+  } catch (error) {
+    process.stderr.write(`wait.mjs: ${error.message}\n`);
+    return 1;
+  }
   const limitMs = options.limit * 1000;
   const pushTimes = new Map();
   for (;;) {
