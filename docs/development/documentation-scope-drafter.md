@@ -140,11 +140,14 @@ resources and does not need the drafter.
 
 The draft does not decide membership by itself. The drafter cannot know move
 destinations, link-repair files, or anything an earlier confirmed scope decided:
-inspection passes it no previous scope. An update therefore asks again every
-question an earlier confirmed scope may have settled, about roots, Markdown
-files outside them, and glossaries alike, and the update rule in the
-[discovery guidance](../../discovery/documentation.md) answers them from that
-scope. It does not judge whether a file's content is useful or current.
+inspection passes it no previous scope. Its proposal can therefore contain
+questions an earlier confirmed scope settled, about roots, Markdown files
+outside them, and glossaries alike. The running CLI may reuse the whole
+earlier scope entry when its reuse checks pass; it does not reuse individual
+answers within that entry. For questions the CLI leaves open, the update rule
+in the [discovery guidance](../../discovery/documentation.md) uses the earlier
+scope where it decides them and current evidence otherwise. The drafter does
+not judge whether a file's content is useful or current.
 
 ## Validation
 
