@@ -66,6 +66,25 @@ const canonicalLabels = [
   },
 ];
 
+// GitHub's documented default labels that the canonical table also names. A
+// label still at both stock values was never chosen by the repository, so the
+// fix updates it without confirmation. The other default labels, and any
+// custom default of an owner or organization, are not canonical names.
+// https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/managing-labels#about-default-labels
+const stockLabels = [
+  { name: "bug", color: "d73a4a", description: "Something isn't working" },
+  {
+    name: "enhancement",
+    color: "a2eeef",
+    description: "New feature or request",
+  },
+  {
+    name: "wontfix",
+    color: "ffffff",
+    description: "This will not be worked on",
+  },
+];
+
 function readLabels(identity, projectRoot) {
   const response = jsonFrom(
     githubApi(
@@ -95,6 +114,10 @@ function sameLabel(actual, expected) {
     String(actual.color).toLowerCase() === expected.color &&
     (actual.description ?? "") === expected.description
   );
+}
+
+function isStockLabel(actual) {
+  return stockLabels.some((stock) => sameLabel(actual, stock));
 }
 
 function describeEffects(created, updated) {
@@ -174,7 +197,7 @@ function setupLabels(request) {
   });
 
   const changes = actions.flatMap((action) =>
-    action.kind === "update"
+    action.kind === "update" && !isStockLabel(action.actual)
       ? describeSettingChanges(
           {
             ...action.actual,

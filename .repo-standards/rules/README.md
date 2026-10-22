@@ -1,11 +1,10 @@
 # Installed rules
 
-These rules come from https://github.com/lutzseverino/repo-canon v0.15.0, profile factory.
+These rules come from https://github.com/lutzseverino/repo-canon v0.17.0, profile factory.
 Repository Standards installs and verifies them; adopt again to change them.
 Run `repo-standards rules <path>` to print the rules that cover a path.
 
 - [`documentation`](documentation.md) covers:
-  - `GLOSSARY-MAP.md`
   - `GLOSSARY.md`
   - `authoring-notes.md`
   - `docs/README.md`
@@ -28,6 +27,11 @@ Run `repo-standards rules <path>` to print the rules that cover a path.
   - `docs/adr/0017-make-the-factory-an-optional-profile.md`
   - `docs/adr/0018-install-only-workflow-skills.md`
   - `docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md`
+  - `docs/adr/0020-release-the-factory-from-its-own-repository.md`
+  - `docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md`
+  - `docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md`
+  - `docs/adr/0023-reach-the-hosting-platform-through-postern.md`
+  - `docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md`
   - `docs/adr/README.md`
   - `docs/development/README.md`
   - `docs/development/adoption-compatibility.md`
@@ -47,25 +51,17 @@ Run `repo-standards rules <path>` to print the rules that cover a path.
   - `docs/development/upstream-compatibility.md`
   - `docs/usage/README.md`
   - `docs/usage/adopt-repo-canon.md`
+  - `docs/usage/stacks.md`
   - `docs/usage/versioning.md`
-  - `factory/GLOSSARY.md`
-  - `factory/docs/README.md`
-  - `factory/docs/adr/0001-keep-the-package-outside-repo-canon-release-inputs.md`
-  - `factory/docs/adr/README.md`
-  - `factory/docs/development/README.md`
-  - `factory/docs/development/release.md`
-  - `factory/docs/usage/README.md`
-  - `factory/docs/usage/factory-configuration.md`
-  - `factory/docs/usage/host.md`
-  - `factory/docs/usage/sandbox-image.md`
 - [`factory-sandbox-image`](factory-sandbox-image.md) covers:
   - `.factory/Dockerfile`
 - [`factory-workflow`](factory-workflow.md) covers the whole repository.
+- [`git-attributes`](git-attributes.md) covers:
+  - `.gitattributes`
 - [`github-repository-configuration`](github-repository-configuration.md) covers the whole repository.
 - [`project-agent-guidance`](project-agent-guidance.md) covers:
   - `docs/agents/project.md`
-- [`project-readmes`](project-readmes.md) covers:
-  - `factory/README.md`
+- [`project-readmes`](project-readmes.md) covers the whole repository.
 - [`repository-license`](repository-license.md) covers:
   - `LICENSE`
 - [`repository-readme`](repository-readme.md) covers:
