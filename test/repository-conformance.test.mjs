@@ -955,6 +955,7 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
     [
       "SKILL.md",
       "merge.mjs",
+      "platform.mjs",
       "pull-request-reviewer.mjs",
       "reviewer.mjs",
       "wait.mjs",

@@ -4,7 +4,7 @@ This directory vendors the self-contained ESM bundle and MIT license from
 [`@lutzseverino/postern` 1.1.0](https://www.npmjs.com/package/@lutzseverino/postern/v/1.1.0).
 Adopters install these exact resources; no runtime package installation is needed.
 
-- Source: [v1.1.0](https://github.com/lutzseverino/postern/tree/v1.1.0),
+- Source: [v1.1.0](https://github.com/lutzseverino/postern/tree/c2ece8be8865b64dbc2b7cd1ac67f51b47ae5fc0),
   commit `c2ece8be8865b64dbc2b7cd1ac67f51b47ae5fc0`.
 - Registry tarball: `https://registry.npmjs.org/@lutzseverino/postern/-/postern-1.1.0.tgz`.
 - Tarball SHA-256: `461f0a12a98c439e7935f5868704c2de594eef6e0d42eed1ec6893b0a0d9b1a2`.
