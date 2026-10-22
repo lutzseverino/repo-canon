@@ -43,14 +43,14 @@ scope entry; none is a question for the maintainer:
   symbolic link under a root, or an entry that blocks a root or an index, such
   as a file named `docs`.
 
-An update drafts afresh: the drafter cannot see the previous confirmed scope,
-so its draft asks again every question that scope may have settled. That scope
-holds the maintainer's earlier decisions. Find it in the retained
-`.repo-standards/inputs/scope-history.json`, format
-`repo-standards/scope-history/v5`, which `inspect --json` reports as
+An update drafts afresh, but the running CLI may already have reused an
+unchanged scope answer. Do not re-enter an answer it has reused. For questions
+the CLI still leaves open, use the previous confirmed scope and its evidence.
+It holds the maintainer's earlier decisions. Find it in the retained
+`.repo-standards/inputs/scope-history.json`, which `inspect --json` reports as
 `historicalScope`: the `documentation` entry of its discovery proposal, with its
-candidates and coverage. Answer each unresolved question it decides as it
-decided:
+candidates and coverage. Answer each remaining unresolved question it decides
+as it decided:
 
 - A root it included stays a root, with its files and a new index for each of
   its directories without one.
