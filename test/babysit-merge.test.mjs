@@ -4,14 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 
-const script = fileURLToPath(
-  new URL("../.agents/skills/babysit/merge.mjs", import.meta.url),
-);
-const fakeGh = fileURLToPath(
-  new URL("./fixtures/fake-gh-babysit-wait.mjs", import.meta.url),
-);
 const head = "a".repeat(40);
 
 function run(t, state, args = ["12", head]) {
@@ -19,20 +12,25 @@ function run(t, state, args = ["12", head]) {
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const statePath = join(directory, "state.json");
   writeFileSync(statePath, JSON.stringify({ head, ...state }));
-  writeFileSync(
-    join(directory, "gh"),
-    `#!/bin/sh\nexec node '${fakeGh}' "$@"\n`,
-    { mode: 0o755 },
-  );
-  const result = spawnSync(process.execPath, [script, ...args], {
-    cwd: directory,
-    encoding: "utf8",
-    env: {
-      ...process.env,
-      PATH: `${directory}:${process.env.PATH}`,
-      FAKE_GH_STATE: statePath,
+  const result = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `import { main } from ${JSON.stringify(new URL("../.agents/skills/babysit/merge.mjs", import.meta.url).href)}; import { fixtureConnection } from ${JSON.stringify(new URL("./fixtures/postern-babysit.mjs", import.meta.url).href)}; try { await main(process.argv.slice(1), fixtureConnection()); } catch (error) { console.error(error.message); process.exitCode = 1; }`,
+      "--",
+      ...args,
+    ],
+    {
+      cwd: directory,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${directory}:${process.env.PATH}`,
+        FAKE_GH_STATE: statePath,
+      },
     },
-  });
+  );
   return { ...result, state: JSON.parse(readFileSync(statePath, "utf8")) };
 }
 
@@ -44,18 +42,12 @@ test("squash-merges with the current title and verbatim body through stdin", (t)
     body,
   });
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(result.state.merge.args, [
-    "pr",
-    "merge",
-    "12",
-    "--squash",
-    "--match-head-commit",
-    head,
-    "--subject",
+  assert.equal(
+    result.state.merge.title,
     "fix: preserve $variables and `quotes` (#12)",
-    "--body-file",
-    "-",
-  ]);
+  );
+  assert.equal(result.state.merge.expectedHead, head);
+  assert.equal(result.state.merge.method, "squash");
   assert.equal(result.state.merge.body, body);
 });
 
@@ -108,7 +100,7 @@ test("reports access and merge failures without requesting a retry", (t) => {
   ]) {
     const result = run(t, state);
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /gh:/);
+    assert.match(result.stderr, /GitHub/);
   }
 });
 

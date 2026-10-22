@@ -25,4 +25,7 @@ by its respective authors:
   [parse5 license](vendor/parse5/LICENSE.parse5) and
   [entities license](vendor/parse5/LICENSE.entities).
 
+- Postern 1.1.0 retains its [MIT License](vendor/postern/LICENSE). Its
+  [provenance](vendor/postern/README.md) identifies the exact published bundle.
+
 These license files accompany the redistributed material and must be retained.

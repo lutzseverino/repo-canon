@@ -100,8 +100,9 @@ wrapper as body text.
 
 The workflow uses `pull_request_target` so GitHub loads its definition from the
 base repository. It checks out the pull request's base commit explicitly, does
-not persist credentials, and only grants `contents: read` to its token. The
-validator reads title and body values from the event JSON; it does not check out
+not persist credentials, and only grants `contents: read` to its token. The thin `.github/scripts/validate.mjs` trigger reads title and body values
+from the event JSON and passes a neutral snapshot to the shared
+`scripts/validate.mjs` command; it does not check out
 or execute the proposed head revision. No `run:` step interpolates the pull
 request title or body, so command-like values in fork metadata and descriptions
 reach the validator only as data in that file; a workflow test fails if a shared
@@ -154,3 +155,9 @@ The shared runtime reads Markdown structure with the repository's pinned
 [Marked lexer](../../vendor/marked/README.md) and rendered HTML content and link
 attributes with the pinned [parse5 bundle](../../vendor/parse5/README.md). Their
 source and license notices live beside the vendored ESM files.
+
+The common command dispatches `pr-metadata` and `issue-contract`. The trigger
+invokes its exported neutral interface so raw event data stays outside policy.
+Postern supplies issue-event normalization, not a PR-event operation. Its exact
+[public bundle, license and provenance](../../vendor/postern/README.md) are
+declared alongside the consumers; installation resolves every import without npm.

@@ -18,8 +18,8 @@ import {
 } from "../.agents/skills/babysit/wait.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
-const script = join(root, ".agents/skills/babysit/wait.mjs");
-const fakeGh = join(root, "test/fixtures/fake-gh-babysit-wait.mjs");
+const fakePlatform = new URL("./fixtures/postern-babysit.mjs", import.meta.url)
+  .href;
 
 const reviewerFixture = (name) =>
   JSON.parse(
@@ -1387,18 +1387,26 @@ const run = (state, args, reviewer = codexReviewer) => {
   }
   const statePath = join(directory, "state.json");
   writeFileSync(statePath, JSON.stringify(state));
-  const gh = join(directory, "gh");
-  writeFileSync(gh, `#!/bin/sh\nexec node ${fakeGh} "$@"\n`, { mode: 0o755 });
   return new Promise((resolve) => {
     const started = Date.now();
-    const child = spawn(process.execPath, [script, ...args], {
-      cwd: directory,
-      env: {
-        ...process.env,
-        PATH: `${directory}:${process.env.PATH}`,
-        FAKE_GH_STATE: statePath,
+    const child = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `import { main } from ${JSON.stringify(new URL("../.agents/skills/babysit/wait.mjs", import.meta.url).href)}; import { fixtureConnection } from ${JSON.stringify(fakePlatform)}; process.exitCode = await main(process.argv.slice(1), fixtureConnection());`,
+        "--",
+        ...args,
+      ],
+      {
+        cwd: directory,
+        env: {
+          ...process.env,
+          PATH: `${directory}:${process.env.PATH}`,
+          FAKE_GH_STATE: statePath,
+        },
       },
-    });
+    );
     let stdout = "";
     let stderr = "";
     let firstWrite = null;
@@ -1826,13 +1834,21 @@ test("an unrecorded push with old dates waits silently until its limit", async (
       },
       ["12", "--limit", "2", "--interval", "0.2"],
     );
-    assert.equal(result.code, 5);
-    assert.equal(result.stderr, "");
-    assert.equal(
-      result.stdout,
-      `${head}: still waiting on checks; run again\n`,
-    );
-    assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
+    if (failActivity) {
+      assert.equal(result.code, 1);
+      assert.match(result.stderr, /502/);
+    } else {
+      assert.equal(result.code, 5);
+      assert.equal(result.stderr, "");
+      assert.equal(
+        result.stdout,
+        `${head}: still waiting on checks; run again\n`,
+      );
+      assert.ok(
+        result.firstWrite >= 1900,
+        `wrote after ${result.firstWrite} ms`,
+      );
+    }
   }
 });
 
@@ -1852,6 +1868,11 @@ test("a push recorded after the first look settles within the invocation", async
       },
       ["12", "--limit", "3", "--interval", "0.2"],
     );
+    if (failActivityReads) {
+      assert.equal(result.code, 1);
+      assert.match(result.stderr, /502/);
+      continue;
+    }
     assert.equal(result.code, 4, result.stderr);
     assert.equal(result.stderr, "");
     assert.equal(
@@ -1964,7 +1985,7 @@ test("usage and gh errors exit 1 with one line", async () => {
   const failure = await run({ ...pendingPullRequest, fail: true }, ["12"]);
   assert.equal(failure.code, 1);
   assert.equal(failure.stderr.trim().split("\n").length, 1);
-  assert.match(failure.stderr, /HTTP 502/);
+  assert.match(failure.stderr, /502/);
 });
 
 test("without a reviewer, settled checks exit 0 and report no reviewer state", () => {

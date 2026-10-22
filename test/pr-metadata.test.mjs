@@ -14,10 +14,7 @@ import { fileURLToPath } from "node:url";
 import { installedValidator } from "./helpers/installed-validator.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const validator = join(
-  repositoryRoot,
-  ".github/scripts/validate-pr-metadata.mjs",
-);
+const validator = join(repositoryRoot, ".github/scripts/validate.mjs");
 
 function validBody(extra = "") {
   return `## Summary
@@ -52,10 +49,14 @@ function runEvent({
     eventPath,
     JSON.stringify({ action: "opened", pull_request: { title, body } }),
   );
-  const result = spawnSync(process.execPath, [validatorPath, eventPath], {
+  const result = spawnSync(process.execPath, [validatorPath, "pr-metadata"], {
     cwd: repositoryRoot,
     encoding: "utf8",
-    env: { ...process.env, GITHUB_STEP_SUMMARY: summaryPath },
+    env: {
+      ...process.env,
+      GITHUB_EVENT_PATH: eventPath,
+      GITHUB_STEP_SUMMARY: summaryPath,
+    },
   });
   const summary = existsSync(summaryPath)
     ? readFileSync(summaryPath, "utf8")
@@ -133,10 +134,7 @@ test("publishes the four-section template in the required order", () => {
 
 test("runs from the exact installed workflow layout", (t) => {
   const result = runEvent({
-    validatorPath: installedValidator(
-      t,
-      ".github/scripts/validate-pr-metadata.mjs",
-    ),
+    validatorPath: installedValidator(t, ".github/scripts/validate.mjs"),
   });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /validation passed/);
@@ -1178,10 +1176,7 @@ BREAKING CHANGE: example footer text stays inert.
 });
 
 test("rejects co-author trailers in titles and raw bodies of every kind", (t) => {
-  const validatorPath = installedValidator(
-    t,
-    ".github/scripts/validate-pr-metadata.mjs",
-  );
+  const validatorPath = installedValidator(t, ".github/scripts/validate.mjs");
   for (const line of [
     "Co-authored-by: Example Person <person@example.com>",
     "  co-authored-by: build-worker[bot] <bot@example.com>",

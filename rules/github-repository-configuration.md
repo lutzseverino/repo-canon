@@ -299,10 +299,9 @@ A child carries exactly one of `wayfinder:research`, `wayfinder:prototype`,
 `wayfinder:grilling`, and `wayfinder:task`, and never `wayfinder:map` with it.
 Its body has a Question section that is not a placeholder, and its parent is an
 issue labeled `wayfinder:map`. Make the child a native sub-issue of its map:
-on GitHub the native parent relationship is canonical. For compatibility, the
-workflow also accepts the first issue reference in the child's `Parent`
-section when the native relationship is absent or GitHub's relationship
-endpoint is unavailable; a `Part of` line alone does not link a child.
+on GitHub only the native parent relationship counts. A `Parent` section
+retains its content requirements but a body-only reference does not link a
+child. A failed relationship read fails validation before any mutation.
 
 Maps and children carry no readiness and no workflow state label. Their
 eligibility uses open state, assignment and native blockers, and the workflow

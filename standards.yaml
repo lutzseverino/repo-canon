@@ -113,6 +113,7 @@ defaults:
               - vendor/marked/LICENSE
               - vendor/parse5/LICENSE.parse5
               - vendor/parse5/LICENSE.entities
+              - vendor/postern/LICENSE
             arguments: []
           prerequisite:
             version-arguments: ["--version"]
@@ -163,6 +164,31 @@ defaults:
       kind: file
       target: .github/ISSUE_TEMPLATE/implementation-ticket.yml
       exact: .github/ISSUE_TEMPLATE/implementation-ticket.yml
+
+    validator-command:
+      kind: file
+      target: scripts/validate.mjs
+      exact: scripts/validate.mjs
+
+    github-validator-trigger:
+      kind: file
+      target: .github/scripts/validate.mjs
+      exact: .github/scripts/validate.mjs
+
+    postern-bundle:
+      kind: file
+      target: vendor/postern/postern.mjs
+      exact: vendor/postern/postern.mjs
+
+    postern-license:
+      kind: file
+      target: vendor/postern/LICENSE
+      exact: vendor/postern/LICENSE
+
+    postern-provenance:
+      kind: file
+      target: vendor/postern/README.md
+      exact: vendor/postern/README.md
 
     issue-contract-validator:
       kind: file
