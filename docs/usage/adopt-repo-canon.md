@@ -2,8 +2,9 @@
 
 The [Repository README](../../README.md#installation) gives the one-line `adopt`
 command that adopts Repo Canon and every later update. `adopt` asks each
-question adoption needs; this guide covers the choices behind three of them:
-the profile, remote setup, and the personal skills adoption leaves to you. The
+question adoption needs; this guide covers the choices behind four of them:
+the profile, which Projects join a stack, remote setup, and the personal skills
+adoption leaves to you. The
 CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/adoption.md)
 describes `adopt` itself, at a terminal and through an agent.

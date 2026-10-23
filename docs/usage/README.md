@@ -13,8 +13,8 @@ profile installs the repository files and workflow rules a repository it serves 
 describes running it.
 
 - [Adopt Repo Canon](adopt-repo-canon.md): choosing a profile, how adoption
-  treats stacks, remote setup prerequisites and deferral, and recommended
-  personal skills.
+  treats a Project's development tools, remote setup prerequisites and
+  deferral, and recommended personal skills.
 - [Release versioning](versioning.md): version increments, breaking standards
   changes, and selecting an adoptable release.
 - [Recommended stacks](stacks.md): a stack is a named set of development tools;

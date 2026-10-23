@@ -77,8 +77,9 @@ script, the documentation scope drafter, retains the same modules and
 `standards.yaml`; inspection runs it read-only to draft the documentation
 scope. The `typescript-node-stack` check and its discovery script, the
 typescript-node stack scope drafter, both retain the shared stack module,
-`operations/lib/typescript-node-stack.mjs`, so the draft and the check read a
-Project's manifests the same way. Other operation resources retain the shared GitHub operation
+`operations/lib/typescript-node-stack.mjs`, and the local-link module it reads
+paths through, so the draft and the check read a Project's manifests the same
+way. Other operation resources retain the shared GitHub operation
 module, Repo Canon's MIT license and third-party notice, and every license
 linked by that notice. The rendered-Markdown runtime, parser files and Postern resources are also
 exact declarations because the validators and babysit import them from the

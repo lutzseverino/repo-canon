@@ -172,6 +172,8 @@ const reasons = {
     `The Project of ${code(path)} matches the typescript-node stack's manifest facts: pnpm 11, its lockfile, Node.js 24 or 26, oxlint 1, Prettier 3 and a validate script.`,
   differs: (path, differences) =>
     `The Project of ${code(path)} differs from the typescript-node stack, so it stays out of the scope until a migration brings it in: ${differences.join(" ")}`,
+  workspaceRoot: (path) =>
+    `${code(path)} is a workspace root, which holds its members' shared configuration rather than a Project; its members are the Projects.`,
   unmaintained: (path, directory) =>
     `${code(path)} lies under ${code(directory)}, which holds fixtures, generated output, or copied code rather than a maintained Project, and no workspace lists it.`,
 };
@@ -179,14 +181,12 @@ const reasons = {
 const questions = {
   standalone: (path) =>
     `Is ${code(path)} the manifest of a maintained Project? No workspace lists it. If it is, include it when it matches the stack, or exclude it naming its differences; otherwise exclude it as no maintained Project.`,
-  workspaceRoot: (path, differences) =>
-    `Is the workspace root ${code(path)} the manifest of a maintained Project, or does it only hold its members' shared configuration? If it is a Project, exclude it naming its differences: ${differences.join(" ")} Otherwise exclude it as no maintained Project.`,
   workspace: (path) =>
     `${code(path)} states its workspace members in a form the drafter cannot read. Which manifests under it belong to maintained Projects? Include each one that matches the stack and exclude the rest with their reasons.`,
 };
 
 function coverage({ included, projects }) {
-  const drafted = `Drafted from manifests and workspace configuration by ${code(drafterPath)}: one ${code(manifestName)} per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. Each workspace member, and a root package that configures no workspace, is a Project; a workspace root is included when it matches and asked about otherwise.`;
+  const drafted = `Drafted from manifests and workspace configuration by ${code(drafterPath)}: one ${code(manifestName)} per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. In a workspace, the members are the Projects and the root is not; a root package without workspace members is a Project.`;
   if (included > 0) return drafted;
   if (projects === 0)
     return `${drafted} The repository holds no Node.js Project, so the declaration has no scope.`;
@@ -209,8 +209,25 @@ function draftStackScope({ projectRoot }) {
       (path) => path === manifestName || path.endsWith(`/${manifestName}`),
     )
     .sort();
+  // The workspace roots that list at least one kept member manifest. A
+  // directory whose workspace configuration lists none, such as a single
+  // package that keeps pnpm settings in `pnpm-workspace.yaml`, is a package.
+  const memberRoots = new Set(
+    manifests
+      .map((path) => listingWorkspace(parentOf(path), found)?.root)
+      .filter((root) => root !== undefined),
+  );
   for (const path of manifests) {
     const directory = parentOf(path);
+    if (memberRoots.has(directory)) {
+      candidates.push({
+        path,
+        decision: "exclude",
+        reason: reasons.workspaceRoot(path),
+        evidence: [...new Set([path, ...found.get(directory).sources])],
+      });
+      continue;
+    }
     const ownWorkspace = found.get(directory);
     const unreadableAbove = [...found].some(
       ([root, configuration]) =>
@@ -243,12 +260,6 @@ function draftStackScope({ projectRoot }) {
       continue;
     }
     const { differences, evidence } = stackDifferences(projectRoot, path);
-    // A workspace root may only aggregate its members, so one that differs
-    // is not taken for a differing Project.
-    if (differences.length > 0 && ownWorkspace?.patterns) {
-      unresolved.push(questions.workspaceRoot(path, differences));
-      continue;
-    }
     projects += 1;
     candidates.push(
       differences.length === 0

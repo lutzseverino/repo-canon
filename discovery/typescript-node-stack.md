@@ -10,14 +10,15 @@ The scope names one path per Project: its `package.json`, such as
 `package.json` for a root package or `packages/cli/package.json` for a
 workspace member. The drafter reads the manifests and workspace configuration
 the repository keeps: each `package.json`, its `workspaces`, and the
-`packages` of each `pnpm-workspace.yaml`. Each listed workspace member is a
-Project, and so is a root `package.json` that configures no workspace.
+`packages` of each `pnpm-workspace.yaml`. In a workspace, each listed member
+is a Project and the root is not. A root `package.json` without workspace
+members, including one beside a `pnpm-workspace.yaml` that holds only settings
+or catalogs, is the repository's one Project.
 
-- A Project that matches the stack's manifest facts is included, and so is a
-  workspace root that matches.
+- A Project that matches the stack's manifest facts is included.
 - A Project that differs is excluded, with a reason naming its differences.
-- A workspace root that differs is an unresolved question: it may be a Project
-  or only hold its members' shared configuration.
+- A workspace root is excluded, conforming or not, as its members' shared
+  configuration.
 - A `package.json` under a directory of fixtures, generated output, or copied
   code, such as `fixtures`, `dist`, or `vendor`, that no workspace lists is
   excluded.

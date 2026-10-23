@@ -17,9 +17,11 @@ const drafter = join(sourceRoot, drafterPath);
 const check = join(sourceRoot, "operations/check-typescript-node-stack.mjs");
 
 const coverage =
-  "Drafted from manifests and workspace configuration by `discovery/draft-typescript-node-stack-scope.mjs`: one `package.json` per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. Each workspace member, and a root package that configures no workspace, is a Project; a workspace root is included when it matches and asked about otherwise.";
+  "Drafted from manifests and workspace configuration by `discovery/draft-typescript-node-stack-scope.mjs`: one `package.json` per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. In a workspace, the members are the Projects and the root is not; a root package without workspace members is a Project.";
 const matches = (path) =>
   `The Project of \`${path}\` matches the typescript-node stack's manifest facts: pnpm 11, its lockfile, Node.js 24 or 26, oxlint 1, Prettier 3 and a validate script.`;
+const workspaceRoot = (path) =>
+  `\`${path}\` is a workspace root, which holds its members' shared configuration rather than a Project; its members are the Projects.`;
 const differs = (path, differences) =>
   `The Project of \`${path}\` differs from the typescript-node stack, so it stays out of the scope until a migration brings it in: ${differences.join(" ")}`;
 
@@ -167,9 +169,9 @@ test("includes only the conforming Projects of a pnpm workspace, naming each dif
     candidates: [
       {
         path: "package.json",
-        decision: "include",
-        reason: matches("package.json"),
-        evidence: ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"],
+        decision: "exclude",
+        reason: workspaceRoot("package.json"),
+        evidence: ["package.json", "pnpm-workspace.yaml"],
       },
       {
         path: "packages/cli/package.json",
@@ -204,20 +206,51 @@ test("includes only the conforming Projects of a pnpm workspace, naming each dif
   });
 });
 
-test("asks about a workspace root that differs instead of excluding it", (t) => {
+test("excludes a workspace root, conforming or not, without a question", (t) => {
+  for (const root of [manifest({ name: "root" }), manifest({ scripts: {} })]) {
+    const { entry } = drafted(t, {
+      "package.json": root,
+      "pnpm-lock.yaml": "",
+      "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+      "packages/cli/package.json": member(),
+    });
+    assert.deepEqual(
+      entry.candidates.map(({ path, decision, reason }) => [
+        path,
+        decision,
+        reason,
+      ]),
+      [
+        ["package.json", "exclude", workspaceRoot("package.json")],
+        [
+          "packages/cli/package.json",
+          "include",
+          matches("packages/cli/package.json"),
+        ],
+      ],
+    );
+    assert.deepEqual(entry.unresolved, []);
+  }
+});
+
+test("keeps a single package's root manifest as its Project when pnpm-workspace.yaml lists no members", (t) => {
   const { entry } = drafted(t, {
-    "package.json": manifest({ name: "root", scripts: {} }),
+    "package.json": manifest({
+      devDependencies: { oxlint: "catalog:", prettier: "catalog:" },
+    }),
     "pnpm-lock.yaml": "",
-    "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
-    "packages/cli/package.json": member(),
+    "pnpm-workspace.yaml":
+      "catalog:\n  oxlint: 1.86.0\n  prettier: 3.9.9\nonlyBuiltDependencies: []\n",
   });
-  assert.deepEqual(
-    entry.candidates.map(({ path, decision }) => [path, decision]),
-    [["packages/cli/package.json", "include"]],
-  );
-  assert.deepEqual(entry.unresolved, [
-    "Is the workspace root `package.json` the manifest of a maintained Project, or does it only hold its members' shared configuration? If it is a Project, exclude it naming its differences: Add a `validate` script to `package.json` that runs the Project's checks. Otherwise exclude it as no maintained Project.",
+  assert.deepEqual(entry.candidates, [
+    {
+      path: "package.json",
+      decision: "include",
+      reason: matches("package.json"),
+      evidence: ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"],
+    },
   ]);
+  assert.equal(entry.noScope, undefined);
 });
 
 test("reads package.json workspaces and their exclusions", (t) => {
@@ -230,7 +263,7 @@ test("reads package.json workspaces and their exclusions", (t) => {
   assert.deepEqual(
     entry.candidates.map(({ path, decision }) => [path, decision]),
     [
-      ["package.json", "include"],
+      ["package.json", "exclude"],
       ["packages/a/b/package.json", "include"],
     ],
   );
@@ -370,7 +403,7 @@ test("every Project it includes passes the stack check", (t) => {
   const paths = entry.candidates
     .filter((candidate) => candidate.decision === "include")
     .map((candidate) => candidate.path);
-  assert.deepEqual(paths, ["package.json", "packages/a/package.json"]);
+  assert.deepEqual(paths, ["packages/a/package.json"]);
   const outcome = invokeCheck(check, root, {
     operation: {
       declaration: "typescript-node-stack",

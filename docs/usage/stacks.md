@@ -2,11 +2,13 @@
 
 A stack is a named set of development tools at exact major versions, such as
 the package manager, runtime, compiler, linter, formatter and test runner a
-Project uses. Stacks are opt-in: the `standard` and `factory` profiles stay
-stack-free, and a Project can permanently use no stack.
+Project uses. Stacks are opt-in per Project, and a Project can permanently use
+no stack. Both profiles include the optional `typescript-node-stack`
+declaration, but it governs only the Projects confirmed in its scope, so a
+repository with no matching Project gets no stack rules, as the
+[authoring notes](../../authoring-notes.md) explain.
 
-Both profiles include the optional `typescript-node-stack` declaration. For
-each Project confirmed in its scope, adoption installs the
+For each Project confirmed in its scope, adoption installs the
 [stack rules](../../rules/typescript-node-stack.md), assesses the Project
 against them, and runs a read-only check of its manifests. A repository without
 such a Project confirms no scope: no stack rules are installed and no stack
@@ -36,9 +38,10 @@ file.
 ## Projects and workspaces
 
 A Project uses at most one stack. Several stacks can coexist in one repository
-with disjoint scopes, and internal workspace packages count as Projects.
-Workspace-shared facts such as `packageManager`, the lockfile and `engines`
-live and are checked at the workspace root.
+with disjoint scopes. In a workspace, the member packages are the Projects;
+the workspace root holds their shared facts, such as `packageManager`, the
+lockfile and `engines`, and is not itself a Project. Those facts live and are
+checked at the root for each member.
 
 The declaration's scope names one `package.json` per Project. Discovery drafts
 it from manifests and workspaces: a Project that matches the stack's manifest

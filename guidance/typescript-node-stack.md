@@ -18,6 +18,8 @@ membership open.
   difference in your handoff, so that a separate migration ticket brings it
   in.
 - A Project that already matches stays in the scope.
+- A workspace root is never a Project: exclude it, conforming or not, and
+  assess its shared facts through its members.
 
 When no Project is included, confirm no scope, with the reasons for each
 exclusion.

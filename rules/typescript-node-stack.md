@@ -2,7 +2,8 @@
 
 These rules cover each Project in the confirmed scope, named by its
 `package.json`. A Project is a maintained CLI, library, or tool with its own
-manifest, and the members of a workspace count as Projects.
+manifest. In a workspace, the members are the Projects; the workspace root
+holds their shared configuration and is not itself a Project.
 
 ## Tools and majors
 
@@ -22,8 +23,9 @@ A covered Project uses:
 ## Workspaces
 
 Facts a workspace shares, `packageManager`, the lockfile and `engines`, are
-set at the workspace root, not in each member. A Project outside a workspace is
-its own workspace root.
+set at the workspace root, not in each member, and the members' checks read
+them there. A package outside any workspace is its own workspace root and its
+own Project.
 
 ## Pull request checks
 

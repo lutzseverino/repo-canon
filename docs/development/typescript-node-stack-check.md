@@ -22,8 +22,10 @@ On success it writes one `repo-standards/result/v2` object to standard output.
 The result passes when no confirmed Project needs a correction; its message
 names what still needs the contextual assessment: TypeScript 7, `node --test`,
 required pull request checks running `validate`, and each Project's Setup and
-validation section. Otherwise it fails with every correction for every path,
-each once, in the order of the confirmed paths. An empty scope passes for zero Projects.
+validation section. Otherwise it fails with every correction of every path, in
+the order of the confirmed paths, each prefixed with the path it belongs to. A
+workspace-root correction that several confirmed Projects share is reported for
+each of them. An empty scope passes for zero Projects.
 
 ## What it reads
 
@@ -52,7 +54,11 @@ For each confirmed path the check names one correction per difference:
 - the Project's `package.json` has no nonempty `validate` script.
 
 A missing or non-object `package.json`, or a workspace configuration the
-module cannot read on the way to the root, is its own correction.
+module cannot read on the way to the root, is its own correction. The module
+reads a file only when the shared local-path policy of
+`operations/lib/local-markdown-links.mjs` finds it inside the project and it
+is a regular file, so a path under a symbolic link that leaves the project
+reads as missing.
 
 The module's range reader evaluates the semantic version ranges npm writes:
 comparators, `^`, `~`, `x` ranges, hyphen ranges and `||` unions. A
@@ -72,6 +78,7 @@ node --test test/typescript-node-stack-check.test.mjs
 They run the check over fixture repositories, assert that it changes nothing,
 and cover a conforming root package and workspace member, both accepted
 `engines.node` spellings, a named correction for each manifest fact, catalog
-specifiers, workspace
+specifiers, shared root corrections reported per path, a manifest under a
+symbolic link that leaves the project, workspace
 roots from `pnpm-workspace.yaml` and `package.json`, refused targets, and a run
 from a retained source that holds only its declared resources.

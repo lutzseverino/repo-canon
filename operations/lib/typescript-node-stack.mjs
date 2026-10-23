@@ -1,5 +1,6 @@
 import { lstatSync, readFileSync } from "node:fs";
-import { posix, sep } from "node:path";
+import { join, posix } from "node:path";
+import { localPathExists } from "./local-markdown-links.mjs";
 
 // The facts of the `typescript-node` stack that a Project's manifests show,
 // shared by the stack's check and its scope drafter so that both read a
@@ -22,9 +23,7 @@ export const declaredTools = [
 const dependencyFields = ["dependencies", "devDependencies"];
 
 function absolutePath(projectRoot, path) {
-  return path === ""
-    ? projectRoot
-    : `${projectRoot}${sep}${path.split("/").join(sep)}`;
+  return join(projectRoot, ...path.split("/"));
 }
 
 // The directory that holds a path, or '' for a path at the repository root.
@@ -62,10 +61,16 @@ export function isManifestPath(path) {
   );
 }
 
-// Whether a regular file, not a symbolic link, lies at a path.
+// Whether a regular file, not a symbolic link, lies at a path inside the
+// project. Every file the module reads passes through here: the shared
+// local-path policy refuses a path whose directories leave the project
+// through a symbolic link, as the Project README check does.
 export function isRegularFile(projectRoot, path) {
   try {
-    return lstatSync(absolutePath(projectRoot, path)).isFile();
+    return (
+      localPathExists(projectRoot, path) &&
+      lstatSync(absolutePath(projectRoot, path)).isFile()
+    );
   } catch {
     return false;
   }
@@ -573,7 +578,7 @@ export function stackDifferences(projectRoot, manifestPath) {
   if (!project.manifest)
     return {
       differences: [
-        `${code(manifestPath)} is ${project.missing ? "missing" : "not a JSON object"}; a Project is one readable ${code(manifestName)}.`,
+        `${code(manifestPath)} is ${project.missing ? "missing, or is not a regular file inside the project" : "not a JSON object"}; a Project is one readable ${code(manifestName)}.`,
       ],
       evidence: project.missing ? [] : [manifestPath],
       workspaceRoot: null,

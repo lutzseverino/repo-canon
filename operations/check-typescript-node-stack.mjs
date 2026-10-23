@@ -57,11 +57,14 @@ function result(status, message) {
   );
 }
 
+// Every correction of every confirmed path, each naming its path, so a
+// workspace-root fact that several Projects share is reported for each.
 function validate(projectRoot, paths) {
-  const corrections = paths.flatMap(
-    (path) => stackDifferences(projectRoot, path).differences,
+  return paths.flatMap((path) =>
+    stackDifferences(projectRoot, path).differences.map(
+      (difference) => `\`${path}\`: ${difference}`,
+    ),
   );
-  return [...new Set(corrections)];
 }
 
 try {

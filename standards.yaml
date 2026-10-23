@@ -432,6 +432,7 @@ defaults:
           script: discovery/draft-typescript-node-stack-scope.mjs
           resources:
             - operations/lib/typescript-node-stack.mjs
+            - operations/lib/local-markdown-links.mjs
           arguments: []
         prerequisite:
           version-arguments: ["--version"]
@@ -444,6 +445,7 @@ defaults:
             script: operations/check-typescript-node-stack.mjs
             resources:
               - operations/lib/typescript-node-stack.mjs
+              - operations/lib/local-markdown-links.mjs
             arguments: []
           prerequisite:
             version-arguments: ["--version"]

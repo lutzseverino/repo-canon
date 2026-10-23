@@ -1,4 +1,13 @@
 import assert from "node:assert/strict";
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
@@ -67,12 +76,24 @@ function check(t, files, paths, script_ = script) {
   return outcome.result;
 }
 
-function corrections(result) {
+function failedMessage(result) {
   assert.equal(result.status, "failed", result.message);
   return result.message.replace(
     /^The typescript-node stack needs correction: /,
     "",
   );
+}
+
+// The corrections of a single-path result, with the path each one names
+// removed: the message must open with that path, and name no other path.
+function corrections(result) {
+  const message = failedMessage(result);
+  const [, path] = /^`([^`]+)`: /.exec(message) ?? [];
+  assert.ok(path, message);
+  const prefix = `\`${path}\`: `;
+  for (const [named] of message.matchAll(/`[^`]+\/?package\.json`: /g))
+    assert.equal(named, prefix, message);
+  return message.replaceAll(prefix, "");
 }
 
 test("passes a conforming root package and a conforming workspace member", (t) => {
@@ -370,7 +391,7 @@ test("names a correction for a missing validate script", (t) => {
   );
 });
 
-test("reports every correction for each path, once each", (t) => {
+test("reports every correction for each path, including shared workspace-root ones", (t) => {
   const result = check(
     t,
     {
@@ -382,13 +403,14 @@ test("reports every correction for each path, once each", (t) => {
     ["apps/web/package.json", "libs/core/package.json"],
   );
   assert.equal(
-    corrections(result),
-    [
-      "Set `packageManager` to `pnpm@11.x.y` in the workspace root `package.json`; it is missing.",
-      "Add `pnpm-lock.yaml` at the workspace root, `pnpm-lock.yaml`.",
-      "Add a `validate` script to `apps/web/package.json` that runs the Project's checks.",
-      "Add a `validate` script to `libs/core/package.json` that runs the Project's checks.",
-    ].join(" "),
+    failedMessage(result),
+    ["apps/web/package.json", "libs/core/package.json"]
+      .flatMap((path) => [
+        `\`${path}\`: Set \`packageManager\` to \`pnpm@11.x.y\` in the workspace root \`package.json\`; it is missing.`,
+        `\`${path}\`: Add \`pnpm-lock.yaml\` at the workspace root, \`pnpm-lock.yaml\`.`,
+        `\`${path}\`: Add a \`validate\` script to \`${path}\` that runs the Project's checks.`,
+      ])
+      .join(" "),
   );
 });
 
@@ -397,11 +419,35 @@ test("names a missing or unreadable confirmed manifest", (t) => {
     corrections(
       check(t, { "README.md": "# Fixture\n" }, ["tool/package.json"]),
     ),
-    "`tool/package.json` is missing; a Project is one readable `package.json`.",
+    "`tool/package.json` is missing, or is not a regular file inside the project; a Project is one readable `package.json`.",
   );
   assert.equal(
     corrections(check(t, { "package.json": "[]\n" }, ["package.json"])),
     "`package.json` is not a JSON object; a Project is one readable `package.json`.",
+  );
+});
+
+test("refuses a confirmed manifest under a symbolic link that leaves the project", (t) => {
+  const outside = mkdtempSync(join(tmpdir(), "repo-canon-outside-"));
+  t.after(() => rmSync(outside, { recursive: true, force: true }));
+  mkdirSync(join(outside, "a"));
+  writeFileSync(join(outside, "a/package.json"), manifest());
+  writeFileSync(join(outside, "pnpm-lock.yaml"), "");
+  const project = fixture(standalone);
+  t.after(project.close);
+  symlinkSync(outside, join(project.root, "pkgs"), "dir");
+  const outcome = invokeCheck(script, project.root, {
+    operation: {
+      declaration: "typescript-node-stack",
+      phase: "checks",
+      id: "typescript-node-stack-manifests",
+    },
+    allowedTargets: { paths: ["pkgs/a/package.json"], directories: [] },
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(
+    corrections(outcome.result),
+    "`pkgs/a/package.json` is missing, or is not a regular file inside the project; a Project is one readable `package.json`.",
   );
 });
 
