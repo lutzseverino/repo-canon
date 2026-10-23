@@ -185,7 +185,7 @@ test("Access supplements reject missing workflow, review-thread and push facts",
   ]);
 });
 
-test("every platform failure at every issue read stage aborts before mutation", async () => {
+test("unavailable issue reads abort before mutation; missing roles follow authorization", async (t) => {
   for (const reason of platformErrorReasons)
     for (const stage of ["issue", "comments", "labelChanges", "role"]) {
       let mutations = 0;
@@ -235,7 +235,7 @@ test("every platform failure at every issue read stage aborts before mutation", 
         async () => {
           throw new PlatformError(reason, "Fixture read failed.");
         };
-      await assert.rejects(
+      const run = () =>
         runIssueContractValidation(
           {
             repository: "example/repository",
@@ -245,10 +245,25 @@ test("every platform failure at every issue read stage aborts before mutation", 
             label: null,
           },
           connection,
-        ),
-        { reason },
-      );
-      assert.equal(mutations, 0, `${reason} at ${stage}`);
+        );
+      if (stage === "role" && reason === "notFound") {
+        const messages = [];
+        const error = t.mock.method(console, "error", (message) =>
+          messages.push(message),
+        );
+        try {
+          assert.equal(await run(), 1);
+          assert.deepEqual(messages, [
+            "@maintainer is not authorized to grant readiness. Use a repository admin, maintainer, or collaborator with the triage role.",
+          ]);
+          assert.equal(mutations, 3); // Remove readiness, add triage, update feedback.
+        } finally {
+          error.mock.restore();
+        }
+      } else {
+        await assert.rejects(run, { reason });
+        assert.equal(mutations, 0, `${reason} at ${stage}`);
+      }
     }
 });
 
