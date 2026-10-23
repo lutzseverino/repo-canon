@@ -179,12 +179,12 @@ described below.
 
 ### Adoption pull requests
 
-An adoption pull request holds one completed Repository Standards adoption or
-update run and nothing else. Record the verdict of the project's pinned
-`.repo-standards/runtime/node_modules/.bin/repo-standards status` as ready to
-commit before committing; once committed, `status` reports not ready.
-Otherwise finish or recover the run with `repo-standards adopt`, using the
-pinned runtime once a run has started.
+An adoption pull request holds only one completed Repository Standards adoption or
+update run. Record the pinned
+`.repo-standards/runtime/node_modules/.bin/repo-standards status` ready-to-commit
+verdict before committing. Otherwise finish or recover with `repo-standards adopt`,
+using the pinned runtime once a run starts. An empty recorded change set can
+remain ready after committing; later readiness never replaces pre-commit evidence.
 
 Title it `chore: adopt <source> <version> with CLI <version>`, naming the
 source by the repository name in its URL and the versions from the record's
