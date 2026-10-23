@@ -1,4 +1,11 @@
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,10 +26,9 @@ export function exactFiles() {
   return files;
 }
 
-// Installs a validator into a fresh tree as an adopting repository receives
-// it: the exact file that `standards.yaml` declares at `target`, then each
-// exact file it reaches through relative imports. A module that no declaration
-// installs fails here rather than resolving through the source checkout.
+// Installs a consumer into a fresh tree from exact file and skill declarations,
+// following relative imports and retaining the platform bundle's notices.
+// Undeclared modules fail here instead of resolving through the source checkout.
 export function installedValidator(t, target) {
   const files = exactFiles();
   const root = mkdtempSync(join(tmpdir(), "repo-canon-installed-"));
@@ -32,9 +38,25 @@ export function installedValidator(t, target) {
   while (pending.length > 0) {
     const path = pending.pop();
     if (installed.has(path)) continue;
-    const source = files.get(path);
+    let source = files.get(path);
+    if (source === undefined) {
+      const manifest = readFileSync(join(sourceRoot, "standards.yaml"), "utf8");
+      for (const [, name, directory] of manifest.matchAll(
+        /kind: skill\n\s+name: (\S+)\n\s+source: (\S+)/g,
+      )) {
+        const prefix = `.agents/skills/${name}/`;
+        if (path.startsWith(prefix)) {
+          const candidate = posix.join(directory, path.slice(prefix.length));
+          if (existsSync(join(sourceRoot, candidate))) source = candidate;
+        }
+      }
+    }
     if (source === undefined)
-      throw new Error(`standards.yaml installs no exact file at ${path}.`);
+      throw new Error(
+        `standards.yaml installs no exact file or skill resource at ${path}.`,
+      );
+    if (path === "vendor/postern/postern.mjs")
+      pending.push("vendor/postern/LICENSE", "vendor/postern/README.md");
     installed.add(path);
     const destination = join(root, path);
     mkdirSync(dirname(destination), { recursive: true });

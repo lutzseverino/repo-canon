@@ -299,6 +299,7 @@ test("public CLI 8.1.0 installs the triage fork and the GitHub rules for the who
     );
     const countedFiles = [
       "scripts/validate-issue-contract.mjs",
+      "scripts/validate.mjs",
       "operations/lib/rendered-markdown.mjs",
       ...readdirSync(join(project, ".agents/skills/babysit"))
         .filter((name) => name.endsWith(".mjs"))

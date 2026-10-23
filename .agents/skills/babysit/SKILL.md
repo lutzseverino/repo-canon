@@ -31,7 +31,7 @@ required request.
      review.
    - `5`: still waiting; run it again.
    - `1`: follow [Credentials](../../../CONTRIBUTING.md#credentials) for a
-     permission refusal; otherwise fix the invocation or other `gh` error and
+     permission refusal; otherwise fix the invocation or other platform error and
      run it again.
 
 2. Verify each failing check and review finding against the source.
@@ -50,6 +50,6 @@ required request.
    [Comments](../../../CONTRIBUTING.md#comments), without retrying the merge;
    `1` means follow
    [Credentials](../../../CONTRIBUTING.md#credentials) for a permission refusal;
-   otherwise fix the invocation or other `gh` error and
+   otherwise fix the invocation or other platform error and
    run it again.
 6. Stop.

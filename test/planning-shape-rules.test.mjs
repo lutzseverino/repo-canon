@@ -316,7 +316,7 @@ test("a Wayfinder child carries exactly one child label the rules name, a Questi
   );
   rejected(
     decide({ body, labels: [childLabels[0]] }),
-    "Link the Wayfinder child to its parent map using the native parent relationship or a `Parent` section.",
+    "Link the Wayfinder child to its parent map using the native parent relationship.",
   );
   rejected(
     decide({
@@ -328,19 +328,19 @@ test("a Wayfinder child carries exactly one child label the rules name, a Questi
   );
 });
 
-test("a native parent is canonical and wins over a Parent section, which is the fallback, and a Part of line links nothing", () => {
+test("only a native parent supplies a GitHub relationship; body references remain content", () => {
   assert.match(
     mapRules,
-    /on GitHub the native parent relationship is canonical\. For compatibility, the workflow also accepts the first issue reference in the child's `Parent` section when the native relationship is absent/,
+    /on GitHub only the native parent relationship counts/,
   );
   const question = "## Question\n\nWhich cache fits?";
-  accepted(
+  rejected(
     decide({
       body: `## Parent\n\n#7\n\n${question}`,
       labels: [childLabels[0]],
       relatedIssues: { "/repos/example/repository/issues/7": mapIssue },
     }),
-    "Wayfinder child",
+    "Link the Wayfinder child to its parent map",
   );
   rejected(
     decide({

@@ -10,6 +10,8 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
+import { installedValidator } from "./helpers/installed-validator.mjs";
 import {
   checkStates,
   decide,
@@ -18,8 +20,8 @@ import {
 } from "../.agents/skills/babysit/wait.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
-const script = join(root, ".agents/skills/babysit/wait.mjs");
-const fakeGh = join(root, "test/fixtures/fake-gh-babysit-wait.mjs");
+const fakePlatform = new URL("./fixtures/postern-babysit.mjs", import.meta.url)
+  .href;
 
 const reviewerFixture = (name) =>
   JSON.parse(
@@ -1376,7 +1378,14 @@ test("unfinished runs hold only their own workflow and check", () => {
 
 // Runs the script against a fake `gh` and returns everything it wrote, with
 // the time of its first write.
-const run = (state, args, reviewer = codexReviewer) => {
+const run = (
+  state,
+  args,
+  reviewer = codexReviewer,
+  target = new URL("../.agents/skills/babysit/wait.mjs", import.meta.url),
+) => {
+  const targetURL = typeof target === "string" ? pathToFileURL(target) : target;
+  const bundleURL = new URL("../../../vendor/postern/postern.mjs", targetURL);
   const directory = mkdtempSync(join(tmpdir(), "babysit-wait-"));
   if (reviewer) {
     mkdirSync(join(directory, ".github"));
@@ -1387,18 +1396,26 @@ const run = (state, args, reviewer = codexReviewer) => {
   }
   const statePath = join(directory, "state.json");
   writeFileSync(statePath, JSON.stringify(state));
-  const gh = join(directory, "gh");
-  writeFileSync(gh, `#!/bin/sh\nexec node ${fakeGh} "$@"\n`, { mode: 0o755 });
   return new Promise((resolve) => {
     const started = Date.now();
-    const child = spawn(process.execPath, [script, ...args], {
-      cwd: directory,
-      env: {
-        ...process.env,
-        PATH: `${directory}:${process.env.PATH}`,
-        FAKE_GH_STATE: statePath,
+    const child = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `import { main } from ${JSON.stringify(targetURL.href)}; import { connect } from ${JSON.stringify(bundleURL.href)}; import { fixtureConnection } from ${JSON.stringify(fakePlatform)}; process.exitCode = await main(process.argv.slice(1), fixtureConnection(connect));`,
+        "--",
+        ...args,
+      ],
+      {
+        cwd: directory,
+        env: {
+          ...process.env,
+          PATH: `${directory}:${process.env.PATH}`,
+          FAKE_GH_STATE: statePath,
+        },
       },
-    });
+    );
     let stdout = "";
     let stderr = "";
     let firstWrite = null;
@@ -1964,7 +1981,7 @@ test("usage and gh errors exit 1 with one line", async () => {
   const failure = await run({ ...pendingPullRequest, fail: true }, ["12"]);
   assert.equal(failure.code, 1);
   assert.equal(failure.stderr.trim().split("\n").length, 1);
-  assert.match(failure.stderr, /HTTP 502/);
+  assert.match(failure.stderr, /502/);
 });
 
 test("without a reviewer, settled checks exit 0 and report no reviewer state", () => {
@@ -2275,4 +2292,16 @@ test("the script excludes a reply-only review after a push with no later request
   );
   assert.equal(reviewed.code, 0);
   assert.equal(reviewed.stdout, `${head}: checks passed, reviewer reviewed\n`);
+});
+
+test("the installed wait runs against the published adapter without runtime packages", async (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/wait.mjs");
+  const result = await run(
+    { ...pendingPullRequest, checks: [checkRun()] },
+    ["12"],
+    null,
+    target,
+  );
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /checks passed/);
 });

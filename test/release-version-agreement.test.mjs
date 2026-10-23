@@ -250,7 +250,7 @@ test("the floor is read from any line of the requires block", () => {
 
 test("other tools named with versions are not taken for the CLI", () => {
   const files = workingTree();
-  const guide = `${files.get(adoptionGuide)}\nUse Git 2.99.0 or newer and GitHub CLI 2.99.0 or newer.\n`;
+  const guide = `${files.get(adoptionGuide)}\nUse Git 2.99.0 or newer, GitHub CLI 2.99.0 or newer, and Postern 1.2.0.\n`;
   assert.deepEqual(
     versionDisagreements(reader(new Map(files).set(adoptionGuide, guide))),
     [],

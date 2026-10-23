@@ -76,10 +76,9 @@ issue does not carry a triage category. Wayfinder labels select the Wayfinder
 contract before either form. The validator alone identifies a contract's kind
 from these labels and the body's headings; the factory reads no issue body. A
 category-labeled `wontfix` outcome does not require an Agent Brief.
-Native parent and blocking relationships are read from GitHub. Explicit issue
-links in rendered `Parent` and `Blocked by` section content are used
-when native relationships are absent or the native dependency endpoint is
-unavailable. An open blocker does not make a complete contract invalid.
+Native parent and blocking relationships are read through Postern. On GitHub,
+body-only links in `Parent` and `Blocked by` sections do not supply
+relationships. An open blocker does not make a complete contract invalid.
 
 Rendered visibility, text, links, heading provenance, and outermost section
 regions come from the shared pure interpreted-document runtime installed at
@@ -304,8 +303,8 @@ changed while closed removes readiness and requires fresh review.
 
 The workflow needs `contents: read` to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access
-must expose collaborator roles, and `GITHUB_GRAPHQL_URL` must be available for
-direct-body edit revisions; both are standard GitHub Actions facilities. Node.js
+must expose collaborator roles, and the supplied workflow credential must read issue edit metadata through
+Postern. Node.js
 24 is the default runtime; the validator also supports stable Node.js 26. The adapter recognizes that the workflow executed the file
 through `import.meta.main`; on 24 releases before 24.2, which lack it, it
 compares the resolved script path with the validator's own path instead. The
@@ -388,18 +387,24 @@ npm run test:issue-contracts
 
 Most fixtures are snapshot tables that call `decideIssueContract` directly with
 the snapshot the adapter would fetch, and assert the exact exit status, label
-changes, and feedback write. A few adapter fixtures invoke the same executable
-boundary as GitHub Actions against a local HTTP server. They cover event parsing,
+changes, and feedback write. Adapter fixtures invoke the same trusted trigger interface as GitHub Actions
+with Postern's injected fetch transport. They cover event parsing,
 pagination, the role lookups, the bounded wait for a readiness trigger's
-timeline event, the order of writes, the exit status, unavailable endpoints, and
-the path fallback for releases without `import.meta.main`. The wait fixtures
-preload a replacement for the `setTimeout` of `node:timers/promises`, the
-adapter's only wait, so they use no real time. They also show that importing
+timeline event, complete ordered write payloads, exact stdout and stderr, and
+exit outcomes. A missing reviewer role (404) follows normal authorization and
+grants no readiness; other failed or unavailable prerequisite reads fail closed
+before any mutation. Separate fixtures cover closed-issue edits and comments,
+a stale open event whose current issue is closed, changed-contract reopening,
+and reopening without a workflow state. Entrypoint fixtures cover the path
+fallback for releases without `import.meta.main`. The wait fixtures
+inject the adapter's pause function, whose production default is
+`setTimeout` from `node:timers/promises`, so they use no real time. They also show that importing
 the validator runs no adapter and, where `import.meta.main` exists, makes no
-file-system or network call; without it, an import only resolves the two
-compared paths. One executes the validator from an
-installed layout containing only the validator, shared runtime, and declared
-parser resources.
+file-system or network call; without it, an import only resolves the compared script paths,
+returning false when no script argument exists and throwing when a supplied
+script or module path cannot be resolved. One executes the validator from an
+installed layout containing only the command, trigger, policy modules,
+shared runtime and declared parser and Postern resources.
 Together they exercise the four public forms, native contracts,
 Agent Brief discussion pagination, parent and blocker relationships, planning
 labels, placeholder failures, readiness removal, workflow-state replacement,
@@ -425,3 +430,32 @@ readiness invalidation when a changed contract is reopened, and hostile Markdown
 that must remain inert. The `CI` workflow runs the complete repository test suite
 with `npm test`. These fixtures exercise the authorization mechanism but do not
 claim that a reviewer made a sound semantic judgment.
+
+## Shared validator and platform access
+
+The trusted `.github/scripts/validate.mjs issue-contract` trigger normalizes
+the GitHub event with Postern's `issueTracker.issueEvent` and calls the common
+`scripts/validate.mjs` interface. The decision consumes neutral event facts;
+current issues, comments, label changes, edit times and relationships come from
+Postern's ports. Repository roles come from Access. Every read completes before
+label or feedback mutation. Failed reads fail validation without writing.
+
+GitHub advertises native parent and blocker capabilities. Only those links
+count as relationships. `Parent` and `Blocked by` sections retain their content
+requirements; links in those sections alone do not create relationships. The
+connection supplies `relationshipSections: { parent: "Parent", blockedBy: "Blocked by" }`
+for ports that use named sections.
+
+For a standalone run, `node scripts/validate.mjs <neutral-input.json>` reads
+a neutral object with `kind: "issue-contract"`, a Postern repository identity
+or remote URL in `repository`, and a normalized `event`. The command uses
+`POSTERN_TOKEN` as its supplied credential. The trusted GitHub trigger instead
+passes its workflow credential and normalized event to the same dispatch
+interface. Neither path substitutes a later event snapshot for current port
+reads. The PR metadata path uses `kind: "pr-metadata"` and
+`pullRequest: { title, body }`.
+
+The exact [published Postern bundle](../../vendor/postern/README.md), license
+and provenance are installed resources, shared by both validator paths and
+`babysit`. Updating the version is a reviewed source change, and adopters
+install no runtime package. Contract revision serialization is unchanged.

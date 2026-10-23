@@ -61,12 +61,12 @@ with the validator's accepted and rejected issues. Run
 `node --test test/babysit-wait.test.mjs` for the `babysit` wait script's
 decision, driven by reviewer data fixtures (including real summary comments),
 and its silence, driven by
-a GitHub CLI fake. Run `node --test test/pull-request-reviewer-check.test.mjs`
+the published bundle with an injected fetch transport. Run `node --test test/pull-request-reviewer-check.test.mjs`
 for the optional reviewer schema check, including retained operation resources;
 the check's parser, `operations/lib/pull-request-reviewer.mjs`, has a
 byte-identical copy in `babysit`'s directory for the wait.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
-and head-change retry behavior against the same fake GitHub CLI.
+and head-change retry behavior against the same Postern transport fixture.
 The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 

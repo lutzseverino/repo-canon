@@ -338,3 +338,37 @@ export function recordedState(body) {
   )?.[1];
   return encoded ? JSON.parse(encoded) : null;
 }
+
+// Neutral facts consumed by the decision core. The adapter fixtures separately
+// exercise Postern's issueEvent decoding of complete GitHub payloads.
+export function neutralEvent(event = {}) {
+  if (event.kind) return event;
+  return {
+    platform: "github",
+    repository,
+    issue: event.issue?.number ?? 42,
+    kind: event.comment
+      ? {
+          created: "commentCreated",
+          edited: "commentEdited",
+          deleted: "commentDeleted",
+        }[event.action]
+      : event.action,
+    actor: event.sender ?? null,
+    label: event.label?.name ?? null,
+    openingLabels:
+      event.action === "opened"
+        ? (event.issue?.labels ?? []).map((label) =>
+            typeof label === "string" ? label : label.name,
+          )
+        : null,
+    bodyChanged: event.changes ? Object.hasOwn(event.changes, "body") : null,
+    comment: event.comment
+      ? {
+          id: event.comment.id,
+          nodeId: event.comment.node_id ?? null,
+          body: event.comment.body,
+        }
+      : null,
+  };
+}

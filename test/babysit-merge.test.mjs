@@ -2,41 +2,48 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { pathToFileURL } from "node:url";
+import { installedValidator } from "./helpers/installed-validator.mjs";
 
-const script = fileURLToPath(
-  new URL("../.agents/skills/babysit/merge.mjs", import.meta.url),
-);
-const fakeGh = fileURLToPath(
-  new URL("./fixtures/fake-gh-babysit-wait.mjs", import.meta.url),
-);
 const head = "a".repeat(40);
 
-function run(t, state, args = ["12", head]) {
+function run(
+  t,
+  state,
+  args = ["12", head],
+  target = new URL("../.agents/skills/babysit/merge.mjs", import.meta.url),
+) {
+  const targetURL = typeof target === "string" ? pathToFileURL(target) : target;
+  const bundleURL = new URL("../../../vendor/postern/postern.mjs", targetURL);
   const directory = mkdtempSync(join(tmpdir(), "babysit-merge-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const statePath = join(directory, "state.json");
   writeFileSync(statePath, JSON.stringify({ head, ...state }));
-  writeFileSync(
-    join(directory, "gh"),
-    `#!/bin/sh\nexec node '${fakeGh}' "$@"\n`,
-    { mode: 0o755 },
-  );
-  const result = spawnSync(process.execPath, [script, ...args], {
-    cwd: directory,
-    encoding: "utf8",
-    env: {
-      ...process.env,
-      PATH: `${directory}:${process.env.PATH}`,
-      FAKE_GH_STATE: statePath,
+  const result = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `import { main } from ${JSON.stringify(targetURL.href)}; import { connect } from ${JSON.stringify(bundleURL.href)}; import { fixtureConnection } from ${JSON.stringify(new URL("./fixtures/postern-babysit.mjs", import.meta.url).href)}; try { await main(process.argv.slice(1), fixtureConnection(connect)); } catch (error) { console.error(error.message); process.exitCode = 1; }`,
+      "--",
+      ...args,
+    ],
+    {
+      cwd: directory,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${directory}:${process.env.PATH}`,
+        FAKE_GH_STATE: statePath,
+      },
     },
-  });
+  );
   return { ...result, state: JSON.parse(readFileSync(statePath, "utf8")) };
 }
 
-test("squash-merges with the current title and verbatim body through stdin", (t) => {
+test("squash-merges with the current title and verbatim body through the port", (t) => {
   const body =
     "## Summary\r\n\r\nQuotes: \"double\", 'single', `backticks`, $HOME, $(touch unwanted).\r\n\r\n## Evidence\n\nMultiple paragraphs.\n\n";
   const result = run(t, {
@@ -44,18 +51,14 @@ test("squash-merges with the current title and verbatim body through stdin", (t)
     body,
   });
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(result.state.merge.args, [
-    "pr",
-    "merge",
-    "12",
-    "--squash",
-    "--match-head-commit",
-    head,
-    "--subject",
+  assert.equal(result.stdout, `${"c".repeat(40)}\n`);
+  assert.equal(result.stderr, "");
+  assert.equal(
+    result.state.merge.title,
     "fix: preserve $variables and `quotes` (#12)",
-    "--body-file",
-    "-",
-  ]);
+  );
+  assert.equal(result.state.merge.expectedHead, head);
+  assert.equal(result.state.merge.method, "squash");
   assert.equal(result.state.merge.body, body);
 });
 
@@ -86,6 +89,7 @@ test("refuses a merge queue without attempting a merge", (t) => {
     isMergeQueueEnabled: true,
   });
   assert.equal(result.status, 3, result.stderr);
+  assert.equal(result.stdout, "");
   assert.match(result.stderr, /merge queue.*explicit squash message/i);
   assert.equal(result.state.merge, undefined);
 });
@@ -97,6 +101,7 @@ test("needs the owner when a successful merge call leaves the PR open", (t) => {
     mergeState: "OPEN",
   });
   assert.equal(result.status, 3, result.stderr);
+  assert.equal(result.stdout, "");
   assert.match(result.stderr, /pull request did not merge.*owner/i);
   assert.ok(result.state.merge);
 });
@@ -108,7 +113,7 @@ test("reports access and merge failures without requesting a retry", (t) => {
   ]) {
     const result = run(t, state);
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /gh:/);
+    assert.match(result.stderr, /GitHub/);
   }
 });
 
@@ -128,4 +133,24 @@ test("preserves an empty body and rejects invalid invocations", (t) => {
     assert.match(invalid.stderr, /Usage:/);
     assert.equal(invalid.state.merge, undefined);
   }
+});
+
+test("installed babysit resolves declared bundle, license and provenance and merges without npm", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const root = join(dirname(target), "../../..");
+  for (const name of ["postern.mjs", "LICENSE", "README.md"])
+    assert.deepEqual(
+      readFileSync(join(root, "vendor/postern", name)),
+      readFileSync(new URL(`../vendor/postern/${name}`, import.meta.url)),
+    );
+  const result = run(
+    t,
+    { title: "fix: installed consumer", body: "Verbatim installed body" },
+    undefined,
+    target,
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, `${"c".repeat(40)}\n`);
+  assert.equal(result.stderr, "");
+  assert.equal(result.state.merge.body, "Verbatim installed body");
 });

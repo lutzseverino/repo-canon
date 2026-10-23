@@ -7,7 +7,6 @@ import {
 import {
   approvedTicketFeedback,
   awaitingTicketFeedback,
-  blockerLinksBody,
   bodyRevision,
   bugBody,
   bot,
@@ -17,11 +16,11 @@ import {
   creationLabel,
   featureBody,
   feedbackState,
-  ignoredBlockerReferences,
   labeledBy,
   laggingReapplicationEvents,
   laggingSwapEvents,
   mapBody,
+  neutralEvent,
   reapplicationEvents,
   reapplicationRun,
   readinessRetryEvents,
@@ -60,7 +59,7 @@ function snapshotFor({
 }) {
   return {
     repository,
-    event: { issue: { number: 42 }, ...event },
+    event: neutralEvent(event),
     issue,
     comments: withNoticeTimes(commentPages?.flat() ?? comments),
     blockedBy,
@@ -976,174 +975,107 @@ structureTable("issue structure decides the contract and its corrections", [
   },
 ]);
 
-decisionTable(
-  "parent and blocker relationships come from native links or explicit references",
-  [
-    {
-      name: "a native ticket can use relationships and remain valid with an open blocker",
-      snapshot: (() => {
-        const issue = {
-          number: 42,
-          body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
-          labels: [{ name: "ready-for-agent" }],
-          state: "open",
-          updated_at: "2026-09-14T17:00:00Z",
-        };
-        return {
-          issue,
-          comments: [awaitingTicketFeedback(issue)],
-          blockedBy: [
-            {
-              number: 41,
-              state: "open",
-              html_url: "https://github.com/example/repository/issues/41",
-            },
-          ],
-          parent: { number: 7, state: "open", labels: [] },
-          issueEvents: [readinessReview],
-          event: {
-            action: "labeled",
-            issue: {
-              number: 42,
-              body: issue.body,
-              updated_at: issue.updated_at,
-            },
-            label: { name: "ready-for-agent" },
-            sender: { login: "maintainer" },
-          },
-          permissions: { maintainer: role("admin") },
-        };
-      })(),
-      expected: {
-        exitCode: 0,
-        feedback: 13,
-        message: /valid implementation ticket with ready-for-agent bound/i,
-      },
-    },
-    {
-      name: "explicit parent and blocker links are read when native relationships are absent",
-      snapshot: {
-        issue: {
-          number: 42,
-          body: "## Parent\n\n[Parent](#7) and #8\n\n## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nhttps://github.com/example/repository/issues/41",
-          labels: [],
-          state: "open",
-        },
-        relatedIssues: {
-          "/repos/example/repository/issues/7": {
-            number: 7,
-            state: "open",
-            labels: [],
-          },
-          "/repos/example/repository/issues/41": {
+decisionTable("parent and blocker relationships come only from the port", [
+  {
+    name: "a native ticket can use relationships and remain valid with an open blocker",
+    snapshot: (() => {
+      const issue = {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
+        labels: [{ name: "ready-for-agent" }],
+        state: "open",
+        updated_at: "2026-09-14T17:00:00Z",
+      };
+      return {
+        issue,
+        comments: [awaitingTicketFeedback(issue)],
+        blockedBy: [
+          {
             number: 41,
             state: "open",
-            labels: [],
+            html_url: "https://github.com/example/repository/issues/41",
           },
-        },
-      },
-      expected: { exitCode: 0, add: ["needs-triage"], feedback: "create" },
-    },
-    {
-      name: "only the first link under Parent is the parent reference",
-      snapshot: {
-        issue: {
-          number: 42,
-          body: "## Parent\n\n[Parent](#7) and #8\n\n## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nhttps://github.com/example/repository/issues/41",
-          labels: [],
-          state: "open",
-        },
-        relatedIssues: {
-          "/repos/example/repository/issues/8": {
-            number: 8,
-            state: "open",
-            labels: [],
+        ],
+        parent: { number: 7, state: "open", labels: [] },
+        issueEvents: [readinessReview],
+        event: {
+          action: "labeled",
+          issue: {
+            number: 42,
+            body: issue.body,
+            updated_at: issue.updated_at,
           },
-          "/repos/example/repository/issues/41": {
-            number: 41,
-            state: "open",
-            labels: [],
-          },
+          label: { name: "ready-for-agent" },
+          sender: { login: "maintainer" },
+        },
+        permissions: { maintainer: role("admin") },
+      };
+    })(),
+    expected: {
+      exitCode: 0,
+      feedback: 13,
+      message: /valid implementation ticket with ready-for-agent bound/i,
+    },
+  },
+  {
+    name: "body-only parent and blocker links do not become GitHub relationships",
+    snapshot: {
+      issue: {
+        number: 42,
+        body: "## Parent\n\n#7\n\n## Question\n\nWhich cache meets the latency target?",
+        labels: [{ name: "wayfinder:task" }],
+        state: "open",
+      },
+      relatedIssues: {
+        "/repos/example/repository/issues/7": {
+          number: 7,
+          state: "open",
+          labels: [{ name: "wayfinder:map" }],
         },
       },
-      expected: {
-        exitCode: 1,
-        add: ["needs-triage"],
-        feedback: "create",
-        message:
-          /^Could not resolve the `Parent` issue reference \/repos\/example\/repository\/issues\/7\.$/,
+    },
+    expected: {
+      exitCode: 1,
+      feedback: "create",
+      message: /native parent relationship/,
+    },
+  },
+  {
+    name: "body-only blocker links remain section content without lookup",
+    snapshot: {
+      issue: {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n#999",
+        labels: [],
+        state: "open",
       },
     },
-    {
-      name: "only visible links under Blocked by are blocker references",
-      snapshot: {
-        issue: {
-          number: 42,
-          body: `## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n${blockerLinksBody}`,
-          labels: [],
-          state: "open",
-        },
-      },
-      expected: {
-        exitCode: 1,
-        add: ["needs-triage"],
-        feedback: "create",
-        message: new RegExp(
-          ["993", "41", "43"]
-            .map(
-              (number) =>
-                `Could not resolve the \`Blocked by\` issue reference /repos/example/repository/issues/${number}\\.`,
-            )
-            .join("\n"),
-        ),
-        notMessage: ignoredBlockerReferences.map(
-          (reference) => new RegExp(`${reference}\\b`),
-        ),
-      },
+    expected: { exitCode: 0, add: ["needs-triage"], feedback: "create" },
+  },
+  {
+    name: "native relationship changes do not revise already reviewed contract bytes",
+    snapshot: (() => {
+      const issue = {
+        number: 42,
+        body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
+        labels: [{ name: "ready-for-agent" }],
+        state: "open",
+      };
+      return {
+        issue,
+        comments: [approvedTicketFeedback(issue)],
+        blockedBy: [{ id: "BLOCKER_44", number: 44, state: "open" }],
+        permissions: { maintainer: role("admin") },
+        issueEvents: [readinessReview],
+        event: { action: "reopened", issue: { number: 42 } },
+      };
+    })(),
+    expected: {
+      exitCode: 0,
+      message: /valid implementation ticket with ready-for-agent bound/i,
     },
-    {
-      name: "an unresolvable blocker link removes readiness with actionable feedback",
-      snapshot: {
-        issue: {
-          number: 42,
-          body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nhttps://github.com/example/repository/issues/999",
-          labels: [{ name: "ready-for-agent" }],
-          state: "open",
-        },
-      },
-      expected: {
-        exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
-        feedback: "create",
-        feedbackBody: /could not resolve.*Blocked by/i,
-      },
-    },
-    {
-      name: "native relationship changes do not revise already reviewed contract bytes",
-      snapshot: (() => {
-        const issue = {
-          number: 42,
-          body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
-          labels: [{ name: "ready-for-agent" }],
-          state: "open",
-        };
-        return {
-          issue,
-          comments: [approvedTicketFeedback(issue)],
-          blockedBy: [{ id: "BLOCKER_44", number: 44, state: "open" }],
-          permissions: { maintainer: role("admin") },
-          issueEvents: [readinessReview],
-          event: { action: "reopened", issue: { number: 42 } },
-        };
-      })(),
-      expected: {
-        exitCode: 0,
-        message: /valid implementation ticket with ready-for-agent bound/i,
-      },
-    },
-  ],
-);
+  },
+]);
 
 decisionTable("the feedback comment is maintained once", [
   {
@@ -4952,3 +4884,49 @@ decisionTable(
     })),
   ),
 );
+
+// Missing global IDs retain main's numeric fallback, including fail-closed
+// mismatches with an old node-ID marker. No alias is inferred.
+test("deleted Briefs without a global identifier preserve numeric marker parity", () => {
+  for (const nodeId of [undefined, null]) {
+    const deleted = agentBrief(25, "2026-09-14T16:55:00Z");
+    const input = deletedBriefSnapshot(deleted);
+    input.event = {
+      platform: "github",
+      repository,
+      issue: 42,
+      kind: "commentDeleted",
+      actor: { login: "triager", bot: false },
+      label: null,
+      openingLabels: null,
+      bodyChanged: null,
+      comment: {
+        id: deleted.id,
+        body: deleted.body,
+        ...(nodeId === undefined ? {} : { nodeId }),
+      },
+    };
+    const first = decideIssueContract(snapshotFor(input));
+    assert.equal(first.exitCode, 1);
+    assert.deepEqual(first.removeLabels, ["ready-for-agent"]);
+    assert.equal(
+      recordedState(first.feedback.body).sourceInvalidation,
+      "deleted-comment:25",
+    );
+    for (const previous of [
+      "deleted-comment:25",
+      "deleted-comment:COMMENT_25",
+    ]) {
+      const state = recordedState(input.comments[1].body);
+      input.comments[1].body = feedbackState({
+        ...state,
+        kind: "triaged Agent Brief",
+        sourceInvalidation: previous,
+      });
+      const replay = decideIssueContract(snapshotFor(input));
+      assert.equal(replay.exitCode, previous === "deleted-comment:25" ? 0 : 1);
+      if (previous !== "deleted-comment:25")
+        assert.deepEqual(replay.removeLabels, ["ready-for-agent"]);
+    }
+  }
+});
