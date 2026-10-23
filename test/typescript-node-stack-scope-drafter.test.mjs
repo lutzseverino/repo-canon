@@ -17,7 +17,7 @@ const drafter = join(sourceRoot, drafterPath);
 const check = join(sourceRoot, "operations/check-typescript-node-stack.mjs");
 
 const coverage =
-  "Drafted from manifests and workspace configuration by `discovery/draft-typescript-node-stack-scope.mjs`: one `package.json` per Project, a workspace's root and members alike, included when it matches the stack's manifest facts and excluded naming its differences otherwise.";
+  "Drafted from manifests and workspace configuration by `discovery/draft-typescript-node-stack-scope.mjs`: one `package.json` per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. Each workspace member, and a root package that configures no workspace, is a Project; a workspace root is included when it matches and asked about otherwise.";
 const matches = (path) =>
   `The Project of \`${path}\` matches the typescript-node stack's manifest facts: pnpm 11, its lockfile, Node.js 24 or 26, oxlint 1, Prettier 3 and a validate script.`;
 const differs = (path, differences) =>
@@ -202,6 +202,22 @@ test("includes only the conforming Projects of a pnpm workspace, naming each dif
     ],
     unresolved: [],
   });
+});
+
+test("asks about a workspace root that differs instead of excluding it", (t) => {
+  const { entry } = drafted(t, {
+    "package.json": manifest({ name: "root", scripts: {} }),
+    "pnpm-lock.yaml": "",
+    "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+    "packages/cli/package.json": member(),
+  });
+  assert.deepEqual(
+    entry.candidates.map(({ path, decision }) => [path, decision]),
+    [["packages/cli/package.json", "include"]],
+  );
+  assert.deepEqual(entry.unresolved, [
+    "Is the workspace root `package.json` the manifest of a maintained Project, or does it only hold its members' shared configuration? If it is a Project, exclude it naming its differences: Add a `validate` script to `package.json` that runs the Project's checks. Otherwise exclude it as no maintained Project.",
+  ]);
 });
 
 test("reads package.json workspaces and their exclusions", (t) => {

@@ -29,15 +29,19 @@ status 1 and no proposal, which inspection reports as
 The drafter reads every `package.json` the copy keeps, outside `node_modules`
 and the paths Repository Standards reserves, and every workspace configuration
 beside them, through the module the
-[stack check](typescript-node-stack-check.md) uses. The root `package.json`, a
-workspace root's `package.json`, and each member a workspace lists are
-Projects. For each Project it runs the check's difference reading:
+[stack check](typescript-node-stack-check.md) uses. Each member a workspace
+lists is a Project, and so is a root `package.json` that configures no
+workspace. For each of them, and for each workspace root, it runs the check's
+difference reading:
 
 - a Project with no difference is included, citing its `package.json`, its
   workspace root's `package.json`, the lockfile, and the workspace
   configuration;
 - a Project with differences is excluded, with every correction the check
-  would name as its reason, citing its `package.json`.
+  would name as its reason, citing its `package.json`;
+- a workspace root with differences is an unresolved question naming them,
+  because it may only hold its members' shared configuration rather than be a
+  Project.
 
 Any other `package.json` lies outside every workspace. Below a directory named
 `__fixtures__`, `__mocks__`, `build`, `coverage`, `dist`, `fixture`,
@@ -79,7 +83,7 @@ node --test test/typescript-node-stack-scope-drafter.test.mjs
 They run the drafter as inspection does, over copies without Git metadata,
 assert that the copy is unchanged and the proposal has the scope proposal's
 shape, and cover a single conforming package, a pnpm workspace with conforming
-and differing members, `package.json` workspaces with exclusions, fixture and
+and differing members, a differing workspace root, `package.json` workspaces with exclusions, fixture and
 generated directories, a repository with no Node.js Project, one whose every
 Project differs, unresolved manifests and workspace configuration, reserved
 paths, a drafted scope that passes the check, a retained source, and process

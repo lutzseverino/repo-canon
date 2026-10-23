@@ -23,7 +23,7 @@ The result passes when no confirmed Project needs a correction; its message
 names what still needs the contextual assessment: TypeScript 7, `node --test`,
 required pull request checks running `validate`, and each Project's Setup and
 validation section. Otherwise it fails with every correction for every path,
-each once, in path order. An empty scope passes for zero Projects.
+each once, in the order of the confirmed paths. An empty scope passes for zero Projects.
 
 ## What it reads
 
@@ -55,9 +55,11 @@ A missing or non-object `package.json`, or a workspace configuration the
 module cannot read on the way to the root, is its own correction.
 
 The module's range reader evaluates the semantic version ranges npm writes:
-comparators, `^`, `~`, `x` ranges, hyphen ranges and `||` unions. It reads
-specifiers such as `workspace:`, `catalog:`, tags and URLs as unreadable, so a
-Project that declares a tool through a pnpm catalog receives a correction.
+comparators, `^`, `~`, `x` ranges, hyphen ranges and `||` unions. A
+`catalog:` or `catalog:<name>` specifier resolves through the default or named
+catalog of the workspace root's `pnpm-workspace.yaml`, read as plain block
+mappings. Other specifiers, such as `workspace:`, tags and URLs, and a catalog
+entry it cannot find, receive a correction.
 
 ## Validation
 
@@ -69,6 +71,7 @@ node --test test/typescript-node-stack-check.test.mjs
 
 They run the check over fixture repositories, assert that it changes nothing,
 and cover a conforming root package and workspace member, both accepted
-`engines.node` spellings, a named correction for each manifest fact, workspace
+`engines.node` spellings, a named correction for each manifest fact, catalog
+specifiers, workspace
 roots from `pnpm-workspace.yaml` and `package.json`, refused targets, and a run
 from a retained source that holds only its declared resources.

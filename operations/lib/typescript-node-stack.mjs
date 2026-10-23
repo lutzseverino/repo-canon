@@ -133,6 +133,48 @@ export function pnpmWorkspacePackages(text) {
   return patterns;
 }
 
+// The dependency catalogs of a `pnpm-workspace.yaml`: a map from catalog name
+// to a map from package name to version, with the top-level `catalog` as
+// `default` beside each named catalog under `catalogs`. Entries in a form this
+// reader does not decode are left out, so their specifiers stay unresolved.
+export function pnpmCatalogs(text) {
+  const catalogs = new Map();
+  let section = null;
+  let named = null;
+  let namedIndent = null;
+  for (const line of text.split(/\r?\n/)) {
+    if (line.trim() === "" || line.trimStart().startsWith("#")) continue;
+    const indent = line.length - line.trimStart().length;
+    const entry =
+      /^\s*("[^"\\]*"|'[^']*'|[^\s:#'"][^:#]*?)\s*:(?:\s+(.*))?$/.exec(line);
+    if (indent === 0) {
+      section =
+        entry?.[1] === "catalog" || entry?.[1] === "catalogs" ? entry[1] : null;
+      named = null;
+      namedIndent = null;
+      if (section === "catalog") catalogs.set("default", new Map());
+      continue;
+    }
+    if (!section || !entry) continue;
+    const key = yamlScalar(entry[1]);
+    const value = entry[2] === undefined ? null : yamlScalar(entry[2]);
+    if (key === null) continue;
+    if (
+      section === "catalogs" &&
+      (namedIndent === null || indent <= namedIndent)
+    ) {
+      if (entry[2] !== undefined && entry[2].trim() !== "") continue;
+      named = key;
+      namedIndent = indent;
+      if (!catalogs.has(named)) catalogs.set(named, new Map());
+      continue;
+    }
+    const catalog = catalogs.get(section === "catalog" ? "default" : named);
+    if (catalog && value !== null) catalog.set(key, value);
+  }
+  return catalogs;
+}
+
 // The workspace configuration of a directory: `null` when it configures no
 // workspace, or `{ patterns, sources }` with its member patterns and the files
 // that state them, or `{ unreadable, sources }` when a file states them in a
@@ -492,13 +534,26 @@ function toolDifference(tool, project, root) {
   const declared = toolDeclaration(tool, project, root);
   if (declared === null)
     return `${wanted}; ${shared ? "neither declares it" : "it is not declared"}.`;
-  const { version, path } = declared;
+  const { path } = declared;
+  let { version } = declared;
+  let declares = `${code(path)} declares ${code(String(version))}`;
+  const catalogName =
+    typeof version === "string" && version.startsWith("catalog:")
+      ? version.slice("catalog:".length) || "default"
+      : null;
+  if (catalogName !== null) {
+    const resolved = root.catalogs.get(catalogName)?.get(tool.name);
+    if (resolved === undefined)
+      return `${wanted}; ${declares}, which no catalog of the workspace root's ${code(pnpmWorkspaceName)} defines for ${code(tool.name)}.`;
+    version = resolved;
+    declares = `${declares}, which its catalog resolves to ${code(resolved)}`;
+  }
   const admitted = admittedMajors(version);
   if (admitted !== null && admitsOnly(admitted, [tool.major])) return null;
   const current =
     admitted === null
-      ? `${code(path)} declares ${code(String(version))}, which is not a version range the check reads`
-      : `${code(path)} declares ${code(version)}, which admits ${admittedText(admitted, "major ")}`;
+      ? `${declares}, which is not a version range the check reads`
+      : `${declares}, which admits ${admittedText(admitted, "major ")}`;
   return `${wanted}; ${current}.`;
 }
 
@@ -540,6 +595,12 @@ export function stackDifferences(projectRoot, manifestPath) {
           path: rootManifestPath,
           manifest: readManifest(projectRoot, rootManifestPath).manifest,
         };
+  const pnpmWorkspace = joinPath(workspace.root, pnpmWorkspaceName);
+  root.catalogs = isRegularFile(projectRoot, pnpmWorkspace)
+    ? pnpmCatalogs(
+        readFileSync(absolutePath(projectRoot, pnpmWorkspace), "utf8"),
+      )
+    : new Map();
   const lockfile = joinPath(workspace.root, lockfileName);
   const differences = [
     packageManagerDifference(rootManifestPath, root.manifest),

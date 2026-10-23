@@ -309,6 +309,51 @@ test("takes tools from the member first, then from its workspace root", (t) => {
   );
 });
 
+test("resolves catalog specifiers through the workspace root's pnpm-workspace.yaml", async (t) => {
+  const pnpmWorkspace = `packages:
+  - packages/*
+catalog:
+  oxlint: 1.86.0
+  prettier: "^3.0.0"
+catalogs:
+  legacy:
+    prettier: 2.8.8
+`;
+  const files = (devDependencies) => ({
+    ...workspace,
+    "pnpm-workspace.yaml": pnpmWorkspace,
+    "packages/cli/package.json": manifest({ devDependencies }),
+  });
+  await t.test("default and named catalogs", (st) => {
+    const result = check(
+      st,
+      files({ oxlint: "catalog:", prettier: "catalog:default" }),
+      ["packages/cli/package.json"],
+    );
+    assert.equal(result.status, "passed", result.message);
+  });
+  await t.test("a catalog with the wrong major", (st) => {
+    assert.equal(
+      corrections(
+        check(st, files({ oxlint: "catalog:", prettier: "catalog:legacy" }), [
+          "packages/cli/package.json",
+        ]),
+      ),
+      "Declare `prettier` at major 3 in `packages/cli/package.json` or its workspace root `package.json`; `packages/cli/package.json` declares `catalog:legacy`, which its catalog resolves to `2.8.8`, which admits major 2.",
+    );
+  });
+  await t.test("an undefined catalog entry", (st) => {
+    assert.equal(
+      corrections(
+        check(st, files({ oxlint: "catalog:tools", prettier: "catalog:" }), [
+          "packages/cli/package.json",
+        ]),
+      ),
+      "Declare `oxlint` at major 1 in `packages/cli/package.json` or its workspace root `package.json`; `packages/cli/package.json` declares `catalog:tools`, which no catalog of the workspace root's `pnpm-workspace.yaml` defines for `oxlint`.",
+    );
+  });
+});
+
 test("names a correction for a missing validate script", (t) => {
   assert.equal(
     corrections(

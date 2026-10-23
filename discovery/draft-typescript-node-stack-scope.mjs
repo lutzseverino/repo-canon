@@ -48,7 +48,6 @@ const unmaintainedDirectories = [
   "fixture",
   "fixtures",
   "generated",
-  "node_modules",
   "out",
   "testdata",
   "vendor",
@@ -180,12 +179,14 @@ const reasons = {
 const questions = {
   standalone: (path) =>
     `Is ${code(path)} the manifest of a maintained Project? No workspace lists it. If it is, include it when it matches the stack, or exclude it naming its differences; otherwise exclude it as no maintained Project.`,
+  workspaceRoot: (path, differences) =>
+    `Is the workspace root ${code(path)} the manifest of a maintained Project, or does it only hold its members' shared configuration? If it is a Project, exclude it naming its differences: ${differences.join(" ")} Otherwise exclude it as no maintained Project.`,
   workspace: (path) =>
     `${code(path)} states its workspace members in a form the drafter cannot read. Which manifests under it belong to maintained Projects? Include each one that matches the stack and exclude the rest with their reasons.`,
 };
 
 function coverage({ included, projects }) {
-  const drafted = `Drafted from manifests and workspace configuration by ${code(drafterPath)}: one ${code(manifestName)} per Project, a workspace's root and members alike, included when it matches the stack's manifest facts and excluded naming its differences otherwise.`;
+  const drafted = `Drafted from manifests and workspace configuration by ${code(drafterPath)}: one ${code(manifestName)} per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. Each workspace member, and a root package that configures no workspace, is a Project; a workspace root is included when it matches and asked about otherwise.`;
   if (included > 0) return drafted;
   if (projects === 0)
     return `${drafted} The repository holds no Node.js Project, so the declaration has no scope.`;
@@ -241,8 +242,14 @@ function draftStackScope({ projectRoot }) {
       else unresolved.push(questions.standalone(path));
       continue;
     }
-    projects += 1;
     const { differences, evidence } = stackDifferences(projectRoot, path);
+    // A workspace root may only aggregate its members, so one that differs
+    // is not taken for a differing Project.
+    if (differences.length > 0 && ownWorkspace?.patterns) {
+      unresolved.push(questions.workspaceRoot(path, differences));
+      continue;
+    }
+    projects += 1;
     candidates.push(
       differences.length === 0
         ? { path, decision: "include", reason: reasons.matches(path), evidence }
