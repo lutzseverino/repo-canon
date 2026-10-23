@@ -2,7 +2,7 @@ format: repo-standards/v2
 name: repo-canon
 description: Repository documentation, contribution, agent workflow, and GitHub validation standards
 requires:
-  repo-standards: ">=8.1.0"
+  repo-standards: ">=10.0.0"
 
 defaults:
   declarations:
@@ -419,6 +419,36 @@ defaults:
       kind: file
       target: docs/agents/triage-labels.md
       exact: vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md
+
+    typescript-node-stack:
+      kind: repository
+      optional: true
+      guidance: guidance/typescript-node-stack.md
+      rules: rules/typescript-node-stack.md
+      discovery: discovery/typescript-node-stack.md
+      discovery-script:
+        run:
+          executable: node
+          script: discovery/draft-typescript-node-stack-scope.mjs
+          resources:
+            - operations/lib/typescript-node-stack.mjs
+          arguments: []
+        prerequisite:
+          version-arguments: ["--version"]
+          version: ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0"
+        timeout-seconds: 60
+      checks:
+        - id: typescript-node-stack-manifests
+          run:
+            executable: node
+            script: operations/check-typescript-node-stack.mjs
+            resources:
+              - operations/lib/typescript-node-stack.mjs
+            arguments: []
+          prerequisite:
+            version-arguments: ["--version"]
+            version: ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0"
+          timeout-seconds: 30
 
 profiles:
   standard:

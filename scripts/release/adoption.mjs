@@ -16,7 +16,7 @@ import {
   withTemporaryDirectory,
 } from "./support.mjs";
 
-const adoptFormat = "repo-standards/adopt/v1";
+const adoptFormat = "repo-standards/adopt/v2";
 // The remote setup the fixture cannot apply without a GitHub remote.
 const remoteSetup = [
   "github-repository-configuration/canonical-labels",

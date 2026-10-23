@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   cpSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -32,7 +33,46 @@ const repositoryWide = {
 // Exercise the published CLI, with its real acquisition, adoption, installation
 // and rules lookup. Only GitHub HTTP and Git transport use disposable fixtures.
 // No Scriptorium implementation or host is needed.
-test("public CLI 8.1.0 installs the triage fork and the GitHub rules for the whole repository in both profiles, and factory workflow rules only in the factory profile", (t) => {
+// A Project that matches the typescript-node stack's manifest facts.
+const nodeProject = {
+  "package.json": `${JSON.stringify(
+    {
+      name: "wordtally",
+      private: true,
+      type: "module",
+      packageManager: "pnpm@11.1.2",
+      engines: { node: ">=24 <25 || >=26 <27" },
+      scripts: { validate: "oxlint && prettier --check . && node --test" },
+      devDependencies: { oxlint: "1.86.0", prettier: "3.9.9" },
+    },
+    null,
+    2,
+  )}\n`,
+  "pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
+};
+
+// The assessment of the stack for the adoption with one conforming Project.
+const stackAssessment = {
+  status: "satisfied",
+  explanation:
+    "package.json is Wordtally's only Project, and it meets the typescript-node stack rules.",
+  evidence: [
+    "package.json sets pnpm 11, Node.js 24 or 26, oxlint 1, Prettier 3 and a validate script running node --test.",
+  ],
+  scopeValidity: Object.fromEntries(
+    ["afterFixes", "current"].map((review) => [
+      review,
+      {
+        status: "valid",
+        explanation: "package.json is the repository's only manifest.",
+        evidence: ["No other package.json or workspace configuration exists."],
+        additionalPaths: [],
+      },
+    ]),
+  ),
+};
+
+test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the whole repository in both profiles, factory workflow rules only in the factory profile, and typescript-node stack rules only for a confirmed Project", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const prefix = process.env.REPO_STANDARDS_PREFIX ?? join(directory, "cli");
@@ -45,14 +85,14 @@ test("public CLI 8.1.0 installs the triage fork and the GitHub rules for the who
         prefix,
         "--ignore-scripts",
         "--registry=https://registry.npmjs.org",
-        "@lutzseverino/repo-standards@8.1.0",
+        "@lutzseverino/repo-standards@10.0.0",
       ],
       { stdio: "pipe" },
     );
   const cli = join(prefix, "node_modules/.bin/repo-standards");
   assert.equal(
     execFileSync(cli, ["--version"], { encoding: "utf8" }).trim(),
-    "8.1.0",
+    "10.0.0",
   );
   const validation = JSON.parse(
     execFileSync(cli, ["source", "validate", root, "--json"], {
@@ -91,7 +131,7 @@ test("public CLI 8.1.0 installs the triage fork and the GitHub rules for the who
             operation.prerequisite.version,
           );
     }
-  assert.equal(prerequisites.size, 9);
+  assert.equal(prerequisites.size, 11);
   for (const [script, range] of prerequisites)
     assert.equal(range, ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0", script);
 
@@ -183,10 +223,15 @@ test("public CLI 8.1.0 installs the triage fork and the GitHub rules for the who
     GIT_CONFIG_KEY_0: `url.file://${source}.insteadOf`,
     GIT_CONFIG_VALUE_0: sourceUrl,
   });
-  for (const profile of ["standard", "factory"]) {
-    const project = join(directory, profile);
+  for (const [label, profile, extraFiles] of [
+    ["standard", "standard", {}],
+    ["factory", "factory", {}],
+    ["node", "standard", nodeProject],
+  ]) {
+    const node = label === "node";
+    const project = join(directory, label);
     mkdirSync(project);
-    for (const [path, content] of Object.entries(files)) {
+    for (const [path, content] of Object.entries({ ...files, ...extraFiles })) {
       mkdirSync(dirname(join(project, path)), { recursive: true });
       writeFileSync(join(project, path), content);
     }
@@ -268,7 +313,21 @@ test("public CLI 8.1.0 installs the triage fork and the GitHub rules for the who
         const [kind, name] = question.id.split(":");
         let answer = question.answer;
         if (kind === "scope") answer ??= scopes[name];
-        if (kind === "assessment") answer = assessments[name];
+        if (kind === "assessment")
+          answer =
+            node && name === "typescript-node-stack"
+              ? stackAssessment
+              : assessments[name];
+        if (kind === "scope" && name === "typescript-node-stack") {
+          // The stack's discovery script drafts the entry, with no scope
+          // unless the repository holds a conforming Project.
+          assert.deepEqual(answer.unresolved, []);
+          assert.equal(answer.noScope, node ? undefined : true);
+          assert.deepEqual(
+            answer.candidates.map(({ path, decision }) => [path, decision]),
+            node ? [["package.json", "include"]] : [],
+          );
+        }
         if (kind === "version") answer = version;
         if (kind === "profile") answer = profile;
         if (kind === "remote-setup") answer = "defer";
@@ -285,12 +344,37 @@ test("public CLI 8.1.0 installs the triage fork and the GitHub rules for the who
         }
         return { ...question, answer };
       });
-      const answers = join(directory, `${profile}-answers.json`);
+      const answers = join(directory, `${label}-answers.json`);
       writeFileSync(answers, JSON.stringify({ ...report.answers, questions }));
       ({ report } = invoke("adopt", "--answers", answers));
     }
     assert.equal(report.outcome, "complete", JSON.stringify(report));
     assert.equal(invoke("status").report.readyToCommit, true);
+    // No scope installs no stack rules and runs no stack check; a confirmed
+    // Project gets both, and its manifest passes.
+    const stackChecks = invoke("check").report.checks.filter(
+      (check) => check.declaration === "typescript-node-stack",
+    );
+    assert.deepEqual(
+      stackChecks.map(({ id, status }) => [id, status]),
+      node ? [["typescript-node-stack-manifests", "passed"]] : [],
+      `${label} typescript-node stack checks`,
+    );
+    const stackRules = invoke("rules", "package.json").report.rules.filter(
+      (rule) => rule.declaration === "typescript-node-stack",
+    );
+    assert.equal(stackRules.length, node ? 1 : 0, `${label} stack rules`);
+    if (node)
+      assert.equal(
+        stackRules[0].content,
+        readFileSync(join(root, "rules/typescript-node-stack.md"), "utf8"),
+      );
+    assert.equal(
+      existsSync(
+        join(project, ".repo-standards/rules/typescript-node-stack.md"),
+      ),
+      node,
+    );
     assert.ok(
       readFileSync(join(project, ".gitattributes"), "utf8").startsWith(
         originalAttributes,
