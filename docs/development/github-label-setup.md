@@ -82,7 +82,7 @@ to sign in again; `rateLimited` asks to wait for the reset; `forbidden`,
 `rejected` and `conflict` ask to retry later. `unavailable` asks to retry later
 for HTTP 5xx, and otherwise to investigate the transport failure or timeout
 and retry. `invalidResponse` retains the invalid JSON reason. HTTP failures
-name the status, and failures other than an invalid response name
+name the status, and every reason names
 `gh api --hostname github.com repos/OWNER/REPO` for full diagnostics, even
 when `GH_HOST` names another host. Later reads and mutations report the
 credential-redacted platform message and HTTP status, or neutral transport

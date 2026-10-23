@@ -234,7 +234,7 @@ function repositoryReadFailure(operationName, identity, failure) {
   // account details, transport traces or credentials in deferred setup records.
   const diagnostic = `For full details, run gh api --hostname github.com ${apiEndpoint(identity)}.`;
   if (failure.reason === "invalidResponse") {
-    return `${operationName} could not verify ${identity}; repository access is incomplete (invalid JSON response).`;
+    return `${operationName} could not verify ${identity}; repository access is incomplete (invalid JSON response). ${diagnostic}`;
   }
   let next = "Retry later.";
   if (failure.reason === "notFound") {

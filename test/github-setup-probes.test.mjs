@@ -202,7 +202,7 @@ for (const probe of probes) {
     const scenario = probeScenario(t, probe, { state });
     const fix = setup(t, probe.fix, { state });
     fix.before = snapshot(fix.project.root);
-    const expected = `${probe.name} could not verify acme/widgets; repository access is incomplete (invalid JSON response).`;
+    const expected = `${probe.name} could not verify acme/widgets; repository access is incomplete (invalid JSON response). For full details, run gh api --hostname github.com repos/acme/widgets.`;
     assertProbe(scenario.invoke(), "not-ready", expected);
     assertProbe(fix.invoke(), "blocked", expected);
     assertNoWrites(scenario);
