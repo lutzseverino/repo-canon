@@ -198,8 +198,8 @@ record's Operations table lists the standards source's fixes and checks with
 their results. Post one check-outcomes comment with the repository's own
 validation outcomes, confirmation of the recorded ready-to-commit verdict, and findings
 links or unfiled findings under the
-[findings rule](#findings). The record stays the body; for a breaking (`!`)
-title, add Impact and Migration sections after the record.
+[findings rule](#findings). For a breaking (`!`) title, append Impact and Migration
+sections after the record only if it lacks them.
 Write the check-outcomes comment under the [comment rules](#comments).
 
 For adoption or update findings, use these target repositories:
