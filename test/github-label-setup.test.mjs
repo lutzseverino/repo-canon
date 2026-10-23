@@ -214,7 +214,7 @@ test("blocks with GitHub's reason when labels cannot be inspected", (t) => {
   assert.equal(outcome.result.status, "blocked");
   assert.match(
     outcome.result.message,
-    /could not inspect labels for acme\/widgets \(exit 1: gh: Resource not accessible by integration \(HTTP 403\)\)/,
+    /could not inspect labels for acme\/widgets \(Resource not accessible by integration \(HTTP 403\)\)/,
   );
   assert.equal(scenario.readState().mutations ?? 0, 0);
 });
@@ -349,4 +349,25 @@ test("treats hexadecimal colour casing as matching without confirmation", (t) =>
   const scenario = setup(t, { state: { labels } });
   assert.equal(scenario.invoke().result.status, "unchanged");
   assert.equal(scenario.readState().mutations ?? 0, 0);
+});
+
+test("reconciles a label on a later page and reads all pages back", (t) => {
+  const labels = structuredClone(canonicalLabels);
+  labels.at(-1).description = "Repository-chosen description";
+  const scenario = setup(t, { state: { labels, pageSize: 2 } });
+  const confirmation = scenario.invoke();
+  assert.equal(confirmation.status, 0, confirmation.stderr);
+  assert.equal(confirmation.result.status, "confirmation-required");
+  assert.match(confirmation.result.message, /Repository-chosen description/);
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+  const changed = scenario.invoke(
+    { overwriteAllowed: true },
+    { GH_HOST: "enterprise.example" },
+  );
+  assert.equal(changed.status, 0, changed.stderr);
+  assert.equal(changed.result.status, "changed");
+  assert.deepEqual(scenario.readState().labels, canonicalLabels);
+  assert.equal(scenario.readState().mutations, 1);
+  assert.equal(scenario.invoke().result.status, "unchanged");
+  assert.deepEqual([...new Set(scenario.readState().apiHosts)], ["github.com"]);
 });

@@ -20,9 +20,8 @@ export const fakeNodeVersion = join(
   "test/fixtures/fake-node-version.mjs",
 );
 
-// The GitHub operations under test: the script, the stateful GitHub CLI
-// fixture that answers its endpoints, its operation as `standards.yaml`
-// declares it, and the remote state the fixture starts from.
+// The GitHub operations under test: entry points, credential CLI fixture,
+// declared operation identity, and initial remote state.
 export const githubLabelSetup = {
   script: join(repositoryRoot, "operations/setup-github-labels.mjs"),
   fakeGh: join(repositoryRoot, "test/fixtures/fake-gh.mjs"),
@@ -36,7 +35,7 @@ export const githubLabelSetup = {
 
 export const githubPrIntegrationSetup = {
   script: join(repositoryRoot, "operations/setup-github-pr-integration.mjs"),
-  fakeGh: join(repositoryRoot, "test/fixtures/fake-gh-pr-settings.mjs"),
+  fakeGh: join(repositoryRoot, "test/fixtures/fake-gh.mjs"),
   operation: {
     declaration: "github-repository-configuration",
     phase: "fixes",
@@ -74,8 +73,8 @@ export function operationRequest(projectRoot, operation, overrides = {}) {
   };
 }
 
-// A disposable project with Git remotes and a `gh` on PATH that answers from a
-// state file, so a GitHub operation runs without contacting GitHub.
+// A disposable project with Git remotes, a credential-only gh fixture, and
+// injected fetch backed by stateful GitHub responses. No network is used.
 export function setup(t, subject, options = {}) {
   const project = fixture({ "README.md": "# Fixture\n" });
   t.after(project.close);
@@ -107,6 +106,7 @@ export function setup(t, subject, options = {}) {
   const env = {
     PATH: `${toolsRoot}:${dirname(process.execPath)}:/usr/bin:/bin`,
     FAKE_GH_STATE: statePath,
+    FAKE_GITHUB_OPERATION: subject.operation.id,
   };
   const invoke = (
     requestOverrides = {},
@@ -116,7 +116,14 @@ export function setup(t, subject, options = {}) {
     invokeOperation(
       subject.script,
       operationRequest(project.root, subject.operation, requestOverrides),
-      { env: { ...env, ...envOverrides }, nodeArguments },
+      {
+        env: { ...env, ...envOverrides },
+        nodeArguments: [
+          "--import",
+          join(repositoryRoot, "test/fixtures/postern-setup.mjs"),
+          ...nodeArguments,
+        ],
+      },
     );
   return {
     project,
