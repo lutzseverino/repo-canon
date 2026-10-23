@@ -53,7 +53,7 @@ workflow file on the default branch, so until the file is there `PR metadata`
 never reports and a required check would hold every pull request, including
 the adoption pull request that installs the workflow. GitHub's `Not Found` 404
 response means the workflow is absent and defers the requirement; any other
-failed read returns `blocked` with GitHub's error text and no mutation. The
+failed read returns `blocked` with the redacted platform message and no mutation. The
 Actions workflow list is not used, because GitHub keeps listing a workflow
 after its file leaves the default branch.
 
@@ -77,6 +77,18 @@ repository merge settings. The `PR metadata validation` workflow must be on the
 default branch before the operation requires the check, so that the check can
 report a result.
 
+The gh minimum is retained for `gh auth token --hostname github.com`, which
+supplies the current credential to one connection through the vendored Postern
+1.2.0 bundle. `Access.viewer()` confirms authentication; a missing token,
+anonymous account report or unauthenticated report blocks with sign-in guidance.
+The role check reads the repository response's `permissions` booleans rather
+than `Access.role()`, preserving support for custom roles with an admin base.
+All GitHub reads and writes use `Access.request()` or `Access.requestPages()`,
+including every ruleset list page and each ruleset's details. Only version and
+token reads run gh. Each fix and probe retains the same bundle, license and
+provenance note and runs without a package installation. No credential appears
+in a result, message, stderr or evidence, even when the platform echoes it.
+
 All repository-local `github.com` fetch and push remote URLs must identify one
 repository. Global and system Git configuration cannot supply or conflict with
 that identity. The operation verifies that the API's canonical `full_name`
@@ -95,7 +107,7 @@ It runs the fix's own preparation and role check from
 and GitHub's confirmation of it, authentication, and admin access. It returns
 `ready` when all of them hold, and otherwise `not-ready` with the message the
 fix would block with, such as the `gh auth login` command that signs in. It
-makes only `gh auth status` and read-only API calls and changes nothing in the
+reads the current gh token and makes only read-only `Access` API calls and changes nothing in the
 project or on GitHub. It does not read branch protection, rulesets, or the
 workflow file, so the plan-gated and deferred `PR metadata` requirement stays
 the fix's decision. An adopter can defer a remote setup that is not ready; the
@@ -103,8 +115,20 @@ next adoption or update probes again and runs the fix once the probe is ready.
 
 Repository-read failures use the same
 [stable reasons and recovery steps](github-label-setup.md#readiness-probe)
-as label setup, with a command for full diagnostics. Raw `gh` error text
-never enters a probe reason or its matching blocked message.
+as label setup: not-found asks to confirm access, unauthenticated asks to sign
+in, rate-limited asks to wait for reset, forbidden/rejected/conflict and HTTP
+5xx ask to retry later, transport failures and timeouts ask to investigate and
+retry, and invalid responses retain the invalid JSON reason. The diagnostic
+command remains pinned to github.com. Platform messages, account and host
+traces never enter a probe reason or its matching blocked message.
+
+Later failures retain Postern's HTTP status and credential-redacted platform
+message. The fix recognizes an unprotected branch only from a 404 mentioning
+`Branch not protected`, an absent workflow only from a 404 mentioning
+`Not Found`, and the plan limit only from a 403 mentioning
+`Upgrade to GitHub … or make this repository public`. Other 403s and 404s,
+including reworded messages, block. A rate-limit 403 remains rate-limited,
+rather than a plan limit.
 
 ## Results and recovery
 
@@ -178,15 +202,17 @@ with an unchanged selection, requires the check as usual.
 Missing or incompatible tools, uncertain identity, authentication failure,
 insufficient permission, an unreadable rule configuration, an API failure, or
 a readback mismatch returns `blocked`. API failures after preparation include
-GitHub's error text from `gh`; the preparation's repository read uses the
+the credential-redacted platform message and status from `Access`; the preparation's repository read uses the
 stable reasons above. A mutation failure names confirmed
 partial effects and the work that remains. Each retry reads current remote
 state and performs only missing changes, including after process interruption.
 Readback is point-in-time evidence: the operation supplies no freshness,
 rollback, or remote ownership-baseline guarantee.
 
-Authoring fixtures use a temporary local Git repository and a stateful GitHub
-CLI replacement. They exercise classic branch protection, repository rulesets,
+Authoring fixtures use a temporary local Git repository and the published
+Postern adapter with an injected fetch transport (`test/fixtures/postern-setup.mjs`)
+backed by stateful GitHub responses. The gh fixture answers only version and
+token reads. They exercise classic branch protection, repository rulesets,
 merge settings, the plan-limit response on either read, a workflow that is
 present, absent, or unreadable on the default branch, identity, permissions,
 partial effects, readback, retry, and unchanged repetition without contacting

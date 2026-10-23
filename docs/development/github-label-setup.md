@@ -36,9 +36,19 @@ Other labels, existing `factory:` labels included, are never deleted or edited.
 The operation requires Node.js 24 or 26 as its public-protocol executable, Git 2.18.0
 or newer, and GitHub CLI 2.57.0 or newer. `gh` must be authenticated to
 `github.com`, and the current account must have write, maintain, or admin
-repository access so it can manage labels. The GitHub CLI minimum supplies
-the paginated `--slurp` API output and active-account authentication check used
-by the operation.
+repository access so it can manage labels. The GitHub CLI minimum is retained for reading its current token with
+`gh auth token --hostname github.com`. The fix opens one connection through the
+vendored Postern 1.2.0 bundle, passes that token as its credential source, and
+uses `Access.viewer()` to confirm authentication. A missing token, anonymous
+account report, or unauthenticated report blocks with the sign-in guidance.
+Repository roles still come from the API response's `permissions` booleans,
+so a custom role with a sufficient base role remains accepted.
+
+Every API request uses `Access.request()` or `Access.requestPages()`, including
+all pages of the label list. Only the version check and current-token read run
+`gh`. The fix and probe each declare the same bundle, license and provenance
+note as retained resources; they need no package installation. Credentials
+never appear in results, messages, stderr or evidence, even if GitHub echoes one.
 
 All repository-local `github.com` fetch and push remote URLs must identify one
 repository. Global and system Git configuration cannot supply or conflict with
@@ -60,22 +70,24 @@ It runs the fix's own preparation and role check from
 and GitHub's confirmation of it, authentication, and write, maintain, or admin
 access. It returns `ready` when all of them hold, and otherwise `not-ready`
 with the message the fix would block with, such as the `gh auth login` command
-that signs in. It makes only `gh auth status` and read-only API calls, never
+that signs in. It reads the current gh token and makes only read-only `Access` API calls, never
 reads the labels, and changes nothing in the project or on GitHub. An adopter
 can defer a remote setup that is not ready; the next adoption or update probes
 again and runs the fix once the probe is ready.
 
-When the repository API read fails, the probe and fix use a stable reason
-based on a recognized HTTP status, without embedding `gh`'s error text.
-The reason gives a recovery step: confirm repository access for
-404, sign in again for 401, wait for the rate limit to reset for a rate-limit
-403 or 429, or retry later for other HTTP failures. Failures without a recognized
-HTTP status, including spawn errors, output buffer exhaustion (`ENOBUFS`), and
-unclassified CLI failures, use neutral verification-failure guidance: investigate
-the failure and then retry, without assuming a connection problem. Each names
-`gh api --hostname github.com repos/OWNER/REPO` to run for full diagnostics
-against the verified repository, even when `GH_HOST` names another host. An
-unparseable response retains its invalid JSON reason.
+When the repository API read fails, the probe and fix map Postern's
+`PlatformError.reason` to a stable recovery step without embedding platform
+messages: `notFound` asks to confirm repository access; `unauthenticated` asks
+to sign in again; `rateLimited` asks to wait for the reset; `forbidden`,
+`rejected` and `conflict` ask to retry later. `unavailable` asks to retry later
+for HTTP 5xx, and otherwise to investigate the transport failure or timeout
+and retry. `invalidResponse` retains the invalid JSON reason. HTTP failures
+name the status, and failures other than an invalid response name
+`gh api --hostname github.com repos/OWNER/REPO` for full diagnostics, even
+when `GH_HOST` names another host. Later reads and mutations report the
+credential-redacted platform message and HTTP status, or neutral transport
+failure guidance. Every failed read blocks before mutation, and a mutation
+failure still names confirmed partial effects.
 This keeps changing host, account, and trace details out of the inspection
 identity and any recorded reason for deferred remote setup.
 
@@ -103,19 +115,21 @@ configuration, which also recovers from an interrupted process. Readback is a
 point-in-time verification. The operation supplies no remote freshness,
 rollback, or ownership-baseline guarantee.
 
-Authoring tests use a disposable local Git repository and a stateful GitHub CLI
-fixture. They never call GitHub or change live repository settings:
+Authoring tests use a disposable local Git repository and the published
+Postern adapter with an injected fetch transport (`test/fixtures/postern-setup.mjs`)
+backed by stateful GitHub responses. A small gh fixture answers only version
+and token reads. They never call GitHub or change live repository settings:
 
 ```sh
 node --test test/github-label-setup.test.mjs
 ```
 
-The probe fixtures run a copy of each probe holding only its declared
+The operation fixtures run each fix and probe from only its declared
 resources. They show `not-ready` for a missing `gh`, an ambiguous remote, no
 authentication, and an insufficient role, and `ready` for a sufficient role,
 with no project change and no API call other than a read. They also verify
-stable repository-read failure reasons across changing stderr, neutral non-HTTP
-guidance including `ENOBUFS`, HTTP recovery steps, the invalid JSON reason, and
+stable repository-read failure reasons across changing transport details, neutral
+transport and timeout guidance, HTTP recovery steps, the invalid JSON reason, and
 matching blocked messages from both fixes:
 
 ```sh

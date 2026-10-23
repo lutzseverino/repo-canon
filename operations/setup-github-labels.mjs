@@ -2,8 +2,7 @@ import {
   apiEndpoint,
   describeSettingChanges,
   requireOverwriteConfirmation,
-  githubApi,
-  jsonFrom,
+  githubRequest,
   labelManagementRole,
   prepareGithubSetup,
   readOperationRequest,
@@ -85,16 +84,11 @@ const stockLabels = [
   },
 ];
 
-function readLabels(identity, projectRoot) {
-  const response = jsonFrom(
-    githubApi(
-      [
-        "--paginate",
-        "--slurp",
-        `${apiEndpoint(identity, "/labels")}?per_page=100`,
-      ],
-      projectRoot,
-    ),
+async function readLabels(identity, access) {
+  const response = await githubRequest(
+    access,
+    `${apiEndpoint(identity, "/labels")}?per_page=100`,
+    { paginate: true },
   );
   if (response.error) return response;
   if (!Array.isArray(response.value))
@@ -129,44 +123,26 @@ function describeEffects(created, updated) {
   return effects.join(" and ");
 }
 
-function mutateLabel(identity, action, projectRoot) {
-  const fields = [
-    "-f",
-    `color=${action.desired.color}`,
-    "-f",
-    `description=${action.desired.description}`,
-  ];
+async function mutateLabel(identity, action, access) {
+  const body = {
+    color: action.desired.color,
+    description: action.desired.description,
+  };
   if (action.kind === "create") {
-    return githubApi(
-      [
-        apiEndpoint(identity, "/labels"),
-        "--method",
-        "POST",
-        "-f",
-        `name=${action.desired.name}`,
-        ...fields,
-      ],
-      projectRoot,
-    );
+    return githubRequest(access, apiEndpoint(identity, "/labels"), {
+      method: "POST",
+      body: { ...body, name: action.desired.name },
+    });
   }
-  return githubApi(
-    [
-      apiEndpoint(
-        identity,
-        `/labels/${encodeURIComponent(action.actual.name)}`,
-      ),
-      "--method",
-      "PATCH",
-      "-f",
-      `new_name=${action.desired.name}`,
-      ...fields,
-    ],
-    projectRoot,
+  return githubRequest(
+    access,
+    apiEndpoint(identity, `/labels/${encodeURIComponent(action.actual.name)}`),
+    { method: "PATCH", body: { ...body, new_name: action.desired.name } },
   );
 }
 
-function setupLabels(request) {
-  const prepared = prepareGithubSetup(
+async function setupLabels(request) {
+  const prepared = await prepareGithubSetup(
     request,
     operationName,
     labelManagementRole,
@@ -177,7 +153,7 @@ function setupLabels(request) {
   }
   const inferred = { identity: prepared.identity };
 
-  const before = readLabels(inferred.identity, request.projectRoot);
+  const before = await readLabels(inferred.identity, prepared.access);
   if (before.error) {
     result(
       "blocked",
@@ -215,10 +191,10 @@ function setupLabels(request) {
   const updated = [];
   for (let index = 0; index < actions.length; index += 1) {
     const action = actions[index];
-    const mutation = mutateLabel(
+    const mutation = await mutateLabel(
       inferred.identity,
       action,
-      request.projectRoot,
+      prepared.access,
     );
     if (!mutation.ok) {
       const effects = describeEffects(created, updated);
@@ -235,7 +211,7 @@ function setupLabels(request) {
     (action.kind === "create" ? created : updated).push(action.desired.name);
   }
 
-  const after = readLabels(inferred.identity, request.projectRoot);
+  const after = await readLabels(inferred.identity, prepared.access);
   const effects = describeEffects(created, updated);
   if (after.error) {
     const effectMessage = effects ? ` Applied changes: ${effects}.` : "";
@@ -277,7 +253,7 @@ function setupLabels(request) {
 }
 
 try {
-  setupLabels(readOperationRequest(operationName, "fixes"));
+  await setupLabels(readOperationRequest(operationName, "fixes"));
 } catch (error) {
   process.stderr.write(
     `${error instanceof Error ? error.message : String(error)}\n`,

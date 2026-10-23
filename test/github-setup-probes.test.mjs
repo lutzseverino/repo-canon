@@ -12,7 +12,7 @@ import { retainedCheck, snapshot } from "./helpers/operation.mjs";
 
 // Each remote setup fix's readiness probe, run from a copy holding only the
 // resources `standards.yaml` declares for it, against the same stateful
-// GitHub CLI fixture as its fix.
+// Postern-backed transport fixture as its fix.
 const probes = [
   {
     name: "GitHub label setup",
@@ -117,10 +117,14 @@ for (const probe of probes) {
     assertNoWrites(scenario);
   });
 
-  test(`${probe.name} gives neutral diagnostics for process output buffer failures without mutation`, (t) => {
-    // Exceed spawnSync's output buffer during the repository read (ENOBUFS),
-    // rather than returning a CLI exit failure or invalid JSON response.
-    const state = { repositoryResponse: "x".repeat(2 * 1024 * 1024) };
+  test(`${probe.name} gives neutral diagnostics for transport timeouts without mutation`, (t) => {
+    const state = {
+      failure: {
+        at: "repository",
+        transport: true,
+        message: "request timeout at fixture-host",
+      },
+    };
     const scenario = probeScenario(t, probe, { state });
     const fix = setup(t, probe.fix, { state });
     fix.before = snapshot(fix.project.root);
@@ -266,8 +270,16 @@ for (const probe of probes) {
       state: { permissions: probe.sufficient },
     });
     const ready = `${probe.name} can run for acme/widgets with ${probe.access}.`;
-    assertProbe(scenario.invoke(), "ready", ready);
-    assertProbe(scenario.invoke(), "ready", ready);
+    assertProbe(
+      scenario.invoke({}, { GH_HOST: "enterprise.example" }),
+      "ready",
+      ready,
+    );
+    assertProbe(
+      scenario.invoke({}, { GH_HOST: "enterprise.example" }),
+      "ready",
+      ready,
+    );
     assert.deepEqual(
       [...new Set(scenario.readState().apiHosts)],
       ["github.com"],

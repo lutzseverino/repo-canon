@@ -106,6 +106,9 @@ defaults:
             script: operations/setup-github-labels.mjs
             resources:
               - operations/lib/github-operation.mjs
+              - vendor/postern/postern.mjs
+              - vendor/postern/LICENSE
+              - vendor/postern/README.md
               - LICENSE
               - THIRD_PARTY_NOTICES.md
               - vendor/mattpocock-skills/LICENSE
@@ -113,7 +116,6 @@ defaults:
               - vendor/marked/LICENSE
               - vendor/parse5/LICENSE.parse5
               - vendor/parse5/LICENSE.entities
-              - vendor/postern/LICENSE
             arguments: []
           prerequisite:
             version-arguments: ["--version"]
@@ -126,6 +128,9 @@ defaults:
                 script: operations/probe-github-labels.mjs
                 resources:
                   - operations/lib/github-operation.mjs
+                  - vendor/postern/postern.mjs
+                  - vendor/postern/LICENSE
+                  - vendor/postern/README.md
                 arguments: []
               prerequisite:
                 version-arguments: ["--version"]
@@ -137,6 +142,9 @@ defaults:
             script: operations/setup-github-pr-integration.mjs
             resources:
               - operations/lib/github-operation.mjs
+              - vendor/postern/postern.mjs
+              - vendor/postern/LICENSE
+              - vendor/postern/README.md
             arguments: []
           prerequisite:
             version-arguments: ["--version"]
@@ -149,6 +157,9 @@ defaults:
                 script: operations/probe-github-pr-integration.mjs
                 resources:
                   - operations/lib/github-operation.mjs
+                  - vendor/postern/postern.mjs
+                  - vendor/postern/LICENSE
+                  - vendor/postern/README.md
                 arguments: []
               prerequisite:
                 version-arguments: ["--version"]

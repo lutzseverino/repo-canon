@@ -10,7 +10,7 @@ import {
 const operationName = "GitHub operation fixture";
 
 try {
-  const prepared = prepareGithubRepository(
+  const prepared = await prepareGithubRepository(
     readOperationRequest(operationName, "fixes"),
     operationName,
   );

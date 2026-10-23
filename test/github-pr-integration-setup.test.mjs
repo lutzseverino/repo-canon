@@ -497,13 +497,13 @@ test("blocks with GitHub's reason unless both reads hit the plan limit on a priv
       name: "only branch protection is plan-limited",
       state: { private: true, forbidden: { protection: planLimit } },
       message:
-        /could not inspect required checks on main \(exit 1: gh: Upgrade to GitHub Pro .* \(HTTP 403\)\)/,
+        /could not inspect required checks on main \(Upgrade to GitHub Pro .* \(HTTP 403\)\)/,
     },
     {
       name: "only rulesets are plan-limited",
       state: { private: true, forbidden: { rulesets: planLimit } },
       message:
-        /could not inspect repository rulesets for acme\/widgets \(exit 1: gh: Upgrade to GitHub Pro .* \(HTTP 403\)\)/,
+        /could not inspect repository rulesets for acme\/widgets \(Upgrade to GitHub Pro .* \(HTTP 403\)\)/,
     },
     {
       name: "a public repository",
@@ -521,7 +521,7 @@ test("blocks with GitHub's reason unless both reads hit the plan limit on a priv
         },
       },
       message:
-        /could not inspect required checks on main \(exit 1: gh: Resource not accessible by integration \(HTTP 403\)\)/,
+        /could not inspect required checks on main \(Resource not accessible by integration \(HTTP 403\)\)/,
     },
     {
       name: "a reworded plan limit",
@@ -558,7 +558,7 @@ test("blocks with GitHub's reason when the merge-settings readback fails where t
   assert.equal(outcome.result.status, "blocked");
   assert.match(
     outcome.result.message,
-    /final readback did not match squash merge settings \(exit 1: gh: Server Error \(HTTP 500\)\)\. Applied changes: updated squash merge settings\./,
+    /final readback did not match squash merge settings \(Server Error \(HTTP 500\)\)\. Applied changes: updated squash merge settings\./,
   );
 });
 
@@ -651,7 +651,7 @@ test("blocks when final readback disagrees and reports applied effects", async (
       if (mismatch === "branch inspection") {
         assert.match(
           outcome.result.message,
-          /branch protection readback \(exit 1: gh: Not Found \(HTTP 404\)\)/,
+          /branch protection readback \(Not Found \(HTTP 404\)\)/,
         );
       }
     });
@@ -757,7 +757,7 @@ test("blocks with GitHub's reason when the workflow read fails", (t) => {
   assert.equal(outcome.result.status, "blocked");
   assert.match(
     outcome.result.message,
-    /could not read \.github\/workflows\/pr-metadata\.yml on main \(exit 1: gh: Server Error \(HTTP 500\)\)/,
+    /could not read \.github\/workflows\/pr-metadata\.yml on main \(Server Error \(HTTP 500\)\)/,
   );
   assert.deepEqual(writes(scenario.readState()), []);
 });
@@ -1073,4 +1073,43 @@ test("creates missing enforcement alongside matching existing merge settings wit
   assert.deepEqual(scenario.readState().rulesets, [
     canonicalRuleset({ id: 100 }),
   ]);
+});
+
+test("reads every ruleset page and detail before reconciling the managed ruleset", (t) => {
+  const unrelated = [
+    canonicalRuleset({ id: 1, name: "Other policy" }),
+    canonicalRuleset({ id: 2, name: "More policy" }),
+  ];
+  const scenario = setup(t, {
+    state: {
+      settings: matchingSettings,
+      rulesets: [...unrelated, canonicalRuleset({ enforcement: "evaluate" })],
+      pageSize: 1,
+    },
+  });
+  const confirmation = scenario.invoke();
+  assert.equal(confirmation.status, 0, confirmation.stderr);
+  assert.equal(confirmation.result.status, "confirmation-required");
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+  const changed = scenario.invoke(
+    { overwriteAllowed: true },
+    { GH_HOST: "enterprise.example" },
+  );
+  assert.equal(changed.status, 0, changed.stderr);
+  assert.equal(changed.result.status, "changed");
+  assert.deepEqual(scenario.readState().rulesets, [
+    ...unrelated,
+    canonicalRuleset(),
+  ]);
+  assert.deepEqual(scenario.readState().mutationLog, [
+    "update required-check ruleset",
+  ]);
+  assert.equal(scenario.invoke().result.status, "unchanged");
+  assert.deepEqual([...new Set(scenario.readState().apiHosts)], ["github.com"]);
+  for (const id of [1, 2, 50])
+    assert.ok(
+      scenario
+        .readState()
+        .requests.includes(`GET repos/acme/widgets/rulesets/${id}`),
+    );
 });

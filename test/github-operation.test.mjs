@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
-import { chmodSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import {
+  existsSync,
+  chmodSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { retainedCheck } from "./helpers/operation.mjs";
@@ -161,10 +167,9 @@ test("blocks for unavailable or incompatible tools and unauthenticated access", 
       const outcome = scenario.invoke();
       assert.equal(outcome.status, 0, outcome.stderr);
       assert.equal(outcome.result.status, "unchanged");
-      assert.deepEqual(scenario.readState().authStatusArguments, [
+      assert.deepEqual(scenario.readState().tokenArguments, [
         "--hostname",
         "github.com",
-        "--active",
       ]);
     },
   );
@@ -177,10 +182,9 @@ test("pins API requests and authentication to github.com when the environment se
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "unchanged");
   assert.deepEqual([...new Set(scenario.readState().apiHosts)], ["github.com"]);
-  assert.deepEqual(scenario.readState().authStatusArguments, [
+  assert.deepEqual(scenario.readState().tokenArguments, [
     "--hostname",
     "github.com",
-    "--active",
   ]);
 });
 
@@ -285,3 +289,159 @@ for (const fix of [githubLabelSetup, githubPrIntegrationSetup]) {
     });
   }
 }
+
+test("uses gh only for the version and the current github.com token", (t) => {
+  const scenario = prepare(t);
+  const outcome = scenario.invoke();
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "unchanged");
+  assert.deepEqual(scenario.readState().ghCalls, [
+    ["--version"],
+    ["auth", "token", "--hostname", "github.com"],
+  ]);
+});
+
+// Exercise the actual adapter's closed error reasons at every operation stage.
+const platformFailures = [
+  { name: "notFound", status: 404, recovery: /Confirm the repository exists/ },
+  { name: "unauthenticated", status: 401, recovery: /Sign in again/ },
+  { name: "forbidden", status: 403, recovery: /Retry later/ },
+  { name: "rateLimited", status: 429, recovery: /rate limit resets/ },
+  {
+    name: "rateLimited 403",
+    status: 403,
+    message: "API rate limit exceeded",
+    recovery: /rate limit resets/,
+  },
+  { name: "rejected", status: 422, recovery: /Retry later/ },
+  { name: "conflict", status: 409, recovery: /Retry later/ },
+  { name: "unavailable HTTP", status: 503, recovery: /Retry later/ },
+  {
+    name: "unavailable transport",
+    transport: true,
+    recovery: /investigating the failure/,
+  },
+  {
+    name: "unavailable timeout",
+    timeout: true,
+    recovery: /investigating the failure/,
+  },
+  { name: "invalidResponse", invalid: true, recovery: /invalid JSON response/ },
+];
+
+for (const fix of [githubLabelSetup, githubPrIntegrationSetup]) {
+  test(`${fix.operation.id} blocks on every PlatformError without mutating after a failed read`, async (t) => {
+    for (const failure of platformFailures) {
+      for (const at of ["repository", "read", "mutation"]) {
+        await t.test(`${failure.name}: ${at}`, (st) => {
+          const scenario = setup(st, fix, {
+            state: { failure: { ...failure, at } },
+          });
+          const outcome = scenario.invoke({ overwriteAllowed: true });
+          assert.equal(outcome.status, 0, outcome.stderr);
+          assert.equal(outcome.result.status, "blocked");
+          if (at === "repository")
+            assert.match(outcome.result.message, failure.recovery);
+          if (at === "mutation")
+            assert.match(outcome.result.message, /No changes were confirmed/);
+          assert.equal(scenario.readState().mutations ?? 0, 0);
+          if (at !== "mutation")
+            assert.ok(
+              scenario
+                .readState()
+                .requests.every((request) => request.startsWith("GET ")),
+            );
+          assert.equal(outcome.stderr, "");
+        });
+      }
+    }
+  });
+
+  test(`${fix.operation.id} never exposes its current token, including echoed failures`, async (t) => {
+    const token = "recognizable-current-token-541";
+    const probe = {
+      ...fix,
+      operation: { ...fix.operation, phase: "probes" },
+      script: retainedCheck(
+        t,
+        fix === githubLabelSetup
+          ? "operations/probe-github-labels.mjs"
+          : "operations/probe-github-pr-integration.mjs",
+      ),
+    };
+    for (const subject of [fix, probe]) {
+      for (const state of [
+        { authenticated: false },
+        { failure: { at: "account", status: 401, message: token } },
+        { failure: { at: "repository", status: 403, message: token } },
+        { failure: { at: "repository", transport: true, message: token } },
+        ...(subject === fix
+          ? [
+              { failure: { at: "read", status: 403, message: token } },
+              { failure: { at: "mutation", status: 422, message: token } },
+              { failure: { at: "mutation", transport: true, message: token } },
+              // A successful response can also echo the credential.
+              { repo: token },
+            ]
+          : []),
+      ]) {
+        await t.test(
+          `${subject.operation.phase}: ${JSON.stringify(state).replaceAll(token, "<token>")}`,
+          (st) => {
+            const scenario = setup(st, subject, { state: { ...state, token } });
+            const outcome = scenario.invoke({ overwriteAllowed: true });
+            assert.equal(outcome.status, 0, outcome.stderr);
+            assert.equal(
+              outcome.result.status,
+              subject === fix ? "blocked" : "not-ready",
+            );
+            assert.ok(
+              !`${outcome.stdout}${outcome.stderr}`.includes(token),
+              "token must not appear in operation output",
+            );
+          },
+        );
+      }
+    }
+  });
+
+  test(`${fix.operation.id} requires a current token and an authenticated account report`, async (t) => {
+    for (const state of [
+      { token: "" },
+      { accountError: "gh: Bad credentials (HTTP 401)" },
+    ]) {
+      await t.test(JSON.stringify(state), (st) => {
+        const scenario = setup(st, fix, { state });
+        const outcome = scenario.invoke();
+        assert.equal(outcome.status, 0, outcome.stderr);
+        assert.equal(outcome.result.status, "blocked");
+        assert.match(
+          outcome.result.message,
+          /requires authenticated github.com access through gh; sign in/,
+        );
+        assert.equal(scenario.readState().mutations ?? 0, 0);
+        assert.ok(
+          !(scenario.readState().requests ?? []).some((request) =>
+            request.startsWith("GET repos/"),
+          ),
+        );
+      });
+    }
+  });
+}
+
+test("all four remote-setup entry points retain the one bundle, license and provenance", (t) => {
+  for (const script of [
+    "setup-github-labels",
+    "probe-github-labels",
+    "setup-github-pr-integration",
+    "probe-github-pr-integration",
+  ]) {
+    const retained = retainedCheck(t, `operations/${script}.mjs`);
+    for (const file of ["postern.mjs", "LICENSE", "README.md"])
+      assert.ok(
+        existsSync(join(dirname(retained), "../vendor/postern", file)),
+        `${script} must retain Postern ${file}`,
+      );
+  }
+});
