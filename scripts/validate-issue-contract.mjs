@@ -2,6 +2,7 @@
 
 import { setTimeout as wait } from "node:timers/promises";
 import { createHash } from "node:crypto";
+import { PlatformError } from "../vendor/postern/postern.mjs";
 import { lexer } from "../vendor/marked/marked.esm.js";
 import {
   interpretMarkdown,
@@ -1654,7 +1655,11 @@ export async function runIssueContractValidation(
     }
     for (const login of reviewerLogins(snapshot)) {
       snapshot.permissions[login] = {
-        role: await connection.access.role(login),
+        role: await connection.access.role(login).catch((error) => {
+          if (error instanceof PlatformError && error.reason === "notFound")
+            return null;
+          throw error;
+        }),
       };
     }
   }

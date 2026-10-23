@@ -1843,21 +1843,13 @@ test("an unrecorded push with old dates waits silently until its limit", async (
       },
       ["12", "--limit", "2", "--interval", "0.2"],
     );
-    if (failActivity) {
-      assert.equal(result.code, 1);
-      assert.match(result.stderr, /502/);
-    } else {
-      assert.equal(result.code, 5);
-      assert.equal(result.stderr, "");
-      assert.equal(
-        result.stdout,
-        `${head}: still waiting on checks; run again\n`,
-      );
-      assert.ok(
-        result.firstWrite >= 1900,
-        `wrote after ${result.firstWrite} ms`,
-      );
-    }
+    assert.equal(result.code, 5);
+    assert.equal(result.stderr, "");
+    assert.equal(
+      result.stdout,
+      `${head}: still waiting on checks; run again\n`,
+    );
+    assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
   }
 });
 
@@ -1877,11 +1869,6 @@ test("a push recorded after the first look settles within the invocation", async
       },
       ["12", "--limit", "3", "--interval", "0.2"],
     );
-    if (failActivityReads) {
-      assert.equal(result.code, 1);
-      assert.match(result.stderr, /502/);
-      continue;
-    }
     assert.equal(result.code, 4, result.stderr);
     assert.equal(result.stderr, "");
     assert.equal(

@@ -291,7 +291,7 @@ const pushTime = async (pull, connection) => {
     await pages(
       connection,
       `${path}/activity?ref=${encodeURIComponent(`refs/heads/${pull.headBranch}`)}&per_page=100`,
-    ),
+    ).catch(() => []),
   );
   const recorded = activity.find((entry) => entry.after === head);
   const pushedAt =

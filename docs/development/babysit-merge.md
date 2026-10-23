@@ -19,6 +19,8 @@ GitHub's default squash message therefore does not add co-author trailers.
 
 After a successful merge call, the script reads the PR's `state` through
 `PullRequests.pullRequest` and reports success only when it is `merged`.
+It then writes the merge result (the squash commit SHA) to stdout, followed by
+a newline. Failed or unconfirmed merges write no success output.
 
 Exit `0` means merged. Exit `3` means not merged and needs the owner: either
 the base branch requires a merge queue, or a successful merge call left the
@@ -39,6 +41,10 @@ declaration, including its scripts and the `platform.mjs`, `reviewer.mjs` and
 separate exact file declarations at `vendor/postern/`, shared with the
 validators. Installed-layout fixtures execute the wait and merge without npm.
 
+The wait's `--repo` argument selects an explicit repository. Otherwise the
+scripts resolve the repository from `GH_REPO`, then the `origin` remote URL.
+They do not read the default repository configured by `gh repo set-default`.
+
 The scripts read the currently authenticated GitHub CLI credential with
 `gh auth token --hostname github.com` and pass it to the exact
 [Postern bundle](../../vendor/postern/README.md). No credential is printed.
@@ -46,7 +52,10 @@ PullRequests owns PR reads, reviews, queue checks and merge writes; Access
 retains conversation comments, GitHub check links, workflow attempt times,
 push activity and inline review-comment facts that the neutral ports do not
 expose. Access reads use
-the expected head SHA and paginate. A failed prerequisite read fails without a merge.
+the expected head SHA and paginate. A failed prerequisite read fails without a merge. The wait preserves its
+activity-read fallback: when the push activity request fails, it uses the
+committer date for review timing and keeps the push unrecorded. Without checks,
+an unrecorded push continues waiting; it cannot satisfy the five-minute gate.
 
 Access supplement reads reject incomplete or unknown check, workflow, push and
 review-comment facts. Check contexts paginate at the immutable head SHA, so a

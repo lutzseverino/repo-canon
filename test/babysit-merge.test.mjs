@@ -51,6 +51,8 @@ test("squash-merges with the current title and verbatim body through the port", 
     body,
   });
   assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, `${"c".repeat(40)}\n`);
+  assert.equal(result.stderr, "");
   assert.equal(
     result.state.merge.title,
     "fix: preserve $variables and `quotes` (#12)",
@@ -87,6 +89,7 @@ test("refuses a merge queue without attempting a merge", (t) => {
     isMergeQueueEnabled: true,
   });
   assert.equal(result.status, 3, result.stderr);
+  assert.equal(result.stdout, "");
   assert.match(result.stderr, /merge queue.*explicit squash message/i);
   assert.equal(result.state.merge, undefined);
 });
@@ -98,6 +101,7 @@ test("needs the owner when a successful merge call leaves the PR open", (t) => {
     mergeState: "OPEN",
   });
   assert.equal(result.status, 3, result.stderr);
+  assert.equal(result.stdout, "");
   assert.match(result.stderr, /pull request did not merge.*owner/i);
   assert.ok(result.state.merge);
 });
@@ -146,5 +150,7 @@ test("installed babysit resolves declared bundle, license and provenance and mer
     target,
   );
   assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, `${"c".repeat(40)}\n`);
+  assert.equal(result.stderr, "");
   assert.equal(result.state.merge.body, "Verbatim installed body");
 });

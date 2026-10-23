@@ -390,13 +390,19 @@ the snapshot the adapter would fetch, and assert the exact exit status, label
 changes, and feedback write. Adapter fixtures invoke the same trusted trigger interface as GitHub Actions
 with Postern's injected fetch transport. They cover event parsing,
 pagination, the role lookups, the bounded wait for a readiness trigger's
-timeline event, the order of writes, the exit status, unavailable endpoints, and
-the path fallback for releases without `import.meta.main`. The wait fixtures
+timeline event, complete ordered write payloads, exact stdout and stderr, and
+exit outcomes. A missing reviewer role (404) follows normal authorization and
+grants no readiness; other failed or unavailable prerequisite reads fail closed
+before any mutation. Separate fixtures cover closed-issue edits and comments,
+a stale open event whose current issue is closed, changed-contract reopening,
+and reopening without a workflow state. Entrypoint fixtures cover the path
+fallback for releases without `import.meta.main`. The wait fixtures
 inject the adapter's pause function, whose production default is
 `setTimeout` from `node:timers/promises`, so they use no real time. They also show that importing
 the validator runs no adapter and, where `import.meta.main` exists, makes no
 file-system or network call; without it, an import only resolves the compared script paths,
-ignoring an absent script path when imported from an evaluation. One executes the validator from an
+returning false when no script argument exists and throwing when a supplied
+script or module path cannot be resolved. One executes the validator from an
 installed layout containing only the command, trigger, policy modules,
 shared runtime and declared parser and Postern resources.
 Together they exercise the four public forms, native contracts,

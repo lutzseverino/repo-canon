@@ -16,6 +16,7 @@ import {
 import { main as merge } from "../.agents/skills/babysit/merge.mjs";
 import { installedValidator } from "./helpers/installed-validator.mjs";
 import {
+  approvedTicketFeedback,
   bugBody,
   ticketBody,
   completeAgentBrief,
@@ -47,6 +48,7 @@ async function exercise(
     eventReads,
     pause,
     failurePath,
+    bodyLastEditedAt = null,
   } = {},
 ) {
   const root = await mkdtemp(join(tmpdir(), "postern-issue-"));
@@ -122,7 +124,7 @@ async function exercise(
                   title: "Fixture issue",
                   body: source.body ?? "",
                   createdAt: source.created_at ?? time,
-                  lastEditedAt: source.lastEditedAt ?? null,
+                  lastEditedAt: source.lastEditedAt ?? bodyLastEditedAt,
                   author: {
                     __typename: "User",
                     login: source.user?.login ?? "reporter",
@@ -186,6 +188,14 @@ async function exercise(
   };
   let code;
   let error;
+  let stdout = "";
+  let stderr = "";
+  const log = t.mock.method(console, "log", (message) => {
+    stdout += `${message}\n`;
+  });
+  const warn = t.mock.method(console, "error", (message) => {
+    stderr += `${message}\n`;
+  });
   try {
     if (pause || command) {
       const connection = connect(`https://github.com/${repository}`, {
@@ -237,13 +247,67 @@ async function exercise(
     }
   } catch (caught) {
     error = caught;
+  } finally {
+    log.mock.restore();
+    warn.mock.restore();
   }
-  return { code, error, requests };
+  return { code, error, requests, stdout, stderr };
 }
 const writes = (result) =>
   result.requests.filter(
     ({ method, path }) => method !== "GET" && path !== "/graphql",
   );
+
+// Compare transport writes to the pure decision, including every payload byte.
+function assertDecision(result, decision, expectedWrites) {
+  assert.equal(result.error, undefined);
+  // Closed issues return after their skip message without an explicit status.
+  assert.equal(result.code ?? 0, decision.exitCode);
+  assert.equal(
+    result.stdout,
+    decision.exitCode === 0 ? `${decision.message}\n` : "",
+  );
+  assert.equal(
+    result.stderr,
+    decision.exitCode === 0 ? "" : `${decision.message}\n`,
+  );
+  assert.deepEqual(
+    writes(result).map(({ method, path, body }) => [method, path, body]),
+    expectedWrites,
+  );
+}
+
+function decisionFor({
+  issue,
+  comments = [],
+  event = {},
+  events = [],
+  permissions = {},
+  bodyLastEditedAt = null,
+  blockedBy = [],
+}) {
+  return decideIssueContract({
+    repository,
+    issue: { number: 42, state: "open", ...issue },
+    comments: comments.map((comment) => ({ updated_at: time, ...comment })),
+    event: { repository, issue: 42, ...event },
+    parent: null,
+    blockedBy,
+    issueEvents: events,
+    permissions: Object.fromEntries(
+      Object.entries(permissions).map(([login, role]) => [login, { role }]),
+    ),
+    bodyRevision: { id: "ISSUE_42", lastEditedAt: bodyLastEditedAt },
+  });
+}
+const issuePath = "/repos/example/repository/issues/42";
+const feedbackWrite = (decision, id) => [
+  id == null ? "POST" : "PATCH",
+  id == null
+    ? `${issuePath}/comments`
+    : `/repos/example/repository/issues/comments/${id}`,
+  { body: decision.feedback.body },
+];
 
 test("trusted issue trigger runs from declared installed resources without npm", async (t) => {
   const installed = installedValidator(t, ".github/scripts/validate.mjs");
@@ -266,16 +330,47 @@ test("Postern excludes pull request comments before any read", async (t) => {
   assert.deepEqual(result.requests, []);
 });
 
-test("fetched closed issue loses only needs-triage without context reads", async (t) => {
-  const result = await exercise(t, {
-    issue: { state: "closed", labels: ["needs-triage", "ready-for-agent"] },
-  });
-  assert.equal(result.error, undefined);
-  assert.equal(result.requests.length, 2);
-  assert.deepEqual(
-    writes(result).map(({ method, path }) => [method, path]),
-    [["DELETE", "/repos/example/repository/issues/42/labels/needs-triage"]],
-  );
+test("a fetched closed issue loses only needs-triage on any trigger without context reads", async (t) => {
+  for (const [action, reason, eventState, kindLabels] of [
+    ["closed", "completed", "closed", []],
+    ["closed", "not_planned", "closed", []],
+    ["closed", "duplicate", "closed", []],
+    ["created", "completed", "closed", []],
+    ["edited", "completed", "open", []],
+    ["closed", "completed", "closed", ["wayfinder:map"]],
+    ["labeled", "completed", "closed", ["wayfinder:research"]],
+  ]) {
+    const issue = {
+      state: "closed",
+      state_reason: reason,
+      body: "Incomplete contract.",
+      labels: [
+        ...kindLabels,
+        "needs-triage",
+        "ready-for-agent",
+        "ready-for-human",
+        "needs-info",
+        "wontfix",
+      ],
+    };
+    const result = await exercise(t, {
+      issue,
+      comments: [approvedTicketFeedback(issue)],
+      event: {
+        action,
+        issue: { number: 42, state: eventState },
+        ...(action === "created"
+          ? { comment: { id: 14, body: "Finished." } }
+          : {}),
+        ...(action === "labeled" ? { label: { name: "ready-for-agent" } } : {}),
+      },
+    });
+    assertDecision(result, decisionFor({ issue }), [
+      ["DELETE", `${issuePath}/labels/needs-triage`, null],
+    ]);
+    assert.equal(result.requests.length, 2);
+    assert.equal(result.requests[0].path, "/graphql");
+  }
 });
 
 test("current issue, complete discussion and role facts bind the unchanged revision", async (t) => {
@@ -428,12 +523,32 @@ test("timeline lag retries authoritative label changes within the existing bound
     assert.equal(result.error, undefined);
     assert.equal(result.code, recorded ? 0 : 1);
     assert.deepEqual(waits, Array(recorded ? 2 : 15).fill(2000));
-    const applied = writes(result);
-    if (recorded) assert.match(applied.at(-1).body.body, /readiness recorded/);
-    else {
-      assert.equal(applied[0].method, "DELETE");
-      assert.match(applied.at(-1).body.body, /timeline does not contain/);
-    }
+    const decision = decisionFor({
+      issue,
+      comments: [awaitingTicketFeedback(issue)],
+      event: {
+        kind: "labeled",
+        actor: account("maintainer"),
+        label: "ready-for-agent",
+      },
+      events: recorded ? [readinessReview] : [],
+      permissions: { maintainer: "admin" },
+    });
+    assertDecision(
+      result,
+      decision,
+      recorded
+        ? [feedbackWrite(decision, 13)]
+        : [
+            ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+            ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+            feedbackWrite(decision, 13),
+          ],
+    );
+    assert.match(
+      decision.feedback.body,
+      recorded ? /readiness recorded/ : /timeline does not contain/,
+    );
   }
 });
 
@@ -499,12 +614,29 @@ test("comment global identifiers remain available through the actual published e
         },
       },
     });
-    assert.equal(result.error, undefined);
-    assert.equal(result.code, 1);
+    const decision = decisionFor({
+      issue: {
+        body: "Intake context",
+        labels: ["enhancement", "ready-for-agent"],
+      },
+      comments: [{ ...current, updated_at: time }],
+      events: [readinessReview],
+      permissions: { maintainer: "admin" },
+      event: {
+        kind: "commentDeleted",
+        comment: { id: "25", nodeId: identity, body: completeAgentBrief },
+      },
+    });
+    assert.equal(decision.exitCode, 1);
     assert.match(
-      writes(result).at(-1).body.body,
+      decision.feedback.body,
       new RegExp(`deleted-comment:${marker}`),
     );
+    assertDecision(result, decision, [
+      ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+      ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+      feedbackWrite(decision),
+    ]);
   }
 });
 
@@ -518,48 +650,75 @@ test("opening labels and author facts authorize only the existing creation revie
     });
     assert.equal(result.error, undefined);
     assert.equal(result.code, role === "admin" ? 0 : 1);
-    const applied = writes(result);
-    if (role === "admin") {
+    const decision = decisionFor({
+      issue: {
+        ...issue,
+        user: account(),
+        created_at: time,
+        node_id: "ISSUE_42",
+      },
+      event: {
+        kind: "opened",
+        actor: account(),
+        openingLabels: ["ready-for-agent"],
+      },
+      permissions: { reporter: role },
+    });
+    assertDecision(
+      result,
+      decision,
+      role === "admin"
+        ? [feedbackWrite(decision)]
+        : [
+            ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+            ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+            feedbackWrite(decision),
+          ],
+    );
+    if (role === "admin")
       assert.match(
-        applied.at(-1).body.body,
+        decision.feedback.body,
         /"reviewEventId":"opened:ISSUE_42:2026-09-14T16:00:00Z"/,
       );
-      assert.ok(!applied.some(({ method }) => method === "DELETE"));
-    } else assert.equal(applied[0].method, "DELETE");
   }
 });
 
 test("native blockers supply relationship facts while named-section requirements remain", async (t) => {
   const emptyBody = ticketBody.replace("None.", "_No response_");
-  const native = await exercise(t, {
-    issue: { body: emptyBody, labels: [] },
-    blockedBy: [{ number: 41, state: "open" }],
-  });
-  assert.equal(native.error, undefined);
-  assert.equal(native.code, 0);
-  const absent = await exercise(t, { issue: { body: emptyBody, labels: [] } });
-  assert.equal(absent.code, 1);
-  assert.match(
-    writes(absent).at(-1).body.body,
-    /placeholder under `Blocked by`/,
-  );
-  const missingSection = await exercise(t, {
-    issue: { body: emptyBody.replace(/## Blocked by[\s\S]*/, ""), labels: [] },
-    blockedBy: [{ number: 41, state: "open" }],
-  });
-  assert.equal(missingSection.code, 1);
-  assert.match(
-    writes(missingSection).at(-1).body.body,
-    /Add the `Blocked by` section/,
-  );
-  const bodyOnly = await exercise(t, {
-    issue: { body: ticketBody.replace("None.", "#999"), labels: [] },
-  });
-  assert.equal(bodyOnly.code, 0);
-  assert.equal(
-    bodyOnly.requests.filter(({ path }) => path === "/graphql").length,
-    1,
-  );
+  for (const [issue, blockedBy, expectedCode, expectedMessage] of [
+    [
+      { body: emptyBody, labels: [] },
+      [{ number: 41, state: "open" }],
+      0,
+      /awaiting review/i,
+    ],
+    [{ body: emptyBody, labels: [] }, [], 1, /placeholder under `Blocked by`/],
+    [
+      { body: emptyBody.replace(/## Blocked by[\s\S]*/, ""), labels: [] },
+      [{ number: 41, state: "open" }],
+      1,
+      /Add the `Blocked by` section/,
+    ],
+    [
+      { body: ticketBody.replace("None.", "#999"), labels: [] },
+      [],
+      0,
+      /awaiting review/i,
+    ],
+  ]) {
+    const result = await exercise(t, { issue, blockedBy });
+    const decision = decisionFor({ issue, blockedBy });
+    assert.equal(decision.exitCode, expectedCode);
+    assert.match(decision.feedback.body, expectedMessage);
+    assertDecision(result, decision, [
+      ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+      feedbackWrite(decision),
+    ]);
+    assert.equal(
+      result.requests.filter(({ path }) => path === "/graphql").length,
+      1,
+    );
+  }
 });
 
 test("a retry read failure cannot apply a decision from an earlier timeline", async (t) => {
@@ -582,4 +741,204 @@ test("a retry read failure cannot apply a decision from an earlier timeline", as
   assert.ok(result.error instanceof PlatformError);
   assert.equal(reads, 2);
   assert.deepEqual(writes(result), []);
+});
+
+test("the adapter applies the decision's writes in order and exits with its status", async (t) => {
+  const invalid = {
+    number: 42,
+    state: "open",
+    body: "## Steps to reproduce\n\n_No response_\n\n## Expected behavior\n\nWorks.\n\n## Actual behavior\n\nBroken.",
+    labels: ["bug", "ready-for-agent"],
+  };
+  const invalidDecision = decisionFor({ issue: invalid });
+  assertDecision(await exercise(t, { issue: invalid }), invalidDecision, [
+    ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    feedbackWrite(invalidDecision),
+  ]);
+  const issue = { number: 42, body: ticketBody, labels: [], state: "open" };
+  const comments = [approvedTicketFeedback(issue)];
+  const events = [
+    readinessReview,
+    {
+      ...readinessReview,
+      id: 102,
+      event: "unlabeled",
+      created_at: "2026-09-14T17:01:00Z",
+    },
+  ];
+  const event = {
+    action: "unlabeled",
+    sender: account("maintainer"),
+    label: { name: "ready-for-agent" },
+  };
+  const decision = decisionFor({
+    issue,
+    comments,
+    events,
+    event: {
+      kind: "unlabeled",
+      actor: account("maintainer"),
+      label: "ready-for-agent",
+    },
+  });
+  assertDecision(
+    await exercise(t, { issue, comments, events, event }),
+    decision,
+    [
+      ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+      feedbackWrite(decision, 13),
+    ],
+  );
+});
+
+test("a missing reviewer role is a definite unauthorized answer", async (t) => {
+  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  const comments = [awaitingTicketFeedback(issue)];
+  const event = {
+    action: "labeled",
+    sender: account("maintainer"),
+    label: { name: "ready-for-agent" },
+  };
+  const decision = decisionFor({
+    issue,
+    comments,
+    events: [readinessReview],
+    event: {
+      kind: "labeled",
+      actor: account("maintainer"),
+      label: "ready-for-agent",
+    },
+  });
+  assert.equal(decision.exitCode, 1);
+  assert.match(decision.message, /@maintainer is not authorized/);
+  const result = await exercise(t, {
+    issue,
+    comments,
+    events: [readinessReview],
+    event,
+    failure: 404,
+    failurePath: (path) => path.endsWith("/permission"),
+  });
+  assertDecision(result, decision, [
+    ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    feedbackWrite(decision, 13),
+  ]);
+});
+
+test("editing or commenting on a closed ready issue leaves feedback and readiness untouched", async (t) => {
+  const before = {
+    number: 42,
+    body: ticketBody,
+    labels: ["ready-for-agent"],
+    state: "closed",
+  };
+  for (const action of ["edited", "created"]) {
+    for (const hasFeedback of [false, true]) {
+      const issue = { ...before, body: ticketBody.replace("- [ ]", "- [x]") };
+      const result = await exercise(t, {
+        issue,
+        comments: hasFeedback ? [approvedTicketFeedback(before)] : [],
+        bodyLastEditedAt: "2026-09-14T17:02:00Z",
+        event: {
+          action,
+          ...(action === "created"
+            ? { comment: { id: 14, body: "Finished." } }
+            : {}),
+          issue: { number: 42, state: "closed" },
+        },
+      });
+      assertDecision(result, decisionFor({ issue }), []);
+      assert.equal(result.requests.length, 1);
+      assert.equal(result.requests[0].path, "/graphql");
+    }
+  }
+});
+
+test("an edit received while open is skipped when the fetched issue is closed", async (t) => {
+  const issue = {
+    number: 42,
+    body: ticketBody,
+    labels: ["ready-for-agent"],
+    state: "closed",
+  };
+  const result = await exercise(t, {
+    issue,
+    event: { action: "edited", issue: { number: 42, state: "open" } },
+    comments: [approvedTicketFeedback(issue)],
+  });
+  assertDecision(result, decisionFor({ issue }), []);
+  assert.equal(result.requests.length, 1);
+});
+
+test("reopening an issue with a changed contract invalidates readiness", async (t) => {
+  const before = {
+    number: 42,
+    body: ticketBody,
+    labels: ["ready-for-agent"],
+    state: "closed",
+  };
+  const issue = {
+    ...before,
+    state: "open",
+    body: ticketBody.replace("- [ ]", "- [x]"),
+  };
+  const comments = [approvedTicketFeedback(before)];
+  const bodyLastEditedAt = "2026-09-14T17:02:00Z";
+  const decision = decisionFor({
+    issue,
+    comments,
+    events: [readinessReview],
+    bodyLastEditedAt,
+    event: { kind: "reopened" },
+    permissions: { maintainer: "admin" },
+  });
+  assert.match(decision.message, /exact contract revision/);
+  const result = await exercise(t, {
+    issue,
+    comments,
+    events: [readinessReview],
+    bodyLastEditedAt,
+    event: { action: "reopened" },
+    permissions: { maintainer: "admin" },
+  });
+  assertDecision(result, decision, [
+    ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    feedbackWrite(decision, 13),
+  ]);
+});
+
+test("reopening a bare native issue restores needs-triage", async (t) => {
+  const issue = { number: 42, body: ticketBody, labels: [], state: "open" };
+  const decision = decisionFor({ issue, event: { kind: "reopened" } });
+  const result = await exercise(t, { issue, event: { action: "reopened" } });
+  assertDecision(result, decision, [
+    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    feedbackWrite(decision),
+  ]);
+});
+
+test("role lookup failures other than notFound fail closed without writes", async (t) => {
+  for (const failure of [401, 403, 409, 422, 429, 500]) {
+    const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+    const result = await exercise(t, {
+      issue,
+      comments: [awaitingTicketFeedback(issue)],
+      events: [readinessReview],
+      event: {
+        action: "labeled",
+        sender: account("maintainer"),
+        label: { name: "ready-for-agent" },
+      },
+      failure,
+      failurePath: (path) => path.endsWith("/permission"),
+    });
+    assert.ok(result.error instanceof PlatformError);
+    assert.notEqual(result.error.reason, "notFound");
+    assert.deepEqual(writes(result), []);
+    assert.equal(result.stdout, "");
+    assert.equal(result.stderr, "");
+  }
 });

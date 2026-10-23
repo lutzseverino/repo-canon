@@ -18,12 +18,7 @@ export async function validate(input, connection, resolveIssue) {
 
 export function executedAsScript(url) {
   if (!process.argv[1]) return false;
-  try {
-    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(url));
-  } catch (error) {
-    if (error.code === "ENOENT") return false;
-    throw error;
-  }
+  return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(url));
 }
 
 export async function main(

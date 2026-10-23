@@ -32,8 +32,9 @@ export async function main(argv = process.argv.slice(2), connection) {
       "The base branch requires a merge queue, which cannot apply the explicit squash message CONTRIBUTING.md requires; needs the owner.",
     );
   }
+  let mergedCommit;
   try {
-    await connection.pullRequests.squashMerge(Number(number), {
+    mergedCommit = await connection.pullRequests.squashMerge(Number(number), {
       expectedHead: head,
       title: `${pullRequest.title} (#${number})`,
       body: pullRequest.body ?? "",
@@ -57,6 +58,7 @@ export async function main(argv = process.argv.slice(2), connection) {
   ) {
     return needsOwner("The pull request did not merge; needs the owner.");
   }
+  process.stdout.write(`${mergedCommit}\n`);
 }
 
 if (import.meta.main ?? executedAsScript(import.meta.url)) {

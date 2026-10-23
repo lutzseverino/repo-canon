@@ -51,7 +51,7 @@ test("importing consumers never runs a trigger, including before import.meta.mai
     ".agents/skills/babysit/wait.mjs",
     ".agents/skills/babysit/merge.mjs",
   ];
-  const { preload, directory } = fixture(t);
+  const { preload, directory, event } = fixture(t);
   for (const oldRuntime of [false, true]) {
     const code = `for (const url of ${JSON.stringify(files.map((path) => new URL(`../${path}`, import.meta.url).href))}) await import(url); console.log("Imports stayed inert");`;
     const result = spawnSync(
@@ -61,7 +61,7 @@ test("importing consumers never runs a trigger, including before import.meta.mai
         "--input-type=module",
         "-e",
         code,
-        "unused-argument",
+        event,
       ],
       {
         cwd: directory,
@@ -170,5 +170,32 @@ test("babysit reads only the current CLI credential and redacts acquisition fail
         /currently authenticated GitHub CLI credential/,
       );
     else assert.equal(result.stdout, "example/repository\n");
+  }
+});
+
+test("script detection throws when either compared path cannot be resolved", (t) => {
+  const { directory, event } = fixture(t);
+  for (const path of [
+    "scripts/validate.mjs",
+    ".agents/skills/babysit/platform.mjs",
+  ]) {
+    const url = new URL(`../${path}`, import.meta.url).href;
+    for (const missing of ["script", "module"]) {
+      const code = `import { executedAsScript } from ${JSON.stringify(url)};
+process.argv[1] = ${JSON.stringify(missing === "script" ? join(directory, "missing.mjs") : event)};
+executedAsScript(${JSON.stringify(missing === "module" ? new URL("file:///unresolvable/module.mjs").href : url)});
+console.log("Skipped validation");`;
+      const result = spawnSync(
+        process.execPath,
+        ["--input-type=module", "-e", code],
+        {
+          cwd: directory,
+          encoding: "utf8",
+        },
+      );
+      assert.equal(result.status, 1, `${path}: ${missing}`);
+      assert.equal(result.stdout, "");
+      assert.match(result.stderr, /ENOENT/);
+    }
   }
 });
