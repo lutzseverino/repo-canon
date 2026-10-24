@@ -125,6 +125,8 @@ accepts full commit SHAs and reads published tag and branch refs with
   and recovery behavior.
 - [Pull request metadata validation](pr-metadata-validation.md): trusted check
   behavior, stable identity, permissions, and local verification.
+- [Standards update workflow](standards-update-workflow.md): opt-in caller,
+  token selection, rolling updates, deferred remote setup, and validation.
 - [Babysit merge script](babysit-merge.md): explicit squash message, verbatim
   body transport, head-change retry, and executable fixtures.
 - [Issue contract validation](issue-contract-validation.md): supported issue

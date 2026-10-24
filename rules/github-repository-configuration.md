@@ -92,6 +92,35 @@ that value. A runner on another machine carrying the same labels takes the jobs
 with no change at all. Changing the variable selects runners for new jobs;
 cancel and rerun a job already queued on unavailable labels.
 
+## Automated standards updates
+
+Both profiles install `.github/workflows/standards-update.yml`. Its daily
+schedule and manual `workflow_dispatch` run the job only when
+`REPO_CANON_UPDATES` is `true`; installing the file opts nobody in. The job
+reads `vars.REPO_CANON_RUNS_ON`, checks out the default branch, and serializes
+runs through one concurrency group. Its workflow token has only
+`contents: write`, `pull-requests: write`, and `issues: write` permissions.
+
+A GitHub App installation token is recommended. Install the App on the
+repository with repository permissions Contents, Pull requests, Issues and
+Workflows set to read and write. Workflows permission lets it push changes to
+workflow files. Set the repository variable `REPO_CANON_UPDATE_APP_ID` to the
+App ID and the secret `REPO_CANON_UPDATE_APP_PRIVATE_KEY` to its private key.
+When both are present, the workflow creates an installation token for this
+repository and passes it to checkout and the Repository Standards action.
+Otherwise it passes `github.token` (`GITHUB_TOKEN`). Pull requests opened with
+that fallback trigger no CI, and it cannot push workflow-file changes. The
+repository must allow GitHub Actions to create pull requests for that fallback
+to open one.
+
+The action moves both pins together to the newest CLI and standards release.
+It maintains one rolling pull request on `repo-standards/update` when the
+headless update completes, or one rolling issue carrying the open questions
+when it stops or a push is refused. A newer target refreshes the rolling item;
+the same target leaves it untouched. Remote setup is deferred until the next
+local `adopt`. The installed caller never sets `agent-command`; an adopter
+wanting that input writes a repository-owned caller workflow.
+
 ## Pull request reviewer file
 
 The optional repository-owned `.github/pull-request-reviewer.json` names the

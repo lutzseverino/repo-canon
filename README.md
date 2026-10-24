@@ -38,6 +38,7 @@ agent, it prints an answers file to fill in with you and its next steps.
 
 - Install contribution guidance, agent configuration, and issue and PR templates.
 - Validate issue contracts (a change's agreed scope and acceptance criteria) and pull request metadata in GitHub workflows.
+- Offer opt-in daily adoption updates through one rolling pull request or issue.
 - Copy sixteen of [Matt Pocock's skills](https://github.com/mattpocock/skills), those the shared workflow relies on, into `.agents/skills/`.
 - Ship a `triage` skill, forked from his, that routes each request by where its uncertainty lies: an independent review of its researched issue contract, or the owner's answers before one is written.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.

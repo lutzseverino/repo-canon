@@ -2,9 +2,8 @@
 
 The [Repository README](../../README.md#installation) gives the one-line `adopt`
 command that adopts Repo Canon and every later update. `adopt` asks each
-question adoption needs; this guide covers the choices behind four of them:
-the profile, which Projects join a stack, remote setup, and the personal skills
-adoption leaves to you. The
+question adoption needs; this guide covers profiles, stacks, remote setup,
+opting into automated updates, and the personal skills adoption leaves to you. The
 CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/adoption.md)
 describes `adopt` itself, at a terminal and through an agent.
@@ -94,6 +93,35 @@ only from the default branch: the first adoption applies the merge settings
 and leaves the check unrequired, and the next `adopt` after the merge requires
 it. On a private repository whose GitHub plan offers neither branch protection
 nor rulesets, the check is unavailable, and adoption completes without it.
+
+## Automated updates
+
+Both profiles install an inert `.github/workflows/standards-update.yml`. To
+opt in, set the repository Actions variable `REPO_CANON_UPDATES` to `true`.
+The workflow runs daily and through **Run workflow**, always against the
+default branch, using the same `REPO_CANON_RUNS_ON` runner selection as the
+other installed jobs. Delete the opt-in variable or change it from `true` to
+skip the job again.
+
+For updates that trigger CI and can change workflow files, install a GitHub
+App on the repository with Contents, Pull requests, Issues and Workflows
+repository permissions set to read and write. Set the repository Actions
+variable `REPO_CANON_UPDATE_APP_ID` to its App ID and Actions secret
+`REPO_CANON_UPDATE_APP_PRIVATE_KEY` to its private key. The workflow creates
+an installation token only when both are set. Otherwise it uses
+`GITHUB_TOKEN`: pull requests it opens trigger no CI, and it cannot push
+workflow-file changes. For the fallback, enable **Allow GitHub Actions to
+create and approve pull requests** in the repository's Actions settings.
+
+The action updates both adoption pins together and keeps one rolling pull
+request, or one rolling issue with the open questions when it needs local
+work or cannot push. New releases refresh that item; the same target does
+nothing. Majors and `0.x` minors produce `chore!:` pull requests with Impact
+and Migration sections. Remote setup is deferred: run local `adopt` after
+merging to apply it. The installed caller does not wire `agent-command`;
+write your own caller workflow if you want an agent to finish contextual work.
+The [workflow development document](../development/standards-update-workflow.md)
+describes its pins and validation.
 
 ## Recommended personal skills
 
