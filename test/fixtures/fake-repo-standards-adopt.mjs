@@ -195,14 +195,15 @@ if (
     updateScenario === "complete"
       ? "Exact update: the run asks for no contextual work."
       : "Contextual update: the run asks for contextual work on repository-readme, which needs review before it is committed.";
+  const asksScopes = [
+    "questions",
+    "fallback-scope",
+    "rejected-scope",
+    "scope-repeat",
+  ].includes(updateScenario);
   save({
     ...state,
-    phase: [
-      "questions",
-      "fallback-scope",
-      "rejected-scope",
-      "scope-repeat",
-    ].includes(updateScenario)
+    phase: asksScopes
       ? "update-questions"
       : ["contextual", "contextual-repeat", "extra-assessment"].includes(
             updateScenario,
@@ -220,11 +221,7 @@ if (
     print(
       report("blocked", [], { ...rest, blockers: [{ message: "A blocker." }] }),
     );
-  if (
-    ["questions", "fallback-scope", "rejected-scope", "scope-repeat"].includes(
-      updateScenario,
-    )
-  ) {
+  if (asksScopes) {
     const asked = [
       {
         id: "scope:documentation",
