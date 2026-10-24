@@ -1,7 +1,7 @@
 // The `adopt` and `status` commands of a fake Repository Standards CLI, for
 // release verification's fixture adoption. It walks the answers-file stages
 // as the real `adopt` does: the template, the discovery scopes with the
-// documentation draft proposed, the remote setup deferral and the inspection,
+// documentation and stack drafts proposed, the remote setup deferral and the inspection,
 // the start, and the contextual assessments. `FAKE_ADOPT` selects a scenario:
 // `complete` (the default), `blocked` (an inspection blocker), `undeferred`
 // (a remote setup that is ready, so not offered for deferral),
@@ -52,6 +52,13 @@ const draft = {
   ],
   unresolved: [],
 };
+const stackDraft = {
+  coverage: "Drafted from manifests and workspace configuration.",
+  candidates: [],
+  unresolved: [],
+  noScope: true,
+};
+const drafts = { documentation: draft, "typescript-node-stack": stackDraft };
 
 function print(report, status = 1) {
   process.stdout.write(`${JSON.stringify(report)}\n`);
@@ -66,13 +73,13 @@ if (args[0] === "status") {
   print(
     state?.phase === "complete"
       ? {
-          format: "repo-standards/status/v8",
+          format: "repo-standards/status/v9",
           readyToCommit: true,
           readinessReasons: [],
           deferred: state.deferred,
         }
       : {
-          format: "repo-standards/status/v8",
+          format: "repo-standards/status/v9",
           readyToCommit: false,
           readinessReasons: ["No complete adoption is recorded."],
           deferred: [],
@@ -99,10 +106,11 @@ const discovered = [
   "documentation",
   "github-repository-configuration",
   "project-readmes",
+  "typescript-node-stack",
   ...(profile === "factory" ? ["factory-workflow"] : []),
 ];
 const report = (outcome, asked, rest = {}) => ({
-  format: "repo-standards/adopt/v1",
+  format: "repo-standards/adopt/v2",
   outcome,
   selection: {
     cli: process.env.STUB_CLI_VERSION,
@@ -154,8 +162,7 @@ if (state === null) {
 
   const missing = [];
   for (const id of discovered) {
-    const answer =
-      given.get(`scope:${id}`) ?? (id === "documentation" ? draft : null);
+    const answer = given.get(`scope:${id}`) ?? drafts[id] ?? null;
     if (given.get(`scope:${id}`) == null) missing.push(`scope:${id}`);
     asked.push({
       id: `scope:${id}`,

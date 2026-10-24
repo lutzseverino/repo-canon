@@ -23,8 +23,8 @@ Rules hold no one-time step and cite no retained source path; where one
 declaration's rules depend on another's, they name that declaration's rules.
 `guidance/` and `discovery/` are source-side instructions for the one-time
 adoption, written for a person as well as an agent, and `discovery/` also holds
-the documentation scope drafter, which inspection runs as the documentation
-declaration's discovery script. They are not installed in the adopting
+the documentation and typescript-node stack scope drafters, which inspection
+runs as those declarations' discovery scripts. They are not installed in the adopting
 repository; the CLI retains them with the other source inputs.
 
 The repository license, READMEs, development documentation, glossaries, and
@@ -76,6 +76,21 @@ repeated.
   failing checks ship with #368 and #346 in their shared breaking release.
 - Project membership and Project README content are stated in the
   [Project README rules](rules/project-readmes.md).
+- The `typescript-node` stack is the optional discovered
+  `typescript-node-stack` declaration, whose scope is one `package.json` per
+  Project that uses it. Its tools and their majors, the workspace-root facts,
+  the pull request check, Setup and validation, one-stack and breaking-bump
+  requirements are stated in the
+  [typescript-node stack rules](rules/typescript-node-stack.md), and the
+  membership and assessment steps in its
+  [adoption guidance](guidance/typescript-node-stack.md) and
+  [discovery guidance](discovery/typescript-node-stack.md). A repository
+  without such a Project confirms no scope, which installs no rules and runs no
+  check, so the profiles stay stack-free. It installs no configuration or
+  workflow file, as
+  [ADR 0024](docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md)
+  decides; its read-only check reads only manifest facts, and the assessment
+  covers the rest.
 - The documentation requirements are stated in
   [documentation rules](rules/documentation.md), with the adoption steps in
   the [documentation guidance](guidance/documentation.md) and the scope in the
@@ -134,7 +149,7 @@ repeated.
   names the recommended ones.
 - Delivery belongs to this source, because Repository Standards leaves it to
   standards sources
-  ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/adr/0015-leave-delivery-to-standards-sources.md)).
+  ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0015-leave-delivery-to-standards-sources.md)).
   The environment carries delivery, as
   [ADR 0010](docs/adr/0010-carry-delivery-rules-in-the-environment.md)
   decides: [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests) says how to open
@@ -244,7 +259,7 @@ repeated.
   decides. Project-specific guidance remains separate. AGENTS.md is an
   identical standards-owned pointer file. Repository Standards owns the update
   notice through its `repository-standards` system skill
-  ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
+  ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
   Create the optional project guidance document, docs/agents/project.md, only
   when it has useful content.
 - GitHub automation rechecks affected issue, brief, and PR metadata on relevant
@@ -315,7 +330,7 @@ repeated.
 
 The complete `repo-standards/v2` source is `standards.yaml`, with the
 `standard` and `factory` profiles and the open-ended CLI compatibility minimum
-`>=8.1.0`. The
+`>=10.0.0`. The
 concise policy-to-declaration, material, operation, ownership, and prerequisite
 mapping is maintained in [the source profile](docs/development/source-profile.md).
 Contextual Project README and documentation scope uses separate assessment and
@@ -323,7 +338,7 @@ discovery guidance and resolves to individual adopter-reviewed paths.
 
 [Adoption compatibility](docs/development/adoption-compatibility.md) maps the
 accepted requirements to the delivered product interface. Use installed public
-CLI 8.1.0 as the current validation baseline; claim only compatibility
+CLI 10.0.0 as the current validation baseline; claim only compatibility
 demonstrated against the released source bytes.
 
 ## License

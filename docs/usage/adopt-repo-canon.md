@@ -2,10 +2,11 @@
 
 The [Repository README](../../README.md#installation) gives the one-line `adopt`
 command that adopts Repo Canon and every later update. `adopt` asks each
-question adoption needs; this guide covers the choices behind three of them:
-the profile, remote setup, and the personal skills adoption leaves to you. The
+question adoption needs; this guide covers the choices behind four of them:
+the profile, which Projects join a stack, remote setup, and the personal skills
+adoption leaves to you. The
 CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v8.1.0/docs/usage/adoption.md)
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/adoption.md)
 describes `adopt` itself, at a terminal and through an agent.
 
 ## Choose a profile
@@ -41,6 +42,19 @@ Repo Canon's own repository needs no entries for its own code. When nothing
 needs an entry, adoption creates no `.gitattributes`. GitHub reads committed
 attributes, so the language bar changes after the adoption reaches the default
 branch.
+
+## Stacks
+
+Both profiles include the optional `typescript-node-stack` declaration, for
+CLIs and libraries built with pnpm 11, Node.js 24 or 26, TypeScript 7, oxlint 1,
+Prettier 3 and `node --test`. Adoption drafts its scope from your manifests and
+workspaces, one `package.json` per Project. A new Project joins the stack. An
+existing Project that differs stays out, and the adoption handoff lists its
+differences for a separate migration. For each Project in the scope, adoption
+installs the stack's rules, assesses the Project against them, and runs a
+read-only check of its manifests. A repository without such a Project confirms
+no scope: no stack rules are installed and no stack check runs.
+[Recommended stacks](stacks.md) describes the stack.
 
 ## Remote setup
 
