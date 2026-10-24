@@ -8,8 +8,10 @@
 // an answers file, deferring remote setup, and the public copy at the release
 // commit names no Repo Canon version and its README no CLI version. Every CLI
 // version that the adoption guide and the development and authoring documents
-// name there is the required minimum.
+// name there is the required minimum. The update check also commits the
+// previous release's fixture adoption and updates it with the newest public CLI.
 
+import { checkUpdates } from "./update.mjs";
 import { checkAdoption } from "./adoption.mjs";
 import {
   adoptionGuidePath,
@@ -221,6 +223,9 @@ await runScript(
       ),
       ...profiles.map((profile) =>
         report(() => checkFixtureAdoption(version, read, profile)),
+      ),
+      ...checkUpdates(sourceRepository, version, releaseCommit, profiles).map(
+        (outcome) => report(() => outcome),
       ),
       report(() => checkDocuments(read)),
     ];

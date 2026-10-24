@@ -62,7 +62,13 @@ if (command === 'source' && subcommand === 'validate') {
     },
     sourceResolved: { declarations: [{ id: 'agent-guidance' }] },
   }));
+} else if (command === '--version') {
+  console.log(process.env.STUB_CLI_VERSION);
 } else if (command === 'adopt' || command === 'status') {
+  if (command === 'adopt' && process.env.STUB_CLI_VERSION === '6.0.0' && !process.argv.includes('--answers') && !process.argv.includes('--standards-version')) {
+    console.log(JSON.stringify({ errors: [{ message: 'The newest release requires a newer CLI; select the previous version explicitly.' }] }));
+    process.exit(1);
+  }
   import(${JSON.stringify(fakeAdopt)});
 } else {
   process.exit(2);
@@ -71,12 +77,29 @@ if (command === 'source' && subcommand === 'validate') {
 
 const ghStub = `#!/usr/bin/env node
 const args = process.argv.slice(2);
-if (args[0] === 'release' && args[1] === 'view' && process.env.STUB_RELEASE) {
+if (args[0] === 'api') {
+  console.log(process.env.STUB_RELEASES || '[]');
+} else if (args[0] === 'release' && args[1] === 'view' && process.env.STUB_RELEASE) {
   console.log(process.env.STUB_RELEASE);
 } else {
   console.error('release not found');
   process.exit(1);
 }
+`;
+
+const npmStub = `#!/usr/bin/env node
+const { mkdirSync, writeFileSync, chmodSync } = require('node:fs');
+const { join } = require('node:path');
+const args = process.argv.slice(2);
+if (args[0] === 'view') {
+  console.log(JSON.stringify('10.0.0'));
+} else if (args[0] === 'install') {
+  const version = args.at(-1).split('@').at(-1);
+  const path = join(args[args.indexOf('--prefix') + 1], 'node_modules/.bin/repo-standards');
+  mkdirSync(join(path, ".."), { recursive: true });
+  writeFileSync(path, '#!/usr/bin/env node\\nprocess.env.STUB_CLI_VERSION = ' + JSON.stringify(version) + ';\\n' + ${JSON.stringify(cliStub.replace(/^#![^\n]*\n/, ""))});
+  chmodSync(path, 0o755);
+} else process.exit(2);
 `;
 
 // Fixture repositories ignore the maintainer's Git configuration, such as tag
@@ -91,7 +114,7 @@ const identity = {
 };
 
 function executable(path, content) {
-  mkdirSync(dirname(path), { recursive: true });
+  mkdirSync(join(path, ".."), { recursive: true });
   writeFileSync(path, content);
   chmodSync(path, 0o755);
 }
@@ -104,6 +127,7 @@ function fixture(t) {
   const bin = join(base, "bin");
   executable(join(prefix, "node_modules/.bin/repo-standards"), cliStub);
   executable(join(bin, "gh"), ghStub);
+  executable(join(bin, "npm"), npmStub);
   mkdirSync(repository);
   const git = (...args) =>
     execFileSync("git", args, {
@@ -393,6 +417,14 @@ function developmentDocuments(cliVersion) {
 // A published v1.0.0 release; `documents` replaces files of its commit.
 function publishedRelease(t, documents = {}) {
   const repository = fixture(t);
+  const previousCommit = repository.commit(
+    {
+      "standards.yaml":
+        'format: repo-standards/v2\nrequires:\n  repo-standards: ">=6.0.0"\n',
+    },
+    "previous",
+  );
+  repository.git("tag", "--annotate", "v0.9.0", "--message", "previous");
   const releaseCommit = repository.commit(
     {
       "declarations.json": previousDeclarations,
@@ -426,6 +458,19 @@ function publishedRelease(t, documents = {}) {
   const environment = {
     STUB_RELEASE: JSON.stringify({ isDraft: false, isPrerelease: false }),
     STUB_RESOLVED_COMMIT: releaseCommit,
+    STUB_RELEASES: JSON.stringify([
+      [
+        { tag_name: "v1.0.0", draft: false, prerelease: false },
+        { tag_name: "v0.99.0", draft: true, prerelease: false },
+      ],
+      [
+        { tag_name: "v0.9.0", draft: false, prerelease: false },
+        { tag_name: "v0.8.0", draft: false, prerelease: false },
+        { tag_name: "v0.10.0", draft: false, prerelease: true },
+        { tag_name: "v0.11.0-rc.1", draft: false, prerelease: false },
+      ],
+    ]),
+    STUB_PREVIOUS_COMMIT: previousCommit,
   };
   return { ...repository, releaseCommit, environment };
 }
@@ -468,9 +513,100 @@ test("release:verify passes a published release that agrees with its commit", (t
   );
 });
 
+test("release:verify updates from the previous stable release once per profile using the newest CLI", (t) => {
+  const { status, output, calls } = verifyAdoption(t, "complete");
+
+  assert.equal(status, 0, output);
+  for (const profile of ["standard", "factory"]) {
+    assert.match(
+      output,
+      new RegExp(
+        `pass: CLI 6\\.0\\.0 adopted v0\\.9\\.0; CLI 10\\.0\\.0 updated to v1\\.0\\.0 with the ${profile} profile in one adopt.*outcome complete`,
+      ),
+    );
+  }
+  assert.match(
+    output,
+    /Adopter action: Exact update: the run asks for no contextual work\./,
+  );
+  assert.equal(
+    calls.filter(
+      (answers) =>
+        answers.version === "v0.9.0" &&
+        answers.inspection === "sha256:complete",
+    ).length,
+    2,
+  );
+});
+
+test("release:verify completes a contextual stop for exactly the declarations the adopter-action line names", (t) => {
+  const { status, output, calls } = verifyAdoption(t, "complete", {
+    FAKE_UPDATE: "contextual",
+  });
+  assert.equal(status, 0, output);
+  assert.match(
+    output,
+    /outcome contextual.*Adopter action: Contextual update: the run asks for contextual work on repository-readme/,
+  );
+  assert.equal(calls.filter((entry) => entry.update).length, 2);
+  const submitted = calls.filter(
+    (entry) =>
+      entry["assessment:repository-readme"] && Object.keys(entry).length === 1,
+  );
+  assert.equal(submitted.length, 2, "one assessment submission per profile");
+});
+
+for (const [scenario, message] of [
+  ["question", /one adopt stopped with outcome answers-required/],
+  ["confirmation", /one adopt stopped with outcome answers-required/],
+  ["blocked", /the update has blockers or failed checks/],
+  ["failed-checks", /the update has blockers or failed checks/],
+  ["extra-assessment", /do not match the adopter-action line/],
+  ["missing-assessment", /do not match the adopter-action line/],
+  ["nonzero", /the complete update exited 1/],
+  ["not-ready", /status does not report the run ready to commit/],
+  ["undeferred", /status does not list remote setup/],
+  ["wrong-version", /the update selected/],
+  ["wrong-commit", /the ready status does not identify the verified release/],
+  ["missing-line", /did not report a derived adopter-action line/],
+]) {
+  test(`release:verify fails an update with ${scenario}`, (t) => {
+    const { status, output, calls } = verifyAdoption(t, "complete", {
+      FAKE_UPDATE: scenario,
+    });
+    assert.notEqual(status, 0, output);
+    assert.match(output, message);
+    assert.equal(calls.filter((entry) => entry.update).length, 2);
+    assert.ok(
+      !calls.some(
+        (entry) =>
+          entry["assessment:repository-readme"] &&
+          Object.keys(entry).length === 1,
+      ),
+      "never answers unexpected stops",
+    );
+  });
+}
+
+test("release:verify fails if submitting the named contextual assessments does not complete", (t) => {
+  const { status, output } = verifyAdoption(t, "complete", {
+    FAKE_UPDATE: "contextual-repeat",
+  });
+  assert.notEqual(status, 0, output);
+  assert.match(output, /one adopt stopped with outcome contextual/);
+});
+
+test("release:verify fails when no previous stable release is published", (t) => {
+  const { status, output } = verifyAdoption(t, "complete", {
+    STUB_RELEASES: "[]",
+  });
+  assert.notEqual(status, 0, output);
+  assert.match(output, /no published stable release precedes v1\.0\.0/);
+});
+
 // Runs release:verify of v1.0.0 with the fake adoption's scenario, and returns
 // its result with the answers of each adopt call.
-function verifyAdoption(t, scenario) {
+function verifyAdoption(t, scenario, overrides = {}) {
   const { run, releaseCommit, environment } = publishedRelease(t);
   const log = join(
     mkdtempSync(join(tmpdir(), "repo-canon-adopt-log-")),
@@ -482,6 +618,7 @@ function verifyAdoption(t, scenario) {
     ...environment,
     FAKE_ADOPT: scenario,
     FAKE_ADOPT_LOG: log,
+    ...overrides,
   });
   const calls = readFileSync(log, "utf8")
     .split("\n")
@@ -495,7 +632,8 @@ test("release:verify adopts the release with the verified version, the drafted s
 
   assert.equal(status, 0, output);
   const started = calls.filter(
-    (answers) => answers.inspection === "sha256:complete",
+    (answers) =>
+      answers.inspection === "sha256:complete" && answers.version === "v1.0.0",
   );
   assert.equal(started.length, 2, "one start per profile");
   for (const answers of started) {

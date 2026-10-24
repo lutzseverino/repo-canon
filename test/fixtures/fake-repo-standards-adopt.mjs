@@ -23,7 +23,7 @@ const option = (name) => {
   const index = args.indexOf(name);
   return index === -1 ? undefined : args[index + 1];
 };
-const project = option("--project");
+const project = option("--project") ?? process.cwd();
 const statePath = join(project, ".repo-standards/fake-run.json");
 const state = existsSync(statePath)
   ? JSON.parse(readFileSync(statePath, "utf8"))
@@ -74,9 +74,39 @@ if (args[0] === "status") {
     state?.phase === "complete"
       ? {
           format: "repo-standards/status/v9",
-          readyToCommit: true,
+          readyToCommit: !(
+            state.version === "v1.0.0" &&
+            process.env.STUB_CLI_VERSION === "10.0.0" &&
+            process.env.FAKE_UPDATE === "not-ready"
+          ),
           readinessReasons: [],
-          deferred: state.deferred,
+          deferred:
+            state.version === "v1.0.0" &&
+            process.env.STUB_CLI_VERSION === "10.0.0" &&
+            process.env.FAKE_UPDATE === "undeferred"
+              ? []
+              : state.deferred,
+          selection: {
+            cli: { version: process.env.STUB_CLI_VERSION },
+            standards: {
+              repository: source,
+              version: state.version,
+              commit:
+                process.env.FAKE_UPDATE === "wrong-commit" &&
+                process.env.STUB_CLI_VERSION === "10.0.0"
+                  ? "0".repeat(40)
+                  : process.env.STUB_RESOLVED_COMMIT,
+            },
+            profile: state.profile,
+          },
+          impact: {
+            derived:
+              process.env.FAKE_UPDATE === "missing-line" &&
+              process.env.STUB_CLI_VERSION === "10.0.0"
+                ? null
+                : (state.line ??
+                  "Exact update: the run asks for no contextual work."),
+          },
         }
       : {
           format: "repo-standards/status/v9",
@@ -110,7 +140,10 @@ const discovered = [
   ...(profile === "factory" ? ["factory-workflow"] : []),
 ];
 const report = (outcome, asked, rest = {}) => ({
-  format: "repo-standards/adopt/v2",
+  format:
+    process.env.STUB_CLI_VERSION === "6.0.0"
+      ? "repo-standards/adopt/v1"
+      : "repo-standards/adopt/v2",
   outcome,
   selection: {
     cli: process.env.STUB_CLI_VERSION,
@@ -130,6 +163,109 @@ const report = (outcome, asked, rest = {}) => ({
   nextSteps: [],
   ...rest,
 });
+
+if (
+  state?.phase === "complete" &&
+  !answersPath &&
+  process.env.STUB_CLI_VERSION === "10.0.0"
+) {
+  const count = execFileSync(
+    "git",
+    ["-C", project, "rev-list", "--count", "HEAD"],
+    { encoding: "utf8" },
+  ).trim();
+  const dirty = execFileSync("git", ["-C", project, "status", "--porcelain"], {
+    encoding: "utf8",
+  }).trim();
+  if (count !== "2" || dirty)
+    reject("The previous adoption must be committed before the update.");
+  if (args.join(" ") !== "adopt --json")
+    reject("The update must run once without flags or answers.");
+  if (process.env.FAKE_ADOPT_LOG)
+    appendFileSync(
+      process.env.FAKE_ADOPT_LOG,
+      JSON.stringify({ update: true, profile, args }) + "\n",
+    );
+  const updateScenario = process.env.FAKE_UPDATE ?? "complete";
+  const line =
+    updateScenario === "complete"
+      ? "Exact update: the run asks for no contextual work."
+      : "Contextual update: the run asks for contextual work on repository-readme, which needs review before it is committed.";
+  save({
+    ...state,
+    phase: ["contextual", "contextual-repeat"].includes(updateScenario)
+      ? "update-contextual"
+      : "complete",
+    version: "v1.0.0",
+    line,
+  });
+  const rest = {
+    selection: { cli: "10.0.0", source, version: "v1.0.0", profile },
+    inspection: { summary: "## Adopter action\n\n" + line },
+  };
+  if (updateScenario === "blocked")
+    print(
+      report("blocked", [], { ...rest, blockers: [{ message: "A blocker." }] }),
+    );
+  if (updateScenario === "confirmation" || updateScenario === "question")
+    print(
+      report(
+        "answers-required",
+        [
+          {
+            id:
+              updateScenario === "confirmation"
+                ? "confirmation"
+                : "scope:documentation",
+            answer: null,
+          },
+        ],
+        rest,
+      ),
+    );
+  if (
+    [
+      "contextual",
+      "contextual-repeat",
+      "extra-assessment",
+      "missing-assessment",
+      "failed-checks",
+    ].includes(updateScenario)
+  ) {
+    const asked =
+      updateScenario === "missing-assessment"
+        ? []
+        : [{ id: "assessment:repository-readme", answer: null }];
+    if (updateScenario === "extra-assessment")
+      asked.push({ id: "assessment:documentation", answer: null });
+    print(
+      report("contextual", asked, {
+        ...rest,
+        contextual: [{ id: "repository-readme" }],
+        ...(updateScenario === "failed-checks"
+          ? { failedChecks: [{ message: "A failed check." }] }
+          : {}),
+      }),
+    );
+  }
+  if (updateScenario === "wrong-version") rest.selection.version = "v1.0.1";
+  print(report("complete", [], rest), updateScenario === "nonzero" ? 1 : 0);
+}
+
+if (state?.phase === "update-contextual") {
+  if (questions.length !== 1 || !given.has("assessment:repository-readme"))
+    reject("Only the named assessment may be submitted.");
+  if (given.get("assessment:repository-readme").status !== "satisfied")
+    reject("Missing fixture assessment.");
+  if (process.env.FAKE_UPDATE === "contextual-repeat")
+    print(
+      report("contextual", [
+        { id: "assessment:repository-readme", answer: null },
+      ]),
+    );
+  save({ ...state, phase: "complete" });
+  print(report("complete", []), 0);
+}
 
 if (state === null) {
   if (!answersPath) {

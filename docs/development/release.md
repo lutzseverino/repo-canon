@@ -98,7 +98,20 @@ The pull request body carries the review and validation summary:
 ## Write the release notes
 
 The GitHub release carries the notes; the repository keeps no copy. Draft them
-in the release pull request so that they are reviewed with it.
+in the release pull request so that they are reviewed with it. Open the draft
+with the expected adopter-action line: the CLI's one-line statement of the
+update class, contextual work needed, and pending remote setup. After
+`release:verify` passes, open the verified notes with the derived adopter-action
+line it printed. If the profiles produce different lines, put both first,
+labelled with their profiles.
+
+Set the optional top-level `adopter-action` field in `standards.yaml` only when
+a release needs an action outside adoption. Write one nonempty line of plain
+text; keep contextual work and remote setup in the CLI's derived line. Include
+that author-written action after the derived line in the notes. The first
+release that sets the field raises `requires.repo-standards` to the first CLI
+that accepts it. Raising the CLI minimum is a compatible change, as the
+[versioning guide](../usage/versioning.md#the-required-cli-version) explains.
 
 - Summarize what changed for adopting repositories.
 - State the required CLI version, and when it moved, the new minimum and why.
@@ -150,7 +163,8 @@ change reached them, and the release needs review again. Publish an ordinary
 release; a draft or prerelease cannot be selected for adoption.
 
 Then verify the publication, and only when it verifies, replace the notes with
-the version that carries the verification paragraph:
+the version that opens with the printed adopter-action line and carries the
+verification paragraph:
 
 ```sh
 npm run release:verify -- "$version" "$release_commit" &&
@@ -181,14 +195,30 @@ npm run release:verify -- "$version" "$release_commit" &&
    change, so one appearing fails it too. `npm test` checks the fixture against
    both drafters and the contextual checks before a release, because `adopt`
    acquires only published stable tags.
-5. The Repository README and the adoption guide at the release commit name no
+5. With each profile, adopt the previous release, the newest published stable
+   tag before the verified version, into the same disposable fixture using that
+   release's required minimum CLI, then commit the completed adoption. Run the
+   newest published CLI exactly once as `adopt --json`, with no answers file and
+   no edits. The check installs these two public CLIs outside the checkout;
+   npm registry access and the previous release tag fetched locally are needed.
+   It requires exit 0 and outcome `complete`, `status` ready to commit, both
+   GitHub remote setup fixes still deferred, and selection of the verified
+   release commit and profile. A stop only for contextual work also passes when
+   its missing assessments are exactly the declarations named in the derived
+   adopter-action line: the check submits the fixture's assessments for only
+   those declarations and requires completion. Any other open question, blocker,
+   failed check, confirmation-required change, or further stop fails. The check
+   prints both CLI versions, the outcome, and the derived adopter-action line.
+   With no previous published stable release, it fails rather than claiming an
+   update was verified.
+6. The Repository README and the adoption guide at the release commit name no
    Repo Canon version, the Repository README names no CLI version, and every
    CLI version that the adoption guide, the development guide, the source
    profile, and the authoring notes there name is the required minimum.
 
 The verification paragraph appended to the release notes names the release
 commit and the release pull request, confirms the tag and release state, and
-reports the CLI version with the inspection and fixture adoption results that
+reports the CLI version with the inspection, fixture adoption, and update-from-previous-release results that
 `release:verify` prints. The release scripts change no repository or GitHub
 state: the fixture adoption runs in a temporary directory and has no remote to
 change. The tag, the release, and its notes are published only by the commands

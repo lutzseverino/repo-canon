@@ -7,6 +7,17 @@ why this scheme was selected. Repo Canon versions identify the standards source;
 the supported CLI version is a separate compatibility requirement recorded in
 the [source profile](../development/source-profile.md).
 
+Repo Canon makes no stability promise and releases frequently. Every release,
+including a breaking one, must be adoptable from the previous release in one
+`adopt` with no hand edits. Release verification checks that path, allowing only
+the contextual work named in the CLI's derived adopter-action line. Actions
+outside adoption are stated separately in the release notes.
+
+To stay current, run `adopt` with the newest published CLI, or opt in to the
+[scheduled update workflow](https://github.com/lutzseverino/repo-canon/issues/561)
+when it is available. See the [adoption guide](adopt-repo-canon.md) for updating
+and reviewing the resulting changes.
+
 ## Compatibility for adopters
 
 A breaking standards change makes a previously conforming repository require
