@@ -291,6 +291,7 @@ const requirementOutcomes = {
   "project-readmes": "both",
   "repository-license": "both",
   "repository-readme": "both",
+  "typescript-node-stack": "both",
 };
 
 test("self-adoption leaves Repo Canon's own installed source unvendored", () => {

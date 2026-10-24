@@ -170,15 +170,16 @@ npm run release:verify -- "$version" "$release_commit" &&
    from `scripts/release/adoption-fixture.mjs`, whose files already satisfy the
    rules of the contextual declarations. It has no Git remote, so the GitHub
    remote setup probes report not ready. The check fills `version` and
-   `profile`, accepts the documentation drafter's scope and answers the other
-   scopes for the fixture, answers `remote-setup` with `defer`, names the
+   `profile`, accepts the drafts of both discovery scripts as given, the
+   documentation drafter's scope and the typescript-node stack drafter's no
+   scope, answers the other scopes for the fixture, answers `remote-setup` with `defer`, names the
    printed `inspection`, and submits each contextual declaration's assessment,
    until the outcome is `complete`. `status` must then report the run ready to
    commit and list both GitHub remote setup fixes as deferred. A blocker, a
    remote setup not offered for deferral, a failed check, or a run that does not
    complete fails the check. The check never confirms a confirmation-required
    change, so one appearing fails it too. `npm test` checks the fixture against
-   the drafter and the contextual checks before a release, because `adopt`
+   both drafters and the contextual checks before a release, because `adopt`
    acquires only published stable tags.
 5. The Repository README and the adoption guide at the release commit name no
    Repo Canon version, the Repository README names no CLI version, and every

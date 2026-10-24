@@ -11,7 +11,7 @@ standards source has no build step; parser dependencies are vendored. The
 factory is developed in [its own repository](https://github.com/lutzseverino/scriptorium). Adopters do not install
 development dependencies. GitHub planning uses authenticated `gh`
 access. For source validation,
-install public Repository Standards CLI 8.1.0 outside the checkout using the
+install public Repository Standards CLI 10.0.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 
@@ -26,9 +26,12 @@ Review affected links, issue-form fields, and consistency with the confirmed
 preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
 Run `node --test test/repository-wide-rules.test.mjs` for a fresh adoption of
-both profiles and repository-wide rules lookup with public CLI 8.1.0: the
+both profiles and repository-wide rules lookup with public CLI 10.0.0: the
 GitHub rules in both profiles and the factory workflow rules only in the
-factory profile. It also checks that adoption installs the contribution guide
+factory profile. It confirms no `typescript-node-stack` scope in both profiles,
+so no stack rules are installed and `repo-standards check` runs no stack check,
+and adopts a third copy with one conforming package, whose `package.json` the
+stack rules cover and whose stack check passes. It also checks that adoption installs the contribution guide
 and the `triage` fork byte for byte. It uses
 the release fixture's answers and a disposable source containing only declared
 inputs; GitHub HTTP responses and Git transport use local fixtures, with no
@@ -142,6 +145,12 @@ accepts full commit SHAs and reads published tag and branch refs with
 - [Documentation scope drafter](documentation-scope-drafter.md): drafting the
   documentation scope from a repository tree, its rules and questions, its
   source of other declarations' targets, and its fixtures.
+- [typescript-node stack check](typescript-node-stack-check.md): the manifest
+  facts it checks per confirmed Project, workspace roots, accepted ranges, and
+  its fixtures.
+- [typescript-node stack scope drafter](typescript-node-stack-scope-drafter.md):
+  drafting one `package.json` per Project from manifests and workspaces, no
+  scope, its questions, and its fixtures.
 - [Standards source profile](source-profile.md): the standard and factory
   profiles' ownership, declarations, executable prerequisites, and the
   validation boundary.

@@ -12,9 +12,11 @@ profile installs the repository files and workflow rules a repository it serves 
 [the factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/main/docs/usage/README.md)
 describes running it.
 
-- [Adopt Repo Canon](adopt-repo-canon.md): choosing a profile, remote setup
-  prerequisites and deferral, and recommended personal skills.
+- [Adopt Repo Canon](adopt-repo-canon.md): choosing a profile, how adoption
+  treats a Project's development tools, remote setup prerequisites and
+  deferral, and recommended personal skills.
 - [Release versioning](versioning.md): version increments, breaking standards
   changes, and selecting an adoptable release.
 - [Recommended stacks](stacks.md): a stack is a named set of development tools;
-  recommended tools for CLIs and libraries, workspace scope, and future installation.
+  recommended tools for CLIs and libraries, workspace scope, and the optional
+  stack declaration and its check.

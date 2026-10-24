@@ -774,6 +774,25 @@ test("the adoption fixture passes the shipped contextual checks with its drafted
   });
   assert.deepEqual(drafts[0], drafts[1]);
   assert.deepEqual(drafts[0], ["docs/README.md", "docs/development/README.md"]);
+  // The fixture has no Node.js Project, so the stack's draft has no scope.
+  const stack = spawnSync(
+    process.execPath,
+    [join(sourceRoot, "discovery/draft-typescript-node-stack-scope.mjs")],
+    {
+      cwd: project,
+      encoding: "utf8",
+      input: JSON.stringify({
+        format: "repo-standards/discovery/v1",
+        declaration: "typescript-node-stack",
+        projectRoot: project,
+      }),
+    },
+  );
+  assert.equal(stack.status, 0, stack.stderr);
+  const [stackEntry] = JSON.parse(stack.stdout).declarations;
+  assert.equal(stackEntry.noScope, true);
+  assert.deepEqual(stackEntry.candidates, []);
+  assert.deepEqual(stackEntry.unresolved, []);
 
   for (const [target, source] of exactFiles()) {
     mkdirSync(dirname(join(project, target)), { recursive: true });
