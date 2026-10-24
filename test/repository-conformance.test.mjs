@@ -257,6 +257,20 @@ test("the standard profile installs no factory file, and the factory profile add
   );
 });
 
+test("both profiles inherit the exact standards update workflow from defaults", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  const defaults = /^defaults:\n([\s\S]*?)^profiles:\n/m.exec(declarations)[1];
+  assert.match(
+    defaults,
+    /^ {4}standards-update-workflow:\n {6}kind: file\n {6}target: \.github\/workflows\/standards-update.yml\n {6}exact: \.github\/workflows\/standards-update.yml$/m,
+  );
+  for (const profile of ["standard", "factory"])
+    assert.doesNotMatch(
+      profileDeclarations(declarations, profile),
+      /standards-update-workflow:/,
+    );
+});
+
 test("the standards retire the in-repository factory, its sandbox base, and the issue-contract kind runtime", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   for (const retired of [
@@ -549,8 +563,9 @@ test("AGENTS.md names no rules path", () => {
 // edit here in the same pull request; never derive a limit from the document.
 const wordBudgets = {
   // Raised from 1970 for the Triage section (#500), then from 2263 for the
-  // adoption pull request's pre-commit verdict (#540).
-  "CONTRIBUTING.md": 2271,
+  // adoption pull request's pre-commit verdict (#540), then for automated
+  // update titles (#561).
+  "CONTRIBUTING.md": 2304,
   "AGENTS.md": 105,
 };
 

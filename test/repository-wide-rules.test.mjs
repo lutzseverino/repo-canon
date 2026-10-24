@@ -100,7 +100,23 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
     }),
   );
   assert.equal(validation.valid, true);
-  for (const profile of Object.values(validation.profiles)) {
+  for (const [name, profile] of Object.entries(validation.profiles)) {
+    assert.equal(
+      profile.declarations.length,
+      { standard: 57, factory: 61 }[name],
+    );
+    assert.deepEqual(
+      profile.declarations.find(({ id }) => id === "standards-update-workflow"),
+      {
+        id: "standards-update-workflow",
+        kind: "file",
+        target: ".github/workflows/standards-update.yml",
+        exact: ".github/workflows/standards-update.yml",
+        checks: [],
+        fixes: [],
+      },
+      `${name} selects the exact opt-in update caller`,
+    );
     const attributes = profile.declarations.find(
       (declaration) => declaration.id === "git-attributes",
     );
@@ -412,9 +428,10 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
       readFileSync(join(root, "rules/git-attributes.md"), "utf8"),
     );
     // Adoption installs the source's triage fork and the contribution guide
-    // whose rules it carries out, byte for byte.
+    // whose rules it carries out, and the opt-in update caller, byte for byte.
     for (const path of [
       "CONTRIBUTING.md",
+      ".github/workflows/standards-update.yml",
       ".agents/skills/triage/AGENT-BRIEF.md",
       ".agents/skills/triage/CREDITS.md",
       ".agents/skills/triage/OUT-OF-SCOPE.md",

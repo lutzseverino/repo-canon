@@ -202,6 +202,10 @@ links or unfiled findings under the
 sections after the record only if it lacks them.
 Write the check-outcomes comment under the [comment rules](#comments).
 
+The Repository Standards update action uses `chore!:` titles and includes
+Impact and Migration sections for major advances and breaking `0.x` minor
+advances of either pin.
+
 For adoption or update findings, use these target repositories:
 
 - For the standards source's guidance, discovery, checks, fixes, installed

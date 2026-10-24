@@ -271,6 +271,11 @@ defaults:
       target: .github/workflows/pr-metadata.yml
       exact: .github/workflows/pr-metadata.yml
 
+    standards-update-workflow:
+      kind: file
+      target: .github/workflows/standards-update.yml
+      exact: .github/workflows/standards-update.yml
+
     project-agent-guidance:
       kind: file
       target: docs/agents/project.md
