@@ -192,10 +192,6 @@ Selection table, such as `chore: adopt repo-canon v0.6.0 with CLI 5.1.0`. An
 adoption is not breaking unless the maintainer judges it breaking for the
 project.
 
-Automated update pull requests use `chore!:` with Impact and Migration sections
-when either pin advances a major version or a minor version of a `0.x` pin.
-Other automated updates follow the adoption title above.
-
 Its body is the adoption record: the output of `status --summary`, byte for
 byte, starting with its `# Repository Standards adoption record` heading. The
 record's Operations table lists the standards source's fixes and checks with
@@ -205,6 +201,10 @@ links or unfiled findings under the
 [findings rule](#findings). For a breaking (`!`) title, append Impact and Migration
 sections after the record only if it lacks them.
 Write the check-outcomes comment under the [comment rules](#comments).
+
+The Repository Standards update action uses `chore!:` titles and includes
+Impact and Migration sections for major advances and breaking `0.x` minor
+advances of either pin.
 
 For adoption or update findings, use these target repositories:
 

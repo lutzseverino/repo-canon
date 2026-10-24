@@ -5,10 +5,7 @@ on:
     - cron: "23 6 * * *"
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+permissions: {}
 
 concurrency:
   group: standards-update
@@ -19,16 +16,24 @@ jobs:
     name: Update Repository Standards
     if: vars.REPO_CANON_UPDATES == 'true'
     runs-on: ${{ vars.REPO_CANON_RUNS_ON && fromJSON(vars.REPO_CANON_RUNS_ON) || 'ubuntu-latest' }}
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
     env:
       HAS_UPDATE_APP_PRIVATE_KEY: ${{ secrets.REPO_CANON_UPDATE_APP_PRIVATE_KEY != '' }}
     steps:
       - name: Create GitHub App token
         id: app-token
-        if: vars.REPO_CANON_UPDATE_APP_ID != '' && env.HAS_UPDATE_APP_PRIVATE_KEY == 'true'
+        if: vars.REPO_CANON_UPDATE_APP_CLIENT_ID != '' && env.HAS_UPDATE_APP_PRIVATE_KEY == 'true'
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          app-id: ${{ vars.REPO_CANON_UPDATE_APP_ID }}
+          client-id: ${{ vars.REPO_CANON_UPDATE_APP_CLIENT_ID }}
           private-key: ${{ secrets.REPO_CANON_UPDATE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+          permission-workflows: write
       - name: Check out default branch
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:

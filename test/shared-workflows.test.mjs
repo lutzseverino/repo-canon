@@ -108,11 +108,7 @@ test("standards updates run daily or manually only after opt-in, with serialized
     /^concurrency:\n {2}group: standards-update\n {2}cancel-in-progress: false$/m,
   );
   assert.deepEqual(
-    [
-      ...text.matchAll(
-        /^\s*(contents|pull-requests|issues|[a-z-]+): (write|read|none)$/gm,
-      ),
-    ]
+    [...text.matchAll(/^ {6}([a-z-]+): (write|read|none)$/gm)]
       .map(([, permission, access]) => [permission, access])
       .sort(),
     [
@@ -121,7 +117,12 @@ test("standards updates run daily or manually only after opt-in, with serialized
       ["pull-requests", "write"],
     ],
   );
-  assert.equal([...text.matchAll(/^\s*permissions:/gm)].length, 1);
+  assert.match(text, /^permissions: \{\}$/m);
+  assert.match(
+    text,
+    /^ {4}permissions:\n {6}contents: write\n {6}pull-requests: write\n {6}issues: write$/m,
+  );
+  assert.equal([...text.matchAll(/^\s*permissions:/gm)].length, 2);
   assert.match(
     text,
     /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/,
@@ -137,7 +138,21 @@ test("standards updates use an App token only with both credentials, else the wo
   );
   assert.match(
     text,
-    /id: app-token\n\s+if: vars\.REPO_CANON_UPDATE_APP_ID != '' && env\.HAS_UPDATE_APP_PRIVATE_KEY == 'true'\n\s+uses: actions\/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3\.3\.0\n\s+with:\n\s+app-id: \$\{\{ vars\.REPO_CANON_UPDATE_APP_ID \}\}\n\s+private-key: \$\{\{ secrets\.REPO_CANON_UPDATE_APP_PRIVATE_KEY \}\}/,
+    /id: app-token\n\s+if: vars\.REPO_CANON_UPDATE_APP_CLIENT_ID != '' && env\.HAS_UPDATE_APP_PRIVATE_KEY == 'true'\n\s+uses: actions\/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3\.3\.0\n\s+with:\n\s+client-id: \$\{\{ vars\.REPO_CANON_UPDATE_APP_CLIENT_ID \}\}\n\s+private-key: \$\{\{ secrets\.REPO_CANON_UPDATE_APP_PRIVATE_KEY \}\}/,
+  );
+  const appToken = text
+    .split("uses: actions/create-github-app-token@")[1]
+    .split("- name:")[0];
+  assert.deepEqual(
+    [...appToken.matchAll(/^ {10}permission-([a-z-]+): (\S+)$/gm)]
+      .map(([, permission, access]) => [permission, access])
+      .sort(),
+    [
+      ["contents", "write"],
+      ["issues", "write"],
+      ["pull-requests", "write"],
+      ["workflows", "write"],
+    ],
   );
   const token = "token: ${{ steps.app-token.outputs.token || github.token }}";
   assert.ok(

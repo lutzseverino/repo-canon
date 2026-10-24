@@ -98,20 +98,28 @@ Both profiles install `.github/workflows/standards-update.yml`. Its daily
 schedule and manual `workflow_dispatch` run the job only when
 `REPO_CANON_UPDATES` is `true`; installing the file opts nobody in. The job
 reads `vars.REPO_CANON_RUNS_ON`, checks out the default branch, and serializes
-runs through one concurrency group. Its workflow token has only
+runs through one concurrency group. Workflow-level permissions are empty; its
+job's workflow token has only
 `contents: write`, `pull-requests: write`, and `issues: write` permissions.
 
 A GitHub App installation token is recommended. Install the App on the
 repository with repository permissions Contents, Pull requests, Issues and
 Workflows set to read and write. Workflows permission lets it push changes to
-workflow files. Set the repository variable `REPO_CANON_UPDATE_APP_ID` to the
-App ID and the secret `REPO_CANON_UPDATE_APP_PRIVATE_KEY` to its private key.
+workflow files. Set the repository variable `REPO_CANON_UPDATE_APP_CLIENT_ID` to
+the Client ID shown on the App's settings page, reached through the owning
+account's or organization's **Settings > Developer settings > GitHub Apps > Edit**.
+Set the secret `REPO_CANON_UPDATE_APP_PRIVATE_KEY` to its private key.
 When both are present, the workflow creates an installation token for this
-repository and passes it to checkout and the Repository Standards action.
+repository, explicitly limited to those four write permissions, and passes it
+to checkout and the Repository Standards action.
 Otherwise it passes `github.token` (`GITHUB_TOKEN`). Pull requests opened with
 that fallback trigger no CI, and it cannot push workflow-file changes. The
 repository must allow GitHub Actions to create pull requests for that fallback
 to open one.
+
+This job puts the App private key and a write token on the
+`REPO_CANON_RUNS_ON` runners, so the warning above about persistent runners
+running untrusted pull request code applies to it too.
 
 The action moves both pins together to the newest CLI and standards release.
 It maintains one rolling pull request on `repo-standards/update` when the

@@ -106,9 +106,12 @@ skip the job again.
 For updates that trigger CI and can change workflow files, install a GitHub
 App on the repository with Contents, Pull requests, Issues and Workflows
 repository permissions set to read and write. Set the repository Actions
-variable `REPO_CANON_UPDATE_APP_ID` to its App ID and Actions secret
-`REPO_CANON_UPDATE_APP_PRIVATE_KEY` to its private key. The workflow creates
-an installation token only when both are set. Otherwise it uses
+variable `REPO_CANON_UPDATE_APP_CLIENT_ID` to its Client ID. Find it on the
+App's settings page: in the owning account's or organization's settings, select
+**Developer settings > GitHub Apps > Edit**, then copy **Client ID**.
+Set Actions secret `REPO_CANON_UPDATE_APP_PRIVATE_KEY` to its private key.
+The workflow creates an installation token only when both are set and requests
+exactly those four write permissions. Otherwise it uses
 `GITHUB_TOKEN`: pull requests it opens trigger no CI, and it cannot push
 workflow-file changes. For the fallback, enable **Allow GitHub Actions to
 create and approve pull requests** in the repository's Actions settings.

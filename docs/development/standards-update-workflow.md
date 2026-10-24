@@ -13,18 +13,21 @@ run. The single job runs only when `vars.REPO_CANON_UPDATES` is `true`, so
 installing the workflow alone runs no steps. It uses `vars.REPO_CANON_RUNS_ON`
 with the hosted default and a fixed concurrency group with
 `cancel-in-progress: false` to keep scheduled and manual runs from overlapping.
-The workflow requests only `contents: write`, `pull-requests: write`, and
-`issues: write`.
+Workflow-level permissions are empty; the job requests only `contents: write`,
+`pull-requests: write`, and `issues: write`.
 
 The caller creates an App token before checkout only when both the variable
-`REPO_CANON_UPDATE_APP_ID` and secret `REPO_CANON_UPDATE_APP_PRIVATE_KEY` are
+`REPO_CANON_UPDATE_APP_CLIENT_ID` and secret `REPO_CANON_UPDATE_APP_PRIVATE_KEY` are
 present. A job environment value exposes only the secret's presence so the
 step condition can test it. The recommended App installation needs Contents,
 Pull requests, Issues and Workflows repository permissions set to read and
-write; Workflows permits updates to workflow files. The installation token is
-scoped to the current repository by the token action's defaults.
+write; Workflows permits updates to workflow files. The caller explicitly
+requests these four write permissions, and the token action's defaults scope
+the installation token to the current repository. The Client ID is shown on
+the App's settings page: from the owning account's or organization's
+**Settings > Developer settings > GitHub Apps > Edit**, copy **Client ID**.
 
-Without either credential, checkout and the update action receive
+Unless both credentials are set, checkout and the update action receive
 `github.token` (`GITHUB_TOKEN`). Pull requests that token opens trigger no CI,
 and it cannot push workflow-file changes. The repository's Actions settings
 must allow Actions to create pull requests for that fallback to open one.
@@ -48,8 +51,8 @@ items when the update lands or is superseded.
 Remote setup is always deferred until the next local `adopt`, including after
 an automated pull request merges. Automated updates include majors and
 breaking minors (`0.x` minor advances), using `chore!:` titles and Impact and
-Migration sections as the [contribution guide](../../CONTRIBUTING.md#adoption-pull-requests)
-requires. The action owns these update decisions and rolling items; this
+Migration sections as described in the [contribution guide](../../CONTRIBUTING.md#adoption-pull-requests).
+The action owns these update decisions and rolling items; this
 repository owns the opt-in caller. Its
 [upstream usage guide](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/automated-updates.md)
 describes the action.
