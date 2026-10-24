@@ -35,11 +35,14 @@ same way for both. A Project's workspace root is its own directory when that
 configures a workspace, else the nearest ancestor whose workspace
 configuration lists it as a member, else its own directory. A directory
 configures a workspace through `pnpm-workspace.yaml`, whose `packages` the
-module reads as a single-line flow sequence or a block sequence, indented or
-not, of plain or quoted patterns with comments, or else through the
-`workspaces` field of its `package.json`, as a list or as
-`workspaces.packages`. No YAML library is available to operations, so the
-module reads only these forms and reports any other as unreadable. Patterns
+module reads as a flow sequence on one or more lines, split only at commas
+outside quotes and nesting and allowing a trailing comma, or a block sequence,
+indented or not, of plain, single-quoted or double-quoted patterns with
+comments, or else through the `workspaces` field of its `package.json`, as a
+list or as `workspaces.packages`. No YAML library is available to operations,
+so the module reads only these forms. Any other, such as an anchor, alias,
+block scalar, nested collection or quoted `packages` key, reads as an
+unreadable workspace, never as a narrower or wider member list. Patterns
 match through Node's own `path.matchesGlob`, so a leading `**` also matches
 zero directories; a quoted `!` pattern excludes what it matches, and a
 `node_modules` directory is never a member.
@@ -84,6 +87,7 @@ They run the check over fixture repositories, assert that it changes nothing,
 and cover a conforming root package and workspace member, both accepted
 `engines.node` spellings, a named correction for each manifest fact, catalog
 specifiers, the `pnpm-workspace.yaml` sequence, glob and catalog forms,
+unsupported forms reading as unreadable,
 shared root corrections reported per path, a manifest under a
 symbolic link that leaves the project, workspace
 roots from `pnpm-workspace.yaml` and `package.json`, refused targets, and a run

@@ -98,33 +98,109 @@ export function readManifest(projectRoot, path) {
 }
 
 // A YAML scalar without its quotes or trailing comment, or null for a form
-// this reader does not decode.
-function yamlScalar(value) {
+// this reader does not decode. Single quotes decode `''`, and double quotes
+// decode only `\\"`, `\\\\` and `\\/`. A plain scalar may not start with an
+// indicator or hold a mapping's `: `, and inside a flow collection it may not
+// hold a flow indicator.
+function yamlScalar(value, { flow = false } = {}) {
   const text = value.trim();
   if (text === "" || text.startsWith("#")) return null;
   const single = /^'((?:[^']|'')*)'\s*(?:#.*)?$/.exec(text);
   if (single) return single[1].replaceAll("''", "'");
-  const double = /^"([^"\\]*)"\s*(?:#.*)?$/.exec(text);
-  if (double) return double[1];
-  if (/^["'&*!|>%@`[\]{},]/.test(text)) return null;
-  return text.replace(/\s+#.*$/, "");
+  const double = /^"((?:[^"\\]|\\["\\/])*)"\s*(?:#.*)?$/.exec(text);
+  if (double) return double[1].replace(/\\(["\\/])/g, "$1");
+  if (/^(?:["'&*!|>%@`[\]{},#]|[-?:](?:\s|$))/.test(text)) return null;
+  const plain = text.replace(/\s+#.*$/, "");
+  if (/:(?:\s|$)/.test(plain) || (flow && /[[\]{},]/.test(plain))) return null;
+  return plain;
 }
 
-// The `packages` patterns of a `pnpm-workspace.yaml`, as a top-level block or
-// flow sequence of plain or quoted scalars, or `[]` without that key. Returns
-// null for a form this reader does not decode.
+// The items of a flow sequence that opens at the start of `text`, which may
+// span lines: `{ items, rest }`, with the text after its closing bracket, or
+// null for a form this reader does not decode. Items split only at commas
+// outside quoted scalars and outside nested brackets and braces, a `#` after
+// whitespace outside quotes starts a comment, and one trailing comma is
+// allowed. A nested collection or an item spanning lines is not decoded.
+function flowSequence(text) {
+  const items = [];
+  let item = "";
+  let depth = 0;
+  let quote = null;
+  for (let index = 1; index < text.length; index++) {
+    const character = text[index];
+    if (quote === "'") {
+      item += character;
+      if (character === "'") {
+        if (text[index + 1] === "'") item += text[++index];
+        else quote = null;
+      }
+      continue;
+    }
+    if (quote === '"') {
+      item += character;
+      if (character === "\\") item += text[++index] ?? "";
+      else if (character === '"') quote = null;
+      continue;
+    }
+    if (character === "#" && (index === 1 || /\s/.test(text[index - 1]))) {
+      while (index + 1 < text.length && text[index + 1] !== "\n") index++;
+      continue;
+    }
+    if (character === "'" || character === '"') quote = character;
+    else if (character === "[" || character === "{") depth++;
+    else if ((character === "]" || character === "}") && depth > 0) depth--;
+    else if (character === "]") {
+      items.push(item);
+      const last = items.at(-1).trim();
+      // `[]` and `[a, b,]` end with one empty item, which is no entry.
+      if (last === "") items.pop();
+      if (
+        items.some(
+          (entry) => entry.trim() === "" || entry.trim().includes("\n"),
+        )
+      )
+        return null;
+      const scalars = items.map((entry) => yamlScalar(entry, { flow: true }));
+      if (scalars.includes(null)) return null;
+      return { items: scalars, rest: text.slice(index + 1) };
+    } else if (character === "}") return null;
+    else if (character === "," && depth === 0) {
+      items.push(item);
+      item = "";
+      continue;
+    }
+    item += character;
+  }
+  return null;
+}
+
+// The `packages` patterns of a `pnpm-workspace.yaml`, or `[]` without that
+// key, or null for any form this reader does not decode, so that an
+// unexpected form reads as an unreadable workspace and never as a narrower or
+// wider member list. It decodes a top-level `packages` key holding:
+// - a flow sequence on one or more lines, ending its line after `]`;
+// - or a block sequence, indented or at the key's column;
+// whose items are plain, single-quoted or double-quoted scalars, with
+// comments. Anchors, aliases, tags, block scalars, nested collections,
+// multi-line scalars, a quoted `packages` key and a flow-mapping document are
+// not decoded. No YAML library is available to operations.
 export function pnpmWorkspacePackages(text) {
   const lines = text.split(/\r?\n/);
+  if (
+    lines.some((line) => /^["']packages["']\s*:/.test(line)) ||
+    /^(?:\s*(?:#.*)?\n)*\s*(?:---\s*\n\s*)?[{[]/.test(text)
+  )
+    return null;
   const start = lines.findIndex((line) => /^packages\s*:/.test(line));
   if (start === -1) return [];
   const rest = lines[start].replace(/^packages\s*:/, "").trim();
-  if (rest !== "" && !rest.startsWith("#")) {
-    const flow = /^\[(.*)\]\s*(?:#.*)?$/.exec(rest);
+  if (rest.startsWith("[")) {
+    const flow = flowSequence([rest, ...lines.slice(start + 1)].join("\n"));
     if (!flow) return null;
-    if (flow[1].trim() === "") return [];
-    const items = flow[1].split(",").map(yamlScalar);
-    return items.includes(null) ? null : items;
+    const after = flow.rest.split("\n")[0].trim();
+    return after === "" || after.startsWith("#") ? flow.items : null;
   }
+  if (rest !== "" && !rest.startsWith("#")) return null;
   // Block sequence items may be indented or start at the key's own column, as
   // YAML allows; the next top-level key ends the sequence.
   const patterns = [];

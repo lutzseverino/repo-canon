@@ -330,6 +330,16 @@ test("drafts members from common pnpm-workspace.yaml forms", async (t) => {
       ["apps", "apps/web"],
     ],
     ["quoted negation", "packages:\n  - '*/*'\n  - '!libs/*'\n", ["apps/web"]],
+    [
+      "brace pattern in a flow sequence",
+      'packages: ["{apps,libs}/*"]\n',
+      ["apps/web", "libs/core"],
+    ],
+    [
+      "multi-line flow sequence",
+      "packages: [\n  'apps/*', # apps\n  \"libs/*\",\n]\n",
+      ["apps/web", "libs/core"],
+    ],
   ])
     await t.test(name, (st) => {
       const { entry } = drafted(st, {

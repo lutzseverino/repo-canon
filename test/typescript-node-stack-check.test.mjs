@@ -407,6 +407,73 @@ test("reads the packages of common pnpm-workspace.yaml forms", () => {
     assert.deepEqual(pnpmWorkspacePackages(text), expected, text);
 });
 
+test("splits flow sequences only at commas outside quotes and nesting", () => {
+  for (const [text, expected] of [
+    ['packages: ["packages/{cli,web}"]\n', ["packages/{cli,web}"]],
+    [
+      "packages: ['packages/{cli,web}', \"apps/{a,b}/*\", tools/*]\n",
+      ["packages/{cli,web}", "apps/{a,b}/*", "tools/*"],
+    ],
+    ["packages: [packages/*, apps/*,]\n", ["packages/*", "apps/*"]],
+    ["packages: [ ]\n", []],
+    ["packages: [packages/*] # see [apps]\n", ["packages/*"]],
+    ['packages: ["a\\"b", \'it\'\'s\', "c\\\\d"]\n', ['a"b', "it's", "c\\d"]],
+    [
+      "packages: [\n  'packages/*', # members\n  \"apps/*\",\n]\nonlyBuiltDependencies: []\n",
+      ["packages/*", "apps/*"],
+    ],
+    // Forms YAML reads differently or rejects, which read as unreadable.
+    ["packages: [packages/{cli,web}]\n", null],
+    ["packages: [a,, b]\n", null],
+    ["packages: [,]\n", null],
+    ["packages: [a] extra\n", null],
+    ['packages: ["a\\nb"]\n', null],
+    ["packages: [\n  'packages/*'\n", null],
+    ["packages: [[a], b]\n", null],
+    ["packages: [a #b, c]\n", null],
+  ])
+    assert.deepEqual(pnpmWorkspacePackages(text), expected, text);
+});
+
+// The reader's contract: a form it does not decode is unreadable, never a
+// narrower or wider member list, so the drafter asks about the workspace and
+// the check names the configuration instead of reading root facts elsewhere.
+test("reads every unsupported pnpm-workspace.yaml form as an unreadable workspace", async (t) => {
+  for (const text of [
+    "packages: &members\n  - packages/*\n",
+    "packages:\n  - *members\n",
+    "packages: |\n  packages/*\n",
+    "packages:\n  - packages/*\n    continued\n",
+    "packages:\n  - key: value\n",
+    "packages:\n  - - packages/*\n",
+    '"packages":\n  - packages/*\n',
+    "{packages: [packages/*]}\n",
+  ])
+    await t.test(text, (st) => {
+      assert.equal(pnpmWorkspacePackages(text), null);
+      assert.equal(
+        corrections(
+          check(st, { ...workspace, "pnpm-workspace.yaml": text }, [
+            "packages/cli/package.json",
+          ]),
+        ),
+        "State the workspace members of `pnpm-workspace.yaml` as a list of plain or quoted patterns, which the check reads.",
+      );
+    });
+});
+
+test("reads a member listed through a brace pattern in a flow sequence", (t) => {
+  const result = check(
+    t,
+    {
+      ...workspace,
+      "pnpm-workspace.yaml": 'packages: ["packages/{cli,web}"]\n',
+    },
+    ["packages/cli/package.json"],
+  );
+  assert.equal(result.status, "passed", result.message);
+});
+
 test("matches workspace globs, a leading globstar matching zero directories", () => {
   for (const [patterns, directory, expected] of [
     [["**/*"], "cli", true],
