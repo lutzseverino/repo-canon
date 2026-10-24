@@ -167,6 +167,31 @@ function listingWorkspace(directory, found) {
   return null;
 }
 
+// The outermost ancestor of a directory, or the directory itself, named as
+// one that holds fixtures, generated output, or copied code, if any.
+function unmaintainedAncestor(directory) {
+  if (directory === "") return undefined;
+  return directory
+    .split("/")
+    .map((_, index, segments) => segments.slice(0, index + 1).join("/"))
+    .find((ancestor) =>
+      unmaintainedDirectories.includes(
+        ancestor.slice(ancestor.lastIndexOf("/") + 1),
+      ),
+    );
+}
+
+// The workspace that lists a directory as a maintained member: one whose root
+// lies outside the directory's unmaintained ancestor. A fixture's own
+// workspace, or its local pnpm settings, makes nothing under it maintained.
+function maintainedListing(directory, found) {
+  const listing = listingWorkspace(directory, found);
+  const unmaintained = unmaintainedAncestor(directory);
+  if (listing && unmaintained && isWithin(listing.root, unmaintained))
+    return null;
+  return listing;
+}
+
 const reasons = {
   matches: (path) =>
     `The Project of ${code(path)} matches the typescript-node stack's manifest facts: pnpm 11, its lockfile, Node.js 24 or 26, oxlint 1, Prettier 3 and a validate script.`,
@@ -175,7 +200,7 @@ const reasons = {
   workspaceRoot: (path) =>
     `${code(path)} is a workspace root, which holds its members' shared configuration rather than a Project; its members are the Projects.`,
   unmaintained: (path, directory) =>
-    `${code(path)} lies under ${code(directory)}, which holds fixtures, generated output, or copied code rather than a maintained Project, and no workspace lists it.`,
+    `${code(path)} lies under ${code(directory)}, which holds fixtures, generated output, or copied code rather than a maintained Project, and no workspace outside it lists it.`,
 };
 
 const questions = {
@@ -214,7 +239,7 @@ function draftStackScope({ projectRoot }) {
   // package that keeps pnpm settings in `pnpm-workspace.yaml`, is a package.
   const memberRoots = new Set(
     manifests
-      .map((path) => listingWorkspace(parentOf(path), found)?.root)
+      .map((path) => maintainedListing(parentOf(path), found)?.root)
       .filter((root) => root !== undefined),
   );
   for (const path of manifests) {
@@ -235,20 +260,15 @@ function draftStackScope({ projectRoot }) {
         root !== directory &&
         (root === "" || isWithin(directory, root)),
     );
+    const listed = maintainedListing(directory, found) !== null;
+    const unmaintained = unmaintainedAncestor(directory);
+    // Under an unmaintained directory, only a listing by a workspace outside
+    // it makes a Project; the manifest's own workspace configuration does not.
     const isProject =
-      directory === "" ||
-      ownWorkspace !== undefined ||
-      listingWorkspace(directory, found) !== null;
+      listed ||
+      (!unmaintained && (directory === "" || ownWorkspace !== undefined));
     if (!isProject) {
       if (unreadableAbove) continue;
-      const unmaintained = directory
-        .split("/")
-        .map((_, index, segments) => segments.slice(0, index + 1).join("/"))
-        .find((ancestor) =>
-          unmaintainedDirectories.includes(
-            ancestor.slice(ancestor.lastIndexOf("/") + 1),
-          ),
-        );
       if (unmaintained)
         candidates.push({
           path,

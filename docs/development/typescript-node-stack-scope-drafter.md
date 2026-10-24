@@ -46,10 +46,13 @@ settings or catalogs. For each Project it runs the check's difference reading:
 The workspace root's facts, such as `packageManager` and catalogs, still feed
 each member's reading.
 
-Any other `package.json` lies outside every workspace. Below a directory named
-`__fixtures__`, `__mocks__`, `build`, `coverage`, `dist`, `fixture`,
-`fixtures`, `generated`, `out`, `testdata`, or `vendor`, it is excluded as no
-maintained Project. Elsewhere it is an unresolved question, and so is each
+A `package.json` below a directory named `__fixtures__`, `__mocks__`,
+`build`, `coverage`, `dist`, `fixture`, `fixtures`, `generated`, `out`,
+`testdata`, or `vendor` is excluded as no maintained Project unless a
+workspace whose root lies outside that directory lists it. Its own pnpm
+settings, or a workspace inside that directory, do not make it a Project, so a
+fixture workspace's root and members are excluded alike. Any other
+`package.json` outside every workspace is an unresolved question, and so is each
 workspace configuration the module cannot read; manifests below such a
 configuration are left to that question.
 
@@ -88,8 +91,8 @@ They run the drafter as inspection does, over copies without Git metadata,
 assert that the copy is unchanged and the proposal has the scope proposal's
 shape, and cover a single conforming package, a pnpm workspace with conforming
 and differing members, workspace roots excluded without a question, a single
-package with a settings-only `pnpm-workspace.yaml`, `package.json` workspaces with exclusions, fixture and
-generated directories, a repository with no Node.js Project, one whose every
+package with a settings-only `pnpm-workspace.yaml`, `package.json` workspaces with exclusions, common `pnpm-workspace.yaml` forms, fixture and
+generated directories including fixture packages with their own pnpm settings or workspace, a repository with no Node.js Project, one whose every
 Project differs, unresolved manifests and workspace configuration, reserved
 paths, a drafted scope that passes the check, a retained source, and process
 errors.

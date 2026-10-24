@@ -20,8 +20,9 @@ or catalogs, is the repository's one Project.
 - A workspace root is excluded, conforming or not, as its members' shared
   configuration.
 - A `package.json` under a directory of fixtures, generated output, or copied
-  code, such as `fixtures`, `dist`, or `vendor`, that no workspace lists is
-  excluded.
+  code, such as `fixtures`, `dist`, or `vendor`, is excluded unless a
+  workspace outside that directory lists it; its own pnpm settings or
+  workspace do not make it a Project.
 - Any other `package.json`, and a workspace configuration the drafter cannot
   read, is an unresolved question.
 

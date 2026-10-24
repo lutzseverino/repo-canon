@@ -271,6 +271,84 @@ test("reads package.json workspaces and their exclusions", (t) => {
   assert.match(entry.unresolved[0], /`packages\/old\/package.json`/);
 });
 
+test("keeps a fixture package excluded despite its own pnpm settings or workspace", (t) => {
+  const conforming = {
+    "package.json": manifest(),
+    "pnpm-lock.yaml": "",
+  };
+  const unmaintained = (path, directory) =>
+    `\`${path}\` lies under \`${directory}\`, which holds fixtures, generated output, or copied code rather than a maintained Project, and no workspace outside it lists it.`;
+  const { entry } = drafted(t, {
+    ...conforming,
+    // A settings-only fixture package with its own lockfile and catalog.
+    "test/fixtures/app/package.json": manifest(),
+    "test/fixtures/app/pnpm-lock.yaml": "",
+    "test/fixtures/app/pnpm-workspace.yaml":
+      "catalog:\n  oxlint: 1.86.0\nonlyBuiltDependencies: []\n",
+    // A fixture workspace whose own configuration lists its member.
+    "test/fixtures/mono/package.json": manifest(),
+    "test/fixtures/mono/pnpm-lock.yaml": "",
+    "test/fixtures/mono/pnpm-workspace.yaml": "packages:\n- packages/*\n",
+    "test/fixtures/mono/packages/a/package.json": member(),
+  });
+  assert.deepEqual(entry.candidates, [
+    {
+      path: "package.json",
+      decision: "include",
+      reason: matches("package.json"),
+      evidence: ["package.json", "pnpm-lock.yaml"],
+    },
+    ...[
+      "test/fixtures/app/package.json",
+      "test/fixtures/mono/package.json",
+      "test/fixtures/mono/packages/a/package.json",
+    ].map((path) => ({
+      path,
+      decision: "exclude",
+      reason: unmaintained(path, "test/fixtures"),
+      evidence: [path],
+    })),
+  ]);
+  assert.deepEqual(entry.unresolved, []);
+});
+
+test("drafts members from common pnpm-workspace.yaml forms", async (t) => {
+  for (const [name, pnpmWorkspace, members] of [
+    [
+      "indentationless block",
+      "packages:\n- apps/*\n- 'libs/*' # libs\n",
+      ["apps/web", "libs/core"],
+    ],
+    [
+      "flow sequence",
+      'packages: [apps/*, "libs/*"] # members\n',
+      ["apps/web", "libs/core"],
+    ],
+    [
+      "leading globstar",
+      "packages:\n  - '**/*'\n  - '!libs/**'\n",
+      ["apps", "apps/web"],
+    ],
+    ["quoted negation", "packages:\n  - '*/*'\n  - '!libs/*'\n", ["apps/web"]],
+  ])
+    await t.test(name, (st) => {
+      const { entry } = drafted(st, {
+        "package.json": manifest({ name: "root" }),
+        "pnpm-lock.yaml": "",
+        "pnpm-workspace.yaml": pnpmWorkspace,
+        "apps/package.json": member(),
+        "apps/web/package.json": member(),
+        "libs/core/package.json": member(),
+      });
+      assert.deepEqual(
+        entry.candidates
+          .filter((candidate) => candidate.decision === "include")
+          .map((candidate) => candidate.path),
+        members.map((directory) => `${directory}/package.json`),
+      );
+    });
+});
+
 test("excludes a fixture-only directory", (t) => {
   const { entry } = drafted(t, {
     "package.json": manifest(),
@@ -283,7 +361,7 @@ test("excludes a fixture-only directory", (t) => {
       path: "dist/package.json",
       decision: "exclude",
       reason:
-        "`dist/package.json` lies under `dist`, which holds fixtures, generated output, or copied code rather than a maintained Project, and no workspace lists it.",
+        "`dist/package.json` lies under `dist`, which holds fixtures, generated output, or copied code rather than a maintained Project, and no workspace outside it lists it.",
       evidence: ["dist/package.json"],
     },
     {
@@ -297,7 +375,7 @@ test("excludes a fixture-only directory", (t) => {
     path: "test/fixtures/broken-app/package.json",
     decision: "exclude",
     reason:
-      "`test/fixtures/broken-app/package.json` lies under `test/fixtures`, which holds fixtures, generated output, or copied code rather than a maintained Project, and no workspace lists it.",
+      "`test/fixtures/broken-app/package.json` lies under `test/fixtures`, which holds fixtures, generated output, or copied code rather than a maintained Project, and no workspace outside it lists it.",
     evidence: ["test/fixtures/broken-app/package.json"],
   });
   assert.deepEqual(entry.unresolved, []);
