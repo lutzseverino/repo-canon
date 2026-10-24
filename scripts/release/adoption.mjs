@@ -48,10 +48,10 @@ function createFixture(project) {
   fixtureGit("commit", "--quiet", "--no-verify", "--message", "Wordtally");
 }
 
-function adopt(cli, args) {
+function adopt(cli, args, formats = [adoptFormat]) {
   const child = run(cli, ["adopt", ...args, "--json"]);
   const report = parseJson(child.stdout || child.stderr, "the adopt output");
-  if (report.format !== adoptFormat) {
+  if (!formats.includes(report.format)) {
     const errors = (report.errors ?? []).map((error) => error.message);
     fail(
       `adopt failed: ${errors.join(" ") || (child.stderr || child.stdout).trim()}`,
@@ -119,7 +119,7 @@ function answer(question, report, version, profile) {
 }
 
 // The deferred remote setup that `status` reports for the completed run.
-function checkStatus(cli, project) {
+export function checkStatus(cli, project) {
   const child = run(cli, ["status", "--project", project, "--json"]);
   const status = parseJson(child.stdout || child.stderr, "the status output");
   if (child.status !== 0)
@@ -136,7 +136,76 @@ function checkStatus(cli, project) {
     fail(
       `status does not list remote setup ${missing.join(", ")} as deferred.`,
     );
-  return deferred;
+  return status;
+}
+
+// Prepares the same fixture for fresh adoption and update verification.
+export function adoptFixture(
+  cli,
+  source,
+  version,
+  profile,
+  floor,
+  directory,
+  { initialArgs = [], formats = [adoptFormat] } = {},
+) {
+  const project = join(directory, "project");
+  const answersPath = join(directory, "answers.json");
+  createFixture(project);
+  let report = adopt(
+    cli,
+    [source, ...initialArgs, "--project", project],
+    formats,
+  );
+  const cliVersion = report.selection?.cli;
+  if (cliVersion !== floor)
+    fail(
+      `adopt ran CLI ${cliVersion}, not the required minimum ${floor}; install ${floor} under REPO_STANDARDS_PREFIX.`,
+    );
+  for (let round = 1; round <= maximumRounds; round += 1) {
+    switch (report.outcome) {
+      case "complete": {
+        const status = checkStatus(cli, project);
+        return { project, cliVersion, status };
+      }
+      case "answers-required":
+      case "contextual": {
+        if (report.failedChecks?.length)
+          fail(
+            `the run's checks failed: ${report.failedChecks
+              .map(
+                (check) => `${check.declaration}/${check.id}: ${check.message}`,
+              )
+              .join(" ")}`,
+          );
+        const questions = report.answers.questions.map((question) => ({
+          ...question,
+          answer: answer(question, report, version, profile),
+        }));
+        writeFileSync(
+          answersPath,
+          `${JSON.stringify({ ...report.answers, questions }, null, 2)}\n`,
+        );
+        report = adopt(
+          cli,
+          ["--answers", answersPath, "--project", project],
+          formats,
+        );
+        break;
+      }
+      default: {
+        const blockers = (report.blockers ?? []).map(
+          (blocker) => blocker.message ?? JSON.stringify(blocker),
+        );
+        fail(
+          `the adoption is ${report.outcome}: ${[...blockers, report.run?.reason].filter(Boolean).join(" ")}`,
+        );
+      }
+    }
+  }
+  return fail(
+    `the adoption did not complete in ${maximumRounds} rounds; adopt last reported ${report.outcome}, missing ${report.missing.join(", ")}.`,
+  );
 }
 
 // Adopts `version` with `profile` into a fresh fixture repository, through the
@@ -144,66 +213,21 @@ function checkStatus(cli, project) {
 export function checkAdoption(cli, source, version, profile, floor) {
   try {
     return withTemporaryDirectory("repo-canon-adopt-", (directory) => {
-      const project = join(directory, "project");
-      const answersPath = join(directory, "answers.json");
-      createFixture(project);
-      let report = adopt(cli, [source, "--project", project]);
-      const cliVersion = report.selection?.cli;
-      if (cliVersion !== floor)
-        fail(
-          `adopt ran CLI ${cliVersion}, not the required minimum ${floor}; install ${floor} under REPO_STANDARDS_PREFIX.`,
-        );
-      for (let round = 1; round <= maximumRounds; round += 1) {
-        switch (report.outcome) {
-          case "complete": {
-            const deferred = checkStatus(cli, project);
-            return {
-              pass:
-                `CLI ${cliVersion} adopted ${version} with the ${profile} profile into a fixture repository ` +
-                `through adopt with an answers file; status reports the run ready to commit, with remote setup ` +
-                `${deferred.join(" and ")} deferred.`,
-            };
-          }
-          case "answers-required":
-          case "contextual": {
-            if (report.failedChecks?.length)
-              fail(
-                `the run's checks failed: ${report.failedChecks
-                  .map(
-                    (check) =>
-                      `${check.declaration}/${check.id}: ${check.message}`,
-                  )
-                  .join(" ")}`,
-              );
-            const questions = report.answers.questions.map((question) => ({
-              ...question,
-              answer: answer(question, report, version, profile),
-            }));
-            writeFileSync(
-              answersPath,
-              `${JSON.stringify({ ...report.answers, questions }, null, 2)}\n`,
-            );
-            report = adopt(cli, [
-              "--answers",
-              answersPath,
-              "--project",
-              project,
-            ]);
-            break;
-          }
-          default: {
-            const blockers = (report.blockers ?? []).map(
-              (blocker) => blocker.message ?? JSON.stringify(blocker),
-            );
-            fail(
-              `the adoption is ${report.outcome}: ${[...blockers, report.run?.reason].filter(Boolean).join(" ")}`,
-            );
-          }
-        }
-      }
-      return fail(
-        `the adoption did not complete in ${maximumRounds} rounds; adopt last reported ${report.outcome}, missing ${report.missing.join(", ")}.`,
+      const { cliVersion, status } = adoptFixture(
+        cli,
+        source,
+        version,
+        profile,
+        floor,
+        directory,
       );
+      const deferred = status.deferred.map(fixId);
+      return {
+        pass:
+          `CLI ${cliVersion} adopted ${version} with the ${profile} profile into a fixture repository ` +
+          `through adopt with an answers file; status reports the run ready to commit, with remote setup ` +
+          `${deferred.join(" and ")} deferred.`,
+      };
     });
   } catch (error) {
     if (!(error instanceof ReleaseCheckFailure)) throw error;
