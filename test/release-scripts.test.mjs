@@ -513,7 +513,7 @@ test("release:verify passes a published release that agrees with its commit", (t
   );
 });
 
-test("release:verify updates from the previous stable release once per profile using the newest CLI", (t) => {
+test("release:verify updates from the previous stable release per profile using the newest CLI", (t) => {
   const { status, output, calls } = verifyAdoption(t, "complete");
 
   assert.equal(status, 0, output);
@@ -521,7 +521,7 @@ test("release:verify updates from the previous stable release once per profile u
     assert.match(
       output,
       new RegExp(
-        `pass: CLI 6\\.0\\.0 adopted v0\\.9\\.0; CLI 10\\.0\\.0 updated to v1\\.0\\.0 with the ${profile} profile in one adopt.*outcome complete`,
+        `pass: CLI 6\\.0\\.0 adopted v0\\.9\\.0; CLI 10\\.0\\.0 updated to v1\\.0\\.0 with the ${profile} profile.*outcome complete`,
       ),
     );
   }
@@ -539,30 +539,78 @@ test("release:verify updates from the previous stable release once per profile u
   );
 });
 
-test("release:verify completes a contextual stop for exactly the declarations the adopter-action line names", (t) => {
-  const { status, output, calls } = verifyAdoption(t, "complete", {
-    FAKE_UPDATE: "contextual",
+for (const scenario of ["questions", "fallback-scope"]) {
+  test(`release:verify answers renewed scope, new discovery and remote setup questions (${scenario})`, (t) => {
+    const { status, output, calls } = verifyAdoption(t, "complete", {
+      FAKE_UPDATE: scenario,
+    });
+    assert.equal(status, 0, output);
+    for (const id of [
+      "scope:documentation",
+      "scope:typescript-node-stack",
+      "remote-setup",
+      "assessment:repository-readme",
+    ])
+      assert.match(output, new RegExp(id));
+    const submitted = calls.filter(
+      (entry) =>
+        entry["scope:documentation"] &&
+        entry["scope:typescript-node-stack"] &&
+        entry["remote-setup"] === "defer" &&
+        entry.inspection === "sha256:update",
+    );
+    assert.equal(
+      submitted.length,
+      2,
+      "one scope and deferral submission per profile",
+    );
+    for (const entry of submitted) {
+      assert.equal(
+        entry["scope:documentation"].coverage,
+        "The previous adoption scope, proposed for validation.",
+      );
+      assert.equal(entry["scope:typescript-node-stack"].noScope, true);
+      if (scenario === "fallback-scope")
+        assert.deepEqual(entry["scope:project-readmes"].candidates, []);
+    }
   });
-  assert.equal(status, 0, output);
-  assert.match(
-    output,
-    /outcome contextual.*Adopter action: Contextual update: the run asks for contextual work on repository-readme/,
-  );
-  assert.equal(calls.filter((entry) => entry.update).length, 2);
-  const submitted = calls.filter(
-    (entry) =>
-      entry["assessment:repository-readme"] && Object.keys(entry).length === 1,
-  );
-  assert.equal(submitted.length, 2, "one assessment submission per profile");
-});
+}
+
+for (const scenario of ["contextual", "extra-assessment"]) {
+  test(`release:verify submits requested contextual assessments (${scenario}) and requires completion`, (t) => {
+    const { status, output, calls } = verifyAdoption(t, "complete", {
+      FAKE_UPDATE: scenario,
+    });
+    assert.equal(status, 0, output);
+    assert.match(
+      output,
+      /outcome complete.*Adopter action: Contextual update: the run asks for contextual work on repository-readme/,
+    );
+    assert.equal(calls.filter((entry) => entry.update).length, 2);
+    const submitted = calls.filter(
+      (entry) =>
+        entry["assessment:repository-readme"] &&
+        Object.keys(entry).length === (scenario === "extra-assessment" ? 2 : 1),
+    );
+    assert.equal(submitted.length, 2, "one assessment submission per profile");
+    if (scenario === "extra-assessment") {
+      for (const entry of submitted)
+        assert.deepEqual(
+          entry["assessment:documentation"],
+          adoptionAssessments.documentation,
+        );
+    }
+  });
+}
 
 for (const [scenario, message] of [
-  ["question", /one adopt stopped with outcome answers-required/],
-  ["confirmation", /one adopt stopped with outcome answers-required/],
+  ["rejected-scope", /CLI rejected the scope answer/],
+  ["scope-repeat", /stopped again after answering scope:documentation/],
+  ["question", /unexpected question surprise:documentation/],
+  ["confirmation", /confirmation-required change/],
   ["blocked", /the update has blockers or failed checks/],
   ["failed-checks", /the update has blockers or failed checks/],
-  ["extra-assessment", /do not match the adopter-action line/],
-  ["missing-assessment", /do not match the adopter-action line/],
+  ["missing-assessment", /stopped with outcome contextual/],
   ["nonzero", /the complete update exited 1/],
   ["not-ready", /status does not report the run ready to commit/],
   ["undeferred", /status does not list remote setup/],
@@ -593,7 +641,10 @@ test("release:verify fails if submitting the named contextual assessments does n
     FAKE_UPDATE: "contextual-repeat",
   });
   assert.notEqual(status, 0, output);
-  assert.match(output, /one adopt stopped with outcome contextual/);
+  assert.match(
+    output,
+    /stopped again after answering assessment:repository-readme/,
+  );
 });
 
 test("release:verify fails when no previous stable release is published", (t) => {

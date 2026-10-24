@@ -103,7 +103,9 @@ with the expected adopter-action line: the CLI's one-line statement of the
 update class, contextual work needed, and pending remote setup. After
 `release:verify` passes, open the verified notes with the derived adopter-action
 line it printed. If the profiles produce different lines, put both first,
-labelled with their profiles.
+labelled with their profiles. Next to each line, name the scope and remote
+setup questions that the update check reported, so adopters know which
+answers they will need to validate and submit.
 
 Set the optional top-level `adopter-action` field in `standards.yaml` only when
 a release needs an action outside adoption. Write one nonempty line of plain
@@ -198,19 +200,22 @@ npm run release:verify -- "$version" "$release_commit" &&
 5. With each profile, adopt the previous release, the newest published stable
    tag before the verified version, into the same disposable fixture using that
    release's required minimum CLI, then commit the completed adoption. Run the
-   newest published CLI exactly once as `adopt --json`, with no answers file and
+   newest published CLI as `adopt --json`, initially with no answers file and
    no edits. The check installs these two public CLIs outside the checkout;
    npm registry access and the previous release tag fetched locally are needed.
-   It requires exit 0 and outcome `complete`, `status` ready to commit, both
-   GitHub remote setup fixes still deferred, and selection of the verified
-   release commit and profile. A stop only for contextual work also passes when
-   its missing assessments are exactly the declarations named in the derived
-   adopter-action line: the check submits the fixture's assessments for only
-   those declarations and requires completion. Any other open question, blocker,
-   failed check, confirmation-required change, or further stop fails. The check
-   prints both CLI versions, the outcome, and the derived adopter-action line.
-   With no previous published stable release, it fails rather than claiming an
-   update was verified.
+   It answers the update's scope questions with their prefilled answers unchanged,
+   including a new declaration's discovery draft. A declaration without a draft
+   gets the same fixture scope answer as check 4. It answers `remote-setup` with
+   `defer` and submits the fixture's contextual assessments for any declaration
+   the run asks about, reusing check 4's answers and assessments. The run must
+   reach `complete` with exit 0, and `status` must report it ready to commit,
+   with both GitHub remote setup fixes deferred and selection of the verified
+   release commit and profile. A blocker, confirmation-required change, failed
+   check, question of any other kind, rejected scope answer, or further stop
+   after submitting an answer fails. The check prints both CLI versions, every
+   question asked (kind and declaration), the outcome, and the derived
+   adopter-action line. With no previous published stable release, it fails
+   rather than claiming an update was verified.
 6. The Repository README and the adoption guide at the release commit name no
    Repo Canon version, the Repository README names no CLI version, and every
    CLI version that the adoption guide, the development guide, the source

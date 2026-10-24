@@ -58,6 +58,10 @@ const stackDraft = {
   unresolved: [],
   noScope: true,
 };
+const recordedDraft = {
+  ...draft,
+  coverage: "The previous adoption scope, proposed for validation.",
+};
 const drafts = { documentation: draft, "typescript-node-stack": stackDraft };
 
 function print(report, status = 1) {
@@ -180,7 +184,7 @@ if (
   if (count !== "2" || dirty)
     reject("The previous adoption must be committed before the update.");
   if (args.join(" ") !== "adopt --json")
-    reject("The update must run once without flags or answers.");
+    reject("The update must start without flags or answers.");
   if (process.env.FAKE_ADOPT_LOG)
     appendFileSync(
       process.env.FAKE_ADOPT_LOG,
@@ -193,9 +197,18 @@ if (
       : "Contextual update: the run asks for contextual work on repository-readme, which needs review before it is committed.";
   save({
     ...state,
-    phase: ["contextual", "contextual-repeat"].includes(updateScenario)
-      ? "update-contextual"
-      : "complete",
+    phase: [
+      "questions",
+      "fallback-scope",
+      "rejected-scope",
+      "scope-repeat",
+    ].includes(updateScenario)
+      ? "update-questions"
+      : ["contextual", "contextual-repeat", "extra-assessment"].includes(
+            updateScenario,
+          )
+        ? "update-contextual"
+        : "complete",
     version: "v1.0.0",
     line,
   });
@@ -207,6 +220,39 @@ if (
     print(
       report("blocked", [], { ...rest, blockers: [{ message: "A blocker." }] }),
     );
+  if (
+    ["questions", "fallback-scope", "rejected-scope", "scope-repeat"].includes(
+      updateScenario,
+    )
+  ) {
+    const asked = [
+      {
+        id: "scope:documentation",
+        answer: recordedDraft,
+        details: { unresolved: [], draft },
+      },
+      {
+        id: "scope:typescript-node-stack",
+        answer: stackDraft,
+        details: { unresolved: [] },
+      },
+      { id: "remote-setup", answer: null, details: remoteSetup },
+    ];
+    if (updateScenario === "fallback-scope")
+      asked.push({ id: "scope:project-readmes", answer: null });
+    print(
+      report(
+        "answers-required",
+        [
+          { id: "version", answer: "v1.0.0" },
+          { id: "profile", answer: profile },
+          ...asked,
+          { id: "inspection", answer: "sha256:update" },
+        ],
+        { ...rest, missing: asked.map((entry) => entry.id) },
+      ),
+    );
+  }
   if (updateScenario === "confirmation" || updateScenario === "question")
     print(
       report(
@@ -216,7 +262,7 @@ if (
             id:
               updateScenario === "confirmation"
                 ? "confirmation"
-                : "scope:documentation",
+                : "surprise:documentation",
             answer: null,
           },
         ],
@@ -252,10 +298,52 @@ if (
   print(report("complete", [], rest), updateScenario === "nonzero" ? 1 : 0);
 }
 
+if (state?.phase === "update-questions") {
+  if (process.env.FAKE_UPDATE === "rejected-scope")
+    reject("The CLI rejected the scope answer.");
+  if (process.env.FAKE_UPDATE === "scope-repeat")
+    print(
+      report("answers-required", [{ id: "scope:documentation", answer: null }]),
+    );
+  if (
+    process.env.FAKE_UPDATE === "fallback-scope" &&
+    given.get("scope:project-readmes")?.candidates.length !== 0
+  )
+    reject("Missing fixture scope for a declaration without a draft.");
+  for (const [id, expected] of Object.entries({
+    documentation: recordedDraft,
+    "typescript-node-stack": stackDraft,
+  })) {
+    if (JSON.stringify(given.get(`scope:${id}`)) !== JSON.stringify(expected))
+      reject(`The ${id} scope must preserve its proposed answer unchanged.`);
+  }
+  if (given.get("remote-setup") !== "defer")
+    reject("Remote setup must be deferred.");
+  save({ ...state, phase: "update-contextual" });
+  print(
+    report(
+      "contextual",
+      [{ id: "assessment:repository-readme", answer: null }],
+      {
+        contextual: [{ id: "repository-readme" }],
+      },
+    ),
+  );
+}
+
 if (state?.phase === "update-contextual") {
-  if (questions.length !== 1 || !given.has("assessment:repository-readme"))
-    reject("Only the named assessment may be submitted.");
-  if (given.get("assessment:repository-readme").status !== "satisfied")
+  const requested =
+    process.env.FAKE_UPDATE === "extra-assessment"
+      ? ["repository-readme", "documentation"]
+      : ["repository-readme"];
+  if (
+    questions.length !== requested.length ||
+    requested.some((id) => !given.has(`assessment:${id}`))
+  )
+    reject("Only the requested assessments may be submitted.");
+  if (
+    requested.some((id) => given.get(`assessment:${id}`).status !== "satisfied")
+  )
     reject("Missing fixture assessment.");
   if (process.env.FAKE_UPDATE === "contextual-repeat")
     print(
