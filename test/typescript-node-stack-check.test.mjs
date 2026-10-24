@@ -16,6 +16,11 @@ import {
   retainedCheck,
   snapshot,
 } from "./helpers/operation.mjs";
+import {
+  isWorkspaceMember,
+  pnpmCatalogs,
+  pnpmWorkspacePackages,
+} from "../operations/lib/typescript-node-stack.mjs";
 
 const scriptPath = "operations/check-typescript-node-stack.mjs";
 const script = fileURLToPath(new URL(`../${scriptPath}`, import.meta.url));
@@ -373,6 +378,120 @@ catalogs:
       "Declare `oxlint` at major 1 in `packages/cli/package.json` or its workspace root `package.json`; `packages/cli/package.json` declares `catalog:tools`, which no catalog of the workspace root's `pnpm-workspace.yaml` defines for `oxlint`.",
     );
   });
+});
+
+// The pnpm-workspace.yaml forms pnpm workspaces commonly use. A form the
+// reader does not decode reads as null, which the drafter asks about.
+test("reads the packages of common pnpm-workspace.yaml forms", () => {
+  for (const [text, expected] of [
+    ["packages:\n  - packages/*\n  - 'apps/*'\n", ["packages/*", "apps/*"]],
+    // An indentationless block sequence, with a comment between items.
+    [
+      'packages:\n- packages/*\n# apps\n- "apps/*" # apps\ncatalog:\n  oxlint: 1.86.0\n',
+      ["packages/*", "apps/*"],
+    ],
+    [
+      "packages: ['packages/*', \"apps/*\", tools/*] # members\n",
+      ["packages/*", "apps/*", "tools/*"],
+    ],
+    ["packages: []\n", []],
+    // Negated patterns are quoted, since a bare `!` starts a YAML tag.
+    [
+      "packages:\n  - 'packages/**'\n  - '!**/test/**'\n",
+      ["packages/**", "!**/test/**"],
+    ],
+    ["packages:\n  - !**/test/**\n", null],
+    ["# settings only\nonlyBuiltDependencies:\n  - esbuild\n", []],
+    ["packages: *members\n", null],
+  ])
+    assert.deepEqual(pnpmWorkspacePackages(text), expected, text);
+});
+
+test("matches workspace globs, a leading globstar matching zero directories", () => {
+  for (const [patterns, directory, expected] of [
+    [["**/*"], "cli", true],
+    [["**/cli"], "cli", true],
+    [["**/cli"], "tools/cli", true],
+    [["packages/*"], "packages/a", true],
+    [["packages/*"], "packages/a/b", false],
+    [["packages/**"], "packages/a/b", true],
+    [["./apps/"], "apps", true],
+    [["packages/**", "!packages/old"], "packages/old", false],
+    [["**", "!**/test/**"], "lib/test/fixture", false],
+    [["**/*"], "lib/node_modules/x", false],
+  ])
+    assert.equal(
+      isWorkspaceMember(patterns, directory),
+      expected,
+      `${patterns} ${directory}`,
+    );
+});
+
+test("reads default and named catalogs with comments and quoted names", () => {
+  const catalogs = pnpmCatalogs(`catalog: # default
+  oxlint: 1.86.0 # lint
+  '@types/node': ^24.0.0
+catalogs:
+  # shared
+  tools: # shared tools
+    prettier: "3.9.9"
+  legacy:
+    prettier: 2.8.8
+`);
+  assert.deepEqual(
+    Object.fromEntries(
+      [...catalogs].map(([name, entries]) => [
+        name,
+        Object.fromEntries(entries),
+      ]),
+    ),
+    {
+      default: { oxlint: "1.86.0", "@types/node": "^24.0.0" },
+      tools: { prettier: "3.9.9" },
+      legacy: { prettier: "2.8.8" },
+    },
+  );
+});
+
+test("reads the root facts of an indentationless workspace sequence and a leading globstar", async (t) => {
+  for (const [name, pnpmWorkspace, member] of [
+    [
+      "indentationless",
+      "packages:\n- packages/*\n",
+      "packages/cli/package.json",
+    ],
+    ["leading globstar", "packages:\n  - '**/cli'\n", "cli/package.json"],
+  ])
+    await t.test(name, (st) => {
+      const { "packages/cli/package.json": memberManifest, ...root } =
+        workspace;
+      const result = check(
+        st,
+        {
+          ...root,
+          "pnpm-workspace.yaml": pnpmWorkspace,
+          [member]: memberManifest,
+        },
+        [member],
+      );
+      assert.equal(result.status, "passed", result.message);
+    });
+});
+
+test("resolves a named catalog whose header carries a comment", (t) => {
+  const result = check(
+    t,
+    {
+      ...workspace,
+      "pnpm-workspace.yaml":
+        "packages:\n  - packages/*\ncatalogs:\n  tools: # shared tools\n    oxlint: 1.86.0\n    prettier: 3.9.9\n",
+      "packages/cli/package.json": manifest({
+        devDependencies: { oxlint: "catalog:tools", prettier: "catalog:tools" },
+      }),
+    },
+    ["packages/cli/package.json"],
+  );
+  assert.equal(result.status, "passed", result.message);
 });
 
 test("names a correction for a missing validate script", (t) => {

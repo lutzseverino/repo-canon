@@ -35,10 +35,14 @@ same way for both. A Project's workspace root is its own directory when that
 configures a workspace, else the nearest ancestor whose workspace
 configuration lists it as a member, else its own directory. A directory
 configures a workspace through `pnpm-workspace.yaml`, whose `packages` the
-module reads as a block or flow sequence of plain or quoted patterns, or else
-through the `workspaces` field of its `package.json`, as a list or as
-`workspaces.packages`. Patterns support `*`, `**`, `?`, and `!` exclusions,
-and a `node_modules` directory is never a member.
+module reads as a single-line flow sequence or a block sequence, indented or
+not, of plain or quoted patterns with comments, or else through the
+`workspaces` field of its `package.json`, as a list or as
+`workspaces.packages`. No YAML library is available to operations, so the
+module reads only these forms and reports any other as unreadable. Patterns
+match through Node's own `path.matchesGlob`, so a leading `**` also matches
+zero directories; a quoted `!` pattern excludes what it matches, and a
+`node_modules` directory is never a member.
 
 For each confirmed path the check names one correction per difference:
 
@@ -63,8 +67,9 @@ reads as missing.
 The module's range reader evaluates the semantic version ranges npm writes:
 comparators, `^`, `~`, `x` ranges, hyphen ranges and `||` unions. A
 `catalog:` or `catalog:<name>` specifier resolves through the default or named
-catalog of the workspace root's `pnpm-workspace.yaml`, read as plain block
-mappings. Other specifiers, such as `workspace:`, tags and URLs, and a catalog
+catalog of the workspace root's `pnpm-workspace.yaml`, read as block mappings
+with plain or quoted names and comments, including a comment after a named
+catalog's header. Other specifiers, such as `workspace:`, tags and URLs, and a catalog
 entry it cannot find, receive a correction.
 
 ## Validation
@@ -78,7 +83,8 @@ node --test test/typescript-node-stack-check.test.mjs
 They run the check over fixture repositories, assert that it changes nothing,
 and cover a conforming root package and workspace member, both accepted
 `engines.node` spellings, a named correction for each manifest fact, catalog
-specifiers, shared root corrections reported per path, a manifest under a
+specifiers, the `pnpm-workspace.yaml` sequence, glob and catalog forms,
+shared root corrections reported per path, a manifest under a
 symbolic link that leaves the project, workspace
 roots from `pnpm-workspace.yaml` and `package.json`, refused targets, and a run
 from a retained source that holds only its declared resources.

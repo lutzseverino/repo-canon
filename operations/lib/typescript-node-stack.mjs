@@ -125,11 +125,13 @@ export function pnpmWorkspacePackages(text) {
     const items = flow[1].split(",").map(yamlScalar);
     return items.includes(null) ? null : items;
   }
+  // Block sequence items may be indented or start at the key's own column, as
+  // YAML allows; the next top-level key ends the sequence.
   const patterns = [];
   for (const line of lines.slice(start + 1)) {
     if (line.trim() === "" || line.trimStart().startsWith("#")) continue;
-    if (!/^\s/.test(line)) break;
-    const item = /^\s+-\s+(.*)$/.exec(line);
+    if (!/^(?:\s|-(?:\s|$))/.test(line)) break;
+    const item = /^\s*-\s+(.*)$/.exec(line);
     if (!item) return null;
     const pattern = yamlScalar(item[1]);
     if (pattern === null) return null;
@@ -168,7 +170,9 @@ export function pnpmCatalogs(text) {
       section === "catalogs" &&
       (namedIndent === null || indent <= namedIndent)
     ) {
-      if (entry[2] !== undefined && entry[2].trim() !== "") continue;
+      // A header's value is empty, or only a comment, before its entries.
+      const header = entry[2]?.trim() ?? "";
+      if (header !== "" && !header.startsWith("#")) continue;
       named = key;
       namedIndent = indent;
       if (!catalogs.has(named)) catalogs.set(named, new Map());
@@ -210,29 +214,14 @@ export function workspaceConfiguration(projectRoot, directory) {
   return { patterns: workspaces, sources: [manifestPath] };
 }
 
-function segmentPattern(segment) {
-  return segment
-    .split("")
-    .map((character) =>
-      character === "*"
-        ? "[^/]*"
-        : character === "?"
-          ? "[^/]"
-          : character.replace(/[.+^${}()|[\]\\]/g, "\\$&"),
-    )
-    .join("");
-}
-
-function globExpression(pattern) {
-  const segments = pattern.replace(/^\.\//, "").replace(/\/+$/, "").split("/");
-  let expression = "";
-  segments.forEach((segment, index) => {
-    const separator = index === 0 ? "" : "/";
-    if (segment === "**")
-      expression += index === 0 ? "(?:[^/]+(?:/[^/]+)*)?" : "(?:/[^/]+)*";
-    else expression += `${separator}${segmentPattern(segment)}`;
-  });
-  return new RegExp(`^${expression.replace(/^\//, "")}$`);
+// Whether a directory matches a workspace glob, through Node's own
+// `path.matchesGlob`, after the `./` prefix and trailing slashes pnpm and npm
+// tolerate. A leading `**` also matches zero directories.
+function matchesWorkspaceGlob(relativeDirectory, pattern) {
+  return posix.matchesGlob(
+    relativeDirectory,
+    pattern.replace(/^\.\//, "").replace(/\/+$/, ""),
+  );
 }
 
 // Whether a directory, relative to a workspace root, is a member that the
@@ -248,10 +237,10 @@ export function isWorkspaceMember(patterns, relativeDirectory) {
   const positive = patterns.filter((pattern) => !pattern.startsWith("!"));
   return (
     positive.some((pattern) =>
-      globExpression(pattern).test(relativeDirectory),
+      matchesWorkspaceGlob(relativeDirectory, pattern),
     ) &&
     !negated.some((pattern) =>
-      globExpression(pattern.slice(1)).test(relativeDirectory),
+      matchesWorkspaceGlob(relativeDirectory, pattern.slice(1)),
     )
   );
 }
