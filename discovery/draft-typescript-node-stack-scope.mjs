@@ -149,8 +149,8 @@ function workspaces(projectRoot, files) {
   return found;
 }
 
-// The workspace that lists a directory as a member, nearest first, or null.
-function listingWorkspace(directory, found) {
+// Each workspace that lists a directory as a member, nearest first.
+function* listingWorkspaces(directory, found) {
   for (
     let ancestor = directory;
     ancestor !== "";
@@ -162,9 +162,8 @@ function listingWorkspace(directory, found) {
       configuration?.patterns &&
       isWorkspaceMember(configuration.patterns, relativeTo(directory, root))
     )
-      return { root, configuration };
+      yield { root, configuration };
   }
-  return null;
 }
 
 // The outermost ancestor of a directory, or the directory itself, named as
@@ -181,15 +180,20 @@ function unmaintainedAncestor(directory) {
     );
 }
 
-// The workspace that lists a directory as a maintained member: one whose root
-// lies outside the directory's unmaintained ancestor. A fixture's own
-// workspace, or its local pnpm settings, makes nothing under it maintained.
+// The nearest workspace that lists a directory as a maintained member: one
+// whose root lies outside the directory's unmaintained ancestor, or whose
+// root a workspace outside it lists in turn. A fixture's own workspace, or its
+// local pnpm settings, makes nothing under it maintained by itself.
 function maintainedListing(directory, found) {
-  const listing = listingWorkspace(directory, found);
   const unmaintained = unmaintainedAncestor(directory);
-  if (listing && unmaintained && isWithin(listing.root, unmaintained))
-    return null;
-  return listing;
+  for (const listing of listingWorkspaces(directory, found))
+    if (
+      !unmaintained ||
+      !isWithin(listing.root, unmaintained) ||
+      maintainedListing(listing.root, found) !== null
+    )
+      return listing;
+  return null;
 }
 
 const reasons = {

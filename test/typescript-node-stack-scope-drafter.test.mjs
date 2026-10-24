@@ -312,6 +312,39 @@ test("keeps a fixture package excluded despite its own pnpm settings or workspac
   assert.deepEqual(entry.unresolved, []);
 });
 
+test("takes a fixture workspace's members as Projects when an outer workspace lists them", (t) => {
+  const { entry } = drafted(t, {
+    "package.json": manifest({ name: "root" }),
+    "pnpm-lock.yaml": "",
+    "pnpm-workspace.yaml": "packages:\n  - 'fixtures/**'\n",
+    "fixtures/mono/package.json": manifest({ name: "mono" }),
+    "fixtures/mono/pnpm-lock.yaml": "",
+    "fixtures/mono/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
+    "fixtures/mono/packages/a/package.json": member(),
+  });
+  assert.deepEqual(
+    entry.candidates.map(({ path, decision, reason }) => [
+      path,
+      decision,
+      reason,
+    ]),
+    [
+      [
+        "fixtures/mono/package.json",
+        "exclude",
+        workspaceRoot("fixtures/mono/package.json"),
+      ],
+      [
+        "fixtures/mono/packages/a/package.json",
+        "include",
+        matches("fixtures/mono/packages/a/package.json"),
+      ],
+      ["package.json", "exclude", workspaceRoot("package.json")],
+    ],
+  );
+  assert.deepEqual(entry.unresolved, []);
+});
+
 test("drafts members from common pnpm-workspace.yaml forms", async (t) => {
   for (const [name, pnpmWorkspace, members] of [
     [
