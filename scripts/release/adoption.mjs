@@ -66,7 +66,7 @@ const fixId = (entry) => `${entry.declaration}/${entry.id}`;
 // as a discovery script's draft. A run starts only on the `inspection` answer,
 // so it names the inspection only once every other answer is in and the
 // inspection offers to defer all the remote setup.
-function answer(question, report, version, profile) {
+export function fixtureAnswer(question, report, version, profile) {
   const { id } = question;
   const [kind, name] = id.split(":");
   switch (kind) {
@@ -180,7 +180,7 @@ export function adoptFixture(
           );
         const questions = report.answers.questions.map((question) => ({
           ...question,
-          answer: answer(question, report, version, profile),
+          answer: fixtureAnswer(question, report, version, profile),
         }));
         writeFileSync(
           answersPath,

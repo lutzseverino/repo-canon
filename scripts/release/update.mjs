@@ -1,9 +1,8 @@
 // Verifies an update from the preceding public release without editing the
-// adopted fixture or answering anything except the declared contextual work.
+// adopted fixture, answering the scope, remote setup and assessment questions.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { adoptFixture, checkStatus } from "./adoption.mjs";
-import { assessments } from "./adoption-fixture.mjs";
+import { adoptFixture, checkStatus, fixtureAnswer } from "./adoption.mjs";
 import { cliFloor } from "./named-versions.mjs";
 import {
   ReleaseCheckFailure,
@@ -146,52 +145,62 @@ function checkUpdate({
       `Adopt ${previous}`,
     ]);
     let { child, report } = update(cli, project);
-    const initialOutcome = report.outcome;
-    const inspectedAction = report.inspection?.summary?.match(
-      /^## Adopter action\n\n([^\n]+)/m,
-    )?.[1];
-    checkSelection(report, version, profile, newest, source);
-
-    if (report.outcome === "contextual") {
-      const line = inspectedAction;
-      const named = line
-        ?.match(
-          /^Contextual update: the run asks for contextual work on ([a-z0-9, -]+), which needs review before it is committed\./,
-        )?.[1]
-        .split(", ")
-        .sort();
-      const missing = [...(report.missing ?? [])].sort();
+    const answered = new Set();
+    for (let round = 0; round < 10; round += 1) {
+      checkSelection(report, version, profile, newest, source);
+      const missing = report.missing ?? [];
+      const line = report.inspection?.summary?.match(
+        /^## Adopter action\n\n([^\n]+)/m,
+      )?.[1];
+      console.log(
+        `update (${profile}, CLI ${floor} to ${newest}): outcome ${report.outcome}; questions ${missing.join(", ") || "none"}.` +
+          (line ? ` Adopter action: ${line}` : ""),
+      );
+      const questions = report.answers?.questions ?? [];
+      const confirmation = questions.find((entry) =>
+        /^(confirmation|fix)(:|$)/.test(entry.id),
+      );
+      if (confirmation)
+        fail(
+          `the update asks to confirm a confirmation-required change (${confirmation.id}).`,
+        );
+      if (report.outcome === "complete") break;
       if (
-        !named?.length ||
-        JSON.stringify(missing) !==
-          JSON.stringify(named.map((id) => `assessment:${id}`).sort())
+        !["answers-required", "contextual"].includes(report.outcome) ||
+        !missing.length
       )
         fail(
-          `the contextual stop's open questions ${missing.join(", ")} do not match the adopter-action line: ${line ?? "missing"}`,
+          `the update stopped with outcome ${report.outcome}; missing ${missing.join(", ") || "none"}.`,
         );
-      const questions = named.map((id) => {
-        const question = report.answers?.questions.find(
-          (entry) => entry.id === `assessment:${id}`,
-        );
-        if (!question || !report.contextual?.some((entry) => entry.id === id))
-          fail(`the contextual stop has no assessment request for ${id}.`);
+      for (const id of missing) {
+        if (answered.has(id))
+          fail(
+            `the update stopped again after answering ${id}; outcome ${report.outcome}.`,
+          );
+        if (!/^(scope:[^:]+|assessment:[^:]+|remote-setup)$/.test(id))
+          fail(`the update asks an unexpected question ${id}.`);
+        if (!questions.some((question) => question.id === id))
+          fail(`the update has no question for ${id}.`);
+      }
+      const submitted = questions.map((question) => {
+        if (!missing.includes(question.id)) return question;
+        answered.add(question.id);
         return {
           ...question,
-          answer:
-            assessments[id] ?? fail(`the fixture has no ${id} assessment.`),
+          answer: fixtureAnswer(question, report, version, profile),
         };
       });
       const answers = join(directory, "update-answers.json");
       writeFileSync(
         answers,
-        `${JSON.stringify({ ...report.answers, questions }, null, 2)}\n`,
+        `${JSON.stringify({ ...report.answers, questions: submitted }, null, 2)}\n`,
       );
       ({ child, report } = update(cli, project, ["--answers", answers]));
-      checkSelection(report, version, profile, newest, source);
     }
+    checkSelection(report, version, profile, newest, source);
     if (report.outcome !== "complete")
       fail(
-        `one adopt stopped with outcome ${report.outcome}; missing ${(report.missing ?? []).join(", ") || "none"}. Adopter action: ${inspectedAction ?? "not reported"}`,
+        `the update did not complete after answering; outcome ${report.outcome}.`,
       );
     if (child.status !== 0 || report.missing?.length)
       fail(
@@ -215,7 +224,7 @@ function checkUpdate({
     )
       fail("the update did not report a derived adopter-action line.");
     return {
-      pass: `CLI ${floor} adopted ${previous}; CLI ${newest} updated to ${version} with the ${profile} profile in one adopt; outcome ${initialOutcome}, ready to commit with both GitHub remote setup fixes deferred. Adopter action: ${line}`,
+      pass: `CLI ${floor} adopted ${previous}; CLI ${newest} updated to ${version} with the ${profile} profile; questions ${[...answered].join(", ") || "none"}; outcome ${report.outcome}, ready to commit with both GitHub remote setup fixes deferred. Adopter action: ${line}`,
     };
   });
 }
