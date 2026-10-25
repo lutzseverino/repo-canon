@@ -87,6 +87,21 @@ function update(cli, project, args = []) {
   return { child, report };
 }
 
+function updateStopDetails(report) {
+  const diagnostics = [
+    report.blockers?.length && `blockers: ${JSON.stringify(report.blockers)}`,
+    report.failedChecks?.length &&
+      `failed checks: ${JSON.stringify(report.failedChecks)}`,
+    report.run?.reason,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    `outcome ${report.outcome}; missing ${(report.missing ?? []).join(", ") || "none"}.` +
+    (diagnostics ? ` ${diagnostics}` : "")
+  );
+}
+
 function checkSelection(report, version, profile, newest, source) {
   const selection = report.selection ?? {};
   if (
@@ -100,7 +115,7 @@ function checkSelection(report, version, profile, newest, source) {
     );
   if (report.blockers?.length || report.failedChecks?.length)
     fail(
-      `the update has blockers or failed checks: ${JSON.stringify(report.blockers)} ${JSON.stringify(report.failedChecks)}`,
+      `the update has blockers or failed checks: ${updateStopDetails(report)}`,
     );
 }
 
@@ -169,9 +184,7 @@ function checkUpdate({
         !["answers-required", "contextual"].includes(report.outcome) ||
         !missing.length
       )
-        fail(
-          `the update stopped with outcome ${report.outcome}; missing ${missing.join(", ") || "none"}.`,
-        );
+        fail(`the update stopped with ${updateStopDetails(report)}`);
       for (const id of missing) {
         if (answered.has(id))
           fail(

@@ -217,6 +217,29 @@ if (
     selection: { cli: "10.0.0", source, version: "v1.0.0", profile },
     inspection: { summary: "## Adopter action\n\n" + line },
   };
+  if (updateScenario === "quota")
+    print(
+      report("blocked", [], {
+        ...rest,
+        blockers: [],
+        run: {
+          reason:
+            "The GitHub API quota is exhausted. Retry at 2026-10-24T20:00:00Z.",
+        },
+      }),
+    );
+  if (updateScenario === "no-cause")
+    print(report("blocked", [], { ...rest, blockers: undefined }));
+  if (updateScenario === "all-diagnostics")
+    print(
+      report("blocked", [], {
+        ...rest,
+        missing: ["scope:documentation"],
+        blockers: [{ message: "A blocker." }],
+        failedChecks: [{ message: "A failed check." }],
+        run: { reason: "The update could not continue." },
+      }),
+    );
   if (updateScenario === "blocked")
     print(
       report("blocked", [], { ...rest, blockers: [{ message: "A blocker." }] }),
