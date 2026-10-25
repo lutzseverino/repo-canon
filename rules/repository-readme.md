@@ -3,9 +3,10 @@
 The top-level `README.md` is the Repository README, the entry document for
 someone discovering the repository. Write it for that reader.
 
-Start with one centered header block: the title, a one-sentence description
-that says what the project is and who it is for, then badges, in that order,
-before anything else. For example:
+Start with one centered header block: optionally one project image, then the
+title, a one-sentence description that says what the project is and who it is
+for, then badges, in that order, before anything else. The image is optional;
+without it, start with the title as usual. For example:
 
 ```html
 <div align="center">
@@ -19,7 +20,28 @@ before anything else. For example:
 ```
 
 Setting `align="center"` on each element is also accepted: the `h1`, the
-description `p`, and the badge `p` paragraphs.
+description `p`, and the badge `p` paragraphs. Center an optional leading image
+with the shared `div`, a containing `p align="center"`, or its own
+`align="center"` attribute.
+
+A single image needs no theme variants. When light and dark variants exist,
+use GitHub's [theme-aware picture markup](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/quickstart-for-writing-on-github#adding-an-image-to-suit-your-visitors)
+so readers see the variant matching their GitHub theme, with a usable `img`
+fallback. The alternatives count as one project image. For example, put this
+before the `h1` inside the centered header:
+
+```html
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="harbor-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="harbor-light.svg" />
+  <img src="harbor-light.svg" alt="" />
+</picture>
+```
+
+Use `alt=""` when the image is decorative and adds no information beyond the
+adjacent title, as in this example. An image that communicates additional
+information needs an appropriate text alternative; assess its purpose using
+the [W3C image guidance](https://www.w3.org/WAI/tutorials/images/decorative/).
 
 The description contains no term defined in the repository's root
 `GLOSSARY.md` or in a context glossary listed in its `GLOSSARY-MAP.md`, matched

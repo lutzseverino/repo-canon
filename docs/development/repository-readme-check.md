@@ -28,13 +28,25 @@ the term and its defining glossary in each correction. It reads these files
 even when they belong to another declaration or lie outside this check's target;
 it never changes them. Repositories without glossaries pass this part.
 
-The title, description and badges form one centered header block. Each element
+One optional project image, then the title, description and badges form one
+centered header block. Before the first title, the check accepts only one
+plain image or `picture` containing exactly one visible `img` fallback with a
+nonempty source. A picture's `source` alternatives count as the same image;
+an image may be wrapped in a link. Other rendered content or additional images
+before the title fail with a correction identifying their text, media tag or
+image paths. Comments and nonrendered content do not count. A README without
+an image retains its existing accepted forms, including headers without badges.
+
+Each element
 is centered by its own `align="center"` or an ancestor `div` with that attribute;
 a `p align="center"` centers its content too. Attribute names and values are
 case-insensitive, but `data-align` and values such as `centerpiece` do not
 count. HTML comments and hidden elements contribute no rendered content or
 centering. Both a single centered `div` and individually centered title,
-description and badge paragraphs pass. Title detection is unchanged.
+description and badge paragraphs pass, with an optional image centered by the
+shared wrapper, its containing paragraph, or its own accepted centering
+attribute. The check still locates the first nonempty level-one title and
+now validates its rendered prefix.
 
 The check uses the same description paragraph as the sentence and glossary
 checks. Badges are the consecutive images after that paragraph, optionally
@@ -44,9 +56,18 @@ paragraphs or directly inside a `div`. Every badge must be centered. A header
 without badges passes; badge presence and coverage remain contextual. Title,
 description and badge failures each produce their own concrete correction.
 
-The shared rendered-Markdown model adds centering and ordered semantic elements
-to blocks, centering to images, and child elements to links. Existing consumers
-keep their heading, section and text behavior.
+The shared rendered-Markdown model exposes centering and ordered semantic
+elements on blocks, centering on images, child elements on links, and media
+tag names. Pictures expose their centering and child elements while preserving
+the existing flat semantic sequence. The README check groups a picture and its
+fallback as one image only when checking the title's prefix. Existing consumers
+keep their heading, section, text and badge behavior.
+
+The rules give a GitHub-supported theme-aware example with dark and light
+sources plus an image fallback. Image suitability, actual source availability
+and theme rendering, and the choice between decorative empty alt text and an
+informative text alternative remain contextual adoption assessments. The check
+neither requires an image nor creates artwork or selects arbitrary icon files.
 
 `operations/lib/entry-document.mjs` is retained alongside both entry-document
 checks and the documentation scope drafter, the documentation declaration's
@@ -61,7 +82,8 @@ The result statuses have distinct meanings:
 - `passed` means the checked structure is valid. Description facts, badges, commands,
   license facts, and prose still need maintainer or agent review.
 - `failed` is a policy failure with concrete corrections, such as centering the
-  title, description or badges, restoring section order, reducing a pointer
+  project image, title, description or badges, removing unexpected content
+  before the title, restoring section order, reducing a pointer
   section to its link, or fixing the License link. It is returned by a successful process so Repository
   Standards can collect ordinary check evidence.
 - `blocked` means a missing, multiple, or unnamed root `LICENSE` file requires
@@ -109,7 +131,10 @@ Run the public-boundary fixtures with Node.js 24 or 26:
 node --test test/repository-readme-check.test.mjs
 ```
 
-The fixtures cover the two accepted centered header forms, Markdown inside a
+The fixtures cover optional plain images and theme-aware pictures in both
+centered header forms, image links, image-specific centering corrections,
+extra images, unrelated rendered prefixes, missing or hidden picture fallbacks,
+and comments and nonrendered prefixes. They also cover Markdown inside a
 div with blank lines, direct and link-wrapped HTML badges, mixed Markdown and
 HTML badges, multiple badge paragraphs, partial centering, and no badges. They
 include Postern's title-only centered header before postern#10, misleading

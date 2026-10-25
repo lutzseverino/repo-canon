@@ -39,6 +39,220 @@ function entryReadme(description, { wrapped = true } = {}) {
 `;
 }
 
+test("rejects an uncentered project image before the title", (t) => {
+  const outcome = check(t, {
+    "README.md": `<img src="harbor.svg" alt="">\n\n${entryReadme("A delivery service for operators.")}`,
+    LICENSE: mit,
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "failed");
+  assert.match(outcome.result.message, /Center.*project image.*harbor\.svg/);
+});
+
+test("rejects unrelated rendered content and extra images before the title", async (t) => {
+  for (const [name, prefix, diagnostic] of [
+    ["prose", "Welcome aboard.\n\n", /Welcome aboard/],
+    ["heading", "## Welcome\n\n", /Welcome/],
+    ["media", '<video src="tour.mp4"></video>\n\n', /video/],
+    ["rule", "---\n\n", /hr/],
+    [
+      "two images",
+      '<img align="center" src="one.svg"><img align="center" src="two.svg">\n\n',
+      /one\.svg.*two\.svg/,
+    ],
+    [
+      "image and prose",
+      '<p align="center"><img src="harbor.svg">Welcome aboard.</p>\n\n',
+      /Welcome aboard/,
+    ],
+    [
+      "linked prose",
+      '<a href="https://example.com/">Welcome aboard.</a>\n\n',
+      /Welcome aboard/,
+    ],
+  ]) {
+    await t.test(name, (t) => {
+      const outcome = check(t, {
+        "README.md": `${prefix}${entryReadme("A delivery service for operators.")}`,
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "failed");
+      assert.match(outcome.result.message, /before.*title/);
+      assert.match(outcome.result.message, diagnostic);
+    });
+  }
+});
+
+test("accepts one centered project image, including theme alternatives", async (t) => {
+  const picture = `<picture>
+<source media="(prefers-color-scheme: dark)" srcset="harbor-dark.svg">
+<source media="(prefers-color-scheme: light)" srcset="harbor-light.svg">
+<img src="harbor-light.svg" alt="">
+</picture>`;
+  for (const [name, image] of [
+    ["plain", '<img src="harbor.svg" alt="">'],
+    ["picture", picture],
+    ["linked picture", `<a href="https://example.com/">${picture}</a>`],
+    ["Markdown", "![Harbor](harbor.svg)"],
+  ]) {
+    for (const wrapped of [true, false]) {
+      await t.test(`${name}, shared wrapper: ${wrapped}`, (t) => {
+        const separateImage =
+          name === "Markdown"
+            ? `<div align="center">\n\n${image}\n\n</div>`
+            : `<p align="CENTER">${image}</p>`;
+        const header = wrapped
+          ? `<div align="center">\n\n${image}\n\n<h1>Harbor</h1>\n<p>A delivery service for operators.</p>\n<p><img src="node.svg" alt="Node.js 24"></p>\n</div>`
+          : `${separateImage}\n<h1 align="center">Harbor</h1>\n<p align="center">A delivery service for operators.</p>\n<p align="center"><img src="node.svg" alt="Node.js 24"></p>`;
+        const outcome = check(t, {
+          "README.md": `${header}\n\n## License\n\n[MIT License](LICENSE)\n`,
+          LICENSE: mit,
+        });
+        assert.equal(outcome.status, 0, outcome.stderr);
+        assert.equal(outcome.result.status, "passed", outcome.result.message);
+      });
+    }
+  }
+});
+
+test("project images use rendered centering rather than misleading or hidden markup", async (t) => {
+  for (const [name, prefix] of [
+    ["image data-align", '<img data-align="center" src="harbor.svg">'],
+    ["image centerpiece", '<img align="centerpiece" src="harbor.svg">'],
+    [
+      "wrapper data-align",
+      '<div data-align="center"><img src="harbor.svg"></div>',
+    ],
+    [
+      "paragraph centerpiece",
+      '<p align="centerpiece"><img src="harbor.svg"></p>',
+    ],
+    [
+      "comment",
+      '<!-- <div align="center"> --><img src="harbor.svg"><!-- </div> -->',
+    ],
+    [
+      "hidden duplicate",
+      '<div hidden align="center"><img src="harbor.svg"></div><img src="harbor.svg">',
+    ],
+    [
+      "picture",
+      '<picture><source media="(prefers-color-scheme: dark)" srcset="dark.svg"><img src="harbor.svg"></picture>',
+    ],
+    [
+      "picture data-align",
+      '<picture data-align="center"><img src="harbor.svg"></picture>',
+    ],
+  ]) {
+    await t.test(name, (t) => {
+      const outcome = check(t, {
+        "README.md": `${prefix}\n\n${entryReadme("A delivery service for operators.")}`,
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "failed");
+      assert.match(
+        outcome.result.message,
+        /Center.*project image.*harbor\.svg/,
+      );
+    });
+  }
+});
+
+test("only rendered project images count, and a picture needs one visible fallback", async (t) => {
+  for (const [name, prefix, status] of [
+    ["comments", '<!-- <img src="ignored.svg"> -->', "passed"],
+    [
+      "nonrendered content",
+      '<script>Ignored</script><style>Ignored</style><template><img src="ignored.svg"></template><div hidden>Ignored</div>',
+      "passed",
+    ],
+    [
+      "one visible image",
+      '<img hidden src="ignored.svg"><img align="center" src="harbor.svg">',
+      "passed",
+    ],
+    ["own centering", '<img align="CENTER" src="harbor.svg">', "passed"],
+    [
+      "fallback centering",
+      '<picture><source srcset="dark.svg"><img align="center" src="harbor.svg"></picture>',
+      "passed",
+    ],
+    [
+      "hidden picture",
+      '<picture hidden><img src="ignored.svg"></picture>',
+      "passed",
+    ],
+    [
+      "picture without fallback",
+      '<p align="center"><picture><source srcset="dark.svg"></picture></p>',
+      "failed",
+    ],
+    [
+      "picture with hidden fallback",
+      '<p align="center"><picture><img hidden src="harbor.svg"></picture></p>',
+      "failed",
+    ],
+    [
+      "picture with empty fallback",
+      '<p align="center"><picture><img src=""></picture></p>',
+      "failed",
+    ],
+    [
+      "picture with prose",
+      '<p align="center"><picture><img src="harbor.svg">Welcome</picture></p>',
+      "failed",
+    ],
+    [
+      "picture with two images",
+      '<p align="center"><picture><img src="one.svg"><img src="two.svg"></picture></p>',
+      "failed",
+    ],
+    [
+      "two pictures",
+      '<p align="center"><picture><img src="one.svg"></picture><picture><img src="two.svg"></picture></p>',
+      "failed",
+    ],
+    [
+      "linked images",
+      '<p align="center"><a href="https://example.com/"><img src="one.svg"><img src="two.svg"></a></p>',
+      "failed",
+    ],
+  ]) {
+    await t.test(name, (t) => {
+      const outcome = check(t, {
+        "README.md": `${prefix}\n\n${entryReadme("A delivery service for operators.")}`,
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, status, outcome.result.message);
+      if (status === "failed")
+        assert.match(outcome.result.message, /before.*title/);
+    });
+  }
+});
+
+test("a project image does not supply the description or hide uncentered badges", (t) => {
+  const outcome = check(t, {
+    "README.md": `<img align="center" src="harbor.svg" alt="This is an image, not the description.">
+<h1 align="center">Harbor</h1>
+<p align="center">A service. Another service.</p>
+<img src="node.svg" alt="Node.js 24">
+
+## License
+
+[MIT License](LICENSE)
+`,
+    LICENSE: mit,
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "failed");
+  assert.match(outcome.result.message, /description.*one sentence/);
+  assert.match(outcome.result.message, /Center.*badges/);
+  assert.doesNotMatch(outcome.result.message, /project image/);
+});
+
 test("rejects Postern's title-only centered header with a description correction", (t) => {
   // Postern at 3ff9017ebf9384e5e27d4790519d03511c9ab2c7, before postern#10.
   const outcome = check(t, {
@@ -430,13 +644,15 @@ test("runs from its declared retained source layout", (t) => {
   );
   const project = fixture({
     "README.md":
-      '<h1 align="center">Harbor</h1>\n\n<p align="center">A delivery service for operators.</p>\n\n## License\n\n[MIT License](LICENSE)\n',
+      '<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="harbor-dark.svg"><img src="harbor-light.svg" alt=""></picture></p>\n<h1 align="center">Harbor</h1>\n\n<p align="center">A delivery service for operators.</p>\n\n## License\n\n[MIT License](LICENSE)\n',
     LICENSE: mit,
   });
   t.after(project.close);
+  const before = snapshot(project.root);
   const outcome = invokeCheck(retainedScript, project.root);
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "passed");
+  assert.deepEqual(snapshot(project.root), before);
 });
 
 test("allows omitted recognized sections and useful interleaved sections", (t) => {
@@ -707,7 +923,7 @@ test("preserves centering through nested HTML blocks", (t) => {
   const outcome = check(t, {
     "README.md": `<div align="center">
 
-<div>Logo</div>
+<div><img src="harbor.svg" alt=""></div>
 
 # Harbor
 
