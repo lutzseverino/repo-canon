@@ -993,6 +993,7 @@ test("adoption installs Repo Canon's triage fork, which credits its upstream and
     "OUT-OF-SCOPE.md",
     "SKILL.md",
     "agents/openai.yaml",
+    "ready.mjs",
   ]);
   assert.ok(
     !existsSync(join(snapshotRoot, "skills/engineering/triage")),

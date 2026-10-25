@@ -132,7 +132,13 @@ Every research run, on either path, does two checks first:
 
 1. **Wait for the revision notice** the issue-contract workflow posts for the brief revision you reviewed. If the brief changed after your review, review the new revision. If no notice arrives, leave readiness to the owner and tell them the notice is missing.
 2. **Choose the model**, when the installed rules ask for a `model:` label: weigh the triage notes' suggestion against the work, and pick one label yourself.
-3. **Apply readiness** to that revision with the credentials you were given, together with the model label: `ready-for-agent`, or `ready-for-human` with a note on why it can't be delegated (judgment calls, external access, design decisions, manual testing).
+3. **Apply and confirm readiness** with the bundled command, using the `sha256:` revision from the notice you reviewed and the companion labels you chose:
+
+   ```sh
+   node <this skill's directory>/ready.mjs <issue> ready-for-agent <sha256:reviewed-revision> <model-label>
+   ```
+
+   Use `ready-for-human` when appropriate, with a note on why it can't be delegated (judgment calls, external access, design decisions, manual testing), and omit the model label when none is needed. Additional companion labels follow the revision; `--repo owner/name` selects another repository. Run with Node.js 24 or 26 in the foreground, bounded by the caller's command timeout. The command uses the current `gh` credential through the vendored Postern bundle and needs no install step. Exit zero confirms the validator approved that revision by the acting account; a nonzero exit explains the refusal or rejection. Review a changed revision again before retrying. For a parent it waits for the latest child link and reapplies readiness when its timestamp is not newer than that link.
 4. **Record blockers.** Add a native blocker for each issue whose work must land first.
 5. **Tell the owner** what you accepted, with links to each brief, the labels you applied, and the blockers you added.
 

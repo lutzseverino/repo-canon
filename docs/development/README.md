@@ -68,6 +68,11 @@ the published bundle with an injected fetch transport. Run `node --test test/pul
 for the optional reviewer schema check, including retained operation resources;
 the check's parser, `operations/lib/pull-request-reviewer.mjs`, has a
 byte-identical copy in `babysit`'s directory for the wait.
+Run `node --test test/triage-ready.test.mjs` for the triage readiness command's
+revision, account, label, validator-event and parent-link fixtures, including
+its installed layout without npm. The command uses the vendored Postern
+bundle and the current GitHub CLI credential. Its caller bounds the foreground
+wait; the command has no invocation timeout.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
 and head-change retry behavior against the same Postern transport fixture.
 The public source-validation command and its boundary are described in
