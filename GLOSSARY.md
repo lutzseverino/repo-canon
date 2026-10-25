@@ -62,18 +62,32 @@ _Avoid_: Bug, when meaning the triage path
 **Intent-bound request**:
 An intake request whose missing answer is the owner's intent, a policy, or a
 trade-off they choose, whatever its category label, so its Agent Brief is
-written from the owner's recorded decisions.
+written from the owner's recorded decisions and any inferred intent.
 _Avoid_: Feature request, when meaning the triage path
 
 **Orchestrating agent**:
 The agent a maintainer runs to triage requests, which starts their research
-runs, reviews each brief independently, puts intent questions to the owner,
-and accepts a brief that holds by applying readiness.
+runs and grilling sessions, receives every question first, records inferred
+intent, keeps the decision inbox, reviews each brief independently, and
+accepts a brief that holds by applying readiness. An owner who triages
+themselves is the orchestrating agent.
 _Avoid_: Factory, research run
+
+**Inferred intent**:
+An answer to an intent question that the orchestrating agent settled under the
+contribution guide's inference test, with its citation to the owner's approved
+goal, a recorded owner decision or wish, or the owner's quoted words.
+_Avoid_: Assumption, agent's choice
+
+**Decision inbox**:
+The single list of decisions open for the owner, kept by the orchestrating
+agent.
+_Avoid_: Owner questions comment, needs-input queue
 
 **Research run**:
 The sub-agent that gathers the facts for one request and, once nothing of the
-owner's intent is open, writes its Agent Brief. It never accepts its own brief.
+owner's intent is open, writes its Agent Brief unless a grilling session
+drafts it. It never accepts its own brief.
 _Avoid_: Orchestrating agent, reviewer
 
 **Readiness**:
@@ -97,9 +111,9 @@ _Avoid_: Pipeline, orchestrator
 **Frontier**:
 The open issues the factory may pick up: those carrying readiness it accepts,
 with no open native blocker, and neither claimed, marked failed, nor waiting
-for the owner's answer under `factory:needs-input`. An issue a gate holds stays on the
-frontier; one waiting for the owner's answer returns when the owner answers
-and removes the label.
+for an answer under `factory:needs-input`. An issue a gate holds stays on the
+frontier; one waiting for an answer returns when its question is answered and
+the label removed.
 _Avoid_: Backlog, queue
 
 **Host configuration**:

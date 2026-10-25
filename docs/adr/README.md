@@ -77,7 +77,8 @@ involve real alternatives.
 - [Route triage by where its uncertainty lies](0021-route-triage-by-where-its-uncertainty-lies.md):
   research and independent acceptance for code-bound requests, a grilling
   session with the owner before the brief for intent-bound ones, and a Repo
-  Canon fork of `triage` to carry the method.
+  Canon fork of `triage` to carry the method; ADR 0025 amends its
+  intent-bound path.
 - [Prove documentation scope coverage only in runs](0022-prove-documentation-scope-coverage-only-in-runs.md):
   between runs the confirmed scope is frozen, so the documentation check
   reports no scope-membership correction when invoked as `check`, and the next
@@ -88,3 +89,7 @@ involve real alternatives.
 - [Scope each stack to the Projects that use it](0024-scope-each-stack-to-the-projects-that-use-it.md):
   opt-in stacks are discovered declarations scoped per Project, starting with
   the recommended `typescript-node` tools while installation waits for optional discovery.
+- [Infer cited intent and route owner questions through one inbox](0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md):
+  the orchestrating agent answers intent it can cite and that does not outlive
+  the work, a grill with the owner drafts the other briefs it accepts, and
+  owner-only questions reach the owner only through its decision inbox.

@@ -1,5 +1,10 @@
 # Route triage by where its uncertainty lies
 
+Status: its intent-bound path, in which the orchestrating agent asks the owner
+every intent question and has a research run write the brief, is amended by
+[ADR 0025](0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md);
+routing by uncertainty and independent acceptance stand.
+
 Triage sorts each intake request by where the answer to its open questions
 lives, not by its category label. A code-bound request, whose expected result
 is clear and whose remaining questions the code, logs, or a

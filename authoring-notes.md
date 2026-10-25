@@ -131,7 +131,12 @@ repeated.
   [ADR 0021](docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md)
   decides: research and independent acceptance by the orchestrating agent for
   a code-bound request, and fact-finding and a grilling session with the owner
-  before the brief for an intent-bound one. The routing and acceptance rules
+  before the brief for an intent-bound one. The orchestrating agent infers only
+  intent it can cite that does not outlive the work, the grill drafts the
+  briefs it accepts, and owner-only questions reach the owner only through its
+  decision inbox, as
+  [ADR 0025](docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md)
+  decides. The routing and acceptance rules
   live in [`CONTRIBUTING.md`](CONTRIBUTING.md#triage), the readiness
   credentials in the
   [GitHub repository configuration rules](rules/github-repository-configuration.md),

@@ -16,7 +16,8 @@ const canonicalLabels = [
   {
     name: "needs-info",
     color: "d4c5f9",
-    description: "Waiting for information needed to evaluate the request",
+    description:
+      "Missing information; the orchestrating agent answers or routes it",
   },
   {
     name: "ready-for-agent",

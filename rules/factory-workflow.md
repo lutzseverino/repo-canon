@@ -62,12 +62,16 @@ again once its failure note or the factory's comment is dealt with.
 
 When an agent needs an answer only the owner can give, follow the contribution
 guide's owner-question and comment rules and add `factory:needs-input` to the
-issue. Work without an issue uses no factory state label.
+issue. Work without an issue uses no factory state label. The question reaches
+the orchestrating agent first, as those rules say: it answers on the issue when
+the triage inference test lets it, and otherwise puts the question in its
+decision inbox for the owner.
 
-With no open pull request, the owner answers and removes the label to return
-the issue to the frontier as a fresh first attempt. While the run's pull request
-is open, removing the label starts no run in a repository a factory serves.
-The owner either finishes the pull request by merging it, for example after
+With no open pull request, whoever answers, the orchestrating agent or the
+owner, removes the label to return the issue to the frontier as a fresh first
+attempt. While the run's pull request is open, removing the label starts no
+run in a repository a factory serves, and the owner, even after the
+orchestrating agent answers, either finishes the pull request by merging it, for example after
 pushing the refused change, and ensuring the issue is closed under the
 contribution guide's pull request rules, or hands it back: close it before
 removing the label, wait for `factory:running` to disappear, then remove the label so a

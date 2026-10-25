@@ -220,6 +220,9 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     /passes the GitHub rules' Agent Brief shape yet does not hold/,
     /exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links/,
     /never re-asks the recorded decision/,
+    /The Retry window persists in the product, so the orchestrating agent never infers it/,
+    /separate grilling session with the owner, which asks short rounds of numbered questions/,
+    /The orchestrating agent writes no brief itself/,
     /when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness/,
   ])
     assert.match(exercise, outcome);
