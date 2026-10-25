@@ -237,8 +237,22 @@ function semanticElements(
       });
       return;
     }
+    if (node.tagName === "picture") {
+      const picture = {
+        type: "content",
+        tag: "picture",
+        centered: isCentered(node, { paragraphContent: true }),
+      };
+      elements.push(picture);
+      const start = elements.length;
+      for (const child of node.childNodes ?? []) visit(child, centered);
+      // Keep the flat sequence for existing consumers, and expose the same
+      // child elements so callers can recognize one picture and its fallback.
+      picture.elements = elements.slice(start);
+      return;
+    }
     if (renderedElementsWithoutText.has(node.tagName))
-      elements.push({ type: "content" });
+      elements.push({ type: "content", tag: node.tagName });
     const insideCenter = centered || (node.tagName === "div" && ownCenter);
     for (const child of node.childNodes ?? []) visit(child, insideCenter);
   };
