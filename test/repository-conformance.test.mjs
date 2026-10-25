@@ -564,8 +564,9 @@ test("AGENTS.md names no rules path", () => {
 const wordBudgets = {
   // Raised from 1970 for the Triage section (#500), then from 2263 for the
   // adoption pull request's pre-commit verdict (#540), then for automated
-  // update titles (#561).
-  "CONTRIBUTING.md": 2304,
+  // update titles (#561), then for the inference test, the grill flow and
+  // question routing (#595).
+  "CONTRIBUTING.md": 2662,
   "AGENTS.md": 105,
 };
 
@@ -1030,16 +1031,34 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /the research run verifies the claim and posts the Agent Brief/,
     /The orchestrating agent runs triage and starts a research run, a separate agent, for each request/,
     /it first gathers the facts from the code/,
-    /short rounds of numbered questions, each with a recommended answer, records the owner's decisions on the issue, and has the brief written from them/,
+    /Under the inference test, the orchestrating agent may answer an intent question itself only when all three hold: it can cite the answer's source, the owner's approved goal for the work, a recorded owner decision or wish, or the owner's quoted words, each with its date/,
+    /the choice is reversible within that work, so no value or policy outlives it, and it adds no public name and no breaking change; and it changes neither the goal nor the scope/,
+    /A default, limit, timeout, or fallback that persists in the product is never inferred/,
+    /its triage notes list it with its citation under \*\*Inferred intent\*\*/,
+    /lists every inferred answer in its next report to the owner, so the owner can veto it\. A veto is an owner decision, and the brief is revised from it/,
+    /Questions it cannot infer go to a separate grilling session with the owner, in short rounds of numbered questions, each with a recommended answer/,
+    /The grill records the owner's decisions and drafts the Agent Briefs in a proposed ticket split; it files no issue and applies no readiness/,
+    /The orchestrating agent decides the split: it may merge, split, or drop a draft, or set it aside for later work/,
+    /each issue's triage notes record the owner decisions its brief relies on, each with its date and where the owner gave it/,
     /A recorded decision is not asked again/,
-    /The orchestrating agent, never the run that wrote the brief, then reviews/,
+    /The orchestrating agent never writes a brief it accepts: when its split changes a draft substantially, the grill rewrites that brief, and a research run writes one only when it needs code facts the grill did not gather/,
+    /The orchestrating agent, never the agent that wrote the brief, then reviews/,
     /Passing the structure check never makes a brief hold/,
     /an implementation choice, an option list, or a fallback value, does not hold/,
     /an unanswered required question blocks acceptance/,
     /accepts a brief that holds by applying readiness to its revision, records its blockers, and tells the owner with links/,
     /When the revision notice never arrives, or its credentials cannot apply readiness, it leaves readiness to the owner/,
+    /Every question reaches the orchestrating agent first\. `needs-info` means information is missing/,
+    /a question for an outside reporter still goes to the reporter/,
+    /A question only the owner can answer goes into its decision inbox with its recommendation; the decision inbox is the one channel for questions to the owner/,
+    /When the owner runs triage themselves, they are the orchestrating agent/,
   ])
     assert.match(triage, requirement);
+  const comments = /## Comments (.*)$/.exec(guide)?.[1] ?? "";
+  assert.match(
+    comments,
+    /The orchestrating agent reads the question first: when it can answer under the \[triage\]\(#triage\) inference test, it answers on the issue; otherwise it puts the question in its decision inbox/,
+  );
   const github = flowedText("rules/github-repository-configuration.md");
   for (const requirement of [
     /An orchestrating agent that accepts an Agent Brief applies its readiness only when the credentials it was given hold one of these roles, and only after the issue-contract workflow's revision notice for the brief revision it reviewed/,
@@ -1055,6 +1074,8 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /The factory accepts readiness only from a person/,
     /tells the owner, with links, that the brief it accepted waits for a person's readiness, even when its own readiness stands under the GitHub rules/,
     /It never reports that its own readiness started a run/,
+    /The question reaches the orchestrating agent first, as those rules say: it answers on the issue when the triage inference test lets it, and otherwise puts the question in its decision inbox for the owner/,
+    /With no open pull request, whoever answers, the orchestrating agent or the owner, removes the label/,
   ])
     assert.match(factory, requirement);
   const skill = flowedText(".agents/skills/triage/SKILL.md");
@@ -1065,9 +1086,16 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /Passing the issue-contract check proves the shape, never that the brief holds/,
     /Leave readiness, labels, and the judgment of its brief to yourself/,
     /Every research run, on either path, does two checks first/,
-    /Call the Skill tool twice, for "grilling" and "domain-modeling"/,
-    /Skip every question a recorded owner decision already answers/,
-    /accept only once every one they must answer is answered/,
+    /The grill calls the Skill tool twice, for "grilling" and "domain-modeling"/,
+    /It skips every question a recorded owner decision already answers/,
+    /accept only once every one the owner must answer is answered/,
+    /`needs-info`: information is missing; you, the orchestrating agent, answer it or route it/,
+    /`needs-info` returns to `needs-triage` once the missing information arrives: your own answer, the reporter's reply, or the owner's decision/,
+    /## Route questions/,
+    /The decision inbox is the one channel for questions to the owner/,
+    /Never infer a default, limit, timeout, or fallback that persists in the product/,
+    /It files no issue and applies no readiness/,
+    /never write or rewrite one yourself/,
     /If no notice arrives, leave readiness to the owner/,
   ])
     assert.match(skill, method);
@@ -1086,6 +1114,11 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
       document,
     );
   assert.doesNotMatch(skill, /setup-matt-pocock-skills/);
+  assert.doesNotMatch(skill, /waiting on reporter|once the reporter replies/);
+  assert.match(
+    flowedText(".agents/skills/triage/AGENT-BRIEF.md"),
+    /\*\*Inferred intent\*\*: each answer the orchestrating agent inferred under the inference test, which the brief states as behavior, with its citation/,
+  );
 });
 
 test("babysit and the factory image rules name both supported Node.js majors", () => {
@@ -1404,11 +1437,11 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
   assert.match(
     rules,
-    /With no open pull request, the owner answers and removes the label to return the issue to the frontier as a fresh first attempt/,
+    /With no open pull request, whoever answers, the orchestrating agent or the owner, removes the label to return the issue to the frontier as a fresh first attempt/,
   );
   assert.match(
     rules,
-    /The owner either finishes the pull request by merging it, for example after pushing the refused change, and ensuring the issue is closed under the contribution guide's pull request rules, or hands it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
+    /the owner, even after the orchestrating agent answers, either finishes the pull request by merging it, for example after pushing the refused change, and ensuring the issue is closed under the contribution guide's pull request rules, or hands it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
   );
   assert.match(
     comments,

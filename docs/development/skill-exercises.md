@@ -162,10 +162,11 @@ The operator also plays the owner and supplies revision notices, as controlled
 inputs. The bug's seeded first brief revision passes the Agent Brief shape but
 not review, so its outcomes cover the challenge, the research run's
 correction, and acceptance of the corrected revision with a chosen model label
-and a recorded blocker. The second bug's outcomes cover fact-finding before
-numbered owner questions with recommendations, a recorded owner decision
-reused rather than asked again, and refusal of a brief that leaves owner
-intent open. The scenario also records the handoffs for credentials without a
+and a recorded blocker. The second bug's outcomes cover fact-finding, a persisting
+Retry window the orchestrating agent never infers, a separate grilling session
+that asks numbered owner questions with recommendations and drafts the brief,
+a recorded owner decision reused rather than asked again, and refusal of a
+brief that leaves owner intent open. The scenario also records the handoffs for credentials without a
 readiness role, a GitHub App account, a missing revision notice, and an edit
 after readiness.
 

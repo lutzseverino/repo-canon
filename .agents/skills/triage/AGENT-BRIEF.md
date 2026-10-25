@@ -38,7 +38,7 @@ State what is out of scope. This prevents the agent from gold-plating or making 
 
 ### Decisions, not options
 
-The implementing agent can't ask the owner anything, so a brief settles every question of intent before it is accepted. State each owner decision as behavior. A brief that needs one of these is not finished; its question goes to the owner:
+The implementing agent can't ask the owner anything, so a brief settles every question of intent before it is accepted. State each owner decision as behavior. A brief that needs one of these is not finished; its question goes to the orchestrating agent, which infers the answer under the inference test or takes it to the owner:
 
 - **Bad:** "Retry for a reasonable period (agent's choice)"
 - **Bad:** "Either drop the row or fail the export"
@@ -54,7 +54,8 @@ The triage notes that accompany a brief follow it in the same comment, never bet
 
 - **Path**: code-bound or intent-bound, with a one-line reason.
 - **Verification**: what was checked and how (reproduction, code path, tests run), and where the redundancy search looked.
-- **Owner decisions**: on the intent-bound path, each decision with a link to where the owner gave it.
+- **Owner decisions**: on the intent-bound path, each decision the brief relies on, with its date and a link to where the owner gave it; for a grill's brief, pasted from the grill record.
+- **Inferred intent**: each answer the orchestrating agent inferred under the inference test, which the brief states as behavior, with its citation: the owner's approved goal, recorded decision or wish, or quoted words, with its date and where it was given.
 - **Dependencies**: issues that must land first, for the reviewer to record as blockers.
 - **Model**: when the installed rules ask for it, one suggested `model:` label with a one-line reason, for the reviewer to apply or replace.
 - **Owner questions**: none, for a brief ready for review.
