@@ -18,8 +18,14 @@ membership open.
   difference in your handoff, so that a separate migration ticket brings it
   in.
 - A Project that already matches stays in the scope.
-- A workspace root is never a Project: exclude it, conforming or not, and
-  assess its shared facts through its members.
+- A root whose workspace configuration lists at least one kept member
+  manifest is excluded as the members' shared configuration, conforming or
+  not. The members are the Projects; assess the root's shared facts through
+  them.
+- A repository root package without such members is itself a Project,
+  including when its `pnpm-workspace.yaml` holds only settings or catalogs.
+  Assess it under the same membership and stack requirements as any other
+  Project.
 
 When no Project is included, confirm no scope, with the reasons for each
 exclusion.
