@@ -164,6 +164,21 @@ reviewed inputs, over the inputs either commit selects. If it fails, another
 change reached them, and the release needs review again. Publish an ordinary
 release; a draft or prerelease cannot be selected for adoption.
 
+Before running `release:verify`, export `GH_TOKEN` from credentials already
+authorized for this run. When the current `gh` login is that authorized
+identity, use:
+
+```sh
+export GH_TOKEN="$(gh auth token)"
+```
+
+The public Repository Standards CLI reads `GH_TOKEN` (or `GITHUB_TOKEN` as a
+fallback) for its GitHub API requests; an authenticated `gh` login alone does
+not supply that environment variable. Verification's public CLI subprocesses
+inherit the exported token, including the inspections, fixture adoptions and
+previous-release updates for both profiles. These requests can exhaust the
+anonymous API quota. Keep the token value out of logs and release notes.
+
 Then verify the publication, and only when it verifies, replace the notes with
 the version that opens with the printed adopter-action line and carries the
 verification paragraph:

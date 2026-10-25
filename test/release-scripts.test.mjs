@@ -603,13 +603,50 @@ for (const scenario of ["contextual", "extra-assessment"]) {
   });
 }
 
+test("release:verify reports a stopped update's quota reason and retry time", (t) => {
+  const { status, output } = verifyAdoption(t, "complete", {
+    FAKE_UPDATE: "quota",
+  });
+  assert.equal(status, 1, output);
+  assert.match(
+    output,
+    /the update stopped with outcome blocked; missing none\. The GitHub API quota is exhausted\. Retry at 2026-10-24T20:00:00Z\./,
+  );
+});
+
+test("release:verify reports a stopped update without optional cause fields", (t) => {
+  const { status, output } = verifyAdoption(t, "complete", {
+    FAKE_UPDATE: "no-cause",
+  });
+  assert.equal(status, 1, output);
+  assert.match(
+    output,
+    /the update stopped with outcome blocked; missing none\./,
+  );
+  assert.doesNotMatch(output, /undefined|TypeError/);
+});
+
+test("release:verify preserves blockers, failed checks and the update stop reason together", (t) => {
+  const { status, output } = verifyAdoption(t, "complete", {
+    FAKE_UPDATE: "all-diagnostics",
+  });
+  assert.equal(status, 1, output);
+  assert.match(output, /outcome blocked; missing scope:documentation\./);
+  assert.match(output, /A blocker\./);
+  assert.match(output, /A failed check\./);
+  assert.match(output, /The update could not continue\./);
+});
+
 for (const [scenario, message] of [
   ["rejected-scope", /CLI rejected the scope answer/],
   ["scope-repeat", /stopped again after answering scope:documentation/],
   ["question", /unexpected question surprise:documentation/],
   ["confirmation", /confirmation-required change/],
-  ["blocked", /the update has blockers or failed checks/],
-  ["failed-checks", /the update has blockers or failed checks/],
+  ["blocked", /the update has blockers or failed checks:.*A blocker\./],
+  [
+    "failed-checks",
+    /the update has blockers or failed checks:.*A failed check\./,
+  ],
   ["missing-assessment", /stopped with outcome contextual/],
   ["nonzero", /the complete update exited 1/],
   ["not-ready", /status does not report the run ready to commit/],
