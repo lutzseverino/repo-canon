@@ -14,9 +14,9 @@ the contextual work named in the CLI's derived adopter-action line. Actions
 outside adoption are stated separately in the release notes.
 
 To stay current, run `adopt` with the newest published CLI, or opt in to the
-[scheduled update workflow](https://github.com/lutzseverino/repo-canon/issues/561)
-when it is available. See the [adoption guide](adopt-repo-canon.md) for updating
-and reviewing the resulting changes.
+installed [scheduled update workflow](adopt-repo-canon.md#automated-updates).
+See the [adoption guide](adopt-repo-canon.md) for updating and reviewing the
+resulting changes.
 
 ## Compatibility for adopters
 

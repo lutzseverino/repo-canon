@@ -68,10 +68,10 @@ npx @lutzseverino/repo-standards adopt
 
 Repo Canon makes no stability promise and releases frequently. Every release,
 including a breaking one, is adoptable from the previous release in one
-`adopt`. Stay current by running `adopt`, or opt in to the
-[scheduled update workflow](https://github.com/lutzseverino/repo-canon/issues/561)
-when it is available. The [versioning guide](docs/usage/versioning.md) explains
-compatibility and release notes.
+`adopt`. Stay current by running `adopt`, or opt in to the installed
+[scheduled update workflow](docs/usage/adopt-repo-canon.md#automated-updates).
+The [versioning guide](docs/usage/versioning.md) explains compatibility and
+release notes.
 
 ## Documentation
 
