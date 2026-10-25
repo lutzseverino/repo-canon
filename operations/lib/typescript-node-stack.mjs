@@ -97,7 +97,11 @@ export function readManifest(projectRoot, path) {
   }
 }
 
-// A YAML scalar without its quotes or trailing comment, or null for a form
+// Preserve non-string scalar types without making them string patterns or
+// versions. Their exact values are irrelevant to the manifest readers.
+const nonStringYamlScalar = Symbol("non-string YAML scalar");
+
+// A string without quotes/comments, a non-string marker, or null for a form
 // this reader does not decode. Single quotes decode `''`, and double quotes
 // decode only `\\"`, `\\\\` and `\\/`. A plain scalar may not start with an
 // indicator or hold a mapping's `: `, and inside a flow collection it may not
@@ -105,13 +109,20 @@ export function readManifest(projectRoot, path) {
 function yamlScalar(value, { flow = false } = {}) {
   const text = value.trim();
   if (text === "" || text.startsWith("#")) return null;
-  const single = /^'((?:[^']|'')*)'\s*(?:#.*)?$/.exec(text);
+  const single = /^'((?:[^']|'')*)'(?:\s+#.*|\s*)$/.exec(text);
   if (single) return single[1].replaceAll("''", "'");
-  const double = /^"((?:[^"\\]|\\["\\/])*)"\s*(?:#.*)?$/.exec(text);
+  const double = /^"((?:[^"\\]|\\["\\/])*)"(?:\s+#.*|\s*)$/.exec(text);
   if (double) return double[1].replace(/\\(["\\/])/g, "$1");
   if (/^(?:["'&*!|>%@`[\]{},#]|[-?:](?:\s|$))/.test(text)) return null;
   const plain = text.replace(/\s+#.*$/, "");
   if (/:(?:\s|$)/.test(plain) || (flow && /[[\]{},]/.test(plain))) return null;
+  // YAML's core schema gives these unquoted scalars non-string values.
+  if (
+    /^(?:null|true|false|~|[-+]?(?:\.inf|\.nan|0o[0-7]+|0x[\da-f]+|(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?))$/i.test(
+      plain,
+    )
+  )
+    return nonStringYamlScalar;
   return plain;
 }
 
@@ -174,89 +185,126 @@ function flowSequence(text) {
   return null;
 }
 
-// The `packages` patterns of a `pnpm-workspace.yaml`, or `[]` without that
-// key, or null for any form this reader does not decode, so that an
-// unexpected form reads as an unreadable workspace and never as a narrower or
-// wider member list. It decodes a top-level `packages` key holding:
-// - a flow sequence on one or more lines, ending its line after `]`;
-// - or a block sequence, indented or at the key's column;
-// whose items are plain, single-quoted or double-quoted scalars, with
-// comments. Anchors, aliases, tags, block scalars, nested collections,
-// multi-line scalars, a quoted `packages` key and a flow-mapping document are
-// not decoded. No YAML library is available to operations.
-export function pnpmWorkspacePackages(text) {
-  const lines = text.split(/\r?\n/);
+// Decode only the block mappings/sequences and scalar flow sequences used by
+// workspace settings. Validate the whole document before trusting any entry:
+// duplicate keys, uneven indentation and multiline continuations must not
+// silently change membership or move catalog entries into another mapping.
+function workspaceYaml(text) {
   if (
-    lines.some((line) => /^["']packages["']\s*:/.test(line)) ||
-    /^(?:\s*(?:#.*)?\n)*\s*(?:---\s*\n\s*)?[{[]/.test(text)
+    [...text.replaceAll("\r\n", "\n")].some(
+      (character) => character.codePointAt(0) < 32 && character !== "\n",
+    )
   )
     return null;
-  const start = lines.findIndex((line) => /^packages\s*:/.test(line));
-  if (start === -1) return [];
-  const rest = lines[start].replace(/^packages\s*:/, "").trim();
-  if (rest.startsWith("[")) {
-    const flow = flowSequence([rest, ...lines.slice(start + 1)].join("\n"));
-    if (!flow) return null;
-    const after = flow.rest.split("\n")[0].trim();
-    return after === "" || after.startsWith("#") ? flow.items : null;
+  const lines = text
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== "" && !line.trimStart().startsWith("#"));
+  if (/^---(?:\s+#.*)?$/.test(lines[0] ?? "")) lines.shift();
+  if (/^\.\.\.(?:\s+#.*)?$/.test(lines.at(-1) ?? "")) lines.pop();
+  let index = 0;
+  const indentation = (line) => line.length - line.trimStart().length;
+  function block(indent, sequence = false) {
+    const result = sequence ? [] : new Map();
+    while (index < lines.length) {
+      const line = lines[index];
+      const column = indentation(line);
+      if (column < indent) break;
+      if (column !== indent) throw new Error("Uneven indentation");
+      const content = line.slice(column);
+      const item = /^-\s+(.*)$/.exec(content);
+      if (sequence && !item) break;
+      const entry = sequence ? item : /^(.*?)\s*:(?:\s+(.*))?$/.exec(content);
+      if (!entry) throw new Error("Unsupported entry");
+      const key = sequence ? null : yamlScalar(entry[1]);
+      if (!sequence && (typeof key !== "string" || result.has(key)))
+        throw new Error("Unsupported or duplicate key");
+      const raw = (sequence ? entry[1] : (entry[2] ?? "")).trim();
+      let value;
+      if (raw.startsWith("[")) {
+        const input = [raw, ...lines.slice(index + 1)].join("\n");
+        const flow = flowSequence(input);
+        if (!flow || !/^(?:\s*|\s+#.*)$/.test(flow.rest.split("\n")[0]))
+          throw new Error("Unsupported flow sequence");
+        const consumed = input
+          .slice(0, input.length - flow.rest.length)
+          .split("\n").length;
+        if (
+          lines
+            .slice(index + 1, index + consumed)
+            .some(
+              (continuation) =>
+                indentation(continuation) < indent ||
+                (indentation(continuation) === indent &&
+                  !continuation.trimStart().startsWith("]")),
+            )
+        )
+          throw new Error("Unindented flow continuation");
+        index += consumed;
+        value = flow.items;
+      } else {
+        index++;
+        if (raw === "" || raw.startsWith("#")) {
+          const next = lines[index];
+          const nextIndent = next === undefined ? -1 : indentation(next);
+          const nextSequence = /^-\s+/.test(next?.trimStart() ?? "");
+          if (
+            nextIndent > indent ||
+            (!sequence && nextIndent === indent && nextSequence)
+          )
+            value = block(nextIndent, nextSequence);
+          else value = null;
+        } else {
+          value = yamlScalar(raw);
+          if (value === null) throw new Error("Unsupported scalar");
+        }
+      }
+      if (sequence) result.push(value);
+      else result.set(key, value);
+    }
+    return result;
   }
-  if (rest !== "" && !rest.startsWith("#")) return null;
-  // Block sequence items may be indented or start at the key's own column, as
-  // YAML allows; the next top-level key ends the sequence.
-  const patterns = [];
-  for (const line of lines.slice(start + 1)) {
-    if (line.trim() === "" || line.trimStart().startsWith("#")) continue;
-    if (!/^(?:\s|-(?:\s|$))/.test(line)) break;
-    const item = /^\s*-\s+(.*)$/.exec(line);
-    if (!item) return null;
-    const pattern = yamlScalar(item[1]);
-    if (pattern === null) return null;
-    patterns.push(pattern);
+  try {
+    const document = block(0);
+    return index === lines.length ? document : null;
+  } catch {
+    return null;
   }
-  return patterns;
 }
 
-// The dependency catalogs of a `pnpm-workspace.yaml`: a map from catalog name
-// to a map from package name to version, with the top-level `catalog` as
-// `default` beside each named catalog under `catalogs`. Entries in a form this
-// reader does not decode are left out, so their specifiers stay unresolved.
+// An ordered string list, [] without a packages key, or null for unsupported
+// YAML. Unsupported input stays unreadable rather than changing membership.
+// Quoted packages keys remain outside the reader's supported subset.
+export function pnpmWorkspacePackages(text) {
+  if (text.split(/\r?\n/).some((line) => /^["']packages["']\s*:/.test(line)))
+    return null;
+  const document = workspaceYaml(text);
+  if (!document) return null;
+  if (!document.has("packages")) return [];
+  const patterns = document.get("packages");
+  return Array.isArray(patterns) &&
+    patterns.every((item) => typeof item === "string")
+    ? patterns
+    : null;
+}
+
+// Return only string catalog entries at their exact mapping depth. Nested
+// values and unsupported documents leave specifiers unresolved.
 export function pnpmCatalogs(text) {
+  const document = workspaceYaml(text);
   const catalogs = new Map();
-  let section = null;
-  let named = null;
-  let namedIndent = null;
-  for (const line of text.split(/\r?\n/)) {
-    if (line.trim() === "" || line.trimStart().startsWith("#")) continue;
-    const indent = line.length - line.trimStart().length;
-    const entry =
-      /^\s*("[^"\\]*"|'[^']*'|[^\s:#'"][^:#]*?)\s*:(?:\s+(.*))?$/.exec(line);
-    if (indent === 0) {
-      section =
-        entry?.[1] === "catalog" || entry?.[1] === "catalogs" ? entry[1] : null;
-      named = null;
-      namedIndent = null;
-      if (section === "catalog") catalogs.set("default", new Map());
-      continue;
-    }
-    if (!section || !entry) continue;
-    const key = yamlScalar(entry[1]);
-    const value = entry[2] === undefined ? null : yamlScalar(entry[2]);
-    if (key === null) continue;
-    if (
-      section === "catalogs" &&
-      (namedIndent === null || indent <= namedIndent)
-    ) {
-      // A header's value is empty, or only a comment, before its entries.
-      const header = entry[2]?.trim() ?? "";
-      if (header !== "" && !header.startsWith("#")) continue;
-      named = key;
-      namedIndent = indent;
-      if (!catalogs.has(named)) catalogs.set(named, new Map());
-      continue;
-    }
-    const catalog = catalogs.get(section === "catalog" ? "default" : named);
-    if (catalog && value !== null) catalog.set(key, value);
-  }
+  if (!document) return catalogs;
+  const add = (name, entries) => {
+    if (typeof name !== "string" || !(entries instanceof Map)) return;
+    catalogs.set(
+      name,
+      new Map([...entries].filter(([, value]) => typeof value === "string")),
+    );
+  };
+  add("default", document.get("catalog"));
+  const named = document.get("catalogs");
+  if (named instanceof Map)
+    for (const [name, entries] of named)
+      if (name !== "default" || !catalogs.has(name)) add(name, entries);
   return catalogs;
 }
 
