@@ -278,6 +278,14 @@ an edit to the brief removes it until the new revision is reviewed.
 
 ## Native blockers
 
+Repo Canon's native GitHub relationship rules take precedence over the
+fallback instructions in the upstream tracker guide installed at
+`docs/agents/issue-tracker.md`. Parent/sub-issue links and blocker/dependency
+links must use GitHub's native relationships. Task lists and `Part of`,
+`Parent`, or `Blocked by` body references do not establish those links, even
+when a native link cannot be created or the feature is unavailable. Required
+named sections retain their content requirements.
+
 GitHub's native issue dependencies are the canonical blocking relationship.
 When adding a native blocker, pass the blocking issue's numeric database ID as
 `issue_id`, not its issue number or `node_id`.
