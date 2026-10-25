@@ -22,6 +22,14 @@ import {
   pnpmWorkspacePackages,
 } from "../operations/lib/typescript-node-stack.mjs";
 
+import {
+  workspaceYamlCases,
+  flowYamlCases,
+  catalogYaml,
+  unsupportedWorkspaceYaml,
+  unsupportedCatalogYaml,
+} from "./helpers/stack-yaml.mjs";
+
 const scriptPath = "operations/check-typescript-node-stack.mjs";
 const script = fileURLToPath(new URL(`../${scriptPath}`, import.meta.url));
 
@@ -383,55 +391,12 @@ catalogs:
 // The pnpm-workspace.yaml forms pnpm workspaces commonly use. A form the
 // reader does not decode reads as null, which the drafter asks about.
 test("reads the packages of common pnpm-workspace.yaml forms", () => {
-  for (const [text, expected] of [
-    ["packages:\n  - packages/*\n  - 'apps/*'\n", ["packages/*", "apps/*"]],
-    // An indentationless block sequence, with a comment between items.
-    [
-      'packages:\n- packages/*\n# apps\n- "apps/*" # apps\ncatalog:\n  oxlint: 1.86.0\n',
-      ["packages/*", "apps/*"],
-    ],
-    [
-      "packages: ['packages/*', \"apps/*\", tools/*] # members\n",
-      ["packages/*", "apps/*", "tools/*"],
-    ],
-    ["packages: []\n", []],
-    // Negated patterns are quoted, since a bare `!` starts a YAML tag.
-    [
-      "packages:\n  - 'packages/**'\n  - '!**/test/**'\n",
-      ["packages/**", "!**/test/**"],
-    ],
-    ["packages:\n  - !**/test/**\n", null],
-    ["# settings only\nonlyBuiltDependencies:\n  - esbuild\n", []],
-    ["packages: *members\n", null],
-  ])
+  for (const [text, expected] of workspaceYamlCases)
     assert.deepEqual(pnpmWorkspacePackages(text), expected, text);
 });
 
 test("splits flow sequences only at commas outside quotes and nesting", () => {
-  for (const [text, expected] of [
-    ['packages: ["packages/{cli,web}"]\n', ["packages/{cli,web}"]],
-    [
-      "packages: ['packages/{cli,web}', \"apps/{a,b}/*\", tools/*]\n",
-      ["packages/{cli,web}", "apps/{a,b}/*", "tools/*"],
-    ],
-    ["packages: [packages/*, apps/*,]\n", ["packages/*", "apps/*"]],
-    ["packages: [ ]\n", []],
-    ["packages: [packages/*] # see [apps]\n", ["packages/*"]],
-    ['packages: ["a\\"b", \'it\'\'s\', "c\\\\d"]\n', ['a"b', "it's", "c\\d"]],
-    [
-      "packages: [\n  'packages/*', # members\n  \"apps/*\",\n]\nonlyBuiltDependencies: []\n",
-      ["packages/*", "apps/*"],
-    ],
-    // Forms YAML reads differently or rejects, which read as unreadable.
-    ["packages: [packages/{cli,web}]\n", null],
-    ["packages: [a,, b]\n", null],
-    ["packages: [,]\n", null],
-    ["packages: [a] extra\n", null],
-    ['packages: ["a\\nb"]\n', null],
-    ["packages: [\n  'packages/*'\n", null],
-    ["packages: [[a], b]\n", null],
-    ["packages: [a #b, c]\n", null],
-  ])
+  for (const [text, expected] of flowYamlCases)
     assert.deepEqual(pnpmWorkspacePackages(text), expected, text);
 });
 
@@ -495,16 +460,7 @@ test("matches workspace globs, a leading globstar matching zero directories", ()
 });
 
 test("reads default and named catalogs with comments and quoted names", () => {
-  const catalogs = pnpmCatalogs(`catalog: # default
-  oxlint: 1.86.0 # lint
-  '@types/node': ^24.0.0
-catalogs:
-  # shared
-  tools: # shared tools
-    prettier: "3.9.9"
-  legacy:
-    prettier: 2.8.8
-`);
+  const catalogs = pnpmCatalogs(catalogYaml);
   assert.deepEqual(
     Object.fromEntries(
       [...catalogs].map(([name, entries]) => [
@@ -662,7 +618,13 @@ test("passes an empty scope, leaving coverage to the assessment", (t) => {
 test("runs from its declared retained source layout", (t) => {
   const result = check(
     t,
-    standalone,
+    {
+      ...standalone,
+      "package.json": manifest({
+        devDependencies: { oxlint: "catalog:", prettier: "catalog:tools" },
+      }),
+      "pnpm-workspace.yaml": catalogYaml,
+    },
     ["package.json"],
     retainedCheck(t, scriptPath),
   );
@@ -690,4 +652,46 @@ test("refuses directory targets and paths that are not package.json as process e
     );
   }
   assert.deepEqual(snapshot(project.root), before);
+});
+
+test("differential workspace regressions stay unreadable through the retained check", (t) => {
+  const retained = retainedCheck(t, scriptPath);
+  for (const text of unsupportedWorkspaceYaml) {
+    const result = check(
+      t,
+      { ...workspace, "pnpm-workspace.yaml": text },
+      ["packages/cli/package.json"],
+      retained,
+    );
+    assert.equal(result.status, "failed", text);
+    assert.match(
+      corrections(result),
+      /State the workspace members of `pnpm-workspace.yaml`/,
+      text,
+    );
+  }
+});
+
+test("nested and duplicate catalog entries stay unresolved through the retained check", (t) => {
+  const retained = retainedCheck(t, scriptPath);
+  for (const [text, specifier] of unsupportedCatalogYaml) {
+    const result = check(
+      t,
+      {
+        ...standalone,
+        "package.json": manifest({
+          devDependencies: { oxlint: specifier, prettier: "3.9.9" },
+        }),
+        "pnpm-workspace.yaml": text,
+      },
+      ["package.json"],
+      retained,
+    );
+    assert.equal(result.status, "failed", text);
+    assert.match(
+      corrections(result),
+      /no catalog.*defines for `oxlint`|State the workspace members/,
+      text,
+    );
+  }
 });

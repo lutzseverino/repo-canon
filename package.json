@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "oxlint": "1.86.0",
-    "prettier": "3.9.9"
+    "prettier": "3.9.9",
+    "yaml": "2.9.0"
   }
 }

@@ -73,6 +73,16 @@ and head-change retry behavior against the same Postern transport fixture.
 The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 
+Run `node --test test/typescript-node-stack-yaml.test.mjs` for the stack
+readers' differential checks against the pinned, development-only `yaml`
+package. They reuse the reader fixtures and a bounded deterministic corpus
+of scalar, list, indentation and catalog forms; disagreements print the case,
+input and both interpretations. Unsupported workspace forms may be rejected,
+and catalogs may omit unsupported entries, but every accepted pattern and
+returned catalog entry must agree with the reference without scalar coercion.
+The focused stack check and scope-drafter suites also exercise regressions and
+valid catalogs from retained resources without the reference dependency.
+
 Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
 disposable local repositories used for the two productivity skill exercises.
 [Skill exercises](skill-exercises.md) describes all three fixture builders and

@@ -11,6 +11,12 @@ import {
   snapshot,
 } from "./helpers/operation.mjs";
 
+import {
+  catalogYaml,
+  unsupportedWorkspaceYaml,
+  unsupportedCatalogYaml,
+} from "./helpers/stack-yaml.mjs";
+
 const sourceRoot = fileURLToPath(new URL("..", import.meta.url));
 const drafterPath = "discovery/draft-typescript-node-stack-scope.mjs";
 const drafter = join(sourceRoot, drafterPath);
@@ -539,8 +545,11 @@ test("every Project it includes passes the stack check", (t) => {
 
 test("drafts the same proposal from its declared retained source layout", (t) => {
   const files = {
-    "package.json": manifest(),
+    "package.json": manifest({
+      devDependencies: { oxlint: "catalog:", prettier: "catalog:tools" },
+    }),
     "pnpm-lock.yaml": "",
+    "pnpm-workspace.yaml": catalogYaml,
   };
   const acquired = drafted(t, files);
   const retained = drafted(t, files, {
@@ -580,4 +589,58 @@ test("rejects arguments and requests it cannot read with a process error", async
       assert.equal(outcome.stdout, "");
       assert.match(outcome.stderr, message);
     });
+});
+
+test("differential workspace regressions raise a discovery question through retained resources", (t) => {
+  const retained = retainedCheck(t, drafterPath);
+  for (const text of unsupportedWorkspaceYaml) {
+    const { entry } = drafted(
+      t,
+      {
+        "package.json": manifest(),
+        "pnpm-lock.yaml": "",
+        "pnpm-workspace.yaml": text,
+        "packages/cli/package.json": member(),
+      },
+      { script: retained },
+    );
+    assert.equal(entry.noScope, true, text);
+    assert.equal(entry.unresolved.length, 1, text);
+    assert.match(
+      entry.unresolved[0],
+      /workspace members in a form the drafter cannot read/,
+      text,
+    );
+    assert.ok(
+      entry.candidates.every(({ decision }) => decision === "exclude"),
+      text,
+    );
+  }
+});
+
+test("nested and duplicate catalogs never include a Project through retained discovery", (t) => {
+  const retained = retainedCheck(t, drafterPath);
+  for (const [text, specifier] of unsupportedCatalogYaml) {
+    const { entry } = drafted(
+      t,
+      {
+        "package.json": manifest({
+          devDependencies: { oxlint: specifier, prettier: "3.9.9" },
+        }),
+        "pnpm-lock.yaml": "",
+        "pnpm-workspace.yaml": text,
+      },
+      { script: retained },
+    );
+    assert.equal(entry.noScope, true, text);
+    assert.ok(
+      entry.candidates.every(({ decision }) => decision === "exclude"),
+      text,
+    );
+    assert.match(
+      entry.candidates[0].reason,
+      /no catalog.*defines for `oxlint`|State the workspace members/,
+      text,
+    );
+  }
 });
