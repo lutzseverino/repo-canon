@@ -31,9 +31,11 @@ and the paths Repository Standards reserves, and every workspace configuration
 beside them, through the module the
 [stack check](typescript-node-stack-check.md) uses. A workspace root is a
 directory whose workspace configuration lists at least one kept member
-manifest. Its members are the Projects; its own `package.json` is excluded,
-conforming or not, as their shared configuration, citing it and the workspace
-configuration, and raises no question. A root `package.json` without such
+manifest. Its members are Projects. Its own `package.json` is also eligible
+when repository evidence establishes a maintained package with its own
+responsibility and development commands. A shared-only root is excluded,
+citing its manifest and workspace configuration. Incomplete evidence leaves
+root membership unresolved. A root `package.json` without such
 members is a Project, even beside a `pnpm-workspace.yaml` that holds only
 settings or catalogs. For each Project it runs the check's difference reading:
 
@@ -43,8 +45,16 @@ settings or catalogs. For each Project it runs the check's difference reading:
 - a Project with differences is excluded, with every correction the check
   would name as its reason, citing its `package.json`.
 
-The workspace root's facts, such as `packageManager` and catalogs, still feed
-each member's reading.
+For a root with members, the drafter uses package entry points (`bin`, `main`,
+`module` or `exports`), nonempty development commands and kept JavaScript or
+TypeScript implementation files as positive evidence together. It excludes
+files belonging to nested packages, fixtures, generated output, dot directories
+and tool configuration from that evidence. With neither entry points nor
+implementation files it proposes a shared-only root; partial evidence or an
+unreadable manifest raises a question for the agent's full repository assessment.
+These are proposal heuristics, not additional Project requirements. The root
+and members are assessed independently for stack differences, and the workspace
+root's facts, such as `packageManager` and catalogs, still feed each reading.
 
 A `package.json` below a directory named `__fixtures__`, `__mocks__`,
 `build`, `coverage`, `dist`, `fixture`, `fixtures`, `generated`, `out`,
@@ -72,7 +82,7 @@ declaration owns a `package.json`.
 
 ## Limits
 
-The draft reads manifest facts only. It cannot see whether a Project compiles
+Beyond root membership evidence, the draft reads manifest facts only. It cannot see whether a Project compiles
 with TypeScript 7, tests with `node --test`, runs `validate` in required pull
 request checks, or names its tools in its Setup and validation section, nor
 whether the Project is new or existing; the adoption guidance leaves those to
@@ -90,7 +100,9 @@ node --test test/typescript-node-stack-scope-drafter.test.mjs
 They run the drafter as inspection does, over copies without Git metadata,
 assert that the copy is unchanged and the proposal has the scope proposal's
 shape, and cover a single conforming package, a pnpm workspace with conforming
-and differing members, workspace roots excluded without a question, a single
+and differing members, a maintained root included alongside its member and
+validated by the check, differing and unresolved roots, shared-only roots,
+a single
 package with a settings-only `pnpm-workspace.yaml`, `package.json` workspaces with exclusions, common `pnpm-workspace.yaml` forms, fixture and
 generated directories including fixture packages with their own pnpm settings or workspace, a repository with no Node.js Project, one whose every
 Project differs, unresolved manifests and workspace configuration, reserved
