@@ -1,11 +1,5 @@
 import assert from "node:assert/strict";
-import {
-  readFileSync,
-  mkdtempSync,
-  mkdirSync,
-  writeFileSync,
-  rmSync,
-} from "node:fs";
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import test from "node:test";
 import { tmpdir } from "node:os";
@@ -22,6 +16,7 @@ import {
   pushActivity,
   conversationComments,
 } from "../.agents/skills/babysit/platform.mjs";
+import { fixtureFetch } from "./fixtures/postern-babysit.mjs";
 import { main as wait } from "../.agents/skills/babysit/wait.mjs";
 import { main as merge } from "../.agents/skills/babysit/merge.mjs";
 import { runIssueContractValidation } from "../scripts/validate-issue-contract.mjs";
@@ -270,15 +265,21 @@ test("unavailable issue reads abort before mutation; missing roles follow author
 test("wait failures never report readiness and merge queue reads fail before merging", async (t) => {
   const directory = mkdtempSync(join(tmpdir(), "postern-reviewer-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  mkdirSync(join(directory, ".github"));
+  const statePath = join(directory, "state.json");
   writeFileSync(
-    join(directory, ".github/pull-request-reviewer.json"),
-    readFileSync(
-      new URL("./fixtures/reviewers/github-review.json", import.meta.url),
-    ),
+    statePath,
+    JSON.stringify({
+      reviewConfiguration: {
+        reviewer: JSON.parse(
+          readFileSync(
+            new URL("./fixtures/reviewers/github-review.json", import.meta.url),
+            "utf8",
+          ),
+        ),
+      },
+    }),
   );
-  const previousDirectory = process.cwd();
-  process.chdir(directory);
+  const connection = connect(repository, { fetch: fixtureFetch(statePath) });
   const original = process.stderr.write;
   let output = "";
   process.stderr.write = (chunk) => {
@@ -291,7 +292,7 @@ test("wait failures never report readiness and merge queue reads fail before mer
         throw new PlatformError(reason, `Fixture ${reason}`);
       };
       const code = await wait(["12"], {
-        repository: { path: "example/repository" },
+        ...connection,
         pullRequests: {
           capabilities: { reviewCommits: true },
           pullRequest: failure,
@@ -312,13 +313,12 @@ test("wait failures never report readiness and merge queue reads fail before mer
       assert.equal(mutations, 0, reason);
     }
     const code = await wait(["12"], {
-      repository: { path: "example/repository" },
+      ...connection,
       pullRequests: { capabilities: {} },
     });
     assert.equal(code, 1);
     assert.match(output, /Review commits are unavailable/);
   } finally {
     process.stderr.write = original;
-    process.chdir(previousDirectory);
   }
 });

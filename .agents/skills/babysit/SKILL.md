@@ -20,8 +20,12 @@ The bundled scripts require Node.js 24 or 26. The request and wait read the opti
 `github-repository-configuration` rules state; without the file, it reports
 only checks unless the app-author policy identifies an external review skip.
 Both commands read the optional `.github/factory-review-policy.json` under
-the same rules. A plain human-login declaration is a configuration error
-(exit `1`), as defined by those rules. Its absence keeps configured reviewer
+the same rules' trusted review configuration: they resolve the destination's
+default-branch commit once and read both files from that SHA. The wait keeps
+that snapshot across polls; its final outcome identifies the repository and
+revision, as does the request's. Proposed configuration changes begin applying
+after merging to that default branch. A plain human-login declaration is a
+configuration error (exit `1`), as defined by those rules. Its absence keeps configured reviewer
 behavior and requires no owner question.
 
 Before the first wait, apply the `github-repository-configuration` rules'

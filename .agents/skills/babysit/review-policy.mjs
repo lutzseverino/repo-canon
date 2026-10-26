@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const target = ".github/factory-review-policy.json";
+export const policyTarget = ".github/factory-review-policy.json";
 const isAppIdentity = (login) =>
   typeof login === "string" &&
   /^(?:[^\s/[\]]+\[bot\]|app\/[^\s/[\]]+)$/i.test(login);
@@ -10,11 +10,15 @@ const isAppIdentity = (login) =>
 export const readReviewPolicy = (root = process.cwd()) => {
   let text;
   try {
-    text = readFileSync(join(root, target), "utf8");
+    text = readFileSync(join(root, policyTarget), "utf8");
   } catch (error) {
     if (error.code === "ENOENT") return null;
     throw error;
   }
+  return parseReviewPolicy(text);
+};
+
+export const parseReviewPolicy = (text) => {
   try {
     const policy = JSON.parse(text);
     if (!policy || typeof policy !== "object" || Array.isArray(policy))
@@ -35,7 +39,7 @@ export const readReviewPolicy = (root = process.cwd()) => {
       );
     return policy;
   } catch (error) {
-    throw new Error(`${target}: ${error.message}`, { cause: error });
+    throw new Error(`${policyTarget}: ${error.message}`, { cause: error });
   }
 };
 

@@ -21,6 +21,67 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       pageInfo: { hasNextPage: false, endCursor: null },
     });
     if (path === "/graphql") {
+      if (body.query.includes("BabysitReviewRevision")) {
+        if (state.traceReviewConfiguration) {
+          state.configurationReads = [
+            ...(state.configurationReads ?? []),
+            { kind: "revision", ...body.variables },
+          ];
+          save();
+        }
+        if (state.failReviewRevision)
+          return json({ message: "read refused" }, state.failReviewRevision);
+        return json(
+          state.reviewRevisionResponse ?? {
+            data: {
+              repository: {
+                nameWithOwner: "example/repository",
+                defaultBranchRef: {
+                  name: state.defaultBranch ?? "main",
+                  target: {
+                    __typename: "Commit",
+                    oid: state.defaultRevision ?? "b".repeat(40),
+                  },
+                },
+              },
+            },
+          },
+        );
+      }
+      if (body.query.includes("BabysitReviewConfiguration")) {
+        const revision = body.variables.revision;
+        const config =
+          state.reviewSnapshots?.[revision] ?? state.reviewConfiguration ?? {};
+        const blob = (value) =>
+          value == null
+            ? null
+            : {
+                __typename: "Blob",
+                isTruncated: false,
+                text: typeof value === "string" ? value : JSON.stringify(value),
+              };
+        if (state.traceReviewConfiguration) {
+          state.configurationReads = [
+            ...(state.configurationReads ?? []),
+            { kind: "files", ...body.variables },
+          ];
+        }
+        if (state.moveDefaultTo) state.defaultRevision = state.moveDefaultTo;
+        if (state.traceReviewConfiguration || state.moveDefaultTo) save();
+        if (state.failReviewFiles)
+          return json({ message: "read refused" }, state.failReviewFiles);
+        return json(
+          state.reviewFilesResponse ?? {
+            data: {
+              repository: {
+                commit: { __typename: "Commit", oid: revision },
+                policy: blob(config.policy),
+                reviewer: blob(config.reviewer),
+              },
+            },
+          },
+        );
+      }
       if (body.query.includes("PosternMergeQueue"))
         return json({
           data: {
@@ -31,16 +92,23 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
             },
           },
         });
-      if (body.query.includes("BabysitChecks"))
+      if (body.query.includes("BabysitChecks")) {
+        const checks = state.checks ?? [];
+        if (state.afterChecks) {
+          Object.assign(state, state.afterChecks);
+          delete state.afterChecks;
+          save();
+        }
         return json({
           data: {
             repository: {
               object: {
-                statusCheckRollup: { contexts: connection(state.checks ?? []) },
+                statusCheckRollup: { contexts: connection(checks) },
               },
             },
           },
         });
+      }
       const pull = {
         number: 12,
         fullDatabaseId: "120",
@@ -56,8 +124,8 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         createdAt: state.createdAt ?? "2026-10-11T05:00:00Z",
         headRefName: state.branch ?? "fixture",
         headRefOid: state.head,
-        baseRefName: "main",
-        isCrossRepository: false,
+        baseRefName: state.baseBranch ?? "main",
+        isCrossRepository: state.crossRepository ?? false,
         repository: { nameWithOwner: "example/repository" },
       };
       return json({ data: { repository: { pullRequest: pull } } });

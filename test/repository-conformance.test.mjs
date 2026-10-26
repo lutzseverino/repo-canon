@@ -1013,6 +1013,7 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
       "request.mjs",
       "review-policy.mjs",
       "reviewer.mjs",
+      "trusted-review-config.mjs",
       "wait.mjs",
     ],
   );

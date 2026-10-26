@@ -116,6 +116,17 @@ preserved request bounds and check waits, and installed executable resources
 without runtime packages. The
 repository-owned `.github/factory-review-policy.json` is optional; neither
 profile installs a declaration or enrolls adopters in skipping external review.
+Run `node --test test/babysit-trusted-config.test.mjs` for installed request and
+wait regressions against independent remote configuration and proposed local
+files. The commands resolve the destination default branch once through Postern
+Access, then read both configurations at that commit; GraphQL errors and
+incomplete, non-blob or truncated file results fail explicitly. An explicit null
+file result with a verified commit is supported absence. The fixtures cover
+policy and reviewer additions, edits and deletions, fork and nondefault-base
+PRs, retargeting and changing heads during polling, a moving default tip,
+resumed invocations, request bounds and read failures. The final command line
+identifies the selected repository, default branch and full commit SHA while
+the wait remains silent during polling.
 Run `node --test test/triage-ready.test.mjs` for the triage readiness command's
 revision, account, label, validator-event and parent-link fixtures, including
 its installed layout without npm. The command uses the vendored Postern
