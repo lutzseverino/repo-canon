@@ -512,6 +512,13 @@ test("the reviewer check and babysit validate the reviewer file with one parser"
   );
 });
 
+test("adoption and babysit keep the policy reader byte-identical", () => {
+  assert.deepEqual(
+    readFileSync(join(root, "operations/lib/review-policy.mjs")),
+    readFileSync(join(root, ".agents/skills/babysit/review-policy.mjs")),
+  );
+});
+
 test("the GitHub rules hold the runner variable, and its guidance the assessment", () => {
   const rules = flowedText("rules/github-repository-configuration.md");
   for (const requirement of [

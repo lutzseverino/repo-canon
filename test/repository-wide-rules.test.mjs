@@ -157,6 +157,14 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
     assert.equal(attributes.exact, undefined);
     assert.deepEqual(attributes.checks, []);
     assert.deepEqual(attributes.fixes, []);
+    const github = profile.declarations.find(
+      (declaration) => declaration.id === "github-repository-configuration",
+    );
+    assert.deepEqual(
+      github.checks.map(({ id }) => id),
+      ["pull-request-reviewer", "factory-review-policy"],
+      `${name} validates both optional repository-owned configurations`,
+    );
   }
   // Every authored Node prerequisite must retain the same stable-major union,
   // including discovery and the two nested remote-setup probes.
@@ -176,7 +184,7 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
             operation.prerequisite.version,
           );
     }
-  assert.equal(prerequisites.size, 11);
+  assert.equal(prerequisites.size, 12);
   for (const [script, range] of prerequisites)
     assert.equal(range, ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0", script);
 
