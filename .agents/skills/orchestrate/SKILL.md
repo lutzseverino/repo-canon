@@ -94,8 +94,9 @@ to its source, and the repository it concerns.
   `dropped (owner)` in its State; the plan closes only then. A row stays for
   the life of the plan: a split adds rows, a merge points several rows at one
   issue, and only the owner drops one. State holds the row's latest step, such
-  as `grill <session reference>`, `grilled <file>`, `filed`, `ready`, or a
-  pull request link.
+  as `grill <session reference>`, `grilled <file>`, `triaged <file>`, `filed`,
+  `ready`, or a pull request link. `grilled <file>` and `triaged <file>` are
+  the done marks a grill and a triage run set.
 - **Open issues.** Count each repository's open issues when the plan starts and
   again at close. Report the counts; they set no limit.
 - **Log.** Take every timestamp from the clock, in UTC, with
@@ -113,14 +114,23 @@ with their citations, and shows the decision inbox. Log the items it showed.
    the plan to `index.md`.
 2. **Intake.** Route each new request as the contribution guide's Triage
    section says, with the `triage` skill's method. Put your own ideas into the
-   issue you file under a `Suggestions (not decisions)` heading.
+   issue you file under a `Suggestions (not decisions)` heading. Give each
+   triage run what the `triage` skill gives a research run, the plan directory,
+   and this task:
+   - write its result to the plan directory, citing the brief or findings it
+     posted by link;
+   - add each decision it leaves open for the owner to `inbox.md`;
+   - mark its row `triaged <file>` in `plan.md`;
+   - commit and push its writes, as [Workbench](#workbench) says;
+   - report back, as [Report-back](#report-back) says.
 3. **Grill.** When the guide's inference test cannot settle an intent
    question, open a grill with the owner in its own session, and record the
    session's reference in the row's State. Give it what the `triage` skill
    gives a grill, the plan directory, and this task:
    - write the owner's decisions and the draft briefs to the plan directory;
    - add each decision it leaves open for the owner to `inbox.md`;
-   - mark its item done in `plan.md`;
+   - mark its row `grilled <file>` in `plan.md`;
+   - commit and push its writes, as [Workbench](#workbench) says;
    - report back, as [Report-back](#report-back) says.
 
    Then decide the split, file the issues and accept the briefs, as the guide
@@ -147,20 +157,22 @@ with their citations, and shows the decision inbox. Log the items it showed.
 
 - One long-lived orchestrating agent owns every plan in the workbench. A fresh
   session reads `index.md`, `inbox.md` and the active plans, and nothing else,
-  before it acts.
+  before it acts. It then records its own session reference as each active
+  plan's owner in `index.md`, marking the previous reference superseded.
 - Give heavy reads, such as whole session transcripts, long logs and large
   diffs, to a subagent that returns what the step needs, or read a bounded
   tail.
 - Run at most three agent launches you started at once, or the cap `index.md`
-  names for this host's hostname. Count every grill, triage run, research run and worker.
+  names for this host's hostname. Count every grill, triage run, research run
+  and worker.
 - Workers deliver as the contribution guide's Pull requests section says.
 
 ## Report-back
 
 The file in the plan directory is the contract. A grill or triage run reports
-by writing its result there and marking its item in `plan.md`. A wake-up
-message to your session is only a nudge, and losing it loses nothing: act on
-the files.
+by writing its result there, setting its done mark in `plan.md`, and
+committing and pushing both. A wake-up message to your session is only a
+nudge, and losing it loses nothing: act on the files.
 
 When your harness cannot send messages between sessions, re-read the active
 plan directories at each turn, and the owner tells you when a grill is done.
