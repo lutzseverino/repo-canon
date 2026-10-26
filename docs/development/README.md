@@ -104,6 +104,11 @@ the published bundle with an injected fetch transport. Run `node --test test/pul
 for the optional reviewer schema check, including retained operation resources;
 the check's parser, `operations/lib/pull-request-reviewer.mjs`, has a
 byte-identical copy in `babysit`'s directory for the wait.
+Run `node --test test/factory-review-policy-check.test.mjs` for the optional
+policy adoption check's absence, app identities, invalid schemas, file-read
+errors and preservation, including retained resources without runtime packages.
+Its reader, `operations/lib/review-policy.mjs`, is byte-identical to babysit's
+`review-policy.mjs`; conformance coverage keeps both schema readers aligned.
 Run `node --test test/babysit-request.test.mjs test/babysit-wait.test.mjs`
 for app-author policy matching, explicit rejection of human-login declarations
 with or without a reviewer, independent request emission and wait classification,
