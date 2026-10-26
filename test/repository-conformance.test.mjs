@@ -955,6 +955,29 @@ test("the installed setup files retain the v1.3.1 seed bytes", () => {
   }
 });
 
+test("installed label rules override upstream meanings while retaining configured label strings", () => {
+  const github = flowedText("rules/github-repository-configuration.md");
+  const labels = /## Labels (.*?) ## Merge settings/.exec(github)?.[1] ?? "";
+  for (const requirement of [
+    /`docs\/agents\/triage-labels\.md` maps canonical roles to tracker label strings; use the configured string for each role/,
+    /Role meanings in these rules and the contribution guide take precedence over its upstream Meaning column, including the conflicting `needs-info` and `ready-for-human` entries/,
+    /For `needs-info`, follow the contribution guide's Triage section for question routing and its inference test/,
+    /Agent work follows the agent path; where factory workflow rules are installed, follow them for factory pickup exclusions/,
+  ])
+    assert.match(labels, requirement);
+});
+
+test("configuration and triage pointers distinguish label mapping from authoritative meanings", () => {
+  assert.match(
+    flowedText("docs/agents/README.md"),
+    /\[Triage labels\]\(triage-labels\.md\): the label strings for the five canonical triage roles\. For role meanings, follow the installed `github-repository-configuration` rules and the contribution guide/,
+  );
+  assert.match(
+    flowedText(".agents/skills/triage/SKILL.md"),
+    /The actual label strings are in the triage label configuration, `docs\/agents\/triage-labels\.md`\. For role meanings, follow the installed `github-repository-configuration` rules and the contribution guide; they take precedence over the configuration's upstream Meaning column/,
+  );
+});
+
 test("adoption installs the model-invocable babysit skill in place of deliver", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   assert.match(

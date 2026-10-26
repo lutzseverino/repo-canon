@@ -27,6 +27,15 @@ descriptions:
 | `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                                       |
 | `wayfinder:task`      | `bfd4f2` | Task in a planning map                                                     |
 
+`docs/agents/triage-labels.md` maps canonical roles to tracker label strings;
+use the configured string for each role. Role meanings in these rules and the
+contribution guide take precedence over its upstream Meaning column, including
+the conflicting `needs-info` and `ready-for-human` entries.
+
+For `needs-info`, follow the contribution guide's Triage section for question
+routing and its inference test. Agent work follows the agent path; where
+factory workflow rules are installed, follow them for factory pickup exclusions.
+
 These rules name no `factory:` label: a factory creates its own state labels
 from the repository's factory configuration.
 
