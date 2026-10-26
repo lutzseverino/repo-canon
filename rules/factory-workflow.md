@@ -80,8 +80,9 @@ behavior; absence needs no owner question. The host does not choose a
 repository's reviewer policy.
 
 A policy skip preserves required checks and their waits, internal Standards
-and Spec reviews, merge authorization, and handling of findings that arrive.
-The GitHub rules hold the skip outcome wording and internal review record;
+and Spec reviews defined by the `github-repository-configuration` rules'
+app-author policy, merge authorization, and handling of findings that arrive.
+Those rules hold the skip outcome wording and internal review record;
 the contribution guide's supplied-credential restrictions still apply.
 
 ## Owner handoff and recovery

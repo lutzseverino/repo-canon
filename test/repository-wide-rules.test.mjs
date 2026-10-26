@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
@@ -450,6 +450,26 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
         readFileSync(join(root, path)),
         `${profile} installs ${path}`,
       );
+    // The policy's two-axis method and implement's review invocation retain
+    // their complete pinned directories in every profile.
+    for (const name of ["code-review", "implement"]) {
+      const source = join(
+        root,
+        "vendor/mattpocock-skills/skills/engineering",
+        name,
+      );
+      for (const entry of readdirSync(source, {
+        recursive: true,
+        withFileTypes: true,
+      }).filter((entry) => entry.isFile())) {
+        const path = relative(source, join(entry.parentPath, entry.name));
+        assert.deepEqual(
+          readFileSync(join(project, ".agents/skills", name, path)),
+          readFileSync(join(source, path)),
+          `${profile} installs ${name}/${path} unchanged`,
+        );
+      }
+    }
     assert.equal(
       existsSync(join(project, ".github/factory-review-policy.json")),
       false,

@@ -47,8 +47,9 @@ requiring a new request under the rules.
      run it again.
 
 2. Verify each failing check and review finding against the source, including
-   findings that arrive on a policy-skipped pull request. Complete internal
-   Standards and Spec reviews and retain their actual outcomes for the merge record.
+   findings that arrive on a policy-skipped pull request. Follow the
+   `github-repository-configuration` rules for applicable internal Standards and
+   Spec reviews and their merge record.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
    every review thread as it requires, following its
    [comment rules](../../../CONTRIBUTING.md#comments).
