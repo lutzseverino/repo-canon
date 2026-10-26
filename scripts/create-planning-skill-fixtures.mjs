@@ -32,6 +32,7 @@ const skillNames = [
   "implement",
   "pr",
   "prototype",
+  "orchestrate",
 ];
 const linkedSkillNames = [
   ...skillNames,
@@ -148,7 +149,8 @@ function createRepository(
 
 function skillPath(name) {
   // Repo Canon's own fork of triage is its installed source, not vendored.
-  if (name === "triage") return join(sourceRoot, ".agents/skills/triage");
+  if (["triage", "orchestrate"].includes(name))
+    return join(sourceRoot, ".agents/skills", name);
   const category = name === "grilling" ? "productivity" : "engineering";
   const path = join(skillsRoot, category, name);
   if (!existsSync(path))
@@ -371,8 +373,20 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
         "# Agent guidance\n\nRead docs/agents/project.md and docs/exercise.md before planning. This is a local simulation of a repository a factory serves.\n",
       context:
         "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n",
-      exercise:
-        "## Task\n\nUse triage on .scratch/receipts/issues/01-export-receipts.md. Then assess the parent and ticket release records in .scratch/receipts/review-inputs.md. Record the readiness actions needed as local Markdown; perform no real factory or GitHub operation.\n\n## Expected outcome\n\nLookup exposes both GitHub repository configuration and factory workflow rules. The Agent Brief follows the GitHub shape and order; a model label suggestion and its reason follow in triage notes, outside the brief. Explain the difference between that suggestion and whoever accepts the brief, a person or the orchestrating agent, applying exactly one chosen model label before or with ticket readiness. The parent requires no model and never runs. Parent readiness in the same second as the latest ticket link does not release tickets; remove and reapply it later. A later ticket requires another parent readiness application. Tickets also require their own readiness and closed blockers. Cite the factory rules' Parent readiness and Model selection sections in the local outcome.\n",
+      exercise: `## Task
+
+You are the orchestrating agent. Use triage on .scratch/receipts/issues/01-export-receipts.md in stages. First read only the intake and gather repository facts in a separate research session. Record the missing decisions in a local decision inbox and route them through the orchestrating agent to a separate grilling session. Stop this stage with no brief or readiness. The operator then supplies .scratch/receipts/owner-inputs.md as controlled owner answers to that grill; the grill records the decisions and drafts the brief, filing nothing and applying no label. When nested sessions are unavailable, the operator starts fresh sessions and relays their results verbatim.
+
+Review the completed draft independently; never author a brief you accept. Only then assess .scratch/receipts/review-inputs.md in order and record the simulated model/readiness actions locally. Keep the unresolved intake separate from the simulated approved contract. Publish nothing and launch no factory.
+
+## Expected outcome
+
+Lookup exposes both GitHub repository configuration and factory workflow rules. The export is intent-bound: public CSV header names, invocation interface and receipt source are undecided. No public CSV/API/source choice is inferred or disguised as an implementation choice. The first stage identifies all three questions and routes them through the orchestrating agent, with no brief or readiness until controlled owner answers settle them.
+
+After the answers, the grill's Agent Brief follows the GitHub shape and order and cites the controlled decisions with their date and source. A model suggestion and reason follow in triage notes, outside the brief; the grill applies no label. The independent accepting reviewer chooses exactly one model label, weighing or replacing that suggestion, before or with ticket readiness. A revision notice and independent review bind readiness to the exact revision. An edit invalidates it until a new notice and review; a valid shape alone grants nothing.
+
+The parent requires no model and never runs. Parent readiness in the same second as the latest ticket link does not release tickets; remove and reapply it later. A later ticket requires another parent readiness application. Tickets also require their own readiness and closed blockers. Use the explicitly simulated approved inputs for those release decisions, not the unresolved intake. Cite CONTRIBUTING.md's Triage and Readiness, the GitHub rules' Agent Brief and Readiness roles, and the factory rules' Parent readiness and Model selection sections in the outcome.
+`,
     },
   );
   write(
@@ -392,8 +406,44 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
   );
   write(
     root,
+    ".scratch/receipts/owner-inputs.md",
+    `# Controlled owner answers: release only after the questions
+
+These are simulated participant decisions for this exercise, not real product decisions. The operator supplies them to the separate grill only after the intent-bound handoff. Cite this file and 2026-10-18 in the draft's owner-decision notes.
+
+1. Use the CSV header exactly: parcel_reference,delivered_at,signer_name.
+2. Expose exportReceipts(receipts, date), returning CSV text. There is no CLI or HTTP endpoint in this exercise contract.
+3. The receipt source is a caller-supplied array of objects with reference, deliveredAt and signer string fields. Filter deliveredAt by the selected UTC date. Do not choose a database, file store or remote service.
+
+Keep the intake's ISO 8601 UTC timestamps, Parcel-reference ordering and header-only empty-date behavior. PDF and scheduled exports remain outside scope. These answers settle 01 only; they do not settle 02's summary interface.
+`,
+  );
+  write(
+    root,
     ".scratch/receipts/review-inputs.md",
-    "# Controlled review inputs\n\nThese are simulated participant inputs, not GitHub events or actual authority.\n\n- The reviewer is a person with repository admin authority. The participant supplies the approved brief revision after triage.\n- Ticket 01 is linked at 2026-10-18T10:00:00Z. The parent receives ready-for-agent at 2026-10-18T10:00:00Z and still carries it.\n- Ticket 02 is published later and linked at 2026-10-18T11:00:00Z, after a renewed parent review at 10:01:00Z.\n- Both tickets are open and unassigned. Ticket 01 has no blockers. Ticket 02 remains blocked by the open ticket 01. Neither ticket has a model label yet.\n\nRecord the model and readiness sequence locally, including what a contract edit would invalidate. Do not launch a factory.\n",
+    `# Controlled review inputs
+
+These are simulated participant inputs, not GitHub events or actual authority. Apply them in order only after the owner-answer stage and the grill's completed draft. They do not declare the unresolved intake ready.
+
+## Exact revision and independent acceptance
+
+- Call the completed grill draft r1 and retain its exact text locally. The operator supplies a simulated issue-contract revision notice for r1 only after the draft exists.
+- The accepting reviewer did not write r1, works through a simulated person's account with repository triage authority, and independently checks the contract and owner-decision citations. Record the actual accept/reject outcome; no preapproved verdict substitutes for this review.
+- If r1 holds, record the reviewer's chosen model and readiness bound to r1. Retain the grill's model suggestion separately.
+- The operator then edits only the summary wording to create r2; retain both texts. r1 readiness is invalidated. Withhold r2 readiness until the operator supplies r2's revision notice and the independent reviewer reviews that exact text again.
+
+## Release ledger: simulated approved contracts
+
+This later ledger is a simulated approved contract state for release reasoning, not evidence that the unresolved intake or summary request passed review. It supplies a reviewed specification and two independently reviewed child contracts, each with its own revision notice, chosen model and ticket readiness. For 01 it may be used only after the r2 review above succeeds. 02's hypothetical settled contract is not a brief for its actual unresolved intake.
+
+- Ticket 01 is linked at 2026-10-18T10:00:00Z. The parent receives ready-for-agent at 2026-10-18T10:00:00Z and still carries it: the same-second case holds tickets.
+- Parent readiness is removed and reapplied at 2026-10-18T10:01:00Z, after the latest link. Open, unassigned ticket 01 has no blockers and can be released once its own exact-revision readiness and model are present. The parent itself never runs.
+- Ticket 02 is linked later at 2026-10-18T11:00:00Z. The earlier parent readiness no longer releases tickets: remove and reapply it after this link, at 2026-10-18T11:01:00Z.
+- Both tickets are still open and unassigned; 02 remains blocked by open 01 despite its own readiness and the parent's renewed readiness.
+- The operator finally records 01 closed in this simulated ledger. 02's blocker is now closed; it can be released only with the renewed parent readiness, its own reviewed revision and exactly one chosen model.
+
+Record all actions as local Markdown. Do not change actual intake status to approved based on this hypothetical ledger, claim GitHub authorization, or launch a factory.
+`,
   );
   repositories["factory-planning"] = {
     path: root,
@@ -651,6 +701,81 @@ Draft a local PR body after implementing the ticket. Do not open a pull request.
     path: root,
     skills: ["implement", "pr", "prototype"],
     initial: commit(root, "chore: establish delivery exercises"),
+  };
+}
+
+{
+  const root = createRepository("orchestrate", ["orchestrate"], {
+    agents:
+      "# Agent guidance\n\nRead docs/exercise.md. This exercise uses a disposable sibling workbench; the operator supplies its path as a simulated owner instruction. Use only the local Markdown tracker.\n",
+    context:
+      "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n",
+    exercise: `## Task
+
+Use the exact .agents/skills/orchestrate/SKILL.md with the sibling workbench identified in manifest.json. The operator supplies its absolute path as the simulated global owner instruction before proposal. All owner, tracker and harness inputs are simulations; no remote issue, PR, message, schedule or factory operation is performed. The workbench has no remote. Participant-authored local tickets are direct implementation contracts, not triaged briefs; this scenario exercises plan lifecycle, not brief acceptance or worker delivery.
+
+## Session sequence
+
+The operator releases docs/participant-inputs.md one turn at a time. Use real harness session references and UTC clock timestamps. Session one starts with the goal only: present a proposal and stop before approval, recording the proposed goal and table for comparison. After explicit approval, record its date, source and preapproved scope in plan.md and index.md. Record the simulated open-issue count. Then route the in-goal row, scope amendment and nonfinding wish. Wait for the separate amendment approval before changing scope. Commit each workbench change straight to main.
+
+End session one with an active plan and unfinished rows. A fresh session starts without the first transcript: read index.md, inbox.md and active plans first, then the exact skill and local guidance. Record takeover with the fresh session's reference, preserving the superseded owner. Try closing while a row remains open; keep the plan active. Only after the final participant turn may the plan close.
+
+## Expected outcome
+
+The proposal is visibly distinct from approval. The in-goal row has a dated citation to the approved goal, passes the inference test and appears in the next update's inferred-intent list; it adds no public name or persistent product policy. The amendment remains pending until explicitly approved, and its new approval supersedes rather than erases the old line. The wish is a future capability, not a Finding: it gains one dated quoted line with its source and repository in wishes.md and no issue. Every update shows the decision inbox.
+
+The fresh session resumes from committed workbench state, preserves row history and cannot close while any row lacks a closed simulated issue or dropped (owner). At close, record both open-issue counts, move the index entry under Closed, and announce shipped/dropped items, inferred intent, wishes, any still-open filed issues with reasons, and one suggested next direction. The suggestion alone approves no new plan. Report actual observed outcomes separately from fixture checks; keep run evidence outside maintained documentation.
+`,
+  });
+  write(
+    root,
+    "docs/usage/receipts.md",
+    "# Delivery receipt export\n\nThe existing export returns CSV for one UTC date, ordered by Parcel reference, with ISO 8601 UTC timestamps. An empty date returns a header-only CSV. This exercise reviews documentation only; no product behavior changes.\n",
+  );
+  write(
+    root,
+    "docs/participant-inputs.md",
+    `# Controlled participant turns
+
+The operator relays these in order, pausing at the indicated boundaries. All are simulated owner/tracker inputs. Cite each turn by this file and turn number with the clock date at delivery; do not pretend these are real approvals. The operator retains prompts, session references and turn delivery times outside the repositories.
+
+## Session one
+
+1. Goal: "Review the existing Delivery receipt export guide for accuracy; finish when each review item is resolved in the local tracker. Documentation review only." Propose one initial row, "Review the current guide", without filing it or recording approval. Stop for the participant.
+2. Approval: "I approve that goal, Done means and initial row. This preapproves the named documentation review only." Record approval. Simulated tracker starts with zero open issues. File the direct local review ticket as 01 under .scratch/receipt-review/issues/; it is open.
+3. In-goal row: "Also check the guide's existing empty-date example against its header-only behavior." Log the inference from turn 2's approved review goal: this is a temporary inspection within the goal, with no new public name or enduring policy. Add row/ticket 02 and list it in the next update.
+4. Scope amendment: "Extend this plan to audit the Parcel glossary as well." Propose the scope amendment through the decision inbox; keep it pending and stop for approval.
+5. Amendment approval: "I approve adding the glossary audit to the plan's scope." Record the superseding approval and add row/ticket 03. Preserve the earlier approval text.
+6. Wish: "In a future plan I would like multilingual Delivery receipt guides." This is a desired future capability, not a Finding. Record it as a wish with its quote, source, date and this project repository; file no issue.
+7. Tracker update: 01 is closed in the simulated local tracker. Tickets 02 and 03 remain open. End the session with a committed active plan; do not close it.
+
+## Fresh session two
+
+8. Resume using only the workbench entry points and active plan, with no prior transcript. Use the fresh harness session reference for takeover. The operator supplies no terminal tracker update yet: 02 and 03 remain open. A request to close now must leave the plan active.
+9. Owner drop: "Drop the glossary audit from this plan." Keep row 03 with state dropped (owner) and the cited decision. Its already-filed simulated issue 03 stays open, intentionally parked; report that reason and count it at close. Ticket 02 still holds closure.
+10. Final tracker update: 02 is now closed. The final open-issue count is one (parked 03). Close the plan, report what shipped/dropped, the in-goal inference, the wish, and the open parked issue. Suggest multilingual guides or the parked glossary audit as one next direction, awaiting a separate approval.
+`,
+  );
+  const workbench = join(fixtureRoot, "orchestrate-workbench");
+  mkdirSync(workbench);
+  write(
+    workbench,
+    "index.md",
+    "# Workbench\n\n## Active\n\nNone.\n\n## Closed\n\n## Launch caps\n\nNo host override; use the skill's default cap.\n",
+  );
+  write(workbench, "inbox.md", "# Decision inbox\n\nNo open decisions.\n");
+  write(workbench, "wishes.md", "# Wishes\n");
+  initializeFixtureRepository(workbench, {
+    author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
+  });
+  repositories.orchestrate = {
+    path: root,
+    skills: ["orchestrate"],
+    initial: commit(root, "chore: establish orchestration exercise"),
+    workbench: {
+      path: workbench,
+      initial: commit(workbench, "chore: initialize exercise workbench"),
+    },
   };
 }
 

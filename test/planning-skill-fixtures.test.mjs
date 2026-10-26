@@ -36,6 +36,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.deepEqual(Object.keys(manifest.repositories).sort(), [
     "delivery",
     "factory-planning",
+    "orchestrate",
     "planning",
     "project-agent-guidance",
     "triage-routing",
@@ -51,6 +52,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "grill-with-docs",
     "grilling",
     "implement",
+    "orchestrate",
     "pr",
     "prototype",
     "research",
@@ -71,6 +73,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "implement",
       "pr",
       "prototype",
+      "orchestrate",
     ],
   );
   const deliveryScenario = manifest.repositories.delivery;
@@ -169,6 +172,106 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     realpathSync(join(root, ".agents/skills/triage")),
   );
   const routing = manifest.repositories["triage-routing"];
+  const orchestrate = manifest.repositories.orchestrate;
+  assert.deepEqual(orchestrate.skills, ["orchestrate"]);
+  assert.equal(
+    realpathSync(join(orchestrate.path, ".agents/skills/orchestrate")),
+    realpathSync(join(root, ".agents/skills/orchestrate")),
+  );
+  const workbench = orchestrate.workbench.path;
+  for (const path of [orchestrate.path, workbench]) {
+    assert.equal(
+      execFileSync("git", ["remote"], { cwd: path, encoding: "utf8" }),
+      "",
+    );
+    assert.equal(
+      execFileSync("git", ["status", "--porcelain"], {
+        cwd: path,
+        encoding: "utf8",
+      }),
+      "",
+    );
+    assert.equal(
+      execFileSync("git", ["config", "commit.gpgsign"], {
+        cwd: path,
+        encoding: "utf8",
+      }).trim(),
+      "false",
+    );
+  }
+  assert.deepEqual(
+    readdirSync(workbench)
+      .filter((name) => name !== ".git")
+      .sort(),
+    ["inbox.md", "index.md", "wishes.md"],
+  );
+  const orchestrateTask = readFileSync(
+    join(orchestrate.path, "docs/exercise.md"),
+    "utf8",
+  );
+  for (const phase of [
+    "proposal",
+    "approval",
+    "amendment",
+    "wish",
+    "fresh session",
+  ])
+    assert.ok(orchestrateTask.includes(phase), `orchestrate phase: ${phase}`);
+  const participantInputs = readFileSync(
+    join(orchestrate.path, "docs/participant-inputs.md"),
+    "utf8",
+  );
+  assert.match(participantInputs, /dropped \(owner\)/);
+  assert.match(participantInputs, /not a Finding/);
+  assert.match(participantInputs, /closed/i);
+  const factoryPlanning = manifest.repositories["factory-planning"];
+  const factoryIntake = readFileSync(
+    join(
+      factoryPlanning.path,
+      ".scratch/receipts/issues/01-export-receipts.md",
+    ),
+    "utf8",
+  );
+  assert.match(factoryIntake, /^Status: needs-triage$/m);
+  assert.doesNotMatch(
+    factoryIntake,
+    /## Agent Brief|parcel_reference|exportReceipts\(|ready-for-agent/,
+  );
+  const factoryTask = readFileSync(
+    join(factoryPlanning.path, "docs/exercise.md"),
+    "utf8",
+  );
+  assert.match(factoryTask, /intent-bound/);
+  assert.match(factoryTask, /no brief or readiness/i);
+  const ownerInputs = readFileSync(
+    join(factoryPlanning.path, ".scratch/receipts/owner-inputs.md"),
+    "utf8",
+  );
+  for (const choice of [
+    "parcel_reference,delivered_at,signer_name",
+    "exportReceipts(receipts, date)",
+    "caller-supplied",
+  ])
+    assert.ok(ownerInputs.includes(choice), `controlled choice: ${choice}`);
+  const factoryReviews = readFileSync(
+    join(factoryPlanning.path, ".scratch/receipts/review-inputs.md"),
+    "utf8",
+  );
+  for (const outcome of [
+    /simulated approved contract/i,
+    /r1/,
+    /r2/,
+    /2026-10-18T10:00:00Z/,
+    /2026-10-18T10:01:00Z/,
+    /2026-10-18T11:00:00Z/,
+    /2026-10-18T11:01:00Z/,
+    /reviewer did not write r1/,
+    /r1 readiness is invalidated/,
+    /parent itself never runs/,
+    /02 remains blocked by open 01/,
+    /02's blocker is now closed/,
+  ])
+    assert.match(factoryReviews, outcome);
   assert.deepEqual(routing.skills, ["triage"]);
   const issues = join(routing.path, ".scratch/routing/issues");
   assert.deepEqual(readdirSync(issues).sort(), [
