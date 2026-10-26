@@ -103,7 +103,7 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
   for (const [name, profile] of Object.entries(validation.profiles)) {
     assert.equal(
       profile.declarations.length,
-      { standard: 57, factory: 61 }[name],
+      { standard: 58, factory: 62 }[name],
     );
     assert.deepEqual(
       profile.declarations.find(({ id }) => id === "standards-update-workflow"),

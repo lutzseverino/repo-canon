@@ -704,7 +704,8 @@ function snapshotFiles(directory, prefix = "") {
 }
 
 // Adoption installs only workflow skills, as ADR 0018 decides: 16 pinned
-// upstream skills, Repo Canon's own babysit, and its triage fork (ADR 0021).
+// upstream skills, Repo Canon's own babysit and orchestrate, and its triage
+// fork (ADR 0021).
 const workflowSkills = [
   "babysit",
   "code-review",
@@ -715,6 +716,7 @@ const workflowSkills = [
   "grilling",
   "implement",
   "improve-codebase-architecture",
+  "orchestrate",
   "pr",
   "prototype",
   "research",
@@ -1118,6 +1120,96 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
   assert.match(
     flowedText(".agents/skills/triage/AGENT-BRIEF.md"),
     /\*\*Inferred intent\*\*: each answer the orchestrating agent inferred under the inference test, which the brief states as behavior, with its citation/,
+  );
+});
+
+test("adoption installs Repo Canon's user-invoked orchestrate skill, which credits chief-of-staff", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.match(
+    declarations,
+    /\n {4}skill-orchestrate:\n {6}kind: skill\n {6}name: orchestrate\n {6}source: \.agents\/skills\/orchestrate\n/,
+  );
+  const directory = join(root, ".agents/skills/orchestrate");
+  assert.deepEqual(snapshotFiles(directory).sort(), [
+    "CREDITS.md",
+    "SKILL.md",
+    "agents/openai.yaml",
+  ]);
+  const frontmatter =
+    /^---\n([\s\S]*?)\n---\n/.exec(
+      readFileSync(join(directory, "SKILL.md"), "utf8"),
+    )?.[1] ?? "";
+  assert.match(frontmatter, /^name: orchestrate$/m);
+  assert.match(frontmatter, /^description: \S/m);
+  assert.match(frontmatter, /^disable-model-invocation: true$/m);
+  assert.match(
+    readFileSync(join(directory, "agents/openai.yaml"), "utf8"),
+    /^ {2}allow_implicit_invocation: false$/m,
+  );
+  const credits = flowedText(".agents/skills/orchestrate/CREDITS.md");
+  assert.match(
+    credits,
+    /`chief-of-staff` skill in \[Matt Pocock's skills\]\(https:\/\/github\.com\/mattpocock\/skills\), compared at commit `5beb35b040e3de97e54fa9e386d7e42d15c295c2`/,
+  );
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  // A method that cites the contribution guide rather than restating it.
+  assert.match(
+    skill,
+    /contribution guide, `CONTRIBUTING\.md`, decides triage, readiness, question routing and delivery/,
+  );
+  assert.doesNotMatch(
+    skill,
+    /Never infer a default|readiness label|`ready-for-agent`/,
+  );
+});
+
+// The orchestrate skill and its workbench stay harness-neutral; its last
+// section alone maps the steps to one harness's tools.
+const harnessSection = "## With T3 Code";
+const harnessNames =
+  /\bT3(?:\b|code)|\bt3_|\bt3:|delegate_task|schedule_task|watch_pull_request/i;
+
+function outsideHarnessSection(content) {
+  const sections = content.split(/^(?=## )/m);
+  const last = sections.at(-1);
+  return last.startsWith(`${harnessSection}\n`)
+    ? sections.slice(0, -1).join("")
+    : content;
+}
+
+test("the orchestrate skill names its harness and that harness's tools only in its closing section", () => {
+  const directory = join(root, ".agents/skills/orchestrate");
+  const skill = readFileSync(join(directory, "SKILL.md"), "utf8");
+  assert.equal(
+    skill.split(/^## /m).at(-1).split("\n")[0],
+    harnessSection.slice(3),
+    "the harness section closes the skill",
+  );
+  for (const path of snapshotFiles(directory)) {
+    const content = readFileSync(join(directory, path), "utf8");
+    const outside =
+      path === "SKILL.md" ? outsideHarnessSection(content) : content;
+    assert.doesNotMatch(outside, harnessNames, path);
+  }
+  for (const [label, content] of [
+    ["a tool name", "Start workers with `delegate_task`."],
+    ["the harness", "Open grills on T3 Code."],
+    ["the harness as one word", "Open grills on T3code."],
+    ["a thread reference", "Record it as `t3:<id>`."],
+    ["a t3_ tool", "Send with `t3_thread_send`."],
+  ])
+    assert.match(
+      outsideHarnessSection(
+        `# Skill\n\n## Steps\n\n${content}\n\n${harnessSection}\n\nTools.\n`,
+      ),
+      harnessNames,
+      `${label} outside the closing section is caught`,
+    );
+  assert.doesNotMatch(
+    outsideHarnessSection(
+      `# Skill\n\n## Steps\n\nWork.\n\n${harnessSection}\n\nUse \`delegate_task\`.\n`,
+    ),
+    harnessNames,
   );
 });
 

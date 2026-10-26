@@ -3,7 +3,8 @@
 The [Repository README](../../README.md#installation) gives the one-line `adopt`
 command that adopts Repo Canon and every later update. `adopt` asks each
 question adoption needs; this guide covers profiles, stacks, remote setup,
-opting into automated updates, and the personal skills adoption leaves to you. The
+opting into automated updates, orchestrating plans, and the personal skills
+adoption leaves to you. The
 CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/adoption.md)
 describes `adopt` itself, at a terminal and through an agent.
@@ -125,6 +126,27 @@ merging to apply it. The installed caller does not wire `agent-command`;
 write your own caller workflow if you want an agent to finish contextual work.
 The [workflow development document](../development/standards-update-workflow.md)
 describes its pins and validation.
+
+## Orchestrate plans
+
+Both profiles install the `orchestrate` skill, which only you can invoke. With
+it, the orchestrating agent turns a feature or problem into a plan you
+approve, keeps the plan's state in a workbench, and runs the plan to an
+announced close. The workbench is a git repository of plain Markdown that you
+create and clone on each host that runs an orchestrating session. Name its
+path in your global agent instructions; the skill assumes no path.
+
+An orchestrating session often runs outside every repository checkout, where
+no repository's skills are found. Link the installed skill directory from an
+adopted checkout into your user-level skills directory, where your agent finds
+skills in every session:
+
+```sh
+ln -s /path/to/checkout/.agents/skills/orchestrate <user-level skills directory>/orchestrate
+```
+
+The link follows that checkout, so the skill changes when the checkout adopts
+an update. Linking it is host setup, outside what adoption installs.
 
 ## Recommended personal skills
 
