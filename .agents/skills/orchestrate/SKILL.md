@@ -174,6 +174,9 @@ with their citations, and shows the decision inbox. Log the items it showed.
   names for this host's hostname. Count every grill, triage run, research run
   and worker.
 - Workers deliver as the contribution guide's Pull requests section says.
+  When applicable installed rules assign a worker's merge to you, read its
+  accepted brief and PR handoff, then resume `babysit`, including when resuming
+  a plan.
 
 ## Report-back
 

@@ -245,6 +245,12 @@ For adoption or update findings, use these target repositories:
 
 ### Merging
 
+Before delivery, read applicable installed rules for merge ownership and
+owner review. When they assign the merge to another agent, the worker records
+the prescribed PR handoff and stops without merging. The designated merging
+agent resumes delivery from that handoff, enforcing those rules on the current
+head alongside the conditions below.
+
 Merge a pull request once every required check passes on its latest head and
 every review thread is answered with its fix or a reasoned decline under the
 [comment rules](#comments). The `github-repository-configuration` rules state

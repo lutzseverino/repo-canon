@@ -118,6 +118,10 @@ bundle and the current GitHub CLI credential. Its caller bounds the foreground
 wait; the command has no invocation timeout.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
 and head-change retry behavior against the same Postern transport fixture.
+The delivery conformance cases in `test/repository-conformance.test.mjs`
+cover worker handoffs, orchestrator merge ownership, either source of an
+owner-review designation, renewed approval after a head change, and skipped
+work without an owner-review requirement.
 The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 
