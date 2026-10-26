@@ -7,5 +7,5 @@ vendor/
 # Installed skills retain their source bytes, including Repo Canon's babysit skill.
 .agents/skills/
 
-# npm maintains the dependency lockfile.
-package-lock.json
+# pnpm maintains the dependency lockfile.
+pnpm-lock.yaml

@@ -15,7 +15,7 @@ import {
 
 await runScript(
   "release:inputs",
-  "npm run release:inputs -- <previous-tag>",
+  "pnpm run release:inputs <previous-tag>",
   1,
   (previousTag) => {
     const previous = resolveTag(previousTag);

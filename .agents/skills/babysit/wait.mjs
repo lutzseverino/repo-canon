@@ -157,15 +157,12 @@ export const decide = ({
   if (failing.length > 0) {
     return { code: 2, ...review, failing };
   }
+  const noChecks = checks.length === 0 && { noChecks: true };
   if (!checksPending && !reviewer) {
-    const outcome = { code: 0, failing };
-    if (checks.length === 0) outcome.noChecks = true;
-    return outcome;
+    return { code: 0, failing, ...noChecks };
   }
   if (!checksPending && state in settledCodes) {
-    const outcome = { code: settledCodes[state], ...review, failing };
-    if (checks.length === 0) outcome.noChecks = true;
-    return outcome;
+    return { code: settledCodes[state], ...review, failing, ...noChecks };
   }
   if (now - startedAt >= limitMs) {
     return { code: 5, ...review, failing, checksPending };

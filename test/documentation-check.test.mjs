@@ -934,6 +934,7 @@ test("the one index per document rule accepts the installed agents index citing 
     );
   }
 
+  // A link in context is a citation too.
   passes(
     check(t, {
       ...files,
@@ -947,7 +948,6 @@ test("the one index per document rule accepts the installed agents index citing 
         ],
       )}\nRead [the project guidance](project.md) for repository constraints.\n`,
     }),
-    "a link in context is a citation too",
   );
 
   const otherAgentsDocument = failures(

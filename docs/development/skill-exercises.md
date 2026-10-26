@@ -63,7 +63,7 @@ not committed.
 
 ```bash
 node scripts/create-engineering-skill-fixtures.mjs
-npm run test:engineering-skill-fixtures
+pnpm run test:engineering-skill-fixtures
 ```
 
 The builder prints its JSON manifest. Five repositories exercise seven
@@ -87,7 +87,7 @@ commit under a host that requires signing with an unusable program.
 
 ```bash
 node scripts/create-productivity-skill-fixtures.mjs
-npm run test:productivity-skill-fixtures
+pnpm run test:productivity-skill-fixtures
 ```
 
 The builder prints a `repo-canon/productivity-skill-fixtures/v1` manifest. Each
@@ -110,7 +110,7 @@ later commit under hostile global signing.
 
 ```bash
 node scripts/create-planning-skill-fixtures.mjs
-npm run test:planning-skill-fixtures
+pnpm run test:planning-skill-fixtures
 ```
 
 The builder writes `manifest.json` under its root and prints that path. Six

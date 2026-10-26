@@ -1,4 +1,5 @@
 // Existing reader fixtures, shared with the independent YAML comparison.
+/** @type {[string, string[] | null][]} */
 export const workspaceYamlCases = [
   ["packages:\n  - packages/*\n  - 'apps/*'\n", ["packages/*", "apps/*"]],
   // An indentationless block sequence, with a comment between items.
@@ -21,6 +22,7 @@ export const workspaceYamlCases = [
   ["packages: *members\n", null],
 ];
 
+/** @type {[string, string[] | null][]} */
 export const flowYamlCases = [
   ['packages: ["packages/{cli,web}"]\n', ["packages/{cli,web}"]],
   [

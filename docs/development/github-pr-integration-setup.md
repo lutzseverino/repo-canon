@@ -219,9 +219,9 @@ partial effects, readback, retry, and unchanged repetition without contacting
 GitHub or mutating live settings:
 
 ```sh
-npm run test:github-pr-integration
+pnpm run test:github-pr-integration
 ```
 
 The [label setup](github-label-setup.md#results-and-recovery) document
-describes the probe fixtures, which `npm run test:github-pr-integration` also
+describes the probe fixtures, which `pnpm run test:github-pr-integration` also
 runs.

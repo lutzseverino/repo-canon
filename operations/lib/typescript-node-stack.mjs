@@ -204,6 +204,7 @@ function workspaceYaml(text) {
   let index = 0;
   const indentation = (line) => line.length - line.trimStart().length;
   function block(indent, sequence = false) {
+    /** @type {any} */
     const result = sequence ? [] : new Map();
     while (index < lines.length) {
       const line = lines[index];
@@ -546,6 +547,7 @@ function comparatorSetInterval(text) {
 
 // The majors an interval admits, or `{ from }` when it admits every major
 // from one on.
+/** @param {{ low?: any, high?: any, empty?: boolean }} interval */
 function intervalMajors({ low, high, empty }) {
   if (empty) return [];
   if (low && high) {

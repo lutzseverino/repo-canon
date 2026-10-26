@@ -148,6 +148,10 @@ export const creationLabel = (overrides = {}) => ({
 // `opened` run or by the `labeled` run in which `labeler` applied `trigger`.
 // `currentLabels` are the labels the run re-fetches, when an earlier run
 // changed them.
+/**
+ * @param {Record<string, any>} options
+ * @returns {Record<string, any>}
+ */
 export function createdWithReadiness({
   run,
   opener = "maintainer",
@@ -282,6 +286,7 @@ export const swapRun = (options) =>
 // The labeled run of `sender`, Alice unless stated, for `trigger` while `label`
 // is present, both `ready-for-agent` unless stated, with the notice that
 // observed 100 or, when `approved`, Bob's recorded approval of 203.
+/** @param {Record<string, any>} options */
 export function reapplicationRun({
   approved = false,
   sender = "alice",

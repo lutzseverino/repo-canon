@@ -9,6 +9,7 @@ import { join } from "node:path";
 
 export class ReleaseCheckFailure extends Error {}
 
+/** @returns {never} */
 export function fail(message) {
   throw new ReleaseCheckFailure(message);
 }

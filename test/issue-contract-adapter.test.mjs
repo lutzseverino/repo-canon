@@ -32,6 +32,10 @@ const page = (nodes) => ({
 });
 const account = (login = "reporter") => ({ login, type: "User" });
 
+/**
+ * @param {any} t
+ * @param {Record<string, any>} [options]
+ */
 async function exercise(
   t,
   {
@@ -277,6 +281,7 @@ function assertDecision(result, decision, expectedWrites) {
   );
 }
 
+/** @param {Record<string, any>} options */
 function decisionFor({
   issue,
   comments = [],
@@ -685,7 +690,8 @@ test("opening labels and author facts authorize only the existing creation revie
 
 test("native blockers supply relationship facts while named-section requirements remain", async (t) => {
   const emptyBody = ticketBody.replace("None.", "_No response_");
-  for (const [issue, blockedBy, expectedCode, expectedMessage] of [
+  /** @type {[object, object[], number, RegExp][]} */
+  const cases = [
     [
       { body: emptyBody, labels: [] },
       [{ number: 41, state: "open" }],
@@ -705,7 +711,8 @@ test("native blockers supply relationship facts while named-section requirements
       0,
       /awaiting review/i,
     ],
-  ]) {
+  ];
+  for (const [issue, blockedBy, expectedCode, expectedMessage] of cases) {
     const result = await exercise(t, { issue, blockedBy });
     const decision = decisionFor({ issue, blockedBy });
     assert.equal(decision.exitCode, expectedCode);

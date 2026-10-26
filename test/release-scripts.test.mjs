@@ -333,14 +333,14 @@ test("release:inputs fails clearly for a missing tag or CLI", (t) => {
   assert.notEqual(noArgument.status, 0);
   assert.match(
     noArgument.output,
-    /Usage: npm run release:inputs -- <previous-tag>/,
+    /Usage: pnpm run release:inputs <previous-tag>/,
   );
 
   const emptyArgument = repository.run("inputs.mjs", [""]);
   assert.notEqual(emptyArgument.status, 0);
   assert.match(
     emptyArgument.output,
-    /Usage: npm run release:inputs -- <previous-tag>/,
+    /Usage: pnpm run release:inputs <previous-tag>/,
   );
 });
 
@@ -637,7 +637,7 @@ test("release:verify preserves blockers, failed checks and the update stop reaso
   assert.match(output, /The update could not continue\./);
 });
 
-for (const [scenario, message] of [
+for (const [scenario, message] of /** @type {[string, RegExp][]} */ ([
   ["rejected-scope", /CLI rejected the scope answer/],
   ["scope-repeat", /stopped again after answering scope:documentation/],
   ["question", /unexpected question surprise:documentation/],
@@ -654,7 +654,7 @@ for (const [scenario, message] of [
   ["wrong-version", /the update selected/],
   ["wrong-commit", /the ready status does not identify the verified release/],
   ["missing-line", /did not report a derived adopter-action line/],
-]) {
+])) {
   test(`release:verify fails an update with ${scenario}`, (t) => {
     const { status, output, calls } = verifyAdoption(t, "complete", {
       FAKE_UPDATE: scenario,
@@ -1026,7 +1026,13 @@ test("the adoption fixture passes the shipped contextual checks with its drafted
       recursive: true,
     });
   }
-  for (const [script, declaration, id, paths, declarations] of [
+  for (const [
+    script,
+    declaration,
+    id,
+    paths,
+    declarations,
+  ] of /** @type {[string, string, string, string[], object[]][]} */ ([
     [
       "check-documentation.mjs",
       "documentation",
@@ -1055,7 +1061,7 @@ test("the adoption fixture passes the shipped contextual checks with its drafted
       [],
       [],
     ],
-  ]) {
+  ])) {
     const outcome = invokeCheck(
       join(sourceRoot, "operations", script),
       project,

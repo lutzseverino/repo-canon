@@ -53,6 +53,7 @@ const unmaintainedDirectories = [
   "vendor",
 ];
 
+/** @returns {never} */
 function fail(message) {
   throw new Error(message);
 }

@@ -245,6 +245,7 @@ if (
       report("blocked", [], { ...rest, blockers: [{ message: "A blocker." }] }),
     );
   if (asksScopes) {
+    /** @type {{ id: string, answer: unknown, details?: object }[]} */
     const asked = [
       {
         id: "scope:documentation",

@@ -94,6 +94,7 @@ const accountRequired = (createdAt) => ({
 
 const passed = [{ name: "check", state: "pass", link: "https://ci/1" }];
 
+/** @returns {Record<string, any>} */
 const decision = (overrides) =>
   decide({
     head,
@@ -532,6 +533,7 @@ test("no recorded push keeps empty checks pending in every Codex state", () => {
   for (const [state, overrides] of Object.entries(reviewerStates)) {
     const now = overrides.now ?? Date.parse("2026-10-11T05:43:00Z");
     for (const age of [60 * minute, 24 * 60 * minute]) {
+      /** @type {Record<string, any>} */
       const look = {
         ...overrides,
         pushedAt: now - age,
@@ -601,6 +603,7 @@ test("no checks after 5 minutes settles like passed checks in every Codex state"
       overrides.now ?? Date.parse("2026-10-11T05:43:00Z"),
       pushedAt + 5 * minute,
     );
+    /** @type {Record<string, any>} */
     const look = { ...overrides, now, startedAt: now };
     // Keep the pending fixture inside its reviewer bounds.
     if (state === "pending") look.requestedAt = now - minute;
@@ -665,6 +668,7 @@ test("a failed workflow without checks fails in every Codex state", () => {
         "startup_failure",
         "timed_out",
       ]) {
+        /** @type {Record<string, any>} */
         const look = {
           ...overrides,
           checks: [],
@@ -1378,6 +1382,7 @@ test("unfinished runs hold only their own workflow and check", () => {
 
 // Runs the script against a fake `gh` and returns everything it wrote, with
 // the time of its first write.
+/** @param {string | URL} [target] */
 const run = (
   state,
   args,

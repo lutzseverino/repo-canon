@@ -14,7 +14,7 @@ import {
 
 await runScript(
   "release:check-merge",
-  "npm run release:check-merge -- <reviewed-head> <merge-commit>",
+  "pnpm run release:check-merge <reviewed-head> <merge-commit>",
   2,
   (reviewedRevision, mergeRevision) => {
     const reviewedHead = resolveCommit(reviewedRevision);

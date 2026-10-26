@@ -45,6 +45,7 @@ function withNoticeTimes(comments) {
 
 // Builds the snapshot the adapter would fetch for issue 42. A row without
 // `issueEvents` has an empty timeline.
+/** @param {Record<string, any>} snapshot */
 function snapshotFor({
   issue,
   comments = [],
@@ -117,6 +118,11 @@ function decisionTable(title, rows, { settles = true } = {}) {
 // The snapshot after a decision's writes: its labels changed, the bot's label
 // events appended to the timeline, and its feedback written a minute after the
 // latest recorded time, with a comment edit as the next trigger.
+/**
+ * @param {Record<string, any>} snapshot
+ * @param {any} decision
+ * @param {object} [event]
+ */
 function afterWrites(snapshot, decision, event = commentEdited) {
   const issueEvents = snapshot.issueEvents ?? [];
   const at = new Date(
@@ -1587,6 +1593,16 @@ const creationState = (opener) => ({
 // Decides the `opened` and `labeled` runs of an issue that `opener` created
 // with readiness, in `order`. Each run sees the labels, timeline, and feedback
 // the previous run left, as the per-issue concurrency group serializes them.
+/**
+ * @param {string[]} order
+ * @param {{
+ *   opener?: string,
+ *   permissions?: Record<string, unknown>,
+ *   firstRunIssueEvents?: object[],
+ *   runIssueEvents?: object[][],
+ *   labeledPayloadUpdatedAt?: string,
+ * }} [options]
+ */
 function decideCreationRuns(
   order,
   {
@@ -1942,7 +1958,7 @@ decisionTable(
         feedbackBody: /"reviewEventId":"101"/,
       },
     },
-    ...[
+    .../** @type {{ name: string, options: object, check: Function }[]} */ ([
       {
         name: "an authorized opener keeps the label",
         options: {},
@@ -1991,7 +2007,7 @@ decisionTable(
           assert.equal(comments.length, 1);
         },
       })),
-    ].map(({ name, options, check }) => ({
+    ]).map(({ name, options, check }) => ({
       name: `${name}, with the same decisions, feedback, and labels in either run order`,
       run: () => {
         const [labeledFirst, openedFirst] = runOrders.map((order) =>
@@ -2181,7 +2197,7 @@ const maintainerGrant = creationLabel({
 decisionTable(
   "a human readiness trigger is reviewed only from a timeline that records its application",
   [
-    ...[
+    .../** @type {[string, Function][]} */ ([
       ["only the opener's creation label", ([creation]) => [creation]],
       ["the bot's cleanup", (issueEvents) => issueEvents],
       [
@@ -2192,7 +2208,7 @@ decisionTable(
           { ...maintainerGrant, id: 301, event: "unlabeled", actor: bot },
         ],
       ],
-    ].map(([name, timeline]) => ({
+    ]).map(([name, timeline]) => ({
       name: `the maintainer's trigger is unrecorded in a timeline holding ${name}`,
       run: () => {
         const snapshot = freshGrantSnapshot();
@@ -2235,7 +2251,7 @@ decisionTable(
         });
       },
     },
-    ...[
+    .../** @type {[string, Function][]} */ ([
       [
         "an opened run",
         () => createdWithReadiness({ run: "opened", issueEvents: [] }),
@@ -2262,7 +2278,7 @@ decisionTable(
           return snapshot;
         },
       ],
-    ].map(([name, snapshot]) => ({
+    ]).map(([name, snapshot]) => ({
       name: `${name} awaits no timeline application`,
       run: () => {
         assert.equal(
@@ -2540,7 +2556,7 @@ decisionTable(
         });
       },
     },
-    ...[
+    .../** @type {[string, Function][]} */ ([
       [
         "is unrecorded",
         (snapshot) =>
@@ -2558,7 +2574,7 @@ decisionTable(
               /timeline does not contain the current readiness label event/,
           }),
       ],
-    ].map(([name, check]) => ({
+    ]).map(([name, check]) => ({
       name: `a retry whose sender applied the label only before the observed application ${name}`,
       run: () =>
         check(
@@ -2633,10 +2649,10 @@ function keepsNoApproval(decision) {
 decisionTable(
   "a readiness trigger is recorded only when the label's latest application is the sender's",
   [
-    ...[
+    .../** @type {[string, object][]} */ ([
       ["awaits review", {}],
       ["records Bob's approval", { approved: true }],
-    ].flatMap(([name, options]) => [
+    ]).flatMap(([name, options]) => [
       {
         name: `Alice's trigger over a timeline ending at Bob's application is unrecorded while the feedback ${name}`,
         run: () =>
@@ -3091,6 +3107,7 @@ decisionTable(
 );
 
 // An approved direct ticket whose review is event 101 at 17:00:00.
+/** @param {Record<string, any>} options */
 function supersessionSnapshot({
   labels,
   issueEvents,
@@ -3348,7 +3365,7 @@ decisionTable("workflow states are ordered against the review", [
       message: /valid implementation ticket with ready-for-agent bound/i,
     },
   })),
-  ...[
+  .../** @type {[string, object[], boolean][]} */ ([
     [
       "re-applied in the review's second after a recorded removal",
       [
@@ -3382,7 +3399,7 @@ decisionTable("workflow states are ordered against the review", [
       ],
       false,
     ],
-  ].flatMap(([name, stateEvents, superseded]) =>
+  ]).flatMap(([name, stateEvents, superseded]) =>
     [
       [
         "its own run with a later payload time",
@@ -3556,6 +3573,7 @@ const triagedUnlabel = (id, name, createdAt, actor = "maintainer") => ({
   event: "unlabeled",
 });
 
+/** @param {Record<string, any>} options */
 function triagedSnapshot({
   labels,
   events = [],
@@ -3582,6 +3600,7 @@ function triagedSnapshot({
 }
 
 const modelLabel = "model:claude-opus-5-5";
+/** @returns {[string, any][]} */
 const triggers = (applier = "maintainer") => [
   ["a model label", labeledBy("maintainer", modelLabel)],
   ["the readiness label", labeledBy(applier)],
@@ -3691,13 +3710,13 @@ decisionTable(
         ]);
       },
     },
-    ...[
+    .../** @type {[string, any][]} */ ([
       ["readiness", labeledBy("maintainer")],
       [
         "needs-triage",
         { ...labeledBy("maintainer", "needs-triage"), action: "unlabeled" },
       ],
-    ].map(([first, firstEvent]) => ({
+    ]).map(([first, firstEvent]) => ({
       name: `the 10:02 round approves readiness whichever run goes first: ${first}`,
       run: () => {
         const decision = decideIssueContract(
@@ -3822,7 +3841,7 @@ decisionTable(
       }),
       expected: { exitCode: 0, remove: [earlier], message },
     })),
-    ...[
+    .../** @type {[string, string, object, string, RegExp][]} */ ([
       [
         "unauthorized readiness",
         "writer",
@@ -3844,7 +3863,7 @@ decisionTable(
         "2026-10-13T10:05:00Z",
         /Wait for the validator to publish the exact contract revision/,
       ],
-    ].flatMap(([name, applier, brief, appliedAt, message]) =>
+    ]).flatMap(([name, applier, brief, appliedAt, message]) =>
       triggers(applier).map(([trigger, event]) => ({
         name: `${name} is removed and needs-triage restored in the run for ${trigger}`,
         snapshot: triagedSnapshot({
@@ -4335,6 +4354,7 @@ const agentBrief = (id, createdAt, body = completeAgentBrief) => ({
 
 // A triaged request whose current Brief, comment 20, was approved by event
 // 101, seen by the run for deleting `deleted`.
+/** @returns {Record<string, any>} */
 function deletedBriefSnapshot(deleted) {
   const current = agentBrief(20, "2026-09-14T17:00:00Z");
   return {

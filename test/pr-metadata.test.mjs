@@ -1088,6 +1088,7 @@ test("rejects duplicate required PR sections", () => {
 });
 
 test("rejects invalid Conventional Commit title structure", () => {
+  /** @type {[string, RegExp][]} */
   const cases = [
     ["Feature(metadata): validate pull requests", /allowed lowercase type/],
     ["feature(metadata): validate pull requests", /allowed lowercase type/],

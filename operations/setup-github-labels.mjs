@@ -166,6 +166,7 @@ async function setupLabels(request) {
   const existing = new Map(
     before.value.map((label) => [label.name.toLowerCase(), label]),
   );
+  /** @type {{ kind: string, actual?: any, desired: any }[]} */
   const actions = canonicalLabels.flatMap((desired) => {
     const actual = existing.get(desired.name.toLowerCase());
     if (!actual) return [{ kind: "create", desired }];

@@ -5,8 +5,11 @@ Repo Canon standards source.
 
 ## Setup and validation
 
-Clone the repository with Git 2.32.0 or newer and use Node.js 24 or 26 and npm. Run
-`npm ci --include=dev` to install the pinned development dependencies. The
+Clone the repository with Git 2.32.0 or newer and use Node.js 24 or 26 with
+pnpm 11, at the version that `packageManager` in `package.json` pins. Run
+`pnpm install --frozen-lockfile` to install the pinned development
+dependencies, including TypeScript 7, oxlint 1, and Prettier 3; tests run with
+Node's test runner, `node --test`. The
 standards source has no build step; parser dependencies are vendored. The
 factory is developed in [its own repository](https://github.com/lutzseverino/scriptorium). Adopters do not install
 development dependencies. GitHub planning uses authenticated `gh`
@@ -15,13 +18,27 @@ install public Repository Standards CLI 10.0.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 
-Run `npm run format` to format supported files locally with Prettier's defaults;
+Run `pnpm run format` to format supported files locally with Prettier's defaults;
 there is no configuration file. `.prettierignore` excludes vendored code,
 installed Repository Standards state, installed skills (including Repo Canon's
-own `babysit` skill), and the npm lockfile.
+own `babysit` skill), and the pnpm lockfile.
 
-Run focused tests for the changed behavior, `npm run format:check`,
-`npm run lint`, `npm run check`, and `git diff --check` before opening a PR.
+Run `pnpm validate`, focused tests for the changed behavior, and
+`git diff --check` before opening a PR. `pnpm validate` runs, in order,
+`pnpm run format:check`, `pnpm run lint`, `pnpm run check` (the `node --check`
+syntax check), `pnpm run typecheck`, and `pnpm test`.
+
+`pnpm run typecheck` runs `scripts/typecheck.mjs`, which runs TypeScript 7
+with `tsconfig.json`: `checkJs`, without `strict` and with Node.js 24's types,
+over every `.mjs` and `.js` file outside `node_modules/`, the installed
+Repository Standards state in `.repo-standards/`, and `vendor/`. Authored code
+stays JavaScript, typed with JSDoc where the checker needs it, so installed
+scripts still run with plain `node` and no install. Imports bring three
+vendored bundles into the program: `vendor/marked/marked.esm.js`,
+`vendor/parse5/parse5.esm.js`, and `vendor/postern/postern.mjs`. They keep
+their upstream bytes, so the script fails on every diagnostic except one
+located in them; `test/typecheck.test.mjs` covers that filter.
+
 Review affected links, issue-form fields, and consistency with the confirmed
 preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
@@ -40,14 +57,14 @@ CLI installation, or the test installs it outside the checkout. Runtime
 preparation also needs npm registry access.
 
 Node.js 24 remains the default toolchain and installed automation runtime.
-Compatibility CI runs on both Node.js 24 and 26, installs development
-dependencies and runs the format check, lint, the full
-`npm test` suite, and all-profile source validation. The lint
-step uses oxlint's defaults plus
+CI runs one job on each of Node.js 24 and 26 that installs the development
+dependencies and runs `pnpm validate` and all-profile source validation. The
+required `Test` check passes only when both jobs pass. Lint uses oxlint's
+defaults plus
 ESLint's `recommended` rules that oxlint does not enable by default, with Node
 globals, as named in `.oxlintrc.json`. It excludes `vendor/`, `.repo-standards/`,
-and installed skills under `.agents/skills/`. Both warnings and errors fail the
-lint step.
+and installed skills under `.agents/skills/`. Both warnings and errors fail
+lint.
 
 The Node test suite exercises executable operation fixtures, including
 disposable remote-label and PR-integration state with interruption recovery,
@@ -56,8 +73,8 @@ metadata, harmless formatting variations, a hostile fork payload, and
 issue-contract structure, exact revision association, actor authority,
 invalidation, and repeated or stale events. The GitHub setup fixtures do not
 contact GitHub or establish live remote setup. Run
-`npm run test:issue-contracts` for the focused issue-contract fixtures and
-`npm run test:planning-skill-fixtures` for the planning-skill harness. The
+`pnpm run test:issue-contracts` for the focused issue-contract fixtures and
+`pnpm run test:planning-skill-fixtures` for the planning-skill harness. The
 issue-contract group includes `test/planning-shape-rules.test.mjs`, which
 checks that the Agent Brief and Wayfinder shapes the GitHub rules state agree
 with the validator's accepted and rejected issues. Run
@@ -88,7 +105,7 @@ returned catalog entry must agree with the reference without scalar coercion.
 The focused stack check and scope-drafter suites also exercise regressions and
 valid catalogs from retained resources without the reference dependency.
 
-Run `npm run test:productivity-skill-fixtures` to rebuild and verify the
+Run `pnpm run test:productivity-skill-fixtures` to rebuild and verify the
 disposable local repositories used for the two productivity skill exercises.
 [Skill exercises](skill-exercises.md) describes all three fixture builders and
 the harness that exercises the skills.
@@ -118,7 +135,7 @@ the two copies of the reviewer parser identical, and keeps the user-invoked
 `orchestrate` skill's harness and tool names in its one closing harness
 section, failing on any outside it. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
-CI step: `npm test` already runs it on every pull request.
+CI step: `pnpm test` already runs it on every pull request.
 The same suite checks every declared source input across both profiles for
 branch-following GitHub document links to `lutzseverino` repositories. It
 accepts full commit SHAs and reads published tag and branch refs with
