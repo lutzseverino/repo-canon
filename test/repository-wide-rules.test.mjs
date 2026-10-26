@@ -441,12 +441,20 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
       ".agents/skills/triage/OUT-OF-SCOPE.md",
       ".agents/skills/triage/SKILL.md",
       ".agents/skills/triage/agents/openai.yaml",
+      ...readdirSync(join(root, ".agents/skills/babysit")).map(
+        (name) => `.agents/skills/babysit/${name}`,
+      ),
     ])
       assert.deepEqual(
         readFileSync(join(project, path)),
         readFileSync(join(root, path)),
         `${profile} installs ${path}`,
       );
+    assert.equal(
+      existsSync(join(project, ".github/factory-review-policy.json")),
+      false,
+      `${profile} never enrolls an adopter in app-author review skipping`,
+    );
     for (const path of [null, "wordtally.mjs", ".factory/config.json"]) {
       const { report: lookup, child } = invoke(
         "rules",

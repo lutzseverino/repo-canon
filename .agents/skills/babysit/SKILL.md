@@ -7,14 +7,23 @@ Take the pull request to its merge. `CONTRIBUTING.md` and the
 `github-repository-configuration` rules hold the merge conditions and the
 wording rules.
 
-The bundled scripts require Node.js 24 or 26. The wait reads the optional
+The bundled scripts require Node.js 24 or 26. The request and wait read the optional
 `.github/pull-request-reviewer.json`, whose schema the
 `github-repository-configuration` rules state; without the file, it reports
-only checks.
+only checks unless the app-author policy identifies an external review skip.
+Both commands read the optional `.github/factory-review-policy.json` under
+the same rules. Its absence keeps configured reviewer behavior and requires
+no owner question.
 
 Before the first wait, apply the `github-repository-configuration` rules'
 review request rule to the pull request's head, using step 4 to post any
-required request.
+required request. Use `node <this skill's directory>/request.mjs <number>`
+from the repository root to apply the app-author policy before that rule.
+It posts a required request or reports why none is needed. Exit `0` means
+the rule was applied, not that a review occurred; exit `1` follows the same
+Credentials/error handling as the wait. Run it again before waiting on a
+later or resumed head; add `--fixes-review` when that head fixes a finding
+requiring a new request under the rules.
 
 1. Wait with `node <this skill's directory>/wait.mjs <number>`, run in the
    repository root in the foreground until it exits; it waits for the checks
@@ -30,17 +39,22 @@ required request.
      the `github-repository-configuration` rules for merging without that
      review.
    - `5`: still waiting; run it again.
+   - `6`: checks passed and external review was skipped by app-author policy;
+     go to step 2 and follow the rules' policy-skip merge outcome requirements.
    - `1`: follow [Credentials](../../../CONTRIBUTING.md#credentials) for a
      permission refusal; otherwise fix the invocation or other platform error and
      run it again.
 
-2. Verify each failing check and review finding against the source.
+2. Verify each failing check and review finding against the source, including
+   findings that arrive on a policy-skipped pull request. Complete internal
+   Standards and Spec reviews and retain their actual outcomes for the merge record.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
    every review thread as it requires, following its
    [comment rules](../../../CONTRIBUTING.md#comments).
 4. Apply the review request rule to each new head after a fix push. When it
    requires a request, post the review request comment as the
-   `github-repository-configuration` rules describe. After any push or
+   `github-repository-configuration` rules describe, using `request.mjs` as above
+   so the app-author policy takes precedence. After any push or
    re-request, return to step 1.
 5. Once the merge conditions hold on the latest head, run
    `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is

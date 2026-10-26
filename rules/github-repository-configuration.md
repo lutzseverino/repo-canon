@@ -196,7 +196,48 @@ For example, with placeholder values:
 }
 ```
 
+## Factory app-author review policy
+
+The optional repository-owned `.github/factory-review-policy.json` exempts its
+declared app author from agent-issued external review requests and external
+reviewer response/review waits. Repo Canon installs no policy declaration or
+default exemption. The factory host remains independent of repository reviewer
+configuration; the installed `babysit` request and wait commands apply it.
+
+The file is valid JSON holding exactly this object shape:
+
+```json
+{ "version": 1, "author": "example-factory[bot]" }
+```
+
+Both fields are required; unknown fields, unsupported versions, and malformed
+JSON are errors. `author` is a nonempty, trimmed login. Compare authors
+case-insensitively, treating REST `<slug>[bot]` and CLI `app/<slug>` as the same
+author. A plain human login `<slug>` remains distinct from that app.
+A different or missing PR author is not exempt. Invalid declarations
+fail explicitly and never authorize a skip.
+
+Apply this policy before the review request rules and reviewer wait
+classification, on every head, including fixes, rebases, retries and resumed
+runs. For a matching author, issue no external review request and impose no
+external response/review wait, regardless of opening-request settings or
+request bounds. Classify this outcome as a policy skip, separately from
+external approval, reviewer unavailability or a timeout. At merge, record the
+actual internal Standards and Spec review outcomes and state: "No external
+reviewer runs on app-authored PRs." Follow the contribution guide's comment
+rules for that outcome comment.
+
+Required checks and their waits, internal Standards and Spec reviews, merge
+authorization, and handling of findings that actually arrive remain enforced.
+Use only supplied credentials under the contribution guide's credential rules.
+Absent policy is supported: apply configured reviewer behavior without asking
+the owner for a missing policy. A nonmatching author also keeps that behavior.
+Without a reviewer configuration, checks-only behavior remains supported.
+
 ## Review requests
+
+Apply the [app-author policy](#factory-app-author-review-policy) first; the
+request rules below govern authors it does not exempt.
 
 With a reviewer file, a review request is the pull request's opening when
 `request.onOpen` is true, or a later comment whose whole trimmed body equals
@@ -235,6 +276,9 @@ request title, or body. To mention the request, describe it as "the review
 request comment".
 
 ## Merging with a configured reviewer
+
+Apply the [app-author policy](#factory-app-author-review-policy) first; the
+reviewer waits below govern authors it does not exempt.
 
 With a reviewer file, a pull request also waits for the configured reviewer's
 review of its latest head before it merges. When the configured reviewer does

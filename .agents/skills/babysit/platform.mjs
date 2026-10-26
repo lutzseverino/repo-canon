@@ -231,3 +231,28 @@ export function conversationComments(pages) {
   }
   return comments;
 }
+
+// Whether GitHub recorded the push of the pull request's head, with its time
+// for the reviewer: the recorded time, else the committer date, never before
+// opening.
+export const pushTime = async (pull, connection) => {
+  const head = pull.headCommit;
+  const path = `/repos/${connection.repository.path}`;
+  const activity = pushActivity(
+    await pages(
+      connection,
+      `${path}/activity?ref=${encodeURIComponent(`refs/heads/${pull.headBranch}`)}&per_page=100`,
+    ).catch(() => []),
+  );
+  const recorded = activity.find((entry) => entry.after === head);
+  const pushedAt =
+    recorded?.timestamp ??
+    (await requestData(connection, { path: `${path}/commits/${head}` })).commit
+      .committer.date;
+  if (!Number.isFinite(Date.parse(pushedAt)))
+    throw new Error("The head push time is unavailable.");
+  return {
+    pushedAt: Math.max(Date.parse(pushedAt), Date.parse(pull.createdAt)),
+    pushRecorded: Boolean(recorded),
+  };
+};

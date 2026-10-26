@@ -110,6 +110,79 @@ const decision = (overrides) =>
     ...overrides,
   });
 
+test("the declared app skips external review on initial and resumed heads", () => {
+  for (const author of ["factory-app[bot]", "app/FACTORY-APP"]) {
+    for (const pushedAt of [0, Date.parse("2026-10-11T05:42:00Z")]) {
+      const outcome = decision({
+        policy: { version: 1, author: "Factory-App[bot]" },
+        author,
+        pushedAt,
+      });
+      assert.equal(outcome.code, 6);
+      assert.equal(outcome.reviewer, "skipped");
+      assert.match(
+        report(outcome, head)[0],
+        /external review skipped by app-author policy/,
+      );
+    }
+  }
+});
+
+test("policy skips preserve check failures, pending checks, workflow waits and arriving findings", () => {
+  const policy = { version: 1, author: "app/factory-app" };
+  const context = { policy, author: "FACTORY-APP[bot]" };
+  assert.equal(
+    decision({ ...context, checks: [{ name: "test", state: "fail" }] }).code,
+    2,
+  );
+  for (const pending of [
+    { checks: [{ name: "test", state: "pending" }] },
+    { runs: [{ status: "queued" }] },
+    { checks: [], pushRecorded: false },
+    { checks: [], pushedAt: Date.parse("2026-10-11T05:42:59Z") },
+  ]) {
+    assert.equal(decision({ ...context, ...pending }).code, null);
+  }
+  const arrived = decision({
+    ...context,
+    reviews: [
+      {
+        user: { login: codex },
+        commit_id: head,
+        state: "CHANGES_REQUESTED",
+        body: "Fix this defect.",
+      },
+    ],
+  });
+  assert.equal(arrived.code, 6);
+  assert.equal(arrived.reviewer, "skipped");
+  assert.equal(decision({ ...context, reviewer: null }).code, 6);
+  assert.equal(
+    reviewRequestedAt(
+      123,
+      [{ body: codexReviewer.request.comment, createdAt: openedNow }],
+      codexReviewer,
+      context,
+    ),
+    null,
+  );
+});
+
+test("a different or missing author and supported absence preserve review waits", () => {
+  for (const context of [
+    { policy: { version: 1, author: "factory-app[bot]" }, author: "owner" },
+    {
+      policy: { version: 1, author: "factory-app[bot]" },
+      author: "factory-app",
+    },
+    { policy: { version: 1, author: "factory-app[bot]" } },
+    { policy: null, author: "factory-app[bot]" },
+  ]) {
+    assert.equal(decision(context).code, null);
+    assert.equal(decision(context).reviewer, "pending");
+  }
+});
+
 test("Completed for the head on a clean pass is reviewed (#257)", () => {
   const outcome = decision({ comments: [summary(completed, "f7bb671")] });
   assert.equal(outcome.code, 0);
@@ -1388,12 +1461,19 @@ const run = (
   args,
   reviewer = codexReviewer,
   target = new URL("../.agents/skills/babysit/wait.mjs", import.meta.url),
+  policy = null,
 ) => {
   const targetURL = typeof target === "string" ? pathToFileURL(target) : target;
   const bundleURL = new URL("../../../vendor/postern/postern.mjs", targetURL);
   const directory = mkdtempSync(join(tmpdir(), "babysit-wait-"));
+  mkdirSync(join(directory, ".github"));
+  if (policy !== null) {
+    writeFileSync(
+      join(directory, ".github/factory-review-policy.json"),
+      typeof policy === "string" ? policy : JSON.stringify(policy),
+    );
+  }
   if (reviewer) {
-    mkdirSync(join(directory, ".github"));
     writeFileSync(
       join(directory, ".github/pull-request-reviewer.json"),
       JSON.stringify(reviewer),
@@ -1444,6 +1524,44 @@ const run = (
     });
   });
 };
+
+test("the installed wait applies the declaration without delaying for external review", async (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/wait.mjs");
+  const result = await run(
+    {
+      head,
+      author: "factory-app[bot]",
+      createdAt: "2026-10-11T05:00:00Z",
+      pushedAt: "2026-10-11T05:00:00Z",
+    },
+    ["12", "--limit", "0.1"],
+    codexReviewer,
+    target,
+    { version: 1, author: "app/FACTORY-APP" },
+  );
+  assert.equal(result.code, 6, result.stderr);
+  assert.match(result.stdout, /external review skipped by app-author policy/);
+});
+
+test("invalid policy declarations fail the wait rather than exempting the author", async () => {
+  for (const policy of [
+    "{",
+    { version: 2, author: "factory-app[bot]" },
+    { version: 1, author: " factory-app[bot]" },
+    { version: 1, author: "" },
+    { version: 1, author: "factory-app[bot]", extra: true },
+  ]) {
+    const result = await run(
+      { head, author: "factory-app[bot]" },
+      ["12"],
+      codexReviewer,
+      undefined,
+      policy,
+    );
+    assert.equal(result.code, 1);
+    assert.match(result.stderr, /\.github\/factory-review-policy\.json:/);
+  }
+});
 
 const openedNow = new Date().toISOString();
 const pendingPullRequest = {
