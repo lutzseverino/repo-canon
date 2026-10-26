@@ -12,6 +12,10 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import test from "node:test";
 import { installedValidator } from "./helpers/installed-validator.mjs";
+import {
+  readReviewPolicy,
+  skipsExternalReview,
+} from "../.agents/skills/babysit/review-policy.mjs";
 
 const script = new URL(
   "../.agents/skills/babysit/request.mjs",
@@ -28,6 +32,24 @@ const policy = { version: 1, author: "Factory-App[bot]" };
 const head = "a".repeat(40);
 const openedAt = "2026-10-11T05:00:00Z";
 const pushedAt = "2026-10-11T05:10:00Z";
+
+test("human declarations are configuration errors and cannot authorize a skip", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "babysit-policy-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  mkdirSync(join(directory, ".github"));
+  for (const author of ["lutzseverino", "LutzSeverino", "factory-app"]) {
+    const declaration = { version: 1, author };
+    writeFileSync(
+      join(directory, ".github/factory-review-policy.json"),
+      JSON.stringify(declaration),
+    );
+    assert.throws(
+      () => readReviewPolicy(directory),
+      /\.github\/factory-review-policy\.json: author must be an app identity/,
+    );
+    assert.equal(skipsExternalReview(declaration, author), false);
+  }
+});
 
 // Exercise the command with the published adapter and a local GitHub transport.
 /** @param {import("node:test").TestContext} t
@@ -98,11 +120,17 @@ const run = (
 };
 
 test("a declared app emits no request initially or after fixes and resumed runs", (t) => {
-  for (const author of ["factory-app[bot]", "app/FACTORY-APP"]) {
+  for (const [declared, author] of [
+    ["Factory-App[bot]", "factory-app[bot]"],
+    ["Factory-App[bot]", "app/FACTORY-APP"],
+    ["APP/Factory-App", "factory-app[bot]"],
+    ["APP/Factory-App", "app/FACTORY-APP"],
+  ]) {
     for (const onOpen of [true, false]) {
       for (const args of [[], ["--fixes-review"]]) {
         const result = run(t, {
           author,
+          declaration: { version: 1, author: declared },
           config: { ...reviewer, request: { ...reviewer.request, onOpen } },
           args,
           push: pushedAt,
@@ -205,11 +233,41 @@ test("invalid declarations fail explicitly before any request", (t) => {
     { ...policy, author: " factory-app[bot]" },
     { ...policy, author: "factory-app[bot] " },
     { ...policy, author: 12 },
+    { ...policy, author: "app/" },
+    { ...policy, author: "[bot]" },
   ]) {
     const result = run(t, { author: "factory-app[bot]", declaration });
     assert.equal(result.code, 1);
     assert.deepEqual(result.emitted, []);
     assert.match(result.stderr, /\.github\/factory-review-policy\.json:/);
+  }
+});
+
+test("installed requests reject human declarations for every author with or without a reviewer", (t) => {
+  const target = pathToFileURL(
+    installedValidator(t, ".agents/skills/babysit/request.mjs"),
+  );
+  for (const declared of ["lutzseverino", "LutzSeverino"]) {
+    for (const author of [declared, "lutzseverino", "other", null]) {
+      for (const config of [
+        { ...reviewer, request: { ...reviewer.request, onOpen: false } },
+        null,
+      ]) {
+        const result = run(t, {
+          target,
+          author,
+          config,
+          declaration: { version: 1, author: declared },
+        });
+        assert.equal(result.code, 1, result.stderr);
+        assert.match(
+          result.stderr,
+          /\.github\/factory-review-policy\.json: author must be an app identity/,
+        );
+        assert.equal(result.stdout, "");
+        assert.deepEqual(result.emitted, []);
+      }
+    }
   }
 });
 

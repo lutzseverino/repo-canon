@@ -3,6 +3,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const target = ".github/factory-review-policy.json";
+const isAppIdentity = (login) =>
+  typeof login === "string" &&
+  /^(?:[^\s/[\]]+\[bot\]|app\/[^\s/[\]]+)$/i.test(login);
 
 export const readReviewPolicy = (root = process.cwd()) => {
   let text;
@@ -26,6 +29,10 @@ export const readReviewPolicy = (root = process.cwd()) => {
       policy.author !== policy.author.trim()
     )
       throw new Error("author must be a nonempty, trimmed login");
+    if (!isAppIdentity(policy.author))
+      throw new Error(
+        "author must be an app identity: <slug>[bot] or app/<slug>",
+      );
     return policy;
   } catch (error) {
     throw new Error(`${target}: ${error.message}`, { cause: error });
@@ -38,6 +45,7 @@ const normalize = (login) =>
 export const skipsExternalReview = (policy, author) =>
   Boolean(
     policy &&
+    isAppIdentity(policy.author) &&
     typeof author === "string" &&
     author &&
     normalize(author) === normalize(policy.author),
