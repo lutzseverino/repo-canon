@@ -105,21 +105,27 @@ export function readManifest(projectRoot, path) {
 // versions. Their exact values are irrelevant to the manifest readers.
 const nonStringYamlScalar = Symbol("non-string YAML scalar");
 
+// YAML separation uses ASCII spaces (and line breaks in flow sequences),
+// not JavaScript's broader whitespace set. Tabs are rejected document-wide.
+function trimYamlSpace(text) {
+  return text.replace(/^[ \n]+|[ \n]+$/g, "");
+}
+
 // A string without quotes/comments, a non-string marker, or null for a form
 // this reader does not decode. Single quotes decode `''`, and double quotes
 // decode only `\\"`, `\\\\` and `\\/`. A plain scalar may not start with an
 // indicator or hold a mapping's `: `, and inside a flow collection it may not
 // hold a flow indicator.
 function yamlScalar(value, { flow = false } = {}) {
-  const text = value.trim();
+  const text = trimYamlSpace(value);
   if (text === "" || text.startsWith("#")) return null;
-  const single = /^'((?:[^']|'')*)'(?:\s+#.*|\s*)$/.exec(text);
+  const single = /^'((?:[^']|'')*)'(?: +#.*| *)$/.exec(text);
   if (single) return single[1].replaceAll("''", "'");
-  const double = /^"((?:[^"\\]|\\["\\/])*)"(?:\s+#.*|\s*)$/.exec(text);
+  const double = /^"((?:[^"\\]|\\["\\/])*)"(?: +#.*| *)$/.exec(text);
   if (double) return double[1].replace(/\\(["\\/])/g, "$1");
-  if (/^(?:["'&*!|>%@`[\]{},#]|[-?:](?:\s|$))/.test(text)) return null;
-  const plain = text.replace(/\s+#.*$/, "");
-  if (/:(?:\s|$)/.test(plain) || (flow && /[[\]{},]/.test(plain))) return null;
+  if (/^(?:["'&*!|>%@`[\]{},#]|[-?:](?: |$))/.test(text)) return null;
+  const plain = text.replace(/ +#.*$/, "");
+  if (/:(?: |$)/.test(plain) || (flow && /[[\]{},]/.test(plain))) return null;
   // YAML's core schema gives these unquoted scalars non-string values.
   if (
     /^(?:null|true|false|~|[-+]?(?:\.inf|\.nan|0o[0-7]+|0x[\da-f]+|(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?))$/i.test(
@@ -157,7 +163,7 @@ function flowSequence(text) {
       else if (character === '"') quote = null;
       continue;
     }
-    if (character === "#" && (index === 1 || /\s/.test(text[index - 1]))) {
+    if (character === "#" && (index === 1 || /[ \n]/.test(text[index - 1]))) {
       while (index + 1 < text.length && text[index + 1] !== "\n") index++;
       continue;
     }
@@ -166,12 +172,13 @@ function flowSequence(text) {
     else if ((character === "]" || character === "}") && depth > 0) depth--;
     else if (character === "]") {
       items.push(item);
-      const last = items.at(-1).trim();
+      const last = trimYamlSpace(items.at(-1));
       // `[]` and `[a, b,]` end with one empty item, which is no entry.
       if (last === "") items.pop();
       if (
         items.some(
-          (entry) => entry.trim() === "" || entry.trim().includes("\n"),
+          (entry) =>
+            trimYamlSpace(entry) === "" || trimYamlSpace(entry).includes("\n"),
         )
       )
         return null;
@@ -189,12 +196,38 @@ function flowSequence(text) {
   return null;
 }
 
+// A mapping separator must precede any comment outside a quoted key. A colon
+// inside comment text cannot turn a scalar into a mapping entry.
+function yamlMappingEntry(text) {
+  let quote = null;
+  for (let index = 0; index < text.length; index++) {
+    const character = text[index];
+    if (quote) {
+      if (quote === '"' && character === "\\") index++;
+      else if (character === quote) {
+        if (quote === "'" && text[index + 1] === "'") index++;
+        else quote = null;
+      }
+    } else if (index === 0 && (character === "'" || character === '"'))
+      quote = character;
+    else if (character === "#" && (index === 0 || text[index - 1] === " "))
+      return null;
+    else if (
+      character === ":" &&
+      (index + 1 === text.length || text[index + 1] === " ")
+    )
+      return [text, text.slice(0, index), text.slice(index + 1)];
+  }
+  return null;
+}
+
 // Decode only the block mappings/sequences and scalar flow sequences used by
 // workspace settings. Validate the whole document before trusting any entry:
 // duplicate keys, uneven indentation and multiline continuations must not
 // silently change membership or move catalog entries into another mapping.
 function workspaceYaml(text) {
   if (
+    text.startsWith("\uFEFF") ||
     [...text.replaceAll("\r\n", "\n")].some(
       (character) => character.codePointAt(0) < 32 && character !== "\n",
     )
@@ -202,11 +235,17 @@ function workspaceYaml(text) {
     return null;
   const lines = text
     .split(/\r?\n/)
-    .filter((line) => line.trim() !== "" && !line.trimStart().startsWith("#"));
-  if (/^---(?:\s+#.*)?$/.test(lines[0] ?? "")) lines.shift();
-  if (/^\.\.\.(?:\s+#.*)?$/.test(lines.at(-1) ?? "")) lines.pop();
+    .filter(
+      (line) =>
+        trimYamlSpace(line) !== "" && !line.replace(/^ +/, "").startsWith("#"),
+    );
+  if (/^---(?: +#.*)?$/.test(lines[0] ?? "")) lines.shift();
+  if (/^\.\.\.(?: +#.*)?$/.test(lines.at(-1) ?? "")) lines.pop();
+  // Only standalone markers around one document are supported. An inline
+  // marker must not become an ordinary key and hide malformed workspace YAML.
+  if (lines.some((line) => /^(?:---|\.\.\.)(?: |$)/.test(line))) return null;
   let index = 0;
-  const indentation = (line) => line.length - line.trimStart().length;
+  const indentation = (line) => line.length - line.replace(/^ +/, "").length;
   function block(indent, sequence = false) {
     /** @type {any} */
     const result = sequence ? [] : new Map();
@@ -216,19 +255,19 @@ function workspaceYaml(text) {
       if (column < indent) break;
       if (column !== indent) throw new Error("Uneven indentation");
       const content = line.slice(column);
-      const item = /^-\s+(.*)$/.exec(content);
+      const item = /^- +(.*)$/.exec(content);
       if (sequence && !item) break;
-      const entry = sequence ? item : /^(.*?)\s*:(?:\s+(.*))?$/.exec(content);
+      const entry = sequence ? item : yamlMappingEntry(content);
       if (!entry) throw new Error("Unsupported entry");
       const key = sequence ? null : yamlScalar(entry[1]);
       if (!sequence && (typeof key !== "string" || result.has(key)))
         throw new Error("Unsupported or duplicate key");
-      const raw = (sequence ? entry[1] : (entry[2] ?? "")).trim();
+      const raw = trimYamlSpace(sequence ? entry[1] : (entry[2] ?? ""));
       let value;
       if (raw.startsWith("[")) {
         const input = [raw, ...lines.slice(index + 1)].join("\n");
         const flow = flowSequence(input);
-        if (!flow || !/^(?:\s*|\s+#.*)$/.test(flow.rest.split("\n")[0]))
+        if (!flow || !/^(?: *| +#.*)$/.test(flow.rest.split("\n")[0]))
           throw new Error("Unsupported flow sequence");
         const consumed = input
           .slice(0, input.length - flow.rest.length)
@@ -240,7 +279,7 @@ function workspaceYaml(text) {
               (continuation) =>
                 indentation(continuation) < indent ||
                 (indentation(continuation) === indent &&
-                  !continuation.trimStart().startsWith("]")),
+                  !continuation.replace(/^ +/, "").startsWith("]")),
             )
         )
           throw new Error("Unindented flow continuation");
@@ -251,7 +290,7 @@ function workspaceYaml(text) {
         if (raw === "" || raw.startsWith("#")) {
           const next = lines[index];
           const nextIndent = next === undefined ? -1 : indentation(next);
-          const nextSequence = /^-\s+/.test(next?.trimStart() ?? "");
+          const nextSequence = /^- +/.test(next?.replace(/^ +/, "") ?? "");
           if (
             nextIndent > indent ||
             (!sequence && nextIndent === indent && nextSequence)
@@ -280,7 +319,7 @@ function workspaceYaml(text) {
 // YAML. Unsupported input stays unreadable rather than changing membership.
 // Quoted packages keys remain outside the reader's supported subset.
 export function pnpmWorkspacePackages(text) {
-  if (text.split(/\r?\n/).some((line) => /^["']packages["']\s*:/.test(line)))
+  if (text.split(/\r?\n/).some((line) => /^["']packages["'] *:/.test(line)))
     return null;
   const document = workspaceYaml(text);
   if (!document) return null;
