@@ -1150,6 +1150,68 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
   );
 });
 
+test("brief writers receive and record an existing owner-review reservation with its source", () => {
+  const skill = flowedText(".agents/skills/triage/SKILL.md");
+  const context =
+    /1\. \*\*Gather context\.\*\* (.*?) Every research run/.exec(skill)?.[1] ??
+    "";
+  assert.match(
+    context,
+    /Pass any recorded owner-review reservation and its dated source to the brief's writer on either path/,
+  );
+  const brief = flowedText(".agents/skills/triage/AGENT-BRIEF.md");
+  assert.match(
+    brief,
+    /When the owner has reserved review before merge, state that designation as contract behavior and retain its dated decision source in the triage notes for the worker's PR handoff/,
+  );
+  assert.match(
+    brief,
+    /Use the recorded reservation, not a routing label, as its source/,
+  );
+  assert.match(
+    brief,
+    /\*\*Owner decisions\*\*: each decision the brief relies on, including any owner-review reservation, with its date and a link to where the owner gave it/,
+  );
+  assert.doesNotMatch(brief, /factory:skip/);
+});
+
+test("owner-review routing returns an incomplete brief to its writer before accepting a new revision", () => {
+  const skill = flowedText(".agents/skills/triage/SKILL.md");
+  const acceptance =
+    /### Accept a brief that holds (.*?) ## Other outcomes/.exec(skill)?.[1] ??
+    "";
+  assert.match(
+    acceptance,
+    /When owner review before merge is the reason for bypassing factory pickup, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source/,
+  );
+  assert.match(
+    acceptance,
+    /Check this even when that reason first arises here, after the initial brief review/,
+  );
+  assert.match(
+    acceptance,
+    /If the designation or its source is missing or unclear, return the brief to its writer with the recorded reservation and source; the writer corrects it/,
+  );
+  assert.match(
+    acceptance,
+    /Independently review the corrected brief from the top, then return to step 1 for its new validator revision notice before applying readiness/,
+  );
+  assert.match(acceptance, /Never write or rewrite the brief you accept/);
+});
+
+test("triage keeps workflow-only skips undesignated and factory routing conditional on installed rules", () => {
+  const skill = flowedText(".agents/skills/triage/SKILL.md");
+  const acceptance =
+    /### Accept a brief that holds (.*?) ## Other outcomes/.exec(skill)?.[1] ??
+    "";
+  assert.match(
+    acceptance,
+    /For workflow-edit-only work without a separate owner-review designation, follow the ordinary applicable merge conditions in the installed rules; the skip marker alone supplies no designation/,
+  );
+  assert.match(acceptance, /Without those rules there is no skip label/);
+  assert.doesNotMatch(flowedText("CONTRIBUTING.md"), /factory:skip/);
+});
+
 test("adoption installs Repo Canon's user-invoked orchestrate skill, which credits chief-of-staff", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   assert.match(
