@@ -16,7 +16,12 @@ export const readReviewer = (root = process.cwd()) => {
     if (error.code === "ENOENT") return null;
     throw error;
   }
-  const reviewer = JSON.parse(text);
+  let reviewer;
+  try {
+    reviewer = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`${reviewerTarget}: ${error.message}`, { cause: error });
+  }
   validateReviewer(reviewer);
   return reviewer;
 };

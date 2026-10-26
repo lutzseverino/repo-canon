@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { readReviewer as readOperationReviewer } from "../operations/lib/pull-request-reviewer.mjs";
+import { readReviewer as readInstalledReviewer } from "../.agents/skills/babysit/pull-request-reviewer.mjs";
 import {
   fixture,
   invokeCheck,
@@ -13,6 +15,10 @@ const script = new URL(
   import.meta.url,
 ).pathname;
 const target = ".github/pull-request-reviewer.json";
+const malformedCases = [
+  { content: "{x", explanation: /Expected property name/ },
+  { content: "", explanation: /Unexpected end of JSON input/ },
+];
 const valid = readFileSync(
   new URL("./fixtures/reviewers/github-review.json", import.meta.url),
   "utf8",
@@ -34,6 +40,24 @@ const check = (t, files, executable = script) => {
   assert.deepEqual(snapshot(project.root), before);
   return outcome;
 };
+
+test("both reviewer readers identify malformed JSON and retain the parse explanation", (t) => {
+  for (const readReviewer of [readOperationReviewer, readInstalledReviewer]) {
+    for (const { content, explanation } of malformedCases) {
+      const project = fixture({ [target]: content });
+      t.after(project.close);
+      assert.throws(
+        () => readReviewer(project.root),
+        (error) => {
+          assert.ok(error instanceof Error);
+          assert.ok(error.message.includes(target), error.message);
+          assert.match(error.message, explanation);
+          return true;
+        },
+      );
+    }
+  }
+});
 
 test("the optional reviewer check passes without a file", (t) => {
   const outcome = check(t, {});
@@ -79,6 +103,19 @@ test("the optional reviewer check rejects invalid schema", (t) => {
     /match the github-repository-configuration rules/,
   );
   assert.doesNotMatch(outcome.result.message, /babysit/);
+});
+
+test("malformed reviewer JSON has an actionable validation correction", (t) => {
+  for (const { content, explanation } of malformedCases) {
+    const outcome = check(t, { [target]: content });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, "failed");
+    assert.match(
+      outcome.result.message,
+      /Correct \.github\/pull-request-reviewer\.json/,
+    );
+    assert.match(outcome.result.message, explanation);
+  }
 });
 
 test("reviewer validation works using only retained resources", (t) => {
