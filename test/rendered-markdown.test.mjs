@@ -249,7 +249,7 @@ test("blocks and linked images expose centering without changing title policy", 
     [
       ["node.svg", true],
       ["runtime.svg", true],
-      ["own.svg", true],
+      ["own.svg", false],
       ["data.svg", false],
       ["left.svg", false],
     ],
@@ -261,6 +261,34 @@ test("blocks and linked images expose centering without changing title policy", 
   );
 });
 
+test("image and picture centering comes from rendered containers", () => {
+  for (const image of [
+    '<img align="CeNtEr" src="harbor.svg">',
+    '<picture align="CENTER"><source srcset="dark.svg"><img src="harbor.svg"></picture>',
+    '<picture><source srcset="dark.svg"><img align="center" src="harbor.svg"></picture>',
+  ]) {
+    for (const container of [null, "p", "div"]) {
+      const markup = container
+        ? `<${container} align="CeNtEr">${image}</${container}>`
+        : image;
+      const elements = interpretMarkdown(markup).content.elements;
+      assert.deepEqual(
+        elements.map((element) => [
+          element.tag ?? element.type,
+          element.centered,
+        ]),
+        image.startsWith("<picture")
+          ? [
+              ["picture", container !== null],
+              ["image", container !== null],
+            ]
+          : [["image", container !== null]],
+        markup,
+      );
+    }
+  }
+});
+
 test("heading targets retain rendered children and centering without entering section bodies", () => {
   const document = interpretMarkdown(`<div align="center">
 <h2><img src="plain.svg" alt=""></h2>
@@ -268,6 +296,7 @@ test("heading targets retain rendered children and centering without entering se
 <h1><a href="home.md">Harbor</a></h1>
 <p>A delivery service for operators.</p>
 </div>
+<h2><a href="https://example.com"><img align="CENTER" src="own.svg" alt=""></a></h2>
 
 ## [License](license-info.md)
 
@@ -281,6 +310,7 @@ test("heading targets retain rendered children and centering without entering se
     [
       ["plain.svg", true, true],
       ["linked.svg", true, true],
+      ["own.svg", false, true],
     ],
   );
   const link = document.content.elements.find(

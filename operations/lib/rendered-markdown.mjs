@@ -59,7 +59,12 @@ function attribute(node, name) {
 }
 
 function isCentered(node, { paragraphContent = false } = {}) {
-  if (attribute(node, "align")?.toLocaleLowerCase("en-US") === "center")
+  // Image and picture alignment does not horizontally center their content.
+  if (
+    node.tagName !== "img" &&
+    node.tagName !== "picture" &&
+    attribute(node, "align")?.toLocaleLowerCase("en-US") === "center"
+  )
     return true;
   for (
     let ancestor = node.parentNode;

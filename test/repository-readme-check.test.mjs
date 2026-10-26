@@ -172,8 +172,21 @@ test("accepts one centered project image, including theme alternatives", async (
 </picture>`;
   for (const [name, image] of [
     ["plain", '<img src="harbor.svg" alt="">'],
+    ["own alignment", '<img align="CeNtEr" src="harbor.svg" alt="">'],
+    [
+      "linked image with own alignment",
+      '<a href="https://example.com/"><img align="CENTER" src="harbor.svg"></a>',
+    ],
     ["picture", picture],
     ["linked picture", `<a href="https://example.com/">${picture}</a>`],
+    [
+      "picture with own alignment",
+      picture.replace("<picture>", '<picture align="CeNtEr">'),
+    ],
+    [
+      "fallback with own alignment",
+      picture.replace("<img ", '<img align="CENTER" '),
+    ],
     ["Markdown", "![Harbor](harbor.svg)"],
   ]) {
     for (const wrapped of [true, false]) {
@@ -198,6 +211,20 @@ test("accepts one centered project image, including theme alternatives", async (
 
 test("project images use rendered centering rather than misleading or hidden markup", async (t) => {
   for (const [name, prefix] of [
+    ["image own alignment", '<img align="center" src="harbor.svg">'],
+    ["image mixed-case alignment", '<img ALIGN="CeNtEr" src="harbor.svg">'],
+    [
+      "linked image own alignment",
+      '<a href="https://example.com/"><img align="CENTER" src="harbor.svg"></a>',
+    ],
+    [
+      "picture own alignment",
+      '<picture align="CeNtEr"><source srcset="dark.svg"><img src="harbor.svg"></picture>',
+    ],
+    [
+      "fallback own alignment",
+      '<picture><source srcset="dark.svg"><img align="CeNtEr" src="harbor.svg"></picture>',
+    ],
     ["image data-align", '<img data-align="center" src="harbor.svg">'],
     ["image centerpiece", '<img align="centerpiece" src="harbor.svg">'],
     [
@@ -250,13 +277,7 @@ test("only rendered project images count, and a picture needs one visible fallba
     ],
     [
       "one visible image",
-      '<img hidden src="ignored.svg"><img align="center" src="harbor.svg">',
-      "passed",
-    ],
-    ["own centering", '<img align="CENTER" src="harbor.svg">', "passed"],
-    [
-      "fallback centering",
-      '<picture><source srcset="dark.svg"><img align="center" src="harbor.svg"></picture>',
+      '<p align="center"><img hidden src="ignored.svg"><img align="center" src="harbor.svg"></p>',
       "passed",
     ],
     [
@@ -315,7 +336,7 @@ test("only rendered project images count, and a picture needs one visible fallba
 
 test("a project image does not supply the description or hide uncentered badges", (t) => {
   const outcome = check(t, {
-    "README.md": `<img align="center" src="harbor.svg" alt="This is an image, not the description.">
+    "README.md": `<p align="center"><img src="harbor.svg" alt="This is an image, not the description."></p>
 <h1 align="center">Harbor</h1>
 <p align="center">A service. Another service.</p>
 <img src="node.svg" alt="Node.js 24">
@@ -361,6 +382,7 @@ test("rejects left-aligned badges after a centered description", async (t) => {
   for (const badges of [
     "[![Node.js](node.svg)](https://nodejs.org/)",
     '<p><img src="typescript.svg" alt="TypeScript"></p>',
+    '<p><img align="CeNtEr" src="typescript.svg"></p>',
     '<p><img align="center" src="typescript.svg"><a href="https://nodejs.org/"><img src="node.svg"></a></p>',
     '<p align="center"><img src="typescript.svg"></p>\n\n![Node.js](node.svg)',
   ]) {
@@ -405,7 +427,7 @@ test("accepts centered header blocks in HTML, Markdown and mixed forms", async (
     `<div align="center"><h1>Harbor</h1><p>A delivery service for operators.</p>
 <img src="typescript.svg" alt="TypeScript"><a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24"></a></div>`,
     `<h1 align="center">Harbor</h1><p align="center">A delivery service for operators.</p>
-<p><img align="CENTER" src="typescript.svg" alt="TypeScript"></p>
+<p align="center"><img align="CENTER" src="typescript.svg" alt="TypeScript"></p>
 <p align="center"><a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24"></a></p>`,
     `<div align="center"><h1>Harbor</h1><p>A delivery service for operators.</p></div>`,
   ]) {
@@ -737,6 +759,34 @@ test("runs from its declared retained source layout", (t) => {
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "passed");
   assert.deepEqual(snapshot(project.root), before);
+});
+
+test("retained source rejects a picture centered only by its own or fallback alignment", async (t) => {
+  const retainedScript = retainedCheck(
+    t,
+    "operations/check-repository-readme.mjs",
+  );
+  for (const image of [
+    '<picture align="CENTER"><source srcset="dark.svg"><img src="harbor.svg"></picture>',
+    '<picture><source srcset="dark.svg"><img align="CeNtEr" src="harbor.svg"></picture>',
+  ]) {
+    await t.test(image, (t) => {
+      const project = fixture({
+        "README.md": `${image}\n\n${entryReadme("A delivery service for operators.")}`,
+        LICENSE: mit,
+      });
+      t.after(project.close);
+      const before = snapshot(project.root);
+      const outcome = invokeCheck(retainedScript, project.root);
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.status, "failed");
+      assert.match(
+        outcome.result.message,
+        /Center.*project image.*harbor\.svg/,
+      );
+      assert.deepEqual(snapshot(project.root), before);
+    });
+  }
 });
 
 test("allows omitted recognized sections and useful interleaved sections", (t) => {
