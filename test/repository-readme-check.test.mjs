@@ -39,6 +39,82 @@ function entryReadme(description, { wrapped = true } = {}) {
 `;
 }
 
+test("returns a centering correction for a linked image in a heading before the title", (t) => {
+  const outcome = check(t, {
+    "README.md": `<h1><a href="https://example.com"><img src="harbor.svg" alt=""></a></h1>\n\n${entryReadme("A delivery service for operators.")}`,
+    LICENSE: mit,
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.format, "repo-standards/result/v2");
+  assert.equal(outcome.result.status, "failed");
+  assert.match(outcome.result.message, /Center.*project image.*harbor\.svg/);
+});
+
+test("heading wrappers preserve prefix image counting, centering, and visible content", async (t) => {
+  for (const [
+    name,
+    prefix,
+    diagnostic,
+  ] of /** @type {[string, string, RegExp?][]} */ ([
+    [
+      "centered image",
+      '<div align="center"><h1><img src="harbor.svg" alt=""></h1></div>',
+    ],
+    [
+      "centered linked image",
+      '<div align="center"><h1><a href="https://example.com"><img src="harbor.svg" alt=""></a></h1></div>',
+    ],
+    [
+      "linked picture",
+      '<div align="center"><h2><a href="https://example.com"><picture><source srcset="dark.svg"><img src="harbor.svg" alt=""></picture></a></h2></div>',
+    ],
+    [
+      "hidden targets",
+      '<div align="center"><h1><a href="https://example.com"><span hidden>Hidden</span><img hidden src="hidden.svg"><img src="harbor.svg" alt=""></a></h1></div>',
+    ],
+    [
+      "uncentered image",
+      '<h1><img src="harbor.svg" alt=""></h1>',
+      /Center.*project image.*harbor\.svg/,
+    ],
+    [
+      "two linked images",
+      '<div align="center"><h1><a href="https://example.com"><img src="one.svg" alt=""><img src="two.svg" alt=""></a></h1></div>',
+      /Keep at most one project image.*one\.svg.*two\.svg/,
+    ],
+    [
+      "separately linked images",
+      '<div align="center"><h2><a href="https://example.com/one"><img src="one.svg" alt=""></a><a href="https://example.com/two"><img src="two.svg" alt=""></a></h2></div>',
+      /Keep at most one project image.*one\.svg.*two\.svg/,
+    ],
+    [
+      "Markdown text link",
+      "## [Website](https://example.com)",
+      /Remove rendered content "Website" before.*title/,
+    ],
+    [
+      "linked non-image media",
+      '<h2><a href="https://example.com"><video src="tour.mp4"></video></a></h2>',
+      /Remove rendered content "video" before.*title/,
+    ],
+  ])) {
+    await t.test(name, (t) => {
+      const outcome = check(t, {
+        "README.md": `${prefix}\n\n${entryReadme("A delivery service for operators.")}`,
+        LICENSE: mit,
+      });
+      assert.equal(outcome.status, 0, outcome.stderr);
+      assert.equal(outcome.result.format, "repo-standards/result/v2");
+      assert.equal(
+        outcome.result.status,
+        diagnostic ? "failed" : "passed",
+        outcome.result.message,
+      );
+      if (diagnostic) assert.match(outcome.result.message, diagnostic);
+    });
+  }
+});
+
 test("rejects an uncentered project image before the title", (t) => {
   const outcome = check(t, {
     "README.md": `<img src="harbor.svg" alt="">\n\n${entryReadme("A delivery service for operators.")}`,

@@ -167,13 +167,14 @@ function headerBadges(document, description) {
   return badges;
 }
 
-function headerPrefixElements(elements) {
+function headerPrefixElements(elements, seen = new Set()) {
   const grouped = [];
   for (let index = 0; index < elements.length; index += 1) {
     const element = elements[index];
-    if (element.wrapsHeading) continue;
+    if (element.wrapsHeading || seen.has(element)) continue;
+    seen.add(element);
     if (element.type === "link") {
-      grouped.push(...headerPrefixElements(element.elements));
+      grouped.push(...headerPrefixElements(element.elements, seen));
     } else if (
       element.tag === "picture" &&
       element.elements.length === 1 &&
@@ -181,6 +182,7 @@ function headerPrefixElements(elements) {
       element.elements[0].target.trim()
     ) {
       const image = element.elements[0];
+      seen.add(image);
       grouped.push({ ...image, centered: image.centered || element.centered });
       index += element.elements.length;
     } else {

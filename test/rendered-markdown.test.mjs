@@ -260,3 +260,39 @@ test("blocks and linked images expose centering without changing title policy", 
     [true, false],
   );
 });
+
+test("heading targets retain rendered children and centering without entering section bodies", () => {
+  const document = interpretMarkdown(`<div align="center">
+<h2><img src="plain.svg" alt=""></h2>
+<h2><a href="https://example.com"><img src="linked.svg" alt=""></a></h2>
+<h1><a href="home.md">Harbor</a></h1>
+<p>A delivery service for operators.</p>
+</div>
+
+## [License](license-info.md)
+
+[MIT License](LICENSE)
+`);
+  const images = document.content.elements.filter(
+    (element) => element.type === "image",
+  );
+  assert.deepEqual(
+    images.map((image) => [image.target, image.centered, image.insideHeading]),
+    [
+      ["plain.svg", true, true],
+      ["linked.svg", true, true],
+    ],
+  );
+  const link = document.content.elements.find(
+    (element) => element.target === "https://example.com",
+  );
+  assert.equal(link.elements[0], images[1]);
+  assert.deepEqual(
+    document.headings.map((heading) => heading.name),
+    ["Harbor", "License"],
+  );
+  assert.deepEqual(
+    section(document, "license").elements.map((element) => element.target),
+    ["LICENSE"],
+  );
+});
