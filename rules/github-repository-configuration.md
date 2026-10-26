@@ -220,9 +220,13 @@ The file is valid JSON holding exactly this object shape:
 ```
 
 Both fields are required; unknown fields, unsupported versions, and malformed
-JSON are errors. `author` is a nonempty, trimmed login. Compare authors
-case-insensitively, treating REST `<slug>[bot]` and CLI `app/<slug>` as the same
-author. A plain human login `<slug>` remains distinct from that app.
+JSON are errors. `author` is a nonempty, trimmed app identity in REST
+`<slug>[bot]` or CLI `app/<slug>` form, with a nonempty slug. A plain human
+login is an invalid declaration, regardless of the PR author or whether a
+reviewer is configured; fail with a configuration error before any review
+request or policy skip. No remote account-type lookup is required. Compare
+authors case-insensitively, treating those REST and CLI forms as the same app.
+A plain human login `<slug>` remains distinct from that app.
 A different or missing PR author is not exempt. Invalid declarations
 fail explicitly and never authorize a skip.
 

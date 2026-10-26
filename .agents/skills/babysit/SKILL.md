@@ -12,8 +12,9 @@ The bundled scripts require Node.js 24 or 26. The request and wait read the opti
 `github-repository-configuration` rules state; without the file, it reports
 only checks unless the app-author policy identifies an external review skip.
 Both commands read the optional `.github/factory-review-policy.json` under
-the same rules. Its absence keeps configured reviewer behavior and requires
-no owner question.
+the same rules. A plain human-login declaration is a configuration error
+(exit `1`), as defined by those rules. Its absence keeps configured reviewer
+behavior and requires no owner question.
 
 Before the first wait, apply the `github-repository-configuration` rules'
 review request rule to the pull request's head, using step 4 to post any

@@ -1511,11 +1511,12 @@ const run = (
     child.stdout.on("data", (chunk) => record(chunk, (s) => (stdout += s)));
     child.stderr.on("data", (chunk) => record(chunk, (s) => (stderr += s)));
     child.on("close", (code) => {
-      const { activityReads } = JSON.parse(readFileSync(statePath, "utf8"));
+      const finalState = JSON.parse(readFileSync(statePath, "utf8"));
       rmSync(directory, { recursive: true, force: true });
       resolve({
         code,
-        activityReads,
+        activityReads: finalState.activityReads,
+        finalState,
         stdout,
         stderr,
         firstWrite,
@@ -1560,6 +1561,28 @@ test("invalid policy declarations fail the wait rather than exempting the author
     );
     assert.equal(result.code, 1);
     assert.match(result.stderr, /\.github\/factory-review-policy\.json:/);
+  }
+});
+
+test("installed waits reject human declarations for every author with or without a reviewer", async (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/wait.mjs");
+  for (const declared of ["lutzseverino", "LutzSeverino"]) {
+    for (const author of [declared, "lutzseverino", "other", null]) {
+      for (const reviewer of [codexReviewer, null]) {
+        const state = { head, author };
+        const result = await run(state, ["12"], reviewer, target, {
+          version: 1,
+          author: declared,
+        });
+        assert.equal(result.code, 1, result.stderr);
+        assert.match(
+          result.stderr,
+          /\.github\/factory-review-policy\.json: author must be an app identity/,
+        );
+        assert.equal(result.stdout, "");
+        assert.deepEqual(result.finalState, state);
+      }
+    }
   }
 });
 
