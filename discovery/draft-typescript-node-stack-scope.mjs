@@ -233,17 +233,24 @@ function coverage({ included, projects }) {
 
 // Entry targets may be strings, bin maps or nested conditional exports.
 function entryPointTargets(value) {
-  if (typeof value === "string") return [value.replace(/^\.\//, "")];
+  if (typeof value === "string") return [value];
   if (value !== null && typeof value === "object")
     return Object.values(value).flatMap(entryPointTargets);
   return [];
 }
 
+// Relate kept script sources to entry points whose compiled output is absent.
+function entryPointStem(path) {
+  return path
+    .slice(path.lastIndexOf("/") + 1)
+    .replace(/(?:\.d)?\.(?:[cm]?[jt]s|[jt]sx)$/, "");
+}
+
 // Conservative root-package evidence, independent of stack conformity. Entry
 // points plus development commands and kept source files establish a
 // package's own responsibility. Other packages' files, fixtures and tool
-// configuration do not establish it. Script helpers need a declared entry
-// target to establish package responsibility. Anything partial stays for assessment.
+// configuration do not establish it. Script helpers need a link to a declared
+// entry point to establish package responsibility. Anything partial stays for assessment.
 function rootPackageEvidence(projectRoot, path, files, manifests) {
   const { manifest } = readManifest(projectRoot, path);
   if (!manifest) return { unresolved: true };
@@ -286,10 +293,15 @@ function rootPackageEvidence(projectRoot, path, files, manifests) {
   const commands = Object.values(manifest.scripts ?? {}).some(
     (command) => typeof command === "string" && command.trim() !== "",
   );
-  const targets = new Set(entryFields.flatMap(entryPointTargets));
+  const entryStems = new Set(
+    entryFields.flatMap(entryPointTargets).map(entryPointStem),
+  );
   const packageSource = sources.find((file) => {
     const relative = relativeTo(file, directory);
-    return !relative.startsWith("scripts/") || targets.has(relative);
+    return (
+      !relative.startsWith("scripts/") ||
+      entryStems.has(entryPointStem(relative))
+    );
   });
   if (entryPoints && commands && packageSource)
     return { evidence: [packageSource] };

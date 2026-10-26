@@ -49,8 +49,10 @@ For a root with members, the drafter uses package entry points (`bin`, `main`,
 `module`, `exports`, `types` or `typings`), nonempty development commands and
 kept JavaScript or TypeScript sources, including declaration-only library
 sources, as positive evidence together. Sources under the root's `scripts/`
-directory establish package responsibility only when a declared entry point
-names that kept file, including through a bin map or conditional exports.
+directory establish package responsibility when their filename stem matches
+a declared entry target's, including through a bin map or conditional exports.
+This links `scripts/cli.ts` to a generated `dist/cli.js` without treating an
+unrelated release helper as package sources.
 A dangling default `main: "index.js"` and a shared `scripts/release.mjs` helper
 therefore leave membership unresolved, even when the root matches the stack.
 Other kept package sources can establish responsibility when declared entry

@@ -325,6 +325,27 @@ test("recognizes a script explicitly named as a package entry point", (t) => {
   }
 });
 
+test("recognizes script sources backing a generated package entry point", (t) => {
+  const { entry } = drafted(t, {
+    "package.json": manifest({
+      bin: { cli: "dist/cli.js" },
+      scripts: {
+        build: "tsc scripts/cli.ts --outDir dist",
+        validate: "pnpm run build && node --test",
+      },
+      workspaces: ["packages/*"],
+    }),
+    "scripts/cli.ts": "console.log('cli');\n",
+    "scripts/release.mjs": "console.log('release workspace');\n",
+    "pnpm-lock.yaml": "",
+    "packages/core/package.json": member(),
+  });
+  assert.equal(entry.candidates[0].path, "package.json");
+  assert.equal(entry.candidates[0].decision, "include");
+  assert.ok(entry.candidates[0].evidence.includes("scripts/cli.ts"));
+  assert.deepEqual(entry.unresolved, []);
+});
+
 test("does not mistake member sources, fixtures or tool configuration for a root package", (t) => {
   const { entry } = drafted(t, {
     "package.json": manifest({ workspaces: ["packages/*"] }),
