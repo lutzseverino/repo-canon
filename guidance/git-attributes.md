@@ -13,9 +13,10 @@ through contextual work; this declaration has no deterministic fix or check.
    and [default vendor list](https://github.com/github-linguist/linguist/blob/main/lib/linguist/vendor.yml).
    `vendor/` and `.github/` are already excluded. For the current profiles,
    the counted files are the issue-contract validator, the common validator
-   command, the rendered-Markdown runtime, the babysit skill's `.mjs` files, and the diagnosing-bugs skill's
-   shell template. Derive the inventory anew on each update; this example is
-   not a replacement for the resolved selection.
+   command, the rendered-Markdown runtime, the babysit skill's `.mjs` files,
+   the triage skill's `ready.mjs`, and the diagnosing-bugs skill's shell
+   template. Derive the inventory anew on each update; this example is not a
+   replacement for the resolved selection.
 3. Read any existing `.gitattributes` before editing. Preserve every
    repository-owned line byte for byte, including line-ending and other
    Linguist settings. Keep Repo Canon's additions in a clearly bounded block
@@ -31,6 +32,7 @@ through contextual work; this declaration has no deterministic fix or check.
    scripts/validate.mjs linguist-vendored
    operations/lib/rendered-markdown.mjs linguist-vendored
    .agents/skills/babysit/** linguist-vendored
+   .agents/skills/triage/** linguist-vendored
    .agents/skills/diagnosing-bugs/** linguist-vendored
    # END Repo Canon linguist-vendored
    ```

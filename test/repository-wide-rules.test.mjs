@@ -23,6 +23,7 @@ import {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sourceUrl = "https://github.com/fixture/repo-canon";
 const version = "v1.0.0";
+const previousVersion = "v0.18.0";
 // Declarations whose rules govern all work, with empty confirmed scope, and
 // the profiles that select them.
 const repositoryWide = {
@@ -72,7 +73,35 @@ const stackAssessment = {
   ),
 };
 
-test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the whole repository in both profiles, factory workflow rules only in the factory profile, and typescript-node stack rules only for a confirmed Project", (t) => {
+test("the release fixture vendors the triage helper without covering repository-owned source or retained state", (t) => {
+  const project = mkdtempSync(join(tmpdir(), "repo-canon-attributes-"));
+  t.after(() => rmSync(project, { recursive: true, force: true }));
+  writeFileSync(join(project, ".gitattributes"), files[".gitattributes"]);
+  execFileSync("git", ["init", "--quiet", project]);
+  const paths = [
+    ".agents/skills/triage/ready.mjs",
+    "wordtally.mjs",
+    "scripts/own.mjs",
+    "operations/own.mjs",
+    ".agents/skills/own/run.mjs",
+    ".repo-standards/inputs/source/operations/check.mjs",
+  ];
+  assert.deepEqual(
+    execFileSync(
+      "git",
+      ["-C", project, "check-attr", "linguist-vendored", "--", ...paths],
+      { encoding: "utf8" },
+    )
+      .trim()
+      .split("\n"),
+    paths.map(
+      (path, index) =>
+        `${path}: linguist-vendored: ${index === 0 ? "set" : "unspecified"}`,
+    ),
+  );
+});
+
+test("public CLI 10.0.0 adopts and updates both profiles with vendored installed code, repository-wide rules and stack rules only for a confirmed Project", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const prefix = process.env.REPO_STANDARDS_PREFIX ?? join(directory, "cli");
@@ -201,27 +230,36 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
     "Fixture source",
   );
   git(source, "-c", "tag.gpgsign=false", "tag", version);
-  const sha = git(source, "rev-parse", "HEAD");
-  const tree = git(source, "rev-parse", "HEAD^{tree}");
-  const entries = git(source, "ls-tree", "-r", "-t", "HEAD")
-    .split("\n")
-    .map((line) => {
-      const [, mode, type, sha, path] = /^(\d+) (\w+) ([a-f0-9]+)\t(.+)$/.exec(
-        line,
-      );
-      return { mode, type, sha, path };
-    });
+  // Fetch the actual previous release even in a shallow CI checkout, then
+  // serve its objects alongside the candidate through the local fixture.
+  git(
+    source,
+    "fetch",
+    "--quiet",
+    "https://github.com/lutzseverino/repo-canon",
+    `refs/tags/${previousVersion}:refs/tags/${previousVersion}`,
+  );
   const api = "https://api.github.com/repos/fixture/repo-canon";
   const responses = join(directory, "github.json");
-  writeFileSync(
-    responses,
-    JSON.stringify({
-      [api]: { private: false, full_name: "fixture/repo-canon" },
-      [`${api}/releases?per_page=100&page=1`]: [
-        { tag_name: version, draft: false, prerelease: false },
-      ],
-      [`${api}/git/ref/tags/${version}`]: {
-        ref: `refs/tags/${version}`,
+  const github = {
+    [api]: { private: false, full_name: "fixture/repo-canon" },
+    [`${api}/releases?per_page=100&page=1`]: [version, previousVersion].map(
+      (tag_name) => ({ tag_name, draft: false, prerelease: false }),
+    ),
+  };
+  for (const tag of [version, previousVersion]) {
+    const sha = git(source, "rev-parse", `${tag}^{commit}`);
+    const tree = git(source, "rev-parse", `${tag}^{tree}`);
+    const entries = git(source, "ls-tree", "-r", "-t", tag)
+      .split("\n")
+      .map((line) => {
+        const [, mode, type, sha, path] =
+          /^(\d+) (\w+) ([a-f0-9]+)\t(.+)$/.exec(line);
+        return { mode, type, sha, path };
+      });
+    Object.assign(github, {
+      [`${api}/git/ref/tags/${tag}`]: {
+        ref: `refs/tags/${tag}`,
         object: { type: "commit", sha },
       },
       [`${api}/git/commits/${sha}`]: { sha, tree: { sha: tree } },
@@ -230,8 +268,9 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
         truncated: false,
         tree: entries,
       },
-    }),
-  );
+    });
+  }
+  writeFileSync(responses, JSON.stringify(github));
   Object.assign(env, {
     NODE_OPTIONS: `--import=${join(root, "test/fixtures/github-source.mjs")}`,
     FIXTURE_GITHUB_RESPONSES: responses,
@@ -247,6 +286,8 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
     ["standard", "standard", {}],
     ["factory", "factory", {}],
     ["node", "standard", nodeProject],
+    ["standard-update", "standard", {}],
+    ["factory-update", "factory", {}],
   ])) {
     const node = label === "node";
     const project = join(directory, label);
@@ -289,87 +330,146 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
       const report = JSON.parse(child.stdout || child.stderr);
       return { report, child };
     };
-    let { report } = invoke(
-      "adopt",
-      sourceUrl,
-      "--standards-version",
-      version,
-      "--profile",
-      profile,
-    );
-    for (let round = 0; report.outcome !== "complete" && round < 10; round++) {
-      assert.ok(
-        ["answers-required", "contextual"].includes(report.outcome),
-        JSON.stringify(report),
+    const adopt = (selectedVersion) => {
+      let { report } = invoke(
+        "adopt",
+        sourceUrl,
+        "--standards-version",
+        selectedVersion,
+        "--profile",
+        profile,
       );
-      for (const entry of report.contextual ?? []) {
-        if (repositoryWide[entry.id]) {
-          assert.ok(repositoryWide[entry.id].includes(profile), entry.id);
-          assert.deepEqual(entry.allowedTargets, {
-            paths: [],
-            directories: [],
-          });
+      let attributesRequested = false;
+      for (
+        let round = 0;
+        report.outcome !== "complete" && round < 10;
+        round++
+      ) {
+        assert.ok(
+          ["answers-required", "contextual"].includes(report.outcome),
+          JSON.stringify(report),
+        );
+        for (const entry of report.contextual ?? []) {
+          if (repositoryWide[entry.id]) {
+            assert.ok(repositoryWide[entry.id].includes(profile), entry.id);
+            assert.deepEqual(entry.allowedTargets, {
+              paths: [],
+              directories: [],
+            });
+          }
+          if (entry.id === "git-attributes") {
+            attributesRequested = true;
+            assert.deepEqual(entry.allowedTargets, {
+              paths: [".gitattributes"],
+              directories: [],
+            });
+            // Perform the contextual edit from the guidance's worked example,
+            // rather than introducing an automatic fix into the source.
+            const guidance =
+              selectedVersion === previousVersion
+                ? git(
+                    source,
+                    "show",
+                    `${previousVersion}:guidance/git-attributes.md`,
+                  )
+                : readFileSync(
+                    join(root, "guidance/git-attributes.md"),
+                    "utf8",
+                  );
+            const block = /```gitattributes\n([\s\S]*?)\n\s*```/.exec(guidance);
+            assert.ok(block, "the guidance gives a worked attributes block");
+            writeFileSync(
+              join(project, ".gitattributes"),
+              originalAttributes + block[1].replaceAll(/^ {3}/gm, "") + "\n",
+            );
+          }
         }
-        if (entry.id === "git-attributes") {
-          assert.deepEqual(entry.allowedTargets, {
-            paths: [".gitattributes"],
-            directories: [],
-          });
-          // Perform the contextual edit from the guidance's worked example,
-          // rather than introducing an automatic fix into the source.
-          const guidance = readFileSync(
-            join(root, "guidance/git-attributes.md"),
-            "utf8",
-          );
-          const block = /```gitattributes\n([\s\S]*?)\n\s*```/.exec(guidance);
-          assert.ok(block, "the guidance gives a worked attributes block");
-          writeFileSync(
-            join(project, ".gitattributes"),
-            originalAttributes + block[1].replaceAll(/^ {3}/gm, "") + "\n",
-          );
-        }
+        const questions = report.answers.questions.map((question) => {
+          const [kind, name] = question.id.split(":");
+          let answer = question.answer;
+          if (kind === "scope") answer ??= scopes[name];
+          if (kind === "assessment")
+            answer =
+              node && name === "typescript-node-stack"
+                ? stackAssessment
+                : assessments[name];
+          if (
+            kind === "assessment" &&
+            name === "git-attributes" &&
+            selectedVersion === previousVersion
+          )
+            answer = {
+              ...assessments[name],
+              evidence: [
+                "The previous release's worked block covers its counted installed files while preserving every repository-owned attribute line.",
+              ],
+            };
+          if (kind === "scope" && name === "typescript-node-stack") {
+            // The stack's discovery script drafts the entry, with no scope
+            // unless the repository holds a conforming Project.
+            assert.deepEqual(answer.unresolved, []);
+            assert.equal(answer.noScope, node ? undefined : true);
+            assert.deepEqual(
+              answer.candidates.map(({ path, decision }) => [path, decision]),
+              node ? [["package.json", "include"]] : [],
+            );
+          }
+          if (kind === "version") answer = selectedVersion;
+          if (kind === "profile") answer = profile;
+          if (kind === "remote-setup") answer = "defer";
+          if (
+            kind === "inspection" &&
+            report.missing.some((id) => !/^(inspection|remote-setup)$/.test(id))
+          )
+            answer = null;
+          assert.notEqual(answer, undefined, question.id);
+          if (repositoryWide[name] && kind === "scope") {
+            assert.ok(repositoryWide[name].includes(profile), name);
+            assert.deepEqual(answer.candidates, []);
+            assert.deepEqual(answer.unresolved, []);
+          }
+          return { ...question, answer };
+        });
+        const answers = join(directory, `${label}-answers.json`);
+        writeFileSync(
+          answers,
+          JSON.stringify({ ...report.answers, questions }),
+        );
+        ({ report } = invoke("adopt", "--answers", answers));
       }
-      const questions = report.answers.questions.map((question) => {
-        const [kind, name] = question.id.split(":");
-        let answer = question.answer;
-        if (kind === "scope") answer ??= scopes[name];
-        if (kind === "assessment")
-          answer =
-            node && name === "typescript-node-stack"
-              ? stackAssessment
-              : assessments[name];
-        if (kind === "scope" && name === "typescript-node-stack") {
-          // The stack's discovery script drafts the entry, with no scope
-          // unless the repository holds a conforming Project.
-          assert.deepEqual(answer.unresolved, []);
-          assert.equal(answer.noScope, node ? undefined : true);
-          assert.deepEqual(
-            answer.candidates.map(({ path, decision }) => [path, decision]),
-            node ? [["package.json", "include"]] : [],
-          );
-        }
-        if (kind === "version") answer = version;
-        if (kind === "profile") answer = profile;
-        if (kind === "remote-setup") answer = "defer";
-        if (
-          kind === "inspection" &&
-          report.missing.some((id) => !/^(inspection|remote-setup)$/.test(id))
-        )
-          answer = null;
-        assert.notEqual(answer, undefined, question.id);
-        if (repositoryWide[name] && kind === "scope") {
-          assert.ok(repositoryWide[name].includes(profile), name);
-          assert.deepEqual(answer.candidates, []);
-          assert.deepEqual(answer.unresolved, []);
-        }
-        return { ...question, answer };
-      });
-      const answers = join(directory, `${label}-answers.json`);
-      writeFileSync(answers, JSON.stringify({ ...report.answers, questions }));
-      ({ report } = invoke("adopt", "--answers", answers));
+      assert.equal(report.outcome, "complete", JSON.stringify(report));
+      assert.equal(invoke("status").report.readyToCommit, true);
+      return attributesRequested;
+    };
+    if (label.endsWith("-update")) {
+      adopt(previousVersion);
+      assert.equal(
+        git(
+          project,
+          "check-attr",
+          "linguist-vendored",
+          "--",
+          ".agents/skills/triage/ready.mjs",
+        ),
+        ".agents/skills/triage/ready.mjs: linguist-vendored: unspecified",
+        "the conforming previous adoption has no triage executable entry",
+      );
+      git(project, "add", "--all");
+      git(
+        project,
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "--quiet",
+        "-m",
+        `Adopt ${previousVersion}`,
+      );
     }
-    assert.equal(report.outcome, "complete", JSON.stringify(report));
-    assert.equal(invoke("status").report.readyToCommit, true);
+    assert.equal(
+      adopt(version),
+      true,
+      `${label} requests git-attributes contextual work`,
+    );
     // No scope installs no stack rules and runs no stack check; a confirmed
     // Project gets both, and its manifest passes.
     const stackChecks = invoke("check").report.checks.filter(
@@ -405,6 +505,7 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
       "scripts/validate-issue-contract.mjs",
       "scripts/validate.mjs",
       "operations/lib/rendered-markdown.mjs",
+      ".agents/skills/triage/ready.mjs",
       ...readdirSync(join(project, ".agents/skills/babysit"))
         .filter((name) => name.endsWith(".mjs"))
         .map((name) => `.agents/skills/babysit/${name}`),
