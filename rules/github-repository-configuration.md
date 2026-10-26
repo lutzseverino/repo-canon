@@ -230,6 +230,15 @@ A plain human login `<slug>` remains distinct from that app.
 A different or missing PR author is not exempt. Invalid declarations
 fail explicitly and never authorize a skip.
 
+For a policy-skipped pull request, complete internal Standards and Spec reviews
+before merge. Standards checks the change against the repository's documented
+standards; Spec checks it against its originating implementation contract. The
+installed `code-review` workflow provides both axes, including its handling of
+a missing specification. These internal reviews are distinct from the configured
+external reviewer. A policy skip supplies neither internal nor external approval.
+For nonmatching and absent-policy pull requests, keep the existing applicable
+internal-review workflow.
+
 Apply this policy before the review request rules and reviewer wait
 classification, on every head, including fixes, rebases, retries and resumed
 runs. For a matching author, issue no external review request and impose no

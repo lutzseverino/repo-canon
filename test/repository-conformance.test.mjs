@@ -1339,6 +1339,62 @@ test("app-author review guidance keeps policy skips distinct and preserves merge
   );
 });
 
+test("policy-skipped PRs require defined internal reviews and their actual outcomes", () => {
+  const rules = flowedText("rules/github-repository-configuration.md");
+  assert.match(
+    rules,
+    /For a policy-skipped pull request, complete internal Standards and Spec reviews before merge/,
+  );
+  assert.match(
+    rules,
+    /Standards checks the change against the repository's documented standards/,
+  );
+  assert.match(
+    rules,
+    /Spec checks it against its originating implementation contract/,
+  );
+  assert.match(
+    rules,
+    /installed `code-review` workflow provides both axes, including its handling of a missing specification/,
+  );
+  assert.match(
+    rules,
+    /These internal reviews are distinct from the configured external reviewer/,
+  );
+  assert.match(
+    rules,
+    /A policy skip supplies neither internal nor external approval/,
+  );
+  assert.match(
+    rules,
+    /At merge, record the actual internal Standards and Spec review outcomes/,
+  );
+
+  const factory = flowedText("rules/factory-workflow.md");
+  assert.match(
+    factory,
+    /internal Standards and Spec reviews defined by the `github-repository-configuration` rules' app-author policy/,
+  );
+});
+
+test("nonmatching and absent-policy PRs keep applicable reviews without a blanket babysit gate", () => {
+  const rules = flowedText("rules/github-repository-configuration.md");
+  assert.match(
+    rules,
+    /For nonmatching and absent-policy pull requests, keep the existing applicable internal-review workflow/,
+  );
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  assert.match(
+    babysit,
+    /Follow the `github-repository-configuration` rules for applicable internal Standards and Spec reviews and their merge record/,
+  );
+  assert.doesNotMatch(babysit, /Complete internal Standards and Spec reviews/);
+  assert.match(
+    flowedText(".agents/skills/implement/SKILL.md"),
+    /Once done, use \/code-review to review the work/,
+  );
+});
+
 test("both babysit exit-1 instructions defer permission refusals to Credentials", () => {
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   const instructions = [
