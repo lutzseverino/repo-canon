@@ -1559,7 +1559,7 @@ test("owner-reviewed heads need explicit current-head approval independently of 
   );
   assert.match(
     factory,
-    /When approval is missing, follow the \[owner handoff\]\(#owner-handoff-and-recovery\) and leave the PR unmerged/,
+    /When approval is missing, follow the contribution guide's owner-question handoff and leave the PR unmerged/,
   );
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(

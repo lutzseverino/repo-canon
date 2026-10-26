@@ -89,7 +89,7 @@ SHA on the PR. Any head change requires renewed owner approval; approval of an
 earlier head does not authorize the new one. Passing checks, a configured
 external review, its absence or timeout, and an app-author review-policy skip
 never substitute for owner approval. When approval is missing, follow the
-[owner handoff](#owner-handoff-and-recovery) and leave the PR unmerged.
+contribution guide's owner-question handoff and leave the PR unmerged.
 
 ## External review of factory pull requests
 
