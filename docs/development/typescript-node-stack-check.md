@@ -5,6 +5,8 @@
 declaration. It validates the manifest facts of the
 [typescript-node stack rules](../../rules/typescript-node-stack.md) for each
 confirmed Project, through the Repository Standards public operation protocol.
+This includes a confirmed maintained workspace root package alongside its
+members; discovery and assessment settle Project membership before the check.
 It runs only when the declaration has a scope: with no scope, the CLI runs none
 of its operations.
 

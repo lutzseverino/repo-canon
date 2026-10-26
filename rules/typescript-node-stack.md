@@ -21,13 +21,17 @@ A covered Project uses:
 
 ## Workspaces
 
-When workspace configuration lists at least one kept member manifest, the
-members are the Projects. Exclude the root as their shared configuration,
-whether or not its manifest conforms to this stack.
+Workspace members are Projects. A workspace root that is itself a maintained
+package with its own responsibility and development commands is also a
+Project alongside its members. A root that only supplies shared workspace
+configuration is not a Project. Establish membership from repository evidence;
+the presence of members or conformity to this stack alone does not decide it.
+Assess each Project's stack membership independently, including the root's.
 
 Facts a workspace shares, `packageManager`, the lockfile and `engines`, are
-set at the workspace root, not in each member, and the members' checks read
-them there. A package outside any workspace is its own workspace root and its
+set at the workspace root, not in each member, and each Project's check reads
+them there, whether the root is itself a Project or shared-only configuration.
+A package outside any workspace is its own workspace root and its
 own Project. This includes a repository root package without workspace
 members, even when its `pnpm-workspace.yaml` holds only settings or catalogs.
 It is subject to the same stack requirements as any other Project.

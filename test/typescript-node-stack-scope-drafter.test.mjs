@@ -23,11 +23,11 @@ const drafter = join(sourceRoot, drafterPath);
 const check = join(sourceRoot, "operations/check-typescript-node-stack.mjs");
 
 const coverage =
-  "Drafted from manifests and workspace configuration by `discovery/draft-typescript-node-stack-scope.mjs`: one `package.json` per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. In a workspace, the members are the Projects and the root is not; a root package without workspace members is a Project.";
+  "Drafted from manifests and workspace configuration by `discovery/draft-typescript-node-stack-scope.mjs`: one `package.json` per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. A maintained workspace root package is a Project alongside its members; a shared-only root is not. Uncertain root membership stays unresolved. A root package without workspace members is a Project.";
 const matches = (path) =>
   `The Project of \`${path}\` matches the typescript-node stack's manifest facts: pnpm 11, its lockfile, Node.js 24 or 26, oxlint 1, Prettier 3 and a validate script.`;
 const workspaceRoot = (path) =>
-  `\`${path}\` is a workspace root, which holds its members' shared configuration rather than a Project; its members are the Projects.`;
+  `\`${path}\` supplies shared workspace configuration without evidence of its own maintained package; its members are the Projects.`;
 const differs = (path, differences) =>
   `The Project of \`${path}\` differs from the typescript-node stack, so it stays out of the scope until a migration brings it in: ${differences.join(" ")}`;
 
@@ -152,6 +152,125 @@ test("includes a single conforming package", (t) => {
   });
 });
 
+test("includes a maintained workspace root package alongside its member", (t) => {
+  const { root, entry } = drafted(t, {
+    "package.json": manifest({
+      name: "cli",
+      bin: { cli: "dist/cli.js" },
+      scripts: { build: "tsc", validate: "pnpm run build && node --test" },
+    }),
+    "src/cli.ts": "console.log('cli');\n",
+    "pnpm-lock.yaml": "",
+    "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+    "packages/core/package.json": member(),
+    "packages/core/src/index.ts": "export {};\n",
+  });
+  const paths = entry.candidates
+    .filter(({ decision }) => decision === "include")
+    .map(({ path }) => path);
+  assert.deepEqual(paths, ["package.json", "packages/core/package.json"]);
+  assert.deepEqual(entry.unresolved, []);
+  assert.ok(entry.candidates[0].evidence.includes("src/cli.ts"));
+  const outcome = invokeCheck(check, root, {
+    operation: {
+      declaration: "typescript-node-stack",
+      phase: "checks",
+      id: "typescript-node-stack-manifests",
+    },
+    allowedTargets: { paths, directories: [] },
+  });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "passed", outcome.result.message);
+  assert.match(outcome.result.message, /valid for 2 Projects/);
+});
+
+test("excludes a differing maintained root while keeping its conforming member", (t) => {
+  const { entry } = drafted(t, {
+    "package.json": manifest({
+      exports: "./dist/index.js",
+      scripts: { build: "tsc" },
+      workspaces: ["packages/*"],
+    }),
+    "src/index.ts": "export {};\n",
+    "pnpm-lock.yaml": "",
+    "packages/core/package.json": member(),
+  });
+  assert.equal(entry.candidates[0].decision, "exclude");
+  assert.equal(
+    entry.candidates[0].reason,
+    differs("package.json", [
+      "Add a `validate` script to `package.json` that runs the Project's checks.",
+    ]),
+  );
+  assert.ok(entry.candidates[0].evidence.includes("src/index.ts"));
+  assert.equal(entry.candidates[1].decision, "include");
+  assert.deepEqual(entry.unresolved, []);
+});
+
+test("includes a maintained declaration-only root library alongside its member", (t) => {
+  for (const field of ["types", "typings"]) {
+    const { entry } = drafted(t, {
+      "package.json": manifest({
+        [field]: "src/index.d.ts",
+        workspaces: ["packages/*"],
+      }),
+      "src/index.d.ts": "export interface Options { verbose: boolean }\n",
+      "pnpm-lock.yaml": "",
+      "packages/core/package.json": member(),
+    });
+    assert.deepEqual(
+      entry.candidates.map(({ path, decision }) => [path, decision]),
+      [
+        ["package.json", "include"],
+        ["packages/core/package.json", "include"],
+      ],
+    );
+    assert.ok(entry.candidates[0].evidence.includes("src/index.d.ts"));
+    assert.deepEqual(entry.unresolved, []);
+  }
+});
+
+test("leaves incomplete root-package evidence unresolved", (t) => {
+  for (const files of [
+    { "package.json": manifest(), "src/index.ts": "export {};\n" },
+    { "package.json": manifest({ main: "dist/index.js" }) },
+    {
+      "package.json": manifest({ main: "dist/index.js", scripts: {} }),
+      "src/index.ts": "export {};\n",
+    },
+    { "package.json": "{ broken" },
+  ]) {
+    const { entry } = drafted(t, {
+      ...files,
+      "pnpm-lock.yaml": "",
+      "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+      "packages/core/package.json": member(),
+      "packages/core/src/index.ts": "export {};\n",
+    });
+    assert.equal(entry.unresolved.length, 1);
+    assert.match(
+      entry.unresolved[0],
+      /workspace root `package.json` itself a maintained package/,
+    );
+    assert.ok(entry.candidates.every(({ path }) => path !== "package.json"));
+  }
+});
+
+test("does not mistake member sources, fixtures or tool configuration for a root package", (t) => {
+  const { entry } = drafted(t, {
+    "package.json": manifest({ workspaces: ["packages/*"] }),
+    "pnpm-lock.yaml": "",
+    "packages/core/package.json": member(),
+    "packages/core/src/index.ts": "export {};\n",
+    "test/fixtures/src/index.ts": "export {};\n",
+    "prettier.config.js": "export default {};\n",
+    ".config/tool.ts": "export {};\n",
+  });
+  assert.equal(entry.candidates[0].decision, "exclude");
+  assert.equal(entry.candidates[0].reason, workspaceRoot("package.json"));
+  assert.deepEqual(entry.unresolved, []);
+});
+
 test("includes only the conforming Projects of a pnpm workspace, naming each differing member's differences", (t) => {
   const { entry } = drafted(t, {
     "package.json": manifest({ name: "root" }),
@@ -212,7 +331,7 @@ test("includes only the conforming Projects of a pnpm workspace, naming each dif
   });
 });
 
-test("excludes a workspace root, conforming or not, without a question", (t) => {
+test("excludes a shared-only workspace root independently of stack conformity", (t) => {
   for (const root of [manifest({ name: "root" }), manifest({ scripts: {} })]) {
     const { entry } = drafted(t, {
       "package.json": root,
@@ -560,6 +679,46 @@ test("drafts the same proposal from its declared retained source layout", (t) =>
     script: retainedCheck(t, drafterPath),
   });
   assert.deepEqual(retained.entry, acquired.entry);
+});
+
+test("retained discovery includes a nested maintained root alongside its member", (t) => {
+  const { entry } = drafted(
+    t,
+    {
+      "tools/package.json": manifest({ main: "dist/index.js" }),
+      "tools/src/index.ts": "export {};\n",
+      "tools/pnpm-lock.yaml": "",
+      "tools/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+      "tools/packages/core/package.json": member(),
+    },
+    { script: retainedCheck(t, drafterPath) },
+  );
+  assert.deepEqual(
+    entry.candidates.map(({ path, decision }) => [path, decision]),
+    [
+      ["tools/package.json", "include"],
+      ["tools/packages/core/package.json", "include"],
+    ],
+  );
+  assert.ok(entry.candidates[0].evidence.includes("tools/src/index.ts"));
+  assert.deepEqual(entry.unresolved, []);
+});
+
+test("keeps noScope and the root question when no confirmed Project matches", (t) => {
+  const { entry } = drafted(t, {
+    "package.json": manifest(),
+    "src/index.ts": "export {};\n",
+    "pnpm-lock.yaml": "",
+    "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+    "packages/core/package.json": member({ scripts: {} }),
+  });
+  assert.equal(entry.noScope, true);
+  assert.equal(entry.unresolved.length, 1);
+  assert.match(entry.unresolved[0], /workspace root `package.json`/);
+  assert.deepEqual(
+    entry.candidates.map(({ path, decision }) => [path, decision]),
+    [["packages/core/package.json", "exclude"]],
+  );
 });
 
 test("rejects arguments and requests it cannot read with a process error", async (t) => {

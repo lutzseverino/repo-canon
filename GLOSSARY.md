@@ -11,8 +11,9 @@ _Avoid_: Project README when referring to the repository-wide document
 
 **Project**:
 A maintained app, service, library, or tool with its own responsibility and
-development commands, including an internal workspace package.
-_Avoid_: Any directory, fixture, generated output
+development commands, including an internal workspace package or a maintained
+workspace root package alongside its members.
+_Avoid_: Any directory, fixture, generated output, shared-only workspace configuration
 
 **Stack**:
 The named set of development tools, each at an exact major version, that a

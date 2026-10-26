@@ -6,6 +6,7 @@ import {
   manifestName,
   parentOf,
   pnpmWorkspaceName,
+  readManifest,
   stackDifferences,
   workspaceConfiguration,
 } from "../operations/lib/typescript-node-stack.mjs";
@@ -203,12 +204,14 @@ const reasons = {
   differs: (path, differences) =>
     `The Project of ${code(path)} differs from the typescript-node stack, so it stays out of the scope until a migration brings it in: ${differences.join(" ")}`,
   workspaceRoot: (path) =>
-    `${code(path)} is a workspace root, which holds its members' shared configuration rather than a Project; its members are the Projects.`,
+    `${code(path)} supplies shared workspace configuration without evidence of its own maintained package; its members are the Projects.`,
   unmaintained: (path, directory) =>
     `${code(path)} lies under ${code(directory)}, which holds fixtures, generated output, or copied code rather than a maintained Project, and no workspace outside it lists it.`,
 };
 
 const questions = {
+  root: (path) =>
+    `Is the workspace root ${code(path)} itself a maintained package with its own responsibility and development commands, alongside its members? The kept evidence does not settle its membership. Include it when it matches the stack, or exclude it naming its differences; exclude a shared-only configuration root as no maintained Project.`,
   standalone: (path) =>
     `Is ${code(path)} the manifest of a maintained Project? No workspace lists it. If it is, include it when it matches the stack, or exclude it naming its differences; otherwise exclude it as no maintained Project.`,
   workspace: (path) =>
@@ -216,11 +219,63 @@ const questions = {
 };
 
 function coverage({ included, projects }) {
-  const drafted = `Drafted from manifests and workspace configuration by ${code(drafterPath)}: one ${code(manifestName)} per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. In a workspace, the members are the Projects and the root is not; a root package without workspace members is a Project.`;
+  const drafted = `Drafted from manifests and workspace configuration by ${code(drafterPath)}: one ${code(manifestName)} per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. A maintained workspace root package is a Project alongside its members; a shared-only root is not. Uncertain root membership stays unresolved. A root package without workspace members is a Project.`;
   if (included > 0) return drafted;
   if (projects === 0)
     return `${drafted} The repository holds no Node.js Project, so the declaration has no scope.`;
   return `${drafted} No Project matches the stack, so the declaration has no scope; each differing Project stays out until a migration brings it in.`;
+}
+
+// Conservative root-package evidence, independent of stack conformity. Entry
+// points plus development commands and kept source files establish a
+// package's own responsibility. Other packages' files, fixtures and tool
+// configuration do not establish it. Anything partial stays for assessment.
+function rootPackageEvidence(projectRoot, path, files, manifests) {
+  const { manifest } = readManifest(projectRoot, path);
+  if (!manifest) return { unresolved: true };
+  const directory = parentOf(path);
+  const nested = manifests
+    .filter(
+      (other) =>
+        other !== path && (directory === "" || isWithin(other, directory)),
+    )
+    .map(parentOf);
+  const sources = [...files]
+    .filter((file) => {
+      if (directory !== "" && !isWithin(file, directory)) return false;
+      const relative = relativeTo(file, directory);
+      return (
+        /\.(?:[cm]?[jt]s|[jt]sx)$/.test(relative) &&
+        !/(?:^|\/)\.|(?:^|\/)[^/]+\.config\.|\.(?:test|spec)\./.test(
+          relative,
+        ) &&
+        !unmaintainedAncestor(parentOf(relative)) &&
+        !nested.some((root) => isWithin(file, root))
+      );
+    })
+    .sort();
+  const entryPoints = [
+    "bin",
+    "main",
+    "module",
+    "exports",
+    "types",
+    "typings",
+  ].some((field) => {
+    const value = manifest[field];
+    return typeof value === "string"
+      ? value.trim() !== ""
+      : value !== null &&
+          typeof value === "object" &&
+          Object.keys(value).length > 0;
+  });
+  const commands = Object.values(manifest.scripts ?? {}).some(
+    (command) => typeof command === "string" && command.trim() !== "",
+  );
+  if (entryPoints && commands && sources.length > 0)
+    return { evidence: [sources[0]] };
+  if (!entryPoints && sources.length === 0) return { sharedOnly: true };
+  return { unresolved: true };
 }
 
 function draftStackScope({ projectRoot }) {
@@ -249,15 +304,6 @@ function draftStackScope({ projectRoot }) {
   );
   for (const path of manifests) {
     const directory = parentOf(path);
-    if (memberRoots.has(directory)) {
-      candidates.push({
-        path,
-        decision: "exclude",
-        reason: reasons.workspaceRoot(path),
-        evidence: [...new Set([path, ...found.get(directory).sources])],
-      });
-      continue;
-    }
     const ownWorkspace = found.get(directory);
     const unreadableAbove = [...found].some(
       ([root, configuration]) =>
@@ -284,16 +330,39 @@ function draftStackScope({ projectRoot }) {
       else unresolved.push(questions.standalone(path));
       continue;
     }
+    let membershipEvidence = [];
+    if (memberRoots.has(directory)) {
+      const root = rootPackageEvidence(projectRoot, path, files, manifests);
+      if (root.unresolved) {
+        unresolved.push(questions.root(path));
+        continue;
+      }
+      if (root.sharedOnly) {
+        candidates.push({
+          path,
+          decision: "exclude",
+          reason: reasons.workspaceRoot(path),
+          evidence: [...new Set([path, ...found.get(directory).sources])],
+        });
+        continue;
+      }
+      membershipEvidence = root.evidence;
+    }
     const { differences, evidence } = stackDifferences(projectRoot, path);
     projects += 1;
     candidates.push(
       differences.length === 0
-        ? { path, decision: "include", reason: reasons.matches(path), evidence }
+        ? {
+            path,
+            decision: "include",
+            reason: reasons.matches(path),
+            evidence: [...new Set([...evidence, ...membershipEvidence])],
+          }
         : {
             path,
             decision: "exclude",
             reason: reasons.differs(path, differences),
-            evidence: [path],
+            evidence: [path, ...membershipEvidence],
           },
     );
   }
