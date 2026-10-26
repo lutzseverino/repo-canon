@@ -12,6 +12,10 @@ import { localPathExists } from "./local-markdown-links.mjs";
 export const manifestName = "package.json";
 export const lockfileName = "pnpm-lock.yaml";
 export const pnpmWorkspaceName = "pnpm-workspace.yaml";
+// Why an unreadable `pnpm-workspace.yaml` can hold a supported member list:
+// the reader validates the whole document, not only its `packages` value.
+export const unreadableWorkspaceYamlCause =
+  "unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns";
 export const nodeMajors = [24, 26];
 // The development tools a Project or its workspace root declares, with their
 // major versions.
@@ -702,7 +706,9 @@ export function stackDifferences(projectRoot, manifestPath) {
   if (workspace.unreadable)
     return {
       differences: [
-        `State the workspace members of ${code(workspace.unreadable)} as a list of plain or quoted patterns, which the check reads.`,
+        workspace.unreadable.endsWith(pnpmWorkspaceName)
+          ? `Cannot read workspace configuration from ${code(workspace.unreadable)}: ${unreadableWorkspaceYamlCause}. Use supported YAML forms throughout the document.`
+          : `State the workspace members of ${code(workspace.unreadable)} as a list of plain or quoted patterns, which the check reads.`,
       ],
       evidence: [manifestPath, workspace.unreadable],
       workspaceRoot: null,

@@ -60,6 +60,13 @@ catalogs:
 `;
 
 export const unsupportedWorkspaceYaml = [
+  // Supported member patterns do not make unsupported YAML elsewhere readable.
+  "packages:\n  - packages/*\noverrides: {}\n",
+  "packages:\n  - packages/*\nsettings: &settings\n  enabled: true\n",
+  "packages:\n  - packages/*\nnotes: |\n  workspace notes\n",
+  "packages:\n  - packages/*\nsettings:\n  - enabled: true\n",
+  "packages:\n  - packages/*\n# unrelated\tcomment\n",
+  "\uFEFFpackages:\n  - packages/*\n",
   "packages:\n  - true\n",
   "packages:\n  - 24\n",
   "packages:\n  - packages/*\n   - apps/*\n",
