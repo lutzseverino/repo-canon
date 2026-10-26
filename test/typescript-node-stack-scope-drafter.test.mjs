@@ -14,7 +14,7 @@ import {
 import {
   catalogYaml,
   unsupportedWorkspaceYaml,
-  unsupportedCatalogYaml,
+  unsupportedCatalogYamlGroups,
 } from "./helpers/stack-yaml.mjs";
 
 const sourceRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -885,9 +885,46 @@ test("differential workspace regressions raise a discovery question through reta
   }
 });
 
-test("unresolved nested catalogs exclude established Projects through retained discovery", (t) => {
+for (const [name, cases] of Object.entries({
+  "unresolved nested catalogs": unsupportedCatalogYamlGroups.nestedMappings,
+  "plain non-breaking-space catalog keys and names":
+    unsupportedCatalogYamlGroups.plainNonBreakingSpace,
+}))
+  test(`${name} exclude established Projects through retained discovery`, (t) => {
+    const retained = retainedCheck(t, drafterPath);
+    for (const [text, specifier] of cases) {
+      const { entry } = drafted(
+        t,
+        {
+          "package.json": manifest({
+            devDependencies: { oxlint: specifier, prettier: "3.9.9" },
+          }),
+          "pnpm-lock.yaml": "",
+          "pnpm-workspace.yaml": text,
+        },
+        { script: retained },
+      );
+      assert.equal(entry.noScope, true, text);
+      assert.deepEqual(
+        entry.candidates.map(({ path, decision }) => [path, decision]),
+        [["package.json", "exclude"]],
+        text,
+      );
+      assert.deepEqual(entry.unresolved, [], text);
+      assert.match(
+        entry.candidates[0].reason,
+        /no catalog of the workspace root's `pnpm-workspace.yaml` defines for `oxlint`/,
+        text,
+      );
+    }
+  });
+
+test("unreadable catalogs leave root membership unresolved through retained discovery", (t) => {
   const retained = retainedCheck(t, drafterPath);
-  for (const [text, specifier] of unsupportedCatalogYaml.slice(0, 2)) {
+  for (const [
+    text,
+    specifier,
+  ] of unsupportedCatalogYamlGroups.unreadableDocuments) {
     const { entry } = drafted(
       t,
       {
@@ -899,33 +936,21 @@ test("unresolved nested catalogs exclude established Projects through retained d
       },
       { script: retained },
     );
-    assert.equal(entry.noScope, true, text);
-    assert.ok(
-      entry.candidates.every(({ decision }) => decision === "exclude"),
+    assert.deepEqual(entry.candidates, [], text);
+    assert.equal(entry.unresolved.length, 1, text);
+    assert.match(
+      entry.unresolved[0],
+      /cannot read workspace configuration from `pnpm-workspace.yaml`.*Which manifests under it belong to maintained Projects\?/,
       text,
     );
-    assert.match(
-      entry.candidates[0].reason,
-      /no catalog.*defines for `oxlint`|Cannot read workspace configuration/,
+    assert.equal(entry.noScope, true, text);
+    assert.match(entry.coverage, /unresolved questions must be settled/, text);
+    assert.doesNotMatch(
+      entry.coverage,
+      /No Project matches|no Node.js Project|migration/,
       text,
     );
   }
-});
-
-test("duplicate catalogs leave root membership unresolved through retained discovery", (t) => {
-  const { entry } = drafted(
-    t,
-    {
-      "package.json": manifest(),
-      "pnpm-lock.yaml": "",
-      "pnpm-workspace.yaml": "catalog:\n  oxlint: 0.9.0\n  oxlint: 1.86.0\n",
-    },
-    { script: retainedCheck(t, drafterPath) },
-  );
-  assert.deepEqual(entry.candidates, []);
-  assert.equal(entry.unresolved.length, 1);
-  assert.match(entry.unresolved[0], /cannot read workspace configuration/);
-  assert.equal(entry.noScope, true);
 });
 
 test("unreadable membership preserves independently established root package evidence", (t) => {
