@@ -12,6 +12,8 @@ Before requesting or waiting, establish your delivery role from
 prescribe a worker handoff, record it on the open PR and stop. The designated
 merging agent resumes here from the handoff, carrying its review requirements
 and outstanding findings into the steps below.
+On resuming an approval-paused PR, follow the installed continuation rules
+before returning to the request and wait steps.
 
 The bundled scripts require Node.js 24 or 26. The request and wait read the optional
 `.github/pull-request-reviewer.json`, whose schema the

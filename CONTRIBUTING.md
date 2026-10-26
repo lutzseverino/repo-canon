@@ -292,7 +292,8 @@ issue comment under these rules, and stop without a pull request if none is open
 or leaving the open pull request unmerged and linked from the question. Work
 without an issue asks on its pull request instead. This owner handoff ends the
 agent's babysitting of the pull request. The agent neither closes the pull
-request nor waits for the answer. The orchestrating agent reads the question
+request nor waits for the answer. Subsequent continuation follows applicable
+installed rules. The orchestrating agent reads the question
 first: when it can answer under the [triage](#triage) inference test, it
 answers on the issue; otherwise it puts the question in its decision inbox.
 
