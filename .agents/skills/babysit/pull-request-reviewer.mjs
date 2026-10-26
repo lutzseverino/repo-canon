@@ -16,6 +16,10 @@ export const readReviewer = (root = process.cwd()) => {
     if (error.code === "ENOENT") return null;
     throw error;
   }
+  return parseReviewer(text);
+};
+
+export const parseReviewer = (text) => {
   let reviewer;
   try {
     reviewer = JSON.parse(text);

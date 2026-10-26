@@ -12,14 +12,20 @@ Before requesting or waiting, establish your delivery role from
 prescribe a worker handoff, record it on the open PR and stop. The designated
 merging agent resumes here from the handoff, carrying its review requirements
 and outstanding findings into the steps below.
+On resuming an approval-paused PR, follow the installed continuation rules
+before returning to the request and wait steps.
 
 The bundled scripts require Node.js 24 or 26. The request and wait read the optional
 `.github/pull-request-reviewer.json`, whose schema the
 `github-repository-configuration` rules state; without the file, it reports
 only checks unless the app-author policy identifies an external review skip.
 Both commands read the optional `.github/factory-review-policy.json` under
-the same rules. A plain human-login declaration is a configuration error
-(exit `1`), as defined by those rules. Its absence keeps configured reviewer
+the same rules' trusted review configuration: they resolve the destination's
+default-branch commit once and read both files from that SHA. The wait keeps
+that snapshot across polls; its final outcome identifies the repository and
+revision, as does the request's. Proposed configuration changes begin applying
+after merging to that default branch. A plain human-login declaration is a
+configuration error (exit `1`), as defined by those rules. Its absence keeps configured reviewer
 behavior and requires no owner question.
 
 Before the first wait, apply the `github-repository-configuration` rules'

@@ -26,7 +26,7 @@
 // The default polling limit is 540 seconds. Each platform request has a
 // 45-second timeout; paginated reads retain their request bounds.
 // One invocation covers 9 minutes waited; repository data sets review bounds.
-// Run from the repository root to read .github/pull-request-reviewer.json.
+// Both review configurations come from one destination default-branch commit.
 // A head with no recorded push and no check or run never settles its checks.
 import {
   connectionFor,
@@ -39,8 +39,7 @@ import {
   conversationComments,
 } from "./platform.mjs";
 
-import { readReviewer } from "./pull-request-reviewer.mjs";
-import { readReviewPolicy } from "./review-policy.mjs";
+import { trustedReviewConfiguration } from "./trusted-review-config.mjs";
 import {
   reviewRequestedAt,
   reviewerState,
@@ -343,18 +342,14 @@ export const main = async (argv = process.argv.slice(2), connection) => {
   let options;
   let reviewer;
   let policy;
+  let evidence;
   try {
     options = parseArguments(argv);
-    reviewer = readReviewer();
-    policy = readReviewPolicy();
+    connection ??= connectionFor(options.repo);
+    ({ reviewer, policy, evidence } =
+      await trustedReviewConfiguration(connection));
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
-    return 1;
-  }
-  try {
-    connection ??= connectionFor(options.repo);
-  } catch (error) {
-    process.stderr.write(`wait.mjs: ${error.message}\n`);
     return 1;
   }
   const limitMs = options.limit * 1000;
@@ -375,7 +370,9 @@ export const main = async (argv = process.argv.slice(2), connection) => {
     }
     const outcome = decide({ ...state, now: Date.now(), startedAt, limitMs });
     if (outcome.code !== null) {
-      process.stdout.write(`${report(outcome, state.head).join("\n")}\n`);
+      const lines = report(outcome, state.head);
+      lines[0] += `; ${evidence}`;
+      process.stdout.write(`${lines.join("\n")}\n`);
       return outcome.code;
     }
     const remaining = startedAt + limitMs - Date.now();

@@ -138,6 +138,28 @@ the same target leaves it untouched. Remote setup is deferred until the next
 local `adopt`. The installed caller never sets `agent-command`; an adopter
 wanting that input writes a repository-owned caller workflow.
 
+## Trusted review configuration
+
+For each `babysit` request or wait invocation, resolve the destination
+repository's default branch to one immutable full commit SHA. Read both
+optional repository-owned files, `.github/factory-review-policy.json` and
+`.github/pull-request-reviewer.json`, from that same commit before applying
+policy or requesting review. Report the destination repository, default branch
+and selected SHA with the command's outcome. A wait keeps the snapshot across
+all polls and head changes; each new invocation resolves the current default
+tip again, including after fixes, rebases, retries and resumed runs.
+
+Configuration additions, edits and deletions take effect only after they land
+on the destination default branch. The PR's head, source fork, chosen base
+branch or retargeting, local branch and dirty or untracked files never select
+or override this configuration.
+
+Only verified absence at the selected commit invokes the optional-file
+behavior below. A repository, default-branch, commit or file-read failure, or
+invalid trusted configuration, is an explicit error before any review-request
+mutation. It authorizes no skip and permits no fallback to local files, the
+head or another revision.
+
 ## Pull request reviewer file
 
 The optional repository-owned `.github/pull-request-reviewer.json` names the
@@ -211,7 +233,8 @@ The optional repository-owned `.github/factory-review-policy.json` exempts its
 declared app author from agent-issued external review requests and external
 reviewer response/review waits. Repo Canon installs no policy declaration or
 default exemption. The factory host remains independent of repository reviewer
-configuration; the installed `babysit` request and wait commands apply it.
+configuration; the installed `babysit` request and wait commands apply it
+from the [trusted review configuration](#trusted-review-configuration).
 
 The file is valid JSON holding exactly this object shape:
 

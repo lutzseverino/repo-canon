@@ -172,6 +172,109 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     manifest.source.linkedSkillDirectories.triage.path,
     realpathSync(join(root, ".agents/skills/triage")),
   );
+  const triageWayfinder = manifest.repositories["triage-wayfinder"];
+  const triageIntake = readFileSync(
+    join(triageWayfinder.path, ".scratch/triage/01-export-receipts.md"),
+    "utf8",
+  );
+  assert.match(triageIntake, /^Status: needs-triage$/m);
+  assert.doesNotMatch(
+    triageIntake,
+    /## Agent Brief|parcel_reference|exportReceipts\(|ready-for-agent/,
+  );
+  const triageOwnerInputs = readFileSync(
+    join(triageWayfinder.path, ".scratch/triage/owner-inputs.md"),
+    "utf8",
+  );
+  for (const choice of [
+    "parcel_reference,delivered_at,signer_name",
+    "exportReceipts(receipts, date)",
+    "caller-supplied",
+    "reference, deliveredAt and signer string fields",
+    "2026-10-18",
+    ".scratch/triage/owner-inputs.md",
+    "ISO 8601 UTC",
+    "Parcel-reference ordering",
+    "header-only",
+    "PDF",
+    "scheduled",
+  ])
+    assert.ok(
+      triageOwnerInputs.includes(choice),
+      `controlled choice: ${choice}`,
+    );
+  assert.match(triageOwnerInputs, /simulated participant decisions/);
+  assert.match(triageOwnerInputs, /only after the intent-bound handoff/);
+  const triageTask = readFileSync(
+    join(triageWayfinder.path, "docs/exercise.md"),
+    "utf8",
+  );
+  let previousCheckpoint = -1;
+  for (const checkpoint of [
+    "### 1. Initial handoff",
+    "### 2. Controlled answers and draft",
+    "### 3. First notice and independent review",
+    "### 4. Edit and invalidation",
+    "### 5. Second notice and independent review",
+    "### 6. Wayfinder",
+  ]) {
+    const position = triageTask.indexOf(checkpoint);
+    assert.ok(
+      position > previousCheckpoint,
+      `ordered checkpoint: ${checkpoint}`,
+    );
+    previousCheckpoint = position;
+  }
+  for (const requirement of [
+    /separate research session/,
+    /local decision inbox/,
+    /no brief or readiness/i,
+    /fresh sessions.*relays.*verbatim/,
+    /never author a brief you accept/i,
+    /No public CSV\/API\/source choice is inferred/,
+    /no factory model suggestion requirement/,
+    /child 02; child 03 remains blocked/,
+    /Maps and children carry no readiness or workflow state/,
+  ])
+    assert.match(triageTask, requirement);
+  const triageReviewInputs = readFileSync(
+    join(triageWayfinder.path, ".scratch/triage/review-inputs.md"),
+    "utf8",
+  );
+  for (const requirement of [
+    /not GitHub events or actual authority/,
+    /retain its exact text.*revisions\/r1\.md/,
+    /notice for r1 only after.*draft exists/,
+    /reviewer did not write r1/,
+    /actual accept\/reject outcome/,
+    /no preapproved verdict/,
+    /If r1 holds.*readiness bound to r1/,
+    /Replace only.*Summary.*Export Delivery receipts as date-filtered CSV text from caller-supplied receipts/,
+    /retain.*revisions\/r2\.md.*both texts/,
+    /r1 readiness is invalidated/,
+    /Withhold r2 readiness until.*r2's revision notice.*independent reviewer/,
+  ])
+    assert.match(triageReviewInputs, requirement);
+  assert.equal(
+    readdirSync(join(triageWayfinder.path, ".scratch/triage")).includes(
+      "revisions",
+    ),
+    false,
+    "contract texts must come from the actual draft and edit, not a seeded approval",
+  );
+  for (const [child, blocker, status] of [
+    ["01-define-failure-categories.md", "None", "resolved"],
+    ["02-choose-default-retry-window.md", "01", "open"],
+    ["03-choose-retry-window.md", "02", "open"],
+  ]) {
+    const text = readFileSync(
+      join(triageWayfinder.path, ".scratch/shipping-map/issues", child),
+      "utf8",
+    );
+    assert.ok(text.includes(`Blocked by: ${blocker}\n`));
+    assert.ok(text.includes(`Status: ${status}\n`));
+    assert.doesNotMatch(text, /ready-for-agent|needs-triage|model:/);
+  }
   const routing = manifest.repositories["triage-routing"];
   const orchestrate = manifest.repositories.orchestrate;
   assert.deepEqual(orchestrate.skills, ["orchestrate"]);
