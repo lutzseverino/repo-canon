@@ -35,7 +35,7 @@ Five **state** roles:
 - `needs-triage`: maintainer needs to evaluate
 - `needs-info`: information is missing; you, the orchestrating agent, answer it or route it (see [Route questions](#route-questions))
 - `ready-for-agent`: fully specified, ready for an AFK agent
-- `ready-for-human`: needs human implementation
+- `ready-for-human`: needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves
 - `wontfix`: will not be actioned
 
 For a PR, the same states read against the attached code: `ready-for-agent` means a brief is attached and an agent should take the next step on the diff; `ready-for-human` means it's ready for a human to merge.
@@ -139,18 +139,22 @@ Every research run, on either path, does two checks first:
 ### Accept a brief that holds
 
 1. **Wait for the revision notice** the issue-contract workflow posts for the brief revision you reviewed. If the brief changed after your review, review the new revision. If no notice arrives, leave readiness to the owner and tell them the notice is missing.
-2. **Choose the model**, when the installed rules ask for a `model:` label: weigh the triage notes' suggestion against the work, and pick one label yourself.
-3. **Apply and confirm readiness** with the bundled command, using the `sha256:` revision from the notice you reviewed and the companion labels you chose:
+2. **Choose the readiness**:
+   - `ready-for-human` only when the work needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves.
+   - `ready-for-agent` with `factory:skip` for agent work the factory must not pick up, by the tests in the installed factory rules, which also say who creates the label and who merges. Without those rules there is no skip label.
+   - `ready-for-agent` alone for any other work.
+3. **Choose the model**, when the installed rules ask for a `model:` label: weigh the triage notes' suggestion against the work, and pick one label yourself.
+4. **Apply and confirm readiness** with the bundled command, using the `sha256:` revision from the notice you reviewed and the companion labels you chose:
 
    ```sh
    node <this skill's directory>/ready.mjs <issue> ready-for-agent <sha256:reviewed-revision> <model-label>
    ```
 
-   Use `ready-for-human` when appropriate, with a note on why it can't be delegated (judgment calls, external access, design decisions, manual testing), and omit the model label when none is needed. Additional companion labels follow the revision; `--repo owner/name` selects another repository. Run with Node.js 24 or 26 in the foreground, bounded by the caller's command timeout. The command uses the current `gh` credential through the vendored Postern bundle and needs no install step. Exit zero confirms the validator approved that revision by the acting account; a nonzero exit explains the refusal or rejection. Review a changed revision again before retrying. For a parent it waits for the latest child link and reapplies readiness when its timestamp is not newer than that link.
-4. **Record blockers.** Add a native blocker for each issue whose work must land first.
-5. **Tell the owner** what you accepted, with links to each brief, the labels you applied, the blockers you added, and every answer you inferred, so they can veto it.
+   For `ready-for-human`, name the account, credential, or reserved taste call the work needs in a note, and omit the model label when none is needed. Additional companion labels, such as `factory:skip`, follow the revision; `--repo owner/name` selects another repository. Run with Node.js 24 or 26 in the foreground, bounded by the caller's command timeout. The command uses the current `gh` credential through the vendored Postern bundle and needs no install step. Exit zero confirms the validator approved that revision by the acting account; a nonzero exit explains the refusal or rejection. Review a changed revision again before retrying. For a parent it waits for the latest child link and reapplies readiness when its timestamp is not newer than that link.
+5. **Record blockers.** Add a native blocker for each issue whose work must land first.
+6. **Tell the owner** what you accepted, with links to each brief, the labels you applied, the blockers you added, and every answer you inferred, so they can veto it.
 
-When your credentials cannot apply readiness, stop at acceptance: tell the owner, with links, which revision holds, the model label you chose, and the blockers to record. When the installed rules say readiness from your account will not start the work, tell the owner a person must apply it.
+When your credentials cannot apply readiness, stop at acceptance: tell the owner, with links, which revision holds, the readiness, model and skip labels you chose, and the blockers to record. When the installed rules say readiness from your account will not start the work, tell the owner a person must apply it.
 
 ## Other outcomes
 

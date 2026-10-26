@@ -50,13 +50,24 @@ GitHub rules. It never reports that its own readiness started a run.
 ## State labels
 
 In a repository a factory serves, `.factory/config.json` names the factory's
-labels: `ready-for-agent` is the ready label, an agent adds
-`factory:needs-input` with its question, and the factory adds `factory:running`
-while it holds an issue, `factory:failed` after a run fails for good, and
-`factory:paused` when it pauses a run. `factory:paused` means the factory
-paused the run and resumes it by itself, and its comment on the issue says why,
-so nobody removes the label by hand. Remove `factory:failed` to run the issue
-again once its failure note or the factory's comment is dealt with.
+labels: `ready-for-agent` is the ready label, `factory:skip` marks ready agent
+work the factory must not pick up, an agent adds `factory:needs-input` with its
+question, and the factory adds `factory:running` while it holds an issue,
+`factory:failed` after a run fails for good, and `factory:paused` when it
+pauses a run. `factory:paused` means the factory paused the run and resumes it
+by itself, and its comment on the issue says why, so nobody removes the label
+by hand. Remove `factory:failed` to run the issue again once its failure note
+or the factory's comment is dealt with.
+
+`ready-for-human` is only for work that needs the owner's own accounts or
+credentials, or a taste call the owner reserved for themselves. Agent work the
+factory must not pick up gets `ready-for-agent`, one `model:` label and
+`factory:skip`, applied together: work that edits `.github/workflows/`, or work
+the owner reviews before merge. Whoever applies `factory:skip` creates it if
+the repository lacks it, as for `model:` labels; the factory never creates or
+removes it. An agent working on the owner's account implements skip-labelled
+work, and the orchestrating agent merges it; when the owner reviews the work
+before merge, the orchestrating agent merges it after the owner's review.
 
 ## Owner handoff and recovery
 

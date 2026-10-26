@@ -627,8 +627,8 @@ test("standards.yaml declares no pull request reviewer file", () => {
 });
 
 // The shipped configuration targets factory configuration version 1, whose
-// schema Scriptorium documents: exactly these fields, five labels distinct
-// ignoring case, and a prompt holding both `{skillPrefix}` and `{issue}`. This
+// schema Scriptorium documents: exactly these fields, six labels, the skip
+// label among them, distinct ignoring case, and a prompt holding both `{skillPrefix}` and `{issue}`. This
 // repository imports no factory code; the exact shape pins the file.
 test("the factory configuration names Repo Canon's labels, model label prefix, and implement prompt", () => {
   const configuration = JSON.parse(
@@ -646,6 +646,7 @@ test("the factory configuration names Repo Canon's labels, model label prefix, a
     version: 1,
     labels: {
       ready: "ready-for-agent",
+      skip: "factory:skip",
       running: "factory:running",
       failed: "factory:failed",
       needsInput: "factory:needs-input",
@@ -1559,6 +1560,11 @@ test("factory workflow rules preserve readiness, models, state recovery and safe
     /runs an unlabelled ticket on the host's default model/,
     /accepts readiness only from a person/,
     /an agent adds `factory:needs-input` with its question/,
+    /`factory:skip` marks ready agent work the factory must not pick up/,
+    /`ready-for-human` is only for work that needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves/,
+    /Agent work the factory must not pick up gets `ready-for-agent`, one `model:` label and `factory:skip`, applied together: work that edits `\.github\/workflows\/`, or work the owner reviews before merge/,
+    /Whoever applies `factory:skip` creates it if the repository lacks it, as for `model:` labels; the factory never creates or removes it/,
+    /An agent working on the owner's account implements skip-labelled work, and the orchestrating agent merges it; when the owner reviews the work before merge, the orchestrating agent merges it after the owner's review/,
     /the factory adds `factory:running` while it holds an issue, `factory:failed` after a run fails for good, and `factory:paused` when it pauses a run/,
     /resumes it by itself.*nobody removes the label by hand/,
     /Remove `factory:failed` to run the issue again once its failure note or the factory's comment is dealt with/,
@@ -1566,6 +1572,49 @@ test("factory workflow rules preserve readiness, models, state recovery and safe
     /Never paste log output, environment values or tokens into that note/,
   ])
     assert.match(rules, requirement);
+});
+
+// `ready-for-human` covers only work that needs the owner; agent work the
+// factory must not pick up carries `factory:skip`, which only the factory
+// rules' State labels section names.
+test("ready-for-human needs the owner, and only the factory rules' State labels name factory:skip", () => {
+  const narrowed =
+    /needs the owner's (?:own )?accounts(?: or|,) credentials,? or a (?:reserved )?taste call/;
+  for (const document of [
+    "rules/github-repository-configuration.md",
+    "docs/development/github-label-setup.md",
+    "operations/setup-github-labels.mjs",
+    ".agents/skills/triage/SKILL.md",
+    "rules/factory-workflow.md",
+  ]) {
+    const text = flowedText(document);
+    assert.match(text, narrowed, document);
+    assert.doesNotMatch(
+      text,
+      /requires human implementation|needs human implementation|judgment calls, external access/i,
+      document,
+    );
+  }
+  const github = flowedText("rules/github-repository-configuration.md");
+  assert.doesNotMatch(
+    github.replace("name no `factory:` label", ""),
+    /factory:/,
+  );
+  const factory = readFileSync(join(root, "rules/factory-workflow.md"), "utf8");
+  const sections = factory.split(/^## /m);
+  for (const section of sections)
+    if (!section.startsWith("State labels\n"))
+      assert.doesNotMatch(section, /factory:skip/);
+  const skill = flowedText(".agents/skills/triage/SKILL.md");
+  const accept =
+    /### Accept a brief that holds (.+?)## Other outcomes/.exec(skill)?.[1] ??
+    "";
+  for (const choice of [
+    /`ready-for-human` only when the work needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves/,
+    /`ready-for-agent` with `factory:skip` for agent work the factory must not pick up, by the tests in the installed factory rules/,
+    /`ready-for-agent` alone for any other work/,
+  ])
+    assert.match(accept, choice);
 });
 
 test("the contribution guide limits each run to its credentials and stops at permission refusals", () => {

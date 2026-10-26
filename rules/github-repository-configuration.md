@@ -12,20 +12,20 @@ findings, delivery, credential and comment requirements.
 The repository carries these canonical issue labels, with these colors and
 descriptions:
 
-| Label                 | Color    | Description                                                       |
-| --------------------- | -------- | ----------------------------------------------------------------- |
-| `needs-triage`        | `fbca04` | Requires review or renewed review                                 |
-| `needs-info`          | `d4c5f9` | Missing information; the orchestrating agent answers or routes it |
-| `ready-for-agent`     | `0e8a16` | Reviewed and sufficiently specified for agent implementation      |
-| `ready-for-human`     | `1d76db` | Reviewed and requires human implementation                        |
-| `wontfix`             | `ffffff` | Will not be actioned                                              |
-| `bug`                 | `d73a4a` | Something isn't working                                           |
-| `enhancement`         | `a2eeef` | New feature or request                                            |
-| `wayfinder:map`       | `5319e7` | Planning map for related work                                     |
-| `wayfinder:research`  | `bfd4f2` | Research question in a planning map                               |
-| `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                              |
-| `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                              |
-| `wayfinder:task`      | `bfd4f2` | Task in a planning map                                            |
+| Label                 | Color    | Description                                                                |
+| --------------------- | -------- | -------------------------------------------------------------------------- |
+| `needs-triage`        | `fbca04` | Requires review or renewed review                                          |
+| `needs-info`          | `d4c5f9` | Missing information; the orchestrating agent answers or routes it          |
+| `ready-for-agent`     | `0e8a16` | Reviewed and sufficiently specified for agent implementation               |
+| `ready-for-human`     | `1d76db` | Reviewed; needs the owner's accounts, credentials or a reserved taste call |
+| `wontfix`             | `ffffff` | Will not be actioned                                                       |
+| `bug`                 | `d73a4a` | Something isn't working                                                    |
+| `enhancement`         | `a2eeef` | New feature or request                                                     |
+| `wayfinder:map`       | `5319e7` | Planning map for related work                                              |
+| `wayfinder:research`  | `bfd4f2` | Research question in a planning map                                        |
+| `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                                       |
+| `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                                       |
+| `wayfinder:task`      | `bfd4f2` | Task in a planning map                                                     |
 
 These rules name no `factory:` label: a factory creates its own state labels
 from the repository's factory configuration.

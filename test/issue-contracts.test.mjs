@@ -3599,6 +3599,25 @@ const firstRound = (event) =>
     event,
   });
 
+// Readiness applied together with a model label and the factory's skip label,
+// which is no workflow state.
+const skipRound = (event) =>
+  triagedSnapshot({
+    labels: [
+      "bug",
+      "needs-triage",
+      modelLabel,
+      "factory:skip",
+      "ready-for-agent",
+    ],
+    events: [
+      triagedLabel(3, modelLabel, "2026-10-13T10:00:48Z"),
+      triagedLabel(4, "factory:skip", "2026-10-13T10:00:48Z"),
+      triagedLabel(5, "ready-for-agent", "2026-10-13T10:00:48Z"),
+    ],
+    event,
+  });
+
 // The 10:02 round with the notice intact: readiness applied and
 // `needs-triage` removed in one edit.
 const secondRound = (event) =>
@@ -3652,6 +3671,24 @@ decisionTable(
             ),
             { exitCode: 0 },
           );
+      },
+    },
+    {
+      name: "readiness applied with factory:skip is approved, and the issue keeps ready-for-agent and factory:skip",
+      snapshot: skipRound(labeledBy("maintainer")),
+      expected: { ...approvedAtBrief, remove: ["needs-triage"] },
+      check: (decision) => {
+        assertBindsBrief(decision, "5");
+        const labels = afterWrites(
+          skipRound(labeledBy("maintainer")),
+          decision,
+        ).issue.labels.map(({ name }) => name);
+        assert.deepEqual(labels, [
+          "bug",
+          modelLabel,
+          "factory:skip",
+          "ready-for-agent",
+        ]);
       },
     },
     ...[
