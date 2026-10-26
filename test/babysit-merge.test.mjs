@@ -9,6 +9,7 @@ import { installedValidator } from "./helpers/installed-validator.mjs";
 
 const head = "a".repeat(40);
 
+/** @param {string | URL} [target] */
 function run(
   t,
   state,

@@ -50,7 +50,11 @@ test("rejects an uncentered project image before the title", (t) => {
 });
 
 test("rejects unrelated rendered content and extra images before the title", async (t) => {
-  for (const [name, prefix, diagnostic] of [
+  for (const [
+    name,
+    prefix,
+    diagnostic,
+  ] of /** @type {[string, string, RegExp][]} */ ([
     ["prose", "Welcome aboard.\n\n", /Welcome aboard/],
     ["heading", "## Welcome\n\n", /Welcome/],
     ["media", '<video src="tour.mp4"></video>\n\n', /video/],
@@ -70,7 +74,7 @@ test("rejects unrelated rendered content and extra images before the title", asy
       '<a href="https://example.com/">Welcome aboard.</a>\n\n',
       /Welcome aboard/,
     ],
-  ]) {
+  ])) {
     await t.test(name, (t) => {
       const outcome = check(t, {
         "README.md": `${prefix}${entryReadme("A delivery service for operators.")}`,
@@ -341,7 +345,7 @@ test("accepts centered header blocks in HTML, Markdown and mixed forms", async (
 });
 
 test("rejects misleading or hidden centering for descriptions and badges", async (t) => {
-  for (const [name, wrap] of [
+  for (const [name, wrap] of /** @type {[string, Function][]} */ ([
     ["centerpiece", (content) => `<div align="centerpiece">${content}</div>`],
     [
       "paragraph centerpiece",
@@ -364,7 +368,7 @@ test("rejects misleading or hidden centering for descriptions and badges", async
       "hidden paragraph",
       (content) => `<p hidden align="center">Ignored</p>${content}`,
     ],
-  ]) {
+  ])) {
     await t.test(name, (t) => {
       const outcome = check(t, {
         "README.md": `<h1 align="center">Harbor</h1>\n${wrap('<p>A delivery service for operators.</p><p><a href="https://nodejs.org/"><img src="node.svg" alt="Node.js 24"></a></p>')}\n\n## License\n\n[MIT License](LICENSE)\n`,
@@ -462,7 +466,11 @@ Our delivery grouping.
     "unmapped/GLOSSARY.md":
       "# Unmapped\n\n**Service**:\nAn unmapped definition.\n",
   };
-  for (const [description, status, diagnostic] of [
+  for (const [
+    description,
+    status,
+    diagnostic,
+  ] of /** @type {[string, string, RegExp?][]} */ ([
     [
       "A RUN\nOUTCOME viewer for operators.",
       "failed",
@@ -480,7 +488,7 @@ Our delivery grouping.
     ["A service for operators, one per project.", "failed", /Project/],
     ["A per_project service for operators.", "failed", /Project/],
     ["A \u20acproject fund for operators.", "passed"],
-  ]) {
+  ])) {
     await t.test(description, (t) => {
       const outcome = check(t, {
         ...glossaries,

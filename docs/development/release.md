@@ -23,7 +23,7 @@ list the inputs and show the diff from the previous release tag:
 ```sh
 export REPO_STANDARDS_PREFIX="$cli_prefix"
 previous_tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD)
-npm run release:inputs -- "$previous_tag"
+pnpm run release:inputs "$previous_tag"
 ```
 
 `release:inputs` validates the checked-out commit and the previous tag with
@@ -61,7 +61,7 @@ as documents that name a moved required CLI version, and it closes the issue
 that plans the release. The Repository README and the
 [adoption guide](../usage/adopt-repo-canon.md) name no Repo Canon version,
 because `adopt` offers the published releases, so a release needs no change to
-them. The version-agreement test in `npm test` fails when either names a Repo
+them. The version-agreement test in `pnpm test` fails when either names a Repo
 Canon version or the Repository README names a CLI version, and until the CLI
 version named in the adoption guide, CI, the [development guide](README.md), the
 [source profile](source-profile.md), and the
@@ -152,7 +152,7 @@ Then confirm the merge commit and publish. Each command runs only when the one
 before it succeeds:
 
 ```sh
-npm run release:check-merge -- "$reviewed_head" "$release_commit" &&
+pnpm run release:check-merge "$reviewed_head" "$release_commit" &&
   git tag --annotate "$version" "$release_commit" --message "Repo Canon $version" &&
   git push origin "$version" &&
   gh release create "$version" --verify-tag --title "$version" \
@@ -184,7 +184,7 @@ the version that opens with the printed adopter-action line and carries the
 verification paragraph:
 
 ```sh
-npm run release:verify -- "$version" "$release_commit" &&
+pnpm run release:verify "$version" "$release_commit" &&
   gh release edit "$version" --notes-file /path/to/verified-release-notes.md
 ```
 
@@ -209,7 +209,7 @@ npm run release:verify -- "$version" "$release_commit" &&
    commit and list both GitHub remote setup fixes as deferred. A blocker, a
    remote setup not offered for deferral, a failed check, or a run that does not
    complete fails the check. The check never confirms a confirmation-required
-   change, so one appearing fails it too. `npm test` checks the fixture against
+   change, so one appearing fails it too. `pnpm test` checks the fixture against
    both drafters and the contextual checks before a release, because `adopt`
    acquires only published stable tags.
 5. With each profile, adopt the previous release, the newest published stable

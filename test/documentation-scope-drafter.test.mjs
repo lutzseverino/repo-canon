@@ -68,6 +68,7 @@ function draft(
 
 // A project as Repository Standards copies it for a discovery script: the
 // files and directories Git keeps, without Git metadata or `.repo-standards`.
+/** @param {(root: string) => void} [prepare] */
 function projectCopy(t, files, prepare = () => {}) {
   const project = fixture(files);
   t.after(project.close);
@@ -78,6 +79,7 @@ function projectCopy(t, files, prepare = () => {}) {
 
 // Drafts a copy's scope, asserting that drafting changes nothing and that the
 // proposal has the scope proposal's shape.
+/** @param {(root: string) => void} [prepare] */
 function drafted(t, files, prepare = () => {}, options = {}) {
   const root = projectCopy(t, files, prepare);
   const before = snapshot(root);
@@ -731,7 +733,7 @@ test("drafts the copy the request names from any working directory", (t) => {
 
 test("rejects arguments and requests it cannot read with a process error", (t) => {
   const root = projectCopy(t, conforming);
-  for (const [options, message] of [
+  for (const [options, message] of /** @type {[object, RegExp][]} */ ([
     [
       { args: ["--root", "docs"] },
       /Unknown argument --root\. The drafter takes no arguments/,
@@ -768,7 +770,7 @@ test("rejects arguments and requests it cannot read with a process error", (t) =
       { input: request(root, { profile: 1 }) },
       /profile must be a profile name/,
     ],
-  ]) {
+  ])) {
     const outcome = draft(root, options);
     assert.equal(outcome.status, 1, JSON.stringify(options));
     assert.equal(outcome.stdout, "");

@@ -2,6 +2,7 @@
   "name": "repo-canon",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.28.8",
   "engines": {
     "node": ">=24 <25 || >=26 <27"
   },
@@ -10,7 +11,9 @@
     "format:check": "prettier --check .",
     "lint": "oxlint --deny-warnings",
     "check": "for file in operations/*.mjs operations/lib/*.mjs discovery/*.mjs scripts/*.mjs scripts/release/*.mjs scripts/support/*.mjs .github/scripts/*.mjs test/*.test.mjs test/helpers/*.mjs test/fixtures/*.mjs .agents/skills/babysit/*.mjs .agents/skills/triage/*.mjs; do node --check \"$file\" || exit 1; done",
+    "typecheck": "node scripts/typecheck.mjs",
     "test": "node --test test/*.test.mjs",
+    "validate": "pnpm run format:check && pnpm run lint && pnpm run check && pnpm run typecheck && pnpm test",
     "release:inputs": "node scripts/release/inputs.mjs",
     "release:check-merge": "node scripts/release/check-merge.mjs",
     "release:verify": "node scripts/release/verify.mjs",
@@ -21,8 +24,10 @@
     "test:productivity-skill-fixtures": "node --test test/productivity-skill-fixtures.test.mjs"
   },
   "devDependencies": {
+    "@types/node": "24.19.2",
     "oxlint": "1.86.0",
     "prettier": "3.9.9",
+    "typescript": "7.0.2",
     "yaml": "2.9.0"
   }
 }

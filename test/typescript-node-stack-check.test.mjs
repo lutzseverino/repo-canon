@@ -230,10 +230,13 @@ test("names a correction for engines.node admitting Node.js 22, 25, or later maj
 });
 
 test("names a correction for a missing or unreadable engines.node", async (t) => {
-  for (const [engines, current] of [
+  for (const [
+    engines,
+    current,
+  ] of /** @type {[{ node: string } | undefined, string][]} */ ([
     [undefined, "it is missing"],
     [{ node: "lts" }, "`lts` is not a version range the check reads"],
-  ])
+  ]))
     await t.test(String(engines?.node), (st) => {
       assert.equal(
         corrections(

@@ -142,7 +142,7 @@ Run the executable checks with Node.js 24 or 26:
 
 ```sh
 node --test test/pr-metadata.test.mjs test/shared-workflows.test.mjs
-npm run check
+pnpm run check
 ```
 
 The focused fixtures include an installed-layout execution containing only the

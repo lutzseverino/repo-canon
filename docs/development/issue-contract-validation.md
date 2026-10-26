@@ -382,7 +382,7 @@ Brief is a structural error.
 Run the issue-contract scenarios locally with:
 
 ```bash
-npm run test:issue-contracts
+pnpm run test:issue-contracts
 ```
 
 Most fixtures are snapshot tables that call `decideIssueContract` directly with
@@ -428,7 +428,7 @@ order, and closed-issue removal of only `needs-triage` without further context
 reads (including an open event whose fetched issue is closed),
 readiness invalidation when a changed contract is reopened, and hostile Markdown
 that must remain inert. The `CI` workflow runs the complete repository test suite
-with `npm test`. These fixtures exercise the authorization mechanism but do not
+with `pnpm test`. These fixtures exercise the authorization mechanism but do not
 claim that a reviewer made a sound semantic judgment.
 
 ## Shared validator and platform access

@@ -347,7 +347,7 @@ test("rejects invalid invocations and failed platform reads without writes", asy
 
 test("the installed triage command resolves the declared bundle without npm", async (t) => {
   const target = installedValidator(t, ".agents/skills/triage/ready.mjs");
-  const command = (await import(pathToFileURL(target))).main;
+  const command = (await import(pathToFileURL(target).href)).main;
   const result = await exercise({}, command);
   assert.equal(result.error, undefined);
   assert.equal(result.code, 0);

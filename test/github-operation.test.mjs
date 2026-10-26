@@ -189,10 +189,10 @@ test("pins API requests and authentication to github.com when the environment se
 });
 
 test("each GitHub operation stops at a blocked preparation and rejects protocol errors", async (t) => {
-  for (const [name, subject] of [
+  for (const [name, subject] of /** @type {[string, any][]} */ ([
     ["GitHub label setup", githubLabelSetup],
     ["GitHub PR integration setup", githubPrIntegrationSetup],
-  ])
+  ]))
     await t.test(name, (st) => {
       const blocked = setup(st, subject, {
         remotes: {

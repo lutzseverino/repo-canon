@@ -18,7 +18,9 @@ globalThis.fetch = async (input, options = {}) => {
     );
   const endpoint = `${url.pathname.slice(1)}${url.search}`;
   const method = options.method ?? "GET";
-  const body = options.body ? JSON.parse(options.body) : {};
+  const body = options.body
+    ? JSON.parse(/** @type {string} */ (options.body))
+    : {};
   state.apiHosts ??= [];
   state.apiHosts.push("github.com");
   state.requests ??= [];

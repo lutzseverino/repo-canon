@@ -352,7 +352,11 @@ test("takes a fixture workspace's members as Projects when an outer workspace li
 });
 
 test("drafts members from common pnpm-workspace.yaml forms", async (t) => {
-  for (const [name, pnpmWorkspace, members] of [
+  for (const [
+    name,
+    pnpmWorkspace,
+    members,
+  ] of /** @type {[string, string, string[]][]} */ ([
     [
       "indentationless block",
       "packages:\n- apps/*\n- 'libs/*' # libs\n",
@@ -379,7 +383,7 @@ test("drafts members from common pnpm-workspace.yaml forms", async (t) => {
       "packages: [\n  'apps/*', # apps\n  \"libs/*\",\n]\n",
       ["apps/web", "libs/core"],
     ],
-  ])
+  ]))
     await t.test(name, (st) => {
       const { entry } = drafted(st, {
         "package.json": manifest({ name: "root" }),
@@ -560,7 +564,11 @@ test("drafts the same proposal from its declared retained source layout", (t) =>
 
 test("rejects arguments and requests it cannot read with a process error", async (t) => {
   const root = projectCopy(t, { "package.json": manifest() });
-  for (const [name, options, message] of [
+  for (const [
+    name,
+    options,
+    message,
+  ] of /** @type {[string, object, RegExp][]} */ ([
     ["an argument", { args: ["--fast"] }, /Unknown argument --fast/],
     [
       "text that is not JSON",
@@ -582,7 +590,7 @@ test("rejects arguments and requests it cannot read with a process error", async
       { input: request(root, { projectRoot: "project" }) },
       /projectRoot must be an absolute path/,
     ],
-  ])
+  ]))
     await t.test(name, () => {
       const outcome = draft(root, options);
       assert.equal(outcome.status, 1);

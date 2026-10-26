@@ -97,6 +97,12 @@ function argumentsFor(argv) {
 
 // The caller bounds this foreground wait. Reuse the validator's two-second
 // timeline polling cadence; there is no invocation timeout here.
+/**
+ * @param {string[]} [argv]
+ * @param {any} [connection]
+ * @param {(milliseconds: number) => Promise<unknown>} [pause]
+ * @param {() => number} [now]
+ */
 export async function main(
   argv = process.argv.slice(2),
   connection,

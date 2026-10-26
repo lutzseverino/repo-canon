@@ -208,7 +208,7 @@ function report(check) {
 
 await runScript(
   "release:verify",
-  "npm run release:verify -- <version> <release-commit>",
+  "pnpm run release:verify <version> <release-commit>",
   2,
   (version, releaseRevision) => {
     if (!/^v\d+\.\d+\.\d+$/.test(version))

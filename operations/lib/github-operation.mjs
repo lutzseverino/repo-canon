@@ -88,10 +88,11 @@ export function run(executable, args, cwd, input) {
     maxBuffer: maximumOutput,
   });
   if (outcome.error) {
+    const { code } = /** @type {NodeJS.ErrnoException} */ (outcome.error);
     return {
       ok: false,
-      unavailable: outcome.error.code === "ENOENT",
-      detail: outcome.error.code ?? "spawn error",
+      unavailable: code === "ENOENT",
+      detail: code ?? "spawn error",
       stderr: "",
     };
   }
@@ -194,6 +195,11 @@ function inferRepository(projectRoot) {
 
 // Access owns authentication, pagination, transport and credential redaction.
 // Keep the operation outcome shape shared by reads and mutations.
+/**
+ * @param {any} access
+ * @param {string} path
+ * @param {{ method?: string, body?: unknown, paginate?: boolean }} [options]
+ */
 export async function githubRequest(
   access,
   path,

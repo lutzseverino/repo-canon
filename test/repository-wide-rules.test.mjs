@@ -239,11 +239,15 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
     GIT_CONFIG_KEY_0: `url.file://${source}.insteadOf`,
     GIT_CONFIG_VALUE_0: sourceUrl,
   });
-  for (const [label, profile, extraFiles] of [
+  for (const [
+    label,
+    profile,
+    extraFiles,
+  ] of /** @type {[string, string, object][]} */ ([
     ["standard", "standard", {}],
     ["factory", "factory", {}],
     ["node", "standard", nodeProject],
-  ]) {
+  ])) {
     const node = label === "node";
     const project = join(directory, label);
     mkdirSync(project);
@@ -406,10 +410,10 @@ test("public CLI 10.0.0 installs the triage fork and the GitHub rules for the wh
         .map((name) => `.agents/skills/babysit/${name}`),
       ".agents/skills/diagnosing-bugs/scripts/hitl-loop.template.sh",
     ];
-    for (const [paths, expected] of [
+    for (const [paths, expected] of /** @type {[string[], string][]} */ ([
       [countedFiles, "set"],
       [ownScripts, "unspecified"],
-    ]) {
+    ])) {
       for (const path of paths) assert.ok(readFileSync(join(project, path)));
       assert.deepEqual(
         git(project, "check-attr", "linguist-vendored", "--", ...paths).split(
