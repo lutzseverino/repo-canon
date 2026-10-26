@@ -158,7 +158,11 @@ repeated.
   the guide for triage, readiness, question routing and delivery. Plan state
   lives in the owner's workbench, a git repository of plain Markdown whose
   path the owner's global agent instructions name, so the skill hard-codes no
-  host path. The skill and its workbench layout name no harness, apart from
+  host path. Wishes hold non-finding ideas outside the plan's goal; they may
+  link reported findings for future planning. The guide's Findings rule still
+  governs every finding, including those outside the goal: a workbench wish
+  never replaces filing or linking it and reporting it where the guide requires.
+  The skill and its workbench layout name no harness, apart from
   one closing section mapping the steps to one harness's tools, which a test
   confines. Its `CREDITS.md` credits Matt Pocock's in-progress
   `chief-of-staff` at the commit it was compared at, whose wiki rules the

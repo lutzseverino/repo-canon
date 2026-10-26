@@ -241,12 +241,22 @@ wait for the next controlled turn.
 
 Allow at most 10 minutes per session, 20 minutes total. The operator reads
 `docs/participant-inputs.md` and relays turns 1–7 to session one at their stated
-checkpoints. Observe the unapproved proposal before supplying turn 2. Observe
-the pending amendment before supplying turn 5. The in-goal row cites the approved
-review goal; the amendment changes scope only after approval. The wish is a
-future multilingual-guide capability, not a defect or Finding, so the exercise
-does not decide the separate wish/Findings question. Tracker updates are
-controlled simulations; no worker implements or delivers a product change.
+checkpoints, including 6a–6c. Observe the unapproved proposal before supplying
+turn 2. Observe the pending amendment before supplying turn 5. The in-goal row
+cites the approved review goal; the amendment changes scope only after approval. The wish is a
+future multilingual-guide capability, not a defect or Finding, and needs no issue.
+Turns 6a–6c add two out-of-goal Findings in the separate simulated tooling
+tracker: reuse the existing open UTF-8 crash issue, then file the stale-option
+finding with that tracker's bug form and `needs-triage`. Check the supplied
+observed command outcomes are cited, both findings are linked from a comment
+on review ticket 01 (there is no PR), and the optional planning wish links the
+reported finding without replacing its issue or reporting links. The method
+follows the contribution guide's Findings section, including its reporting
+fallback when filing fails; neither repair delays the documentation plan.
+The project issue counts stay zero at start and one at close; the closing
+announcement also names the new still-open tooling issue with its reason.
+Tracker updates are controlled simulations; no worker implements or delivers a
+product change.
 
 End session one with unfinished rows and committed active state. Start session
 two with a fresh context, the same project/workbench paths, its own session

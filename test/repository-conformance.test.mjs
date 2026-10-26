@@ -1189,6 +1189,57 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, which credi
   );
 });
 
+test("orchestrate wishes preserve mandatory Findings reporting", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const wish = flowedText("GLOSSARY.md")
+    .split("**Wish**:")[1]
+    .split("_Avoid_:")[0];
+
+  assert.doesNotMatch(
+    skill,
+    /owner's quoted words or the finding|A defect others need to see may still be filed|\*\*Wish:\*\* it lies outside the goal\. Add it to `wishes\.md`, and file no issue/,
+  );
+  assert.doesNotMatch(wish, /or the finding|instead of an issue/);
+  assert.match(skill, /contribution guide's Findings section/);
+  assert.match(
+    skill,
+    /first link an existing open issue reporting the finding; otherwise file it/,
+  );
+  assert.match(
+    skill,
+    /A wish never replaces the finding's tracker record or reporting links/,
+  );
+  assert.match(
+    skill,
+    /\*\*Wish:\*\* it lies outside the goal and is not a Finding/,
+  );
+  assert.match(skill, /A wish may link a filed finding for future planning/);
+  assert.match(
+    skill,
+    /One line per wish: the date, the owner's quoted words or idea, a link to its source, and the repository it concerns/,
+  );
+  assert.match(wish, /non-finding idea outside its plan's goal/);
+  assert.match(wish, /may link a reported finding for future planning/);
+
+  // The method defers to the installed rule for the full reporting contract.
+  const findings = flowedText("CONTRIBUTING.md")
+    .split("## Findings ")[1]
+    .split("## Titles and commits")[0];
+  for (const requirement of [
+    "Fix defects inside the change's responsibility in the change",
+    "check for an open issue that already reports the finding and link it",
+    "one issue per finding through the target repository's issue forms, labelled `needs-triage`",
+    "repository responsible for the affected material or tooling",
+    "distinguishes what the run observed from what it only read in code",
+    "links them from a comment on that pull request",
+    "links them from the issue it was working on",
+    "lists them in its final message",
+    "If filing fails, list each unfiled finding",
+    "Findings never block or delay",
+  ])
+    assert.ok(findings.includes(requirement), requirement);
+});
+
 // The orchestrate skill and its workbench stay harness-neutral; its last
 // section alone maps the steps to one harness's tools.
 const harnessSection = "## With T3 Code";

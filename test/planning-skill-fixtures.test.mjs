@@ -224,6 +224,33 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.match(participantInputs, /dropped \(owner\)/);
   assert.match(participantInputs, /not a Finding/);
   assert.match(participantInputs, /closed/i);
+  // Controlled Findings routes accompany the existing non-finding wish.
+  const existingFinding = ".scratch/tooling/issues/01-utf8-crash.md";
+  assert.ok(participantInputs.includes(existingFinding));
+  assert.match(participantInputs, /Existing Finding.*reuse.*no duplicate/);
+  assert.match(
+    participantInputs,
+    /New Finding.*02-stale-option\.md.*needs-triage/,
+  );
+  assert.match(
+    participantInputs,
+    /Linked wish.*02-stale-option\.md.*reporting links/,
+  );
+  const findingIssue = readFileSync(
+    join(orchestrate.path, existingFinding),
+    "utf8",
+  );
+  assert.match(findingIssue, /^Status: open$/m);
+  assert.match(findingIssue, /^Labels: needs-triage$/m);
+  assert.match(findingIssue, /Observed:.*café\.md.*exits 1/);
+  assert.deepEqual(
+    readdirSync(join(orchestrate.path, ".scratch/tooling/issues")),
+    ["01-utf8-crash.md"],
+    "the participant must file the new finding, not the fixture builder",
+  );
+  assert.match(orchestrateTask, /Findings section.*responsible.*tooling/);
+  assert.match(orchestrateTask, /no pull request.*review ticket 01/);
+  assert.match(orchestrateTask, /filing fails.*unfiled.*target repository/);
   const factoryPlanning = manifest.repositories["factory-planning"];
   const factoryIntake = readFileSync(
     join(
