@@ -43,31 +43,10 @@ indented or not, of plain, single-quoted or double-quoted patterns with
 comments, or else through the `workspaces` field of its `package.json`, as a
 list or as `workspaces.packages`.
 
-No YAML library is available to operations. The entire `pnpm-workspace.yaml`
-document must fit the limited reader before its members or catalogs can be
-trusted; arbitrary YAML outside `packages` is not ignored. It supports block
-mappings, block sequences and flow sequences of scalars, with plain or quoted
-strings and comments. Unrelated settings can contain null, boolean or numeric
-scalars, such as `linkWorkspacePackages: true` and `resolutionMode: 1`; member
-patterns and catalog versions must still be strings. Anchors, aliases, block
-scalars, flow mappings and a mapping that starts on a sequence item's line,
-such as `- enabled: true`, are unsupported, even in unrelated settings. Tabs, a
-leading BOM, duplicate keys, malformed indentation and multiline scalar
-continuations also make the document unreadable. A quoted `packages` key is
-unsupported as well.
-
-For example, this supported member list still belongs to an unreadable document
-because the unrelated `overrides` setting uses a flow mapping:
-
-```yaml
-packages:
-  - packages/*
-overrides: {}
-```
-
-The correction names the file and explains that unsupported or malformed YAML
-anywhere in the document can prevent reading its members. Rewriting a conforming
-`packages` list alone cannot resolve unsupported YAML elsewhere. An unreadable
+No YAML library is available to operations. The whole-document acceptance
+boundary and supported YAML forms are described in the retained
+[adoption guidance](../../guidance/typescript-node-stack.md#supported-workspace-yaml),
+which the unreadable-workspace correction names for adopters. An unreadable
 document never becomes a narrower or wider member list. Patterns
 match through Node's own `path.matchesGlob`, so a leading `**` also matches
 zero directories; a quoted `!` pattern excludes what it matches, and a

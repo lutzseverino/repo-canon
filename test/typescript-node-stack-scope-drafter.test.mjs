@@ -14,7 +14,7 @@ import {
 import {
   catalogYaml,
   unsupportedWorkspaceYaml,
-  unsupportedCatalogYaml,
+  unsupportedCatalogYamlGroups,
 } from "./helpers/stack-yaml.mjs";
 
 const sourceRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -706,16 +706,12 @@ test("asks about a workspace configuration it cannot read", (t) => {
   assert.deepEqual(entry.unresolved, [
     "The drafter cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Which manifests under it belong to maintained Projects? Include each one that matches the stack and exclude the rest with their reasons.",
   ]);
-  assert.deepEqual(entry.candidates, [
-    {
-      path: "package.json",
-      decision: "exclude",
-      reason: differs("package.json", [
-        "Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Use supported YAML forms throughout the document.",
-      ]),
-      evidence: ["package.json"],
-    },
-  ]);
+  assert.deepEqual(entry.candidates, []);
+  assert.match(entry.coverage, /unresolved questions must be settled/);
+  assert.doesNotMatch(
+    entry.coverage,
+    /No Project matches|no Node.js Project|migration/,
+  );
   assert.equal(entry.noScope, true);
 });
 
@@ -879,23 +875,56 @@ test("differential workspace regressions raise a discovery question through reta
       /unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list/,
       text,
     );
-    assert.deepEqual(
-      entry.candidates.map(({ path }) => path),
-      ["package.json"],
-      text,
-    );
-    assert.equal(entry.candidates[0].decision, "exclude", text);
-    assert.match(
-      entry.candidates[0].reason,
-      /Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document/,
+    assert.deepEqual(entry.candidates, [], text);
+    assert.match(entry.coverage, /unresolved questions must be settled/, text);
+    assert.doesNotMatch(
+      entry.coverage,
+      /No Project matches|no Node.js Project|migration/,
       text,
     );
   }
 });
 
-test("nested and duplicate catalogs never include a Project through retained discovery", (t) => {
+for (const [name, cases] of Object.entries({
+  "unresolved nested catalogs": unsupportedCatalogYamlGroups.nestedMappings,
+  "plain non-breaking-space catalog keys and names":
+    unsupportedCatalogYamlGroups.plainNonBreakingSpace,
+}))
+  test(`${name} exclude established Projects through retained discovery`, (t) => {
+    const retained = retainedCheck(t, drafterPath);
+    for (const [text, specifier] of cases) {
+      const { entry } = drafted(
+        t,
+        {
+          "package.json": manifest({
+            devDependencies: { oxlint: specifier, prettier: "3.9.9" },
+          }),
+          "pnpm-lock.yaml": "",
+          "pnpm-workspace.yaml": text,
+        },
+        { script: retained },
+      );
+      assert.equal(entry.noScope, true, text);
+      assert.deepEqual(
+        entry.candidates.map(({ path, decision }) => [path, decision]),
+        [["package.json", "exclude"]],
+        text,
+      );
+      assert.deepEqual(entry.unresolved, [], text);
+      assert.match(
+        entry.candidates[0].reason,
+        /no catalog of the workspace root's `pnpm-workspace.yaml` defines for `oxlint`/,
+        text,
+      );
+    }
+  });
+
+test("unreadable catalogs leave root membership unresolved through retained discovery", (t) => {
   const retained = retainedCheck(t, drafterPath);
-  for (const [text, specifier] of unsupportedCatalogYaml) {
+  for (const [
+    text,
+    specifier,
+  ] of unsupportedCatalogYamlGroups.unreadableDocuments) {
     const { entry } = drafted(
       t,
       {
@@ -907,15 +936,79 @@ test("nested and duplicate catalogs never include a Project through retained dis
       },
       { script: retained },
     );
-    assert.equal(entry.noScope, true, text);
-    assert.ok(
-      entry.candidates.every(({ decision }) => decision === "exclude"),
+    assert.deepEqual(entry.candidates, [], text);
+    assert.equal(entry.unresolved.length, 1, text);
+    assert.match(
+      entry.unresolved[0],
+      /cannot read workspace configuration from `pnpm-workspace.yaml`.*Which manifests under it belong to maintained Projects\?/,
       text,
     );
-    assert.match(
-      entry.candidates[0].reason,
-      /no catalog.*defines for `oxlint`|Cannot read workspace configuration/,
+    assert.equal(entry.noScope, true, text);
+    assert.match(entry.coverage, /unresolved questions must be settled/, text);
+    assert.doesNotMatch(
+      entry.coverage,
+      /No Project matches|no Node.js Project|migration/,
       text,
     );
   }
+});
+
+test("unreadable membership preserves independently established root package evidence", (t) => {
+  const { entry } = drafted(
+    t,
+    {
+      "package.json": manifest({ exports: "./dist/index.js" }),
+      "src/index.ts": "export {};\n",
+      "pnpm-lock.yaml": "",
+      "pnpm-workspace.yaml": "packages:\n  - packages/*\noverrides: {}\n",
+      "packages/core/package.json": member(),
+    },
+    { script: retainedCheck(t, drafterPath) },
+  );
+  assert.deepEqual(
+    entry.candidates.map(({ path }) => path),
+    ["package.json"],
+  );
+  assert.ok(entry.candidates[0].evidence.includes("src/index.ts"));
+  assert.match(
+    entry.candidates[0].reason,
+    /Cannot read workspace configuration/,
+  );
+  assert.equal(entry.unresolved.length, 1);
+  assert.equal(entry.noScope, true);
+});
+
+test("an unreadable workspace does not halt independently settled Projects", (t) => {
+  const { entry } = drafted(
+    t,
+    {
+      "package.json": manifest(),
+      "pnpm-workspace.yaml": "packages:\n  - packages/*\noverrides: {}\n",
+      "packages/unknown/package.json": member(),
+      "tools/package.json": manifest({ workspaces: ["packages/*"] }),
+      "tools/pnpm-lock.yaml": "",
+      "tools/packages/matching/package.json": member(),
+      "tools/packages/differing/package.json": member({ scripts: {} }),
+      // Its outer workspace establishes membership even though its own cannot be read.
+      "tools/packages/unreadable/package.json": member(),
+      "tools/packages/unreadable/pnpm-workspace.yaml": "packages: *members\n",
+    },
+    { script: retainedCheck(t, drafterPath) },
+  );
+  assert.deepEqual(
+    entry.candidates.map(({ path, decision }) => [path, decision]),
+    [
+      ["tools/package.json", "exclude"],
+      ["tools/packages/differing/package.json", "exclude"],
+      ["tools/packages/matching/package.json", "include"],
+      ["tools/packages/unreadable/package.json", "exclude"],
+    ],
+  );
+  assert.match(entry.candidates[1].reason, /Add a `validate` script/);
+  assert.match(
+    entry.candidates[3].reason,
+    /Cannot read workspace configuration/,
+  );
+  assert.equal(entry.unresolved.length, 2);
+  assert.equal(entry.noScope, undefined);
 });

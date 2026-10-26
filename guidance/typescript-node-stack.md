@@ -56,3 +56,39 @@ script. Assess what the check cannot see:
 
 Cite the evidence for each judgment, such as the `tsconfig.json`, the
 `validate` script's steps, and the workflow jobs that the repository requires.
+
+## Supported workspace YAML
+
+The check and scope drafter use a limited YAML reader. The entire
+`pnpm-workspace.yaml` document must fit it before its members or catalogs can
+be trusted; a supported `packages` list does not make unsupported syntax
+elsewhere readable.
+
+The reader supports block mappings, block sequences and flow sequences of
+scalars, with plain, single-quoted or double-quoted strings and comments.
+A `packages` sequence may be indented or unindented; a flow sequence may span
+lines and have a trailing comma. Unrelated settings can contain null, boolean
+or numeric scalars, such as `linkWorkspacePackages: true` and
+`resolutionMode: 1`; member patterns and catalog versions must still be
+strings.
+
+Anchors, aliases, block scalars, flow mappings and a mapping that starts on a
+sequence item's line, such as `- enabled: true`, are unsupported, even in
+unrelated settings. Tabs, a leading BOM, duplicate keys, malformed indentation
+and multiline scalar continuations also make the document unreadable. A quoted
+`packages` key is unsupported as well. The reader does not support arbitrary
+YAML.
+
+For example, this supported member list still belongs to an unreadable document
+because `overrides` uses a flow mapping:
+
+```yaml
+packages:
+  - packages/*
+overrides: {}
+```
+
+Rewrite unsupported forms throughout the document, including unrelated
+settings. Correcting only the member list cannot resolve unsupported YAML
+elsewhere. Until the document is readable, its membership remains unresolved;
+do not treat it as an empty, narrower or wider trusted member list.

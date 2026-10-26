@@ -1,6 +1,9 @@
 // Existing reader fixtures, shared with the independent YAML comparison.
 /** @type {[string, string[] | null][]} */
 export const workspaceYamlCases = [
+  ['packages:\n  - "apps/*\u00a0"\n', ["apps/*\u00a0"]],
+  ["packages:\n  - apps/*\u00a0\n", ["apps/*\u00a0"]],
+  ["--- # workspace\npackages: [apps/*]\n... # end\n", ["apps/*"]],
   ["packages:\n  - packages/*\n  - 'apps/*'\n", ["packages/*", "apps/*"]],
   // An indentationless block sequence, with a comment between items.
   [
@@ -24,6 +27,10 @@ export const workspaceYamlCases = [
 
 /** @type {[string, string[] | null][]} */
 export const flowYamlCases = [
+  [
+    'packages: [apps/*\u00a0, "libs/*\u00a0"]\n',
+    ["apps/*\u00a0", "libs/*\u00a0"],
+  ],
   ['packages: ["packages/{cli,web}"]\n', ["packages/{cli,web}"]],
   [
     "packages: ['packages/{cli,web}', \"apps/{a,b}/*\", tools/*]\n",
@@ -60,6 +67,12 @@ catalogs:
 `;
 
 export const unsupportedWorkspaceYaml = [
+  'packages:\n  - "apps/*"\u00a0\n',
+  'packages: ["apps/*"\u00a0]\n',
+  "--- packages: [apps/*]\n",
+  "... packages: [apps/*]\n",
+  "packages #x: [apps/*]\n",
+  "packages: [apps/*]\nsettings:\n  nested #x: value\n",
   // Supported member patterns do not make unsupported YAML elsewhere readable.
   "packages:\n  - packages/*\noverrides: {}\n",
   "packages:\n  - packages/*\nsettings: &settings\n  enabled: true\n",
@@ -75,11 +88,32 @@ export const unsupportedWorkspaceYaml = [
   "packages: [packages/*]\n---\npackages: [apps/*]\n",
 ];
 
-export const unsupportedCatalogYaml = [
-  ["catalog:\n  wrapper:\n    oxlint: 1.86.0\n", "catalog:"],
-  [
-    "catalogs:\n  tools:\n    wrapper:\n      oxlint: 1.86.0\n",
-    "catalog:tools",
+// Expected discovery semantics, declared independently of the production reader.
+export const unsupportedCatalogYamlGroups = {
+  unreadableDocuments: [
+    ['catalog:\n  oxlint: "1.86.0"\u00a0\n', "catalog:"],
+    ['catalog:\n  "oxlint"\u00a0: 1.86.0\n', "catalog:"],
+    ["--- packages: [apps/*]\ncatalog:\n  oxlint: 1.86.0\n", "catalog:"],
+    ["catalog #x:\n  oxlint: 1.86.0\n", "catalog:"],
+    ["catalog:\n  oxlint #x: 1.86.0\n", "catalog:"],
+    ["catalogs #x:\n  tools:\n    oxlint: 1.86.0\n", "catalog:tools"],
+    ["catalogs:\n  tools #x:\n    oxlint: 1.86.0\n", "catalog:tools"],
+    ["catalogs:\n  tools:\n    oxlint #x: 1.86.0\n", "catalog:tools"],
+    ["catalog:\n  oxlint: 0.9.0\n  oxlint: 1.86.0\n", "catalog:"],
   ],
-  ["catalog:\n  oxlint: 0.9.0\n  oxlint: 1.86.0\n", "catalog:"],
-];
+  plainNonBreakingSpace: [
+    ["catalog:\n  oxlint\u00a0: 1.86.0\n", "catalog:"],
+    ["catalogs:\n  tools\u00a0:\n    oxlint: 1.86.0\n", "catalog:tools"],
+  ],
+  nestedMappings: [
+    ["catalog:\n  wrapper:\n    oxlint: 1.86.0\n", "catalog:"],
+    [
+      "catalogs:\n  tools:\n    wrapper:\n      oxlint: 1.86.0\n",
+      "catalog:tools",
+    ],
+  ],
+};
+
+export const unsupportedCatalogYaml = Object.values(
+  unsupportedCatalogYamlGroups,
+).flat();
