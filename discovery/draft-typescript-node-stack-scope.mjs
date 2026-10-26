@@ -8,6 +8,7 @@ import {
   pnpmWorkspaceName,
   readManifest,
   stackDifferences,
+  unreadableWorkspaceYamlCause,
   workspaceConfiguration,
 } from "../operations/lib/typescript-node-stack.mjs";
 
@@ -214,8 +215,12 @@ const questions = {
     `Is the workspace root ${code(path)} itself a maintained package with its own responsibility and development commands, alongside its members? The kept evidence does not settle its membership. Include it when it matches the stack, or exclude it naming its differences; exclude a shared-only configuration root as no maintained Project.`,
   standalone: (path) =>
     `Is ${code(path)} the manifest of a maintained Project? No workspace lists it. If it is, include it when it matches the stack, or exclude it naming its differences; otherwise exclude it as no maintained Project.`,
-  workspace: (path) =>
-    `${code(path)} states its workspace members in a form the drafter cannot read. Which manifests under it belong to maintained Projects? Include each one that matches the stack and exclude the rest with their reasons.`,
+  workspace: (path) => {
+    const unreadable = path.endsWith(pnpmWorkspaceName)
+      ? `The drafter cannot read workspace configuration from ${code(path)}: ${unreadableWorkspaceYamlCause}.`
+      : `${code(path)} states its workspace members in a form the drafter cannot read.`;
+    return `${unreadable} Which manifests under it belong to maintained Projects? Include each one that matches the stack and exclude the rest with their reasons.`;
+  },
 };
 
 function coverage({ included, projects }) {

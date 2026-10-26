@@ -425,7 +425,7 @@ test("reads every unsupported pnpm-workspace.yaml form as an unreadable workspac
             "packages/cli/package.json",
           ]),
         ),
-        "State the workspace members of `pnpm-workspace.yaml` as a list of plain or quoted patterns, which the check reads.",
+        "Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Use supported YAML forms throughout the document.",
       );
     });
 });
@@ -608,7 +608,7 @@ test("names a workspace configuration it cannot read", (t) => {
         ["package.json"],
       ),
     ),
-    "State the workspace members of `pnpm-workspace.yaml` as a list of plain or quoted patterns, which the check reads.",
+    "Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Use supported YAML forms throughout the document.",
   );
 });
 
@@ -622,13 +622,13 @@ test("runs from its declared retained source layout", (t) => {
   const result = check(
     t,
     {
-      ...standalone,
+      ...workspace,
       "package.json": manifest({
         devDependencies: { oxlint: "catalog:", prettier: "catalog:tools" },
       }),
-      "pnpm-workspace.yaml": catalogYaml,
+      "pnpm-workspace.yaml": `packages: ['packages/*']\n${catalogYaml}linkWorkspacePackages: true\nresolutionMode: 1\n`,
     },
-    ["package.json"],
+    ["package.json", "packages/cli/package.json"],
     retainedCheck(t, scriptPath),
   );
   assert.equal(result.status, "passed", result.message);
@@ -669,7 +669,7 @@ test("differential workspace regressions stay unreadable through the retained ch
     assert.equal(result.status, "failed", text);
     assert.match(
       corrections(result),
-      /State the workspace members of `pnpm-workspace.yaml`/,
+      /Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list/,
       text,
     );
   }
@@ -693,7 +693,7 @@ test("nested and duplicate catalog entries stay unresolved through the retained 
     assert.equal(result.status, "failed", text);
     assert.match(
       corrections(result),
-      /no catalog.*defines for `oxlint`|State the workspace members/,
+      /no catalog.*defines for `oxlint`|Cannot read workspace configuration/,
       text,
     );
   }

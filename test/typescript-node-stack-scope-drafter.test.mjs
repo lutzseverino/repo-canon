@@ -614,14 +614,14 @@ test("asks about a workspace configuration it cannot read", (t) => {
     "apps/web/package.json": member(),
   });
   assert.deepEqual(entry.unresolved, [
-    "`pnpm-workspace.yaml` states its workspace members in a form the drafter cannot read. Which manifests under it belong to maintained Projects? Include each one that matches the stack and exclude the rest with their reasons.",
+    "The drafter cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Which manifests under it belong to maintained Projects? Include each one that matches the stack and exclude the rest with their reasons.",
   ]);
   assert.deepEqual(entry.candidates, [
     {
       path: "package.json",
       decision: "exclude",
       reason: differs("package.json", [
-        "State the workspace members of `pnpm-workspace.yaml` as a list of plain or quoted patterns, which the check reads.",
+        "Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Use supported YAML forms throughout the document.",
       ]),
       evidence: ["package.json"],
     },
@@ -669,16 +669,27 @@ test("every Project it includes passes the stack check", (t) => {
 test("drafts the same proposal from its declared retained source layout", (t) => {
   const files = {
     "package.json": manifest({
+      main: "dist/index.js",
       devDependencies: { oxlint: "catalog:", prettier: "catalog:tools" },
     }),
     "pnpm-lock.yaml": "",
-    "pnpm-workspace.yaml": catalogYaml,
+    "pnpm-workspace.yaml": `packages: ['packages/*']\n${catalogYaml}linkWorkspacePackages: true\nresolutionMode: 1\n`,
+    "src/index.ts": "export {};\n",
+    "packages/cli/package.json": member(),
   };
   const acquired = drafted(t, files);
   const retained = drafted(t, files, {
     script: retainedCheck(t, drafterPath),
   });
   assert.deepEqual(retained.entry, acquired.entry);
+  assert.deepEqual(
+    retained.entry.candidates.map(({ path, decision }) => [path, decision]),
+    [
+      ["package.json", "include"],
+      ["packages/cli/package.json", "include"],
+    ],
+  );
+  assert.deepEqual(retained.entry.unresolved, []);
 });
 
 test("retained discovery includes a nested maintained root alongside its member", (t) => {
@@ -775,11 +786,18 @@ test("differential workspace regressions raise a discovery question through reta
     assert.equal(entry.unresolved.length, 1, text);
     assert.match(
       entry.unresolved[0],
-      /workspace members in a form the drafter cannot read/,
+      /unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list/,
       text,
     );
-    assert.ok(
-      entry.candidates.every(({ decision }) => decision === "exclude"),
+    assert.deepEqual(
+      entry.candidates.map(({ path }) => path),
+      ["package.json"],
+      text,
+    );
+    assert.equal(entry.candidates[0].decision, "exclude", text);
+    assert.match(
+      entry.candidates[0].reason,
+      /Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document/,
       text,
     );
   }
@@ -806,7 +824,7 @@ test("nested and duplicate catalogs never include a Project through retained dis
     );
     assert.match(
       entry.candidates[0].reason,
-      /no catalog.*defines for `oxlint`|State the workspace members/,
+      /no catalog.*defines for `oxlint`|Cannot read workspace configuration/,
       text,
     );
   }

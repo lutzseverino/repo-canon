@@ -67,6 +67,15 @@ fixture workspace's root and members are excluded alike. Any other
 workspace configuration the module cannot read; manifests below such a
 configuration are left to that question.
 
+The whole `pnpm-workspace.yaml` document must fit the shared reader's limited
+grammar, described in the [stack check](typescript-node-stack-check.md#what-it-reads);
+arbitrary YAML outside `packages` is not ignored. For example, a supported
+`packages` list followed by `overrides: {}` is unreadable because flow mappings
+are unsupported. The question and exclusion reasons name the file and explain
+that unsupported or malformed YAML anywhere in it can cause this, even when the
+member list itself is supported. The question still asks which manifests belong
+to maintained Projects; discovery does not guess membership.
+
 When the draft includes no Project it proposes no scope, with `noScope`, and
 keeps its exclusions and questions. Its coverage then says whether the
 repository holds no Node.js Project or no Project matches the stack. An agent
