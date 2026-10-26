@@ -88,21 +88,32 @@ export const unsupportedWorkspaceYaml = [
   "packages: [packages/*]\n---\npackages: [apps/*]\n",
 ];
 
-export const unsupportedCatalogYaml = [
-  ['catalog:\n  oxlint: "1.86.0"\u00a0\n', "catalog:"],
-  ['catalog:\n  "oxlint"\u00a0: 1.86.0\n', "catalog:"],
-  ["catalog:\n  oxlint\u00a0: 1.86.0\n", "catalog:"],
-  ["catalogs:\n  tools\u00a0:\n    oxlint: 1.86.0\n", "catalog:tools"],
-  ["--- packages: [apps/*]\ncatalog:\n  oxlint: 1.86.0\n", "catalog:"],
-  ["catalog #x:\n  oxlint: 1.86.0\n", "catalog:"],
-  ["catalog:\n  oxlint #x: 1.86.0\n", "catalog:"],
-  ["catalogs #x:\n  tools:\n    oxlint: 1.86.0\n", "catalog:tools"],
-  ["catalogs:\n  tools #x:\n    oxlint: 1.86.0\n", "catalog:tools"],
-  ["catalogs:\n  tools:\n    oxlint #x: 1.86.0\n", "catalog:tools"],
-  ["catalog:\n  wrapper:\n    oxlint: 1.86.0\n", "catalog:"],
-  [
-    "catalogs:\n  tools:\n    wrapper:\n      oxlint: 1.86.0\n",
-    "catalog:tools",
+// Expected discovery semantics, declared independently of the production reader.
+export const unsupportedCatalogYamlGroups = {
+  unreadableDocuments: [
+    ['catalog:\n  oxlint: "1.86.0"\u00a0\n', "catalog:"],
+    ['catalog:\n  "oxlint"\u00a0: 1.86.0\n', "catalog:"],
+    ["--- packages: [apps/*]\ncatalog:\n  oxlint: 1.86.0\n", "catalog:"],
+    ["catalog #x:\n  oxlint: 1.86.0\n", "catalog:"],
+    ["catalog:\n  oxlint #x: 1.86.0\n", "catalog:"],
+    ["catalogs #x:\n  tools:\n    oxlint: 1.86.0\n", "catalog:tools"],
+    ["catalogs:\n  tools #x:\n    oxlint: 1.86.0\n", "catalog:tools"],
+    ["catalogs:\n  tools:\n    oxlint #x: 1.86.0\n", "catalog:tools"],
+    ["catalog:\n  oxlint: 0.9.0\n  oxlint: 1.86.0\n", "catalog:"],
   ],
-  ["catalog:\n  oxlint: 0.9.0\n  oxlint: 1.86.0\n", "catalog:"],
-];
+  plainNonBreakingSpace: [
+    ["catalog:\n  oxlint\u00a0: 1.86.0\n", "catalog:"],
+    ["catalogs:\n  tools\u00a0:\n    oxlint: 1.86.0\n", "catalog:tools"],
+  ],
+  nestedMappings: [
+    ["catalog:\n  wrapper:\n    oxlint: 1.86.0\n", "catalog:"],
+    [
+      "catalogs:\n  tools:\n    wrapper:\n      oxlint: 1.86.0\n",
+      "catalog:tools",
+    ],
+  ],
+};
+
+export const unsupportedCatalogYaml = Object.values(
+  unsupportedCatalogYamlGroups,
+).flat();
