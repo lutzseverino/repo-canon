@@ -98,9 +98,9 @@ agent instructions.
 _Avoid_: Notes, memory
 
 **Wish**:
-A requirement outside its plan's goal, recorded in the workbench with its date,
-the owner's quoted words or the finding, and its repository, instead of an
-issue.
+A non-finding idea outside its plan's goal, recorded in the workbench with its
+date, source and repository. A wish may link a reported finding for future
+planning; the finding retains its required issue and reporting links.
 _Avoid_: Backlog item, suggestion
 
 **Research run**:

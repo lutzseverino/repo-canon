@@ -724,6 +724,8 @@ End session one with an active plan and unfinished rows. A fresh session starts 
 
 The proposal is visibly distinct from approval. The in-goal row has a dated citation to the approved goal, passes the inference test and appears in the next update's inferred-intent list; it adds no public name or persistent product policy. The amendment remains pending until explicitly approved, and its new approval supersedes rather than erases the old line. The wish is a future capability, not a Finding: it gains one dated quoted line with its source and repository in wishes.md and no issue. Every update shows the decision inbox.
 
+Turns 6a–6c exercise the contribution guide's Findings section in a separate responsible repository, simulated by the tooling tracker at .scratch/tooling/issues/. Reuse its existing open issue for the UTF-8 crash, then file the new stale-option finding there with needs-triage and the local bug form's fields. Cite the observed command outcomes the participant supplies, separately from anything only read in code. There is no pull request: link both findings from a comment on review ticket 01 with the guide's AI disclaimer. The linked wish retains its date, source and tooling repository; it replaces neither the finding issue nor reporting links. Continue the documentation plan without adding tooling repair rows or waiting for repairs. The project's starting and closing counts remain zero and one; separately report the still-open tooling finding filed by the plan and its reason at close. Also record the reporting fallback if filing fails: list the unfiled finding and target repository in the same reporting location, without blocking the plan. This is a simulated outcome, not a request to fail a real write.
+
 The fresh session resumes from committed workbench state, preserves row history and cannot close while any row lacks a closed simulated issue or dropped (owner). At close, record both open-issue counts, move the index entry under Closed, and announce shipped/dropped items, inferred intent, wishes, any still-open filed issues with reasons, and one suggested next direction. The suggestion alone approves no new plan. Report actual observed outcomes separately from fixture checks; keep run evidence outside maintained documentation.
 `,
   });
@@ -731,6 +733,16 @@ The fresh session resumes from committed workbench state, preserves row history 
     root,
     "docs/usage/receipts.md",
     "# Delivery receipt export\n\nThe existing export returns CSV for one UTC date, ordered by Parcel reference, with ISO 8601 UTC timestamps. An empty date returns a header-only CSV. This exercise reviews documentation only; no product behavior changes.\n",
+  );
+  write(
+    root,
+    ".scratch/tooling/issues/01-utf8-crash.md",
+    "# Guide checker crashes on UTF-8 paths\n\nStatus: open\nLabels: needs-triage\nRepository: tooling (simulated)\n\n## Steps to reproduce\n\nObserved: running guide-check docs/usage/café.md on a valid guide exits 1 with an encoding error.\n\n## Expected behavior\n\nCheck valid UTF-8 paths successfully.\n\n## Actual behavior\n\nThe checker throws before inspecting the guide.\n\n## Environment\n\nSimulated tooling CLI 1.0, Node.js 24.\n",
+  );
+  write(
+    root,
+    ".scratch/tooling/bug-form.md",
+    "# Local tooling bug form\n\nOne Markdown issue per finding in issues/, with Status, Labels and Repository, then Steps to reproduce, Expected behavior, Actual behavior and Environment. Use needs-triage. This directory represents a separate responsible repository's tracker; it is not the documentation plan's project tracker.\n",
   );
   write(
     root,
@@ -747,13 +759,16 @@ The operator relays these in order, pausing at the indicated boundaries. All are
 4. Scope amendment: "Extend this plan to audit the Parcel glossary as well." Propose the scope amendment through the decision inbox; keep it pending and stop for approval.
 5. Amendment approval: "I approve adding the glossary audit to the plan's scope." Record the superseding approval and add row/ticket 03. Preserve the earlier approval text.
 6. Wish: "In a future plan I would like multilingual Delivery receipt guides." This is a desired future capability, not a Finding. Record it as a wish with its quote, source, date and this project repository; file no issue.
+6a. Existing Finding: during the review, the external tooling's guide-check docs/usage/café.md on a valid guide was observed to exit 1 with an encoding error. This is outside this documentation change's responsibility. The same crash already has an open issue at .scratch/tooling/issues/01-utf8-crash.md; reuse it, with no duplicate. Follow the Findings rule's reporting links as well; a wish-only record cannot satisfy it.
+6b. New Finding: the external tooling's usage guide instructs users to run guide-check --legacy, but that command was observed to exit 2 with "unknown option --legacy" in simulated tooling CLI 1.0 on Node.js 24. There is no existing open issue for this stale instruction. File .scratch/tooling/issues/02-stale-option.md using .scratch/tooling/bug-form.md with needs-triage, cite this turn's observed evidence, and report it under Findings. No tooling repair is part of this plan.
+6c. Linked wish: "In a future plan I would like clearer tooling migration guidance." Record a dated wish with this source and the tooling repository; it may link the reported .scratch/tooling/issues/02-stale-option.md for future planning, while retaining the finding's tracker record and all reporting links. Neither finding waits for a repair before the documentation plan continues.
 7. Tracker update: 01 is closed in the simulated local tracker. Tickets 02 and 03 remain open. End the session with a committed active plan; do not close it.
 
 ## Fresh session two
 
 8. Resume using only the workbench entry points and active plan, with no prior transcript. Use the fresh harness session reference for takeover. The operator supplies no terminal tracker update yet: 02 and 03 remain open. A request to close now must leave the plan active.
 9. Owner drop: "Drop the glossary audit from this plan." Keep row 03 with state dropped (owner) and the cited decision. Its already-filed simulated issue 03 stays open, intentionally parked; report that reason and count it at close. Ticket 02 still holds closure.
-10. Final tracker update: 02 is now closed. The final open-issue count is one (parked 03). Close the plan, report what shipped/dropped, the in-goal inference, the wish, and the open parked issue. Suggest multilingual guides or the parked glossary audit as one next direction, awaiting a separate approval.
+10. Final tracker update: 02 is now closed. The final project open-issue count is one (parked 03). The separate tooling tracker still has its two open findings; the plan filed only 02-stale-option.md, which remains open because tooling repair is outside this plan. Close the plan, report what shipped/dropped, the in-goal inference, the wishes, the open parked issue and the new still-open tooling finding with its reason. Suggest multilingual guides or the parked glossary audit as one next direction, awaiting a separate approval.
 `,
   );
   const workbench = join(fixtureRoot, "orchestrate-workbench");

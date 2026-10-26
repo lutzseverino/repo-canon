@@ -12,8 +12,9 @@ workbench; and run the plan to an announced close.
 
 Each repository's contribution guide, `CONTRIBUTING.md`, decides triage,
 readiness, question routing and delivery for its work: its Triage, Readiness,
-Comments and Pull requests sections. This skill is how to carry those rules
-across a plan. The installed `triage` skill is how to triage one request.
+Comments, Findings and Pull requests sections. This skill is how to carry
+those rules across a plan. The installed `triage` skill is how to triage one
+request.
 
 ## Workbench
 
@@ -61,8 +62,11 @@ to its plan's log, with the date, the answer, and where the owner gave it.
 
 ### `wishes.md`
 
-One line per wish: the date, the owner's quoted words or the finding, a link
+One line per wish: the date, the owner's quoted words or idea, a link
 to its source, and the repository it concerns.
+
+A wish may link a filed finding for future planning. A wish never replaces
+the finding's tracker record or reporting links.
 
 ## The plan
 
@@ -137,14 +141,18 @@ with their citations, and shows the decision inbox. Log the items it showed.
    says. A draft you set aside for later work stays in the plan directory,
    marked parked, and takes no row. To take over an owner's grill or
    prototype, continue in that session.
-4. **New requirements.** A requirement that arrives mid-plan takes one route:
+4. **New requirements.** Handle a Finding under the contribution guide's
+   Findings section even when it lies outside the goal: first link an existing
+   open issue reporting the finding; otherwise file it as that section says.
+   Continue the plan without waiting for the finding's resolution.
+   A requirement that arrives mid-plan takes one route:
    - **Row:** it serves the goal and passes the guide's inference test. Add it
      as a row, log it, and list it in the next plan update.
    - **Amendment:** it changes the goal or the scope. Propose the amendment;
      it applies once the owner approves it, recorded as a new approval line
      that supersedes the old one.
-   - **Wish:** it lies outside the goal. Add it to `wishes.md`, and file no
-     issue for it. A defect others need to see may still be filed.
+   - **Wish:** it lies outside the goal and is not a Finding. Add it to
+     `wishes.md`; it needs no issue merely because it is a wish.
 5. **Close.** Once every row has ended, record the open-issue counts at close,
    move the plan under `Closed` in `index.md`, and announce, as the last plan
    update:
