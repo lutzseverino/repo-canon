@@ -21,8 +21,8 @@ without it, start with the title as usual. For example:
 
 Setting `align="center"` on each element is also accepted: the `h1`, the
 description `p`, and the badge `p` paragraphs. Center an optional leading image
-with the shared `div`, a containing `p align="center"`, or its own
-`align="center"` attribute.
+with the shared `div` or a containing `p align="center"`. An `img` or
+`picture` element's own `align="center"` does not horizontally center it.
 
 A single image needs no theme variants. When light and dark variants exist,
 use GitHub's [theme-aware picture markup](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/quickstart-for-writing-on-github#adding-an-image-to-suit-your-visitors)
