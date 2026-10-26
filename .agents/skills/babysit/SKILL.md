@@ -1,11 +1,17 @@
 ---
 name: babysit
-description: Babysit an opened pull request through checks and review until it merges. Use right after opening a pull request, or when asked to babysit or land one.
+description: Babysit an opened pull request through checks and review to merge or its prescribed handoff. Use right after opening a pull request, or when asked to babysit or land one.
 ---
 
-Take the pull request to its merge. `CONTRIBUTING.md` and the
+Take the pull request through its authorized delivery. `CONTRIBUTING.md` and the
 `github-repository-configuration` rules hold the merge conditions and the
 wording rules.
+
+Before requesting or waiting, establish your delivery role from
+`CONTRIBUTING.md`'s Merging section and applicable installed rules. If they
+prescribe a worker handoff, record it on the open PR and stop. The designated
+merging agent resumes here from the handoff, carrying its review requirements
+and outstanding findings into the steps below.
 
 The bundled scripts require Node.js 24 or 26. The request and wait read the optional
 `.github/pull-request-reviewer.json`, whose schema the
@@ -58,7 +64,12 @@ requiring a new request under the rules.
    `github-repository-configuration` rules describe, using `request.mjs` as above
    so the app-author policy takes precedence. After any push or
    re-request, return to step 1.
-5. Once the merge conditions hold on the latest head, run
+5. Before each merge attempt, verify merge ownership and any required owner
+   approval against the current head under the applicable installed rules.
+   When required approval is missing, use the contribution guide's
+   owner-question handoff and stop with the PR unmerged. After a head change,
+   return through the applicable approval gate as well as the check and review
+   steps. Once the merge conditions hold on the latest head, run
    `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
    the full SHA that starts the wait's latest line. Exit `0` means merged;
    `2` means the head changed, so return to step 1; `3` means it did not merge

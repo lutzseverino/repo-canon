@@ -69,6 +69,29 @@ removes it. An agent working on the owner's account implements skip-labelled
 work, and the orchestrating agent merges it; when the owner reviews the work
 before merge, the orchestrating agent merges it after the owner's review.
 
+For every skip-labelled PR, the implementing worker delivers an open PR and
+hands it to the orchestrating agent without merging. Worker completion is the
+recorded PR handoff; the issue stays open until delivery finishes. The handoff
+records the PR's current head, validation and review outcomes, outstanding
+findings, and any owner-review requirement with its source. The orchestrating
+agent continues `babysit` and owns the merge under the contribution guide and
+applicable review rules, including required checks, internal reviews, finding
+responses, supplied credentials, explicit squash messages, and issue closure.
+
+Owner review is required when either the accepted brief or the worker's handoff
+says so. Read both sources; an omission in one does not cancel a designation in
+the other. Carry that designation and its source into the PR handoff. The skip
+marker alone requires no owner review; without a designation, the orchestrating
+agent merges under the ordinary applicable conditions.
+
+Before merging a designated PR, the orchestrating agent verifies the owner's
+explicit approval of the current head. Record the approval's source and head
+SHA on the PR. Any head change requires renewed owner approval; approval of an
+earlier head does not authorize the new one. Passing checks, a configured
+external review, its absence or timeout, and an app-author review-policy skip
+never substitute for owner approval. When approval is missing, follow the
+contribution guide's owner-question handoff and leave the PR unmerged.
+
 ## External review of factory pull requests
 
 Before requesting or waiting for external review, apply the optional

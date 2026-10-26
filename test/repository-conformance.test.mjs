@@ -565,9 +565,9 @@ const wordBudgets = {
   // Raised from 1970 for the Triage section (#500), then from 2263 for the
   // adoption pull request's pre-commit verdict (#540), then for automated
   // update titles (#561), then for the inference test, the grill flow and
-  // question routing (#595).
-  "CONTRIBUTING.md": 2662,
-  "AGENTS.md": 105,
+  // question routing (#595), then for prescribed merge-role handoffs (#609).
+  "CONTRIBUTING.md": 2713,
+  "AGENTS.md": 108,
 };
 
 function wordCount(text) {
@@ -1468,13 +1468,116 @@ test("both babysit exit-1 instructions defer permission refusals to Credentials"
   );
 });
 
-test("the installed agent guidance ends every change as a babysat pull request", () => {
+test("the installed delivery route honors prescribed worker handoffs before merging", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   assert.ok(declarations.includes("target: AGENTS.md\n      exact: AGENTS.md"));
   assert.ok(
     flowedText("AGENTS.md").includes(
-      "Deliver every change as one pull request: open it and write its body as `CONTRIBUTING.md` says, using `pr` where it directs, then `babysit` it until it merges.",
+      "Deliver every change as one pull request: open it and write its body as `CONTRIBUTING.md` says, using `pr` where it directs, then `babysit` it through merge or the prescribed handoff.",
     ),
+  );
+  const guide = flowedText("CONTRIBUTING.md");
+  assert.match(
+    guide,
+    /Before delivery, read applicable installed rules for merge ownership and owner review/,
+  );
+  assert.match(
+    guide,
+    /When they assign the merge to another agent, the worker records the prescribed PR handoff and stops without merging/,
+  );
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  assert.match(
+    babysit,
+    /Before requesting or waiting, establish your delivery role/,
+  );
+  assert.match(
+    babysit,
+    /If they prescribe a worker handoff, record it on the open PR and stop/,
+  );
+  const orchestrate = flowedText(".agents/skills/orchestrate/SKILL.md");
+  assert.match(
+    orchestrate,
+    /When applicable installed rules assign its merge to you, read the PR handoff and resume `babysit`/,
+  );
+  for (const text of [guide, babysit, orchestrate])
+    assert.doesNotMatch(text, /factory:skip/);
+});
+
+test("every skipped factory PR has worker completion and an orchestrator-owned merge", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  assert.match(
+    factory,
+    /For every skip-labelled PR, the implementing worker delivers an open PR and hands it to the orchestrating agent without merging/,
+  );
+  assert.match(
+    factory,
+    /Worker completion is the recorded PR handoff; the issue stays open until delivery finishes/,
+  );
+  assert.match(
+    factory,
+    /The orchestrating agent continues `babysit` and owns the merge/,
+  );
+  assert.match(
+    factory,
+    /The handoff records the PR's current head, validation and review outcomes, outstanding findings, and any owner-review requirement with its source/,
+  );
+});
+
+test("either owner-review designation source survives the PR handoff without making every skip require review", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  assert.match(
+    factory,
+    /Owner review is required when either the accepted brief or the worker's handoff says so/,
+  );
+  assert.match(
+    factory,
+    /Read both sources; an omission in one does not cancel a designation in the other/,
+  );
+  assert.match(
+    factory,
+    /Carry that designation and its source into the PR handoff/,
+  );
+  assert.match(
+    factory,
+    /The skip marker alone requires no owner review; without a designation, the orchestrating agent merges under the ordinary applicable conditions/,
+  );
+});
+
+test("owner-reviewed heads need explicit current-head approval independently of other delivery gates", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  assert.match(
+    factory,
+    /Before merging a designated PR, the orchestrating agent verifies the owner's explicit approval of the current head/,
+  );
+  assert.match(
+    factory,
+    /Any head change requires renewed owner approval; approval of an earlier head does not authorize the new one/,
+  );
+  assert.match(
+    factory,
+    /Passing checks, a configured external review, its absence or timeout, and an app-author review-policy skip never substitute for owner approval/,
+  );
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  assert.match(
+    babysit,
+    /Before each merge attempt, verify merge ownership and any required owner approval against the current head/,
+  );
+  assert.match(
+    babysit,
+    /After a head change, return through the applicable approval gate as well as the check and review steps/,
+  );
+  assert.match(
+    babysit,
+    /When required approval is missing, use the contribution guide's owner-question handoff and stop with the PR unmerged/,
+  );
+  const mergeDoc = flowedText("docs/development/babysit-merge.md");
+  assert.match(
+    mergeDoc,
+    /The caller establishes merge ownership and any required owner approval of the current head before invoking the script/,
+  );
+  assert.match(
+    mergeDoc,
+    /The script's expected-head check preserves that decision against a head change; it does not establish authorization itself/,
   );
 });
 
