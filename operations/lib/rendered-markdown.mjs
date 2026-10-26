@@ -152,22 +152,42 @@ function semanticElements(
   spans = null,
 ) {
   const elements = [];
+  const appendHeadingTargets = (children) => {
+    for (const child of children) {
+      if (child.type === "link" || child.type === "image") {
+        child.insideHeading = true;
+        elements.push(child);
+      }
+      if (child.type === "link") appendHeadingTargets(child.elements);
+    }
+  };
   const visitTargets = (node) => {
     if (isHidden(node)) return;
     if (node.tagName === "a") {
-      elements.push({
+      const link = {
         type: "link",
         text: renderedText(node, isHidden).trim(),
         target: attribute(node, "href") ?? "",
         containsMedia: containsMedia(node, isHidden),
         insideHeading: true,
-      });
+        elements: semanticElements(
+          { childNodes: node.childNodes },
+          isHidden,
+          markdownHeadingMarker,
+        ),
+      };
+      elements.push(link);
+      // Keep heading targets in the flat sequence for existing consumers,
+      // sharing their identity with the link's rendered children.
+      appendHeadingTargets(link.elements);
+      return;
     } else if (node.tagName === "img") {
       elements.push({
         type: "image",
         text: attribute(node, "alt") ?? "",
         target: attribute(node, "src") ?? "",
         insideHeading: true,
+        centered: isCentered(node, { paragraphContent: true }),
       });
       return;
     }
