@@ -171,6 +171,10 @@ test("policy skips preserve check failures, pending checks, workflow waits and a
 test("a different or missing author and supported absence preserve review waits", () => {
   for (const context of [
     { policy: { version: 1, author: "factory-app[bot]" }, author: "owner" },
+    {
+      policy: { version: 1, author: "factory-app[bot]" },
+      author: "factory-app",
+    },
     { policy: { version: 1, author: "factory-app[bot]" } },
     { policy: null, author: "factory-app[bot]" },
   ]) {

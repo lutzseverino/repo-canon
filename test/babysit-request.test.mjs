@@ -121,6 +121,7 @@ test("a declared app emits no request initially or after fixes and resumed runs"
 test("nonmatching, missing and absent-policy authors retain the initial request rule", (t) => {
   for (const context of [
     { author: "owner" },
+    { author: "factory-app" },
     { author: null },
     { author: "factory-app[bot]", declaration: null },
   ]) {

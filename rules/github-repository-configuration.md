@@ -213,7 +213,8 @@ The file is valid JSON holding exactly this object shape:
 Both fields are required; unknown fields, unsupported versions, and malformed
 JSON are errors. `author` is a nonempty, trimmed login. Compare authors
 case-insensitively, treating REST `<slug>[bot]` and CLI `app/<slug>` as the same
-author. A different or missing PR author is not exempt. Invalid declarations
+author. A plain human login `<slug>` remains distinct from that app.
+A different or missing PR author is not exempt. Invalid declarations
 fail explicitly and never authorize a skip.
 
 Apply this policy before the review request rules and reviewer wait

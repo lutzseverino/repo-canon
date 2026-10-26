@@ -33,10 +33,7 @@ export const readReviewPolicy = (root = process.cwd()) => {
 };
 
 const normalize = (login) =>
-  login
-    .toLowerCase()
-    .replace(/^app\//, "")
-    .replace(/\[bot\]$/, "");
+  login.toLowerCase().replace(/^app\/(.+)$/, "$1[bot]");
 
 export const skipsExternalReview = (policy, author) =>
   Boolean(
