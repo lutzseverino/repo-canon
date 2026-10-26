@@ -13,8 +13,8 @@ import {
   pushTime,
   requestData,
 } from "./platform.mjs";
-import { readReviewer } from "./pull-request-reviewer.mjs";
-import { readReviewPolicy, skipsExternalReview } from "./review-policy.mjs";
+import { skipsExternalReview } from "./review-policy.mjs";
+import { trustedReviewConfiguration } from "./trusted-review-config.mjs";
 import { reviewRequestedAt, reviewRequestCount } from "./reviewer.mjs";
 
 export const main = async (argv = process.argv.slice(2), connection) => {
@@ -32,13 +32,13 @@ export const main = async (argv = process.argv.slice(2), connection) => {
       throw new Error(
         "Usage: request.mjs <number> [--fixes-review] [--repo <owner/name>]",
       );
-    const policy = readReviewPolicy();
-    const reviewer = readReviewer();
     connection ??= connectionFor(repository);
+    const { policy, reviewer, evidence } =
+      await trustedReviewConfiguration(connection);
     const pull = await connection.pullRequests.pullRequest(Number(number));
     const author = pull.author?.login;
     const result = (phrase) => {
-      process.stdout.write(`${pull.headCommit}: ${phrase}\n`);
+      process.stdout.write(`${pull.headCommit}: ${phrase}; ${evidence}\n`);
       return 0;
     };
     if (skipsExternalReview(policy, author))
