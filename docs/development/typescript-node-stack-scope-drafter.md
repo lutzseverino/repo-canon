@@ -48,7 +48,14 @@ settings or catalogs. For each Project it runs the check's difference reading:
 For a root with members, the drafter uses package entry points (`bin`, `main`,
 `module`, `exports`, `types` or `typings`), nonempty development commands and
 kept JavaScript or TypeScript sources, including declaration-only library
-sources, as positive evidence together. It excludes
+sources, as positive evidence together. Sources under the root's `scripts/`
+directory establish package responsibility only when a declared entry point
+names that kept file, including through a bin map or conditional exports.
+A dangling default `main: "index.js"` and a shared `scripts/release.mjs` helper
+therefore leave membership unresolved, even when the root matches the stack.
+Other kept package sources can establish responsibility when declared entry
+points are generated build output absent from the kept tree; discovery neither
+requires all entry targets to be kept nor builds them. It excludes
 files belonging to nested packages, fixtures, generated output, dot directories
 and tool configuration from that evidence. With neither entry points nor
 source files it proposes a shared-only root; partial evidence or an
