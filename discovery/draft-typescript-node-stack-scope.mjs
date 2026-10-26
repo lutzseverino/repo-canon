@@ -231,10 +231,26 @@ function coverage({ included, projects }) {
   return `${drafted} No Project matches the stack, so the declaration has no scope; each differing Project stays out until a migration brings it in.`;
 }
 
+// Entry targets may be strings, bin maps or nested conditional exports.
+function entryPointTargets(value) {
+  if (typeof value === "string") return [value];
+  if (value !== null && typeof value === "object")
+    return Object.values(value).flatMap(entryPointTargets);
+  return [];
+}
+
+// Relate kept script sources to entry points whose compiled output is absent.
+function entryPointStem(path) {
+  return path
+    .slice(path.lastIndexOf("/") + 1)
+    .replace(/(?:\.d)?\.(?:[cm]?[jt]s|[jt]sx)$/, "");
+}
+
 // Conservative root-package evidence, independent of stack conformity. Entry
 // points plus development commands and kept source files establish a
 // package's own responsibility. Other packages' files, fixtures and tool
-// configuration do not establish it. Anything partial stays for assessment.
+// configuration do not establish it. Script helpers need a link to a declared
+// entry point to establish package responsibility. Anything partial stays for assessment.
 function rootPackageEvidence(projectRoot, path, files, manifests) {
   const { manifest } = readManifest(projectRoot, path);
   if (!manifest) return { unresolved: true };
@@ -259,15 +275,15 @@ function rootPackageEvidence(projectRoot, path, files, manifests) {
       );
     })
     .sort();
-  const entryPoints = [
+  const entryFields = [
     "bin",
     "main",
     "module",
     "exports",
     "types",
     "typings",
-  ].some((field) => {
-    const value = manifest[field];
+  ].map((field) => manifest[field]);
+  const entryPoints = entryFields.some((value) => {
     return typeof value === "string"
       ? value.trim() !== ""
       : value !== null &&
@@ -277,8 +293,18 @@ function rootPackageEvidence(projectRoot, path, files, manifests) {
   const commands = Object.values(manifest.scripts ?? {}).some(
     (command) => typeof command === "string" && command.trim() !== "",
   );
-  if (entryPoints && commands && sources.length > 0)
-    return { evidence: [sources[0]] };
+  const entryStems = new Set(
+    entryFields.flatMap(entryPointTargets).map(entryPointStem),
+  );
+  const packageSource = sources.find((file) => {
+    const relative = relativeTo(file, directory);
+    return (
+      !relative.startsWith("scripts/") ||
+      entryStems.has(entryPointStem(relative))
+    );
+  });
+  if (entryPoints && commands && packageSource)
+    return { evidence: [packageSource] };
   if (!entryPoints && sources.length === 0) return { sharedOnly: true };
   return { unresolved: true };
 }

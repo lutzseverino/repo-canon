@@ -160,6 +160,7 @@ test("includes a maintained workspace root package alongside its member", (t) =>
       scripts: { build: "tsc", validate: "pnpm run build && node --test" },
     }),
     "src/cli.ts": "console.log('cli');\n",
+    "scripts/release.mjs": "console.log('release workspace');\n",
     "pnpm-lock.yaml": "",
     "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
     "packages/core/package.json": member(),
@@ -215,6 +216,7 @@ test("includes a maintained declaration-only root library alongside its member",
         workspaces: ["packages/*"],
       }),
       "src/index.d.ts": "export interface Options { verbose: boolean }\n",
+      "scripts/release.mjs": "console.log('release workspace');\n",
       "pnpm-lock.yaml": "",
       "packages/core/package.json": member(),
     });
@@ -233,6 +235,7 @@ test("includes a maintained declaration-only root library alongside its member",
 test("leaves incomplete root-package evidence unresolved", (t) => {
   for (const files of [
     { "package.json": manifest(), "src/index.ts": "export {};\n" },
+    { "package.json": manifest({ main: "index.js" }) },
     { "package.json": manifest({ main: "dist/index.js" }) },
     {
       "package.json": manifest({ main: "dist/index.js", scripts: {} }),
@@ -254,6 +257,93 @@ test("leaves incomplete root-package evidence unresolved", (t) => {
     );
     assert.ok(entry.candidates.every(({ path }) => path !== "package.json"));
   }
+});
+
+test("leaves a dangling default entry point with only a shared helper unresolved", (t) => {
+  for (const scripts of [
+    { validate: "pnpm run lint && pnpm test" },
+    { test: "node --test" },
+  ]) {
+    const { entry } = drafted(t, {
+      "package.json": manifest({ main: "index.js", scripts }),
+      "scripts/release.mjs": "console.log('release workspace');\n",
+      "pnpm-lock.yaml": "",
+      "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+      "packages/core/package.json": member(),
+    });
+    assert.deepEqual(
+      entry.candidates.map(({ path, decision }) => [path, decision]),
+      [["packages/core/package.json", "include"]],
+    );
+    assert.equal(entry.unresolved.length, 1);
+    assert.match(
+      entry.unresolved[0],
+      /workspace root `package.json` itself a maintained package/,
+    );
+  }
+});
+
+test("includes kept library sources with generated entry points and shared helpers", (t) => {
+  for (const entryPoint of [
+    { main: "index.js" },
+    { main: "dist/index.js" },
+    { exports: { ".": { import: "./dist/index.js" } } },
+  ]) {
+    const { entry } = drafted(t, {
+      "package.json": manifest({
+        ...entryPoint,
+        scripts: { build: "tsc", validate: "pnpm run build && node --test" },
+        workspaces: ["packages/*"],
+      }),
+      "src/index.ts": "export {};\n",
+      "scripts/release.mjs": "console.log('release workspace');\n",
+      "pnpm-lock.yaml": "",
+      "packages/core/package.json": member(),
+    });
+    assert.equal(entry.candidates[0].decision, "include");
+    assert.ok(entry.candidates[0].evidence.includes("src/index.ts"));
+    assert.ok(!entry.candidates[0].evidence.includes("scripts/release.mjs"));
+    assert.deepEqual(entry.unresolved, []);
+  }
+});
+
+test("recognizes a script explicitly named as a package entry point", (t) => {
+  for (const entryPoint of [
+    { bin: "scripts/cli.mjs" },
+    { bin: { cli: "./scripts/cli.mjs" } },
+    { exports: { ".": { import: ["./scripts/cli.mjs"] } } },
+  ]) {
+    const { entry } = drafted(t, {
+      "package.json": manifest({ ...entryPoint, workspaces: ["packages/*"] }),
+      "scripts/cli.mjs": "console.log('cli');\n",
+      "pnpm-lock.yaml": "",
+      "packages/core/package.json": member(),
+    });
+    assert.equal(entry.candidates[0].decision, "include");
+    assert.ok(entry.candidates[0].evidence.includes("scripts/cli.mjs"));
+    assert.deepEqual(entry.unresolved, []);
+  }
+});
+
+test("recognizes script sources backing a generated package entry point", (t) => {
+  const { entry } = drafted(t, {
+    "package.json": manifest({
+      bin: { cli: "dist/cli.js" },
+      scripts: {
+        build: "tsc scripts/cli.ts --outDir dist",
+        validate: "pnpm run build && node --test",
+      },
+      workspaces: ["packages/*"],
+    }),
+    "scripts/cli.ts": "console.log('cli');\n",
+    "scripts/release.mjs": "console.log('release workspace');\n",
+    "pnpm-lock.yaml": "",
+    "packages/core/package.json": member(),
+  });
+  assert.equal(entry.candidates[0].path, "package.json");
+  assert.equal(entry.candidates[0].decision, "include");
+  assert.ok(entry.candidates[0].evidence.includes("scripts/cli.ts"));
+  assert.deepEqual(entry.unresolved, []);
 });
 
 test("does not mistake member sources, fixtures or tool configuration for a root package", (t) => {
