@@ -961,10 +961,7 @@ test("installed label rules override upstream meanings while retaining configure
   for (const requirement of [
     /`docs\/agents\/triage-labels\.md` maps canonical roles to tracker label strings; use the configured string for each role/,
     /Role meanings in these rules and the contribution guide take precedence over its upstream Meaning column, including the conflicting `needs-info` and `ready-for-human` entries/,
-    /`needs-info` means information is missing\. Every question reaches the orchestrating agent first/,
-    /answers from available evidence or under the contribution guide's inference test/,
-    /routes outside-reporter questions to the reporter, and puts only owner-only questions in the decision inbox/,
-    /`ready-for-human` is reserved for work needing the owner's own accounts or credentials, or a taste call the owner reserved/,
+    /For `needs-info`, follow the contribution guide's Triage section for question routing and its inference test/,
     /Agent work follows the agent path; where factory workflow rules are installed, follow them for factory pickup exclusions/,
   ])
     assert.match(labels, requirement);
