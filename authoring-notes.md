@@ -148,6 +148,24 @@ repeated.
   names the upstream commit and what changed, and the forked material keeps
   the upstream notice. The owner first approved a rule that the owner finish
   every brief, then replaced it the same day; no rule restores it.
+- Repo Canon writes and installs `orchestrate`, the method by which the
+  orchestrating agent the contribution guide names runs a plan across
+  tickets. It is a workflow skill under
+  [ADR 0018](docs/adr/0018-install-only-workflow-skills.md): the issues it
+  files and the briefs it accepts are tracker items the shared workflow relies
+  on. Like `triage`, it is user-invoked only, and it is a method under
+  [ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md): it cites
+  the guide for triage, readiness, question routing and delivery. Plan state
+  lives in the owner's workbench, a git repository of plain Markdown whose
+  path the owner's global agent instructions name, so the skill hard-codes no
+  host path. The skill and its workbench layout name no harness, apart from
+  one closing section mapping the steps to one harness's tools, which a test
+  confines. Its `CREDITS.md` credits Matt Pocock's in-progress
+  `chief-of-staff` at the commit it was compared at, whose wiki rules the
+  workbench borrows. Linking the skill into a user's own skills, for sessions
+  outside a checkout, is host setup that the
+  [adoption guide](docs/usage/adopt-repo-canon.md#orchestrate-plans)
+  describes.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
   maintainer to install from upstream at user scope; the
   [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)

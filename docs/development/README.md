@@ -114,7 +114,9 @@ maximal run of non-whitespace characters as a word; a document over its limit
 fails naming the document, its count, and the limit. The limits are constants
 in the test, so raising one is an explicit edit in the same pull request. No
 budget covers declaration rules or retained adoption guidance. It also keeps
-the two copies of the reviewer parser identical. Run it alone
+the two copies of the reviewer parser identical, and keeps the user-invoked
+`orchestrate` skill's harness and tool names in its one closing harness
+section, failing on any outside it. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
 CI step: `npm test` already runs it on every pull request.
 The same suite checks every declared source input across both profiles for

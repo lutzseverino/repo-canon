@@ -42,6 +42,7 @@ agent, it prints an answers file to fill in with you and its next steps.
 - Copy sixteen of [Matt Pocock's skills](https://github.com/mattpocock/skills), those the shared workflow relies on, into `.agents/skills/`.
 - Ship a `triage` skill, forked from his, that routes each request by where its uncertainty lies: an independent review of its researched issue contract, or the owner's answers before one is written.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.
+- Ship an `orchestrate` skill that turns a feature or problem into a plan the owner approves, keeps it in a workbench of plain Markdown, and runs it to an announced close.
 - Offer a `factory` profile that adds factory workflow rules, configuration and the toolchain image a host-installed factory, an unattended ticket-running service, needs to serve the repository.
 - Set up triage labels, squash-only merging, and a required `PR metadata` check where GitHub's plan offers one.
 - Check the repository introduction, component introductions, and documentation navigation.

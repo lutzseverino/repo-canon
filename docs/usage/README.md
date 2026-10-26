@@ -14,7 +14,8 @@ describes running it.
 
 - [Adopt Repo Canon](adopt-repo-canon.md): choosing a profile, how adoption
   treats a Project's development tools, remote setup prerequisites and
-  deferral, and recommended personal skills.
+  deferral, linking the `orchestrate` skill for sessions outside a checkout,
+  and recommended personal skills.
 - [Release versioning](versioning.md): version increments, breaking standards
   changes, and selecting an adoptable release.
 - [Recommended stacks](stacks.md): a stack is a named set of development tools;

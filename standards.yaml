@@ -381,6 +381,11 @@ defaults:
       name: improve-codebase-architecture
       source: vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture
 
+    skill-orchestrate:
+      kind: skill
+      name: orchestrate
+      source: .agents/skills/orchestrate
+
     skill-pr:
       kind: skill
       name: pr

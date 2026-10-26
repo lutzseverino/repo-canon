@@ -84,6 +84,24 @@ The single list of decisions open for the owner, kept by the orchestrating
 agent.
 _Avoid_: Owner questions comment, needs-input queue
 
+**Plan**:
+An owner-approved goal, with what Done means, that the orchestrating agent
+runs across tickets, kept in the workbench; it closes once each of its tickets
+ends with a closed issue or the owner's drop.
+_Avoid_: Roadmap, specification
+
+**Workbench**:
+The git repository of plain Markdown in which the orchestrating agent keeps
+its plans, decision inbox and wishes, named by path in the owner's global
+agent instructions.
+_Avoid_: Notes, memory
+
+**Wish**:
+A requirement outside its plan's goal, recorded in the workbench with its date,
+the owner's quoted words or the finding, and its repository, instead of an
+issue.
+_Avoid_: Backlog item, suggestion
+
 **Research run**:
 The sub-agent that gathers the facts for one request and, once nothing of the
 owner's intent is open, writes its Agent Brief unless a grilling session
