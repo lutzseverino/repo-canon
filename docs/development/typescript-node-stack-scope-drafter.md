@@ -46,11 +46,12 @@ settings or catalogs. For each Project it runs the check's difference reading:
   would name as its reason, citing its `package.json`.
 
 For a root with members, the drafter uses package entry points (`bin`, `main`,
-`module` or `exports`), nonempty development commands and kept JavaScript or
-TypeScript implementation files as positive evidence together. It excludes
+`module`, `exports`, `types` or `typings`), nonempty development commands and
+kept JavaScript or TypeScript sources, including declaration-only library
+sources, as positive evidence together. It excludes
 files belonging to nested packages, fixtures, generated output, dot directories
 and tool configuration from that evidence. With neither entry points nor
-implementation files it proposes a shared-only root; partial evidence or an
+source files it proposes a shared-only root; partial evidence or an
 unreadable manifest raises a question for the agent's full repository assessment.
 These are proposal heuristics, not additional Project requirements. The root
 and members are assessed independently for stack differences, and the workspace

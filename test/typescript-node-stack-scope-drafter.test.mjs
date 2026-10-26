@@ -207,6 +207,29 @@ test("excludes a differing maintained root while keeping its conforming member",
   assert.deepEqual(entry.unresolved, []);
 });
 
+test("includes a maintained declaration-only root library alongside its member", (t) => {
+  for (const field of ["types", "typings"]) {
+    const { entry } = drafted(t, {
+      "package.json": manifest({
+        [field]: "src/index.d.ts",
+        workspaces: ["packages/*"],
+      }),
+      "src/index.d.ts": "export interface Options { verbose: boolean }\n",
+      "pnpm-lock.yaml": "",
+      "packages/core/package.json": member(),
+    });
+    assert.deepEqual(
+      entry.candidates.map(({ path, decision }) => [path, decision]),
+      [
+        ["package.json", "include"],
+        ["packages/core/package.json", "include"],
+      ],
+    );
+    assert.ok(entry.candidates[0].evidence.includes("src/index.d.ts"));
+    assert.deepEqual(entry.unresolved, []);
+  }
+});
+
 test("leaves incomplete root-package evidence unresolved", (t) => {
   for (const files of [
     { "package.json": manifest(), "src/index.ts": "export {};\n" },

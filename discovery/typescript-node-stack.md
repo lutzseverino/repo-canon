@@ -20,7 +20,7 @@ or catalogs, is the repository's one Project.
 - A Project that matches the stack's manifest facts is included.
 - A Project that differs is excluded, with a reason naming its differences.
 - The drafter proposes a maintained root when its package entry points,
-  development commands and kept implementation files establish its own
+  development commands and kept source files establish its own
   responsibility. It excludes a shared-only root and asks about incomplete
   root-package evidence. A root's stack conformity does not establish Project
   membership, and its members' files do not establish its own responsibility.

@@ -227,7 +227,7 @@ function coverage({ included, projects }) {
 }
 
 // Conservative root-package evidence, independent of stack conformity. Entry
-// points plus development commands and kept implementation files establish a
+// points plus development commands and kept source files establish a
 // package's own responsibility. Other packages' files, fixtures and tool
 // configuration do not establish it. Anything partial stays for assessment.
 function rootPackageEvidence(projectRoot, path, files, manifests) {
@@ -246,7 +246,7 @@ function rootPackageEvidence(projectRoot, path, files, manifests) {
       const relative = relativeTo(file, directory);
       return (
         /\.(?:[cm]?[jt]s|[jt]sx)$/.test(relative) &&
-        !/(?:^|\/)\.|(?:^|\/)[^/]+\.config\.|\.(?:test|spec)\.|\.d\.[cm]?ts$/.test(
+        !/(?:^|\/)\.|(?:^|\/)[^/]+\.config\.|\.(?:test|spec)\./.test(
           relative,
         ) &&
         !unmaintainedAncestor(parentOf(relative)) &&
@@ -254,7 +254,14 @@ function rootPackageEvidence(projectRoot, path, files, manifests) {
       );
     })
     .sort();
-  const entryPoints = ["bin", "main", "module", "exports"].some((field) => {
+  const entryPoints = [
+    "bin",
+    "main",
+    "module",
+    "exports",
+    "types",
+    "typings",
+  ].some((field) => {
     const value = manifest[field];
     return typeof value === "string"
       ? value.trim() !== ""
