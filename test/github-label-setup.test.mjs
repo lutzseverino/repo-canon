@@ -27,7 +27,8 @@ const canonicalLabels = [
   {
     name: "ready-for-human",
     color: "1d76db",
-    description: "Reviewed and requires human implementation",
+    description:
+      "Reviewed; needs the owner's accounts, credentials or a reserved taste call",
   },
   { name: "wontfix", color: "ffffff", description: "Will not be actioned" },
   { name: "bug", color: "d73a4a", description: "Something isn't working" },

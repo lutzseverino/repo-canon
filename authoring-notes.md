@@ -276,6 +276,13 @@ repeated.
   and the mechanism that
   enforces them in
   [issue contract validation](docs/development/issue-contract-validation.md).
+- `ready-for-human` marks only work that needs the owner's own accounts or
+  credentials, or a taste call the owner reserved. The owner decided this on
+  2026-10-25, after the label had also marked agent work the factory could not
+  run and confused them. Agent work the factory must not pick up carries
+  `ready-for-agent`, a `model:` label and `factory:skip`. Only the
+  [factory workflow rules](rules/factory-workflow.md) name that label, since
+  the canonical labels carry no `factory:` label.
 - The skill setup files under docs/agents are installed verbatim from the
   vendored upstream setup seeds, and Repo Canon writes nothing into them, as
   [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
