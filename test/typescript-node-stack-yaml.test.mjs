@@ -243,6 +243,81 @@ test("integration regression inputs obey the same differential contract", () => 
     compare(text, `catalog regression ${index}`);
 });
 
+test("comments, markers and non-breaking spaces agree at lexical boundaries", () => {
+  const boundaries = [
+    "",
+    " ",
+    " # comment",
+    "\u00a0",
+    "\u00a0# text",
+    " \u00a0 ",
+  ];
+  const scalars = [
+    "apps/*",
+    "'apps/*'",
+    '"apps/*"',
+    '"apps/\u00a0*"',
+    "'it''s #x: y'",
+    '"a\\\"b #x: y"',
+  ];
+  for (const [scalarIndex, scalar] of scalars.entries())
+    for (const [boundaryIndex, boundary] of boundaries.entries()) {
+      for (const [form, text] of [
+        ["block", `packages:\n  - ${scalar}${boundary}\n`],
+        ["flow", `packages: [${scalar}${boundary}\n]\n`],
+        ["flow tail", `packages: [${scalar}]${boundary}\n`],
+        ["catalog value", `catalog:\n  oxlint: ${scalar}${boundary}\n`],
+        ["catalog key", `catalog:\n  ${scalar}${boundary}: 1.86.0\n`],
+        [
+          "catalog name",
+          `catalogs:\n  ${scalar}${boundary}:\n    oxlint: 1.86.0\n`,
+        ],
+      ])
+        compare(
+          text,
+          `lexical scalar ${scalarIndex}, boundary ${boundaryIndex}, ${form}`,
+        );
+    }
+  for (const [index, boundary] of boundaries.entries())
+    for (const [form, text] of [
+      ["packages key", `packages${boundary}: [apps/*]\n`],
+      ["catalog header", `catalog${boundary}:\n  oxlint: 1.86.0\n`],
+      [
+        "catalogs header",
+        `catalogs${boundary}:\n  tools:\n    oxlint: 1.86.0\n`,
+      ],
+      ["start marker", `---${boundary}\npackages: [apps/*]\n`],
+      ["end marker", `packages: [apps/*]\n...${boundary}\n`],
+      ["indentation", `packages:\n${boundary}  - apps/*\n`],
+      ["sequence indicator", `packages:\n  -${boundary} apps/*\n`],
+    ])
+      compare(text, `lexical boundary ${index}, ${form}`);
+});
+
+test("supported catalog scalars preserve non-breaking spaces and quoted comment text", () => {
+  const text = `catalog:
+  oxlint\u00a0: 1.86.0\u00a0
+  'oxlint #x: y': 1.86.0
+catalogs:
+  tools\u00a0:
+    prettier: "3.9.9\u00a0"
+`;
+  compare(text, "exact supported catalog scalars");
+  assert.deepEqual(
+    pnpmCatalogs(text),
+    new Map([
+      [
+        "default",
+        new Map([
+          ["oxlint\u00a0", "1.86.0\u00a0"],
+          ["oxlint #x: y", "1.86.0"],
+        ]),
+      ],
+      ["tools\u00a0", new Map([["prettier", "3.9.9\u00a0"]])],
+    ]),
+  );
+});
+
 test("supported patterns and catalogs survive unrelated non-string settings", () => {
   const text = `packages: [apps/*]
 autoInstallPeers: true
