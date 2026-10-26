@@ -425,7 +425,7 @@ test("reads every unsupported pnpm-workspace.yaml form as an unreadable workspac
             "packages/cli/package.json",
           ]),
         ),
-        "Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Use supported YAML forms throughout the document.",
+        "Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Use the limited YAML forms described under Supported workspace YAML in the retained `guidance/typescript-node-stack.md`; flow mappings such as `overrides: {}` are unsupported.",
       );
     });
 });
@@ -603,12 +603,13 @@ test("names a workspace configuration it cannot read", (t) => {
         t,
         {
           ...standalone,
-          "pnpm-workspace.yaml": "packages: *members\n",
+          "pnpm-workspace.yaml": "packages:\n  - packages/*\noverrides: {}\n",
         },
         ["package.json"],
+        retainedCheck(t, scriptPath),
       ),
     ),
-    "Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Use supported YAML forms throughout the document.",
+    "Cannot read workspace configuration from `pnpm-workspace.yaml`: unsupported or malformed YAML anywhere in the document can prevent reading its members, even when `packages` is a supported list of plain or quoted patterns. Use the limited YAML forms described under Supported workspace YAML in the retained `guidance/typescript-node-stack.md`; flow mappings such as `overrides: {}` are unsupported.",
   );
 });
 

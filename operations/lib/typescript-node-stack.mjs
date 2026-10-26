@@ -707,7 +707,7 @@ export function stackDifferences(projectRoot, manifestPath) {
     return {
       differences: [
         workspace.unreadable.endsWith(pnpmWorkspaceName)
-          ? `Cannot read workspace configuration from ${code(workspace.unreadable)}: ${unreadableWorkspaceYamlCause}. Use supported YAML forms throughout the document.`
+          ? `Cannot read workspace configuration from ${code(workspace.unreadable)}: ${unreadableWorkspaceYamlCause}. Use the limited YAML forms described under Supported workspace YAML in the retained ${code("guidance/typescript-node-stack.md")}; flow mappings such as ${code("overrides: {}")} are unsupported.`
           : `State the workspace members of ${code(workspace.unreadable)} as a list of plain or quoted patterns, which the check reads.`,
       ],
       evidence: [manifestPath, workspace.unreadable],
