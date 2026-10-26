@@ -223,9 +223,11 @@ const questions = {
   },
 };
 
-function coverage({ included, projects }) {
+function coverage({ included, projects, unresolved }) {
   const drafted = `Drafted from manifests and workspace configuration by ${code(drafterPath)}: one ${code(manifestName)} per Project, included when it matches the stack's manifest facts and excluded naming its differences otherwise. A maintained workspace root package is a Project alongside its members; a shared-only root is not. Uncertain root membership stays unresolved. A root package without workspace members is a Project.`;
   if (included > 0) return drafted;
+  if (unresolved > 0)
+    return `${drafted} No Project is included in this draft, so it proposes no scope; unresolved questions must be settled before confirming membership.`;
   if (projects === 0)
     return `${drafted} The repository holds no Node.js Project, so the declaration has no scope.`;
   return `${drafted} No Project matches the stack, so the declaration has no scope; each differing Project stays out until a migration brings it in.`;
@@ -362,10 +364,13 @@ function draftStackScope({ projectRoot }) {
       continue;
     }
     let membershipEvidence = [];
-    if (memberRoots.has(directory)) {
+    // Unreadable membership cannot establish that a root is a standalone
+    // Project or shared-only configuration. Independent package evidence or
+    // an ancestor's readable member listing can still establish membership.
+    if (memberRoots.has(directory) || (ownWorkspace?.unreadable && !listed)) {
       const root = rootPackageEvidence(projectRoot, path, files, manifests);
-      if (root.unresolved) {
-        unresolved.push(questions.root(path));
+      if (root.unresolved || (ownWorkspace?.unreadable && root.sharedOnly)) {
+        if (!ownWorkspace?.unreadable) unresolved.push(questions.root(path));
         continue;
       }
       if (root.sharedOnly) {
@@ -403,7 +408,7 @@ function draftStackScope({ projectRoot }) {
   ).length;
   const entry = {
     id: declarationId,
-    coverage: coverage({ included, projects }),
+    coverage: coverage({ included, projects, unresolved: unresolved.length }),
     candidates: candidates.sort(byPath),
     unresolved: unresolved.sort(),
   };
