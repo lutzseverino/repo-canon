@@ -18,6 +18,25 @@ install public Repository Standards CLI 10.0.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 
+The factory toolchain image sets `pnpm_config_store_dir` to
+`/home/agent/.local/share/pnpm/store`, outside the checkout and writable by the
+runtime `agent` user. pnpm copies packages when the store and checkout are on
+different filesystems. Local development keeps pnpm's platform defaults;
+`.pnpm-store/` directories are ignored if a local or leftover store exists.
+When a command needs a clean checkout, select a writable store outside it
+without deleting or moving the existing cache. For example, from the repository
+root, pnpm 11 supports a command-scoped environment setting:
+
+```sh
+pnpm_config_store_dir="$HOME/.local/share/pnpm/store" pnpm store path
+pnpm_config_store_dir="$HOME/.local/share/pnpm/store" pnpm install --frozen-lockfile
+```
+
+Use the same setting for later installs with that store. pnpm 11 reads
+`pnpm_config_*` variables; `npm_config_*` variables and non-authentication
+`.npmrc` settings no longer configure it. See pnpm's
+[v11 configuration reference](https://github.com/pnpm/pnpm.io/blob/0aab2bac6247c16409137037dbfcec731822b828/versioned_docs/version-11.x/configuring.md).
+
 Run `pnpm run format` to format supported files locally with Prettier's defaults;
 there is no configuration file. `.prettierignore` excludes vendored code,
 installed Repository Standards state, installed skills (including Repo Canon's
