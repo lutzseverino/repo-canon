@@ -64,6 +64,8 @@ const run = (
     args = [],
     target = script,
     push = openedAt,
+    trustedPolicy = declaration,
+    trustedReviewer = config,
   } = {},
 ) => {
   const directory = mkdtempSync(join(tmpdir(), "babysit-request-"));
@@ -90,6 +92,7 @@ const run = (
       createdAt: openedAt,
       pushedAt: push,
       comments,
+      reviewConfiguration: { policy: trustedPolicy, reviewer: trustedReviewer },
     }),
   );
   const bundle = new URL("../../../vendor/postern/postern.mjs", target);
@@ -285,4 +288,24 @@ test("the installed request command includes its policy reader and platform reso
   });
   assert.equal(requested.code, 0, requested.stderr);
   assert.deepEqual(requested.emitted, [reviewer.request.comment]);
+});
+
+test("a proposed app exemption cannot replace the destination default-branch policy", (t) => {
+  const config = {
+    ...reviewer,
+    request: { ...reviewer.request, onOpen: false },
+  };
+  const result = run(t, {
+    author: "factory-app[bot]",
+    declaration: policy,
+    config,
+    trustedPolicy: { version: 1, author: "trusted-factory[bot]" },
+    trustedReviewer: config,
+  });
+  assert.equal(result.code, 0, result.stderr);
+  assert.deepEqual(result.emitted, [reviewer.request.comment]);
+  assert.match(
+    result.stdout,
+    /review configuration: example\/repository default branch main@b{40}/,
+  );
 });

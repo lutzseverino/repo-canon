@@ -1480,7 +1480,13 @@ const run = (
     );
   }
   const statePath = join(directory, "state.json");
-  writeFileSync(statePath, JSON.stringify(state));
+  writeFileSync(
+    statePath,
+    JSON.stringify({
+      reviewConfiguration: { policy, reviewer },
+      ...state,
+    }),
+  );
   return new Promise((resolve) => {
     const started = Date.now();
     const child = spawn(
@@ -1512,6 +1518,8 @@ const run = (
     child.stderr.on("data", (chunk) => record(chunk, (s) => (stderr += s)));
     child.on("close", (code) => {
       const finalState = JSON.parse(readFileSync(statePath, "utf8"));
+      if (!Object.hasOwn(state, "reviewConfiguration"))
+        delete finalState.reviewConfiguration;
       rmSync(directory, { recursive: true, force: true });
       resolve({
         code,
@@ -1631,7 +1639,7 @@ test("the wait names the reached request bound after a later push", async () => 
   assert.equal(result.stderr, "");
   assert.equal(
     result.stdout,
-    `${head}: checks passed, review not requested for this head; review request bound reached (4)\n`,
+    `${head}: checks passed, review not requested for this head; review request bound reached (4); review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
   );
 });
 
@@ -1736,7 +1744,7 @@ test("the script writes nothing while it waits, then one line at its limit", asy
   assert.equal(result.stderr, "");
   assert.equal(
     result.stdout,
-    `${head}: still waiting on checks and reviewer; run again\n`,
+    `${head}: still waiting on checks and reviewer; run again; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
   );
   assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
 });
@@ -1760,7 +1768,10 @@ test("a reviewed head with a queued rerun waits silently until its limit", async
   );
   assert.equal(result.code, 5);
   assert.equal(result.stderr, "");
-  assert.equal(result.stdout, `${head}: still waiting on checks; run again\n`);
+  assert.equal(
+    result.stdout,
+    `${head}: still waiting on checks; run again; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
+  );
   assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
 });
 
@@ -1787,7 +1798,7 @@ test("an already-settled outcome exits at once", async () => {
   assert.equal(result.code, 2);
   assert.equal(
     result.stdout,
-    `${head}: 1 check failed, reviewer reviewed\ntest https://ci/1\n`,
+    `${head}: 1 check failed, reviewer reviewed; review configuration: example/repository default branch main@${"b".repeat(40)}\ntest https://ci/1\n`,
   );
   assert.ok(result.elapsed < 5000);
 });
@@ -1801,7 +1812,10 @@ test("a fresh push with no checks yet waits silently until its limit", async () 
   );
   assert.equal(result.code, 5);
   assert.equal(result.stderr, "");
-  assert.equal(result.stdout, `${head}: still waiting on checks; run again\n`);
+  assert.equal(
+    result.stdout,
+    `${head}: still waiting on checks; run again; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
+  );
   assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
 });
 
@@ -1820,7 +1834,7 @@ test("an old push with no checks or runs settles at once", async () => {
   assert.equal(result.stderr, "");
   assert.equal(
     result.stdout,
-    `${head}: no checks within 5 minutes of the push, review not requested for this head\n`,
+    `${head}: no checks within 5 minutes of the push, review not requested for this head; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
   );
   assert.ok(result.firstWrite < 1900, `wrote after ${result.firstWrite} ms`);
 });
@@ -1841,7 +1855,7 @@ test("the script reports a completed failed workflow with no check (#293)", asyn
   assert.equal(result.stderr, "");
   assert.equal(
     result.stdout,
-    `${head}: 1 check failed, reviewer unavailable\nCI ${failedRun.html_url}\n`,
+    `${head}: 1 check failed, reviewer unavailable; review configuration: example/repository default branch main@${"b".repeat(40)}\nCI ${failedRun.html_url}\n`,
   );
 });
 
@@ -1879,7 +1893,7 @@ test("the script uses check start times to settle later runs and attempts (#296)
       assert.equal(result.stderr, "");
       assert.equal(
         result.stdout,
-        `${head}: 1 check failed, reviewer unavailable\n${currentCheck ? `Validate example ${checkLink}` : `CI ${runUrl(id)}`}\n`,
+        `${head}: 1 check failed, reviewer unavailable; review configuration: example/repository default branch main@${"b".repeat(40)}\n${currentCheck ? `Validate example ${checkLink}` : `CI ${runUrl(id)}`}\n`,
       );
     }
   }
@@ -1908,7 +1922,7 @@ test("the script keeps failures of workflows sharing a display name", async () =
   assert.equal(result.code, 2);
   assert.equal(
     result.stdout,
-    `${head}: 1 check failed, reviewer unavailable\nCI ${failedRun.html_url}\n`,
+    `${head}: 1 check failed, reviewer unavailable; review configuration: example/repository default branch main@${"b".repeat(40)}\nCI ${failedRun.html_url}\n`,
   );
 });
 
@@ -1942,7 +1956,7 @@ test("the script matches checks to same-named workflows by their run links", asy
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: 1 check failed, reviewer unavailable\n${id === 21 ? `Validate example ${runUrl(21)}/job/1` : `CI ${runUrl(21)}`}\n`,
+      `${head}: 1 check failed, reviewer unavailable; review configuration: example/repository default branch main@${"b".repeat(40)}\n${id === 21 ? `Validate example ${runUrl(21)}/job/1` : `CI ${runUrl(21)}`}\n`,
     );
   }
 });
@@ -1970,7 +1984,7 @@ test("the script uses a workflow's checks without hiding another workflow's fail
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: 1 check failed, reviewer unavailable\n${expected}\n`,
+      `${head}: 1 check failed, reviewer unavailable; review configuration: example/repository default branch main@${"b".repeat(40)}\n${expected}\n`,
     );
   }
 });
@@ -1993,7 +2007,7 @@ test("an unrecorded push with old dates waits silently until its limit", async (
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: still waiting on checks; run again\n`,
+      `${head}: still waiting on checks; run again; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
     );
     assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
   }
@@ -2019,7 +2033,7 @@ test("a push recorded after the first look settles within the invocation", async
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: no checks within 5 minutes of the push, review not requested for this head\n`,
+      `${head}: no checks within 5 minutes of the push, review not requested for this head; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
     );
     assert.equal(result.activityReads, 2);
     assert.ok(result.elapsed < 2900, `settled after ${result.elapsed} ms`);
@@ -2053,7 +2067,7 @@ test("a queued rerun missing from the rollup waits silently until its limit", as
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: still waiting on checks; run again\n`,
+      `${head}: still waiting on checks; run again; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
     );
     assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
   }
@@ -2076,7 +2090,7 @@ test("the head's push time comes from GitHub's activity record", async () => {
   assert.equal(pushed.code, 4);
   assert.equal(
     pushed.stdout,
-    `${head}: checks passed, review not requested for this head\n`,
+    `${head}: checks passed, review not requested for this head; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
   );
   // A later re-request makes the pushed head requested again.
   const rerequested = await run(
@@ -2098,7 +2112,7 @@ test("the head's push time comes from GitHub's activity record", async () => {
   assert.equal(rerequested.code, 5);
   assert.equal(
     rerequested.stdout,
-    `${head}: still waiting on reviewer; run again\n`,
+    `${head}: still waiting on reviewer; run again; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
   );
   // Without an activity record, the head's committer date stands in, and a
   // push is never before the opening.
@@ -2115,7 +2129,7 @@ test("the head's push time comes from GitHub's activity record", async () => {
   assert.equal(committed.code, 4);
   assert.equal(
     committed.stdout,
-    `${head}: checks passed, reviewer did not respond within 5 minutes\n`,
+    `${head}: checks passed, reviewer did not respond within 5 minutes; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
   );
 });
 
@@ -2177,7 +2191,10 @@ test("the script with no file finishes settled checks without a reviewer", async
     null,
   );
   assert.equal(result.code, 0);
-  assert.equal(result.stdout, `${head}: checks passed\n`);
+  assert.equal(
+    result.stdout,
+    `${head}: checks passed; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
+  );
 });
 
 test("the script reads a GitHub-review-only fixture and its paginated reviews", async () => {
@@ -2200,7 +2217,10 @@ test("the script reads a GitHub-review-only fixture and its paginated reviews", 
     githubReviewer,
   );
   assert.equal(reviewed.code, 0);
-  assert.equal(reviewed.stdout, `${head}: checks passed, reviewer reviewed\n`);
+  assert.equal(
+    reviewed.stdout,
+    `${head}: checks passed, reviewer reviewed; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
+  );
 });
 
 test("a failed check exits immediately while other checks are pending", () => {
@@ -2421,7 +2441,7 @@ test("the script excludes a reply-only review after a push with no later request
   assert.equal(result.code, 4);
   assert.equal(
     result.stdout,
-    `${head}: checks passed, review not requested for this head\n`,
+    `${head}: checks passed, review not requested for this head; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
   );
   assert.equal(result.stderr, "");
   // A new thread on a later page must belong to this review to complete it.
@@ -2437,7 +2457,10 @@ test("the script excludes a reply-only review after a push with no later request
     githubReviewer,
   );
   assert.equal(reviewed.code, 0);
-  assert.equal(reviewed.stdout, `${head}: checks passed, reviewer reviewed\n`);
+  assert.equal(
+    reviewed.stdout,
+    `${head}: checks passed, reviewer reviewed; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
+  );
 });
 
 test("the installed wait runs against the published adapter without runtime packages", async (t) => {
@@ -2450,4 +2473,29 @@ test("the installed wait runs against the published adapter without runtime pack
   );
   assert.equal(result.code, 0, result.stderr);
   assert.match(result.stdout, /checks passed/);
+});
+
+test("a proposed self-exemption cannot disable the trusted wait", async () => {
+  const result = await run(
+    {
+      head,
+      author: "factory-app[bot]",
+      createdAt: "2026-10-11T05:00:00Z",
+      pushedAt: "2026-10-11T05:00:00Z",
+      reviewConfiguration: {
+        policy: { version: 1, author: "other-app[bot]" },
+        reviewer: codexReviewer,
+      },
+    },
+    ["12", "--limit", "0.1"],
+    codexReviewer,
+    undefined,
+    { version: 1, author: "factory-app[bot]" },
+  );
+  assert.equal(result.code, 4, result.stderr);
+  assert.match(result.stdout, /reviewer did not respond/);
+  assert.match(
+    result.stdout,
+    /review configuration: example\/repository default branch main@b{40}/,
+  );
 });

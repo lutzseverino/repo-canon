@@ -573,8 +573,9 @@ const wordBudgets = {
   // Raised from 1970 for the Triage section (#500), then from 2263 for the
   // adoption pull request's pre-commit verdict (#540), then for automated
   // update titles (#561), then for the inference test, the grill flow and
-  // question routing (#595), then for prescribed merge-role handoffs (#609).
-  "CONTRIBUTING.md": 2713,
+  // question routing (#595), then for prescribed merge-role handoffs (#609)
+  // and the installed approval-pause continuation pointer (#632).
+  "CONTRIBUTING.md": 2720,
   "AGENTS.md": 108,
 };
 
@@ -1012,6 +1013,7 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
       "request.mjs",
       "review-policy.mjs",
       "reviewer.mjs",
+      "trusted-review-config.mjs",
       "wait.mjs",
     ],
   );
@@ -1650,6 +1652,70 @@ test("owner-reviewed heads need explicit current-head approval independently of 
     mergeDoc,
     /The script's expected-head check preserves that decision against a head change; it does not establish authorization itself/,
   );
+});
+
+test("designated skipped PR approval pauses resume the same PR without ordinary factory recovery", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  const recovery =
+    /## Owner handoff and recovery (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+
+  // Read the approval pause and the general recovery route together: either
+  // one alone used to admit transferring this PR's merge back to the owner.
+  assert.match(
+    state,
+    /When approval is missing, follow the contribution guide's owner-question handoff and leave the PR unmerged\. For this approval pause, keep the PR open, retain `factory:needs-input` and `factory:skip` on its issue, and preserve the orchestrating agent's merge ownership/,
+  );
+  assert.match(state, /Record the approval's source and head SHA on the PR/);
+  assert.match(
+    state,
+    /After verifying and recording current-head approval as above, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR, merging only when all other applicable merge conditions hold/,
+  );
+  assert.match(
+    state,
+    /Any head change returns to this approval pause until renewed approval is verified and recorded/,
+  );
+  assert.match(
+    state,
+    /This continuation requires neither owner merge, PR closure nor factory pickup/,
+  );
+  assert.match(
+    recovery,
+    /For the designated skipped-PR approval pause, follow State labels for continuation\. The recovery below applies to other owner questions/,
+  );
+  assert.match(recovery, /With no open pull request, whoever answers/);
+  assert.match(
+    recovery,
+    /the owner, even after the orchestrating agent answers, either finishes the pull request by merging it/,
+  );
+  assert.match(
+    recovery,
+    /close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
+  );
+});
+
+test("shared delivery guidance delegates approval-pause continuation to installed rules", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  assert.match(
+    guide,
+    /This owner handoff ends the agent's babysitting of the pull request/,
+  );
+  assert.match(
+    guide,
+    /Subsequent continuation follows applicable installed rules/,
+  );
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  assert.match(
+    babysit,
+    /On resuming an approval-paused PR, follow the installed continuation rules before returning to the request and wait steps/,
+  );
+  const orchestrate = flowedText(".agents/skills/orchestrate/SKILL.md");
+  assert.match(
+    orchestrate,
+    /For an approval-paused PR, follow the applicable installed continuation rules to resume that same open PR/,
+  );
+  for (const text of [guide, babysit, orchestrate])
+    assert.doesNotMatch(text, /factory:needs-input|factory:skip/);
 });
 
 test("the GitHub rules require a first review request before waiting when opening is not a request", () => {
