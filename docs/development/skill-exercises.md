@@ -175,17 +175,46 @@ three requests: a bug whose documentation states the expected result, a bug
 whose fix needs a Retry window nobody chose, and a feature request. Each
 research run is a separate session with a fresh context; when the harness
 cannot nest sub-agents, the operator runs it and relays its messages verbatim.
-The operator also plays the owner and supplies revision notices, as controlled
-inputs. The bug's seeded first brief revision passes the Agent Brief shape but
+The operator keeps `.scratch/routing/review-inputs.md` and `owner-inputs.md`
+private and releases the numbered participant turns at their checkpoints.
+Start with turn 1 only. Release request 02's controlled owner answers in turn 2
+only after its separate grill asks the numbered questions. They choose a
+synthetic 60-minute Retry window measured from the first transient failure,
+allow retries strictly before that boundary, and retain the recorded
+transient-failure decision. The grill cites the supplied date and answer source;
+these simulation values establish no policy for real software.
+
+The bug's seeded first brief revision passes the Agent Brief shape but
 not review, so its outcomes cover the challenge, the research run's
 correction, and acceptance of the corrected revision with a chosen model label
 and a recorded blocker. The second bug's outcomes cover fact-finding, a persisting
 Retry window the orchestrating agent never infers, a separate grilling session
 that asks numbered owner questions with recommendations and drafts the brief,
 a recorded owner decision reused rather than asked again, and refusal of a
-brief that leaves owner intent open. The scenario also records the handoffs for credentials without a
-readiness role, a GitHub App account, a missing revision notice, and an edit
-after readiness.
+brief that leaves owner intent open.
+
+Turn 3 retains the complete corrected comments, including triage notes and
+whitespace, and computes their notices with the fixture's local
+`docs/revision-notice.mjs`. Each notice binds a concrete `sha256:` identifier
+to the retained text and simulated comment identity/edit timestamp using the
+issue-contract validator's revision convention. Dynamic drafts receive no
+identifier before their text exists. The helper computes identity only;
+structure and independent acceptance remain separate checks. Turn 4 requires
+an independent review, the reviewer's chosen model and request 01's ticket 05
+blocker before reporting acceptance.
+
+Turn 5 actually edits request 01's accepted retained Summary, preserving both
+texts. Observe readiness invalidated and record the missing-notice handoff
+while withholding the new notice. The old notice cannot authorize the edited
+comment. Only after that outcome is recorded does turn 6 compute and relay
+the changed revision's notice for renewed independent review and readiness.
+Turn 7 records the write-role-only and GitHub App credential handoffs.
+All readiness actions are local Markdown simulations: never run `ready.mjs`
+or live readiness automation. Retain the delivered turns, times, exact
+contracts, notices and observed outcomes with the run outside maintained
+documentation. Fixture regression checks verify these inputs and their
+revision associations; they do not establish that an agent performed the
+exercise.
 
 Check produced briefs against the discovered GitHub rules' shape and ordering,
 and readiness decisions against those rules and `CONTRIBUTING.md`. Record the

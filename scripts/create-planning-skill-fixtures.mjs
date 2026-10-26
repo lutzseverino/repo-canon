@@ -53,6 +53,7 @@ const sharedSourceFiles = [
   "rules/factory-workflow.md",
   "scripts/support/repository-standards/SKILL.md",
   "scripts/support/repository-standards/rules.mjs",
+  "scripts/support/planning-revision-notice.mjs",
   "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
 ];
 
@@ -463,7 +464,7 @@ Record all actions as local Markdown. Do not change actual intake status to appr
       context:
         "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Retry window**:\nThe period after a failed Parcel dispatch in which dispatch is retried.\n_Avoid_: Timeout\n",
       exercise:
-        "## Task\n\nYou are the orchestrating agent. Use triage on the three requests in .scratch/routing/issues/, with .scratch/routing/review-inputs.md as the controlled inputs. Sort all three. Take 01 and 02 through their paths to acceptance; for 03, record its path and reason only. Start a separate research run with a fresh context for each request you research; when the harness cannot nest sub-agents, the operator runs it and relays its messages verbatim. The operator also plays the owner and supplies revision notices; neither is a real person or GitHub event.\n\n## Expected outcome\n\n01 is code-bound: its expected result is documented. 02 is labeled bug but intent-bound, because its fix needs a Retry window nobody chose. 03 is an intent-bound feature request. Classification follows where the uncertainty lies, not the label.\n\nFor 01, the published revision r1 passes the GitHub rules' Agent Brief shape yet does not hold. The orchestrating agent checks it against the issue and code itself, names the defects it finds (an untestable criterion, scope the request never asked for, a wrong code path, and the missing dependency on 05), and sends them to the research run, which revises the brief. Only after the revision notice for the corrected revision does it accept that exact revision: it applies ready-for-agent with exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links. r1's readiness would never have been valid, and the research run applies no label.\n\nFor 02, the research run gathers code facts first and writes no brief. The Retry window persists in the product, so the orchestrating agent never infers it, not even from the operators' stated preference. It sends the question to a separate grilling session with the owner, which asks short rounds of numbered questions, each with a recommended answer, never re-asks the recorded decision on transient failures, records the owner's answers, and drafts the brief. The orchestrating agent writes no brief itself: it records the owner decisions the brief relies on in the issue's triage notes, reviews the draft as a reviewer who did not write it, and refuses any brief that leaves a choice to the implementing agent, lists options, or carries a value the owner did not choose, returning that question to the owner instead.\n\nAlso record, without acting on them, what the orchestrating agent does when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness. Cite the contribution guide's Triage and Readiness sections, the GitHub rules' Readiness roles section, and the factory rules' Model selection section in the local outcome.\n",
+        "## Task\n\nYou are the orchestrating agent. Use triage on the three requests in .scratch/routing/issues/, with the operator releasing .scratch/routing/review-inputs.md one turn at a time. The operator keeps owner-inputs.md and unreleased turns private until their checkpoints. Sort all three. Take 01 and 02 through their paths to acceptance; for 03, record its path and reason only. Start a separate research run with a fresh context for each request you research; when the harness cannot nest sub-agents, the operator runs it and relays its messages verbatim. The operator also plays the owner and supplies revision notices; neither is a real person or GitHub event.\n\n## Expected outcome\n\n01 is code-bound: its expected result is documented. 02 is labeled bug but intent-bound, because its fix needs a Retry window nobody chose. 03 is an intent-bound feature request. Classification follows where the uncertainty lies, not the label.\n\nFor 01, the published revision r1 passes the GitHub rules' Agent Brief shape yet does not hold. The orchestrating agent checks it against the issue and code itself, names the defects it finds (an untestable criterion, scope the request never asked for, a wrong code path, and the missing dependency on 05), and sends them to the research run, which revises the brief. Only after the revision notice for the corrected revision does it accept that exact revision: it applies ready-for-agent with exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links. r1's readiness would never have been valid, and the research run applies no label.\n\nFor 02, the research run gathers code facts first and writes no brief. The Retry window persists in the product, so the orchestrating agent never infers it, not even from the operators' stated preference. It sends the question to a separate grilling session with the owner, which asks short rounds of numbered questions, each with a recommended answer, never re-asks the recorded decision on transient failures, records the owner's answers, and drafts the brief. The orchestrating agent writes no brief itself: it records the owner decisions the brief relies on in the issue's triage notes, reviews the draft as a reviewer who did not write it, and refuses any brief that leaves a choice to the implementing agent, lists options, or carries a value the owner did not choose, returning that question to the owner instead.\n\nExecute turns 5 and 6: the participant edits the accepted retained brief, readiness is lost, the new notice is withheld, then the changed revision receives its own exact notice and independent review before renewed readiness. Also record the counterfactual handoffs when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness. Never run ready.mjs; all actions are local Markdown simulations. Cite the contribution guide's Triage and Readiness sections, the GitHub rules' Readiness roles section, and the factory rules' Model selection section in the local outcome.\n",
     },
   );
   write(
@@ -500,10 +501,7 @@ export function shouldRetry(failure, minutesSinceFirstFailure) {
     "docs/operations/carrier-incidents.md",
     "# Carrier incidents\n\nLast quarter, 90% of carrier incidents cleared within 20 minutes and the longest lasted three hours. Once dispatch stops retrying, operators replay failed Parcels by hand. Operators have said they would prefer one hour of retries.\n",
   );
-  write(
-    root,
-    ".scratch/routing/issues/01-empty-date-export-fails.md",
-    `# Exporting a date with no deliveries fails
+  const seededIssue = `# Exporting a date with no deliveries fails
 
 Status: needs-triage
 Category: bug
@@ -546,10 +544,29 @@ An empty date returns a CSV holding only the header row. Add a \`skipEmpty\` opt
 - Model: suggest \`model:claude-haiku-4-5-20251001\`, a one-function fix.
 - Dependencies: none.
 
-### Revision notice (controlled input)
-
-The issue-contract workflow published revision r1 as a valid triaged Agent Brief awaiting review.
-`,
+`;
+  const retainedBrief = ".scratch/routing/contracts/01-r1.md";
+  write(
+    root,
+    retainedBrief,
+    seededIssue.slice(seededIssue.indexOf("> *This was generated")).trimEnd() +
+      "\n",
+  );
+  cpSync(
+    join(sourceRoot, "scripts/support/planning-revision-notice.mjs"),
+    join(root, "docs/revision-notice.mjs"),
+  );
+  const notice = execFileSync(
+    process.execPath,
+    ["docs/revision-notice.mjs", retainedBrief, "routing-01", "null"],
+    { cwd: root, encoding: "utf8" },
+  );
+  write(
+    root,
+    ".scratch/routing/issues/01-empty-date-export-fails.md",
+    seededIssue.trimEnd() +
+      "\n\n### Revision notice (controlled input)\n\n" +
+      notice,
   );
   write(
     root,
@@ -588,7 +605,68 @@ Owner decisions:
   write(
     root,
     ".scratch/routing/review-inputs.md",
-    "# Controlled review inputs\n\nThese are simulated participant inputs, not GitHub events or actual authority.\n\n- The orchestrating agent works through a person's account, which the owner delegated to this session and which holds the repository `triage` role. The research run has no credentials of its own.\n- A revision notice exists only once the participant supplies it for that revision. Revision r1 of 01's brief already has one.\n- The owner answers only the questions put to them in this session. Recorded owner decisions on an issue stand.\n- Ticket 05 is open and ready; it is not yet a native blocker of any issue.\n\nRecord every readiness, model label, blocker and owner notification as local Markdown in the issue files. Do not launch a factory.\n",
+    `# Controlled participant turns
+
+Operator-only: release one turn at its checkpoint, never this whole file or the owner answers at startup. These are local Markdown simulations, not GitHub events, actual credentials or authority. Retain delivered turns, relay times, session references, exact contracts and observed outcomes. Do not predeclare an acceptance verdict.
+
+## Turn 1: Sort and challenge
+
+Release at startup. The orchestrating agent uses a simulated person's delegated account holding repository triage authority; the research run has no credentials. Ticket 05 is open and ready, with no blocker relationship recorded yet. Request 01's seeded r1 and its concrete revision notice are already retained. Review r1 independently against the code and intake: a passing structure check never accepts it. Start separate fresh research sessions; return the identified defects to 01's research writer. For 02, gather facts without writing a brief, then start a separate grill. Record 03's classification only.
+
+## Turn 2: Owner answers after questions
+
+Release only after the separate grill asks its numbered questions for 02. Relay the matching numbered answers from .scratch/routing/owner-inputs.md verbatim. The recorded 2026-10-10 transient-failure decision stands and must not be asked again. The grill records the new simulated decisions with their date and source and drafts the settled brief; the orchestrating agent does not write it. An unresolved owner choice returns to the grill, never to an implementing agent.
+
+## Turn 3: Corrected contracts and notices
+
+Release after 01's research correction and 02's grill draft exist. Retain each entire exact comment, including triage notes and whitespace, separately from the issue wrapper, revision notices and outcome ledger. Use contracts/01-r2.md and contracts/02-r1.md under .scratch/routing/. The simulated comment IDs remain routing-01 and routing-02 respectively; the corrected 01 comment has editedAt 2026-10-26T10:01:00Z, and the first 02 comment has editedAt null. These are synthetic source metadata, not relay clock times.
+
+Run these local hash-only commands from the fixture root only after those files exist, and relay their full output as simulated notices:
+
+- node docs/revision-notice.mjs .scratch/routing/contracts/01-r2.md routing-01 2026-10-26T10:01:00Z
+- node docs/revision-notice.mjs .scratch/routing/contracts/02-r1.md routing-02 null
+
+Retain each output beside its contract. Every notice must carry the computed sha256: identifier with 64 hexadecimal digits, never a placeholder or r1/r2 name alone. The command uses the validator's repo-canon/issue-contract-revision/v1 convention: kind triaged Agent Brief, comment source id and editedAt, and full body. If a writer revises again, retain a new file, advance the synthetic edit timestamp and compute a new notice after the exact text exists. Never reuse a notice for changed text. The command checks no structure and grants no readiness.
+
+## Turn 4: Independent acceptance
+
+Release only after turn 3's notices are relayed. A reviewer who did not write either brief checks the exact retained text against code, intake and the owner-decision citations, and records its actual verdict. Return defects to the appropriate writer, then repeat retention, a new notice and independent review. Before reporting acceptance of 01, record the reviewer's chosen single model label (recorded separately from the writer's suggestion), ticket 05 as its blocker, readiness bound to the exact revision and the local owner notification with links. Do the corresponding independent review and model/readiness record for 02 only once all its owner questions are settled. No simulated ticket launches a factory.
+
+## Turn 5: Edit after readiness; withhold the notice
+
+Release only after 01's corrected retained brief has independently passed review and gained simulated readiness in turn 4. The participant now edits that accepted comment: append the exact sentence "Keep the existing CSV header unchanged." to its Summary field. Retain the pre-edit text and the changed entire comment as contracts/01-r3.md under .scratch/routing/; retain routing-01 as source id and set editedAt to 2026-10-26T10:02:00Z. If that sentence is already present, append it once more; this is a deliberate wording edit, not a new requirement.
+
+Observe and record readiness invalidated immediately. Keep the earlier notice as stale evidence; it cannot authorize the changed text. Supply no new notice in this turn. Record no readiness for r3 while its new notice is withheld, even if the text still passes structure. Do not proceed to turn 6 until the missing-notice handoff and lost-readiness outcome have been recorded locally.
+
+## Turn 6: Release the changed revision for renewed review
+
+Release only after turn 5's outcomes exist. Compute and retain the new concrete notice now:
+
+- node docs/revision-notice.mjs .scratch/routing/contracts/01-r3.md routing-01 2026-10-26T10:02:00Z
+
+Relay its full output. Verify its identifier differs from the accepted pre-edit notice and refers to the retained changed body and metadata. The reviewer who did not write the changed comment reviews that exact text again, retaining the chosen model and ticket 05 blocker; only after both the new notice and renewed independent acceptance may simulated readiness be restored. Record the new revision binding and local owner notification. If review fails, return it to its writer and repeat turn 3's revision procedure instead of forcing acceptance.
+
+## Turn 7: Credential handoffs
+
+Release after renewed review. Record independent counterfactuals without applying labels: write-role-only credentials leave readiness to the owner; a triage-authorized GitHub App can have GitHub readiness but cannot start this factory, so tell the owner it awaits a person's readiness. Turn 5 already exercised the missing-notice and post-readiness edit cases. Cite CONTRIBUTING.md Triage and Readiness, GitHub rules Readiness roles, and factory rules Model selection.
+
+Record every action, model, blocker, revision, review verdict and owner notification as local Markdown with links to retained contracts and notices. Never contact GitHub, make remote writes or launch a factory; never run triage's ready.mjs or any live readiness automation. Simulate the readiness decision in Markdown. Fixture construction and regression tests prove setup only; report observed agent behavior separately.
+`,
+  );
+  write(
+    root,
+    ".scratch/routing/owner-inputs.md",
+    `# Controlled owner answers for request 02
+
+Operator-only: release only after the separate grill asks its numbered questions. Relay the matching answers verbatim, with their question numbers; do not supply this file to the orchestrating agent or research run in advance. These synthetic decisions apply only to this disposable simulation and establish no policy for real software.
+
+1. Choose a Retry window of 60 minutes measured from the first transient carrier failure for a Parcel dispatch. Keep that original starting point across subsequent failures; do not reset the window on each retry.
+2. Retry transient carrier failures while elapsed time is strictly less than 60 minutes; stop at or beyond 60 minutes. Thus 59.999 minutes permits a retry and exactly 60 minutes does not. Keep the existing manual replay behavior after the window ends.
+3. Retain the existing decision: only transient carrier failures are retried; validation failures never are. Cite Owner, 2026-10-10, in the earlier owner thread retained in issues/02-dispatch-retry-gives-up.md; do not ask it again.
+4. Change only the window in the existing shouldRetry(failure, minutesSinceFirstFailure) behavior. No new backoff or retry cadence, storage, automatic replay, CLI, HTTP interface or monitoring feature is requested. Keep the existing non-transient behavior and other dispatch behavior.
+
+Record the new simulated decisions as Owner, 2026-10-26, .scratch/routing/owner-inputs.md, answers 1, 2 and 4, with the actual relay time separately. The grill cites that date and source in its draft's triage notes and leaves no policy choice to the implementer. For questions already answered by the intake or recorded decision, cite that source. If a question requires a new policy outside these inputs, record an exercise limit rather than inventing an answer.
+`,
   );
   repositories["triage-routing"] = {
     path: root,
