@@ -67,9 +67,8 @@ requiring a new request under the rules.
 5. Before each merge attempt, verify merge ownership and any required owner
    approval against the current head under the applicable installed rules.
    When required approval is missing, use the contribution guide's
-   owner-question handoff and stop with the PR unmerged. After a head change,
-   return through the applicable approval gate as well as the check and review
-   steps. Once the merge conditions hold on the latest head, run
+   owner-question handoff and stop with the PR unmerged. Once the merge
+   conditions hold on the latest head, run
    `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
    the full SHA that starts the wait's latest line. Exit `0` means merged;
    `2` means the head changed, so return to step 1; `3` means it did not merge

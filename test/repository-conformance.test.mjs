@@ -1497,7 +1497,7 @@ test("the installed delivery route honors prescribed worker handoffs before merg
   const orchestrate = flowedText(".agents/skills/orchestrate/SKILL.md");
   assert.match(
     orchestrate,
-    /When applicable installed rules assign its merge to you, read the PR handoff and resume `babysit`/,
+    /When applicable installed rules assign a worker's merge to you, read its accepted brief and PR handoff, then resume `babysit`/,
   );
   for (const text of [guide, babysit, orchestrate])
     assert.doesNotMatch(text, /factory:skip/);
@@ -1519,7 +1519,7 @@ test("every skipped factory PR has worker completion and an orchestrator-owned m
   );
   assert.match(
     factory,
-    /The handoff records the PR's current head, validation and review outcomes, outstanding findings, and any owner-review requirement with its source/,
+    /The handoff records the PR's current head, validation and internal review outcomes, outstanding findings, and any owner-review requirement with its source/,
   );
 });
 
@@ -1557,15 +1557,16 @@ test("owner-reviewed heads need explicit current-head approval independently of 
     factory,
     /Passing checks, a configured external review, its absence or timeout, and an app-author review-policy skip never substitute for owner approval/,
   );
+  assert.match(
+    factory,
+    /When approval is missing, follow the \[owner handoff\]\(#owner-handoff-and-recovery\) and leave the PR unmerged/,
+  );
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(
     babysit,
     /Before each merge attempt, verify merge ownership and any required owner approval against the current head/,
   );
-  assert.match(
-    babysit,
-    /After a head change, return through the applicable approval gate as well as the check and review steps/,
-  );
+  assert.match(babysit, /`2` means the head changed, so return to step 1/);
   assert.match(
     babysit,
     /When required approval is missing, use the contribution guide's owner-question handoff and stop with the PR unmerged/,

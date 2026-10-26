@@ -121,8 +121,7 @@ and head-change retry behavior against the same Postern transport fixture.
 The delivery conformance cases in `test/repository-conformance.test.mjs`
 cover worker handoffs, orchestrator merge ownership, either source of an
 owner-review designation, renewed approval after a head change, and skipped
-work without an owner-review requirement. The merge script executes a merge
-only after its caller establishes those applicable authorization conditions.
+work without an owner-review requirement.
 The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 

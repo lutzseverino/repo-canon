@@ -7,9 +7,7 @@ review steps establish the merge conditions in
 
 The caller establishes merge ownership and any required owner approval of the
 current head before invoking the script, following the contribution guide and
-applicable installed rules. A worker whose delivery ends in a prescribed
-handoff records it on the open PR and leaves the merge to its designated agent.
-The script's expected-head check preserves that decision against a head change;
+applicable installed rules. The script's expected-head check preserves that decision against a head change;
 it does not establish authorization itself. After a head change, the caller
 re-establishes approval as well as check and review conditions before retrying.
 
