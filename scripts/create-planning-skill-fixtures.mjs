@@ -290,8 +290,40 @@ Operators need to submit up to 100 Parcel declarations as one Intake batch. The 
       "prototype",
     ],
     {
-      exercise:
-        "## Task\n\nTriage .scratch/triage/01-export-receipts.md, then use wayfinder to choose the next eligible child of .scratch/shipping-map/map.md. Use participant answers and local tracker records only.\n\n## Expected outcome\n\nThe CSV request gets an Agent Brief satisfying the discovered GitHub rules, with triage notes after the brief. Simulate an authorized review, then a contract revision: readiness drops until renewed review of that revision. The Wayfinder run selects child 02; child 03 remains blocked. Maps and children carry no readiness or workflow state. Standard-profile triage has no factory model suggestion requirement.\n",
+      exercise: `## Task
+
+Act as the orchestrating agent using triage on .scratch/triage/01-export-receipts.md, then wayfinder on .scratch/shipping-map/map.md. Use participant answers and local tracker records only. The operator holds back owner-inputs.md and review-inputs.md until their checkpoints; do not read ahead. Use separate research and grill sessions; when the harness cannot nest them, the operator starts fresh sessions and relays their results verbatim. Never author a brief you accept. Allow at most 20 minutes; a timeout or unavailable session is an exercise limit, not a pass. Publish nothing and launch no factory.
+
+### 1. Initial handoff
+
+Read only the intake and repository guidance. A separate research session gathers facts without writing a brief. The export is intent-bound: public CSV headers, invocation interface and receipt source are undecided. Record all three questions and recommendations in the local decision inbox, routed through the orchestrating agent. Observe needs-info with no brief or readiness before answers arrive. No public CSV/API/source choice is inferred or disguised as an implementation choice.
+
+### 2. Controlled answers and draft
+
+Only after that handoff does the operator relay .scratch/triage/owner-inputs.md to a separate grill. The grill records the simulated decisions with their date and source and drafts the Agent Brief, filing nothing and applying no readiness. Post the draft and its decision citations locally, with triage notes after the brief. Return needs-info to needs-triage once the questions are settled.
+
+### 3. First notice and independent review
+
+Only after the draft exists, relay step 1 of .scratch/triage/review-inputs.md. Retain r1's exact contract text, supply its simulated revision notice, and independently review the actual draft against the intake, answers and GitHub rules. Record acceptance or rejection; the inputs preapprove nothing. Simulated readiness is allowed only if that exact revision has its notice and is independently accepted. If rejected, return corrections to the writer and repeat this checkpoint for the corrected text before advancing.
+
+### 4. Edit and invalidation
+
+Relay step 2 of review-inputs.md: apply the supplied Summary edit, retain r2's exact text alongside r1, and invalidate r1 readiness immediately. Observe no readiness for r2 while its notice and independent review are withheld.
+
+### 5. Second notice and independent review
+
+Only after observing invalidation, relay step 3 of review-inputs.md. Supply r2's own notice and independently review its retained text again. Renew readiness only if that exact revision is accepted; record the actual verdict and any correction loop.
+
+### 6. Wayfinder
+
+Choose the next eligible child of the shipping map without settling its Retry window. Record child eligibility from open state, assignment and blockers.
+
+## Expected outcome
+
+Standard-profile lookup exposes only the GitHub repository rules, without factory workflow rules; standard-profile triage has no factory model suggestion requirement. The initial handoff, dated controlled answers, independent review results, retained r1/r2 texts, notices and readiness invalidation are observable local simulations, never real hosting-platform authority. The accepted CSV brief preserves the intake's column meanings, ISO 8601 UTC timestamps, Parcel-reference ordering, header-only empty dates and export exclusions. Cite CONTRIBUTING.md's Triage and Readiness and the GitHub rules' Agent Brief, Readiness roles and Wayfinder sections with the outcomes.
+
+The Wayfinder run selects child 02; child 03 remains blocked. Maps and children carry no readiness or workflow state.
+`,
       agents:
         "# Agent guidance\n\nRead the local tracker, triage labels, and domain documentation before tracker work. The latest Agent Brief is the candidate contract. A revision loses readiness until renewed authorized review. Wayfinder eligibility uses open state, assignment, and blockers.\n",
       context:
@@ -313,6 +345,34 @@ Operators need a CSV export of Delivery receipts for a selected UTC date. The ex
 ## Comments
 
 Reporter clarification: timestamps must remain ISO 8601 UTC and rows sort by Parcel reference.
+`,
+  );
+  write(
+    root,
+    ".scratch/triage/owner-inputs.md",
+    `# Controlled owner answers: release only after the questions
+
+These are simulated participant decisions for this disposable exercise, not real product decisions or approval. The operator relays them to the separate grill only after the intent-bound handoff. Cite .scratch/triage/owner-inputs.md and 2026-10-18 in the draft's owner-decision notes.
+
+1. Use the CSV header exactly: parcel_reference,delivered_at,signer_name.
+2. Expose exportReceipts(receipts, date), returning CSV text. There is no CLI or HTTP endpoint in this exercise contract.
+3. The receipt source is a caller-supplied array of objects with reference, deliveredAt and signer string fields. Filter deliveredAt by the selected UTC date. Do not choose a database, file store or remote service.
+
+Keep the intake's column meanings, ISO 8601 UTC timestamps, Parcel-reference ordering and header-only empty-date behavior. PDF export and scheduled delivery remain outside scope. These answers settle only the export request, not the Wayfinder Retry window.
+`,
+  );
+  write(
+    root,
+    ".scratch/triage/review-inputs.md",
+    `# Controlled review inputs: relay one step at a time
+
+These are simulated participant inputs, not GitHub events or actual authority. The operator releases each step only at its docs/exercise.md checkpoint. They supply notices and review conditions, not acceptance decisions. Use a simulated person's account with repository triage authority; no real account or permission is asserted.
+
+1. After the grill draft exists, call it r1 and retain its exact text in .scratch/triage/revisions/r1.md. Supply a local simulated issue-contract revision notice for r1 only after the draft exists, identifying that retained text. The accepting reviewer did not write r1 and independently checks it against the intake, controlled decisions and discovered GitHub rules. Record the actual accept/reject outcome; no preapproved verdict substitutes for this review. If r1 holds, record readiness bound to r1 only after its notice and review. Otherwise return corrections to the grill and retain the corrected text and its own notice/review before proceeding.
+2. Replace only the Summary field's content with: Export Delivery receipts as date-filtered CSV text from caller-supplied receipts. Keep every other field and the decision citations unchanged; retain the edited text in .scratch/triage/revisions/r2.md, preserving both texts. r1 readiness is invalidated immediately by the edit. Observe that r2 has no readiness at this checkpoint. Withhold r2 readiness until the operator supplies r2's revision notice and the independent reviewer reviews that exact text again.
+3. Only after invalidation is recorded, supply a new local simulated revision notice identifying the retained r2 text. The independent reviewer checks r2 and records its actual verdict. Renew readiness bound to r2 only if accepted; rejection returns to the writer for correction, its own notice and renewed independent review. Neither the earlier notice nor the earlier acceptance authorizes r2.
+
+Keep all notices, review outcomes and readiness records local. No model label or factory release ledger is required by this standard-profile exercise. These inputs never approve a Wayfinder map or child.
 `,
   );
   write(

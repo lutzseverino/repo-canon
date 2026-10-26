@@ -147,7 +147,39 @@ upstream workflow skills remain intact.
 
 All scenarios explicitly use `standard`, except `factory-planning` and
 `triage-routing`, which use `factory`. Standard scenarios expose GitHub repository configuration
-rules without factory workflow rules. The factory-planning scenario exposes both and runs in stages. First, invoke
+rules without factory workflow rules.
+
+For `triage-wayfinder`, follow the numbered checkpoints in `docs/exercise.md`
+within 20 minutes. The operator holds back `.scratch/triage/owner-inputs.md`
+and `review-inputs.md`; the agent must not read ahead. Begin with the unresolved
+CSV intake and a separate research session gathering facts without a brief.
+Observe the orchestrating agent's local decision inbox, the three missing
+header/interface/source choices, and `needs-info` with no brief or readiness.
+Only then relay the controlled owner answers to a separate grill. These dated,
+cited answers settle exercise behavior only; the grill records them and drafts
+the brief. The accepting reviewer must be a different session from its writer.
+When the harness cannot nest sessions, start fresh research and grill sessions
+and relay their outputs verbatim to the orchestrating reviewer.
+
+After the actual draft exists, relay review-inputs step 1: retain its exact r1
+text, supply the simulated revision notice identifying it, and record the
+independent review's actual acceptance or rejection. Rejection returns to the
+writer for correction and another notice/review; no input preapproves a draft.
+Only an accepted revision with its notice may receive simulated readiness.
+Then relay step 2's supplied Summary edit, retain r2 alongside r1, and observe
+readiness invalidated while r2 has neither its notice nor renewed review.
+Only then relay step 3's r2 notice and independently review that exact text
+before renewing readiness if accepted. The Wayfinder outcome still selects
+child 02 while child 03 remains blocked; maps and children stay outside
+readiness and workflow state. No factory model suggestion is required.
+
+Report the observed checkpoints, retained text identities, review verdicts and
+rule sections separately from builder/test success. All participant relays,
+notices, reviews and tracker artifacts are local simulations, with no remote
+publication, real authority or factory launch. A timeout or unavailable session
+is an exercise limit, never a pass.
+
+The factory-planning scenario exposes both rule sets and runs in stages. First, invoke
 `triage` as the orchestrating agent on the unresolved export request. Its
 public CSV headers, invocation interface and receipt source are missing:
 research gathers facts, and the questions reach a separate grill through the
