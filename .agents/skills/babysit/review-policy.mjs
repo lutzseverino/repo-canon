@@ -28,7 +28,7 @@ export const readReviewPolicy = (root = process.cwd()) => {
       throw new Error("author must be a nonempty, trimmed login");
     return policy;
   } catch (error) {
-    throw new Error(`${target}: ${error.message}`);
+    throw new Error(`${target}: ${error.message}`, { cause: error });
   }
 };
 
