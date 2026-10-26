@@ -90,6 +90,14 @@ earlier head does not authorize the new one. Passing checks, a configured
 external review, its absence or timeout, and an app-author review-policy skip
 never substitute for owner approval. When approval is missing, follow the
 contribution guide's owner-question handoff and leave the PR unmerged.
+For this approval pause, keep the PR open, retain `factory:needs-input` and
+`factory:skip` on its issue, and preserve the orchestrating agent's merge
+ownership. After verifying and recording current-head approval as above, the
+orchestrating agent removes `factory:needs-input` and resumes `babysit` on the
+same open PR, merging only when all other applicable merge conditions hold.
+Any head change returns to this approval pause until renewed approval is
+verified and recorded. This continuation requires neither owner merge, PR
+closure nor factory pickup.
 
 ## External review of factory pull requests
 
@@ -115,6 +123,9 @@ issue. Work without an issue uses no factory state label. The question reaches
 the orchestrating agent first, as those rules say: it answers on the issue when
 the triage inference test lets it, and otherwise puts the question in its
 decision inbox for the owner.
+
+For the designated skipped-PR approval pause, follow State labels for
+continuation. The recovery below applies to other owner questions.
 
 With no open pull request, whoever answers, the orchestrating agent or the
 owner, removes the label to return the issue to the frontier as a fresh first
