@@ -1614,7 +1614,7 @@ test("ready-for-human needs the owner, and only the factory rules' State labels 
     assert.match(text, narrowed, document);
     assert.doesNotMatch(
       text,
-      /requires human implementation|needs human implementation|judgment calls, external access/i,
+      /requires human implementation|needs human implementation|judgment calls, external access|ready for a human to merge/i,
       document,
     );
   }
@@ -1629,6 +1629,14 @@ test("ready-for-human needs the owner, and only the factory rules' State labels 
     if (!section.startsWith("State labels\n"))
       assert.doesNotMatch(section, /factory:skip/);
   const skill = flowedText(".agents/skills/triage/SKILL.md");
+  const forPr = /For a PR, (.+?) Every triaged issue/.exec(skill)?.[1] ?? "";
+  for (const meaning of [
+    /`ready-for-agent` means a brief is attached and an agent should take the next step on the diff/,
+    /`ready-for-human` keeps the owner-only meaning above/,
+    /Work an agent can perform stays `ready-for-agent`, including work awaiting the owner's review/,
+    /In repositories with installed factory rules, follow those rules for work the factory must not pick up/,
+  ])
+    assert.match(forPr, meaning);
   const accept =
     /### Accept a brief that holds (.+?)## Other outcomes/.exec(skill)?.[1] ??
     "";
