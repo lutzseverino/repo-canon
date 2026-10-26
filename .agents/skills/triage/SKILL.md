@@ -42,7 +42,7 @@ For a PR, the same states read against the attached code: `ready-for-agent` mean
 
 Every triaged issue should carry exactly one category role and one state role. If state roles conflict, flag it and ask the maintainer before doing anything else.
 
-These are canonical role names. The actual label strings are in the triage label configuration, `docs/agents/triage-labels.md`.
+These are canonical role names. The actual label strings are in the triage label configuration, `docs/agents/triage-labels.md`. For role meanings, follow the installed `github-repository-configuration` rules and the contribution guide; they take precedence over the configuration's upstream Meaning column.
 
 State transitions: an unlabeled issue normally goes to `needs-triage` first; from there it moves to `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`. `needs-info` returns to `needs-triage` once the missing information arrives: your own answer, the reporter's reply, or the owner's decision. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
 
