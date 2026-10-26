@@ -12,6 +12,7 @@
 //   3  checks settled and the configured reviewer is unavailable
 //   4  checks settled and the configured reviewer did not review this head
 //   5  still waiting at the invocation limit; run it again
+//   6  checks settled; external review skipped by app-author policy
 //
 // Checks settled means checks passed or no check arrived within 5 minutes
 // of a push GitHub recorded and no workflow run for the head is unfinished
@@ -35,11 +36,12 @@ import {
   checkRollup,
   workflowRuns,
   reviewComments,
-  pushActivity,
+  pushTime,
   conversationComments,
 } from "./platform.mjs";
 
 import { readReviewer } from "./pull-request-reviewer.mjs";
+import { readReviewPolicy } from "./review-policy.mjs";
 import {
   reviewRequestedAt,
   reviewerState,
@@ -49,6 +51,7 @@ export { reviewRequestedAt } from "./reviewer.mjs";
 
 const checksBoundMs = 5 * 60_000;
 const settledCodes = {
+  skipped: 6,
   reviewed: 0,
   unavailable: 3,
   "not requested": 4,
@@ -82,6 +85,8 @@ const workflowRunLink = (link) =>
 // is not reached.
 export const decide = ({
   reviewer,
+  policy,
+  author,
   head,
   checks,
   runs = [],
@@ -94,17 +99,17 @@ export const decide = ({
   startedAt,
   limitMs,
 }) => {
-  const state = reviewer
-    ? reviewerState(reviewer, {
-        head,
-        requestedAt,
-        pushedAt,
-        comments,
-        reviews,
-        now,
-      })
-    : undefined;
-  const review = reviewer
+  const state = reviewerState(reviewer, {
+    policy,
+    author,
+    head,
+    requestedAt,
+    pushedAt,
+    comments,
+    reviews,
+    now,
+  });
+  const review = state
     ? { reviewer: state, reviewerPhrase: reviewerPhrase(reviewer, state) }
     : {};
   const latestRuns = new Map();
@@ -158,7 +163,7 @@ export const decide = ({
     return { code: 2, ...review, failing };
   }
   const noChecks = checks.length === 0 && { noChecks: true };
-  if (!checksPending && !reviewer) {
+  if (!checksPending && !state) {
     return { code: 0, failing, ...noChecks };
   }
   if (!checksPending && state in settledCodes) {
@@ -278,32 +283,7 @@ const parseArguments = (argv) => {
   return { number: positional[0], ...options };
 };
 
-// Whether GitHub recorded the push of the pull request's head, with its time
-// for the reviewer: the recorded time, else the committer date, never before
-// opening.
-const pushTime = async (pull, connection) => {
-  const head = pull.headCommit;
-  const path = `/repos/${connection.repository.path}`;
-  const activity = pushActivity(
-    await pages(
-      connection,
-      `${path}/activity?ref=${encodeURIComponent(`refs/heads/${pull.headBranch}`)}&per_page=100`,
-    ).catch(() => []),
-  );
-  const recorded = activity.find((entry) => entry.after === head);
-  const pushedAt =
-    recorded?.timestamp ??
-    (await requestData(connection, { path: `${path}/commits/${head}` })).commit
-      .committer.date;
-  if (!Number.isFinite(Date.parse(pushedAt)))
-    throw new Error("The head push time is unavailable.");
-  return {
-    pushedAt: Math.max(Date.parse(pushedAt), Date.parse(pull.createdAt)),
-    pushRecorded: Boolean(recorded),
-  };
-};
-
-const look = async (number, pushTimes, reviewer, connection) => {
+const look = async (number, pushTimes, reviewer, policy, connection) => {
   const path = `/repos/${connection.repository.path}`;
   if (reviewer && !connection.pullRequests.capabilities.reviewCommits)
     throw new Error(
@@ -339,6 +319,8 @@ const look = async (number, pushTimes, reviewer, connection) => {
     checks: checkStates(rollup),
     runs: workflowRuns(runs),
     reviewer,
+    policy,
+    author: pull.author?.login,
     reviews: reviews.map((review) => ({
       user: review.author,
       commit_id: review.commit,
@@ -350,6 +332,7 @@ const look = async (number, pushTimes, reviewer, connection) => {
       Date.parse(pull.createdAt),
       neutralComments,
       reviewer,
+      { policy, author: pull.author?.login },
     ),
     ...push,
     comments: neutralComments,
@@ -360,9 +343,11 @@ export const main = async (argv = process.argv.slice(2), connection) => {
   const startedAt = Date.now();
   let options;
   let reviewer;
+  let policy;
   try {
     options = parseArguments(argv);
     reviewer = readReviewer();
+    policy = readReviewPolicy();
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
     return 1;
@@ -378,7 +363,13 @@ export const main = async (argv = process.argv.slice(2), connection) => {
   for (;;) {
     let state;
     try {
-      state = await look(options.number, pushTimes, reviewer, connection);
+      state = await look(
+        options.number,
+        pushTimes,
+        reviewer,
+        policy,
+        connection,
+      );
     } catch (error) {
       process.stderr.write(`wait.mjs: ${error.message}\n`);
       return 1;

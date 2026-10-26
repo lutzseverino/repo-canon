@@ -978,6 +978,8 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
       "merge.mjs",
       "platform.mjs",
       "pull-request-reviewer.mjs",
+      "request.mjs",
+      "review-policy.mjs",
       "reviewer.mjs",
       "wait.mjs",
     ],
@@ -1240,7 +1242,7 @@ test("babysit waits only through its script, and the GitHub rules own the no-che
   );
   assert.match(
     babysit,
-    /Before the first wait, apply the `github-repository-configuration` rules' review request rule to the pull request's head, using step 4 to post any required request\. 1\. Wait with/,
+    /Before the first wait, apply the `github-repository-configuration` rules' review request rule to the pull request's head, using step 4 to post any required request\./,
   );
   assert.match(
     babysit,
@@ -1290,6 +1292,27 @@ test("babysit waits only through its script, and the GitHub rules own the no-che
   assert.doesNotMatch(
     guide,
     /merging agent comments|bounds\.responseMinutes|bounds\.reviewMinutes|5 minutes/,
+  );
+});
+
+test("app-author review guidance keeps policy skips distinct and preserves merge obligations", () => {
+  const rules = flowedText("rules/github-repository-configuration.md");
+  const factory = flowedText("rules/factory-workflow.md");
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  for (const text of [rules, factory, babysit]) {
+    assert.match(text, /\.github\/factory-review-policy\.json/);
+    assert.match(text, /Standards and Spec reviews/);
+    assert.match(text, /findings that (?:actually )?arrive/);
+  }
+  assert.match(rules, /No external reviewer runs on app-authored PRs\./);
+  assert.match(rules, /actual internal Standards and Spec review outcomes/);
+  assert.match(rules, /Absent policy is supported/);
+  assert.match(rules, /merge authorization/);
+  assert.match(rules, /Use only supplied credentials/);
+  assert.match(babysit, /request\.mjs <number>/);
+  assert.match(
+    babysit,
+    /`6`: checks passed and external review was skipped by app-author policy/,
   );
 });
 

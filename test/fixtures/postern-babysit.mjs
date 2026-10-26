@@ -49,7 +49,10 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         state: state.pullRequestState ?? "OPEN",
         title: state.title ?? "fix: fixture title",
         body: state.body ?? "",
-        author: { __typename: "User", login: "owner" },
+        author:
+          state.author === null
+            ? null
+            : { __typename: "User", login: state.author ?? "owner" },
         createdAt: state.createdAt ?? "2026-10-11T05:00:00Z",
         headRefName: state.branch ?? "fixture",
         headRefOid: state.head,
@@ -119,6 +122,17 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         return json({ message: "unexpected review comment read" }, 500);
       values = state.reviewCommentPages ?? [state.reviewComments ?? []];
     } else if (/\/issues\/\d+\/comments$/.test(path)) {
+      if (options.method === "POST") {
+        const comment = {
+          login: "agent",
+          createdAt: new Date().toISOString(),
+          body: body.body,
+        };
+        state.comments = [...(state.comments ?? []), comment];
+        state.emitted = [...(state.emitted ?? []), body.body];
+        save();
+        return json({ id: state.comments.length, body: body.body }, 201);
+      }
       values = [
         (state.comments ?? []).map(({ login, createdAt, body }, index) => ({
           id: index + 1,

@@ -69,6 +69,21 @@ removes it. An agent working on the owner's account implements skip-labelled
 work, and the orchestrating agent merges it; when the owner reviews the work
 before merge, the orchestrating agent merges it after the owner's review.
 
+## External review of factory pull requests
+
+Before requesting or waiting for external review, apply the optional
+repository-owned `.github/factory-review-policy.json` under the
+`github-repository-configuration` rules, including after fixes, rebases,
+retries and resumed runs. The installed `babysit` request and wait commands
+implement that policy. Without a declaration, keep configured reviewer
+behavior; absence needs no owner question. The host does not choose a
+repository's reviewer policy.
+
+A policy skip preserves required checks and their waits, internal Standards
+and Spec reviews, merge authorization, and handling of findings that arrive.
+The GitHub rules hold the skip outcome wording and internal review record;
+the contribution guide's supplied-credential restrictions still apply.
+
 ## Owner handoff and recovery
 
 When an agent needs an answer only the owner can give, follow the contribution
