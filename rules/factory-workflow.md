@@ -125,8 +125,35 @@ the orchestrating agent first, as those rules say: it answers on the issue when
 the triage inference test lets it, and otherwise puts the question in its
 decision inbox for the owner.
 
+An agent that stops without a pull request and without a question under
+`factory:needs-input` comments one short paragraph on the issue explaining why
+it stopped, in its own words. Never paste log output, environment values or
+tokens into that note: this repository and repositories that adopt these rules
+may be public.
+
+### Skipped work
+
+For every owner question on skipped work, retain the skip marker and
+`factory:needs-input` while unanswered. The current worker or merging-agent
+run stops under the contribution guide's owner-question handoff.
+
 For the designated skipped-PR approval pause, follow State labels for
-continuation. The recovery below applies to other owner questions.
+continuation. Answering another question does not satisfy that approval
+requirement: keep both markers until explicit current-head approval is verified
+and recorded with its source and SHA, as State labels requires.
+
+Once the question is resolved, the orchestrating agent removes
+`factory:needs-input` and continues the skipped work. With no open PR, it resumes
+or relaunches the implementing worker. With an open PR, it resumes that same PR,
+arranging any remaining worker work and continuing delivery from the prescribed
+handoff. The worker still hands off without merging; the orchestrating agent
+owns `babysit` and the merge as State labels prescribes. Removing the waiting
+marker alone is not a factory retry for skipped work. This recovery requires
+neither factory pickup, owner merge nor closing an open PR for hand-back.
+
+### Ordinary factory runs
+
+This recovery applies only to non-skipped factory runs.
 
 With no open pull request, whoever answers, the orchestrating agent or the
 owner, removes the label to return the issue to the frontier as a fresh first
@@ -137,12 +164,6 @@ pushing the refused change, and ensuring the issue is closed under the
 contribution guide's pull request rules, or hands it back: close it before
 removing the label, wait for `factory:running` to disappear, then remove the label so a
 fresh first attempt continues its branch.
-
-An agent that stops without a pull request and without a question under
-`factory:needs-input` comments one short paragraph on the issue explaining why
-it stopped, in its own words. Never paste log output, environment values or
-tokens into that note: this repository and repositories that adopt these rules
-may be public.
 
 ## Issue closure
 
