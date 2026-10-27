@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync } from "node:fs";
 import { interpretMarkdown } from "../../operations/lib/rendered-markdown.mjs";
 import { marked } from "../../vendor/marked/marked.esm.js";
 
@@ -384,22 +384,10 @@ function writeSummary(errors, adoptionRecord) {
   appendFileSync(summaryPath, `${lines.join("\n")}\n`, "utf8");
 }
 
-function main() {
-  const eventPath = process.argv[2] ?? process.env.GITHUB_EVENT_PATH;
-  if (!eventPath) {
-    throw new Error(
-      "Provide a GitHub pull request event through GITHUB_EVENT_PATH or the first argument.",
-    );
-  }
-
-  const event = JSON.parse(readFileSync(eventPath, "utf8"));
-  const pullRequest = event.pull_request;
+export function validatePullRequestMetadata(pullRequest) {
   if (!pullRequest || typeof pullRequest.title !== "string") {
-    throw new Error(
-      "The event does not contain pull_request title and body metadata.",
-    );
+    throw new Error("Provide neutral pull request title and body metadata.");
   }
-
   const body = typeof pullRequest.body === "string" ? pullRequest.body : "";
   const errors = [];
   validateAttribution(pullRequest.title, "title", errors);
@@ -423,10 +411,8 @@ function main() {
     console.error(
       `PR metadata validation found ${errors.length} problem${errors.length === 1 ? "" : "s"}.`,
     );
-    process.exitCode = 1;
-    return;
+    return 1;
   }
   console.log("PR metadata validation passed.");
+  return 0;
 }
-
-main();

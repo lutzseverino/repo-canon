@@ -2,9 +2,10 @@
 
 The root `.gitattributes` marks every file Repo Canon installs that GitHub
 Linguist would count toward language statistics as `linguist-vendored`. This
-covers exact file declarations and files inside installed skill directories.
-Paths Linguist's default vendor list already excludes, including `vendor/`
-and `.github/`, need no entry.
+covers exact file declarations and files inside installed skill directories,
+including the triage skill's installed `.agents/skills/triage/ready.mjs`
+readiness helper. Paths Linguist's default vendor list already excludes,
+including `vendor/` and `.github/`, need no entry.
 
 Each Repo Canon entry matches only an installed exact file path or an installed
 skill's own directory, such as `.agents/skills/babysit/**`. It never matches
