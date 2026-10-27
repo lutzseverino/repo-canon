@@ -162,11 +162,14 @@ repeated.
   link reported findings for future planning. The guide's Findings rule still
   governs every finding, including those outside the goal: a workbench wish
   never replaces filing or linking it and reporting it where the guide requires.
-  The skill and its workbench layout name no harness, apart from
-  one closing section mapping the steps to one harness's tools, which a test
-  confines. Its `CREDITS.md` credits Matt Pocock's in-progress
-  `chief-of-staff` at the commit it was compared at, whose wiki rules the
-  workbench borrows. Linking the skill into a user's own skills, for sessions
+  Shared workflow methods stay application-independent: applications may
+  enhance them, but are never dependencies. Application-specific tool mappings
+  belong in the owner's own setup outside Repo Canon. The skill and its
+  workbench layout use opaque session references and name no private
+  application, tool mapping or host details; conformance coverage enforces
+  that boundary throughout the installed skill. Its `CREDITS.md` credits Matt
+  Pocock's in-progress `chief-of-staff` at the commit it was compared at, whose
+  wiki rules the workbench borrows. Linking the skill into a user's own skills, for sessions
   outside a checkout, is host setup that the
   [adoption guide](docs/usage/adopt-repo-canon.md#orchestrate-plans)
   describes.
