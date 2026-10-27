@@ -1677,7 +1677,7 @@ test("skipped owner questions resume workers or the same PR through the orchestr
   );
   assert.match(
     skipped,
-    /Once the question is resolved, the orchestrating agent removes `factory:needs-input` and continues the skipped work/,
+    /Once the question is resolved and any required renewed readiness is recorded, the orchestrating agent removes `factory:needs-input` and continues the skipped work/,
   );
   assert.match(
     skipped,
@@ -1716,6 +1716,66 @@ test("skipped owner questions resume workers or the same PR through the orchestr
     /For every skip-labelled PR, the implementing worker delivers an open PR and hands it to the orchestrating agent without merging/,
   );
 });
+
+for (const { prState, continuation } of [
+  {
+    prState: "no open PR",
+    continuation:
+      /With no open PR, it resumes or relaunches the implementing worker/,
+  },
+  {
+    prState: "an open PR",
+    continuation:
+      /With an open PR, it resumes that same PR, arranging any remaining worker work and continuing delivery from the prescribed handoff/,
+  },
+]) {
+  test(`skipped recovery with ${prState} gates a changed contract on renewed readiness`, () => {
+    const factory = flowedText("rules/factory-workflow.md");
+    const skipped =
+      /### Skipped work (.*?)(?= ### | ## |$)/.exec(factory)?.[1] ?? "";
+
+    assert.match(
+      skipped,
+      /If the answer changes the implementation contract, edit the contract and have that exact revision independently reviewed and granted renewed readiness under the contribution guide and the `github-repository-configuration` rules, including the validator revision notice before readiness is applied/,
+    );
+    assert.match(
+      skipped,
+      /With or without an open PR, implementation and delivery wait for that renewed readiness/,
+    );
+    assert.match(
+      skipped,
+      /Resolving the question or removing `factory:needs-input` does not authorize continuation on an unreviewed revision/,
+    );
+    assert.match(
+      skipped,
+      /Renewed readiness does not substitute for designated current-head owner approval under State labels/,
+    );
+    const gate = skipped.indexOf(
+      "Once the question is resolved and any required renewed readiness is recorded",
+    );
+    assert.ok(
+      gate >= 0,
+      "continuation requires question resolution and renewed readiness",
+    );
+    assert.match(skipped.slice(gate), continuation);
+  });
+
+  test(`skipped recovery with ${prState} continues an unchanged contract without renewed readiness`, () => {
+    const factory = flowedText("rules/factory-workflow.md");
+    const skipped =
+      /### Skipped work (.*?)(?= ### | ## |$)/.exec(factory)?.[1] ?? "";
+
+    assert.match(
+      skipped,
+      /If the answer leaves the contract unchanged, no new readiness cycle is required/,
+    );
+    assert.match(
+      skipped,
+      /Once the question is resolved and any required renewed readiness is recorded, the orchestrating agent removes `factory:needs-input` and continues the skipped work/,
+    );
+    assert.match(skipped, continuation);
+  });
+}
 
 test("designated skipped PR approval pauses resume the same PR without ordinary factory recovery", () => {
   const factory = flowedText("rules/factory-workflow.md");
