@@ -1,6 +1,6 @@
 # Installed rules
 
-These rules come from https://github.com/lutzseverino/repo-canon v0.17.0, profile factory.
+These rules come from https://github.com/lutzseverino/repo-canon v0.19.0, profile factory.
 Repository Standards installs and verifies them; adopt again to change them.
 Run `repo-standards rules <path>` to print the rules that cover a path.
 
@@ -32,6 +32,7 @@ Run `repo-standards rules <path>` to print the rules that cover a path.
   - `docs/adr/0022-prove-documentation-scope-coverage-only-in-runs.md`
   - `docs/adr/0023-reach-the-hosting-platform-through-postern.md`
   - `docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md`
+  - `docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md`
   - `docs/adr/README.md`
   - `docs/development/README.md`
   - `docs/development/adoption-compatibility.md`
@@ -48,6 +49,9 @@ Run `repo-standards rules <path>` to print the rules that cover a path.
   - `docs/development/sandbox-image-workflow.md`
   - `docs/development/skill-exercises.md`
   - `docs/development/source-profile.md`
+  - `docs/development/standards-update-workflow.md`
+  - `docs/development/typescript-node-stack-check.md`
+  - `docs/development/typescript-node-stack-scope-drafter.md`
   - `docs/development/upstream-compatibility.md`
   - `docs/usage/README.md`
   - `docs/usage/adopt-repo-canon.md`
@@ -66,3 +70,5 @@ Run `repo-standards rules <path>` to print the rules that cover a path.
   - `LICENSE`
 - [`repository-readme`](repository-readme.md) covers:
   - `README.md`
+- [`typescript-node-stack`](typescript-node-stack.md) covers:
+  - `package.json`

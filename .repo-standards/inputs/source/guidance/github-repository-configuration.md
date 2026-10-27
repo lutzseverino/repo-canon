@@ -54,6 +54,24 @@ the file in a separate commit after the run completes, following the schema in
 the rules, never in the adoption commit or pull request. The check validates it
 on the next `check` or update.
 
+## Factory app-author review policy
+
+The optional `.github/factory-review-policy.json` is the repository's own
+configuration, not adoption output. Adoption and update leave it untouched:
+they neither create nor edit it, supply a preset, select an app author nor
+enable a review exemption. Deliberate configuration belongs in a separate
+commit after the run completes, following the schema in the rules, never in
+the adoption commit or pull request.
+
+The read-only `factory-review-policy` check passes without the file; absence
+is supported and requires no policy or owner question. When present, it
+validates the version-1 schema with the same reader as the installed request
+and wait commands, without account lookup or GitHub access. Valid declarations
+using REST `<slug>[bot]` or CLI `app/<slug>` identities pass unchanged. Invalid
+declarations, including plain human logins, and file-read failures fail with
+a correction identifying the policy and the requirement from the rules. The
+check never rewrites the file or treats invalid content as absence.
+
 ## Installed workflow runners
 
 Assess the repository's visibility and the repository-level

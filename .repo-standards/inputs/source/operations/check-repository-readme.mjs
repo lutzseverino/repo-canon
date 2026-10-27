@@ -167,10 +167,63 @@ function headerBadges(document, description) {
   return badges;
 }
 
+function headerPrefixElements(elements, seen = new Set()) {
+  const grouped = [];
+  for (let index = 0; index < elements.length; index += 1) {
+    const element = elements[index];
+    if (element.wrapsHeading || seen.has(element)) continue;
+    seen.add(element);
+    if (element.type === "link") {
+      grouped.push(...headerPrefixElements(element.elements, seen));
+    } else if (
+      element.tag === "picture" &&
+      element.elements.length === 1 &&
+      element.elements[0].type === "image" &&
+      element.elements[0].target.trim()
+    ) {
+      const image = element.elements[0];
+      seen.add(image);
+      grouped.push({ ...image, centered: image.centered || element.centered });
+      index += element.elements.length;
+    } else {
+      grouped.push(element);
+    }
+  }
+  return grouped;
+}
+
+function checkHeaderPrefix(document, corrections) {
+  const elements = document.content.elements;
+  const titleIndex = elements.findIndex(
+    (element) => element.type === "heading" && element.level === 1,
+  );
+  if (titleIndex < 0) return;
+  const prefix = headerPrefixElements(elements.slice(0, titleIndex));
+  const images = prefix.filter((element) => element.type === "image");
+  if (images.length > 1) {
+    corrections.push(
+      `Keep at most one project image before the Repository README title; found ${images.map((image) => `"${image.target}"`).join(", ")}.`,
+    );
+  }
+  for (const element of prefix) {
+    if (element.type === "image" && !element.centered) {
+      corrections.push(
+        `Center the Repository README project image "${element.target}" before its title.`,
+      );
+    } else if (element.type !== "image") {
+      const detail = element.text?.trim() || element.tag || element.type;
+      corrections.push(
+        `Remove rendered content "${detail}" before the Repository README title; only one optional centered project image may precede it.`,
+      );
+    }
+  }
+}
+
 function checkStructure(projectRoot, markdown, license) {
   if (markdown === null) return ["Create the root README.md."];
   const corrections = [];
   const document = interpretMarkdown(markdown);
+  checkHeaderPrefix(document, corrections);
   const parsedHeadings = document.headings;
   const title = parsedHeadings.find((heading) => heading.level === 1) ?? null;
   const descriptionBlock = readmeDescriptionBlock(document);
