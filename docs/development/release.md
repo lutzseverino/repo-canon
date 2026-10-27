@@ -133,6 +133,38 @@ explain its migration in two parts, each starting with its `Impact:` or
   CLI selects the new standards version that requires it. Say which release an
   adopter that cannot migrate stays on.
 
+For each replaced installed runtime, assess the effects on repository-owned
+tests and scripts that execute it, import it, or fake its dependencies. Explain
+the relevant caller-visible changes in the notes, including in Impact and
+Migration when breaking: executable versus module invocation, exported entry
+points, arguments and exit codes, platform transport and fakes, Git repository
+context, and trusted configuration reads. Identify the compatibility work and
+how an adopter confirms it against the newly installed files. Describe the
+changed contract without claiming to know every adopter's private suite.
+
+For example, when a validator becomes import-only, warn that directly executing
+the module can exit successfully without validating anything. Explain which
+export the caller invokes and how a caller checks that invalid input still
+fails. When babysit's contracts change, explain the affected platform transport
+or fakes, required Git remote and repository context, trusted default-branch
+configuration reads, and policy-skip exit codes. Callers and fixtures need to
+exercise the intended outcome, including a changed skip exit, rather than
+treating every nonzero exit as a failure. Report only the contracts that change
+in that release.
+
+Point adopters with repository-owned callers to the adoption guide's
+[compatibility preparation](../usage/adopt-repo-canon.md#prepare-caller-compatibility)
+for checking them before committing and separating prerequisite fixes from the
+completed adoption run.
+
+State each migration step's applicability. Mark a downstream-only step
+explicitly and give the self-adoption result when relevant. For example, a step
+to mark installed code vendored applies only to downstream adopters:
+`git check-attr linguist-vendored -- .agents/skills/triage/ready.mjs` should
+report `set` there. Repo Canon's self-adoption leaves its own code unvendored,
+so the same check should report `unspecified`; it must not add a vendoring
+entry for that code.
+
 ## Publish and verify
 
 After the pull request merges, publish from its merge commit on `main`. In an
