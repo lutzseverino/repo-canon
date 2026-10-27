@@ -1654,6 +1654,69 @@ test("owner-reviewed heads need explicit current-head approval independently of 
   );
 });
 
+test("skipped owner questions resume workers or the same PR through the orchestrating agent", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  const recovery =
+    /## Owner handoff and recovery (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  const skipped = /### Skipped work (.*?)(?= ### |$)/.exec(recovery)?.[1] ?? "";
+
+  assert.match(recovery, /add `factory:needs-input` to the issue/);
+  assert.match(recovery, /The question reaches the orchestrating agent first/);
+  assert.match(
+    recovery,
+    /otherwise puts the question in its decision inbox for the owner/,
+  );
+  assert.match(
+    skipped,
+    /For every owner question on skipped work, retain the skip marker and `factory:needs-input` while unanswered/,
+  );
+  assert.match(
+    skipped,
+    /The current worker or merging-agent run stops under the contribution guide's owner-question handoff/,
+  );
+  assert.match(
+    skipped,
+    /Once the question is resolved, the orchestrating agent removes `factory:needs-input` and continues the skipped work/,
+  );
+  assert.match(
+    skipped,
+    /With no open PR, it resumes or relaunches the implementing worker/,
+  );
+  assert.match(
+    skipped,
+    /With an open PR, it resumes that same PR, arranging any remaining worker work and continuing delivery from the prescribed handoff/,
+  );
+  assert.match(
+    skipped,
+    /The worker still hands off without merging; the orchestrating agent owns `babysit` and the merge as State labels prescribes/,
+  );
+  assert.match(
+    skipped,
+    /Removing the waiting marker alone is not a factory retry for skipped work/,
+  );
+  assert.match(
+    skipped,
+    /This recovery requires neither factory pickup, owner merge nor closing an open PR for hand-back/,
+  );
+  assert.doesNotMatch(
+    skipped,
+    /return the issue to the frontier|fresh first attempt|the owner.*(?:finishes|merging it)|close it before/,
+  );
+  assert.doesNotMatch(
+    recovery,
+    /The recovery below applies to other owner questions/,
+  );
+  assert.match(
+    state,
+    /`factory:skip` marks ready agent work the factory must not pick up/,
+  );
+  assert.match(
+    state,
+    /For every skip-labelled PR, the implementing worker delivers an open PR and hands it to the orchestrating agent without merging/,
+  );
+});
+
 test("designated skipped PR approval pauses resume the same PR without ordinary factory recovery", () => {
   const factory = flowedText("rules/factory-workflow.md");
   const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
@@ -1681,20 +1744,43 @@ test("designated skipped PR approval pauses resume the same PR without ordinary 
   );
   assert.match(
     recovery,
-    /For the designated skipped-PR approval pause, follow State labels for continuation\. The recovery below applies to other owner questions/,
-  );
-  assert.match(recovery, /With no open pull request, whoever answers/);
-  assert.match(
-    recovery,
-    /the owner, even after the orchestrating agent answers, either finishes the pull request by merging it/,
+    /For the designated skipped-PR approval pause, follow State labels for continuation/,
   );
   assert.match(
     recovery,
+    /Answering another question does not satisfy that approval requirement: keep both markers until explicit current-head approval is verified and recorded with its source and SHA, as State labels requires/,
+  );
+});
+
+test("ordinary non-skipped recovery retains frontier re-entry and owner merge or hand-back", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  const recovery =
+    /## Owner handoff and recovery (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  const ordinary =
+    /### Ordinary factory runs (.*?)(?= ### |$)/.exec(recovery)?.[1] ?? "";
+  assert.match(
+    ordinary,
+    /This recovery applies only to non-skipped factory runs/,
+  );
+  assert.match(
+    ordinary,
+    /With no open pull request, whoever answers, the orchestrating agent or the owner, removes the label to return the issue to the frontier as a fresh first attempt/,
+  );
+  assert.match(
+    ordinary,
+    /While the run's pull request is open, removing the label starts no run in a repository a factory serves/,
+  );
+  assert.match(
+    ordinary,
+    /the owner, even after the orchestrating agent answers, either finishes the pull request by merging it, for example after pushing the refused change, and ensuring the issue is closed under the contribution guide's pull request rules/,
+  );
+  assert.match(
+    ordinary,
     /close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
   );
 });
 
-test("shared delivery guidance delegates approval-pause continuation to installed rules", () => {
+test("shared delivery guidance delegates owner-question continuation to installed rules", () => {
   const guide = flowedText("CONTRIBUTING.md");
   assert.match(
     guide,
@@ -1707,12 +1793,12 @@ test("shared delivery guidance delegates approval-pause continuation to installe
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(
     babysit,
-    /On resuming an approval-paused PR, follow the installed continuation rules before returning to the request and wait steps/,
+    /On resuming a PR paused for an owner question, follow the installed continuation rules before returning to the request and wait steps/,
   );
   const orchestrate = flowedText(".agents/skills/orchestrate/SKILL.md");
   assert.match(
     orchestrate,
-    /For an approval-paused PR, follow the applicable installed continuation rules to resume that same open PR/,
+    /After an owner question is resolved, follow the applicable installed continuation rules to resume the worker or that same open PR/,
   );
   for (const text of [guide, babysit, orchestrate])
     assert.doesNotMatch(text, /factory:needs-input|factory:skip/);

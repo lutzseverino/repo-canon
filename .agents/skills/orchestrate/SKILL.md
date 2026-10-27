@@ -176,8 +176,8 @@ with their citations, and shows the decision inbox. Log the items it showed.
 - Workers deliver as the contribution guide's Pull requests section says.
   When applicable installed rules assign a worker's merge to you, read its
   accepted brief and PR handoff, then resume `babysit`, including when resuming
-  a plan. For an approval-paused PR, follow the applicable installed
-  continuation rules to resume that same open PR.
+  a plan. After an owner question is resolved, follow the applicable installed
+  continuation rules to resume the worker or that same open PR.
 
 ## Report-back
 
