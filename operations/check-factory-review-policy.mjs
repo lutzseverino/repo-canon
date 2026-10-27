@@ -21,7 +21,11 @@ try {
     if (readReviewPolicy(request.projectRoot)) message = `${target} is valid.`;
   } catch (error) {
     status = "failed";
-    message = `Correct ${target} to match the github-repository-configuration rules: ${error.message}`;
+    const prefix = `${target}: `;
+    const reason = error.message.startsWith(prefix)
+      ? error.message.slice(prefix.length)
+      : error.message;
+    message = `Correct ${target} to match the github-repository-configuration rules: ${reason}`;
   }
   process.stdout.write(
     `${JSON.stringify({ format: "repo-standards/result/v2", status, message })}\n`,
