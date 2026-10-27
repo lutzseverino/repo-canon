@@ -2021,6 +2021,25 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
 });
 
+test("GitHub label guidance defers factory-label ownership to the factory workflow rules", () => {
+  const github = flowedText("rules/github-repository-configuration.md");
+  const factory = flowedText("rules/factory-workflow.md");
+  const notes = flowedText("authoring-notes.md");
+  assert.match(
+    github,
+    /These rules name no `factory:` label: the factory workflow rules govern who creates and manages the labels named by the repository's factory configuration/,
+  );
+  for (const text of [github, notes])
+    assert.doesNotMatch(
+      text,
+      /(?:a|the) factory creates its own state labels/i,
+    );
+  assert.match(
+    factory,
+    /Whoever applies `factory:skip` creates it if the repository lacks it, as for `model:` labels; the factory never creates or removes it/,
+  );
+});
+
 test("factory workflow rules preserve readiness, models, state recovery and safe stop notes", () => {
   const rules = flowedText("rules/factory-workflow.md");
   for (const requirement of [

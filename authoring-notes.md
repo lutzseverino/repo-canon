@@ -220,9 +220,9 @@ repeated.
   file. The profile also installs the contextual `.factory/Dockerfile`,
   toolchain only and Debian-based, as the
   [toolchain image rules](rules/factory-sandbox-image.md) state, and the
-  pull request workflow that builds it. The factory creates its own state
-  labels from the configuration, so the canonical labels carry no `factory:`
-  label and no `model:` label. The
+  pull request workflow that builds it. The factory workflow rules govern
+  ownership of the labels named by the configuration; the canonical labels
+  carry no `factory:` label and no `model:` label. The
   [factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/main/docs/usage/README.md) describes its
   behavior.
 - Omit contributor-facing instructions for updating the managed skill
