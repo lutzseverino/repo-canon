@@ -92,9 +92,6 @@ requiring a new request under the rules.
    run it again.
 6. Stop.
 
-For exit `7` from either command, the correction must land on the destination
-default branch through the applicable owner-handoff and merge procedure; it
-grants no merge exception. A correcting PR's proposed configuration does not
-govern that PR before it lands, and local files provide no fallback. After the
-correction lands and continuation is authorized, a fresh invocation selects
-the current default-branch revision and applies the corrected configuration.
+For exit `7` from either command, follow correction and authorized continuation
+under the `github-repository-configuration` rules' Trusted review configuration
+section.
