@@ -210,6 +210,7 @@ for (const entry of ["request", "wait"]) {
     const failures = [
       { failReviewRevision: 404 },
       { failReviewRevision: 403 },
+      { failReviewRevision: 502 },
       {
         reviewRevisionResponse: {
           errors: [{ message: "ref read failed" }],
@@ -242,6 +243,7 @@ for (const entry of ["request", "wait"]) {
       },
       { failReviewFiles: 404 },
       { failReviewFiles: 403 },
+      { failReviewFiles: 502 },
       {
         reviewFilesResponse: {
           errors: [{ message: "file read failed" }],
@@ -275,20 +277,100 @@ for (const entry of ["request", "wait"]) {
       assert.match(result.stderr, /review configuration|default-branch commit/);
       assert.deepEqual(result.state.emitted ?? [], []);
     }
-    for (const trusted of [
-      { policy: "{", reviewer },
-      { policy: { ...policy, version: 2 }, reviewer },
-      { policy, reviewer: "{" },
-      { policy, reviewer: { ...reviewer, version: 2 } },
-    ]) {
-      const result = command(t, entry, { trusted, local: {} }).invoke();
-      assert.equal(result.status, 1, result.stderr);
-      assert.match(
-        result.stderr,
-        /example\/repository default branch main@b{40}/,
-      );
-      assert.deepEqual(result.state.emitted ?? [], []);
+  });
+
+  test(`${entry}: invalid trusted declarations require owner correction without a local fallback`, (t) => {
+    /** @type {Array<[string, string, unknown, RegExp]>} */
+    const invalidDeclarations = [
+      ["policy", "factory-review-policy", "{", /JSON/],
+      [
+        "policy",
+        "factory-review-policy",
+        { ...policy, version: 2 },
+        /version must be 1/,
+      ],
+      ["reviewer", "pull-request-reviewer", "{", /JSON/],
+      [
+        "reviewer",
+        "pull-request-reviewer",
+        { ...reviewer, version: 2 },
+        /version must be 1/,
+      ],
+    ];
+    for (const [key, target, invalid, problem] of invalidDeclarations) {
+      // A proposed correction, dirty file or untracked declaration has no
+      // authority; the installed commands never consult those local bytes.
+      for (const local of [
+        {},
+        { policy, reviewer },
+        { policy: "{", reviewer: "{" },
+      ]) {
+        const result = command(t, entry, {
+          trusted: { policy, reviewer, [key]: invalid },
+          local,
+          remote: { checks: [passed], crossRepository: true },
+        }).invoke();
+        assert.equal(result.status, 7, result.stderr);
+        assert.equal(result.stdout, "");
+        assert.match(result.stderr, /Owner handoff required/);
+        assert.match(
+          result.stderr,
+          /example\/repository default branch main@b{40}/,
+        );
+        assert.ok(result.stderr.includes(`.github/${target}.json`));
+        assert.match(result.stderr, problem);
+        assert.match(
+          result.stderr,
+          /Correct .* on the destination default branch/,
+        );
+        assert.match(result.stderr, /keep the PR open and stop babysitting/);
+        assert.deepEqual(result.state.emitted ?? [], []);
+      }
     }
+  });
+
+  test(`${entry}: a fresh invocation uses a correction only after it reaches the trusted default branch`, (t) => {
+    for (const key of ["policy", "reviewer"]) {
+      const { invoke } = command(t, entry, {
+        local: { policy, reviewer },
+        remote: {
+          checks: [passed],
+          moveDefaultTo: laterRevision,
+          reviewSnapshots: {
+            [revision]: { reviewer, [key]: "{" },
+            [laterRevision]: { reviewer },
+          },
+        },
+      });
+      const invalid = invoke();
+      assert.equal(invalid.status, 7, invalid.stderr);
+      assert.match(invalid.stderr, /default branch main@b{40}/);
+      assert.deepEqual(invalid.state.emitted ?? [], []);
+      const corrected = invoke(entry === "request" ? ["--fixes-review"] : []);
+      assert.equal(
+        corrected.status,
+        entry === "request" ? 0 : 4,
+        corrected.stderr,
+      );
+      assert.equal(corrected.stderr, "");
+      assert.match(corrected.stdout, /default branch main@c{40}/);
+      assert.doesNotMatch(corrected.stdout, /external review skipped/);
+      assert.deepEqual(
+        corrected.state.emitted ?? [],
+        entry === "request" ? [reviewer.request.comment] : [],
+      );
+    }
+  });
+
+  test(`${entry}: invocation errors retain exit 1 before configuration selection`, (t) => {
+    const result = command(t, entry, {
+      trusted: { policy: "{" },
+    }).invoke(["--unknown"]);
+    assert.equal(result.status, 1, result.stderr);
+    assert.equal(result.stdout, "");
+    assert.doesNotMatch(result.stderr, /Owner handoff required/);
+    assert.deepEqual(result.state.configurationReads ?? [], []);
+    assert.deepEqual(result.state.emitted ?? [], []);
   });
 }
 

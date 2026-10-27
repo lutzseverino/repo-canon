@@ -126,7 +126,12 @@ policy and reviewer additions, edits and deletions, fork and nondefault-base
 PRs, retargeting and changing heads during polling, a moving default tip,
 resumed invocations, request bounds and read failures. The final command line
 identifies the selected repository, default branch and full commit SHA while
-the wait remains silent during polling.
+the wait remains silent during polling. Malformed JSON or schema-invalid
+trusted declarations return exit `7` from request and wait with the affected
+file, validation problem and required default-branch correction for an owner
+handoff; invocation and platform errors retain exit `1`. The installed-command
+fixtures also cover selecting a corrected trusted revision on a fresh
+invocation, without a fallback to proposed or local files.
 Run `node --test test/triage-ready.test.mjs` for the triage readiness command's
 revision, account, label, validator-event and parent-link fixtures, including
 its installed layout without npm. The command uses the vendored Postern

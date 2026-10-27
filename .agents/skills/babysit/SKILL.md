@@ -24,18 +24,18 @@ the same rules' trusted review configuration: they resolve the destination's
 default-branch commit once and read both files from that SHA. The wait keeps
 that snapshot across polls; its final outcome identifies the repository and
 revision, as does the request's. Proposed configuration changes begin applying
-after merging to that default branch. A plain human-login declaration is a
-configuration error (exit `1`), as defined by those rules. Its absence keeps configured reviewer
-behavior and requires no owner question.
+after merging to that default branch. Invalid trusted declarations, including
+a plain human-login policy author, require an owner handoff (exit `7`, below).
+Policy absence keeps configured reviewer behavior and requires no owner question.
 
 Before the first wait, apply the `github-repository-configuration` rules'
 review request rule to the pull request's head, using step 4 to post any
 required request. Use `node <this skill's directory>/request.mjs <number>`
 from the repository root to apply the app-author policy before that rule.
 It posts a required request or reports why none is needed. Exit `0` means
-the rule was applied, not that a review occurred; exit `1` follows the same
-Credentials/error handling as the wait. Run it again before waiting on a
-later or resumed head; add `--fixes-review` when that head fixes a finding
+the rule was applied, not that a review occurred; exits `1` and `7` follow the
+same error and owner-handoff handling as the wait below. Run it again before
+waiting on a later or resumed head; add `--fixes-review` when that head fixes a finding
 requiring a new request under the rules.
 
 1. Wait with `node <this skill's directory>/wait.mjs <number>`, run in the
@@ -54,6 +54,12 @@ requiring a new request under the rules.
    - `5`: still waiting; run it again.
    - `6`: checks passed and external review was skipped by app-author policy;
      go to step 2 and follow the rules' policy-skip merge outcome requirements.
+   - `7`: invalid trusted review configuration. Record an owner question under
+     the contribution guide's Comments rules, identifying the destination
+     repository, selected revision, affected declaration and validation problem
+     from the diagnostic, and the correction needed. Follow applicable installed
+     continuation rules, leave the PR open and stop babysitting. This outcome
+     permits neither an unchanged-configuration retry nor a merge.
    - `1`: follow [Credentials](../../../CONTRIBUTING.md#credentials) for a
      permission refusal; otherwise fix the invocation or other platform error and
      run it again.
@@ -85,3 +91,7 @@ requiring a new request under the rules.
    otherwise fix the invocation or other platform error and
    run it again.
 6. Stop.
+
+For exit `7` from either command, follow correction and authorized continuation
+under the `github-repository-configuration` rules' Trusted review configuration
+section.

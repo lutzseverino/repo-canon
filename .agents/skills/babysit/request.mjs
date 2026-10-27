@@ -4,7 +4,8 @@
 // Run before every wait, including resumed runs. --fixes-review says this
 // head fixes a finding requiring another request under the installed rules.
 // Exit 0 means the request rule was applied (which may require no request);
-// exit 1 is a configuration, invocation or platform error.
+// exit 1 is an invocation or platform error; exit 7 requires an owner handoff
+// to correct invalid trusted review configuration on the default branch.
 import {
   connectionFor,
   executedAsScript,
@@ -14,7 +15,10 @@ import {
   requestData,
 } from "./platform.mjs";
 import { skipsExternalReview } from "./review-policy.mjs";
-import { trustedReviewConfiguration } from "./trusted-review-config.mjs";
+import {
+  InvalidTrustedReviewConfiguration,
+  trustedReviewConfiguration,
+} from "./trusted-review-config.mjs";
 import { reviewRequestedAt, reviewRequestCount } from "./reviewer.mjs";
 
 export const main = async (argv = process.argv.slice(2), connection) => {
@@ -73,7 +77,7 @@ export const main = async (argv = process.argv.slice(2), connection) => {
     return result("review requested");
   } catch (error) {
     process.stderr.write(`request.mjs: ${error.message}\n`);
-    return 1;
+    return error instanceof InvalidTrustedReviewConfiguration ? 7 : 1;
   }
 };
 
