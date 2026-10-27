@@ -296,6 +296,18 @@ for (const entry of ["request", "wait"]) {
         { ...reviewer, version: 2 },
         /version must be 1/,
       ],
+      [
+        "reviewer",
+        "pull-request-reviewer",
+        {
+          ...reviewer,
+          finished: {
+            commentMarker: "done",
+            line: "x)(?<sha>[0-9a-f]+)(?<at>\\S+)(",
+          },
+        },
+        /reviewer\.finished\.line must be a valid regular expression/,
+      ],
     ];
     for (const [key, target, invalid, problem] of invalidDeclarations) {
       // A proposed correction, dirty file or untracked declaration has no
@@ -373,6 +385,33 @@ for (const entry of ["request", "wait"]) {
     assert.deepEqual(result.state.emitted ?? [], []);
   });
 }
+
+test("wait preserves standalone Unicode completion matching from trusted reviewer data", (t) => {
+  const result = command(t, "wait", {
+    trusted: {
+      reviewer: {
+        ...reviewer,
+        request: { ...reviewer.request, onOpen: true },
+        finished: {
+          commentMarker: "<!-- done -->",
+          line: "^✓ (?<sha>\\p{ASCII_Hex_Digit}{40}) at (?<at>\\S+)$",
+        },
+      },
+    },
+    remote: {
+      checks: [passed],
+      comments: [
+        {
+          login: reviewer.account,
+          createdAt: date,
+          body: `<!-- done -->\n✓ ${head} at ${date}`,
+        },
+      ],
+    },
+  }).invoke();
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^a{40}: checks passed, reviewer reviewed/);
+});
 
 test("wait pins both files across polls and changed heads; a resumed invocation selects the new default tip", (t) => {
   const { invoke } = command(t, "wait", {

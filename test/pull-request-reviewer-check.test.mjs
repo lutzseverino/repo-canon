@@ -59,6 +59,21 @@ test("both reviewer readers identify malformed JSON and retain the parse explana
   }
 });
 
+test("both reviewer readers reject completion patterns that only compile inside a wrapper", (t) => {
+  const reviewer = JSON.parse(valid);
+  reviewer.finished = {
+    commentMarker: "done",
+    line: "x)(?<sha>[0-9a-f]+)(?<at>\\S+)(",
+  };
+  const project = fixture({ [target]: JSON.stringify(reviewer) });
+  t.after(project.close);
+  for (const readReviewer of [readOperationReviewer, readInstalledReviewer])
+    assert.throws(
+      () => readReviewer(project.root),
+      /reviewer\.finished\.line must be a valid regular expression/,
+    );
+});
+
 test("the optional reviewer check passes without a file", (t) => {
   const outcome = check(t, {});
   assert.equal(outcome.status, 0, outcome.stderr);
@@ -161,6 +176,16 @@ test("invalid field types and completion patterns fail with corrections", (t) =>
     [
       "regular expression",
       { ...reviewer, finished: { commentMarker: "done", line: "[" } },
+    ],
+    [
+      "reviewer.finished.line must be a valid regular expression",
+      {
+        ...reviewer,
+        finished: {
+          commentMarker: "done",
+          line: "x)(?<sha>[0-9a-f]+)(?<at>\\S+)(",
+        },
+      },
     ],
     [
       "named sha and at",
