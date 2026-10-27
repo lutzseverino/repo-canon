@@ -2,9 +2,9 @@
 
 The [Repository README](../../README.md#installation) gives the one-line `adopt`
 command that adopts Repo Canon and every later update. `adopt` asks each
-question adoption needs; this guide covers profiles, stacks, remote setup,
-opting into automated updates, orchestrating plans, and the personal skills
-adoption leaves to you. The
+question adoption needs; this guide covers profiles, caller compatibility,
+stacks, remote setup, opting into automated updates, orchestrating plans, and
+the personal skills adoption leaves to you. The
 CLI's
 [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/adoption.md)
 describes `adopt` itself, at a terminal and through an agent.
@@ -27,6 +27,37 @@ Repo Canon supplies two profiles:
 
 Every update offers the profiles again, so a repository switches profile by
 answering differently when a factory starts or stops serving it.
+
+## Prepare caller compatibility
+
+Read the target release's notes before updating. If your repository's own tests
+or scripts execute, import, or fake an installed runtime, identify the affected
+callers and the calling contracts the notes describe. Check those callers
+against the newly installed files and run your repository's own applicable
+tests before committing the update; the adoption checks do not establish that
+your callers still work. Check meaningful outcomes, such as rejection of
+invalid input, as well as exit status.
+
+Start adoption from a clean committed tree through the public CLI. A disposable
+checkout of the current base can help explore compatibility against the target
+release without disturbing other work. For an active run, follow the
+[pinned-runtime completion and recovery rules](../../CONTRIBUTING.md#adoption-pull-requests).
+Do not hand edit installed source to make a caller pass.
+
+When repository-owned compatibility fixes are needed, land them in separate
+prerequisite pull requests before the adoption pull request. Link their issues
+under the [partial-work `Part of` convention](../../CONTRIBUTING.md#pull-requests).
+Keep the existing default branch runnable while those fixes land. Supporting and checking both
+the old and target runtimes can help when a prerequisite must work before and
+after the update; it is a technique to use where needed, not a requirement for
+every adoption.
+
+After the prerequisites land, repeat any exploratory adoption that needs it
+from a clean committed tree on the updated base, using the public CLI. Follow
+the [adoption pull request rules](../../CONTRIBUTING.md#adoption-pull-requests)
+for the pre-commit ready-to-commit verdict and delivery of one completed run.
+Keep repository-owned compatibility fixes in their prerequisite pull requests.
+This preparation adds no CLI gate or universal test command.
 
 ## Language statistics
 
