@@ -15,6 +15,16 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         headers: { "content-type": "application/json", ...headers },
       });
     const save = () => writeFileSync(statePath, JSON.stringify(state));
+    if (state.traceDestinations) {
+      const repository =
+        path === "/graphql"
+          ? `${body.variables.owner}/${body.variables.name}`
+          : /^\/repos\/([^/]+\/[^/]+)/.exec(path)?.[1];
+      state.destinations = [...(state.destinations ?? []), repository];
+      save();
+      if (repository !== state.repository)
+        return json({ message: "Wrong destination repository" }, 404);
+    }
     if (state.fail) return json({ message: "Server Error" }, 502);
     const connection = (nodes) => ({
       nodes,
@@ -35,7 +45,7 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
           state.reviewRevisionResponse ?? {
             data: {
               repository: {
-                nameWithOwner: "example/repository",
+                nameWithOwner: state.repository ?? "example/repository",
                 defaultBranchRef: {
                   name: state.defaultBranch ?? "main",
                   target: {
@@ -126,7 +136,7 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         headRefOid: state.head,
         baseRefName: state.baseBranch ?? "main",
         isCrossRepository: state.crossRepository ?? false,
-        repository: { nameWithOwner: "example/repository" },
+        repository: { nameWithOwner: state.repository ?? "example/repository" },
       };
       return json({ data: { repository: { pullRequest: pull } } });
     }
