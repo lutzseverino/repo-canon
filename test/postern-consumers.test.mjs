@@ -180,7 +180,7 @@ test("Access supplements reject missing workflow, review-thread and push facts",
   ]);
 });
 
-test("unavailable issue reads abort before mutation; missing roles follow authorization", async (t) => {
+test("unavailable prerequisite reads abort; role failures reach authorization cleanup", async (t) => {
   for (const reason of platformErrorReasons)
     for (const stage of ["issue", "comments", "labelChanges", "role"]) {
       let mutations = 0;
@@ -241,7 +241,7 @@ test("unavailable issue reads abort before mutation; missing roles follow author
           },
           connection,
         );
-      if (stage === "role" && reason === "notFound") {
+      if (stage === "role") {
         const messages = [];
         const error = t.mock.method(console, "error", (message) =>
           messages.push(message),
@@ -249,7 +249,9 @@ test("unavailable issue reads abort before mutation; missing roles follow author
         try {
           assert.equal(await run(), 1);
           assert.deepEqual(messages, [
-            "@maintainer is not authorized to grant readiness. Use a repository admin, maintainer, or collaborator with the triage role.",
+            reason === "notFound"
+              ? "@maintainer is not authorized to grant readiness. Use a repository admin, maintainer, or collaborator with the triage role."
+              : "Could not verify @maintainer's review authority: Fixture read failed.",
           ]);
           assert.equal(mutations, 3); // Remove readiness, add triage, update feedback.
         } finally {

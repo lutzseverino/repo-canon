@@ -21,6 +21,10 @@ import {
   ticketBody,
   completeAgentBrief,
   awaitingTicketFeedback,
+  bodyRevision,
+  briefRevision,
+  feedbackState,
+  recordedState,
   readinessReview,
   repository,
 } from "./helpers/issue-contracts.mjs";
@@ -557,8 +561,8 @@ test("timeline lag retries authoritative label changes within the existing bound
   }
 });
 
-test("late read failures abort before label or feedback mutation", async (t) => {
-  for (const path of ["/comments", "/events", "/permission"]) {
+test("late prerequisite read failures abort before label or feedback mutation", async (t) => {
+  for (const path of ["/comments", "/events"]) {
     const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
     const result = await exercise(t, {
       issue,
@@ -927,7 +931,7 @@ test("reopening a bare native issue restores needs-triage", async (t) => {
   ]);
 });
 
-test("role lookup failures other than notFound fail closed without writes", async (t) => {
+test("unavailable reviewer roles reject readiness with cleanup and useful feedback", async (t) => {
   for (const failure of [401, 403, 409, 422, 429, 500]) {
     const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
     const result = await exercise(t, {
@@ -942,9 +946,221 @@ test("role lookup failures other than notFound fail closed without writes", asyn
       failure,
       failurePath: (path) => path.endsWith("/permission"),
     });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 1);
+    assert.deepEqual(
+      writes(result).map(({ method, path }) => [method, path]),
+      [
+        ["DELETE", `${issuePath}/labels/ready-for-agent`],
+        ["POST", `${issuePath}/labels`],
+        ["PATCH", "/repos/example/repository/issues/comments/13"],
+      ],
+    );
+    assert.deepEqual(writes(result)[1].body, { labels: ["needs-triage"] });
+    const feedback = writes(result).at(-1).body.body;
+    assert.match(feedback, /Issue contract awaiting review/);
+    assert.match(feedback, /Could not verify @maintainer's review authority:/);
+    assert.match(feedback, /A fresh authorized review is required/);
+    assert.match(
+      result.stderr,
+      /Could not verify @maintainer's review authority:/,
+    );
+    assert.doesNotMatch(feedback + result.stderr, /fixture-credential/);
+    assert.equal(result.stdout, "");
+  }
+});
+
+test("role failures clean up edited approved contracts and recovery requires fresh review", async (t) => {
+  for (const kind of ["brief", "direct"]) {
+    for (const edit of ["body", "revision metadata"]) {
+      for (const label of ["ready-for-agent", "ready-for-human"]) {
+        await t.test(`${kind}, ${edit}, ${label}`, async (t) => {
+          const before = {
+            number: 42,
+            body: kind === "brief" ? "Intake context" : ticketBody,
+            labels: kind === "brief" ? ["enhancement", label] : [label],
+          };
+          const brief = {
+            id: 20,
+            node_id: "COMMENT_20",
+            body: completeAgentBrief,
+            user: account("triager"),
+            updated_at: time,
+          };
+          const feedback = {
+            id: 13,
+            user: account("github-actions[bot]"),
+            body: feedbackState({
+              status: "approved",
+              revision:
+                kind === "brief" ? briefRevision(brief) : bodyRevision(before),
+              label,
+              reviewer: "maintainer",
+              kind:
+                kind === "brief"
+                  ? "triaged Agent Brief"
+                  : "implementation ticket",
+            }),
+          };
+          const events = [{ ...readinessReview, label: { name: label } }];
+          const approved = await exercise(t, {
+            issue: before,
+            comments: kind === "brief" ? [brief, feedback] : [feedback],
+            events,
+            permissions: { maintainer: "admin" },
+          });
+          assert.equal(approved.error, undefined);
+          assert.equal(approved.code, 0);
+          assert.deepEqual(writes(approved), []);
+
+          const editedAt = "2026-09-14T17:02:00Z";
+          const changedBrief = {
+            ...brief,
+            body: edit === "body" ? `${brief.body} and indexing` : brief.body,
+            updated_at: editedAt,
+          };
+          const issue = {
+            ...before,
+            body:
+              kind === "direct" && edit === "body"
+                ? before.body.replace("Add caching.", "Add indexing.")
+                : before.body,
+          };
+          const context = {
+            issue,
+            comments: kind === "brief" ? [changedBrief, feedback] : [feedback],
+            events,
+            bodyLastEditedAt: kind === "direct" ? editedAt : null,
+            event:
+              kind === "brief"
+                ? { action: "edited", comment: changedBrief }
+                : { action: "edited" },
+          };
+          const failed = await exercise(t, {
+            ...context,
+            failure: 503,
+            failurePath: (path) => path.endsWith("/permission"),
+          });
+          assert.equal(failed.error, undefined);
+          assert.equal(failed.code, 1);
+          assert.match(failed.stderr, /exact contract revision/);
+          assert.deepEqual(
+            writes(failed).map(({ method, path }) => [method, path]),
+            [
+              ["DELETE", `${issuePath}/labels/${label}`],
+              ["POST", `${issuePath}/labels`],
+              ["PATCH", "/repos/example/repository/issues/comments/13"],
+            ],
+          );
+          assert.deepEqual(writes(failed)[1].body, {
+            labels: ["needs-triage"],
+          });
+          const noticeBody = writes(failed).at(-1).body.body;
+          assert.equal(recordedState(noticeBody).status, "awaiting-review");
+          assert.notEqual(
+            recordedState(noticeBody).revision,
+            recordedState(feedback.body).revision,
+          );
+          assert.match(noticeBody, /A fresh authorized review is required/);
+          const readPaths = failed.requests
+            .filter(({ method }) => method === "GET")
+            .map(({ path }) => path);
+          assert.ok(
+            readPaths.indexOf(`${issuePath}/comments`) < readPaths.length - 1,
+          );
+          assert.ok(
+            readPaths.indexOf(`${issuePath}/events`) < readPaths.length - 1,
+          );
+          assert.ok(readPaths.at(-1).endsWith("/permission"));
+
+          const notice = {
+            ...feedback,
+            body: noticeBody,
+            updated_at: "2026-09-14T17:05:00Z",
+          };
+          const removed = {
+            ...events[0],
+            id: 102,
+            event: "unlabeled",
+            actor: account("github-actions[bot]"),
+            created_at: editedAt,
+          };
+          const settled = {
+            ...context,
+            issue: {
+              ...issue,
+              labels: [
+                ...(kind === "brief" ? ["enhancement"] : []),
+                "needs-triage",
+              ],
+            },
+            comments: kind === "brief" ? [changedBrief, notice] : [notice],
+            events: [
+              ...events,
+              removed,
+              {
+                ...removed,
+                id: 103,
+                event: "labeled",
+                label: { name: "needs-triage" },
+              },
+            ],
+            permissions: { maintainer: "admin" },
+          };
+          const recovered = await exercise(t, settled);
+          assert.equal(recovered.error, undefined);
+          assert.equal(recovered.code, 0);
+          assert.deepEqual(writes(recovered), []);
+
+          const reviewed = await exercise(t, {
+            ...settled,
+            issue: { ...issue, labels: [...settled.issue.labels, label] },
+            events: [
+              ...settled.events,
+              {
+                ...events[0],
+                id: 104,
+                created_at: "2026-09-14T17:10:00Z",
+              },
+            ],
+            event: {
+              action: "labeled",
+              sender: account("maintainer"),
+              label: { name: label },
+            },
+          });
+          assert.equal(reviewed.error, undefined);
+          assert.equal(reviewed.code, 0);
+          const approval = recordedState(writes(reviewed).at(-1).body.body);
+          assert.equal(approval.status, "approved");
+          assert.equal(approval.revision, recordedState(noticeBody).revision);
+          assert.equal(approval.label, label);
+          assert.equal(approval.reviewEventId, "104");
+        });
+      }
+    }
+  }
+});
+
+test("mutation failures during permission-error cleanup remain visible", async (t) => {
+  for (const failedWrite of [
+    `${issuePath}/labels/ready-for-agent`,
+    `${issuePath}/labels`,
+    "/repos/example/repository/issues/comments/13",
+  ]) {
+    const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+    const result = await exercise(t, {
+      issue,
+      comments: [approvedTicketFeedback(issue)],
+      events: [readinessReview],
+      failure: 503,
+      failurePath: (path) =>
+        path.endsWith("/permission") || path === failedWrite,
+    });
     assert.ok(result.error instanceof PlatformError);
-    assert.notEqual(result.error.reason, "notFound");
-    assert.deepEqual(writes(result), []);
+    assert.equal(result.error.status, 503);
+    assert.equal(result.code, undefined);
+    assert.equal(writes(result).at(-1).path, failedWrite);
     assert.equal(result.stdout, "");
     assert.equal(result.stderr, "");
   }

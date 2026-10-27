@@ -260,7 +260,14 @@ before every decision.
 It also reads the repository role of every actor on a readiness-label event, of
 the recorded reviewer, and of an opening event's sender. On a `labeled` run, the
 opener's role is the one read for the creation label event's actor. A failed
-role lookup is recorded for that login and counts as unauthorized.
+role lookup is recorded for that login as unavailable authority; a missing role
+is recorded as a definite absence of authority. Neither authorizes readiness.
+Role lookup failures do not bypass the decision's cleanup: readiness that
+cannot be verified or is bound to an older revision is removed, and the
+feedback explains why a fresh review is required. A later successful lookup
+does not restore readiness without a fresh authorized review of the published
+revision. Label and feedback write failures remain visible as failed validation,
+so a failed mutation is never reported as successful cleanup.
 It binds approval to the actor and ID of the latest transition for the current
 readiness label. A removal therefore invalidates the old event even if another
 label is added before its workflow runs. A delayed removal or repeated webhook
@@ -392,8 +399,12 @@ with Postern's injected fetch transport. They cover event parsing,
 pagination, the role lookups, the bounded wait for a readiness trigger's
 timeline event, complete ordered write payloads, exact stdout and stderr, and
 exit outcomes. A missing reviewer role (404) follows normal authorization and
-grants no readiness; other failed or unavailable prerequisite reads fail closed
-before any mutation. Separate fixtures cover closed-issue edits and comments,
+grants no readiness; unavailable roles reach the fail-closed decision and its
+cleanup writes. Regression fixtures cover edited approved Agent Briefs and
+direct contracts, body and revision-metadata edits, both readiness labels,
+lookup recovery followed by fresh review, and cleanup mutation failures.
+Other failed or unavailable prerequisite reads fail closed before any mutation.
+Separate fixtures cover closed-issue edits and comments,
 a stale open event whose current issue is closed, changed-contract reopening,
 and reopening without a workflow state. Entrypoint fixtures cover the path
 fallback for releases without `import.meta.main`. The wait fixtures
@@ -438,7 +449,9 @@ the GitHub event with Postern's `issueTracker.issueEvent` and calls the common
 `scripts/validate.mjs` interface. The decision consumes neutral event facts;
 current issues, comments, label changes, edit times and relationships come from
 Postern's ports. Repository roles come from Access. Every read completes before
-label or feedback mutation. Failed reads fail validation without writing.
+label or feedback mutation. Failed prerequisite reads abort without writing;
+role lookup errors are recorded in the snapshot so unavailable authority cannot
+prevent readiness invalidation once the contract and timeline have been read.
 
 GitHub advertises native parent and blocker capabilities. Only those links
 count as relationships. `Parent` and `Blocked by` sections retain their content
