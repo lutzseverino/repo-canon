@@ -186,8 +186,9 @@ fails naming the document, its count, and the limit. The limits are constants
 in the test, so raising one is an explicit edit in the same pull request. No
 budget covers declaration rules or retained adoption guidance. It also keeps
 the two copies of the reviewer parser identical, and keeps the user-invoked
-`orchestrate` skill's harness and tool names in its one closing harness
-section, failing on any outside it. Run it alone
+`orchestrate` skill application-independent, checking every file in its
+installed directory and its authoring and adoption guidance for private
+application names, tool mappings and session-reference syntax. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
 CI step: `pnpm test` already runs it on every pull request.
 The same suite checks every declared source input across both profiles for

@@ -1312,54 +1312,27 @@ test("orchestrate wishes preserve mandatory Findings reporting", () => {
     assert.ok(findings.includes(requirement), requirement);
 });
 
-// The orchestrate skill and its workbench stay harness-neutral; its last
-// section alone maps the steps to one harness's tools.
-const harnessSection = "## With T3 Code";
-const harnessNames =
+// Check the whole installed directory, including supporting files and any
+// closing section. Keep the forbidden identifiers here, not as tool mappings.
+const privateOrchestrationNames =
   /\bT3(?:\b|code)|\bt3_|\bt3:|delegate_task|schedule_task|watch_pull_request/i;
 
-function outsideHarnessSection(content) {
-  const sections = content.split(/^(?=## )/m);
-  const last = sections.at(-1);
-  return last.startsWith(`${harnessSection}\n`)
-    ? sections.slice(0, -1).join("")
-    : content;
-}
-
-test("the orchestrate skill names its harness and that harness's tools only in its closing section", () => {
+test("shared orchestration material excludes private application mappings everywhere", () => {
   const directory = join(root, ".agents/skills/orchestrate");
-  const skill = readFileSync(join(directory, "SKILL.md"), "utf8");
-  assert.equal(
-    skill.split(/^## /m).at(-1).split("\n")[0],
-    harnessSection.slice(3),
-    "the harness section closes the skill",
-  );
-  for (const path of snapshotFiles(directory)) {
-    const content = readFileSync(join(directory, path), "utf8");
-    const outside =
-      path === "SKILL.md" ? outsideHarnessSection(content) : content;
-    assert.doesNotMatch(outside, harnessNames, path);
-  }
-  for (const [label, content] of [
-    ["a tool name", "Start workers with `delegate_task`."],
-    ["the harness", "Open grills on T3 Code."],
-    ["the harness as one word", "Open grills on T3code."],
-    ["a thread reference", "Record it as `t3:<id>`."],
-    ["a t3_ tool", "Send with `t3_thread_send`."],
-  ])
-    assert.match(
-      outsideHarnessSection(
-        `# Skill\n\n## Steps\n\n${content}\n\n${harnessSection}\n\nTools.\n`,
-      ),
-      harnessNames,
-      `${label} outside the closing section is caught`,
-    );
-  assert.doesNotMatch(
-    outsideHarnessSection(
-      `# Skill\n\n## Steps\n\nWork.\n\n${harnessSection}\n\nUse \`delegate_task\`.\n`,
+  const paths = [
+    ...snapshotFiles(directory).map(
+      (path) => `.agents/skills/orchestrate/${path}`,
     ),
-    harnessNames,
-  );
+    "authoring-notes.md",
+    "docs/usage/adopt-repo-canon.md",
+    "docs/development/README.md",
+  ];
+  for (const path of paths)
+    assert.doesNotMatch(
+      readFileSync(join(root, path), "utf8"),
+      privateOrchestrationNames,
+      path,
+    );
 });
 
 test("babysit and the factory image rules name both supported Node.js majors", () => {

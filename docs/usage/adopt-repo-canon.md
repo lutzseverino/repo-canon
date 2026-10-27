@@ -167,6 +167,11 @@ announced close. The workbench is a git repository of plain Markdown that you
 create and clone on each host that runs an orchestrating session. Name its
 path in your global agent instructions; the skill assumes no path.
 
+The shared method works with the capabilities available in your session.
+Applications can enhance it, and any application-specific tool mappings belong
+in your own setup outside Repo Canon. Neither adoption profile installs that
+private setup.
+
 An orchestrating session often runs outside every repository checkout, where
 no repository's skills are found. Link the installed skill directory from an
 adopted checkout into your user-level skills directory, where your agent finds
