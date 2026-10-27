@@ -40,24 +40,22 @@ invalid input, as well as exit status.
 
 Start adoption from a clean committed tree through the public CLI. A disposable
 checkout of the current base can help explore compatibility against the target
-release without disturbing other work. Once an adoption run starts, use its
-pinned runtime to finish or recover it as the CLI directs. Do not hand edit
-installed source to make a caller pass.
+release without disturbing other work. For an active run, follow the
+[pinned-runtime completion and recovery rules](../../CONTRIBUTING.md#adoption-pull-requests).
+Do not hand edit installed source to make a caller pass.
 
 When repository-owned compatibility fixes are needed, land them in separate
-prerequisite pull requests before the adoption pull request. Use `Part of #<n>`
-when a prerequisite does only part of its issue's work, following the
-[contribution rules](../../CONTRIBUTING.md#pull-requests). Keep the existing
-default branch runnable while those fixes land. Supporting and checking both
+prerequisite pull requests before the adoption pull request. Link their issues
+under the [partial-work `Part of` convention](../../CONTRIBUTING.md#pull-requests).
+Keep the existing default branch runnable while those fixes land. Supporting and checking both
 the old and target runtimes can help when a prerequisite must work before and
 after the update; it is a technique to use where needed, not a requirement for
 every adoption.
 
 After the prerequisites land, repeat any exploratory adoption that needs it
-from a clean committed tree on the updated base, using the public CLI. Finish
-the run with its pinned runtime, record `status`'s ready-to-commit verdict
-before committing, and deliver one completed run in the adoption pull request
-under the [adoption pull request rules](../../CONTRIBUTING.md#adoption-pull-requests).
+from a clean committed tree on the updated base, using the public CLI. Follow
+the [adoption pull request rules](../../CONTRIBUTING.md#adoption-pull-requests)
+for the pre-commit ready-to-commit verdict and delivery of one completed run.
 Keep repository-owned compatibility fixes in their prerequisite pull requests.
 This preparation adds no CLI gate or universal test command.
 
