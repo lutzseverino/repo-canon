@@ -44,7 +44,8 @@ for (const command of ["request", "wait"]) {
         { cwd: directory, encoding: "utf8", timeout: 15000 },
       );
       assert.ifError(child.error);
-      assert.equal(child.status, 1, child.stderr);
+      assert.equal(child.status, 7, child.stderr);
+      assert.match(child.stderr, /Owner handoff required/);
       assert.equal(child.stdout, "");
       assert.match(child.stderr, /\.github\/pull-request-reviewer\.json:/);
       assert.match(child.stderr, explanation);
