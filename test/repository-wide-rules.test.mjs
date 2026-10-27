@@ -366,43 +366,43 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
             });
           }
           if (entry.id === "git-attributes") {
-            attributesRequested = true;
             assert.deepEqual(entry.allowedTargets, {
               paths: [".gitattributes"],
               directories: [],
             });
-            // Perform the contextual edit from the guidance's worked example,
-            // rather than introducing an automatic fix into the source.
-            const guidance =
-              selectedVersion === previousVersion
-                ? git(
-                    source,
-                    "show",
-                    `${previousVersion}:guidance/git-attributes.md`,
-                  )
-                : readFileSync(
-                    join(root, "guidance/git-attributes.md"),
-                    "utf8",
-                  );
-            const block = /```gitattributes\n([\s\S]*?)\n\s*```/.exec(guidance);
-            assert.ok(block, "the guidance gives a worked attributes block");
-            writeFileSync(
-              join(project, ".gitattributes"),
-              originalAttributes + block[1].replaceAll(/^ {3}/gm, "") + "\n",
-            );
           }
+        }
+        // The contextual inventory includes reused assessments. Only an actual
+        // missing question authorizes new contextual work and a new judgment.
+        if (report.missing.includes("assessment:git-attributes")) {
+          attributesRequested = true;
+          const guidance =
+            selectedVersion === previousVersion
+              ? git(
+                  source,
+                  "show",
+                  `${previousVersion}:guidance/git-attributes.md`,
+                )
+              : readFileSync(join(root, "guidance/git-attributes.md"), "utf8");
+          const block = /```gitattributes\n([\s\S]*?)\n\s*```/.exec(guidance);
+          assert.ok(block, "the guidance gives a worked attributes block");
+          writeFileSync(
+            join(project, ".gitattributes"),
+            originalAttributes + block[1].replaceAll(/^ {3}/gm, "") + "\n",
+          );
         }
         const questions = report.answers.questions.map((question) => {
           const [kind, name] = question.id.split(":");
           let answer = question.answer;
           if (kind === "scope") answer ??= scopes[name];
-          if (kind === "assessment")
+          if (kind === "assessment" && report.missing.includes(question.id))
             answer =
               node && name === "typescript-node-stack"
                 ? stackAssessment
                 : assessments[name];
           if (
             kind === "assessment" &&
+            report.missing.includes(question.id) &&
             name === "git-attributes" &&
             selectedVersion === previousVersion
           )
@@ -450,7 +450,11 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
       return attributesRequested;
     };
     if (label.endsWith("-update")) {
-      adopt(previousVersion);
+      assert.equal(
+        adopt(previousVersion),
+        true,
+        `${label} records the previous release's requested Git attributes assessment`,
+      );
       assert.equal(
         git(
           project,
@@ -476,7 +480,7 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
     assert.equal(
       adopt(version),
       true,
-      `${label} requests git-attributes contextual work`,
+      `${label} includes assessment:git-attributes in report.missing`,
     );
     // No scope installs no stack rules and runs no stack check; a confirmed
     // Project gets both, and its manifest passes.
