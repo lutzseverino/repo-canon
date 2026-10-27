@@ -3,6 +3,17 @@ import { requestData } from "./platform.mjs";
 import { parseReviewPolicy, policyTarget } from "./review-policy.mjs";
 import { parseReviewer, reviewerTarget } from "./pull-request-reviewer.mjs";
 
+export class InvalidTrustedReviewConfiguration extends Error {
+  constructor(evidence, target, cause) {
+    super(
+      `Owner handoff required: invalid trusted ${target}; ${evidence}: ${cause.message}. ` +
+        `Correct ${target} on the destination default branch through the applicable owner-handoff/merge procedure; ` +
+        "keep the PR open and stop babysitting. After the correction lands and continuation is authorized, invoke again to select the current default-branch revision.",
+      { cause },
+    );
+  }
+}
+
 export async function trustedReviewConfiguration(connection) {
   const repository = connection.repository.path;
   const [owner, name] = repository.split("/");
@@ -71,7 +82,11 @@ export async function trustedReviewConfiguration(connection) {
         typeof blob.text !== "string"
       )
         throw new Error(`Could not read complete ${target}.`);
-      return parse(blob.text);
+      try {
+        return parse(blob.text);
+      } catch (error) {
+        throw new InvalidTrustedReviewConfiguration(evidence, target, error);
+      }
     };
     return {
       policy: parseFile(files.policy, policyTarget, parseReviewPolicy),
@@ -79,6 +94,7 @@ export async function trustedReviewConfiguration(connection) {
       evidence,
     };
   } catch (error) {
+    if (error instanceof InvalidTrustedReviewConfiguration) throw error;
     throw new Error(`${evidence}: ${error.message}`, { cause: error });
   }
 }

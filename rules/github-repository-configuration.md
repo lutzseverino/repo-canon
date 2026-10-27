@@ -160,6 +160,22 @@ invalid trusted configuration, is an explicit error before any review-request
 mutation. It authorizes no skip and permits no fallback to local files, the
 head or another revision.
 
+Invalid JSON or a schema-invalid declaration requires an owner handoff:
+identify the destination repository, selected default-branch revision, affected
+file and validation problem, and name the correction needed. Record the owner
+question under the contribution guide's comment rules and applicable installed
+continuation rules, leave the PR open, and stop babysitting. Do not retry the
+unchanged invalid configuration or proceed to merge.
+
+The correction must land on the destination default branch through the
+applicable owner-handoff and merge procedure. A correcting PR's proposed
+configuration cannot govern its own delivery before it lands; this repair
+grants no new merge exception. After the correction lands and continuation is
+authorized, a fresh request or wait invocation resolves the current default
+branch and uses the corrected configuration. Invocation errors, permission
+refusals, platform failures and verified optional-file absence retain their
+existing handling.
+
 ## Pull request reviewer file
 
 The optional repository-owned `.github/pull-request-reviewer.json` names the

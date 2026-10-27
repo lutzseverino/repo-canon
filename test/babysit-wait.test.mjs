@@ -1567,7 +1567,7 @@ test("invalid policy declarations fail the wait rather than exempting the author
       undefined,
       policy,
     );
-    assert.equal(result.code, 1);
+    assert.equal(result.code, 7);
     assert.match(result.stderr, /\.github\/factory-review-policy\.json:/);
   }
 });
@@ -1582,7 +1582,7 @@ test("installed waits reject human declarations for every author with or without
           version: 1,
           author: declared,
         });
-        assert.equal(result.code, 1, result.stderr);
+        assert.equal(result.code, 7, result.stderr);
         assert.match(
           result.stderr,
           /\.github\/factory-review-policy\.json: author must be an app identity/,
@@ -1726,7 +1726,7 @@ test("the wait rejects invalid review request bounds", async () => {
       bounds: { ...githubReviewer.bounds, reviewRequests },
     };
     const result = await run(pendingPullRequest, ["12"], reviewer);
-    assert.equal(result.code, 1);
+    assert.equal(result.code, 7);
     assert.equal(result.stdout, "");
     assert.match(result.stderr, /reviewRequests must be a positive integer/);
   }
@@ -2328,12 +2328,12 @@ test("without a reviewer the check grace period and invocation limit still apply
   assert.equal(decision({ reviewer: null, checks: failedChecks }).code, 2);
 });
 
-test("an invalid reviewer file exits 1 with actionable feedback", async () => {
+test("an invalid reviewer file requires an owner handoff with actionable feedback", async () => {
   const result = await run(pendingPullRequest, ["12"], {
     ...githubReviewer,
     bounds: { responseMinutes: 0, reviewMinutes: 10 },
   });
-  assert.equal(result.code, 1);
+  assert.equal(result.code, 7);
   assert.match(result.stderr, /responseMinutes/);
   assert.equal(result.stdout, "");
 });

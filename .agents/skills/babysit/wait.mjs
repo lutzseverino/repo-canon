@@ -13,6 +13,7 @@
 //   4  checks settled and the configured reviewer did not review this head
 //   5  still waiting at the invocation limit; run it again
 //   6  checks settled; external review skipped by app-author policy
+//   7  invalid trusted review configuration; owner handoff, keep the PR open
 //
 // Checks settled means checks passed or no check arrived within 5 minutes
 // of a push GitHub recorded and no workflow run for the head is unfinished
@@ -39,7 +40,10 @@ import {
   conversationComments,
 } from "./platform.mjs";
 
-import { trustedReviewConfiguration } from "./trusted-review-config.mjs";
+import {
+  InvalidTrustedReviewConfiguration,
+  trustedReviewConfiguration,
+} from "./trusted-review-config.mjs";
 import {
   reviewRequestedAt,
   reviewerState,
@@ -350,7 +354,7 @@ export const main = async (argv = process.argv.slice(2), connection) => {
       await trustedReviewConfiguration(connection));
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
-    return 1;
+    return error instanceof InvalidTrustedReviewConfiguration ? 7 : 1;
   }
   const limitMs = options.limit * 1000;
   const pushTimes = new Map();

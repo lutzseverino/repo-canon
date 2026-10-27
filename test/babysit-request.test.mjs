@@ -240,7 +240,7 @@ test("invalid declarations fail explicitly before any request", (t) => {
     { ...policy, author: "[bot]" },
   ]) {
     const result = run(t, { author: "factory-app[bot]", declaration });
-    assert.equal(result.code, 1);
+    assert.equal(result.code, 7);
     assert.deepEqual(result.emitted, []);
     assert.match(result.stderr, /\.github\/factory-review-policy\.json:/);
   }
@@ -262,7 +262,7 @@ test("installed requests reject human declarations for every author with or with
           config,
           declaration: { version: 1, author: declared },
         });
-        assert.equal(result.code, 1, result.stderr);
+        assert.equal(result.code, 7, result.stderr);
         assert.match(
           result.stderr,
           /\.github\/factory-review-policy\.json: author must be an app identity/,
