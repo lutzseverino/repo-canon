@@ -47,9 +47,16 @@ declaration, including its scripts and the `platform.mjs`, `reviewer.mjs` and
 separate exact file declarations at `vendor/postern/`, shared with the
 validators. Installed-layout fixtures execute the wait and merge without npm.
 
-The wait's `--repo` argument selects an explicit repository. Otherwise the
-scripts resolve the repository from `GH_REPO`, then the `origin` remote URL.
-They do not read the default repository configured by `gh repo set-default`.
+The request and wait commands' `--repo` argument selects an explicit repository.
+Otherwise all three scripts resolve the repository from `GH_REPO`, then the
+default repository configured by `gh repo set-default`, then the `origin`
+remote URL when no default is configured. They read that default with
+`gh repo set-default --view`; a failed lookup stops the command without
+falling back to another repository. Request and wait select both trusted review
+declarations from the resolved destination's default branch at one pinned commit.
+Run `node --test test/babysit-destination.test.mjs` for installed-command fixtures
+covering selection precedence, trusted reads, request and merge writes, lookup
+and credential failures, and the expected-head gate with a configured default.
 
 The scripts read the currently authenticated GitHub CLI credential with
 `gh auth token --hostname github.com` and pass it to the exact
