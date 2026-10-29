@@ -80,6 +80,29 @@ required checks and applicable internal and external review on the replacement
 head. Checks from the old head never qualify the replacement. GitHub remains
 the final guard if the base advances again; bound recovery as babysit directs.
 
+## Designated owner review
+
+Owner review is required when either the accepted brief or the worker's handoff
+says so. Read both sources; an omission in one does not cancel a designation in
+the other. Carry that designation and its source into the PR handoff.
+Record the designation and its source on the PR, including when no worker
+handoff is required.
+
+Before merging a designated PR, the merging agent verifies the owner's
+explicit approval of the current head. Record the approval's source and head
+SHA on the PR. Any head change requires renewed owner approval; approval of an
+earlier head does not authorize the new one. Passing checks, a configured
+external review, its absence or timeout, and an app-author review-policy skip
+never substitute for owner approval. When approval is missing, follow the
+contribution guide's owner-question handoff and leave the PR unmerged.
+
+This gate applies in both profiles and does not assign merge ownership.
+In the standard profile, the otherwise authorized merging agent, ordinarily
+the implementing agent, enforces it. It requires no factory label, pickup or
+recovery mechanism. Where factory workflow rules are installed, follow them
+for merge ownership and approval-pause continuation. Without a designation,
+ordinary applicable merge conditions hold.
+
 ## Preserved settings
 
 The GitHub configuration changes only the labels, merge settings, required check,
