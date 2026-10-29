@@ -89,8 +89,13 @@ under the ordinary applicable conditions.
 
 When the shared gate requires an approval pause, keep the PR open, retain
 `factory:needs-input` and `factory:skip` on its issue, and preserve the
-orchestrating agent's merge ownership. After verifying and recording
-current-head approval under the shared gate, the orchestrating agent removes
+orchestrating agent's merge ownership.
+If an answer changes the implementation contract during this pause, apply
+Skipped work's contract-revision gate: implementation and delivery wait for the
+edited revision's validator notice, independent review and renewed readiness.
+An unchanged contract requires no new readiness cycle.
+After verifying and recording current-head approval under the shared gate and
+any required renewed readiness, the orchestrating agent removes
 `factory:needs-input` and resumes `babysit` on the same open PR, merging only
 when all other applicable merge conditions hold.
 Any head change returns to this approval pause until renewed approval is
@@ -136,7 +141,8 @@ For every owner question on skipped work, retain the skip marker and
 run stops under the contribution guide's owner-question handoff.
 
 For the designated skipped-PR approval pause, follow State labels for
-continuation. Answering another question does not satisfy that approval
+continuation, including any required renewed readiness after a contract-changing
+answer. Answering another question does not satisfy that approval
 requirement: keep both markers until explicit current-head approval is verified
 and recorded with its source and SHA, as State labels requires.
 

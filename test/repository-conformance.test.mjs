@@ -1906,6 +1906,37 @@ for (const { prState, continuation } of [
   });
 }
 
+test("designated skipped PR continuation gates a changed contract on renewed readiness and current-head approval", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  const skipped =
+    /### Skipped work (.*?)(?= ### | ## |$)/.exec(factory)?.[1] ?? "";
+
+  assert.match(
+    skipped,
+    /For the designated skipped-PR approval pause, follow State labels for continuation, including any required renewed readiness after a contract-changing answer/,
+  );
+  assert.match(
+    state,
+    /If an answer changes the implementation contract during this pause, apply Skipped work's contract-revision gate: implementation and delivery wait for the edited revision's validator notice, independent review and renewed readiness/,
+  );
+  assert.match(
+    state,
+    /After verifying and recording current-head approval under the shared gate and any required renewed readiness, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR/,
+  );
+});
+
+test("designated skipped PR continuation needs no new readiness for an unchanged contract", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+
+  assert.match(state, /An unchanged contract requires no new readiness cycle/);
+  assert.match(
+    state,
+    /After verifying and recording current-head approval under the shared gate and any required renewed readiness, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR/,
+  );
+});
+
 test("designated skipped PR approval pauses resume the same PR without ordinary factory recovery", () => {
   const factory = flowedText("rules/factory-workflow.md");
   const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
@@ -1924,7 +1955,7 @@ test("designated skipped PR approval pauses resume the same PR without ordinary 
   );
   assert.match(
     state,
-    /After verifying and recording current-head approval under the shared gate, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR, merging only when all other applicable merge conditions hold/,
+    /After verifying and recording current-head approval under the shared gate and any required renewed readiness, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR, merging only when all other applicable merge conditions hold/,
   );
   assert.match(
     state,
