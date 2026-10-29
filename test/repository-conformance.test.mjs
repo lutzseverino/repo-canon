@@ -1975,6 +1975,76 @@ test("designated skipped PR approval pauses resume the same PR without ordinary 
   );
 });
 
+test("ordinary no-PR recovery holds a changed contract until renewed readiness before frontier release", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  const ordinary =
+    /### Ordinary factory runs (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  assert.match(
+    ordinary,
+    /If the answer changes the implementation contract, record the answer on the issue and have a writer independent of the accepting reviewer incorporate it in the authoritative contract/,
+  );
+  assert.match(
+    ordinary,
+    /Keep `factory:needs-input` until that exact edited revision receives its validator revision notice, independent authorized review and renewed readiness/,
+  );
+  assert.match(
+    ordinary,
+    /An answer or marker removal alone authorizes neither implementation of an unreviewed revision nor continuation on the superseded contract/,
+  );
+  const gate = ordinary.indexOf(
+    "Once the question is resolved and any required renewed readiness is recorded",
+  );
+  const release = ordinary.indexOf(
+    "With no open pull request, whoever answers",
+  );
+  assert.ok(
+    gate >= 0 && release > gate,
+    "renewed readiness gates frontier release",
+  );
+});
+
+test("ordinary no-PR recovery releases an unchanged contract without another readiness cycle", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  const ordinary =
+    /### Ordinary factory runs (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  assert.match(
+    ordinary,
+    /If the answer leaves the contract unchanged, no new readiness cycle is required/,
+  );
+  assert.match(
+    ordinary,
+    /Once the question is resolved and any required renewed readiness is recorded, follow the existing recovery paths below\. With no open pull request, whoever answers, the orchestrating agent or the owner, removes the label to return the issue to the frontier as a fresh first attempt/,
+  );
+});
+
+test("contract-changing answers return to an independent writer and revision review before recovery", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  const comments = /## Comments (.*?)(?= ## |$)/.exec(guide)?.[1] ?? "";
+  assert.match(
+    comments,
+    /If the answer changes the implementation contract, have a separate writer edit it; await its validator notice, independent review and renewed readiness before continuation/,
+  );
+  assert.doesNotMatch(guide, /factory|`model:/);
+  const skill = flowedText(".agents/skills/triage/SKILL.md");
+  const routing = /## Route questions (.*?)(?= ## |$)/.exec(skill)?.[1] ?? "";
+  assert.match(
+    routing,
+    /If an answer changes the implementation contract, send the edit to a separate writer; never write the revised brief you accept/,
+  );
+  assert.match(
+    routing,
+    /Follow the contribution guide's validator-notice, independent-review and renewed-readiness steps before continuation; an unchanged contract needs no new readiness cycle/,
+  );
+  assert.match(
+    routing,
+    /remove `factory:needs-input` where the installed factory rules let the answerer remove it/,
+  );
+  assert.match(
+    routing,
+    /Follow those rules for the order of marker removal and frontier release/,
+  );
+});
+
 test("ordinary non-skipped recovery retains frontier re-entry and owner merge or hand-back", () => {
   const factory = flowedText("rules/factory-workflow.md");
   const recovery =
@@ -2240,7 +2310,7 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
   assert.match(
     comments,
-    /If the answer changes the implementation contract, edit the contract; that drops readiness and requires review again/,
+    /If the answer changes the implementation contract, have a separate writer edit it; await its validator notice, independent review and renewed readiness before continuation/,
   );
 });
 

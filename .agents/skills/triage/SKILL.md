@@ -176,10 +176,12 @@ When your credentials cannot apply readiness, stop at acceptance: tell the owner
 
 Every question reaches you first, whoever raises it: a research run, a grill, or an agent's issue comment, including one under `needs-info` or `factory:needs-input`.
 
+If an answer changes the implementation contract, send the edit to a separate writer; never write the revised brief you accept. Follow the contribution guide's validator-notice, independent-review and renewed-readiness steps before continuation; an unchanged contract needs no new readiness cycle.
+
 - **Answer what you can**: from code, logs, or a reproduction, or by inference under the [inference test](#intent-bound-path).
 - **Ask an outside reporter** what only they know, with the needs-info template below.
 - **Put an owner-only question in your decision inbox**, with your recommendation. The decision inbox is the one channel for questions to the owner.
-- **An agent's question to the owner**, posted as one issue comment under the contribution guide's owner-question rules: read it first. When the inference test lets you answer, answer on the issue, and remove `factory:needs-input` where the installed factory rules let the answerer remove it. Otherwise put it in your decision inbox.
+- **An agent's question to the owner**, posted as one issue comment under the contribution guide's owner-question rules: read it first. When the inference test lets you answer, answer on the issue, and remove `factory:needs-input` where the installed factory rules let the answerer remove it. Follow those rules for the order of marker removal and frontier release. Otherwise put it in your decision inbox.
 
 ## Quick state override
 
