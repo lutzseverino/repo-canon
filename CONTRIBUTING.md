@@ -297,8 +297,9 @@ installed rules. The orchestrating agent reads the question
 first: when it can answer under the [triage](#triage) inference test, it
 answers on the issue; otherwise it puts the question in its decision inbox.
 
-If the answer changes the implementation contract, edit the contract; that
-drops readiness and requires review again.
+If the answer changes the implementation contract, have a separate writer edit
+it; await its validator notice, independent review and renewed readiness before
+continuation.
 
 An agent comments on an issue or pull request to record a decision, an outcome,
 or a question that needs an answer, never to narrate progress. Consolidate

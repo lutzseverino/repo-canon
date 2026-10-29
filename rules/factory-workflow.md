@@ -176,6 +176,18 @@ neither factory pickup, owner merge nor closing an open PR for hand-back.
 
 This recovery applies only to non-skipped factory runs.
 
+If the answer changes the implementation contract, record the answer on the
+issue and have a writer independent of the accepting reviewer incorporate it
+in the authoritative contract. Keep `factory:needs-input` until that exact
+edited revision receives its validator revision notice, independent authorized
+review and renewed readiness under the contribution guide and the
+`github-repository-configuration` rules. An answer or marker removal alone
+authorizes neither implementation of an unreviewed revision nor continuation
+on the superseded contract.
+If the answer leaves the contract unchanged, no new readiness cycle is required.
+
+Once the question is resolved and any required renewed readiness is recorded,
+follow the existing recovery paths below.
 With no open pull request, whoever answers, the orchestrating agent or the
 owner, removes the label to return the issue to the frontier as a fresh first
 attempt. While the run's pull request is open, removing the label starts no
