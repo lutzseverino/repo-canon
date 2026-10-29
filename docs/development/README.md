@@ -143,7 +143,12 @@ identity/applicability read failures and exact approval association. Factory
 applicability comes from the selected destination's installed
 `.repo-standards/rules/factory-workflow.md` at a pinned default-branch commit;
 verified absence permits the generic account policy, while a failed read
-permits no readiness writes. The command uses the vendored Postern
+permits no readiness writes. Actor discovery uses GraphQL `viewer { login }`
+and the matching REST `/users/{login}` account type with the same credential;
+these reads support App installation tokens, unlike `/user`. See GitHub's
+[installation authentication example](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation#using-octokitjs-to-authenticate-with-an-installation-id)
+and [user lookup endpoint](https://docs.github.com/en/rest/users/users#get-a-user).
+The command uses the vendored Postern
 bundle and the current GitHub CLI credential. Its caller bounds the foreground
 wait; the command has no invocation timeout.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message

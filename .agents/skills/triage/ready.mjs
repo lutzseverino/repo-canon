@@ -172,13 +172,20 @@ export async function main(
   const { number, label, revision, companions, repository } =
     argumentsFor(argv);
   connection ??= connectionFor(repository);
-  // The neutral account port loses the distinction between App and User.
-  const actor = await requestData(connection, { path: "/user" });
-  if (
-    !["User", "Bot", "App"].includes(actor?.type) ||
-    typeof actor.login !== "string" ||
-    !actor.login.trim()
-  )
+  // /user excludes installation tokens. Resolve the authenticated login through
+  // GraphQL, then retain REST's precise account type using the same credential.
+  const identity = await requestData(connection, {
+    method: "POST",
+    path: "/graphql",
+    body: { query: "query TriageActingAccount { viewer { login } }" },
+  });
+  const login = identity?.data?.viewer?.login;
+  if (identity?.errors?.length || typeof login !== "string" || !login.trim())
+    throw new Error("Could not identify the readiness acting account.");
+  const actor = await requestData(connection, {
+    path: `/users/${encodeURIComponent(login)}`,
+  });
+  if (!["User", "Bot", "App"].includes(actor?.type) || actor.login !== login)
     throw new Error("Could not identify the readiness acting account.");
   const policy = await factoryPolicy(connection);
   if (

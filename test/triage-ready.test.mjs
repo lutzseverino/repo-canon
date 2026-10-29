@@ -59,11 +59,32 @@ async function exercise(options = {}, command = main) {
     if (options.failure)
       return json({ message: "Fixture failure" }, options.failure);
     if (url.pathname === "/user")
+      return json({ message: "Resource not accessible by integration" }, 403);
+    if (url.pathname.startsWith("/users/"))
       return json(
         Object.hasOwn(options, "identityResponse")
           ? options.identityResponse
           : actor,
       );
+    if (
+      url.pathname === "/graphql" &&
+      body.query.includes("TriageActingAccount")
+    ) {
+      if (options.viewerFailure)
+        return json({ message: "Viewer unavailable" }, options.viewerFailure);
+      if (options.viewerErrors)
+        return json({
+          data: { viewer: { login: actor.login } },
+          errors: [{ message: "Viewer unavailable" }],
+        });
+      return json({
+        data: {
+          viewer: Object.hasOwn(options, "viewerResponse")
+            ? options.viewerResponse
+            : { login: actor.login },
+        },
+      });
+    }
     if (
       url.pathname === "/graphql" &&
       body.query.includes("TriageReadinessPolicy")
@@ -467,10 +488,16 @@ test("standard destinations permit Bot and App reviewers with validator-confirme
     { login: "helper", type: "Bot" },
     { login: "helper", type: "App" },
   ]) {
-    const result = await exercise({ factory: false, actor });
-    assert.equal(result.error, undefined);
-    assert.equal(result.code, 0);
-    assert.equal(writes(result).length, 1);
+    for (const selected of [label, "ready-for-human"]) {
+      const result = await exercise({
+        factory: false,
+        actor,
+        argv: ["42", selected, revision],
+      });
+      assert.equal(result.error, undefined);
+      assert.equal(result.code, 0);
+      assert.equal(writes(result).length, 1);
+    }
   }
 });
 
@@ -514,6 +541,11 @@ test("eligibility follows the connected destination rather than this factory che
 test("unreadable identity or destination policy never authorizes readiness writes", async () => {
   for (const options of [
     { identityResponse: null },
+    { identityResponse: { login: "another-reviewer", type: "User" } },
+    { viewerResponse: null },
+    { viewerResponse: {} },
+    { viewerErrors: true },
+    ...[401, 403, 503].map((status) => ({ viewerFailure: status })),
     { actor: { login: null } },
     { actor: { login: 123 } },
     { actor: { login: " " } },
@@ -622,4 +654,18 @@ test("standard Bot and App reviewers cannot bypass revision notices or stale par
       ["DELETE", "POST"],
     );
   }
+});
+
+test("an App installation reviewer resolves its authenticated viewer without the unsupported user endpoint", async () => {
+  const result = await exercise({
+    factory: false,
+    actor: { login: "integration[bot]", type: "Bot" },
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.code, 0);
+  assert.equal(
+    result.requests.some(({ path }) => path === "/user"),
+    false,
+  );
+  assert.equal(writes(result).length, 1);
 });
