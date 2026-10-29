@@ -14,6 +14,7 @@ import test from "node:test";
 import { installedValidator } from "./helpers/installed-validator.mjs";
 
 const gh = execFileSync("which", ["gh"], { encoding: "utf8" }).trim();
+const ssh = execFileSync("which", ["ssh"], { encoding: "utf8" }).trim();
 const fixture = new URL("./fixtures/postern-babysit.mjs", import.meta.url);
 const head = "a".repeat(40);
 const revision = "b".repeat(40);
@@ -32,6 +33,7 @@ const reviewer = {
  * @param {string} entry
  * @param {{ configured?: boolean, environment?: string, explicit?: string,
  * destination?: string, selectionFails?: boolean, credentialFails?: boolean,
+ * defaultHost?: string, resolution?: string, defaultRemote?: string, defaultName?: string, extraDefault?: string,
  * currentHead?: string }} [options]
  */
 function run(
@@ -39,6 +41,11 @@ function run(
   entry,
   {
     configured = true,
+    defaultName = "upstream",
+    defaultHost = "github.com",
+    resolution = "base",
+    defaultRemote = `https://${defaultHost || "github.com"}/example/repository.git`,
+    extraDefault,
     environment,
     explicit,
     destination = "example/repository",
@@ -52,8 +59,15 @@ function run(
   const git = (...args) => execFileSync("git", args, { cwd: directory });
   git("init", "-q");
   git("remote", "add", "origin", "https://github.com/fork/repository.git");
-  git("remote", "add", "upstream", "https://github.com/example/repository.git");
-  if (configured) git("config", "remote.upstream.gh-resolved", "base");
+  if (defaultName === "origin")
+    git("remote", "set-url", "origin", defaultRemote);
+  else git("remote", "add", defaultName, defaultRemote);
+  if (configured)
+    git("config", `remote.${defaultName}.gh-resolved`, resolution);
+  if (extraDefault) {
+    git("remote", "set-url", "origin", extraDefault);
+    git("config", "remote.origin.gh-resolved", "base");
+  }
   mkdirSync(join(directory, ".github"));
   // Local declarations disagree with the destination snapshot and cannot win.
   writeFileSync(
@@ -68,6 +82,7 @@ function run(
       repository: destination,
       traceDestinations: true,
       traceReviewConfiguration: true,
+      traceRequests: true,
       head: currentHead,
       author: "factory-app[bot]",
       createdAt: "2026-10-11T05:00:00Z",
@@ -103,8 +118,27 @@ if (args.join(" ") === "auth token --hostname github.com") {
 `,
     { mode: 0o755 },
   );
+  const sshConfig = join(directory, "ssh-config");
+  writeFileSync(
+    sshConfig,
+    "Host github-work\n  HostName github.com\nHost enterprise-work\n  HostName ghe.example.com\n",
+  );
+  writeFileSync(
+    join(directory, "ssh"),
+    `#!${process.execPath}
+const { spawnSync } = require("node:child_process");
+const result = spawnSync(${JSON.stringify(ssh)}, ["-F", ${JSON.stringify(sshConfig)}, ...process.argv.slice(2)], { stdio: "inherit" });
+process.exit(result.status ?? 1);
+`,
+    { mode: 0o755 },
+  );
   const target = pathToFileURL(
-    installedValidator(t, `.agents/skills/babysit/${entry}.mjs`),
+    installedValidator(
+      t,
+      entry === "ready"
+        ? ".agents/skills/triage/ready.mjs"
+        : `.agents/skills/babysit/${entry === "connection" ? "platform" : entry}.mjs`,
+    ),
   );
   const inherited = { ...process.env };
   delete inherited.GH_REPO;
@@ -115,11 +149,17 @@ if (args.join(" ") === "auth token --hostname github.com") {
       "-e",
       `import { fixtureFetch } from ${JSON.stringify(fixture.href)};
      globalThis.fetch = fixtureFetch();
-     const { main } = await import(${JSON.stringify(target.href)});
-     try { const code = await main(process.argv.slice(1)); if (code != null) process.exitCode = code; }
+     const command = await import(${JSON.stringify(target.href)});
+     try {
+       if (${JSON.stringify(entry)} === "connection") console.log(JSON.stringify(command.connectionFor().repository));
+       else { const code = await command.main(process.argv.slice(1)); if (code != null) process.exitCode = code; }
+     }
      catch (error) { console.error(error.message); process.exitCode = 1; }`,
       "--",
       "12",
+      ...(entry === "ready"
+        ? ["ready-for-agent", `sha256:${"a".repeat(64)}`]
+        : []),
       ...(entry === "merge" ? [head] : []),
       ...(entry === "wait" ? ["--limit", "1", "--interval", "0.01"] : []),
       ...(explicit ? ["--repo", explicit] : []),
@@ -132,6 +172,8 @@ if (args.join(" ") === "auth token --hostname github.com") {
         ...inherited,
         PATH: `${directory}:${process.env.PATH}`,
         ...(environment == null ? {} : { GH_REPO: environment }),
+        GH_HOST: defaultHost,
+        GH_ENTERPRISE_TOKEN: "fixture-credential",
         GH_TOKEN: "fixture-credential",
         GITHUB_TOKEN: "fixture-credential",
         GH_CONFIG_DIR: join(directory, "gh-config"),
@@ -272,4 +314,83 @@ test("installed merge retains the expected-head gate on the configured destinati
   assert.match(result.stderr, /head changed.*wait again/i);
   assert.equal(result.state.merge, undefined);
   assert.deepEqual(result.state.destinations, ["example/repository"]);
+});
+
+for (const entry of ["connection", "request", "wait", "merge", "ready"]) {
+  test(`installed ${entry} refuses an enterprise CLI default before any HTTP request`, (t) => {
+    const result = run(t, entry, {
+      defaultHost: "ghe.example.com",
+      defaultName: "origin",
+    });
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(
+      result.stderr,
+      /No platform adapter serves the remote on host ghe\.example\.com/,
+    );
+    assert.deepEqual(result.state.destinations ?? [], []);
+    assert.deepEqual(result.state.requests ?? [], []);
+    assert.equal(result.state.merge, undefined);
+    assert.deepEqual(result.state.emitted ?? [], []);
+  });
+}
+
+for (const options of [
+  { defaultHost: "" },
+  { defaultHost: "", defaultRemote: "git@github-work:example/repository.git" },
+  { defaultHost: "", extraDefault: "git@github.com:example/repository.git" },
+  { defaultRemote: "git@github.com:example/repository.git" },
+  { defaultRemote: "ssh://git@ssh.github.com:443/example/repository.git" },
+  { resolution: "parent/repository", destination: "parent/repository" },
+  {
+    resolution: "github.com/parent/repository",
+    destination: "parent/repository",
+  },
+  {
+    defaultHost: "ghe.example.com",
+    environment: "environment/repository",
+    destination: "environment/repository",
+  },
+  {
+    defaultHost: "ghe.example.com",
+    explicit: "explicit/repository",
+    environment: "environment/repository",
+    destination: "explicit/repository",
+  },
+]) {
+  test(`installed request preserves default identity and override precedence: ${JSON.stringify(options)}`, (t) => {
+    const result = run(t, "request", options);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.state.destinations.length > 0);
+    assert.ok(
+      result.state.destinations.every(
+        (repository) =>
+          repository === (options.destination ?? "example/repository"),
+      ),
+    );
+    assert.deepEqual(result.state.emitted, [reviewer.request.comment]);
+  });
+}
+
+test("the shared installed resolver retains the configured github.com default identity", (t) => {
+  const result = run(t, "connection");
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), {
+    platform: "github",
+    host: "github.com",
+    path: "example/repository",
+  });
+  assert.deepEqual(result.state.requests ?? [], []);
+});
+
+test("an SSH alias for an enterprise default is refused before HTTP", (t) => {
+  const result = run(t, "connection", {
+    defaultHost: "ghe.example.com",
+    defaultRemote: "git@enterprise-work:example/repository.git",
+  });
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(
+    result.stderr,
+    /No platform adapter serves the remote on host ghe\.example\.com/,
+  );
+  assert.deepEqual(result.state.requests ?? [], []);
 });

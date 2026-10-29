@@ -121,7 +121,13 @@ wait regressions against independent remote configuration and proposed local
 files. Run `node --test test/babysit-destination.test.mjs` for installed request,
 wait and merge destination selection with a configured GitHub CLI default,
 `GH_REPO`, explicit overrides and the `origin` fallback, including trusted reads,
-mutations and selection failures. The commands resolve the destination default
+mutations and selection failures. The real CLI fixtures also cover configured
+enterprise defaults being refused before HTTP in request, wait, merge and
+readiness, SSH defaults and hostname aliases, resolved parent identities and
+overrides. The shared
+resolver recovers the configured default host from local Git remote configuration
+because the CLI default display omits it; an unresolved or ambiguous identity
+fails without falling back. The commands resolve the destination default
 branch once through Postern Access, then read both configurations at that commit; GraphQL errors and
 incomplete, non-blob or truncated file results fail explicitly. An explicit null
 file result with a verified commit is supported absence. The fixtures cover
