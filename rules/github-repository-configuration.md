@@ -52,33 +52,38 @@ requirement is unavailable, not optional, and applies once GitHub offers
 either. GitHub runs the PR metadata validation workflow only from the default
 branch, so the check is required once the workflow is on the default branch.
 
-## Designated owner review
+## Required-check freshness
 
-Owner review is required when either the accepted brief or the worker's handoff
-says so. Read both sources; an omission in one does not cancel a designation in
-the other. Carry that designation and its source into the PR handoff.
-Record the designation and its source on the PR, including when no worker
-handoff is required.
+Every adopter requires GitHub's “Require branches to be up to date before
+merging” setting on its default branch wherever required-check enforcement is
+available: `strict: true` in classic protection, or
+`strict_required_status_checks_policy: true` in an active applicable ruleset
+with at least one required check. Checks must pass against the current default
+branch. Extra validation after concurrent merges is expected.
 
-Before merging a designated PR, the merging agent verifies the owner's
-explicit approval of the current head. Record the approval's source and head
-SHA on the PR. Any head change requires renewed owner approval; approval of an
-earlier head does not authorize the new one. Passing checks, a configured
-external review, its absence or timeout, and an app-author review-policy skip
-never substitute for owner approval. When approval is missing, follow the
-contribution guide's owner-question handoff and leave the PR unmerged.
+Before unattended merging, confirm this platform enforcement through current
+GitHub policy reads. A local ancestry check alone cannot protect against a
+base advance between inspection and the merge request. Bypassable enforcement
+alone cannot provide that final guard: babysit confirms either a strict
+ruleset with no bypass actors, or strict classic checks enforced for admins.
+Setup preserves existing bypass configuration; resolve insufficient enforcement
+with the owner rather than changing bypass policy during delivery.
 
-This gate applies in both profiles and does not assign merge ownership.
-In the standard profile, the otherwise authorized merging agent, ordinarily
-the implementing agent, enforces it. It requires no factory label, pickup or
-recovery mechanism. Where factory workflow rules are installed, follow them
-for merge ownership and approval-pause continuation. Without a designation,
-ordinary applicable merge conditions hold.
+Unavailable, unreadable or unconfirmed freshness stops unattended merging until
+the repository is fixed. Adoption's plan limits, missing workflow and deferred
+remote setup grant no merge exception. Use the contribution guide's owner
+handoff; no best-effort merge or alternate credential is permitted.
+
+A stale PR returns to branch update and validation. Preserve its work, rebase
+or replay only its changes onto the refreshed default branch, and repeat
+required checks and applicable internal and external review on the replacement
+head. Checks from the old head never qualify the replacement. GitHub remains
+the final guard if the base advances again; bound recovery as babysit directs.
 
 ## Preserved settings
 
-The GitHub configuration changes only the labels, merge settings, and required
-check these rules name. Unrelated labels, rules, checks, and repository
+The GitHub configuration changes only the labels, merge settings, required check,
+and freshness these rules name. Unrelated labels, rules, checks, and repository
 settings stay as the repository has them.
 
 ## Installed workflow runners

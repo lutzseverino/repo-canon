@@ -290,14 +290,6 @@ repeated.
   `ready-for-agent`, a `model:` label and `factory:skip`. Only the
   [factory workflow rules](rules/factory-workflow.md) name that label, since
   the canonical labels carry no `factory:` label.
-- Designated owner review has one current-head approval gate in both profiles,
-  stated in the [GitHub repository configuration rules](rules/github-repository-configuration.md#designated-owner-review).
-  The owner chose this shared gate on 2026-10-29 in
-  [#665](https://github.com/lutzseverino/repo-canon/issues/665#issuecomment-6498159486),
-  retaining the otherwise authorized merge actor in the standard profile and
-  the orchestrating agent for factory-skip work. The
-  [factory workflow rules](rules/factory-workflow.md) retain that profile's
-  merge ownership and approval-pause continuation.
 - The skill setup files under docs/agents are installed verbatim from the
   vendored upstream setup seeds, and Repo Canon writes nothing into them, as
   [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
@@ -320,6 +312,14 @@ repeated.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   and [issue contract validation](docs/development/issue-contract-validation.md)
   state what each check requires and how a contract loses readiness.
+- Required checks include the current default branch through GitHub's strict
+  up-to-date-branch enforcement for every adopter. Setup reconciles classic
+  protection and managed rulesets with confirmation and readback, preserving
+  unrelated policy. Babysit returns a stale PR to a bounded branch update,
+  validation and review cycle; GitHub guards the race at merge time. Unavailable,
+  unreadable or unconfirmed enforcement stops unattended merging even when
+  adoption deferred setup. The owner accepted extra CI runs for concurrent PRs
+  in [#656](https://github.com/lutzseverino/repo-canon/issues/656#issuecomment-6451776114).
 - Accepted automation prerequisites are GitHub Actions, permission to update
   issue labels/comments, and repository-setup permission for labels and branch
   rules. Metadata validation runs trusted code without executing PR-supplied

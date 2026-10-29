@@ -253,10 +253,10 @@ head alongside the conditions below.
 
 Merge a pull request once every required check passes on its latest head and
 every review thread is answered with its fix or a reasoned decline under the
-[comment rules](#comments). The `github-repository-configuration` rules state
-when a head with no check counts as passed, and, for the optional
-repository-owned `.github/pull-request-reviewer.json`, its schema, review
-requests, and merging with or without the configured reviewer's review.
+[comment rules](#comments). Checks must include the current default branch
+under GitHub's up-to-date-branch enforcement; unconfirmed enforcement stops unattended merging. The
+`github-repository-configuration` rules define freshness, passing checks and
+reviewer policy.
 Squash-merge pull requests into their base branch, passing the subject
 `<title> (#<number>)` and the current PR body explicitly, with the body passed
 byte for byte through a file or stdin. GitHub's default squash message must

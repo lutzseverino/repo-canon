@@ -77,17 +77,24 @@ outstanding findings, and any owner-review requirement with its source. The
 orchestrating agent continues `babysit` and owns the merge under the
 contribution guide and applicable review rules.
 
-Apply the `github-repository-configuration` rules' Designated owner review gate
-for designation, provenance and current-head approval. The skip marker alone
-requires no owner review; without a designation, the orchestrating agent merges
-under the ordinary applicable conditions.
+Owner review is required when either the accepted brief or the worker's handoff
+says so. Read both sources; an omission in one does not cancel a designation in
+the other. Carry that designation and its source into the PR handoff. The skip
+marker alone requires no owner review; without a designation, the orchestrating
+agent merges under the ordinary applicable conditions.
 
-When the shared gate requires an approval pause, keep the PR open, retain
-`factory:needs-input` and `factory:skip` on its issue, and preserve the
-orchestrating agent's merge ownership. After verifying and recording
-current-head approval under the shared gate, the orchestrating agent removes
-`factory:needs-input` and resumes `babysit` on the same open PR, merging only
-when all other applicable merge conditions hold.
+Before merging a designated PR, the orchestrating agent verifies the owner's
+explicit approval of the current head. Record the approval's source and head
+SHA on the PR. Any head change requires renewed owner approval; approval of an
+earlier head does not authorize the new one. Passing checks, a configured
+external review, its absence or timeout, and an app-author review-policy skip
+never substitute for owner approval. When approval is missing, follow the
+contribution guide's owner-question handoff and leave the PR unmerged.
+For this approval pause, keep the PR open, retain `factory:needs-input` and
+`factory:skip` on its issue, and preserve the orchestrating agent's merge
+ownership. After verifying and recording current-head approval as above, the
+orchestrating agent removes `factory:needs-input` and resumes `babysit` on the
+same open PR, merging only when all other applicable merge conditions hold.
 Any head change returns to this approval pause until renewed approval is
 verified and recorded. This continuation requires neither owner merge, PR
 closure nor factory pickup.

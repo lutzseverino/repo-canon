@@ -144,9 +144,7 @@ Every research run, on either path, does two checks first:
    - `ready-for-agent` with `factory:skip` for agent work the factory must not pick up, by the tests in the installed factory rules, which also say who creates the label and who merges. Without those rules there is no skip label.
    - `ready-for-agent` alone for any other work.
 
-   When owner review before merge is reserved, in either profile, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source. Check this even when that reason first arises here, after the initial brief review. If the designation or its source is missing or unclear, return the brief to its writer with the recorded reservation and source; the writer corrects it. Independently review the corrected brief from the top, then return to step 1 for its new validator revision notice before applying readiness. Never write or rewrite the brief you accept.
-
-   Follow the `github-repository-configuration` rules' Designated owner review gate for delivery. Standard-profile delivery keeps its otherwise authorized merge actor; installed factory rules govern factory merge ownership and approval-pause continuation.
+   When owner review before merge is the reason for bypassing factory pickup, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source. Check this even when that reason first arises here, after the initial brief review. If the designation or its source is missing or unclear, return the brief to its writer with the recorded reservation and source; the writer corrects it. Independently review the corrected brief from the top, then return to step 1 for its new validator revision notice before applying readiness. Never write or rewrite the brief you accept.
 
    For workflow-edit-only work without a separate owner-review designation, follow the ordinary applicable merge conditions in the installed rules; the skip marker alone supplies no designation.
 
