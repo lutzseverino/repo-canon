@@ -10,6 +10,66 @@ import {
 const readiness = new Set(["ready-for-agent", "ready-for-human"]);
 const marker = "<!-- repo-canon:issue-contract-feedback -->";
 
+// Eligibility follows installed rules in the selected destination, independently
+// of the checkout that supplies this command. Pin the default tip before reading.
+async function factoryPolicy(connection) {
+  const repository = connection.repository.path;
+  const [owner, name] = repository.split("/");
+  const query = async (source, variables = {}) => {
+    const response = await requestData(connection, {
+      method: "POST",
+      path: "/graphql",
+      body: { query: source, variables: { owner, name, ...variables } },
+    });
+    if (response?.errors?.length || !response?.data?.repository)
+      throw new Error(
+        `Could not establish factory applicability for ${repository}.`,
+      );
+    return response.data.repository;
+  };
+  const destination =
+    await query(`query TriageReadinessPolicy($owner: String!, $name: String!) {
+    repository(owner: $owner, name: $name) {
+      nameWithOwner
+      defaultBranchRef { name target { __typename oid } }
+    }
+  }`);
+  const branch = destination.defaultBranchRef;
+  const revision = branch?.target?.oid;
+  if (
+    destination.nameWithOwner?.toLowerCase() !== repository.toLowerCase() ||
+    typeof branch?.name !== "string" ||
+    !branch.name ||
+    branch.target?.__typename !== "Commit" ||
+    !/^[0-9a-f]{40}$/i.test(revision ?? "")
+  )
+    throw new Error(
+      `Could not establish factory applicability for ${repository}: missing default-branch commit.`,
+    );
+  const evidence = `${repository} default branch ${branch.name}@${revision}`;
+  const files = await query(
+    `query TriageFactoryRules($owner: String!, $name: String!, $revision: GitObjectID!, $rules: String!) {
+    repository(owner: $owner, name: $name) {
+      commit: object(oid: $revision) { __typename oid }
+      rules: object(expression: $rules) { __typename }
+    }
+  }`,
+    {
+      revision,
+      rules: `${revision}:.repo-standards/rules/factory-workflow.md`,
+    },
+  );
+  if (
+    files.commit?.__typename !== "Commit" ||
+    files.commit.oid !== revision ||
+    !(files.rules === null || files.rules?.__typename === "Blob")
+  )
+    throw new Error(
+      `Could not establish factory applicability at ${evidence}.`,
+    );
+  return { factory: files.rules !== null, evidence };
+}
+
 async function snapshot(connection, number) {
   const tracker = connection.issueTracker;
   const issue = await tracker.issue(number);
@@ -114,9 +174,20 @@ export async function main(
   connection ??= connectionFor(repository);
   // The neutral account port loses the distinction between App and User.
   const actor = await requestData(connection, { path: "/user" });
-  if (actor?.type !== "User" || !actor.login || actor.login.endsWith("[bot]"))
+  if (
+    !["User", "Bot", "App"].includes(actor?.type) ||
+    typeof actor.login !== "string" ||
+    !actor.login.trim()
+  )
+    throw new Error("Could not identify the readiness acting account.");
+  const policy = await factoryPolicy(connection);
+  if (
+    policy.factory &&
+    (actor.type !== "User" || actor.login.endsWith("[bot]"))
+  )
     throw new Error(
-      "Readiness requires a person acting account; bot and App accounts cannot start factory work.",
+      `Readiness at ${policy.evidence} requires a person acting account; bot and App accounts cannot start factory work. ` +
+        "Stop at acceptance: report the reviewed brief, revision, suggested labels and blockers to an authorized person. No factory work was started.",
     );
   let before;
   for (;;) {

@@ -9,6 +9,7 @@ const revision = `sha256:${"a".repeat(64)}`;
 const label = "ready-for-agent";
 const model = "model:gpt-6.1-sol@high";
 const time = "2026-10-25T12:00:00Z";
+const policyRevision = "b".repeat(40);
 const page = (nodes) => ({
   nodes,
   pageInfo: { hasNextPage: false, endCursor: null },
@@ -29,6 +30,9 @@ const event = (
 
 async function exercise(options = {}, command = main) {
   const selectedLabel = options.argv?.[1] ?? label;
+  const actor = { login: "maintainer", type: "User", ...options.actor };
+  const repository = options.repository ?? "owner/repo";
+  const [owner, name] = repository.split("/");
   const requests = [];
   const labels = [...(options.labels ?? ["enhancement", "needs-triage"])];
   const events = [...(options.events ?? [])];
@@ -55,7 +59,57 @@ async function exercise(options = {}, command = main) {
     if (options.failure)
       return json({ message: "Fixture failure" }, options.failure);
     if (url.pathname === "/user")
-      return json({ login: "maintainer", type: "User", ...options.actor });
+      return json(
+        Object.hasOwn(options, "identityResponse")
+          ? options.identityResponse
+          : actor,
+      );
+    if (
+      url.pathname === "/graphql" &&
+      body.query.includes("TriageReadinessPolicy")
+    ) {
+      assert.equal(body.variables.owner, owner);
+      assert.equal(body.variables.name, name);
+      if (options.policyFailure)
+        return json({ message: "Policy unavailable" }, options.policyFailure);
+      if (options.policyErrors)
+        return json({ errors: [{ message: "Unavailable" }] });
+      return json({
+        data: {
+          repository: {
+            nameWithOwner: repository,
+            defaultBranchRef: {
+              name: "main",
+              target: { __typename: "Commit", oid: policyRevision },
+            },
+            ...options.destination,
+          },
+        },
+      });
+    }
+    if (
+      url.pathname === "/graphql" &&
+      body.query.includes("TriageFactoryRules")
+    ) {
+      assert.equal(body.variables.revision, policyRevision);
+      assert.equal(
+        body.variables.rules,
+        `${policyRevision}:.repo-standards/rules/factory-workflow.md`,
+      );
+      if (options.rulesFailure)
+        return json({ message: "Rules unavailable" }, options.rulesFailure);
+      if (options.rulesErrors)
+        return json({ errors: [{ message: "Rules unavailable" }] });
+      return json({
+        data: {
+          repository: {
+            commit: { __typename: "Commit", oid: policyRevision },
+            rules: options.factory === false ? null : { __typename: "Blob" },
+            ...options.policyFiles,
+          },
+        },
+      });
+    }
     if (url.pathname === "/graphql")
       return json({
         data: {
@@ -112,7 +166,7 @@ async function exercise(options = {}, command = main) {
         created_at: time,
         updated_at: time,
       };
-      return json([feedback]);
+      return json(options.missingNotice ? [] : [feedback]);
     }
     if (method === "DELETE" && url.pathname.endsWith(`/labels/${label}`)) {
       labels.splice(labels.indexOf(label), 1);
@@ -128,17 +182,18 @@ async function exercise(options = {}, command = main) {
       ownEvent = event(
         300,
         selectedLabel,
-        "maintainer",
+        actor.login,
         "labeled",
         "2026-10-25T12:00:03Z",
       );
+      ownEvent.actor = actor;
       events.push(ownEvent);
       phase = "applied";
       return json([]);
     }
     throw new Error(`Unexpected fixture request ${method} ${url.pathname}`);
   };
-  const connection = connect("https://github.com/owner/repo", {
+  const connection = connect(`https://github.com/${repository}`, {
     credential: "fixture",
     fetch,
   });
@@ -151,7 +206,7 @@ async function exercise(options = {}, command = main) {
         status: "approved",
         revision,
         label: selectedLabel,
-        reviewer: "maintainer",
+        reviewer: actor.login,
         reviewEventId: String(ownEvent.id),
         ...options.after,
       };
@@ -216,12 +271,13 @@ test("refuses incomplete feedback even when it carries the old awaiting state", 
   assert.deepEqual(writes(result), []);
 });
 
-test("refuses conflicting model labels and non-person acting accounts without writes", async () => {
+test("factory destinations refuse conflicting model labels and non-person accounts without writes", async () => {
   for (const options of [
     { labels: ["enhancement", "model:other"] },
     { actor: { login: "helper[bot]", type: "Bot" } },
     { actor: { login: "helper", type: "Bot" } },
     { actor: { login: "helper", type: "App" } },
+    { actor: { login: "helper[bot]", type: "User" } },
   ]) {
     const result = await exercise(options);
     assert.match(result.error?.message ?? "", /model:|person|bot|App/);
@@ -348,9 +404,25 @@ test("rejects invalid invocations and failed platform reads without writes", asy
 test("the installed triage command resolves the declared bundle without npm", async (t) => {
   const target = installedValidator(t, ".agents/skills/triage/ready.mjs");
   const command = (await import(pathToFileURL(target).href)).main;
-  const result = await exercise({}, command);
-  assert.equal(result.error, undefined);
-  assert.equal(result.code, 0);
+  for (const factory of [false, true]) {
+    for (const actor of [
+      { login: "maintainer", type: "User" },
+      { login: "helper[bot]", type: "Bot" },
+      { login: "helper", type: "App" },
+    ]) {
+      const result = await exercise({ factory, actor }, command);
+      if (factory && actor.type !== "User") {
+        assert.match(
+          result.error?.message ?? "",
+          /authorized person.*No factory work was started/,
+        );
+        assert.deepEqual(writes(result), []);
+      } else {
+        assert.equal(result.error, undefined);
+        assert.equal(result.code, 0);
+      }
+    }
+  }
 });
 
 test("refuses feedback that retains a state without reporting a complete contract", async () => {
@@ -387,4 +459,167 @@ test("validator cleanup does not hide a rejection of the command's label event",
     },
   });
   assert.match(result.error?.message ?? "", /Review authority refused/);
+});
+
+test("standard destinations permit Bot and App reviewers with validator-confirmed readiness", async () => {
+  for (const actor of [
+    { login: "helper[bot]", type: "Bot" },
+    { login: "helper", type: "Bot" },
+    { login: "helper", type: "App" },
+  ]) {
+    const result = await exercise({ factory: false, actor });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+    assert.equal(writes(result).length, 1);
+  }
+});
+
+test("a person retains revision-bound readiness in both destination policies", async () => {
+  for (const factory of [false, true]) {
+    for (const selected of [label, "ready-for-human"]) {
+      const result = await exercise({
+        factory,
+        argv: ["42", selected, revision],
+      });
+      assert.equal(result.error, undefined);
+      assert.equal(result.code, 0);
+    }
+  }
+});
+
+test("eligibility follows the connected destination rather than this factory checkout", async () => {
+  for (const factory of [false, true]) {
+    const result = await exercise({
+      factory,
+      repository: "other/selected",
+      actor: { login: "helper[bot]", type: "Bot" },
+      args: ["--repo", "other/selected"],
+    });
+    if (factory) {
+      assert.match(
+        result.error?.message ?? "",
+        /other\/selected default branch main@b{40}.*person/,
+      );
+      assert.deepEqual(writes(result), []);
+    } else {
+      assert.equal(result.error, undefined);
+      assert.equal(
+        writes(result)[0].path,
+        "/repos/other/selected/issues/42/labels",
+      );
+    }
+  }
+});
+
+test("unreadable identity or destination policy never authorizes readiness writes", async () => {
+  for (const options of [
+    { identityResponse: null },
+    { actor: { login: null } },
+    { actor: { login: 123 } },
+    { actor: { login: " " } },
+    { actor: { type: "Unknown" } },
+    { destination: { nameWithOwner: "different/repo" } },
+    { destination: { defaultBranchRef: null } },
+    {
+      destination: {
+        defaultBranchRef: {
+          name: "main",
+          target: { __typename: "Tree", oid: policyRevision },
+        },
+      },
+    },
+    {
+      destination: {
+        defaultBranchRef: {
+          name: "main",
+          target: { __typename: "Commit", oid: "invalid" },
+        },
+      },
+    },
+    { policyErrors: true },
+    { rulesErrors: true },
+    { policyFiles: { commit: null } },
+    { policyFiles: { commit: { __typename: "Commit", oid: "c".repeat(40) } } },
+    { policyFiles: { rules: undefined } },
+    { policyFiles: { rules: { __typename: "Tree" } } },
+    ...[401, 403, 503].flatMap((status) => [
+      { policyFailure: status },
+      { rulesFailure: status },
+    ]),
+  ]) {
+    const result = await exercise({ factory: false, ...options });
+    assert.ok(result.error, JSON.stringify(options));
+    assert.deepEqual(writes(result), []);
+  }
+});
+
+test("standard Bot and App reviewers still require the validator's exact approval association", async () => {
+  for (const type of ["Bot", "App"]) {
+    for (const after of [
+      { reviewer: "somebody-else" },
+      { revision: `sha256:${"b".repeat(64)}` },
+      { reviewEventId: "999", observedEventId: "300" },
+      { label: "ready-for-human" },
+      {
+        status: "awaiting-review",
+        observedEventId: "300",
+        rejectionReason: "Not authorized for readiness.",
+      },
+      {
+        status: "awaiting-review",
+        observedEventId: "300",
+        rejectionReason: "The brief's author cannot review it.",
+      },
+    ]) {
+      const result = await exercise({
+        factory: false,
+        actor: { login: "helper[bot]", type },
+        after,
+      });
+      assert.match(
+        result.error?.message ?? "",
+        /this account|reviewed revision|Not authorized|author cannot review/,
+      );
+      assert.equal(writes(result).length, 1);
+    }
+  }
+});
+
+test("standard Bot and App reviewers cannot bypass revision notices or stale parent readiness", async () => {
+  for (const type of ["Bot", "App"]) {
+    for (const options of [
+      { state: { revision: `sha256:${"b".repeat(64)}` } },
+      { incomplete: true },
+      { labels: [label] },
+      { state: null, heading: "No revision notice", missingNotice: true },
+    ]) {
+      const result = await exercise({
+        factory: false,
+        actor: { login: "helper[bot]", type },
+        ...options,
+      });
+      assert.ok(result.error);
+      assert.deepEqual(writes(result), []);
+    }
+    const parent = await exercise({
+      factory: false,
+      actor: { login: "helper[bot]", type },
+      parent: true,
+      linkTime: time,
+      labels: [label],
+      events: [event(100)],
+      state: {
+        status: "approved",
+        label,
+        reviewer: "maintainer",
+        observedEventId: undefined,
+        reviewEventId: "100",
+      },
+    });
+    assert.equal(parent.error, undefined);
+    assert.deepEqual(
+      writes(parent).map(({ method }) => method),
+      ["DELETE", "POST"],
+    );
+  }
 });

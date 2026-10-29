@@ -40,12 +40,17 @@ suggested it applies no label.
 The factory runs an unlabelled ticket on the host's default model; a parent's
 label chooses none of its tickets' models.
 
-The factory accepts readiness only from a person. Readiness that an agent's
-tool applies through a GitHub App or bot account never starts a run, so the
-issue waits until a person applies readiness. An orchestrating agent working
-through such an account tells the owner, with links, that the brief it accepted
-waits for a person's readiness, even when its own readiness stands under the
-GitHub rules. It never reports that its own readiness started a run.
+The factory accepts readiness only from a person. In repositories governed by
+these rules, triage's bundled `ready.mjs` refuses GitHub App and bot accounts
+before any readiness write, even when their roles authorize review under the
+GitHub rules. The command checks the selected destination's installed rules,
+not an unrelated checkout. The orchestrating agent stops at acceptance and
+reports the reviewed brief and revision, suggested readiness, model and skip
+labels, and blockers to an authorized person, with links. The issue waits for
+that person's readiness; the agent never reports that factory work started.
+This person-only command refusal applies only where factory workflow rules
+are installed; elsewhere the generic readiness roles and revision-bound
+confirmation govern bot and App reviewers too.
 
 ## State labels
 
