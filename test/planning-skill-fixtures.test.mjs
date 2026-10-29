@@ -95,6 +95,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     const factory = [
       manifest.repositories["factory-planning"],
       manifest.repositories["triage-routing"],
+      manifest.repositories.orchestrate,
     ].includes(repository);
     assert.equal(repository.profile, factory ? "factory" : "standard");
     const lookup = execFileSync(
@@ -355,6 +356,43 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.match(orchestrateTask, /Findings section.*responsible.*tooling/);
   assert.match(orchestrateTask, /no pull request.*review ticket 01/);
   assert.match(orchestrateTask, /filing fails.*unfiled.*target repository/);
+  // Inputs exercise observation before approval and closure from worker records.
+  assert.match(participantInputs, /1a\. Pre-approval filing/);
+  assert.match(
+    participantInputs,
+    /1b\. Heartbeat.*configured cadence.*no PR.*no directly launched worker/,
+  );
+  assert.match(
+    participantInputs,
+    /1c\. Answered blocker question.*no observable continuation/,
+  );
+  assert.match(
+    participantInputs,
+    /2\. Approval:.*independent contract review.*other readiness gates/,
+  );
+  assert.match(orchestrateTask, /Observation.*readiness.*recovery rules/);
+  const closureInputs = readFileSync(
+    join(orchestrate.path, "docs/closure-inputs.md"),
+    "utf8",
+  );
+  for (const evidence of [
+    "11-findings.md",
+    "04-factory-only.md",
+    "05-already-closed.md",
+    "99-unrelated.md",
+    "02-final.md",
+    "receipt-review#4",
+    "tooling#4",
+  ])
+    assert.ok(closureInputs.includes(evidence), evidence);
+  assert.match(closureInputs, /absent from.*ticket table.*creation log/);
+  assert.match(closureInputs, /two references.*same.*tooling#4/);
+  assert.match(closureInputs, /pre-existing.*01-utf8-crash/);
+  assert.match(closureInputs, /directly launched.*without.*issue.*final/);
+  assert.match(
+    orchestrateTask,
+    /reconcile.*PR findings comments.*runs without PRs/,
+  );
   const factoryPlanning = manifest.repositories["factory-planning"];
   const factoryIntake = readFileSync(
     join(
