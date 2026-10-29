@@ -971,9 +971,18 @@ test("installed label rules override upstream meanings while retaining configure
     /`docs\/agents\/triage-labels\.md` maps canonical roles to tracker label strings; use the configured string for each role/,
     /Role meanings in these rules and the contribution guide take precedence over its upstream Meaning column, including the conflicting `needs-info` and `ready-for-human` entries/,
     /For `needs-info`, follow the contribution guide's Triage section for question routing and its inference test/,
-    /Agent work follows the agent path; where factory workflow rules are installed, follow them for factory pickup exclusions/,
+    /Agent work, including work awaiting the owner's review, follows the contribution guide's Triage and Readiness sections for `ready-for-agent`/,
+    /Where factory workflow rules are installed, follow their State labels section for factory pickup exclusions/,
   ])
     assert.match(labels, requirement);
+  assert.doesNotMatch(labels, /agent path/i);
+  const guide = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
+  assert.match(guide, /^## Triage$/m);
+  assert.match(guide, /^## Readiness$/m);
+  assert.match(
+    readFileSync(join(root, "rules/factory-workflow.md"), "utf8"),
+    /^## State labels$/m,
+  );
 });
 
 test("configuration and triage pointers distinguish label mapping from authoritative meanings", () => {
