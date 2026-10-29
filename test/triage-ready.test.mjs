@@ -31,6 +31,17 @@ const event = (
 async function exercise(options = {}, command = main) {
   const selectedLabel = options.argv?.[1] ?? label;
   const actor = { login: "maintainer", type: "User", ...options.actor };
+  // GraphQL names a Bot without the "[bot]" suffix that REST logins carry.
+  const viewer =
+    actor.type === "User"
+      ? { __typename: "User", login: actor.login }
+      : {
+          __typename: "Bot",
+          login:
+            typeof actor.login === "string"
+              ? actor.login.replace(/\[bot\]$/, "")
+              : actor.login,
+        };
   const repository = options.repository ?? "owner/repo";
   const [owner, name] = repository.split("/");
   const requests = [];
@@ -60,12 +71,14 @@ async function exercise(options = {}, command = main) {
       return json({ message: "Fixture failure" }, options.failure);
     if (url.pathname === "/user")
       return json({ message: "Resource not accessible by integration" }, 403);
-    if (url.pathname.startsWith("/users/"))
-      return json(
-        Object.hasOwn(options, "identityResponse")
-          ? options.identityResponse
-          : actor,
-      );
+    if (url.pathname.startsWith("/users/")) {
+      if (Object.hasOwn(options, "identityResponse"))
+        return json(options.identityResponse);
+      return decodeURIComponent(url.pathname.slice("/users/".length)) ===
+        actor.login
+        ? json(actor)
+        : json({ message: "Not Found" }, 404);
+    }
     if (
       url.pathname === "/graphql" &&
       body.query.includes("TriageActingAccount")
@@ -81,7 +94,7 @@ async function exercise(options = {}, command = main) {
         data: {
           viewer: Object.hasOwn(options, "viewerResponse")
             ? options.viewerResponse
-            : { login: actor.login },
+            : viewer,
         },
       });
     }
@@ -296,8 +309,7 @@ test("factory destinations refuse conflicting model labels and non-person accoun
   for (const options of [
     { labels: ["enhancement", "model:other"] },
     { actor: { login: "helper[bot]", type: "Bot" } },
-    { actor: { login: "helper", type: "Bot" } },
-    { actor: { login: "helper", type: "App" } },
+    { actor: { login: "helper[bot]", type: "App" } },
     { actor: { login: "helper[bot]", type: "User" } },
   ]) {
     const result = await exercise(options);
@@ -429,7 +441,7 @@ test("the installed triage command resolves the declared bundle without npm", as
     for (const actor of [
       { login: "maintainer", type: "User" },
       { login: "helper[bot]", type: "Bot" },
-      { login: "helper", type: "App" },
+      { login: "helper[bot]", type: "App" },
     ]) {
       const result = await exercise({ factory, actor }, command);
       if (factory && actor.type !== "User") {
@@ -485,8 +497,7 @@ test("validator cleanup does not hide a rejection of the command's label event",
 test("standard destinations permit Bot and App reviewers with validator-confirmed readiness", async () => {
   for (const actor of [
     { login: "helper[bot]", type: "Bot" },
-    { login: "helper", type: "Bot" },
-    { login: "helper", type: "App" },
+    { login: "helper[bot]", type: "App" },
   ]) {
     for (const selected of [label, "ready-for-human"]) {
       const result = await exercise({
@@ -544,6 +555,8 @@ test("unreadable identity or destination policy never authorizes readiness write
     { identityResponse: { login: "another-reviewer", type: "User" } },
     { viewerResponse: null },
     { viewerResponse: {} },
+    { viewerResponse: { login: "maintainer" } },
+    { viewerResponse: { __typename: "Organization", login: "maintainer" } },
     { viewerErrors: true },
     ...[401, 403, 503].map((status) => ({ viewerFailure: status })),
     { actor: { login: null } },
@@ -667,5 +680,24 @@ test("an App installation reviewer resolves its authenticated viewer without the
     result.requests.some(({ path }) => path === "/user"),
     false,
   );
+  assert.ok(
+    result.requests.some(({ path }) => path === "/users/integration%5Bbot%5D"),
+  );
   assert.equal(writes(result).length, 1);
+});
+
+test("a GraphQL Bot viewer resolves its suffixed account rather than a same-named person", async () => {
+  for (const factory of [false, true]) {
+    const result = await exercise({
+      factory,
+      actor: { login: "helper[bot]", type: "Bot" },
+      viewerResponse: { __typename: "Bot", login: "helper" },
+    });
+    assert.equal(
+      result.requests.some(({ path }) => path === "/users/helper"),
+      false,
+    );
+    assert.equal(result.error === undefined, !factory);
+    assert.equal(writes(result).length, factory ? 0 : 1);
+  }
 });

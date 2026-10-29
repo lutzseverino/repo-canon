@@ -410,15 +410,15 @@ readiness. Readiness it applies is bound to that revision like any other, so
 an edit to the brief removes it until the new revision is reviewed.
 
 Outside repositories governed by factory workflow rules, these roles authorize
-person, bot and App reviewers alike. Apply readiness through triage's bundled
-`ready.mjs` and require the validator's approval of that same account's event
-for the reviewed revision; account eligibility never authorizes manual labels
-that bypass this command or the validator. Where factory workflow rules are
-installed, their person-only eligibility also applies. The command establishes
-that boundary from the selected destination's installed
-`.repo-standards/rules/factory-workflow.md` at its default-branch commit,
-independently of the local checkout. A failed identity or applicability read
-authorizes no readiness writes.
+an orchestrating agent whose account is a person, bot or App alike. It applies
+readiness through triage's bundled `ready.mjs` and requires the validator's
+approval of that same account's event for the reviewed revision; its account's
+eligibility never authorizes manual labels that bypass this command or the
+validator. Where factory workflow rules are installed, their person-only
+eligibility also applies. The command establishes that boundary from the
+selected destination's installed `.repo-standards/rules/factory-workflow.md` at
+its default-branch commit, independently of the local checkout. A failed
+identity or applicability read authorizes no readiness writes.
 
 ## Native blockers
 

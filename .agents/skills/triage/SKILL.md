@@ -159,7 +159,7 @@ Every research run, on either path, does two checks first:
 5. **Record blockers.** Add a native blocker for each issue whose work must land first.
 6. **Tell the owner** what you accepted, with links to each brief, the labels you applied, the blockers you added, and every answer you inferred, so they can veto it.
 
-When your credentials cannot apply readiness, stop at acceptance: tell the owner, with links, which revision holds, the readiness, model and skip labels you chose, and the blockers to record. For a factory destination's person-only refusal, hand those details to an authorized person and report that factory work has not started. Use the command and its validator confirmation for non-factory bot/App readiness too.
+When your credentials cannot apply readiness, stop at acceptance: tell the owner, with links, which revision holds, the readiness, model and skip labels you chose, and the blockers to record. When the command refuses your account because the destination's factory rules require a person, give those details to an authorized person in the same way and report that factory work has not started.
 
 ## Other outcomes
 

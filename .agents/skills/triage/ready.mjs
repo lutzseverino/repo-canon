@@ -70,6 +70,37 @@ async function factoryPolicy(connection) {
   return { factory: files.rules !== null, evidence };
 }
 
+async function actingAccount(connection) {
+  // /user excludes installation tokens. Resolve the authenticated login through
+  // GraphQL, then retain REST's precise account type using the same credential.
+  const identity = await requestData(connection, {
+    method: "POST",
+    path: "/graphql",
+    body: {
+      query: "query TriageActingAccount { viewer { __typename login } }",
+    },
+  });
+  const viewer = identity?.data?.viewer;
+  if (
+    identity?.errors?.length ||
+    !["User", "Bot"].includes(viewer?.__typename) ||
+    typeof viewer.login !== "string" ||
+    !viewer.login.trim()
+  )
+    throw new Error("Could not identify the readiness acting account.");
+  // GraphQL omits the "[bot]" suffix that REST logins and events carry.
+  const login =
+    viewer.__typename === "Bot" && !viewer.login.endsWith("[bot]")
+      ? `${viewer.login}[bot]`
+      : viewer.login;
+  const actor = await requestData(connection, {
+    path: `/users/${encodeURIComponent(login)}`,
+  });
+  if (!["User", "Bot", "App"].includes(actor?.type) || actor.login !== login)
+    throw new Error("Could not identify the readiness acting account.");
+  return actor;
+}
+
 async function snapshot(connection, number) {
   const tracker = connection.issueTracker;
   const issue = await tracker.issue(number);
@@ -172,21 +203,7 @@ export async function main(
   const { number, label, revision, companions, repository } =
     argumentsFor(argv);
   connection ??= connectionFor(repository);
-  // /user excludes installation tokens. Resolve the authenticated login through
-  // GraphQL, then retain REST's precise account type using the same credential.
-  const identity = await requestData(connection, {
-    method: "POST",
-    path: "/graphql",
-    body: { query: "query TriageActingAccount { viewer { login } }" },
-  });
-  const login = identity?.data?.viewer?.login;
-  if (identity?.errors?.length || typeof login !== "string" || !login.trim())
-    throw new Error("Could not identify the readiness acting account.");
-  const actor = await requestData(connection, {
-    path: `/users/${encodeURIComponent(login)}`,
-  });
-  if (!["User", "Bot", "App"].includes(actor?.type) || actor.login !== login)
-    throw new Error("Could not identify the readiness acting account.");
+  const actor = await actingAccount(connection);
   const policy = await factoryPolicy(connection);
   if (
     policy.factory &&
