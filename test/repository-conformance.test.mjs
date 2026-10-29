@@ -1191,7 +1191,7 @@ test("owner-review routing returns an incomplete brief to its writer before acce
     "";
   assert.match(
     acceptance,
-    /When owner review before merge is the reason for bypassing factory pickup, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source/,
+    /When owner review before merge is reserved, in either profile, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source/,
   );
   assert.match(
     acceptance,
@@ -1568,20 +1568,22 @@ test("every skipped factory PR has worker completion and an orchestrator-owned m
   );
 });
 
-test("either owner-review designation source survives the PR handoff without making every skip require review", () => {
-  const factory = flowedText("rules/factory-workflow.md");
+test("either owner-review designation source survives handoffs in both profiles", () => {
+  const shared = flowedText("rules/github-repository-configuration.md");
   assert.match(
-    factory,
+    shared,
     /Owner review is required when either the accepted brief or the worker's handoff says so/,
   );
   assert.match(
-    factory,
+    shared,
     /Read both sources; an omission in one does not cancel a designation in the other/,
   );
   assert.match(
-    factory,
+    shared,
     /Carry that designation and its source into the PR handoff/,
   );
+  assert.match(shared, /Record the designation and its source on the PR/);
+  const factory = flowedText("rules/factory-workflow.md");
   assert.match(
     factory,
     /The skip marker alone requires no owner review; without a designation, the orchestrating agent merges under the ordinary applicable conditions/,
@@ -1589,27 +1591,32 @@ test("either owner-review designation source survives the PR handoff without mak
 });
 
 test("owner-reviewed heads need explicit current-head approval independently of other delivery gates", () => {
-  const factory = flowedText("rules/factory-workflow.md");
+  const shared = flowedText("rules/github-repository-configuration.md");
   assert.match(
-    factory,
-    /Before merging a designated PR, the orchestrating agent verifies the owner's explicit approval of the current head/,
+    shared,
+    /Before merging a designated PR, the merging agent verifies the owner's explicit approval of the current head/,
   );
   assert.match(
-    factory,
+    shared,
     /Any head change requires renewed owner approval; approval of an earlier head does not authorize the new one/,
   );
   assert.match(
-    factory,
+    shared,
     /Passing checks, a configured external review, its absence or timeout, and an app-author review-policy skip never substitute for owner approval/,
   );
   assert.match(
-    factory,
+    shared,
     /When approval is missing, follow the contribution guide's owner-question handoff and leave the PR unmerged/,
   );
+  assert.match(shared, /Record the approval's source and head SHA on the PR/);
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(
     babysit,
     /Before each merge attempt, verify merge ownership and any required owner approval against the current head/,
+  );
+  assert.match(
+    babysit,
+    /Read the accepted brief and any worker handoff and apply the `github-repository-configuration` rules' Designated owner review gate/,
   );
   assert.match(babysit, /`2` means the head changed, so return to step 1/);
   assert.match(
@@ -1625,6 +1632,54 @@ test("owner-reviewed heads need explicit current-head approval independently of 
     mergeDoc,
     /The script's expected-head check preserves that decision against a head change; it does not establish authorization itself/,
   );
+});
+
+test("shared owner review preserves standard merge ownership and undesignated delivery", () => {
+  const shared = flowedText("rules/github-repository-configuration.md");
+  const gate =
+    /## Designated owner review (.*?)(?= ## |$)/.exec(shared)?.[1] ?? "";
+  assert.match(
+    gate,
+    /This gate applies in both profiles and does not assign merge ownership/,
+  );
+  assert.match(
+    gate,
+    /In the standard profile, the otherwise authorized merging agent, ordinarily the implementing agent, enforces it/,
+  );
+  assert.match(
+    gate,
+    /It requires no factory label, pickup or recovery mechanism/,
+  );
+  assert.match(
+    gate,
+    /Without a designation, ordinary applicable merge conditions hold/,
+  );
+  assert.doesNotMatch(gate, /factory:|orchestrating agent/);
+  const factory = flowedText("rules/factory-workflow.md");
+  assert.match(
+    factory,
+    /Apply the `github-repository-configuration` rules' Designated owner review gate/,
+  );
+  assert.doesNotMatch(
+    factory,
+    /Owner review is required when either|Before merging a designated PR|Any head change requires renewed owner approval/,
+  );
+});
+
+test("triage preserves owner-review reservations independently of profile routing", () => {
+  const triage = flowedText(".agents/skills/triage/SKILL.md");
+  assert.match(
+    triage,
+    /When owner review before merge is reserved, in either profile, verify that the brief explicitly designates it as contract behavior/,
+  );
+  for (const path of [
+    ".agents/skills/triage/SKILL.md",
+    ".agents/skills/triage/AGENT-BRIEF.md",
+  ])
+    assert.match(
+      flowedText(path),
+      /`github-repository-configuration` rules' Designated owner review gate/,
+    );
 });
 
 test("skipped owner questions resume workers or the same PR through the orchestrating agent", () => {
@@ -1760,12 +1815,15 @@ test("designated skipped PR approval pauses resume the same PR without ordinary 
   // one alone used to admit transferring this PR's merge back to the owner.
   assert.match(
     state,
-    /When approval is missing, follow the contribution guide's owner-question handoff and leave the PR unmerged\. For this approval pause, keep the PR open, retain `factory:needs-input` and `factory:skip` on its issue, and preserve the orchestrating agent's merge ownership/,
+    /When the shared gate requires an approval pause, keep the PR open, retain `factory:needs-input` and `factory:skip` on its issue, and preserve the orchestrating agent's merge ownership/,
   );
-  assert.match(state, /Record the approval's source and head SHA on the PR/);
   assert.match(
     state,
-    /After verifying and recording current-head approval as above, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR, merging only when all other applicable merge conditions hold/,
+    /Apply the `github-repository-configuration` rules' Designated owner review gate/,
+  );
+  assert.match(
+    state,
+    /After verifying and recording current-head approval under the shared gate, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR, merging only when all other applicable merge conditions hold/,
   );
   assert.match(
     state,

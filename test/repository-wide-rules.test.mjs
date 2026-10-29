@@ -601,6 +601,15 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
         const expected = profiles.includes(profile) ? 1 : 0;
         assert.equal(rules.length, expected, `${profile} ${declaration}`);
         if (!expected) continue;
+        if (declaration === "github-repository-configuration") {
+          const gate = rules[0].content.replace(/\s+/g, " ");
+          assert.match(gate, /## Designated owner review/);
+          assert.match(
+            gate,
+            /Owner review is required when either the accepted brief or the worker's handoff says so/,
+          );
+          assert.match(gate, /Any head change requires renewed owner approval/);
+        }
         assert.equal(rules[0].coverage, "repository");
         assert.equal(
           rules[0].content,

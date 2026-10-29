@@ -290,6 +290,14 @@ repeated.
   `ready-for-agent`, a `model:` label and `factory:skip`. Only the
   [factory workflow rules](rules/factory-workflow.md) name that label, since
   the canonical labels carry no `factory:` label.
+- Designated owner review has one current-head approval gate in both profiles,
+  stated in the [GitHub repository configuration rules](rules/github-repository-configuration.md#designated-owner-review).
+  The owner chose this shared gate on 2026-10-29 in
+  [#665](https://github.com/lutzseverino/repo-canon/issues/665#issuecomment-6498159486),
+  retaining the otherwise authorized merge actor in the standard profile and
+  the orchestrating agent for factory-skip work. The
+  [factory workflow rules](rules/factory-workflow.md) retain that profile's
+  merge ownership and approval-pause continuation.
 - The skill setup files under docs/agents are installed verbatim from the
   vendored upstream setup seeds, and Repo Canon writes nothing into them, as
   [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
