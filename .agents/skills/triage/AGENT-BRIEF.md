@@ -46,7 +46,7 @@ The implementing agent can't ask the owner anything, so a brief settles every qu
 - **Bad:** "Open question: should admins be exempt?"
 - **Good:** "Retry for 30 minutes after the first failure, then mark the Parcel failed", with the owner's decision linked from the triage notes
 
-When the owner has reserved review before merge, state that designation as contract behavior and retain its dated decision source in the triage notes for the worker's PR handoff. Use the recorded reservation, not a routing label, as its source. Follow the `github-repository-configuration` rules' Designated owner review gate in both profiles; applicable installed rules retain merge ownership and continuation.
+When the owner has reserved review before merge, state that designation as contract behavior and retain its dated decision source in the triage notes for the worker's PR handoff. Use the recorded reservation, not a routing label, as its source. Follow applicable installed rules for routing and delivery.
 
 Implementation choices that don't change what users or operators see stay with the agent; leave them out.
 
