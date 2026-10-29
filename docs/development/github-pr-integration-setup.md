@@ -4,8 +4,8 @@ The GitHub PR integration setup is a repeat-safe Repository Standards fixes
 operation. It requires the stable `PR metadata` check from the
 [pull request metadata workflow](pr-metadata-validation.md) on the default
 branch wherever GitHub offers branch protection or rulesets for the repository
-and the default branch carries that workflow, and configures these repository
-merge settings:
+and the default branch carries that workflow. It enables GitHub's up-to-date-branch
+requirement alongside the required check and configures these repository merge settings:
 
 | Setting               | Required value           |
 | --------------------- | ------------------------ |
@@ -20,20 +20,23 @@ and repository rulesets. When classic required status checks already protect
 the default branch, it adds `PR metadata` to that list without replacing the
 adopter's checks. Otherwise it creates or reconciles a dedicated
 `Repo Canon required PR checks` ruleset. Reconciliation keeps other check
-names, rules, branch includes, bypass actors, and strict-check policy in that
-ruleset while making it active and applicable to the default branch. Other
+names, rules, branch includes and bypass actors in that ruleset while enabling
+`strict_required_status_checks_policy` and making it active and applicable to
+the default branch. Classic protection keeps its existing check/app bindings;
+setup adds the missing context through the additive contexts endpoint, then
+PATCHes only `strict: true` through required-status-check protection. Other
 rulesets and branch policy remain untouched.
 
 The classic-protection read distinguishes GitHub's documented response states
 before choosing an enforcement location:
 
-| Branch protection response                         | Required-check action                                                | Readback                                                                           |
-| -------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `404 Branch not protected`                         | Use the dedicated ruleset                                            | Confirm an active ruleset applies to the default branch and requires `PR metadata` |
-| `200` with no `required_status_checks` policy      | Preserve the other classic protections and use the dedicated ruleset | Confirm the same ruleset enforcement                                               |
-| `200` with `required_status_checks`                | Add `PR metadata` to the existing classic contexts                   | Re-read branch protection and confirm the context                                  |
-| `403` plan limit on both reads, private repository | Make no protection or ruleset change; reconcile only merge settings  | Re-read merge settings only                                                        |
-| Any other `404` or unreadable response             | Return `blocked` without mutation                                    | None; the operation cannot safely distinguish absence from inaccessible state      |
+| Branch protection response                         | Required-check action                                                          | Readback                                                                                                 |
+| -------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `404 Branch not protected`                         | Use the dedicated ruleset                                                      | Confirm an active ruleset applies to the default branch and requires `PR metadata` with strict freshness |
+| `200` with no `required_status_checks` policy      | Preserve the other classic protections and use the dedicated ruleset           | Confirm the same ruleset enforcement                                                                     |
+| `200` with `required_status_checks`                | Add `PR metadata` to the existing classic contexts and enable strict freshness | Re-read branch protection and confirm the context and strict freshness                                   |
+| `403` plan limit on both reads, private repository | Make no protection or ruleset change; reconcile only merge settings            | Re-read merge settings only                                                                              |
+| Any other `404` or unreadable response             | Return `blocked` without mutation                                              | None; the operation cannot safely distinguish absence from inaccessible state                            |
 
 Requiring `PR metadata` is a plan-gated requirement. GitHub offers neither
 classic protection nor rulesets on a private repository on some plans, and
@@ -58,7 +61,7 @@ Actions workflow list is not used, because GitHub keeps listing a workflow
 after its file leaves the default branch.
 
 Ruleset readback checks active enforcement, branch applicability, exclusions,
-and the required-check rule together. An inactive or non-applicable managed
+the required-check rule and strict freshness together. An inactive or non-applicable managed
 ruleset is reconciled before settings are changed.
 
 Repository settings are updated with only the five fields in the table, so
@@ -141,7 +144,7 @@ setting. It returns `unchanged` when the first read already matches. Results use
 
 Missing merge settings and a missing dedicated ruleset are created freely.
 Before any mutation, the fix checks the complete plan for changes to existing
-merge settings, classic protection's required-check contexts, and the managed
+merge settings, classic protection's required-check contexts and strict freshness, and the managed
 ruleset's enforcement, conditions, or rules. When `overwriteAllowed` is
 `false`, any such difference returns `confirmation-required`, naming each
 setting and its current and proposed values. It makes no mutation, including
@@ -187,6 +190,14 @@ integration matches what GitHub offers the repository, names the unavailable
 requirement and its reason, and asks to upgrade the plan or make the repository
 public; the next adoption or update then requires the check as usual.
 
+Adoption deferrals never authorize unattended merging. Until current GitHub
+policy reads confirm strict freshness, unattended delivery stops for an owner
+handoff. This also applies to unavailable enforcement, unreadable settings and
+failed readback. Setup preserves bypass actors and admin-enforcement settings;
+babysit requires an enforcement path that cannot bypass the platform's final
+freshness guard. The rules define that merge condition separately from setup's
+point-in-time readback.
+
 When the default branch does not carry the workflow, requiring `PR metadata` is
 deferred. The operation creates no ruleset, adds no classic required check, and
 leaves existing branch protection and rulesets as they are, including an
@@ -195,7 +206,7 @@ back, returning `changed` when it updated them and `unchanged` when they
 already matched, so the adoption completes. Its message says the integration
 applies squash-only integration, PR-title subjects, and PR-body messages,
 names the deferred requirement and the default branch that lacks the workflow,
-and asks to merge the adoption. Once the adoption pull request merges and the
+and asks the owner to merge the adoption. Once the adoption pull request merges and the
 workflow is on the default branch, the next adoption or update, including one
 with an unchanged selection, requires the check as usual.
 
@@ -215,7 +226,7 @@ backed by stateful GitHub responses. The gh fixture answers only version and
 token reads. They exercise classic branch protection, repository rulesets,
 merge settings, the plan-limit response on either read, a workflow that is
 present, absent, or unreadable on the default branch, identity, permissions,
-partial effects, readback, retry, and unchanged repetition without contacting
+partial effects, strict freshness, confirmation, readback, partial freshness failures, retry, and unchanged repetition without contacting
 GitHub or mutating live settings:
 
 ```sh

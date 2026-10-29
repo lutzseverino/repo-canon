@@ -25,11 +25,54 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       if (repository !== state.repository)
         return json({ message: "Wrong destination repository" }, 404);
     }
+    if (state.traceRequests) {
+      state.requests = [
+        ...(state.requests ?? []),
+        `${options.method ?? "GET"} ${path}`,
+      ];
+      save();
+    }
     if (state.fail) return json({ message: "Server Error" }, 502);
     const connection = (nodes) => ({
       nodes,
       pageInfo: { hasNextPage: false, endCursor: null },
     });
+    if (/\/repos\/[^/]+\/[^/]+$/.test(path))
+      return json({ default_branch: state.defaultBranch ?? "main" });
+    if (/\/rules\/branches\//.test(path)) {
+      if (state.failFreshness)
+        return json({ message: "freshness read failed" }, state.failFreshness);
+      return json(
+        state.rules ?? [
+          {
+            type: "required_status_checks",
+            ruleset_id: 50,
+            parameters: {
+              strict_required_status_checks_policy: state.strict ?? true,
+              required_status_checks: [{ context: "CI" }],
+            },
+          },
+        ],
+      );
+    }
+    if (/\/rulesets\/50$/.test(path))
+      return json({ id: 50, bypass_actors: state.bypassActors ?? [] });
+    if (/\/branches\/[^/]+\/protection$/.test(path))
+      return state.protection
+        ? json(state.protection)
+        : json({ message: "Branch not protected" }, 404);
+    if (/\/compare\//.test(path)) {
+      const stale =
+        state.stale ||
+        (state.testedBase ?? "b".repeat(40)) !==
+          (state.defaultRevision ?? "b".repeat(40));
+      return json(
+        state.comparison ?? {
+          status: stale ? "diverged" : "ahead",
+          behind_by: stale ? 1 : 0,
+        },
+      );
+    }
     if (path === "/graphql") {
       if (body.query.includes("BabysitReviewRevision")) {
         if (state.traceReviewConfiguration) {
@@ -147,12 +190,45 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         expectedHead: body.sha,
         method: body.merge_method,
       };
+      if (state.advanceBaseOnMerge)
+        state.defaultRevision = state.advanceBaseOnMerge;
+      if (state.mergeStatus) {
+        save();
+        return json({ message: "merge refused" }, state.mergeStatus);
+      }
+      // Model GitHub's strict required-check guard at the merge boundary,
+      // independently of the helper's earlier comparison.
+      if (
+        (state.strict ?? true) &&
+        (state.testedBase ?? "b".repeat(40)) !==
+          (state.defaultRevision ?? "b".repeat(40))
+      ) {
+        save();
+        return json(
+          {
+            message:
+              "Base branch was modified. Review and try the merge again.",
+          },
+          405,
+        );
+      }
+      if (state.mergeChecks && state.mergeChecks !== "success") {
+        save();
+        return json(
+          { message: "Required status check CI is not successful." },
+          405,
+        );
+      }
       if (state.mergeHead) state.head = state.mergeHead;
       if (!state.mergeHead && !state.mergeFail)
         state.pullRequestState = state.mergeState ?? "MERGED";
       save();
       if (state.mergeHead || state.mergeFail)
         return json({ message: "merge refused" }, 409);
+      if (state.pullRequestState === "MERGED") {
+        state.defaultRevision = "c".repeat(40);
+        save();
+      }
       return json({
         merged: state.pullRequestState === "MERGED",
         sha: "c".repeat(40),

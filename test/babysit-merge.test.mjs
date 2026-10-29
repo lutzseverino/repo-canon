@@ -155,3 +155,114 @@ test("installed babysit resolves declared bundle, license and provenance and mer
   assert.equal(result.stderr, "");
   assert.equal(result.state.merge.body, "Verbatim installed body");
 });
+
+test("returns stale-base recovery rather than merging old validation", (t) => {
+  const result = run(t, { stale: true });
+  assert.equal(result.status, 4, result.stderr);
+  assert.match(result.stderr, /base.*advanced.*update.*validat.*wait/i);
+  assert.equal(result.state.merge, undefined);
+});
+
+test("stops unattended merging when strict freshness is unconfirmed", (t) => {
+  for (const state of [
+    { strict: false },
+    { rules: [] },
+    { failFreshness: 502 },
+  ]) {
+    const result = run(t, state);
+    assert.notEqual(result.status, 0);
+    assert.equal(result.state.merge, undefined);
+    assert.match(result.stderr, /freshness|GitHub/);
+  }
+});
+
+test("two green PRs on one base require new validation after the first merges", (t) => {
+  const first = run(t, { mergeChecks: "success" });
+  assert.equal(first.status, 0, first.stderr);
+  const state = { ...first.state };
+  delete state.merge;
+  const secondHead = "d".repeat(40);
+  const second = { ...state, pullRequestState: "OPEN", head: secondHead };
+  const stale = run(t, second, ["13", secondHead]);
+  assert.equal(stale.status, 4, stale.stderr);
+  assert.equal(stale.state.merge, undefined);
+  // A branch update preserves the PR work, but the replacement head must
+  // earn its own green checks before the platform will merge it.
+  const updatedHead = "e".repeat(40);
+  const updated = {
+    ...second,
+    head: updatedHead,
+    testedBase: first.state.defaultRevision,
+  };
+  for (const mergeChecks of ["pending", "failure"]) {
+    const waiting = run(t, { ...updated, mergeChecks }, ["13", updatedHead]);
+    assert.equal(waiting.status, 1, waiting.stderr);
+    assert.equal(waiting.state.pullRequestState, "OPEN");
+  }
+  const validated = run(t, { ...updated, mergeChecks: "success" }, [
+    "13",
+    updatedHead,
+  ]);
+  assert.equal(validated.status, 0, validated.stderr);
+});
+
+test("GitHub refuses a base advance between freshness inspection and merge", (t) => {
+  const result = run(t, { advanceBaseOnMerge: "d".repeat(40) });
+  assert.equal(result.status, 4, result.stderr);
+  assert.equal(result.state.pullRequestState, undefined);
+  assert.ok(
+    result.state.merge,
+    "the platform, rather than preflight alone, refused the stale merge",
+  );
+  assert.equal(result.stdout, "");
+});
+
+test("supports enforced classic freshness and refuses bypassable enforcement", (t) => {
+  const protection = {
+    required_status_checks: { strict: true, contexts: ["CI"] },
+    enforce_admins: { enabled: true },
+  };
+  const classic = run(t, { rules: [], protection });
+  assert.equal(classic.status, 0, classic.stderr);
+  for (const state of [
+    {
+      rules: [],
+      protection: { ...protection, enforce_admins: { enabled: false } },
+    },
+    {
+      rules: [],
+      protection: {
+        ...protection,
+        required_status_checks: { strict: true, contexts: [] },
+      },
+    },
+    {
+      bypassActors: [
+        { actor_type: "Integration", actor_id: 1, bypass_mode: "always" },
+      ],
+    },
+    { baseBranch: "release" },
+    {
+      rules: [
+        {
+          type: "required_status_checks",
+          parameters: {
+            strict_required_status_checks_policy: true,
+            required_status_checks: [],
+          },
+        },
+      ],
+    },
+  ]) {
+    const stopped = run(t, state);
+    assert.equal(stopped.status, 3, stopped.stderr);
+    assert.equal(stopped.state.merge, undefined);
+  }
+});
+
+test("permission refusal ends merge handling without a retry or further read", (t) => {
+  const result = run(t, { mergeStatus: 403, traceRequests: true });
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /403/);
+  assert.match(result.state.requests.at(-1), /PUT .*\/merge$/);
+});

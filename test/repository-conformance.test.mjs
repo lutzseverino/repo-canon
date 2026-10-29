@@ -464,7 +464,7 @@ test("the GitHub rules state the reviewer file's schema, and babysit only cites 
   const guide = flowedText("CONTRIBUTING.md");
   assert.match(
     guide,
-    /The `github-repository-configuration` rules state when a head with no check counts as passed, and, for the optional repository-owned `\.github\/pull-request-reviewer\.json`, its schema, review requests, and merging with or without the configured reviewer's review/,
+    /The `github-repository-configuration` rules define freshness, passing checks and reviewer policy/,
   );
   assert.doesNotMatch(guide, /`babysit`\]\([^)]*\) documents its schema/);
   assert.match(
