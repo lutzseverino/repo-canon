@@ -52,10 +52,11 @@ recorded as given.
 
 ### `index.md`
 
-One line per active plan: its directory, its goal in a few words, and the
-reference of the session that owns it. When a plan closes, move its line under
-a `Closed` heading, dated. A `Launch caps` list names a host by its hostname and
-the most agent launches you may run at once on it.
+One line per active plan, including proposals awaiting approval: its directory,
+its goal in a few words, and the reference of the session that owns it. When a
+plan closes, move its line under a `Closed` heading, dated. A `Launch caps` list
+names a host by its hostname and the most agent launches you may run at once
+on it.
 
 ### `inbox.md`
 
@@ -108,7 +109,10 @@ the finding's tracker record or reporting links.
   the done marks a grill and a triage run set.
 - **Open issues.** Count each repository's open issues when the plan starts and
   again at close. Report the counts; they set no limit.
-- **Log.** Take every timestamp from the clock, in UTC, with
+- **Log.** Record every issue the plan files with its repository, number and
+  creation evidence, including findings outside the ticket table. Keep each
+  factory or directly launched run's issue, run and PR references and its final
+  findings-report location. Take every timestamp from the clock, in UTC, with
   `date -u +%Y-%m-%dT%H:%MZ`, never by hand.
 
 A **plan update** is any report to the owner about a plan, the proposal
@@ -118,9 +122,13 @@ with their citations, and shows the decision inbox. Log the items it showed.
 ## Lifecycle
 
 1. **Propose.** Present the goal, Done means and ticket table to the owner for
-   approval, as a plan update. On approval, write the approval line, with what
-   the approval preapproves, record the open-issue counts at start, and add
-   the plan to `index.md`.
+   approval, as a plan update. Record the proposal in the plan directory and
+   `index.md` before filing work; record the open-issue counts at start.
+   Research, filing and brief preparation may precede plan approval. Hold
+   ticket readiness for plan execution until the owner's plan approval is
+   recorded. On approval, write the approval line with its source and what it
+   preapproves. Plan approval replaces neither independent brief review nor
+   any other readiness condition in the contribution guide and installed rules.
 2. **Intake.** Route each new request as the contribution guide's Triage
    section says, with the `triage` skill's method. Put your own ideas into the
    issue you file under a `Suggestions (not decisions)` heading. Give each
@@ -158,12 +166,24 @@ with their citations, and shows the decision inbox. Log the items it showed.
      that supersedes the old one.
    - **Wish:** it lies outside the goal and is not a Finding. Add it to
      `wishes.md`; it needs no issue merely because it is a wish.
-5. **Close.** Once every row has ended, record the open-issue counts at close,
-   move the plan under `Closed` in `index.md`, and announce, as the last plan
-   update:
+5. **Close.** Once every row has ended, collect the plan's issue-creation
+   records. Reconcile those records with every run's findings: PR findings
+   comments and, for runs without PRs, the reporting locations the contribution
+   guide prescribes. Include factory and directly launched workers, even when
+   their findings are absent from the ticket table. Follow creation evidence
+   from those reports to recover issues missing from the plan's log.
+   Consolidate references by repository and issue number, then check current
+   issue state. Distinguish newly plan-filed issues from pre-existing linked
+   findings and unrelated concurrent work; retain the provenance links.
+   Closed issues stay out of the still-open list. Outside findings need not be
+   resolved for the plan to close.
+
+   After reconciliation, record the open-issue counts at close, move the plan
+   under `Closed` in `index.md`, and announce, as the last plan update:
    - what shipped and what was dropped;
    - the inferred-intent items and the wishes the plan added;
-   - every issue the plan filed that is still open, each with its reason;
+   - every issue the plan filed that is still open, each with its reason and
+     evidence link;
    - one suggested next direction, taken from the wishes and the parked items.
 
 ## Running the plan
@@ -183,6 +203,25 @@ with their citations, and shows the decision inbox. Log the items it showed.
   accepted brief and PR handoff, then resume `babysit`, including when resuming
   a plan. After an owner question is resolved, follow the applicable installed
   continuation rules to resume the worker or that same open PR.
+
+### Progress observation
+
+Use the available harness's recurring mechanism to extend the existing
+heartbeat at its configured cadence. Observe unresolved filed work associated
+with the plan from filing, before plan approval and before a PR exists:
+factory tickets, directly launched workers and recorded blockers. Keep that
+coverage when resuming a plan; refresh it as issues and blockers are recorded.
+When the harness cannot arrange recurring observation, report that limit and
+re-read these records at each turn.
+
+Read issue state and labels, latest comments and owner answers, blocker state,
+run progress and any PR. Compare with the previous dated observation in the
+plan log. Record approval and blocker waits separately from unexplained lack
+of progress. When an answered owner question has no observable continuation,
+surface it with current state and issue/run/PR evidence links, recording absent
+run or PR evidence explicitly. Route any intervention through the contribution
+guide and applicable installed recovery rules. Observation authorizes no
+execution and adds no stall timeout or recovery procedure.
 
 ## Report-back
 

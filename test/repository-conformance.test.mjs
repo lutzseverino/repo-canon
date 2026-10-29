@@ -1261,6 +1261,92 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, which credi
   );
 });
 
+test("orchestrate observes filed work before approval without authorizing execution", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  assert.match(
+    skill,
+    /Record the proposal in the plan directory and `index.md` before filing work/,
+  );
+  assert.match(
+    skill,
+    /Research, filing and brief preparation may precede plan approval/,
+  );
+  assert.match(
+    skill,
+    /Hold ticket readiness for plan execution until the owner's plan approval is recorded/,
+  );
+  assert.match(
+    skill,
+    /Plan approval replaces neither independent brief review nor any other readiness condition/,
+  );
+  assert.match(skill, /existing heartbeat at its configured cadence/);
+  assert.match(
+    skill,
+    /from filing, before plan approval and before a PR exists/,
+  );
+  assert.match(
+    skill,
+    /factory tickets, directly launched workers and recorded blockers/,
+  );
+  assert.match(skill, /available harness's recurring mechanism/);
+  assert.match(skill, /Observation authorizes no execution/);
+  assert.doesNotMatch(skill, /(?:15|30)[- ]minute|after (?:six|6) hours/i);
+});
+
+test("orchestrate retains observation evidence and routes unexplained inactivity through existing recovery", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  assert.match(
+    skill,
+    /issue state and labels, latest comments and owner answers, blocker state, run progress and any PR/,
+  );
+  assert.match(skill, /Compare with the previous dated observation/);
+  assert.match(
+    skill,
+    /approval and blocker waits separately from unexplained lack of progress/,
+  );
+  assert.match(skill, /answered owner question has no observable continuation/);
+  assert.match(skill, /current state and issue\/run\/PR evidence links/);
+  assert.match(
+    skill,
+    /contribution guide and applicable installed recovery rules/,
+  );
+  assert.match(skill, /adds no stall timeout or recovery procedure/);
+});
+
+test("orchestrate reconciles closure from run findings with repository identity and provenance", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  assert.match(
+    skill,
+    /Record every issue the plan files with its repository, number and creation evidence/,
+  );
+  assert.match(skill, /Reconcile those records with every run's findings/);
+  assert.match(
+    skill,
+    /PR findings comments and, for runs without PRs, the reporting locations the contribution guide prescribes/,
+  );
+  assert.match(
+    skill,
+    /Include factory and directly launched workers, even when their findings are absent from the ticket table/,
+  );
+  assert.match(
+    skill,
+    /Consolidate references by repository and issue number, then check current issue state/,
+  );
+  assert.match(
+    skill,
+    /Distinguish newly plan-filed issues from pre-existing linked findings and unrelated concurrent work/,
+  );
+  assert.match(
+    skill,
+    /every issue the plan filed that is still open, each with its reason and evidence link/,
+  );
+  assert.match(skill, /Closed issues stay out of the still-open list/);
+  assert.match(
+    skill,
+    /Outside findings need not be resolved for the plan to close/,
+  );
+});
+
 test("orchestrate wishes preserve mandatory Findings reporting", () => {
   const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
   const wish = flowedText("GLOSSARY.md")
