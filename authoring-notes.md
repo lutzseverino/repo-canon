@@ -312,6 +312,14 @@ repeated.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   and [issue contract validation](docs/development/issue-contract-validation.md)
   state what each check requires and how a contract loses readiness.
+- Required checks include the current default branch through GitHub's strict
+  up-to-date-branch enforcement for every adopter. Setup reconciles classic
+  protection and managed rulesets with confirmation and readback, preserving
+  unrelated policy. Babysit returns a stale PR to a bounded branch update,
+  validation and review cycle; GitHub guards the race at merge time. Unavailable,
+  unreadable or unconfirmed enforcement stops unattended merging even when
+  adoption deferred setup. The owner accepted extra CI runs for concurrent PRs
+  in [#656](https://github.com/lutzseverino/repo-canon/issues/656#issuecomment-6451776114).
 - Accepted automation prerequisites are GitHub Actions, permission to update
   issue labels/comments, and repository-setup permission for labels and branch
   rules. Metadata validation runs trusted code without executing PR-supplied

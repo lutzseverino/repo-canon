@@ -154,6 +154,8 @@ globalThis.fetch = async (input, options = {}) => {
         (check) => check.context !== "PR metadata",
       );
     }
+    if (state.readbackMismatch === "branch freshness" && state.branchReads > 1)
+      protection.required_status_checks.strict = false;
     return json(protection);
   }
   if (method === "GET" && rulesetsEndpoint.test(endpoint)) {
@@ -177,6 +179,13 @@ globalThis.fetch = async (input, options = {}) => {
     const value = structuredClone(ruleset);
     if (state.readbackMismatch === "ruleset" && (state.mutations ?? 0) > 0)
       value.enforcement = "evaluate";
+    if (
+      state.readbackMismatch === "ruleset freshness" &&
+      (state.mutations ?? 0) > 0
+    )
+      value.rules.find(
+        (rule) => rule.type === "required_status_checks",
+      ).parameters.strict_required_status_checks_policy = false;
     return json(value);
   }
   if (method !== "GET") {
@@ -217,6 +226,15 @@ globalThis.fetch = async (input, options = {}) => {
       });
       save();
       return json(label);
+    }
+    if (
+      method === "PATCH" &&
+      endpoint.endsWith("/protection/required_status_checks")
+    ) {
+      record("enable branch freshness");
+      Object.assign(state.branchProtection.required_status_checks, body);
+      save();
+      return json(state.branchProtection.required_status_checks);
     }
     if (method === "POST" && contextsEndpoint.test(endpoint)) {
       record("add branch status check");
