@@ -62,6 +62,17 @@ function defaultRemote() {
     const remote = git("remote", "get-url", name);
     const scp = /^(?:[^@/\s]+@)?([^:/\s]+):(?!\/)(.+)$/.exec(remote);
     const url = new URL(scp ? `ssh://${scp[1]}/${scp[2]}` : remote);
+    if (url.protocol === "ssh:" || url.protocol === "git+ssh:") {
+      const configuration = execFileSync("ssh", ["-G", url.hostname], {
+        encoding: "utf8",
+        timeout: 15_000,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      const hostname = /^hostname (\S+)$/m.exec(configuration)?.[1];
+      if (!hostname)
+        throw new Error("Could not resolve the configured SSH remote host.");
+      url.hostname = hostname;
+    }
     const path = url.pathname.replace(/^\/+|\/+$/g, "").replace(/\.git$/, "");
     const destination =
       resolution === "base" ? path : resolution.split("/").slice(-2).join("/");

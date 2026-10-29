@@ -123,7 +123,8 @@ wait and merge destination selection with a configured GitHub CLI default,
 `GH_REPO`, explicit overrides and the `origin` fallback, including trusted reads,
 mutations and selection failures. The real CLI fixtures also cover configured
 enterprise defaults being refused before HTTP in request, wait, merge and
-readiness, SSH defaults, resolved parent identities and overrides. The shared
+readiness, SSH defaults and hostname aliases, resolved parent identities and
+overrides. The shared
 resolver recovers the configured default host from local Git remote configuration
 because the CLI default display omits it; an unresolved or ambiguous identity
 fails without falling back. The commands resolve the destination default

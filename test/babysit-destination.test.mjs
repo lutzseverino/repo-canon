@@ -14,6 +14,7 @@ import test from "node:test";
 import { installedValidator } from "./helpers/installed-validator.mjs";
 
 const gh = execFileSync("which", ["gh"], { encoding: "utf8" }).trim();
+const ssh = execFileSync("which", ["ssh"], { encoding: "utf8" }).trim();
 const fixture = new URL("./fixtures/postern-babysit.mjs", import.meta.url);
 const head = "a".repeat(40);
 const revision = "b".repeat(40);
@@ -114,6 +115,20 @@ if (args.join(" ") === "auth token --hostname github.com") {
   const result = spawnSync(${JSON.stringify(gh)}, args, { stdio: "inherit" });
   process.exit(result.status ?? 1);
 } else process.exit(99);
+`,
+    { mode: 0o755 },
+  );
+  const sshConfig = join(directory, "ssh-config");
+  writeFileSync(
+    sshConfig,
+    "Host github-work\n  HostName github.com\nHost enterprise-work\n  HostName ghe.example.com\n",
+  );
+  writeFileSync(
+    join(directory, "ssh"),
+    `#!${process.execPath}
+const { spawnSync } = require("node:child_process");
+const result = spawnSync(${JSON.stringify(ssh)}, ["-F", ${JSON.stringify(sshConfig)}, ...process.argv.slice(2)], { stdio: "inherit" });
+process.exit(result.status ?? 1);
 `,
     { mode: 0o755 },
   );
@@ -321,6 +336,7 @@ for (const entry of ["connection", "request", "wait", "merge", "ready"]) {
 
 for (const options of [
   { defaultHost: "" },
+  { defaultHost: "", defaultRemote: "git@github-work:example/repository.git" },
   { defaultHost: "", extraDefault: "git@github.com:example/repository.git" },
   { defaultRemote: "git@github.com:example/repository.git" },
   { defaultRemote: "ssh://git@ssh.github.com:443/example/repository.git" },
@@ -363,5 +379,18 @@ test("the shared installed resolver retains the configured github.com default id
     host: "github.com",
     path: "example/repository",
   });
+  assert.deepEqual(result.state.requests ?? [], []);
+});
+
+test("an SSH alias for an enterprise default is refused before HTTP", (t) => {
+  const result = run(t, "connection", {
+    defaultHost: "ghe.example.com",
+    defaultRemote: "git@enterprise-work:example/repository.git",
+  });
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(
+    result.stderr,
+    /No platform adapter serves the remote on host ghe\.example\.com/,
+  );
   assert.deepEqual(result.state.requests ?? [], []);
 });
