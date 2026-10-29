@@ -170,7 +170,7 @@ test("stops unattended merging when strict freshness is unconfirmed", (t) => {
     { failFreshness: 502 },
   ]) {
     const result = run(t, state);
-    assert.notEqual(result.status, 0);
+    assert.equal(result.status, 3, result.stderr);
     assert.equal(result.state.merge, undefined);
     assert.match(result.stderr, /freshness|GitHub/);
   }
@@ -265,4 +265,12 @@ test("permission refusal ends merge handling without a retry or further read", (
   assert.equal(result.status, 1, result.stderr);
   assert.match(result.stderr, /403/);
   assert.match(result.state.requests.at(-1), /PUT .*\/merge$/);
+});
+
+test("a freshness permission refusal permits no subsequent read or merge", (t) => {
+  const result = run(t, { failFreshness: 403, traceRequests: true });
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /403/);
+  assert.match(result.state.requests.at(-1), /\/rules\/branches\/main$/);
+  assert.equal(result.state.merge, undefined);
 });

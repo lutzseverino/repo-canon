@@ -48,7 +48,9 @@ PR in a state other than `merged`, or freshness enforcement cannot be confirmed.
 without retrying the merge. Exit `2` means the head changed, either before the merge
 call or when a refused merge is followed by a read showing a different head;
 the skill returns to its wait step. Exit `1` reports an invalid invocation or
-a platform error. A permission refusal ends handling immediately without another
+a platform error outside freshness preflight. Unreadable policy or comparison
+results require exit `3` and the owner handoff, retaining the read diagnostic.
+A permission refusal ends handling immediately without another
 read or merge attempt. Other merge refusals re-read the head and compare the
 base, so a base advance returns `4` instead of being mistaken for a changed PR
 head. A failed comparison remains an explicit failure. Each platform request

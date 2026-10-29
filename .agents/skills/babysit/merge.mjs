@@ -15,6 +15,13 @@ function needsOwner(message) {
   process.exitCode = 3;
 }
 
+function unreadableFreshness(error) {
+  if (["forbidden", "unauthenticated"].includes(error.reason)) throw error;
+  return needsOwner(
+    `Could not confirm required-check freshness (${error.message}); unattended merging stops until the owner fixes GitHub enforcement.`,
+  );
+}
+
 function retry() {
   console.error("PR head changed; wait again before merging.");
   process.exitCode = 2;
@@ -113,23 +120,28 @@ export async function main(argv = process.argv.slice(2), connection) {
       "The base branch requires a merge queue, which cannot apply the explicit squash message CONTRIBUTING.md requires; needs the owner.",
     );
   }
-  const repository = await requestData(connection, {
-    path: `/repos/${connection.repository.path}`,
-  });
-  const branch = repository?.default_branch;
-  if (
-    typeof branch !== "string" ||
-    !branch ||
-    pullRequest.baseBranch !== branch
-  )
-    return needsOwner(
-      "Could not confirm the PR targets the current default branch; needs the owner.",
-    );
-  if (!(await enforcedFreshness(connection, branch)))
-    return needsOwner(
-      "Required-check freshness is unconfirmed or bypassable; unattended merging stops until GitHub enforcement is fixed by the owner.",
-    );
-  if (await baseIsStale(connection, branch, head)) return staleBase();
+  let branch;
+  try {
+    const repository = await requestData(connection, {
+      path: `/repos/${connection.repository.path}`,
+    });
+    branch = repository?.default_branch;
+    if (
+      typeof branch !== "string" ||
+      !branch ||
+      pullRequest.baseBranch !== branch
+    )
+      return needsOwner(
+        "Could not confirm the PR targets the current default branch; needs the owner.",
+      );
+    if (!(await enforcedFreshness(connection, branch)))
+      return needsOwner(
+        "Required-check freshness is unconfirmed or bypassable; unattended merging stops until GitHub enforcement is fixed by the owner.",
+      );
+    if (await baseIsStale(connection, branch, head)) return staleBase();
+  } catch (error) {
+    return unreadableFreshness(error);
+  }
   let mergedCommit;
   try {
     mergedCommit = await connection.pullRequests.squashMerge(Number(number), {
@@ -145,7 +157,11 @@ export async function main(argv = process.argv.slice(2), connection) {
       head
     )
       return retry();
-    if (await baseIsStale(connection, branch, head)) return staleBase();
+    try {
+      if (await baseIsStale(connection, branch, head)) return staleBase();
+    } catch (readError) {
+      return unreadableFreshness(readError);
+    }
     if (
       error.reason === "invalidResponse" &&
       error.message === "GitHub answered the merge without merging."
