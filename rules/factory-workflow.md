@@ -54,6 +54,11 @@ confirmation govern bot and App reviewers too.
 
 ## State labels
 
+The factory creates and manages `factory:running`, `factory:failed`,
+`factory:paused` and `factory:needs-input`, using the corresponding roles in
+`.factory/config.json`. The repository owns `ready-for-agent`, provisioned by
+canonical-label setup.
+
 In a repository a factory serves, `.factory/config.json` names the factory's
 labels: `ready-for-agent` is the ready label, `factory:skip` marks ready agent
 work the factory must not pick up, an agent adds `factory:needs-input` with its

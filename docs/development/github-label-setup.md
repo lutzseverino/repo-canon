@@ -19,9 +19,15 @@ GitHub API resolves the same repository, and reconciles these labels:
 | `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                                       |
 | `wayfinder:task`      | `bfd4f2` | Task in a planning map                                                     |
 
-It provisions no `factory:` label: a factory creates its own state labels from
-the repository's factory configuration. Matching labels are left alone. Missing
-labels are created freely. A label with a matching case-insensitive name but
+The repository owns `ready-for-agent`, provisioned by canonical-label setup.
+This operation provisions no `factory:` label. Where factory workflow rules
+are installed, follow their [label ownership rules](../../rules/factory-workflow.md#state-labels):
+the factory provisions the configured running, failed, paused and needs-input
+state labels. The applier creates missing skip and model labels; the factory
+never creates or removes skip.
+
+Matching labels are left alone. Missing canonical labels are created freely.
+A label with a matching case-insensitive name but
 different casing, color, or description requires confirmation before updating,
 unless the label is still at both of GitHub's
 [documented default values](https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/managing-labels#about-default-labels)

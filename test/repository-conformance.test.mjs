@@ -2244,15 +2244,26 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
 });
 
-test("GitHub label guidance defers factory-label ownership to the factory workflow rules", () => {
+test("GitHub label guidance delegates only factory-owned and applier-owned labels", () => {
   const github = flowedText("rules/github-repository-configuration.md");
   const factory = flowedText("rules/factory-workflow.md");
   const notes = flowedText("authoring-notes.md");
+  const setup = flowedText("docs/development/github-label-setup.md");
+  assert.match(github, /These rules name no `factory:` label/);
   assert.match(
     github,
-    /These rules name no `factory:` label: the factory workflow rules govern who creates and manages the labels named by the repository's factory configuration/,
+    /Where factory workflow rules are installed, follow them for ownership of factory state labels and skip and model labels/,
   );
-  for (const text of [github, notes])
+  for (const text of [github, factory, setup])
+    assert.match(
+      text,
+      /The repository owns `ready-for-agent`, provisioned by canonical-label setup/,
+    );
+  assert.match(
+    factory,
+    /The factory creates and manages `factory:running`, `factory:failed`, `factory:paused` and `factory:needs-input`, using the corresponding roles in `\.factory\/config\.json`/,
+  );
+  for (const text of [github, notes, setup])
     assert.doesNotMatch(
       text,
       /(?:a|the) factory creates its own state labels/i,
@@ -2260,6 +2271,15 @@ test("GitHub label guidance defers factory-label ownership to the factory workfl
   assert.match(
     factory,
     /Whoever applies `factory:skip` creates it if the repository lacks it, as for `model:` labels; the factory never creates or removes it/,
+  );
+  assert.match(factory, /create the label if the repository lacks it/);
+  assert.match(
+    setup,
+    /the factory provisions the configured running, failed, paused and needs-input state labels/,
+  );
+  assert.match(
+    setup,
+    /The applier creates missing skip and model labels; the factory never creates or removes skip/,
   );
 });
 
