@@ -32,7 +32,7 @@ const reviewer = {
  * @param {string} entry
  * @param {{ configured?: boolean, environment?: string, explicit?: string,
  * destination?: string, selectionFails?: boolean, credentialFails?: boolean,
- * defaultHost?: string, resolution?: string, defaultRemote?: string, defaultName?: string,
+ * defaultHost?: string, resolution?: string, defaultRemote?: string, defaultName?: string, extraDefault?: string,
  * currentHead?: string }} [options]
  */
 function run(
@@ -43,7 +43,8 @@ function run(
     defaultName = "upstream",
     defaultHost = "github.com",
     resolution = "base",
-    defaultRemote = `https://${defaultHost}/example/repository.git`,
+    defaultRemote = `https://${defaultHost || "github.com"}/example/repository.git`,
+    extraDefault,
     environment,
     explicit,
     destination = "example/repository",
@@ -62,6 +63,10 @@ function run(
   else git("remote", "add", defaultName, defaultRemote);
   if (configured)
     git("config", `remote.${defaultName}.gh-resolved`, resolution);
+  if (extraDefault) {
+    git("remote", "set-url", "origin", extraDefault);
+    git("config", "remote.origin.gh-resolved", "base");
+  }
   mkdirSync(join(directory, ".github"));
   // Local declarations disagree with the destination snapshot and cannot win.
   writeFileSync(
@@ -308,15 +313,22 @@ for (const entry of ["connection", "request", "wait", "merge", "ready"]) {
       /No platform adapter serves the remote on host ghe\.example\.com/,
     );
     assert.deepEqual(result.state.destinations ?? [], []);
+    assert.deepEqual(result.state.requests ?? [], []);
     assert.equal(result.state.merge, undefined);
     assert.deepEqual(result.state.emitted ?? [], []);
   });
 }
 
 for (const options of [
+  { defaultHost: "" },
+  { defaultHost: "", extraDefault: "git@github.com:example/repository.git" },
   { defaultRemote: "git@github.com:example/repository.git" },
   { defaultRemote: "ssh://git@ssh.github.com:443/example/repository.git" },
   { resolution: "parent/repository", destination: "parent/repository" },
+  {
+    resolution: "github.com/parent/repository",
+    destination: "parent/repository",
+  },
   {
     defaultHost: "ghe.example.com",
     environment: "environment/repository",

@@ -48,7 +48,7 @@ function defaultRemote() {
     }).trim();
   if (!selected) return git("remote", "get-url", "origin");
 
-  const candidates = new Set();
+  const candidates = new Map();
   const configuration = git(
     "config",
     "--null",
@@ -63,7 +63,8 @@ function defaultRemote() {
     const scp = /^(?:[^@/\s]+@)?([^:/\s]+):(?!\/)(.+)$/.exec(remote);
     const url = new URL(scp ? `ssh://${scp[1]}/${scp[2]}` : remote);
     const path = url.pathname.replace(/^\/+|\/+$/g, "").replace(/\.git$/, "");
-    const destination = resolution === "base" ? path : resolution;
+    const destination =
+      resolution === "base" ? path : resolution.split("/").slice(-2).join("/");
     if (destination.toLowerCase() !== selected.toLowerCase()) continue;
     const host =
       url.protocol !== "https:" && url.hostname === "ssh.github.com"
@@ -72,13 +73,13 @@ function defaultRemote() {
     if (process.env.GH_HOST && host !== process.env.GH_HOST.toLowerCase())
       continue;
     url.pathname = `/${selected}`;
-    candidates.add(url.href);
+    candidates.set(host, url.href);
   }
   if (candidates.size !== 1)
     throw new Error(
       "Could not establish the configured GitHub CLI default repository host.",
     );
-  return [...candidates][0];
+  return [...candidates.values()][0];
 }
 
 export async function requestData(connection, request) {
