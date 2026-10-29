@@ -30,13 +30,19 @@ const event = (
 
 async function exercise(options = {}, command = main) {
   const selectedLabel = options.argv?.[1] ?? label;
-  const actor = { login: "maintainer", type: "User", ...options.actor };
+  const actor = {
+    login: "maintainer",
+    type: "User",
+    id: 7,
+    ...options.actor,
+  };
   // GraphQL names a Bot without the "[bot]" suffix that REST logins carry.
   const viewer =
     actor.type === "User"
-      ? { __typename: "User", login: actor.login }
+      ? { __typename: "User", login: actor.login, databaseId: actor.id }
       : {
           __typename: "Bot",
+          databaseId: actor.id,
           login:
             typeof actor.login === "string"
               ? actor.login.replace(/\[bot\]$/, "")
@@ -555,8 +561,15 @@ test("unreadable identity or destination policy never authorizes readiness write
     { identityResponse: { login: "another-reviewer", type: "User" } },
     { viewerResponse: null },
     { viewerResponse: {} },
-    { viewerResponse: { login: "maintainer" } },
-    { viewerResponse: { __typename: "Organization", login: "maintainer" } },
+    { viewerResponse: { login: "maintainer", databaseId: 7 } },
+    {
+      viewerResponse: {
+        __typename: "Organization",
+        login: "maintainer",
+        databaseId: 7,
+      },
+    },
+    { viewerResponse: { __typename: "User", login: "maintainer" } },
     { viewerErrors: true },
     ...[401, 403, 503].map((status) => ({ viewerFailure: status })),
     { actor: { login: null } },
@@ -691,7 +704,7 @@ test("a GraphQL Bot viewer resolves its suffixed account rather than a same-name
     const result = await exercise({
       factory,
       actor: { login: "helper[bot]", type: "Bot" },
-      viewerResponse: { __typename: "Bot", login: "helper" },
+      viewerResponse: { __typename: "Bot", login: "helper", databaseId: 7 },
     });
     assert.equal(
       result.requests.some(({ path }) => path === "/users/helper"),
@@ -699,5 +712,18 @@ test("a GraphQL Bot viewer resolves its suffixed account rather than a same-name
     );
     assert.equal(result.error === undefined, !factory);
     assert.equal(writes(result).length, factory ? 0 : 1);
+  }
+});
+
+test("a viewer resolving to a same-named account with another ID applies no readiness", async () => {
+  for (const factory of [false, true]) {
+    const result = await exercise({
+      factory,
+      actor: { login: "helper[bot]", type: "Bot", id: 41 },
+      viewerResponse: { __typename: "User", login: "helper", databaseId: 41 },
+      identityResponse: { login: "helper", type: "User", id: 42 },
+    });
+    assert.match(result.error?.message ?? "", /acting account/);
+    assert.deepEqual(writes(result), []);
   }
 });

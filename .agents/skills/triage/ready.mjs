@@ -77,7 +77,8 @@ async function actingAccount(connection) {
     method: "POST",
     path: "/graphql",
     body: {
-      query: "query TriageActingAccount { viewer { __typename login } }",
+      query:
+        "query TriageActingAccount { viewer { __typename login databaseId } }",
     },
   });
   const viewer = identity?.data?.viewer;
@@ -85,7 +86,8 @@ async function actingAccount(connection) {
     identity?.errors?.length ||
     !["User", "Bot"].includes(viewer?.__typename) ||
     typeof viewer.login !== "string" ||
-    !viewer.login.trim()
+    !viewer.login.trim() ||
+    !Number.isInteger(viewer.databaseId)
   )
     throw new Error("Could not identify the readiness acting account.");
   // GraphQL omits the "[bot]" suffix that REST logins and events carry.
@@ -96,7 +98,12 @@ async function actingAccount(connection) {
   const actor = await requestData(connection, {
     path: `/users/${encodeURIComponent(login)}`,
   });
-  if (!["User", "Bot", "App"].includes(actor?.type) || actor.login !== login)
+  // The matching account ID keeps a same-named person from standing in for it.
+  if (
+    !["User", "Bot", "App"].includes(actor?.type) ||
+    actor.login !== login ||
+    actor.id !== viewer.databaseId
+  )
     throw new Error("Could not identify the readiness acting account.");
   return actor;
 }

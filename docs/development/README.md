@@ -143,9 +143,12 @@ identity/applicability read failures and exact approval association. Factory
 applicability comes from the selected destination's installed
 `.repo-standards/rules/factory-workflow.md` at a pinned default-branch commit;
 verified absence permits the generic account policy, while a failed read
-permits no readiness writes. Actor discovery uses GraphQL `viewer { login }`
-and the matching REST `/users/{login}` account type with the same credential;
-these reads support App installation tokens, unlike `/user`. See GitHub's
+permits no readiness writes. Actor discovery uses GraphQL `viewer`'s type,
+login and database ID, then the REST `/users/{login}` account type with the
+same credential; these reads support App installation tokens, unlike `/user`.
+GraphQL names a Bot without the `[bot]` suffix of REST logins and events, so
+the command adds it back as Postern's GraphQL account mapping does, and the
+REST account's ID must match the viewer's. See GitHub's
 [installation authentication example](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation#using-octokitjs-to-authenticate-with-an-installation-id)
 and [user lookup endpoint](https://docs.github.com/en/rest/users/users#get-a-user).
 The command uses the vendored Postern
