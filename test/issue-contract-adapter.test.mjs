@@ -970,6 +970,40 @@ test("unavailable reviewer roles reject readiness with cleanup and useful feedba
   }
 });
 
+test("role failures on an unchanged recorded approval publish the authority cause safely", async (t) => {
+  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  const result = await exercise(t, {
+    issue,
+    comments: [approvedTicketFeedback(issue)],
+    events: [readinessReview],
+    failure: 503,
+    failurePath: (path) => path.endsWith("/permission"),
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.code, 1);
+  assert.deepEqual(
+    writes(result).map(({ method, path }) => [method, path]),
+    [
+      ["DELETE", `${issuePath}/labels/ready-for-agent`],
+      ["POST", `${issuePath}/labels`],
+      ["PATCH", "/repos/example/repository/issues/comments/13"],
+    ],
+  );
+  assert.deepEqual(writes(result)[1].body, { labels: ["needs-triage"] });
+  const feedback = writes(result).at(-1).body.body;
+  const reason = /Could not verify @maintainer's review authority:/;
+  assert.match(feedback, reason);
+  assert.match(result.stderr, reason);
+  assert.match(recordedState(feedback).rejectionReason, reason);
+  assert.match(feedback, /A fresh authorized review is required/);
+  assert.doesNotMatch(
+    feedback + result.stderr,
+    /Wait for the validator to publish/,
+  );
+  assert.doesNotMatch(feedback + result.stderr, /fixture-credential/);
+  assert.equal(result.stdout, "");
+});
+
 test("role failures clean up edited approved contracts and recovery requires fresh review", async (t) => {
   for (const kind of ["brief", "direct"]) {
     for (const edit of ["body", "revision metadata"]) {
