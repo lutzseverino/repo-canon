@@ -229,7 +229,7 @@ globalThis.fetch = async (input, options = {}) => {
     }
     if (
       method === "PATCH" &&
-      /\/protection\/required_status_checks$/.test(endpoint)
+      endpoint.endsWith("/protection/required_status_checks")
     ) {
       record("enable branch freshness");
       Object.assign(state.branchProtection.required_status_checks, body);

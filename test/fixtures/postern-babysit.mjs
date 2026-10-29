@@ -55,7 +55,7 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         ],
       );
     }
-    if (/\/rulesets\/50$/.test(path))
+    if (path.endsWith("/rulesets/50"))
       return json({ id: 50, bypass_actors: state.bypassActors ?? [] });
     if (/\/branches\/[^/]+\/protection$/.test(path))
       return state.protection
