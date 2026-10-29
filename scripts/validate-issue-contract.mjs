@@ -911,35 +911,16 @@ function assessReadiness({
     latestEvent.label?.name === currentReadyLabels[0]
       ? latestEvent
       : null);
-  if (
-    currentReadyLabels.length === 1 &&
-    activeApproval(
-      permissions,
+  const grant =
+    currentApproval(recorded, revision, currentReadyLabels[0], timeline) ??
+    readinessGrant(
       recorded,
+      previousFeedback,
       revision,
-      currentReadyLabels[0],
+      currentReadyLabels,
+      labelEvent,
       timeline,
-    )
-  ) {
-    return {
-      valid: true,
-      approved: true,
-      label: recorded.label,
-      reviewer: recorded.reviewer,
-      reviewEventId: recorded.reviewEventId,
-      observedEventId,
-      sourceInvalidation,
-    };
-  }
-
-  const grant = readinessGrant(
-    recorded,
-    previousFeedback,
-    revision,
-    currentReadyLabels,
-    labelEvent,
-    timeline,
-  );
+    );
   if (grant.candidate) {
     if (!grant.valid)
       return {
@@ -1053,7 +1034,7 @@ function readinessGrant(
   return { candidate: true, valid: true, label, reviewer, reviewEventId };
 }
 
-function activeApproval(permissions, recorded, revision, label, timeline) {
+function currentApproval(recorded, revision, label, timeline) {
   if (
     recorded?.status !== "approved" ||
     recorded.revision !== revision ||
@@ -1062,9 +1043,15 @@ function activeApproval(permissions, recorded, revision, label, timeline) {
     !recorded.reviewEventId ||
     !timeline.isCurrentReview(recorded.reviewEventId, label)
   ) {
-    return false;
+    return null;
   }
-  return reviewerAuthority(permissions, recorded.reviewer).authorized;
+  return {
+    candidate: true,
+    valid: true,
+    label: recorded.label,
+    reviewer: recorded.reviewer,
+    reviewEventId: recorded.reviewEventId,
+  };
 }
 
 // The creation snapshot's review of an unedited direct contract, for either the

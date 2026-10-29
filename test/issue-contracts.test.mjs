@@ -229,6 +229,111 @@ function applyFeedback(comments, decision) {
   else comments.push({ id: 99, body: feedback.body, user: bot });
 }
 
+test("current recorded approvals report unavailable or revoked reviewer authority", async (t) => {
+  for (const kind of ["direct", "brief"]) {
+    for (const label of ["ready-for-agent", "ready-for-human"]) {
+      for (const { name, permission, reason } of [
+        {
+          name: "unavailable",
+          permission: {
+            error:
+              "Reviewer role lookup returned HTTP 503: service unavailable",
+          },
+          reason: /Could not verify @maintainer's review authority:.*503/,
+        },
+        {
+          name: "revoked",
+          permission: role("read"),
+          reason: /@maintainer is not authorized to grant readiness/,
+        },
+      ]) {
+        await t.test(`${kind}, ${label}, ${name}`, () => {
+          const issue = {
+            number: 42,
+            body: kind === "direct" ? ticketBody : featureBody,
+            labels: [
+              ...(kind === "brief" ? [{ name: "enhancement" }] : []),
+              { name: label },
+            ],
+          };
+          const brief = {
+            id: 12,
+            node_id: "COMMENT_12",
+            body: completeAgentBrief,
+            updated_at: "2026-09-14T16:58:00Z",
+            user: { login: "triager" },
+          };
+          const feedback = approvedTicketFeedback(issue, {
+            revision:
+              kind === "direct" ? bodyRevision(issue) : briefRevision(brief),
+            kind:
+              kind === "direct"
+                ? "implementation ticket"
+                : "triaged Agent Brief",
+            label,
+          });
+          const snapshot = {
+            issue,
+            comments: kind === "direct" ? [feedback] : [brief, feedback],
+            issueEvents: [reviewBy("maintainer", label)],
+            permissions: { maintainer: role("admin") },
+          };
+          assertDecision(decideIssueContract(snapshotFor(snapshot)), {
+            exitCode: 0,
+          });
+
+          const unverified = {
+            ...snapshot,
+            permissions: { maintainer: permission },
+          };
+          const rejection = decideIssueContract(snapshotFor(unverified));
+          assertDecision(rejection, {
+            exitCode: 1,
+            remove: [label],
+            add: ["needs-triage"],
+            feedback: 13,
+            message: reason,
+            feedbackBody: [reason, /A fresh authorized review is required/],
+            notMessage: /Wait for the validator to publish/,
+            notFeedbackBody: /Wait for the validator to publish/,
+          });
+          assert.match(
+            recordedState(rejection.feedback.body).rejectionReason,
+            reason,
+          );
+
+          const settled = afterWrites(unverified, rejection);
+          assertDecision(decideIssueContract(snapshotFor(settled)), {
+            exitCode: 0,
+          });
+          const recovered = { ...settled, permissions: snapshot.permissions };
+          assertDecision(decideIssueContract(snapshotFor(recovered)), {
+            exitCode: 0,
+          });
+          assert.match(
+            settled.comments.find(({ id }) => id === 13).body,
+            reason,
+          );
+
+          settled.issue.labels.push({ name: label });
+          settled.issueEvents.push({
+            ...reviewBy("maintainer", label),
+            id: 200,
+            created_at: "2026-09-14T18:02:00Z",
+          });
+          assertDecision(decideIssueContract(snapshotFor(recovered)), {
+            exitCode: 0,
+            remove: ["needs-triage"],
+            feedback: 13,
+            feedbackBody: /reviewed by @maintainer/,
+            notFeedbackBody: /rejectionReason/,
+          });
+        });
+      }
+    }
+  }
+});
+
 structureTable("issue structure decides the contract and its corrections", [
   {
     name: "a complete public bug report is accepted without changing the issue",
