@@ -12,8 +12,10 @@ export function connectionFor(repository) {
   let remote = repository ?? process.env.GH_REPO ?? defaultRemote();
   if (!remote.includes(":")) {
     // CLI selectors accept [HOST/]OWNER/REPO; retain an explicit host.
-    const host = remote.split("/").length === 3 ? "" : "github.com/";
-    remote = `https://${host}${remote}`;
+    const prefix = /^[a-z0-9.-]+\/[^/]+\/[^/]+$/i.test(remote)
+      ? ""
+      : "github.com/";
+    remote = `https://${prefix}${remote}`;
   }
   const identity = detectPlatform(remote);
   let credential;

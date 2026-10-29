@@ -433,6 +433,9 @@ for (const entry of ["connection", "request", "wait", "merge", "ready"]) {
       "github.com/example/repo#fragment",
       "github.com//repository",
       "example",
+      "ghe.example.com@github.com/example/repository",
+      "github.com\\/example/repository",
+      "%67ithub.com/example/repository",
     ]) {
       test(`installed ${entry} refuses ${selector} repository ${repository} before HTTP`, (t) => {
         const result = run(t, entry, { [selector]: repository });
