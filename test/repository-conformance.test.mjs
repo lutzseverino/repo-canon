@@ -1423,6 +1423,19 @@ test("shared orchestration material excludes private application mappings everyw
     );
 });
 
+test("factory image rules link to Scriptorium's released sandbox image contract", () => {
+  const rules = readFileSync(
+    join(root, "rules/factory-sandbox-image.md"),
+    "utf8",
+  );
+  const destinations = [
+    ...rules.matchAll(/\[sandbox image contract\]\(([^)]+)\)/g),
+  ].map(([, destination]) => destination);
+  assert.deepEqual(destinations, [
+    "https://github.com/lutzseverino/scriptorium/blob/scriptorium-v2.0.0/docs/usage/sandbox-image.md",
+  ]);
+});
+
 test("babysit and the factory image rules name both supported Node.js majors", () => {
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   const rules = flowedText("rules/factory-sandbox-image.md");
