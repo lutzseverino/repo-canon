@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 import { installedValidator } from "./helpers/installed-validator.mjs";
+import { renderedAdoptionRecord } from "./fixtures/adoption-record.mjs";
 
 const head = "a".repeat(40);
 
@@ -71,6 +72,30 @@ test("returns a distinct retry result if the head changes during merge", (t) => 
   });
   assert.equal(result.status, 2, result.stderr);
   assert.match(result.stderr, /head changed.*wait again/i);
+});
+
+test("preserves adoption record bytes and the trailing closing reference in the squash message", (t) => {
+  for (const newline of ["\n", "\r\n"]) {
+    const record = renderedAdoptionRecord.replace(/\n/g, newline);
+    for (const breaking of [false, true]) {
+      const additions = breaking
+        ? "\n## Impact\n\nClaim labels change.\n\n## Migration\n\nRelabel open claims.\n"
+        : "";
+      const body =
+        record +
+        `${additions}\n## Related issue\n\nCloses #123\n`.replace(
+          /\n/g,
+          newline,
+        );
+      const title = `chore${breaking ? "!" : ""}: adopt repo-canon v0.16.0 with CLI 8.0.0`;
+      const result = run(t, { title, body });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.state.merge.title, `${title} (#12)`);
+      assert.equal(result.state.merge.body, body);
+      assert.equal(result.state.merge.body.slice(0, record.length), record);
+      assert.match(result.state.merge.body, /Closes #123\r?\n$/);
+    }
+  }
 });
 
 test("returns retry without merging if the head changed after the wait", (t) => {

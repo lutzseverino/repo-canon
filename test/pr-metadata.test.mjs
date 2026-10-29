@@ -12,6 +12,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { installedValidator } from "./helpers/installed-validator.mjs";
+import { renderedAdoptionRecord } from "./fixtures/adoption-record.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const validator = join(repositoryRoot, ".github/scripts/validate.mjs");
@@ -265,53 +266,6 @@ ${
 }`;
 }
 
-// The shape of a record the CLI rendered for an adoption pull request:
-// escaped inline markup in a message and an empty scope changes table.
-const renderedAdoptionRecord = `# Repository Standards adoption record
-
-## Ready to commit
-
-Ready to commit: yes.
-
-## Selection
-
-| Component | Value |
-| --- | --- |
-| CLI | \`8.0.0\` |
-| Standards source | \`https://github.com/lutzseverino/repo-canon\` |
-| Standards version | \`v0.16.0\` |
-| Standards commit | \`7f16041b8626a8119281b2e872f539b782fd83b8\` |
-| Profile | \`factory\` |
-
-## Operations
-
-| Phase | Declaration | Operation | Result | Message |
-| --- | --- | --- | --- | --- |
-| fixes | \`github-repository-configuration\` | \`pull-request-integration\` | unchanged | Requiring \\\`PR metadata\\\` is deferred because the default branch \\\`main\\\` does not carry the workflow yet. |
-| checks | \`documentation\` | \`documentation-navigation\` | passed | Documentation navigation is valid. |
-
-## Changed paths
-
-| Path | Phases |
-| --- | --- |
-| \`.factory/Dockerfile\` | agent |
-| \`.github/scripts/validate-pr-metadata.mjs\` | installation |
-
-## Scope changes
-
-| Declaration | Added | Removed |
-| --- | --- | --- |
-
-## Identities
-
-| Record | Value |
-| --- | --- |
-| Run | \`23226a68-14d7-4654-be39-2b48bea73fe7\` |
-| Inspection | \`sha256:d6a340538b4d8d97d0937132af1c2817f1b4839a2693dcfaf8d4d420777a091f\` |
-| HEAD at start | \`64b725a80edf9e3f85f77307147dbde8b251086b\` |
-| Completed at | 2026-10-19T03:51:52.933Z |
-`;
-
 test("accepts a complete, ready adoption record under its adoption title", () => {
   const record = adoptionRecord();
   for (const [variant, title, body] of [
@@ -371,14 +325,47 @@ test("still validates the title of an adoption record body", () => {
   assert.doesNotMatch(breaking.stderr, /Title the adoption pull request/);
 });
 
+test("accepts a trailing issue relationship after the complete adoption record", () => {
+  for (const [title, record] of [
+    [adoptionTitle, adoptionRecord()],
+    [adoptionTitle, adoptionRecord({ abandonedRuns: true })],
+    ["chore: adopt repo-canon v0.16.0 with CLI 8.0.0", renderedAdoptionRecord],
+    [
+      "chore: adopt repo-canon v0.16.0 with CLI 8.0.0",
+      renderedAdoptionRecord.replace(/\n/g, "\r\n"),
+    ],
+  ]) {
+    for (const reference of [
+      "Closes #123",
+      "Part of owner/repository#123",
+      "[Related work](https://github.com/owner/repository/issues/123)",
+    ]) {
+      const body = `${record}\n## Related issue\n\n${reference}\n`;
+      const result = runEvent({ title, body });
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.summary, /adoption record/);
+    }
+  }
+});
+
+test("validates a trailing adoption relationship in the installed layout", (t) => {
+  const result = runEvent({
+    title: adoptionTitle,
+    body: `${adoptionRecord()}\n## Related issue\n\nCloses #123\n`,
+    validatorPath: installedValidator(t, ".github/scripts/validate.mjs"),
+  });
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("accepts a breaking adoption record followed by Impact and Migration", () => {
   for (const record of [
     adoptionRecord(),
     adoptionRecord({ abandonedRuns: true }),
   ]) {
-    const result = runEvent({
-      title: "chore!: adopt repo-canon v0.4.0 with CLI 7.0.0",
-      body: `${record}
+    for (const relationship of ["", "\n## Related issue\n\nCloses #123\n"]) {
+      const result = runEvent({
+        title: "chore!: adopt repo-canon v0.4.0 with CLI 7.0.0",
+        body: `${record}
 ## Impact
 
 The factory's claim labels change, so open claims need relabelling.
@@ -386,10 +373,56 @@ The factory's claim labels change, so open claims need relabelling.
 ## Migration
 
 Relabel each open factory:running issue before the factory restarts.
-`,
+${relationship}`,
+      });
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.summary, /adoption record/);
+    }
+  }
+});
+
+test("rejects empty, placeholder or invisible adoption relationships", () => {
+  for (const reference of [
+    "",
+    "TODO",
+    "See the original issue",
+    "`Closes #123`",
+    "```markdown\nCloses #123\n```",
+    "<!-- Closes #123 -->",
+    "<span hidden>Closes #123</span>",
+    '<span title="Closes #123">No relationship here</span>',
+  ]) {
+    const result = runEvent({
+      title: adoptionTitle,
+      body: `${adoptionRecord()}\n## Related issue\n\n${reference}\n`,
     });
-    assert.equal(result.status, 0, result.stderr);
-    assert.match(result.summary, /adoption record/);
+    assert.equal(result.status, 1, reference);
+    assert.match(result.stderr, /Link a related GitHub issue/, reference);
+  }
+});
+
+test("rejects duplicate or misplaced adoption relationship sections", () => {
+  const record = adoptionRecord();
+  const relationship = "\n## Related issue\n\nCloses #123\n";
+  const impact = "\n## Impact\n\nLabels change.\n";
+  const migration = "\n## Migration\n\nRelabel open issues.\n";
+  for (const body of [
+    `${record}${relationship}${relationship}`,
+    record.replace("## Identities", `${relationship}\n## Identities`),
+    adoptionRecord({ abandonedRuns: true }).replace(
+      "## Abandoned runs",
+      `${relationship}\n## Abandoned runs`,
+    ),
+    `${record}${relationship}${impact}${migration}`,
+    `${record}${impact}${relationship}${migration}`,
+    `${record}${relationship}\n## Notes\n\nExtra record section.\n`,
+    `${record}${relationship.replace("## Related", "# Related")}`,
+    `${record}${relationship.replace("## Related", "### Related")}`,
+    `${record}${relationship}${relationship.replace("## Related", "### Related")}`,
+  ]) {
+    const result = runEvent({ title: adoptionTitle, body });
+    assert.equal(result.status, 1, body);
+    assert.match(result.stderr, sectionOrderError);
   }
 });
 
@@ -548,13 +581,18 @@ test("rejects an adoption record without its sections once and in order", () => 
     ],
   ];
   for (const [variant, body] of variants) {
-    const result = runEvent({ title: adoptionTitle, body });
-    const expected = [sectionOrderError];
-    if (variant === "missing Ready to commit") expected.push(readyError);
-    // Without its heading, the next section's table joins the Selection.
-    if (["missing Selection", "missing Operations"].includes(variant))
-      expected.push(selectionError);
-    assertRecordFailure(result, variant, expected);
+    for (const relationship of ["", "\n## Related issue\n\nCloses #123\n"]) {
+      const result = runEvent({
+        title: adoptionTitle,
+        body: body + relationship,
+      });
+      const expected = [sectionOrderError];
+      if (variant === "missing Ready to commit") expected.push(readyError);
+      // Without its heading, the next section's table joins the Selection.
+      if (["missing Selection", "missing Operations"].includes(variant))
+        expected.push(selectionError);
+      assertRecordFailure(result, variant, expected);
+    }
   }
 
   const readyInComment = runEvent({

@@ -38,8 +38,8 @@ A GitHub issue URL used as a visible Markdown or HTML link destination does coun
 
 A body whose first line, after any blank lines, is exactly
 `# Repository Standards adoption record`, apart from trailing spaces or tabs,
-claims to be a Repository Standards adoption record, the complete body of an
-adoption or update pull request. The heading counts only as that exact first
+claims to start with a Repository Standards adoption record, optionally followed
+by issue relationship metadata. The heading counts only as that exact first
 line: text, an HTML comment, or a code fence before it, indentation, another
 heading level, or other wording makes the body an ordinary description,
 validated as above.
@@ -53,7 +53,10 @@ adoption title, as the
   level-2 sections `Ready to commit`, `Selection`, `Operations`,
   `Changed paths`, `Scope changes`, and `Identities`, each once and in that
   order, optionally followed by `Abandoned runs`, then optionally by `Impact`
-  and `Migration` together. Headings are recognized from rendered Markdown, as
+  and `Migration` together, then optionally one level-2 `Related issue` section
+  outside the record. That section uses the ordinary relationship content rules
+  above and follows all record sections; duplicate, nested or misplaced
+  relationship headings fail. Headings are recognized from rendered Markdown, as
   above, so headings in code, HTML comments, or hidden HTML do not count.
 - The first block of the `Ready to commit` section is the paragraph
   `Ready to commit: yes.`
@@ -74,8 +77,10 @@ name, the check reports the `Selection` error instead of a title error, since
 it cannot derive the expected title.
 The title rules below, including `Impact` and `Migration` for `chore!:`, and the
 attribution check still apply to a record. The check cannot tell whether the
-record is the CLI's output or matches the repository's `.repo-standards` state;
-review confirms both.
+record portion is the CLI's byte-preserved output or matches the repository's
+`.repo-standards` state; review confirms both. The optional relationship section
+is outside that preserved portion. Explicit squash merge retains the complete
+PR body, including the relationship.
 
 Titles use `type(scope): description`, with an optional scope and an optional
 `!` immediately before the colon. The allowed lowercase types are `feat`,

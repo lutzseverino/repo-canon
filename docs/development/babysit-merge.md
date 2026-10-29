@@ -35,6 +35,9 @@ subject and body. The subject is `<title> (#<number>)`; the body passes verbatim
 through the port's JSON transport, preserving quotes, backticks, dollar signs,
 line endings, and multiple paragraphs. No shell interprets the metadata.
 GitHub's default squash message therefore does not add co-author trailers.
+For adoption and update PRs, this includes the byte-preserved adoption record,
+any Impact/Migration sections, and a trailing `## Related issue` section with
+its closing or partial-work reference.
 
 After a successful merge call, the script reads the PR's `state` through
 `PullRequests.pullRequest` and reports success only when it is `merged`.
@@ -68,6 +71,7 @@ unbounded loop. The skill carries the complete recovery instructions.
 Run `node --test test/babysit-merge.test.mjs` for the executable fixtures. They
 use the same injected Postern fetch transport as the wait tests and cover the explicit message,
 verbatim body, head changes, empty bodies, invalid arguments, access errors,
+adoption-record bytes and trailing closing references,
 merge refusals, merge queue refusal, and successful calls that leave the PR
 unmerged. The freshness fixtures model two green PRs sharing one base, a base
 advance after preflight refused at the platform boundary, replacement heads
