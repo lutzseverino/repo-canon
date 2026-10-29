@@ -436,11 +436,17 @@ for (const entry of ["connection", "request", "wait", "merge", "ready"]) {
       "ghe.example.com@github.com/example/repository",
       "github.com\\/example/repository",
       "%67ithub.com/example/repository",
+      "github.com/exam\tple/repository",
+      "github.com/example/repo\nsitory",
+      "github.com/../example/repository",
     ]) {
       test(`installed ${entry} refuses ${selector} repository ${repository} before HTTP`, (t) => {
         const result = run(t, entry, { [selector]: repository });
         assert.equal(result.status, 1, result.stderr);
-        assert.match(result.stderr, /No platform adapter serves the remote/);
+        assert.match(
+          result.stderr,
+          /No platform adapter serves the remote|Repository selector must use/,
+        );
         if (repository.startsWith("ghe.example.com/"))
           assert.match(result.stderr, /on host ghe\.example\.com/);
         assert.deepEqual(result.state.requests ?? [], []);

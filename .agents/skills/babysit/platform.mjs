@@ -12,10 +12,15 @@ export function connectionFor(repository) {
   let remote = repository ?? process.env.GH_REPO ?? defaultRemote();
   if (!remote.includes(":")) {
     // CLI selectors accept [HOST/]OWNER/REPO; retain an explicit host.
-    const prefix = /^[a-z0-9.-]+\/[^/]+\/[^/]+$/i.test(remote)
-      ? ""
-      : "github.com/";
-    remote = `https://${prefix}${remote}`;
+    const selector = /^(?:([a-z0-9.-]+)\/)?([a-z0-9_.-]+)\/([a-z0-9_.-]+)$/i.exec(
+      remote,
+    );
+    if (!selector)
+      throw new PlatformError(
+        "unsupported",
+        "Repository selector must use [HOST/]OWNER/REPO.",
+      );
+    remote = `https://${selector[1] ?? "github.com"}/${selector[2]}/${selector[3]}`;
   }
   const identity = detectPlatform(remote);
   let credential;
