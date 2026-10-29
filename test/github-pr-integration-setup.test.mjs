@@ -30,7 +30,7 @@ function canonicalRuleset(overrides = {}) {
       {
         type: "required_status_checks",
         parameters: {
-          strict_required_status_checks_policy: false,
+          strict_required_status_checks_policy: true,
           required_status_checks: [{ context: checkName }],
         },
       },
@@ -218,7 +218,7 @@ test("accepts GitHub classic status-check responses that omit the optional check
   assert.deepEqual(
     scenario.readState().branchProtection.required_status_checks,
     {
-      strict: false,
+      strict: true,
       contexts: ["build", checkName],
     },
   );
@@ -664,7 +664,8 @@ const deferredRequirement = new RegExp(
   [
     "GitHub PR integration for acme/widgets applies squash-only integration, PR-title subjects, and PR-body messages\\.",
     "Requiring `PR metadata` is deferred because the default branch `main` does not carry the PR metadata validation workflow yet, so GitHub cannot report the check\\.",
-    "Merge this adoption; the next adoption or update then requires the check\\.",
+    "Merge this adoption through the owner; the next adoption or update then requires the check\\.",
+    "Strict freshness is unconfirmed; unattended merging stops until GitHub enforcement is confirmed\\.",
   ].join(" "),
 );
 
@@ -1112,4 +1113,115 @@ test("reads every ruleset page and detail before reconciling the managed ruleset
         .readState()
         .requests.includes(`GET repos/acme/widgets/rulesets/${id}`),
     );
+});
+
+test("requires confirmation to enable freshness in otherwise matching enforcement", async (t) => {
+  for (const kind of ["classic", "ruleset"])
+    await t.test(kind, (st) => {
+      const managed = canonicalRuleset();
+      managed.rules[0].parameters.strict_required_status_checks_policy = false;
+      const protection = classicProtection({
+        strict: false,
+        contexts: [checkName, "build"],
+        checks: [{ context: "security", app_id: 42 }],
+      });
+      const scenario = setup(st, {
+        state: {
+          settings: matchingSettings,
+          ...(kind === "classic"
+            ? { branchProtection: protection }
+            : { rulesets: [managed] }),
+        },
+      });
+      const before = scenario.readState();
+      const pending = scenario.invoke({ overwriteAllowed: false });
+      assert.equal(
+        pending.result.status,
+        "confirmation-required",
+        pending.result.message,
+      );
+      assert.match(pending.result.message, /strict/);
+      assert.equal(scenario.readState().mutations ?? 0, 0);
+      const applied = scenario.invoke({ overwriteAllowed: true });
+      assert.equal(applied.result.status, "changed", applied.result.message);
+      const after = scenario.readState();
+      if (kind === "classic") {
+        assert.deepEqual(after.branchProtection, {
+          ...protection,
+          required_status_checks: {
+            ...protection.required_status_checks,
+            strict: true,
+          },
+        });
+      } else {
+        assert.deepEqual(after.rulesets, [canonicalRuleset()]);
+      }
+      assert.deepEqual(after.settings, before.settings);
+      assert.equal(
+        scenario.invoke({ overwriteAllowed: false }).result.status,
+        "unchanged",
+      );
+    });
+});
+
+test("blocks when final readback loses strict freshness", async (t) => {
+  for (const kind of ["branch", "ruleset"])
+    await t.test(kind, (st) => {
+      const scenario = setup(st, {
+        state: {
+          settings: matchingSettings,
+          ...(kind === "branch"
+            ? {
+                branchProtection: classicProtection({
+                  strict: false,
+                  contexts: [checkName],
+                }),
+              }
+            : {}),
+          readbackMismatch: `${kind} freshness`,
+        },
+      });
+      const outcome = scenario.invoke({ overwriteAllowed: true });
+      assert.equal(outcome.result.status, "blocked", outcome.result.message);
+      assert.match(
+        outcome.result.message,
+        /final readback did not match.*strict freshness/,
+      );
+    });
+});
+
+test("retains partial classic changes and retries only missing freshness", (t) => {
+  const protection = classicProtection({
+    strict: false,
+    contexts: ["build"],
+    checks: [{ context: "security", app_id: 42 }],
+  });
+  const scenario = setup(t, {
+    state: {
+      settings: matchingSettings,
+      branchProtection: protection,
+      failAtMutation: 2,
+    },
+  });
+  const partial = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(partial.result.status, "blocked", partial.result.message);
+  assert.match(
+    partial.result.message,
+    /Confirmed partial effects: required PR metadata through main branch protection/,
+  );
+  const retry = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(retry.result.status, "changed", retry.result.message);
+  assert.deepEqual(scenario.readState().branchProtection, {
+    ...protection,
+    required_status_checks: {
+      ...protection.required_status_checks,
+      strict: true,
+      contexts: ["build", checkName],
+    },
+  });
+  assert.deepEqual(scenario.readState().mutationLog, [
+    "add branch status check",
+    "enable branch freshness",
+  ]);
+  assert.equal(scenario.invoke().result.status, "unchanged");
 });
