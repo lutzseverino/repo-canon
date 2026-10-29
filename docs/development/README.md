@@ -157,9 +157,12 @@ wait; the command has no invocation timeout.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
 and head-change retry behavior against the same Postern transport fixture.
 The delivery conformance cases in `test/repository-conformance.test.mjs`
-cover worker handoffs, orchestrator merge ownership, either source of an
-owner-review designation, renewed approval after a head change, and skipped
-work without an owner-review requirement.
+cover the shared owner-review gate in both profiles, either designation source
+and its provenance, renewed approval after a head change, standard merge
+ownership, undesignated delivery, and factory worker handoffs and approval-pause
+continuation. The public-CLI adoption fixtures in
+`test/repository-wide-rules.test.mjs` verify that both profiles install the
+shared gate.
 The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 

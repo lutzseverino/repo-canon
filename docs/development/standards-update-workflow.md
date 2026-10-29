@@ -57,6 +57,14 @@ repository owns the opt-in caller. Its
 [upstream usage guide](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/automated-updates.md)
 describes the action.
 
+An adoption or update PR may append one `## Related issue` section after the
+complete record and any Impact/Migration sections, as the contribution guide
+describes. The rendered summary remains byte-preserved at the start of the
+body. A record without a relationship remains valid, including the action's
+rolling update body; this caller composes no PR body. When an update finishes
+an issue, its submitted body carries the closing reference in that trailing
+section so explicit squash merge retains it.
+
 ## Validation
 
 Run `node --test test/shared-workflows.test.mjs test/repository-conformance.test.mjs`

@@ -215,20 +215,20 @@ verdict before committing. Otherwise finish or recover with `repo-standards adop
 using the pinned runtime once a run starts. An empty recorded change set can
 remain ready after committing; later readiness never replaces pre-commit evidence.
 
-Title it `chore: adopt <source> <version> with CLI <version>`, naming the
-source by the repository name in its URL and the versions from the record's
-Selection table, such as `chore: adopt repo-canon v0.6.0 with CLI 5.1.0`. An
-adoption is not breaking unless the maintainer judges it breaking for the
-project.
+Title it `chore: adopt <source> <version> with CLI <version>`, using the
+source URL's repository name and versions from the record's Selection table.
+An adoption is not breaking unless the maintainer judges it so.
 
-Its body is the adoption record: the output of `status --summary`, byte for
-byte, starting with its `# Repository Standards adoption record` heading. The
-record's Operations table lists the standards source's fixes and checks with
-their results. Post one check-outcomes comment with the repository's own
+Start its body with the complete `status --summary` output, byte for byte,
+including its `# Repository Standards adoption record` heading and optional
+sections. For a breaking (`!`) title, append Impact and Migration sections
+if absent. Then optionally append one `## Related issue` section outside the
+byte-preserved record, using the ordinary closing or partial-work reference.
+Squash with the complete PR body, including that relationship.
+Post one check-outcomes comment with the repository's own
 validation outcomes, confirmation of the recorded ready-to-commit verdict, and findings
 links or unfiled findings under the
-[findings rule](#findings). For a breaking (`!`) title, append Impact and Migration
-sections after the record only if it lacks them.
+[findings rule](#findings).
 Write the check-outcomes comment under the [comment rules](#comments).
 
 The Repository Standards update action uses `chore!:` titles and includes

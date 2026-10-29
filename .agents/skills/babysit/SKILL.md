@@ -78,6 +78,9 @@ requiring a new request under the rules.
    re-request, return to step 1.
 5. Before each merge attempt, verify merge ownership and any required owner
    approval against the current head under the applicable installed rules.
+   Read the accepted brief and any worker handoff and apply the
+   `github-repository-configuration` rules' Designated owner review gate,
+   preserving designation provenance and recording approval for that head.
    When required approval is missing, use the contribution guide's
    owner-question handoff and stop with the PR unmerged. Once the merge
    conditions hold on the latest head, run
