@@ -432,6 +432,17 @@ leaves readiness to the owner. The run that wrote the brief never applies its
 readiness. Readiness it applies is bound to that revision like any other, so
 an edit to the brief removes it until the new revision is reviewed.
 
+Outside repositories governed by factory workflow rules, these roles authorize
+an orchestrating agent whose account is a person, bot or App alike. It applies
+readiness through triage's bundled `ready.mjs` and requires the validator's
+approval of that same account's event for the reviewed revision; its account's
+eligibility never authorizes manual labels that bypass this command or the
+validator. Where factory workflow rules are installed, their person-only
+eligibility also applies. The command establishes that boundary from the
+selected destination's installed `.repo-standards/rules/factory-workflow.md` at
+its default-branch commit, independently of the local checkout. A failed
+identity or applicability read authorizes no readiness writes.
+
 ## Native blockers
 
 Repo Canon's native GitHub relationship rules take precedence over the

@@ -1110,8 +1110,10 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /An orchestrating agent that accepts the brief is that reviewer: it chooses the label itself/,
     /the research run that suggested it applies no label/,
     /The factory accepts readiness only from a person/,
-    /tells the owner, with links, that the brief it accepted waits for a person's readiness, even when its own readiness stands under the GitHub rules/,
-    /It never reports that its own readiness started a run/,
+    /`ready.mjs` refuses GitHub App and bot accounts before any readiness write/,
+    /The orchestrating agent stops at acceptance and reports the reviewed brief and revision, suggested readiness, model and skip labels, and blockers to an authorized person, with links/,
+    /the agent never reports that factory work started/,
+    /This person-only command refusal applies only where factory workflow rules are installed/,
     /The question reaches the orchestrating agent first, as those rules say: it answers on the issue when the triage inference test lets it, and otherwise puts the question in its decision inbox for the owner/,
     /With no open pull request, whoever answers, the orchestrating agent or the owner, removes the label/,
   ])
