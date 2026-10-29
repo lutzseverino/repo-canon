@@ -12,12 +12,136 @@ import { join } from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 import { installedValidator } from "./helpers/installed-validator.mjs";
+import { fixtureFetch } from "./fixtures/postern-babysit.mjs";
+import { connect } from "../vendor/postern/postern.mjs";
 import {
   checkStates,
   decide,
+  main,
   report,
   reviewRequestedAt,
 } from "../.agents/skills/babysit/wait.mjs";
+
+test("invalid durations fail before accessing the connection", async (t) => {
+  let stderr = "";
+  t.mock.method(process.stderr, "write", (chunk) => {
+    stderr += chunk;
+    return true;
+  });
+  const connection = new Proxy(
+    {},
+    {
+      get() {
+        assert.fail("invalid duration accessed the connection");
+      },
+    },
+  );
+  for (const flag of ["--limit", "--interval"]) {
+    for (const value of ["Infinity", "-Infinity", "NaN", "0", "-1", "1e308"]) {
+      stderr = "";
+      assert.equal(await main(["12", flag, value], connection), 1);
+      assert.match(stderr, new RegExp(`${flag} must be .*positive.*seconds`));
+    }
+  }
+});
+
+test("accepted durations preserve polling intervals and invocation deadlines", async (t) => {
+  for (const scenario of [
+    {
+      name: "defaults",
+      installed: false,
+      args: [],
+      polls: Array.from({ length: 19 }, (_, index) => index * 30_000),
+      pauses: Array(18).fill(30_000),
+    },
+    {
+      name: "fractional seconds",
+      installed: false,
+      args: ["--limit", "0.25", "--interval", "0.1"],
+      polls: [0, 100, 200, 250],
+      pauses: [100, 100, 50],
+    },
+    {
+      name: "integer seconds",
+      installed: false,
+      args: ["--limit", "2", "--interval", "1"],
+      polls: [0, 1000, 2000],
+      pauses: [1000, 1000],
+    },
+    ...[false, true].map((installed) => ({
+      name: `long waits (${installed ? "installed" : "source"})`,
+      installed,
+      args: ["--limit", "5500000", "--interval", "3000000"],
+      polls: [0, 3_000_000_000, 5_500_000_000],
+      pauses: [2_147_483_647, 852_516_353, 2_147_483_647, 352_516_353],
+    })),
+  ]) {
+    await t.test(scenario.name, async (t) => {
+      const waitMain = scenario.installed
+        ? (
+            await import(
+              pathToFileURL(
+                installedValidator(t, ".agents/skills/babysit/wait.mjs"),
+              ).href
+            )
+          ).main
+        : main;
+      const directory = mkdtempSync(join(tmpdir(), "babysit-wait-clock-"));
+      t.after(() => rmSync(directory, { recursive: true, force: true }));
+      const statePath = join(directory, "state.json");
+      writeFileSync(
+        statePath,
+        JSON.stringify({
+          head: "a".repeat(40),
+          createdAt: "2026-10-11T05:00:00Z",
+          pushedAt: "2026-10-11T05:00:00Z",
+          checks: [
+            { __typename: "StatusContext", context: "CI", state: "PENDING" },
+          ],
+        }),
+      );
+      const startedAt = Date.parse("2026-10-11T05:00:00Z");
+      let now = startedAt;
+      const pauses = [];
+      t.mock.method(Date, "now", () => now);
+      t.mock.method(globalThis, "setTimeout", (callback, delay) => {
+        assert.ok(
+          delay > 0 && delay <= 2_147_483_647,
+          `unsafe timer delay: ${delay}`,
+        );
+        assert.ok(
+          pauses.length < scenario.pauses.length,
+          "polling did not reach its deadline",
+        );
+        pauses.push(delay);
+        now += delay;
+        queueMicrotask(callback);
+      });
+      let stdout = "";
+      t.mock.method(process.stdout, "write", (chunk) => {
+        stdout += chunk;
+        return true;
+      });
+      const fetch = fixtureFetch(statePath);
+      const polls = [];
+      const connection = connect("https://github.com/example/repository", {
+        credential: "fixture-credential",
+        fetch: async (input, options) => {
+          if (
+            options.body &&
+            JSON.parse(options.body).query?.includes("PosternPullRequest(")
+          )
+            polls.push(now - startedAt);
+          return fetch(input, options);
+        },
+      });
+      assert.equal(await waitMain(["12", ...scenario.args], connection), 5);
+      assert.deepEqual(polls, scenario.polls);
+      assert.deepEqual(pauses, scenario.pauses);
+      assert.match(stdout, /still waiting on checks; run again/);
+    });
+  }
+});
 
 const root = new URL("..", import.meta.url).pathname;
 const fakePlatform = new URL("./fixtures/postern-babysit.mjs", import.meta.url)
