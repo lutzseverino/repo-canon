@@ -686,6 +686,12 @@ test("an App installation reviewer resolves its authenticated viewer without the
   const result = await exercise({
     factory: false,
     actor: { login: "integration[bot]", type: "Bot" },
+    // An installation token's viewer is typed User and keeps the suffix.
+    viewerResponse: {
+      __typename: "User",
+      login: "integration[bot]",
+      databaseId: 7,
+    },
   });
   assert.equal(result.error, undefined);
   assert.equal(result.code, 0);
