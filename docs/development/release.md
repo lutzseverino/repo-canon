@@ -40,6 +40,9 @@ diff is not empty, the release requires all of the following:
 
 - Whole-source review. Review covers the whole source, every source input, not
   only the diff.
+- External full-file review of every installed runtime script changed since
+  the previous release. Follow the coverage and evidence requirements below
+  alongside whole-source review.
 - Validation of every profile. The public CLI at the required minimum version
   runs `source validate` without filtering and returns `valid: true` with no
   errors.
@@ -52,6 +55,88 @@ diff is not empty, the release requires all of the following:
 
 Changes outside the source inputs do not require this, because they do not
 change what adopters receive.
+
+### External review of changed installed scripts
+
+From the source input inventories and diff above, identify every added or
+modified runtime script installed into an adopting repository by any profile,
+including imported helpers and vendored runtime code. Map source paths to
+installed paths through the declarations. Include renamed scripts at their
+candidate paths; review removals in the whole-source review.
+
+Give the external reviewer the full candidate files and an explicit full-file
+assignment. The review must cover each script's complete contents and its
+runtime contracts, rather than only changed lines. Ordinary pull request diff
+review alone does not establish this coverage. Record with the release
+candidate, in its pull request:
+
+- the full candidate commit SHA and previous release tag;
+- the source and installed paths of every changed script, with its profile or
+  profiles, or an explicit statement that none changed;
+- the reviewer and links to the full-file review evidence, identifying which
+  scripts each review covered, its findings and their resolution.
+
+Keep this evidence associated with the candidate selected for publication.
+After a script changes, obtain renewed full-file review of that script at the
+new candidate revision and update the coverage record. Carry forward evidence
+for unchanged scripts only after verifying their bytes match the reviewed
+revision, recording that comparison. The reviewed-byte check before publication
+still applies. This additional review preserves whole-source review; it makes
+no claim to cover unchanged installed scripts or to find every defect.
+
+## Confirmed defects in shipped installed scripts
+
+Evaluate every confirmed defect in a shipped installed script as a release
+candidate, including findings on adopters' installed copies. Follow the
+[findings rules](../../CONTRIBUTING.md#findings) to file or link the defect in
+the responsible repository. On that issue, record:
+
+- the finding and confirmation evidence;
+- affected published versions, with evidence for the range and any uncertainty;
+- the confirmed correction, linked to its commit or pull request and validation;
+- compatibility under [release versioning](../usage/versioning.md), including
+  any required migration; and
+- adopter impact, including which installed behavior fails and what adoption
+  of the correction changes.
+
+Bring this evidence to the owner for a patch-now versus next-ordinary-release
+decision through the [owner-question route](../../CONTRIBUTING.md#comments).
+The orchestrating agent routes the question to its decision inbox. Record the
+owner's decision and its source on the issue; follow the applicable handoff
+and continuation rules. Neither confirmation nor merging a correction
+automatically publishes a release. This policy sets no deadline or severity
+threshold.
+
+A selected release follows this entire procedure, including whole-source and
+external changed-script review, all-profile validation, refreshed applicable
+fixtures and skill exercises, reviewed-byte checks, immutable publication and
+published-release/update verification. A compatible fix can use a patch
+version; incompatible work retains its ordinary required bump. Source merge,
+publication and installed adoption are separate stages: adopters receive the
+correction only through their normal [adoption update](../usage/adopt-repo-canon.md).
+
+### Worked adopter-finding example
+
+Suppose an adopter confirms that an installed helper chooses the wrong GitHub
+repository. File or link the defect, reproduce it against the shipped copies,
+and record the affected published versions and adopter impact. Confirm the
+correction with the focused destination-selection fixtures and link the fix.
+If it restores the documented repository selection without requiring migration,
+classify it as a compatible fix. Send that evidence through the owner-question
+route and record the owner's choice: publish a patch now or include it in the
+next ordinary release.
+
+If the owner chooses a patch, prepare the next patch version under the ordinary
+versioning rules, unless other included work requires a larger bump. Record
+whole-source review and external full-file review of the changed helper at the
+candidate revision, pass all-profile validation and the required checks and
+applicable fixtures/exercises, then publish and verify as below, including the
+reviewed-byte comparison and update from the previous release. Keep existing
+tags immutable. The adopter then updates through `adopt`, validates the newly
+installed helper and its repository-owned callers, and delivers that adoption.
+Merging the source fix or publishing its release alone has not updated that
+adopter's installed copy. This example prescribes future handling, not a
+release decision or publication claim for an existing defect.
 
 ## Prepare the release pull request
 
@@ -90,6 +175,8 @@ The pull request body carries the review and validation summary:
 - the reviewed diff, as the changed source input paths from the previous tag
   that `release:inputs` reports;
 - the outcomes of the whole-source review, or that the diff is empty;
+- the candidate revision, changed installed-script inventory and external
+  full-file review evidence described above;
 - the CLI version and result of `source validate`, with the profile and
   declaration counts;
 - the test results, and any refreshed fixture results; and
