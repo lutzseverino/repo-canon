@@ -9,10 +9,13 @@ import {
 
 // The only credential is the GitHub CLI's currently authenticated credential.
 export function connectionFor(repository) {
-  const remote = repository ?? process.env.GH_REPO ?? defaultRemote();
-  const identity = detectPlatform(
-    remote.includes(":") ? remote : `https://github.com/${remote}`,
-  );
+  let remote = repository ?? process.env.GH_REPO ?? defaultRemote();
+  if (!remote.includes(":")) {
+    // CLI selectors accept [HOST/]OWNER/REPO; retain an explicit host.
+    const host = remote.split("/").length === 3 ? "" : "github.com/";
+    remote = `https://${host}${remote}`;
+  }
+  const identity = detectPlatform(remote);
   let credential;
   try {
     credential = execFileSync(

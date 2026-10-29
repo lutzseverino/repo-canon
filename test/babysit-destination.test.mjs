@@ -151,7 +151,7 @@ process.exit(result.status ?? 1);
      globalThis.fetch = fixtureFetch();
      const command = await import(${JSON.stringify(target.href)});
      try {
-       if (${JSON.stringify(entry)} === "connection") console.log(JSON.stringify(command.connectionFor().repository));
+       if (${JSON.stringify(entry)} === "connection") console.log(JSON.stringify(command.connectionFor(${JSON.stringify(explicit)}).repository));
        else { const code = await command.main(process.argv.slice(1)); if (code != null) process.exitCode = code; }
      }
      catch (error) { console.error(error.message); process.exitCode = 1; }`,
@@ -256,6 +256,13 @@ for (const entry of ["request", "wait", "merge"]) {
         destination: "environment/repository",
       },
     },
+    {
+      name: "host-qualified GH_REPO before a configured default",
+      options: {
+        environment: "github.com/environment/repository",
+        destination: "environment/repository",
+      },
+    },
     ...(entry === "merge"
       ? []
       : [
@@ -264,6 +271,14 @@ for (const entry of ["request", "wait", "merge"]) {
             options: {
               explicit: "explicit/repository",
               environment: "environment/repository",
+              destination: "explicit/repository",
+            },
+          },
+          {
+            name: "a host-qualified explicit repository before GH_REPO and a configured default",
+            options: {
+              explicit: "github.com/explicit/repository",
+              environment: "ghe.example.com/environment/repository",
               destination: "explicit/repository",
             },
           },
@@ -381,6 +396,57 @@ test("the shared installed resolver retains the configured github.com default id
   });
   assert.deepEqual(result.state.requests ?? [], []);
 });
+
+for (const repository of [
+  "example/repository",
+  "github.com/example/repository",
+  "https://github.com/example/repository.git",
+  "git@github.com:example/repository.git",
+  "ssh://git@github.com/example/repository.git",
+  "ssh://git@ssh.github.com:443/example/repository.git",
+]) {
+  for (const selector of ["environment", "explicit"]) {
+    test(`the shared installed resolver accepts ${selector} repository ${repository}`, (t) => {
+      const result = run(t, "connection", {
+        environment: "ghe.example.com/other/repository",
+        [selector]: repository,
+      });
+      assert.equal(result.status, 0, result.stderr);
+      assert.deepEqual(JSON.parse(result.stdout), {
+        platform: "github",
+        host: "github.com",
+        path: "example/repository",
+      });
+      assert.deepEqual(result.state.requests ?? [], []);
+    });
+  }
+}
+
+for (const entry of ["connection", "request", "wait", "merge", "ready"]) {
+  for (const selector of entry === "merge"
+    ? ["environment"]
+    : ["environment", "explicit"]) {
+    for (const repository of [
+      "ghe.example.com/example/repository",
+      "github.com/example/repository/extra",
+      "github.com/example/repo?query",
+      "github.com/example/repo#fragment",
+      "github.com//repository",
+      "example",
+    ]) {
+      test(`installed ${entry} refuses ${selector} repository ${repository} before HTTP`, (t) => {
+        const result = run(t, entry, { [selector]: repository });
+        assert.equal(result.status, 1, result.stderr);
+        assert.match(result.stderr, /No platform adapter serves the remote/);
+        if (repository.startsWith("ghe.example.com/"))
+          assert.match(result.stderr, /on host ghe\.example\.com/);
+        assert.deepEqual(result.state.requests ?? [], []);
+        assert.equal(result.state.merge, undefined);
+        assert.deepEqual(result.state.emitted ?? [], []);
+      });
+    }
+  }
+}
 
 test("an SSH alias for an enterprise default is refused before HTTP", (t) => {
   const result = run(t, "connection", {
