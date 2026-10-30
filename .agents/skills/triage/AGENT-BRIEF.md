@@ -6,6 +6,10 @@ The brief states **what the agent should do**, which stretches to both surfaces:
 
 ## Principles
 
+### Available inputs
+
+A brief's required implementation material must be in the repository, the issue and its comments, or public URLs. A host-only path cannot be the sole required source. Before readiness, check host material for secrets and post the non-secret material on the issue, quoted or attached, then cite it from the brief. Independent acceptance review verifies input availability along with the brief's other requirements.
+
 ### Durability over precision
 
 The issue may sit in `ready-for-agent` for days or weeks. The codebase will change in the meantime. Write the brief so it stays useful even as files are renamed, moved, or refactored.

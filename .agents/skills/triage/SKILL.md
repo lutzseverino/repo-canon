@@ -107,11 +107,11 @@ Every research run, on either path, does two checks first:
 1. **Research.** Start the research run with the issue link, its path, [AGENT-BRIEF.md](AGENT-BRIEF.md), the two checks, and this task: when the claim is confirmed, post the agent brief, followed by its triage notes, on the issue, and report any question it could not answer from code or logs instead of guessing at it.
 
 2. **Review.** Read the published brief as a reviewer who did not write it. Check it against the issue and the code yourself, not against the research run's own summary:
-   - **Evidence**: each claim the brief rests on traces to a code path, a reproduction, or the issue. Spot-check the one the change depends on.
+   - **Evidence**: each claim the brief rests on traces to a code path, a reproduction, or the issue. Spot-check the one the change depends on. Verify every required input under [Available inputs](AGENT-BRIEF.md#available-inputs).
    - **Scope**: desired behavior is what the request asks for; nothing the request needs is dropped, nothing beyond it is added, and out of scope names the adjacent work an agent might reach for.
    - **Acceptance criteria**: each is concrete, testable, and independently verifiable, and together they cover the edge cases the request and the code expose.
    - **Dependencies**: work that must land first is named, so it can be recorded as a blocker.
-   - **Open questions**: none remain. An open question, an option list, or an unchosen value means the request is intent-bound; switch paths.
+   - **Open questions**: none remain, including missing required inputs. Route unavailable material as [Route questions](#route-questions) says. An open intent question, an option list, or an unchosen value means the request is intent-bound; switch paths.
 
    Passing the issue-contract check proves the shape, never that the brief holds. When it does not hold, send the research run the specific corrections; it edits the brief, and you review the new revision from the top.
 

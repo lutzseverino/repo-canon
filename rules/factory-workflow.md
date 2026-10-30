@@ -5,6 +5,16 @@ tracker work that changes no file. The contribution guide holds the general
 implementation contract, readiness, owner-question, credential, comment and
 pull request requirements.
 
+## Implementation inputs
+
+An Agent Brief's required inputs must be in the repository, the issue and its
+comments, or public URLs. Before readiness, check material originating on a host
+for secrets and post the non-secret material on the issue, quoted or attached.
+A host-only path cannot be the sole required source. Independent acceptance
+review checks input availability like the brief's other requirements; a passing
+structure check alone grants no readiness. This boundary requires no change to
+sandbox access.
+
 ## Parent readiness
 
 A parent (a specification or any issue with sub-issues) never runs; its
