@@ -486,6 +486,14 @@ Keep the intake's ISO 8601 UTC timestamps, Parcel-reference ordering and header-
 
 These are simulated participant inputs, not GitHub events or actual authority. Apply them in order only after the owner-answer stage and the grill's completed draft. They do not declare the unresolved intake ready.
 
+## Input availability checkpoint: release one step at a time
+
+The operator keeps the later steps private until their checkpoints, even though this local fixture stores them together. They simulate issue comments and unavailable host material; no host file is created and no sandbox access changes.
+
+1. After the grill drafts the brief, have its writer add this required input: "The sample Delivery receipt is available only at /srv/exercise/receipts/sample.json." Retain that exact candidate and supply its simulated revision notice. The reviewer who did not write it checks input availability and records the actual verdict and cited rule. A host-only required input must be rejected with no readiness, even if the shape check passes. Return the missing-input question through the orchestrating agent; do not ask for host or sandbox access.
+2. Release only after the rejection and missing-input outcome are recorded. The operator supplies the host material: [{"reference":"P001","deliveredAt":"2026-10-18T12:00:00Z","signer":"Example Person"}]. Check it for secrets before posting; record the check outcome, then quote or attach this same non-secret material in a local simulated comment on issue 01. Keep any secret material out of the issue. Retain the posted comment and its issue reference.
+3. Have the writer replace the host-only source with that issue-comment reference, preserving the required sample and behavior. Retain the corrected candidate and its own simulated revision notice. The independent reviewer checks the exact revision and verifies the posted input is available. Record its actual acceptance or rejection; available material resolves this input defect, while every other acceptance requirement still applies. Return any remaining defect to the writer. Only after this review holds continue below, calling the corrected draft r1. Never preseed an approval or grant readiness from posting the material alone.
+
 ## Exact revision and independent acceptance
 
 - Call the completed grill draft r1 and retain its exact text locally. The operator supplies a simulated issue-contract revision notice for r1 only after the draft exists.

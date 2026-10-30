@@ -189,7 +189,18 @@ participant answers. The grill records those answers and drafts the brief;
 the orchestrating agent reviews it independently and never authors a brief it
 accepts. The answers choose only simulated exercise behavior.
 
-Next relay `.scratch/receipts/review-inputs.md` in order: retain r1's exact
+Next relay `.scratch/receipts/review-inputs.md` one checkpoint step at a time.
+First have the brief's writer cite the synthetic host-only sample as a required
+input. Retain that candidate and its notice, and observe independent rejection
+with no readiness. Only then release the sample, check it for secrets, and quote
+or attach the same non-secret material to the simulated issue. The writer
+replaces the host-only source with the issue-comment reference; retain the new
+candidate and notice and record the independent review's actual verdict.
+Input availability resolves that defect, while all other review requirements
+still apply. Report these observed outcomes separately from fixture-test success;
+the fixture grants no host access and preapproves no draft.
+
+Continue with the corrected draft as r1: retain r1's exact
 text, supply its simulated revision notice, record the independent review and
 reviewer's chosen model, then edit the summary to r2. Readiness is invalidated
 until r2 has its own notice and independent review. A model suggestion follows

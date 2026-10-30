@@ -426,6 +426,52 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     join(factoryPlanning.path, ".scratch/receipts/review-inputs.md"),
     "utf8",
   );
+  const inputCheckpoint = factoryReviews
+    .split("## Input availability checkpoint: release one step at a time")[1]
+    ?.split("## Exact revision and independent acceptance")[0];
+  assert.ok(inputCheckpoint);
+  const hostStep = inputCheckpoint.split("\n1. ")[1].split("\n2. ")[0];
+  const postingStep = inputCheckpoint.split("\n2. ")[1].split("\n3. ")[0];
+  const correctedStep = inputCheckpoint.split("\n3. ")[1];
+  assert.match(
+    hostStep,
+    /available only at \/srv\/exercise\/receipts\/sample\.json/,
+  );
+  assert.match(hostStep, /reviewer who did not write it/);
+  assert.match(hostStep, /rejected with no readiness.*shape check passes/);
+  assert.match(
+    hostStep,
+    /missing-input question through the orchestrating agent/,
+  );
+  assert.match(postingStep, /only after the rejection.*recorded/);
+  assert.match(postingStep, /Check it for secrets before posting/);
+  assert.match(postingStep, /quote or attach this same non-secret material/);
+  assert.match(postingStep, /"reference":"P001"/);
+  assert.match(
+    correctedStep,
+    /replace the host-only source.*issue-comment reference/,
+  );
+  assert.match(
+    correctedStep,
+    /corrected candidate and its own simulated revision notice/,
+  );
+  assert.match(correctedStep, /actual acceptance or rejection/);
+  assert.match(
+    correctedStep,
+    /every other acceptance requirement still applies/,
+  );
+  assert.match(correctedStep, /Never preseed an approval/);
+  assert.doesNotMatch(
+    readFileSync(
+      join(
+        factoryPlanning.path,
+        ".scratch/receipts/issues/01-export-receipts.md",
+      ),
+      "utf8",
+    ),
+    /P001|sample\.json/,
+    "the operator releases the sample only after the missing-input rejection",
+  );
   for (const outcome of [
     /simulated approved contract/i,
     /r1/,
