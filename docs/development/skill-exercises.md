@@ -337,6 +337,9 @@ worker. The ticks simulate the existing configured cadence; create no live
 schedule. Check that the answered blocker question without continuation is
 surfaced with dated issue/run/PR evidence, separately from approval and blocker
 waits. Intervention follows the installed recovery rules and grants no execution.
+Throughout, check that `now.md` is rewritten rather than appended, and that
+plan history goes to the plan's append-only `log.md` while `plan.md` keeps
+current state.
 Turn 2 records plan approval separately from independent contract review and
 all other readiness gates. Observe the pending amendment before supplying
 turn 5. The in-goal row cites the approved review goal; the amendment changes scope only after approval. The wish is a
@@ -365,12 +368,13 @@ implements or delivers a product change.
 End session one with unfinished rows and committed active state. Start session
 two with a fresh context, the same project/workbench paths, its own session
 reference, and turn 8. Give it no session-one transcript or artifact summary.
-It reads `index.md`, `inbox.md` and active plans before other work, then the
-skill/local guidance. Inspect the recorded takeover and preserved previous
-owner, and confirm the plan remains open. Relay turn 9: the owner drop remains
-in the table and the already-filed parked issue stays open. Relay turn 10:
-only then may the remaining closed simulated issues plus the owner drop permit
-closure. Check the final counts and closing announcement against the skill.
+It reads `index.md`, `now.md`, `inbox.md` and each active `plan.md`, not
+`log.md`, before other work, then the skill/local guidance. Inspect the
+recorded takeover and preserved previous owner, and confirm the plan remains
+open. Relay turn 9: the owner drop remains in the table and the already-filed
+parked issue stays open. Relay turn 10: only then may the remaining closed
+simulated issues plus the owner drop permit closure. Check the final counts
+and closing announcement against the skill.
 The suggested next direction is not a new approved plan.
 
 Report with the run or PR that needs the exercise: source and skill digests,

@@ -866,7 +866,7 @@ Use the exact .agents/skills/orchestrate/SKILL.md with the sibling workbench ide
 
 The operator releases docs/participant-inputs.md one turn at a time. Use real harness session references and UTC clock timestamps. Session one starts with the goal only: present a proposal and stop before approval, recording the proposed goal and table for comparison. Register the proposal in index.md and record the starting count of zero before filing. Turns 1a–1c file work and supply heartbeat observations before approval. Observation holds readiness and routes any intervention through the contribution guide and installed recovery rules. After explicit approval, record its date, source and preapproved scope in plan.md; independent contract review and all other readiness gates still apply. Then route the in-goal row, scope amendment and nonfinding wish. Wait for the separate amendment approval before changing scope. Commit each workbench change straight to main.
 
-End session one with an active plan and unfinished rows. A fresh session starts without the first transcript: read index.md, inbox.md and active plans first, then the exact skill and local guidance. Record takeover with the fresh session's reference, preserving the superseded owner. Try closing while a row remains open; keep the plan active. Only after the final participant turn may the plan close.
+End session one with an active plan and unfinished rows. A fresh session starts without the first transcript: read index.md, now.md, inbox.md and each active plan.md first, not log.md, then the exact skill and local guidance. Record takeover with the fresh session's reference, preserving the superseded owner. Try closing while a row remains open; keep the plan active. Only after the final participant turn may the plan close.
 
 ## Expected outcome
 
@@ -947,10 +947,15 @@ At close, receipt-review#1 and #2 are closed; #3 remains open because the owner 
   write(
     workbench,
     "index.md",
-    "# Workbench\n\n## Active\n\nNone.\n\n## Closed\n\n## Launch caps\n\nNo host override; use the skill's default cap.\n",
+    "# Workbench\n\n## Repositories\n\n- receipt-review (the exercise project)\n- tooling (simulated at .scratch/tooling/)\n\n## Active\n\nNone.\n\n## Closed\n\n## Launch caps\n\nNo host override; use the skill's default cap.\n",
   );
   write(workbench, "inbox.md", "# Decision inbox\n\nNo open decisions.\n");
   write(workbench, "wishes.md", "# Wishes\n");
+  write(
+    workbench,
+    "now.md",
+    "# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n## In flight\n\n| Item | Waiting on | Since (UTC) | Next check | Evidence |\n| ---- | ---------- | ----------- | ---------- | -------- |\n\n## Running launches\n\n| Host | Kind | Session | Started (UTC) |\n| ---- | ---- | ------- | ------------- |\n",
+  );
   initializeFixtureRepository(workbench, {
     author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
   });

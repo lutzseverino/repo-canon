@@ -94,7 +94,8 @@ _Avoid_: Roadmap, specification
 **Workbench**:
 The git repository of plain Markdown in which the orchestrating agent keeps
 its plans, decision inbox and wishes, named by path in the owner's global
-agent instructions.
+agent instructions, or created by the orchestrating agent when none is named;
+private, and outside every project checkout.
 _Avoid_: Notes, memory
 
 **Wish**:

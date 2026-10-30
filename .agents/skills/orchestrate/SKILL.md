@@ -30,47 +30,97 @@ Repo Canon.
 ## Workbench
 
 The workbench is a git repository of plain Markdown holding the state of every
-plan you own. Your global agent instructions name its path. When they name
-none, ask the owner for it before you propose a plan.
+plan you own. It is the owner's private record, outside every project
+repository, with a private remote or none. Your global agent instructions name
+its path. When they name none, create one before you propose a plan: a local
+git repository outside every project checkout, seeded with `index.md`,
+`inbox.md`, `wishes.md` and `now.md`. Tell the owner its path and the line to
+add to their global agent instructions, such as
+`The orchestrating agent's workbench is <path>.`
 
 Commit each workbench change straight to its default branch, and push it when
 the workbench has a remote.
 
 ```text
-index.md     the active plans, each with its owning session reference, and launch caps
+index.md     the tracked repositories, the active plans, each with its owning session reference, and launch caps
 inbox.md     the decision inbox
 wishes.md    one line per wish
+now.md       the current state: what waits on the owner, what is in flight, and running launches
 <plan>/      one directory per plan
-  plan.md    the plan
+  plan.md    the plan's current state
+  log.md     the plan's append-only log
   *.md       its grill decisions and draft briefs
 ```
 
-The workbench is a wiki:
+`now.md` and each `plan.md` are rewritten in place, except that `plan.md`
+keeps a superseded approval line, marked as the wiki rules below say. The rest
+of the workbench is a wiki:
 
 - Date every entry.
 - Cite each source, such as an issue, pull request, comment or session, by its
   link or reference, and leave its content where it is.
 - Leave a superseded entry's text as written: mark it superseded, dated, and
   point to the entry that replaces it.
+- Once a draft brief is filed, add a dated line at its top linking the issues
+  it became, and leave the draft below it as written. Leave decision records as
+  written.
 
 A session reference is the opaque identifier your harness gives a session,
 recorded as given.
 
 ### `index.md`
 
-One line per active plan, including proposals awaiting approval: its directory,
-its goal in a few words, and the reference of the session that owns it. When a
-plan closes, move its line under a `Closed` heading, dated. A `Launch caps` list
+A `Repositories` list names each repository the workbench tracks. One line per
+active plan, including proposals awaiting approval: its directory, its goal in
+a few words, and the reference of the session that owns it. When a plan
+closes, move its line under a `Closed` heading, dated. A `Launch caps` list
 names a host by its hostname and the most agent launches you may run at once
 on it.
+
+### `now.md`
+
+The current state across plans. Rewrite it on every pass; never append to it.
+Take its times from the clock, in UTC, as `log.md` does.
+
+```markdown
+# Now
+
+## Waiting on you
+
+<count> open decisions in `inbox.md`.
+
+- <chore or notification for the owner>
+
+## In flight
+
+| Item | Waiting on | Since (UTC) | Next check | Evidence |
+| ---- | ---------- | ----------- | ---------- | -------- |
+
+## Running launches
+
+| Host | Kind | Session | Started (UTC) |
+| ---- | ---- | ------- | ------------- |
+```
+
+- **Waiting on you** holds the count of open entries in `inbox.md`, plus the
+  chores and notifications for the owner. Carry each one into every rewrite
+  until the owner has done or acknowledged it.
+- **In flight** holds one row per item that waits on someone or something,
+  such as a run, a review, a blocker or plan approval, with the link that shows
+  it.
+- **Running launches** holds one row per agent launch you started: its host's
+  hostname, its kind (grill, triage run, research run or worker), its session
+  reference once the harness gives one, and its start time. Add a launch's row
+  before you start it, and remove the row when you take in its report-back.
 
 ### `inbox.md`
 
 The decision inbox the contribution guide names: one entry per decision open
-for the owner, across plans. Each entry holds the question, its plan, a link
-to its source, the date it opened, and your recommendation.
-Grills and triage runs add entries too. When the owner answers, move the entry
-to its plan's log, with the date, the answer, and where the owner gave it.
+for the owner, across plans. Each entry is a decision, and holds the question,
+its plan, a link to its source, the date it opened, and your recommendation.
+Notifications and chores go in `now.md`. Grills and triage runs add entries
+too. When the owner answers, move the entry to its plan's `log.md`, with the
+date, the answer, and where the owner gave it.
 
 ### `wishes.md`
 
@@ -82,7 +132,8 @@ the finding's tracker record or reporting links.
 
 ## The plan
 
-`plan.md` takes this shape:
+`plan.md` holds the plan's current state, rewritten in place, and takes this
+shape:
 
 ```markdown
 # <Plan title>
@@ -101,7 +152,15 @@ the finding's tracker record or reporting links.
 | Repository | At start | At close |
 | ---------- | -------- | -------- |
 
-## Log
+## Current state
+
+<what the plan is doing now and what it waits on>
+```
+
+`log.md` takes this shape:
+
+```markdown
+# <Plan title> log
 
 - <timestamp> <entry>
 ```
@@ -115,7 +174,10 @@ the finding's tracker record or reporting links.
   the done marks a grill and a triage run set.
 - **Open issues.** Count each repository's open issues when the plan starts and
   again at close. Report the counts; they set no limit.
-- **Log.** Record every issue the plan files with its repository, number and
+- **Current state.** A few lines on what the plan is doing now and what it
+  waits on. Rewrite them as the plan moves; the log keeps the history.
+- **`log.md`.** Append entries; never rewrite one. The wiki rules apply.
+  Record every issue the plan files with its repository, number and
   creation evidence, including findings outside the ticket table. Keep each
   factory or directly launched run's issue, run and PR references and its final
   findings-report location. Take every timestamp from the clock, in UTC, with
@@ -123,7 +185,8 @@ the finding's tracker record or reporting links.
 
 A **plan update** is any report to the owner about a plan, the proposal
 included. Each one lists the inferred-intent items the owner has not yet seen,
-with their citations, and shows the decision inbox. Log the items it showed.
+with their citations, and shows the decision inbox. Log the items it showed in
+`log.md`.
 
 ## Lifecycle
 
@@ -162,8 +225,9 @@ with their citations, and shows the decision inbox. Log the items it showed.
    - report back, as [Report-back](#report-back) says.
 
    Then decide the split, file the issues and accept the briefs, as the guide
-   says. A draft you set aside for later work stays in the plan directory,
-   marked parked, and takes no row. To take over an owner's grill or
+   says, and mark each filed draft as [Workbench](#workbench) says. A draft
+   you set aside for later work stays in the plan directory, marked parked,
+   and takes no row. To take over an owner's grill or
    prototype, continue in that session.
 4. **New requirements.** Handle a Finding under the contribution guide's
    Findings section even when it lies outside the goal: first link an existing
@@ -182,7 +246,7 @@ with their citations, and shows the decision inbox. Log the items it showed.
    comments and, for runs without PRs, the reporting locations the contribution
    guide prescribes. Include factory and directly launched workers, even when
    their findings are absent from the ticket table. Follow creation evidence
-   from those reports to recover issues missing from the plan's log.
+   from those reports to recover issues missing from the plan's `log.md`.
    Consolidate references by repository and issue number, then check current
    issue state. Distinguish newly plan-filed issues from pre-existing linked
    findings and unrelated concurrent work; retain the provenance links.
@@ -200,16 +264,18 @@ with their citations, and shows the decision inbox. Log the items it showed.
 ## Running the plan
 
 - One long-lived orchestrating agent owns every plan in the workbench. A fresh
-  session reads `index.md`, `inbox.md` and the active plans, and nothing else,
-  before it acts. It then records its own session reference as each active
-  plan's owner in `index.md`, marking the previous reference superseded.
+  session reads `index.md`, `now.md`, `inbox.md` and each active `plan.md`, and
+  nothing else, not even a plan's `log.md`, before it acts. It then records its
+  own session reference as each active plan's owner in `index.md`, marking the
+  previous reference superseded.
 - Give heavy reads, such as whole session transcripts, long logs and large
   diffs, to a subagent that returns what the step needs, or read a bounded
   tail. Select any covering installed skill under `AGENTS.md`'s delegation
   requirements; an uncovered read needs only its task context.
 - Run at most three agent launches you started at once, or the cap `index.md`
-  names for this host's hostname. Count every grill, triage run, research run
-  and worker.
+  names for this host's hostname. To check the cap, count the rows under
+  `now.md`'s Running launches for this host: every grill, triage run, research
+  run and worker has one.
 - Launch a ticket worker with `/implement`, followed by its issue, scope,
   repository checkout and report-back destination. Workers deliver as the
   contribution guide's Pull requests section says.
@@ -230,20 +296,22 @@ When the harness cannot arrange recurring observation, report that limit and
 re-read these records at each turn.
 
 Read issue state and labels, latest comments and owner answers, blocker state,
-run progress and any PR. Compare with the previous dated observation in the
-plan log. Record approval and blocker waits separately from unexplained lack
-of progress. When an answered owner question has no observable continuation,
-surface it with current state and issue/run/PR evidence links, recording absent
-run or PR evidence explicitly. Route any intervention through the contribution
-guide and applicable installed recovery rules. Observation authorizes no
-execution and adds no stall timeout or recovery procedure.
+run progress and any PR. Compare with the previous dated observation in a
+bounded tail of the plan's `log.md`. Record approval and blocker waits
+separately from unexplained lack of progress, and keep each wait as a row under
+`now.md`'s In flight. When an answered owner question has no observable
+continuation, surface it with current state and issue/run/PR evidence links,
+recording absent run or PR evidence explicitly. Route any intervention through
+the contribution guide and applicable installed recovery rules. Observation
+authorizes no execution and adds no stall timeout or recovery procedure.
 
 ## Report-back
 
 The file in the plan directory is the contract. A grill or triage run reports
-by writing its result there, setting its done mark in `plan.md`, and
-committing and pushing both. A wake-up message to your session is only a
-nudge, and losing it loses nothing: act on the files.
+by writing its result there, setting its done mark in `plan.md`, and committing
+and pushing both. When you take in a report-back, remove its launch's row from
+`now.md`'s Running launches. A wake-up message to your session is only a nudge,
+and losing it loses nothing: act on the files.
 
 When your harness cannot send messages between sessions, re-read the active
 plan directories at each turn, and the owner tells you when a grill is done.

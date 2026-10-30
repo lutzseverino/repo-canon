@@ -333,7 +333,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     readdirSync(workbench)
       .filter((name) => name !== ".git")
       .sort(),
-    ["inbox.md", "index.md", "wishes.md"],
+    ["inbox.md", "index.md", "now.md", "wishes.md"],
   );
   const orchestrateTask = readFileSync(
     join(orchestrate.path, "docs/exercise.md"),
