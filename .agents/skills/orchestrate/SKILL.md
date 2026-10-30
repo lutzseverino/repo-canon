@@ -16,6 +16,10 @@ Comments, Findings and Pull requests sections. This skill is how to carry
 those rules across a plan. The installed `triage` skill is how to triage one
 request.
 
+Follow `AGENTS.md`'s Agent skills requirements for delegation. Use the
+session's supported invocation for the commands below, followed by their
+task context.
+
 Use the capabilities available in your session to carry out the steps. An
 application may enhance orchestration; the shared method works without it.
 Keep application-specific tool mappings in the owner's own setup outside
@@ -131,9 +135,10 @@ with their citations, and shows the decision inbox. Log the items it showed.
    any other readiness condition in the contribution guide and installed rules.
 2. **Intake.** Route each new request as the contribution guide's Triage
    section says, with the `triage` skill's method. Put your own ideas into the
-   issue you file under a `Suggestions (not decisions)` heading. Give each
-   triage run what the `triage` skill gives a research run, the plan directory,
-   and this task:
+   issue you file under a `Suggestions (not decisions)` heading. Open each
+   triage run with `/triage`, followed by the issue, evidence, recorded
+   decisions, scope, repository checkout, plan directory and report-back
+   destination. Its task context includes these workbench delivery obligations:
    - write its result to the plan directory, citing the brief or findings it
      posted by link;
    - add each decision it leaves open for the owner to `inbox.md`;
@@ -142,8 +147,12 @@ with their citations, and shows the decision inbox. Log the items it showed.
    - report back, as [Report-back](#report-back) says.
 3. **Grill.** When the guide's inference test cannot settle an intent
    question, open a grill with the owner in its own session, and record the
-   session's reference in the row's State. Give it what the `triage` skill
-   gives a grill, the plan directory, and this task:
+   session's reference in the row's State. Launch it with `/grill-with-docs`,
+   followed by the issue links, evidence, recorded decisions, unresolved
+   questions, scope, plan directory and report-back destination. Supply the
+   owned branch and checkout for domain-document edits and one pull request
+   destination per affected repository, as the contribution guide's Triage
+   section requires. Its task context also includes these workbench obligations:
    - write the owner's decisions and the draft briefs to the plan directory;
    - add each decision it leaves open for the owner to `inbox.md`;
    - mark its row `grilled <file>` in `plan.md`;
@@ -194,11 +203,14 @@ with their citations, and shows the decision inbox. Log the items it showed.
   plan's owner in `index.md`, marking the previous reference superseded.
 - Give heavy reads, such as whole session transcripts, long logs and large
   diffs, to a subagent that returns what the step needs, or read a bounded
-  tail.
+  tail. Select any covering installed skill under `AGENTS.md`'s delegation
+  requirements; an uncovered read needs only its task context.
 - Run at most three agent launches you started at once, or the cap `index.md`
   names for this host's hostname. Count every grill, triage run, research run
   and worker.
-- Workers deliver as the contribution guide's Pull requests section says.
+- Launch a ticket worker with `/implement`, followed by its issue, scope,
+  repository checkout and report-back destination. Workers deliver as the
+  contribution guide's Pull requests section says.
   When applicable installed rules assign a worker's merge to you, read its
   accepted brief and PR handoff, then resume `babysit`, including when resuming
   a plan. After an owner question is resolved, follow the applicable installed

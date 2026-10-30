@@ -574,9 +574,11 @@ const wordBudgets = {
   // adoption pull request's pre-commit verdict (#540), then for automated
   // update titles (#561), then for the inference test, the grill flow and
   // question routing (#595), then for prescribed merge-role handoffs (#609)
-  // and the installed approval-pause continuation pointer (#632).
-  "CONTRIBUTING.md": 2720,
-  "AGENTS.md": 108,
+  // and the installed approval-pause continuation pointer (#632), then for
+  // grill domain-document delivery (#693).
+  "CONTRIBUTING.md": 2784,
+  // Raised from 108 for the general delegation requirements (#693).
+  "AGENTS.md": 193,
 };
 
 function wordCount(text) {
@@ -1135,15 +1137,15 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /Passing the issue-contract check proves the shape, never that the brief holds/,
     /Leave readiness, labels, and the judgment of its brief to yourself/,
     /Every research run, on either path, does two checks first/,
-    /The grill calls the Skill tool twice, for "grilling" and "domain-modeling"/,
-    /It skips every question a recorded owner decision already answers/,
+    /Open it with `\/grill-with-docs`/,
+    /Leave filing and readiness to yourself/,
     /accept only once every one the owner must answer is answered/,
     /`needs-info`: information is missing; you, the orchestrating agent, answer it or route it/,
     /`needs-info` returns to `needs-triage` once the missing information arrives: your own answer, the reporter's reply, or the owner's decision/,
     /## Route questions/,
     /The decision inbox is the one channel for questions to the owner/,
     /Never infer a default, limit, timeout, or fallback that persists in the product/,
-    /It files no issue and applies no readiness/,
+    /it files no issue and applies no readiness/,
     /never write or rewrite one yourself/,
     /If no notice arrives, leave readiness to the owner/,
   ])
@@ -1232,6 +1234,42 @@ test("triage keeps workflow-only skips undesignated and factory routing conditio
   assert.doesNotMatch(flowedText("CONTRIBUTING.md"), /factory:skip/);
 });
 
+test("installed agent guidance governs covered and uncovered delegation by every agent", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.match(
+    declarations,
+    /\n {4}agent-guidance:\n {6}kind: file\n {6}target: AGENTS\.md\n {6}exact: AGENTS\.md\n/,
+  );
+  const guidance = flowedText("AGENTS.md");
+  for (const requirement of [
+    /Before handing work to another agent, subagent or session, check whether an installed skill covers it/,
+    /This includes implementation workers delegating ticket subwork without invoking `orchestrate` or `triage`, and heavy reads/,
+    /When covered, invoke that skill using the session's supported invocation mechanism, followed by task context/,
+    /When no installed skill covers the work, pass task context only/,
+    /Task context includes issue links, evidence, recorded decisions, scope, workspace and plan references, report-back destinations and task-specific delivery obligations/,
+    /Keep procedure and question format with the invoked skill/,
+  ])
+    assert.match(guidance, requirement);
+});
+
+test("installed contribution guidance separates grill domain edits from workbench delivery", () => {
+  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  assert.match(
+    declarations,
+    /\n {4}contribution-guidance:\n {6}kind: file\n {6}target: CONTRIBUTING\.md\n {6}exact: CONTRIBUTING\.md\n/,
+  );
+  const triage = flowedText("CONTRIBUTING.md")
+    .split("## Triage ")[1]
+    .split("## Readiness")[0];
+  for (const requirement of [
+    /A grilling session changing a repository's glossary or ADRs works on its own branch in a checkout it owns \(a worktree or fresh clone\), never in a shared checkout on the default branch/,
+    /Domain modeling edits those documents inline there/,
+    /Each repository whose domain documents change gets one pull request through its normal review and merge/,
+    /The grill's decision record and draft briefs stay in the workbench, committed directly to its default branch/,
+  ])
+    assert.match(triage, requirement);
+});
+
 test("adoption installs Repo Canon's user-invoked orchestrate skill, which credits chief-of-staff", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   assert.match(
@@ -1270,6 +1308,74 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, which credi
     skill,
     /Never infer a default|readiness label|`ready-for-agent`/,
   );
+});
+
+test("owned handoffs invoke covering skills without copying grill procedure", () => {
+  const orchestrate = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const triage = flowedText(".agents/skills/triage/SKILL.md");
+  for (const skill of [orchestrate, triage]) {
+    assert.match(skill, /`AGENTS\.md`.*delegation/);
+    assert.match(skill, /`\/grill-with-docs`/);
+    assert.match(skill, /contribution guide's Triage section/);
+    assert.doesNotMatch(
+      skill,
+      /what the `triage` skill gives|The grill calls the Skill tool twice|updates `GLOSSARY\.md` and ADRs inline|in short rounds of numbered questions|one question at a time/,
+    );
+  }
+  assert.match(orchestrate, /Open each triage run with `\/triage`/);
+  assert.match(orchestrate, /Launch a ticket worker with `\/implement`/);
+  assert.match(
+    orchestrate,
+    /owned branch and checkout.*one pull request destination per affected repository/,
+  );
+  assert.match(
+    triage,
+    /For each research run below, apply that rule to its research task and use the listed issue references and deliverables as task context/,
+  );
+  assert.match(
+    triage,
+    /owned branch and checkout.*per-repository pull request destinations/,
+  );
+  assert.match(
+    triage,
+    /issue links, the facts, your inferred answers, the recorded owner decisions/,
+  );
+  assert.match(triage, /draft briefs in a proposed ticket split/);
+});
+
+test("orchestrate handoffs retain workbench delivery and report-back context", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const intake =
+    /2\. \*\*Intake\.\*\* (.*?) 3\. \*\*Grill\./.exec(skill)?.[1] ?? "";
+  const grill =
+    /3\. \*\*Grill\.\*\* (.*?) 4\. \*\*New requirements\./.exec(skill)?.[1] ??
+    "";
+  assert.match(
+    intake,
+    /write its result to the plan directory, citing the brief or findings it posted by link/,
+  );
+  assert.match(
+    grill,
+    /write the owner's decisions and the draft briefs to the plan directory/,
+  );
+  for (const [step, mark] of [
+    [intake, "triaged"],
+    [grill, "grilled"],
+  ]) {
+    assert.match(
+      step,
+      /add each decision it leaves open for the owner to `inbox\.md`/,
+    );
+    assert.ok(
+      step.includes(`mark its row \`${mark} <file>\` in \`plan.md\``),
+      mark,
+    );
+    assert.match(
+      step,
+      /commit and push its writes, as \[Workbench\]\(#workbench\) says/,
+    );
+    assert.match(step, /report back, as \[Report-back\]\(#report-back\) says/);
+  }
 });
 
 test("orchestrate observes filed work before approval without authorizing execution", () => {
@@ -1409,8 +1515,9 @@ test("orchestrate wishes preserve mandatory Findings reporting", () => {
     assert.ok(findings.includes(requirement), requirement);
 });
 
-// Check the whole installed directory, including supporting files and any
-// closing section. Keep the forbidden identifiers here, not as tool mappings.
+// Check the whole installed directory and the shared delegation guidance.
+// The only exempt test source is this exact detector declaration; comments,
+// strings and assertions elsewhere in the test remain subject to the scan.
 const privateOrchestrationNames =
   /\bT3(?:\b|code)|\bt3_|\bt3:|delegate_task|schedule_task|watch_pull_request/i;
 
@@ -1423,13 +1530,24 @@ test("shared orchestration material excludes private application mappings everyw
     "authoring-notes.md",
     "docs/usage/adopt-repo-canon.md",
     "docs/development/README.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    ".agents/skills/triage/SKILL.md",
+    "test/repository-conformance.test.mjs",
   ];
-  for (const path of paths)
-    assert.doesNotMatch(
-      readFileSync(join(root, path), "utf8"),
-      privateOrchestrationNames,
-      path,
-    );
+  for (const path of paths) {
+    let text = readFileSync(join(root, path), "utf8");
+    if (path === "test/repository-conformance.test.mjs") {
+      const detector = `const privateOrchestrationNames =\n  ${privateOrchestrationNames};`;
+      assert.equal(
+        text.split(detector).length,
+        2,
+        "one exact detector declaration",
+      );
+      text = text.replace(detector, "");
+    }
+    assert.doesNotMatch(text, privateOrchestrationNames, path);
+  }
 });
 
 test("factory image rules link to Scriptorium's released sandbox image contract", () => {

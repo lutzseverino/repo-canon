@@ -70,6 +70,13 @@ orchestrating agent never writes a brief it accepts: when its split changes a
 draft substantially, the grill rewrites that brief, and a research run writes
 one only when it needs code facts the grill did not gather.
 
+A grilling session changing a repository's glossary or ADRs works on its own
+branch in a checkout it owns (a worktree or fresh clone), never in a shared
+checkout on the default branch. Domain modeling edits those documents inline
+there. Each repository whose domain documents change gets one pull request
+through its normal review and merge. The grill's decision record and draft
+briefs stay in the workbench, committed directly to its default branch.
+
 The orchestrating agent, never the agent that wrote the brief, then reviews its
 evidence, scope, acceptance criteria, dependencies, and open questions. Passing
 the structure check never makes a brief hold. A brief that leaves owner intent
