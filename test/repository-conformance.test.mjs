@@ -1330,7 +1330,7 @@ test("owned handoffs invoke covering skills without copying grill procedure", ()
   );
   assert.match(
     triage,
-    /When no installed skill covers the research task, pass its context alone/,
+    /For each research run below, apply that rule to its research task and use the listed issue references and deliverables as task context/,
   );
   assert.match(
     triage,
