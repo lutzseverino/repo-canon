@@ -33,8 +33,10 @@ contribution guide take precedence over its upstream Meaning column, including
 the conflicting `needs-info` and `ready-for-human` entries.
 
 For `needs-info`, follow the contribution guide's Triage section for question
-routing and its inference test. Agent work follows the agent path; where
-factory workflow rules are installed, follow them for factory pickup exclusions.
+routing and its inference test. Agent work, including work awaiting the owner's
+review, follows the contribution guide's Triage and Readiness sections for
+`ready-for-agent`. Where factory workflow rules are installed, follow their
+State labels section for factory pickup exclusions.
 
 The repository owns `ready-for-agent`, provisioned by canonical-label setup.
 These rules name no `factory:` label. Where factory workflow rules are installed,
