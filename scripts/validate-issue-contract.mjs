@@ -190,15 +190,20 @@ const wayfinderChildFields = new Set(["parent", "question"]);
 // none, a `null` `commentId` to create it), and the exit code with its message.
 export function decideIssueContract(snapshot) {
   if (snapshot.issue.state === "closed") {
-    const needsTriage = (snapshot.issue.labels ?? []).some(
-      (label) => labelName(label) === "needs-triage",
-    );
+    const removeLabels = (snapshot.issue.labels ?? [])
+      .map(labelName)
+      .filter(
+        (label) =>
+          (workflowLabels.has(label) && label !== "wontfix") ||
+          label.startsWith("factory:"),
+      );
     return issueDecision({
       exitCode: 0,
-      message: needsTriage
-        ? "Skipped closed issue validation; removed needs-triage."
-        : "Skipped closed issue; issue contract validation handles open issues only.",
-      removeLabels: needsTriage ? ["needs-triage"] : [],
+      message:
+        removeLabels.length > 0
+          ? `Skipped closed issue validation; removed ${removeLabels.join(", ")}.`
+          : "Skipped closed issue; issue contract validation handles open issues only.",
+      removeLabels,
     });
   }
 

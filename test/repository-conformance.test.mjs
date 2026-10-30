@@ -575,8 +575,8 @@ const wordBudgets = {
   // update titles (#561), then for the inference test, the grill flow and
   // question routing (#595), then for prescribed merge-role handoffs (#609)
   // and the installed approval-pause continuation pointer (#632), then for
-  // grill domain-document delivery (#693).
-  "CONTRIBUTING.md": 2784,
+  // grill domain-document delivery (#693), then closed-issue label cleanup (#735).
+  "CONTRIBUTING.md": 2799,
   // Raised from 108 for the general delegation requirements (#693).
   "AGENTS.md": 193,
 };
@@ -2151,7 +2151,7 @@ test("contract-changing answers return to an independent writer and revision rev
     comments,
     /If the answer changes the implementation contract, have a separate writer edit it; await its validator notice, independent review and renewed readiness before continuation/,
   );
-  assert.doesNotMatch(guide, /factory|`model:/);
+  assert.doesNotMatch(comments, /factory|`model:/);
   const skill = flowedText(".agents/skills/triage/SKILL.md");
   const routing = /## Route questions (.*?)(?= ## |$)/.exec(skill)?.[1] ?? "";
   assert.match(
@@ -2407,7 +2407,7 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   const guide = flowedText("CONTRIBUTING.md");
   const comments = /## Comments (.*?)(?= ## |$)/.exec(guide)?.[1] ?? "";
   assert.match(comments, /post the question as one issue comment/);
-  assert.doesNotMatch(guide, /factory|`model:/);
+  assert.doesNotMatch(comments, /factory|`model:/);
   assert.match(comments, /without a pull request if none is open/);
   assert.match(
     comments,

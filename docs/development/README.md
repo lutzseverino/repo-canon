@@ -246,8 +246,8 @@ accepts full commit SHAs and reads published tag and branch refs with
 - [Babysit merge script](babysit-merge.md): explicit squash message, verbatim
   body transport, head-change retry, and executable fixtures.
 - [Issue contract validation](issue-contract-validation.md): supported issue
-  shapes, feedback behavior, workflow state, workflow permissions, and runnable
-  fixtures.
+  shapes, feedback behavior, workflow state, workflow permissions, the one-time
+  closed-issue label sweep, and runnable fixtures.
 - [Upstream skill compatibility](upstream-compatibility.md): the pinned
   Matt Pocock snapshot, its review and update steps, the native
   issue formats that
