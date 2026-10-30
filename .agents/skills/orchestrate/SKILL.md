@@ -16,9 +16,11 @@ Comments, Findings and Pull requests sections. This skill is how to carry
 those rules across a plan. The installed `triage` skill is how to triage one
 request.
 
-Follow `AGENTS.md`'s Agent skills requirements for delegation. Use the
-session's supported invocation for the commands below, followed by their
-task context.
+Follow `AGENTS.md`'s Agent skills requirements for delegation and session naming.
+Use the available naming capability separately from the command and task context.
+Use the session's supported invocation for the commands below, followed by their
+task context. Illustrative names include `triage repo-canon#726`,
+`grill plan 07` and `orchestrate: plans 07–10`; case and punctuation are flexible.
 
 Use the capabilities available in your session to carry out the steps. An
 application may enhance orchestration; the shared method works without it.

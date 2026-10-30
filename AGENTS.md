@@ -22,6 +22,10 @@ Task context includes issue links, evidence, recorded decisions, scope,
 workspace and plan references, report-back destinations and task-specific
 delivery obligations. Keep procedure and question format with the invoked skill.
 
+Where session naming is supported, name sessions you launch or own for their
+operation and target. Otherwise, continue without naming. Keep naming metadata
+outside the skill invocation and task context.
+
 ### Issue tracker
 
 Issues, specifications, and tickets live in GitHub Issues, worked with the `gh`

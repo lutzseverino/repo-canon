@@ -965,6 +965,36 @@ At close, receipt-review#1 and #2 are closed; #3 remains open because the owner 
   };
 }
 
+{
+  const root = createRepository("session-naming", [], {
+    agents: readFileSync(join(sourceRoot, "AGENTS.md"), "utf8"),
+    context:
+      "# Glossary\n\nA Delivery is a completed shipment of one Parcel.\n",
+    exercise: `## Task
+
+Read AGENTS.md as an implementation worker outside orchestrate or triage. Inspect the Delivery definition in GLOSSARY.md and report its meaning and source to the operator. This bounded local inspection has no covering installed skill; any delegation carries context only. Make no repository edits or remote calls.
+
+## Supported naming
+
+Use a session that can name a session it launches or owns. Apply the installed rule using that capability, with naming metadata outside the task message. Observe a name stating the operation and target, such as inspect Delivery glossary; this example fixes neither punctuation nor case. Retain the exact task message and observed name separately, and verify the message still contains the question, source path and report-back destination.
+
+## Unsupported naming
+
+Repeat the inspection in a session with no naming capability for the session it owns or launches. Continue the same task with no new prerequisite. Record the capability's absence and the successful inspection, and verify the task message and report-back obligations remain intact. When using a controlled capability restriction, identify it explicitly rather than claiming a live platform limitation.
+
+## Evidence
+
+Allow at most two minutes per case. Record actual session references, capability evidence, naming metadata when supported, task messages and results outside maintained documentation. A timeout or unavailable session is not a pass. Fixture assertions verify setup only; agent observations establish the exercise outcomes.
+`,
+  });
+  installLocalTracker(root);
+  repositories["session-naming"] = {
+    path: root,
+    skills: [],
+    initial: commit(root, "chore: establish session naming exercise"),
+  };
+}
+
 const provenance = identifyFixtureSource({
   sourceRoot,
   builderPath: scriptSourcePath,

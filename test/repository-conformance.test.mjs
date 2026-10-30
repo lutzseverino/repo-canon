@@ -575,8 +575,9 @@ const wordBudgets = {
   // and the installed approval-pause continuation pointer (#632), then for
   // grill domain-document delivery (#693), then closed-issue label cleanup (#735).
   "CONTRIBUTING.md": 2799,
-  // Raised from 108 for the general delegation requirements (#693).
-  "AGENTS.md": 193,
+  // Raised from 108 for general delegation (#693), then from 193 for
+  // supported session naming alongside that installed rule (#748).
+  "AGENTS.md": 223,
 };
 
 function wordCount(text) {
@@ -1250,6 +1251,33 @@ test("installed agent guidance governs covered and uncovered delegation by every
     assert.match(guidance, requirement);
 });
 
+test("installed session naming applies to launched and owned sessions where supported", () => {
+  const guidance = flowedText("AGENTS.md");
+  assert.match(
+    guidance,
+    /Where session naming is supported, name sessions you launch or own for their operation and target/,
+  );
+  assert.match(guidance, /Otherwise, continue without naming/);
+  assert.match(
+    guidance,
+    /Keep naming metadata outside the skill invocation and task context/,
+  );
+  for (const path of [
+    ".agents/skills/orchestrate/SKILL.md",
+    ".agents/skills/triage/SKILL.md",
+  ]) {
+    const skill = flowedText(path);
+    assert.match(
+      skill,
+      /`AGENTS\.md`'s Agent skills requirements for delegation and session naming/,
+    );
+    assert.match(
+      skill,
+      /Use the available naming capability separately from the command and task context/,
+    );
+  }
+});
+
 test("installed contribution guidance separates grill domain edits from workbench delivery", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   assert.match(
@@ -1532,6 +1560,9 @@ test("shared orchestration material excludes private application mappings everyw
     "CONTRIBUTING.md",
     ".agents/skills/triage/SKILL.md",
     "test/repository-conformance.test.mjs",
+    "scripts/create-planning-skill-fixtures.mjs",
+    "test/planning-skill-fixtures.test.mjs",
+    "docs/development/skill-exercises.md",
   ];
   for (const path of paths) {
     let text = readFileSync(join(root, path), "utf8");
