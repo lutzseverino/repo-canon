@@ -145,7 +145,11 @@ Run `node --test test/triage-ready.test.mjs` for the triage readiness command's
 revision, account, label, validator-event and parent-link fixtures, including
 its installed layout without npm. These cover person, Bot and App reviewers
 across standard and factory destinations, factory no-write handoffs,
-identity/applicability read failures and exact approval association. Factory
+identity/applicability read failures and exact approval association. They also
+cover effective factory model-label cardinality, reuse of a matching issue
+label, missing repository-label creation with shared metadata, preservation of
+existing labels, provisioning failures without readiness, and parent, human
+and standard-profile exemptions. Factory
 applicability comes from the selected destination's installed
 `.repo-standards/rules/factory-workflow.md` at a pinned default-branch commit;
 verified absence permits the generic account policy, while a failed read

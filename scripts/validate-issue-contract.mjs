@@ -50,7 +50,7 @@ const contractSectionNames = new Set([
 // Whether an issue's contract is a directly authored specification: it carries
 // no Wayfinder or triage category label, and its body's recognized contract
 // headings identify a specification. Labels are names or GitHub label objects.
-function isSpecification({ labels, body }) {
+export function isSpecification({ labels, body }) {
   const names = (labels ?? []).map((label) =>
     typeof label === "string" ? label : label.name,
   );
