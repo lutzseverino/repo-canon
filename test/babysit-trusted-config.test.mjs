@@ -341,6 +341,37 @@ for (const entry of ["request", "wait"]) {
     }
   });
 
+  test(`${entry}: validation causes meet recovery guidance with one period`, (t) => {
+    for (const [trusted, cause] of [
+      [
+        {
+          reviewer: {
+            ...reviewer,
+            finished: {
+              commentMarker: "done",
+              line: "x)(?<sha>[0-9a-f]+)(?<at>\\S+)(",
+            },
+          },
+        },
+        "reviewer.finished.line must be a valid regular expression",
+      ],
+      [
+        { policy: { ...policy, "unexpected.field": true } },
+        ".github/factory-review-policy.json: unknown field: unexpected.field",
+      ],
+    ]) {
+      const result = command(t, entry, { trusted }).invoke();
+      assert.equal(result.status, 7, result.stderr);
+      assert.ok(result.stderr.includes(`${cause}. Correct `), result.stderr);
+      assert.match(
+        result.stderr,
+        /example\/repository default branch main@b{40}/,
+      );
+      assert.match(result.stderr, /keep the PR open and stop babysitting/);
+      assert.deepEqual(result.state.emitted ?? [], []);
+    }
+  });
+
   test(`${entry}: a fresh invocation uses a correction only after it reaches the trusted default branch`, (t) => {
     for (const key of ["policy", "reviewer"]) {
       const { invoke } = command(t, entry, {
