@@ -188,6 +188,31 @@ test("returns stale-base recovery rather than merging old validation", (t) => {
   assert.equal(result.state.merge, undefined);
 });
 
+test("merges when the merging credential cannot bypass strict rules, regardless of the global bypass list", (t) => {
+  for (const bypass of [
+    {},
+    { bypass_actors: [] },
+    {
+      bypass_actors: [
+        { actor_type: "Integration", actor_id: 1, bypass_mode: "always" },
+      ],
+    },
+  ]) {
+    const result = run(t, {
+      rulesetDetail: { id: 50, current_user_can_bypass: "never", ...bypass },
+      traceRequests: true,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.state.merge);
+    assert.ok(
+      result.state.requests.some((request) => request.endsWith("/rulesets/50")),
+    );
+    assert.ok(
+      !result.state.requests.some((request) => request.endsWith("/protection")),
+    );
+  }
+});
+
 test("stops unattended merging when strict freshness is unconfirmed", (t) => {
   for (const state of [
     { strict: false },
@@ -198,6 +223,74 @@ test("stops unattended merging when strict freshness is unconfirmed", (t) => {
     assert.equal(result.status, 3, result.stderr);
     assert.equal(result.state.merge, undefined);
     assert.match(result.stderr, /freshness|GitHub/);
+  }
+});
+
+test("requires explicit never evidence even with an empty global bypass list", (t) => {
+  for (const evidence of [
+    {},
+    { current_user_can_bypass: "always" },
+    { current_user_can_bypass: "pull_requests_only" },
+    { current_user_can_bypass: "exempt" },
+    { current_user_can_bypass: "unknown" },
+    { current_user_can_bypass: null },
+  ]) {
+    const result = run(t, {
+      rulesetDetail: { id: 50, bypass_actors: [], ...evidence },
+      traceRequests: true,
+    });
+    assert.equal(result.status, 3, result.stderr);
+    assert.equal(result.state.merge, undefined);
+    assert.match(result.stderr, /freshness.*unconfirmed or bypassable/i);
+    assert.match(result.state.requests.at(-1), /\/protection$/);
+  }
+});
+
+test("requires matching ruleset details and applicable strict nonempty checks", (t) => {
+  const rule = {
+    type: "required_status_checks",
+    ruleset_id: 50,
+    parameters: {
+      strict_required_status_checks_policy: true,
+      required_status_checks: [{ context: "CI" }],
+    },
+  };
+  for (const state of [
+    { rulesetDetail: null },
+    { rulesetDetail: { current_user_can_bypass: "never" } },
+    { rulesetDetail: { id: 51, current_user_can_bypass: "never" } },
+    { rulesetStatus: 404 },
+    { rules: [] },
+    { rules: [{ ...rule, type: "pull_request" }] },
+    { rules: [{ ...rule, parameters: {} }] },
+    {
+      rules: [
+        {
+          ...rule,
+          parameters: {
+            ...rule.parameters,
+            strict_required_status_checks_policy: false,
+          },
+        },
+      ],
+    },
+    {
+      rules: [
+        { ...rule, parameters: { strict_required_status_checks_policy: true } },
+      ],
+    },
+    {
+      rules: [
+        {
+          ...rule,
+          parameters: { ...rule.parameters, required_status_checks: [] },
+        },
+      ],
+    },
+  ]) {
+    const result = run(t, state);
+    assert.equal(result.status, 3, result.stderr);
+    assert.equal(result.state.merge, undefined);
   }
 });
 
@@ -249,6 +342,15 @@ test("supports enforced classic freshness and refuses bypassable enforcement", (
   };
   const classic = run(t, { rules: [], protection });
   assert.equal(classic.status, 0, classic.stderr);
+  const fallback = run(t, {
+    rulesetDetail: { id: 50, current_user_can_bypass: "always" },
+    protection,
+    traceRequests: true,
+  });
+  assert.equal(fallback.status, 0, fallback.stderr);
+  assert.ok(
+    fallback.state.requests.some((request) => request.endsWith("/protection")),
+  );
   for (const state of [
     {
       rules: [],
@@ -262,9 +364,7 @@ test("supports enforced classic freshness and refuses bypassable enforcement", (
       },
     },
     {
-      bypassActors: [
-        { actor_type: "Integration", actor_id: 1, bypass_mode: "always" },
-      ],
+      rulesetDetail: { id: 50, current_user_can_bypass: "always" },
     },
     { baseBranch: "release" },
     {
@@ -293,9 +393,18 @@ test("permission refusal ends merge handling without a retry or further read", (
 });
 
 test("a freshness permission refusal permits no subsequent read or merge", (t) => {
-  const result = run(t, { failFreshness: 403, traceRequests: true });
-  assert.equal(result.status, 1, result.stderr);
-  assert.match(result.stderr, /403/);
-  assert.match(result.state.requests.at(-1), /\/rules\/branches\/main$/);
-  assert.equal(result.state.merge, undefined);
+  for (const { state, refusedPath } of [
+    { state: { failFreshness: 403 }, refusedPath: /\/rules\/branches\/main$/ },
+    { state: { rulesetStatus: 403 }, refusedPath: /\/rulesets\/50$/ },
+    {
+      state: { rulesetDetail: { id: 50 }, protectionStatus: 403 },
+      refusedPath: /\/protection$/,
+    },
+  ]) {
+    const result = run(t, { ...state, traceRequests: true });
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /403/);
+    assert.match(result.state.requests.at(-1), refusedPath);
+    assert.equal(result.state.merge, undefined);
+  }
 });

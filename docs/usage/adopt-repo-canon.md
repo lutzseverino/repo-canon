@@ -126,6 +126,14 @@ and leaves the check unrequired, and the next `adopt` after the merge requires
 it. On a private repository whose GitHub plan offers neither branch protection
 nor rulesets, the check is unavailable, and adoption completes without it.
 
+For unattended delivery, `babysit` confirms strict required-check enforcement
+for the merging credential. A matching active ruleset's explicit
+`current_user_can_bypass: "never"` supplies that evidence even when GitHub hides
+the global bypass list or other actors can bypass. Without qualifying ruleset
+evidence, the existing strict classic protection enforced for admins can still
+qualify. Unconfirmed enforcement stops delivery for the owner; see the
+[merge script's policy checks](../development/babysit-merge.md).
+
 ## Automated updates
 
 Both profiles install an inert `.github/workflows/standards-update.yml`. To

@@ -19,10 +19,14 @@ branch requires a merge queue, it stops before calling `PullRequests.squashMerge
 cannot apply the explicit squash message the contribution guide requires.
 Before merging, Access reads the destination's default branch and verifies the
 PR targets it. It reads all active branch rules, including inherited rulesets,
-and confirms a nonempty strict required-check rule backed by a ruleset with no
-bypass actors. Otherwise it reads classic protection, requiring nonempty strict
-checks enforced for admins too. Missing or unreadable bypass information cannot
-confirm the final guard. These are read-only policy checks; setup and delivery
+and confirms a nonempty strict required-check rule whose matching ruleset detail
+explicitly reports `current_user_can_bypass: "never"`. The policy read and merge
+use the same authenticated connection, so this evidence concerns the merging
+credential. A hidden global bypass list or one containing other actors is
+compatible with that evidence; an empty list alone is insufficient. Every other
+or missing caller-bypass value leaves that ruleset unconfirmed. Otherwise it
+reads classic protection, requiring nonempty strict checks enforced for admins
+too. These are read-only policy checks; setup and delivery
 never change bypass settings to make a merge pass. Unavailable, unreadable or
 unconfirmed enforcement stops unattended merging, including deferred adoptions.
 
@@ -75,8 +79,10 @@ adoption-record bytes and trailing closing references,
 merge refusals, merge queue refusal, and successful calls that leave the PR
 unmerged. The freshness fixtures model two green PRs sharing one base, a base
 advance after preflight refused at the platform boundary, replacement heads
-with pending or failed checks, classic and ruleset enforcement, and unconfirmed
-or bypassable policy. These injected GitHub responses exercise the published
+with pending or failed checks, classic and ruleset enforcement, explicit caller
+non-bypass evidence with absent, empty or nonempty global lists, other or missing
+caller-bypass values, missing or nonmatching details, non-strict or missing
+required checks, and permission-refusal termination. These injected GitHub responses exercise the published
 adapter; they do not establish live settings or a live GitHub integration test. The whole skill directory is installed by its exact skill
 declaration, including its scripts and the `platform.mjs`, `reviewer.mjs` and
 `pull-request-reviewer.mjs` modules. The bundle, license and provenance are

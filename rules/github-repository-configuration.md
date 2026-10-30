@@ -68,7 +68,12 @@ Before unattended merging, confirm this platform enforcement through current
 GitHub policy reads. A local ancestry check alone cannot protect against a
 base advance between inspection and the merge request. Bypassable enforcement
 alone cannot provide that final guard: babysit confirms either a strict
-ruleset with no bypass actors, or strict classic checks enforced for admins.
+ruleset whose matching detail explicitly reports `current_user_can_bypass: "never"`
+for the same credential that performs the merge, or strict classic
+checks enforced for admins. The ruleset evidence concerns the merging credential:
+a hidden bypass list or a list containing other actors does not disqualify it,
+and an empty list alone does not qualify it. Other or missing caller-bypass
+values cannot confirm that ruleset's enforcement.
 Setup preserves existing bypass configuration; resolve insufficient enforcement
 with the owner rather than changing bypass policy during delivery.
 
