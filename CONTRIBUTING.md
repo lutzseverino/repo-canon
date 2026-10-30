@@ -110,8 +110,10 @@ to open intake requests, specifications, tickets, and unrecognized issues;
 Wayfinder maps and children stay outside workflow states. The validator's own
 `needs-triage` is a fallback and never supersedes authorized readiness bound to
 the current revision, even when applied after its review. A person's later
-workflow state still supersedes readiness. A closed issue loses `needs-triage`
-and keeps its other labels and feedback unchanged.
+workflow state still supersedes readiness. A closed issue loses `needs-triage`,
+`needs-info`, `ready-for-agent`, `ready-for-human` and every `factory:*` label,
+preserving `wontfix`, category, `model:*`, unrelated labels and feedback.
+Reopening restores no removed labels; normal validation applies.
 A specification or ticket can be ready while its blockers are open.
 
 ## Development setup

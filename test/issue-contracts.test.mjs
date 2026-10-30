@@ -4919,42 +4919,37 @@ decisionTable(
   })),
 );
 
-decisionTable("closed issues only lose needs-triage", [
-  {
-    name: "a closed issue needs no contract snapshot to remove needs-triage",
-    snapshot: {
-      issue: {
-        number: 42,
-        body: "Unrecognized body.",
-        labels: [
-          "needs-triage",
-          "ready-for-agent",
-          "needs-info",
-          "wontfix",
-        ].map((name) => ({ name })),
-        state: "closed",
-        state_reason: "completed",
-      },
-      event: { action: "closed", issue: { number: 42 } },
-    },
-    expected: { exitCode: 0, remove: ["needs-triage"] },
+decisionTable("closed issues clear workflow and factory labels", [
+  ...[
+    "needs-triage",
+    "needs-info",
+    "ready-for-agent",
+    "ready-for-human",
+    "factory:running",
+    "factory:failed",
+    "factory:paused",
+    "factory:needs-input",
+    "factory:skip",
+    "factory:future",
+  ].map((label) => ({
+    name: `a closed issue removes ${label} without a contract snapshot`,
+    snapshot: { issue: { state: "closed", labels: [{ name: label }] } },
     check: () =>
       assertDecision(
-        decideIssueContract({
-          issue: { state: "closed", labels: ["needs-triage"] },
-        }),
-        { exitCode: 0, remove: ["needs-triage"] },
+        decideIssueContract({ issue: { state: "closed", labels: [label] } }),
+        { exitCode: 0, remove: [label] },
       ),
-  },
+    expected: { exitCode: 0, remove: [label] },
+  })),
   ...[
     ["native ticket", ticketBody, []],
     ["specification", specificationBody, []],
-    ["form intake", bugBody, ["bug"]],
+    ["form intake", bugBody, ["bug", "enhancement"]],
     ["Wayfinder map", mapBody, ["wayfinder:map"]],
     ["Wayfinder child", "Incomplete.", ["wayfinder:research"]],
   ].flatMap(([kind, body, kindLabels]) =>
-    [true, false].map((needsTriage) => ({
-      name: `a closed ${kind} ${needsTriage ? "loses needs-triage" : "has no label or feedback writes"}`,
+    [true, false].map((cleanup) => ({
+      name: `a closed ${kind} ${cleanup ? "clears workflow and factory labels" : "has no label or feedback writes"}`,
       snapshot: {
         issue: {
           number: 42,
@@ -4962,11 +4957,20 @@ decisionTable("closed issues only lose needs-triage", [
           state: "closed",
           labels: [
             ...kindLabels,
-            "ready-for-agent",
-            "ready-for-human",
-            "needs-info",
             "wontfix",
-            ...(needsTriage ? ["needs-triage"] : []),
+            "model:x",
+            "unrelated",
+            "factory-other",
+            "ready-for-custom",
+            ...(cleanup
+              ? [
+                  "needs-triage",
+                  "needs-info",
+                  "ready-for-agent",
+                  "ready-for-human",
+                  "factory:failed",
+                ]
+              : []),
           ].map((name) => ({ name })),
         },
         comments: [
@@ -4978,7 +4982,18 @@ decisionTable("closed issues only lose needs-triage", [
         ],
         event: commentEdited,
       },
-      expected: { exitCode: 0, remove: needsTriage ? ["needs-triage"] : [] },
+      expected: {
+        exitCode: 0,
+        remove: cleanup
+          ? [
+              "needs-triage",
+              "needs-info",
+              "ready-for-agent",
+              "ready-for-human",
+              "factory:failed",
+            ]
+          : [],
+      },
     })),
   ),
 ]);

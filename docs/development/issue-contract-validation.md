@@ -13,12 +13,14 @@ comment Markdown only as data.
 
 The adapter fetches the issue itself before reading its discussion, timeline,
 relationships, edit revision, or actor roles. If that fetched issue is closed,
-it removes `needs-triage` if present and skips validation with exit status 0.
-It makes no other write or context read: other labels and the feedback comment
-stay untouched, and discussion, timeline, relationships, edit revision, and
-roles are not fetched. This applies to every issue kind, Wayfinder included,
-and every close reason. The fetched state decides this path whatever the
-trigger, even when the triggering event says the issue was open.
+it removes `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`
+and every `factory:*` label, then skips validation with exit status 0.
+It preserves `wontfix` as the closure outcome, category, `model:*`, unrelated
+labels and the feedback comment. An already-clean issue causes no writes.
+Discussion, timeline, relationships, edit revision, and roles are not fetched.
+This applies to every issue kind, Wayfinder included, and every close reason.
+The fetched state decides this path whatever the trigger, even when the
+triggering event says the issue was open.
 
 The validator is one file. It exports `decideIssueContract`, a synchronous
 decision that reads one snapshot and returns the label changes, the feedback
@@ -435,8 +437,8 @@ readiness removal and re-add
 ordering across paginated issue events, the one timeline ordering rule,
 contract edits, pull request exclusion, first state assignment to bare open
 issues, the validator's fallback applied after a creation review in either run
-order, and closed-issue removal of only `needs-triage` without further context
-reads (including an open event whose fetched issue is closed),
+order, and closed-issue cleanup of workflow-state and factory labels without
+further context reads (including an open event whose fetched issue is closed),
 readiness invalidation when a changed contract is reopened, and hostile Markdown
 that must remain inert. The `CI` workflow runs the complete repository test suite
 with `pnpm test`. These fixtures exercise the authorization mechanism but do not
@@ -472,3 +474,38 @@ The exact [published Postern bundle](../../vendor/postern/README.md), license
 and provenance are installed resources, shared by both validator paths and
 `babysit`. Updating the version is a reviewed source change, and adopters
 install no runtime package. Contract revision serialization is unchanged.
+
+## One-time closed-issue sweep
+
+After delivery, the orchestrating agent runs the source checkout's command in
+each adopting repository, supplying every destination explicitly. It uses only
+the currently authenticated GitHub CLI credential, with issue read/write access:
+
+```sh
+node scripts/sweep-closed-issue-labels.mjs --repo OWNER/REPO --dry-run
+node scripts/sweep-closed-issue-labels.mjs --repo OWNER/REPO --apply
+```
+
+Repeat `--repo OWNER/REPO` for multiple repositories. Both an explicit repository
+and exactly one mode are required; no checkout remote or `GH_REPO` selects a
+destination. Dry run lists the exact proposed removals by repository and issue
+without writes. Execution reports each successful removal. Both modes print
+per-repository scanned, needing-cleanup, removed-label and failure counts.
+Any failure yields exit status 1; otherwise the command exits 0. A permission
+refusal stops the whole run immediately, without another mutation or identity;
+follow the contribution guide's owner-question handoff. Other failures are
+reported and remaining issues and repositories are processed.
+
+The sweep enumerates all closed issues through the platform adapter's paginated
+listing, then fetches each issue again. Issues reopened since listing stay
+untouched. Closed issues use `decideIssueContract`'s same cleanup decision as the
+live workflow; already-clean issues cause no writes, and repeat execution is
+safe. Reopening restores none of the removed labels; normal open-issue
+validation can add `needs-triage`. The sweep never rewrites feedback or adds
+labels. Like live handling, its writes follow the fetched state; a later
+concurrent reopening is outside that snapshot.
+
+Run `node --test test/sweep-closed-issue-labels.test.mjs` for dry-run output,
+execution, preserved labels, reopened issues, repeat runs, partial failures,
+permission refusal and explicit-target/mode fixtures. These tests use disposable
+tracker state and perform no live adopter sweep.

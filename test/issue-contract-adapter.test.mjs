@@ -339,7 +339,7 @@ test("Postern excludes pull request comments before any read", async (t) => {
   assert.deepEqual(result.requests, []);
 });
 
-test("a fetched closed issue loses only needs-triage on any trigger without context reads", async (t) => {
+test("a fetched closed issue clears workflow and factory labels on any trigger without context reads", async (t) => {
   for (const [action, reason, eventState, kindLabels] of [
     ["closed", "completed", "closed", []],
     ["closed", "not_planned", "closed", []],
@@ -360,6 +360,11 @@ test("a fetched closed issue loses only needs-triage on any trigger without cont
         "ready-for-human",
         "needs-info",
         "wontfix",
+        "factory:failed",
+        "factory:future",
+        "model:x",
+        "enhancement",
+        "unrelated",
       ],
     };
     const result = await exercise(t, {
@@ -376,8 +381,13 @@ test("a fetched closed issue loses only needs-triage on any trigger without cont
     });
     assertDecision(result, decisionFor({ issue }), [
       ["DELETE", `${issuePath}/labels/needs-triage`, null],
+      ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+      ["DELETE", `${issuePath}/labels/ready-for-human`, null],
+      ["DELETE", `${issuePath}/labels/needs-info`, null],
+      ["DELETE", `${issuePath}/labels/factory%3Afailed`, null],
+      ["DELETE", `${issuePath}/labels/factory%3Afuture`, null],
     ]);
-    assert.equal(result.requests.length, 2);
+    assert.equal(result.requests.length, 7);
     assert.equal(result.requests[0].path, "/graphql");
   }
 });
@@ -838,7 +848,7 @@ test("a missing reviewer role is a definite unauthorized answer", async (t) => {
   ]);
 });
 
-test("editing or commenting on a closed ready issue leaves feedback and readiness untouched", async (t) => {
+test("editing or commenting on a closed ready issue clears readiness and leaves feedback untouched", async (t) => {
   const before = {
     number: 42,
     body: ticketBody,
@@ -860,8 +870,10 @@ test("editing or commenting on a closed ready issue leaves feedback and readines
           issue: { number: 42, state: "closed" },
         },
       });
-      assertDecision(result, decisionFor({ issue }), []);
-      assert.equal(result.requests.length, 1);
+      assertDecision(result, decisionFor({ issue }), [
+        ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+      ]);
+      assert.equal(result.requests.length, 2);
       assert.equal(result.requests[0].path, "/graphql");
     }
   }
@@ -879,8 +891,10 @@ test("an edit received while open is skipped when the fetched issue is closed", 
     event: { action: "edited", issue: { number: 42, state: "open" } },
     comments: [approvedTicketFeedback(issue)],
   });
-  assertDecision(result, decisionFor({ issue }), []);
-  assert.equal(result.requests.length, 1);
+  assertDecision(result, decisionFor({ issue }), [
+    ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+  ]);
+  assert.equal(result.requests.length, 2);
 });
 
 test("reopening an issue with a changed contract invalidates readiness", async (t) => {
@@ -925,6 +939,29 @@ test("reopening a bare native issue restores needs-triage", async (t) => {
   const issue = { number: 42, body: ticketBody, labels: [], state: "open" };
   const decision = decisionFor({ issue, event: { kind: "reopened" } });
   const result = await exercise(t, { issue, event: { action: "reopened" } });
+  assertDecision(result, decision, [
+    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    feedbackWrite(decision),
+  ]);
+});
+
+test("an already-clean closed issue causes no label or feedback writes", async (t) => {
+  const issue = {
+    state: "closed",
+    labels: ["wontfix", "bug", "model:x", "unrelated"],
+  };
+  const result = await exercise(t, { issue, event: { action: "closed" } });
+  assertDecision(result, decisionFor({ issue }), []);
+});
+
+test("reopening a cleaned issue restores no historical routing labels", async (t) => {
+  const issue = {
+    state: "open",
+    body: ticketBody,
+    labels: ["model:x", "unrelated"],
+  };
+  const result = await exercise(t, { issue, event: { action: "reopened" } });
+  const decision = decisionFor({ issue, event: { kind: "reopened" } });
   assertDecision(result, decision, [
     ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
     feedbackWrite(decision),
