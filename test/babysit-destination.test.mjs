@@ -1,3 +1,7 @@
+import {
+  execFixtureGit,
+  fixtureGitEnvironment,
+} from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -56,7 +60,7 @@ function run(
 ) {
   const directory = mkdtempSync(join(tmpdir(), "babysit-destination-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const git = (...args) => execFileSync("git", args, { cwd: directory });
+  const git = (...args) => execFixtureGit(args, { cwd: directory });
   git("init", "-q");
   git("remote", "add", "origin", "https://github.com/fork/repository.git");
   if (defaultName === "origin")
@@ -140,7 +144,7 @@ process.exit(result.status ?? 1);
         : `.agents/skills/babysit/${entry === "connection" ? "platform" : entry}.mjs`,
     ),
   );
-  const inherited = { ...process.env };
+  const inherited = fixtureGitEnvironment();
   delete inherited.GH_REPO;
   const result = spawnSync(
     process.execPath,

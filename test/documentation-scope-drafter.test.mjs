@@ -1,5 +1,6 @@
+import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import {
   copyFileSync,
   lstatSync,
@@ -1134,8 +1135,7 @@ test("fails without a manifest it can read beside it", (t) => {
 function repositoryCopy(t) {
   const copy = mkdtempSync(join(tmpdir(), "repo-canon-copy-"));
   t.after(() => rmSync(copy, { recursive: true, force: true }));
-  const paths = execFileSync(
-    "git",
+  const paths = execFixtureGit(
     ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
     { cwd: sourceRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
   )

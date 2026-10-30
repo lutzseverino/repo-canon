@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { execFixtureGit } from "./support/fixture-git.mjs";
 import { execFileSync } from "node:child_process";
 import {
   cpSync,
@@ -979,7 +980,7 @@ const manifest = {
     fixtureBuilderSha256: provenance.inputFiles[scriptSourcePath].sha256,
     upstreamCommit,
     node: process.version,
-    git: execFileSync("git", ["--version"], { encoding: "utf8" }).trim(),
+    git: execFixtureGit(["--version"], { encoding: "utf8" }).trim(),
     directoryHashSerialization: provenance.directoryHashSerialization,
     inputFiles: provenance.inputFiles,
     linkedSkillDirectories: provenance.directories,

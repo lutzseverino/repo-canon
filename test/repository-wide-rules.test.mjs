@@ -1,3 +1,7 @@
+import {
+  execFixtureGit,
+  fixtureGitEnvironment,
+} from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -77,7 +81,7 @@ test("the release fixture vendors the triage helper without covering repository-
   const project = mkdtempSync(join(tmpdir(), "repo-canon-attributes-"));
   t.after(() => rmSync(project, { recursive: true, force: true }));
   writeFileSync(join(project, ".gitattributes"), files[".gitattributes"]);
-  execFileSync("git", ["init", "--quiet", project]);
+  execFixtureGit(["init", "--quiet", project]);
   const paths = [
     ".agents/skills/triage/ready.mjs",
     "wordtally.mjs",
@@ -87,8 +91,7 @@ test("the release fixture vendors the triage helper without covering repository-
     ".repo-standards/inputs/source/operations/check.mjs",
   ];
   assert.deepEqual(
-    execFileSync(
-      "git",
+    execFixtureGit(
       ["-C", project, "check-attr", "linguist-vendored", "--", ...paths],
       { encoding: "utf8" },
     )
@@ -215,7 +218,7 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
     cpSync(join(root, path), join(source, path), { recursive: true });
   }
   const env = {
-    ...process.env,
+    ...fixtureGitEnvironment(),
     GIT_CONFIG_GLOBAL: "/dev/null",
     GIT_CONFIG_NOSYSTEM: "1",
     GIT_AUTHOR_NAME: "Fixture",
@@ -225,7 +228,7 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
     XDG_CACHE_HOME: join(directory, "cache"),
   };
   const git = (cwd, ...args) =>
-    execFileSync("git", ["-C", cwd, ...args], { env, encoding: "utf8" }).trim();
+    execFixtureGit(["-C", cwd, ...args], { env, encoding: "utf8" }).trim();
   git(source, "init", "--quiet");
   git(source, "add", "--all");
   git(

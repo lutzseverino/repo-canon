@@ -1,3 +1,7 @@
+import {
+  execFixtureGit,
+  fixtureGitEnvironment,
+} from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -25,6 +29,7 @@ const sharedInputs = [
   "docs/agents/issue-tracker.md",
   "docs/agents/triage-labels.md",
   "scripts/support/fixture-authoring.mjs",
+  "scripts/support/fixture-git.mjs",
 ];
 
 // What each builder records in its manifest, read the same way for all three.
@@ -64,7 +69,7 @@ function sha256(bytes) {
 }
 
 function git(root, ...args) {
-  return execFileSync("git", ["-C", root, ...args], {
+  return execFixtureGit(["-C", root, ...args], {
     encoding: "utf8",
   }).trim();
 }
@@ -145,7 +150,7 @@ test("every builder records its dirty source bytes and builds repositories with 
   for (const path of dirtyFiles)
     assert.notEqual(
       sha256(readFileSync(join(source, path))),
-      sha256(execFileSync("git", ["show", `HEAD:${path}`], { cwd: source })),
+      sha256(execFixtureGit(["show", `HEAD:${path}`], { cwd: source })),
     );
 
   // A host whose global configuration requires signing with an unusable
@@ -154,7 +159,10 @@ test("every builder records its dirty source bytes and builds repositories with 
   const hostileGlobalConfigBytes =
     "[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = /bin/false\n";
   writeFileSync(hostileGlobalConfig, hostileGlobalConfigBytes);
-  const hostileEnv = { ...process.env, GIT_CONFIG_GLOBAL: hostileGlobalConfig };
+  const hostileEnv = {
+    ...fixtureGitEnvironment(),
+    GIT_CONFIG_GLOBAL: hostileGlobalConfig,
+  };
 
   for (const builder of builders) {
     const root = join(parent, builder.name);
@@ -214,9 +222,8 @@ test("every builder records its dirty source bytes and builds repositories with 
       join(repository, "later-agent-work.md"),
       "# Later agent work\n",
     );
-    execFileSync("git", ["add", "--all"], { cwd: repository, env: hostileEnv });
-    execFileSync(
-      "git",
+    execFixtureGit(["add", "--all"], { cwd: repository, env: hostileEnv });
+    execFixtureGit(
       ["commit", "--quiet", "-m", "test: record later agent work"],
       { cwd: repository, env: hostileEnv },
     );

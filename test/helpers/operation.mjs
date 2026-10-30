@@ -1,4 +1,8 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import {
+  execFixtureGit,
+  fixtureGitEnvironment,
+} from "../../scripts/support/fixture-git.mjs";
+import { spawnSync } from "node:child_process";
 import {
   cpSync,
   mkdtempSync,
@@ -61,7 +65,7 @@ export function fixture(files) {
     mkdirSync(dirname(absolute), { recursive: true });
     writeFileSync(absolute, content);
   }
-  execFileSync("git", ["init", "--quiet"], { cwd: root });
+  execFixtureGit(["init", "--quiet"], { cwd: root });
   return { root, close: () => rmSync(root, { recursive: true, force: true }) };
 }
 
@@ -88,6 +92,7 @@ export function invokeCheck(script, root, overrides = {}) {
   const child = spawnSync(process.execPath, [script], {
     cwd: root,
     encoding: "utf8",
+    env: fixtureGitEnvironment(),
     input: JSON.stringify(request),
   });
   return {
@@ -106,7 +111,7 @@ export function invokeOperation(script, request, options = {}) {
     {
       cwd: request.projectRoot,
       encoding: "utf8",
-      env: { ...process.env, ...options.env },
+      env: fixtureGitEnvironment(options.env),
       input: JSON.stringify(request),
     },
   );

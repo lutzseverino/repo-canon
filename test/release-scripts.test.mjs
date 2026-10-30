@@ -1,5 +1,9 @@
+import {
+  execFixtureGit,
+  fixtureGitEnvironment,
+} from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import {
   chmodSync,
   cpSync,
@@ -130,10 +134,10 @@ function fixture(t) {
   executable(join(bin, "npm"), npmStub);
   mkdirSync(repository);
   const git = (...args) =>
-    execFileSync("git", args, {
+    execFixtureGit(args, {
       cwd: repository,
       encoding: "utf8",
-      env: { ...process.env, ...identity },
+      env: { ...fixtureGitEnvironment(), ...identity },
     }).trim();
   git("init", "--quiet", "--initial-branch=main");
   git("init", "--quiet", "--bare", join(base, "origin.git"));
@@ -165,7 +169,7 @@ function fixture(t) {
         cwd: repository,
         encoding: "utf8",
         env: {
-          ...process.env,
+          ...fixtureGitEnvironment(),
           PATH: `${bin}:${process.env.PATH}`,
           REPO_STANDARDS_PREFIX: prefix,
           STUB_CLI_VERSION: "7.0.0",

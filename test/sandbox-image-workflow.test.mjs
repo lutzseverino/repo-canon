@@ -1,5 +1,9 @@
+import {
+  execFixtureGit,
+  fixtureGitEnvironment,
+} from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import {
   mkdirSync,
   mkdtempSync,
@@ -22,7 +26,7 @@ function fixture(t, changes, dockerfile = "FROM scratch\n") {
   const repository = join(directory, "repository");
   mkdirSync(repository);
   const git = (...args) =>
-    execFileSync("git", args, { cwd: repository, encoding: "utf8" }).trim();
+    execFixtureGit(args, { cwd: repository, encoding: "utf8" }).trim();
   const write = (path, contents) => {
     mkdirSync(dirname(join(repository, path)), { recursive: true });
     writeFileSync(join(repository, path), contents);
@@ -47,7 +51,7 @@ function fixture(t, changes, dockerfile = "FROM scratch\n") {
   const base = git("rev-parse", "HEAD");
   const head = commit(changes, "Pull request");
   const env = {
-    ...process.env,
+    ...fixtureGitEnvironment(),
     BASE_SHA: base,
     HEAD_SHA: head,
     RUNNER_TEMP: directory,

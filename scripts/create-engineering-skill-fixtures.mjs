@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
+import { spawnFixtureGit } from "./support/fixture-git.mjs";
 import {
   cpSync,
   existsSync,
@@ -65,7 +65,7 @@ function write(root, path, content) {
 }
 
 function gitOptional(root, args) {
-  const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+  const result = spawnFixtureGit(args, { cwd: root, encoding: "utf8" });
   if (result.status === 0) return result.stdout.trim();
   if (result.status === 1) return null;
   throw new Error(result.stderr.trim() || `git ${args.join(" ")} failed`);

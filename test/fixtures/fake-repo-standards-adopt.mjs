@@ -1,3 +1,4 @@
+import { execFixtureGit } from "../../scripts/support/fixture-git.mjs";
 // The `adopt` and `status` commands of a fake Repository Standards CLI, for
 // release verification's fixture adoption. It walks the answers-file stages
 // as the real `adopt` does: the template, the discovery scopes with the
@@ -7,7 +8,6 @@
 // (a remote setup that is ready, so not offered for deferral),
 // `confirmation` (a confirmation-required change), or `failed-checks`. Each
 // call's answers are appended to `FAKE_ADOPT_LOG` when it is set.
-import { execFileSync } from "node:child_process";
 import {
   appendFileSync,
   existsSync,
@@ -173,12 +173,10 @@ if (
   !answersPath &&
   process.env.STUB_CLI_VERSION === "10.0.0"
 ) {
-  const count = execFileSync(
-    "git",
-    ["-C", project, "rev-list", "--count", "HEAD"],
-    { encoding: "utf8" },
-  ).trim();
-  const dirty = execFileSync("git", ["-C", project, "status", "--porcelain"], {
+  const count = execFixtureGit(["-C", project, "rev-list", "--count", "HEAD"], {
+    encoding: "utf8",
+  }).trim();
+  const dirty = execFixtureGit(["-C", project, "status", "--porcelain"], {
     encoding: "utf8",
   }).trim();
   if (count !== "2" || dirty)
@@ -379,7 +377,7 @@ if (state?.phase === "update-contextual") {
 if (state === null) {
   if (!answersPath) {
     const git = (...gitArgs) =>
-      execFileSync("git", ["-C", project, ...gitArgs], {
+      execFixtureGit(["-C", project, ...gitArgs], {
         encoding: "utf8",
       }).trim();
     if (

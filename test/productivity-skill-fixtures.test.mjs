@@ -1,3 +1,4 @@
+import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import {
@@ -43,7 +44,7 @@ test("builds scenario-specific repositories using every declared productivity sk
   const exercised = new Set();
   for (const repository of Object.values(manifest.repositories)) {
     assert.equal(
-      execFileSync("git", ["status", "--short"], {
+      execFixtureGit(["status", "--short"], {
         cwd: repository.path,
         encoding: "utf8",
       }),

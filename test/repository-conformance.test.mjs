@@ -1,5 +1,5 @@
+import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
@@ -25,7 +25,7 @@ const rootDocuments = ["GLOSSARY.md", "authoring-notes.md"];
 const observationFileLimit = 8 * 1024 * 1024;
 
 function trackedFiles() {
-  return execFileSync("git", ["-C", root, "ls-files", "-z"], {
+  return execFixtureGit(["-C", root, "ls-files", "-z"], {
     encoding: "utf8",
     maxBuffer: 1024 * 1024 * 64,
   })
@@ -106,8 +106,7 @@ test("every lutzseverino GitHub document link in source inputs is pinned", () =>
       if (!refsByRepository.has(repository)) {
         // Ref names alone cannot distinguish a tag from an arbitrary branch.
         // Read published refs without using another GitHub identity.
-        const refs = execFileSync(
-          "git",
+        const refs = execFixtureGit(
           [
             "ls-remote",
             "--refs",
@@ -318,8 +317,7 @@ test("self-adoption leaves Repo Canon's own installed source unvendored", () => 
       .filter((name) => name.endsWith(".mjs"))
       .map((name) => `.agents/skills/babysit/${name}`),
   ];
-  const attributes = execFileSync(
-    "git",
+  const attributes = execFixtureGit(
     ["-C", root, "check-attr", "linguist-vendored", "--", ...paths],
     { encoding: "utf8" },
   );
