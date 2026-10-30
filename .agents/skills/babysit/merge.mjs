@@ -35,7 +35,7 @@ function staleBase() {
 }
 
 // Active branch rules include inherited rulesets. Read the ruleset details too:
-// a bypassable rule cannot supply the final platform guard for this command.
+// the merging credential must be unable to bypass the final platform guard.
 async function enforcedFreshness(connection, branch) {
   const path = `/repos/${connection.repository.path}`;
   const rulePages = await pages(
@@ -61,8 +61,7 @@ async function enforcedFreshness(connection, branch) {
     });
     if (
       detail?.id === rule.ruleset_id &&
-      Array.isArray(detail.bypass_actors) &&
-      detail.bypass_actors.length === 0
+      detail.current_user_can_bypass === "never"
     )
       return true;
   }

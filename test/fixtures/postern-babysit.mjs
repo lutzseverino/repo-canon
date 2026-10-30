@@ -55,12 +55,25 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         ],
       );
     }
-    if (path.endsWith("/rulesets/50"))
-      return json({ id: 50, bypass_actors: state.bypassActors ?? [] });
-    if (/\/branches\/[^/]+\/protection$/.test(path))
+    if (path.endsWith("/rulesets/50")) {
+      if (state.rulesetStatus)
+        return json({ message: "ruleset read failed" }, state.rulesetStatus);
+      return json(
+        Object.hasOwn(state, "rulesetDetail")
+          ? state.rulesetDetail
+          : { id: 50, current_user_can_bypass: "never" },
+      );
+    }
+    if (/\/branches\/[^/]+\/protection$/.test(path)) {
+      if (state.protectionStatus)
+        return json(
+          { message: "protection read failed" },
+          state.protectionStatus,
+        );
       return state.protection
         ? json(state.protection)
         : json({ message: "Branch not protected" }, 404);
+    }
     if (/\/compare\//.test(path)) {
       const stale =
         state.stale ||
