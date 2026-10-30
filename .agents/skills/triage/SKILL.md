@@ -18,6 +18,8 @@ Start every comment or issue you post to the issue tracker during triage with th
 
 The contribution guide's Triage and Readiness sections and the installed rules decide routing, acceptance, readiness, model labels, and owner questions. This skill is how to carry them out.
 
+Follow `AGENTS.md`'s Agent skills requirements for delegation. For each research run below, select a covering installed skill, if any, and open with its supported invocation followed by the task context. When no installed skill covers the research task, pass its context alone.
+
 ## Reference docs
 
 - [AGENT-BRIEF.md](AGENT-BRIEF.md): how to write durable agent briefs and the triage notes after them
@@ -126,7 +128,7 @@ Every research run, on either path, does two checks first:
 
    Otherwise the question goes to the owner. Each inferred answer is stated as behavior in the brief and listed with its citation under **Inferred intent** in the triage notes. List every inferred answer in your next report to the owner, so they can veto it; a veto is an owner decision, and the brief is revised from it. When you infer every intent question, have the research run write the brief from the facts and your inferred answers, then go to step 6.
 
-3. **Grill the owner** on the questions you cannot infer, in a grilling session of its own. Give it the issue links, the facts, your inferred answers, the recorded owner decisions, and [AGENT-BRIEF.md](AGENT-BRIEF.md). The grill calls the Skill tool twice, for "grilling" and "domain-modeling", and asks only what the facts and your inferences cannot answer, in short rounds of numbered questions, each with a recommended answer and its reason. It skips every question a recorded owner decision already answers, records each owner decision with its date and where the owner gave it, updates `GLOSSARY.md` and ADRs inline as decisions land, and drafts the agent briefs in a proposed ticket split. It files no issue and applies no readiness. When the owner cannot join a grill now, put the request in your decision inbox with your recommendation.
+3. **Grill the owner** on the questions you cannot infer, in a grilling session of its own. Open it with `/grill-with-docs` using the session's supported invocation, followed by task context: the issue links, the facts, your inferred answers, the recorded owner decisions, unresolved questions, scope and [AGENT-BRIEF.md](AGENT-BRIEF.md). Include the owned branch and checkout for domain-document edits, the per-repository pull request destinations and the workbench destination required by the contribution guide's Triage section. Its deliverables are the decision record and draft briefs in a proposed ticket split, with the report-back destination. Leave filing and readiness to yourself. When the owner cannot join a grill now, put the request in your decision inbox with your recommendation.
 
 4. **Decide the split.** Merge, split, or drop a draft, or set it aside for later work. When your split changes a draft substantially, have the grill rewrite that brief; never write or rewrite one yourself. Start a research run to write a brief only when it needs code facts the grill did not gather.
 

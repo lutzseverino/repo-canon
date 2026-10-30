@@ -11,6 +11,17 @@ merge or the prescribed handoff.
 
 ## Agent skills
 
+Before handing work to another agent, subagent or session, check whether an
+installed skill covers it. This includes implementation workers delegating
+ticket subwork without invoking `orchestrate` or `triage`, and heavy reads.
+When covered, invoke that skill using the session's supported invocation
+mechanism, followed by task context. When no installed skill covers the work,
+pass task context only.
+
+Task context includes issue links, evidence, recorded decisions, scope,
+workspace and plan references, report-back destinations and task-specific
+delivery obligations. Keep procedure and question format with the invoked skill.
+
 ### Issue tracker
 
 Issues, specifications, and tickets live in GitHub Issues, worked with the `gh`
