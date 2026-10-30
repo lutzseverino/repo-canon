@@ -28,7 +28,13 @@ Choose a stronger model when the work needs design judgment, has an ambiguous
 scope, or makes a long cross-cutting change. Name the chosen model with
 `model:<slug>` or `model:<provider>/<slug>`, optionally followed by
 `@<effort>`; create the label if the repository lacks it. A `claude-*` or
-`gpt-*` slug needs no provider.
+`gpt-*` slug needs no provider. Create missing model labels with color
+`5319e7` and description `Factory model: <model>` where `<model>` is the label
+name after `model:`. Preserve an existing repository label unchanged. Triage's
+readiness command provisions the chosen label before applying readiness; a
+lookup or creation failure grants no readiness. The command accepts a matching
+model already on the issue and refuses zero or conflicting models for
+non-parent agent readiness.
 
 For a non-parent issue in a repository a factory serves, the triage notes after
 its Agent Brief suggest one `model:` label with a one-line reason, for the

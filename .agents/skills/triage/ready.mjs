@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { setTimeout as wait } from "node:timers/promises";
+import { isSpecification } from "../../../scripts/validate-issue-contract.mjs";
 import {
   connectionFor,
   executedAsScript,
@@ -223,16 +224,22 @@ export async function main(
   let before;
   for (;;) {
     before = await snapshot(connection, number);
-    const models = companions.filter((name) => name.startsWith("model:"));
     if (
-      models.length > 1 ||
-      before.issue.labels.some(
-        (name) => name.startsWith("model:") && !models.includes(name),
-      )
-    )
-      throw new Error(
-        "A different model: label already exists, or multiple model: labels were given.",
+      policy.factory &&
+      label === "ready-for-agent" &&
+      !before.issue.subIssues.length &&
+      !isSpecification(before.issue)
+    ) {
+      const models = new Set(
+        [...before.issue.labels, ...companions].filter((name) =>
+          name.startsWith("model:"),
+        ),
       );
+      if (models.size !== 1)
+        throw new Error(
+          "Factory agent readiness requires exactly one model: label in the resulting issue state; choose one and remove conflicting labels before retrying.",
+        );
+    }
     checkContract(before, revision);
     if (before.issue.state !== "open")
       throw new Error("Readiness requires an open issue.");
@@ -278,6 +285,18 @@ export async function main(
       continue;
     }
     break;
+  }
+  const chosenModels = companions.filter((name) => name.startsWith("model:"));
+  if (policy.factory && chosenModels.length) {
+    const existing = await connection.issueTracker.labels();
+    for (const name of chosenModels) {
+      if (!existing.some((entry) => entry.name === name))
+        await connection.issueTracker.createLabel({
+          name,
+          color: "5319e7",
+          description: `Factory model: ${name.slice("model:".length)}`,
+        });
+    }
   }
   await connection.issueTracker.addLabels(number, [...companions, label]);
   for (;;) {

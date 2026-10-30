@@ -52,6 +52,11 @@ async function exercise(options = {}, command = main) {
   const [owner, name] = repository.split("/");
   const requests = [];
   const labels = [...(options.labels ?? ["enhancement", "needs-triage"])];
+  const repositoryLabels = [
+    ...(options.repositoryLabels ?? [
+      { name: model, color: "abcdef", description: "Existing model" },
+    ]),
+  ];
   const events = [...(options.events ?? [])];
   let phase = "before";
   let waits = 0;
@@ -161,7 +166,7 @@ async function exercise(options = {}, command = main) {
               url: "https://github.com/owner/repo/issues/42",
               state: "OPEN",
               title: "Fixture request",
-              body: "Intake",
+              body: options.body ?? "Intake",
               createdAt: time,
               lastEditedAt: null,
               author: { __typename: "User", login: "reporter" },
@@ -207,6 +212,20 @@ async function exercise(options = {}, command = main) {
         updated_at: time,
       };
       return json(options.missingNotice ? [] : [feedback]);
+    }
+    if (url.pathname === `/repos/${repository}/labels`) {
+      if (options.labelFailure)
+        return json({ message: "Label unavailable" }, options.labelFailure);
+      if (method === "GET") return json(repositoryLabels);
+      if (method === "POST") {
+        if (options.createFailure)
+          return json(
+            { message: "Label creation refused" },
+            options.createFailure,
+          );
+        repositoryLabels.push(body);
+        return json(body, 201);
+      }
     }
     if (method === "DELETE" && url.pathname.endsWith(`/labels/${label}`)) {
       labels.splice(labels.indexOf(label), 1);
@@ -272,7 +291,7 @@ async function exercise(options = {}, command = main) {
   } catch (caught) {
     error = caught;
   }
-  return { code, error, requests, waits, labels };
+  return { code, error, requests, waits, labels, repositoryLabels };
 }
 
 const writes = (result) =>
@@ -322,6 +341,130 @@ test("factory destinations refuse conflicting model labels and non-person accoun
     assert.match(result.error?.message ?? "", /model:|person|bot|App/);
     assert.deepEqual(writes(result), []);
   }
+});
+
+test("factory agent readiness requires exactly one effective model label", async () => {
+  for (const options of [
+    { argv: ["42", label, revision] },
+    { argv: ["42", label, revision, model, "model:other"] },
+    { labels: [model, "model:other"], argv: ["42", label, revision] },
+    { labels: ["model:other"], argv: ["42", label, revision, model] },
+  ]) {
+    const result = await exercise(options);
+    assert.match(result.error?.message ?? "", /exactly one model:/);
+    assert.deepEqual(writes(result), []);
+  }
+  for (const companions of [[], [model]]) {
+    const result = await exercise({
+      labels: [model],
+      argv: ["42", label, revision, ...companions],
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+  }
+});
+
+test("parents, specifications, human readiness and standard repositories need no model", async () => {
+  for (const options of [
+    { parent: true, linkTime: time },
+    {
+      labels: [],
+      body: "### Problem Statement\nGroup the work.\n### Solution\nDeliver tickets.",
+    },
+    { factory: false },
+    { argv: ["42", "ready-for-human", revision] },
+  ]) {
+    const result = await exercise({
+      argv: ["42", label, revision],
+      ...options,
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+    assert.equal(writes(result).length, 1);
+  }
+});
+
+test("creates a missing chosen repository model once before applying readiness", async () => {
+  for (const chosen of [model, "model:provider/another@low"]) {
+    const result = await exercise({
+      repository: "other/destination",
+      repositoryLabels: [],
+      argv: ["42", label, revision, chosen],
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+    assert.deepEqual(writes(result), [
+      {
+        method: "POST",
+        path: "/repos/other/destination/labels",
+        body: {
+          name: chosen,
+          color: "5319e7",
+          description: `Factory model: ${chosen.slice(6)}`,
+        },
+      },
+      {
+        method: "POST",
+        path: "/repos/other/destination/issues/42/labels",
+        body: { labels: [chosen, label] },
+      },
+    ]);
+    assert.ok(result.labels.includes(chosen));
+  }
+});
+
+test("reuses an existing repository model without changing its metadata", async () => {
+  const existing = {
+    name: model,
+    color: "123456",
+    description: "Owner's description",
+  };
+  for (const labels of [[], [model]]) {
+    const result = await exercise({ labels, repositoryLabels: [existing] });
+    assert.equal(result.error, undefined);
+    assert.deepEqual(result.repositoryLabels, [existing]);
+    assert.equal(writes(result).length, 1);
+    assert.ok(result.labels.includes(model));
+  }
+});
+
+test("label lookup and creation failures never grant readiness", async () => {
+  for (const failure of [403, 422, 503]) {
+    for (const options of [
+      { labelFailure: failure },
+      { createFailure: failure },
+    ]) {
+      const result = await exercise({ repositoryLabels: [], ...options });
+      assert.ok(result.error);
+      assert.equal(result.labels.includes(label), false);
+      assert.equal(
+        writes(result).some(({ path }) => path.includes("/issues/")),
+        false,
+      );
+    }
+  }
+});
+
+test("the installed readiness command enforces models and provisions missing labels", async (t) => {
+  const target = installedValidator(t, ".agents/skills/triage/ready.mjs");
+  const command = (await import(pathToFileURL(target).href)).main;
+  const missing = await exercise({ argv: ["42", label, revision] }, command);
+  assert.match(missing.error?.message ?? "", /exactly one model:/);
+  assert.deepEqual(writes(missing), []);
+  const created = await exercise({ repositoryLabels: [] }, command);
+  assert.equal(created.error, undefined);
+  assert.equal(created.code, 0);
+  assert.equal(created.repositoryLabels.length, 1);
+  assert.ok(created.labels.includes(model));
+  const specification = await exercise(
+    {
+      labels: [],
+      body: "### Problem Statement\nGroup work.",
+      argv: ["42", label, revision],
+    },
+    command,
+  );
+  assert.equal(specification.error, undefined);
 });
 
 test("reports a rejection after its own event but ignores an earlier rejection", async () => {
@@ -523,7 +666,12 @@ test("a person retains revision-bound readiness in both destination policies", a
     for (const selected of [label, "ready-for-human"]) {
       const result = await exercise({
         factory,
-        argv: ["42", selected, revision],
+        argv: [
+          "42",
+          selected,
+          revision,
+          ...(factory && selected === label ? [model] : []),
+        ],
       });
       assert.equal(result.error, undefined);
       assert.equal(result.code, 0);
