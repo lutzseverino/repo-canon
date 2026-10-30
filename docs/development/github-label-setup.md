@@ -20,11 +20,15 @@ GitHub API resolves the same repository, and reconciles these labels:
 | `wayfinder:task`      | `bfd4f2` | Task in a planning map                                                     |
 
 The repository owns `ready-for-agent`, provisioned by canonical-label setup.
-This operation provisions no `factory:` label. Where factory workflow rules
+The factory profile also provisions and verifies `factory:skip`; standard-profile
+setup does not add it. Its canonical color is `c5def5` and its description is
+`Ready agent work the factory must not pick up`.
+The operation selects labels from the request's `profile`, independently of
+existing local factory files or installed rules. Where factory workflow rules
 are installed, follow their [label ownership rules](../../rules/factory-workflow.md#state-labels):
 the factory provisions the configured running, failed, paused and needs-input
-state labels. The applier creates missing skip and model labels; the factory
-never creates or removes skip.
+state labels. The applier still creates a missing skip label before applying
+it, as for model labels; the factory never creates or removes skip.
 
 Matching labels are left alone. Missing canonical labels are created freely.
 A label with a matching case-insensitive name but
@@ -35,7 +39,8 @@ for its name: the repository never chose it, so it is updated without
 confirmation. Today only `wontfix`, whose default description is "This will not
 be worked on", differs from the table. A custom default set by an owner or
 organization counts as chosen.
-Other labels, existing `factory:` labels included, are never deleted or edited.
+Other labels are never deleted or edited, including factory state labels and,
+in the standard profile, any existing skip label.
 
 ## Prerequisites and identity
 
@@ -80,6 +85,11 @@ that signs in. It reads the current gh token and makes only read-only `Access` A
 reads the labels, and changes nothing in the project or on GitHub. An adopter
 can defer a remote setup that is not ready; the next adoption or update probes
 again and runs the fix once the probe is ready.
+
+The probe has the same access contract for standard and factory selections.
+`ready` confirms that label setup can run, not that the selected labels exist
+or match. Only the fix reads and verifies the selected label inventory,
+including the factory profile's skip label.
 
 When the repository API read fails, the probe and fix map Postern's
 `PlatformError.reason` to a stable recovery step without embedding platform
@@ -129,6 +139,11 @@ and token reads. They never call GitHub or change live repository settings:
 ```sh
 node --test test/github-label-setup.test.mjs
 ```
+
+These fixtures cover factory-only skip creation and readback, repeat runs,
+overwrite confirmation, mismatched skip readback and preservation of unrelated
+labels, including existing skip labels under the standard profile. The factory
+creation fixture runs from only the installed operation's declared resources.
 
 The operation fixtures run each fix and probe from only its declared
 resources. They show `not-ready` for a missing `gh`, an ambiguous remote, no

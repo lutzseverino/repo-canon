@@ -73,7 +73,10 @@ confirmation govern bot and App reviewers too.
 The factory creates and manages `factory:running`, `factory:failed`,
 `factory:paused` and `factory:needs-input`, using the corresponding roles in
 `.factory/config.json`. The repository owns `ready-for-agent`, provisioned by
-canonical-label setup.
+canonical-label setup. In the factory profile, that setup also provisions and
+verifies `factory:skip` with color `c5def5` and description
+`Ready agent work the factory must not pick up`. Standard-profile setup does
+not provision it.
 
 In a repository a factory serves, `.factory/config.json` names the factory's
 labels: `ready-for-agent` is the ready label, `factory:skip` marks ready agent
@@ -88,15 +91,22 @@ or the factory's comment is dealt with.
 `ready-for-human` is only for work that needs the owner's own accounts or
 credentials, or a taste call the owner reserved for themselves. Agent work the
 factory must not pick up gets `ready-for-agent`, one `model:` label and
-`factory:skip`, applied together: work that edits `.github/workflows/`, or work
-the owner reviews before merge. Whoever applies `factory:skip` creates it if
-the repository lacks it, as for `model:` labels; the factory never creates or
-removes it. An agent working on the owner's account implements skip-labelled
+`factory:skip`, applied together: work that edits `.github/workflows/`, work
+the owner reviews before merge, or work whose live steps need host access the
+maintainer grants. A directly launched worker performs the agent work,
+including the source changes; host access gates only the live host steps and
+does not designate owner review of the source PR.
+Whoever applies `factory:skip` creates it if the repository lacks it, as for
+`model:` labels; the factory never creates or
+removes it. An agent using the supplied credentials implements skip-labelled
 work, and the orchestrating agent merges it; when the owner reviews the work
 before merge, the orchestrating agent merges it after the owner's review.
 
-For every skip-labelled PR, the implementing worker delivers an open PR and
-hands it to the orchestrating agent without merging. Worker completion is the
+## Merging
+
+For every skip-labelled PR and every PR opened by a directly launched worker,
+including a PR without a skip label, the implementing worker delivers an open
+PR and hands it to the orchestrating agent without merging. Worker completion is the
 recorded PR handoff; the issue stays open until delivery finishes. The handoff
 records the PR's current head, validation and internal review outcomes,
 outstanding findings, and any owner-review requirement with its source. The
@@ -108,8 +118,8 @@ for designation, provenance and current-head approval. The skip marker alone
 requires no owner review; without a designation, the orchestrating agent merges
 under the ordinary applicable conditions.
 
-When the shared gate requires an approval pause, keep the PR open, retain
-`factory:needs-input` and `factory:skip` on its issue, and preserve the
+For skipped work, when the shared gate requires an approval pause, keep the PR
+open, retain `factory:needs-input` and `factory:skip` on its issue, and preserve the
 orchestrating agent's merge ownership.
 If an answer changes the implementation contract during this pause, apply
 Skipped work's contract-revision gate: implementation and delivery wait for the
@@ -161,11 +171,11 @@ For every owner question on skipped work, retain the skip marker and
 `factory:needs-input` while unanswered. The current worker or merging-agent
 run stops under the contribution guide's owner-question handoff.
 
-For the designated skipped-PR approval pause, follow State labels for
+For the designated skipped-PR approval pause, follow Merging for
 continuation, including any required renewed readiness after a contract-changing
 answer. Answering another question does not satisfy that approval
 requirement: keep both markers until explicit current-head approval is verified
-and recorded with its source and SHA, as State labels requires.
+and recorded with its source and SHA, as Merging requires.
 
 If the answer changes the implementation contract, edit the contract and have
 that exact revision independently reviewed and granted renewed readiness under
@@ -175,7 +185,7 @@ without an open PR, implementation
 and delivery wait for that renewed readiness. Resolving the question or
 removing `factory:needs-input` does not authorize continuation on an unreviewed
 revision. Renewed readiness does not substitute for designated current-head
-owner approval under State labels.
+owner approval under Merging.
 If the answer leaves the contract unchanged, no new readiness cycle is required.
 
 Once the question is resolved and any required renewed readiness is recorded,
@@ -184,7 +194,7 @@ work. With no open PR, it resumes
 or relaunches the implementing worker. With an open PR, it resumes that same PR,
 arranging any remaining worker work and continuing delivery from the prescribed
 handoff. The worker still hands off without merging; the orchestrating agent
-owns `babysit` and the merge as State labels prescribes. Removing the waiting
+owns `babysit` and the merge as Merging prescribes. Removing the waiting
 marker alone is not a factory retry for skipped work. This recovery requires
 neither factory pickup, owner merge nor closing an open PR for hand-back.
 
