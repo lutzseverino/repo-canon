@@ -41,6 +41,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "orchestrate",
     "planning",
     "project-agent-guidance",
+    "session-naming",
     "triage-routing",
     "triage-wayfinder",
   ]);
@@ -78,6 +79,29 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "orchestrate",
     ],
   );
+  const naming = manifest.repositories["session-naming"];
+  assert.deepEqual(naming.skills, []);
+  assert.ok(
+    readFileSync(join(naming.path, "AGENTS.md"), "utf8").startsWith(
+      readFileSync(join(root, "AGENTS.md"), "utf8"),
+    ),
+    "workers discover the naming rule without orchestration skills",
+  );
+  const namingTask = readFileSync(
+    join(naming.path, "docs/exercise.md"),
+    "utf8",
+  );
+  for (const requirement of [
+    "Supported naming",
+    "Unsupported naming",
+    "operation and target",
+    "outside the task message",
+    "context only",
+    "no new prerequisite",
+    "observed name",
+    "not a pass",
+  ])
+    assert.ok(namingTask.includes(requirement), requirement);
   const deliveryScenario = manifest.repositories.delivery;
   assert.ok(deliveryScenario.skills.includes("implement"));
   assert.ok(deliveryScenario.skills.includes("pr"));

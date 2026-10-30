@@ -284,6 +284,23 @@ local signing, an ordinary later commit under hostile global signing, and the
 managed-update boundary: a synthetic change to a candidate copy of a vendored
 skill is detected while the vendored directory stays unchanged.
 
+## Session naming with and without support
+
+The planning builder's `repositories.session-naming` fixture copies the shared
+`AGENTS.md` and installs no orchestration skill. Follow its `docs/exercise.md`
+as an implementation worker: inspect the Delivery glossary in two bounded
+agent sessions, first with naming supported, then without naming for the
+session being launched or owned. A controlled capability restriction is valid
+when recorded as such; it does not establish a platform limitation.
+
+Observe the operation and target in the supported name, held outside the task
+message, and successful inspection with no new prerequisite in the unsupported
+case. Preserve the question, source path and report-back destination in both
+messages. Report actual capabilities, names, session references, messages and
+results with the PR. Fixture tests establish setup and shared-rule discovery;
+these observations establish behavior. Existing conformance tests separately
+protect skill invocation and grill/workbench delivery contracts.
+
 ## Orchestrate: two sessions and a local workbench
 
 Use the planning builder above from the candidate checkout. Its manifest entry
