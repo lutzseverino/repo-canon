@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFixtureGit } from "./fixture-git.mjs";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -10,7 +10,7 @@ export const DIRECTORY_HASH_SERIALIZATION =
   "repo-canon/directory-sha256/recursive-locale-path-nul-bytes-nul/v1";
 
 function git(root, args) {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  return execFixtureGit(args, { cwd: root, encoding: "utf8" }).trim();
 }
 
 export function initializeFixtureRepository(root, { author, remote = null }) {
@@ -61,7 +61,14 @@ export function identifyFixtureSource({
     "\\",
     "/",
   );
-  const sourceFiles = [...new Set([builderPath, ...files, helperSourcePath])];
+  const sourceFiles = [
+    ...new Set([
+      builderPath,
+      ...files,
+      helperSourcePath,
+      "scripts/support/fixture-git.mjs",
+    ]),
+  ];
   return {
     head: git(sourceRoot, ["rev-parse", "HEAD"]),
     inputFiles: Object.fromEntries(

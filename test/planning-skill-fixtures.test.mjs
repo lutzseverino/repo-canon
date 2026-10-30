@@ -1,3 +1,4 @@
+import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -286,18 +287,18 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   const workbench = orchestrate.workbench.path;
   for (const path of [orchestrate.path, workbench]) {
     assert.equal(
-      execFileSync("git", ["remote"], { cwd: path, encoding: "utf8" }),
+      execFixtureGit(["remote"], { cwd: path, encoding: "utf8" }),
       "",
     );
     assert.equal(
-      execFileSync("git", ["status", "--porcelain"], {
+      execFixtureGit(["status", "--porcelain"], {
         cwd: path,
         encoding: "utf8",
       }),
       "",
     );
     assert.equal(
-      execFileSync("git", ["config", "commit.gpgsign"], {
+      execFixtureGit(["config", "commit.gpgsign"], {
         cwd: path,
         encoding: "utf8",
       }).trim(),
@@ -744,7 +745,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.throws(localLookup, /Command failed/);
 
   assert.equal(
-    execFileSync("git", ["status", "--porcelain"], {
+    execFixtureGit(["status", "--porcelain"], {
       cwd: join(target, "project-agent-guidance"),
       encoding: "utf8",
     }),

@@ -1,5 +1,5 @@
+import { execFixtureGit } from "../../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import {
   chmodSync,
   mkdtempSync,
@@ -81,10 +81,10 @@ export function setup(t, subject, options = {}) {
   for (const [name, url] of Object.entries(
     options.remotes ?? { origin: "git@github.com:acme/widgets.git" },
   )) {
-    execFileSync("git", ["remote", "add", name, url], { cwd: project.root });
+    execFixtureGit(["remote", "add", name, url], { cwd: project.root });
   }
   for (const [name, url] of Object.entries(options.pushUrls ?? {})) {
-    execFileSync("git", ["remote", "set-url", "--add", "--push", name, url], {
+    execFixtureGit(["remote", "set-url", "--add", "--push", name, url], {
       cwd: project.root,
     });
   }
