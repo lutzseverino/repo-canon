@@ -5,7 +5,7 @@ import {
   githubLabelSetup,
   setup as githubSetup,
 } from "./helpers/github-setup.mjs";
-import { snapshot } from "./helpers/operation.mjs";
+import { retainedCheck, snapshot } from "./helpers/operation.mjs";
 
 const canonicalLabels = [
   {
@@ -68,6 +68,78 @@ function setup(t, options) {
   return githubSetup(t, githubLabelSetup, options);
 }
 
+const factorySkip = {
+  name: "factory:skip",
+  color: "c5def5",
+  description: "Ready agent work the factory must not pick up",
+};
+
+test("factory setup provisions and verifies skip, preserves unrelated labels and is repeat-safe", (t) => {
+  const unrelated = {
+    name: "factory:running",
+    color: "0052cc",
+    description: "Claimed by a factory run",
+  };
+  const scenario = githubSetup(
+    t,
+    {
+      ...githubLabelSetup,
+      script: retainedCheck(t, "operations/setup-github-labels.mjs"),
+    },
+    { state: { labels: [...structuredClone(canonicalLabels), unrelated] } },
+  );
+  const before = snapshot(scenario.project.root);
+  const outcome = scenario.invoke({ profile: "factory" });
+  assert.equal(outcome.status, 0, outcome.stderr);
+  assert.equal(outcome.result.status, "changed");
+  assert.match(outcome.result.message, /created factory:skip/);
+  assert.match(
+    outcome.result.message,
+    /Readback confirmed all 13 canonical labels/,
+  );
+  assert.deepEqual(scenario.readState().labels, [
+    ...canonicalLabels,
+    unrelated,
+    factorySkip,
+  ]);
+  assert.equal(scenario.readState().labelReads, 2);
+  assert.equal(
+    scenario.invoke({ profile: "factory" }).result.status,
+    "unchanged",
+  );
+  assert.equal(scenario.readState().mutations, 1);
+  assertProjectUnchanged(before, scenario);
+});
+
+test("factory setup confirms skip drift before any writes and blocks on mismatched skip readback", (t) => {
+  const driftedSkip = { ...factorySkip, color: "000000" };
+  const scenario = setup(t, {
+    state: { labels: [driftedSkip], readbackMismatch: true },
+  });
+  const confirmation = scenario.invoke({ profile: "factory" });
+  assert.equal(confirmation.status, 0, confirmation.stderr);
+  assert.equal(confirmation.result.status, "confirmation-required");
+  assert.match(confirmation.result.message, /factory:skip.color/);
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+  assert.deepEqual(scenario.readState().labels, [driftedSkip]);
+
+  // Reset the simulated readback failure so it occurs on the confirmed run's
+  // final read, after the initial inspection.
+  scenario.updateState({ labelReads: 0 });
+  const confirmed = scenario.invoke({
+    profile: "factory",
+    overwriteAllowed: true,
+  });
+  assert.equal(confirmed.status, 0, confirmed.stderr);
+  assert.equal(confirmed.result.status, "blocked");
+  assert.match(confirmed.result.message, /readback did not match factory:skip/);
+  assert.match(confirmed.result.message, /updated factory:skip/);
+  assert.deepEqual(scenario.readState().labels, [
+    factorySkip,
+    ...canonicalLabels,
+  ]);
+});
+
 test("provisions every canonical label in an empty repository and is unchanged on repeat", (t) => {
   const scenario = setup(t);
   const before = snapshot(scenario.project.root);
@@ -124,9 +196,9 @@ test("leaves the retired run:orchestrated label in place without provisioning it
 });
 
 // The factory creates its own state labels from the repository's factory
-// configuration, so setup provisions none of them, and leaves the ones a
-// repository already has alone.
-test("creates no factory label and leaves existing factory labels in place", (t) => {
+// configuration. Standard-profile setup provisions no factory label and
+// leaves all existing factory labels alone, including skip.
+test("standard setup creates no factory label and leaves existing factory labels in place", (t) => {
   const empty = setup(t);
   const created = empty.invoke();
   assert.equal(created.status, 0, created.stderr);
@@ -136,6 +208,11 @@ test("creates no factory label and leaves existing factory labels in place", (t)
   );
 
   const factoryLabels = [
+    {
+      ...factorySkip,
+      color: "000000",
+      description: "Keep chosen skip metadata",
+    },
     {
       name: "factory:running",
       color: "0052cc",

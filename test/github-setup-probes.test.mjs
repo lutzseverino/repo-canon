@@ -89,6 +89,30 @@ function assertProbe(outcome, status, message) {
   });
 }
 
+for (const profile of ["standard", "factory"]) {
+  test(`${profile} label probe checks access without claiming label inventory is verified`, (t) => {
+    const scenario = probeScenario(t, probes[0], {
+      state: { labels: [], failLabelInspection: true },
+    });
+    assertProbe(
+      scenario.invoke({ profile }),
+      "ready",
+      "GitHub label setup can run for acme/widgets with write, maintain, or admin access.",
+    );
+    assert.equal(scenario.readState().labelReads ?? 0, 0);
+    assertNoWrites(scenario);
+
+    const fix = setup(t, githubLabelSetup, {
+      state: { failLabelInspection: true },
+    });
+    const outcome = fix.invoke({ profile });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, "blocked");
+    assert.match(outcome.result.message, /could not inspect labels/);
+    assert.equal(fix.readState().mutations ?? 0, 0);
+  });
+}
+
 for (const probe of probes) {
   test(`${probe.name} gives stable neutral diagnostics for non-HTTP failures across probes and fixes`, (t) => {
     const scenario = probeScenario(t, probe);

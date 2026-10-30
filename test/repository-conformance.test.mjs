@@ -1776,11 +1776,14 @@ test("the installed delivery route honors prescribed worker handoffs before merg
     assert.doesNotMatch(text, /factory:skip/);
 });
 
-test("every skipped factory PR has worker completion and an orchestrator-owned merge", () => {
-  const factory = flowedText("rules/factory-workflow.md");
+test("skipped and directly launched worker PRs have worker completion and an orchestrator-owned merge", () => {
+  const factory =
+    /## Merging (.*?)(?= ## |$)/.exec(
+      flowedText("rules/factory-workflow.md"),
+    )?.[1] ?? "";
   assert.match(
     factory,
-    /For every skip-labelled PR, the implementing worker delivers an open PR and hands it to the orchestrating agent without merging/,
+    /For every skip-labelled PR and every PR opened by a directly launched worker, including a PR without a skip label, the implementing worker delivers an open PR and hands it to the orchestrating agent without merging/,
   );
   assert.match(
     factory,
@@ -1794,6 +1797,30 @@ test("every skipped factory PR has worker completion and an orchestrator-owned m
     factory,
     /The handoff records the PR's current head, validation and internal review outcomes, outstanding findings, and any owner-review requirement with its source/,
   );
+});
+
+test("host-access skips gate live steps without designating source PR review, while explicit designations bind workers", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  assert.match(
+    factory,
+    /`factory:skip`, applied together: work that edits `\.github\/workflows\/`, work the owner reviews before merge, or work whose live steps need host access the maintainer grants/,
+  );
+  assert.match(
+    factory,
+    /A directly launched worker performs the agent work, including the source changes; host access gates only the live host steps and does not designate owner review of the source PR/,
+  );
+  assert.doesNotMatch(factory, /maintenance grant/);
+  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  assert.match(
+    merging,
+    /Apply the `github-repository-configuration` rules' Designated owner review gate for designation, provenance and current-head approval/,
+  );
+  const shared = flowedText("rules/github-repository-configuration.md");
+  assert.match(
+    shared,
+    /Owner review is required when either the accepted brief or the worker's handoff says so/,
+  );
+  assert.match(shared, /Any head change requires renewed owner approval/);
 });
 
 test("either owner-review designation source survives handoffs in both profiles", () => {
@@ -1913,6 +1940,7 @@ test("triage preserves owner-review reservations independently of profile routin
 test("skipped owner questions resume workers or the same PR through the orchestrating agent", () => {
   const factory = flowedText("rules/factory-workflow.md");
   const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
   const recovery =
     /## Owner handoff and recovery (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
   const skipped = /### Skipped work (.*?)(?= ### |$)/.exec(recovery)?.[1] ?? "";
@@ -1945,7 +1973,7 @@ test("skipped owner questions resume workers or the same PR through the orchestr
   );
   assert.match(
     skipped,
-    /The worker still hands off without merging; the orchestrating agent owns `babysit` and the merge as State labels prescribes/,
+    /The worker still hands off without merging; the orchestrating agent owns `babysit` and the merge as Merging prescribes/,
   );
   assert.match(
     skipped,
@@ -1968,8 +1996,8 @@ test("skipped owner questions resume workers or the same PR through the orchestr
     /`factory:skip` marks ready agent work the factory must not pick up/,
   );
   assert.match(
-    state,
-    /For every skip-labelled PR, the implementing worker delivers an open PR and hands it to the orchestrating agent without merging/,
+    merging,
+    /For every skip-labelled PR and every PR opened by a directly launched worker, including a PR without a skip label, the implementing worker delivers an open PR and hands it to the orchestrating agent without merging/,
   );
 });
 
@@ -2004,7 +2032,7 @@ for (const { prState, continuation } of [
     );
     assert.match(
       skipped,
-      /Renewed readiness does not substitute for designated current-head owner approval under State labels/,
+      /Renewed readiness does not substitute for designated current-head owner approval under Merging/,
     );
     const gate = skipped.indexOf(
       "Once the question is resolved and any required renewed readiness is recorded",
@@ -2035,70 +2063,73 @@ for (const { prState, continuation } of [
 
 test("designated skipped PR continuation gates a changed contract on renewed readiness and current-head approval", () => {
   const factory = flowedText("rules/factory-workflow.md");
-  const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
   const skipped =
     /### Skipped work (.*?)(?= ### | ## |$)/.exec(factory)?.[1] ?? "";
 
   assert.match(
     skipped,
-    /For the designated skipped-PR approval pause, follow State labels for continuation, including any required renewed readiness after a contract-changing answer/,
+    /For the designated skipped-PR approval pause, follow Merging for continuation, including any required renewed readiness after a contract-changing answer/,
   );
   assert.match(
-    state,
+    merging,
     /If an answer changes the implementation contract during this pause, apply Skipped work's contract-revision gate: implementation and delivery wait for the edited revision's validator notice, independent review and renewed readiness/,
   );
   assert.match(
-    state,
+    merging,
     /After verifying and recording current-head approval under the shared gate and any required renewed readiness, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR/,
   );
 });
 
 test("designated skipped PR continuation needs no new readiness for an unchanged contract", () => {
   const factory = flowedText("rules/factory-workflow.md");
-  const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
 
-  assert.match(state, /An unchanged contract requires no new readiness cycle/);
   assert.match(
-    state,
+    merging,
+    /An unchanged contract requires no new readiness cycle/,
+  );
+  assert.match(
+    merging,
     /After verifying and recording current-head approval under the shared gate and any required renewed readiness, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR/,
   );
 });
 
 test("designated skipped PR approval pauses resume the same PR without ordinary factory recovery", () => {
   const factory = flowedText("rules/factory-workflow.md");
-  const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
   const recovery =
     /## Owner handoff and recovery (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
 
   // Read the approval pause and the general recovery route together: either
   // one alone used to admit transferring this PR's merge back to the owner.
   assert.match(
-    state,
-    /When the shared gate requires an approval pause, keep the PR open, retain `factory:needs-input` and `factory:skip` on its issue, and preserve the orchestrating agent's merge ownership/,
+    merging,
+    /For skipped work, when the shared gate requires an approval pause, keep the PR open, retain `factory:needs-input` and `factory:skip` on its issue, and preserve the orchestrating agent's merge ownership/,
   );
   assert.match(
-    state,
+    merging,
     /Apply the `github-repository-configuration` rules' Designated owner review gate/,
   );
   assert.match(
-    state,
+    merging,
     /After verifying and recording current-head approval under the shared gate and any required renewed readiness, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR, merging only when all other applicable merge conditions hold/,
   );
   assert.match(
-    state,
+    merging,
     /Any head change returns to this approval pause until renewed approval is verified and recorded/,
   );
   assert.match(
-    state,
+    merging,
     /This continuation requires neither owner merge, PR closure nor factory pickup/,
   );
   assert.match(
     recovery,
-    /For the designated skipped-PR approval pause, follow State labels for continuation/,
+    /For the designated skipped-PR approval pause, follow Merging for continuation/,
   );
   assert.match(
     recovery,
-    /Answering another question does not satisfy that approval requirement: keep both markers until explicit current-head approval is verified and recorded with its source and SHA, as State labels requires/,
+    /Answering another question does not satisfy that approval requirement: keep both markers until explicit current-head approval is verified and recorded with its source and SHA, as Merging requires/,
   );
 });
 
@@ -2441,7 +2472,7 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
 });
 
-test("GitHub label guidance delegates only factory-owned and applier-owned labels", () => {
+test("GitHub label guidance provisions skip only for factory and delegates runtime state labels", () => {
   const github = flowedText("rules/github-repository-configuration.md");
   const factory = flowedText("rules/factory-workflow.md");
   const notes = flowedText("authoring-notes.md");
@@ -2476,7 +2507,7 @@ test("GitHub label guidance delegates only factory-owned and applier-owned label
   );
   assert.match(
     setup,
-    /The applier creates missing skip and model labels; the factory never creates or removes skip/,
+    /The factory profile also provisions and verifies `factory:skip`; standard-profile setup does not add it/,
   );
 });
 
@@ -2500,9 +2531,9 @@ test("factory workflow rules preserve readiness, models, state recovery and safe
     /an agent adds `factory:needs-input` with its question/,
     /`factory:skip` marks ready agent work the factory must not pick up/,
     /`ready-for-human` is only for work that needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves/,
-    /Agent work the factory must not pick up gets `ready-for-agent`, one `model:` label and `factory:skip`, applied together: work that edits `\.github\/workflows\/`, or work the owner reviews before merge/,
+    /Agent work the factory must not pick up gets `ready-for-agent`, one `model:` label and `factory:skip`, applied together: work that edits `\.github\/workflows\/`, work the owner reviews before merge, or work whose live steps need host access the maintainer grants/,
     /Whoever applies `factory:skip` creates it if the repository lacks it, as for `model:` labels; the factory never creates or removes it/,
-    /An agent working on the owner's account implements skip-labelled work, and the orchestrating agent merges it; when the owner reviews the work before merge, the orchestrating agent merges it after the owner's review/,
+    /An agent using the supplied credentials implements skip-labelled work, and the orchestrating agent merges it; when the owner reviews the work before merge, the orchestrating agent merges it after the owner's review/,
     /the factory adds `factory:running` while it holds an issue, `factory:failed` after a run fails for good, and `factory:paused` when it pauses a run/,
     /resumes it by itself.*nobody removes the label by hand/,
     /Remove `factory:failed` to run the issue again once its failure note or the factory's comment is dealt with/,
@@ -2513,9 +2544,9 @@ test("factory workflow rules preserve readiness, models, state recovery and safe
 });
 
 // `ready-for-human` covers only work that needs the owner; agent work the
-// factory must not pick up carries `factory:skip`, which only the factory
-// rules' State labels section names.
-test("ready-for-human needs the owner, and only the factory rules' State labels name factory:skip", () => {
+// factory must not pick up carries `factory:skip`. The factory rules own its
+// routing and delivery.
+test("ready-for-human needs the owner, and only the factory rules name factory:skip", () => {
   const narrowed =
     /needs the owner's (?:own )?accounts(?: or|,) credentials,? or a (?:reserved )?taste call/;
   for (const document of [
@@ -2541,7 +2572,10 @@ test("ready-for-human needs the owner, and only the factory rules' State labels 
   const factory = readFileSync(join(root, "rules/factory-workflow.md"), "utf8");
   const sections = factory.split(/^## /m);
   for (const section of sections)
-    if (!section.startsWith("State labels\n"))
+    if (
+      !section.startsWith("State labels\n") &&
+      !section.startsWith("Merging\n")
+    )
       assert.doesNotMatch(section, /factory:skip/);
   const skill = flowedText(".agents/skills/triage/SKILL.md");
   const forPr = /For a PR, (.+?) Every triaged issue/.exec(skill)?.[1] ?? "";

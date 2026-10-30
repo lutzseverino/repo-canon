@@ -287,9 +287,14 @@ repeated.
   credentials, or a taste call the owner reserved. The owner decided this on
   2026-10-25, after the label had also marked agent work the factory could not
   run and confused them. Agent work the factory must not pick up carries
-  `ready-for-agent`, a `model:` label and `factory:skip`. Only the
-  [factory workflow rules](rules/factory-workflow.md) name that label, since
-  the canonical labels carry no `factory:` label.
+  `ready-for-agent`, a `model:` label and `factory:skip`. The
+  [factory workflow rules](rules/factory-workflow.md) own that routing; canonical
+  label setup provisions skip only for the factory profile. On 2026-10-29, the
+  owner extended skip routing to work whose live steps need host access the
+  maintainer grants, and worker handoff to every PR from a directly launched
+  worker, including PRs without a skip label; see
+  [#739](https://github.com/lutzseverino/repo-canon/issues/739). Host access gates
+  only live host steps and does not designate owner review of the source PR.
 - Designated owner review has one current-head approval gate in both profiles,
   stated in the [GitHub repository configuration rules](rules/github-repository-configuration.md#designated-owner-review).
   The owner chose this shared gate on 2026-10-29 in
