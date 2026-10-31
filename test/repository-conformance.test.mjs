@@ -650,7 +650,7 @@ test("standards.yaml declares no pull request reviewer file", () => {
 });
 
 // The shipped configuration targets factory configuration version 1, whose
-// schema Scriptorium documents: exactly these fields, six labels, the skip
+// schema Scriptorium documents: exactly these fields, seven labels, the skip and release-hold
 // label among them, distinct ignoring case, and a prompt holding both `{skillPrefix}` and `{issue}`. This
 // repository imports no factory code; the exact shape pins the file.
 test("the factory configuration names Repo Canon's labels, model label prefix, and implement prompt", () => {
@@ -670,6 +670,7 @@ test("the factory configuration names Repo Canon's labels, model label prefix, a
     labels: {
       ready: "ready-for-agent",
       skip: "factory:skip",
+      releaseHold: "factory:release-hold",
       running: "factory:running",
       failed: "factory:failed",
       needsInput: "factory:needs-input",

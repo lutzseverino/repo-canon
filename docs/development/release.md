@@ -154,6 +154,20 @@ version named in the adoption guide, CI, the [development guide](README.md), the
 `.factory/Dockerfile`, equals the floor of the `requires` minimum in
 `standards.yaml`.
 
+Open the release PR with the configured `labels.releaseHold` label from
+`.factory/config.json` (Repo Canon uses `factory:release-hold`), for example
+by passing `--label factory:release-hold` to `gh pr create`. Keep that label
+on the PR until it merges or closes, and confirm it is present immediately
+before merging. Factory-profile label setup provisions it.
+
+Two layers hold other merges: a serving Scriptorium release containing
+[lutzseverino/scriptorium#77](https://github.com/lutzseverino/scriptorium/issues/77)
+holds the factory's merge relaunches; babysit independently checks other open
+labelled PRs immediately before every merge write, including when a release
+PR opens mid-run. Its exit `9` leaves the held PR open until the hold ends;
+the release PR never holds itself. Upgrade older hosts before adopting the
+configuration: they pause a repository that declares the unknown key.
+
 Title it `<type>: release vX.Y.Z`. The type follows the release's
 classification under [release versioning](../usage/versioning.md). Use the
 first that applies:
@@ -368,6 +382,17 @@ reports the CLI version with the inspection, fixture adoption, and update-from-p
 state: the fixture adoption runs in a temporary directory and has no remote to
 change. The tag, the release, and its notes are published only by the commands
 written out above.
+
+### Account for tracked adopters
+
+After publication and verification, post a comment on the release PR under
+[the contribution guide's comment rules](../../CONTRIBUTING.md#comments)
+accounting for every adopter the maintainer tracks. Keep that tracked list
+outside Repo Canon. For each adopter, record either that it is updated to the
+release with a link to its adoption PR, or that it is waiting with a reason.
+Update the coverage in release-PR comments as waiting adopters progress.
+Preserve adoption-record bodies unchanged. Adoption uses published releases;
+there is no pre-tag adopter dry-run or unpublished-candidate install step.
 
 ### Recover verification of an existing tag
 

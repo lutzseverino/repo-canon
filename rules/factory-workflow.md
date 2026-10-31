@@ -162,6 +162,22 @@ Any head change returns to this approval pause until renewed approval is
 verified and recorded. This continuation requires neither owner merge, PR
 closure nor factory pickup.
 
+## Release holds
+
+In a factory repository, a release PR carries the configured
+`labels.releaseHold` label from opening until it merges or closes. Factory-profile
+label setup provisions and verifies this release-hold label. While another
+open PR carries it, the factory holds merges in that repository. Babysit also
+checks immediately before its merge write, covering a release PR opened
+mid-run and every babysit merge, including orchestrator recovery and
+handed-off worker PRs. The labelled PR is exempt from its own hold. Merges
+outside babysit are unaffected by its check.
+
+Babysit reads the hold configuration from the destination default branch at
+the same pinned revision as trusted review configuration; proposed PR changes
+cannot remove their own hold. Follow babysit's exit-9 steps to resume after
+the hold ends; a release hold is not an owner handoff.
+
 ## External review of factory pull requests
 
 Before requesting or waiting for external review, apply the optional

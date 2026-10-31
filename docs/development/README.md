@@ -203,6 +203,9 @@ including independent trusted-policy selection and the current-head internal
 review outcome gate. Missing or incomplete outcome evidence returns merge exit
 `5`: post the completed record, then rerun. Wait exit `6` prints its full-head
 template; an unfilled template never counts as completed review evidence.
+The merge fixtures also cover the release-hold exit `9`, self-exemption,
+multiple holds, closed PRs, removed labels, absent configuration and keys,
+trusted pinned factory configuration, and failed reads without merge writes.
 The delivery conformance cases in `test/repository-conformance.test.mjs`
 cover the shared owner-review gate in both profiles, either designation source
 and its provenance, renewed approval after a head change, standard merge

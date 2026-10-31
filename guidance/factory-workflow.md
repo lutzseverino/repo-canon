@@ -3,6 +3,14 @@
 Confirm an intentionally empty scope for `factory-workflow`: no content paths
 or directories. Adoption installs its rules for the whole repository.
 
+## Host compatibility
+
+The factory configuration declares `labels.releaseHold`. Before adopting this
+factory profile, the serving host must run a Scriptorium release containing
+[lutzseverino/scriptorium#77](https://github.com/lutzseverino/scriptorium/issues/77).
+Older hosts reject the unknown key and pause the repository. Verify the
+serving host's release before delivering the adoption.
+
 ## App-author policy opt-in
 
 Read the previous adoption record before the run changes it. Ask only when

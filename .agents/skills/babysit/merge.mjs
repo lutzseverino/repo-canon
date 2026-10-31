@@ -3,7 +3,8 @@
 // Usage: node merge.mjs <number> <head SHA>, from the repository root.
 // Exit codes: 0 merged, 1 usage or platform error, 2 head changed; wait again,
 // 3 not merged; needs the owner, 4 stale base; update and validate,
-// 5 missing review outcome; post the completed record and rerun.
+// 5 missing review outcome; post the completed record and rerun,
+// 9 release hold; leave open and resume after the hold ends.
 import {
   connectionFor,
   executedAsScript,
@@ -109,6 +110,83 @@ async function baseIsStale(connection, branch, head) {
   return comparison.behind_by > 0;
 }
 
+// This last preflight shares the review snapshot, never the proposed PR tree.
+async function releaseHolds(connection, revision, number) {
+  const [owner, name] = connection.repository.path.split("/");
+  const response = await requestData(connection, {
+    method: "POST",
+    path: "/graphql",
+    body: {
+      query: `query BabysitReleaseHold($owner: String!, $name: String!, $revision: GitObjectID!, $factory: String!) {
+        repository(owner: $owner, name: $name) {
+          commit: object(oid: $revision) { __typename oid }
+          factory: object(expression: $factory) { __typename ... on Blob { text isTruncated } }
+        }
+      }`,
+      variables: {
+        owner,
+        name,
+        revision,
+        factory: `${revision}:.factory/config.json`,
+      },
+    },
+  });
+  const files = response?.data?.repository;
+  if (
+    response?.errors?.length ||
+    files?.commit?.__typename !== "Commit" ||
+    files.commit.oid !== revision
+  )
+    throw new Error("Could not read the pinned factory configuration commit.");
+  const blob = files.factory;
+  if (blob === null) return [];
+  if (
+    blob?.__typename !== "Blob" ||
+    blob.isTruncated !== false ||
+    typeof blob.text !== "string"
+  )
+    throw new Error("Could not read complete .factory/config.json.");
+  const config = JSON.parse(blob.text);
+  if (
+    !config ||
+    Array.isArray(config) ||
+    config.version !== 1 ||
+    (config.labels !== undefined &&
+      (!config.labels ||
+        typeof config.labels !== "object" ||
+        Array.isArray(config.labels)))
+  )
+    throw new Error(
+      "Invalid .factory/config.json: expected version 1 and a labels object when present.",
+    );
+  const label = config.labels?.releaseHold;
+  if (label === undefined) return [];
+  if (typeof label !== "string" || !label.trim() || label !== label.trim())
+    throw new Error(
+      "Invalid .factory/config.json labels.releaseHold: expected a nonempty, trimmed label.",
+    );
+  const issuePages = await pages(
+    connection,
+    `/repos/${connection.repository.path}/issues?state=open&labels=${encodeURIComponent(label)}&per_page=100`,
+  );
+  if (!issuePages.every(Array.isArray))
+    throw new Error("Could not read release-hold pull requests.");
+  const issues = issuePages.flat();
+  if (
+    issues.some(
+      (issue) =>
+        !Number.isSafeInteger(issue?.number) ||
+        issue.number <= 0 ||
+        !["open", "closed"].includes(issue.state),
+    )
+  )
+    throw new Error("Could not read a release-hold pull request.");
+  return issues.filter(
+    (issue) =>
+      issue.pull_request && issue.state === "open" && issue.number !== number,
+  );
+}
+
 export async function main(argv = process.argv.slice(2), connection) {
   const [number, head, ...extra] = argv;
   if (
@@ -172,6 +250,25 @@ export async function main(argv = process.argv.slice(2), connection) {
     if (await baseIsStale(connection, branch, head)) return staleBase();
   } catch (error) {
     return unreadableFreshness(error);
+  }
+  try {
+    const holds = await releaseHolds(
+      connection,
+      configuration.revision,
+      Number(number),
+    );
+    if (holds.length) {
+      console.error(
+        `Release merge hold: ${holds.map((pull) => `#${pull.number}`).join(", ")}. Leave this PR open and resume after the hold ends.`,
+      );
+      process.exitCode = 9;
+      return;
+    }
+  } catch (error) {
+    if (["forbidden", "unauthenticated"].includes(error.reason)) throw error;
+    return needsOwner(
+      `Could not confirm the release hold at ${configuration.revision}: ${error.message}`,
+    );
   }
   let mergedCommit;
   try {

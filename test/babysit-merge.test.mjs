@@ -26,6 +26,218 @@ Standards: Passed; documented repository rules checked, no findings remain.
 Spec: Passed; all acceptance criteria in #744 verified.
 No external reviewer runs on app-authored PRs.`;
 
+const factoryConfiguration = {
+  version: 1,
+  labels: { releaseHold: "factory:release-hold" },
+};
+const releaseIssue = (
+  number,
+  state = "open",
+  labels = ["factory:release-hold"],
+) => ({
+  number,
+  state,
+  labels,
+  pull_request: {
+    url: `https://api.github.com/repos/example/repository/pulls/${number}`,
+  },
+});
+
+test("another open release PR holds an installed merge without a write", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const result = run(
+    t,
+    {
+      factoryConfiguration,
+      releaseIssues: [releaseIssue(24)],
+      traceRequests: true,
+    },
+    undefined,
+    target,
+  );
+  assert.equal(result.status, 9, result.stderr);
+  assert.match(result.stderr, /release.*hold.*#24/i);
+  assert.equal(result.state.merge, undefined);
+});
+
+test("only other open labelled PRs hold merges; issues and the release PR itself do not", (t) => {
+  const cases = [
+    { issues: [releaseIssue(12)], status: 0 },
+    { issues: [releaseIssue(24, "closed")], status: 0 },
+    { issues: [releaseIssue(24, "open", [])], status: 0 },
+    {
+      issues: [{ number: 24, state: "open", labels: ["factory:release-hold"] }],
+      status: 0,
+    },
+    {
+      issues: [releaseIssue(12), releaseIssue(24), releaseIssue(36)],
+      status: 9,
+    },
+  ];
+  for (const { issues, status } of cases) {
+    const result = run(t, { factoryConfiguration, releaseIssues: issues });
+    assert.equal(result.status, status, result.stderr);
+    if (status === 0) assert.ok(result.state.merge);
+    else {
+      assert.equal(result.state.merge, undefined);
+      assert.match(result.stderr, /#24, #36/);
+      assert.doesNotMatch(result.stderr, /#12/);
+    }
+  }
+});
+
+test("release holds include later pages and encode the configured label", (t) => {
+  const paged = run(t, {
+    factoryConfiguration,
+    releaseIssuePages: [[releaseIssue(12)], [releaseIssue(24)]],
+  });
+  assert.equal(paged.status, 9, paged.stderr);
+  assert.match(paged.stderr, /#24/);
+  assert.equal(paged.state.merge, undefined);
+  const label = "release: hold/+&";
+  const encoded = run(t, {
+    factoryConfiguration: { version: 1, labels: { releaseHold: label } },
+    releaseIssues: [releaseIssue(24, "open", [label])],
+  });
+  assert.equal(encoded.status, 9, encoded.stderr);
+  assert.equal(encoded.state.merge, undefined);
+});
+
+test("absent release configuration or key keeps existing merge behavior", (t) => {
+  for (const configuration of [
+    undefined,
+    { version: 1 },
+    { version: 1, labels: {} },
+  ]) {
+    const result = run(t, {
+      factoryConfiguration: configuration,
+      releaseIssues: [releaseIssue(24)],
+      traceRequests: true,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.state.merge);
+    assert.ok(
+      !result.state.requests.some((request) => request.endsWith("/issues")),
+    );
+  }
+});
+
+test("release hold uses the pinned destination snapshot despite a moving default and proposed PR edits", (t) => {
+  const revision = "b".repeat(40);
+  const result = run(t, {
+    factorySnapshots: {
+      [revision]: factoryConfiguration,
+      ["d".repeat(40)]: { version: 1, labels: { releaseHold: "other-hold" } },
+    },
+    localReviewConfiguration: { factory: { version: 1, labels: {} } },
+    moveDefaultTo: "d".repeat(40),
+    // Keep freshness independently satisfied to reach the last preflight.
+    comparison: { status: "ahead", behind_by: 0 },
+    releaseIssues: [releaseIssue(24)],
+    traceReviewConfiguration: true,
+  });
+  assert.equal(result.status, 9, result.stderr);
+  assert.equal(result.state.merge, undefined);
+  const reads = result.state.configurationReads;
+  assert.equal(reads.filter((read) => read.kind === "revision").length, 1);
+  assert.deepEqual(
+    reads
+      .filter((read) => ["files", "factory"].includes(read.kind))
+      .map((read) => read.revision),
+    [revision, revision],
+  );
+  assert.equal(reads.at(-1).factory, `${revision}:.factory/config.json`);
+  const proposed = run(t, {
+    factoryConfiguration: { version: 1, labels: {} },
+    localReviewConfiguration: { factory: factoryConfiguration },
+    releaseIssues: [releaseIssue(24)],
+  });
+  assert.equal(proposed.status, 0, proposed.stderr);
+});
+
+test("ending a hold still enforces current-head review, freshness and platform checks", (t) => {
+  for (const { state, status } of [
+    { state: {}, status: 0 },
+    {
+      state: { author: "factory-app[bot]", reviewConfiguration: { policy } },
+      status: 5,
+    },
+    { state: { stale: true }, status: 4 },
+    { state: { strict: false }, status: 3 },
+    { state: { mergeChecks: "pending" }, status: 1 },
+    { state: { mergeChecks: "failure" }, status: 1 },
+  ]) {
+    const result = run(t, {
+      factoryConfiguration,
+      releaseIssues: [releaseIssue(24, "open", [])],
+      ...state,
+    });
+    assert.equal(result.status, status, result.stderr);
+    if ([3, 4, 5].includes(status)) assert.equal(result.state.merge, undefined);
+  }
+});
+
+test("unreadable or invalid release configuration and PR reads never write a merge", (t) => {
+  /** @type {Array<{ factoryConfiguration?: any, factoryConfigurationResponse?: any, failFactoryConfiguration?: number, failReleasePulls?: number, releaseIssuesResponse?: any }>} */
+  const failures = [
+    { factoryConfiguration: "{" },
+    { factoryConfiguration: [] },
+    { factoryConfiguration: { version: 2 } },
+    { factoryConfiguration: { version: 1, labels: [] } },
+    ...[null, "", " hold ", 42].map((releaseHold) => ({
+      factoryConfiguration: { version: 1, labels: { releaseHold } },
+    })),
+    { factoryConfigurationResponse: { errors: [{ message: "read failed" }] } },
+    {
+      factoryConfigurationResponse: {
+        data: {
+          repository: { commit: { __typename: "Commit", oid: "b".repeat(40) } },
+        },
+      },
+    },
+    ...[
+      { __typename: "Commit", text: "{}", isTruncated: false },
+      { __typename: "Blob", text: "{}", isTruncated: true },
+      { __typename: "Blob", isTruncated: false },
+    ].map((factory) => ({
+      factoryConfigurationResponse: {
+        data: {
+          repository: {
+            commit: { __typename: "Commit", oid: "b".repeat(40) },
+            factory,
+          },
+        },
+      },
+    })),
+    { releaseIssuesResponse: { message: "incomplete" } },
+    { releaseIssuesResponse: [{ number: 24 }] },
+    { failFactoryConfiguration: 502 },
+    { failReleasePulls: 502 },
+    { failFactoryConfiguration: 403 },
+    { failReleasePulls: 403 },
+  ];
+  for (const failure of failures) {
+    const result = run(t, {
+      factoryConfiguration,
+      traceRequests: true,
+      ...failure,
+    });
+    assert.equal(
+      result.status,
+      failure.failFactoryConfiguration === 403 ||
+        failure.failReleasePulls === 403
+        ? 1
+        : 3,
+      result.stderr,
+    );
+    assert.equal(result.state.merge, undefined);
+    if (failure.failFactoryConfiguration === 403)
+      assert.equal(result.state.requests.at(-1), "POST /graphql");
+    if (failure.failReleasePulls === 403)
+      assert.match(result.state.requests.at(-1), /GET .*\/issues$/);
+  }
+});
+
 test("direct merge requires the trusted app author's current-head review outcome", (t) => {
   const result = run(t, {
     author: "factory-app[bot]",
@@ -214,9 +426,17 @@ function run(
   const directory = mkdtempSync(join(tmpdir(), "babysit-merge-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const statePath = join(directory, "state.json");
+  if (state.localReviewConfiguration?.factory) {
+    mkdirSync(join(directory, ".factory"));
+    writeFileSync(
+      join(directory, ".factory/config.json"),
+      JSON.stringify(state.localReviewConfiguration.factory),
+    );
+  }
   if (state.localReviewConfiguration) {
     mkdirSync(join(directory, ".github"));
     for (const [key, value] of Object.entries(state.localReviewConfiguration)) {
+      if (key === "factory") continue;
       writeFileSync(
         join(
           directory,

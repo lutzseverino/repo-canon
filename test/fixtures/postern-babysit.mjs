@@ -86,7 +86,70 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         },
       );
     }
+    if (path.endsWith("/issues")) {
+      if (state.failReleasePulls)
+        return json(
+          { message: "release PR read failed" },
+          state.failReleasePulls,
+        );
+      if (state.releaseIssuesResponse) return json(state.releaseIssuesResponse);
+      if (state.releaseIssuePages) {
+        const index = Number(url.searchParams.get("page") ?? 1) - 1;
+        const next = new URL(url);
+        next.searchParams.set("page", String(index + 2));
+        return json(
+          state.releaseIssuePages[index],
+          200,
+          index + 1 < state.releaseIssuePages.length
+            ? { link: `<${next}>; rel="next"` }
+            : {},
+        );
+      }
+      const label = url.searchParams.get("labels");
+      return json(
+        (state.releaseIssues ?? []).filter(
+          (issue) => issue.state === "open" && issue.labels.includes(label),
+        ),
+      );
+    }
     if (path === "/graphql") {
+      if (body.query.includes("BabysitReleaseHold")) {
+        if (state.failFactoryConfiguration)
+          return json(
+            { message: "factory configuration read failed" },
+            state.failFactoryConfiguration,
+          );
+        const revision = body.variables.revision;
+        const configuration =
+          state.factorySnapshots?.[revision] ?? state.factoryConfiguration;
+        if (state.traceReviewConfiguration) {
+          state.configurationReads = [
+            ...(state.configurationReads ?? []),
+            { kind: "factory", ...body.variables },
+          ];
+          save();
+        }
+        return json(
+          state.factoryConfigurationResponse ?? {
+            data: {
+              repository: {
+                commit: { __typename: "Commit", oid: revision },
+                factory:
+                  configuration == null
+                    ? null
+                    : {
+                        __typename: "Blob",
+                        isTruncated: false,
+                        text:
+                          typeof configuration === "string"
+                            ? configuration
+                            : JSON.stringify(configuration),
+                      },
+              },
+            },
+          },
+        );
+      }
       if (body.query.includes("BabysitReviewRevision")) {
         if (state.traceReviewConfiguration) {
           state.configurationReads = [

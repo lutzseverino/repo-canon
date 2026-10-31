@@ -23,6 +23,9 @@ The repository owns `ready-for-agent`, provisioned by canonical-label setup.
 The factory profile also provisions and verifies `factory:skip`; standard-profile
 setup does not add it. Its canonical color is `c5def5` and its description is
 `Ready agent work the factory must not pick up`.
+Factory-profile setup also provisions and verifies `factory:release-hold`,
+with color `c5def5` and description `Hold other merges while a release PR is open`.
+Standard-profile setup does not add it.
 The operation selects labels from the request's `profile`, independently of
 existing local factory files or installed rules. Where factory workflow rules
 are installed, follow their [label ownership rules](../../rules/factory-workflow.md#state-labels):
@@ -40,7 +43,7 @@ confirmation. Today only `wontfix`, whose default description is "This will not
 be worked on", differs from the table. A custom default set by an owner or
 organization counts as chosen.
 Other labels are never deleted or edited, including factory state labels and,
-in the standard profile, any existing skip label.
+in the standard profile, any existing skip or release-hold label.
 
 ## Prerequisites and identity
 
@@ -89,7 +92,7 @@ again and runs the fix once the probe is ready.
 The probe has the same access contract for standard and factory selections.
 `ready` confirms that label setup can run, not that the selected labels exist
 or match. Only the fix reads and verifies the selected label inventory,
-including the factory profile's skip label.
+including the factory profile's skip and release-hold labels.
 
 When the repository API read fails, the probe and fix map Postern's
 `PlatformError.reason` to a stable recovery step without embedding platform
@@ -140,7 +143,7 @@ and token reads. They never call GitHub or change live repository settings:
 node --test test/github-label-setup.test.mjs
 ```
 
-These fixtures cover factory-only skip creation and readback, repeat runs,
+These fixtures cover factory-only skip and release-hold creation and readback, repeat runs,
 overwrite confirmation, mismatched skip readback and preservation of unrelated
 labels, including existing skip labels under the standard profile. The factory
 creation fixture runs from only the installed operation's declared resources.

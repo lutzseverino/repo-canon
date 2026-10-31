@@ -36,8 +36,9 @@ traverse directories depth first, sort each directory's entries with JavaScript
 bytes, and NUL to the SHA-256 stream. These values identify the bytes actually
 used even when the source worktree has uncommitted changes.
 
-Run one session per scenario, with the fixture repository as its working
-directory:
+Run exercises one at a time, waiting for each session to finish before
+starting the next. Run one session per scenario, with the fixture repository
+as its working directory:
 
 - Require the agent to read the exact repository-scoped `SKILL.md` before it
   acts.
