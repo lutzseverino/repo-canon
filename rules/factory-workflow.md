@@ -30,11 +30,9 @@ unreadable actors, and unknown link times, hold the parent. A later authorized
 link never cancels an earlier unauthorized one. Body edits and Agent Brief
 revisions still require the applicable review and renewed readiness.
 
-The actor-history rule requires a factory release containing
-[Scriptorium #80](https://github.com/lutzseverino/scriptorium/issues/80).
-Scriptorium v2.2.0 and platforms without that history use the latest-link-time
-fallback: apply the parent's readiness after its tickets are published, and
-again when a ticket is published later. To re-apply readiness the parent still
+Scriptorium v2.3.0 introduced this actor-history rule. Platforms without that
+history use the latest-link-time fallback: apply the parent's readiness after
+its tickets are published, and again when a ticket is published later. To re-apply readiness the parent still
 carries, remove `ready-for-agent` and add it back, only once the latest ticket
 link appears in the parent's timeline. Readiness recorded in the same second
 as that link holds the tickets. A platform reporting no link times skips the
