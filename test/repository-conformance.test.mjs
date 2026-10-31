@@ -1140,7 +1140,7 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /the agent never reports that factory work started/,
     /This person-only command refusal applies only where factory workflow rules are installed/,
     /The question reaches the orchestrating agent first, as those rules say: it answers on the issue when the triage inference test lets it, and otherwise puts the question in its decision inbox for the owner/,
-    /With no open pull request, whoever answers, the orchestrating agent or the owner, removes the label/,
+    /whoever answers, the orchestrating agent or the owner, may remove `factory:needs-input` to request factory resumption/,
   ])
     assert.match(factory, requirement);
   const skill = flowedText(".agents/skills/triage/SKILL.md");
@@ -2627,7 +2627,7 @@ test("designated skipped PR approval pauses resume the same PR without ordinary 
   );
 });
 
-test("ordinary no-PR recovery holds a changed contract until renewed readiness before frontier release", () => {
+test("ordinary recovery holds a changed contract until renewed readiness before resumption", () => {
   const factory = flowedText("rules/factory-workflow.md");
   const ordinary =
     /### Ordinary factory runs (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
@@ -2647,15 +2647,15 @@ test("ordinary no-PR recovery holds a changed contract until renewed readiness b
     "Once the question is resolved and any required renewed readiness is recorded",
   );
   const release = ordinary.indexOf(
-    "With no open pull request, whoever answers",
+    "may remove `factory:needs-input` to request factory resumption",
   );
   assert.ok(
     gate >= 0 && release > gate,
-    "renewed readiness gates frontier release",
+    "renewed readiness gates factory resumption",
   );
 });
 
-test("ordinary no-PR recovery releases an unchanged contract without another readiness cycle", () => {
+test("ordinary recovery resumes an unchanged contract without another readiness cycle", () => {
   const factory = flowedText("rules/factory-workflow.md");
   const ordinary =
     /### Ordinary factory runs (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
@@ -2665,7 +2665,7 @@ test("ordinary no-PR recovery releases an unchanged contract without another rea
   );
   assert.match(
     ordinary,
-    /Once the question is resolved and any required renewed readiness is recorded, follow the existing recovery paths below\. With no open pull request, whoever answers, the orchestrating agent or the owner, removes the label to return the issue to the frontier as a fresh first attempt/,
+    /Once the question is resolved and any required renewed readiness is recorded, whoever answers, the orchestrating agent or the owner, may remove `factory:needs-input` to request factory resumption/,
   );
 });
 
@@ -2709,7 +2709,7 @@ test("ordinary recovery authorizes only stopped open-PR handoffs and retains own
   );
   assert.match(
     ordinary,
-    /With no open pull request, whoever answers, the orchestrating agent or the owner, removes the label to return the issue to the frontier as a fresh first attempt/,
+    /The factory resumes the same work and PR on a current base, whether the PR is open or closed-unmerged; it reopens the existing PR when needed and never creates a replacement PR/,
   );
   assert.match(
     ordinary,
@@ -2733,11 +2733,11 @@ test("ordinary recovery authorizes only stopped open-PR handoffs and retains own
   );
   assert.match(
     ordinary,
-    /The owner may instead finish the open PR by merging it and ensuring its issue closes under the contribution guide's pull request rules, or hand it back/,
+    /The owner may instead finish the open PR by merging it and ensuring its issue closes under the contribution guide's pull request rules, or request factory resumption by removing `factory:needs-input`/,
   );
   assert.match(
     ordinary,
-    /close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
+    /No PR closure or ordered label-removal procedure is required/,
   );
 });
 
@@ -3015,7 +3015,7 @@ test("pull requests close finished issues and leave partial work linked without 
   assert.match(pullRequests, /If the work finished the issue, close it/);
   assert.match(
     flowedText("rules/factory-workflow.md"),
-    /A merged pull request that leaves its issue open fails the factory run for good, without a retry/,
+    /When a merged PR's body has an actual closing reference to its still-open issue, the factory closes the issue and clears its factory state instead of failing the run/,
   );
 });
 
@@ -3059,11 +3059,11 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
   assert.match(
     rules,
-    /With no open pull request, whoever answers, the orchestrating agent or the owner, removes the label to return the issue to the frontier as a fresh first attempt/,
+    /The factory resumes the same work and PR on a current base, whether the PR is open or closed-unmerged; it reopens the existing PR when needed and never creates a replacement PR/,
   );
   assert.match(
     rules,
-    /The owner may instead finish the open PR by merging it and ensuring its issue closes under the contribution guide's pull request rules, or hand it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
+    /No PR closure or ordered label-removal procedure is required/,
   );
   assert.match(
     comments,

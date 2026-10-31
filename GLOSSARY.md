@@ -130,10 +130,11 @@ _Avoid_: Orchestrating agent, reviewer
 The reviewed state of an implementation contract that an authorized reviewer
 considers sufficiently specified for work, granting it to an agent; the
 factory accepts it only from a person whose current repository role the host
-configuration authorizes, after the issue's last edit. A parent never runs:
-its readiness releases its tickets only after the latest ticket link, must be
-re-applied for a later link or one recorded at the same time, and is subject
-to the hosting platform's available timing evidence.
+configuration authorizes, after the issue's last edit. A parent never runs,
+but its readiness releases its tickets and survives later links only when
+complete history shows every addition at or after readiness was made by an
+authorized person; without complete history, the platform's available link
+timing governs renewed readiness.
 _Avoid_: Passing structural validation
 
 **Factory**:
