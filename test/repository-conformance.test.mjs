@@ -1462,7 +1462,10 @@ test("orchestrate creates a private workbench and separates current state from h
   const inbox = /### `inbox\.md` (.*?) ### /.exec(workbench)?.[1] ?? "";
   assert.match(inbox, /Each entry is a decision/);
   assert.match(inbox, /Notifications and chores go in `now\.md`/);
-  assert.match(inbox, /move the entry to its plan's `log\.md`/);
+  assert.match(
+    inbox,
+    /Move the answered entry under `Answered` in `inbox\.md`/,
+  );
 
   // Filed drafts are marked; decision records stay as written.
   assert.match(
@@ -1488,6 +1491,26 @@ test("orchestrate creates a private workbench and separates current state from h
   assert.match(
     term,
     /named by path in the owner's global agent instructions, or created by the orchestrating agent when none is named; private, and outside every project checkout/,
+  );
+});
+
+test("orchestrate persists decisions before other requests in a mixed owner message", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const inbox = /### `inbox\.md` (.*?) ### /.exec(skill)?.[1] ?? "";
+  assert.match(
+    inbox,
+    /When an owner message contains a decision, complete this sequence before acting on anything else in that message/,
+  );
+  assert.match(
+    inbox,
+    /1\. Post a comment on each affected issue, recording the decision, its date and where the owner gave it, under the contribution guide's comment rules.*2\. Append the decision, date, source and issue links to the plan's `log\.md`.*3\. Move the answered entry under `Answered` in `inbox\.md`, keeping its question, answer, date and source.*4\. Commit the workbench writes and push when it has a remote, as \[Workbench\]\(#workbench\) says.*Only then act on the rest of the message/,
+  );
+  const running =
+    /## Running the plan (.*?) ### Progress observation /.exec(skill)?.[1] ??
+    "";
+  assert.match(
+    running,
+    /Process owner decisions in the \[inbox sequence\]\(#inboxmd\) before other requests in the same message/,
   );
 });
 

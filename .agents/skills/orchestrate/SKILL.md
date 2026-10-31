@@ -119,8 +119,20 @@ The decision inbox the contribution guide names: one entry per decision open
 for the owner, across plans. Each entry is a decision, and holds the question,
 its plan, a link to its source, the date it opened, and your recommendation.
 Notifications and chores go in `now.md`. Grills and triage runs add entries
-too. When the owner answers, move the entry to its plan's `log.md`, with the
-date, the answer, and where the owner gave it.
+too. Keep open decisions separate from the inbox's `Answered` history.
+
+When an owner message contains a decision, complete this sequence before
+acting on anything else in that message:
+
+1. Post a comment on each affected issue, recording the decision, its date
+   and where the owner gave it, under the contribution guide's comment rules.
+2. Append the decision, date, source and issue links to the plan's `log.md`.
+3. Move the answered entry under `Answered` in `inbox.md`, keeping its
+   question, answer, date and source.
+4. Commit the workbench writes and push when it has a remote, as
+   [Workbench](#workbench) says.
+
+Only then act on the rest of the message.
 
 ### `wishes.md`
 
@@ -263,6 +275,8 @@ with their citations, and shows the decision inbox. Log the items it showed in
 
 ## Running the plan
 
+- Process owner decisions in the [inbox sequence](#inboxmd) before other
+  requests in the same message.
 - One long-lived orchestrating agent owns every plan in the workbench. A fresh
   session reads `index.md`, `now.md`, `inbox.md` and each active `plan.md`, and
   nothing else, not even a plan's `log.md`, before it acts. It then records its
