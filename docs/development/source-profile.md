@@ -55,7 +55,12 @@ release or successful adoption.
 
 The optional `typescript-astro-stack` and `typescript-vite-stack` repository
 declarations own confirmed manifests, with guidance and discovery per stack,
-shared web rules, one check each and retained discovery/check resources.
+shared web rules, one check each and retained discovery/check resources. Their
+installed runtime closure includes `stack-files.mjs`, `stack-scope.mjs`,
+`stack-check.mjs`, `typescript-node-stack.mjs`, `typescript-web-stack.mjs` and
+`local-markdown-links.mjs` under `operations/lib/`. The Node discovery entry also selects
+that shared scope implementation, so release review covers these helpers along
+with all four discovery entry points and both web check entry points.
 
 The resolved `standard` profile contains 60 declarations: 31 exact files, four
 contextual files, six repository declarations, and 19 exact skill
