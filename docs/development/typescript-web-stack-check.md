@@ -30,5 +30,5 @@ contextual assessments under the [shared rules](../../rules/typescript-web-stack
 Run `node --test test/typescript-web-stack.test.mjs` for command-boundary
 fixtures, including installed layouts without development packages, holder
 sharing, catalogs and the checked/assessed boundary. Public CLI installation
-and updates for both profiles run in
+and updates for the standard and factory profiles run in
 `node --test test/repository-wide-rules.test.mjs`.

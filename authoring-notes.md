@@ -61,10 +61,14 @@ repeated.
   repositories maintained by others. The `standard` profile serves every
   adopting repository, and the `factory` profile adds the factory's repository
   files for a repository that a factory serves, as
-  [ADR 0017](docs/adr/0017-make-the-factory-an-optional-profile.md) decides,
-  with opt-in stacks scoped per Project as
-  [ADR 0024](docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md) decides;
-  no ownership-based differences have been requested.
+  [ADR 0017](docs/adr/0017-make-the-factory-an-optional-profile.md) decides.
+  The `workbench` profile installs only the workflow skills, with the files
+  they import and their license notices, into the orchestrating agent's
+  workbench, as [ADR 0027](docs/adr/0027-give-the-workbench-its-own-profile.md)
+  decides. The standard and factory profiles carry opt-in stacks scoped per
+  Project, as
+  [ADR 0024](docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md)
+  decides; no ownership-based differences have been requested.
 - The Repository README's title, description, badges, section order, length,
   examples, Features items, and pointer sections are stated in the
   [Repository README rules](rules/repository-readme.md).
@@ -92,7 +96,7 @@ repeated.
   decides; its read-only check reads only manifest facts, and the assessment
   covers the rest.
 - The optional `typescript-astro-stack` and `typescript-vite-stack` declarations
-  ship in both profiles under [ADR 0026](docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md).
+  ship in the standard and factory profiles under [ADR 0026](docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md).
   Both name the one [shared web rules file](rules/typescript-web-stacks.md).
   Each discovers disjoint manifest scope or no scope, with Node excluding web
   membership. The read-only checks extend Node's manifest boundary only with
@@ -204,10 +208,14 @@ repeated.
   a recurring check is optional. The skill ships a babysit-like wait script
   for that, whose poll interval and maximum duration each invocation supplies,
   with no default; [#732](https://github.com/lutzseverino/repo-canon/issues/732)
-  records these decisions. Linking the skill into a user's own skills, for sessions
-  outside a checkout, is host setup that the
+  records these decisions. For sessions outside every project checkout, the
+  workbench adopts the `workbench` profile, which the skill offers when it
+  creates a workbench and the
   [adoption guide](docs/usage/adopt-repo-canon.md#orchestrate-plans)
-  describes.
+  describes, replacing the earlier link from a checkout into the user's own
+  skills, which followed that checkout's unreleased working tree; the owner
+  decided this on 2026-10-30, as
+  [ADR 0027](docs/adr/0027-give-the-workbench-its-own-profile.md) records.
 - On 2026-10-29 the owner decided that `orchestrate` closes every plan with a
   retro in a separate session reading primary sources, and that each lesson
   goes to whoever owns its rule: the adopter's own repository or setup, a wish,
@@ -340,7 +348,8 @@ repeated.
   worker, including PRs without a skip label; see
   [#739](https://github.com/lutzseverino/repo-canon/issues/739). Host access gates
   only live host steps and does not designate owner review of the source PR.
-- Designated owner review has one current-head approval gate in both profiles,
+- Designated owner review has one current-head approval gate in the standard
+  and factory profiles,
   stated in the [GitHub repository configuration rules](rules/github-repository-configuration.md#designated-owner-review).
   The owner chose this shared gate on 2026-10-29 in
   [#665](https://github.com/lutzseverino/repo-canon/issues/665#issuecomment-6498159486),

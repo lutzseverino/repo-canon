@@ -295,7 +295,7 @@ The public Repository Standards CLI reads `GH_TOKEN` (or `GITHUB_TOKEN` as a
 fallback) for its GitHub API requests; an authenticated `gh` login alone does
 not supply that environment variable. Verification's public CLI subprocesses
 inherit the exported token, including the inspections, fixture adoptions and
-previous-release updates for both profiles. These requests can exhaust the
+previous-release updates for every profile. These requests can exhaust the
 anonymous API quota. Keep the token value out of logs and release notes.
 
 Then verify the publication, and only when it verifies, replace the notes with
@@ -312,8 +312,8 @@ pnpm run release:verify "$version" "$release_commit" &&
 1. The annotated tag on `origin` peels to the release commit.
 2. The GitHub release is neither a draft nor a prerelease.
 3. In a disposable Git repository, the public CLI at the required minimum
-   version inspects the release with each profile, `standard` and `factory`,
-   through `inspect`. Each report resolves the release commit and its profile.
+   version inspects the release with each profile, `standard`, `factory` and
+   `workbench`, through `inspect`. Each report resolves the release commit and its profile.
 4. With each profile, the same CLI adopts the release into a fixture
    repository through `adopt` with an answers file, as an agent does without a
    terminal. The fixture is a disposable Git repository with one commit, built
@@ -327,7 +327,12 @@ pnpm run release:verify "$version" "$release_commit" &&
    commit and list both GitHub remote setup fixes as deferred. A blocker, a
    remote setup not offered for deferral, a failed check, or a run that does not
    complete fails the check. The check never confirms a confirmation-required
-   change, so one appearing fails it too. `pnpm test` checks the fixture against
+   change, so one appearing fails it too. The `workbench` profile is adopted
+   instead into a disposable workbench with one commit, holding the files the
+   `orchestrate` skill seeds. Its run asks for no scope, remote setup or
+   assessment; `status` must list nothing deferred, and the adoption must
+   install no `.repo-standards/rules/` directory and no `.github/` file.
+   `pnpm test` checks the fixture against
    both drafters and the contextual checks before a release, because `adopt`
    acquires only published stable tags.
 5. With each profile, adopt the previous release, the newest published stable
@@ -342,13 +347,15 @@ pnpm run release:verify "$version" "$release_commit" &&
    `defer` and submits the fixture's contextual assessments for any declaration
    the run asks about, reusing check 4's answers and assessments. The run must
    reach `complete` with exit 0, and `status` must report it ready to commit,
-   with both GitHub remote setup fixes deferred and selection of the verified
-   release commit and profile. A blocker, confirmation-required change, failed
+   with both GitHub remote setup fixes deferred, or none for the `workbench`
+   profile, and selection of the verified release commit and profile. A blocker, confirmation-required change, failed
    check, question of any other kind, rejected scope answer, or further stop
    after submitting an answer fails. The check prints both CLI versions, every
    question asked (kind and declaration), the outcome, and the derived
    adopter-action line. With no previous published stable release, it fails
-   rather than claiming an update was verified.
+   rather than claiming an update was verified. A profile that the previous
+   release does not declare has no adoption to update, so the check reports it
+   skipped, as for the first release with the `workbench` profile.
 6. The Repository README and the adoption guide at the release commit name no
    Repo Canon version, the Repository README names no CLI version, and every
    CLI version that the adoption guide, the development guide, the source

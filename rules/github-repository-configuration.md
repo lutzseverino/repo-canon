@@ -169,7 +169,8 @@ cancel and rerun a job already queued on unavailable labels.
 
 ## Automated standards updates
 
-Both profiles install `.github/workflows/standards-update.yml`. Its daily
+The standard and factory profiles install
+`.github/workflows/standards-update.yml`. Its daily
 schedule and manual `workflow_dispatch` run the job only when
 `REPO_CANON_UPDATES` is `true`; installing the file opts nobody in. The job
 reads `vars.REPO_CANON_RUNS_ON`, checks out the default branch, and serializes

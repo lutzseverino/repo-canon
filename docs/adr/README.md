@@ -63,7 +63,7 @@ involve real alternatives.
   installed skills, pinned upstream ones included, never define them.
 - [Make the factory an optional profile](0017-make-the-factory-an-optional-profile.md):
   a standard profile for every adopting repository and a factory profile that
-  adds the factory's repository files.
+  adds the factory's repository files; ADR 0027 adds a workbench profile.
 - [Install only workflow skills](0018-install-only-workflow-skills.md): the
   standard installs skills that the workflow relies on, and people install
   personal skills for themselves.
@@ -97,3 +97,7 @@ involve real alternatives.
 - [Add the typescript-astro and typescript-vite stacks](0026-add-the-typescript-astro-and-typescript-vite-stacks.md):
   Sites use Astro and Apps use Vite with React, as two stacks over shared web
   rules with oxlint, Prettier, pnpm and shadcn, amending ADR 0024.
+- [Give the workbench its own profile](0027-give-the-workbench-its-own-profile.md):
+  the orchestrating agent's workbench adopts only the workflow skills and the
+  files they need to run, with no rules, CI or branch requirements, and
+  commits its updates directly.

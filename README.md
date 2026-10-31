@@ -44,6 +44,7 @@ agent, it prints an answers file to fill in with you and its next steps.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.
 - Ship an `orchestrate` skill that turns a feature or problem into a plan the owner approves, keeps it in a workbench of plain Markdown, and runs it to an announced close.
 - Offer a `factory` profile that adds factory workflow rules, configuration and the toolchain image a host-installed factory, an unattended ticket-running service, needs to serve the repository.
+- Offer a `workbench` profile that installs only the workflow skills into the orchestrating agent's private workbench, with no rules, CI or branch requirements.
 - Set up triage labels, squash-only merging, and a required `PR metadata` check where GitHub's plan offers one.
 - Check the repository introduction, component introductions, and documentation navigation.
 - Offer optional Node.js, Astro and Vite tool conventions for matching code, leaving existing differing code for separate migrations.
@@ -58,9 +59,10 @@ with the rules. Your repository-specific agent instructions move to
 remote setup can be deferred when GitHub access is missing, so adoption
 completes locally. Review the changes `adopt` leaves and commit them.
 
-Pick the `standard` profile, or `factory` for a repository a factory serves;
-the [adoption guide](docs/usage/adopt-repo-canon.md) explains the choice and
-what remote setup needs. To update, read the
+Pick the `standard` profile, `factory` for a repository a factory serves, or
+`workbench` for the orchestrating agent's workbench; the
+[adoption guide](docs/usage/adopt-repo-canon.md) explains the choice and what
+remote setup needs. To update, read the
 [release notes](https://github.com/lutzseverino/repo-canon/releases) since your
 adopted release, then run the command without the URL:
 

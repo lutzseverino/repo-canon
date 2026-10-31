@@ -246,6 +246,11 @@ The profile that adds the factory's repository files and workflow rules to the s
 for a repository that a factory serves.
 _Avoid_: Factory add-on, factory overlay
 
+**Workbench profile**:
+The profile of Repo Canon that a workbench adopts: only the workflow skills,
+with no rules, CI or branch requirements; its updates land as direct commits.
+_Avoid_: Orchestrator profile
+
 **Adoption**:
 Applying a selected standards source to a repository within its confirmed
 scope and satisfying the source's requirements there.

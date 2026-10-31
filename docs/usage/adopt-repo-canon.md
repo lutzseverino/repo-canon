@@ -11,7 +11,7 @@ describes `adopt` itself, at a terminal and through an agent.
 
 ## Choose a profile
 
-Repo Canon supplies two profiles:
+Repo Canon supplies three profiles:
 
 - `standard`: everything Repo Canon installs except the factory's repository
   files and workflow rules. Select it for every repository that no factory serves.
@@ -24,6 +24,11 @@ Repo Canon supplies two profiles:
   factory serves, as
   [the factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/main/docs/usage/README.md)
   describes.
+- `workbench`: only the workflow skills, with the files their scripts import
+  and their license notices, for the orchestrating agent's workbench rather
+  than a project repository. It installs no rules, CI workflows, labels,
+  branch requirements or remote setup; see
+  [Orchestrate plans](#orchestrate-plans).
 
 Every update offers the profiles again, so a repository switches profile by
 answering differently when a factory starts or stops serving it.
@@ -61,7 +66,8 @@ This preparation adds no CLI gate or universal test command.
 
 ## Language statistics
 
-Both profiles include the contextual `git-attributes` declaration. On adoption
+The standard and factory profiles include the contextual `git-attributes`
+declaration. On adoption
 or update, it adds `linguist-vendored` entries to the root `.gitattributes` for
 Repo Canon's installed code that GitHub would otherwise count as yours. It
 preserves your existing lines and limits entries to installed files or
@@ -76,7 +82,8 @@ branch.
 
 ## Stacks
 
-Both profiles include the optional `typescript-node-stack` declaration, for
+The standard and factory profiles include the optional
+`typescript-node-stack` declaration, for
 CLIs and libraries built with pnpm 11, Node.js 24 or 26, TypeScript 7, oxlint 1,
 Prettier 3 and `node --test`. Adoption drafts its scope from your manifests and
 workspaces, one `package.json` per Project. A new Project joins the stack. An
@@ -86,7 +93,7 @@ installs the stack's rules, assesses the Project against them, and runs a
 read-only check of its manifests. A repository without such a Project confirms
 no scope: no stack rules are installed and no stack check runs.
 The optional `typescript-astro-stack` and `typescript-vite-stack` declarations
-also ship in both profiles for Sites and Apps. They install the same shared
+also ship in both of them for Sites and Apps. They install the same shared
 web rules, with separate discovered scopes and checks. Node discovery excludes
 web Projects, including shared web packages; a package with non-web consumers
 remains independently eligible for Node. Framework tools alone do not decide
@@ -146,7 +153,8 @@ qualify. Unconfirmed enforcement stops delivery for the owner; see the
 
 ## Automated updates
 
-Both profiles install an inert `.github/workflows/standards-update.yml`. To
+The standard and factory profiles install an inert
+`.github/workflows/standards-update.yml`. To
 opt in, set the repository Actions variable `REPO_CANON_UPDATES` to `true`.
 The workflow runs daily and through **Run workflow**, always against the
 default branch, using the same `REPO_CANON_RUNS_ON` runner selection as the
@@ -178,36 +186,48 @@ describes its pins and validation.
 
 ## Orchestrate plans
 
-Both profiles install the `orchestrate` skill, which only you can invoke. With
-it, the orchestrating agent turns a feature or problem into a plan you
+Every profile installs the `orchestrate` skill, which only you can invoke.
+With it, the orchestrating agent turns a feature or problem into a plan you
 approve, keeps the plan's state in a workbench, and runs the plan to an
-announced close. The workbench is a git repository of plain Markdown that you
-create and clone on each host that runs an orchestrating session. Name its
-path in your global agent instructions; the skill assumes no path.
+announced close. The workbench is a private git repository of plain Markdown,
+outside every project repository. Name its path in your global agent
+instructions and clone it on each host that runs an orchestrating session.
+When they name none, the skill creates one and tells you the line to add.
 
 The shared method works with the capabilities available in your session.
 Applications can enhance it, and any application-specific tool mappings belong
-in your own setup outside Repo Canon. Neither adoption profile installs that
+in your own setup outside Repo Canon. No adoption profile installs that
 private setup.
 
-An orchestrating session often runs outside every repository checkout, where
-no repository's skills are found. Link the installed skill directory from an
-adopted checkout into your user-level skills directory, where your agent finds
-skills in every session:
+An orchestrating session often runs outside every project checkout, where no
+repository's skills are found. Adopt the `workbench` profile into the
+workbench and start orchestrating sessions there: it installs the workflow
+skills pinned to a Repo Canon release, like any adopting repository, without
+the rules, workflows and branch requirements a project repository carries.
+When the skill creates a workbench, it offers this adoption. To adopt it
+yourself, run this in the workbench, from a clean committed tree:
 
 ```sh
-ln -s /path/to/checkout/.agents/skills/orchestrate <user-level skills directory>/orchestrate
+npx @lutzseverino/repo-standards adopt https://github.com/lutzseverino/repo-canon --profile workbench
 ```
 
-The link follows that checkout, so the skill changes when the checkout adopts
-an update. Linking it is host setup, outside what adoption installs.
+Update it like any adoption, by running `adopt` there without the URL. A
+workbench takes every change as a direct commit to its default branch, so
+commit the completed adoption or update there once `status` reports it ready
+to commit, rather than opening a pull request. Grilling sessions keep running
+in their target repository's checkout.
+
+Earlier versions of this guide had you link the skill directory from an
+adopted project checkout into your user-level skills directory. That link
+follows the checkout's working tree, including unreleased changes, so remove it
+once the workbench has adopted the profile.
 
 The skill's wait script wakes the orchestrating agent when a watched issue,
-pull request or workbench file changes. It runs from the linked checkout with
-Node.js 24 or 26, importing that checkout's `babysit` skill and vendored
-Postern bundle, and reads GitHub with the GitHub CLI's current credential.
-Each invocation names its own poll interval and maximum duration; the script
-has no default for either.
+pull request or workbench file changes. It runs from the workbench with
+Node.js 24 or 26, importing the installed `babysit` skill and vendored Postern
+bundle, and reads GitHub with the GitHub CLI's current credential. Each
+invocation names its own poll interval and maximum duration; the script has no
+default for either.
 
 Each plan you approve names its Close reviews, which run before the plan's
 closing announcement. The retro is always one: a separate session reviews the

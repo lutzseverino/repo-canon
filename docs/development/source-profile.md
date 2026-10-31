@@ -1,10 +1,14 @@
 # Standards source profile
 
-`standards.yaml` defines two `repo-standards/v2` profiles, as
-[ADR 0017](../adr/0017-make-the-factory-an-optional-profile.md) decides. The
+`standards.yaml` defines three `repo-standards/v2` profiles, as
+[ADR 0017](../adr/0017-make-the-factory-an-optional-profile.md) and
+[ADR 0027](../adr/0027-give-the-workbench-its-own-profile.md) decide. The
 `standard` profile selects every default declaration unchanged, for every
 adopting repository. The `factory` profile adds the factory's repository files
 and repository-wide workflow rules to it, for a repository a factory serves.
+The `workbench` profile excludes every default declaration except the workflow
+skills, the files their executables import and the license notices, for the
+orchestrating agent's workbench.
 The source identity is `repo-canon`,
 and its compatibility contract is the open-ended minimum
 `requires.repo-standards: ">=10.0.0"`. Public CLI 10.0.0 is the oldest version
@@ -14,7 +18,7 @@ stay out of repositories without a matching Project. Its check request
 `invocation` field, which earlier CLIs also supply, lets
 `documentation-navigation` prove scope coverage only during adoption runs,
 while standalone checks continue checking content. The range gates which CLI versions may
-select it and is never re-validated afterwards. Neither profile implies a
+select it and is never re-validated afterwards. No profile implies a
 release or successful adoption.
 
 ## Policy and ownership map
@@ -25,7 +29,7 @@ release or successful adoption.
 | Issue and pull request intake                                                                                    | `bug-report-template`, `feature-request-template`, `implementation-ticket-template`, `specification-template`, `pull-request-template`                      | `.github` templates                                                                                                                                                                                                                                                                                          | Exact files                                                                                                              |
 | Trusted issue contract validation                                                                                | `issue-contract-workflow`, `issue-contract-validator`                                                                                                       | Default-branch workflow and validator                                                                                                                                                                                                                                                                        | Exact files                                                                                                              |
 | Trusted pull request metadata validation                                                                         | `pr-metadata-workflow`, `pr-metadata-validator`                                                                                                             | Base-revision workflow and validator                                                                                                                                                                                                                                                                         | Exact files                                                                                                              |
-| Automated standards updates                                                                                      | `standards-update-workflow`                                                                                                                                 | `.github/workflows/standards-update.yml`; opt-in daily and manual Repository Standards update caller                                                                                                                                                                                                         | Exact file in both profiles; disabled until the repository opts in                                                       |
+| Automated standards updates                                                                                      | `standards-update-workflow`                                                                                                                                 | `.github/workflows/standards-update.yml`; opt-in daily and manual Repository Standards update caller                                                                                                                                                                                                         | Exact file in the standard and factory profiles; disabled until the repository opts in                                   |
 | Shared rendered Markdown interpretation                                                                          | `rendered-markdown-runtime`                                                                                                                                 | Pure interpreted-document runtime used by both trusted validators and all three documentation checks                                                                                                                                                                                                         | Exact file; also retained operation resource                                                                             |
 | Rendered Markdown dependencies                                                                                   | `marked-*`, `parse5-*`                                                                                                                                      | Marked 18.0.13 and parse5 8.0.1 bundles, provenance, and license notices                                                                                                                                                                                                                                     | Exact files; also retained operation resources                                                                           |
 | Installed code language statistics                                                                               | `git-attributes`                                                                                                                                            | `rules/git-attributes.md` and `guidance/git-attributes.md`; contextual assessment only, with no fixes or checks                                                                                                                                                                                              | Project-owned contextual `.gitattributes`; preserves repository-owned lines                                              |
@@ -57,7 +61,21 @@ The resolved `standard` profile contains 60 declarations: 31 exact files, four
 contextual files, six repository declarations, and 19 exact skill
 directories. The `factory` profile adds one exact file, one contextual file,
 the exact workflow, and one repository declaration, for 64 declarations. Each has eight checks, two fixes,
-and four discovery scripts. Exact targets are individual and disjoint from all
+and four discovery scripts.
+
+The `workbench` profile excludes the other 27 default declarations with
+`exclude: true` and adds none, for 33 declarations: the 19 exact skill
+directories and 14 exact files, with no rules, guidance, checks, fixes or
+discovery. The files are the two skill license notices, the five Postern
+files that `babysit`, the `orchestrate` wait and the issue-contract validator
+import, and that validator, which the `triage` readiness command imports, with
+the rendered-Markdown runtime and the Marked and parse5 files it imports. The
+excluded declarations include all three default workflows,
+`issue-contract-workflow`, `pr-metadata-workflow` and
+`standards-update-workflow`, so the profile installs nothing under `.github/`.
+A new default declaration joins the workbench profile unless the profile
+excludes it, so `test/workbench-profile.test.mjs` fails until it is excluded
+or admitted to the list there. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
 trees, globs, or adopter-specific paths embedded in this source.
 
@@ -133,8 +151,8 @@ and validates every profile.
 ## Validation boundary
 
 Public CLI 10.0.0 on stable Node.js 24 or 26 returns `valid: true`, no errors,
-and the `standard` and `factory` profiles with 60 and 64 declarations for the
-source, matching the inventory above. Local validation and CI install
+and the `standard`, `factory` and `workbench` profiles with 60, 64 and 33
+declarations for the source, matching the inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@10.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
 the requirement is a minimum. The release pull request records local validation outcomes and separate CI

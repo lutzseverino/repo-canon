@@ -1,6 +1,7 @@
 # Standards update workflow
 
-Both profiles install `.github/workflows/standards-update.yml` as exact content
+The standard and factory profiles install
+`.github/workflows/standards-update.yml` as exact content
 through `standards-update-workflow`. The installed
 [`github-repository-configuration` rules](../../rules/github-repository-configuration.md#automated-standards-updates)
 state its behavior; the [adoption guide](../usage/adopt-repo-canon.md#automated-updates)
@@ -70,6 +71,6 @@ section so explicit squash merge retains it.
 Run `node --test test/shared-workflows.test.mjs test/repository-conformance.test.mjs`
 for caller permissions, triggers, opt-in, token selection, action pins, shared
 runner and checkout conventions, declaration placement, and interpolation
-checks. `test/repository-wide-rules.test.mjs` also adopts both profiles with
+checks. `test/repository-wide-rules.test.mjs` also adopts both of them with
 public CLI 10.0.0 and checks the installed workflow byte for byte. These tests
 do not enable scheduled updates, create an App, or mutate live GitHub settings.

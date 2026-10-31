@@ -195,10 +195,11 @@ test("the repository passes the Repository README check at its root", () => {
   assert.equal(outcome.result.status, "passed", outcome.result.message);
 });
 
-// The declarations of one profile in `standards.yaml`, as its block of text.
+// The declarations of one profile in `standards.yaml`, as its block of text,
+// without the blank lines before the next profile.
 function profileDeclarations(declarations, name) {
   return new RegExp(
-    `^ {2}${name}:\\n {4}description: .+\\n {4}declarations:((?: \\{\\}|\\n(?: {6}.*\\n|\\n)*))`,
+    `^ {2}${name}:\\n {4}description: .+\\n {4}declarations:((?: \\{\\}|\\n(?: {6}.*\\n|\\n(?= {6}))*))`,
     "m",
   ).exec(declarations)?.[1];
 }
@@ -216,7 +217,7 @@ test("the standard profile installs no factory file, and the factory profile add
     [...declarations.matchAll(/^ {2}([a-z0-9-]+):\n {4}description:/gm)].map(
       ([, name]) => name,
     ),
-    ["standard", "factory"],
+    ["standard", "factory", "workbench"],
   );
   const defaults = /^defaults:\n([\s\S]*?)^profiles:\n/m.exec(declarations)[1];
   assert.equal(profileDeclarations(declarations, "standard"), " {}");
@@ -1432,6 +1433,14 @@ test("orchestrate creates a private workbench and separates current state from h
     /Tell the owner its path and the line to add to their global agent instructions/,
   );
   assert.doesNotMatch(workbench, /ask the owner for it/);
+  assert.match(
+    workbench,
+    /When you create it, also offer to adopt Repo Canon's `workbench` profile into it/,
+  );
+  assert.match(
+    workbench,
+    /A completed adoption or update of the `workbench` profile is one such change/,
+  );
   assert.match(
     workbench,
     /`Repositories` list names each repository the workbench tracks/,

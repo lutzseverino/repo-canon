@@ -1,5 +1,7 @@
 // Verifies an update from the preceding public release without editing the
 // adopted fixture, answering the scope, remote setup and assessment questions.
+// A profile that the preceding release does not declare has no update to
+// verify, so its check is skipped.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { adoptFixture, checkStatus, fixtureAnswer } from "./adoption.mjs";
@@ -219,7 +221,7 @@ function checkUpdate({
       fail(
         `the complete update exited ${child.status} with open questions ${JSON.stringify(report.missing)}.`,
       );
-    const status = checkStatus(cli, project);
+    const status = checkStatus(cli, project, profile);
     const selection = status.selection;
     if (
       selection?.cli?.version !== newest ||
@@ -237,16 +239,28 @@ function checkUpdate({
     )
       fail("the update did not report a derived adopter-action line.");
     return {
-      pass: `CLI ${floor} adopted ${previous}; CLI ${newest} updated to ${version} with the ${profile} profile; questions ${[...answered].join(", ") || "none"}; outcome ${report.outcome}, ready to commit with both GitHub remote setup fixes deferred. Adopter action: ${line}`,
+      pass: `CLI ${floor} adopted ${previous}; CLI ${newest} updated to ${version} with the ${profile} profile; questions ${[...answered].join(", ") || "none"}; outcome ${report.outcome}, ready to commit with ${profile === "workbench" ? "no remote setup" : "both GitHub remote setup fixes deferred"}. Adopter action: ${line}`,
     };
   });
+}
+
+// The profile names that a `standards.yaml` declares.
+export function profileNames(standardsText) {
+  const profiles = /^profiles:[ \t]*\r?\n((?:(?:[ \t]+.*)?\r?\n?)*)/m.exec(
+    standardsText,
+  )?.[1];
+  return [...(profiles ?? "").matchAll(/^ {2}([A-Za-z0-9._-]+):/gm)].map(
+    ([, name]) => name,
+  );
 }
 
 export function checkUpdates(source, version, commit, profiles) {
   try {
     const previous = previousRelease(version);
-    const floor = cliFloor(filesAt(resolveTag(previous))("standards.yaml"));
+    const manifest = filesAt(resolveTag(previous))("standards.yaml");
+    const floor = cliFloor(manifest);
     if (!floor) fail(`${previous} declares no open-ended CLI minimum.`);
+    const declared = profileNames(manifest);
     const newest = parseJson(
       successful("npm", [
         "view",
@@ -263,6 +277,10 @@ export function checkUpdates(source, version, commit, profiles) {
       const baseline = installCli(join(directory, "previous"), floor);
       const cli = installCli(join(directory, "newest"), newest);
       return profiles.map((profile) => {
+        if (!declared.includes(profile))
+          return {
+            skip: `${previous} declares no ${profile} profile, so no ${profile} adoption precedes ${version} to update.`,
+          };
         try {
           return checkUpdate({
             cli,
