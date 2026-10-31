@@ -14,6 +14,10 @@ merging agent resumes here from the handoff, carrying its review requirements
 and outstanding findings into the steps below.
 On resuming a PR paused for an owner question, follow the installed continuation
 rules before returning to the request and wait steps.
+When installed rules authorize delivery of a stopped run's open PR, enter
+Branch-update recovery before the request and wait steps. This consumes the
+invocation's one recovery attempt. Carry the handoff's context and follow those
+rules for retaining its waiting marker and recording the merge outcome.
 
 The bundled scripts require Node.js 24 or 26. The request and wait read the optional
 `.github/pull-request-reviewer.json`, whose schema the
@@ -90,11 +94,14 @@ requiring a new request under the rules.
    `2` means the head changed, so return to step 1; `3` means it did not merge
    and needs the owner, so hand off with a question under
    [Comments](../../../CONTRIBUTING.md#comments), without retrying the merge;
-   `4` means the base is stale: follow the branch-update recovery below;
+   `4` means the base is stale: follow Branch-update recovery only if its one
+   attempt is unused; otherwise record the owner handoff and stop;
    `1` means follow
    [Credentials](../../../CONTRIBUTING.md#credentials) for a permission refusal;
    otherwise fix the invocation or other platform error and
-   run it again.
+   run it again. On exit `0`, record any merge outcome comment the installed rules
+   require, using the delivered head, validation and review results, and merge
+   commit SHA printed by the command.
 6. Stop.
 
 ## Branch-update recovery
@@ -111,7 +118,9 @@ before changing history. Fetch origin, resolve its remote default branch again,
 and inspect outgoing history (including each merge parent) and the whole diff.
 Rebase or replay only this PR's work onto the refreshed base; keep unrelated
 work preserved separately. Never merge the default branch into the PR branch.
-Uncertain ownership or reconstruction conflicts require the owner handoff.
+Never use GitHub update-branch. Uncertain ownership or reconstruction conflicts
+require the owner handoff. For an authorized stopped-run handoff, any failed
+recovery step requires the owner handoff with its failure reason.
 
 Validate the integrated change with the repository's required local checks;
 wait for their final successful status before pushing with an explicit lease
@@ -125,7 +134,8 @@ then run request and wait again from step 1, applying the trusted app-author
 policy anew. Pending or failed checks on that head permit no merge; checks from
 the old head never qualify it. Re-establish merge ownership before step 5.
 If another merge attempt reports stale base, record the owner handoff and stop;
-this is not an unbounded update/retry loop.
+this is not an unbounded update/retry loop. For several waiting PRs, finish each
+delivery before starting the next and refresh its base independently.
 
 For exit `7` from either command, follow correction and authorized continuation
 under the `github-repository-configuration` rules' Trusted review configuration

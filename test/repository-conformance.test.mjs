@@ -2626,7 +2626,7 @@ test("contract-changing answers return to an independent writer and revision rev
   );
 });
 
-test("ordinary non-skipped recovery retains frontier re-entry and owner merge or hand-back", () => {
+test("ordinary recovery authorizes only stopped open-PR handoffs and retains owner options", () => {
   const factory = flowedText("rules/factory-workflow.md");
   const recovery =
     /## Owner handoff and recovery (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
@@ -2642,16 +2642,107 @@ test("ordinary non-skipped recovery retains frontier re-entry and owner merge or
   );
   assert.match(
     ordinary,
-    /While the run's pull request is open, removing the label starts no run in a repository a factory serves/,
+    /A qualifying handoff is a non-skipped factory run stopped under `factory:needs-input` with its PR still open/,
   );
   assert.match(
     ordinary,
-    /the owner, even after the orchestrating agent answers, either finishes the pull request by merging it, for example after pushing the refused change, and ensuring the issue is closed under the contribution guide's pull request rules/,
+    /An open PR under `factory:failed` does not qualify; removing that label requests a retry/,
+  );
+  assert.match(
+    ordinary,
+    /The orchestrating agent may take delivery ownership of a qualifying handoff and continue `babysit` through its Branch-update recovery/,
+  );
+  assert.match(
+    ordinary,
+    /Keep `factory:needs-input` throughout this delivery attempt, until merge or owner handoff, preventing concurrent factory resumption/,
+  );
+  assert.match(
+    ordinary,
+    /Handing the PR to the owner does not itself request factory resumption; retain the waiting marker/,
+  );
+  assert.match(
+    ordinary,
+    /The owner may instead finish the open PR by merging it and ensuring its issue closes under the contribution guide's pull request rules, or hand it back/,
   );
   assert.match(
     ordinary,
     /close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
   );
+});
+
+test("ordinary handoff delivery reuses one local recovery and records its merge", () => {
+  const factory = flowedText("rules/factory-workflow.md");
+  const ordinary =
+    /### Ordinary factory runs (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
+  for (const requirement of [
+    /Rebase onto the current default branch in a checkout it owns, never through GitHub update-branch/,
+    /Revalidate the integrated change and repeat applicable internal and external review and designated current-head owner approval/,
+    /One recovery attempt is allowed; a failed recovery or a further stale-base result hands the still-unmerged PR to the owner with its failure reason/,
+    /Pending or failed checks permit no merge; obsolete-head checks and approval never qualify a replacement head/,
+    /Record the merge outcome in a PR comment, retaining the delivered head, validation and applicable review results, and resulting merge commit SHA/,
+    /Deliver several waiting PRs sequentially, refreshing the default branch for each PR; create no shared queue/,
+  ])
+    assert.match(ordinary, requirement);
+
+  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
+  const entry = babysit.indexOf(
+    "When installed rules authorize delivery of a stopped run's open PR",
+  );
+  const request = babysit.indexOf("Before the first wait");
+  assert.ok(
+    entry >= 0 && entry < request,
+    "recover the handoff before requesting or waiting",
+  );
+  assert.match(
+    babysit,
+    /enter Branch-update recovery before the request and wait steps/,
+  );
+  assert.match(babysit, /This consumes the invocation's one recovery attempt/);
+  assert.match(
+    babysit,
+    /On exit `0`, record any merge outcome comment the installed rules require, using the delivered head, validation and review results, and merge commit SHA printed by the command/,
+  );
+  assert.match(
+    babysit,
+    /`4` means the base is stale: follow Branch-update recovery only if its one attempt is unused; otherwise record the owner handoff and stop/,
+  );
+  assert.match(
+    babysit,
+    /For an authorized stopped-run handoff, any failed recovery step requires the owner handoff with its failure reason/,
+  );
+  assert.match(
+    babysit,
+    /For several waiting PRs, finish each delivery before starting the next and refresh its base independently/,
+  );
+
+  const recovery = /## Branch-update recovery (.*)/.exec(babysit)?.[1] ?? "";
+  assert.match(
+    recovery,
+    /Fetch origin, resolve its remote default branch again/,
+  );
+  assert.match(
+    recovery,
+    /Rebase or replay only this PR's work onto the refreshed base/,
+  );
+  assert.match(recovery, /Never use GitHub update-branch/);
+  assert.match(
+    recovery,
+    /For the replacement head, repeat applicable internal reviews and owner approval, then run request and wait again from step 1, applying the trusted app-author policy anew/,
+  );
+  assert.match(
+    recovery,
+    /Pending or failed checks on that head permit no merge; checks from the old head never qualify it/,
+  );
+  // The executable merge guard must not substitute a remote merge/update for
+  // the caller's locally validated rebase. Its behind-head and sequential-PR
+  // fixtures separately exercise the final platform guard.
+  for (const file of readdirSync(join(root, ".agents/skills/babysit"))) {
+    if (file.endsWith(".mjs"))
+      assert.doesNotMatch(
+        readFileSync(join(root, ".agents/skills/babysit", file), "utf8"),
+        /update-branch|updateBranch/,
+      );
+  }
 });
 
 test("shared delivery guidance delegates owner-question continuation to installed rules", () => {
@@ -2879,7 +2970,7 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   assert.match(rules, /add `factory:needs-input` to the issue/);
   assert.match(
     rules,
-    /While the run's pull request is open, removing the label starts no run in a repository a factory serves/,
+    /A qualifying handoff is a non-skipped factory run stopped under `factory:needs-input` with its PR still open/,
   );
   assert.match(
     rules,
@@ -2887,7 +2978,7 @@ test("owner questions stay on the issue and leave an open pull request unmerged"
   );
   assert.match(
     rules,
-    /the owner, even after the orchestrating agent answers, either finishes the pull request by merging it, for example after pushing the refused change, and ensuring the issue is closed under the contribution guide's pull request rules, or hands it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
+    /The owner may instead finish the open PR by merging it and ensuring its issue closes under the contribution guide's pull request rules, or hand it back: close it before removing the label, wait for `factory:running` to disappear, then remove the label so a fresh first attempt continues its branch/,
   );
   assert.match(
     comments,

@@ -111,7 +111,9 @@ recorded PR handoff; the issue stays open until delivery finishes. The handoff
 records the PR's current head, validation and internal review outcomes,
 outstanding findings, and any owner-review requirement with its source. The
 orchestrating agent continues `babysit` and owns the merge under the
-contribution guide and applicable review rules.
+contribution guide and applicable review rules. For a qualifying ordinary factory
+handoff, the orchestrating agent may also take merge ownership under Ordinary
+factory runs below.
 
 Apply the `github-repository-configuration` rules' Designated owner review gate
 for designation, provenance and current-head approval. The skip marker alone
@@ -218,13 +220,36 @@ Once the question is resolved and any required renewed readiness is recorded,
 follow the existing recovery paths below.
 With no open pull request, whoever answers, the orchestrating agent or the
 owner, removes the label to return the issue to the frontier as a fresh first
-attempt. While the run's pull request is open, removing the label starts no
-run in a repository a factory serves, and the owner, even after the
-orchestrating agent answers, either finishes the pull request by merging it, for example after
-pushing the refused change, and ensuring the issue is closed under the
-contribution guide's pull request rules, or hands it back: close it before
-removing the label, wait for `factory:running` to disappear, then remove the label so a
-fresh first attempt continues its branch.
+attempt.
+
+A qualifying handoff is a non-skipped factory run stopped under
+`factory:needs-input` with its PR still open. An open PR under `factory:failed`
+does not qualify; removing that label requests a retry. The orchestrating agent
+may take delivery ownership of a qualifying handoff and continue `babysit`
+through its Branch-update recovery. Keep `factory:needs-input` throughout this
+delivery attempt, until merge or owner handoff, preventing concurrent factory
+resumption. Removing it requests factory resumption, not orchestrator delivery.
+Handing the PR to the owner does not itself request factory resumption; retain
+the waiting marker.
+
+Rebase onto the current default branch in a checkout it owns, never through
+GitHub update-branch. Revalidate the integrated change and repeat applicable
+internal and external review and designated current-head owner approval, under
+the contribution guide and review rules, then use babysit's merge step. One
+recovery attempt is allowed; a failed recovery or a further stale-base result
+hands the still-unmerged PR to the owner with its failure reason. Pending or
+failed checks permit no merge; obsolete-head checks and approval never qualify
+a replacement head. The supplied-credential restrictions still apply: a
+permission refusal ends the attempt without another push or identity switch.
+Record the merge outcome in a PR comment, retaining the delivered head,
+validation and applicable review results, and resulting merge commit SHA.
+Deliver several waiting PRs sequentially, refreshing the default branch for
+each PR; create no shared queue.
+
+The owner may instead finish the open PR by merging it and ensuring its issue
+closes under the contribution guide's pull request rules, or hand it back:
+close it before removing the label, wait for `factory:running` to disappear,
+then remove the label so a fresh first attempt continues its branch.
 
 ## Issue closure
 
