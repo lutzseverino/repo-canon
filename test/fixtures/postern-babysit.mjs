@@ -196,6 +196,22 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       };
       return json({ data: { repository: { pullRequest: pull } } });
     }
+    if (/\/pulls\/\d+$/.test(path))
+      return json(
+        state.pullDetails ?? {
+          head: {
+            sha: state.head,
+            ref: state.branch ?? "fixture",
+            repo: {
+              full_name:
+                state.headRepository ??
+                state.repository ??
+                "example/repository",
+            },
+          },
+          base: { sha: state.baseCommit ?? "b".repeat(40) },
+        },
+      );
     if (path.endsWith("/merge")) {
       state.merge = {
         body: body.commit_message,

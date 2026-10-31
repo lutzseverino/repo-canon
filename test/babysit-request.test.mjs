@@ -66,6 +66,8 @@ const run = (
     push = openedAt,
     trustedPolicy = declaration,
     trustedReviewer = config,
+    body = "",
+    branch = "factory/issue-719",
   } = {},
 ) => {
   const directory = mkdtempSync(join(tmpdir(), "babysit-request-"));
@@ -88,6 +90,8 @@ const run = (
     state,
     JSON.stringify({
       author,
+      body,
+      branch,
       head,
       createdAt: openedAt,
       pushedAt: push,
@@ -308,4 +312,22 @@ test("a proposed app exemption cannot replace the destination default-branch pol
     result.stdout,
     /review configuration: example\/repository default branch main@b{40}/,
   );
+});
+
+test("own head-branch file links block requests, policy skips and checks-only delivery", (t) => {
+  const link =
+    "https://github.com/example/repository/blob/factory/issue-719/docs/file.md";
+  for (const options of [
+    {
+      config: { ...reviewer, request: { ...reviewer.request, onOpen: false } },
+    },
+    { author: "factory-app[bot]" },
+    { config: null },
+  ]) {
+    const result = run(t, { ...options, body: `[file](${link})` });
+    assert.equal(result.code, 8, result.stderr);
+    assert.ok(result.stderr.includes(link));
+    assert.match(result.stderr, /commit-SHA links.*rerun/);
+    assert.deepEqual(result.emitted, []);
+  }
 });

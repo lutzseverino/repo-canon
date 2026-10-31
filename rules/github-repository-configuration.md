@@ -383,6 +383,19 @@ Without a reviewer configuration, checks-only behavior remains supported.
 
 ## Review requests
 
+Before requesting review or accepting a reviewer-policy skip, check PR-body
+file links into the PR's own repository at its head branch, including encoded
+and slash-containing refs. Report offending links for the author to replace
+with commit-SHA links, then rerun the check before proceeding. Preserve the
+body; external links and other branches, including asset branches, are outside
+this check. This applies with or without a configured reviewer.
+
+Adoption PRs exempt only the complete, byte-preserved tool-generated summary
+prefix verified by rebuilding the head's pre-commit state; appended sections
+remain subject to the check even when they repeat generated headings. Missing,
+failed or mismatching evidence grants no exemption: explain why and check the
+whole body. The `babysit` request command supplies this verification method.
+
 Apply the [app-author policy](#factory-app-author-review-policy) first; the
 request rules below govern authors it does not exempt.
 

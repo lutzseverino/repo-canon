@@ -135,6 +135,15 @@ preserved request bounds and check waits, and installed executable resources
 without runtime packages. The
 repository-owned `.github/factory-review-policy.json` is optional; neither
 profile installs a declaration or enrolls adopters in skipping external review.
+Run `node --test test/babysit-body-links.test.mjs test/babysit-request.test.mjs`
+for pre-review own-head file links (exit `8`), encoded refs and source-fork
+identity, and the exact adoption-summary exemption. The offline fixtures use
+real temporary Git worktrees and a stub pinned runtime whose summary depends
+on uncommitted changes. They distinguish clean-head from reconstructed
+pre-commit output, cover appended and mismatching sections, install/generation
+failures and missing local bases, and verify cleanup and author-worktree
+preservation. Production installs the head's runtime lockfile with `npm ci`;
+these fixtures never contact the registry.
 Run `node --test test/babysit-trusted-config.test.mjs` for installed request and
 wait regressions against independent remote configuration and proposed local
 files. Run `node --test test/babysit-destination.test.mjs` for installed request,
