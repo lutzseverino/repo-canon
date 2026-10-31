@@ -107,6 +107,7 @@ involve real alternatives.
   every workflow skill and skill setup file is Repo Canon's own, and each one
   taken from upstream records its upstream base and takes upstream updates by a
   three-way merge, superseding ADR 0019 and ADR 0008's verbatim rule.
-- [Interpret implementation contracts in one shared module](0029-interpret-implementation-contracts-in-one-shared-module.md):
-  one Repo Canon module decides contracts, readiness and parent release for both
-  the validator and the factory, from Postern's facts and a caller's policy.
+- [Make the validator's posted result the only contract decision](0029-make-the-validators-posted-result-the-only-contract-decision.md):
+  the issue-contract validator alone decides contracts and readiness and posts
+  a versioned result, which the factory checks against platform facts without
+  interpreting the contract itself.
