@@ -331,9 +331,9 @@ wait for the next controlled turn.
 Allow at most 10 minutes per session, 20 minutes total. The operator reads
 `docs/participant-inputs.md` and relays turns 1–7 to session one at their stated
 checkpoints, including 1a–1c and 6a–6c. Before approval, observe registration
-of the proposal, filing without readiness, and heartbeat coverage of the filed
+of the proposal, filing without readiness, and wake-up coverage of the filed
 factory ticket and its recorded blocker without a PR or directly launched
-worker. The ticks simulate the existing configured cadence; create no live
+worker. The operator's wake-ups stand for wait exits; start no live wait or
 schedule. Check that the answered blocker question without continuation is
 surfaced with dated issue/run/PR evidence, separately from approval and blocker
 waits. Intervention follows the installed recovery rules and grants no execution.
@@ -370,8 +370,9 @@ two with a fresh context, the same project/workbench paths, its own session
 reference, and turn 8. Give it no session-one transcript or artifact summary.
 It reads `index.md`, `now.md`, `inbox.md` and each active `plan.md`, not
 `log.md`, before other work, then the skill/local guidance. Inspect the
-recorded takeover and preserved previous owner, and confirm the plan remains
-open. Relay turn 9: the owner drop remains in the table and the already-filed
+recorded takeover and preserved previous owner, check that it re-arms a
+simulated wake-up for every In flight row not waiting on the owner before
+other work, and confirm the plan remains open. Relay turn 9: the owner drop remains in the table and the already-filed
 parked issue stays open. Relay turn 10: only then may the remaining closed
 simulated issues plus the owner drop permit closure. Check the final counts
 and closing announcement against the skill.

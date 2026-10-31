@@ -1307,6 +1307,7 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, which credi
     "CREDITS.md",
     "SKILL.md",
     "agents/openai.yaml",
+    "wait.mjs",
   ]);
   const frontmatter =
     /^---\n([\s\S]*?)\n---\n/.exec(
@@ -1532,7 +1533,7 @@ test("orchestrate observes filed work before approval without authorizing execut
     skill,
     /Plan approval replaces neither independent brief review nor any other readiness condition/,
   );
-  assert.match(skill, /existing heartbeat at its configured cadence/);
+  assert.doesNotMatch(skill, /heartbeat|configured cadence/i);
   assert.match(
     skill,
     /from filing, before plan approval and before a PR exists/,
@@ -1541,9 +1542,77 @@ test("orchestrate observes filed work before approval without authorizing execut
     skill,
     /factory tickets, directly launched workers and recorded blockers/,
   );
-  assert.match(skill, /available harness's recurring mechanism/);
   assert.match(skill, /Observation authorizes no execution/);
   assert.doesNotMatch(skill, /(?:15|30)[- ]minute|after (?:six|6) hours/i);
+});
+
+test("orchestrate has one owning session that hands over and re-arms its wake-ups", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const running =
+    /## Running the plan (.*?) ### Progress observation /.exec(skill)?.[1] ??
+    "";
+  assert.doesNotMatch(skill, /long-lived/);
+  assert.match(
+    running,
+    /One orchestrating session at a time owns every plan in the workbench/,
+  );
+  assert.match(
+    running,
+    /It hands over at each plan's close, and whenever it has compacted since it took over/,
+  );
+  assert.match(
+    running,
+    /Then stop: `index\.md` and `now\.md` are the handover/,
+  );
+  assert.match(
+    running,
+    /takes over\. Before anything else, it re-arms a wake-up for every row under `now\.md`'s In flight that does not wait on the owner/,
+  );
+});
+
+test("orchestrate ends a turn only after arming a wake-up, with recurring checks optional", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const observation =
+    /### Progress observation (.*?) ## Report-back /.exec(skill)?.[1] ?? "";
+  const wait = /#### The wait step (.*)$/.exec(observation)?.[1] ?? "";
+  assert.match(
+    wait,
+    /End a turn only when every row under `now\.md`'s In flight waits on the owner or has a wake-up armed through the harness's own event mechanisms\. Its \*Next check\* names that wake-up/,
+  );
+  assert.match(observation, /A recurring check is optional/);
+  assert.match(
+    observation,
+    /Where the harness can neither wait in the background nor deliver events, report that limit and re-read these records at each turn/,
+  );
+  assert.match(
+    wait,
+    /node <this skill's directory>\/wait\.mjs --interval <seconds> --max-duration <seconds> <item>\.\.\./,
+  );
+  assert.match(wait, /report-back file in the plan directory/);
+  assert.match(wait, /done mark/);
+  assert.match(
+    wait,
+    /arm it after your own writes to watched files and before you read the items' current state/,
+  );
+  assert.match(
+    skill,
+    /\*\*In flight\*\* holds one row per item .*a launch's report-back/,
+  );
+  assert.match(wait, /Both are required; choose both for each invocation/);
+  for (const code of ["0", "1", "2"])
+    assert.match(wait, new RegExp(`- \`${code}\`: `));
+
+  // Neither duration has a default anywhere: skill, script or example.
+  const script = readFileSync(
+    join(root, ".agents/skills/orchestrate/wait.mjs"),
+    "utf8",
+  );
+  for (const text of [skill, script])
+    assert.doesNotMatch(
+      text,
+      /--(?:interval|max-duration)[ =]\d|default (?:interval|duration|cadence|timeout|polling)|defaults? to \d/i,
+    );
+  assert.match(script, /Both durations are required/);
 });
 
 test("orchestrate retains observation evidence and routes unexplained inactivity through existing recovery", () => {

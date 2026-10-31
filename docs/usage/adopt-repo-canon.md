@@ -192,6 +192,13 @@ ln -s /path/to/checkout/.agents/skills/orchestrate <user-level skills directory>
 The link follows that checkout, so the skill changes when the checkout adopts
 an update. Linking it is host setup, outside what adoption installs.
 
+The skill's wait script wakes the orchestrating agent when a watched issue,
+pull request or workbench file changes. It runs from the linked checkout with
+Node.js 24 or 26, importing that checkout's `babysit` skill and vendored
+Postern bundle, and reads GitHub with the GitHub CLI's current credential.
+Each invocation names its own poll interval and maximum duration; the script
+has no default for either.
+
 ## Recommended personal skills
 
 Adoption installs only workflow skills, whose output the shared workflow keeps.

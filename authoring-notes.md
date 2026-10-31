@@ -182,7 +182,16 @@ repeated.
   application, tool mapping or host details; conformance coverage enforces
   that boundary throughout the installed skill. Its `CREDITS.md` credits Matt
   Pocock's in-progress `chief-of-staff` at the commit it was compared at, whose
-  wiki rules the workbench borrows. Linking the skill into a user's own skills, for sessions
+  wiki rules the workbench borrows. The owner decided on 2026-10-29 that one
+  orchestrating session at a time owns the plans, handing over through
+  `index.md` and `now.md` at each plan's close and after any compaction since
+  it took over. On 2026-10-30 they decided that it wakes on events: it ends a
+  turn only when every in-flight item waits on the owner or has a wake-up
+  armed through the harness's own event mechanisms, which `now.md` names, and
+  a recurring check is optional. The skill ships a babysit-like wait script
+  for that, whose poll interval and maximum duration each invocation supplies,
+  with no default; [#732](https://github.com/lutzseverino/repo-canon/issues/732)
+  records these decisions. Linking the skill into a user's own skills, for sessions
   outside a checkout, is host setup that the
   [adoption guide](docs/usage/adopt-repo-canon.md#orchestrate-plans)
   describes.

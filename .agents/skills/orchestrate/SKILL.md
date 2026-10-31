@@ -106,8 +106,9 @@ Take its times from the clock, in UTC, as `log.md` does.
   chores and notifications for the owner. Carry each one into every rewrite
   until the owner has done or acknowledged it.
 - **In flight** holds one row per item that waits on someone or something,
-  such as a run, a review, a blocker or plan approval, with the link that shows
-  it.
+  such as a run, a review, a blocker, plan approval or a launch's report-back,
+  with the link that shows it. Its *Next check* names the wake-up armed for
+  it, as the [wait step](#the-wait-step) says.
 - **Running launches** holds one row per agent launch you started: its host's
   hostname, its kind (grill, triage run, research run or worker), its session
   reference once the harness gives one, and its start time. Add a launch's row
@@ -277,11 +278,19 @@ with their citations, and shows the decision inbox. Log the items it showed in
 
 - Process owner decisions in the [inbox sequence](#inboxmd) before other
   requests in the same message.
-- One long-lived orchestrating agent owns every plan in the workbench. A fresh
-  session reads `index.md`, `now.md`, `inbox.md` and each active `plan.md`, and
-  nothing else, not even a plan's `log.md`, before it acts. It then records its
-  own session reference as each active plan's owner in `index.md`, marking the
-  previous reference superseded.
+- One orchestrating session at a time owns every plan in the workbench. It
+  hands over at each plan's close, and whenever it has compacted since it took
+  over. To hand over, bring `index.md` and `now.md` up to date, commit and push
+  the workbench, start a fresh session with `/orchestrate` and the workbench
+  path where your harness can, and otherwise tell the owner the handover is
+  ready. Then stop: `index.md` and `now.md` are the handover.
+- A fresh session reads `index.md`, `now.md`, `inbox.md` and each active
+  `plan.md`, and nothing else, not even a plan's `log.md`, before it acts. It
+  then records its own session reference as each active plan's owner in
+  `index.md`, marking the previous reference superseded, and takes over.
+  Before anything else, it re-arms a wake-up for every row under `now.md`'s In
+  flight that does not wait on the owner, as the [wait step](#the-wait-step)
+  says.
 - Give heavy reads, such as whole session transcripts, long logs and large
   diffs, to a subagent that returns what the step needs, or read a bounded
   tail. Select any covering installed skill under `AGENTS.md`'s delegation
@@ -301,13 +310,15 @@ with their citations, and shows the decision inbox. Log the items it showed in
 
 ### Progress observation
 
-Use the available harness's recurring mechanism to extend the existing
-heartbeat at its configured cadence. Observe unresolved filed work associated
-with the plan from filing, before plan approval and before a PR exists:
-factory tickets, directly launched workers and recorded blockers. Keep that
-coverage when resuming a plan; refresh it as issues and blockers are recorded.
-When the harness cannot arrange recurring observation, report that limit and
-re-read these records at each turn.
+Observe unresolved filed work associated with the plan from filing, before
+plan approval and before a PR exists: factory tickets, directly launched
+workers and recorded blockers, plus the report-back of every running launch.
+Keep that coverage when taking over or resuming a plan; refresh it as issues,
+blockers and launches are recorded. You wake on events, through the wait step
+below. A recurring check is optional: use the harness's recurring mechanism
+alongside the wait step only if you choose to. Where the harness can neither
+wait in the background nor deliver events, report that limit and re-read
+these records at each turn.
 
 Read issue state and labels, latest comments and owner answers, blocker state,
 run progress and any PR. Compare with the previous dated observation in a
@@ -318,6 +329,44 @@ continuation, surface it with current state and issue/run/PR evidence links,
 recording absent run or PR evidence explicitly. Route any intervention through
 the contribution guide and applicable installed recovery rules. Observation
 authorizes no execution and adds no stall timeout or recovery procedure.
+
+#### The wait step
+
+End a turn only when every row under `now.md`'s In flight waits on the owner
+or has a wake-up armed through the harness's own event mechanisms. Its *Next
+check* names that wake-up. Where the harness can neither wait in the
+background nor deliver events, the fallback above applies instead.
+
+Where the harness can run a command in the background and wake you when it
+exits, arm a wake-up with this skill's wait script, in the background:
+
+```sh
+node <this skill's directory>/wait.mjs --interval <seconds> --max-duration <seconds> <item>...
+```
+
+- An item is an issue or pull request, as `<owner>/<name>#<number>` or its
+  `https://github.com` link, or a file, as `file:<path>`. For a launch, watch
+  its report-back file in the plan directory and the plan's `plan.md`, where it
+  sets its done mark. A file item reads the workbench checkout the wait runs
+  in, so a launch writing in another clone wakes it only once its push is
+  pulled here; arm such a launch's wake-up on its tracker items or the
+  harness's own events instead.
+- It exits when any item changes: an issue's or pull request's state, labels,
+  or new comments, an issue's linked pull requests, or a file's creation, edit
+  or removal. It measures changes from when it starts, so arm it after your
+  own writes to watched files and before you read the items' current state.
+- `--interval` is the time between polls and `--max-duration` the longest the
+  wait runs. Both are required; choose both for each invocation.
+- It needs Node.js 24 or 26, and the GitHub CLI's current credential for
+  issues and pull requests. It prints nothing while it waits.
+
+Its exit code says what comes next:
+
+- `0`: an item changed; each line names the item and how. Observe as
+  [Progress observation](#progress-observation) says, then arm the wait again.
+- `2`: the maximum duration passed with no change; arm the wait again.
+- `1`: follow the contribution guide's Credentials section for a permission
+  refusal; otherwise fix the invocation or platform error and arm it again.
 
 ## Report-back
 
