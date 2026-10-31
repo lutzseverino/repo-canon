@@ -3,8 +3,10 @@
 Status: where Repo Canon's own rules live is superseded by
 [ADR 0016](0016-keep-requirements-in-installed-rules.md), which moves file rules
 from the contribution guide to installed rules. Its assumption of one GitHub
-tracker seed for every platform is superseded by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md); verbatim
-installation from the selected upstream seed stands.
+tracker seed for every platform is superseded by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md).
+Verbatim installation is superseded by
+[ADR 0028](0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md):
+the setup files are owned files reconciled with their upstream base.
 
 The issue tracker, triage label, and domain configurations under `docs/agents`
 are skill setup files: the installed skills read them as their per-repository

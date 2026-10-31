@@ -1,5 +1,10 @@
 # Fork a pinned skill when its overrides outgrow it
 
+Status: superseded by
+[ADR 0028](0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md),
+which makes every workflow skill an owned skill and drops the override
+threshold.
+
 A pinned upstream skill stays verbatim while Repo Canon's rules override only
 the instructions that break its workflow. When the overrides it needs would
 restate most of its procedure, or would number more than two, Repo Canon forks

@@ -28,7 +28,7 @@ involve real alternatives.
 - [Install skill setup files verbatim from upstream seeds](0008-install-skill-setup-files-verbatim-from-upstream-seeds.md):
   the issue tracker, triage label, and domain configurations are the vendored
   upstream setup seeds, installed byte for byte; ADR 0016 moves Repo Canon's
-  file rules out of the contribution guide.
+  file rules out of the contribution guide, and ADR 0028 makes them owned files.
 - [Enforce documentation rules as checks](0009-enforce-documentation-rules-as-checks.md):
   the documentation check enforces the index entry form, one index per
   document, the development guide's order, and scope coverage; ADR 0016 moves
@@ -60,7 +60,8 @@ involve real alternatives.
   means no reviewer.
 - [Keep requirements in installed rules, and use skills as methods](0016-keep-requirements-in-installed-rules.md):
   requirements live in installed rules that checks and assessments cite, and
-  installed skills, pinned upstream ones included, never define them.
+  installed skills, pinned upstream ones included, never define them; ADR 0028
+  supersedes its override and fork consequences.
 - [Make the factory an optional profile](0017-make-the-factory-an-optional-profile.md):
   a standard profile for every adopting repository and a factory profile that
   adds the factory's repository files; ADR 0027 adds a workbench profile.
@@ -69,7 +70,8 @@ involve real alternatives.
   personal skills for themselves.
 - [Fork a pinned skill when its overrides outgrow it](0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md):
   pinned skills stay verbatim until their overrides would restate most of the
-  procedure or exceed two, and then Repo Canon owns the skill with credit.
+  procedure or exceed two, and then Repo Canon owns the skill with credit;
+  superseded by ADR 0028.
 - [Release the factory from its own repository](0020-release-the-factory-from-its-own-repository.md):
   Scriptorium moved with its history to `lutzseverino/scriptorium`, while Repo
   Canon keeps the factory profile, the boundary terms, and the published
@@ -101,3 +103,11 @@ involve real alternatives.
   the orchestrating agent's workbench adopts only the workflow skills and the
   files they need to run, with no rules, CI or branch requirements, and
   commits its updates directly.
+- [Own every workflow skill, reconciled with its upstream base](0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md):
+  every workflow skill and skill setup file is Repo Canon's own, and each one
+  taken from upstream records its upstream base and takes upstream updates by a
+  three-way merge, superseding ADR 0019 and ADR 0008's verbatim rule.
+- [Make the validator's posted result the only contract decision](0029-make-the-validators-posted-result-the-only-contract-decision.md):
+  the issue-contract validator alone decides contracts and readiness and posts
+  a versioned result, which the factory checks against platform facts without
+  interpreting the contract itself.
