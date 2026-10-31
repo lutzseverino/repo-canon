@@ -244,7 +244,12 @@ repeated.
   [review finding rules](CONTRIBUTING.md#merging) and the
   request rule in the
   [GitHub repository configuration rules](rules/github-repository-configuration.md),
-  with an optional total request bound in the repository's reviewer data.
+  with a total request bound of four when the repository's reviewer data omits
+  it, a positive-integer override, and an explicit `"unbounded"` choice. The
+  [owner decision for #746](https://github.com/lutzseverino/repo-canon/issues/746#issuecomment-6533150044)
+  also makes first factory selection ask about post-run app-author policy
+  configuration using the repository's own app identity. Standard-only runs and
+  routine factory updates do not ask; existing policy remains untouched.
   It waits through one bundled script that polls silently for checks and the
   reviewer named by the optional repository-owned
   `.github/pull-request-reviewer.json`, run in the foreground on every host.

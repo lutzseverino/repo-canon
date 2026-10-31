@@ -1767,11 +1767,11 @@ const pendingPullRequest = {
   comments: [],
 };
 
-test("the wait names the reached request bound after a later push", async () => {
+test("the wait names the default request bound after a later push", async () => {
   const reviewer = {
     ...githubReviewer,
     request: { ...githubReviewer.request, onOpen: true },
-    bounds: { ...githubReviewer.bounds, reviewRequests: 4 },
+    bounds: { responseMinutes: 5, reviewMinutes: 30 },
   };
   const result = await run(
     {
@@ -1794,6 +1794,31 @@ test("the wait names the reached request bound after a later push", async () => 
     result.stdout,
     `${head}: checks passed, review not requested for this head; review request bound reached (4); review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
   );
+});
+
+test("an explicitly unbounded wait does not report a reached bound beyond four", async () => {
+  const reviewer = {
+    ...githubReviewer,
+    bounds: { ...githubReviewer.bounds, reviewRequests: "unbounded" },
+  };
+  const result = await run(
+    {
+      ...pendingPullRequest,
+      createdAt: "2026-10-11T05:00:00Z",
+      pushedAt: "2026-10-11T05:10:00Z",
+      checks: [checkRun()],
+      comments: Array.from({ length: 5 }, () => ({
+        login: "anyone",
+        createdAt: "2026-10-11T05:05:00Z",
+        body: reviewer.request.comment,
+      })),
+    },
+    ["12"],
+    reviewer,
+  );
+  assert.equal(result.code, 4, result.stderr);
+  assert.match(result.stdout, /review not requested for this head/);
+  assert.doesNotMatch(result.stdout, /bound reached/);
 });
 
 test("only exact request comments and enabled opening requests reach the bound", () => {
@@ -1873,7 +1898,19 @@ test("a reached bound still waits for checks and honors reviews and later reques
 });
 
 test("the wait rejects invalid review request bounds", async () => {
-  for (const reviewRequests of [0, -1, 1.5, "4", null, true, [], {}]) {
+  for (const reviewRequests of [
+    0,
+    -1,
+    1.5,
+    "4",
+    "Unbounded",
+    "unbounded ",
+    "infinity",
+    null,
+    true,
+    [],
+    {},
+  ]) {
     const reviewer = {
       ...githubReviewer,
       bounds: { ...githubReviewer.bounds, reviewRequests },

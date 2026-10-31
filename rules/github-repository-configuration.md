@@ -268,8 +268,9 @@ fields are invalid, at every level.
 - `unavailable`: array of nonempty reply texts; an empty array is valid.
 - `bounds.responseMinutes` and `bounds.reviewMinutes`: positive finite numbers
   measured from the latest request.
-- `bounds.reviewRequests`: optional positive integer; the total request bound
-  defined under [review requests](#review-requests).
+- `bounds.reviewRequests`: optional positive integer or the exact string
+  `"unbounded"`; omission defaults to **4**. The total request bound is defined
+  under [review requests](#review-requests).
 
 A review of the pull request's head is complete when either holds:
 
@@ -329,8 +330,11 @@ review requirement. A policy skip supplies neither internal nor external approva
 
 The optional repository-owned `.github/factory-review-policy.json` exempts its
 declared app author from agent-issued external review requests and external
-reviewer response/review waits. Repo Canon installs no policy declaration or
-default exemption. The factory host remains independent of repository reviewer
+reviewer response/review waits. Repo Canon ships no policy declaration or
+default exemption. Deliberate repository configuration is a separate post-run
+commit outside the adoption commit and adoption PR, using the app identity
+named by that repository; adoption never writes or changes the policy file.
+The factory host remains independent of repository reviewer
 configuration; the installed `babysit` request and wait commands apply it
 from the [trusted review configuration](#trusted-review-configuration).
 
@@ -416,10 +420,13 @@ changes only tests, documentation or wording, or only fixes a failing check
 gets none.
 
 The optional `bounds.reviewRequests` limits the total review requests a pull
-request gets. Count the opening when `request.onOpen` is true and every comment
-whose whole trimmed body equals `request.comment`, whoever posted it. Once that
-count reaches the bound, no agent requests another review. Without the field
-there is no count bound.
+request gets, defaulting to **4** when omitted from a reviewer file. An explicit
+positive integer overrides that default; the exact JSON string `"unbounded"`
+deliberately removes the count bound. Count the opening when `request.onOpen`
+is true and every comment whose whole trimmed body equals `request.comment`,
+whoever posted it. Once that
+count reaches the bound, no agent requests another review. Without a reviewer
+file there is no reviewer, request or reviewer wait; the default creates none.
 
 The bound creates no reason to decline a real finding and no grouped follow-up
 issue. After the bound is reached, fix every finding the contribution guide
