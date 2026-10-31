@@ -394,6 +394,13 @@ repeated.
   unreadable or unconfirmed enforcement stops unattended merging even when
   adoption deferred setup. The owner accepted extra CI runs for concurrent PRs
   in [#656](https://github.com/lutzseverino/repo-canon/issues/656#issuecomment-6451776114).
+  On 2026-10-29, approved for filing on 2026-10-30, the owner chose one
+  orchestrator recovery for a stopped ordinary factory run with an open PR,
+  recorded in [#740](https://github.com/lutzseverino/repo-canon/issues/740#issuecomment-6532707688).
+  The factory workflow rules authorize that handoff, and babysit reuses its
+  local branch-update recovery. The waiting marker prevents concurrent factory
+  resumption; the merge record stays in a PR comment. Each waiting PR refreshes
+  its own base, with no shared queue.
 - Accepted automation prerequisites are GitHub Actions, permission to update
   issue labels/comments, and repository-setup permission for labels and branch
   rules. Metadata validation runs trusted code without executing PR-supplied

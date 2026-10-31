@@ -189,7 +189,12 @@ The delivery conformance cases in `test/repository-conformance.test.mjs`
 cover the shared owner-review gate in both profiles, either designation source
 and its provenance, renewed approval after a head change, standard merge
 ownership, undesignated delivery, and factory worker handoffs and approval-pause
-continuation. The public-CLI adoption fixtures in
+continuation. They also cover ordinary stopped-run handoff eligibility, retained
+waiting markers, one local recovery before request/wait, replacement-head review
+and approval, merge records and sequential base refresh; the installed babysit
+scripts make no GitHub update-branch call. The merge fixtures exercise a behind
+PR and two initially green PRs delivered sequentially, refusing pending or
+failed replacement-head checks. The public-CLI adoption fixtures in
 `test/repository-wide-rules.test.mjs` verify that both profiles install the
 shared gate.
 The public source-validation command and its boundary are described in
