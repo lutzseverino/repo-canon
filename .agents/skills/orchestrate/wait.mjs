@@ -11,9 +11,10 @@
 //
 // An item is an issue or pull request, as <owner>/<name>#<number> or its
 // https://github.com link, or a file, as file:<path>. An issue changes when
-// its state, labels, comments or linked pull requests do; a pull request when
-// its state (including merging), labels or comments do; a file when it is
-// created, edited or removed, as a report-back or a done mark in plan.md is.
+// its state, labels or linked pull requests do or it gets a new comment; a
+// pull request when its state (including merging) or labels do or it gets a
+// new comment; a file when it is created, edited or removed, as a report-back
+// or a done mark in plan.md is.
 // Changes are measured from the first read, when the wait is armed.
 //
 // Usage: node wait.mjs --interval <seconds> --max-duration <seconds> <item>...
