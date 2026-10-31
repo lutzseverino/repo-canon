@@ -102,10 +102,9 @@ ends with a closed issue or the owner's drop.
 _Avoid_: Roadmap, specification
 
 **Close review**:
-A review a plan runs at its close, named when the owner approves the plan. The
-retro is always one: a separate session that weighs the plan's outcome, time
-and lessons from primary sources, and sends each lesson to whoever owns the
-rule it concerns.
+A review of a finished plan, run before its closing announcement and named
+when the owner approves the plan. The plan's retro, a review of its outcome,
+time and lessons by a separate session, is always one.
 _Avoid_: Post-mortem, plan audit
 
 **Workbench**:

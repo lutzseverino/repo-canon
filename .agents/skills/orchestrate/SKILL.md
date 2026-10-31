@@ -110,8 +110,9 @@ Take its times from the clock, in UTC, as `log.md` does.
   with the link that shows it. Its *Next check* names the wake-up armed for
   it, as the [wait step](#the-wait-step) says.
 - **Running launches** holds one row per agent launch you started: its host's
-  hostname, its kind (grill, triage run, research run, worker or Close review), its session
-  reference once the harness gives one, and its start time. Add a launch's row
+  hostname, its kind (grill, triage run, research run, worker or Close
+  review), its session reference once the harness gives one, and its start
+  time. Add a launch's row
   before you start it, and remove the row when you take in its report-back.
 
 ### `inbox.md`
@@ -154,7 +155,7 @@ shape:
 **Goal:** <the outcome the plan delivers>
 **Done means:** <the observable state that ends it>
 **Approval:** <date>, <link to the owner's approval>. Preapproves: <what the plan names that the approval covers>
-**Close reviews:** retro; <`improve-codebase-architecture` in <repository>, for each one the owner kept>
+**Close reviews:** retro; <`improve-codebase-architecture` in each repository the owner kept it for>
 
 ## Tickets
 
@@ -217,8 +218,9 @@ with their citations, and shows the decision inbox. Log the items it showed in
    filing and brief preparation may precede plan approval. Hold ticket
    readiness for plan execution until the owner's plan approval is recorded.
    On approval, write the approval line with its source and what it
-   preapproves, and the Close reviews line the owner approved. Plan approval replaces neither independent brief review nor
-   any other readiness condition in the contribution guide and installed rules.
+   preapproves, and the Close reviews line the owner approved. Plan approval
+   replaces neither independent brief review nor any other readiness
+   condition in the contribution guide and installed rules.
 2. **Intake.** Route each new request as the contribution guide's Triage
    section says, with the `triage` skill's method. Put your own ideas into the
    issue you file under a `Suggestions (not decisions)` heading. Open each
@@ -290,7 +292,7 @@ with their citations, and shows the decision inbox. Log the items it showed in
        each wait to what it waited on, such as the owner, a review, a check,
        a blocker or a launch; and its lessons, ranked by cost;
      - compare each lesson with the previous plan's retro and the open issues
-       of the repository that owns its rule before filing it;
+       before filing it;
      - route each lesson as below, recording its route and link in
        `retro.md`, and record each issue it files or reopens in `log.md` with
        its creation evidence;
@@ -302,6 +304,7 @@ with their citations, and shows the decision inbox. Log the items it showed in
      checkout, the plan's changes there, the plan directory and report-back
      destination. Supply the owned branch and checkout for domain-document
      edits and that repository's pull request destination, as for a grill.
+     Like a grill, it asks the owner its questions in its own session.
      Its task context also includes these obligations:
      - route each of its findings as [New requirements](#lifecycle) says: a
        Finding becomes an issue in that repository, and any other idea a wish
@@ -435,8 +438,8 @@ Its exit code says what comes next:
 ## Report-back
 
 The file in the plan directory is the contract. A grill, triage run or Close
-review reports by writing its result there, setting its done mark in `plan.md`, and committing
-and pushing both. When you take in a report-back, remove its launch's row from
+review reports by writing its result there, setting its done mark in
+`plan.md`, and committing and pushing both. When you take in a report-back, remove its launch's row from
 `now.md`'s Running launches. A wake-up message to your session is only a nudge,
 and losing it loses nothing: act on the files.
 

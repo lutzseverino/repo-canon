@@ -1698,7 +1698,7 @@ test("orchestrate closes with an independent retro between reconciliation and th
     /the outcome against the plan's Done means, with evidence/,
     /where the time went, attributing each wait to what it waited on/,
     /its lessons, ranked by cost/,
-    /compare each lesson with the previous plan's retro and the open issues of the repository that owns its rule before filing it/,
+    /compare each lesson with the previous plan's retro and the open issues before filing it/,
   ])
     assert.match(retro, check);
   assert.match(retro, /write `retro\.md` in the plan directory/);
@@ -1763,7 +1763,7 @@ test("orchestrate plans name their Close reviews at approval", () => {
   const plan = /## The plan (.*?) ## Lifecycle /.exec(skill)?.[1] ?? "";
   assert.match(
     plan,
-    /\*\*Approval:\*\* [^*]*\*\*Close reviews:\*\* retro; <`improve-codebase-architecture` in <repository>, for each one the owner kept>/,
+    /\*\*Approval:\*\* [^*]*\*\*Close reviews:\*\* retro; <`improve-codebase-architecture` in each repository the owner kept it for>/,
   );
   assert.match(
     plan,
@@ -1783,9 +1783,11 @@ test("orchestrate plans name their Close reviews at approval", () => {
     skill,
     /When it changes which repositories' code the plan changes, propose their Close reviews with it/,
   );
+  const close =
+    /5\. \*\*Close\.\*\* (.*?) ## Running the plan /.exec(skill)?.[1] ?? "";
   const other =
     /- \*\*Other Close reviews\.\*\* (.*?) Each lesson goes to/.exec(
-      skill,
+      close,
     )?.[1] ?? "";
   assert.match(
     other,
@@ -1795,6 +1797,7 @@ test("orchestrate plans name their Close reviews at approval", () => {
     other,
     /route each of its findings as \[New requirements\]\(#lifecycle\) says: a Finding becomes an issue in that repository, and any other idea a wish naming it/,
   );
+  assert.match(other, /Like a grill, it asks the owner its questions/);
 });
 
 test("orchestrate wishes preserve mandatory Findings reporting", () => {
