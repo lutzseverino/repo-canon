@@ -420,7 +420,7 @@ repeated.
   defaults remain editable at merge time; configuration and title checks are not
   an immutable final-message guarantee.
 - The attribution rule lives in
-  [`CONTRIBUTING.md`](CONTRIBUTING.md#titles-and-commits). Its guard is that
+  [`CONTRIBUTING.md`](CONTRIBUTING.md#agents-on-the-maintainers-account). Its guard is that
   rule, the tool-agnostic PR metadata check, and an explicit squash subject and
   body supplied by `babysit`. The standard declares no per-tool attribution
   settings. Published history stays unchanged because tags and adopters' locks
