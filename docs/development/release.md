@@ -369,5 +369,21 @@ state: the fixture adoption runs in a temporary directory and has no remote to
 change. The tag, the release, and its notes are published only by the commands
 written out above.
 
-A published tag is never moved, deleted, or retargeted. A correction receives
-a new version. Earlier releases keep their notes.
+### Recover verification of an existing tag
+
+A verifier tooling correction can be reviewed and merged in an ordinary pull
+request, separately from the release pull request, then used from an up-to-date
+`main` checkout to rerun `release:verify` against the existing published tag.
+Pass the original release commit, never the tooling correction's commit. The
+verifier logic and adoption fixture come from the tooling checkout; released
+requirements and documents remain pinned to the release-commit argument. Only
+a successful full authenticated run permits finalizing provisional release
+notes with its derived adopter-action lines and verification paragraph.
+
+This recovery does not change released source inputs or amend their reviewed
+bytes. The rule against committing changes for the release after its pull
+request merges still applies to those inputs.
+
+A published tag is never moved, deleted, or retargeted. A correction to released
+source inputs receives a new version. Earlier finalized releases keep their
+notes.
