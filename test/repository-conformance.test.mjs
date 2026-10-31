@@ -1669,6 +1669,137 @@ test("orchestrate reconciles closure from run findings with repository identity 
   );
 });
 
+test("orchestrate closes with an independent retro between reconciliation and the announcement", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const close =
+    /5\. \*\*Close\.\*\* (.*?) ## Running the plan /.exec(skill)?.[1] ?? "";
+  const order = [
+    "Reconcile those records with every run's findings",
+    "**The retro.**",
+    "announce, as the last plan update",
+  ].map((step) => close.indexOf(step));
+  assert.ok(
+    order.every((at, index) => at > (order[index - 1] ?? -1)),
+    `${order}`,
+  );
+  const retro =
+    /\*\*The retro\.\*\* (.*?) - \*\*Other Close reviews\.\*\*/.exec(
+      close,
+    )?.[1] ?? "";
+  assert.match(
+    retro,
+    /Start a separate session that reads primary sources.*never your session's context or a summary of it/,
+  );
+  assert.match(
+    retro,
+    /the previous plan's `retro\.md`, from the plan most recently moved under `Closed` in `index\.md`/,
+  );
+  for (const check of [
+    /the outcome against the plan's Done means, with evidence/,
+    /where the time went, attributing each wait to what it waited on/,
+    /its lessons, ranked by cost/,
+    /compare each lesson with the previous plan's retro and the open issues before filing it/,
+  ])
+    assert.match(retro, check);
+  assert.match(retro, /write `retro\.md` in the plan directory/);
+  assert.match(
+    retro,
+    /mark the retro done on the Close reviews line in `plan\.md`/,
+  );
+  assert.match(
+    retro,
+    /commit and push its writes, as \[Workbench\]\(#workbench\) says/,
+  );
+  assert.match(retro, /report back, as \[Report-back\]\(#report-back\) says/);
+  assert.match(
+    close,
+    /Once every Close review is marked done, move the plan under `Closed` in `index\.md`/,
+  );
+  assert.match(
+    skill,
+    /its kind \(grill, triage run, research run, worker or Close review\)/,
+  );
+  assert.match(
+    skill,
+    /A grill, triage run or Close review reports by writing its result there/,
+  );
+});
+
+test("orchestrate routes each retro lesson to the owner of its rule", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const close =
+    /5\. \*\*Close\.\*\* (.*?) ## Running the plan /.exec(skill)?.[1] ?? "";
+  const routing =
+    /Each lesson goes to whoever owns the rule it concerns: (.*?) Once every Close review/.exec(
+      close,
+    )?.[1] ?? "";
+  assert.match(
+    routing,
+    /the adopter's own repository: an issue there, filed as that repository's contribution guide's Findings section says/,
+  );
+  assert.match(
+    routing,
+    /the owner's own setup, outside every repository: a chore for the owner, which you carry into `now\.md`'s Waiting on you/,
+  );
+  // An adopter who doesn't develop Repo Canon still files skill lessons there.
+  assert.match(
+    routing,
+    /a Repo Canon skill or rule: an issue in the Repo Canon source repository that the adoption record's Selection names, such as `lutzseverino\/repo-canon`, filed as its contribution guide's Findings section says, even when the owner does not develop Repo Canon, since an adopter cannot change its skills/,
+  );
+  assert.match(routing, /a wish: a line in `wishes\.md`/);
+  assert.match(routing, /nowhere, as a one-off, beyond `retro\.md`/);
+  assert.match(
+    close,
+    /A recurring lesson links its earlier issue, or reopens it when closed, instead of filing a new one/,
+  );
+  assert.match(
+    close,
+    /the retro's lessons and the other Close reviews' findings, each with its route and link/,
+  );
+});
+
+test("orchestrate plans name their Close reviews at approval", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const plan = /## The plan (.*?) ## Lifecycle /.exec(skill)?.[1] ?? "";
+  assert.match(
+    plan,
+    /\*\*Approval:\*\* [^*]*\*\*Close reviews:\*\* retro; <`improve-codebase-architecture` in each repository the owner kept it for>/,
+  );
+  assert.match(
+    plan,
+    /\*\*Close reviews\.\*\* The reviews Close runs, set when the owner approves the plan\. The retro is always one/,
+  );
+  const propose =
+    /1\. \*\*Propose\.\*\* (.*?) 2\. \*\*Intake\./.exec(skill)?.[1] ?? "";
+  assert.match(
+    propose,
+    /The proposal names its Close reviews: the retro, and `improve-codebase-architecture` for each repository whose code the plan changes\. The owner keeps or removes each architecture review; the retro stays/,
+  );
+  assert.match(
+    propose,
+    /On approval, write the approval line with its source and what it preapproves, and the Close reviews line the owner approved/,
+  );
+  assert.match(
+    skill,
+    /When it changes which repositories' code the plan changes, propose their Close reviews with it/,
+  );
+  const close =
+    /5\. \*\*Close\.\*\* (.*?) ## Running the plan /.exec(skill)?.[1] ?? "";
+  const other =
+    /- \*\*Other Close reviews\.\*\* (.*?) Each lesson goes to/.exec(
+      close,
+    )?.[1] ?? "";
+  assert.match(
+    other,
+    /Open each `improve-codebase-architecture` review with `\/improve-codebase-architecture`/,
+  );
+  assert.match(
+    other,
+    /route each of its findings as \[New requirements\]\(#lifecycle\) says: a Finding becomes an issue in that repository, and any other idea a wish naming it/,
+  );
+  assert.match(other, /Like a grill, it asks the owner its questions/);
+});
+
 test("orchestrate wishes preserve mandatory Findings reporting", () => {
   const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
   const wish = flowedText("GLOSSARY.md")

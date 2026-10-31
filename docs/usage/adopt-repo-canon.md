@@ -199,6 +199,15 @@ Postern bundle, and reads GitHub with the GitHub CLI's current credential.
 Each invocation names its own poll interval and maximum duration; the script
 has no default for either.
 
+Each plan you approve names its Close reviews, which run before the plan's
+closing announcement. The retro is always one: a separate session reviews the
+plan and sends each lesson to whoever owns the rule it concerns, such as your
+own repository, your setup or a wish. A lesson about a Repo Canon skill or rule
+becomes an issue filed against Repo Canon, even when you don't develop it,
+because your installed copy changes only through an update. The orchestrating
+agent also proposes an `improve-codebase-architecture` review for each
+repository whose code the plan changes; you keep or remove each one.
+
 ## Recommended personal skills
 
 Adoption installs only workflow skills, whose output the shared workflow keeps.

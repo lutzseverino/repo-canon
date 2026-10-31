@@ -345,6 +345,8 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "amendment",
     "wish",
     "fresh session",
+    "retro",
+    "Close reviews line",
   ])
     assert.ok(orchestrateTask.includes(phase), `orchestrate phase: ${phase}`);
   const participantInputs = readFileSync(

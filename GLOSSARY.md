@@ -101,6 +101,12 @@ runs across tickets, kept in the workbench; it closes once each of its tickets
 ends with a closed issue or the owner's drop.
 _Avoid_: Roadmap, specification
 
+**Close review**:
+A review of a finished plan, run before its closing announcement and named
+when the owner approves the plan. The plan's retro, a review of its outcome,
+time and lessons by a separate session, is always one.
+_Avoid_: Post-mortem, plan audit
+
 **Workbench**:
 The git repository of plain Markdown in which the orchestrating agent keeps
 its plans, decision inbox and wishes, named by path in the owner's global

@@ -195,6 +195,16 @@ repeated.
   outside a checkout, is host setup that the
   [adoption guide](docs/usage/adopt-repo-canon.md#orchestrate-plans)
   describes.
+- On 2026-10-29 the owner decided that `orchestrate` closes every plan with a
+  retro in a separate session reading primary sources, and that each lesson
+  goes to whoever owns its rule: the adopter's own repository or setup, a wish,
+  nowhere for a one-off, or an issue filed against Repo Canon for a Repo Canon
+  skill or rule, because an adopter who does not develop Repo Canon cannot
+  change its skills. On 2026-10-30 they decided that a plan names its Close
+  reviews at approval: the retro always, and `improve-codebase-architecture`
+  proposed for each repository whose code the plan changes, which the owner
+  keeps or removes; [#733](https://github.com/lutzseverino/repo-canon/issues/733)
+  records these decisions.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
   maintainer to install from upstream at user scope; the
   [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)
