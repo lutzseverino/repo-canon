@@ -443,7 +443,14 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
         const questions = report.answers.questions.map((question) => {
           const [kind, name] = question.id.split(":");
           let answer = question.answer;
-          if (kind === "scope") answer ??= scopes[name];
+          if (kind === "scope") {
+            // Updates offer the previous confirmed answer alongside a fresh
+            // discovery draft. Reassess stack membership with that draft;
+            // an old Node inclusion must not override new web exclusions.
+            if (/^typescript-(?:node|astro|vite)-stack$/.test(name))
+              answer = question.details?.draft ?? answer;
+            answer ??= scopes[name];
+          }
           if (kind === "assessment" && report.missing.includes(question.id))
             answer =
               name === `typescript-${selectedStack}-stack` ||
@@ -479,7 +486,11 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
             // unless the repository holds a conforming Project.
             assert.deepEqual(answer.unresolved, []);
             const covered = name === `typescript-${selectedStack}-stack`;
-            assert.equal(answer.noScope, covered ? undefined : true);
+            assert.equal(
+              answer.noScope,
+              covered ? undefined : true,
+              `${label} ${name}: ${JSON.stringify(question)}`,
+            );
             assert.deepEqual(
               answer.candidates.map(({ path, decision }) => [path, decision]),
               selectedStack
