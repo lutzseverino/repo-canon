@@ -156,7 +156,8 @@ test("fixture Git operations ignore inherited repository and config redirections
     {
       env: suiteEnvironment,
       encoding: "utf8",
-      timeout: 120000,
+      // The nested release regressions exercise full verification commands.
+      timeout: 240000,
       maxBuffer: 8 * 1024 * 1024,
     },
   );
