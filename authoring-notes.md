@@ -303,6 +303,10 @@ repeated.
   the orchestrating agent for factory-skip work. The
   [factory workflow rules](rules/factory-workflow.md) retain that profile's
   merge ownership and approval-pause continuation.
+  On 2026-10-29, the owner chose the authoritative Implementation contract as
+  a designation source alongside the worker handoff, including directly
+  authored body contracts, as recorded in
+  [#716](https://github.com/lutzseverino/repo-canon/issues/716#issuecomment-6532708764).
 - The skill setup files under docs/agents are installed verbatim from the
   vendored upstream setup seeds, and Repo Canon writes nothing into them, as
   [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)

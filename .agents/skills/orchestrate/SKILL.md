@@ -214,9 +214,10 @@ with their citations, and shows the decision inbox. Log the items it showed.
   repository checkout and report-back destination. Workers deliver as the
   contribution guide's Pull requests section says.
   When applicable installed rules assign a worker's merge to you, read its
-  accepted brief and PR handoff, then resume `babysit`, including when resuming
-  a plan. After an owner question is resolved, follow the applicable installed
-  continuation rules to resume the worker or that same open PR.
+  authoritative implementation contract and PR handoff, then resume `babysit`,
+  including when resuming a plan. After an owner question is resolved, follow
+  the applicable installed continuation rules to resume the worker or that same
+  open PR.
 
 ### Progress observation
 

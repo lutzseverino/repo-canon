@@ -1799,7 +1799,7 @@ test("the installed delivery route honors prescribed worker handoffs before merg
   const orchestrate = flowedText(".agents/skills/orchestrate/SKILL.md");
   assert.match(
     orchestrate,
-    /When applicable installed rules assign a worker's merge to you, read its accepted brief and PR handoff, then resume `babysit`/,
+    /When applicable installed rules assign a worker's merge to you, read its authoritative implementation contract and PR handoff, then resume `babysit`/,
   );
   for (const text of [guide, babysit, orchestrate])
     assert.doesNotMatch(text, /factory:skip/);
@@ -1847,16 +1847,41 @@ test("host-access skips gate live steps without designating source PR review, wh
   const shared = flowedText("rules/github-repository-configuration.md");
   assert.match(
     shared,
-    /Owner review is required when either the accepted brief or the worker's handoff says so/,
+    /Owner review is required when either the authoritative implementation contract or the worker's handoff says so/,
   );
   assert.match(shared, /Any head change requires renewed owner approval/);
+});
+
+test("owner-review designation includes directly authored body contracts and latest triaged briefs", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  assert.match(
+    guide,
+    /A directly authored specification or implementation ticket carries its implementation contract in its issue body/,
+  );
+  assert.match(
+    guide,
+    /A triaged request's contract is its latest Agent Brief comment/,
+  );
+  assert.match(
+    flowedText("GLOSSARY.md"),
+    /\*\*Implementation contract\*\*: The agreed scope and acceptance criteria for a change, recorded in the latest agent-brief comment for a triaged request or in a directly authored specification or implementation ticket/,
+  );
+  const shared = flowedText("rules/github-repository-configuration.md");
+  assert.match(
+    shared,
+    /Resolve the authoritative implementation contract under the contribution guide's Implementation contracts section/,
+  );
+  assert.match(
+    shared,
+    /Owner review is required when either the authoritative implementation contract or the worker's handoff says so/,
+  );
 });
 
 test("either owner-review designation source survives handoffs in both profiles", () => {
   const shared = flowedText("rules/github-repository-configuration.md");
   assert.match(
     shared,
-    /Owner review is required when either the accepted brief or the worker's handoff says so/,
+    /Owner review is required when either the authoritative implementation contract or the worker's handoff says so/,
   );
   assert.match(
     shared,
@@ -1900,7 +1925,7 @@ test("owner-reviewed heads need explicit current-head approval independently of 
   );
   assert.match(
     babysit,
-    /Read the accepted brief and any worker handoff and apply the `github-repository-configuration` rules' Designated owner review gate/,
+    /Read the authoritative implementation contract and any worker handoff and apply the `github-repository-configuration` rules' Designated owner review gate/,
   );
   assert.match(babysit, /`2` means the head changed, so return to step 1/);
   assert.match(

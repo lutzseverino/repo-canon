@@ -90,9 +90,11 @@ the final guard if the base advances again; bound recovery as babysit directs.
 
 ## Designated owner review
 
-Owner review is required when either the accepted brief or the worker's handoff
-says so. Read both sources; an omission in one does not cancel a designation in
-the other. Carry that designation and its source into the PR handoff.
+Owner review is required when either the authoritative implementation contract
+or the worker's handoff says so. Resolve the authoritative implementation
+contract under the contribution guide's Implementation contracts section.
+Read both sources; an omission in one does not cancel a designation in the
+other. Carry that designation and its source into the PR handoff.
 Record the designation and its source on the PR, including when no worker
 handoff is required.
 
