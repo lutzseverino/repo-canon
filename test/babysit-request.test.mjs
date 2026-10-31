@@ -126,6 +126,63 @@ const run = (
   };
 };
 
+test("omitted request bounds stop at four and count only enabled openings and exact comments", (t) => {
+  for (const onOpen of [false, true]) {
+    const config = {
+      ...reviewer,
+      request: { ...reviewer.request, onOpen },
+      bounds: { responseMinutes: 5, reviewMinutes: 30 },
+    };
+    for (const count of [3, 4]) {
+      const comments = Array.from({ length: count - Number(onOpen) }, () => ({
+        login: "anyone",
+        createdAt: openedAt,
+        body: ` \n${reviewer.request.comment}\n `,
+      }));
+      comments.push({
+        login: "owner",
+        createdAt: openedAt,
+        body: `Fixed. ${reviewer.request.comment}`,
+      });
+      const result = run(t, {
+        config,
+        comments,
+        push: pushedAt,
+        args: ["--fixes-review"],
+      });
+      assert.equal(result.code, 0, result.stderr);
+      assert.deepEqual(
+        result.emitted,
+        count === 3 ? [reviewer.request.comment] : [],
+      );
+      if (count === 4)
+        assert.match(result.stdout, /review request bound reached/);
+    }
+  }
+});
+
+test("explicit unbounded requests continue beyond four in the installed command", (t) => {
+  const config = {
+    ...reviewer,
+    bounds: { ...reviewer.bounds, reviewRequests: "unbounded" },
+  };
+  const result = run(t, {
+    config,
+    comments: Array.from({ length: 5 }, () => ({
+      login: "anyone",
+      createdAt: openedAt,
+      body: reviewer.request.comment,
+    })),
+    push: pushedAt,
+    args: ["--fixes-review"],
+    target: pathToFileURL(
+      installedValidator(t, ".agents/skills/babysit/request.mjs"),
+    ),
+  });
+  assert.equal(result.code, 0, result.stderr);
+  assert.deepEqual(result.emitted, [reviewer.request.comment]);
+});
+
 test("a declared app emits no request initially or after fixes and resumed runs", (t) => {
   for (const [declared, author] of [
     ["Factory-App[bot]", "factory-app[bot]"],

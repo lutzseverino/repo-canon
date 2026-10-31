@@ -94,7 +94,19 @@ test("the optional reviewer check accepts a positive review request bound", (t) 
 });
 
 test("the optional reviewer check rejects invalid review request bounds", (t) => {
-  for (const reviewRequests of [0, -1, 1.5, "4", null, true, [], {}]) {
+  for (const reviewRequests of [
+    0,
+    -1,
+    1.5,
+    "4",
+    "Unbounded",
+    "unbounded ",
+    "infinity",
+    null,
+    true,
+    [],
+    {},
+  ]) {
     const reviewer = JSON.parse(valid);
     reviewer.bounds.reviewRequests = reviewRequests;
     const outcome = check(t, { [target]: JSON.stringify(reviewer) });
@@ -103,6 +115,23 @@ test("the optional reviewer check rejects invalid review request bounds", (t) =>
       outcome.result.message,
       /reviewRequests must be a positive integer/,
     );
+  }
+});
+
+test("both reviewer readers and the check agree on default, finite and unbounded requests", (t) => {
+  for (const [configured, effective] of [
+    [undefined, 4],
+    [2, 2],
+    ["unbounded", Infinity],
+  ]) {
+    const reviewer = JSON.parse(valid);
+    if (configured !== undefined) reviewer.bounds.reviewRequests = configured;
+    const content = JSON.stringify(reviewer);
+    const project = fixture({ [target]: content });
+    t.after(project.close);
+    for (const readReviewer of [readOperationReviewer, readInstalledReviewer])
+      assert.equal(readReviewer(project.root).bounds.reviewRequests, effective);
+    assert.equal(check(t, { [target]: content }).result.status, "passed");
   }
 });
 

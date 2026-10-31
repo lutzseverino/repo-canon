@@ -478,7 +478,7 @@ test("the GitHub rules state the reviewer file's schema, and babysit only cites 
   assert.doesNotMatch(guide, /`babysit`\]\([^)]*\) documents its schema/);
   assert.match(
     rules,
-    /`bounds\.reviewRequests`: optional positive integer; the total request bound defined under \[review requests\]\(#review-requests\)/,
+    /`bounds\.reviewRequests`: optional positive integer or the exact string `"unbounded"`; omission defaults to \*\*4\*\*/,
   );
   assert.doesNotMatch(rules, /contribution guide's Merging section/);
 });
@@ -2004,6 +2004,67 @@ test("babysit waits only through its script, and the GitHub rules own the no-che
   );
 });
 
+test("only first factory selection asks about separate post-run app-author policy configuration", () => {
+  const factory = flowedText("guidance/factory-workflow.md");
+  const github = flowedText("guidance/github-repository-configuration.md");
+  const rules = flowedText("rules/github-repository-configuration.md");
+  assert.match(
+    factory,
+    /Read the previous adoption record before the run changes it/,
+  );
+  assert.match(
+    factory,
+    /A first adoption and a switch from standard to factory both ask; routine updates of existing factory adopters do not ask again/,
+  );
+  assert.match(factory, /Ask the repository's maintainer:/);
+  assert.match(
+    factory,
+    /If yes, which app identity does this repository name as its author/,
+  );
+  assert.match(factory, /Preserve any existing deliberate policy unchanged/);
+  assert.match(factory, /On no, leave the policy absent if absent/);
+  assert.match(
+    factory,
+    /after the adoption run completes and its adoption PR is delivered/,
+  );
+  assert.match(
+    factory,
+    /separate commit, outside the adoption commit and adoption PR/,
+  );
+  assert.match(
+    factory,
+    /validate it with the read-only `factory-review-policy` check/,
+  );
+  assert.match(factory, /do not copy an identity/);
+  assert.match(factory, /perform a remote account lookup/);
+  assert.match(
+    factory,
+    /Adoption neither creates nor edits the policy file or `\.github\/pull-request-reviewer\.json`/,
+  );
+  assert.match(github, /Standard-only runs do not ask/);
+  assert.match(
+    github,
+    /routine updates whose previous adoption record already selected factory do not ask again/,
+  );
+  assert.match(github, /factory-workflow\.md#app-author-policy-opt-in/);
+  assert.match(
+    github,
+    /omission of `bounds.reviewRequests` now means a total bound of \*\*4\*\*, where it previously meant unbounded requests/,
+  );
+  assert.match(
+    github,
+    /set `bounds.reviewRequests` to the exact JSON string `"unbounded"`/,
+  );
+  assert.match(
+    rules,
+    /Repo Canon ships no policy declaration or default exemption/,
+  );
+  assert.doesNotMatch(
+    readFileSync(join(root, "standards.yaml"), "utf8"),
+    /factory-review-policy\.json|pull-request-reviewer\.json/,
+  );
+});
+
 test("app-author review guidance keeps policy skips distinct and preserves merge obligations", () => {
   const rules = flowedText("rules/github-repository-configuration.md");
   const factory = flowedText("rules/factory-workflow.md");
@@ -2806,7 +2867,10 @@ test("review converges on fixes and reasoned declines the guide allows", () => {
     /After that first request, an agent must post the review request comment for a new head when its push fixes, fully or partly, a review finding the contribution guide does not let it decline, and the request bound has not been reached/,
     /No other push gets a request: a push that only follows declines, changes only tests, documentation or wording, or only fixes a failing check gets none/,
     /The optional `bounds.reviewRequests` limits the total review requests a pull request gets/,
-    /Once that count reaches the bound, no agent requests another review\. Without the field there is no count bound/,
+    /defaulting to \*\*4\*\* when omitted from a reviewer file/,
+    /the exact JSON string `"unbounded"` deliberately removes the count bound/,
+    /Once that count reaches the bound, no agent requests another review/,
+    /Without a reviewer file there is no reviewer, request or reviewer wait; the default creates none/,
     /The bound creates no reason to decline a real finding and no grouped follow-up issue/,
     /fix every finding the contribution guide does not let the agent decline and push without another request, and answer any review that arrives anyway/,
   ])

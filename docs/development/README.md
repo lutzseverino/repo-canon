@@ -134,7 +134,12 @@ with or without a reviewer, independent request emission and wait classification
 preserved request bounds and check waits, and installed executable resources
 without runtime packages. The
 repository-owned `.github/factory-review-policy.json` is optional; neither
-profile installs a declaration or enrolls adopters in skipping external review.
+profile installs a declaration or enrolls adopters silently in skipping external
+review. First factory selection asks about a separate post-run opt-in; routine
+factory updates and standard-only runs do not ask. The reviewer check and
+request/wait fixtures cover omission defaulting to four requests, explicit
+finite bounds and the deliberate `"unbounded"` schema value, without creating
+a reviewer when its file is absent.
 Run `node --test test/babysit-body-links.test.mjs test/babysit-request.test.mjs`
 for pre-review own-head file links (exit `8`), encoded refs and source-fork
 identity, and the exact adoption-summary exemption. The offline fixtures use
