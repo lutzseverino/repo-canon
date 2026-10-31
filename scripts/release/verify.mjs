@@ -136,7 +136,13 @@ function checkInspection(version, releaseCommit, read, profile) {
   const selection = inspection.selection ?? {};
   const cliVersion = selection.cli?.version;
   const resolvedCommit = selection.standards?.commit;
-  const declarations = inspection.sourceResolved?.declarations?.length ?? 0;
+  const resolved =
+    inspection.sourceResolved !== undefined
+      ? inspection.sourceResolved
+      : inspection.resolved;
+  const declarations = Array.isArray(resolved?.declarations)
+    ? resolved.declarations.length
+    : 0;
   const failures = [];
   if (cliVersion !== floor) {
     failures.push(

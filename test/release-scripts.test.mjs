@@ -57,14 +57,17 @@ if (command === 'source' && subcommand === 'validate') {
   const version = args[args.indexOf('--standards-version') + 1];
   const profile = args[args.indexOf('--profile') + 1];
   console.log(JSON.stringify({
-    format: 'repo-standards/inspection/v8',
+    format: 'repo-standards/inspection/v9',
     remoteSetup: [],
     selection: {
       cli: { version: process.env.STUB_CLI_VERSION },
-      standards: { version, commit: process.env.STUB_RESOLVED_COMMIT },
-      profile,
+      standards: { version: process.env.STUB_INSPECTION_VERSION || version, commit: process.env.STUB_RESOLVED_COMMIT },
+      profile: process.env.STUB_INSPECTION_PROFILE || profile,
     },
-    sourceResolved: { declarations: [{ id: 'agent-guidance' }] },
+    ...(profile === 'workbench'
+      ? { resolved: { declarations: [{ id: 'agent-guidance' }] } }
+      : { sourceResolved: { declarations: [{ id: 'agent-guidance' }] }, resolved: { declarations: [] } }),
+    ...JSON.parse(process.env.STUB_INSPECTION_FIELDS || '{}'),
   }));
 } else if (command === '--version') {
   console.log(process.env.STUB_CLI_VERSION);
@@ -528,6 +531,95 @@ test("release:verify passes a published release that agrees with its commit", (t
     /pass: the public copy at the release commit names no Repo Canon version and its README no CLI version, and every CLI version the adoption guide and the development and authoring documents name is the required minimum 7\.0\.0\./,
   );
 });
+
+test("release:verify uses released requirements and documents when the tooling checkout is newer", (t) => {
+  const repository = publishedRelease(t);
+  const toolingCommit = repository.commit(
+    {
+      "standards.yaml":
+        'format: repo-standards/v2\nrequires:\n  repo-standards: ">=10.0.0"\n',
+      "README.md": "Repo Canon v9.0.0 with CLI 99.0.0.\n",
+      "docs/usage/adopt-repo-canon.md": "CLI v99.0.0.\n",
+      ...developmentDocuments("99.0.0"),
+    },
+    "newer tooling checkout",
+  );
+  assert.notEqual(toolingCommit, repository.releaseCommit);
+  const { status, output } = repository.run(
+    "verify.mjs",
+    ["v1.0.0", repository.releaseCommit],
+    repository.environment,
+  );
+  assert.equal(status, 0, output);
+  assert.match(output, /required minimum 7\.0\.0/);
+  assert.match(
+    output,
+    new RegExp(`v1\\.0\\.0 verified at ${repository.releaseCommit}`),
+  );
+});
+
+for (const [name, fields] of [
+  ["empty source declarations", { sourceResolved: { declarations: [] } }],
+  ["missing source declarations", { sourceResolved: {} }],
+  ["null source report", { sourceResolved: null }],
+  [
+    "malformed source declarations",
+    { sourceResolved: { declarations: "bad" } },
+  ],
+  ["empty effective declarations", { resolved: { declarations: [] } }],
+  ["missing effective declarations", { resolved: {} }],
+  ["missing effective report", { resolved: null }],
+  ["malformed effective declarations", { resolved: { declarations: "bad" } }],
+]) {
+  test(`release:verify rejects ${name} in the applicable inspection field`, (t) => {
+    const { run, releaseCommit, environment } = publishedRelease(t);
+    const { status, output } = run("verify.mjs", ["v1.0.0", releaseCommit], {
+      ...environment,
+      STUB_INSPECTION_FIELDS: JSON.stringify(fields),
+    });
+    assert.notEqual(status, 0, output);
+    assert.match(
+      output,
+      /fail: the inspection did not resolve the workbench profile/,
+    );
+  });
+}
+
+/** @type {Array<[string, Record<string, string>, RegExp]>} */
+const wrongInspectionSelections = [
+  [
+    "profile",
+    { STUB_INSPECTION_PROFILE: "wrong" },
+    /did not resolve the workbench profile/,
+  ],
+  [
+    "version",
+    { STUB_INSPECTION_VERSION: "v9.0.0" },
+    /selected v9\.0\.0, not v1\.0\.0/,
+  ],
+  [
+    "commit",
+    { STUB_RESOLVED_COMMIT: "e".repeat(40) },
+    /resolved commit e{40}, not the release commit/,
+  ],
+  [
+    "CLI",
+    { STUB_CLI_VERSION: "7.1.0" },
+    /used CLI 7\.1\.0, not the required minimum 7\.0\.0/,
+  ],
+];
+for (const [name, overrides, failure] of wrongInspectionSelections) {
+  test(`release:verify rejects the wrong ${name} in a no-discovery inspection`, (t) => {
+    const { run, releaseCommit, environment } = publishedRelease(t);
+    const { status, output } = run("verify.mjs", ["v1.0.0", releaseCommit], {
+      ...environment,
+      ...overrides,
+    });
+    assert.notEqual(status, 0, output);
+    assert.match(output, failure);
+    assert.doesNotMatch(output, /pass: .* inspected .* workbench profile/);
+  });
+}
 
 test("release:verify updates from the previous stable release per profile using the newest CLI", (t) => {
   const { status, output, calls } = verifyAdoption(t, "complete");
