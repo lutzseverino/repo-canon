@@ -1404,6 +1404,93 @@ test("orchestrate handoffs retain workbench delivery and report-back context", (
   }
 });
 
+test("orchestrate creates a private workbench and separates current state from history", () => {
+  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const workbench = /## Workbench (.*?) ## The plan /.exec(skill)?.[1] ?? "";
+  // Creation and privacy.
+  assert.match(
+    workbench,
+    /owner's private record, outside every project repository, with a private remote or none/,
+  );
+  assert.match(
+    workbench,
+    /When they name none, create one before you propose a plan: a local git repository outside every project checkout, seeded with `index\.md`, `inbox\.md`, `wishes\.md` and `now\.md`/,
+  );
+  assert.match(
+    workbench,
+    /Tell the owner its path and the line to add to their global agent instructions/,
+  );
+  assert.doesNotMatch(workbench, /ask the owner for it/);
+  assert.match(
+    workbench,
+    /`Repositories` list names each repository the workbench tracks/,
+  );
+
+  // Layout and the current-state file.
+  for (const entry of ["now.md", "plan.md", "log.md"])
+    assert.ok(workbench.includes(` ${entry} `), entry);
+  assert.match(
+    workbench,
+    /`now\.md` and each `plan\.md` are rewritten in place/,
+  );
+  const now = /### `now\.md` (.*?) ### /.exec(workbench)?.[1] ?? "";
+  assert.match(now, /Rewrite it on every pass; never append to it/);
+  assert.match(
+    now,
+    /\*\*Waiting on you\*\*.*count of open entries in `inbox\.md`.*chores/,
+  );
+  assert.match(
+    now,
+    /\| Item \| Waiting on \| Since \(UTC\) \| Next check \| Evidence \|/,
+  );
+  assert.match(now, /\| Host \| Kind \| Session \| Started \(UTC\) \|/);
+  assert.match(
+    now,
+    /Add a launch's row before you start it, and remove the row when you take in its report-back/,
+  );
+  assert.match(skill, /count the rows under `now\.md`'s Running launches/);
+  assert.match(
+    skill,
+    /When you take in a report-back, remove its launch's row from `now\.md`'s Running launches/,
+  );
+  assert.match(
+    skill,
+    /previous dated observation in a bounded tail of the plan's `log\.md`/,
+  );
+
+  // The inbox holds decisions only.
+  const inbox = /### `inbox\.md` (.*?) ### /.exec(workbench)?.[1] ?? "";
+  assert.match(inbox, /Each entry is a decision/);
+  assert.match(inbox, /Notifications and chores go in `now\.md`/);
+  assert.match(inbox, /move the entry to its plan's `log\.md`/);
+
+  // Filed drafts are marked; decision records stay as written.
+  assert.match(
+    workbench,
+    /Once a draft brief is filed, add a dated line at its top linking the issues it became/,
+  );
+  assert.match(workbench, /Leave decision records as written/);
+
+  // plan.md is current state; log.md is the append-only history.
+  const plan = /## The plan (.*?) ## Lifecycle /.exec(skill)?.[1] ?? "";
+  assert.doesNotMatch(plan, /## Log/);
+  assert.match(plan, /## Current state/);
+  assert.match(plan, /`log\.md` takes this shape/);
+  assert.match(plan, /\*\*`log\.md`\.\*\* Append entries; never rewrite one/);
+  assert.match(
+    skill,
+    /A fresh session reads `index\.md`, `now\.md`, `inbox\.md` and each active `plan\.md`, and nothing else, not even a plan's `log\.md`, before it acts/,
+  );
+
+  const term = flowedText("GLOSSARY.md")
+    .split("**Workbench**:")[1]
+    .split("_Avoid_:")[0];
+  assert.match(
+    term,
+    /named by path in the owner's global agent instructions, or created by the orchestrating agent when none is named; private, and outside every project checkout/,
+  );
+});
+
 test("orchestrate observes filed work before approval without authorizing execution", () => {
   const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
   assert.match(

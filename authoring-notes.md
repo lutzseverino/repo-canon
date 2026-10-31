@@ -158,7 +158,20 @@ repeated.
   the guide for triage, readiness, question routing and delivery. Plan state
   lives in the owner's workbench, a git repository of plain Markdown whose
   path the owner's global agent instructions name, so the skill hard-codes no
-  host path. Wishes hold non-finding ideas outside the plan's goal; they may
+  host path. The owner decided on 2026-10-29 that when none is named, the
+  skill creates one: a local git repository outside every project checkout,
+  private, with a private remote or none, whose `index.md` lists the
+  repositories it tracks. The same decision keeps current state in `now.md`,
+  rewritten on every pass, with a register of running launches that the launch
+  cap counts; the inbox holds only decisions. Two further rules are inferred
+  intent from the approved cleanup ticket list of 2026-10-30, open to the
+  owner's veto rather than decided by the owner, as
+  [#731](https://github.com/lutzseverino/repo-canon/issues/731#issuecomment-6532507498)
+  records with both: each plan's `plan.md` holds
+  its current state and an append-only `log.md` its history, so a fresh
+  session reads current state, not the log; and a filed draft gets a dated
+  line at its top linking the issues it became, while decision records stay as
+  written. Wishes hold non-finding ideas outside the plan's goal; they may
   link reported findings for future planning. The guide's Findings rule still
   governs every finding, including those outside the goal: a workbench wish
   never replaces filing or linking it and reporting it where the guide requires.
