@@ -305,6 +305,8 @@ const requirementOutcomes = {
   "repository-license": "both",
   "repository-readme": "both",
   "typescript-node-stack": "both",
+  "typescript-astro-stack": "both",
+  "typescript-vite-stack": "both",
 };
 
 test("self-adoption leaves Repo Canon's own installed source unvendored", () => {
@@ -361,13 +363,21 @@ test("the contribution guide leaves documentation rules to the documentation dec
   );
 });
 
-test("the source keeps every declaration's rules in one place, named by the declaration", () => {
+test("the source keeps each rule in one place, with web stacks sharing their source", () => {
   const rules = manifestDeclarations().filter(({ rules }) => rules);
   for (const { id, rules: path } of rules)
-    assert.equal(path, `rules/${id}.md`, `${id} keeps its rules in rules/`);
+    assert.equal(
+      path,
+      ["typescript-astro-stack", "typescript-vite-stack"].includes(id)
+        ? "rules/typescript-web-stacks.md"
+        : `rules/${id}.md`,
+      `${id} keeps its rules in rules/`,
+    );
   assert.deepEqual(
     readdirSync(join(root, "rules")).sort(),
-    rules.map(({ id }) => `${id}.md`).sort(),
+    [
+      ...new Set(rules.map(({ rules: path }) => path.slice("rules/".length))),
+    ].sort(),
     "rules/ holds only declared rules",
   );
   assert.ok(

@@ -56,6 +56,40 @@ const nodeProject = {
   "pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
 };
 
+function webProject(stack) {
+  const base = JSON.parse(nodeProject["package.json"]);
+  return {
+    ...nodeProject,
+    "package.json": JSON.stringify({
+      ...base,
+      description:
+        stack === "astro"
+          ? "A static content site"
+          : "A client-side app owning routing and state",
+      dependencies:
+        stack === "astro"
+          ? { astro: "7.0.0", react: "19.0.0" }
+          : { vite: "8.0.0", react: "19.0.0" },
+      devDependencies: {
+        ...base.devDependencies,
+        shadcn: "4.1.0",
+        "prettier-plugin-astro": "0.14.0",
+      },
+      scripts: {
+        validate: "pnpm run ui:check",
+        "ui:add": "shadcn add",
+        "ui:update": "shadcn add --overwrite",
+        "ui:check": "node integrity.mjs",
+      },
+    }),
+    [`${stack}.config.mjs`]: "export default {};\n",
+    "components.json": JSON.stringify({
+      style: "base-nova",
+      iconLibrary: "lucide",
+    }),
+  };
+}
+
 // The assessment of the stack for the adoption with one conforming Project.
 const stackAssessment = {
   status: "satisfied",
@@ -135,7 +169,7 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
   for (const [name, profile] of Object.entries(validation.profiles)) {
     assert.equal(
       profile.declarations.length,
-      { standard: 58, factory: 62 }[name],
+      { standard: 60, factory: 64 }[name],
     );
     assert.deepEqual(
       profile.declarations.find(({ id }) => id === "standards-update-workflow"),
@@ -187,7 +221,7 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
             operation.prerequisite.version,
           );
     }
-  assert.equal(prerequisites.size, 12);
+  assert.equal(prerequisites.size, 16);
   for (const [script, range] of prerequisites)
     assert.equal(range, ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0", script);
 
@@ -297,10 +331,22 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
     ["standard", "standard", {}],
     ["factory", "factory", {}],
     ["node", "standard", nodeProject],
+    ...["astro", "vite"].flatMap((stack) =>
+      ["standard", "factory"].flatMap((profile) => [
+        [`${stack}-${profile}`, profile, webProject(stack)],
+        [`${stack}-${profile}-update`, profile, webProject(stack)],
+      ]),
+    ),
     ["standard-update", "standard", {}],
     ["factory-update", "factory", {}],
   ])) {
+    const web = label.startsWith("astro-")
+      ? "astro"
+      : label.startsWith("vite-")
+        ? "vite"
+        : null;
     const node = label === "node";
+    const selectedStack = web ?? (node ? "node" : null);
     const project = join(directory, label);
     mkdirSync(project);
     for (const [path, content] of Object.entries({ ...files, ...extraFiles })) {
@@ -397,11 +443,27 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
         const questions = report.answers.questions.map((question) => {
           const [kind, name] = question.id.split(":");
           let answer = question.answer;
-          if (kind === "scope") answer ??= scopes[name];
+          if (kind === "scope") {
+            // Updates offer the previous confirmed answer alongside a fresh
+            // discovery draft. Reassess stack membership with that draft;
+            // an old Node inclusion must not override new web exclusions.
+            if (/^typescript-(?:node|astro|vite)-stack$/.test(name))
+              answer = question.details?.draft ?? answer;
+            answer ??= scopes[name];
+          }
           if (kind === "assessment" && report.missing.includes(question.id))
             answer =
-              node && name === "typescript-node-stack"
-                ? stackAssessment
+              name === `typescript-${selectedStack}-stack` ||
+              (web &&
+                selectedVersion === previousVersion &&
+                name === "typescript-node-stack")
+                ? {
+                    ...stackAssessment,
+                    explanation: `The fixture root matches ${name}; its retained configuration and manifest provide the evidence.`,
+                    evidence: [
+                      "package.json, components.json and framework configuration establish membership and tools; the fixture assessment accepts the remaining contextual rules.",
+                    ],
+                  }
                 : assessments[name];
           if (
             kind === "assessment" &&
@@ -415,14 +477,25 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
                 "The previous release's worked block covers its counted installed files while preserving every repository-owned attribute line.",
               ],
             };
-          if (kind === "scope" && name === "typescript-node-stack") {
+          if (
+            kind === "scope" &&
+            /^typescript-(?:node|astro|vite)-stack$/.test(name) &&
+            selectedVersion === version
+          ) {
             // The stack's discovery script drafts the entry, with no scope
             // unless the repository holds a conforming Project.
             assert.deepEqual(answer.unresolved, []);
-            assert.equal(answer.noScope, node ? undefined : true);
+            const covered = name === `typescript-${selectedStack}-stack`;
+            assert.equal(
+              answer.noScope,
+              covered ? undefined : true,
+              `${label} ${name}: ${JSON.stringify(question)}`,
+            );
             assert.deepEqual(
               answer.candidates.map(({ path, decision }) => [path, decision]),
-              node ? [["package.json", "include"]] : [],
+              selectedStack
+                ? [["package.json", covered ? "include" : "exclude"]]
+                : [],
             );
           }
           if (kind === "version") answer = selectedVersion;
@@ -485,31 +558,47 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
       true,
       `${label} includes assessment:git-attributes in report.missing`,
     );
-    // No scope installs no stack rules and runs no stack check; a confirmed
-    // Project gets both, and its manifest passes.
-    const stackChecks = invoke("check").report.checks.filter(
-      (check) => check.declaration === "typescript-node-stack",
-    );
-    assert.deepEqual(
-      stackChecks.map(({ id, status }) => [id, status]),
-      node ? [["typescript-node-stack-manifests", "passed"]] : [],
-      `${label} typescript-node stack checks`,
-    );
-    const stackRules = invoke("rules", "package.json").report.rules.filter(
-      (rule) => rule.declaration === "typescript-node-stack",
-    );
-    assert.equal(stackRules.length, node ? 1 : 0, `${label} stack rules`);
-    if (node)
-      assert.equal(
-        stackRules[0].content,
-        readFileSync(join(root, "rules/typescript-node-stack.md"), "utf8"),
+    // Exercise no scope and covered checks/rules for all stacks in both profiles,
+    // including updates from a source that did not ship web declarations.
+    const checks = invoke("check").report.checks;
+    const rules = invoke("rules", "package.json").report.rules;
+    for (const stack of ["node", "astro", "vite"]) {
+      const declaration = `typescript-${stack}-stack`;
+      const covered = stack === selectedStack;
+      assert.deepEqual(
+        checks
+          .filter((check) => check.declaration === declaration)
+          .map(({ id, status }) => [id, status]),
+        covered ? [[`${declaration}-manifests`, "passed"]] : [],
+        label,
       );
-    assert.equal(
-      existsSync(
-        join(project, ".repo-standards/rules/typescript-node-stack.md"),
-      ),
-      node,
-    );
+      const selectedRules = rules.filter(
+        (rule) => rule.declaration === declaration,
+      );
+      assert.equal(
+        selectedRules.length,
+        covered ? 1 : 0,
+        `${label} ${declaration} rules`,
+      );
+      if (covered)
+        assert.equal(
+          selectedRules[0].content,
+          readFileSync(
+            join(
+              root,
+              stack === "node"
+                ? "rules/typescript-node-stack.md"
+                : "rules/typescript-web-stacks.md",
+            ),
+            "utf8",
+          ),
+        );
+      assert.equal(
+        existsSync(join(project, `.repo-standards/rules/${declaration}.md`)),
+        covered,
+        label,
+      );
+    }
     assert.ok(
       readFileSync(join(project, ".gitattributes"), "utf8").startsWith(
         originalAttributes,

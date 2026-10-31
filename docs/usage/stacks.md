@@ -3,13 +3,13 @@
 A stack is a named set of development tools at exact major versions, such as
 the package manager, runtime, compiler, linter, formatter and test runner a
 Project uses. Stacks are opt-in per Project, and a Project can permanently use
-no stack. Both profiles include the optional `typescript-node-stack`
-declaration, but it governs only the Projects confirmed in its scope, so a
+no stack. Both profiles include the optional `typescript-node-stack`,
+`typescript-astro-stack` and `typescript-vite-stack` declarations, each governing only its confirmed Projects, so a
 repository with no matching Project gets no stack rules, as the
 [authoring notes](../../authoring-notes.md) explain.
 
 For each Project confirmed in its scope, adoption installs the
-[stack rules](../../rules/typescript-node-stack.md), assesses the Project
+applicable stack rules, assesses the Project
 against them, and runs a read-only check of its manifests. A repository without
 such a Project confirms no scope: no stack rules are installed and no stack
 check runs. [ADR 0024](../adr/0024-scope-each-stack-to-the-projects-that-use-it.md)
@@ -69,10 +69,15 @@ use it, and a Site in no stack does not move it. A package that a Project other
 than a web Project also uses is not a shared web package and stays out of both
 web stacks.
 
-These two stacks are recommended, but their declarations have not shipped yet:
-adoption installs no rules and runs no check for them. The
-`typescript-node-stack` declaration still installs and checks as described
-above. [ADR 0026](../adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md)
+Both web declarations ship in both profiles. Confirming a Project installs
+the same [shared web rules](../../rules/typescript-web-stacks.md) for either
+stack and runs its read-only manifest check. No matching Project confirms no
+scope, installing no web rules and running no web check. The web checks add
+Astro formatter availability and shadcn configuration, exact pin and scripts at
+the evidenced holder to Node's checks. Framework, React, Tailwind, TypeScript
+and runner majors, actual `astro check`/`ui:check` execution, CI and UI
+integrity, wrappers and themes remain contextual assessment requirements. A
+shared package without UI needs no registry of its own. [ADR 0026](../adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md)
 records these decisions and their rationale.
 
 ## Projects and workspaces
@@ -86,8 +91,7 @@ development commands is also a Project alongside its members, and its stack
 membership is assessed independently; a root that only supplies shared
 workspace configuration is not a Project.
 
-The `typescript-node-stack` declaration's scope names one `package.json` per
-Project. Discovery drafts
+Each stack declaration's scope names one `package.json` per Project. Discovery drafts
 it from manifests and workspaces: a Project that matches the stack's manifest
 facts is proposed, and one that differs is left out with its differences. The
 adopting agent settles membership from evidence, asking only when membership

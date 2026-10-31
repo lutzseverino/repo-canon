@@ -85,7 +85,17 @@ differences for a separate migration. For each Project in the scope, adoption
 installs the stack's rules, assesses the Project against them, and runs a
 read-only check of its manifests. A repository without such a Project confirms
 no scope: no stack rules are installed and no stack check runs.
-[Recommended stacks](stacks.md) describes the stack.
+The optional `typescript-astro-stack` and `typescript-vite-stack` declarations
+also ship in both profiles for Sites and Apps. They install the same shared
+web rules, with separate discovered scopes and checks. Node discovery excludes
+web Projects, including shared web packages; a package with non-web consumers
+remains independently eligible for Node. Framework tools alone do not decide
+membership, and a Vite-built Site stays outside all stacks until migrated.
+Each maintained workspace root is assessed independently of its members;
+shared-only roots supply facts without becoming scoped Projects. Checks cover
+manifest/configuration facts; framework and runner majors and actual validation
+behavior remain assessed. [Recommended stacks](stacks.md) describes all three
+stacks and their checked/assessed boundary.
 
 ## Remote setup
 

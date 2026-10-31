@@ -62,7 +62,15 @@ const recordedDraft = {
   ...draft,
   coverage: "The previous adoption scope, proposed for validation.",
 };
-const drafts = { documentation: draft, "typescript-node-stack": stackDraft };
+const drafts = {
+  documentation: draft,
+  ...Object.fromEntries(
+    ["node", "astro", "vite"].map((stack) => [
+      `typescript-${stack}-stack`,
+      stackDraft,
+    ]),
+  ),
+};
 
 function print(report, status = 1) {
   process.stdout.write(`${JSON.stringify(report)}\n`);
@@ -141,6 +149,8 @@ const discovered = [
   "github-repository-configuration",
   "project-readmes",
   "typescript-node-stack",
+  "typescript-astro-stack",
+  "typescript-vite-stack",
   ...(profile === "factory" ? ["factory-workflow"] : []),
 ];
 const report = (outcome, asked, rest = {}) => ({
@@ -250,11 +260,11 @@ if (
         answer: recordedDraft,
         details: { unresolved: [], draft },
       },
-      {
-        id: "scope:typescript-node-stack",
+      ...["node", "astro", "vite"].map((stack) => ({
+        id: `scope:typescript-${stack}-stack`,
         answer: stackDraft,
         details: { unresolved: [] },
-      },
+      })),
       { id: "remote-setup", answer: null, details: remoteSetup },
     ];
     if (updateScenario === "fallback-scope")
@@ -331,7 +341,12 @@ if (state?.phase === "update-questions") {
     reject("Missing fixture scope for a declaration without a draft.");
   for (const [id, expected] of Object.entries({
     documentation: recordedDraft,
-    "typescript-node-stack": stackDraft,
+    ...Object.fromEntries(
+      ["node", "astro", "vite"].map((stack) => [
+        `typescript-${stack}-stack`,
+        stackDraft,
+      ]),
+    ),
   })) {
     if (JSON.stringify(given.get(`scope:${id}`)) !== JSON.stringify(expected))
       reject(`The ${id} scope must preserve its proposed answer unchanged.`);

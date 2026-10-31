@@ -23,7 +23,7 @@ Rules hold no one-time step and cite no retained source path; where one
 declaration's rules depend on another's, they name that declaration's rules.
 `guidance/` and `discovery/` are source-side instructions for the one-time
 adoption, written for a person as well as an agent, and `discovery/` also holds
-the documentation and typescript-node stack scope drafters, which inspection
+the documentation and all three TypeScript stack scope drafters, which inspection
 runs as those declarations' discovery scripts. They are not installed in the adopting
 repository; the CLI retains them with the other source inputs.
 
@@ -91,6 +91,19 @@ repeated.
   [ADR 0024](docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md)
   decides; its read-only check reads only manifest facts, and the assessment
   covers the rest.
+- The optional `typescript-astro-stack` and `typescript-vite-stack` declarations
+  ship in both profiles under [ADR 0026](docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md).
+  Both name the one [shared web rules file](rules/typescript-web-stacks.md).
+  Each discovers disjoint manifest scope or no scope, with Node excluding web
+  membership. The read-only checks extend Node's manifest boundary only with
+  Astro formatter availability and the holder's shadcn configuration, exact
+  CLI pin and scripts. Framework, React, Tailwind, TypeScript and runner majors,
+  CI, validation execution and UI behavior remain assessed. Discovery evidence
+  must distinguish Sites and Apps; tool configuration alone is not a general
+  classifier. Shared package membership follows in-stack web consumers, with
+  Astro winning; mixed non-web consumers preserve Node eligibility. Differing
+  existing Projects need separate migrations, so these optional additions are
+  a feature, not a forced migration.
 - The documentation requirements are stated in
   [documentation rules](rules/documentation.md), with the adoption steps in
   the [documentation guidance](guidance/documentation.md) and the scope in the

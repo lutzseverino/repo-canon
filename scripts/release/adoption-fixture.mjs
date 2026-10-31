@@ -255,6 +255,42 @@ export const assessments = {
       ),
     },
   },
+  "typescript-astro-stack": {
+    status: "satisfied",
+    explanation:
+      "Wordtally has no package.json, so it holds no Project of the typescript-astro stack and the declaration has no scope.",
+    evidence: [
+      "The fixture keeps no package.json, pnpm-workspace.yaml, or pnpm-lock.yaml.",
+    ],
+    scopeValidity: {
+      afterFixes: unchangedScope(
+        "No project file belongs in the scope: the fixture has no web manifest.",
+        ["wordtally.mjs runs unbuilt with plain node and has no manifest."],
+      ),
+      current: unchangedScope(
+        "Adoption made no contextual edit, so no manifest appeared.",
+        ["The fixture's files are unchanged since the fixes."],
+      ),
+    },
+  },
+  "typescript-vite-stack": {
+    status: "satisfied",
+    explanation:
+      "Wordtally has no package.json, so it holds no Project of the typescript-vite stack and the declaration has no scope.",
+    evidence: [
+      "The fixture keeps no package.json, pnpm-workspace.yaml, or pnpm-lock.yaml.",
+    ],
+    scopeValidity: {
+      afterFixes: unchangedScope(
+        "No project file belongs in the scope: the fixture has no web manifest.",
+        ["wordtally.mjs runs unbuilt with plain node and has no manifest."],
+      ),
+      current: unchangedScope(
+        "Adoption made no contextual edit, so no manifest appeared.",
+        ["The fixture's files are unchanged since the fixes."],
+      ),
+    },
+  },
   "project-agent-guidance": {
     status: "satisfied",
     explanation:

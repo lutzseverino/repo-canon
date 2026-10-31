@@ -320,9 +320,8 @@ pnpm run release:verify "$version" "$release_commit" &&
    from `scripts/release/adoption-fixture.mjs`, whose files already satisfy the
    rules of the contextual declarations. It has no Git remote, so the GitHub
    remote setup probes report not ready. The check fills `version` and
-   `profile`, accepts the drafts of both discovery scripts as given, the
-   documentation drafter's scope and the typescript-node stack drafter's no
-   scope, answers the other scopes for the fixture, answers `remote-setup` with `defer`, names the
+   `profile`, accepts all four discovery-script drafts as given: the documentation
+   scope and no scope for Node, Astro and Vite stacks, answers the other scopes for the fixture, answers `remote-setup` with `defer`, names the
    printed `inspection`, and submits each contextual declaration's assessment,
    until the outcome is `complete`. `status` must then report the run ready to
    commit and list both GitHub remote setup fixes as deferred. A blocker, a

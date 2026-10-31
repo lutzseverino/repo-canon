@@ -46,6 +46,7 @@ agent, it prints an answers file to fill in with you and its next steps.
 - Offer a `factory` profile that adds factory workflow rules, configuration and the toolchain image a host-installed factory, an unattended ticket-running service, needs to serve the repository.
 - Set up triage labels, squash-only merging, and a required `PR metadata` check where GitHub's plan offers one.
 - Check the repository introduction, component introductions, and documentation navigation.
+- Offer optional Node.js, Astro and Vite tool conventions for matching code, leaving existing differing code for separate migrations.
 - Install rules for the documentation tree, the repository and component introductions, the license, and the GitHub configuration.
 
 ## Usage
