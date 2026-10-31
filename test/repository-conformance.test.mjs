@@ -1034,6 +1034,7 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
       "platform.mjs",
       "pull-request-reviewer.mjs",
       "request.mjs",
+      "review-outcome.mjs",
       "review-policy.mjs",
       "reviewer.mjs",
       "trusted-review-config.mjs",
@@ -2012,7 +2013,7 @@ test("app-author review guidance keeps policy skips distinct and preserves merge
     assert.match(text, /findings that (?:actually )?arrive/);
   }
   assert.match(rules, /No external reviewer runs on app-authored PRs\./);
-  assert.match(rules, /actual internal Standards and Spec review outcomes/);
+  assert.match(rules, /record the actual outcomes of both axes/);
   assert.match(rules, /Absent policy is supported/);
   assert.match(rules, /merge authorization/);
   assert.match(rules, /Use only supplied credentials/);
@@ -2027,7 +2028,7 @@ test("policy-skipped PRs require defined internal reviews and their actual outco
   const rules = flowedText("rules/github-repository-configuration.md");
   assert.match(
     rules,
-    /For a policy-skipped pull request, complete internal Standards and Spec reviews before merge/,
+    /Policy-skipped pull requests require both reviews before merge/,
   );
   assert.match(
     rules,
@@ -2039,11 +2040,11 @@ test("policy-skipped PRs require defined internal reviews and their actual outco
   );
   assert.match(
     rules,
-    /installed `code-review` workflow provides both axes, including its handling of a missing specification/,
+    /use the installed `code-review` workflow: Standards checks/,
   );
   assert.match(
     rules,
-    /These internal reviews are distinct from the configured external reviewer/,
+    /These reviews are distinct from the configured external reviewer/,
   );
   assert.match(
     rules,
@@ -2051,13 +2052,19 @@ test("policy-skipped PRs require defined internal reviews and their actual outco
   );
   assert.match(
     rules,
-    /At merge, record the actual internal Standards and Spec review outcomes/,
+    /Complete the shared \[internal reviews\]\(#internal-standards-and-spec-reviews\) and post their actual outcomes in one PR comment before merge/,
   );
+  assert.equal((rules.match(/Standards checks the change/g) ?? []).length, 1);
+  assert.match(
+    rules,
+    /including the workflow's handling of a missing specification/,
+  );
+  assert.match(rules, /merge exit `5` without a merge write/);
 
   const factory = flowedText("rules/factory-workflow.md");
   assert.match(
     factory,
-    /internal Standards and Spec reviews defined by the `github-repository-configuration` rules' app-author policy/,
+    /internal Standards and Spec reviews defined by the `github-repository-configuration` rules' Internal Standards and Spec reviews section/,
   );
 });
 
@@ -2065,7 +2072,7 @@ test("nonmatching and absent-policy PRs keep applicable reviews without a blanke
   const rules = flowedText("rules/github-repository-configuration.md");
   assert.match(
     rules,
-    /For nonmatching and absent-policy pull requests, keep the existing applicable internal-review workflow/,
+    /Nonmatching and absent-policy pull requests retain their existing applicable internal-review workflow and optionality in both profiles/,
   );
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(

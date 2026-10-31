@@ -57,7 +57,10 @@ requiring a new request under the rules.
      review.
    - `5`: still waiting; run it again.
    - `6`: checks passed and external review was skipped by app-author policy;
-     go to step 2 and follow the rules' policy-skip merge outcome requirements.
+     go to step 2. After completing both internal reviews, replace both outcome
+     placeholders in the printed full-head template and post it as a PR comment
+     under the rules' policy-skip merge outcome requirements. The unfilled
+     template is not completed review evidence.
    - `7`: invalid trusted review configuration. Record an owner question under
      the contribution guide's Comments rules, identifying the destination
      repository, selected revision, affected declaration and validation problem
@@ -96,6 +99,10 @@ requiring a new request under the rules.
    [Comments](../../../CONTRIBUTING.md#comments), without retrying the merge;
    `4` means the base is stale: follow Branch-update recovery only if its one
    attempt is unused; otherwise record the owner handoff and stop;
+   `5` means the current-head policy-skip outcome comment is missing or incomplete:
+   complete both internal reviews, post their actual outcomes using the wait's
+   template for that full head, then rerun the merge after verifying the other
+   merge conditions. This is a post-and-rerun result, not an owner handoff;
    `1` means follow
    [Credentials](../../../CONTRIBUTING.md#credentials) for a permission refusal;
    otherwise fix the invocation or other platform error and
@@ -103,6 +110,12 @@ requiring a new request under the rules.
    require, using the delivered head, validation and review results, and merge
    commit SHA printed by the command.
 6. Stop.
+
+The merge command independently resolves trusted review configuration and checks
+the platform PR author on every invocation, even without a prior wait. Invalid
+trusted declarations require its owner-handoff exit `3`; unreadable review
+configuration returns `1` and permits no merge. A prior wait result and proposed
+PR-branch policy cannot bypass the outcome check.
 
 ## Branch-update recovery
 

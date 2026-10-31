@@ -304,6 +304,7 @@ test("wait failures never report readiness and merge queue reads fail before mer
       let mutations = 0;
       await assert.rejects(
         merge(["12", head], {
+          ...connection,
           pullRequests: {
             pullRequest: async () => ({ headCommit: head }),
             mergesThroughQueue: failure,

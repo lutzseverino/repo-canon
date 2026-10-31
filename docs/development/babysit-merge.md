@@ -17,6 +17,26 @@ script reads the current PR title, body, and head through Postern's `PullRequest
 `PullRequests.mergesThroughQueue`. If the base
 branch requires a merge queue, it stops before calling `PullRequests.squashMerge`: a queue
 cannot apply the explicit squash message the contribution guide requires.
+Before the queue check, it independently resolves both trusted review
+declarations through `trustedReviewConfiguration()` at one pinned destination
+default-branch commit and matches the platform PR author against that policy.
+This applies even to direct invocation without a prior wait. For a matching
+app author, Access reads the PR conversation comments and requires a complete
+current-head outcome record before any merge write. Proposed local or PR-branch
+configuration and caller claims about a previous wait cannot bypass this check.
+Nonmatching and absent policies keep their existing applicability.
+
+Wait exit `6` prints a copyable comment template with the full `Head:` SHA,
+`Standards:` and `Spec:` outcome fields and the exact sentence
+"No external reviewer runs on app-authored PRs." Follow the shared internal-review
+workflow in the `github-repository-configuration` rules and replace both outcome
+placeholders with actual results before posting. The parser requires those
+three plain text fields, each once in the same comment, and the exact sentence
+on its own line. The head must be the full current SHA. Empty fields, unfilled
+angle/bracket/brace prompt values, TODO/TBD placeholder values, and fenced or HTML-comment
+examples do not count. The record documents completed reviews; it grants no
+merge authorization and does not settle review findings by itself.
+
 Before merging, Access reads the destination's default branch and verifies the
 PR targets it. It reads all active branch rules, including inherited rulesets,
 and confirms a nonempty strict required-check rule whose matching ruleset detail
@@ -55,13 +75,23 @@ PR in a state other than `merged`, or freshness enforcement cannot be confirmed.
 without retrying the merge. Exit `2` means the head changed, either before the merge
 call or when a refused merge is followed by a read showing a different head;
 the skill returns to its wait step. Exit `1` reports an invalid invocation or
-a platform error outside freshness preflight. Unreadable policy or comparison
+a platform error outside freshness preflight, including unreadable trusted review
+configuration. Invalid trusted review declarations return `3` with the selected
+revision, affected file, validation problem and required correction for the owner;
+they permit neither merging nor an unchanged-configuration retry.
+Unreadable freshness policy or comparison
 results require exit `3` and the owner handoff, retaining the read diagnostic.
 A permission refusal ends handling immediately without another
 read or merge attempt. Other merge refusals re-read the head and compare the
 base, so a base advance returns `4` instead of being mistaken for a changed PR
 head. A failed comparison remains an explicit failure. Each platform request
 has a 45-second timeout.
+
+Exit `5` means a policy-skipped PR lacks a complete current-head outcome comment.
+It makes no merge write and identifies the head and trusted configuration snapshot.
+Complete both internal reviews, post their actual outcomes using the wait's
+template, and rerun after verifying the remaining merge conditions. This retry
+is distinct from the owner handoff, head-change and stale-base exits.
 
 For exit `4`, the skill permits one branch-update recovery per invocation,
 preserving all work and PR context before rebasing or replaying only the PR's
@@ -77,7 +107,10 @@ use the same injected Postern fetch transport as the wait tests and cover the ex
 verbatim body, head changes, empty bodies, invalid arguments, access errors,
 adoption-record bytes and trailing closing references,
 merge refusals, merge queue refusal, and successful calls that leave the PR
-unmerged. The freshness fixtures model two green PRs sharing one base, a base
+unmerged. Outcome fixtures cover direct and installed invocation, missing,
+stale, abbreviated, incomplete and placeholder evidence, policy changes since
+wait, proposed local policy, invalid/unreadable trusted declarations, and all
+remaining gates after a complete record. The freshness fixtures model two green PRs sharing one base, a base
 advance after preflight refused at the platform boundary, replacement heads
 with pending or failed checks, classic and ruleset enforcement, explicit caller
 non-bypass evidence with absent, empty or nonempty global lists, other or missing
@@ -95,7 +128,8 @@ default repository configured by `gh repo set-default`, then the `origin`
 remote URL when no default is configured. They read that default with
 `gh repo set-default --view`; a failed lookup stops the command without
 falling back to another repository. Request and wait select both trusted review
-declarations from the resolved destination's default branch at one pinned commit.
+declarations from the resolved destination's default branch at one pinned commit;
+merge independently selects a fresh snapshot on every invocation as well.
 Run `node --test test/babysit-destination.test.mjs` for installed-command fixtures
 covering selection precedence, trusted reads, request and merge writes, lookup
 and credential failures, and the expected-head gate with a configured default.

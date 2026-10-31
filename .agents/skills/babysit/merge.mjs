@@ -2,13 +2,20 @@
 
 // Usage: node merge.mjs <number> <head SHA>, from the repository root.
 // Exit codes: 0 merged, 1 usage or platform error, 2 head changed; wait again,
-// 3 not merged; needs the owner, 4 stale base; update and validate.
+// 3 not merged; needs the owner, 4 stale base; update and validate,
+// 5 missing review outcome; post the completed record and rerun.
 import {
   connectionFor,
   executedAsScript,
   pages,
   requestData,
 } from "./platform.mjs";
+import {
+  InvalidTrustedReviewConfiguration,
+  trustedReviewConfiguration,
+} from "./trusted-review-config.mjs";
+import { skipsExternalReview } from "./review-policy.mjs";
+import { completeReviewOutcome } from "./review-outcome.mjs";
 
 function needsOwner(message) {
   console.error(message);
@@ -114,6 +121,31 @@ export async function main(argv = process.argv.slice(2), connection) {
   connection ??= connectionFor();
   const pullRequest = await connection.pullRequests.pullRequest(Number(number));
   if (pullRequest.headCommit !== head) return retry();
+  let configuration;
+  try {
+    configuration = await trustedReviewConfiguration(connection);
+  } catch (error) {
+    if (error instanceof InvalidTrustedReviewConfiguration)
+      return needsOwner(error.message);
+    throw error;
+  }
+  if (skipsExternalReview(configuration.policy, pullRequest.author?.login)) {
+    const comments = await pages(
+      connection,
+      `/repos/${connection.repository.path}/issues/${number}/comments?per_page=100`,
+    );
+    if (
+      !comments
+        .flat()
+        .some((comment) => completeReviewOutcome(comment.body, head))
+    ) {
+      console.error(
+        `Post a complete current-head review outcome comment for ${head}, then rerun merge.mjs; ${configuration.evidence}.`,
+      );
+      process.exitCode = 5;
+      return;
+    }
+  }
   if (await connection.pullRequests.mergesThroughQueue(Number(number))) {
     return needsOwner(
       "The base branch requires a merge queue, which cannot apply the explicit squash message CONTRIBUTING.md requires; needs the owner.",

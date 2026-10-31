@@ -1676,6 +1676,35 @@ test("the installed wait applies the declaration without delaying for external r
   assert.match(result.stdout, /external review skipped by app-author policy/);
 });
 
+test("policy-skip wait prints a copyable full-head outcome template with or without a reviewer", async (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/wait.mjs");
+  for (const reviewer of [codexReviewer, null]) {
+    const result = await run(
+      {
+        head,
+        author: "factory-app[bot]",
+        createdAt: "2026-10-11T05:00:00Z",
+        pushedAt: "2026-10-11T05:00:00Z",
+      },
+      ["12", "--limit", "0.1"],
+      reviewer,
+      target,
+      { version: 1, author: "app/factory-app" },
+    );
+    assert.equal(result.code, 6, result.stderr);
+    assert.ok(result.stdout.includes(`Head: ${head}\n`));
+    assert.ok(
+      result.stdout.includes("Standards: <actual Standards review outcome>\n"),
+    );
+    assert.ok(result.stdout.includes("Spec: <actual Spec review outcome>\n"));
+    assert.ok(
+      result.stdout.includes(
+        "No external reviewer runs on app-authored PRs.\n",
+      ),
+    );
+  }
+});
+
 test("invalid policy declarations fail the wait rather than exempting the author", async () => {
   for (const policy of [
     "{",

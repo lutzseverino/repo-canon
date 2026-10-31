@@ -184,7 +184,11 @@ The command uses the vendored Postern
 bundle and the current GitHub CLI credential. Its caller bounds the foreground
 wait; the command has no invocation timeout.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
-and head-change retry behavior against the same Postern transport fixture.
+and head-change retry behavior against the same Postern transport fixture,
+including independent trusted-policy selection and the current-head internal
+review outcome gate. Missing or incomplete outcome evidence returns merge exit
+`5`: post the completed record, then rerun. Wait exit `6` prints its full-head
+template; an unfilled template never counts as completed review evidence.
 The delivery conformance cases in `test/repository-conformance.test.mjs`
 cover the shared owner-review gate in both profiles, either designation source
 and its provenance, renewed approval after a head change, standard merge
