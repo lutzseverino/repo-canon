@@ -385,7 +385,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.match(participantInputs, /1a\. Pre-approval filing/);
   assert.match(
     participantInputs,
-    /1b\. Heartbeat.*configured cadence.*no PR.*no directly launched worker/,
+    /1b\. Wake-up: a simulated wait armed for filed factory ticket 01.*no PR.*no directly launched worker/,
   );
   assert.match(
     participantInputs,
