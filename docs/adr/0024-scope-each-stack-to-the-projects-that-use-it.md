@@ -1,5 +1,10 @@
 # Scope each stack to the Projects that use it
 
+Status: decision 4's wait for the Astro verdict and decision 11's wait for the
+web stack are amended by
+[ADR 0026](0026-add-the-typescript-astro-and-typescript-vite-stacks.md); the
+other decisions stand.
+
 Repo Canon standardizes stacks through opt-in discovered declarations, each
 scoped to the Projects that use it. One repository can hold several Projects
 with different stacks, so a repository-wide stack selection cannot express

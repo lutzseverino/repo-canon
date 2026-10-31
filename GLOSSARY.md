@@ -10,9 +10,10 @@ The repository's top-level introduction and starting point for its readers.
 _Avoid_: Project README when referring to the repository-wide document
 
 **Project**:
-A maintained app, service, library, or tool with its own responsibility and
-development commands, including an internal workspace package or a maintained
-workspace root package alongside its members.
+A maintained application of any kind, service, library, or tool with its own
+responsibility and development commands, including an internal workspace
+package or a maintained workspace root package alongside its members. A Site
+or an App is a web Project.
 _Avoid_: Any directory, fixture, generated output, shared-only workspace configuration
 
 **Stack**:
@@ -21,6 +22,15 @@ Project uses, such as its package manager, runtime, compiler, linter, formatter
 and test runner. Repo Canon declares each stack as a discovered declaration
 whose scope is the Projects that use it, and a Project uses at most one.
 _Avoid_: Stack profile, stack choice, framework
+
+**Site**:
+A web Project whose pages are built ahead of time from content or build-time
+data, with interactive islands at most.
+
+**App**:
+A web Project whose interface is rendered in the browser by client-side code
+that owns its routing and state, together with the web packages in its
+workspace that only Apps use.
 
 **Project README**:
 The developer-facing introduction to one project within a monorepo.

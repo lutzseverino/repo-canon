@@ -88,8 +88,12 @@ involve real alternatives.
   policy, platform choice, distribution and timing guarantees stay explicit.
 - [Scope each stack to the Projects that use it](0024-scope-each-stack-to-the-projects-that-use-it.md):
   opt-in stacks are discovered declarations scoped per Project, starting with
-  the recommended `typescript-node` tools while installation waits for optional discovery.
+  the recommended `typescript-node` tools while installation waits for optional discovery;
+  ADR 0026 amends its decisions 4 and 11, which waited for the web stack.
 - [Infer cited intent and route owner questions through one inbox](0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md):
   the orchestrating agent answers intent it can cite and that does not outlive
   the work, a grill with the owner drafts the other briefs it accepts, and
   owner-only questions reach the owner only through its decision inbox.
+- [Add the typescript-astro and typescript-vite stacks](0026-add-the-typescript-astro-and-typescript-vite-stacks.md):
+  Sites use Astro and Apps use Vite with React, as two stacks over shared web
+  rules with oxlint, Prettier, pnpm and shadcn, amending ADR 0024.

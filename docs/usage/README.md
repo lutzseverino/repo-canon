@@ -19,5 +19,5 @@ describes running it.
 - [Release versioning](versioning.md): version increments, breaking standards
   changes, and selecting an adoptable release.
 - [Recommended stacks](stacks.md): a stack is a named set of development tools;
-  recommended tools for CLIs and libraries, workspace scope, and the optional
-  stack declaration and its check.
+  recommended tools for CLIs, libraries and web Projects, workspace scope, and
+  the optional stack declaration and its check.
