@@ -376,6 +376,14 @@ other work, and confirm the plan remains open. Relay turn 9: the owner drop rema
 parked issue stays open. Relay turn 10: only then may the remaining closed
 simulated issues plus the owner drop permit closure. Check the final counts
 and closing announcement against the skill.
+Before that announcement, check that a separate retro session, started by the
+operator when the harness cannot nest one, writes `retro.md` from the workbench
+and simulated tracker records, attributes each wait, ranks its lessons by cost
+and records that no previous retro exists. The Close reviews line, set at
+turn 2, holds only the retro, because the plan changes no code. A lesson about
+a Repo Canon skill or rule is drafted under `.scratch/repo-canon/issues/`,
+never published. The counts are recorded before the retro, so its lessons
+leave them unchanged.
 The suggested next direction is not a new approved plan.
 
 Report with the run or PR that needs the exercise: source and skill digests,

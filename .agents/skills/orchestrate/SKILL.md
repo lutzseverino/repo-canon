@@ -110,7 +110,7 @@ Take its times from the clock, in UTC, as `log.md` does.
   with the link that shows it. Its *Next check* names the wake-up armed for
   it, as the [wait step](#the-wait-step) says.
 - **Running launches** holds one row per agent launch you started: its host's
-  hostname, its kind (grill, triage run, research run or worker), its session
+  hostname, its kind (grill, triage run, research run, worker or Close review), its session
   reference once the harness gives one, and its start time. Add a launch's row
   before you start it, and remove the row when you take in its report-back.
 
@@ -154,6 +154,7 @@ shape:
 **Goal:** <the outcome the plan delivers>
 **Done means:** <the observable state that ends it>
 **Approval:** <date>, <link to the owner's approval>. Preapproves: <what the plan names that the approval covers>
+**Close reviews:** retro; <`improve-codebase-architecture` in <repository>, for each one the owner kept>
 
 ## Tickets
 
@@ -185,6 +186,10 @@ shape:
   as `grill <session reference>`, `grilled <file>`, `triaged <file>`, `filed`,
   `ready`, or a pull request link. `grilled <file>` and `triaged <file>` are
   the done marks a grill and a triage run set.
+- **Close reviews.** The reviews Close runs, set when the owner approves the
+  plan. The retro is always one. Each other review names its skill and
+  repository. A review's session sets its done mark by adding `done <file>`
+  after the review on this line, such as `retro done retro.md`.
 - **Open issues.** Count each repository's open issues when the plan starts and
   again at close. Report the counts; they set no limit.
 - **Current state.** A few lines on what the plan is doing now and what it
@@ -204,12 +209,15 @@ with their citations, and shows the decision inbox. Log the items it showed in
 ## Lifecycle
 
 1. **Propose.** Present the goal, Done means and ticket table to the owner for
-   approval, as a plan update. Record the proposal in the plan directory and
-   `index.md` before filing work; record the open-issue counts at start.
-   Research, filing and brief preparation may precede plan approval. Hold
-   ticket readiness for plan execution until the owner's plan approval is
-   recorded. On approval, write the approval line with its source and what it
-   preapproves. Plan approval replaces neither independent brief review nor
+   approval, as a plan update. The proposal names its Close reviews: the
+   retro, and `improve-codebase-architecture` for each repository whose code
+   the plan changes. The owner keeps or removes each architecture review; the
+   retro stays. Record the proposal in the plan directory and `index.md`
+   before filing work; record the open-issue counts at start. Research,
+   filing and brief preparation may precede plan approval. Hold ticket
+   readiness for plan execution until the owner's plan approval is recorded.
+   On approval, write the approval line with its source and what it
+   preapproves, and the Close reviews line the owner approved. Plan approval replaces neither independent brief review nor
    any other readiness condition in the contribution guide and installed rules.
 2. **Intake.** Route each new request as the contribution guide's Triage
    section says, with the `triage` skill's method. Put your own ideas into the
@@ -251,7 +259,8 @@ with their citations, and shows the decision inbox. Log the items it showed in
      as a row, log it, and list it in the next plan update.
    - **Amendment:** it changes the goal or the scope. Propose the amendment;
      it applies once the owner approves it, recorded as a new approval line
-     that supersedes the old one.
+     that supersedes the old one. When it changes which repositories' code
+     the plan changes, propose their Close reviews with it.
    - **Wish:** it lies outside the goal and is not a Finding. Add it to
      `wishes.md`; it needs no issue merely because it is a wish.
 5. **Close.** Once every row has ended, collect the plan's issue-creation
@@ -266,12 +275,67 @@ with their citations, and shows the decision inbox. Log the items it showed in
    Closed issues stay out of the still-open list. Outside findings need not be
    resolved for the plan to close.
 
-   After reconciliation, record the open-issue counts at close, move the plan
-   under `Closed` in `index.md`, and announce, as the last plan update:
+   After reconciliation, record the open-issue counts at close. Then run each
+   of the plan's Close reviews in its own session, as a launch:
+   - **The retro.** Start a separate session that reads primary sources, such
+     as the plan directory and the issues, pull requests, comments and run
+     records it cites, and never your session's context or a summary of it.
+     Select any covering installed skill under `AGENTS.md`'s delegation
+     requirements. Its task context is the plan directory, the repository
+     checkouts, the previous plan's `retro.md`, from the plan most recently
+     moved under `Closed` in `index.md`, and the report-back destination,
+     with these obligations:
+     - write `retro.md` in the plan directory, with the outcome against the
+       plan's Done means, with evidence; where the time went, attributing
+       each wait to what it waited on, such as the owner, a review, a check,
+       a blocker or a launch; and its lessons, ranked by cost;
+     - compare each lesson with the previous plan's retro and the open issues
+       of the repository that owns its rule before filing it;
+     - route each lesson as below, recording its route and link in
+       `retro.md`, and record each issue it files or reopens in `log.md` with
+       its creation evidence;
+     - mark the retro done on the Close reviews line in `plan.md`;
+     - commit and push its writes, as [Workbench](#workbench) says;
+     - report back, as [Report-back](#report-back) says.
+   - **Other Close reviews.** Open each `improve-codebase-architecture` review
+     with `/improve-codebase-architecture`, followed by its repository
+     checkout, the plan's changes there, the plan directory and report-back
+     destination. Supply the owned branch and checkout for domain-document
+     edits and that repository's pull request destination, as for a grill.
+     Its task context also includes these obligations:
+     - route each of its findings as [New requirements](#lifecycle) says: a
+       Finding becomes an issue in that repository, and any other idea a wish
+       naming it;
+     - write its result to the plan directory, citing those issues and wishes
+       by link;
+     - mark its review done on the Close reviews line in `plan.md`;
+     - commit and push its writes, as [Workbench](#workbench) says;
+     - report back, as [Report-back](#report-back) says.
+
+   Each lesson goes to whoever owns the rule it concerns:
+   - the adopter's own repository: an issue there, filed as that
+     repository's contribution guide's Findings section says;
+   - the owner's own setup, outside every repository: a chore for the owner,
+     which you carry into `now.md`'s Waiting on you;
+   - a Repo Canon skill or rule: an issue in the Repo Canon source repository
+     that the adoption record's Selection names, such as
+     `lutzseverino/repo-canon`, filed as its contribution guide's Findings
+     section says, even when the owner does not develop Repo Canon, since an
+     adopter cannot change its skills;
+   - a wish: a line in `wishes.md`;
+   - or nowhere, as a one-off, beyond `retro.md`.
+
+   A recurring lesson links its earlier issue, or reopens it when closed,
+   instead of filing a new one.
+
+   Once every Close review is marked done, move the plan under `Closed` in
+   `index.md`, and announce, as the last plan update:
    - what shipped and what was dropped;
    - the inferred-intent items and the wishes the plan added;
    - every issue the plan filed that is still open, each with its reason and
      evidence link;
+   - the retro's lessons and the other Close reviews' findings, each with its
+     route and link;
    - one suggested next direction, taken from the wishes and the parked items.
 
 ## Running the plan
@@ -298,7 +362,7 @@ with their citations, and shows the decision inbox. Log the items it showed in
 - Run at most three agent launches you started at once, or the cap `index.md`
   names for this host's hostname. To check the cap, count the rows under
   `now.md`'s Running launches for this host: every grill, triage run, research
-  run and worker has one.
+  run, worker and Close review has one.
 - Launch a ticket worker with `/implement`, followed by its issue, scope,
   repository checkout and report-back destination. Workers deliver as the
   contribution guide's Pull requests section says.
@@ -370,8 +434,8 @@ Its exit code says what comes next:
 
 ## Report-back
 
-The file in the plan directory is the contract. A grill or triage run reports
-by writing its result there, setting its done mark in `plan.md`, and committing
+The file in the plan directory is the contract. A grill, triage run or Close
+review reports by writing its result there, setting its done mark in `plan.md`, and committing
 and pushing both. When you take in a report-back, remove its launch's row from
 `now.md`'s Running launches. A wake-up message to your session is only a nudge,
 and losing it loses nothing: act on the files.

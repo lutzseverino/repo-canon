@@ -191,6 +191,15 @@ repeated.
   a recurring check is optional. The skill ships a babysit-like wait script
   for that, whose poll interval and maximum duration each invocation supplies,
   with no default; [#732](https://github.com/lutzseverino/repo-canon/issues/732)
+  records these decisions. On 2026-10-29 the owner also decided that every plan's Close runs
+  a retro in a separate session reading primary sources, and that each lesson
+  goes to whoever owns its rule: the adopter's own repository or setup, a wish,
+  nowhere for a one-off, or an issue filed against Repo Canon for a Repo Canon
+  skill or rule, because an adopter who does not develop Repo Canon cannot
+  change its skills. On 2026-10-30 they decided that a plan names its Close
+  reviews at approval: the retro always, and `improve-codebase-architecture`
+  proposed for each repository whose code the plan changes, which the owner
+  keeps or removes; [#733](https://github.com/lutzseverino/repo-canon/issues/733)
   records these decisions. Linking the skill into a user's own skills, for sessions
   outside a checkout, is host setup that the
   [adoption guide](docs/usage/adopt-repo-canon.md#orchestrate-plans)
