@@ -42,6 +42,24 @@ same error and owner-handoff handling as the wait below. Run it again before
 waiting on a later or resumed head; add `--fixes-review` when that head fixes a finding
 requiring a new request under the rules.
 
+The request command also checks the PR body's own-head file links before any
+request or reviewer-policy skip. Exit `8` lists links to replace with commit-SHA
+links; correct the body and rerun request before waiting. It never rewrites the
+body. External repositories and other branches are outside this check.
+
+When a potentially offending link needs an adoption-summary exemption, the
+command rebuilds the pre-commit state in a temporary detached worktree outside
+the author's checkout at `merge-base(<PR base commit>, <head>)`. It restores the
+exact head tree with `git restore --source=<head> --worktree :/`, runs
+`npm ci --ignore-scripts --prefix .repo-standards/runtime` there, then runs the
+head's pinned `.repo-standards/runtime/node_modules/.bin/repo-standards status --summary`.
+It removes the temporary worktree on success and failure. Only a complete,
+byte-exact leading match of that stdout is exempt, including its final newline
+and generated Impact and Migration. Every appended section is checked. Missing
+local commits or runtime, failed reconstruction/install/generation, and a
+mismatching prefix grant no exemption: the diagnostic explains why the whole
+body was checked. Link-free bodies need no reconstruction.
+
 1. Wait with `node <this skill's directory>/wait.mjs <number>`, run in the
    repository root in the foreground until it exits; it waits for the checks
    and the configured reviewer's review of the head, silently. Use a command

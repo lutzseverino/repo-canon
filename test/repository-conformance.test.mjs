@@ -1030,6 +1030,7 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
     }).sort(),
     [
       "SKILL.md",
+      "body-links.mjs",
       "merge.mjs",
       "platform.mjs",
       "pull-request-reviewer.mjs",
