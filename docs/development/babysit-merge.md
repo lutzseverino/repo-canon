@@ -63,6 +63,23 @@ For adoption and update PRs, this includes the byte-preserved adoption record,
 any Impact/Migration sections, and a trailing `## Related issue` section with
 its closing or partial-work reference.
 
+Immediately before the merge write, Access reads `.factory/config.json` at
+the same destination default-branch SHA selected by
+`trustedReviewConfiguration()`. A missing file or `labels.releaseHold` key
+adds no check. With a configured label, it paginates open labelled issues,
+keeps only PRs, and excludes the PR being merged. Other open labelled PRs
+cause exit `9`, naming them with no merge write. Closed PRs, issues and the
+labelled PR itself cannot hold that merge. Proposed branch or local
+configuration never overrides the pinned default-branch configuration.
+Unreadable or invalid factory configuration or PR-list reads follow freshness
+failure handling: exit `3` needs the owner, while a permission refusal returns
+`1` and stops immediately.
+
+On exit `9`, leave the PR open and do not retry yet. In a factory run, end the
+run so the factory can relaunch merging after the hold ends. Otherwise rerun
+merge after the hold ends, keeping every other gate enforced. This result is
+not an owner handoff and is distinct from every wait and merge outcome.
+
 After a successful merge call, the script reads the PR's `state` through
 `PullRequests.pullRequest` and reports success only when it is `merged`.
 It then writes the merge result (the squash commit SHA) to stdout, followed by
@@ -110,7 +127,10 @@ merge refusals, merge queue refusal, and successful calls that leave the PR
 unmerged. Outcome fixtures cover direct and installed invocation, missing,
 stale, abbreviated, incomplete and placeholder evidence, policy changes since
 wait, proposed local policy, invalid/unreadable trusted declarations, and all
-remaining gates after a complete record. The freshness fixtures model two green PRs sharing one base, a base
+remaining gates after a complete record. Release-hold fixtures cover installed
+execution, multiple holds, self-exemption, closed PRs, label removal, issues,
+absent configuration and keys, pinned configuration despite proposed local
+changes or a moving default branch, and unreadable or invalid reads. The freshness fixtures model two green PRs sharing one base, a base
 advance after preflight refused at the platform boundary, replacement heads
 with pending or failed checks, classic and ruleset enforcement, explicit caller
 non-bypass evidence with absent, empty or nonempty global lists, other or missing

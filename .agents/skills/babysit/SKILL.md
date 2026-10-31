@@ -121,6 +121,10 @@ body was checked. Link-free bodies need no reconstruction.
    complete both internal reviews, post their actual outcomes using the wait's
    template for that full head, then rerun the merge after verifying the other
    merge conditions. This is a post-and-rerun result, not an owner handoff;
+   `9` means another open PR carries the configured release-hold label: leave
+   this PR open and do not retry yet. In a factory run, end the run; the factory
+   relaunches merging after the hold ends. Otherwise, run merge again after
+   the hold ends. This is not an owner handoff;
    `1` means follow
    [Credentials](../../../CONTRIBUTING.md#credentials) for a permission refusal;
    otherwise fix the invocation or other platform error and
@@ -134,6 +138,11 @@ the platform PR author on every invocation, even without a prior wait. Invalid
 trusted declarations require its owner-handoff exit `3`; unreadable review
 configuration returns `1` and permits no merge. A prior wait result and proposed
 PR-branch policy cannot bypass the outcome check.
+Immediately before its merge write, it reads `labels.releaseHold` from
+`.factory/config.json` at that same destination default-branch snapshot and
+lists open PRs carrying the label, excluding the PR being merged. An absent
+file or key adds no hold. Unreadable or invalid configuration or PR reads
+permit no merge write and follow the freshness-read failure handling.
 
 ## Branch-update recovery
 

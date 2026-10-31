@@ -74,7 +74,13 @@ const factorySkip = {
   description: "Ready agent work the factory must not pick up",
 };
 
-test("factory setup provisions and verifies skip, preserves unrelated labels and is repeat-safe", (t) => {
+const factoryReleaseHold = {
+  name: "factory:release-hold",
+  color: "c5def5",
+  description: "Hold other merges while a release PR is open",
+};
+
+test("factory setup provisions and verifies skip and release hold, preserves unrelated labels and is repeat-safe", (t) => {
   const unrelated = {
     name: "factory:running",
     color: "0052cc",
@@ -92,52 +98,59 @@ test("factory setup provisions and verifies skip, preserves unrelated labels and
   const outcome = scenario.invoke({ profile: "factory" });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
-  assert.match(outcome.result.message, /created factory:skip/);
+  assert.match(outcome.result.message, /created 2 labels/);
   assert.match(
     outcome.result.message,
-    /Readback confirmed all 13 canonical labels/,
+    /Readback confirmed all 14 canonical labels/,
   );
   assert.deepEqual(scenario.readState().labels, [
     ...canonicalLabels,
     unrelated,
     factorySkip,
+    factoryReleaseHold,
   ]);
   assert.equal(scenario.readState().labelReads, 2);
   assert.equal(
     scenario.invoke({ profile: "factory" }).result.status,
     "unchanged",
   );
-  assert.equal(scenario.readState().mutations, 1);
+  assert.equal(scenario.readState().mutations, 2);
   assertProjectUnchanged(before, scenario);
 });
 
-test("factory setup confirms skip drift before any writes and blocks on mismatched skip readback", (t) => {
-  const driftedSkip = { ...factorySkip, color: "000000" };
-  const scenario = setup(t, {
-    state: { labels: [driftedSkip], readbackMismatch: true },
-  });
-  const confirmation = scenario.invoke({ profile: "factory" });
-  assert.equal(confirmation.status, 0, confirmation.stderr);
-  assert.equal(confirmation.result.status, "confirmation-required");
-  assert.match(confirmation.result.message, /factory:skip.color/);
-  assert.equal(scenario.readState().mutations ?? 0, 0);
-  assert.deepEqual(scenario.readState().labels, [driftedSkip]);
+test("factory setup confirms label drift before writes and verifies both factory labels on readback", (t) => {
+  for (const desired of [factorySkip, factoryReleaseHold]) {
+    const drifted = { ...desired, color: "000000" };
+    const scenario = setup(t, {
+      state: { labels: [drifted], readbackMismatch: true },
+    });
+    const confirmation = scenario.invoke({ profile: "factory" });
+    assert.equal(confirmation.status, 0, confirmation.stderr);
+    assert.equal(confirmation.result.status, "confirmation-required");
+    assert.ok(confirmation.result.message.includes(`${desired.name}.color`));
+    assert.equal(scenario.readState().mutations ?? 0, 0);
+    assert.deepEqual(scenario.readState().labels, [drifted]);
 
-  // Reset the simulated readback failure so it occurs on the confirmed run's
-  // final read, after the initial inspection.
-  scenario.updateState({ labelReads: 0 });
-  const confirmed = scenario.invoke({
-    profile: "factory",
-    overwriteAllowed: true,
-  });
-  assert.equal(confirmed.status, 0, confirmed.stderr);
-  assert.equal(confirmed.result.status, "blocked");
-  assert.match(confirmed.result.message, /readback did not match factory:skip/);
-  assert.match(confirmed.result.message, /updated factory:skip/);
-  assert.deepEqual(scenario.readState().labels, [
-    factorySkip,
-    ...canonicalLabels,
-  ]);
+    scenario.updateState({ labelReads: 0 });
+    const confirmed = scenario.invoke({
+      profile: "factory",
+      overwriteAllowed: true,
+    });
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    assert.equal(confirmed.result.status, "blocked");
+    assert.ok(
+      confirmed.result.message.includes(
+        `readback did not match ${desired.name}`,
+      ),
+    );
+    assert.ok(confirmed.result.message.includes(`updated ${desired.name}`));
+    const other = desired === factorySkip ? factoryReleaseHold : factorySkip;
+    assert.deepEqual(scenario.readState().labels, [
+      desired,
+      ...canonicalLabels,
+      other,
+    ]);
+  }
 });
 
 test("provisions every canonical label in an empty repository and is unchanged on repeat", (t) => {
@@ -197,7 +210,7 @@ test("leaves the retired run:orchestrated label in place without provisioning it
 
 // The factory creates its own state labels from the repository's factory
 // configuration. Standard-profile setup provisions no factory label and
-// leaves all existing factory labels alone, including skip.
+// leaves all existing factory labels alone, including skip and release hold.
 test("standard setup creates no factory label and leaves existing factory labels in place", (t) => {
   const empty = setup(t);
   const created = empty.invoke();
@@ -208,6 +221,11 @@ test("standard setup creates no factory label and leaves existing factory labels
   );
 
   const factoryLabels = [
+    {
+      ...factoryReleaseHold,
+      color: "000000",
+      description: "Keep chosen hold metadata",
+    },
     {
       ...factorySkip,
       color: "000000",
