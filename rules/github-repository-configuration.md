@@ -207,12 +207,13 @@ wanting that input writes a repository-owned caller workflow.
 
 ## Trusted review configuration
 
-For each `babysit` request or wait invocation, resolve the destination
+For each `babysit` request, wait or merge invocation, resolve the destination
 repository's default branch to one immutable full commit SHA. Read both
 optional repository-owned files, `.github/factory-review-policy.json` and
 `.github/pull-request-reviewer.json`, from that same commit before applying
-policy or requesting review. Report the destination repository, default branch
-and selected SHA with the command's outcome. A wait keeps the snapshot across
+policy or requesting review. Request and wait report the destination repository,
+default branch and selected SHA with their outcome; merge includes them in its
+missing-outcome diagnostic. A wait keeps the snapshot across
 all polls and head changes; each new invocation resolves the current default
 tip again, including after fixes, rebases, retries and resumed runs.
 
@@ -238,7 +239,7 @@ The correction must land on the destination default branch through the
 applicable owner-handoff and merge procedure. A correcting PR's proposed
 configuration cannot govern its own delivery before it lands; this repair
 grants no new merge exception. After the correction lands and continuation is
-authorized, a fresh request or wait invocation resolves the current default
+authorized, a fresh invocation resolves the current default
 branch and uses the corrected configuration. Invocation errors, permission
 refusals, platform failures and verified optional-file absence retain their
 existing handling.
@@ -310,6 +311,20 @@ For example, with placeholder values:
 }
 ```
 
+## Internal Standards and Spec reviews
+
+When an applicable workflow calls for internal review, use the installed
+`code-review` workflow: Standards checks the change against the repository's
+documented standards; Spec checks it against its originating implementation
+contract, including the workflow's handling of a missing specification.
+Review the current head and record the actual outcomes of both axes. These
+reviews are distinct from the configured external reviewer.
+
+Policy-skipped pull requests require both reviews before merge. Nonmatching
+and absent-policy pull requests retain their existing applicable internal-review
+workflow and optionality in both profiles; this definition adds no blanket
+review requirement. A policy skip supplies neither internal nor external approval.
+
 ## Factory app-author review policy
 
 The optional repository-owned `.github/factory-review-policy.json` exempts its
@@ -336,24 +351,28 @@ A plain human login `<slug>` remains distinct from that app.
 A different or missing PR author is not exempt. Invalid declarations
 fail explicitly and never authorize a skip.
 
-For a policy-skipped pull request, complete internal Standards and Spec reviews
-before merge. Standards checks the change against the repository's documented
-standards; Spec checks it against its originating implementation contract. The
-installed `code-review` workflow provides both axes, including its handling of
-a missing specification. These internal reviews are distinct from the configured
-external reviewer. A policy skip supplies neither internal nor external approval.
-For nonmatching and absent-policy pull requests, keep the existing applicable
-internal-review workflow.
-
 Apply this policy before the review request rules and reviewer wait
 classification, on every head, including fixes, rebases, retries and resumed
 runs. For a matching author, issue no external review request and impose no
 external response/review wait, regardless of opening-request settings or
 request bounds. Classify this outcome as a policy skip, separately from
-external approval, reviewer unavailability or a timeout. At merge, record the
-actual internal Standards and Spec review outcomes and state: "No external
-reviewer runs on app-authored PRs." Follow the contribution guide's comment
-rules for that outcome comment.
+external approval, reviewer unavailability or a timeout. Complete the shared
+[internal reviews](#internal-standards-and-spec-reviews) and post their actual
+outcomes in one PR comment before merge. Exit `6` from wait prints a copyable
+template with `Head: <full current SHA>`, `Standards: <actual outcome>` and
+`Spec: <actual outcome>` lines and the exact sentence "No external reviewer
+runs on app-authored PRs." Replace both outcome placeholders and follow the
+contribution guide's comment rules. Use plain text lines for these fields;
+quoted or fenced examples and unfilled placeholders are not completed evidence.
+
+At every invocation, merge independently checks the platform PR author and the
+trusted destination policy, including without a prior wait. A caller's wait
+result or PR-branch policy never authorizes a skip. For a matching author, it
+requires one complete comment with the current full SHA, both populated outcome
+fields and the exact sentence. Missing, incomplete or stale evidence returns
+merge exit `5` without a merge write: post the completed current-head outcome,
+then rerun. That retry is distinct from owner handoff (`3`), head changed (`2`)
+and stale base (`4`); every other merge condition still applies.
 
 Required checks and their waits, internal Standards and Spec reviews, merge
 authorization, and handling of findings that actually arrive remain enforced.

@@ -150,7 +150,7 @@ repository's reviewer policy.
 
 A policy skip preserves required checks and their waits, internal Standards
 and Spec reviews defined by the `github-repository-configuration` rules'
-app-author policy, merge authorization, and handling of findings that arrive.
+Internal Standards and Spec reviews section, merge authorization, and handling of findings that arrive.
 Those rules hold the skip outcome wording and internal review record;
 the contribution guide's supplied-credential restrictions still apply.
 
