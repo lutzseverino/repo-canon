@@ -63,8 +63,8 @@ preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
 Run `node --test test/repository-wide-rules.test.mjs` for a fresh adoption of
 the standard and factory profiles and repository-wide rules lookup with public
-CLI 10.0.0: the GitHub rules in both profiles and the factory workflow rules
-only in the factory profile. It confirms no `typescript-node-stack` scope in both profiles,
+CLI 10.0.0: the GitHub rules in both and the factory workflow rules only in
+the factory profile. It confirms no `typescript-node-stack` scope in both profiles,
 so no stack rules are installed and `repo-standards check` runs no stack check,
 and adopts a third copy with one conforming package, whose `package.json` the
 stack rules cover and whose stack check passes. It also checks that adoption installs the contribution guide

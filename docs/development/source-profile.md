@@ -66,7 +66,7 @@ and four discovery scripts.
 The `workbench` profile excludes the other 27 default declarations with
 `exclude: true` and adds none, for 33 declarations: the 19 exact skill
 directories and 14 exact files, with no rules, guidance, checks, fixes or
-discovery. The files are the two skill license notices, the five Postern
+discovery. The files are the two skill license notices, the three Postern
 files that `babysit`, the `orchestrate` wait and the issue-contract validator
 import, and that validator, which the `triage` readiness command imports, with
 the rendered-Markdown runtime and the Marked and parse5 files it imports. The

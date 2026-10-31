@@ -76,9 +76,9 @@ const commands = [
   "triage/ready.mjs",
 ];
 
-// The declaration IDs of `standards.yaml`'s defaults and each profile's
-// exclusions, read from the manifest's own layout.
-function manifestIds() {
+// The declaration IDs of `standards.yaml`'s defaults and of the workbench
+// profile's exclusions and additions, read from the manifest's own layout.
+function workbenchSelection() {
   const manifest = readFileSync(join(root, "standards.yaml"), "utf8");
   const [, defaults, profiles] =
     /^defaults:\n {2}declarations:\n([\s\S]*?)^profiles:\n([\s\S]*)$/m.exec(
@@ -104,7 +104,7 @@ const allowed = [
 ].sort();
 
 test("the workbench profile excludes every default but the workflow skills, their support files and license notices", () => {
-  const { defaults, excluded, added } = manifestIds();
+  const { defaults, excluded, added } = workbenchSelection();
   assert.deepEqual(added, [], "the workbench profile adds no declaration");
   for (const id of excluded)
     assert.ok(defaults.includes(id), `${id} is a default declaration`);

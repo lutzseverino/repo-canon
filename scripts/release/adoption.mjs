@@ -24,23 +24,27 @@ import {
 } from "./support.mjs";
 
 const adoptFormat = "repo-standards/adopt/v2";
-// The remote setup the fixture cannot apply without a GitHub remote, which the
-// workbench profile does not select.
-const remoteSetup = (profile) =>
-  profile === "workbench"
-    ? []
-    : [
-        "github-repository-configuration/canonical-labels",
-        "github-repository-configuration/pull-request-integration",
-      ];
+// The fixture each profile is adopted into, with the remote setup it cannot
+// apply without a GitHub remote; the workbench profile selects none.
+const projectFixture = {
+  files,
+  remoteSetup: [
+    "github-repository-configuration/canonical-labels",
+    "github-repository-configuration/pull-request-integration",
+  ],
+};
+const fixtures = {
+  standard: projectFixture,
+  factory: projectFixture,
+  workbench: { files: workbenchFiles, remoteSetup: [] },
+};
+const remoteSetup = (profile) => fixtures[profile].remoteSetup;
 // More rounds than a run needs: the template, the scopes, the start, and the
 // assessments.
 const maximumRounds = 10;
 
 function createFixture(project, profile) {
-  for (const [path, content] of Object.entries(
-    profile === "workbench" ? workbenchFiles : files,
-  )) {
+  for (const [path, content] of Object.entries(fixtures[profile].files)) {
     mkdirSync(dirname(join(project, path)), { recursive: true });
     writeFileSync(join(project, path), content);
   }

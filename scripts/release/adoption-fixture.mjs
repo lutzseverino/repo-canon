@@ -3,8 +3,8 @@
 // adoption needs, and the workbench it adopts the workbench profile into. The
 // repository's files already satisfy the rules of every contextual declaration
 // once adoption installs the exact files, so adoption makes no contextual edit.
-// Neither has a Git remote, so the GitHub remote setup probes report not ready
-// and the run defers them.
+// Neither has a Git remote, so the GitHub remote setup probes of the standard
+// and factory profiles report not ready and the run defers them.
 
 const developmentGuide = "docs/development/README.md";
 

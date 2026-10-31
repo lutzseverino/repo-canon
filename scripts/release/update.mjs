@@ -245,7 +245,7 @@ function checkUpdate({
 }
 
 // The profile names that a `standards.yaml` declares.
-export function profileNames(standardsText) {
+function profileNames(standardsText) {
   const profiles = /^profiles:[ \t]*\r?\n((?:(?:[ \t]+.*)?\r?\n?)*)/m.exec(
     standardsText,
   )?.[1];
