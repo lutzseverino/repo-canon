@@ -95,16 +95,21 @@ or the worker's handoff says so. Resolve the authoritative implementation
 contract under the contribution guide's Implementation contracts section.
 Read both sources; an omission in one does not cancel a designation in the
 other. Carry that designation and its source into the PR handoff.
-Record the designation and its source on the PR, including when no worker
+Record the designation and its source in a PR comment, including when no worker
 handoff is required.
 
 Before merging a designated PR, the merging agent verifies the owner's
 explicit approval of the current head. Record the approval's source and head
-SHA on the PR. Any head change requires renewed owner approval; approval of an
-earlier head does not authorize the new one. Passing checks, a configured
+SHA in a PR comment. Any head change requires renewed owner approval; approval
+of an earlier head does not authorize the new one. Passing checks, a configured
 external review, its absence or timeout, and an app-author review-policy skip
 never substitute for owner approval. When approval is missing, follow the
 contribution guide's owner-question handoff and leave the PR unmerged.
+
+Read these PR comments when verifying designation and current-head approval,
+including after a handoff or resumed delivery. For adoption PRs, keep both
+records in comments and preserve the body under the contribution guide's
+adoption-record contract.
 
 This gate applies in both profiles and does not assign merge ownership.
 In the standard profile, the otherwise authorized merging agent, ordinarily

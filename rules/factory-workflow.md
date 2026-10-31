@@ -129,6 +129,8 @@ After verifying and recording current-head approval under the shared gate and
 any required renewed readiness, the orchestrating agent removes
 `factory:needs-input` and resumes `babysit` on the same open PR, merging only
 when all other applicable merge conditions hold.
+Read and carry the shared gate's PR comment records through the worker handoff
+and this approval-pause continuation.
 Any head change returns to this approval pause until renewed approval is
 verified and recorded. This continuation requires neither owner merge, PR
 closure nor factory pickup.

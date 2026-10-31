@@ -632,6 +632,22 @@ test("public CLI 10.0.0 adopts and updates both profiles with vendored installed
             /Read both sources; an omission in one does not cancel a designation in the other/,
           );
           assert.match(gate, /Any head change requires renewed owner approval/);
+          assert.match(
+            gate,
+            /Record the designation and its source in a PR comment/,
+          );
+          assert.match(
+            gate,
+            /Record the approval's source and head SHA in a PR comment/,
+          );
+          assert.match(
+            gate,
+            /Read these PR comments when verifying designation and current-head approval, including after a handoff or resumed delivery/,
+          );
+          assert.match(
+            gate,
+            /For adoption PRs, keep both records in comments and preserve the body under the contribution guide's adoption-record contract/,
+          );
         }
         assert.equal(rules[0].coverage, "repository");
         assert.equal(

@@ -1891,7 +1891,7 @@ test("either owner-review designation source survives handoffs in both profiles"
     shared,
     /Carry that designation and its source into the PR handoff/,
   );
-  assert.match(shared, /Record the designation and its source on the PR/);
+  assert.match(shared, /Record the designation and its source in a PR comment/);
   const factory = flowedText("rules/factory-workflow.md");
   assert.match(
     factory,
@@ -1917,7 +1917,18 @@ test("owner-reviewed heads need explicit current-head approval independently of 
     shared,
     /When approval is missing, follow the contribution guide's owner-question handoff and leave the PR unmerged/,
   );
-  assert.match(shared, /Record the approval's source and head SHA on the PR/);
+  assert.match(
+    shared,
+    /Record the approval's source and head SHA in a PR comment/,
+  );
+  assert.match(
+    shared,
+    /Read these PR comments when verifying designation and current-head approval, including after a handoff or resumed delivery/,
+  );
+  assert.match(
+    shared,
+    /For adoption PRs, keep both records in comments and preserve the body under the contribution guide's adoption-record contract/,
+  );
   const babysit = flowedText(".agents/skills/babysit/SKILL.md");
   assert.match(
     babysit,
@@ -1930,9 +1941,17 @@ test("owner-reviewed heads need explicit current-head approval independently of 
   assert.match(babysit, /`2` means the head changed, so return to step 1/);
   assert.match(
     babysit,
+    /Read the PR comments carrying designation provenance and current-head approval, and record approval there under that gate/,
+  );
+  assert.match(
+    babysit,
     /When required approval is missing, use the contribution guide's owner-question handoff and stop with the PR unmerged/,
   );
   const mergeDoc = flowedText("docs/development/babysit-merge.md");
+  assert.match(
+    flowedText("rules/factory-workflow.md"),
+    /Read and carry the shared gate's PR comment records through the worker handoff and this approval-pause continuation/,
+  );
   assert.match(
     mergeDoc,
     /The caller establishes merge ownership and any required owner approval of the current head before invoking the script/,
@@ -1941,6 +1960,27 @@ test("owner-reviewed heads need explicit current-head approval independently of 
     mergeDoc,
     /The script's expected-head check preserves that decision against a head change; it does not establish authorization itself/,
   );
+});
+
+test("the adoption delivery example keeps owner-review records in comments outside the preserved body", () => {
+  const example =
+    /## Adoption owner-review example (.*?)(?= ## |$)/.exec(
+      flowedText("docs/development/babysit-merge.md"),
+    )?.[1] ?? "";
+  assert.match(example, /Designation PR comment/);
+  assert.match(
+    example,
+    /Owner review is required by the authoritative implementation contract/,
+  );
+  assert.match(example, /issues\/123#issuecomment-456/);
+  assert.match(example, /approval PR comment/);
+  assert.match(example, /Owner approval source: .*pull\/12#issuecomment-789/);
+  assert.match(example, /Approved current head: a{40}/);
+  assert.match(
+    example,
+    /The PR body stays byte-identical to its adoption record and permitted additions/,
+  );
+  assert.match(example, /A later head needs renewed explicit owner approval/);
 });
 
 test("shared owner review preserves standard merge ownership and undesignated delivery", () => {

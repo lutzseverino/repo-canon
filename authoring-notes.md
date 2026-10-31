@@ -307,6 +307,9 @@ repeated.
   a designation source alongside the worker handoff, including directly
   authored body contracts, as recorded in
   [#716](https://github.com/lutzseverino/repo-canon/issues/716#issuecomment-6532708764).
+  The owner also chose PR comments for designation/provenance and
+  approval/source/head-SHA records, preserving adoption PR bodies, on 2026-10-29
+  in [#717](https://github.com/lutzseverino/repo-canon/issues/717#issuecomment-6532709093).
 - The skill setup files under docs/agents are installed verbatim from the
   vendored upstream setup seeds, and Repo Canon writes nothing into them, as
   [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
