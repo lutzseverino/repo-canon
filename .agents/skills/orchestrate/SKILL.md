@@ -106,9 +106,9 @@ Take its times from the clock, in UTC, as `log.md` does.
   chores and notifications for the owner. Carry each one into every rewrite
   until the owner has done or acknowledged it.
 - **In flight** holds one row per item that waits on someone or something,
-  such as a run, a review, a blocker or plan approval, with the link that shows
-  it. Its *Next check* names the wake-up armed for it, as the
-  [wait step](#the-wait-step) says.
+  such as a run, a review, a blocker, plan approval or a launch's report-back,
+  with the link that shows it. Its *Next check* names the wake-up armed for
+  it, as the [wait step](#the-wait-step) says.
 - **Running launches** holds one row per agent launch you started: its host's
   hostname, its kind (grill, triage run, research run or worker), its session
   reference once the harness gives one, and its start time. Add a launch's row
@@ -347,14 +347,16 @@ node <this skill's directory>/wait.mjs --interval <seconds> --max-duration <seco
 - An item is an issue or pull request, as `<owner>/<name>#<number>` or its
   `https://github.com` link, or a file, as `file:<path>`. For a launch, watch
   its report-back file in the plan directory and the plan's `plan.md`, where it
-  sets its done mark.
+  sets its done mark. A file item reads the workbench checkout the wait runs
+  in, so a launch writing in another clone wakes it only once its push is
+  pulled here; arm such a launch's wake-up on its tracker items or the
+  harness's own events instead.
 - It exits when any item changes: an issue's or pull request's state, labels,
   or new comments, an issue's linked pull requests, or a file's creation, edit
-  or removal. It measures changes from when it starts, so arm it before you
-  read the items' current state.
+  or removal. It measures changes from when it starts, so arm it after your
+  own writes to watched files and before you read the items' current state.
 - `--interval` is the time between polls and `--max-duration` the longest the
-  wait runs. Both are required; choose both for each invocation, since the
-  script supplies neither.
+  wait runs. Both are required; choose both for each invocation.
 - It needs Node.js 24 or 26, and the GitHub CLI's current credential for
   issues and pull requests. It prints nothing while it waits.
 

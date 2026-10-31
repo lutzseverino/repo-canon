@@ -1590,7 +1590,14 @@ test("orchestrate ends a turn only after arming a wake-up, with recurring checks
   );
   assert.match(wait, /report-back file in the plan directory/);
   assert.match(wait, /done mark/);
-  assert.match(wait, /arm it before you read the items' current state/);
+  assert.match(
+    wait,
+    /arm it after your own writes to watched files and before you read the items' current state/,
+  );
+  assert.match(
+    skill,
+    /\*\*In flight\*\* holds one row per item .*a launch's report-back/,
+  );
   assert.match(wait, /Both are required; choose both for each invocation/);
   for (const code of ["0", "1", "2"])
     assert.match(wait, new RegExp(`- \`${code}\`: `));

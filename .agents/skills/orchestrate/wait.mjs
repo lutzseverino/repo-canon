@@ -21,11 +21,9 @@
 // Both durations are required; the caller chooses them for each invocation.
 // Each platform request has a 45-second timeout.
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
-import { readFileSync, realpathSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { connect } from "../../../vendor/postern/postern.mjs";
+import { connectionFor, executedAsScript } from "../babysit/platform.mjs";
 
 const usage =
   "usage: wait.mjs --interval <seconds> --max-duration <seconds> <item>...";
@@ -62,7 +60,7 @@ const parseArguments = (argv) => {
     const flag = /^--(interval|max-duration)$/.exec(argv[index])?.[1];
     if (!flag) {
       if (argv[index].startsWith("--"))
-        throw new UsageError(`unrecognized item ${argv[index]}; ${usage}`);
+        throw new UsageError(`unrecognized option ${argv[index]}; ${usage}`);
       const item = parseItem(argv[index]);
       if (!items.has(item.key)) items.set(item.key, item);
       continue;
@@ -92,36 +90,8 @@ const parseArguments = (argv) => {
   };
 };
 
-// The only credential is the GitHub CLI's currently authenticated credential.
-const cliConnection = (() => {
-  let credential;
-  return (repository) => {
-    if (credential === undefined) {
-      try {
-        credential = execFileSync(
-          "gh",
-          ["auth", "token", "--hostname", "github.com"],
-          {
-            encoding: "utf8",
-            timeout: 15_000,
-            stdio: ["ignore", "pipe", "pipe"],
-          },
-        ).trim();
-      } catch {
-        throw new Error(
-          "Could not read the currently authenticated GitHub CLI credential.",
-        );
-      }
-    }
-    if (!credential)
-      throw new Error(
-        "The currently authenticated GitHub CLI credential is empty.",
-      );
-    return connect(repository, { credential, timeoutMs: 45_000 });
-  };
-})();
-
-const readFile = (path) => {
+// The file's content digest, or null when it does not exist.
+const fileDigest = (path) => {
   try {
     return createHash("sha256").update(readFileSync(path)).digest("hex");
   } catch (error) {
@@ -156,15 +126,15 @@ const readTracker = async (item, connection) => {
 };
 
 // Every item's current facts, keyed as the items are.
-const look = async (items, connectionFor) => {
+const look = async (items, connectionOf) => {
   const facts = new Map();
   await Promise.all(
     items.map(async (item) => {
       facts.set(
         item.key,
         item.kind === "file"
-          ? readFile(item.path)
-          : await readTracker(item, connectionFor(item.repository)),
+          ? fileDigest(item.path)
+          : await readTracker(item, connectionOf(item.repository)),
       );
     }),
   );
@@ -172,7 +142,7 @@ const look = async (items, connectionFor) => {
 };
 
 // How one item changed between two reads; empty when it did not.
-export const changes = (item, before, after) => {
+const changes = (item, before, after) => {
   if (item.kind === "file") {
     if (before === after) return [];
     if (before === null) return ["created"];
@@ -223,14 +193,15 @@ const pause = async (durationMs) => {
   }
 };
 
-// `connect` turns a repository link into a Postern connection; `pause`
-// waits a number of milliseconds; `stdout` and `stderr` receive the lines.
-// Each is replaceable for fixtures.
+// `connect` turns an <owner>/<name> selector into a Postern connection with
+// the GitHub CLI's current credential; `pause` waits a number of
+// milliseconds; `stdout` and `stderr` receive the lines. Each is replaceable
+// for fixtures.
 export const main = async (
   argv = process.argv.slice(2),
   {
-    connect: connectTo = cliConnection,
-    pause: wait = pause,
+    connect: connectTo = connectionFor,
+    pause: pauseFor = pause,
     stdout = process.stdout,
     stderr = process.stderr,
   } = {},
@@ -244,16 +215,15 @@ export const main = async (
     return 1;
   }
   const connections = new Map();
-  const connectionFor = (repository) => {
+  const connectionOf = (repository) => {
     const key = repository.toLowerCase();
-    if (!connections.has(key))
-      connections.set(key, connectTo(`https://github.com/${repository}`));
+    if (!connections.has(key)) connections.set(key, connectTo(repository));
     return connections.get(key);
   };
   const limitMs = options.maxDuration * 1000;
   let before;
   try {
-    before = await look(options.items, connectionFor);
+    before = await look(options.items, connectionOf);
   } catch (error) {
     stderr.write(`wait.mjs: ${error.message}\n`);
     return 1;
@@ -266,10 +236,10 @@ export const main = async (
       );
       return 2;
     }
-    await wait(Math.min(options.interval * 1000, remaining));
+    await pauseFor(Math.min(options.interval * 1000, remaining));
     let after;
     try {
-      after = await look(options.items, connectionFor);
+      after = await look(options.items, connectionOf);
     } catch (error) {
       stderr.write(`wait.mjs: ${error.message}\n`);
       return 1;
@@ -287,17 +257,6 @@ export const main = async (
   }
 };
 
-const executedAsScript = () => {
-  try {
-    return (
-      realpathSync(process.argv[1]) ===
-      realpathSync(fileURLToPath(import.meta.url))
-    );
-  } catch {
-    return false;
-  }
-};
-
-if (import.meta.main ?? executedAsScript()) {
+if (import.meta.main ?? executedAsScript(import.meta.url)) {
   process.exitCode = await main();
 }

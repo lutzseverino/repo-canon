@@ -93,7 +93,8 @@ function tracker(items) {
   };
   return {
     requests,
-    connect: (repository) => connect(repository, { fetch }),
+    connect: (repository) =>
+      connect(`https://github.com/${repository}`, { fetch }),
   };
 }
 
@@ -204,6 +205,7 @@ test("items are required and must be issue, pull request or file references", as
     "https://github.com/example/tracker/commit/7",
     "file:",
     "--repo",
+    "--interval-seconds",
   ]) {
     output.stderr = "";
     assert.equal(
@@ -214,7 +216,11 @@ test("items are required and must be issue, pull request or file references", as
       1,
       item,
     );
-    assert.match(output.stderr, /unrecognized item|usage: wait\.mjs/, item);
+    assert.match(
+      output.stderr,
+      /unrecognized (?:item|option)|usage: wait\.mjs/,
+      item,
+    );
   }
 });
 
