@@ -283,3 +283,7 @@ accepts full commit SHAs and reads published tag and branch refs with
 - [Skill exercises](skill-exercises.md): the procedure, fixture builders,
   common harness, and scenarios for exercising the pinned skills, the `triage`
   fork, and the `babysit` skill.
+- [TypeScript web stack checks](typescript-web-stack-check.md): manifest and
+  shadcn holder checks and their assessment boundary.
+- [TypeScript web stack scope drafters](typescript-web-stack-scope-drafter.md):
+  semantic membership, shared consumers and installed discovery fixtures.

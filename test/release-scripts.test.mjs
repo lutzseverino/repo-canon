@@ -552,6 +552,8 @@ for (const scenario of ["questions", "fallback-scope"]) {
     for (const id of [
       "scope:documentation",
       "scope:typescript-node-stack",
+      "scope:typescript-astro-stack",
+      "scope:typescript-vite-stack",
       "remote-setup",
       "assessment:repository-readme",
     ])
@@ -560,6 +562,8 @@ for (const scenario of ["questions", "fallback-scope"]) {
       (entry) =>
         entry["scope:documentation"] &&
         entry["scope:typescript-node-stack"] &&
+        entry["scope:typescript-astro-stack"] &&
+        entry["scope:typescript-vite-stack"] &&
         entry["remote-setup"] === "defer" &&
         entry.inspection === "sha256:update",
     );
@@ -573,7 +577,8 @@ for (const scenario of ["questions", "fallback-scope"]) {
         entry["scope:documentation"].coverage,
         "The previous adoption scope, proposed for validation.",
       );
-      assert.equal(entry["scope:typescript-node-stack"].noScope, true);
+      for (const stack of ["node", "astro", "vite"])
+        assert.equal(entry[`scope:typescript-${stack}-stack`].noScope, true);
       if (scenario === "fallback-scope")
         assert.deepEqual(entry["scope:project-readmes"].candidates, []);
     }
@@ -1004,25 +1009,27 @@ test("the adoption fixture passes the shipped contextual checks with its drafted
   });
   assert.deepEqual(drafts[0], drafts[1]);
   assert.deepEqual(drafts[0], ["docs/README.md", "docs/development/README.md"]);
-  // The fixture has no Node.js Project, so the stack's draft has no scope.
-  const stack = spawnSync(
-    process.execPath,
-    [join(sourceRoot, "discovery/draft-typescript-node-stack-scope.mjs")],
-    {
-      cwd: project,
-      encoding: "utf8",
-      input: JSON.stringify({
-        format: "repo-standards/discovery/v1",
-        declaration: "typescript-node-stack",
-        projectRoot: project,
-      }),
-    },
-  );
-  assert.equal(stack.status, 0, stack.stderr);
-  const [stackEntry] = JSON.parse(stack.stdout).declarations;
-  assert.equal(stackEntry.noScope, true);
-  assert.deepEqual(stackEntry.candidates, []);
-  assert.deepEqual(stackEntry.unresolved, []);
+  // Every stack drafts no scope in the release fixture.
+  for (const kind of ["node", "astro", "vite"]) {
+    const stack = spawnSync(
+      process.execPath,
+      [join(sourceRoot, `discovery/draft-typescript-${kind}-stack-scope.mjs`)],
+      {
+        cwd: project,
+        encoding: "utf8",
+        input: JSON.stringify({
+          format: "repo-standards/discovery/v1",
+          declaration: `typescript-${kind}-stack`,
+          projectRoot: project,
+        }),
+      },
+    );
+    assert.equal(stack.status, 0, stack.stderr);
+    const [stackEntry] = JSON.parse(stack.stdout).declarations;
+    assert.equal(stackEntry.noScope, true);
+    assert.deepEqual(stackEntry.candidates, []);
+    assert.deepEqual(stackEntry.unresolved, []);
+  }
 
   for (const [target, source] of exactFiles()) {
     mkdirSync(dirname(join(project, target)), { recursive: true });

@@ -9,7 +9,7 @@ The source identity is `repo-canon`,
 and its compatibility contract is the open-ended minimum
 `requires.repo-standards: ">=10.0.0"`. Public CLI 10.0.0 is the oldest version
 this source was validated against. It is the first that accepts an optional
-discovery declaration with no scope, which `typescript-node-stack` needs to
+discovery declaration with no scope, which all three TypeScript stacks need to
 stay out of repositories without a matching Project. Its check request
 `invocation` field, which earlier CLIs also supply, lets
 `documentation-navigation` prove scope coverage only during adoption runs,
@@ -49,11 +49,15 @@ release or successful adoption.
 | Upstream skill license notice                                                                                    | `mattpocock-skills-license`                                                                                                                                 | `vendor/mattpocock-skills/LICENSE`, installed at `.agents/skills/LICENSE.mattpocock-skills` beside the copied skills                                                                                                                                                                                         | Exact file outside every skill directory                                                                                 |
 | HumanLayer license notice                                                                                        | `humanlayer-skills-license`                                                                                                                                 | `vendor/humanlayer-skills/LICENSE`, installed at `.agents/skills/LICENSE.humanlayer-skills` for material reproduced in the `pr` Summary                                                                                                                                                                      | Exact file outside every skill directory; also retained operation resource                                               |
 
-The resolved `standard` profile contains 58 declarations: 31 exact files, four
-contextual files, four repository declarations, and 19 exact skill
+The optional `typescript-astro-stack` and `typescript-vite-stack` repository
+declarations own confirmed manifests, with guidance and discovery per stack,
+shared web rules, one check each and retained discovery/check resources.
+
+The resolved `standard` profile contains 60 declarations: 31 exact files, four
+contextual files, six repository declarations, and 19 exact skill
 directories. The `factory` profile adds one exact file, one contextual file,
-the exact workflow, and one repository declaration, for 62 declarations. Each has six checks, two fixes,
-and two discovery scripts. Exact targets are individual and disjoint from all
+the exact workflow, and one repository declaration, for 64 declarations. Each has eight checks, two fixes,
+and four discovery scripts. Exact targets are individual and disjoint from all
 contextual scope. Discovery proposes individual files rather than directory
 trees, globs, or adopter-specific paths embedded in this source.
 
@@ -82,7 +86,14 @@ scope. The `typescript-node-stack` check and its discovery script, the
 typescript-node stack scope drafter, both retain the shared stack module,
 `operations/lib/typescript-node-stack.mjs`, and the local-link module it reads
 paths through, so the draft and the check read a Project's manifests the same
-way. Other operation resources retain the shared GitHub operation
+way. The web stacks additionally retain `stack-files.mjs`,
+`typescript-web-stack.mjs` and the shared `stack-check.mjs` or `stack-scope.mjs`
+entry implementation. Node discovery retains the same scope and web helpers
+to preserve web exclusions. Both optional web declarations reference
+`rules/typescript-web-stacks.md`; confirmed no scope installs no rules or
+checks. The [web check](typescript-web-stack-check.md) and
+[web discovery](typescript-web-stack-scope-drafter.md) pages define their
+execution and checked/assessed boundary. Other operation resources retain the shared GitHub operation
 module, Repo Canon's MIT license and third-party notice, and every license
 linked by that notice. The rendered-Markdown runtime, parser files and Postern resources are also
 exact declarations because the validators and babysit import them from the
@@ -122,7 +133,7 @@ and validates every profile.
 ## Validation boundary
 
 Public CLI 10.0.0 on stable Node.js 24 or 26 returns `valid: true`, no errors,
-and the `standard` and `factory` profiles with 58 and 62 declarations for the
+and the `standard` and `factory` profiles with 60 and 64 declarations for the
 source, matching the inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@10.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
