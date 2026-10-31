@@ -35,7 +35,9 @@ because two implementations drift, as these had.
 - The factory deletes its own contract interpretation. Moving an identical copy
   elsewhere would not satisfy this decision.
 - A missing or stale result holds the issue with a visible reason until the
-  validator runs again. The readiness procedure already waits for the
+  validator runs again. A result is stale when a comment or an edit on the
+  issue is newer than it, so the validator posts a current result for every
+  event it evaluates. The readiness procedure already waits for the
   validator's notice before readiness is applied, so a current result is the
   normal state.
 - The state line is a published format: a change to it is a format version
