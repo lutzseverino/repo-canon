@@ -66,7 +66,7 @@ or edit product state to imitate it.
 
 ## Preserving project instructions
 
-Both profiles declare `docs/agents/project.md` as the contextual
+The standard and factory profiles declare `docs/agents/project.md` as the contextual
 `project-agent-guidance` file, with its own
 [rules](../../rules/project-agent-guidance.md) and
 [adoption guidance](../../guidance/project-agent-guidance.md). Adoption installs

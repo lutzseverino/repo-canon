@@ -62,9 +62,9 @@ Review affected links, issue-form fields, and consistency with the confirmed
 preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
 Run `node --test test/repository-wide-rules.test.mjs` for a fresh adoption of
-both profiles and repository-wide rules lookup with public CLI 10.0.0: the
-GitHub rules in both profiles and the factory workflow rules only in the
-factory profile. It confirms no `typescript-node-stack` scope in both profiles,
+the standard and factory profiles and repository-wide rules lookup with public
+CLI 10.0.0: the GitHub rules in both and the factory workflow rules only in
+the factory profile. It confirms no `typescript-node-stack` scope in both profiles,
 so no stack rules are installed and `repo-standards check` runs no stack check,
 and adopts a third copy with one conforming package, whose `package.json` the
 stack rules cover and whose stack check passes. It also checks that adoption installs the contribution guide
@@ -74,6 +74,17 @@ inputs; GitHub HTTP responses and Git transport use local fixtures, with no
 in-tree factory dependency. Set `REPO_STANDARDS_PREFIX` to reuse that public
 CLI installation, or the test installs it outside the checkout. Runtime
 preparation also needs npm registry access.
+Run `node --test test/workbench-profile.test.mjs` for the `workbench` profile.
+It reads `standards.yaml` and fails when the profile would select any default
+declaration besides the workflow skills, the files their executables import
+and the license notices, so a new default declaration fails it until the
+profile excludes it. With public CLI 10.0.0 and the same disposable source and
+fixtures, it then adopts the profile into a repository holding only an empty
+commit. The adoption must ask no scope, assessment or remote setup question,
+write no rules, `.github/` file or `AGENTS.md`, and leave every installed skill
+command able to import its modules. An update to a release that changes one
+skill then lands as one direct commit on `main` touching only that skill and
+the CLI's records.
 
 Node.js 24 remains the default toolchain and installed automation runtime.
 CI runs one job on each of Node.js 24 and 26 that installs the development
@@ -226,7 +237,7 @@ installed directory and its authoring and adoption guidance for private
 application names, tool mappings and session-reference syntax. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
 CI step: `pnpm test` already runs it on every pull request.
-The same suite checks every declared source input across both profiles for
+The same suite checks every declared source input across every profile for
 branch-following GitHub document links to `lutzseverino` repositories. It
 accepts full commit SHAs and reads published tag and branch refs with
 `git ls-remote`, so this check requires network access to those repositories.

@@ -2,11 +2,18 @@
 // an answers file, as an agent would without a terminal, and checks that the
 // run completes with the GitHub remote setup deferred. The fixture and the
 // answers file live in a temporary directory that is removed, and the fixture
-// has no Git remote, so the run changes no repository or GitHub state.
+// has no Git remote, so the run changes no repository or GitHub state. The
+// workbench profile has no remote setup, and its adoption installs no rules
+// and no `.github` file.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { assessments, files, scopes } from "./adoption-fixture.mjs";
+import {
+  assessments,
+  files,
+  scopes,
+  workbenchFiles,
+} from "./adoption-fixture.mjs";
 import {
   ReleaseCheckFailure,
   fail,
@@ -17,17 +24,27 @@ import {
 } from "./support.mjs";
 
 const adoptFormat = "repo-standards/adopt/v2";
-// The remote setup the fixture cannot apply without a GitHub remote.
-const remoteSetup = [
-  "github-repository-configuration/canonical-labels",
-  "github-repository-configuration/pull-request-integration",
-];
+// The fixture each profile is adopted into, with the remote setup it cannot
+// apply without a GitHub remote; the workbench profile selects none.
+const projectFixture = {
+  files,
+  remoteSetup: [
+    "github-repository-configuration/canonical-labels",
+    "github-repository-configuration/pull-request-integration",
+  ],
+};
+const fixtures = {
+  standard: projectFixture,
+  factory: projectFixture,
+  workbench: { files: workbenchFiles, remoteSetup: [] },
+};
+const remoteSetup = (profile) => fixtures[profile].remoteSetup;
 // More rounds than a run needs: the template, the scopes, the start, and the
 // assessments.
 const maximumRounds = 10;
 
-function createFixture(project) {
-  for (const [path, content] of Object.entries(files)) {
+function createFixture(project, profile) {
+  for (const [path, content] of Object.entries(fixtures[profile].files)) {
     mkdirSync(dirname(join(project, path)), { recursive: true });
     writeFileSync(join(project, path), content);
   }
@@ -97,7 +114,9 @@ export function fixtureAnswer(question, report, version, profile) {
         report.answers.questions.find((entry) => entry.id === "remote-setup")
           ?.details ?? []
       ).map(fixId);
-      const undeferred = remoteSetup.filter((fix) => !offered.includes(fix));
+      const undeferred = remoteSetup(profile).filter(
+        (fix) => !offered.includes(fix),
+      );
       if (undeferred.length > 0)
         fail(
           `the inspection offers no deferral of remote setup ${undeferred.join(", ")}; starting would apply it.`,
@@ -118,8 +137,10 @@ export function fixtureAnswer(question, report, version, profile) {
   }
 }
 
-// The deferred remote setup that `status` reports for the completed run.
-export function checkStatus(cli, project) {
+// The deferred remote setup that `status` reports for the completed run, and
+// for the workbench profile, that the run deferred nothing and installed no
+// rules or `.github` file.
+export function checkStatus(cli, project, profile) {
   const child = run(cli, ["status", "--project", project, "--json"]);
   const status = parseJson(child.stdout || child.stderr, "the status output");
   if (child.status !== 0)
@@ -131,11 +152,20 @@ export function checkStatus(cli, project) {
       `status does not report the run ready to commit: ${(status.readinessReasons ?? []).join(" ")}`,
     );
   const deferred = (status.deferred ?? []).map(fixId);
-  const missing = remoteSetup.filter((fix) => !deferred.includes(fix));
+  const missing = remoteSetup(profile).filter((fix) => !deferred.includes(fix));
   if (missing.length > 0)
     fail(
       `status does not list remote setup ${missing.join(", ")} as deferred.`,
     );
+  if (profile === "workbench") {
+    if (deferred.length > 0)
+      fail(
+        `status lists remote setup ${deferred.join(", ")} as deferred, but the workbench profile has none.`,
+      );
+    for (const path of [".repo-standards/rules", ".github"])
+      if (existsSync(join(project, path)))
+        fail(`the workbench adoption installed ${path}.`);
+  }
   return status;
 }
 
@@ -151,7 +181,7 @@ export function adoptFixture(
 ) {
   const project = join(directory, "project");
   const answersPath = join(directory, "answers.json");
-  createFixture(project);
+  createFixture(project, profile);
   let report = adopt(
     cli,
     [source, ...initialArgs, "--project", project],
@@ -165,7 +195,7 @@ export function adoptFixture(
   for (let round = 1; round <= maximumRounds; round += 1) {
     switch (report.outcome) {
       case "complete": {
-        const status = checkStatus(cli, project);
+        const status = checkStatus(cli, project, profile);
         return { project, cliVersion, status };
       }
       case "answers-required":
@@ -225,8 +255,10 @@ export function checkAdoption(cli, source, version, profile, floor) {
       return {
         pass:
           `CLI ${cliVersion} adopted ${version} with the ${profile} profile into a fixture repository ` +
-          `through adopt with an answers file; status reports the run ready to commit, with remote setup ` +
-          `${deferred.join(" and ")} deferred.`,
+          `through adopt with an answers file; status reports the run ready to commit, ` +
+          (deferred.length > 0
+            ? `with remote setup ${deferred.join(" and ")} deferred.`
+            : "with no remote setup, rules or .github file."),
       };
     });
   } catch (error) {

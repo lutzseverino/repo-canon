@@ -9,7 +9,8 @@
 // commit names no Repo Canon version and its README no CLI version. Every CLI
 // version that the adoption guide and the development and authoring documents
 // name there is the required minimum. The update check also commits the
-// previous release's fixture adoption and updates it with the newest public CLI.
+// previous release's fixture adoption and updates it with the newest public CLI,
+// for each profile that the previous release declares.
 
 import { checkUpdates } from "./update.mjs";
 import { checkAdoption } from "./adoption.mjs";
@@ -35,7 +36,7 @@ import {
 } from "./support.mjs";
 
 const sourceRepository = "https://github.com/lutzseverino/repo-canon";
-const profiles = ["standard", "factory"];
+const profiles = ["standard", "factory", "workbench"];
 
 function checkTag(version, releaseCommit) {
   const references = new Map();
@@ -191,8 +192,8 @@ function checkDocuments(read) {
   };
 }
 
-// Reports one check's outcome and returns whether it passed. A check that
-// cannot complete fails with its reason.
+// Reports one check's outcome and returns whether it passed or was skipped. A
+// check that cannot complete fails with its reason.
 function report(check) {
   let outcome;
   try {
@@ -203,6 +204,7 @@ function report(check) {
   }
   for (const failure of outcome.failures ?? []) console.log(`fail: ${failure}`);
   if (outcome.pass) console.log(`pass: ${outcome.pass}`);
+  if (outcome.skip) console.log(`skip: ${outcome.skip}`);
   return !outcome.failures;
 }
 

@@ -1,9 +1,11 @@
 # Make the factory an optional profile
 
 Status: its hosting-platform profile-multiplication assumption is superseded
-by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md), and its
+by [ADR 0023](0023-reach-the-hosting-platform-through-postern.md), its
 project-stack consequence is amended by
-[ADR 0024](0024-scope-each-stack-to-the-projects-that-use-it.md); the two profiles and their purpose stand.
+[ADR 0024](0024-scope-each-stack-to-the-projects-that-use-it.md), and
+[ADR 0027](0027-give-the-workbench-its-own-profile.md) adds a third profile,
+for the workbench; the two profiles and their purpose stand.
 
 Repo Canon offers two profiles: the standard profile, which every adopting
 repository can select, and the factory profile, which adds the factory's

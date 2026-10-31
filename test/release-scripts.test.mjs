@@ -418,13 +418,21 @@ function developmentDocuments(cliVersion) {
   };
 }
 
-// A published v1.0.0 release; `documents` replaces files of its commit.
-function publishedRelease(t, documents = {}) {
+// A published v1.0.0 release; `documents` replaces files of its commit, and
+// the previous release v0.9.0 declares `previousProfiles`.
+function publishedRelease(
+  t,
+  documents = {},
+  previousProfiles = ["standard", "factory"],
+) {
   const repository = fixture(t);
   const previousCommit = repository.commit(
     {
       "standards.yaml":
-        'format: repo-standards/v2\nrequires:\n  repo-standards: ">=6.0.0"\n',
+        'format: repo-standards/v2\nrequires:\n  repo-standards: ">=6.0.0"\n\nprofiles:\n' +
+        previousProfiles
+          .map((name) => `  ${name}:\n    declarations: {}\n`)
+          .join("\n"),
     },
     "previous",
   );
@@ -494,7 +502,7 @@ test("release:verify passes a published release that agrees with its commit", (t
     output,
     /pass: GitHub release v1\.0\.0 is neither a draft nor a prerelease/,
   );
-  for (const profile of ["standard", "factory"])
+  for (const profile of ["standard", "factory", "workbench"])
     assert.match(
       output,
       new RegExp(
@@ -511,6 +519,10 @@ test("release:verify passes a published release that agrees with its commit", (t
           "github-repository-configuration/pull-request-integration deferred\\.",
       ),
     );
+  assert.match(
+    output,
+    /pass: CLI 7\.0\.0 adopted v1\.0\.0 with the workbench profile into a fixture repository through adopt with an answers file; status reports the run ready to commit, with no remote setup, rules or \.github file\./,
+  );
   assert.match(
     output,
     /pass: the public copy at the release commit names no Repo Canon version and its README no CLI version, and every CLI version the adoption guide and the development and authoring documents name is the required minimum 7\.0\.0\./,
@@ -533,6 +545,10 @@ test("release:verify updates from the previous stable release per profile using 
     output,
     /Adopter action: Exact update: the run asks for no contextual work\./,
   );
+  assert.match(
+    output,
+    /skip: v0\.9\.0 declares no workbench profile, so no workbench adoption precedes v1\.0\.0 to update\./,
+  );
   assert.equal(
     calls.filter(
       (answers) =>
@@ -541,6 +557,25 @@ test("release:verify updates from the previous stable release per profile using 
     ).length,
     2,
   );
+});
+
+test("release:verify updates the workbench profile once the previous release declares it", (t) => {
+  const { status, output, calls } = verifyAdoption(t, "complete", {}, [
+    "standard",
+    "factory",
+    "workbench",
+  ]);
+
+  assert.equal(status, 0, output);
+  assert.match(
+    output,
+    /pass: CLI 6\.0\.0 adopted v0\.9\.0; CLI 10\.0\.0 updated to v1\.0\.0 with the workbench profile; questions none; outcome complete, ready to commit with no remote setup\./,
+  );
+  assert.doesNotMatch(output, /skip:/);
+  const workbench = calls.find(
+    (answers) => answers.update && answers.profile === "workbench",
+  );
+  assert.deepEqual(workbench.args, ["adopt", "--json"]);
 });
 
 for (const scenario of ["questions", "fallback-scope"]) {
@@ -702,9 +737,14 @@ test("release:verify fails when no previous stable release is published", (t) =>
 });
 
 // Runs release:verify of v1.0.0 with the fake adoption's scenario, and returns
-// its result with the answers of each adopt call.
-function verifyAdoption(t, scenario, overrides = {}) {
-  const { run, releaseCommit, environment } = publishedRelease(t);
+// its result with the answers of each adopt call. The previous release declares
+// `previousProfiles`, by default the standard and factory profiles.
+function verifyAdoption(t, scenario, overrides = {}, previousProfiles) {
+  const { run, releaseCommit, environment } = publishedRelease(
+    t,
+    {},
+    previousProfiles,
+  );
   const log = join(
     mkdtempSync(join(tmpdir(), "repo-canon-adopt-log-")),
     "answers.jsonl",
@@ -732,8 +772,10 @@ test("release:verify adopts the release with the verified version, the drafted s
     (answers) =>
       answers.inspection === "sha256:complete" && answers.version === "v1.0.0",
   );
-  assert.equal(started.length, 2, "one start per profile");
-  for (const answers of started) {
+  assert.equal(started.length, 3, "one start per profile");
+  for (const answers of started.filter(
+    ({ profile }) => profile !== "workbench",
+  )) {
     assert.equal(answers.version, "v1.0.0");
     assert.equal(answers["remote-setup"], "defer");
     assert.equal(
@@ -743,7 +785,12 @@ test("release:verify adopts the release with the verified version, the drafted s
   }
   assert.deepEqual(
     started.map((answers) => answers.profile),
-    ["standard", "factory"],
+    ["standard", "factory", "workbench"],
+  );
+  assert.deepEqual(
+    Object.keys(started[2]).sort(),
+    ["inspection", "profile", "version"],
+    "the workbench adoption answers no scope, remote setup or assessment",
   );
   const factory = started.find((answers) => answers.profile === "factory");
   assert.deepEqual(factory["scope:factory-workflow"].candidates, []);
@@ -760,7 +807,7 @@ test("release:verify fails an adoption that an inspection blocker stops", (t) =>
   const { status, output } = verifyAdoption(t, "blocked");
 
   assert.notEqual(status, 0);
-  for (const profile of ["standard", "factory"])
+  for (const profile of ["standard", "factory", "workbench"])
     assert.match(
       output,
       new RegExp(
@@ -777,7 +824,12 @@ test("release:verify fails, without starting, an adoption that would apply remot
     output,
     /fail: the standard adoption of v1\.0\.0 failed: the inspection offers no deferral of remote setup github-repository-configuration\/pull-request-integration; starting would apply it\./,
   );
-  assert.ok(calls.every((answers) => answers.inspection !== "sha256:complete"));
+  // The workbench profile has no remote setup and no file to replace.
+  assert.ok(
+    calls
+      .filter(({ profile }) => profile !== "workbench")
+      .every((answers) => answers.inspection !== "sha256:complete"),
+  );
 });
 
 test("release:verify fails an adoption that asks to confirm a confirmation-required change", (t) => {
@@ -789,7 +841,12 @@ test("release:verify fails an adoption that asks to confirm a confirmation-requi
     /fail: the standard adoption of v1\.0\.0 failed: the run asks to confirm a confirmation-required change \(confirmation\): The run replaces README\.md, discarding its edits\./,
   );
   assert.ok(calls.every((answers) => !answers.confirmation));
-  assert.ok(calls.every((answers) => answers.inspection !== "sha256:complete"));
+  // The workbench profile has no remote setup and no file to replace.
+  assert.ok(
+    calls
+      .filter(({ profile }) => profile !== "workbench")
+      .every((answers) => answers.inspection !== "sha256:complete"),
+  );
 });
 
 test("release:verify fails an adoption whose checks fail after the assessment", (t) => {

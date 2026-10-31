@@ -3,7 +3,7 @@
 A stack is a named set of development tools at exact major versions, such as
 the package manager, runtime, compiler, linter, formatter and test runner a
 Project uses. Stacks are opt-in per Project, and a Project can permanently use
-no stack. Both profiles include the optional `typescript-node-stack`,
+no stack. The standard and factory profiles include the optional `typescript-node-stack`,
 `typescript-astro-stack` and `typescript-vite-stack` declarations, each governing only its confirmed Projects, so a
 repository with no matching Project gets no stack rules, as the
 [authoring notes](../../authoring-notes.md) explain.
@@ -69,7 +69,7 @@ use it, and a Site in no stack does not move it. A package that a Project other
 than a web Project also uses is not a shared web package and stays out of both
 web stacks.
 
-Both web declarations ship in both profiles. Confirming a Project installs
+Both web declarations ship in those two profiles. Confirming a Project installs
 the same [shared web rules](../../rules/typescript-web-stacks.md) for either
 stack and runs its read-only manifest check. No matching Project confirms no
 scope, installing no web rules and running no web check. The web checks add

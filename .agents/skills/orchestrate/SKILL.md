@@ -38,8 +38,20 @@ git repository outside every project checkout, seeded with `index.md`,
 add to their global agent instructions, such as
 `The orchestrating agent's workbench is <path>.`
 
+When you create it, also offer to adopt Repo Canon's `workbench` profile into
+it. The profile installs this skill and the other workflow skills, pinned to a
+release, with no rules, CI or branch requirements, so a later orchestrating
+session started in the workbench invokes them from there. With the owner's
+yes, commit the seeded files, then run Repository Standards' `adopt` in the
+workbench with the Repo Canon source that a tracked repository's adoption
+record names, such as `https://github.com/lutzseverino/repo-canon`, and the
+`workbench` profile. Update it later by running `adopt` there without the
+source.
+
 Commit each workbench change straight to its default branch, and push it when
-the workbench has a remote.
+the workbench has a remote. A completed adoption or update of the `workbench`
+profile is one such change: commit it once `status` reports it ready to
+commit.
 
 ```text
 index.md     the tracked repositories, the active plans, each with its owning session reference, and launch caps

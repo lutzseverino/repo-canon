@@ -6,8 +6,10 @@ import { execFixtureGit } from "../../scripts/support/fixture-git.mjs";
 // the start, and the contextual assessments. `FAKE_ADOPT` selects a scenario:
 // `complete` (the default), `blocked` (an inspection blocker), `undeferred`
 // (a remote setup that is ready, so not offered for deferral),
-// `confirmation` (a confirmation-required change), or `failed-checks`. Each
-// call's answers are appended to `FAKE_ADOPT_LOG` when it is set.
+// `confirmation` (a confirmation-required change), or `failed-checks`. The
+// workbench profile has no discovery, remote setup or contextual work, so its
+// run starts on the inspection and completes. Each call's answers are appended
+// to `FAKE_ADOPT_LOG` when it is set.
 import {
   appendFileSync,
   existsSync,
@@ -144,15 +146,18 @@ if (process.env.FAKE_ADOPT_LOG)
   );
 
 const profile = state?.profile ?? given.get("profile") ?? null;
-const discovered = [
-  "documentation",
-  "github-repository-configuration",
-  "project-readmes",
-  "typescript-node-stack",
-  "typescript-astro-stack",
-  "typescript-vite-stack",
-  ...(profile === "factory" ? ["factory-workflow"] : []),
-];
+const workbench = profile === "workbench";
+const discovered = workbench
+  ? []
+  : [
+      "documentation",
+      "github-repository-configuration",
+      "project-readmes",
+      "typescript-node-stack",
+      "typescript-astro-stack",
+      "typescript-vite-stack",
+      ...(profile === "factory" ? ["factory-workflow"] : []),
+    ];
 const report = (outcome, asked, rest = {}) => ({
   format:
     process.env.STUB_CLI_VERSION === "6.0.0"
@@ -400,8 +405,11 @@ if (state === null) {
       git("status", "--porcelain")
     )
       reject("The fixture must be one clean commit.");
-    if (!existsSync(join(project, "README.md")))
-      reject("The fixture has no README.md.");
+    if (
+      !existsSync(join(project, "README.md")) &&
+      !existsSync(join(project, "index.md"))
+    )
+      reject("The fixture has neither README.md nor a workbench index.md.");
   }
   const asked = [
     {
@@ -441,7 +449,7 @@ if (state === null) {
         ],
       }),
     );
-  if (complete) {
+  if (complete && !workbench) {
     asked.push({
       id: "remote-setup",
       question: "Defer?",
@@ -466,11 +474,12 @@ if (state === null) {
   if (result.missing.length > 0) print(result);
 
   save({
-    phase: "contextual",
+    phase: workbench ? "complete" : "contextual",
     version: given.get("version"),
     profile,
     deferred: given.get("remote-setup") === "defer" ? remoteSetup : [],
   });
+  if (workbench) print(report("complete", []), 0);
   print(contextual(false));
 }
 

@@ -1,8 +1,10 @@
 // The fixture repository that release verification adopts each published
-// release into, with the answers its adoption needs. Its files already satisfy
-// the rules of every contextual declaration once adoption installs the exact
-// files, so adoption makes no contextual edit. It has no Git remote, so the
-// GitHub remote setup probes report not ready and the run defers them.
+// release into with the standard and factory profiles, with the answers its
+// adoption needs, and the workbench it adopts the workbench profile into. The
+// repository's files already satisfy the rules of every contextual declaration
+// once adoption installs the exact files, so adoption makes no contextual edit.
+// Neither has a Git remote, so the GitHub remote setup probes of the standard
+// and factory profiles report not ready and the run defers them.
 
 const developmentGuide = "docs/development/README.md";
 
@@ -115,6 +117,17 @@ Install Node.js 24. Wordtally has no dependencies to install. Run
 `,
   ".factory/Dockerfile": `FROM node:24-bookworm
 `,
+};
+
+// The workbench that the workbench profile is adopted into, as the
+// `orchestrate` skill seeds it before its first plan. It holds no project and
+// gets no scope or assessment.
+export const workbenchFiles = {
+  "index.md": "# Index\n\n## Repositories\n\n## Launch caps\n",
+  "inbox.md": "# Inbox\n\n## Answered\n",
+  "wishes.md": "# Wishes\n",
+  "now.md":
+    "# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n## In flight\n\n## Running launches\n",
 };
 
 // Each discovery declaration's scope entry that no discovery script drafts.
