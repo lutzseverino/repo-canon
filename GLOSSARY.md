@@ -64,6 +64,11 @@ agent-brief comment for a triaged request or in a directly authored
 specification or implementation ticket.
 _Avoid_: Intake report, any comment, inferred scope
 
+**Live acceptance**:
+The recorded evidence that a deployed change behaves on the live system as its
+implementation contract says. A merge never establishes it.
+_Avoid_: Deployed, merged, done
+
 **Code-bound request**:
 An intake request whose expected result is clear and whose remaining questions
 the code, logs, or a reproduction can answer, so research writes its Agent
@@ -130,11 +135,11 @@ _Avoid_: Orchestrating agent, reviewer
 The reviewed state of an implementation contract that an authorized reviewer
 considers sufficiently specified for work, granting it to an agent; the
 factory accepts it only from a person whose current repository role the host
-configuration authorizes, after the issue's last edit. A parent never runs,
-but its readiness releases its tickets and survives later links only when
-complete history shows every addition at or after readiness was made by an
-authorized person; without complete history, the platform's available link
-timing governs renewed readiness.
+configuration authorizes, after the implementation contract's last edit. A
+parent never runs, but its readiness releases its tickets and survives later
+links only when complete history shows every addition at or after readiness
+was made by an authorized person; without complete history, the platform's
+available link timing governs renewed readiness.
 _Avoid_: Passing structural validation
 
 **Factory**:
@@ -219,6 +224,17 @@ as committed artifacts or issue tracker items that others rely on, or because
 rules, a check, or another workflow skill rely on it. It is a method an agent
 follows and never defines a requirement.
 _Avoid_: Installed skill, rule, policy
+
+**Owned skill**:
+A workflow skill Repo Canon publishes as its own, either written for it or
+taken from an upstream skill and reconciled with that skill's upstream base.
+Every workflow skill is an owned skill.
+_Avoid_: Fork, patched skill, pinned skill
+
+**Upstream base**:
+The upstream snapshot an owned skill was last reconciled with, kept unedited
+as the reference for the next upstream update.
+_Avoid_: Pin, vendored copy
 
 **Personal skill**:
 A skill whose output serves only the person using it, such as a lesson or a

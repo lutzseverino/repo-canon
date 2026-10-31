@@ -1,5 +1,10 @@
 # Keep requirements in installed rules, and use skills as methods
 
+Status: its consequences on overriding a pinned skill and on forking one are
+superseded by
+[ADR 0028](0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md);
+the decision that requirements live in installed rules stands.
+
 Every requirement a standard places on an adopting repository lives in
 installed, human-readable rules that its checks and assessments cite. An
 installed skill is a method: it says how to do work and never defines what the
