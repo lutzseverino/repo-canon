@@ -4,7 +4,7 @@ A stack is a named set of development tools at exact major versions, such as
 the package manager, runtime, compiler, linter, formatter and test runner a
 Project uses. Stacks are opt-in per Project, and a Project can permanently use
 no stack. Both profiles include the optional `typescript-node-stack`,
-`typescript-astro-stack` and `typescript-vite-stack` declarations, but it governs only the Projects confirmed in its scope, so a
+`typescript-astro-stack` and `typescript-vite-stack` declarations, each governing only its confirmed Projects, so a
 repository with no matching Project gets no stack rules, as the
 [authoring notes](../../authoring-notes.md) explain.
 

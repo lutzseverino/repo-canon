@@ -515,3 +515,50 @@ test("a missing holder script is named and mixed-consumer Node differences are r
   assert.equal(protocol.decision, "exclude");
   assert.match(protocol.reason, /validate/);
 });
+
+test("mixed App/API consumers keep React-marked packages as Node candidates", (t) => {
+  const files = {
+    ...workspace,
+    ...webFiles("vite", "apps/web", {
+      dependencies: { vite: "8.0.0", react: "19.0.0", protocol: "workspace:*" },
+    }),
+    "services/api/package.json": manifest({
+      name: "api",
+      dependencies: { protocol: "workspace:*" },
+    }),
+    "packages/protocol/package.json": manifest({
+      name: "protocol",
+      dependencies: { react: "19.0.0" },
+    }),
+    "packages/protocol/components.json": components,
+  };
+  assert.equal(
+    decisions(draft(t, "node", files))["packages/protocol/package.json"],
+    "include",
+  );
+  assert.equal(
+    decisions(draft(t, "vite", files))["packages/protocol/package.json"],
+    "exclude",
+  );
+});
+
+test("App-connected cycles inherit the external consumer's stack and never fall back to Node", (t) => {
+  const files = {
+    ...workspace,
+    ...webFiles("vite", "apps/web", {
+      dependencies: { vite: "8.0.0", react: "19.0.0", a: "workspace:*" },
+    }),
+    "packages/a/package.json": manifest({
+      name: "a",
+      dependencies: { b: "workspace:*" },
+    }),
+    "packages/b/package.json": manifest({
+      name: "b",
+      dependencies: { a: "workspace:*" },
+    }),
+  };
+  for (const path of ["packages/a/package.json", "packages/b/package.json"]) {
+    assert.equal(decisions(draft(t, "vite", files))[path], "include");
+    assert.equal(decisions(draft(t, "node", files))[path], "exclude");
+  }
+});

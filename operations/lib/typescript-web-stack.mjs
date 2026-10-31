@@ -287,92 +287,126 @@ export function classifyWebPackages(projectRoot, files) {
           "Web candidate membership is unresolved: framework tools alone do not distinguish a Site from an App or select a stack.",
       });
   }
-  // A differing existing consumer stays out of its stack. Keep its intended
-  // stack for explanations, but do not let it choose shared membership.
-  for (const [path, membership] of classified) {
-    membership.eligible =
-      membership.stack !== null &&
-      webStackDifferences(
-        projectRoot,
-        path,
-        membership.stack,
-        files,
-        classified,
-      ).differences.length === 0;
-  }
-  // Iterate dependency propagation so framework-less shared packages inherit
-  // through other shared packages. A non-web consumer keeps a package in Node.
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const entry of entries) {
-      if (
-        !entry.manifest ||
-        (classified.has(entry.path) &&
-          classified.get(entry.path).kind !== "package")
-      )
-        continue;
-      const workspace = workspaceRootOf(projectRoot, entry.path);
-      if (workspace.root === undefined) continue;
-      const consumers = entries.filter(
-        (other) =>
-          other.path !== entry.path &&
-          other.manifest &&
-          packageDependencies(other.manifest).includes(entry.manifest.name) &&
-          workspaceRootOf(projectRoot, other.path).root === workspace.root,
-      );
-      if (!consumers.length) continue;
-      if (
-        consumers.every(
+  const isEligible = (path, membership) =>
+    membership.stack !== null &&
+    webStackDifferences(projectRoot, path, membership.stack, files, classified)
+      .differences.length === 0;
+  // A differing existing consumer keeps its intended stack for explanations,
+  // but cannot choose the stack of a shared package.
+  for (const [path, membership] of classified)
+    membership.eligible = isEligible(path, membership);
+
+  const consumers = new Map(
+    entries.map((entry) => [
+      entry.path,
+      entries
+        .filter(
           (other) =>
-            classified.has(other.path) &&
-            classified.get(other.path).kind !== "package",
+            other.path !== entry.path &&
+            entry.manifest &&
+            other.manifest &&
+            packageDependencies(other.manifest).includes(entry.manifest.name) &&
+            workspaceRootOf(projectRoot, other.path).root ===
+              workspaceRootOf(projectRoot, entry.path).root,
         )
-      ) {
-        const memberships = consumers.map((other) =>
-          classified.get(other.path),
-        );
-        const stack = memberships.some(
-          (value) => value.eligible && value.stack === "astro",
-        )
-          ? "astro"
-          : memberships.some(
-                (value) => value.eligible && value.stack === "vite",
-              )
-            ? "vite"
-            : null;
-        const unresolved = memberships.some(
-          (value) => value.kind === "unresolved",
-        );
-        classified.set(entry.path, {
-          kind: unresolved ? "unresolved" : "shared",
-          stack: unresolved ? null : stack,
-          evidence: [
-            entry.path,
-            ...consumers.flatMap(
-              (other) => classified.get(other.path).evidence,
-            ),
-          ],
-          reason:
-            unresolved || !stack
-              ? "Shared web package has no established in-stack consumers; membership remains unresolved."
-              : `Shared web package follows typescript-${stack}; only in-stack web consumers choose its stack.`,
-        });
-        const membership = classified.get(entry.path);
-        membership.eligible =
-          membership.stack !== null &&
-          webStackDifferences(
-            projectRoot,
-            entry.path,
-            membership.stack,
-            files,
-            classified,
-          ).differences.length === 0;
-        changed = true;
-      }
+        .map((other) => other.path),
+    ]),
+  );
+  const packages = entries
+    .filter(
+      (entry) =>
+        entry.manifest &&
+        (!classified.has(entry.path) ||
+          classified.get(entry.path).kind === "package"),
+    )
+    .map((entry) => entry.path);
+  // Consumer components are returned after their external consumers. This
+  // lets framework-less cycles inherit from Apps/Sites as one component,
+  // without letting an internal cycle masquerade as a non-web consumer.
+  for (const component of consumerComponents(packages, consumers)) {
+    const external = [
+      ...new Set(
+        component
+          .flatMap((path) => consumers.get(path))
+          .filter((path) => !component.includes(path)),
+      ),
+    ];
+    const memberships = external.map((path) => classified.get(path));
+    if (memberships.some((value) => value === undefined)) {
+      // A non-web consumer overrides secondary web markers such as React or
+      // components.json: this is a mixed-consumer package, eligible for Node.
+      for (const path of component) classified.delete(path);
+      continue;
+    }
+    if (!external.length && !component.some((path) => classified.has(path)))
+      continue;
+    const stack = memberships.some(
+      (value) => value.eligible && value.stack === "astro",
+    )
+      ? "astro"
+      : memberships.some((value) => value.eligible && value.stack === "vite")
+        ? "vite"
+        : null;
+    const unresolved =
+      !external.length ||
+      memberships.some((value) => value.kind === "unresolved");
+    const evidence = [
+      ...new Set([
+        ...component,
+        ...memberships.flatMap((value) => value.evidence),
+      ]),
+    ];
+    for (const path of component)
+      classified.set(path, {
+        kind: unresolved ? "unresolved" : "shared",
+        stack: unresolved ? null : stack,
+        evidence,
+        reason:
+          unresolved || !stack
+            ? "Shared web package has no established in-stack consumers; membership remains unresolved."
+            : `Shared web package follows typescript-${stack}; only in-stack web consumers choose its stack.`,
+      });
+    for (const path of component) {
+      const membership = classified.get(path);
+      membership.eligible = isEligible(path, membership);
     }
   }
-  for (const membership of classified.values())
-    if (membership.kind === "package") membership.kind = "unresolved";
   return classified;
+}
+
+// Tarjan's strongly connected components on package -> consumer edges.
+// Primary Sites/Apps are external leaves, not vertices in this graph.
+function consumerComponents(paths, consumers) {
+  const vertices = new Set(paths);
+  const indices = new Map();
+  const low = new Map();
+  const pending = [];
+  const active = new Set();
+  const components = [];
+  let index = 0;
+  const visit = (path) => {
+    indices.set(path, index);
+    low.set(path, index++);
+    pending.push(path);
+    active.add(path);
+    for (const consumer of consumers.get(path)) {
+      if (!vertices.has(consumer)) continue;
+      if (!indices.has(consumer)) {
+        visit(consumer);
+        low.set(path, Math.min(low.get(path), low.get(consumer)));
+      } else if (active.has(consumer))
+        low.set(path, Math.min(low.get(path), indices.get(consumer)));
+    }
+    if (low.get(path) !== indices.get(path)) return;
+    const component = [];
+    let member;
+    do {
+      member = pending.pop();
+      active.delete(member);
+      component.push(member);
+    } while (member !== path);
+    components.push(component);
+  };
+  for (const path of paths) if (!indices.has(path)) visit(path);
+  return components;
 }

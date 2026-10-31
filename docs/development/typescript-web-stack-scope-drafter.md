@@ -20,6 +20,7 @@ confirmation. A Vite-built Site remains outside every stack; ambiguous web
 candidates are excluded with an unresolved question rather than sent to Node.
 
 Workspace consumers establish shared packages, including framework-less ones.
+Dependency cycles are resolved together from their external consumers.
 Non-web consumers keep a package outside the web-only category. Only in-stack
 web consumers choose a stack, with Astro winning when both apply; no-stack
 Sites do not compete. No known in-stack consumers keeps a web package
