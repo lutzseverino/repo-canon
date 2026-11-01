@@ -92,3 +92,6 @@ Paths are relative to the repository root.
   directory's index. When the repository's documentation directories are
   missing one, keep no ADR index; when only `docs/adr/README.md` is missing,
   create it with `docs/adr/`.
+- `CONTRIBUTING.md`: how the repository delivers glossary and ADR edits, such
+  as one pull request. When it is missing, leave the edits on your own
+  branch.

@@ -119,5 +119,9 @@ Paths are relative to the repository root.
   canonical role names as the label strings.
 - `GLOSSARY.md` and the ADRs in `docs/adr/`: the domain vocabulary and
   decisions to respect. When either is missing, use the codebase's own words.
+- The installed rules, such as the `github-repository-configuration` rules,
+  which the `repository-standards` skill looks up: the companion labels
+  readiness needs. When they are missing, readiness carries no companion
+  labels.
 - `.scratch/`: the local-files tracker's tickets. When it is missing, create
   it as step 5 says.

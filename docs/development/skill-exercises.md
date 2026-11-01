@@ -85,8 +85,8 @@ rather than a link. Its last commit totals posted entries and leaves pending
 ones at zero, against `specs/summarize-ledger.md`. Review it since the
 manifest's `fixedPoint`. The outcome shows the skill following its Reads
 section: the Spec axis finds the spec under `specs/`, the Standards axis
-carries only the smell baseline, and the missing
-`docs/agents/issue-tracker.md` is reported without blocking the review.
+carries only the smell baseline, and with `docs/agents/issue-tracker.md`
+missing, the review looks for the spec in its other places without blocking.
 
 The research exercise needs web search, such as Codex CLI's `--search` option.
 Opening the architecture report needs a browser; in a headless harness, render

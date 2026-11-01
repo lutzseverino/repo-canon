@@ -27,14 +27,12 @@ your agent with `--agent`. Name the bundle path, not the repository: the
 repository also keeps the inputs of its own adoption under `.repo-standards/`,
 which hold a second copy of every skill.
 
-The listing pins a release only through such a URL. The CLI fetches the
-tag's content and records the tag as the skill's `ref` in `skills-lock.json`.
+The listing pins a release only through such a URL. The CLI copies the tag's
+skill files and records the tag as the skill's `ref` in `skills-lock.json`.
 A listing's `lutzseverino/repo-canon` source name alone names no release and
-follows the default branch. On 2026-11-01, with skills CLI 1.5.25, installing
-`grilling` from `v0.20.0` this way copied the tag's `SKILL.md` and
-`agents/openai.yaml` and recorded `"ref": "v0.20.0"`, and `skills update`
-skipped the skill, because more than one path in the repository matched it.
-To move to a later release, run `add` again with the later tag. Without the
+follows the default branch. `skills update` skips a skill installed this way,
+because more than one path in the repository matches it; to move to a later
+release, run `add` again with the later tag. Without the
 skills CLI, copy `.agents/skills/<name>` from a checkout of the tag instead.
 
 ## What a skill needs on its own

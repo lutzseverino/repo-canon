@@ -36,7 +36,7 @@ each states that a prompt or brief naming it is its invocation. `implement` also
 invocation in both harness formats. `grill-with-docs` and `prototype` differ in
 nothing else; the other fifteen, including `triage` with its workflow changes,
 differ further as their `CREDITS.md` files describe. `pr` adds the screenshot
-storage and retention contract. Twelve add a Reads section, which lists the
+storage and retention contract. Fourteen add a Reads section, which lists the
 repository files the skill reads and what it does when each is missing. Each
 reproduces the upstream MIT License notice from
 `vendor/mattpocock-skills/LICENSE`, and `pr`'s keeps HumanLayer's too, so a
