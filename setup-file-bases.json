@@ -16,7 +16,7 @@
         "commit": "24fe0ef7737efae15c87225755e9f6f5965e4888",
         "path": "skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md"
       },
-      "edits": null
+      "edits": "Creating an issue writes the body in the matching issue form's sections and passes it as a body file. Reading an issue names the latest Agent Brief comment as its implementation contract. Readiness labels are applied only through the triage skill's readiness command. Wayfinding child and blocking links are native only: the task list, `Part of` and `Blocked by` body fallbacks are removed, an uncreatable link is reported, and the frontier query reads native sub-issues and dependencies."
     },
     "docs/agents/triage-labels.md": {
       "upstream": {
@@ -25,7 +25,7 @@
         "commit": "24fe0ef7737efae15c87225755e9f6f5965e4888",
         "path": "skills/engineering/setup-matt-pocock-skills/triage-labels.md"
       },
-      "edits": null
+      "edits": "The Meaning column states each role's meaning as Repo Canon's GitHub rules define it. A paragraph says that readiness is a review of the current contract revision applied through the triage skill's readiness command after the revision notice, and that an issue left with no role gets `needs-triage`. The closing line names the \"Label in our tracker\" column as the one to edit."
     }
   }
 }

@@ -28,9 +28,7 @@ descriptions:
 | `wayfinder:task`      | `bfd4f2` | Task in a planning map                                                     |
 
 `docs/agents/triage-labels.md` maps canonical roles to tracker label strings;
-use the configured string for each role. Role meanings in these rules and the
-contribution guide take precedence over its upstream Meaning column, including
-the conflicting `needs-info` and `ready-for-human` entries.
+use the configured string for each role.
 
 For `needs-info`, follow the contribution guide's Triage section for question
 routing and its inference test. Agent work, including work awaiting the owner's
@@ -500,13 +498,11 @@ identity or applicability read authorizes no readiness writes.
 
 ## Native blockers
 
-Repo Canon's native GitHub relationship rules take precedence over the
-fallback instructions in the upstream tracker guide installed at
-`docs/agents/issue-tracker.md`. Parent/sub-issue links and blocker/dependency
-links must use GitHub's native relationships. Task lists and `Part of`,
-`Parent`, or `Blocked by` body references do not establish those links, even
-when a native link cannot be created or the feature is unavailable. Required
-named sections retain their content requirements.
+Parent/sub-issue links and blocker/dependency links must use GitHub's native
+relationships. Task lists and `Part of`, `Parent`, or `Blocked by` body
+references do not establish those links, even when a native link cannot be
+created or the feature is unavailable. Required named sections retain their
+content requirements.
 
 GitHub's native issue dependencies are the canonical blocking relationship.
 When adding a native blocker, pass the blocking issue's numeric database ID as

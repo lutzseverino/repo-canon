@@ -105,18 +105,18 @@ test("an owned file identical to its base that claims edits fails", (t) => {
   );
   edit(copy, "setup-file-bases.json", (text) => {
     const record = JSON.parse(text);
-    record.files["docs/agents/triage-labels.md"].edits = "Renames a label.";
+    record.files["docs/agents/domain.md"].edits = "Renames a heading.";
     return JSON.stringify(record);
   });
   assert.deepEqual(checkUpstreamBases(copy), [
     "tdd (.agents/skills/tdd/CREDITS.md) claims edits, but the skill is identical to its upstream base",
-    "docs/agents/triage-labels.md (setup-file-bases.json) claims edits, but the file is identical to its upstream base",
+    "docs/agents/domain.md (setup-file-bases.json) claims edits, but the file is identical to its upstream base",
   ]);
 });
 
 test("an owned file that differs from its base and claims none fails", (t) => {
   const copy = fixture(t);
-  for (const name of ["tdd", "grilling"])
+  for (const name of ["tdd", "prototype"])
     edit(copy, `.agents/skills/${name}/CREDITS.md`, (text) =>
       text.replace(
         "The skill differs from its upstream base:",
@@ -124,7 +124,7 @@ test("an owned file that differs from its base and claims none fails", (t) => {
       ),
     );
   appendFileSync(join(copy, ".agents/skills/tdd/SKILL.md"), "\nEdited.\n");
-  writeFileSync(join(copy, ".agents/skills/grilling/NOTES.md"), "Added.\n");
+  writeFileSync(join(copy, ".agents/skills/prototype/NOTES.md"), "Added.\n");
   appendFileSync(join(copy, "docs/agents/domain.md"), "\nEdited.\n");
   edit(copy, ".agents/skills/triage/CREDITS.md", (text) =>
     text.replace(
@@ -133,7 +133,7 @@ test("an owned file that differs from its base and claims none fails", (t) => {
     ),
   );
   assert.deepEqual(checkUpstreamBases(copy), [
-    "grilling (.agents/skills/grilling/CREDITS.md) claims the skill is identical to its upstream base, but it differs",
+    "prototype (.agents/skills/prototype/CREDITS.md) claims the skill is identical to its upstream base, but it differs",
     "tdd (.agents/skills/tdd/CREDITS.md) claims the skill is identical to its upstream base, but it differs",
     "triage (.agents/skills/triage/CREDITS.md) claims the skill is identical to its upstream base, but it differs",
     "docs/agents/domain.md (setup-file-bases.json) claims no edits, but the file differs from its upstream base",
@@ -248,7 +248,7 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   const skill = (name, path) => `skills/engineering/${name}/${path}`;
 
   // A nonconflicting owned skill takes the upstream change.
-  edit(next, skill("code-review", "SKILL.md"), (text) =>
+  edit(next, skill("diagnosing-bugs", "SKILL.md"), (text) =>
     text.replace(/\n/, "\nUpstream addition.\n"),
   );
   // A line Repo Canon rewrote in triage, changed upstream too, conflicts.
@@ -281,8 +281,8 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   const outcomes = (entries) =>
     entries.map(({ path, outcome }) => `${outcome} ${path}`);
   const expected = [
-    "merged .agents/skills/code-review/SKILL.md",
     "removed .agents/skills/codebase-design/agents/openai.yaml",
+    "merged .agents/skills/diagnosing-bugs/SKILL.md",
     "conflict .agents/skills/pr/CREDITS.md",
     "removed .agents/skills/prototype/UI.md",
     "added .agents/skills/tdd/NEW.md",
@@ -316,20 +316,20 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   );
   assert.equal(rerun.status, 2, rerun.stderr);
 
-  const mergedReview = readFileSync(
-    join(copy, ".agents/skills/code-review/SKILL.md"),
+  const mergedSkill = readFileSync(
+    join(copy, ".agents/skills/diagnosing-bugs/SKILL.md"),
     "utf8",
   );
   assert.match(
-    mergedReview,
+    mergedSkill,
     /A prompt or brief naming this skill is its invocation\./,
   );
   assert.equal(
-    mergedReview.replace(
+    mergedSkill.replace(
       "\nA prompt or brief naming this skill is its invocation.\n",
       "",
     ),
-    readFileSync(join(next, skill("code-review", "SKILL.md")), "utf8"),
+    readFileSync(join(next, skill("diagnosing-bugs", "SKILL.md")), "utf8"),
   );
   assert.deepEqual(
     readFileSync(join(copy, ".agents/skills/tdd/NEW.md")),

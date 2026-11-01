@@ -216,6 +216,17 @@ does not replace the reason. Timeline recognition of the opener's creation label
 requires its application in the same second the issue was created. The bot's
 removal of readiness as rejection cleanup also retains the reason.
 
+A rejection or supersession that removes readiness publishes an "Issue contract
+readiness removed" notice. It leads with `Readiness was removed:` and the
+reason, names each readiness label the validator removed, and says that
+restoring readiness needs a fresh authorized review of the exact revision, after
+its revision notice for an Agent Brief. Its result keeps the v1 fields with
+status `awaiting-review`. A run that retains the reason takes the removed
+labels from the validator's previous notice, so it publishes the same notice. A
+rejection that removed no label keeps the awaiting-review notice with its
+reason. Triage's readiness command accepts either notice as a
+complete contract awaiting review.
+
 A creation rejection records which label the creation review rejected. That
 label's creation event, the first readiness transition when the rejection
 observed none, does not replace the reason, so it survives both creation runs
@@ -437,7 +448,7 @@ workflow states is never a structural error.
   bare snapshot and wrote its fallback after an authorized creation review.
 - A non-readiness state applied after the review supersedes it, whatever its
   timestamp, except for the validator's own `needs-triage` fallback: the validator
-  keeps the latest such state, removes readiness and every other state, and publishes the revision as awaiting review. A carried
+  keeps the latest such state, removes readiness and every other state, and publishes the readiness-removed notice naming that state. A carried
   state whose application the timeline has not recorded counts as later than
   every recorded event only when its latest recorded change is a removal or
   nothing. A label the issue was opened with is the exception.

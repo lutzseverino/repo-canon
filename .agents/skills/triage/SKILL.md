@@ -46,7 +46,7 @@ For a PR, the same states read against the attached code: `ready-for-agent` mean
 
 Every triaged issue should carry exactly one category role and one state role. If state roles conflict, flag it and ask the maintainer before doing anything else.
 
-These are canonical role names. The actual label strings are in the triage label configuration, `docs/agents/triage-labels.md`. For role meanings, follow the installed `github-repository-configuration` rules and the contribution guide; they take precedence over the configuration's upstream Meaning column.
+These are canonical role names. The actual label strings and their meanings are in the triage label configuration, `docs/agents/triage-labels.md`.
 
 State transitions: an unlabeled issue normally goes to `needs-triage` first; from there it moves to `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`. `needs-info` returns to `needs-triage` once the missing information arrives: your own answer, the reporter's reply, or the owner's decision. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
 
@@ -190,7 +190,7 @@ If an answer changes the implementation contract, send the edit to a separate wr
 
 ## Quick state override
 
-If the maintainer says "move #42 to ready-for-agent", trust them and apply the role directly: that is their review, not yours. Confirm what you're about to do (role changes, comment, close), then act. Skip grilling. If moving to `ready-for-agent` without a brief, ask whether they want one written.
+If the maintainer says "move #42 to ready-for-agent", trust them: that is their review, not yours. Confirm what you're about to do (role changes, comment, close), then act. Skip grilling. Apply a readiness role through [Apply and confirm readiness](#accept-a-brief-that-holds), with the revision from the issue's current revision notice and the model and skip labels the installed rules ask for; when the command refuses your account, hand the maintainer those details instead. If moving to `ready-for-agent` without a brief, ask whether they want one written.
 
 ## Needs-info template
 

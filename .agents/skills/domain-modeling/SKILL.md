@@ -39,7 +39,9 @@ If a `GLOSSARY-MAP.md` exists at the root, the repo has multiple contexts. The m
 │       └── docs/adr/
 ```
 
-Create files lazily: only when you have something to write. If no `GLOSSARY.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
+Create files lazily: only when you have something to write. If no `GLOSSARY.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed, with the index [ADR-FORMAT.md](./ADR-FORMAT.md) describes when the repo indexes its documentation directories.
+
+Before your first edit to a glossary or ADR, work on a branch of your own in a checkout you own, such as a worktree or fresh clone, never in a shared checkout on the default branch. Each repository whose domain documents change gets its edits delivered as its contribution guide directs, such as one pull request.
 
 ## During the session
 

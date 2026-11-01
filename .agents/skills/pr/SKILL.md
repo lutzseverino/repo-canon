@@ -32,7 +32,13 @@ Use this template for writing the PR body:
 **Blast Radius:** <one-word description>
 
 <optional: potential ramifications of merge>
+
+## Related issue
+
+<closing or partial-work reference, or Direct change: reason>
 ```
+
+Keep the sections in this order. Put any other material, such as scope, impact, or migration, in a subsection of the section it belongs to.
 
 ## Sections
 
@@ -165,8 +171,16 @@ Screenshots are S-tier - when the environment is set up for it and the change is
 
 Execution-based evidence is A-tier. Test results, console output. Show the exact test that now fails and passes, using pseudocode.
 
+List every check you ran on the final commit with its outcome, and say why any required check was not run.
+
 ### Merge Danger
 
 Describe whether it's a one-way or two-way door. You can walk back through two-way doors, but not one-way doors. A PR that is cheap to roll back is lower risk. Changes that involve destructive actions or hard-to-reverse decisions are one-way doors.
 
 The blast radius is the potential impact or scope of the changes introduced by this PR. Consider all possibilities. Examples are layout shift, breakages for consumers, mobile responsiveness, etc.
+
+Name the change's relevant limits here: what it leaves undone, unverified, or unsupported. For a breaking change, explain its impact and migration in a subsection.
+
+### Related issue
+
+Link the issue the change works on. Use a closing reference, such as `Closes #123`, when the PR finishes the issue, and a nonclosing one, such as `Part of #123`, when it does only part. For work without an issue, write `Direct change:` followed by the reason instead.

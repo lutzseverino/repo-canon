@@ -654,6 +654,16 @@ test("refuses a result of an unknown format without writes", async () => {
   assert.deepEqual(writes(result), []);
 });
 
+test("applies readiness again after a notice that reports removed readiness", async () => {
+  const result = await exercise({
+    heading:
+      "## Issue contract readiness removed\n\nReadiness was removed: `needs-info` was applied after the review and supersedes its readiness.",
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.code, 0);
+  assert.ok(writes(result)[0].body.labels.includes("ready-for-agent"));
+});
+
 test("accepts ready-for-human without a model label", async () => {
   const result = await exercise({ argv: ["42", "ready-for-human", revision] });
   assert.equal(result.error, undefined);

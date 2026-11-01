@@ -112,6 +112,7 @@ const feedbackStatePrefix = "<!-- repo-canon:issue-contract-state ";
 export const resultFormat = "repo-canon/issue-contract-state/v1";
 const needsAttentionHeading = "## Issue contract needs attention";
 const structureCorrectedHeading = "## Issue contract structure corrected";
+const readinessRemovedHeading = "## Issue contract readiness removed";
 const readyLabels = new Set(["ready-for-agent", "ready-for-human"]);
 const workflowLabels = new Set([
   "needs-triage",
@@ -284,15 +285,17 @@ export function decideIssueContract(snapshot) {
       readiness.sourceInvalidation ?? evaluation.sourceInvalidation,
   };
   if (!readiness.valid) {
+    const writes = stateWrites();
     return issueDecision({
       exitCode: 1,
       message: readiness.error,
-      ...stateWrites(),
+      ...writes,
       feedback: feedbackChange(
         comments,
         awaitingReviewFeedback(published, {
           reason: readiness.error,
           rejectedCreationLabel: readiness.rejectedCreationLabel,
+          removedLabels: readinessLabels(writes.removeLabels),
         }),
       ),
     });
@@ -305,10 +308,11 @@ export function decideIssueContract(snapshot) {
     const superseding = supersedingStates
       .map((label) => `\`${label}\``)
       .join(" and ");
+    const writes = stateWrites(supersedingStates);
     return issueDecision({
       exitCode: 0,
       message: `Valid ${result.kind}; ${superseding} superseded ${readiness.label}.`,
-      ...stateWrites(supersedingStates),
+      ...writes,
       feedback: feedbackChange(
         comments,
         awaitingReviewFeedback(published, {
@@ -316,6 +320,7 @@ export function decideIssueContract(snapshot) {
             supersedingStates.length === 1
               ? `${superseding} was applied after the review and supersedes its readiness.`
               : `${superseding} were applied after the review and supersede its readiness.`,
+          removedLabels: readinessLabels(writes.removeLabels),
         }),
       ),
     });
@@ -336,6 +341,7 @@ export function decideIssueContract(snapshot) {
         : awaitingReviewFeedback(published, {
             reason: readiness.rejectionReason,
             rejectedCreationLabel: readiness.rejectedCreationLabel,
+            removedLabels: readiness.removedLabels,
           }),
     ),
   });
@@ -1032,6 +1038,7 @@ function assessReadiness({
       rejectedCreationLabel: rejectionReason
         ? recorded.rejectedCreationLabel
         : null,
+      removedLabels: rejectionReason ? removedLabelsIn(previousFeedback) : [],
     };
   }
 
@@ -1633,14 +1640,40 @@ function invalidFeedback(errors, evaluation) {
   return `${resultLine({ ...evaluation, status: "needs-attention" })}\n${needsAttentionHeading}\n\n${errors.map((error) => `- ${error}`).join("\n")}\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.`;
 }
 
+// The readiness labels the validator's previous readiness-removed notice
+// names, so a run that keeps its reason publishes the same notice.
+function removedLabelsIn(feedback) {
+  const body = feedback?.body ?? "";
+  if (!body.includes(`\n${readinessRemovedHeading}\n`)) return [];
+  const line = /^The validator removed (.+) from the /m.exec(body)?.[1] ?? "";
+  return [...line.matchAll(/`([^`]+)`/g)]
+    .map(([, label]) => label)
+    .filter((label) => readyLabels.has(label));
+}
+
+// A rejection or supersession that removed readiness leads with that removal
+// and names the removed labels: the decision's own writes, or on later runs
+// that keep the reason, the labels its previous notice named.
 function awaitingReviewFeedback(
   published,
-  { reason = null, rejectedCreationLabel = null } = {},
+  { reason = null, rejectedCreationLabel = null, removedLabels = [] } = {},
 ) {
+  const state = resultLine({
+    ...published,
+    status: "awaiting-review",
+    rejectionReason: reason,
+    rejectedCreationLabel,
+  });
+  const review =
+    "A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.";
+  if (reason && removedLabels.length > 0) {
+    const labels = removedLabels.map((label) => `\`${label}\``).join(" and ");
+    return `${state}\n${readinessRemovedHeading}\n\nReadiness was removed: ${reason}\n\nThe validator removed ${labels} from the ${published.kind} at revision \`${published.revision}\`, which has the required structure.\n\nA fresh authorized review is required to restore readiness. ${review}`;
+  }
   const explanation = reason
     ? `\n\nThe last readiness attempt was rejected: ${reason}`
     : "";
-  return `${resultLine({ ...published, status: "awaiting-review", rejectionReason: reason, rejectedCreationLabel })}\n## Issue contract awaiting review\n\nThe ${published.kind} has the required structure at revision \`${published.revision}\`.${explanation}\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
+  return `${state}\n## Issue contract awaiting review\n\nThe ${published.kind} has the required structure at revision \`${published.revision}\`.${explanation}\n\nA fresh authorized review is required. ${review}`;
 }
 
 function approvedFeedback(published, { label, reviewer, reviewEventId }) {

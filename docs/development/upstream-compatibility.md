@@ -33,8 +33,10 @@ of the skill except `CREDITS.md`. When the base has its own `CREDITS.md`, as
 `pr`'s does for the HumanLayer material, the owned `CREDITS.md` keeps that
 text word for word. All 17 skills taken from upstream differ from their bases:
 each states that a prompt or brief naming it is its invocation. `implement` also allows model
-invocation in both harness formats; `triage` carries the workflow changes its
-`CREDITS.md` describes.
+invocation in both harness formats. `codebase-design`, `diagnosing-bugs`,
+`grill-with-docs`, `prototype` and `tdd` differ in nothing else; the other
+twelve, including `triage` with its workflow changes, differ further as their
+`CREDITS.md` files describe.
 
 The skill setup files `docs/agents/domain.md`, `docs/agents/issue-tracker.md`
 and `docs/agents/triage-labels.md` are owned files installed from themselves.
@@ -42,7 +44,8 @@ Adopters' `docs/agents/` has no place for a `CREDITS.md` beside each one, so
 `setup-file-bases.json` at the repository root records their bases: for each
 path, its `upstream` repository, tag, commit and seed path, and `edits`, which
 is `null` while the file is identical to its base and otherwise summarizes how
-it differs. All three are identical to their seeds. The snapshot's own
+it differs. `domain.md` is identical to its seed; `issue-tracker.md` and
+`triage-labels.md` differ, as their `edits` describe. The snapshot's own
 `UPSTREAM.json` records its repository, tag and commit; it is Repo Canon's
 provenance record, not an upstream file.
 
@@ -93,13 +96,11 @@ provenance. Every vendored upstream byte, including referenced templates,
 scripts, agent metadata, and supporting Markdown, matches the base commit.
 
 Concrete local links from `SKILL.md` files resolve within their complete skill
-directories. The owned skills invoke only other declared skills, apart from
-routes to `setup-matt-pocock-skills` that fire only when the skill setup files
-are missing; the route test lists those as dormant. References to subagents,
-context controls, browsers, issue-tracker clients, and similar harness
-facilities describe runtime prerequisites; they are not missing source
-dependencies. This inventory and content review does not exercise any skill;
-the [skill exercise procedure](skill-exercises.md) does.
+directories. The owned skills invoke only other declared skills. References to
+subagents, context controls, browsers, issue-tracker clients, and similar
+harness facilities describe runtime prerequisites; they are not missing source
+dependencies. This inventory and content review does not exercise any skill; the
+[skill exercise procedure](skill-exercises.md) does.
 
 Standards maintainers can reproduce the byte comparison from the repository
 root. These commands intentionally verify content and do not run the skills:
@@ -238,9 +239,8 @@ every promoted file, vendored or not. The repository conformance suite compares
 the declared skills to the workflow skill list, checks that the vendored tree
 holds only owned skills' bases and setup seeds, that every vendored upstream
 byte matches those digests and that `UPSTREAM.json` names the same tag and
-commit, and checks that installed skills' routes to undeclared skills are
-dormant or overridden. The manifest is provenance, not an installed adopter
-file.
+commit, and checks that no installed skill routes to an undeclared skill. The
+manifest is provenance, not an installed adopter file.
 
 Rerun the byte comparison with the proposed commit, review all resource
 references and runtime prerequisites, and exercise the changed skills through
@@ -253,13 +253,13 @@ adapt Repo Canon conventions; the owned copies carry them.
 The four public templates do not prohibit the installed skills' native issue
 formats. Validation must recognize the applicable contract and workflow.
 
-| Shape                        | Required structure and readiness meaning                                                                                                                                                                            |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Native specification         | Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope, Further Notes. to-spec can publish a reviewed specification ready-for-agent without intake triage or a brief. |
-| Native implementation ticket | Optional Parent, What to build, Acceptance criteria, Blocked by. to-tickets can publish reviewed tickets ready-for-agent even when blockers remain open.                                                            |
-| Triaged request              | Agent Brief comment with Category, Summary, Current behavior, Desired behavior, Key interfaces, Acceptance criteria, Out of scope; original body/discussion is intake context.                                      |
-| Wayfinder map                | Destination, Notes, Decisions so far, Not yet specified, Out of scope. An initially empty decisions section is valid; label wayfinder:map.                                                                          |
-| Wayfinder child              | Question; one wayfinder research/prototype/grilling/task label. Eligibility uses open state, assignment, and blockers rather than requiring intake labels or a brief.                                               |
+| Shape                        | Required structure and readiness meaning                                                                                                                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Native specification         | Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope, Further Notes. A reviewed specification can be ready-for-agent without intake triage or a brief. |
+| Native implementation ticket | Optional Parent, What to build, Acceptance criteria, Blocked by. A reviewed ticket can be ready-for-agent even when blockers remain open.                                                              |
+| Triaged request              | Agent Brief comment with Category, Summary, Current behavior, Desired behavior, Key interfaces, Acceptance criteria, Out of scope; original body/discussion is intake context.                         |
+| Wayfinder map                | Destination, Notes, Decisions so far, Not yet specified, Out of scope. An initially empty decisions section is valid; label wayfinder:map.                                                             |
+| Wayfinder child              | Question; one wayfinder research/prototype/grilling/task label. Eligibility uses open state, assignment, and blockers rather than requiring intake labels or a brief.                                  |
 
 The `github-repository-configuration` rules state the Agent Brief and
 Wayfinder shapes the validator enforces, citing `triage` and `wayfinder` as
