@@ -197,13 +197,13 @@ node scripts/upstream-bases.mjs reconcile "$next_snapshot"
 Each changed file prints one line: `merged`, `added`, `removed`, or
 `conflict` with its reason. `No owned file changes.` means nothing changes. The
 command exits `0` when every change merged cleanly, `2` when a conflict
-remains, and `1` for invalid arguments, a path that is not a staged snapshot,
-or base records that fail the check, which it prints before merging anything.
+remains, and `1` for invalid arguments or a path that is not a staged snapshot.
 A conflicting file holds `<<<<<<< owned` and `>>>>>>> upstream` markers;
 resolve each by judgment, keeping what Repo Canon's edit needs and what the
 upstream change adds. A change to upstream's own `CREDITS.md`, a file changed
-upstream but removed from the owned copy, and a base missing from the staged
-snapshot are reported as conflicts to resolve by hand. A dry run against the
+upstream but removed from the owned copy, a base missing from the staged
+snapshot, and a recorded base that is not the vendored snapshot are reported
+as conflicts to resolve by hand. A dry run against the
 current base, `node scripts/upstream-bases.mjs reconcile vendor/mattpocock-skills --dry-run`,
 prints `No owned file changes.`; `test/upstream-bases.test.mjs` runs it.
 

@@ -12,10 +12,11 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  rmdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const snapshotPath = "vendor/mattpocock-skills";
@@ -378,7 +379,14 @@ function reconcileFile(owned, base, next) {
  */
 export function reconcileUpstreamBases(root, next, { write = false } = {}) {
   const snapshot = join(root, snapshotPath);
+  const identity = snapshotIdentity(root);
   const entries = [];
+  // A base the vendored snapshot no longer is would merge from the wrong base.
+  const staleBase = (path, base) => {
+    const problem = identityProblem(path, base, identity);
+    if (problem) entries.push({ path, outcome: "conflict", reason: problem });
+    return problem;
+  };
   const plan = (owned, base, nextPath) => {
     const result = reconcileFile(
       join(root, owned),
@@ -390,7 +398,7 @@ export function reconcileUpstreamBases(root, next, { write = false } = {}) {
   };
 
   for (const { source, base } of ownedSkills(root)) {
-    if (!base) continue;
+    if (!base || staleBase(source, base)) continue;
     if (!existsSync(join(next, base.path, "SKILL.md"))) {
       entries.push({
         path: source,
@@ -425,6 +433,7 @@ export function reconcileUpstreamBases(root, next, { write = false } = {}) {
       });
   }
   for (const { path, base } of ownedSetupFiles(root)) {
+    if (staleBase(path, base)) continue;
     if (!existsSync(join(next, base.path))) {
       entries.push({
         path,
@@ -441,10 +450,16 @@ export function reconcileUpstreamBases(root, next, { write = false } = {}) {
       const target = join(root, path);
       if (outcome === "removed") {
         rmSync(target);
-        // Drop directories the removal leaves empty.
+        // Drop directories the removal leaves empty inside a skill.
         let directory = dirname(target);
-        while (readdirSync(directory).length === 0) {
-          rmSync(directory, { recursive: true });
+        for (
+          let inside = relative(join(root, ownedTree), directory);
+          inside.includes("/") &&
+          !inside.startsWith("..") &&
+          readdirSync(directory).length === 0;
+          inside = relative(join(root, ownedTree), directory)
+        ) {
+          rmdirSync(directory);
           directory = dirname(directory);
         }
       } else if (content) {
@@ -478,13 +493,6 @@ function main(args) {
   const next = resolve(rest[1]);
   if (!existsSync(join(next, "LICENSE"))) {
     console.error(`${rest[1]} is not a staged snapshot: it has no LICENSE`);
-    return 1;
-  }
-  // Merging from a base the records no longer match would use the wrong base.
-  const problems = checkUpstreamBases(root);
-  if (problems.length > 0) {
-    for (const problem of problems) console.error(problem);
-    console.error("Fix the upstream base records before reconciling.");
     return 1;
   }
   const entries = reconcileUpstreamBases(root, next, { write: !dryRun });

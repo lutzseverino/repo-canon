@@ -194,18 +194,32 @@ test("malformed records and declarations fail instead of passing unchecked", (t)
     "docs/agents/triage-labels.md (setup-file-bases.json) must record edits as null or a summary of how the file differs",
   ]);
 
-  // Reconciling from records that fail the check would merge from the wrong base.
-  const child = spawnSync(
-    process.execPath,
-    [join(copy, "scripts/upstream-bases.mjs"), "reconcile", nextSnapshot(copy)],
-    { encoding: "utf8" },
+  // Reconciliation still runs: these records name the right base.
+  assert.deepEqual(reconcileUpstreamBases(copy, nextSnapshot(copy)), []);
+});
+
+test("reconciliation refuses to merge from a base the snapshot no longer is", (t) => {
+  const copy = fixture(t);
+  const other = "0".repeat(40);
+  edit(copy, ".agents/skills/code-review/CREDITS.md", (text) =>
+    text.replaceAll("24fe0ef7737efae15c87225755e9f6f5965e4888", other),
   );
-  assert.equal(child.status, 1);
-  assert.match(
-    child.stderr,
-    /Fix the upstream base records before reconciling\.$/m,
+  const next = nextSnapshot(copy);
+  appendFileSync(
+    join(next, "skills/engineering/code-review/SKILL.md"),
+    "\nUpstream addition.\n",
   );
-  assert.equal(child.stdout, "");
+  assert.deepEqual(reconcileUpstreamBases(copy, next, { write: true }), [
+    {
+      path: ".agents/skills/code-review",
+      outcome: "conflict",
+      reason: `.agents/skills/code-review records upstream base https://github.com/mattpocock/skills v1.3.1 (${other}), but the vendored snapshot is https://github.com/mattpocock/skills v1.3.1 (24fe0ef7737efae15c87225755e9f6f5965e4888)`,
+    },
+  ]);
+  assert.doesNotMatch(
+    readFileSync(join(copy, ".agents/skills/code-review/SKILL.md"), "utf8"),
+    /Upstream addition/,
+  );
 });
 
 test("reconciliation three-way merges upstream changes into the owned files", (t) => {
@@ -274,6 +288,13 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
     child.stdout,
     /^conflict \.agents\/skills\/triage\/SKILL\.md: 1 conflicting hunk\(s\)$/m,
   );
+  // A rerun after writing, before the records are updated, still reconciles.
+  const rerun = spawnSync(
+    process.execPath,
+    [join(copy, "scripts/upstream-bases.mjs"), "reconcile", next, "--dry-run"],
+    { encoding: "utf8" },
+  );
+  assert.equal(rerun.status, 2, rerun.stderr);
 
   for (const path of [skill("code-review", "SKILL.md"), skill("tdd", "NEW.md")])
     assert.deepEqual(
