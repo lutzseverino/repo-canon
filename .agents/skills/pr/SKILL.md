@@ -169,6 +169,8 @@ Concrete evidence that the change works. Show a before and after.
 
 Screenshots are S-tier - when the environment is set up for it and the change is visual.
 
+Store screenshots on an orphan branch named `pr-assets/<topic>`, keeping them out of the default branch's history. Link each image by its full commit SHA. Never delete the asset branch; preserve `pr-assets/*` during branch cleanup so merged PRs keep their images.
+
 Execution-based evidence is A-tier. Test results, console output. Show the exact test that now fails and passes, using pseudocode.
 
 List every check you ran on the final commit with its outcome, and say why any required check was not run.

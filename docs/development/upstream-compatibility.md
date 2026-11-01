@@ -36,7 +36,8 @@ each states that a prompt or brief naming it is its invocation. `implement` also
 invocation in both harness formats. `codebase-design`, `diagnosing-bugs`,
 `grill-with-docs`, `prototype` and `tdd` differ in nothing else; the other
 twelve, including `triage` with its workflow changes, differ further as their
-`CREDITS.md` files describe.
+`CREDITS.md` files describe. `pr` adds the screenshot storage and retention
+contract.
 
 The skill setup files `docs/agents/domain.md`, `docs/agents/issue-tracker.md`
 and `docs/agents/triage-labels.md` are owned files installed from themselves.
