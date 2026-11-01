@@ -68,7 +68,9 @@ the factory profile. It confirms no `typescript-node-stack` scope in both profil
 so no stack rules are installed and `repo-standards check` runs no stack check,
 and adopts a third copy with one conforming package, whose `package.json` the
 stack rules cover and whose stack check passes. It also checks that adoption installs the contribution guide
-and the `triage` fork byte for byte. It uses
+byte for byte, every owned skill whole from `.agents/skills/`, and, apart
+from each skill's `CREDITS.md`, the upstream base's bytes for every skill and
+setup file identical to its base. It uses
 the release fixture's answers and a disposable source containing only declared
 inputs; GitHub HTTP responses and Git transport use local fixtures, with no
 in-tree factory dependency. Set `REPO_STANDARDS_PREFIX` to reuse that public
@@ -221,6 +223,13 @@ shared gate.
 The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 
+Run `node --test test/upstream-bases.test.mjs` for the owned skills' and
+setup files' upstream bases: `node scripts/upstream-bases.mjs check` on this
+repository and on disposable copies with a mismatched base, an identical file
+claiming edits, a differing file claiming none, missing or dropped credits and
+a snapshot source, and the three-way reconciliation, including the dry run on
+the current base that changes nothing.
+
 Run `node --test test/typescript-node-stack-yaml.test.mjs` for the stack
 readers' differential checks against the pinned, development-only `yaml`
 package. They reuse the reader fixtures and a bounded deterministic corpus
@@ -293,8 +302,9 @@ accepts full commit SHAs and reads published tag and branch refs with
 - [Issue contract validation](issue-contract-validation.md): supported issue
   shapes, feedback behavior, workflow state, workflow permissions, the one-time
   closed-issue label sweep, and runnable fixtures.
-- [Upstream skill compatibility](upstream-compatibility.md): the pinned
-  Matt Pocock snapshot, its review and update steps, the native
+- [Upstream skill compatibility](upstream-compatibility.md): the vendored
+  Matt Pocock snapshot as the owned skills' upstream base, the base records and
+  their check, the three-way reconciliation for each upstream release, the native
   issue formats that
   automation must respect, and how shared instructions and configuration adapt
   upstream setup.
@@ -318,8 +328,8 @@ accepts full commit SHAs and reads published tag and branch refs with
   profiles' ownership, declarations, executable prerequisites, and the
   validation boundary.
 - [Skill exercises](skill-exercises.md): the procedure, fixture builders,
-  common harness, and scenarios for exercising the pinned skills, the `triage`
-  fork, and the `babysit` skill.
+  common harness, and scenarios for exercising the owned workflow skills,
+  including `triage` and `babysit`.
 - [TypeScript web stack checks](typescript-web-stack-check.md): manifest and
   shadcn holder checks and their assessment boundary.
 - [TypeScript web stack scope drafters](typescript-web-stack-scope-drafter.md):

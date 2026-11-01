@@ -121,8 +121,8 @@ test("every builder records its dirty source bytes and builds repositories with 
     planning: ["tdd", "grilling"],
   };
   const dirtySkillDirectories = [
-    "vendor/mattpocock-skills/skills/engineering/tdd",
-    "vendor/mattpocock-skills/skills/productivity/grilling",
+    ".agents/skills/tdd",
+    ".agents/skills/grilling",
   ];
   const committedSkillSha256 = Object.fromEntries(
     dirtySkillDirectories.map((path) => [

@@ -9,9 +9,9 @@ Repo Canon owns a file only when every adopting repository should hold the
 same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
 and pull request templates, the skill setup files under `docs/agents`, the
 trusted validation workflows with their scripts, the vendored rendered-Markdown
-runtime and parsers with their notices, the pinned skills with their upstream
-license notice, the HumanLayer license notice for material reproduced in the
-`pr` skill's Summary, Repo Canon's own `babysit` and `triage` skills, and, in the factory
+runtime and parsers with their notices, the owned workflow skills with the
+upstream license notice, the HumanLayer license notice for material reproduced
+in the `pr` skill's Summary, and, in the factory
 profile, the factory configuration and the sandbox image workflow. It is installed
 identically in every adopting repository that selects its profile and changes
 only through a Repo Canon release.
@@ -130,20 +130,27 @@ repeated.
   `diagnosing-bugs`, `domain-modeling`, `grill-with-docs`, `grilling`,
   `implement`, `improve-codebase-architecture`, `pr`, `prototype`, `research`,
   `tdd`, `to-spec`, `to-tickets`, `triage`, `wayfinder`, and
-  `writing-for-agents`, 16 from the pin and `triage` as Repo Canon's own fork.
+  `writing-for-agents`, each an owned skill whose upstream base is that
+  release; 16 are identical to their bases and `triage` differs.
   `prototype` stays because `wayfinder` calls it. The
-  vendored tree holds only those skills and the setup seeds that the skill setup
-  files are installed from; `implement-spec` is not vendored, because every
+  vendored tree holds only those skills' bases and the setup seeds that the
+  skill setup files take as theirs; `implement-spec` is not vendored, because every
   factory run is a direct run, as
   [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
   Routes to `setup-matt-pocock-skills` stay dormant while the skill setup files
   are installed; the route test lists them with that reason.
-- The standards source manages reviewed, pinned upstream skill snapshots and
-  distributes changes through standards releases. Keep pinned upstream skill
-  content intact; Repo Canon's own conventions live in `CONTRIBUTING.md` and the
-  rules files, not in the skills or their setup files. The snapshot follows
-  the [upstream-compatibility procedure](docs/development/upstream-compatibility.md)
-  and is not updated independently by adopting contributors.
+- Every workflow skill and skill setup file is Repo Canon's own, as
+  [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
+  decides. Adoption installs each skill from the owned tree, `.agents/skills/`,
+  and each setup file from itself. A skill taken from upstream names its
+  upstream base in `CREDITS.md` and says whether and how it differs; the setup
+  files' bases are in `setup-file-bases.json`. The vendored snapshot stays
+  unedited as the base, and each upstream release is one reconciliation by a
+  three-way merge, following the
+  [upstream-compatibility procedure](docs/development/upstream-compatibility.md#upstream-reconciliation);
+  adopting contributors never update it independently. Requirements still
+  live in `CONTRIBUTING.md` and the rules files, as
+  [ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md) decides.
 - Triage routes each request by where its uncertainty lies, as
   [ADR 0021](docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md)
   decides: research and independent acceptance by the orchestrating agent for
@@ -159,11 +166,9 @@ repeated.
   [GitHub repository configuration rules](rules/github-repository-configuration.md),
   and the model choice and person-only factory readiness in the
   [factory workflow rules](rules/factory-workflow.md). The method restates
-  most of the pinned `triage` procedure, so `triage` is forked under
-  [ADR 0019](docs/adr/0019-fork-a-pinned-skill-when-its-overrides-outgrow-it.md):
-  its source is its installed path, `.agents/skills/triage`, its `CREDITS.md`
-  names the upstream commit and what changed, and the forked material keeps
-  the upstream notice. The owner first approved a rule that the owner finish
+  most of upstream's `triage` procedure, so the owned `triage` differs from its
+  upstream base: its `CREDITS.md` names that base and what changed, and the
+  upstream material keeps the upstream notice. The owner first approved a rule that the owner finish
   every brief, then replaced it the same day; no rule restores it.
 - Repo Canon writes and installs `orchestrate`, the method by which the
   orchestrating agent the contribution guide names runs a plan across
@@ -369,10 +374,12 @@ repeated.
   The owner also chose PR comments for designation/provenance and
   approval/source/head-SHA records, preserving adoption PR bodies, on 2026-10-29
   in [#717](https://github.com/lutzseverino/repo-canon/issues/717#issuecomment-6532709093).
-- The skill setup files under docs/agents are installed verbatim from the
-  vendored upstream setup seeds, and Repo Canon writes nothing into them, as
-  [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md)
-  decides. Project-specific guidance remains separate. AGENTS.md is an
+- The skill setup files under docs/agents are owned files whose upstream bases
+  are the vendored setup seeds, reconciled like the skills, as
+  [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
+  decides in place of the verbatim rule of
+  [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md).
+  They are still identical to their seeds. Project-specific guidance remains separate. AGENTS.md is an
   identical standards-owned pointer file. Repository Standards owns the update
   notice through its `repository-standards` system skill
   ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
@@ -454,8 +461,7 @@ repeated.
 - Upstream recognizes an Agent Brief heading but provides no approval marker,
   approved-revision selector, or revision invalidation mechanism. Repo Canon's
   readiness rules are its own convention and live in `CONTRIBUTING.md`, the
-  GitHub repository configuration rules, and its automation, preserving
-  pinned upstream skill content.
+  GitHub repository configuration rules, and its automation.
 
 ## Source profile
 

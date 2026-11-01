@@ -39,8 +39,8 @@ agent, it prints an answers file to fill in with you and its next steps.
 - Install contribution guidance, agent configuration, and issue and PR templates.
 - Validate issue contracts (a change's agreed scope and acceptance criteria) and pull request metadata in GitHub workflows.
 - Offer opt-in daily adoption updates through one rolling pull request or issue.
-- Copy sixteen of [Matt Pocock's skills](https://github.com/mattpocock/skills), those the shared workflow relies on, into `.agents/skills/`.
-- Ship a `triage` skill, forked from his, that routes each request by where its uncertainty lies: an independent review of its researched issue contract, or the owner's answers before one is written.
+- Ship the workflow skills as Repo Canon's own into `.agents/skills/`, sixteen of them taken unchanged from [Matt Pocock's skills](https://github.com/mattpocock/skills), those the shared workflow relies on, each crediting the upstream release it was reconciled with.
+- Ship a `triage` skill, taken from his and reworked, that routes each request by where its uncertainty lies: an independent review of its researched issue contract, or the owner's answers before one is written.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.
 - Ship an `orchestrate` skill that turns a feature or problem into a plan the owner approves, keeps it in a workbench of plain Markdown, and runs it to an announced close.
 - Offer a `factory` profile that adds factory workflow rules, configuration and the toolchain image a host-installed factory, an unattended ticket-running service, needs to serve the repository.

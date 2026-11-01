@@ -1,11 +1,12 @@
 # Skill exercises
 
-This procedure exercises the pinned skills under `vendor/mattpocock-skills`
-and Repo Canon's `triage` fork and `orchestrate` skill against disposable local Git repositories. Run it when a release changes a
+This procedure exercises the owned workflow skills under `.agents/skills`
+against disposable local Git repositories. Run it when a release changes a
 skill, as the [release procedure](release.md#when-selected-bytes-change)
-requires, for the changed skills. Three builders create the repositories: one
-each for the engineering, productivity, and planning skills, which together
-cover all 16 pinned workflow skills, the `triage` fork and `orchestrate`. Repo Canon's own `babysit` skill acts on a live pull request, so no builder covers it; exercise
+requires, and after an upstream reconciliation, for the changed skills. Three
+builders create the repositories: one each for the engineering, productivity,
+and planning skills, which together cover every owned skill except `babysit`.
+Repo Canon's own `babysit` skill acts on a live pull request, so no builder covers it; exercise
 it on a pull request in a disposable GitHub repository. Its wait script has
 its own fixtures, which the [development guide](README.md) names.
 
@@ -277,13 +278,11 @@ plus hashes of both canonical rules, every lookup input and the local tracker
 seed under `source.inputFiles`. Linked workflow skill digests remain under
 `source.linkedSkillDirectories`.
 
-The tests verify every repository and skill link, `triage` linking the fork,
-the seeded revision passing the issue-contract check, the manifest identities,
+The tests verify every repository and skill link, each skill linking its
+owned copy, the seeded revision passing the issue-contract check, the manifest identities,
 canonical rule bytes, local index and lookup discovery, profile isolation,
 lookup after relocation with an empty command search path, missing rule failure,
-local signing, an ordinary later commit under hostile global signing, and the
-managed-update boundary: a synthetic change to a candidate copy of a vendored
-skill is detected while the vendored directory stays unchanged.
+local signing, and an ordinary later commit under hostile global signing.
 
 ## Session naming with and without support
 

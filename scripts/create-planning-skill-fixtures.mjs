@@ -22,7 +22,11 @@ import {
 
 const sourceRoot = fileURLToPath(new URL("..", import.meta.url));
 const scriptSourcePath = "scripts/create-planning-skill-fixtures.mjs";
-const skillsRoot = join(sourceRoot, "vendor/mattpocock-skills/skills");
+const skillsRoot = join(sourceRoot, ".agents/skills");
+const setupSeeds = join(
+  sourceRoot,
+  "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills",
+);
 const upstreamCommit = "24fe0ef7737efae15c87225755e9f6f5965e4888";
 const skillNames = [
   "grill-with-docs",
@@ -150,22 +154,15 @@ function createRepository(
 }
 
 function skillPath(name) {
-  // Repo Canon's own fork of triage is its installed source, not vendored.
-  if (["triage", "orchestrate"].includes(name))
-    return join(sourceRoot, ".agents/skills", name);
-  const category = name === "grilling" ? "productivity" : "engineering";
-  const path = join(skillsRoot, category, name);
+  const path = join(skillsRoot, name);
   if (!existsSync(path))
-    throw new Error(`Missing fixture skill dependency: ${category}/${name}`);
+    throw new Error(`Missing fixture skill dependency: ${name}`);
   return path;
 }
 
 function installLocalTracker(root) {
   cpSync(
-    join(
-      skillsRoot,
-      "engineering/setup-matt-pocock-skills/issue-tracker-local.md",
-    ),
+    join(setupSeeds, "issue-tracker-local.md"),
     join(root, "docs/agents/issue-tracker.md"),
   );
   write(
