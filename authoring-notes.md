@@ -286,8 +286,9 @@ repeated.
   [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md)
   decides. Repo Canon ships none of its code. A repository the factory serves
   selects the `factory` profile, which installs `.factory/config.json` as an
-  exact file: factory configuration version 1, naming Repo Canon's labels, the
-  `model:` label prefix, and the `implement` prompt, since the factory has no
+  exact file: factory configuration version 2, naming Repo Canon's labels, the
+  `model:` label prefix, the `implement` skill with `#{issue}` arguments, and
+  the contract result's marker and trusted author, since the factory has no
   default for any of them, as
   [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
   decides. The profile installs the repository-wide

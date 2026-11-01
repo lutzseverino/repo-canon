@@ -5,11 +5,22 @@ or directories. Adoption installs its rules for the whole repository.
 
 ## Host compatibility
 
-The factory configuration declares `labels.releaseHold`. Before adopting this
-factory profile, the serving host must run a Scriptorium release containing
-[lutzseverino/scriptorium#77](https://github.com/lutzseverino/scriptorium/issues/77).
-Older hosts reject the unknown key and pause the repository. Verify the
-serving host's release before delivering the adoption.
+Before adopting this factory profile, the serving host must run Scriptorium
+v3.0.0 or later. Older hosts refuse configuration version 2 and pause the
+repository. Verify the serving host's release before delivering the adoption.
+
+The shipped `.factory/config.json` is version 2. It names `skill` as
+`implement` and `arguments` as `#{issue}`, replacing the version-1 `prompt`;
+each provider renders the skill invocation in its own syntax. Its
+`contractResult.marker` is `repo-canon:issue-contract-state` and
+`contractResult.author` is `github-actions[bot]`, the trusted author of the
+issue-contract workflow's posted result. It also names Repo Canon's labels,
+including `labels.releaseHold`, and the `model:` label prefix. There is no
+factory configuration compatibility layer.
+
+The `babysit` merge check reads only labels from the destination default
+branch's configuration. It accepts versions 1 and 2, so an adopter still on
+version 1 can deliver this update while retaining its release-hold check.
 
 ## App-author policy opt-in
 

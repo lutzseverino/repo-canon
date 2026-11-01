@@ -650,11 +650,11 @@ test("standards.yaml declares no pull request reviewer file", () => {
   );
 });
 
-// The shipped configuration targets factory configuration version 1, whose
-// schema Scriptorium documents: exactly these fields, seven labels, the skip and release-hold
-// label among them, distinct ignoring case, and a prompt holding both `{skillPrefix}` and `{issue}`. This
+// The shipped configuration targets Scriptorium v3.0.0's configuration version 2:
+// exactly these fields, seven labels distinct ignoring case, the skill and its
+// issue argument, and the contract result's marker and trusted author. This
 // repository imports no factory code; the exact shape pins the file.
-test("the factory configuration names Repo Canon's labels, model label prefix, and implement prompt", () => {
+test("the factory configuration names Repo Canon's labels, skill, and trusted contract result", () => {
   const configuration = JSON.parse(
     readFileSync(join(root, ".factory/config.json"), "utf8"),
   );
@@ -664,10 +664,9 @@ test("the factory configuration names Repo Canon's labels, model label prefix, a
     new Set(labels.map((label) => label.toLowerCase())).size,
     labels.length,
   );
-  assert.match(configuration.prompt, /\{skillPrefix\}/);
-  assert.match(configuration.prompt, /\{issue\}/);
+  assert.equal(Object.hasOwn(configuration, "prompt"), false);
   assert.deepEqual(configuration, {
-    version: 1,
+    version: 2,
     labels: {
       ready: "ready-for-agent",
       skip: "factory:skip",
@@ -678,7 +677,12 @@ test("the factory configuration names Repo Canon's labels, model label prefix, a
       paused: "factory:paused",
     },
     modelLabelPrefix: "model:",
-    prompt: "{skillPrefix}implement #{issue}",
+    skill: "implement",
+    arguments: "#{issue}",
+    contractResult: {
+      marker: "repo-canon:issue-contract-state",
+      author: "github-actions[bot]",
+    },
   });
 });
 

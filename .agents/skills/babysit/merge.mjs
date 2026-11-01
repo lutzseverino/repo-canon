@@ -150,14 +150,14 @@ async function releaseHolds(connection, revision, number) {
   if (
     !config ||
     Array.isArray(config) ||
-    config.version !== 1 ||
+    ![1, 2].includes(config.version) ||
     (config.labels !== undefined &&
       (!config.labels ||
         typeof config.labels !== "object" ||
         Array.isArray(config.labels)))
   )
     throw new Error(
-      "Invalid .factory/config.json: expected version 1 and a labels object when present.",
+      "Invalid .factory/config.json: expected version 1 or 2 and a labels object when present.",
     );
   const label = config.labels?.releaseHold;
   if (label === undefined) return [];
