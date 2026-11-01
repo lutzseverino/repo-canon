@@ -141,7 +141,7 @@ function declared(path, entries) {
 export function skillProblems(directory, name) {
   const problems = [];
   const inside = new Set(files(directory));
-  const contents = [...inside].filter((path) => textExtensions.test(path));
+  const textFiles = [...inside].filter((path) => textExtensions.test(path));
   const skillText = existsSync(join(directory, "SKILL.md"))
     ? readFileSync(join(directory, "SKILL.md"), "utf8")
     : "";
@@ -154,7 +154,7 @@ export function skillProblems(directory, name) {
         `${name}/SKILL.md: Reads item does not say what the skill does when the file is missing: ${text}`,
       );
 
-  for (const file of contents) {
+  for (const file of textFiles) {
     const text = readFileSync(join(directory, file), "utf8");
     const host = hostNames.exec(text) ?? cursorHost.exec(text);
     if (host) {
