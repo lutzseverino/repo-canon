@@ -913,33 +913,6 @@ test("the vendored Matt Pocock tree holds only owned skills' upstream bases and 
   }
 });
 
-// Routes from an installed skill to an uninstalled one that cannot fire in an
-// adopting repository. Any other such route needs a CONTRIBUTING.md override.
-const missingSetupFiles =
-  "fires only when the installed docs/agents skill setup files are missing";
-const dormantRoutes = [
-  {
-    skill: "code-review",
-    target: "setup-matt-pocock-skills",
-    reason: missingSetupFiles,
-  },
-  {
-    skill: "to-spec",
-    target: "setup-matt-pocock-skills",
-    reason: missingSetupFiles,
-  },
-  {
-    skill: "to-tickets",
-    target: "setup-matt-pocock-skills",
-    reason: missingSetupFiles,
-  },
-  {
-    skill: "wayfinder",
-    target: "setup-matt-pocock-skills",
-    reason: missingSetupFiles,
-  },
-];
-
 // A route is a `/name` invocation or a Skill tool call naming the skill in the
 // same sentence, such as `call the Skill tool twice, for "a" and "b"`.
 function routesTo(content, target) {
@@ -950,79 +923,65 @@ function routesTo(content, target) {
   );
 }
 
-test("installed skill routes to uninstalled vendored skills are dormant or have contribution overrides", () => {
+// Owned skills are edited rather than overridden, so none routes to a skill
+// that adoption does not install.
+test("installed skills route to no uninstalled vendored skill", () => {
   const installed = declaredSkills();
   // An owned skill taken from upstream is installed under its upstream name.
   const uninstalled = upstreamManifest.skills
     .map((path) => basename(path))
     .filter((name) => !installed.some((skill) => skill.name === name));
-  const contributing = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
-  const firing = new Set();
-
+  assert.ok(uninstalled.includes("setup-matt-pocock-skills"));
   for (const { name, source } of installed) {
     for (const path of snapshotFiles(join(root, source))) {
       const content = readFileSync(join(root, source, path), "utf8");
-      for (const target of uninstalled.filter((target) =>
-        routesTo(content, target),
-      )) {
-        firing.add(`${name} -> ${target}`);
-        if (
-          dormantRoutes.some(
-            (route) => route.skill === name && route.target === target,
-          )
-        ) {
-          continue;
-        }
+      for (const target of uninstalled)
         assert.ok(
-          new RegExp(
-            `(?<![a-z0-9-])${RegExp.escape(target)}(?![a-z0-9-])`,
-          ).test(contributing),
-          `${name} (${source}/${path}) routes to uninstalled ${target}; list the route as dormant with its reason, or CONTRIBUTING.md must name ${target} to override it`,
+          !routesTo(content, target),
+          `${name} (${source}/${path}) routes to uninstalled ${target}; edit the owned skill instead of overriding the route`,
         );
-      }
     }
-  }
-  for (const { skill, target, reason } of dormantRoutes) {
-    assert.ok(
-      reason,
-      `the dormant ${skill} route to ${target} states its reason`,
-    );
-    assert.ok(
-      firing.has(`${skill} -> ${target}`),
-      `${skill} no longer routes to uninstalled ${target}; remove its dormant route`,
-    );
   }
 });
 
-test("the owned setup files install from themselves and keep their v1.3.1 seed bytes", () => {
+test("the owned setup files install from themselves and record how they differ from their v1.3.1 seeds", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  for (const [target, seed] of [
-    ["docs/agents/domain.md", "domain.md"],
-    ["docs/agents/issue-tracker.md", "issue-tracker-github.md"],
-    ["docs/agents/triage-labels.md", "triage-labels.md"],
+  const bases = JSON.parse(
+    readFileSync(join(root, "setup-file-bases.json"), "utf8"),
+  ).files;
+  for (const { target, seed, edited } of [
+    { target: "docs/agents/domain.md", seed: "domain.md", edited: false },
+    {
+      target: "docs/agents/issue-tracker.md",
+      seed: "issue-tracker-github.md",
+      edited: true,
+    },
+    {
+      target: "docs/agents/triage-labels.md",
+      seed: "triage-labels.md",
+      edited: true,
+    },
   ]) {
     assert.ok(
       declarations.includes(`target: ${target}\n      exact: ${target}\n`),
     );
-    // Unedited so far: the bytes adopters received before ADR 0028.
-    assert.equal(
+    const sameAsSeed =
       createHash("sha256")
         .update(readFileSync(join(root, target)))
-        .digest("hex"),
+        .digest("hex") ===
       upstreamSnapshot.files[
         `skills/engineering/setup-matt-pocock-skills/${seed}`
-      ],
-      `${target} is unchanged from ${upstreamSnapshot.tag}`,
-    );
+      ];
+    assert.equal(sameAsSeed, !edited, `${target} edited: ${edited}`);
+    assert.equal(bases[target].edits === null, !edited, target);
   }
 });
 
-test("installed label rules override upstream meanings while retaining configured label strings", () => {
+test("the setup files state the rules' label meanings and native links, so no rule overrides them", () => {
   const github = flowedText("rules/github-repository-configuration.md");
   const labels = /## Labels (.*?) ## Merge settings/.exec(github)?.[1] ?? "";
   for (const requirement of [
     /`docs\/agents\/triage-labels\.md` maps canonical roles to tracker label strings; use the configured string for each role/,
-    /Role meanings in these rules and the contribution guide take precedence over its upstream Meaning column, including the conflicting `needs-info` and `ready-for-human` entries/,
     /For `needs-info`, follow the contribution guide's Triage section for question routing and its inference test/,
     /Agent work, including work awaiting the owner's review, follows the contribution guide's Triage and Readiness sections for `ready-for-agent`/,
     /Where factory workflow rules are installed, follow their State labels section for factory pickup exclusions/,
@@ -1036,16 +995,151 @@ test("installed label rules override upstream meanings while retaining configure
     readFileSync(join(root, "rules/factory-workflow.md"), "utf8"),
     /^## State labels$/m,
   );
+
+  // Each role's meaning in the setup file is the rules' label description.
+  const rulesTable = readFileSync(
+    join(root, "rules/github-repository-configuration.md"),
+    "utf8",
+  );
+  const table = readFileSync(
+    join(root, "docs/agents/triage-labels.md"),
+    "utf8",
+  );
+  for (const role of [
+    "needs-triage",
+    "needs-info",
+    "ready-for-agent",
+    "ready-for-human",
+    "wontfix",
+  ]) {
+    const described = new RegExp(
+      `^\\| \`${role}\` +\\| \`[0-9a-f]{6}\` +\\| (.+?) +\\|$`,
+      "m",
+    ).exec(rulesTable)?.[1];
+    assert.ok(described, role);
+    assert.match(
+      table,
+      new RegExp(
+        `^\\| \`${role}\` +\\| \`${role}\` +\\| ${RegExp.escape(described)} +\\|$`,
+        "m",
+      ),
+      role,
+    );
+  }
+  assert.doesNotMatch(
+    table,
+    /Waiting on reporter|Requires human implementation/,
+  );
+  assert.match(flowedText("docs/agents/triage-labels.md"), /readiness command/);
+
+  const tracker = flowedText("docs/agents/issue-tracker.md");
+  assert.doesNotMatch(
+    tracker,
+    /fall back to a `Blocked by|task list in the map body|Part of #<map>` at the top/,
+  );
+  assert.match(tracker, /Only the native sub-issue link makes it a child/);
+  assert.match(tracker, /the latest one is its implementation contract/);
+  assert.match(tracker, /issue form under `\.github\/ISSUE_TEMPLATE\/`/);
+
+  // The prose that existed only to override the setup files is gone.
+  for (const document of [
+    "CONTRIBUTING.md",
+    "rules/github-repository-configuration.md",
+    "rules/factory-workflow.md",
+    "rules/documentation.md",
+    "AGENTS.md",
+    "docs/agents/README.md",
+    ".agents/skills/triage/SKILL.md",
+  ])
+    assert.doesNotMatch(
+      flowedText(document),
+      /take precedence over (?:its|the configuration's) upstream Meaning column|upstream tracker guide|precedence over the fallback/,
+      document,
+    );
 });
 
-test("configuration and triage pointers distinguish label mapping from authoritative meanings", () => {
+test("configuration and triage pointers name the label mapping as the home of role meanings", () => {
   assert.match(
     flowedText("docs/agents/README.md"),
-    /\[Triage labels\]\(triage-labels\.md\): the label strings for the five canonical triage roles\. For role meanings, follow the installed `github-repository-configuration` rules and the contribution guide/,
+    /\[Triage labels\]\(triage-labels\.md\): the label strings and meanings for the five canonical triage roles\./,
   );
   assert.match(
     flowedText(".agents/skills/triage/SKILL.md"),
-    /The actual label strings are in the triage label configuration, `docs\/agents\/triage-labels\.md`\. For role meanings, follow the installed `github-repository-configuration` rules and the contribution guide; they take precedence over the configuration's upstream Meaning column/,
+    /The actual label strings and their meanings are in the triage label configuration, `docs\/agents\/triage-labels\.md`\./,
+  );
+});
+
+// Each owned skill states the method the rules require, so the guide and the
+// rules carry no sentence whose only job is to override it.
+test("owned skills state what the rules require instead of being overridden", () => {
+  const skill = (name, file = "SKILL.md") =>
+    flowedText(`.agents/skills/${name}/${file}`);
+
+  const toTickets = skill("to-tickets");
+  assert.doesNotMatch(toTickets, /share an integration branch/);
+  assert.match(
+    toTickets,
+    /Every ticket merges into its base branch on its own, with its checks passing/,
+  );
+  assert.doesNotMatch(toTickets, /Apply the `ready-for-agent` triage label/);
+  assert.doesNotMatch(toTickets, /otherwise set each ticket's "Blocked by"/);
+  assert.match(toTickets, /native sub-issue and blocking relationships/);
+  assert.match(toTickets, /\*\*Status:\*\* needs-triage/);
+  for (const name of ["to-tickets", "to-spec"])
+    assert.match(
+      skill(name),
+      /someone other than you who holds a role the repository authorizes for readiness, after any revision notice the tracker posts, with the companion labels its rules require/,
+      name,
+    );
+  assert.doesNotMatch(skill("to-spec"), /Apply the `ready-for-agent`/);
+
+  const implement = skill("implement");
+  assert.doesNotMatch(implement, /Commit your work to the current branch\./);
+  assert.match(implement, /made from the up-to-date base branch/);
+  assert.match(implement, /as the repository's contribution guide directs/);
+
+  const pr = readFileSync(join(root, ".agents/skills/pr/SKILL.md"), "utf8");
+  assert.match(pr, /## Merge Danger[\s\S]*## Related issue\n[\s\S]*```\n/);
+  assert.match(pr, /^### Related issue$/m);
+  assert.match(
+    flowedText(".agents/skills/pr/SKILL.md"),
+    /List every check you ran on the final commit with its outcome/,
+  );
+  assert.match(
+    flowedText("CONTRIBUTING.md"),
+    /For an ordinary pull request, write the body with the `pr` skill\. For an adoption pull request/,
+  );
+
+  const wayfinder = skill("wayfinder");
+  assert.match(wayfinder, /those links are the only ones that count/);
+  assert.match(wayfinder, /\*\*Out of scope\*\* filled in/);
+
+  assert.match(skill("grilling"), /Keep each round short/);
+  const adr = skill("domain-modeling", "ADR-FORMAT.md");
+  assert.match(adr, /add each new ADR to it/);
+  assert.match(adr, /Keep every ADR/);
+  assert.match(
+    skill("improve-codebase-architecture"),
+    /on the branch and checkout it directs/,
+  );
+  assert.match(
+    skill("code-review"),
+    /The spec is the issue's implementation contract/,
+  );
+  assert.match(skill("research"), /add it to that directory's index/);
+  assert.match(
+    skill("writing-for-agents"),
+    /A requirement lives in the rules or contribution guide that hold it/,
+  );
+  assert.match(
+    skill("triage"),
+    /Apply a readiness role through \[Apply and confirm readiness\]\(#accept-a-brief-that-holds\)/,
+  );
+  assert.doesNotMatch(skill("triage"), /apply the role directly/);
+
+  assert.doesNotMatch(
+    flowedText("CONTRIBUTING.md"),
+    /tickets sharing an integration branch|in short rounds of numbered questions|then Related issue/,
   );
 });
 
@@ -1139,7 +1233,7 @@ test("the guide, the installed rules and the triage skill route by uncertainty a
     /A default, limit, timeout, or fallback that persists in the product is never inferred/,
     /its triage notes list it with its citation under \*\*Inferred intent\*\*/,
     /lists every inferred answer in its next report to the owner, so the owner can veto it\. A veto is an owner decision, and the brief is revised from it/,
-    /Questions it cannot infer go to a separate grilling session with the owner, in short rounds of numbered questions, each with a recommended answer/,
+    /Questions it cannot infer go to a separate grilling session with the owner\. The grill/,
     /The grill records the owner's decisions and drafts the Agent Briefs in a proposed ticket split; it files no issue and applies no readiness/,
     /The orchestrating agent decides the split: it may merge, split, or drop a draft, or set it aside for later work/,
     /each issue's triage notes record the owner decisions its brief relies on, each with its date and where the owner gave it/,
@@ -1344,11 +1438,16 @@ test("installed contribution guidance separates grill domain edits from workbenc
     .split("## Readiness")[0];
   for (const requirement of [
     /A grilling session changing a repository's glossary or ADRs works on its own branch in a checkout it owns \(a worktree or fresh clone\), never in a shared checkout on the default branch/,
-    /Domain modeling edits those documents inline there/,
     /Each repository whose domain documents change gets one pull request through its normal review and merge/,
     /The grill's decision record and draft briefs stay in the workbench, committed directly to its default branch/,
   ])
     assert.match(triage, requirement);
+  // The domain-modeling skill states where its inline edits happen.
+  assert.doesNotMatch(triage, /Domain modeling edits those documents inline/);
+  assert.match(
+    flowedText(".agents/skills/domain-modeling/SKILL.md"),
+    /Before your first edit to a glossary or ADR, work on a branch of your own in a checkout you own, such as a worktree or fresh clone, never in a shared checkout on the default branch/,
+  );
 });
 
 test("adoption installs Repo Canon's user-invoked orchestrate skill, which credits chief-of-staff", () => {

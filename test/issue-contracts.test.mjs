@@ -364,9 +364,18 @@ test("current recorded approvals report unavailable or revoked reviewer authorit
             add: ["needs-triage"],
             feedback: 13,
             message: reason,
-            feedbackBody: [reason, /A fresh authorized review is required/],
+            feedbackBody: [
+              /^## Issue contract readiness removed$/m,
+              new RegExp(`^Readiness was removed: ${reason.source}`, "m"),
+              new RegExp(`The validator removed \`${label}\` from the `),
+              /A fresh authorized review is required to restore readiness/,
+              /wait for this revision notice before applying the label/,
+            ],
             notMessage: /Wait for the validator to publish/,
-            notFeedbackBody: /Wait for the validator to publish/,
+            notFeedbackBody: [
+              /Wait for the validator to publish/,
+              /awaiting review|last readiness attempt/i,
+            ],
           });
           assert.match(
             recordedState(rejection.feedback.body).rejectionReason,
@@ -381,9 +390,10 @@ test("current recorded approvals report unavailable or revoked reviewer authorit
           assertDecision(decideIssueContract(snapshotFor(recovered)), {
             exitCode: 0,
           });
-          assert.match(
+          // The runs after the cleanup keep naming the removed label.
+          assert.equal(
             settled.comments.find(({ id }) => id === 13).body,
-            reason,
+            rejection.feedback.body,
           );
 
           settled.issue.labels.push({ name: label });
@@ -3097,6 +3107,14 @@ decisionTable(
           rejectionReason:
             "Apply only one readiness label to an implementation contract.",
         });
+        assert.match(
+          comments[0].body,
+          /^Readiness was removed: Apply only one readiness label to an implementation contract\.$/m,
+        );
+        assert.match(
+          comments[0].body,
+          /The validator removed `ready-for-agent` and `ready-for-human` from the implementation ticket/,
+        );
       },
     },
     {
@@ -3318,11 +3336,16 @@ const supersededBy = (state) => ({
   feedback: 13,
   message: new RegExp(`\`${state}\` superseded ready-for-agent`),
   feedbackBody: [
-    /awaiting review/i,
+    /^## Issue contract readiness removed$/m,
     new RegExp(
-      `\`${state}\` was applied after the review and supersedes its readiness`,
+      `^Readiness was removed: \`${state}\` was applied after the review and supersedes its readiness\\.$`,
+      "m",
     ),
+    /The validator removed `ready-for-agent` from the /,
+    /A fresh authorized review is required to restore readiness/,
+    /wait for this revision notice before applying the label/,
   ],
+  notFeedbackBody: /awaiting review|last readiness attempt/i,
 });
 
 decisionTable("workflow states are ordered against the review", [

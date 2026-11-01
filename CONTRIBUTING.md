@@ -28,8 +28,6 @@ specification, and its blockers, and clarify contradictions. Start a ticket
 only after its blockers are closed.
 
 Every ticket merges into its base branch on its own, with its checks passing.
-Expand–contract batches that can't each stay green become a single ticket, not
-tickets sharing an integration branch.
 
 ## Triage
 
@@ -58,12 +56,11 @@ citation under **Inferred intent**. The orchestrating agent lists every
 inferred answer in its next report to the owner, so the owner can veto it. A
 veto is an owner decision, and the brief is revised from it.
 
-Questions it cannot infer go to a separate grilling session with the owner, in
-short rounds of numbered questions, each with a recommended answer. The grill
-records the owner's decisions and drafts the Agent Briefs in a proposed ticket
-split; it files no issue and applies no readiness. The orchestrating agent
-decides the split: it may merge, split, or drop a draft, or set it aside for
-later work. It files the issues with the grill's briefs, and each issue's
+Questions it cannot infer go to a separate grilling session with the owner. The
+grill records the owner's decisions and drafts the Agent Briefs in a proposed
+ticket split; it files no issue and applies no readiness. The orchestrating
+agent decides the split: it may merge, split, or drop a draft, or set it aside
+for later work. It files the issues with the grill's briefs, and each issue's
 triage notes record the owner decisions its brief relies on, each with its date
 and where the owner gave it. A recorded decision is not asked again. The
 orchestrating agent never writes a brief it accepts: when its split changes a
@@ -72,10 +69,10 @@ one only when it needs code facts the grill did not gather.
 
 A grilling session changing a repository's glossary or ADRs works on its own
 branch in a checkout it owns (a worktree or fresh clone), never in a shared
-checkout on the default branch. Domain modeling edits those documents inline
-there. Each repository whose domain documents change gets one pull request
-through its normal review and merge. The grill's decision record and draft
-briefs stay in the workbench, committed directly to its default branch.
+checkout on the default branch. Each repository whose domain documents change
+gets one pull request through its normal review and merge. The grill's decision
+record and draft briefs stay in the workbench, committed directly to its default
+branch.
 
 The orchestrating agent, never the agent that wrote the brief, then reviews its
 evidence, scope, acceptance criteria, dependencies, and open questions. Passing
@@ -243,10 +240,8 @@ holds unrelated uncommitted edits, run them in a clean checkout of that commit,
 such as a temporary Git worktree. Run a check that reads a diff, such as
 `git diff --check`, over the whole change against the base.
 
-For an ordinary pull request, write the body with the `pr` skill, in the pull
-request template's sections: the skill's Summary, Evidence and Merge Danger,
-then Related issue. For an adoption pull request, use the adoption record as
-described below.
+For an ordinary pull request, write the body with the `pr` skill. For an
+adoption pull request, use the adoption record as described below.
 
 ### Adoption pull requests
 

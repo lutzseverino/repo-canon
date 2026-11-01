@@ -131,16 +131,18 @@ repeated.
   `implement`, `improve-codebase-architecture`, `pr`, `prototype`, `research`,
   `tdd`, `to-spec`, `to-tickets`, `triage`, `wayfinder`, and
   `writing-for-agents`, each an owned skill whose upstream base is that
-  release. Each states that a prompt or brief naming it is its invocation;
-  `implement` also allows model invocation, and `triage` carries the workflow
-  changes its credits describe.
+  release. Each states that a prompt or brief naming it is its invocation,
+  and `implement` also allows model invocation; `codebase-design`,
+  `diagnosing-bugs`, `grill-with-docs`, `prototype` and `tdd` differ in
+  nothing else, and the other twelve differ further as their `CREDITS.md`
+  files describe.
   `prototype` stays because `wayfinder` calls it. The
   vendored tree holds only those skills' bases and the setup seeds that the
   skill setup files take as theirs; `implement-spec` is not vendored, because every
   factory run is a direct run, as
   [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
-  Routes to `setup-matt-pocock-skills` stay dormant while the skill setup files
-  are installed; the route test lists them with that reason.
+  No owned skill routes to `setup-matt-pocock-skills` or another uninstalled
+  skill; the route test fails on any such route.
 - Every workflow skill and skill setup file is Repo Canon's own, as
   [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
   decides. Adoption installs each skill from the owned tree, `.agents/skills/`,
@@ -318,7 +320,7 @@ repeated.
   which apply to the whole repository. Every other file cites it
   rather than repeating one of them. Agent implementation procedures belong in
   skills. Files Repo Canon authors do not restate them, and cite them only for
-  delivery or to override routes to uninstalled skills: `AGENTS.md` names `pr`
+  delivery: `AGENTS.md` names `pr`
   and `babysit`, and `CONTRIBUTING.md` names
   `pr` for a pull request's body and `repo-standards adopt` for finishing or
   recovering an adoption run, using the pinned runtime once a run has started.
@@ -381,7 +383,9 @@ repeated.
   [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
   decides in place of the verbatim rule of
   [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md).
-  They are still identical to their seeds. Project-specific guidance remains separate. AGENTS.md is an
+  `domain.md` is still identical to its seed; `issue-tracker.md` and
+  `triage-labels.md` differ as `setup-file-bases.json` records, so they state
+  what the rules require. Project-specific guidance remains separate. AGENTS.md is an
   identical standards-owned pointer file. Repository Standards owns the update
   notice through its `repository-standards` system skill
   ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).

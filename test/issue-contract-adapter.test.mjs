@@ -1027,8 +1027,12 @@ test("unavailable reviewer roles reject readiness with cleanup and useful feedba
     );
     assert.deepEqual(writes(result)[1].body, { labels: ["needs-triage"] });
     const feedback = writes(result).at(-1).body.body;
-    assert.match(feedback, /Issue contract awaiting review/);
-    assert.match(feedback, /Could not verify @maintainer's review authority:/);
+    assert.match(feedback, /^## Issue contract readiness removed$/m);
+    assert.match(
+      feedback,
+      /^Readiness was removed: Could not verify @maintainer's review authority:/m,
+    );
+    assert.match(feedback, /The validator removed `ready-for-agent` from the /);
     assert.match(feedback, /A fresh authorized review is required/);
     assert.match(
       result.stderr,
