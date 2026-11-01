@@ -107,3 +107,17 @@ The end-to-end behaviour this ticket makes work, from the user's perspective, no
 </issue-template>
 
 In either form, avoid specific file paths or code snippets: they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts, not a working demo, just the important bits.
+
+## Reads
+
+Paths are relative to the repository root.
+
+- `docs/agents/issue-tracker.md` and `docs/agents/triage-labels.md`: the
+  configured tracker and its triage label vocabulary. When the tracker config
+  is missing and no tracker was provided, ask the user whether to publish to
+  local files or a real tracker; when the label config is missing, use the
+  canonical role names as the label strings.
+- `GLOSSARY.md` and the ADRs in `docs/adr/`: the domain vocabulary and
+  decisions to respect. When either is missing, use the codebase's own words.
+- `.scratch/`: the local-files tracker's tickets. When it is missing, create
+  it as step 5 says.

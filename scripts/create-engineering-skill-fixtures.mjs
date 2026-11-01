@@ -273,6 +273,69 @@ const repositories = {};
   repositories.tdd = { path: root, skills, head };
 }
 
+// A repository with no Repo Canon adoption: no shared guidance, setup files,
+// glossary, rules or Repository Standards state. Its skill is a copy, as an
+// installation from a release tag leaves it.
+{
+  const skills = ["code-review"];
+  const root = join(fixtureRoot, "standalone");
+  write(
+    root,
+    "README.md",
+    `# Ledger\n\nAn example ledger library. Run \`npm test\` with Node.js 24 or 26.\n`,
+  );
+  write(
+    root,
+    "package.json",
+    `${JSON.stringify(
+      {
+        name: "standalone-ledger-fixture",
+        private: true,
+        type: "module",
+        scripts: { test: "node --test" },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  write(
+    root,
+    "specs/summarize-ledger.md",
+    `# Summarize ledger entries\n\n\`summarizeLedger(entries)\` returns independent posted and pending totals. It rejects an entry whose state is neither \`posted\` nor \`pending\`. Tests must cover both totals and the rejection behavior.\n`,
+  );
+  write(
+    root,
+    "src/ledger.mjs",
+    `export function summarizeLedger(entries) {\n  return { posted: 0, pending: 0 };\n}\n`,
+  );
+  for (const skill of skills)
+    cpSync(join(skillsRoot, skill), join(root, ".agents/skills", skill), {
+      recursive: true,
+    });
+  initializeFixtureRepository(root, {
+    author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
+  });
+  const fixedPoint = commit(root, "chore: start the ledger");
+  write(
+    root,
+    "src/ledger.mjs",
+    `export function summarizeLedger(entries) {\n  const x = entries.filter(entry => entry.state === 'posted');\n  return { posted: x.reduce((total, entry) => total + entry.amount, 0), pending: 0 };\n}\n`,
+  );
+  write(
+    root,
+    "test/ledger.test.mjs",
+    `import assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { summarizeLedger } from '../src/ledger.mjs';\n\ntest('totals posted entries', () => {\n  assert.deepEqual(summarizeLedger([{ state: 'posted', amount: 12 }]), { posted: 12, pending: 0 });\n});\n`,
+  );
+  const head = commit(root, "feat: total posted ledger entries");
+  repositories.standalone = {
+    path: root,
+    skills,
+    installation: "copy",
+    fixedPoint,
+    head,
+  };
+}
+
 const provenance = identifyFixtureSource({
   sourceRoot,
   builderPath: scriptSourcePath,

@@ -71,3 +71,13 @@ Side effects happen inline as decisions crystallize; call the Skill tool with "d
 - **Sharpening a fuzzy term during the conversation?** Update `GLOSSARY.md` right there.
 - **User rejects the candidate with a load-bearing reason?** Offer an ADR, framed as: _"Want me to record this as an ADR so future architecture reviews don't re-suggest it?"_ Only offer when the reason would actually be needed by a future explorer to avoid re-suggesting the same thing; skip ephemeral reasons ("not worth it right now") and self-evident ones.
 - **Want to explore alternative interfaces for the deepened module?** Call the Skill tool with "codebase-design" and use its design-it-twice parallel sub-agent pattern.
+
+## Reads
+
+Paths are relative to the repository root.
+
+- `GLOSSARY.md`: the domain language that names good seams. When it is
+  missing, use the code's own names, and create it lazily when a deepened
+  module needs a new term, as step 3 says.
+- The ADRs in `docs/adr/`: decisions not to re-litigate. When it is missing,
+  no recorded decision constrains the candidates.

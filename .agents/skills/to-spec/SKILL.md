@@ -75,3 +75,15 @@ A description of the things that are out of scope for this spec.
 Any further notes about the feature.
 
 </spec-template>
+
+## Reads
+
+Paths are relative to the repository root.
+
+- `docs/agents/issue-tracker.md` and `docs/agents/triage-labels.md`: the
+  issue tracker and its triage label vocabulary. When the tracker config is
+  missing and no tracker was provided, ask the user where to publish the
+  spec; when the label config is missing, use the canonical role names as
+  the label strings.
+- `GLOSSARY.md` and the ADRs in `docs/adr/`: the domain vocabulary and
+  decisions to respect. When either is missing, use the codebase's own words.

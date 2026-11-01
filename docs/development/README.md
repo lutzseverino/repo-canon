@@ -229,9 +229,22 @@ The public source-validation command and its boundary are described in
 Run `node --test test/upstream-bases.test.mjs` for the owned skills' and
 setup files' upstream bases: `node scripts/upstream-bases.mjs check` on this
 repository and on disposable copies with a mismatched base, an identical file
-claiming edits, a differing file claiming none, missing or dropped credits and
-a snapshot source, and the three-way reconciliation, including the dry run on
-the current base that changes nothing.
+claiming edits, a differing file claiming none, missing or dropped credits, a
+dropped license notice and a snapshot source, and the three-way
+reconciliation, including the dry run on the current base that changes
+nothing.
+
+Run `node --test test/owned-skill-reads.test.mjs` for the owned skills'
+standalone use: `node scripts/owned-skill-reads.mjs check` on this repository,
+and fixture skills that name an undeclared path, name an agent host
+application, or leave a Reads entry without its behavior when the file is
+missing. The check reads every file of each declared skill. In
+Markdown it reads paths outside fenced code blocks and double-quoted text,
+which illustrate; in scripts it reads the whole text, including imports. A
+path is allowed when it is inside the skill or listed in the `## Reads`
+section of the skill's `SKILL.md`, whose entries may hold `<placeholder>`
+segments, `*` globs and directories ending in `/`. A relative import of a
+sibling skill's file is allowed when the Reads section names that skill.
 
 Run `node --test test/typescript-node-stack-yaml.test.mjs` for the stack
 readers' differential checks against the pinned, development-only `yaml`

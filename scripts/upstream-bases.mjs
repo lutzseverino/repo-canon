@@ -30,7 +30,12 @@ const identicalClaim = /\bis identical to its upstream base\b/;
 const editedClaim = /\bdiffers from its upstream base\b/;
 const writtenClaim = /\bwritten for Repo Canon and has no upstream base\b/;
 
-function files(directory, prefix = "") {
+/**
+ * Every file under a directory, as slash-separated relative paths.
+ * @param {string} directory
+ * @returns {string[]}
+ */
+export function files(directory, prefix = "") {
   if (!existsSync(directory)) return [];
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = `${prefix}${entry.name}`;
@@ -235,6 +240,12 @@ export function checkUpstreamBases(root) {
           `${label} must keep its upstream base's CREDITS.md text word for word`,
         );
     }
+    // A skill installed on its own, without the notice adoption installs
+    // beside it, still carries its upstream license.
+    if (!skill.credits.includes(read(root, licensePath).toString("utf8")))
+      problems.push(
+        `${label} must reproduce the upstream license notice from ${licensePath}`,
+      );
   }
 
   const setupFiles = ownedSetupFiles(root);

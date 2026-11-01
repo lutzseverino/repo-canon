@@ -87,7 +87,7 @@ body was checked. Link-free bodies need no reconstruction.
      from the diagnostic, and the correction needed. Follow applicable installed
      continuation rules, leave the PR open and stop babysitting. This outcome
      permits neither an unchanged-configuration retry nor a merge.
-   - `1`: follow [Credentials](../../../CONTRIBUTING.md#credentials) for a
+   - `1`: follow `CONTRIBUTING.md`'s Credentials section for a
      permission refusal; otherwise fix the invocation or other platform error and
      run it again.
 
@@ -96,8 +96,7 @@ body was checked. Link-free bodies need no reconstruction.
    `github-repository-configuration` rules for applicable internal Standards and
    Spec reviews and their merge record.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
-   every review thread as it requires, following its
-   [comment rules](../../../CONTRIBUTING.md#comments).
+   every review thread as it requires, following its Comments section.
 4. Apply the review request rule to each new head after a fix push. When it
    requires a request, post the review request comment as the
    `github-repository-configuration` rules describe, using `request.mjs` as above
@@ -116,7 +115,7 @@ body was checked. Link-free bodies need no reconstruction.
    the full SHA that starts the wait's latest line. Exit `0` means merged;
    `2` means the head changed, so return to step 1; `3` means it did not merge
    and needs the owner, so hand off with a question under
-   [Comments](../../../CONTRIBUTING.md#comments), without retrying the merge;
+   `CONTRIBUTING.md`'s Comments section, without retrying the merge;
    `4` means the base is stale: follow Branch-update recovery only if its one
    attempt is unused; otherwise record the owner handoff and stop;
    `5` means the current-head policy-skip outcome comment is missing or incomplete:
@@ -128,7 +127,7 @@ body was checked. Link-free bodies need no reconstruction.
    relaunches merging after the hold ends. Otherwise, run merge again after
    the hold ends. This is not an owner handoff;
    `1` means follow
-   [Credentials](../../../CONTRIBUTING.md#credentials) for a permission refusal;
+   `CONTRIBUTING.md`'s Credentials section for a permission refusal;
    otherwise fix the invocation or other platform error and
    run it again. On exit `0`, record any merge outcome comment the installed rules
    require, using the delivered head, validation and review results, and merge
@@ -182,3 +181,34 @@ delivery before starting the next and refresh its base independently.
 For exit `7` from either command, follow correction and authorized continuation
 under the `github-repository-configuration` rules' Trusted review configuration
 section.
+
+## Reads
+
+Paths are relative to the repository root.
+
+- `CONTRIBUTING.md`: the merge conditions and the Merging, Comments and
+  Credentials sections the steps name. When it is missing, carry out the
+  steps and the commands' own checks as written, and hand off to the owner in
+  one PR comment for any rule the steps leave to the guide.
+- The installed rules the steps name, such as the
+  `github-repository-configuration` rules, which the `repository-standards`
+  skill looks up. When they are missing, the commands' own behavior stands, no
+  rule prescribes a worker handoff, owner approval or merge outcome comment,
+  and `CONTRIBUTING.md` alone sets the merge and wording rules.
+- `.github/pull-request-reviewer.json`: the optional reviewer declaration.
+  When it is missing at the selected commit, no reviewer is configured.
+- `.github/factory-review-policy.json`: the optional app-author review policy.
+  When it is missing at the selected commit, configured reviewer behavior
+  applies.
+- `.factory/config.json`: its `labels.releaseHold`, which the merge command
+  reads. When the file or the key is missing, no release hold applies.
+- `.repo-standards/runtime/`: the pinned Repository Standards runtime, its
+  `package-lock.json` and `node_modules/.bin/repo-standards`, which the
+  request command uses to rebuild an adoption summary. When it is missing, no
+  link is exempt as part of an adoption summary.
+- `vendor/postern/postern.mjs`, `vendor/marked/marked.esm.js` and
+  `vendor/parse5/parse5.esm.js`: the bundles the commands import, which Repo
+  Canon's adoption installs. When they are missing, the commands cannot start:
+  carry out each step by hand with the GitHub CLI under the same rules, and
+  squash-merge with the subject `<title> (#<number>)` and the PR body passed
+  explicitly.

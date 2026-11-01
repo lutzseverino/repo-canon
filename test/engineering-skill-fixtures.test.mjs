@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
+  existsSync,
   lstatSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   readlinkSync,
   rmSync,
@@ -13,6 +15,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { skillProblems } from "../scripts/owned-skill-reads.mjs";
+import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const script = join(
@@ -54,10 +58,12 @@ test("creates the engineering-skill repositories with the declared engineering s
     "debugging",
     "modeling-research",
     "review",
+    "standalone",
     "tdd",
   ]);
 
   for (const [name, repository] of Object.entries(manifest.repositories)) {
+    if (name === "standalone") continue;
     assert.equal(
       readFileSync(join(repository.path, "AGENTS.md"), "utf8"),
       readFileSync(join(repositoryRoot, "AGENTS.md"), "utf8"),
@@ -89,6 +95,54 @@ test("creates the engineering-skill repositories with the declared engineering s
       "# Ledger",
     ),
     true,
+  );
+});
+
+test("the standalone repository has no Repo Canon adoption and a copied skill", (t) => {
+  const { manifest } = build(t);
+  const standalone = manifest.repositories.standalone;
+  assert.equal(standalone.installation, "copy");
+  assert.deepEqual(standalone.skills, ["code-review"]);
+  for (const path of [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "CODING_STANDARDS.md",
+    "GLOSSARY.md",
+    "docs",
+    ".repo-standards",
+    ".github",
+    ".agents/skills/LICENSE.mattpocock-skills",
+  ])
+    assert.equal(
+      existsSync(join(standalone.path, path)),
+      false,
+      `the standalone repository has no ${path}`,
+    );
+  const skill = join(standalone.path, ".agents/skills/code-review");
+  assert.equal(lstatSync(skill).isSymbolicLink(), false);
+  for (const path of readdirSync(manifest.skills["code-review"].path, {
+    encoding: "utf8",
+    recursive: true,
+  }))
+    if (!lstatSync(join(skill, path)).isDirectory())
+      assert.deepEqual(
+        readFileSync(join(skill, path)),
+        readFileSync(join(manifest.skills["code-review"].path, path)),
+        `code-review/${path} is copied unchanged`,
+      );
+  assert.deepEqual(skillProblems(skill, "code-review"), []);
+  const git = (...args) =>
+    execFixtureGit(args, { cwd: standalone.path, encoding: "utf8" }).trim();
+  assert.equal(git("rev-parse", "HEAD"), standalone.head);
+  assert.equal(git("rev-parse", "HEAD~1"), standalone.fixedPoint);
+  assert.equal(git("status", "--porcelain"), "");
+  assert.match(
+    git("diff", "--name-only", `${standalone.fixedPoint}...HEAD`),
+    /^src\/ledger\.mjs\ntest\/ledger\.test\.mjs$/,
+  );
+  assert.match(
+    readFileSync(join(standalone.path, "specs/summarize-ledger.md"), "utf8"),
+    /pending totals/,
   );
 });
 

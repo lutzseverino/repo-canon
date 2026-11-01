@@ -87,3 +87,17 @@ A change can pass one axis and fail the other:
 - Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
 
 Reporting them separately stops one axis from masking the other.
+
+## Reads
+
+Paths are relative to the repository root.
+
+- `docs/agents/issue-tracker.md`: how to fetch the issues that commit
+  messages reference, and which comment or body holds an issue's
+  implementation contract. When it is missing and no tracker was provided,
+  look for the spec in step 2's other places, without blocking the review.
+- A spec file under `docs/`, `specs/` or `.scratch/`. When it is missing,
+  ask the user where the spec is, as step 2 says.
+- `CODING_STANDARDS.md`, `CONTRIBUTING.md` and anything else in the repository
+  that documents how code should be written. When they are missing, the
+  Standards axis carries only the smell baseline.

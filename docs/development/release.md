@@ -13,7 +13,12 @@ contextual target, not an input. Documentation, tests, fixtures, and CI are
 not inputs either.
 
 The commit of the annotated release tag identifies the released bytes. No
-separate closure file records them. The reviewed diff is the diff from the
+separate closure file records them. The same tag publishes the owned skills for
+installation without adoption, as one bundle at `.agents/skills/`: each skill
+declaration installs from `.agents/skills/<name>`, which
+`node scripts/upstream-bases.mjs check` enforces, so the path is the same at
+every release tag. The [usage guide](../usage/install-skills.md) gives the
+install command. The reviewed diff is the diff from the
 previous release tag over the source inputs. Install the public CLI at the
 required minimum version outside the checkout, as the
 [source profile](source-profile.md#executable-prerequisites) describes, and
