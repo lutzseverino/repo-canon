@@ -135,7 +135,7 @@ repeated.
   and `implement` also allows model invocation; `codebase-design`,
   `diagnosing-bugs`, `grill-with-docs`, `prototype` and `tdd` differ in
   nothing else, and the other twelve differ further as their `CREDITS.md`
-  files describe.
+  files describe. `pr` adds the screenshot storage and retention contract.
   `prototype` stays because `wayfinder` calls it. The
   vendored tree holds only those skills' bases and the setup seeds that the
   skill setup files take as theirs; `implement-spec` is not vendored, because every
