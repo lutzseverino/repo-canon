@@ -113,6 +113,13 @@ decides, and the `triage` readiness command reads it through the validator's
 exported `issueContractResult`. A marked comment by any other account, person
 or bot, is not a result.
 
+Scriptorium v2.3.0's factory host remains compatible with this result. Its
+reader checks `status`, `revision`, `label`, `reviewEventId` and `reviewer`,
+which remain present with their existing meaning; the added `format` field
+does not change those checks. Scriptorium v3.0.0 will consume the versioned
+result as its contract decision. Publishing this source does not update the
+host or adopt it into Scriptorium; that adoption is a separate rollout step.
+
 `format` names the format version, `repo-canon/issue-contract-state/v1`. Any
 change to the fields or their meaning is a new version, which a reader accepts
 or refuses explicitly. Every v1 line carries every field below, in this order,
