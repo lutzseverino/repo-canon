@@ -20,7 +20,7 @@ npx skills@1.5.25 add https://github.com/lutzseverino/repo-canon/tree/<tag>/.age
   --skill grilling --agent codex --copy
 ```
 
-Replace `<tag>` with a published release tag. Releases after `v0.20.0` carry
+Replace `<tag>` with a published release tag. Releases after `v0.21.0` carry
 the skills' Reads sections and license notices; an earlier tag installs the
 skills without them. Add `--global` to install at user scope, and select
 your agent with `--agent`. Name the bundle path, not the repository: the
