@@ -270,8 +270,9 @@ repository has no Project README, and `standards.yaml` supplies the other
 active file declarations. The same fixture asserts that only the
 `factory` profile declares the `.factory/` files and the sandbox image
 workflow, that `standards.yaml` declares no pull request reviewer file, and
-that `.factory/config.json` holds factory configuration version 1 with Repo
-Canon's labels, model label prefix and prompt. It also
+that `.factory/config.json` holds factory configuration version 2 with Repo
+Canon's labels, model label prefix, `implement` skill, `#{issue}` arguments,
+and contract-result marker and trusted author, without a `prompt`. It also
 fails if any tracked file reaches the CLI's 8 MiB per-file observation limit,
 which would make the repository uninspectable before any report. It lists each
 declaration that has rules or adoption guidance with its decided outcome, keeps

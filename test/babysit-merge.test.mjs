@@ -43,6 +43,29 @@ const releaseIssue = (
   },
 });
 
+test("installed merge accepts the shipped configuration and version 1 on the default branch", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const shipped = JSON.parse(
+    readFileSync(new URL("../.factory/config.json", import.meta.url), "utf8"),
+  );
+  for (const configuration of [shipped, factoryConfiguration]) {
+    for (const held of [false, true]) {
+      const result = run(
+        t,
+        {
+          factoryConfiguration: configuration,
+          releaseIssues: held ? [releaseIssue(24)] : [],
+        },
+        undefined,
+        target,
+      );
+      assert.equal(result.status, held ? 9 : 0, result.stderr);
+      if (held) assert.equal(result.state.merge, undefined);
+      else assert.ok(result.state.merge);
+    }
+  }
+});
+
 test("another open release PR holds an installed merge without a write", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const result = run(
@@ -182,7 +205,7 @@ test("unreadable or invalid release configuration and PR reads never write a mer
   const failures = [
     { factoryConfiguration: "{" },
     { factoryConfiguration: [] },
-    { factoryConfiguration: { version: 2 } },
+    { factoryConfiguration: { version: 3 } },
     { factoryConfiguration: { version: 1, labels: [] } },
     ...[null, "", " hold ", 42].map((releaseHold) => ({
       factoryConfiguration: { version: 1, labels: { releaseHold } },
