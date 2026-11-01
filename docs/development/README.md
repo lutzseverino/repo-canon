@@ -198,7 +198,10 @@ REST account's ID must match the viewer's. See GitHub's
 and [user lookup endpoint](https://docs.github.com/en/rest/users/users#get-a-user).
 The command uses the vendored Postern
 bundle and the current GitHub CLI credential. Its caller bounds the foreground
-wait; the command has no invocation timeout.
+wait; the command has no invocation timeout. It reads the validator's published
+result through the validator's own reader. Run
+`node --test test/issue-contract-result.test.mjs` for that result's format,
+rules and the examples that the validator and the command both run.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
 and head-change retry behavior against the same Postern transport fixture,
 including independent trusted-policy selection and the current-head internal

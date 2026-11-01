@@ -39,7 +39,8 @@ what current state cannot show: a deleted Agent Brief, the creation review's
 facts (the labels an `opened` issue was created with, and whether a `labeled`
 run's sender is the issue's opener), and a human readiness trigger the
 timeline has not recorded yet. Two runs that read the same state therefore make the same
-decision, and a run on the state its own writes produced changes nothing.
+decision, and a run on the state its own writes produced changes no label and
+records the same decision again.
 One timeline helper inside the decision answers every question about whether
 one issue event came after another, and it orders events by one rule: the
 timeline's order decides when GitHub has recorded both events. A carried label
@@ -100,22 +101,110 @@ Triaged bug and feature requests must carry exactly one category (`bug` or
 tickets do not need intake categories or an Agent Brief. Wayfinder planning
 labels remain separate from intake labels.
 
+## Published result
+
+The validator's result on an issue is its feedback comment: the latest comment
+by `github-actions[bot]` containing `<!-- repo-canon:issue-contract-feedback -->`.
+Its second line, `<!-- repo-canon:issue-contract-state {…} -->`, holds one JSON
+object in a published format. The factory reads that result instead of
+interpreting contracts, as
+[ADR 0029](../adr/0029-make-the-validators-posted-result-the-only-contract-decision.md)
+decides, and the `triage` readiness command reads it through the validator's
+exported `issueContractResult`. A marked comment by any other account, person
+or bot, is not a result.
+
+`format` names the format version, `repo-canon/issue-contract-state/v1`. Any
+change to the fields or their meaning is a new version, which a reader accepts
+or refuses explicitly. Every v1 line carries every field below, in this order,
+with `null` where the evaluation has no value:
+
+- `format`: the format version.
+- `status`: `approved` when readiness is bound to the contract;
+  `awaiting-review` for a complete contract without bound readiness, including
+  after a rejection; `needs-attention` for an incomplete structure; and
+  `no-contract` for a valid issue without an implementation contract, such as
+  a `wontfix` outcome. Only `approved` approves readiness.
+- `kind`: the kind the validator identified, such as `triaged Agent Brief`,
+  `implementation ticket`, or `specification`.
+- `revision`: the complete contract's `sha256:` revision.
+- `source`: the contract source, either
+  `{"type":"comment","id":"<Agent Brief comment ID>","editedAt":"<its update time>"}`
+  or `{"type":"issue-body","editedAt":"<the body's last edit time>"}`, whose
+  `editedAt` is `null` for a body never edited.
+- `label`, `reviewer`, `reviewEventId`: for an approval, the readiness label it
+  approves, the reviewer's login, and the ID of the readiness label event it
+  approves. A creation review the timeline has not recorded yet uses an
+  `opened:` ID until a later run records the event's own ID. A reader compares
+  `label` with its own ready label and `reviewEventId` with the current
+  readiness label event.
+- `event`: the event this evaluation decided: its neutral `kind`, such as
+  `labeled` or `commentEdited`, the `actor` login, the `label` of a label event,
+  and the `commentId` of a comment event.
+- `evaluatedAt`: the second the validator decided in. It makes every result's
+  bytes differ from the one it replaces, so each write updates the comment even
+  when two events of the same kind leave the decision unchanged.
+- `observedEventId`: the latest readiness transition the evaluation observed,
+  other than the validator's own removal of readiness.
+- `sourceInvalidation`: the deleted newer Agent Brief, `deleted-comment:<ID>`,
+  that invalidated a restored source.
+- `publishedAt`: when the validator first published this revision, carried by
+  later results for it. The result that first publishes a revision records
+  `null`; its own update time is that time.
+- `rejectionReason` and `rejectedCreationLabel`: the last readiness rejection's
+  reason and, for a creation review, the label it rejected.
+
+`observedEventId`, `sourceInvalidation`, `publishedAt` and the rejection fields
+are the validator's records for its next evaluation; a reader of the decision
+need not interpret them.
+
+Every evaluation of an open issue writes its result, even when the decision is
+unchanged, after its label writes. A result older than the issue's latest
+comment, edit or label change therefore means the validator has not evaluated
+the issue since. An issue without an implementation contract that has never had
+a result, such as an intake form or a Wayfinder issue, gets none; it carries no
+readiness. Closed issues are not evaluated and keep their last result.
+
+The result applies one rule for each point where the factory once interpreted
+contracts itself:
+
+- Only an edit to the implementation contract cancels readiness: the latest
+  Agent Brief of a triaged request, or the body of a directly authored ticket or
+  specification. Editing a triaged request's body or another comment does not.
+- Only current category labels count. Removing a triaged request's category
+  label leaves its Agent Brief without the matching category, so the result
+  needs attention and readiness is removed; a native ticket whose category was
+  removed needs no Agent Brief.
+- Readiness binds to one revision of one Agent Brief. Editing or deleting that
+  Brief, or posting a newer one, cancels it; deleting an older, superseded
+  Brief does not.
+- Only the `admin`, `maintain` and `triage` roles authorize readiness, as the
+  [readiness roles](../../rules/github-repository-configuration.md#readiness-roles)
+  rules state.
+- The result names the readiness label it approves.
+
+The validator and the readiness command also read the earlier line without
+`format`, which the next evaluation replaces. Such a line under a "needs
+attention" or "structure corrected" notice carried an earlier state forward;
+it is read as `needs-attention` or `no-contract` and approves nothing.
+
 ## Feedback and readiness
 
-The validator maintains one marked feedback comment. Incomplete contracts list
-the structural corrections there. That notice carries the previous feedback's
-state line forward, so the recorded revision, observed event, and source
-invalidation survive a structural failure. A later structural pass replaces a
-"needs attention" notice, and only that notice, with a "structure corrected"
-notice that carries the same line. Complete specifications, tickets, and Agent
-Briefs publish a `sha256:` revision and wait for authorized review. The same
-comment records the reviewer, revision, and resulting readiness state after an
-accepted review event, so repeated workflow events can verify the association
-without reapproving or duplicating feedback. Awaiting-review state also records
-the latest readiness-label transition it observed. Approved state records the
-exact GitHub issue-event ID that supplied the review. The observed transition
-is the latest readiness transition other than the validator's own removal of
-readiness, so the run after that cleanup records the same one.
+The validator maintains one marked feedback comment, which holds its [published
+result](#published-result). Incomplete contracts list the structural corrections
+there, under a `needs-attention` result that approves nothing and records no
+revision. It carries forward only the source invalidation, so a corrected
+contract's revision is published again before readiness is applied. A later
+structural pass replaces a "needs attention" notice with a "structure corrected"
+notice; an issue that no longer carries a contract gets a "not required" notice.
+Complete specifications, tickets, and Agent Briefs publish a `sha256:` revision
+and wait for authorized review. The same comment records the reviewer, revision,
+and resulting readiness state after an accepted review event, so repeated
+workflow events can verify the association without reapproving or duplicating
+feedback. Every result also records the latest readiness-label transition it
+observed. Approved state records the exact GitHub issue-event ID that supplied
+the review. The observed transition is the latest readiness transition other
+than the validator's own removal of readiness, so the run after that cleanup
+records the same one.
 
 Every readiness rejection records its reason, such as an unauthorized
 reviewer's "is not authorized to grant readiness", and so does a workflow state
@@ -254,8 +343,11 @@ Every later review, and every Agent Brief review, starts after the validator
 publishes the exact revision in its feedback comment; the reviewer then applies
 a readiness label. This notice-first sequence avoids relying on GitHub's
 second-resolution edit and label timestamps to order otherwise ambiguous events.
-The feedback comment's authoritative `updated_at` must strictly precede the
-review label event; a same-second attempt is rejected and must be reapplied.
+The revision's first publication must strictly precede the review label event:
+the result's `publishedAt`, or, when the result first published its revision,
+the feedback comment's authoritative `updated_at`. A same-second attempt is
+rejected and must be reapplied. Results rewritten for later events keep the
+first publication time, so a rewrite never moves the notice past a label.
 For an open issue, the validator re-fetches the issue, complete discussion,
 complete issue-event timeline, relationships, and direct-body edit revision
 before every decision.
@@ -358,7 +450,7 @@ workflow states is never a structural error.
 - An open issue left with no workflow state gets `needs-triage`, whether or not
   it has carried one before, on any trigger. Opening and reopening a bare issue
   therefore need no special case. The run keeps the recorded review state,
-  so an unchanged feedback comment is not rewritten and readiness applied
+  so its rewritten result records the same decision and readiness applied
   afterwards at the same revision is decided as if `needs-triage` had never been
   removed. Removing readiness, or losing it to invalidation, therefore returns a
   contract, or an unrecognized issue such as a contract edited until no contract
@@ -440,7 +532,13 @@ issues, the validator's fallback applied after a creation review in either run
 order, and closed-issue cleanup of workflow-state and factory labels without
 further context reads (including an open event whose fetched issue is closed),
 readiness invalidation when a changed contract is reopened, and hostile Markdown
-that must remain inert. The `CI` workflow runs the complete repository test suite
+that must remain inert. Run `node --test test/issue-contract-result.test.mjs` for the published
+result: its complete v1 line, its write on every evaluated event, each rule
+above, and unknown formats and other authors. Its shared examples run the
+validator's adapter and the `triage` readiness command against one in-memory
+issue through Postern: edited, deleted and newer Agent Briefs, Briefs and
+results by bot and other authors, a bot reviewer without a role, and events in
+the same second. The `CI` workflow runs the complete repository test suite
 with `pnpm test`. These fixtures exercise the authorization mechanism but do not
 claim that a reviewer made a sound semantic judgment.
 

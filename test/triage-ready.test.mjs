@@ -4,6 +4,7 @@ import { connect } from "../vendor/postern/postern.mjs";
 import { pathToFileURL } from "node:url";
 import { installedValidator } from "./helpers/installed-validator.mjs";
 import { main } from "../.agents/skills/triage/ready.mjs";
+import { resultFormat } from "../scripts/validate-issue-contract.mjs";
 
 const revision = `sha256:${"a".repeat(64)}`;
 const label = "ready-for-agent";
@@ -60,10 +61,15 @@ async function exercise(options = {}, command = main) {
   const events = [...(options.events ?? [])];
   let phase = "before";
   let waits = 0;
+  // An incomplete contract's current result approves nothing; an earlier
+  // unversioned line carried the previous state under its notice.
   let state = {
     status: "awaiting-review",
     revision,
     observedEventId: null,
+    ...(options.incomplete && !options.legacy
+      ? { status: "needs-attention", revision: null }
+      : {}),
     ...options.state,
   };
   let ownEvent;
@@ -206,7 +212,9 @@ async function exercise(options = {}, command = main) {
         id: 10,
         node_id: "COMMENT_10",
         html_url: "https://github.com/owner/repo/issues/42#issuecomment-10",
-        body: `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${JSON.stringify(state)} -->\n${heading}`,
+        // The current result format unless the fixture asks for another,
+        // or for the earlier unversioned line.
+        body: `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${JSON.stringify(options.legacy ? state : { format: options.format ?? resultFormat, ...state })} -->\n${heading}`,
         user: { login: "github-actions[bot]", type: "Bot" },
         created_at: time,
         updated_at: time,
@@ -325,7 +333,7 @@ test("refuses a changed revision without applying labels", async () => {
 });
 
 test("refuses incomplete feedback even when it carries the old awaiting state", async () => {
-  const result = await exercise({ incomplete: true });
+  const result = await exercise({ legacy: true, incomplete: true });
   assert.match(result.error?.message ?? "", /Complete Acceptance criteria/);
   assert.deepEqual(writes(result), []);
 });
@@ -608,13 +616,41 @@ test("the installed triage command resolves the declared bundle without npm", as
 });
 
 test("refuses feedback that retains a state without reporting a complete contract", async () => {
+  for (const options of [
+    { legacy: true, heading: "## Issue contract structure corrected" },
+    {
+      state: { status: "no-contract", revision: null },
+      heading: "## Issue contract not required",
+    },
+  ]) {
+    const result = await exercise(options);
+    assert.match(
+      result.error?.message ?? "",
+      /complete contract awaiting review/,
+    );
+    assert.deepEqual(writes(result), []);
+  }
+});
+
+test("refuses an incomplete contract by its result status in either format", async () => {
+  for (const legacy of [false, true]) {
+    const result = await exercise({ legacy, incomplete: true });
+    assert.match(result.error?.message ?? "", /Incomplete contract/);
+    assert.deepEqual(writes(result), []);
+  }
+});
+
+test("reads the earlier unversioned result line", async () => {
+  const result = await exercise({ legacy: true });
+  assert.equal(result.error, undefined);
+  assert.equal(result.code, 0);
+});
+
+test("refuses a result of an unknown format without writes", async () => {
   const result = await exercise({
-    heading: "## Issue contract structure corrected",
+    format: "repo-canon/issue-contract-state/v2",
   });
-  assert.match(
-    result.error?.message ?? "",
-    /complete contract awaiting review/,
-  );
+  assert.match(result.error?.message ?? "", /unknown format/);
   assert.deepEqual(writes(result), []);
 });
 

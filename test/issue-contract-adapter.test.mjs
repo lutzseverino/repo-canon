@@ -261,10 +261,25 @@ async function exercise(
   }
   return { code, error, requests, stdout, stderr };
 }
+// The run's writes, with each result's evaluation time, which the adapter
+// takes from the real clock, set to `null` as the pure decision leaves it.
 const writes = (result) =>
-  result.requests.filter(
-    ({ method, path }) => method !== "GET" && path !== "/graphql",
-  );
+  result.requests
+    .filter(({ method, path }) => method !== "GET" && path !== "/graphql")
+    .map((request) =>
+      typeof request.body?.body === "string"
+        ? {
+            ...request,
+            body: {
+              ...request.body,
+              body: request.body.body.replace(
+                /"evaluatedAt":"[^"]+"/,
+                '"evaluatedAt":null',
+              ),
+            },
+          }
+        : request,
+    );
 
 // Compare transport writes to the pure decision, including every payload byte.
 function assertDecision(result, decision, expectedWrites) {
@@ -299,7 +314,14 @@ function decisionFor({
     repository,
     issue: { number: 42, state: "open", ...issue },
     comments: comments.map((comment) => ({ updated_at: time, ...comment })),
-    event: { repository, issue: 42, ...event },
+    // The fixture payload's defaults: an edit by the reporter.
+    event: {
+      repository,
+      issue: 42,
+      kind: "edited",
+      actor: { login: "reporter" },
+      ...event,
+    },
     parent: null,
     blockedBy,
     issueEvents: events,
@@ -310,6 +332,16 @@ function decisionFor({
   });
 }
 const issuePath = "/repos/example/repository/issues/42";
+
+// Asserts that a run's only write rewrites the result of comment 13 with the
+// decision it already recorded.
+function assertResultOnly(result, decision) {
+  assert.deepEqual(
+    writes(result).map(({ method, path }) => [method, path]),
+    [["PATCH", "/repos/example/repository/issues/comments/13"]],
+  );
+  assert.deepEqual(recordedState(writes(result)[0].body.body), decision);
+}
 const feedbackWrite = (decision, id) => [
   id == null ? "POST" : "PATCH",
   id == null
@@ -1082,7 +1114,7 @@ test("role failures clean up edited approved contracts and recovery requires fre
           });
           assert.equal(approved.error, undefined);
           assert.equal(approved.code, 0);
-          assert.deepEqual(writes(approved), []);
+          assertResultOnly(approved, recordedState(feedback.body));
 
           const editedAt = "2026-09-14T17:02:00Z";
           const changedBrief = {
@@ -1181,7 +1213,7 @@ test("role failures clean up edited approved contracts and recovery requires fre
           const recovered = await exercise(t, settled);
           assert.equal(recovered.error, undefined);
           assert.equal(recovered.code, 0);
-          assert.deepEqual(writes(recovered), []);
+          assertResultOnly(recovered, recordedState(noticeBody));
 
           const reviewed = await exercise(t, {
             ...settled,
