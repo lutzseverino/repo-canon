@@ -131,7 +131,9 @@ repeated.
   `implement`, `improve-codebase-architecture`, `pr`, `prototype`, `research`,
   `tdd`, `to-spec`, `to-tickets`, `triage`, `wayfinder`, and
   `writing-for-agents`, each an owned skill whose upstream base is that
-  release; 16 are identical to their bases and `triage` differs.
+  release. Each states that a prompt or brief naming it is its invocation;
+  `implement` also allows model invocation, and `triage` carries the workflow
+  changes its credits describe.
   `prototype` stays because `wayfinder` calls it. The
   vendored tree holds only those skills' bases and the setup seeds that the
   skill setup files take as theirs; `implement-spec` is not vendored, because every

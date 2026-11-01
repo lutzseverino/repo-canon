@@ -4,6 +4,8 @@ description: Turn the owner's feature or problem into an approved plan across ti
 disable-model-invocation: true
 ---
 
+A prompt or brief naming this skill is its invocation.
+
 # Orchestrate
 
 You are the orchestrating agent. Turn the owner's feature or problem into a

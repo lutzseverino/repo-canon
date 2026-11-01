@@ -4,6 +4,8 @@ description: Move issues and external PRs through a state machine of triage role
 disable-model-invocation: true
 ---
 
+A prompt or brief naming this skill is its invocation.
+
 # Triage
 
 Move issues on the project issue tracker through a small state machine of triage roles, and bring each request you triage to an agent brief that holds.

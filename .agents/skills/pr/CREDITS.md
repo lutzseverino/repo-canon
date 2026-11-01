@@ -2,7 +2,7 @@
 
 This skill is Repo Canon's own, taken from the `pr` skill in [Matt Pocock's skills](https://github.com/mattpocock/skills). Its upstream base is tag `v1.3.1`, commit `24fe0ef7737efae15c87225755e9f6f5965e4888`, at [`skills/engineering/pr`](https://github.com/mattpocock/skills/tree/24fe0ef7737efae15c87225755e9f6f5965e4888/skills/engineering/pr). That material is used under its MIT License, whose notice adoption installs beside the skills as `.agents/skills/LICENSE.mattpocock-skills`.
 
-Apart from this file, which keeps upstream's credits below, the skill is identical to its upstream base. The `show-me` material those credits name is covered by HumanLayer's MIT License, whose notice adoption installs beside the skills as `.agents/skills/LICENSE.humanlayer-skills`.
+The skill differs from its upstream base: `SKILL.md` states that a prompt or brief naming the skill is its invocation. This file keeps upstream's credits below unchanged. The `show-me` material those credits name is covered by HumanLayer's MIT License, whose notice adoption installs beside the skills as `.agents/skills/LICENSE.humanlayer-skills`.
 
 ## Upstream credits
 
