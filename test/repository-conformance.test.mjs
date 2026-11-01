@@ -754,6 +754,31 @@ const workflowSkills = [
   "writing-for-agents",
 ];
 
+test("implement allows model invocation in both harness formats", () => {
+  const directory = join(root, ".agents/skills/implement");
+  const frontmatter = /^---\n([\s\S]*?)\n---\n/.exec(
+    readFileSync(join(directory, "SKILL.md"), "utf8"),
+  )?.[1];
+  assert.ok(frontmatter);
+  assert.doesNotMatch(frontmatter, /^disable-model-invocation:/m);
+  assert.match(
+    readFileSync(join(directory, "agents/openai.yaml"), "utf8"),
+    /^ {2}allow_implicit_invocation: true$/m,
+  );
+});
+
+test("every owned skill treats a prompt or brief naming it as invocation", () => {
+  for (const { source } of declaredSkills()) {
+    const body = readFileSync(join(root, source, "SKILL.md"), "utf8")
+      .replace(/^---\n[\s\S]*?\n---\n/, "")
+      .replace(/\s+/g, " ");
+    assert.ok(
+      body.includes("A prompt or brief naming this skill is its invocation."),
+      `${source} states how a prompt or brief invokes it`,
+    );
+  }
+});
+
 // The skill setup files take these seeds as their upstream bases (ADR 0028),
 // so they stay vendored without the setup skill itself.
 const setupSeeds =

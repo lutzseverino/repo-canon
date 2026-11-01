@@ -31,8 +31,10 @@ It then says either that the skill is identical to its upstream base or that
 it differs from its upstream base, and how. The comparison covers every file
 of the skill except `CREDITS.md`. When the base has its own `CREDITS.md`, as
 `pr`'s does for the HumanLayer material, the owned `CREDITS.md` keeps that
-text word for word. Sixteen of these skills are identical to their bases;
-`triage` differs, as its `CREDITS.md` describes.
+text word for word. All 17 skills taken from upstream differ from their bases:
+each states that a prompt or brief naming it is its invocation. `implement` also allows model
+invocation in both harness formats; `triage` carries the workflow changes its
+`CREDITS.md` describes.
 
 The skill setup files `docs/agents/domain.md`, `docs/agents/issue-tracker.md`
 and `docs/agents/triage-labels.md` are owned files installed from themselves.

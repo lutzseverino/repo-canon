@@ -3,6 +3,8 @@ name: babysit
 description: Babysit an opened pull request through checks and review to merge or its prescribed handoff. Use right after opening a pull request, or when asked to babysit or land one.
 ---
 
+A prompt or brief naming this skill is its invocation.
+
 Take the pull request through its authorized delivery. `CONTRIBUTING.md` and the
 `github-repository-configuration` rules hold the merge conditions and the
 wording rules.

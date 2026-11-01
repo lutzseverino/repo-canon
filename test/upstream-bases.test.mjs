@@ -99,11 +99,9 @@ test("a replaced snapshot fails every base still recorded against the old one", 
 
 test("an owned file identical to its base that claims edits fails", (t) => {
   const copy = fixture(t);
-  edit(copy, ".agents/skills/tdd/CREDITS.md", (text) =>
-    text.replace(
-      "the skill is identical to its upstream base",
-      "the skill differs from its upstream base",
-    ),
+  cpSync(
+    join(copy, engineering, "tdd/SKILL.md"),
+    join(copy, ".agents/skills/tdd/SKILL.md"),
   );
   edit(copy, "setup-file-bases.json", (text) => {
     const record = JSON.parse(text);
@@ -118,6 +116,13 @@ test("an owned file identical to its base that claims edits fails", (t) => {
 
 test("an owned file that differs from its base and claims none fails", (t) => {
   const copy = fixture(t);
+  for (const name of ["tdd", "grilling"])
+    edit(copy, `.agents/skills/${name}/CREDITS.md`, (text) =>
+      text.replace(
+        "The skill differs from its upstream base:",
+        "The skill is identical to its upstream base:",
+      ),
+    );
   appendFileSync(join(copy, ".agents/skills/tdd/SKILL.md"), "\nEdited.\n");
   writeFileSync(join(copy, ".agents/skills/grilling/NOTES.md"), "Added.\n");
   appendFileSync(join(copy, "docs/agents/domain.md"), "\nEdited.\n");
@@ -148,7 +153,10 @@ test("missing credits, dropped upstream credits and snapshot sources fail", (t) 
     text.replace("reproduced almost word for word", "reproduced"),
   );
   edit(copy, ".agents/skills/research/CREDITS.md", (text) =>
-    text.replace(/ the skill is identical to its upstream base/, " unchanged"),
+    text.replace(
+      /The skill differs from its upstream base/,
+      "The skill is changed",
+    ),
   );
   edit(copy, "standards.yaml", (text) =>
     text
@@ -239,7 +247,7 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   const next = nextSnapshot(copy);
   const skill = (name, path) => `skills/engineering/${name}/${path}`;
 
-  // An unedited skill takes the upstream change.
+  // A nonconflicting owned skill takes the upstream change.
   edit(next, skill("code-review", "SKILL.md"), (text) =>
     text.replace(/\n/, "\nUpstream addition.\n"),
   );
@@ -261,7 +269,7 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   // Files added and removed upstream, upstream credits, and a setup seed.
   writeFileSync(join(next, skill("tdd", "NEW.md")), "New upstream file.\n");
   rmSync(join(next, skill("prototype", "UI.md")));
-  rmSync(join(next, skill("implement", "agents")), { recursive: true });
+  rmSync(join(next, skill("codebase-design", "agents")), { recursive: true });
   appendFileSync(join(next, skill("pr", "CREDITS.md")), "\nMore credits.\n");
   appendFileSync(
     join(next, "skills/engineering/setup-matt-pocock-skills/domain.md"),
@@ -274,7 +282,7 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
     entries.map(({ path, outcome }) => `${outcome} ${path}`);
   const expected = [
     "merged .agents/skills/code-review/SKILL.md",
-    "removed .agents/skills/implement/agents/openai.yaml",
+    "removed .agents/skills/codebase-design/agents/openai.yaml",
     "conflict .agents/skills/pr/CREDITS.md",
     "removed .agents/skills/prototype/UI.md",
     "added .agents/skills/tdd/NEW.md",
@@ -308,13 +316,25 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   );
   assert.equal(rerun.status, 2, rerun.stderr);
 
-  for (const path of [skill("code-review", "SKILL.md"), skill("tdd", "NEW.md")])
-    assert.deepEqual(
-      readFileSync(
-        join(copy, ".agents/skills", path.split("/").slice(2).join("/")),
-      ),
-      readFileSync(join(next, path)),
-    );
+  const mergedReview = readFileSync(
+    join(copy, ".agents/skills/code-review/SKILL.md"),
+    "utf8",
+  );
+  assert.match(
+    mergedReview,
+    /A prompt or brief naming this skill is its invocation\./,
+  );
+  assert.equal(
+    mergedReview.replace(
+      "\nA prompt or brief naming this skill is its invocation.\n",
+      "",
+    ),
+    readFileSync(join(next, skill("code-review", "SKILL.md")), "utf8"),
+  );
+  assert.deepEqual(
+    readFileSync(join(copy, ".agents/skills/tdd/NEW.md")),
+    readFileSync(join(next, skill("tdd", "NEW.md"))),
+  );
   assert.equal(
     readFileSync(join(copy, "docs/agents/domain.md"), "utf8"),
     readFileSync(
@@ -327,7 +347,7 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   );
   // A removal leaves no empty directory behind.
   assert.equal(
-    existsSync(join(copy, ".agents/skills/implement/agents")),
+    existsSync(join(copy, ".agents/skills/codebase-design/agents")),
     false,
   );
   assert.match(
@@ -353,6 +373,12 @@ test("the command rejects invalid arguments and reports check problems", (t) => 
   assert.match(missing.stderr, /is not a staged snapshot/);
 
   const copy = fixture(t);
+  edit(copy, ".agents/skills/tdd/CREDITS.md", (text) =>
+    text.replace(
+      "The skill differs from its upstream base:",
+      "The skill is identical to its upstream base:",
+    ),
+  );
   appendFileSync(join(copy, ".agents/skills/tdd/SKILL.md"), "\nEdited.\n");
   const child = spawnSync(
     process.execPath,

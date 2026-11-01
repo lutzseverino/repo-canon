@@ -9,6 +9,8 @@ metadata:
     url: "https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md"
 ---
 
+A prompt or brief naming this skill is its invocation.
+
 Use this template for writing the PR body:
 
 ```markdown

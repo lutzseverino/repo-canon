@@ -1,8 +1,9 @@
 ---
 name: implement
 description: "Implement a piece of work based on a spec or set of tickets."
-disable-model-invocation: true
 ---
+
+A prompt or brief naming this skill is its invocation.
 
 Implement the work described by the user in the spec or tickets.
 
