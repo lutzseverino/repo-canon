@@ -19,10 +19,7 @@ import {
 
 const sourceRoot = fileURLToPath(new URL("..", import.meta.url));
 const scriptSourcePath = "scripts/create-productivity-skill-fixtures.mjs";
-const skillsRoot = join(
-  sourceRoot,
-  "vendor/mattpocock-skills/skills/productivity",
-);
+const skillsRoot = join(sourceRoot, ".agents/skills");
 const skillNames = ["grilling", "writing-for-agents"];
 const sharedFiles = [
   "AGENTS.md",

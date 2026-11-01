@@ -15,6 +15,11 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
+  ownedSetupFiles,
+  ownedSkills,
+  snapshotPath,
+} from "../scripts/upstream-bases.mjs";
+import {
   assessments,
   files,
   scopes,
@@ -558,26 +563,64 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         readFileSync(join(root, path)),
         `${profile} installs ${path}`,
       );
-    // The policy's two-axis method and implement's review invocation retain
-    // their complete pinned directories in every profile.
-    for (const name of ["code-review", "implement"]) {
-      const source = join(
-        root,
-        "vendor/mattpocock-skills/skills/engineering",
-        name,
-      );
-      for (const entry of readdirSync(source, {
+    // Every owned skill installs whole from the owned tree. Apart from the
+    // CREDITS.md each gains, a skill identical to its upstream base installs
+    // the base's bytes, as it did when it installed from the snapshot, and
+    // the setup files install their seeds' bytes.
+    for (const { name, source, base } of ownedSkills(root)) {
+      const files = readdirSync(join(root, source), {
         recursive: true,
         withFileTypes: true,
-      }).filter((entry) => entry.isFile())) {
-        const path = relative(source, join(entry.parentPath, entry.name));
-        assert.deepEqual(
-          readFileSync(join(project, ".agents/skills", name, path)),
-          readFileSync(join(source, path)),
-          `${profile} installs ${name}/${path} unchanged`,
+      })
+        .filter((entry) => entry.isFile())
+        .map((entry) =>
+          relative(join(root, source), join(entry.parentPath, entry.name)),
         );
+      assert.deepEqual(
+        readdirSync(join(project, ".agents/skills", name), {
+          recursive: true,
+          withFileTypes: true,
+        })
+          .filter((entry) => entry.isFile())
+          .map((entry) =>
+            relative(
+              join(project, ".agents/skills", name),
+              join(entry.parentPath, entry.name),
+            ),
+          )
+          .sort(),
+        files.sort(),
+        `${profile} installs ${name} whole`,
+      );
+      const unchanged =
+        base &&
+        /identical to its upstream base/.test(
+          readFileSync(join(root, source, "CREDITS.md"), "utf8"),
+        );
+      for (const path of files) {
+        const installed = readFileSync(
+          join(project, ".agents/skills", name, path),
+        );
+        assert.deepEqual(
+          installed,
+          readFileSync(join(root, source, path)),
+          `${profile} installs ${name}/${path} from the owned tree`,
+        );
+        if (unchanged && path !== "CREDITS.md")
+          assert.deepEqual(
+            installed,
+            readFileSync(join(root, snapshotPath, base.path, path)),
+            `${profile} installs ${name}/${path} unchanged from its base`,
+          );
       }
     }
+    for (const { path, base, edits } of ownedSetupFiles(root))
+      if (edits === null)
+        assert.deepEqual(
+          readFileSync(join(project, path)),
+          readFileSync(join(root, snapshotPath, base.path)),
+          `${profile} installs ${path} unchanged from its seed`,
+        );
     assert.equal(
       existsSync(join(project, ".github/factory-review-policy.json")),
       false,

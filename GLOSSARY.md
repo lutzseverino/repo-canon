@@ -54,8 +54,8 @@ directory's purpose and lists its entries.
 _Avoid_: Table of contents, listing page
 
 **Skill setup file**:
-A file the installed skills read as their per-repository configuration,
-installed unchanged from the upstream setup seeds.
+A file the installed skills read as their per-repository configuration, owned
+by Repo Canon and reconciled with an upstream setup seed as its upstream base.
 _Avoid_: Agent docs, tracker guidance
 
 **Implementation contract**:

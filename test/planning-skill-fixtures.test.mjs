@@ -193,11 +193,11 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     );
   }
 
-  // Triage links Repo Canon's fork, the skill adoption installs.
-  assert.equal(
-    manifest.source.linkedSkillDirectories.triage.path,
-    realpathSync(join(root, ".agents/skills/triage")),
-  );
+  // Every skill links its owned copy, the skill adoption installs.
+  for (const [name, { path }] of Object.entries(
+    manifest.source.linkedSkillDirectories,
+  ))
+    assert.equal(path, realpathSync(join(root, ".agents/skills", name)), name);
   const triageWayfinder = manifest.repositories["triage-wayfinder"];
   const triageIntake = readFileSync(
     join(triageWayfinder.path, ".scratch/triage/01-export-receipts.md"),

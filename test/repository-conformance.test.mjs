@@ -5,6 +5,7 @@ import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { basePaths, snapshotIdentity } from "../scripts/upstream-bases.mjs";
 import { decideIssueContract } from "../scripts/validate-issue-contract.mjs";
 import {
   completeAgentBrief,
@@ -728,9 +729,9 @@ function snapshotFiles(directory, prefix = "") {
   });
 }
 
-// Adoption installs only workflow skills, as ADR 0018 decides: 16 pinned
-// upstream skills, Repo Canon's own babysit and orchestrate, and its triage
-// fork (ADR 0021).
+// Adoption installs only workflow skills, as ADR 0018 decides, each an owned
+// skill (ADR 0028): 17 taken from upstream, triage among them (ADR 0021), and
+// babysit and orchestrate, written for Repo Canon.
 const workflowSkills = [
   "babysit",
   "code-review",
@@ -753,16 +754,10 @@ const workflowSkills = [
   "writing-for-agents",
 ];
 
-// The skill setup files are installed from these seeds (ADR 0008), so they stay
-// vendored without the setup skill itself.
+// The skill setup files take these seeds as their upstream bases (ADR 0028),
+// so they stay vendored without the setup skill itself.
 const setupSeeds =
   /^skills\/engineering\/setup-matt-pocock-skills\/(?!SKILL\.md$)[^/]+\.md$/;
-
-function vendoredSkillSources() {
-  return declaredSkills()
-    .filter(({ source }) => source.startsWith("vendor/mattpocock-skills/"))
-    .map(({ source }) => source.slice("vendor/mattpocock-skills/".length));
-}
 
 test("adoption declares exactly the workflow skills and no show-me skill", () => {
   assert.deepEqual(
@@ -853,9 +848,16 @@ test("operations retaining third-party notices also retain every linked license"
   }
 });
 
-test("the vendored Matt Pocock tree holds only declared skills and setup seeds, matching v1.3.1", () => {
+test("the vendored Matt Pocock tree holds only owned skills' upstream bases and setup seeds, matching v1.3.1", () => {
   assert.equal(upstreamManifest.version, "1.3.1");
-  const sources = vendoredSkillSources();
+  assert.deepEqual(snapshotIdentity(root), {
+    repository: "https://github.com/mattpocock/skills",
+    tag: upstreamSnapshot.tag,
+    commit: upstreamSnapshot.commit,
+  });
+  const { skills: sources, setupFiles } = basePaths(root);
+  for (const seed of setupFiles)
+    assert.match(seed, setupSeeds, `${seed} is a setup seed`);
   for (const source of sources) {
     assert.ok(
       upstreamManifest.skills.includes(`./${source}`),
@@ -868,7 +870,13 @@ test("the vendored Matt Pocock tree holds only declared skills and setup seeds, 
       setupSeeds.test(path) ||
       sources.some((source) => path.startsWith(`${source}/`)),
   );
-  assert.deepEqual(snapshotFiles(snapshotRoot).sort(), retained.sort());
+  // UPSTREAM.json is Repo Canon's provenance record, not an upstream file.
+  assert.deepEqual(
+    snapshotFiles(snapshotRoot)
+      .filter((path) => path !== "UPSTREAM.json")
+      .sort(),
+    retained.sort(),
+  );
   for (const path of retained) {
     assert.equal(
       createHash("sha256")
@@ -919,7 +927,7 @@ function routesTo(content, target) {
 
 test("installed skill routes to uninstalled vendored skills are dormant or have contribution overrides", () => {
   const installed = declaredSkills();
-  // A forked skill is installed under its upstream name from its own source.
+  // An owned skill taken from upstream is installed under its upstream name.
   const uninstalled = upstreamManifest.skills
     .map((path) => basename(path))
     .filter((name) => !installed.some((skill) => skill.name === name));
@@ -961,20 +969,25 @@ test("installed skill routes to uninstalled vendored skills are dormant or have 
   }
 });
 
-test("the installed setup files retain the v1.3.1 seed bytes", () => {
+test("the owned setup files install from themselves and keep their v1.3.1 seed bytes", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   for (const [target, seed] of [
     ["docs/agents/domain.md", "domain.md"],
     ["docs/agents/issue-tracker.md", "issue-tracker-github.md"],
     ["docs/agents/triage-labels.md", "triage-labels.md"],
   ]) {
-    const source = `vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/${seed}`;
     assert.ok(
-      declarations.includes(`target: ${target}\n      exact: ${source}`),
+      declarations.includes(`target: ${target}\n      exact: ${target}\n`),
     );
-    assert.deepEqual(
-      readFileSync(join(root, target)),
-      readFileSync(join(root, source)),
+    // Unedited so far: the bytes adopters received before ADR 0028.
+    assert.equal(
+      createHash("sha256")
+        .update(readFileSync(join(root, target)))
+        .digest("hex"),
+      upstreamSnapshot.files[
+        `skills/engineering/setup-matt-pocock-skills/${seed}`
+      ],
+      `${target} is unchanged from ${upstreamSnapshot.tag}`,
     );
   }
 });
@@ -1030,6 +1043,7 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
       recursive: true,
     }).sort(),
     [
+      "CREDITS.md",
       "SKILL.md",
       "body-links.mjs",
       "merge.mjs",
@@ -1045,14 +1059,14 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
   );
 });
 
-test("adoption installs Repo Canon's triage fork, which credits its upstream and leaves the pin", () => {
+test("adoption installs Repo Canon's own triage, which credits its upstream base", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   assert.match(
     declarations,
     /\n {4}skill-triage:\n {6}kind: skill\n {6}name: triage\n {6}source: \.agents\/skills\/triage\n/,
   );
-  const fork = join(root, ".agents/skills/triage");
-  assert.deepEqual(snapshotFiles(fork).sort(), [
+  const owned = join(root, ".agents/skills/triage");
+  assert.deepEqual(snapshotFiles(owned).sort(), [
     "AGENT-BRIEF.md",
     "CREDITS.md",
     "OUT-OF-SCOPE.md",
@@ -1061,14 +1075,14 @@ test("adoption installs Repo Canon's triage fork, which credits its upstream and
     "ready.mjs",
   ]);
   assert.ok(
-    !existsSync(join(snapshotRoot, "skills/engineering/triage")),
-    "the forked skill leaves the vendored snapshot",
+    existsSync(join(snapshotRoot, "skills/engineering/triage/SKILL.md")),
+    "the vendored snapshot keeps triage's upstream base",
   );
-  // The files the fork keeps unchanged still match the pinned upstream bytes.
+  // The files triage keeps unchanged still match the upstream base's bytes.
   for (const path of ["OUT-OF-SCOPE.md", "agents/openai.yaml"])
     assert.equal(
       createHash("sha256")
-        .update(readFileSync(join(fork, path)))
+        .update(readFileSync(join(owned, path)))
         .digest("hex"),
       upstreamSnapshot.files[`skills/engineering/triage/${path}`],
       `${path} is unchanged from ${upstreamSnapshot.tag}`,
@@ -1079,7 +1093,7 @@ test("adoption installs Repo Canon's triage fork, which credits its upstream and
   assert.match(credits, /`\.agents\/skills\/LICENSE\.mattpocock-skills`/);
   assert.match(
     flowedText("THIRD_PARTY_NOTICES.md"),
-    /Repo Canon's `triage` skill is a fork of the collection's `triage` skill and keeps the forked material under the same notice/,
+    /Repo Canon's owned skills taken from the collection, including `triage`, keep that material under the same notice/,
   );
 });
 

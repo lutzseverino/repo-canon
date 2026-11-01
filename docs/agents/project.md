@@ -14,7 +14,10 @@ supported interface and preparation steps.
 Before preparing a release, read the
 [release procedure](../development/release.md).
 
-Preserve pinned upstream skill contents and their notices. The root MIT License
+Keep the vendored upstream snapshot unedited: it is the upstream base of the
+owned skills and setup files, which change only as the
+[upstream compatibility record](../development/upstream-compatibility.md)
+describes. Keep upstream notices and each owned skill's `CREDITS.md`. The root MIT License
 covers Repo Canon's original material; third-party material retains its own
 licenses and notices, which the
 [third-party notices](../../THIRD_PARTY_NOTICES.md) identify.
