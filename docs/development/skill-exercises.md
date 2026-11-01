@@ -68,20 +68,33 @@ node scripts/create-engineering-skill-fixtures.mjs
 pnpm run test:engineering-skill-fixtures
 ```
 
-The builder prints its JSON manifest. Five repositories exercise seven
+The builder prints its JSON manifest. Six repositories exercise seven
 engineering skills: `review` for `code-review`; `architecture` for
 `codebase-design` and `improve-codebase-architecture`; `debugging` for
 `diagnosing-bugs`; `modeling-research` for `domain-modeling` and `research`;
-and `tdd`. The scenarios supply a domain glossary,
+`tdd`; and `standalone` for `code-review` without adoption. The other
+scenarios supply a domain glossary,
 applicable ADRs with their indexes, contributor commands, source, tests, requests, and
 specifications.
+
+The `standalone` repository has no Repo Canon adoption: no shared guidance,
+`CONTRIBUTING.md`, skill setup files, glossary, rules or Repository Standards
+state. Its `code-review` is a copy of the owned skill, as an
+[installation from a release tag](../usage/install-skills.md) leaves it,
+rather than a link. Its last commit totals posted entries and leaves pending
+ones at zero, against `specs/summarize-ledger.md`. Review it since the
+manifest's `fixedPoint`. The outcome shows the skill following its Reads
+section: the Spec axis finds the spec under `specs/`, the Standards axis
+carries only the smell baseline, and with `docs/agents/issue-tracker.md`
+missing, the review looks for the spec in its other places without blocking.
 
 The research exercise needs web search, such as Codex CLI's `--search` option.
 Opening the architecture report needs a browser; in a headless harness, render
 it with a local headless browser and inspect the result.
 
 The test verifies the shared and scenario guidance, domain and development
-context, ADR indexes, skill links and digests, the review specification, a
+context, ADR indexes, skill links and digests, the review specification, the
+standalone repository's absent adoption files and copied skill, a
 build from a Repo Canon checkout without an `origin` remote, and an ordinary later
 commit under a host that requires signing with an unusable program.
 

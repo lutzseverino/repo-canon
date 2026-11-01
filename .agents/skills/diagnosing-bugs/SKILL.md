@@ -138,3 +138,11 @@ Required before declaring done:
 - [ ] All `[DEBUG-...]` instrumentation removed (`grep` the prefix)
 - [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message, so the next debugger learns
+
+## Reads
+
+Paths are relative to the repository root.
+
+- `GLOSSARY.md` and the ADRs in `docs/adr/`: the project's domain language
+  and its decisions in the area you're touching. When either is missing,
+  explore without it.

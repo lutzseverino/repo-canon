@@ -16,6 +16,9 @@ describes running it.
   treats a Project's development tools, remote setup prerequisites and
   deferral, linking the `orchestrate` skill for sessions outside a checkout,
   and recommended personal skills.
+- [Install a skill without adoption](install-skills.md): installing a
+  Repo Canon skill from a release tag through the skills CLI, whether the listing
+  pins a release, and what a skill needs on its own.
 - [Release versioning](versioning.md): version increments, breaking standards
   changes, and selecting an adoptable release.
 - [Recommended stacks](stacks.md): a stack is a named set of development tools;

@@ -186,3 +186,10 @@ Name the change's relevant limits here: what it leaves undone, unverified, or un
 ### Related issue
 
 Link the issue the change works on. Use a closing reference, such as `Closes #123`, when the PR finishes the issue, and a nonclosing one, such as `Part of #123`, when it does only part. For work without an issue, write `Direct change:` followed by the reason instead.
+
+## Reads
+
+Paths are relative to the repository root.
+
+- `GLOSSARY.md`: the user's domain language. When it is missing, use the
+  words the code and its issues use.

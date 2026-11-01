@@ -76,3 +76,22 @@ Only offer to create an ADR when all three are true:
 3. **The result of a real trade-off**: there were genuine alternatives and you picked one for specific reasons
 
 If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](./ADR-FORMAT.md).
+
+## Reads
+
+Paths are relative to the repository root.
+
+- `GLOSSARY.md`, or the root `GLOSSARY-MAP.md` that points to each context's
+  own `GLOSSARY.md`: the domain language. When `GLOSSARY-MAP.md` is missing,
+  the repository has a single context; when its `GLOSSARY.md` is missing,
+  create it once the first term is resolved.
+- `docs/adr/`, holding `docs/adr/<NNNN>-<slug>.md` records, and each context's
+  own `docs/adr/`: the decisions. When it is missing, create it when the first
+  ADR is needed.
+- `<directory>/README.md`, such as `docs/adr/README.md`: a documentation
+  directory's index. When the repository's documentation directories are
+  missing one, keep no ADR index; when only `docs/adr/README.md` is missing,
+  create it with `docs/adr/`.
+- `CONTRIBUTING.md`: how the repository delivers glossary and ADR edits, such
+  as one pull request. When it is missing, leave the edits on your own
+  branch.

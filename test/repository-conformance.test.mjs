@@ -1209,7 +1209,19 @@ test("adoption installs Repo Canon's own triage, which credits its upstream base
   const credits = flowedText(".agents/skills/triage/CREDITS.md");
   assert.ok(credits.includes(upstreamSnapshot.commit));
   assert.match(credits, /tag `v1\.3\.1`/);
-  assert.match(credits, /`\.agents\/skills\/LICENSE\.mattpocock-skills`/);
+  // A standalone copy carries the notice that adoption installs beside it.
+  assert.match(
+    credits,
+    /whose notice follows at the end of this file; adoption also installs it beside the skills/,
+  );
+  assert.ok(
+    readFileSync(
+      join(root, ".agents/skills/triage/CREDITS.md"),
+      "utf8",
+    ).includes(
+      readFileSync(join(root, "vendor/mattpocock-skills/LICENSE"), "utf8"),
+    ),
+  );
   assert.match(
     flowedText("THIRD_PARTY_NOTICES.md"),
     /Repo Canon's owned skills taken from the collection, including `triage`, keep that material under the same notice/,
@@ -2296,7 +2308,7 @@ test("both babysit exit-1 instructions defer permission refusals to Credentials"
   for (const instruction of instructions) {
     assert.match(
       instruction,
-      /follow \[Credentials\]\(\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#credentials\) for a permission refusal; otherwise/,
+      /follow `CONTRIBUTING\.md`'s Credentials section for a permission refusal; otherwise/,
     );
     assert.match(
       instruction,

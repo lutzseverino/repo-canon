@@ -181,6 +181,16 @@ test("missing credits, dropped upstream credits and snapshot sources fail", (t) 
   ]);
 });
 
+test("a skill taken from upstream without its license notice fails", (t) => {
+  const copy = fixture(t);
+  edit(copy, ".agents/skills/grilling/CREDITS.md", (text) =>
+    text.replace("Copyright (c) 2026 Matt Pocock", "Copyright Matt Pocock"),
+  );
+  assert.deepEqual(checkUpstreamBases(copy), [
+    `grilling (.agents/skills/grilling/CREDITS.md) must reproduce the upstream license notice from ${snapshotPath}/LICENSE`,
+  ]);
+});
+
 test("malformed records and declarations fail instead of passing unchecked", (t) => {
   const copy = fixture(t);
   edit(copy, "setup-file-bases.json", (text) => {
@@ -248,7 +258,7 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   const skill = (name, path) => `skills/engineering/${name}/${path}`;
 
   // A nonconflicting owned skill takes the upstream change.
-  edit(next, skill("diagnosing-bugs", "SKILL.md"), (text) =>
+  edit(next, skill("grill-with-docs", "SKILL.md"), (text) =>
     text.replace(/\n/, "\nUpstream addition.\n"),
   );
   // A line Repo Canon rewrote in triage, changed upstream too, conflicts.
@@ -282,7 +292,7 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
     entries.map(({ path, outcome }) => `${outcome} ${path}`);
   const expected = [
     "removed .agents/skills/codebase-design/agents/openai.yaml",
-    "merged .agents/skills/diagnosing-bugs/SKILL.md",
+    "merged .agents/skills/grill-with-docs/SKILL.md",
     "conflict .agents/skills/pr/CREDITS.md",
     "removed .agents/skills/prototype/UI.md",
     "added .agents/skills/tdd/NEW.md",
@@ -317,7 +327,7 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   assert.equal(rerun.status, 2, rerun.stderr);
 
   const mergedSkill = readFileSync(
-    join(copy, ".agents/skills/diagnosing-bugs/SKILL.md"),
+    join(copy, ".agents/skills/grill-with-docs/SKILL.md"),
     "utf8",
   );
   assert.match(
@@ -329,7 +339,7 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
       "\nA prompt or brief naming this skill is its invocation.\n",
       "",
     ),
-    readFileSync(join(next, skill("diagnosing-bugs", "SKILL.md")), "utf8"),
+    readFileSync(join(next, skill("grill-with-docs", "SKILL.md")), "utf8"),
   );
   assert.deepEqual(
     readFileSync(join(copy, ".agents/skills/tdd/NEW.md")),

@@ -33,11 +33,15 @@ of the skill except `CREDITS.md`. When the base has its own `CREDITS.md`, as
 `pr`'s does for the HumanLayer material, the owned `CREDITS.md` keeps that
 text word for word. All 17 skills taken from upstream differ from their bases:
 each states that a prompt or brief naming it is its invocation. `implement` also allows model
-invocation in both harness formats. `codebase-design`, `diagnosing-bugs`,
-`grill-with-docs`, `prototype` and `tdd` differ in nothing else; the other
-twelve, including `triage` with its workflow changes, differ further as their
-`CREDITS.md` files describe. `pr` adds the screenshot storage and retention
-contract.
+invocation in both harness formats. `grill-with-docs` and `prototype` differ in
+nothing else; the other fifteen, including `triage` with its workflow changes,
+differ further as their `CREDITS.md` files describe. `pr` adds the screenshot
+storage and retention contract. Fourteen add a Reads section, which lists the
+repository files the skill reads and what it does when each is missing. Each
+reproduces the upstream MIT License notice from
+`vendor/mattpocock-skills/LICENSE`, and `pr`'s keeps HumanLayer's too, so a
+skill installed without adoption still carries the notices that adoption
+installs beside the skills.
 
 The skill setup files `docs/agents/domain.md`, `docs/agents/issue-tracker.md`
 and `docs/agents/triage-labels.md` are owned files installed from themselves.
@@ -54,6 +58,7 @@ provenance record, not an upstream file.
 skill installs from anywhere but the owned tree, a setup file installs from
 anywhere but itself, an owned skill lacks its `CREDITS.md`, a recorded base
 differs from the snapshot's `UPSTREAM.json` or is missing from the snapshot, a
+skill taken from upstream does not reproduce the upstream license notice, a
 file identical to its base claims edits, a file that differs claims none, a
 setup file's `edits` is neither `null` nor a summary, a skill declaration does
 not read as `kind`, `name` and `source` in that order, or upstream's own

@@ -132,10 +132,9 @@ repeated.
   `tdd`, `to-spec`, `to-tickets`, `triage`, `wayfinder`, and
   `writing-for-agents`, each an owned skill whose upstream base is that
   release. Each states that a prompt or brief naming it is its invocation,
-  and `implement` also allows model invocation; `codebase-design`,
-  `diagnosing-bugs`, `grill-with-docs`, `prototype` and `tdd` differ in
-  nothing else, and the other twelve differ further as their `CREDITS.md`
-  files describe. `pr` adds the screenshot storage and retention contract.
+  and `implement` also allows model invocation; `grill-with-docs` and
+  `prototype` differ in nothing else, and the other fifteen differ further as
+  their `CREDITS.md` files describe. `pr` adds the screenshot storage and retention contract.
   `prototype` stays because `wayfinder` calls it. The
   vendored tree holds only those skills' bases and the setup seeds that the
   skill setup files take as theirs; `implement-spec` is not vendored, because every
@@ -152,8 +151,15 @@ repeated.
   unedited as the base, and each upstream release is one reconciliation by a
   three-way merge, following the
   [upstream-compatibility procedure](docs/development/upstream-compatibility.md#upstream-reconciliation);
-  adopting contributors never update it independently. Requirements still
-  live in `CONTRIBUTING.md` and the rules files, as
+  adopting contributors never update it independently. Each owned skill also
+  works without adoption, as the owner decided on 2026-10-31 in
+  [#787](https://github.com/lutzseverino/repo-canon/issues/787): it names only
+  its own files and those its `SKILL.md`'s Reads section lists, each with what
+  the skill does when the file is missing, and names no agent host
+  application; `scripts/owned-skill-reads.mjs` enforces both. Its `CREDITS.md`
+  carries the upstream license notices, and each release publishes the skills
+  at `.agents/skills/<name>` at its tag. Requirements still live in
+  `CONTRIBUTING.md` and the rules files, as
   [ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md) decides.
 - Triage routes each request by where its uncertainty lies, as
   [ADR 0021](docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md)
