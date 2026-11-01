@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { isDeepStrictEqual } from "node:util";
 import test from "node:test";
 import {
-  decideIssueContract,
+  decideIssueContract as decide,
+  issueContractResult,
   readinessTriggerUnrecorded,
 } from "../scripts/validate-issue-contract.mjs";
 import {
@@ -32,6 +34,7 @@ import {
   swapEvents,
   swapRun,
   ticketBody,
+  withoutEvaluatedEvent,
 } from "./helpers/issue-contracts.mjs";
 
 function withNoticeTimes(comments) {
@@ -75,14 +78,75 @@ function snapshotFor({
   };
 }
 
+// The result each decision replaced, so an expectation of no feedback change
+// accepts the rewrite of an unchanged decision that every evaluation writes.
+const previousResults = new WeakMap();
+/** @param {any} snapshot */
+function decideIssueContract(snapshot) {
+  const decision = decide(snapshot);
+  previousResults.set(
+    decision,
+    issueContractResult(snapshot.comments ?? []).comment?.body ?? null,
+  );
+  return decision;
+}
+
+// The decision a result records: its notice text and the state fields an
+// earlier unversioned line also recorded. The evaluated event and the
+// revision's first publication time change on a rewrite of the same decision.
+function recordedDecision(body) {
+  const state = issueContractResult([{ body, user: bot }]).state;
+  if (!state) return { body };
+  const reviewed =
+    state.status === "approved"
+      ? { reviewEventId: state.reviewEventId }
+      : state.status === "awaiting-review"
+        ? { observedEventId: state.observedEventId ?? null }
+        : {};
+  return {
+    notice: body.slice(
+      body.indexOf(" -->\n", body.indexOf("issue-contract-state")) + 5,
+    ),
+    status: state.status,
+    revision: state.revision,
+    label: state.label,
+    reviewer: state.reviewer,
+    sourceInvalidation: state.sourceInvalidation ?? null,
+    rejectionReason: state.rejectionReason ?? null,
+    rejectedCreationLabel: state.rejectedCreationLabel ?? null,
+    ...reviewed,
+  };
+}
+
+// Whether a decision's feedback write only records again the decision the
+// existing result holds.
+function rewritesSameDecision(decision) {
+  const previous = previousResults.get(decision);
+  return (
+    !decision.feedback ||
+    (previous != null &&
+      decision.feedback.commentId != null &&
+      isDeepStrictEqual(
+        recordedDecision(previous),
+        recordedDecision(decision.feedback.body),
+      ))
+  );
+}
+
 // Asserts the complete decision: exit code, label changes, and feedback write
-// are exact; message and feedback patterns are checked when given.
+// are exact; message and feedback patterns are checked when given. Without a
+// feedback expectation, the decision writes no result or rewrites the same
+// decision.
 function assertDecision(decision, expected) {
   assert.equal(decision.exitCode, expected.exitCode, decision.message);
   assert.deepEqual(decision.removeLabels, expected.remove ?? []);
   assert.deepEqual(decision.addLabels, expected.add ?? []);
   const feedback = expected.feedback ?? null;
-  if (feedback === null) assert.equal(decision.feedback, null);
+  if (feedback === null)
+    assert.ok(
+      rewritesSameDecision(decision),
+      `Unexpected feedback change: ${decision.feedback?.body}`,
+    );
   else
     assert.equal(
       decision.feedback?.commentId,
@@ -99,8 +163,10 @@ function assertDecision(decision, expected) {
 }
 
 // Unless `settles` is false, each snapshot row also decides again on the state
-// its own writes produced, from a comment edit, and that decision writes
-// nothing.
+// its own writes produced, from a comment edit, and that decision changes no
+// label and records the same decision again. A row whose next run publishes
+// the outcome its own label writes leave names that run's `settled`
+// expectation, and the run after it settles.
 function decisionTable(title, rows, { settles = true } = {}) {
   test(title, async (context) => {
     for (const row of rows) {
@@ -109,7 +175,12 @@ function decisionTable(title, rows, { settles = true } = {}) {
         const decision = decideIssueContract(snapshotFor(row.snapshot));
         assertDecision(decision, row.expected);
         await row.check?.(decision);
-        if (settles) assertSettled(row.snapshot, decision);
+        if (!settles) return;
+        if (!row.settled) return assertSettled(row.snapshot, decision);
+        const next = afterWrites(row.snapshot, decision);
+        const outcome = decideIssueContract(snapshotFor(next));
+        assertDecision(outcome, row.settled);
+        assertSettled(next, outcome);
       });
     }
   });
@@ -192,9 +263,9 @@ function assertSettled(snapshot, decision) {
     {
       removeLabels: again.removeLabels,
       addLabels: again.addLabels,
-      feedback: again.feedback,
+      sameDecision: rewritesSameDecision(again),
     },
-    { removeLabels: [], addLabels: [], feedback: null },
+    { removeLabels: [], addLabels: [], sameDecision: true },
     again.message,
   );
 }
@@ -326,7 +397,7 @@ test("current recorded approvals report unavailable or revoked reviewer authorit
             remove: ["needs-triage"],
             feedback: 13,
             feedbackBody: /reviewed by @maintainer/,
-            notFeedbackBody: /rejectionReason/,
+            notFeedbackBody: /"rejectionReason":"/,
           });
         });
       }
@@ -1206,7 +1277,7 @@ decisionTable("the feedback comment is maintained once", [
         },
       ],
     },
-    expected: { exitCode: 1, feedback: null },
+    expected: { exitCode: 1, feedback: 9 },
   },
   {
     name: "a correction updates existing feedback without restoring readiness",
@@ -2118,7 +2189,10 @@ decisionTable(
         const [labeledFirst, openedFirst] = runOrders.map((order) =>
           decideCreationRuns(order, options),
         );
-        assert.deepEqual(labeledFirst, openedFirst);
+        assert.deepEqual(
+          withoutEvaluatedEvent(labeledFirst),
+          withoutEvaluatedEvent(openedFirst),
+        );
         check(labeledFirst);
       },
     })),
@@ -3095,7 +3169,7 @@ decisionTable(
         });
         assert.doesNotMatch(
           decision.feedback.body,
-          /not authorized|last readiness attempt was rejected|rejectionReason/,
+          /not authorized|last readiness attempt was rejected|"rejectionReason":"/,
         );
       },
     },
@@ -3182,7 +3256,7 @@ decisionTable(
         });
         assert.doesNotMatch(
           decision.feedback.body,
-          /not authorized|last readiness attempt was rejected|rejectionReason/,
+          /not authorized|last readiness attempt was rejected|"rejectionReason":"/,
         );
       },
     })),
@@ -3203,7 +3277,10 @@ decisionTable(
         const unrelated = decideIssueContract(snapshotFor(snapshot));
         snapshot.event = event;
         const triggered = decideIssueContract(snapshotFor(snapshot));
-        assert.deepEqual(triggered, unrelated);
+        assert.deepEqual(
+          withoutEvaluatedEvent(triggered),
+          withoutEvaluatedEvent(unrelated),
+        );
         assertDecision(triggered, { exitCode: 0 });
         assert.match(snapshot.comments[0].body, notAuthorized);
       },
@@ -3411,6 +3488,13 @@ decisionTable("workflow states are ordered against the review", [
       };
     })(),
     expected: supersededBy("wontfix"),
+    // With readiness gone, the next run publishes the `wontfix` outcome.
+    settled: {
+      exitCode: 0,
+      feedback: 13,
+      message: /valid triaged wontfix request/i,
+      feedbackBody: /## Issue contract not required/,
+    },
   },
   ...["needs-info", "ready-for-agent"].map((trigger) => {
     const state = "needs-info";
@@ -3785,7 +3869,10 @@ decisionTable(
           decideIssueContract(snapshotFor(firstRound(event))),
         );
         for (const decision of decisions)
-          assert.deepEqual(decision, decisions[0]);
+          assert.deepEqual(
+            withoutEvaluatedEvent(decision),
+            withoutEvaluatedEvent(decisions[0]),
+          );
         for (const [, event] of triggers())
           assertDecision(
             decideIssueContract(
@@ -3915,7 +4002,12 @@ decisionTable(
         labels: ["bug", "needs-info", "wontfix"],
         events: [triagedUnlabel(3, "needs-triage", "2026-10-13T10:00:00Z")],
       }),
-      expected: { exitCode: 0, message: /valid triaged wontfix request/i },
+      expected: {
+        exitCode: 0,
+        feedback: 13,
+        message: /valid triaged wontfix request/i,
+        feedbackBody: /"status":"no-contract".*## Issue contract not required/s,
+      },
     },
     {
       name: "two unrecorded states applied after an approved review both supersede it",
@@ -3944,7 +4036,15 @@ decisionTable(
           triagedLabel(5, later, "2026-10-13T10:00:02Z"),
         ],
       }),
-      expected: { exitCode: 0, remove: [earlier], message },
+      expected: {
+        exitCode: 0,
+        remove: [earlier],
+        message,
+        // A wontfix outcome replaces the Brief's revision notice.
+        ...(later === "wontfix"
+          ? { feedback: 13, feedbackBody: /## Issue contract not required/ }
+          : {}),
+      },
     })),
     .../** @type {[string, string, object, string, RegExp][]} */ ([
       [
@@ -3990,7 +4090,7 @@ decisionTable(
       })),
     ),
     {
-      name: "a structural failure keeps the recorded review, which a correction and readiness then use",
+      name: "a structural failure's result approves nothing, so its correction is published again before readiness",
       run: () => {
         const failing = triagedSnapshot({
           labels: ["bug", "enhancement", "needs-triage"],
@@ -4003,29 +4103,85 @@ decisionTable(
           message: /Apply exactly one category label/,
           feedbackBody: /needs attention/,
         });
-        assert.deepEqual(
-          recordedState(failure.feedback.body),
-          recordedState(briefNotice.body),
-        );
+        assert.deepEqual(recordedState(failure.feedback.body), {
+          status: "needs-attention",
+          revision: null,
+          label: null,
+          reviewer: null,
+          observedEventId: null,
+          sourceInvalidation: null,
+        });
         const failed = afterWrites(failing, failure);
-        const corrected = {
+        const fixedLabels = [
+          ...failed.issueEvents,
+          triagedUnlabel(4, "enhancement", "2026-10-13T19:00:00Z"),
+        ];
+        // Readiness applied with the correction follows no published
+        // revision, so it is rejected.
+        const early = decideIssueContract(
+          snapshotFor({
+            ...failed,
+            issue: {
+              ...failed.issue,
+              labels: [
+                { name: "bug" },
+                { name: "needs-triage" },
+                { name: "ready-for-agent" },
+              ],
+            },
+            issueEvents: [
+              ...fixedLabels,
+              triagedLabel(5, "ready-for-agent", "2026-10-13T19:00:01Z"),
+            ],
+            event: labeledBy("maintainer"),
+          }),
+        );
+        assertDecision(early, {
+          exitCode: 1,
+          remove: ["ready-for-agent"],
+          feedback: 13,
+          message:
+            /Wait for the validator to publish the exact contract revision/,
+        });
+        // The correction alone publishes the revision, and readiness after
+        // that notice is approved.
+        const correction = {
           ...failed,
           issue: {
             ...failed.issue,
-            labels: [
-              { name: "bug" },
-              { name: "needs-triage" },
-              { name: "ready-for-agent" },
-            ],
+            labels: [{ name: "bug" }, { name: "needs-triage" }],
           },
-          issueEvents: [
-            ...failed.issueEvents,
-            triagedUnlabel(4, "enhancement", "2026-10-13T19:00:00Z"),
-            triagedLabel(5, "ready-for-agent", "2026-10-13T19:00:01Z"),
-          ],
-          event: labeledBy("maintainer"),
+          issueEvents: fixedLabels,
+          event: {
+            ...labeledBy("maintainer", "enhancement"),
+            action: "unlabeled",
+          },
         };
-        const approval = decideIssueContract(snapshotFor(corrected));
+        const notice = decideIssueContract(snapshotFor(correction));
+        assertDecision(notice, {
+          exitCode: 0,
+          feedback: 13,
+          message: /awaiting authorized review/,
+        });
+        assert.equal(
+          recordedState(notice.feedback.body).revision,
+          briefRevision(triagedBrief),
+        );
+        const published = afterWrites(correction, notice);
+        const approval = decideIssueContract(
+          snapshotFor({
+            ...published,
+            issue: {
+              ...published.issue,
+              labels: [...published.issue.labels, { name: "ready-for-agent" }],
+            },
+            issueEvents: [
+              ...published.issueEvents,
+              triagedLabel(5, "ready-for-agent", "2026-10-13T19:30:00Z"),
+            ],
+            event: labeledBy("maintainer"),
+          }),
+        );
         assertDecision(approval, {
           ...approvedAtBrief,
           remove: ["needs-triage"],

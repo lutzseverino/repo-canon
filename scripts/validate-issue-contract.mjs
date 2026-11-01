@@ -107,7 +107,11 @@ function normalizeMarkdown(value) {
 
 const feedbackMarker = "<!-- repo-canon:issue-contract-feedback -->";
 const feedbackStatePrefix = "<!-- repo-canon:issue-contract-state ";
+// The published result format. Any change to the state line's fields or their
+// meaning is a new version.
+export const resultFormat = "repo-canon/issue-contract-state/v1";
 const needsAttentionHeading = "## Issue contract needs attention";
+const structureCorrectedHeading = "## Issue contract structure corrected";
 const readyLabels = new Set(["ready-for-agent", "ready-for-human"]);
 const workflowLabels = new Set([
   "needs-triage",
@@ -175,7 +179,9 @@ const wayfinderChildFields = new Set(["parent", "question"]);
 // - `bodyRevision`: the direct body's `{ id, lastEditedAt }` edit revision;
 // - `issueEvents`: the complete authoritative issue-event timeline;
 // - `permissions`: each looked-up login's repository `{ role }`, `null` when
-//   GitHub reports none, with an `error` when the lookup failed.
+//   GitHub reports none, with an `error` when the lookup failed;
+// - `evaluatedAt`: the second the adapter decided in, which the result
+//   records.
 // The timeline is read whenever the issue uses workflow state, permissions only
 // for a structurally complete contract, and `bodyRevision` only for a
 // direct-body contract. Permissions cover every actor on a readiness-label
@@ -186,8 +192,11 @@ const wayfinderChildFields = new Set(["parent", "question"]);
 // what that state cannot show: a deleted Agent Brief, the creation review's
 // facts (the labels the issue was opened with, and whether a `labeled` run's
 // sender is the opener), and a readiness label the timeline has not recorded.
+// The result it writes records that event as the one it evaluated.
 // Returns the labels to remove and add, the feedback comment write (`null` for
 // none, a `null` `commentId` to create it), and the exit code with its message.
+// An open issue's evaluation always writes its result, unless the issue carries
+// no implementation contract and has never had a result.
 export function decideIssueContract(snapshot) {
   if (snapshot.issue.state === "closed") {
     const removeLabels = (snapshot.issue.labels ?? [])
@@ -210,11 +219,20 @@ export function decideIssueContract(snapshot) {
   const { comments } = snapshot;
   const result = assessStructure(snapshot);
   const previousFeedback = findFeedback(comments);
+  const recorded = feedbackState(previousFeedback?.body);
   const timeline = result.usesWorkflowState ? issueTimeline(snapshot) : null;
   const stateWrites = (kept = null) =>
     timeline
       ? settledStates(result.labels, timeline, kept)
       : { removeLabels: readinessLabels(result.labels), addLabels: [] };
+  // What every result written by this evaluation records about it.
+  const evaluation = {
+    kind: result.kind,
+    event: evaluatedEvent(snapshot.event),
+    evaluatedAt: snapshot.evaluatedAt ?? null,
+    observedEventId: eventId(timeline?.latestObservedTransition()),
+    sourceInvalidation: recorded?.sourceInvalidation ?? null,
+  };
 
   if (!result.valid) {
     return issueDecision({
@@ -223,20 +241,25 @@ export function decideIssueContract(snapshot) {
       ...stateWrites(),
       feedback: feedbackChange(
         comments,
-        invalidFeedback(result.errors, previousFeedback),
+        invalidFeedback(result.errors, evaluation),
       ),
     });
   }
 
   if (!result.contract) {
+    // An issue without an implementation contract gets a result only once it
+    // has had one, so intake forms and planning issues stay free of notices.
     return issueDecision({
       exitCode: 0,
       message: `Valid ${result.kind}.`,
       ...stateWrites(),
-      feedback: previousFeedback?.body.includes(needsAttentionHeading)
+      feedback: previousFeedback
         ? feedbackChange(
             comments,
-            resolvedFeedback(result.kind, previousFeedback),
+            noContractFeedback(
+              evaluation,
+              recorded?.status === "needs-attention",
+            ),
           )
         : null,
     });
@@ -252,6 +275,14 @@ export function decideIssueContract(snapshot) {
     revision,
     openingEligible: contract.openingEligible,
   });
+  const published = {
+    ...evaluation,
+    revision,
+    source: contract.source,
+    publishedAt: revisionPublishedAt(recorded, previousFeedback, revision),
+    sourceInvalidation:
+      readiness.sourceInvalidation ?? evaluation.sourceInvalidation,
+  };
   if (!readiness.valid) {
     return issueDecision({
       exitCode: 1,
@@ -259,16 +290,10 @@ export function decideIssueContract(snapshot) {
       ...stateWrites(),
       feedback: feedbackChange(
         comments,
-        awaitingReviewFeedback(
-          result.kind,
-          revision,
-          readiness.observedEventId,
-          readiness.sourceInvalidation,
-          {
-            reason: readiness.error,
-            rejectedCreationLabel: readiness.rejectedCreationLabel,
-          },
-        ),
+        awaitingReviewFeedback(published, {
+          reason: readiness.error,
+          rejectedCreationLabel: readiness.rejectedCreationLabel,
+        }),
       ),
     });
   }
@@ -286,18 +311,12 @@ export function decideIssueContract(snapshot) {
       ...stateWrites(supersedingStates),
       feedback: feedbackChange(
         comments,
-        awaitingReviewFeedback(
-          result.kind,
-          revision,
-          readiness.observedEventId,
-          readiness.sourceInvalidation,
-          {
-            reason:
-              supersedingStates.length === 1
-                ? `${superseding} was applied after the review and supersedes its readiness.`
-                : `${superseding} were applied after the review and supersede its readiness.`,
-          },
-        ),
+        awaitingReviewFeedback(published, {
+          reason:
+            supersedingStates.length === 1
+              ? `${superseding} was applied after the review and supersedes its readiness.`
+              : `${superseding} were applied after the review and supersede its readiness.`,
+        }),
       ),
     });
   }
@@ -309,26 +328,50 @@ export function decideIssueContract(snapshot) {
     feedback: feedbackChange(
       comments,
       readiness.approved
-        ? approvedFeedback(
-            result.kind,
-            revision,
-            readiness.label,
-            readiness.reviewer,
-            readiness.reviewEventId,
-            readiness.sourceInvalidation,
-          )
-        : awaitingReviewFeedback(
-            result.kind,
-            revision,
-            readiness.observedEventId,
-            readiness.sourceInvalidation,
-            {
-              reason: readiness.rejectionReason,
-              rejectedCreationLabel: readiness.rejectedCreationLabel,
-            },
-          ),
+        ? approvedFeedback(published, {
+            label: readiness.label,
+            reviewer: readiness.reviewer,
+            reviewEventId: readiness.reviewEventId,
+          })
+        : awaitingReviewFeedback(published, {
+            reason: readiness.rejectionReason,
+            rejectedCreationLabel: readiness.rejectedCreationLabel,
+          }),
     ),
   });
+}
+
+// The event this evaluation decided, as far as its facts identify it.
+function evaluatedEvent(event) {
+  return {
+    kind: event?.kind ?? null,
+    actor: event?.actor?.login ?? null,
+    label: event?.label ?? null,
+    commentId: event?.comment?.id == null ? null : String(event.comment.id),
+  };
+}
+
+// A timeline event's ID as the result records it.
+function eventId(event) {
+  return event?.id == null ? null : String(event.id);
+}
+
+// When the validator first published this revision: carried from a previous
+// result for the same complete revision, or that result's own write time when
+// it was the first. A result that first publishes its revision records `null`,
+// since its own write time is not known before it is written.
+function revisionPublishedAt(recorded, previousFeedback, revision) {
+  if (
+    !["approved", "awaiting-review"].includes(recorded?.status) ||
+    recorded.revision !== revision
+  )
+    return null;
+  return firstPublication(recorded, previousFeedback);
+}
+
+// When the previous result's revision was first published.
+function firstPublication(recorded, previousFeedback) {
+  return recorded.publishedAt ?? previousFeedback?.updated_at ?? null;
 }
 
 // Whether the snapshot's run is a human readiness trigger the timeline has not
@@ -820,8 +863,11 @@ function agentBriefHeading(body) {
   return findMarkdownHeadings(body, agentBriefHeadingNames)[0] ?? null;
 }
 
+// The contract's revision, and the source the published result names: the
+// Agent Brief comment's ID or the issue body, with its last edit time.
 function contractRevision({ bodyRevision }, result) {
   let source;
+  let publishedSource;
   let openingEligible = false;
   if (result.contract.type === "issue-body") {
     if (!bodyRevision)
@@ -833,6 +879,7 @@ function contractRevision({ bodyRevision }, result) {
       id: bodyRevision.id,
       editedAt: bodyRevision.lastEditedAt ?? null,
     };
+    publishedSource = { type: "issue-body", editedAt: source.editedAt };
     openingEligible = bodyRevision.lastEditedAt == null;
   } else {
     const comment = result.contract.comment;
@@ -840,6 +887,11 @@ function contractRevision({ bodyRevision }, result) {
       type: "comment",
       id: String(comment.node_id ?? comment.id),
       editedAt: comment.updated_at ?? null,
+    };
+    publishedSource = {
+      type: "comment",
+      id: String(comment.id),
+      editedAt: source.editedAt,
     };
   }
   const value = JSON.stringify({
@@ -850,6 +902,7 @@ function contractRevision({ bodyRevision }, result) {
   });
   return {
     revision: `sha256:${createHash("sha256").update(value).digest("hex")}`,
+    source: publishedSource,
     openingEligible,
   };
 }
@@ -1024,7 +1077,10 @@ function readinessGrant(
   const followsAwaitingRevision =
     recorded?.status === "awaiting-review" &&
     recorded.revision === revision &&
-    timeline.noticePrecedes(previousFeedback, labelEvent) &&
+    timeline.noticePrecedes(
+      firstPublication(recorded, previousFeedback),
+      labelEvent,
+    ) &&
     timeline.follows(reviewEventId, recorded.observedEventId);
   const followsRevisionNotice =
     followsApprovedRevision || followsAwaitingRevision;
@@ -1153,14 +1209,48 @@ function reviewerLogins({ event, comments, issueEvents }) {
   return [...logins];
 }
 
+// The validator's latest result on an issue: the latest marked comment by
+// `github-actions[bot]`, with its state, `null` when the line is missing,
+// malformed or of an unknown format. Comments carry their author as `user`, as
+// GitHub's REST API names it, or as `author`, as Postern's port does. The
+// `triage` readiness command reads results through this function.
+export function issueContractResult(comments) {
+  const comment = findFeedback(comments ?? []) ?? null;
+  return { comment, state: feedbackState(comment?.body) };
+}
+
+// A result's state. A line without `format` is the earlier unversioned record,
+// which the next evaluation replaces. It is read in today's terms: under a
+// "needs attention" or "structure corrected" notice it carried an earlier
+// state forward, which approves nothing.
 function feedbackState(body) {
   const line = feedbackStateLine(body);
   if (!line) return null;
+  let state;
   try {
-    return JSON.parse(line.slice(feedbackStatePrefix.length, -4));
+    state = JSON.parse(line.slice(feedbackStatePrefix.length, -4));
   } catch {
     return null;
   }
+  if (!state || typeof state !== "object" || Array.isArray(state)) return null;
+  if (Object.hasOwn(state, "format"))
+    return state.format === resultFormat ? state : null;
+  const notice = normalizeMarkdown(body);
+  const carriedUnder = notice.includes(needsAttentionHeading)
+    ? "needs-attention"
+    : notice.includes(structureCorrectedHeading)
+      ? "no-contract"
+      : null;
+  return carriedUnder
+    ? {
+        ...state,
+        status: carriedUnder,
+        revision: null,
+        label: null,
+        reviewer: null,
+        reviewEventId: null,
+      }
+    : state;
 }
 
 function feedbackStateLine(body = "") {
@@ -1381,13 +1471,13 @@ function issueTimeline({ event, issue, issueEvents }) {
       return earlier !== null && later !== null && later > earlier;
     },
 
-    // Whether the revision notice was updated in a strictly earlier second
-    // than the readiness label event.
-    noticePrecedes(notice, labelEvent) {
+    // Whether the revision notice was first published in a strictly earlier
+    // second than the readiness label event.
+    noticePrecedes(publishedAt, labelEvent) {
       return Boolean(
-        notice?.updated_at &&
+        publishedAt &&
         labelEvent.created_at &&
-        notice.updated_at < labelEvent.created_at,
+        publishedAt < labelEvent.created_at,
       );
     },
 
@@ -1483,10 +1573,12 @@ function issueTimeline({ event, issue, issueEvents }) {
   };
 }
 
+// Every evaluation writes its result, even when the decision is unchanged, so
+// a result older than the issue's latest activity shows the validator has not
+// run since.
 function feedbackChange(comments, body) {
   const existing = findFeedback(comments);
-  if (!existing) return { commentId: null, body };
-  return existing.body === body ? null : { commentId: existing.id, body };
+  return { commentId: existing ? existing.id : null, body };
 }
 
 function findFeedback(comments) {
@@ -1495,75 +1587,78 @@ function findFeedback(comments) {
     .find(
       (comment) =>
         comment.body?.includes(feedbackMarker) &&
-        comment.user?.login === "github-actions[bot]",
+        (comment.user ?? comment.author)?.login === "github-actions[bot]",
     );
 }
 
-// The previous feedback's state line, which structural notices carry forward
-// so the recorded review survives them.
-function carriedState(previousFeedback) {
-  const line = feedbackStateLine(previousFeedback?.body);
-  return line ? `${line}\n` : "";
-}
-
-function invalidFeedback(errors, previousFeedback) {
-  return `${feedbackMarker}\n${carriedState(previousFeedback)}${needsAttentionHeading}\n\n${errors.map((error) => `- ${error}`).join("\n")}\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.`;
-}
-
-function awaitingReviewFeedback(
+// The published state line. Every result carries every field, in this order,
+// with `null` where the evaluation has no value.
+function resultLine({
+  status,
   kind,
-  revision,
-  observedEventId = null,
-  sourceInvalidation = null,
-  { reason = null, rejectedCreationLabel = null } = {},
-) {
+  revision = null,
+  source = null,
+  label = null,
+  reviewer = null,
+  reviewEventId = null,
+  event,
+  evaluatedAt,
+  observedEventId,
+  sourceInvalidation,
+  publishedAt = null,
+  rejectionReason = null,
+  rejectedCreationLabel = null,
+}) {
   const state = JSON.stringify({
-    status: "awaiting-review",
+    format: resultFormat,
+    status,
+    kind,
     revision,
-    label: null,
-    reviewer: null,
-    observedEventId,
-    sourceInvalidation,
-    ...(reason
-      ? {
-          rejectionReason: reason,
-          ...(rejectedCreationLabel ? { rejectedCreationLabel } : {}),
-        }
-      : {}),
-  });
-  const explanation = reason
-    ? `\n\nThe last readiness attempt was rejected: ${reason}`
-    : "";
-  return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${revision}\`.${explanation}\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
-}
-
-function approvedFeedback(
-  kind,
-  revision,
-  label,
-  reviewer,
-  reviewEventId,
-  sourceInvalidation = null,
-) {
-  const state = JSON.stringify({
-    status: "approved",
-    revision,
+    source,
     label,
     reviewer,
     reviewEventId,
+    event,
+    evaluatedAt,
+    observedEventId,
     sourceInvalidation,
+    publishedAt,
+    rejectionReason,
+    rejectedCreationLabel: rejectionReason ? rejectedCreationLabel : null,
   });
-  return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${revision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`;
+  return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->`;
 }
 
-function resolvedFeedback(kind, previousFeedback) {
-  return `${feedbackMarker}\n${carriedState(previousFeedback)}## Issue contract structure corrected\n\nThe ${kind} now has the required structure. A fresh authorized review is still required before restoring readiness.`;
+function invalidFeedback(errors, evaluation) {
+  return `${resultLine({ ...evaluation, status: "needs-attention" })}\n${needsAttentionHeading}\n\n${errors.map((error) => `- ${error}`).join("\n")}\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.`;
+}
+
+function awaitingReviewFeedback(
+  published,
+  { reason = null, rejectedCreationLabel = null } = {},
+) {
+  const explanation = reason
+    ? `\n\nThe last readiness attempt was rejected: ${reason}`
+    : "";
+  return `${resultLine({ ...published, status: "awaiting-review", rejectionReason: reason, rejectedCreationLabel })}\n## Issue contract awaiting review\n\nThe ${published.kind} has the required structure at revision \`${published.revision}\`.${explanation}\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
+}
+
+function approvedFeedback(published, { label, reviewer, reviewEventId }) {
+  return `${resultLine({ ...published, status: "approved", label, reviewer, reviewEventId })}\n## Issue contract readiness recorded\n\nThe ${published.kind} at revision \`${published.revision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`;
+}
+
+function noContractFeedback(evaluation, corrected) {
+  const notice = corrected
+    ? `${structureCorrectedHeading}\n\nThe ${evaluation.kind} now has the required structure. A fresh authorized review is still required before restoring readiness.`
+    : `## Issue contract not required\n\nThe ${evaluation.kind} has the required structure and carries no implementation contract, so it carries no readiness.`;
+  return `${resultLine({ ...evaluation, status: "no-contract" })}\n${notice}`;
 }
 
 // While a human readiness trigger is unrecorded, the adapter re-reads the
 // issue events every two seconds, waiting thirty seconds at most in total, then
 // decides from the last read. The wait is `node:timers/promises`'s
 // `setTimeout`, which the adapter tests replace so they use no real time.
+// They replace `now`, the clock that dates each evaluation, likewise.
 const triggerWaitInterval = 2000;
 const triggerWaitBound = 30000;
 
@@ -1572,6 +1667,7 @@ export async function runIssueContractValidation(
   connection,
   resolveIssue,
   pause = wait,
+  now = Date.now,
 ) {
   const tracker = connection.issueTracker;
   if (!event) {
@@ -1660,6 +1756,11 @@ export async function runIssueContractValidation(
       }
     }
   }
+  // The evaluation's second makes each result's bytes differ from the last,
+  // so every write updates the comment.
+  snapshot.evaluatedAt = new Date(Math.floor(now() / 1000) * 1000)
+    .toISOString()
+    .replace(".000Z", "Z");
   const decision = decideIssueContract(snapshot);
   for (const label of decision.removeLabels)
     await tracker.removeLabel(issueNumber, label);

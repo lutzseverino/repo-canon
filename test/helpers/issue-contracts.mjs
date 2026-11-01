@@ -336,12 +336,62 @@ export const readinessReview = {
   created_at: "2026-09-14T17:00:00Z",
 };
 
-// The issue-contract state a feedback comment records in its marker.
-export function recordedState(body) {
+// The complete published state a feedback comment records in its marker.
+export function publishedState(body) {
   const encoded = body.match(
     /<!-- repo-canon:issue-contract-state (\{.*\}) -->/,
   )?.[1];
   return encoded ? JSON.parse(encoded) : null;
+}
+
+// The review decision a feedback comment records, in the fields the earlier
+// unversioned line also held: the evaluated event, the contract source and the
+// revision's publication time are left to `publishedState`.
+export function recordedState(body) {
+  const state = publishedState(body);
+  if (!state?.format) return state;
+  const {
+    status,
+    revision: contractRevision,
+    label,
+    reviewer,
+    reviewEventId,
+    observedEventId,
+    sourceInvalidation,
+    rejectionReason,
+    rejectedCreationLabel,
+  } = state;
+  if (status === "approved")
+    return {
+      status,
+      revision: contractRevision,
+      label,
+      reviewer,
+      reviewEventId,
+      sourceInvalidation,
+    };
+  return {
+    status,
+    revision: contractRevision,
+    label,
+    reviewer,
+    observedEventId,
+    sourceInvalidation,
+    ...(rejectionReason
+      ? {
+          rejectionReason,
+          ...(rejectedCreationLabel ? { rejectedCreationLabel } : {}),
+        }
+      : {}),
+  };
+}
+
+// A value with the evaluated event removed from every result line in it, for
+// comparing the decisions that different triggers make on the same state.
+export function withoutEvaluatedEvent(value) {
+  return JSON.parse(
+    JSON.stringify(value).replace(/,\\"event\\":\{[^}]*\}/g, ""),
+  );
 }
 
 // Neutral facts consumed by the decision core. The adapter fixtures separately
