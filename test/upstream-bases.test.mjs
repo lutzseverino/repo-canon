@@ -198,28 +198,40 @@ test("malformed records and declarations fail instead of passing unchecked", (t)
   assert.deepEqual(reconcileUpstreamBases(copy, nextSnapshot(copy)), []);
 });
 
-test("reconciliation refuses to merge from a base the snapshot no longer is", (t) => {
+test("reconciliation refuses to merge from a stale or unreadable base", (t) => {
   const copy = fixture(t);
   const other = "0".repeat(40);
   edit(copy, ".agents/skills/code-review/CREDITS.md", (text) =>
     text.replaceAll("24fe0ef7737efae15c87225755e9f6f5965e4888", other),
   );
-  const next = nextSnapshot(copy);
-  appendFileSync(
-    join(next, "skills/engineering/code-review/SKILL.md"),
-    "\nUpstream addition.\n",
+  // A base sentence that no longer parses records no base at all.
+  edit(copy, ".agents/skills/tdd/CREDITS.md", (text) =>
+    text.replace("Its upstream base is", "Its upstrem base is"),
   );
+  const next = nextSnapshot(copy);
+  for (const name of ["code-review", "tdd"])
+    appendFileSync(
+      join(next, `skills/engineering/${name}/SKILL.md`),
+      "\nUpstream addition.\n",
+    );
   assert.deepEqual(reconcileUpstreamBases(copy, next, { write: true }), [
     {
       path: ".agents/skills/code-review",
       outcome: "conflict",
       reason: `.agents/skills/code-review records upstream base https://github.com/mattpocock/skills v1.3.1 (${other}), but the vendored snapshot is https://github.com/mattpocock/skills v1.3.1 (24fe0ef7737efae15c87225755e9f6f5965e4888)`,
     },
+    {
+      path: ".agents/skills/tdd",
+      outcome: "conflict",
+      reason:
+        "its CREDITS.md records no upstream base and does not say it was written for Repo Canon",
+    },
   ]);
-  assert.doesNotMatch(
-    readFileSync(join(copy, ".agents/skills/code-review/SKILL.md"), "utf8"),
-    /Upstream addition/,
-  );
+  for (const name of ["code-review", "tdd"])
+    assert.doesNotMatch(
+      readFileSync(join(copy, `.agents/skills/${name}/SKILL.md`), "utf8"),
+      /Upstream addition/,
+    );
 });
 
 test("reconciliation three-way merges upstream changes into the owned files", (t) => {

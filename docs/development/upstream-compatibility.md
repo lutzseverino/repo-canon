@@ -202,8 +202,9 @@ A conflicting file holds `<<<<<<< owned` and `>>>>>>> upstream` markers;
 resolve each by judgment, keeping what Repo Canon's edit needs and what the
 upstream change adds. A change to upstream's own `CREDITS.md`, a file changed
 upstream but removed from the owned copy, a base missing from the staged
-snapshot, and a recorded base that is not the vendored snapshot are reported
-as conflicts to resolve by hand. A dry run against the
+snapshot, and a recorded base that is not the vendored snapshot or that a
+skill's `CREDITS.md` states unreadably are reported as conflicts to resolve by
+hand. A dry run against the
 current base, `node scripts/upstream-bases.mjs reconcile vendor/mattpocock-skills --dry-run`,
 prints `No owned file changes.`; `test/upstream-bases.test.mjs` runs it.
 

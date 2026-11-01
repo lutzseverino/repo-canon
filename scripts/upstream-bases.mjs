@@ -397,8 +397,19 @@ export function reconcileUpstreamBases(root, next, { write = false } = {}) {
       entries.push({ path: owned, ...result });
   };
 
-  for (const { source, base } of ownedSkills(root)) {
-    if (!base || staleBase(source, base)) continue;
+  for (const { source, base, credits: ownedCredits } of ownedSkills(root)) {
+    if (!base) {
+      // Only a skill written for Repo Canon has no base to merge from.
+      if (!writtenClaim.test((ownedCredits ?? "").replace(/\s+/g, " ")))
+        entries.push({
+          path: source,
+          outcome: "conflict",
+          reason:
+            "its CREDITS.md records no upstream base and does not say it was written for Repo Canon",
+        });
+      continue;
+    }
+    if (staleBase(source, base)) continue;
     if (!existsSync(join(next, base.path, "SKILL.md"))) {
       entries.push({
         path: source,
