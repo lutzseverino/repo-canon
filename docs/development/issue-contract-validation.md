@@ -189,22 +189,22 @@ it is read as `needs-attention` or `no-contract` and approves nothing.
 
 ## Feedback and readiness
 
-The validator maintains one marked feedback comment, which holds its
-[published result](#published-result). Incomplete contracts list the structural
-corrections there, under a `needs-attention` result that approves nothing and
-records no revision. It carries forward only the source invalidation, so a corrected
+The validator maintains one marked feedback comment, which holds its [published
+result](#published-result). Incomplete contracts list the structural corrections
+there, under a `needs-attention` result that approves nothing and records no
+revision. It carries forward only the source invalidation, so a corrected
 contract's revision is published again before readiness is applied. A later
-structural pass replaces a "needs attention" notice with a "structure
-corrected" notice; an issue that no longer carries a contract gets a "not
-required" notice. Complete specifications, tickets, and Agent Briefs publish a
-`sha256:` revision and wait for authorized review. The same comment records the
-reviewer, revision, and resulting readiness state after an accepted review
-event, so repeated workflow events can verify the association without
-reapproving or duplicating feedback. Every result also records the latest
-readiness-label transition it observed. Approved state records the exact GitHub
-issue-event ID that supplied the review. The observed transition is the latest
-readiness transition other than the validator's own removal of readiness, so
-the run after that cleanup records the same one.
+structural pass replaces a "needs attention" notice with a "structure corrected"
+notice; an issue that no longer carries a contract gets a "not required" notice.
+Complete specifications, tickets, and Agent Briefs publish a `sha256:` revision
+and wait for authorized review. The same comment records the reviewer, revision,
+and resulting readiness state after an accepted review event, so repeated
+workflow events can verify the association without reapproving or duplicating
+feedback. Every result also records the latest readiness-label transition it
+observed. Approved state records the exact GitHub issue-event ID that supplied
+the review. The observed transition is the latest readiness transition other
+than the validator's own removal of readiness, so the run after that cleanup
+records the same one.
 
 Every readiness rejection records its reason, such as an unauthorized
 reviewer's "is not authorized to grant readiness", and so does a workflow state

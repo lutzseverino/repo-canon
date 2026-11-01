@@ -262,7 +262,7 @@ async function exercise(
   return { code, error, requests, stdout, stderr };
 }
 // The run's writes, with each result's evaluation time, which the adapter
-// takes from the real clock, left out as the pure decision leaves it.
+// takes from the real clock, set to `null` as the pure decision leaves it.
 const writes = (result) =>
   result.requests
     .filter(({ method, path }) => method !== "GET" && path !== "/graphql")
