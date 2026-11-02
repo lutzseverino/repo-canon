@@ -147,10 +147,17 @@ permit no merge write and follow the freshness-read failure handling.
 
 ## Branch-update recovery
 
-The merge command confirms GitHub's required-check freshness before merging;
-unavailable, unreadable or unconfirmed enforcement requires the owner handoff,
-even when remote setup was deferred. It never substitutes local ancestry for
-GitHub's final guard. Exit `4` reports a stale base, separately from a changed
+Only recognized plan-limit 403 responses for both classic protection and
+rulesets on a private repository permit merging-agent freshness verification.
+After slow gates, immediately before the expected-head merge, verify the live
+default destination, unchanged validated/reviewed head, successful applicable
+validation on that exact head, and current default-tip ancestry. Missing or
+unreadable evidence, ordinary permission refusals, missing workflow and deferred
+setup grant no exception. Another writer can advance the base after this final
+check and the merge can succeed: the owner accepts this residual concurrent-base
+race only on this proven plan-limited path. Immediate checks narrow the window;
+they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
+enforcement remains required wherever available. Exit `4` reports a stale base, separately from a changed
 PR head or an owner-only failure; no merge succeeded.
 
 Allow one branch-update recovery per babysit invocation. Preserve committed,

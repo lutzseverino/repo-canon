@@ -871,3 +871,117 @@ test("a freshness permission refusal permits no subsequent read or merge", (t) =
     assert.equal(result.state.merge, undefined);
   }
 });
+
+const planLimited = {
+  private: true,
+  planRulesets: true,
+  planProtection: true,
+  strict: false,
+  checks: [
+    {
+      __typename: "StatusContext",
+      context: "CI",
+      state: "SUCCESS",
+      targetUrl: "https://example.com/ci",
+    },
+  ],
+};
+
+test("private plan-limited installed delivery verifies the head and preserves squash bytes", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const body = "Quotes: `code`, $HOME, $(false).\r\n\nCloses #814\n";
+  const result = run(t, { ...planLimited, body }, undefined, target);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.state.merge.body, body);
+  assert.equal(result.state.merge.expectedHead, head);
+});
+
+test("plan-limited delivery requires dual private evidence and stops ordinary refusals", (t) => {
+  for (const state of [
+    { private: false },
+    { private: null },
+    { planProtection: false },
+    { planRulesets: false, rules: [] },
+    { planProtection: false, protectionStatus: 403 },
+    { planRulesets: false, failFreshness: 403 },
+    { planProtection: false, protectionStatus: 404 },
+  ]) {
+    const result = run(t, { ...planLimited, ...state, traceRequests: true });
+    assert.notEqual(result.status, 0, result.stderr);
+    assert.equal(result.state.merge, undefined);
+    if (state.protectionStatus === 403)
+      assert.match(result.state.requests.at(-1), /protection$/);
+    if (state.failFreshness === 403)
+      assert.match(result.state.requests.at(-1), /rules\/branches\/main$/);
+  }
+});
+
+test("plan-limited final validation refuses missing, failed, pending and malformed evidence", (t) => {
+  for (const state of [
+    { checks: [] },
+    { checksByHead: { ["d".repeat(40)]: planLimited.checks } },
+    { checks: [{ ...planLimited.checks[0], state: "PENDING" }] },
+    { checks: [{ ...planLimited.checks[0], state: "FAILURE" }] },
+    { checks: [{ ...planLimited.checks[0], state: "UNKNOWN" }] },
+    { runs: [{ workflow_id: 1 }] },
+    { failRuns: 403 },
+  ]) {
+    const result = run(t, { ...planLimited, ...state });
+    assert.notEqual(result.status, 0, result.stderr);
+    assert.equal(result.state.merge, undefined);
+  }
+});
+
+test("plan-limited final verification observes release-hold and validation-time changes", (t) => {
+  for (const state of [
+    { afterReleaseHold: { defaultRevision: "d".repeat(40) } },
+    { afterReleaseHold: { head: "d".repeat(40) } },
+    { afterReleaseHold: { baseBranch: "other" } },
+    { afterReleaseHold: { defaultBranch: "other" } },
+    { afterChecks: { defaultRevision: "d".repeat(40) } },
+    { afterChecks: { head: "d".repeat(40) } },
+    { afterChecks: { baseBranch: "other" } },
+  ]) {
+    const result = run(t, { ...planLimited, ...state });
+    assert.notEqual(result.status, 0, result.stderr);
+    assert.equal(result.state.merge, undefined);
+  }
+});
+
+test("plan-limited sequential PRs must update and validate the replacement head", (t) => {
+  const first = run(t, planLimited);
+  assert.equal(first.status, 0, first.stderr);
+  const secondHead = "d".repeat(40);
+  const second = {
+    ...planLimited,
+    defaultRevision: first.state.defaultRevision,
+    head: secondHead,
+  };
+  const stale = run(t, second, ["13", secondHead]);
+  assert.equal(stale.status, 4, stale.stderr);
+  assert.equal(stale.state.merge, undefined);
+  const replacement = "e".repeat(40);
+  const updated = {
+    ...second,
+    head: replacement,
+    testedBase: second.defaultRevision,
+  };
+  for (const state of ["PENDING", "FAILURE"]) {
+    const result = run(
+      t,
+      { ...updated, checks: [{ ...planLimited.checks[0], state }] },
+      ["13", replacement],
+    );
+    assert.equal(result.status, 2, result.stderr);
+    assert.equal(result.state.merge, undefined);
+  }
+  const result = run(t, updated, ["13", replacement]);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("plan-limited expected-head merge accepts the owner's residual concurrent-base race", (t) => {
+  const result = run(t, { ...planLimited, advanceBaseOnMerge: "d".repeat(40) });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.state.merge.expectedHead, head);
+  assert.equal(result.state.pullRequestState, "MERGED");
+});

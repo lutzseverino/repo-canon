@@ -75,16 +75,26 @@ values cannot confirm that ruleset's enforcement.
 Setup preserves existing bypass configuration; resolve insufficient enforcement
 with the owner rather than changing bypass policy during delivery.
 
-Unavailable, unreadable or unconfirmed freshness stops unattended merging until
-the repository is fixed. Adoption's plan limits, missing workflow and deferred
-remote setup grant no merge exception. Use the contribution guide's owner
-handoff; no best-effort merge or alternate credential is permitted.
+Only recognized plan-limit 403 responses for both classic protection and
+rulesets on a private repository permit merging-agent freshness verification.
+After slow gates, immediately before the expected-head merge, verify the live
+default destination, unchanged validated/reviewed head, successful applicable
+validation on that exact head, and current default-tip ancestry. Missing or
+unreadable evidence, ordinary permission refusals, missing workflow and deferred
+setup grant no exception. Another writer can advance the base after this final
+check and the merge can succeed: the owner accepts this residual concurrent-base
+race only on this proven plan-limited path. Immediate checks narrow the window;
+they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
+enforcement remains required wherever available.
+Otherwise unconfirmed freshness requires the contribution guide's owner handoff;
+no alternate credential is permitted.
 
 A stale PR returns to branch update and validation. Preserve its work, rebase
 or replay only its changes onto the refreshed default branch, and repeat
 required checks and applicable internal and external review on the replacement
 head. Checks from the old head never qualify the replacement. GitHub remains
-the final guard if the base advances again; bound recovery as babysit directs.
+the final guard wherever enforcement is available; the plan-limited path repeats
+its final verification with the accepted race. Bound recovery as babysit directs.
 
 ## Designated owner review
 
