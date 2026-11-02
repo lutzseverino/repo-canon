@@ -571,6 +571,11 @@ profiles:
   factory:
     description: The standard profile plus the factory's repository files and workflow rules, for a repository a factory serves
     declarations:
+      skill-factory:
+        kind: skill
+        name: factory
+        source: .agents/skills/factory
+
       factory-configuration:
         kind: file
         target: .factory/config.json

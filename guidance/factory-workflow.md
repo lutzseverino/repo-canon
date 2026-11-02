@@ -15,12 +15,14 @@ each provider renders the skill invocation in its own syntax. Its
 `contractResult.marker` is `repo-canon:issue-contract-state` and
 `contractResult.author` is `github-actions[bot]`, the trusted author of the
 issue-contract workflow's posted result. It also names Repo Canon's labels,
-including `labels.releaseHold`, and the `model:` label prefix. There is no
-factory configuration compatibility layer.
+including `labels.hold` and `labels.releaseHold`, and the `model:` label prefix.
+There is no factory configuration compatibility layer.
 
 The `babysit` merge check reads only labels from the destination default
 branch's configuration. It accepts versions 1 and 2, so an adopter still on
-version 1 can deliver this update while retaining its release-hold check.
+version 1 can deliver this update while retaining its hold checks. The factory
+profile installs the `factory` skill for ongoing operations, including pause
+and resume through the repository hold.
 
 ## App-author policy opt-in
 

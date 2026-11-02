@@ -123,8 +123,8 @@ body was checked. Link-free bodies need no reconstruction.
    complete both internal reviews, post their actual outcomes using the wait's
    template for that full head, then rerun the merge after verifying the other
    merge conditions. This is a post-and-rerun result, not an owner handoff;
-   `9` means another open PR carries the configured release-hold label: leave
-   this PR open and do not retry yet. In a factory run, end the run; the factory
+   `9` means another open issue or PR carries the configured repository-hold
+   label, or another open PR carries the release-hold label: leave this PR open and do not retry yet. In a factory run, end the run; the factory
    relaunches merging after the hold ends. Otherwise, run merge again after
    the hold ends. This is not an owner handoff;
    `1` means follow
@@ -140,10 +140,11 @@ the platform PR author on every invocation, even without a prior wait. Invalid
 trusted declarations require its owner-handoff exit `3`; unreadable review
 configuration returns `1` and permits no merge. A prior wait result and proposed
 PR-branch policy cannot bypass the outcome check.
-Immediately before its merge write, it reads `labels.releaseHold` from
+Immediately before its merge write, it reads `labels.hold` and
+`labels.releaseHold` from
 `.factory/config.json` at that same destination default-branch snapshot and
-lists open PRs carrying the label, excluding the PR being merged. An absent
-file or key adds no hold. Unreadable or invalid configuration or PR reads
+lists open issues and PRs for the repository hold and open PRs for the release
+hold, excluding only the PR being merged. An absent file or key adds no hold. Unreadable or invalid configuration or issue/PR reads
 permit no merge write and follow the freshness-read failure handling.
 
 ## Branch-update recovery
@@ -211,8 +212,8 @@ Paths are relative to the repository root.
 - `.github/workflows/pr-metadata.yml`: the workflow whose presence the merge
   command verifies on the live default branch for plan-limited delivery. When
   missing or unreadable, that path permits no merge.
-- `.factory/config.json`: its `labels.releaseHold`, which the merge command
-  reads. When the file or the key is missing, no release hold applies.
+- `.factory/config.json`: its `labels.hold` and `labels.releaseHold`, which the
+  merge command reads. When the file or a key is missing, that hold does not apply.
 - `.repo-standards/runtime/`: the pinned Repository Standards runtime, its
   `package-lock.json` and `node_modules/.bin/repo-standards`, which the
   request command uses to rebuild an adoption summary. When it is missing, no

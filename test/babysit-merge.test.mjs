@@ -66,6 +66,50 @@ test("installed merge accepts the shipped configuration and version 1 on the def
   }
 });
 
+test("repository holds cover issues and other PRs, exempt only this PR, and resume after removal", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const shipped = JSON.parse(
+    readFileSync(new URL("../.factory/config.json", import.meta.url), "utf8"),
+  );
+  for (const configuration of [
+    { version: 1, labels: { hold: "factory:hold" } },
+    { version: 2, labels: { hold: "factory:hold" } },
+    shipped,
+  ]) {
+    for (const { issues, status } of [
+      {
+        issues: [{ number: 24, state: "open", labels: ["factory:hold"] }],
+        status: 9,
+      },
+      { issues: [releaseIssue(24, "open", ["factory:hold"])], status: 9 },
+      { issues: [releaseIssue(12, "open", ["factory:hold"])], status: 0 },
+      { issues: [releaseIssue(24, "closed", ["factory:hold"])], status: 0 },
+      { issues: [releaseIssue(24, "open", [])], status: 0 },
+      {
+        issues: [
+          releaseIssue(12, "open", ["factory:hold"]),
+          { number: 24, state: "open", labels: ["factory:hold"] },
+        ],
+        status: 9,
+      },
+    ]) {
+      const result = run(
+        t,
+        { factoryConfiguration: configuration, releaseIssues: issues },
+        undefined,
+        target,
+      );
+      assert.equal(result.status, status, result.stderr);
+      if (status === 0) assert.ok(result.state.merge);
+      else {
+        assert.equal(result.state.merge, undefined);
+        assert.match(result.stderr, /hold.*#24/i);
+        assert.doesNotMatch(result.stderr, /#12/);
+      }
+    }
+  }
+});
+
 test("another open release PR holds an installed merge without a write", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const result = run(
@@ -124,6 +168,44 @@ test("release holds include later pages and encode the configured label", (t) =>
   });
   assert.equal(encoded.status, 9, encoded.stderr);
   assert.equal(encoded.state.merge, undefined);
+});
+
+test("repository holds preserve pinned configuration, pagination, label encoding and independent release holds", (t) => {
+  const label = "factory: hold/+&";
+  const configuration = {
+    version: 2,
+    labels: { hold: label, releaseHold: "release" },
+  };
+  const paged = run(t, {
+    factoryConfiguration: configuration,
+    releaseIssuePages: [[releaseIssue(12)], [{ number: 24, state: "open" }]],
+  });
+  assert.equal(paged.status, 9, paged.stderr);
+  assert.match(paged.stderr, /#24/);
+  assert.equal(paged.state.merge, undefined);
+  const held = run(t, {
+    factorySnapshots: {
+      ["b".repeat(40)]: configuration,
+      ["d".repeat(40)]: { version: 2, labels: {} },
+    },
+    moveDefaultTo: "d".repeat(40),
+    comparison: { status: "ahead", behind_by: 0 },
+    localReviewConfiguration: { factory: { version: 2, labels: {} } },
+    releaseIssues: [releaseIssue(24, "open", [label])],
+  });
+  assert.equal(held.status, 9, held.stderr);
+  assert.equal(held.state.merge, undefined);
+  const release = run(t, {
+    factoryConfiguration: configuration,
+    releaseIssues: [
+      releaseIssue(12, "open", [label]),
+      releaseIssue(36, "open", ["release"]),
+    ],
+  });
+  assert.equal(release.status, 9, release.stderr);
+  assert.match(release.stderr, /#36/);
+  assert.doesNotMatch(release.stderr, /#12/);
+  assert.equal(release.state.merge, undefined);
 });
 
 test("absent release configuration or key keeps existing merge behavior", (t) => {
@@ -207,9 +289,11 @@ test("unreadable or invalid release configuration and PR reads never write a mer
     { factoryConfiguration: [] },
     { factoryConfiguration: { version: 3 } },
     { factoryConfiguration: { version: 1, labels: [] } },
-    ...[null, "", " hold ", 42].map((releaseHold) => ({
-      factoryConfiguration: { version: 1, labels: { releaseHold } },
-    })),
+    ...["hold", "releaseHold"].flatMap((key) =>
+      [null, "", " hold ", 42].map((value) => ({
+        factoryConfiguration: { version: 2, labels: { [key]: value } },
+      })),
+    ),
     { factoryConfigurationResponse: { errors: [{ message: "read failed" }] } },
     {
       factoryConfigurationResponse: {

@@ -147,7 +147,7 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
   }
   // The other profiles keep their resolved declarations.
   assert.equal(validation.profiles.standard.declarations.length, 60);
-  assert.equal(validation.profiles.factory.declarations.length, 64);
+  assert.equal(validation.profiles.factory.declarations.length, 65);
 
   const { source, env, git, publish } = fixtureSource(directory, validation);
   git(source, "-c", "tag.gpgsign=false", "tag", "v1.0.0");
@@ -230,7 +230,12 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
       .filter((name) => name !== "repository-standards"),
     skills,
   );
-  for (const path of [".github", ".repo-standards/rules", "AGENTS.md"])
+  for (const path of [
+    ".github",
+    ".repo-standards/rules",
+    "AGENTS.md",
+    ".agents/skills/factory",
+  ])
     assert.equal(existsSync(join(project, path)), false, path);
   const { report: lookup, child: lookupChild } = invoke("rules");
   assert.equal(lookupChild.status, 0, JSON.stringify(lookup));
