@@ -33,6 +33,15 @@ Repo Canon supplies three profiles:
 Every update offers the profiles again, so a repository switches profile by
 answering differently when a factory starts or stops serving it.
 
+## Coordinate the factory host
+
+The `factory` profile installs configuration version 2, which requires
+[Scriptorium major version 3](https://github.com/lutzseverino/scriptorium/releases).
+Coordinate repository updates with the host operator. A factory-served repository
+that updates while its host runs Scriptorium v2.x stays paused until the host
+installs v3. After the host upgrade, confirm configuration acceptance and resumed
+pickups. The `standard` and `workbench` profiles need no host migration.
+
 ## Prepare caller compatibility
 
 Read the target release's notes before updating. If your repository's own tests
