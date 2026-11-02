@@ -20,8 +20,11 @@ The fix establishes and reads back strict required-check freshness through
 classic protection or its managed ruleset when it establishes the required
 check, preserving other checks, rules and bypass settings. Changes to existing
 policy require confirmation. Adoption deferrals do not authorize unattended
-merging: unavailable, unreadable or unconfirmed freshness stops it until the
-owner fixes the repository, as the rules require.
+merging. Only positively established private-plan limitations covering both
+classic protection and rulesets permit immediate merging-agent freshness
+verification under the rules, with the accepted residual concurrent-base race.
+Strict GitHub enforcement remains required wherever available; ordinary
+permission refusals, unreadable evidence and unconfirmed freshness stop delivery.
 
 ## Remote setup
 
