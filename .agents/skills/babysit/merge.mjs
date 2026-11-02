@@ -324,13 +324,11 @@ export async function main(argv = process.argv.slice(2), connection) {
         return needsOwner(
           "Could not confirm the PR targets the current private default branch; needs the owner.",
         );
+      const workflowPath = ".github/workflows/pr-metadata.yml";
       const workflow = await requestData(connection, {
-        path: `/repos/${connection.repository.path}/contents/.github/workflows/pr-metadata.yml?ref=${encodeURIComponent(branch)}`,
+        path: `/repos/${connection.repository.path}/contents/${workflowPath}?ref=${encodeURIComponent(branch)}`,
       });
-      if (
-        workflow?.type !== "file" ||
-        workflow.path !== ".github/workflows/pr-metadata.yml"
-      )
+      if (workflow?.type !== "file" || workflow.path !== workflowPath)
         return needsOwner(
           "Could not confirm the default-branch PR metadata workflow; needs the owner.",
         );
