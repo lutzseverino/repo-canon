@@ -4,7 +4,8 @@ The upstream base snapshot is mattpocock/skills tag `v1.3.1`, commit
 `24fe0ef7737efae15c87225755e9f6f5965e4888`. Its promoted plugin set contains 27
 regular skills. Repo Canon installs the 17 of them that are workflow skills, as
 [ADR 0018](../adr/0018-install-only-workflow-skills.md) decides, together with
-its own `babysit` and `orchestrate`. Every workflow skill is an owned skill, as
+its own `babysit` and `orchestrate`, plus `factory` only in the factory profile.
+Every workflow skill is an owned skill, as
 [ADR 0028](../adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
 decides: adoption installs it from the owned tree, `.agents/skills/<name>` in
 this repository, and never from the vendored snapshot. The snapshot under
@@ -19,8 +20,8 @@ because every factory run is a direct run, as
 ## Owned skills and their upstream bases
 
 Each owned skill's `CREDITS.md` says where it comes from. A skill written for
-Repo Canon, `babysit` or `orchestrate`, says that it was written for Repo
-Canon and has no upstream base. A skill taken from upstream names its base in
+Repo Canon, such as `babysit`, `factory` or `orchestrate`, says that it was
+written for Repo Canon and has no upstream base. A skill taken from upstream names its base in
 one sentence of this form, with the tree link at the same commit and path:
 
 ```markdown

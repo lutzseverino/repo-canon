@@ -3,7 +3,9 @@
 These rules apply to all work in a repository a factory serves, including
 tracker work that changes no file. The contribution guide holds the general
 implementation contract, readiness, owner-question, credential, comment and
-pull request requirements.
+pull request requirements. The `factory` skill holds the method for handing
+work to the factory, interpreting holds, delivering skipped and handed-off
+work, and pausing or resuming one repository.
 
 ## Implementation inputs
 
@@ -32,9 +34,9 @@ revisions still require the applicable review and renewed readiness.
 
 Scriptorium v2.3.0 introduced this actor-history rule. Platforms without that
 history use the latest-link-time fallback: apply the parent's readiness after
-its tickets are published, and again when a ticket is published later. To re-apply readiness the parent still
-carries, remove `ready-for-agent` and add it back, only once the latest ticket
-link appears in the parent's timeline. Readiness recorded in the same second
+its tickets are published, and again when a ticket is published later. Renewed
+readiness is valid only once the latest ticket link appears in the parent's
+timeline. Readiness recorded in the same second
 as that link holds the tickets. A platform reporting no link times skips the
 link check; contract-review and authorization gates still apply.
 
@@ -46,8 +48,8 @@ issue must apply exactly one `model:` label they chose, before readiness or
 together with it, even when it names the host's default model. A parent needs
 no `model:` label of its own, and `ready-for-human` needs none.
 
-Choose a stronger model when the work needs design judgment, has an ambiguous
-scope, or makes a long cross-cutting change. Name the chosen model with
+Work needing design judgment, ambiguous scope or a long cross-cutting change
+uses a stronger model. The chosen model label uses
 `model:<slug>` or `model:<provider>/<slug>`, optionally followed by
 `@<effort>`; create the label if the repository lacks it. A `claude-*` or
 `gpt-*` slug needs no provider. Create missing model labels with color
@@ -162,7 +164,30 @@ Any head change returns to this approval pause until renewed approval is
 verified and recorded. This continuation requires neither owner merge, PR
 closure nor factory pickup.
 
-## Release holds
+## Repository and release holds
+
+The configured `labels.hold` label pauses new pickups and merges in one
+repository while any open issue or PR carries it. Runs already started finish
+without merging. Factory-profile label setup provisions and verifies
+`factory:hold` with color `c5def5` and description
+`Pause factory pickups and other merges in this repository`.
+
+An expedited change carries the repository hold on its own PR, so merging or
+closing that PR ends its hold. A pause begun on an issue transfers to that PR
+before merge, with the PR labelled before the issue label is removed. Only the
+PR being merged is exempt from its own hold; every other labelled open issue
+or PR still holds it. A held repository claims and launches nothing, so new
+expedited work runs outside factory pickup through a directly launched worker
+or the orchestrating agent. An already-open factory PR can carry the hold and
+finish through its exempt merge relaunch. Ending a time-bounded host access
+grant is not a worker's completion step.
+
+Babysit's merge check enforces the repository hold as well as the release hold
+immediately before merging, including when a hold appears mid-run. For the
+repository hold it counts open issues and PRs; the release hold counts open
+PRs only. Its hold exit leaves the PR open; a hold is not an owner handoff.
+
+### Release holds
 
 In a factory repository, a release PR carries the configured
 `labels.releaseHold` label from opening until it merges or closes. Factory-profile
@@ -175,8 +200,9 @@ outside babysit are unaffected by its check.
 
 Babysit reads the hold configuration from the destination default branch at
 the same pinned revision as trusted review configuration; proposed PR changes
-cannot remove their own hold. Follow babysit's exit-9 steps to resume after
-the hold ends; a release hold is not an owner handoff.
+cannot remove their own hold. Missing configuration or an absent label key
+adds no corresponding hold; unreadable or invalid configuration permits no
+merge. The check accepts configuration versions 1 and 2.
 
 ## External review of factory pull requests
 

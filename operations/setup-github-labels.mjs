@@ -168,6 +168,12 @@ async function setupLabels(request) {
             color: "c5def5",
             description: "Hold other merges while a release PR is open",
           },
+          {
+            name: "factory:hold",
+            color: "c5def5",
+            description:
+              "Pause factory pickups and other merges in this repository",
+          },
         ]
       : canonicalLabels;
 

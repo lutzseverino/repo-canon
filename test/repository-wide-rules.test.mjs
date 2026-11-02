@@ -163,7 +163,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     const profile = validation.profiles[name];
     assert.equal(
       profile.declarations.length,
-      { standard: 60, factory: 64 }[name],
+      { standard: 60, factory: 65 }[name],
     );
     assert.deepEqual(
       profile.declarations.find(({ id }) => id === "standards-update-workflow"),
@@ -574,6 +574,14 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     // the base's bytes, as it did when it installed from the snapshot, and
     // the setup files install their seeds' bytes.
     for (const { name, source, base } of ownedSkills(root)) {
+      if (name === "factory" && profile !== "factory") {
+        assert.equal(
+          existsSync(join(project, source)),
+          false,
+          `${profile} excludes factory`,
+        );
+        continue;
+      }
       const files = readdirSync(join(root, source), {
         recursive: true,
         withFileTypes: true,

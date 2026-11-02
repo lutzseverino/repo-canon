@@ -232,6 +232,11 @@ test("the standard profile installs no factory file, and the factory profile add
   assert.equal(
     profileDeclarations(declarations, "factory"),
     `
+      skill-factory:
+        kind: skill
+        name: factory
+        source: .agents/skills/factory
+
       factory-configuration:
         kind: file
         target: .factory/config.json
@@ -651,7 +656,7 @@ test("standards.yaml declares no pull request reviewer file", () => {
 });
 
 // The shipped configuration targets Scriptorium v3.0.0's configuration version 2:
-// exactly these fields, seven labels distinct ignoring case, the skill and its
+// exactly these fields, eight labels distinct ignoring case, the skill and its
 // issue argument, and the contract result's marker and trusted author. This
 // repository imports no factory code; the exact shape pins the file.
 test("the factory configuration names Repo Canon's labels, skill, and trusted contract result", () => {
@@ -670,6 +675,7 @@ test("the factory configuration names Repo Canon's labels, skill, and trusted co
     labels: {
       ready: "ready-for-agent",
       skip: "factory:skip",
+      hold: "factory:hold",
       releaseHold: "factory:release-hold",
       running: "factory:running",
       failed: "factory:failed",
@@ -719,7 +725,7 @@ function declaredSkills() {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   return [
     ...declarations.matchAll(
-      /^ {6}kind: skill\n {6}name: ([^\s]+)\n {6}source: ([^\s]+)/gm,
+      /^ {6,8}kind: skill\n {6,8}name: ([^\s]+)\n {6,8}source: ([^\s]+)/gm,
     ),
   ].map((match) => ({ name: match[1], source: match[2] }));
 }
@@ -742,6 +748,7 @@ const workflowSkills = [
   "codebase-design",
   "diagnosing-bugs",
   "domain-modeling",
+  "factory",
   "grill-with-docs",
   "grilling",
   "implement",
@@ -3274,7 +3281,6 @@ test("factory workflow rules preserve readiness, models, state recovery and safe
     /A parent \(a specification or any issue with sub-issues\) never runs/,
     /its tickets, which each also need their own readiness/,
     /again when a ticket is published later/,
-    /remove `ready-for-agent` and add it back/,
     /only once the latest ticket link appears in the parent's timeline/,
     /Readiness recorded in the same second as that link holds the tickets/,
     /exactly one `model:` label they chose, before readiness or together with it, even when it names the host's default model/,

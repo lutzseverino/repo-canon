@@ -75,7 +75,7 @@ function declarations(root) {
 export function ownedSkills(root) {
   return [
     ...declarations(root).matchAll(
-      /^ {6}kind: skill\n {6}name: ([^\s]+)\n {6}source: ([^\s]+)/gm,
+      /^ {6,8}kind: skill\n {6,8}name: ([^\s]+)\n {6,8}source: ([^\s]+)/gm,
     ),
   ].map(([, name, source]) => {
     const creditsPath = `${source}/CREDITS.md`;
@@ -168,7 +168,7 @@ export function checkUpstreamBases(root) {
   const snapshot = snapshotIdentity(root);
   const text = declarations(root);
   const skills = ownedSkills(root);
-  const declared = text.match(/^ {6}kind: skill$/gm)?.length ?? 0;
+  const declared = text.match(/^ {6,8}kind: skill$/gm)?.length ?? 0;
   if (declared !== skills.length)
     problems.push(
       `standards.yaml declares ${declared} skills, but only ${skills.length} read as kind, name and source in that order`,
