@@ -208,6 +208,9 @@ Paths are relative to the repository root.
 - `.github/factory-review-policy.json`: the optional app-author review policy.
   When it is missing at the selected commit, configured reviewer behavior
   applies.
+- `.github/workflows/pr-metadata.yml`: the workflow whose presence the merge
+  command verifies on the live default branch for plan-limited delivery. When
+  missing or unreadable, that path permits no merge.
 - `.factory/config.json`: its `labels.releaseHold`, which the merge command
   reads. When the file or the key is missing, no release hold applies.
 - `.repo-standards/runtime/`: the pinned Repository Standards runtime, its
