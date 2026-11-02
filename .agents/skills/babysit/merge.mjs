@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Usage: node merge.mjs <number> <head SHA>, from the repository root.
-// Exit codes: 0 merged, 1 usage or platform error, 2 head changed; wait again,
+// Exit codes: 0 merged, 1 usage or platform error, 2 head changed or validation not successful; wait again,
 // 3 not merged; needs the owner, 4 stale base; update and validate,
 // 5 missing review outcome; post the completed record and rerun,
 // 9 release hold; leave open and resume after the hold ends.
@@ -324,6 +324,16 @@ export async function main(argv = process.argv.slice(2), connection) {
         return needsOwner(
           "Could not confirm the PR targets the current private default branch; needs the owner.",
         );
+      const workflow = await requestData(connection, {
+        path: `/repos/${connection.repository.path}/contents/.github/workflows/pr-metadata.yml?ref=${encodeURIComponent(branch)}`,
+      });
+      if (
+        workflow?.type !== "file" ||
+        workflow.path !== ".github/workflows/pr-metadata.yml"
+      )
+        return needsOwner(
+          "Could not confirm the default-branch PR metadata workflow; needs the owner.",
+        );
       // Reuse wait's selection and attempt semantics, but require positive
       // validation: its no-check timeout is not successful evidence here.
       const checks = checkStates(await checkRollup(connection, head));
@@ -360,7 +370,14 @@ export async function main(argv = process.argv.slice(2), connection) {
         Number(number),
       );
       if (finalPull.headCommit !== head) return retry();
-      if (finalPull.baseBranch !== branch)
+      const finalRepository = await requestData(connection, {
+        path: `/repos/${connection.repository.path}`,
+      });
+      if (
+        finalRepository?.default_branch !== branch ||
+        finalRepository.private !== true ||
+        finalPull.baseBranch !== branch
+      )
         return needsOwner("The PR destination changed; needs the owner.");
       if (await baseIsStale(connection, branch, head)) return staleBase();
     } catch (error) {

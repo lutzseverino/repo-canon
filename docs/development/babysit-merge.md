@@ -100,8 +100,8 @@ Exit `0` means merged. Exit `3` means not merged and needs the owner: either
 the base branch requires a merge queue, or a successful merge call left the
 PR in a state other than `merged`, or neither freshness enforcement nor the proven private-plan path can be confirmed. The skill hands off with a question under
 [the contribution guide's comment rules](../../CONTRIBUTING.md#comments),
-without retrying the merge. Exit `2` means the head changed, either before the merge
-call or when a refused merge is followed by a read showing a different head;
+without retrying the merge. Exit `2` means current-head validation has not succeeded, or the head changed
+before the merge call or after a refused merge;
 the skill returns to its wait step. Exit `1` reports an invalid invocation or
 a platform error outside freshness preflight, including unreadable trusted review
 configuration. Invalid trusted review declarations return `3` with the selected

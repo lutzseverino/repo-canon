@@ -665,7 +665,7 @@ const deferredRequirement = new RegExp(
     "GitHub PR integration for acme/widgets applies squash-only integration, PR-title subjects, and PR-body messages\\.",
     "Requiring `PR metadata` is deferred because the default branch `main` does not carry the PR metadata validation workflow yet, so GitHub cannot report the check\\.",
     "Merge this adoption through the owner; the next adoption or update then requires the check\\.",
-    "On this proven private-plan limitation, babysit verifies current-head validation and default-branch freshness immediately before merging; a concurrent base advance after that check can still merge, an accepted residual race. Strict GitHub enforcement remains required wherever available\\.",
+    "Strict freshness is unconfirmed; unattended merging stops until GitHub enforcement is confirmed\\.",
   ].join(" "),
 );
 

@@ -481,7 +481,7 @@ function unavailableRequirement(identity) {
 }
 
 function deferredRequirement(identity, defaultBranch) {
-  const deferred = `GitHub PR integration for ${identity} applies squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is deferred because the default branch \`${defaultBranch}\` does not carry the PR metadata validation workflow yet, so GitHub cannot report the check. Merge this adoption through the owner; the next adoption or update then requires the check. On this proven private-plan limitation, babysit verifies current-head validation and default-branch freshness immediately before merging; a concurrent base advance after that check can still merge, an accepted residual race. Strict GitHub enforcement remains required wherever available.`;
+  const deferred = `GitHub PR integration for ${identity} applies squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is deferred because the default branch \`${defaultBranch}\` does not carry the PR metadata validation workflow yet, so GitHub cannot report the check. Merge this adoption through the owner; the next adoption or update then requires the check. Strict freshness is unconfirmed; unattended merging stops until GitHub enforcement is confirmed.`;
   return { unchanged: deferred, changed: deferred };
 }
 

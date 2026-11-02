@@ -925,6 +925,9 @@ test("plan-limited final validation refuses missing, failed, pending and malform
     { checks: [{ ...planLimited.checks[0], state: "UNKNOWN" }] },
     { runs: [{ workflow_id: 1 }] },
     { failRuns: 403 },
+    { workflowStatus: 404 },
+    { workflowStatus: 403 },
+    { workflowResponse: {} },
   ]) {
     const result = run(t, { ...planLimited, ...state });
     assert.notEqual(result.status, 0, result.stderr);
@@ -941,6 +944,7 @@ test("plan-limited final verification observes release-hold and validation-time 
     { afterChecks: { defaultRevision: "d".repeat(40) } },
     { afterChecks: { head: "d".repeat(40) } },
     { afterChecks: { baseBranch: "other" } },
+    { afterChecks: { defaultBranch: "other" } },
   ]) {
     const result = run(t, { ...planLimited, ...state });
     assert.notEqual(result.status, 0, result.stderr);

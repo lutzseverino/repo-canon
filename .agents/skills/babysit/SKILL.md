@@ -113,7 +113,8 @@ body was checked. Link-free bodies need no reconstruction.
    conditions hold on the latest head, run
    `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
    the full SHA that starts the wait's latest line. Exit `0` means merged;
-   `2` means the head changed, so return to step 1; `3` means it did not merge
+   `2` means the head changed or current-head validation has not succeeded,
+   so return to step 1; `3` means it did not merge
    and needs the owner, so hand off with a question under
    `CONTRIBUTING.md`'s Comments section, without retrying the merge;
    `4` means the base is stale: follow Branch-update recovery only if its one

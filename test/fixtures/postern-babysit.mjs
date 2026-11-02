@@ -84,6 +84,16 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         ? json(state.protection)
         : json({ message: "Branch not protected" }, 404);
     }
+    if (path.includes("/contents/.github/workflows/pr-metadata.yml")) {
+      if (state.workflowStatus)
+        return json({ message: "workflow unreadable" }, state.workflowStatus);
+      return json(
+        state.workflowResponse ?? {
+          type: "file",
+          path: ".github/workflows/pr-metadata.yml",
+        },
+      );
+    }
     if (/\/compare\//.test(path)) {
       const stale =
         state.stale ||
