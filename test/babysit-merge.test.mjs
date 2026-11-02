@@ -880,7 +880,7 @@ const planLimited = {
   checks: [
     {
       __typename: "StatusContext",
-      context: "CI",
+      context: "PR metadata",
       state: "SUCCESS",
       targetUrl: "https://example.com/ci",
     },
@@ -988,4 +988,75 @@ test("plan-limited expected-head merge accepts the owner's residual concurrent-b
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.state.merge.expectedHead, head);
   assert.equal(result.state.pullRequestState, "MERGED");
+});
+
+test("plan-limited delivery refuses unrelated green CI without metadata validation", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const result = run(
+    t,
+    {
+      ...planLimited,
+      title: "invalid title",
+      body: "",
+      checks: [{ ...planLimited.checks[0], context: "CI" }],
+    },
+    undefined,
+    target,
+  );
+  assert.equal(result.status, 2, result.stderr);
+  assert.equal(result.state.merge, undefined);
+});
+
+test("plan-limited metadata validation must succeed on this exact head", (t) => {
+  const unrelated = { ...planLimited.checks[0], context: "CI" };
+  const metadata = {
+    __typename: "CheckRun",
+    name: "PR metadata",
+    workflowName: "PR metadata validation",
+    status: "COMPLETED",
+    conclusion: "SUCCESS",
+    startedAt: "2026-11-02T12:00:00Z",
+    detailsUrl: "https://example.com/metadata",
+  };
+  for (const conclusion of [
+    "SUCCESS",
+    "FAILURE",
+    "NEUTRAL",
+    "SKIPPED",
+    "CANCELLED",
+  ]) {
+    const result = run(t, {
+      ...planLimited,
+      checks: [unrelated, { ...metadata, conclusion }],
+    });
+    assert.equal(
+      result.status,
+      conclusion === "SUCCESS" ? 0 : 2,
+      result.stderr,
+    );
+    if (conclusion !== "SUCCESS") assert.equal(result.state.merge, undefined);
+  }
+  for (const checks of [
+    [unrelated, { ...metadata, status: "IN_PROGRESS", conclusion: null }],
+    [unrelated, { ...metadata, name: "Unrelated" }],
+  ]) {
+    const result = run(t, { ...planLimited, checks });
+    assert.equal(result.status, 2, result.stderr);
+    assert.equal(result.state.merge, undefined);
+  }
+  const oldHead = "d".repeat(40);
+  const old = run(t, {
+    ...planLimited,
+    checksByHead: { [head]: [unrelated], [oldHead]: [metadata] },
+  });
+  assert.equal(old.status, 2, old.stderr);
+  assert.equal(old.state.merge, undefined);
+  const rerun = run(t, {
+    ...planLimited,
+    checks: [
+      { ...metadata, conclusion: "FAILURE", startedAt: "2026-11-02T11:00:00Z" },
+      metadata,
+    ],
+  });
+  assert.equal(rerun.status, 0, rerun.stderr);
 });

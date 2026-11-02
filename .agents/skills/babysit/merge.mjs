@@ -334,7 +334,23 @@ export async function main(argv = process.argv.slice(2), connection) {
         );
       // Reuse wait's selection and attempt semantics, but require positive
       // validation: its no-check timeout is not successful evidence here.
-      const checks = checkStates(await checkRollup(connection, head));
+      const rollup = await checkRollup(connection, head);
+      const checks = checkStates(rollup);
+      // Metadata is required even without platform enforcement. Unlike wait's
+      // general checks, this validation must succeed, not merely skip or settle.
+      const metadataChecks = checkStates(
+        rollup
+          .filter((item) => (item.name ?? item.context) === "PR metadata")
+          .map((item) =>
+            item.__typename === "CheckRun"
+              ? {
+                  ...item,
+                  conclusion:
+                    item.conclusion === "SUCCESS" ? "SUCCESS" : "FAILURE",
+                }
+              : item,
+          ),
+      );
       const runs = workflowRuns(
         await pages(
           connection,
@@ -357,7 +373,11 @@ export async function main(argv = process.argv.slice(2), connection) {
         policy: null,
         author: current.author?.login,
       });
-      if (!checks.length || validation.code !== 0) {
+      if (
+        !metadataChecks.length ||
+        metadataChecks.some((check) => check.state !== "pass") ||
+        validation.code !== 0
+      ) {
         console.error(
           "Current-head validation has not succeeded; wait again before merging.",
         );
