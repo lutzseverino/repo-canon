@@ -2102,7 +2102,7 @@ test("babysit waits only through its script, and the GitHub rules own the no-che
   assert.match(babysit, /`4` for the reason its line gives/);
   assert.match(
     babysit,
-    /`node <this skill's directory>\/merge\.mjs <number> <SHA>`, where `<SHA>` is the full SHA that starts the wait's latest line\. Exit `0` means merged; `2` means the head changed, so return to step 1/,
+    /`node <this skill's directory>\/merge\.mjs <number> <SHA>`, where `<SHA>` is the full SHA that starts the wait's latest line\. Exit `0` means merged; `2` means the head changed or current-head validation has not succeeded, so return to step 1/,
   );
   assert.match(
     babysit,
@@ -2493,7 +2493,10 @@ test("owner-reviewed heads need explicit current-head approval independently of 
     babysit,
     /Read the authoritative implementation contract and any worker handoff and apply the `github-repository-configuration` rules' Designated owner review gate/,
   );
-  assert.match(babysit, /`2` means the head changed, so return to step 1/);
+  assert.match(
+    babysit,
+    /`2` means the head changed or current-head validation has not succeeded, so return to step 1/,
+  );
   assert.match(
     babysit,
     /Read the PR comments carrying designation provenance and current-head approval, and record approval there under that gate/,
