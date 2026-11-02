@@ -291,7 +291,8 @@ head alongside the conditions below.
 Merge a pull request once every required check passes on its latest head and
 every review thread is answered with its fix or a reasoned decline under the
 [comment rules](#comments). Checks must include the current default branch
-under GitHub's up-to-date-branch enforcement; unconfirmed enforcement stops unattended merging. The
+under GitHub enforcement wherever available; proven private-plan limitations
+require immediate merging-agent verification with the accepted concurrent-base race. The
 `github-repository-configuration` rules define freshness, passing checks and
 reviewer policy.
 Squash-merge pull requests into their base branch, passing the subject

@@ -38,8 +38,17 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       pageInfo: { hasNextPage: false, endCursor: null },
     });
     if (/\/repos\/[^/]+\/[^/]+$/.test(path))
-      return json({ default_branch: state.defaultBranch ?? "main" });
+      return json({
+        default_branch: state.defaultBranch ?? "main",
+        private: state.private ?? false,
+      });
+    const planMessage = "Upgrade to GitHub Pro or make this repository public";
+    if (path.endsWith("/rulesets"))
+      return state.planRulesets
+        ? json({ message: planMessage }, 403)
+        : json([]);
     if (/\/rules\/branches\//.test(path)) {
+      if (state.planRulesets) return json({ message: planMessage }, 403);
       if (state.failFreshness)
         return json({ message: "freshness read failed" }, state.failFreshness);
       return json(
@@ -65,6 +74,7 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       );
     }
     if (/\/branches\/[^/]+\/protection$/.test(path)) {
+      if (state.planProtection) return json({ message: planMessage }, 403);
       if (state.protectionStatus)
         return json(
           { message: "protection read failed" },
@@ -73,6 +83,16 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       return state.protection
         ? json(state.protection)
         : json({ message: "Branch not protected" }, 404);
+    }
+    if (path.includes("/contents/.github/workflows/pr-metadata.yml")) {
+      if (state.workflowStatus)
+        return json({ message: "workflow unreadable" }, state.workflowStatus);
+      return json(
+        state.workflowResponse ?? {
+          type: "file",
+          path: ".github/workflows/pr-metadata.yml",
+        },
+      );
     }
     if (/\/compare\//.test(path)) {
       const stale =
@@ -114,6 +134,11 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
     }
     if (path === "/graphql") {
       if (body.query.includes("BabysitReleaseHold")) {
+        if (state.afterReleaseHold) {
+          Object.assign(state, state.afterReleaseHold);
+          delete state.afterReleaseHold;
+          save();
+        }
         if (state.failFactoryConfiguration)
           return json(
             { message: "factory configuration read failed" },
@@ -222,7 +247,9 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
           },
         });
       if (body.query.includes("BabysitChecks")) {
-        const checks = state.checks ?? [];
+        const checks = state.checksByHead
+          ? (state.checksByHead[body.variables.head] ?? [])
+          : (state.checks ?? []);
         if (state.afterChecks) {
           Object.assign(state, state.afterChecks);
           delete state.afterChecks;
@@ -345,11 +372,14 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
     }
     if (/\/commits\/[^/]+$/.test(path))
       return json({ commit: { committer: { date: state.committedAt } } });
-    if (path.endsWith("/actions/runs"))
+    if (path.endsWith("/actions/runs")) {
+      if (state.failRuns)
+        return json({ message: "runs refused" }, state.failRuns);
       return json({
         total_count: (state.runs ?? []).length,
         workflow_runs: state.runs ?? [],
       });
+    }
     let values;
     if (path.endsWith("/reviews")) {
       if (state.rejectReviewReads)

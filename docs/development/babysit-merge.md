@@ -47,8 +47,19 @@ compatible with that evidence; an empty list alone is insufficient. Every other
 or missing caller-bypass value leaves that ruleset unconfirmed. Otherwise it
 reads classic protection, requiring nonempty strict checks enforced for admins
 too. These are read-only policy checks; setup and delivery
-never change bypass settings to make a merge pass. Unavailable, unreadable or
-unconfirmed enforcement stops unattended merging, including deferred adoptions.
+never change bypass settings to make a merge pass.
+
+Only recognized plan-limit 403 responses for both classic protection and
+rulesets on a private repository permit merging-agent freshness verification.
+After slow gates, immediately before the expected-head merge, verify the live
+default destination, unchanged validated/reviewed head, successful applicable
+validation on that exact head, and current default-tip ancestry. Missing or
+unreadable evidence, ordinary permission refusals, missing workflow and deferred
+setup grant no exception. Another writer can advance the base after this final
+check and the merge can succeed: the owner accepts this residual concurrent-base
+race only on this proven plan-limited path. Immediate checks narrow the window;
+they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
+enforcement remains required wherever available.
 
 Access then compares the default branch against the waited head. A stale branch
 returns exit `4` for branch-update recovery. The comparison is preflight only:
@@ -87,10 +98,10 @@ a newline. Failed or unconfirmed merges write no success output.
 
 Exit `0` means merged. Exit `3` means not merged and needs the owner: either
 the base branch requires a merge queue, or a successful merge call left the
-PR in a state other than `merged`, or freshness enforcement cannot be confirmed. The skill hands off with a question under
+PR in a state other than `merged`, or neither freshness enforcement nor the proven private-plan path can be confirmed. The skill hands off with a question under
 [the contribution guide's comment rules](../../CONTRIBUTING.md#comments),
-without retrying the merge. Exit `2` means the head changed, either before the merge
-call or when a refused merge is followed by a read showing a different head;
+without retrying the merge. Exit `2` means current-head validation has not succeeded, or the head changed
+before the merge call or after a refused merge;
 the skill returns to its wait step. Exit `1` reports an invalid invocation or
 a platform error outside freshness preflight, including unreadable trusted review
 configuration. Invalid trusted review declarations return `3` with the selected

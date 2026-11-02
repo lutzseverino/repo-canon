@@ -190,13 +190,19 @@ integration matches what GitHub offers the repository, names the unavailable
 requirement and its reason, and asks to upgrade the plan or make the repository
 public; the next adoption or update then requires the check as usual.
 
-Adoption deferrals never authorize unattended merging. Until current GitHub
-policy reads confirm strict freshness, unattended delivery stops for an owner
-handoff. This also applies to unavailable enforcement, unreadable settings and
-failed readback. Setup preserves bypass actors and admin-enforcement settings;
-babysit requires an enforcement path that cannot bypass the platform's final
-freshness guard. The rules define that merge condition separately from setup's
-point-in-time readback.
+Only recognized plan-limit 403 responses for both classic protection and
+rulesets on a private repository permit merging-agent freshness verification.
+After slow gates, immediately before the expected-head merge, verify the live
+default destination, unchanged validated/reviewed head, successful applicable
+validation on that exact head, and current default-tip ancestry. Missing or
+unreadable evidence, ordinary permission refusals, missing workflow and deferred
+setup grant no exception. Another writer can advance the base after this final
+check and the merge can succeed: the owner accepts this residual concurrent-base
+race only on this proven plan-limited path. Immediate checks narrow the window;
+they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
+enforcement remains required wherever available.
+Setup preserves bypass actors and admin-enforcement settings. Its point-in-time
+readback does not replace babysit's live merge evidence.
 
 When the default branch does not carry the workflow, requiring `PR metadata` is
 deferred. The operation creates no ruleset, adds no classic required check, and

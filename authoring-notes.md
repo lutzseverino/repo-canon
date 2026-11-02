@@ -415,9 +415,13 @@ repeated.
   up-to-date-branch enforcement for every adopter. Setup reconciles classic
   protection and managed rulesets with confirmation and readback, preserving
   unrelated policy. Babysit returns a stale PR to a bounded branch update,
-  validation and review cycle; GitHub guards the race at merge time. Unavailable,
-  unreadable or unconfirmed enforcement stops unattended merging even when
-  adoption deferred setup. The owner accepted extra CI runs for concurrent PRs
+  validation and review cycle; GitHub guards the race wherever offered.
+  On proven private-plan unavailability of both enforcement mechanisms, the
+  merging agent verifies exact-head validation and current-base ancestry
+  immediately before merge. The owner accepted the residual concurrent-base
+  race on 2026-11-02 in
+  [#814](https://github.com/lutzseverino/repo-canon/issues/814#issuecomment-6578631340).
+  Unreadable or unconfirmed evidence and deferred setup still stop delivery. The owner accepted extra CI runs for concurrent PRs
   in [#656](https://github.com/lutzseverino/repo-canon/issues/656#issuecomment-6451776114).
   On 2026-10-29, approved for filing on 2026-10-30, the owner chose one
   orchestrator recovery for a stopped ordinary factory run with an open PR,

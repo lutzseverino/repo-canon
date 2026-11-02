@@ -113,7 +113,8 @@ body was checked. Link-free bodies need no reconstruction.
    conditions hold on the latest head, run
    `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
    the full SHA that starts the wait's latest line. Exit `0` means merged;
-   `2` means the head changed, so return to step 1; `3` means it did not merge
+   `2` means the head changed or current-head validation has not succeeded,
+   so return to step 1; `3` means it did not merge
    and needs the owner, so hand off with a question under
    `CONTRIBUTING.md`'s Comments section, without retrying the merge;
    `4` means the base is stale: follow Branch-update recovery only if its one
@@ -147,10 +148,17 @@ permit no merge write and follow the freshness-read failure handling.
 
 ## Branch-update recovery
 
-The merge command confirms GitHub's required-check freshness before merging;
-unavailable, unreadable or unconfirmed enforcement requires the owner handoff,
-even when remote setup was deferred. It never substitutes local ancestry for
-GitHub's final guard. Exit `4` reports a stale base, separately from a changed
+Only recognized plan-limit 403 responses for both classic protection and
+rulesets on a private repository permit merging-agent freshness verification.
+After slow gates, immediately before the expected-head merge, verify the live
+default destination, unchanged validated/reviewed head, successful applicable
+validation on that exact head, and current default-tip ancestry. Missing or
+unreadable evidence, ordinary permission refusals, missing workflow and deferred
+setup grant no exception. Another writer can advance the base after this final
+check and the merge can succeed: the owner accepts this residual concurrent-base
+race only on this proven plan-limited path. Immediate checks narrow the window;
+they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
+enforcement remains required wherever available. Exit `4` reports a stale base, separately from a changed
 PR head or an owner-only failure; no merge succeeded.
 
 Allow one branch-update recovery per babysit invocation. Preserve committed,
@@ -200,6 +208,9 @@ Paths are relative to the repository root.
 - `.github/factory-review-policy.json`: the optional app-author review policy.
   When it is missing at the selected commit, configured reviewer behavior
   applies.
+- `.github/workflows/pr-metadata.yml`: the workflow whose presence the merge
+  command verifies on the live default branch for plan-limited delivery. When
+  missing or unreadable, that path permits no merge.
 - `.factory/config.json`: its `labels.releaseHold`, which the merge command
   reads. When the file or the key is missing, no release hold applies.
 - `.repo-standards/runtime/`: the pinned Repository Standards runtime, its

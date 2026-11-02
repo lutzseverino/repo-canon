@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Usage: node merge.mjs <number> <head SHA>, from the repository root.
-// Exit codes: 0 merged, 1 usage or platform error, 2 head changed; wait again,
+// Exit codes: 0 merged, 1 usage or platform error, 2 head changed or validation not successful; wait again,
 // 3 not merged; needs the owner, 4 stale base; update and validate,
 // 5 missing review outcome; post the completed record and rerun,
 // 9 release hold; leave open and resume after the hold ends.
@@ -10,6 +10,8 @@ import {
   executedAsScript,
   pages,
   requestData,
+  checkRollup,
+  workflowRuns,
 } from "./platform.mjs";
 import {
   InvalidTrustedReviewConfiguration,
@@ -17,6 +19,8 @@ import {
 } from "./trusted-review-config.mjs";
 import { skipsExternalReview } from "./review-policy.mjs";
 import { completeReviewOutcome } from "./review-outcome.mjs";
+
+import { checkStates, decide } from "./wait.mjs";
 
 function needsOwner(message) {
   console.error(message);
@@ -42,14 +46,41 @@ function staleBase() {
   process.exitCode = 4;
 }
 
+function planLimited(error) {
+  return (
+    error.status === 403 &&
+    /Upgrade to GitHub .+ or make this repository public/i.test(
+      error.platformMessage ?? "",
+    )
+  );
+}
+
 // Active branch rules include inherited rulesets. Read the ruleset details too:
 // the merging credential must be unable to bypass the final platform guard.
-async function enforcedFreshness(connection, branch) {
+async function enforcedFreshness(connection, branch, privateRepository) {
   const path = `/repos/${connection.repository.path}`;
-  const rulePages = await pages(
-    connection,
-    `${path}/rules/branches/${encodeURIComponent(branch)}?per_page=100`,
-  );
+  let rulePages;
+  try {
+    rulePages = await pages(
+      connection,
+      `${path}/rules/branches/${encodeURIComponent(branch)}?per_page=100`,
+    );
+  } catch (error) {
+    if (!privateRepository || !planLimited(error)) throw error;
+    // A branch-rule refusal alone does not establish both capabilities.
+    for (const endpoint of [
+      `${path}/branches/${encodeURIComponent(branch)}/protection`,
+      `${path}/rulesets?per_page=100`,
+    ]) {
+      try {
+        await requestData(connection, { path: endpoint });
+        return false;
+      } catch (capabilityError) {
+        if (!planLimited(capabilityError)) throw capabilityError;
+      }
+    }
+    return "plan-limited";
+  }
   if (!rulePages.every(Array.isArray))
     throw new Error("Could not read required-check freshness rules.");
   for (const rule of rulePages.flat()) {
@@ -230,6 +261,7 @@ export async function main(argv = process.argv.slice(2), connection) {
     );
   }
   let branch;
+  let freshness;
   try {
     const repository = await requestData(connection, {
       path: `/repos/${connection.repository.path}`,
@@ -243,7 +275,12 @@ export async function main(argv = process.argv.slice(2), connection) {
       return needsOwner(
         "Could not confirm the PR targets the current default branch; needs the owner.",
       );
-    if (!(await enforcedFreshness(connection, branch)))
+    freshness = await enforcedFreshness(
+      connection,
+      branch,
+      repository.private === true,
+    );
+    if (!freshness)
       return needsOwner(
         "Required-check freshness is unconfirmed or bypassable; unattended merging stops until GitHub enforcement is fixed by the owner.",
       );
@@ -269,6 +306,101 @@ export async function main(argv = process.argv.slice(2), connection) {
     return needsOwner(
       `Could not confirm the release hold at ${configuration.revision}: ${error.message}`,
     );
+  }
+  if (freshness === "plan-limited") {
+    try {
+      const current = await connection.pullRequests.pullRequest(Number(number));
+      if (current.headCommit !== head) return retry();
+      const repository = await requestData(connection, {
+        path: `/repos/${connection.repository.path}`,
+      });
+      branch = repository?.default_branch;
+      if (
+        typeof branch !== "string" ||
+        !branch ||
+        current.baseBranch !== branch ||
+        repository.private !== true
+      )
+        return needsOwner(
+          "Could not confirm the PR targets the current private default branch; needs the owner.",
+        );
+      const workflowPath = ".github/workflows/pr-metadata.yml";
+      const workflow = await requestData(connection, {
+        path: `/repos/${connection.repository.path}/contents/${workflowPath}?ref=${encodeURIComponent(branch)}`,
+      });
+      if (workflow?.type !== "file" || workflow.path !== workflowPath)
+        return needsOwner(
+          "Could not confirm the default-branch PR metadata workflow; needs the owner.",
+        );
+      // Reuse wait's selection and attempt semantics, but require positive
+      // validation: its no-check timeout is not successful evidence here.
+      const rollup = await checkRollup(connection, head);
+      const checks = checkStates(rollup);
+      // Metadata is required even without platform enforcement. Unlike wait's
+      // general checks, this validation must succeed, not merely skip or settle.
+      const metadataChecks = checkStates(
+        rollup
+          .filter((item) => (item.name ?? item.context) === "PR metadata")
+          .map((item) =>
+            item.__typename === "CheckRun"
+              ? {
+                  ...item,
+                  conclusion:
+                    item.conclusion === "SUCCESS" ? "SUCCESS" : "FAILURE",
+                }
+              : item,
+          ),
+      );
+      const runs = workflowRuns(
+        await pages(
+          connection,
+          `/repos/${connection.repository.path}/actions/runs?head_sha=${head}&per_page=100`,
+        ),
+      );
+      const now = Date.now();
+      const validation = decide({
+        checks,
+        runs,
+        head,
+        now,
+        startedAt: now,
+        limitMs: 0,
+        comments: [],
+        requestedAt: now,
+        pushedAt: now,
+        pushRecorded: false,
+        reviewer: null,
+        policy: null,
+        author: current.author?.login,
+      });
+      if (
+        !metadataChecks.length ||
+        metadataChecks.some((check) => check.state !== "pass") ||
+        validation.code !== 0
+      ) {
+        console.error(
+          "Current-head validation has not succeeded; wait again before merging.",
+        );
+        process.exitCode = 2;
+        return;
+      }
+      const finalPull = await connection.pullRequests.pullRequest(
+        Number(number),
+      );
+      if (finalPull.headCommit !== head) return retry();
+      const finalRepository = await requestData(connection, {
+        path: `/repos/${connection.repository.path}`,
+      });
+      if (
+        finalRepository?.default_branch !== branch ||
+        finalRepository.private !== true ||
+        finalPull.baseBranch !== branch
+      )
+        return needsOwner("The PR destination changed; needs the owner.");
+      if (await baseIsStale(connection, branch, head)) return staleBase();
+    } catch (error) {
+      return unreadableFreshness(error);
+    }
   }
   let mergedCommit;
   try {
