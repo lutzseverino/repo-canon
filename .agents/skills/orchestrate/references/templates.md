@@ -99,6 +99,12 @@ Take its times from the clock, in UTC, as `log.md` does.
   [expedited change](launches.md#expedited-change)'s row starts its Item with
   `expedited`, links its `Answered` entry and pull request in Evidence, and
   states the pause it holds.
+  A time-bounded host access grant you asked the maintainer for is one row you
+  own: *Waiting on* lists the workers using it, and its *Next check* names a
+  wake-up at its time bound. When a listed worker reports back, remove it from
+  the row. When the last one reports, end the grant, tell the maintainer, log
+  its end in `log.md` and remove the row. At its own time bound the grant has
+  ended, whoever still uses it: log its end and remove the row.
 - **Running launches** holds one row per agent launch you started: its host's
   hostname, its kind (grill, triage run, research run, worker or Close
   review), its session reference once the harness gives one, and its start

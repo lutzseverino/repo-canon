@@ -128,8 +128,8 @@ node scripts/create-planning-skill-fixtures.mjs
 pnpm run test:planning-skill-fixtures
 ```
 
-The builder writes `manifest.json` under its root and prints that path. Seven
-repositories cover nine skills: `project-agent-guidance`, which links no skill,
+The builder writes `manifest.json` under its root and prints that path. Eight
+repositories cover ten skills: `project-agent-guidance`, which links no skill,
 supplies existing project-specific `AGENTS.md` instructions for the
 `project-agent-guidance` contextual work described in
 [adoption compatibility](adoption-compatibility.md#preserving-project-instructions);
@@ -137,6 +137,7 @@ supplies existing project-specific `AGENTS.md` instructions for the
 `triage-wayfinder` for `triage` and `wayfinder`; `factory-planning` for
 factory-profile triage and readiness decisions; `triage-routing` for routing
 by uncertainty and brief acceptance; `orchestrate` for the workbench plan lifecycle;
+`host-grant` for `orchestrate` and `factory` with a shared host access grant;
 and `delivery` for
 `implement`, `pr`, and `prototype`. The delivery repository
 includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
@@ -161,7 +162,7 @@ adopting-repository conformance. Root guidance points to this adapter; the
 upstream workflow skills remain intact.
 
 All scenarios explicitly use `standard`, except `factory-planning`,
-`triage-routing` and `orchestrate`, which use `factory`. Standard scenarios
+`triage-routing`, `orchestrate` and `host-grant`, which use `factory`. Standard scenarios
 expose GitHub repository configuration rules without factory workflow rules.
 
 For `triage-wayfinder`, follow the numbered checkpoints in `docs/exercise.md`
@@ -419,3 +420,31 @@ and times, observed proposal/approval and routing checkpoints, fresh-session
 resume and closure, and any limits. Retain transcripts and resulting workbench
 commits outside maintained documentation. Builder tests establish setup
 correctness; only these agent sessions establish exercise outcomes.
+
+## Orchestrate and factory: a shared host access grant
+
+Use the planning builder above from the candidate checkout. Its manifest entry
+`repositories.host-grant` names the disposable project, which links the exact
+candidate `orchestrate` and `factory` skills, and a separate workbench holding
+an approved, active plan handed over by a simulated previous session. Source
+ticket 01 has merged through a pull request that links live-acceptance tickets
+02 and 03 without closing them. Both are ready under the skip route, and their
+live steps need the same staging host. Prerequisites and the session limits
+match the [orchestrate exercise](#orchestrate-two-sessions-and-a-local-workbench);
+no worker is launched, and the operator plays both workers.
+
+Run the scenario twice, each time from a fresh build: order A, where the
+worker on 02 reports first, and order B, where the worker on 03 reports first.
+The operator relays `docs/participant-inputs.md` one turn at a time: the
+request to deliver, the maintainer's time-bounded grant, then the order's two
+reports. The first report offers to end the grant.
+
+In both orders, check that the session asks the maintainer for the grant in
+`inbox.md`, records it as one In flight row it owns, with both workers listed
+before their simulated launches and a wake-up at the grant's time bound, and
+gives each worker the grant as task context. At the first report the reporting
+worker leaves the row, the offer is declined and the grant stays. At the second
+report the session ends the grant, tells the maintainer, logs its end and
+removes the row. Each ticket closes only on its recorded live acceptance, never
+on the merge. Report both orders' observed outcomes, session references and
+workbench commits with the pull request that needs them.

@@ -28,6 +28,13 @@ specification, and its blockers, and clarify contradictions. Start a ticket
 only after its blockers are closed.
 
 Every ticket merges into its base branch on its own, with its checks passing.
+An issue closes when its own acceptance criteria hold. After readiness, nobody
+edits an implementation contract to record progress: progress lives in linked
+pull requests, sub-issue states and comments.
+
+Work that must be shown on a live system splits into a source ticket, which
+closes when its pull request merges, and a live-acceptance ticket, blocked by
+the source ticket, which closes only on its recorded live acceptance.
 
 ## Triage
 
@@ -215,9 +222,11 @@ report the checks you ran and their outcomes, and link the relevant issue.
 A pull request that finishes its issue links it with a closing reference, such
 as `Closes #123`, so merging it closes the issue. A pull request that does only
 part of an issue's work links it without a closing reference, such as
-`Part of #123`. A closing reference closes the issue only when the pull request
-merges into the default branch; with another base branch, whoever merges closes
-the issue after the merge. If the work finished the issue, close it.
+`Part of #123`. A source pull request links its live-acceptance ticket this
+way, because a merge never closes one. A closing reference closes the issue
+only when the pull request merges into the default branch; with another base
+branch, whoever merges closes the issue after the merge. If the work finished
+the issue, close it.
 
 A Direct change is work without a ticket, requested by the maintainer in a
 thread or making a minor correction, such as a typo, broken link, or formatting

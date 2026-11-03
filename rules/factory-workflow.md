@@ -122,7 +122,11 @@ factory must not pick up gets `ready-for-agent`, one `model:` label and
 the owner reviews before merge, or work whose live steps need host access the
 maintainer grants. A directly launched worker performs the agent work,
 including the source changes; host access gates only the live host steps and
-does not designate owner review of the source PR.
+does not designate owner review of the source PR. A live-acceptance ticket
+takes this route, and a merge never closes it. The orchestrating agent that
+asked the maintainer for a time-bounded host access grant owns it and records
+the workers using it. Workers never end a grant: it ends when the last of them
+reports back, or at its own time bound.
 Whoever applies `factory:skip` creates it if the repository lacks it, as for
 `model:` labels; the factory never creates or
 removes it. An agent using the supplied credentials implements skip-labelled

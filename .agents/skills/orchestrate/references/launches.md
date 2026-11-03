@@ -70,6 +70,14 @@ including when resuming a plan. After an owner question is resolved, follow
 the applicable installed continuation rules to resume the worker or that same
 open PR.
 
+Workers' live steps on a host need access the maintainer grants. Ask the
+maintainer for time-bounded host access in `inbox.md`. List each worker on the
+grant's row before you launch it, and give it the grant and its time bound as
+task context; the worker never ends the grant. The grant's row in `now.md`'s
+In flight, as [templates](templates.md#nowmd) says, is how you own it. In a
+repository a factory serves, the `factory` skill installed there is how to
+deliver that skip-route work.
+
 ## Expedited change
 
 When the owner asks for something now, their request is its approval and

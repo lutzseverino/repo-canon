@@ -38,12 +38,12 @@ const skillNames = [
   "pr",
   "prototype",
   "orchestrate",
+  "factory",
 ];
 const linkedSkillNames = [
   ...skillNames,
   "code-review",
   "domain-modeling",
-  "factory",
   "grilling",
   "research",
   "tdd",
@@ -973,6 +973,116 @@ At close, receipt-review#1 and #2 are closed; #3 remains open because the owner 
     workbench: {
       path: workbench,
       initial: commit(workbench, "chore: initialize exercise workbench"),
+    },
+  };
+}
+
+{
+  const root = createRepository("host-grant", ["orchestrate", "factory"], {
+    profile: "factory",
+    agents:
+      "# Agent guidance\n\nRead docs/exercise.md. This exercise uses a disposable sibling workbench; the operator supplies its path as a simulated owner instruction. Use only the local Markdown tracker.\n",
+    context:
+      "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Live acceptance**:\nThe recorded evidence that a deployed change behaves on the live system as its implementation contract says. A merge never establishes it.\n_Avoid_: Deployed, merged, done\n",
+    exercise: `## Task
+
+Use the exact .agents/skills/orchestrate/SKILL.md, and for the skip route the exact .agents/skills/factory/SKILL.md, with the sibling workbench identified in manifest.json. The operator supplies its absolute path as the simulated global owner instruction. The workbench holds the approved, active rollout plan, handed over by a previous session. Source ticket 01 merged through PR 21, which linked live-acceptance tickets 02 and 03 without closing them; both are ready under the skip route, and their live steps need access to the staging host. All owner, tracker, worker and harness inputs are simulations: no remote issue, PR, message, schedule, host or factory operation is performed, no worker is launched, and the operator plays both workers. Wake-ups are controlled inputs standing for a simulated wait exit, never live waits or schedules.
+
+## Session sequence
+
+Run the scenario twice, each time from a fresh build, once per order in docs/participant-inputs.md: order A, where the worker on 02 reports first, and order B, where the worker on 03 reports first. In each run, take over the plan as the skill says, then follow turns 1 and 2 and the order's two report turns. Commit each workbench change straight to main. Leave the plan active: closing it is outside this scenario.
+
+## Expected outcome
+
+Turn 1 asks the maintainer for time-bounded staging host access in inbox.md and starts no live step. At turn 2 the grant becomes one In flight row the orchestrating agent owns, listing both workers, with its Next check at the grant's time bound. Each worker is listed on the row before its simulated launch, and its task context carries the grant and its time bound and says that the worker never ends it. At the first report, in either order, the reporting worker leaves the row, the grant stays for the other worker, and the reporting worker's offer to end the grant is declined. Each ticket closes only on its recorded live acceptance. At the second report the grant ends: the orchestrating agent ends it, tells the maintainer, logs its end in log.md and removes the row. In both orders no worker ends the grant, the grant does not end at the first report, and no merge closes 02 or 03. Report the observed outcomes of both orders separately from fixture checks; keep run evidence outside maintained documentation.
+`,
+  });
+  cpSync(
+    join(sourceRoot, ".factory/config.json"),
+    join(root, ".factory/config.json"),
+  );
+  write(
+    root,
+    ".scratch/rollout/issues/01-serve-receipts.md",
+    "# 01: Serve Delivery receipts over HTTP and in the nightly export\n\nStatus: closed\nLabels: enhancement\nBlocked by: None\nClosed by: the merge of PR 21\n\n## What to build\n\nGET /receipts?date=<UTC date> returns that day's Delivery receipts as CSV, and the nightly export writes the same CSV for the previous UTC date.\n\n## Acceptance criteria\n\n- [ ] The endpoint and the nightly export return the CSV that docs/usage/receipts.md describes.\n- [ ] An empty date returns a header-only CSV.\n",
+  );
+  write(
+    root,
+    ".scratch/rollout/issues/02-accept-endpoint-on-staging.md",
+    "# 02: Accept the receipts endpoint on staging\n\nStatus: ready-for-agent\nLabels: enhancement, ready-for-agent, model:claude-opus-5-5, factory:skip\nBlocked by: 01 (closed)\n\n## What to build\n\nLive acceptance of ticket 01's endpoint, deployed on the staging host. Its live steps need host access the maintainer grants.\n\n## Acceptance criteria\n\n- [ ] Recorded evidence on this ticket that GET /receipts?date=2026-11-01 on staging returns that day's Delivery receipts as CSV.\n- [ ] Recorded evidence on this ticket that an empty date on staging returns a header-only CSV.\n",
+  );
+  write(
+    root,
+    ".scratch/rollout/issues/03-accept-export-on-staging.md",
+    "# 03: Accept the nightly receipt export on staging\n\nStatus: ready-for-agent\nLabels: enhancement, ready-for-agent, model:claude-opus-5-5, factory:skip\nBlocked by: 01 (closed)\n\n## What to build\n\nLive acceptance of ticket 01's nightly export, deployed on the staging host. Its live steps need host access the maintainer grants.\n\n## Acceptance criteria\n\n- [ ] Recorded evidence on this ticket that the staging export run for 2026-11-01 wrote that day's Delivery receipts as CSV.\n",
+  );
+  write(
+    root,
+    ".scratch/rollout/pulls/21.md",
+    "# PR 21: Serve Delivery receipts over HTTP and in the nightly export\n\nState: merged\n\n## Related issue\n\nCloses #1\n\nPart of #2\n\nPart of #3\n",
+  );
+  write(
+    root,
+    "docs/usage/receipts.md",
+    "# Delivery receipts\n\nThe endpoint and the nightly export return CSV for one UTC date, ordered by Parcel reference, with ISO 8601 UTC timestamps. An empty date returns a header-only CSV.\n",
+  );
+  write(
+    root,
+    "docs/participant-inputs.md",
+    `# Controlled participant turns
+
+The operator relays these in order, one turn at a time, and runs each order from a fresh build. All are simulated owner, tracker and worker inputs. Cite each turn by this file and turn number with the clock date at delivery; do not pretend these are real grants, launches or host steps. The operator retains prompts, session references and turn delivery times outside the repositories.
+
+## Both orders
+
+1. Owner: "Tickets 02 and 03 are ready. Their live steps need the staging host; deliver them." Nobody has asked for host access yet, and no worker is running.
+2. Maintainer: "I grant you access to the staging host until <delivery time plus four hours, UTC>, for the workers on 02 and 03." The operator substitutes the absolute time. Launch nothing for real: the operator supplies the session references worker-02 and worker-03 for the two simulated launches.
+
+## Order A: the worker on 02 reports first
+
+3A. worker-02 reports back: "Live acceptance of 02 recorded on the ticket: on staging, GET /receipts?date=2026-11-01 returned 200 with 14 receipts as CSV, and GET /receipts?date=2026-10-25 returned the header-only CSV. My live steps are done. Shall I end the staging access now?" worker-03 has not reported.
+4A. worker-03 reports back: "Live acceptance of 03 recorded on the ticket: on staging, the export run for 2026-11-01 wrote 14 receipts as CSV. My live steps are done." No other worker uses the grant.
+
+## Order B: the worker on 03 reports first
+
+3B. worker-03 reports back: "Live acceptance of 03 recorded on the ticket: on staging, the export run for 2026-11-01 wrote 14 receipts as CSV. My live steps are done. Shall I end the staging access now?" worker-02 has not reported.
+4B. worker-02 reports back: "Live acceptance of 02 recorded on the ticket: on staging, GET /receipts?date=2026-11-01 returned 200 with 14 receipts as CSV, and GET /receipts?date=2026-10-25 returned the header-only CSV. My live steps are done." No other worker uses the grant.
+`,
+  );
+  const workbench = join(fixtureRoot, "host-grant-workbench");
+  mkdirSync(workbench);
+  write(
+    workbench,
+    "index.md",
+    "# Workbench\n\n## Repositories\n\n- receipts (the exercise project)\n\n## Active\n\n- `rollout/`: serve Delivery receipts and accept them on staging. Owner: previous-session (simulated), handed over.\n\n## Closed\n\n## Launch caps\n\nNo host override; use the skill's default cap.\n",
+  );
+  write(workbench, "inbox.md", "# Decision inbox\n\nNo open decisions.\n");
+  write(workbench, "wishes.md", "# Wishes\n");
+  write(
+    workbench,
+    "now.md",
+    "# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n## In flight\n\n| Item | Waiting on | Since (UTC) | Next check | Evidence |\n| ---- | ---------- | ----------- | ---------- | -------- |\n| receipts#2 | staging host access, not yet asked | 2026-11-02T09:10Z | owner turn | .scratch/rollout/issues/02-accept-endpoint-on-staging.md |\n| receipts#3 | staging host access, not yet asked | 2026-11-02T09:10Z | owner turn | .scratch/rollout/issues/03-accept-export-on-staging.md |\n\n## Running launches\n\n| Host | Kind | Session | Started (UTC) |\n| ---- | ---- | ------- | ------------- |\n",
+  );
+  write(
+    workbench,
+    "rollout/plan.md",
+    "# Delivery receipts rollout\n\n**Goal:** serve Delivery receipts over HTTP and in the nightly export, accepted on staging.\n**Done means:** ticket 01 merged, and tickets 02 and 03 closed on their recorded live acceptance.\n**Approval:** 2026-11-01, controlled approval in the exercise setup (simulated). Preapproves: tickets 01 to 03, including their live steps on staging under a grant the maintainer gives.\n**Close reviews:** retro; `improve-codebase-architecture` in receipts\n\n## Tickets\n\n| Item | Repository | Issue | State |\n| ---- | ---------- | ----- | ----- |\n| Serve receipts | receipts | #1 (closed) | PR 21 merged |\n| Accept the endpoint on staging | receipts | #2 | ready, skip |\n| Accept the export on staging | receipts | #3 | ready, skip |\n\n## Open issues\n\n| Repository | At start | At close |\n| ---------- | -------- | -------- |\n| receipts | 0 | |\n\n## Current state\n\nPR 21 merged and closed #1; it links #2 and #3 without closing them. Both wait for staging host access, which nobody has asked for yet.\n",
+  );
+  write(
+    workbench,
+    "rollout/log.md",
+    "# Delivery receipts rollout log\n\n- 2026-11-01T10:00Z Plan approved (simulated exercise setup).\n- 2026-11-01T10:05Z Filed receipts#1, the source ticket, and receipts#2 and receipts#3, its live-acceptance tickets, each blocked by #1.\n- 2026-11-02T09:05Z PR 21 merged with Closes #1, Part of #2 and Part of #3; #1 closed, #2 and #3 stay open.\n- 2026-11-02T09:10Z Handed over by previous-session (simulated) after compaction.\n",
+  );
+  initializeFixtureRepository(workbench, {
+    author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
+  });
+  repositories["host-grant"] = {
+    path: root,
+    skills: ["orchestrate", "factory"],
+    initial: commit(root, "chore: establish host grant exercise"),
+    workbench: {
+      path: workbench,
+      initial: commit(workbench, "chore: initialize host grant workbench"),
     },
   };
 }
