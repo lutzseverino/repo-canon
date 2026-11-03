@@ -1878,6 +1878,45 @@ test("orchestrate ends a turn only after arming a wake-up, with recurring checks
   assert.match(script, /Both durations are required/);
 });
 
+test("orchestrate takes messages from any session through the workbench's incoming directory (#792)", () => {
+  const core = orchestrateFile("SKILL.md");
+  const templates = orchestrateFile("references/templates.md");
+  const launches = orchestrateFile("references/launches.md");
+  const workbench = /## Workbench (.*?) ## Lifecycle /.exec(core)?.[1] ?? "";
+  const step = /## The wait step (.*?) ## Report-back /.exec(core)?.[1] ?? "";
+  const incoming =
+    /## `incoming\/` (.*?) ## `plan\.md` and `log\.md` /.exec(templates)?.[1] ??
+    "";
+  assert.match(
+    workbench,
+    /`incoming\/`: \[messages\]\(references\/templates\.md#incoming\)/,
+  );
+  assert.match(step, /Every wait also watches `incoming\/`/);
+  // The message shape, both sender paths and the take-in step.
+  assert.match(
+    incoming,
+    /one Markdown file directly in `incoming\/`, named `<UTC>-<sender>\.md`/,
+  );
+  assert.match(incoming, /A sender on the same host .* commits nothing/);
+  assert.match(
+    incoming,
+    /A sender elsewhere commits the file in its own clone of the workbench, .* and pushes it/,
+  );
+  assert.match(
+    core,
+    /A direct message to your session, where a harness offers one, is only a nudge/,
+  );
+  assert.match(
+    incoming,
+    /Take in each message: move it into the `log\.md` of the plan it concerns, .* or into `inbox\.md` when it holds a decision for the owner, since the inbox holds only decisions\. Then delete the file and commit/,
+  );
+  assert.match(
+    launches,
+    /Give every wait the item `dir:<workbench>\/incoming`/,
+  );
+  assert.match(launches, /each poll fetches it/);
+});
+
 test("orchestrate retains observation evidence and routes unexplained inactivity through existing recovery", () => {
   const observation = orchestrateFile("references/launches.md");
   assert.match(

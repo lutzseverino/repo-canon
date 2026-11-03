@@ -232,7 +232,10 @@ follows the checkout's working tree, including unreleased changes, so remove it
 once the workbench has adopted the profile.
 
 The skill's wait script wakes the orchestrating agent when a watched issue,
-pull request or workbench file changes. It runs from the workbench with
+pull request or workbench file changes, or when another session leaves it a
+message in the workbench's `incoming/` directory. When the workbench's branch
+tracks a remote, the wait fetches it on each poll, so a message pushed from
+another host wakes it too. It runs from the workbench with
 Node.js 24 or 26, importing the installed `babysit` skill and vendored Postern
 bundle, and reads GitHub with the GitHub CLI's current credential. Each
 invocation names its own poll interval and maximum duration; the script has no

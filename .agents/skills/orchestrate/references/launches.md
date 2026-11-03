@@ -160,16 +160,23 @@ node <this skill's directory>/wait.mjs --interval <seconds> --max-duration <seco
 ```
 
 - An item is an issue or pull request, as `<owner>/<name>#<number>` or its
-  `https://github.com` link, or a file, as `file:<path>`. For a launch, watch
-  its report-back file in the plan directory and the plan's `plan.md`, where it
-  sets its done mark. A file item reads the workbench checkout the wait runs
-  in, so a launch writing in another clone wakes it only once its push is
-  pulled here; arm such a launch's wake-up on its tracker items or the
-  harness's own events instead.
+  `https://github.com` link, a file, as `file:<path>`, or a directory, as
+  `dir:<path>`. For a launch, watch its report-back file in the plan directory
+  and the plan's `plan.md`, where it sets its done mark. A file item reads the
+  workbench checkout the wait runs in, so a launch writing in another clone
+  wakes it only once its push is pulled here; arm such a launch's wake-up on
+  its tracker items or the harness's own events instead.
+- Give every wait the item `dir:<workbench>/incoming`, for
+  [messages](templates.md#incoming). A directory item also reads the
+  checkout's upstream, when its branch has one: each poll fetches it, and an
+  upstream commit touching a file directly in the directory that the checkout
+  has not pulled is a change, even one fetched before the wait started.
+  Without an upstream, it reads only the checkout.
 - It exits when any item changes: an issue's or pull request's state, labels,
-  or new comments, an issue's linked pull requests, or a file's creation, edit
-  or removal. It measures changes from when it starts, so arm it after your
-  own writes to watched files and before you read the items' current state.
+  or new comments, an issue's linked pull requests, a file's creation, edit
+  or removal, or such a change to a file directly in a directory. It measures
+  changes from when it starts, so arm it after your own writes to watched
+  files and before you read the items' current state.
 - `--interval` is the time between polls and `--max-duration` the longest the
   wait runs. Both are required; choose both for each invocation.
 - It needs Node.js 24 or 26, and the GitHub CLI's current credential for
@@ -181,4 +188,5 @@ Its exit code says what comes next:
   [Progress observation](#progress-observation) says, then arm the wait again.
 - `2`: the maximum duration passed with no change; arm the wait again.
 - `1`: follow the contribution guide's Credentials section for a permission
-  refusal; otherwise fix the invocation or platform error and arm it again.
+  refusal; otherwise fix the invocation or platform error, such as a failed
+  upstream fetch, and arm it again.
