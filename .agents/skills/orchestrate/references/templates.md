@@ -146,11 +146,8 @@ sources by link.
 - A sender elsewhere commits the file in its own clone of the workbench,
   straight to the default branch, and pushes it.
 
-The file is the message. A direct message to your session, where a harness
-offers one, is only a nudge.
-
-The [wait step](../SKILL.md#the-wait-step) watches `incoming/`. When it
-reports a new upstream commit, pull the workbench first. Take in each
+When the [wait step](../SKILL.md#the-wait-step) reports an upstream commit
+not yet pulled, pull the workbench first. Take in each
 message: move it into the `log.md` of the plan it concerns, dated and citing
 its file name, or into `inbox.md` when it holds a decision for the owner,
 since the inbox holds only decisions. Then delete the file and commit, as

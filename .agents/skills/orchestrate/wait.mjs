@@ -20,10 +20,11 @@
 //
 // When a directory lies in a git checkout whose current branch has an
 // upstream, each poll also fetches that upstream's remote, and the directory
-// changes when a fetched upstream commit the checkout does not hold touches
-// it. A failed fetch is a platform error. A checkout without an upstream, or
-// a directory outside any checkout, is read only on disk.
-// Changes are measured from the first read, when the wait is armed.
+// changes when an upstream commit touching a file directly in it is not yet
+// in the checkout, as a message another host pushed is until it is pulled. A
+// failed fetch is a platform error. A checkout without an upstream, or a
+// directory outside any checkout, is read only on disk.
+// Other changes are measured from the first read, when the wait is armed.
 //
 // Usage: node wait.mjs --interval <seconds> --max-duration <seconds> <item>...
 //
@@ -185,17 +186,20 @@ const upstreamOf = async (path) => {
     .split("\0");
   if (!ref || !remote) return null;
   const below = path.slice(existing.length).split(/[\\/]/).filter(Boolean);
+  const directory = [prefix.replace(/\/$/, ""), ...below]
+    .filter(Boolean)
+    .map((segment) => segment.replaceAll(/[*?[\\]/g, "\\$&"));
+  // A glob's `*` matches no `/`, so the pathspec holds only direct files.
   return {
     top,
     ref,
     remote,
-    pathspec:
-      [prefix.replace(/\/$/, ""), ...below].filter(Boolean).join("/") || ".",
+    pathspec: `:(glob)${[...directory, "*"].join("/")}`,
   };
 };
 
-// The upstream commits touching the directory that the checkout's HEAD does
-// not hold, oldest first.
+// The upstream commits touching a file directly in the directory that the
+// checkout's HEAD does not hold, oldest first.
 const unheldCommits = async (upstream) => {
   const listed = await git(upstream.top, [
     "rev-list",
@@ -235,9 +239,10 @@ const readTracker = async (item, connection) => {
   };
 };
 
-// Every item's current facts, keyed as the items are. `fetch` says whether
-// directory items fetch their upstream first, once per checkout.
-const look = async (items, connectionOf, { fetch }) => {
+// Every item's current facts, keyed as the items are. With `readUpstream`,
+// directory items fetch their upstream, once per checkout, and list the
+// commits the checkout lacks; arming lists none, so any such commit wakes.
+const look = async (items, connectionOf, { readUpstream }) => {
   const facts = new Map();
   const fetches = new Map();
   const fetched = (upstream) => {
@@ -253,10 +258,12 @@ const look = async (items, connectionOf, { fetch }) => {
   const read = {
     file: async (item) => fileDigest(item.path),
     dir: async (item) => {
-      if (item.upstream && fetch) await fetched(item.upstream);
+      if (!item.upstream || !readUpstream)
+        return { files: directoryDigests(item.path), commits: [] };
+      await fetched(item.upstream);
       return {
         files: directoryDigests(item.path),
-        commits: item.upstream ? await unheldCommits(item.upstream) : [],
+        commits: await unheldCommits(item.upstream),
       };
     },
     tracker: (item) => readTracker(item, connectionOf(item.repository)),
@@ -289,7 +296,7 @@ const changes = (item, before, after) => {
     });
     for (const commit of after.commits)
       if (!before.commits.includes(commit))
-        found.push(`new upstream commit ${commit}`);
+        found.push(`upstream commit ${commit} not yet pulled`);
     return found;
   }
   const found = [];
@@ -368,7 +375,7 @@ export const main = async (
   try {
     for (const item of options.items)
       if (item.kind === "dir") item.upstream = await upstreamOf(item.path);
-    before = await look(options.items, connectionOf, { fetch: false });
+    before = await look(options.items, connectionOf, { readUpstream: false });
   } catch (error) {
     stderr.write(`wait.mjs: ${error.message}\n`);
     return 1;
@@ -384,7 +391,7 @@ export const main = async (
     await pauseFor(Math.min(options.interval * 1000, remaining));
     let after;
     try {
-      after = await look(options.items, connectionOf, { fetch: true });
+      after = await look(options.items, connectionOf, { readUpstream: true });
     } catch (error) {
       stderr.write(`wait.mjs: ${error.message}\n`);
       return 1;

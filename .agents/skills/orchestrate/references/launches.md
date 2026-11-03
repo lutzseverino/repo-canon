@@ -169,8 +169,9 @@ node <this skill's directory>/wait.mjs --interval <seconds> --max-duration <seco
 - Give every wait the item `dir:<workbench>/incoming`, for
   [messages](templates.md#incoming). A directory item also reads the
   checkout's upstream, when its branch has one: each poll fetches it, and an
-  upstream commit touching the directory that the checkout does not hold is a
-  change. Without a remote, it reads only the checkout.
+  upstream commit touching a file directly in the directory that the checkout
+  has not pulled is a change, even one fetched before the wait started.
+  Without an upstream, it reads only the checkout.
 - It exits when any item changes: an issue's or pull request's state, labels,
   or new comments, an issue's linked pull requests, a file's creation, edit
   or removal, or such a change to a file directly in a directory. It measures

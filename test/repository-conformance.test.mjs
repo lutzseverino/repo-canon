@@ -1903,8 +1903,8 @@ test("orchestrate takes messages from any session through the workbench's incomi
     /A sender elsewhere commits the file in its own clone of the workbench, .* and pushes it/,
   );
   assert.match(
-    incoming,
-    /The file is the message\. A direct message .* is only a nudge/,
+    core,
+    /A direct message to your session, where a harness offers one, is only a nudge/,
   );
   assert.match(
     incoming,

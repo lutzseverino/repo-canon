@@ -472,37 +472,67 @@ test("an upstream commit under a directory item wakes the wait, and other commit
   assert.equal(pauses, 2);
   assert.equal(
     output.stdout,
-    `dir:${incoming}: new upstream commit ${message}\n`,
+    `dir:${incoming}: upstream commit ${message} not yet pulled\n`,
   );
   // The wait fetches but never merges into the workbench checkout.
   assert.throws(() => readFileSync(join(incoming, "20261103T100000Z-bob.md")));
 });
 
-test("upstream commits fetched before arming, or pulled after it, are not new", async (t) => {
+test("an upstream message fetched but not pulled before arming wakes the wait, and pulling it is the only change", async (t) => {
   const output = capture();
   const { workbench, sender } = workbenches(t);
   const incoming = join(workbench, "incoming");
-  push(sender, "incoming/20261103T090000Z-bob.md", "Earlier.\n");
+  const earlier = push(sender, "incoming/20261103T090000Z-bob.md", "Hi.\n");
   git(workbench, "fetch", "--quiet", "origin");
-  const unchanged = await main(
-    ["--interval", "0.02", "--max-duration", "0.2", `dir:${incoming}`],
-    { ...output.streams, connect: unreachable },
+  const code = await main([...durations, `dir:${incoming}`], {
+    ...output.streams,
+    connect: unreachable,
+  });
+  assert.equal(code, 0, output.stderr);
+  assert.equal(
+    output.stdout,
+    `dir:${incoming}: upstream commit ${earlier} not yet pulled\n`,
   );
-  assert.equal(unchanged, 2, output.stdout + output.stderr);
 
-  // Pulling brings the message's file into the checkout, the only change.
+  // Pulling brings the messages' files into the checkout, the only change.
   output.stdout = "";
   push(sender, "incoming/20261103T093000Z-bob.md", "Later.\n");
-  const code = await main([...durations, `dir:${incoming}`], {
+  const pulled = await main([...durations, `dir:${incoming}`], {
     ...output.streams,
     connect: unreachable,
     pause: async () => git(workbench, "pull", "--quiet", "--ff-only"),
   });
-  assert.equal(code, 0, output.stderr);
+  assert.equal(pulled, 0, output.stderr);
   assert.deepEqual(output.stdout.trimEnd().split("\n"), [
     `dir:${incoming}: file 20261103T090000Z-bob.md created`,
     `dir:${incoming}: file 20261103T093000Z-bob.md created`,
   ]);
+});
+
+test("an upstream commit only below a directory item's own files does not wake the wait", async (t) => {
+  const output = capture();
+  const { workbench, sender } = workbenches(t);
+  let pauses = 0;
+  const code = await main(
+    [
+      "--interval",
+      "0.02",
+      "--max-duration",
+      "0.3",
+      `dir:${join(workbench, "incoming")}`,
+    ],
+    {
+      ...output.streams,
+      connect: unreachable,
+      pause: async (milliseconds) => {
+        pauses += 1;
+        if (pauses === 1)
+          push(sender, "incoming/archive/20261103T090000Z-bob.md", "Old.\n");
+        await new Promise((resolve) => setTimeout(resolve, milliseconds));
+      },
+    },
+  );
+  assert.equal(code, 2, output.stdout + output.stderr);
 });
 
 test("a workbench without a remote watches only its own directory", async (t) => {
