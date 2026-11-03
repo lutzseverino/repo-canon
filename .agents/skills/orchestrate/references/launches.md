@@ -81,7 +81,7 @@ delivery, such as its Direct change, pull request, review and merge rules.
    [sequence](templates.md#inboxmd) for the request.
 2. **Track.** Add its `now.md` In flight row, which states the pause below.
    When the change falls inside an open plan's goal, also add an expedited row
-   to that plan, log it and list it in the next plan update.
+   to that plan and list it in the next plan update.
 3. **Pause.** Pause only what you own: start no launch and make no merge other
    than the change's own; hold the rest. Running sessions keep running unless
    the owner says to stop one. In a repository a factory serves, also pause

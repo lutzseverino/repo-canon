@@ -409,7 +409,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   // A "do this now" request arrives while work is in flight (#791).
   assert.match(
     participantInputs,
-    /6d\. Do this now, with work in flight:.*factory run is running.*research run.*is running.*launch is due/,
+    /6d\. Do this now, with work in flight:.*factory run is running.*research run for ticket 03.*running.*launch is due/,
   );
   assert.match(
     participantInputs,
