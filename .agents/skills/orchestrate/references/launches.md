@@ -78,22 +78,21 @@ repository's contribution guide and installed rules still decide the change's
 delivery, such as its Direct change, pull request, review and merge rules.
 
 1. **Record.** Before acting, complete the decision
-   [sequence](templates.md#inboxmd) for the request, entering it under
-   `inbox.md`'s `Answered` with the owner's quoted words, date and source.
+   [sequence](templates.md#inboxmd) for the request.
 2. **Track.** Add its `now.md` In flight row, which states the pause below.
    When the change falls inside an open plan's goal, also add an expedited row
    to that plan, log it and list it in the next plan update.
 3. **Pause.** Pause only what you own: start no launch and make no merge other
    than the change's own; hold the rest. Running sessions keep running unless
    the owner says to stop one. In a repository a factory serves, also pause
-   the factory there with the installed `factory` skill's pause and resume
-   step.
+   the factory with the `factory` skill installed there, as its Pause and
+   resume one repository section says.
 4. **Deliver.** Launch the change's worker within the launch cap, as
    [Worker](#worker) says, or implement it yourself.
-5. **End.** The pause ends when the change merges, or when the owner ends it.
-   Resume the factory through the same `factory` step, then the launches and
-   merges you held. Append the outcome, with its pull request link, to the
-   change's `Answered` entry, and end its rows.
+5. **End.** The pause ends when the change merges. Resume the factory through
+   that same `factory` section, then the launches and merges you held. Append
+   the outcome, with its pull request link, to the change's `Answered` entry,
+   and end its rows.
 
 ## Retro
 

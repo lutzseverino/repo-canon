@@ -266,9 +266,10 @@ repeated.
   `now.md` and, inside an open plan's goal, as an expedited row of that plan,
   with no new file; each repository's own delivery rules, such as its Direct
   change, still apply. To make room, the orchestrating agent pauses only what
-  it owns, its new launches and its merges, until the change merges; running
-  sessions continue unless the owner stops them, and a factory serving the
-  repository pauses through the installed `factory` skill;
+  it owns, its new launches and its merges, until the change merges, because
+  interrupting a running session needs the owner's word; running sessions
+  continue unless the owner stops them, and a factory serving the repository
+  pauses through the `factory` skill installed there;
   [#791](https://github.com/lutzseverino/repo-canon/issues/791) records the
   decision.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each

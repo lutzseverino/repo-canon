@@ -68,7 +68,7 @@ their citations, and shows the decision inbox; log those items in `log.md`.
 4. **Run.** Launch the plan's ticket workers and observe progress. Handle a
    Finding as the contribution guide's Findings section says, even outside the
    goal, without waiting for its resolution. A **new requirement** that arrives
-   mid-plan takes one route:
+   mid-plan, unless the owner wants it now, takes one route:
    - **Row:** it serves the goal and passes the guide's inference test. Add it
      as a row, log it, and list it in the next plan update.
    - **Amendment:** it changes the goal or the scope. Propose the amendment; it

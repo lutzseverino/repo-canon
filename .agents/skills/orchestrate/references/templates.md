@@ -98,8 +98,7 @@ Take its times from the clock, in UTC, as `log.md` does.
   it, as the [wait step](../SKILL.md#the-wait-step) says. An
   [expedited change](launches.md#expedited-change)'s row starts its Item with
   `expedited`, links its `Answered` entry and pull request in Evidence, and
-  states the pause it holds: no new launches, your held merges and any factory
-  hold.
+  states the pause it holds.
 - **Running launches** holds one row per agent launch you started: its host's
   hostname, its kind (grill, triage run, research run, worker or Close
   review), its session reference once the harness gives one, and its start
@@ -127,10 +126,10 @@ acting on anything else in that message:
 
 Only then act on the rest of the message.
 
-An [expedited change](launches.md#expedited-change)'s request opens no entry:
-the sequence enters it under `Answered` directly, marked expedited, with the
-owner's quoted words, date and source. Append its outcome to that entry once
-it ends.
+An [expedited change](launches.md#expedited-change)'s request has no open
+entry: step 3 enters it under `Answered` directly, marked expedited, with the
+owner's quoted words, date and source, and step 2 applies only when it falls
+inside a plan's goal. The entry later gains its outcome.
 
 ## `wishes.md`
 

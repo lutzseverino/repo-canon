@@ -183,6 +183,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "rules/factory-workflow.md",
     "scripts/support/repository-standards/SKILL.md",
     "scripts/support/repository-standards/rules.mjs",
+    ".factory/config.json",
     "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
   ]) {
     assert.equal(
@@ -312,10 +313,8 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     );
   // The factory skill pauses the repository with its configured hold label.
   assert.equal(
-    JSON.parse(
-      readFileSync(join(orchestrate.path, ".factory/config.json"), "utf8"),
-    ).labels.hold,
-    "factory:hold",
+    readFileSync(join(orchestrate.path, ".factory/config.json"), "utf8"),
+    readFileSync(join(root, ".factory/config.json"), "utf8"),
   );
   const workbench = orchestrate.workbench.path;
   for (const path of [orchestrate.path, workbench]) {
@@ -410,23 +409,28 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   // A "do this now" request arrives while work is in flight (#791).
   assert.match(
     participantInputs,
-    /6d\. Do this now, with work in flight:.*factory run is running.*worker is running.*launch is due/,
+    /6d\. Do this now, with work in flight:.*factory run is running.*research run.*is running.*launch is due/,
   );
   assert.match(
     participantInputs,
-    /6d\..*Direct change inside the approved goal; it skips only the plan.*hold 03's launch and every merge but the change's own.*Leave 01's run and 02's worker running.*factory skill.*hold label.*12-expedited\.md/,
+    /6d\..*Direct change inside the approved goal; it skips only the plan.*hold 02's launch and every merge but the change's own.*Leave 01's run and 03's research run running.*factory skill.*hold label.*12-expedited\.md/,
   );
   assert.match(
     participantInputs,
-    /6e\. Expedited merge:.*no open item carries a hold.*Answered entry.*merged pull request.*held launch/,
+    /6e\. Expedited merge:.*no open item carries a hold.*Answered entry.*merged pull request.*held launch.*research run then reports back/,
   );
   assert.match(
     participantInputs,
-    /9\. Owner drop:.*word that stops 03's simulated worker/,
+    /7\. Tracker update:.*Ticket 02's worker reports back.*remove its Running launches row/,
   );
+  assert.match(participantInputs, /10\. .*including the expedited PR 12/);
   assert.match(
     orchestrateTask,
     /Turns 6d–6e exercise the expedited change\..*skips only the plan.*Before acting.*Answered.*In flight row.*expedited row without an issue.*keep running.*hold label.*Once PR 12 merges, the pause ends/,
+  );
+  assert.match(
+    orchestrateTask,
+    /cannot close while any row lacks a closed simulated issue or dropped \(owner\), apart from the expedited row, which ends with merged PR 12/,
   );
   const closureInputs = readFileSync(
     join(orchestrate.path, "docs/closure-inputs.md"),
