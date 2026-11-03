@@ -1,8 +1,9 @@
 # Launches
 
 Each agent launch you start, with the task context and obligations it
-carries; the handover to the next orchestrating session; and how you observe
-launches and filed work, including the wait script that wakes you.
+carries; the expedited change and the pause that makes room for it; the
+handover to the next orchestrating session; and how you observe launches and
+filed work, including the wait script that wakes you.
 [Lifecycle](../SKILL.md#lifecycle) says when each launch starts.
 
 ## Starting a launch
@@ -69,6 +70,31 @@ including when resuming a plan. After an owner question is resolved, follow
 the applicable installed continuation rules to resume the worker or that same
 open PR.
 
+## Expedited change
+
+When the owner asks for something now, their request is its approval and
+skips only the plan: no proposal, no plan approval and no new file. Each
+repository's contribution guide and installed rules still decide the change's
+delivery, such as its Direct change, pull request, review and merge rules.
+
+1. **Record.** Before acting, complete the decision
+   [sequence](templates.md#inboxmd) for the request, entering it under
+   `inbox.md`'s `Answered` with the owner's quoted words, date and source.
+2. **Track.** Add its `now.md` In flight row, which states the pause below.
+   When the change falls inside an open plan's goal, also add an expedited row
+   to that plan, log it and list it in the next plan update.
+3. **Pause.** Pause only what you own: start no launch and make no merge other
+   than the change's own; hold the rest. Running sessions keep running unless
+   the owner says to stop one. In a repository a factory serves, also pause
+   the factory there with the installed `factory` skill's pause and resume
+   step.
+4. **Deliver.** Launch the change's worker within the launch cap, as
+   [Worker](#worker) says, or implement it yourself.
+5. **End.** The pause ends when the change merges, or when the owner ends it.
+   Resume the factory through the same `factory` step, then the launches and
+   merges you held. Append the outcome, with its pull request link, to the
+   change's `Answered` entry, and end its rows.
+
 ## Retro
 
 Start a separate session that reads primary sources, such as the plan
@@ -125,7 +151,8 @@ then records its own session reference as each active plan's owner in
 `index.md`, marking the previous reference superseded, and takes over.
 Before anything else, it re-arms a wake-up for every row under `now.md`'s In
 flight that does not wait on the owner, as the
-[wait step](../SKILL.md#the-wait-step) says.
+[wait step](../SKILL.md#the-wait-step) says, and keeps the pause an expedited
+row states.
 
 ## Progress observation
 

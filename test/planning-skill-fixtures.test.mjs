@@ -52,6 +52,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.deepEqual(Object.keys(manifest.source.linkedSkillDirectories).sort(), [
     "code-review",
     "domain-modeling",
+    "factory",
     "grill-with-docs",
     "grilling",
     "implement",
@@ -303,10 +304,18 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   }
   const routing = manifest.repositories["triage-routing"];
   const orchestrate = manifest.repositories.orchestrate;
-  assert.deepEqual(orchestrate.skills, ["orchestrate"]);
+  assert.deepEqual(orchestrate.skills, ["orchestrate", "factory"]);
+  for (const skill of orchestrate.skills)
+    assert.equal(
+      realpathSync(join(orchestrate.path, ".agents/skills", skill)),
+      realpathSync(join(root, ".agents/skills", skill)),
+    );
+  // The factory skill pauses the repository with its configured hold label.
   assert.equal(
-    realpathSync(join(orchestrate.path, ".agents/skills/orchestrate")),
-    realpathSync(join(root, ".agents/skills/orchestrate")),
+    JSON.parse(
+      readFileSync(join(orchestrate.path, ".factory/config.json"), "utf8"),
+    ).labels.hold,
+    "factory:hold",
   );
   const workbench = orchestrate.workbench.path;
   for (const path of [orchestrate.path, workbench]) {
@@ -398,6 +407,27 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     /2\. Approval:.*independent contract review.*other readiness gates/,
   );
   assert.match(orchestrateTask, /Observation.*readiness.*recovery rules/);
+  // A "do this now" request arrives while work is in flight (#791).
+  assert.match(
+    participantInputs,
+    /6d\. Do this now, with work in flight:.*factory run is running.*worker is running.*launch is due/,
+  );
+  assert.match(
+    participantInputs,
+    /6d\..*Direct change inside the approved goal; it skips only the plan.*hold 03's launch and every merge but the change's own.*Leave 01's run and 02's worker running.*factory skill.*hold label.*12-expedited\.md/,
+  );
+  assert.match(
+    participantInputs,
+    /6e\. Expedited merge:.*no open item carries a hold.*Answered entry.*merged pull request.*held launch/,
+  );
+  assert.match(
+    participantInputs,
+    /9\. Owner drop:.*word that stops 03's simulated worker/,
+  );
+  assert.match(
+    orchestrateTask,
+    /Turns 6d–6e exercise the expedited change\..*skips only the plan.*Before acting.*Answered.*In flight row.*expedited row without an issue.*keep running.*hold label.*Once PR 12 merges, the pause ends/,
+  );
   const closureInputs = readFileSync(
     join(orchestrate.path, "docs/closure-inputs.md"),
     "utf8",

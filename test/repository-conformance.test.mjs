@@ -1760,6 +1760,59 @@ test("orchestrate persists decisions before other requests in a mixed owner mess
   );
 });
 
+// The owner's "do this now" approves work without a plan, and the
+// orchestrating agent pauses only what it owns to make room for it (#791).
+test("orchestrate expedites an owner's request for now and pauses only its own work", () => {
+  const core = orchestrateFile("SKILL.md");
+  const propose =
+    /1\. \*\*Propose\.\*\* (.*?) 2\. \*\*Intake/.exec(core)?.[1] ?? "";
+  assert.match(
+    propose,
+    /An owner's request for something now skips only the plan: \[Expedited change\]\(references\/launches\.md#expedited-change\)/,
+  );
+  const launches = orchestrateFile("references/launches.md");
+  const expedited =
+    /## Expedited change (.*?) ## Retro /.exec(launches)?.[1] ?? "";
+  for (const rule of [
+    /When the owner asks for something now, their request is its approval and skips only the plan: no proposal, no plan approval and no new file/,
+    /Each repository's contribution guide and installed rules still decide the change's delivery, such as its Direct change, pull request, review and merge rules/,
+    /1\. \*\*Record\.\*\* Before acting, complete the decision \[sequence\]\(templates\.md#inboxmd\) for the request, entering it under `inbox\.md`'s `Answered` with the owner's quoted words, date and source/,
+    /2\. \*\*Track\.\*\* Add its `now\.md` In flight row, which states the pause below\. When the change falls inside an open plan's goal, also add an expedited row to that plan/,
+    /3\. \*\*Pause\.\*\* Pause only what you own: start no launch and make no merge other than the change's own; hold the rest\. Running sessions keep running unless the owner says to stop one/,
+    /In a repository a factory serves, also pause the factory there with the installed `factory` skill's pause and resume step/,
+    /5\. \*\*End\.\*\* The pause ends when the change merges, or when the owner ends it\. Resume the factory through the same `factory` step, then the launches and merges you held\. Append the outcome, with its pull request link, to the change's `Answered` entry, and end its rows/,
+  ])
+    assert.match(expedited, rule);
+  const order = [
+    "**Record.**",
+    "**Track.**",
+    "**Pause.**",
+    "**Deliver.**",
+    "**End.**",
+  ].map((step) => expedited.indexOf(step));
+  assert.ok(
+    order.every((at, index) => at > (order[index - 1] ?? -1)),
+    `${order}`,
+  );
+  assert.match(
+    /## Handover (.*?) ## Progress observation /.exec(launches)?.[1] ?? "",
+    /keeps the pause an expedited row states/,
+  );
+  const templates = orchestrateFile("references/templates.md");
+  assert.match(
+    templates,
+    /An \[expedited change\]\(launches\.md#expedited-change\)'s row starts its Item with `expedited`, links its `Answered` entry and pull request in Evidence, and states the pause it holds/,
+  );
+  assert.match(
+    templates,
+    /An \[expedited change\]\(launches\.md#expedited-change\)'s request opens no entry: the sequence enters it under `Answered` directly, marked expedited, with the owner's quoted words, date and source\. Append its outcome to that entry once it ends/,
+  );
+  assert.match(
+    templates,
+    /Every row ends with a closed issue in its Issue column, `dropped \(owner\)` in its State or, for an expedited row without an issue, its merged pull request in its State; the plan closes only then/,
+  );
+});
+
 test("orchestrate observes filed work before approval without authorizing execution", () => {
   const skill = orchestrateSkill();
   assert.match(

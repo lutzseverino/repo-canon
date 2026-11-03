@@ -95,7 +95,11 @@ Take its times from the clock, in UTC, as `log.md` does.
 - **In flight** holds one row per item that waits on someone or something,
   such as a run, a review, a blocker, plan approval or a launch's report-back,
   with the link that shows it. Its *Next check* names the wake-up armed for
-  it, as the [wait step](../SKILL.md#the-wait-step) says.
+  it, as the [wait step](../SKILL.md#the-wait-step) says. An
+  [expedited change](launches.md#expedited-change)'s row starts its Item with
+  `expedited`, links its `Answered` entry and pull request in Evidence, and
+  states the pause it holds: no new launches, your held merges and any factory
+  hold.
 - **Running launches** holds one row per agent launch you started: its host's
   hostname, its kind (grill, triage run, research run, worker or Close
   review), its session reference once the harness gives one, and its start
@@ -122,6 +126,11 @@ acting on anything else in that message:
    [Workbench](../SKILL.md#workbench) says.
 
 Only then act on the rest of the message.
+
+An [expedited change](launches.md#expedited-change)'s request opens no entry:
+the sequence enters it under `Answered` directly, marked expedited, with the
+owner's quoted words, date and source. Append its outcome to that entry once
+it ends.
 
 ## `wishes.md`
 
@@ -198,13 +207,16 @@ shape:
 - <timestamp> <entry>
 ```
 
-- **Tickets.** Every row ends with a closed issue in its Issue column or
-  `dropped (owner)` in its State; the plan closes only then. A row stays for
-  the life of the plan: a split adds rows, a merge points several rows at one
-  issue, and only the owner drops one. State holds the row's latest step, such
-  as `grill <session reference>`, `grilled <file>`, `triaged <file>`, `filed`,
-  `ready`, or a pull request link. `grilled <file>` and `triaged <file>` are
-  the done marks a grill and a triage run set.
+- **Tickets.** Every row ends with a closed issue in its Issue column,
+  `dropped (owner)` in its State or, for an expedited row without an issue,
+  its merged pull request in its State; the plan closes only then. A row stays
+  for the life of the plan: a split adds rows, a merge points several rows at
+  one issue, and only the owner drops one. State holds the row's latest step,
+  such as `grill <session reference>`, `grilled <file>`, `triaged <file>`,
+  `filed`, `ready`, or a pull request link. `grilled <file>` and
+  `triaged <file>` are the done marks a grill and a triage run set. An
+  [expedited change](launches.md#expedited-change)'s row starts its State with
+  `expedited`.
 - **Close reviews.** The reviews Close runs, set when the owner approves the
   plan. The retro is always one. Each other review names its skill and
   repository. A review's session sets its done mark by adding `done <file>`

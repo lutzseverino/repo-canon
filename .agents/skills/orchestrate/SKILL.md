@@ -46,9 +46,8 @@ has a remote. Its files:
 ## Lifecycle
 
 A **plan update** is any report to the owner about a plan, the proposal
-included. Each one lists the inferred-intent items the owner has not yet seen,
-with their citations, and shows the decision inbox. Log the items it showed in
-`log.md`.
+included. Each lists the inferred-intent items the owner has not yet seen, with
+their citations, and shows the decision inbox; log those items in `log.md`.
 
 1. **Propose.** Present the goal, Done means, ticket table and Close reviews to
    the owner for approval, as a plan update. Record the proposal before filing
@@ -57,7 +56,8 @@ with their citations, and shows the decision inbox. Log the items it showed in
    and brief preparation may precede plan approval. Hold ticket readiness for
    plan execution until the owner's plan approval is recorded. Plan approval
    replaces neither independent brief review nor any other readiness condition
-   in the guide and installed rules.
+   in the guide and installed rules. An owner's request for something now skips
+   only the plan: [Expedited change](references/launches.md#expedited-change).
 2. **Intake.** Route each new request as the contribution guide's Triage section
    says, with the `triage` skill's method, in triage runs. Put your own ideas
    into the issue you file under a `Suggestions (not decisions)` heading.
