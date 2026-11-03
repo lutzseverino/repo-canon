@@ -39,6 +39,7 @@ has a remote. Its files:
   [sequence](references/templates.md#inboxmd) before its other requests.
 - `wishes.md`: one line per wish, an idea outside a plan's goal.
 - `now.md`: the current state, rewritten on every pass.
+- `incoming/`: [messages](references/templates.md#incoming) from any session.
 - `<plan>/plan.md`: the plan's current state; `<plan>/log.md`: its append-only
   history; other `<plan>/*.md`: its records and draft briefs.
 
@@ -82,20 +83,19 @@ with their citations, and shows the decision inbox. Log the items it showed in
 
 End a turn only when every row under `now.md`'s In flight waits on the owner or
 has a wake-up armed through the harness's own event mechanisms. Its *Next check*
-names that wake-up; arm it with the wait script where the harness can. Where the
-harness can neither wait in the background nor deliver events, report that limit
-and re-read the records at each turn instead.
+names that wake-up; arm it with the wait script where the harness can. Every
+wait also watches `incoming/`, and one watches it alone when nothing else needs
+one. Where the harness can neither wait in the background nor deliver events,
+report that limit and re-read the records at each turn instead.
 
 ## Report-back
 
 The file in the plan directory is the contract. A grill, triage run or Close
 review reports by writing its result there, setting its done mark in `plan.md`,
 and committing and pushing both; take it in as `now.md`'s Running launches says.
-A wake-up message to your session is only a nudge, and losing it loses nothing:
-act on the files.
-
-When your harness cannot send messages between sessions, re-read the active plan
-directories at each turn, and the owner tells you when a grill is done.
+Any other session writes to `incoming/`. A direct message to your session, where
+a harness offers one, is only a nudge, and losing it loses nothing: act on the
+files. Where none is offered, the owner also tells you when a grill is done.
 
 ## Reads
 
@@ -109,8 +109,8 @@ paths to the workbench's.
   When it is missing, give each launch only its task context, and name each
   session for its operation and target where naming is supported.
 - The workbench, whose format this skill owns: its `index.md`, `inbox.md`,
-  `wishes.md` and `now.md`, and each plan's `<plan>/plan.md`, `<plan>/log.md`,
-  `retro.md` and other Markdown files. When it is missing, create it as
+  `wishes.md`, `now.md`, `incoming/` and each plan's `<plan>/plan.md`,
+  `<plan>/log.md`, `retro.md` and other files. When it is missing, create it as
   [templates](references/templates.md) says, and a plan's files as it starts.
 - A tracked repository's Repository Standards adoption record: the Repo Canon
   source its Selection names, for the `workbench` profile offer and lessons

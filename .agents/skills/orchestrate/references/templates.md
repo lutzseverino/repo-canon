@@ -31,6 +31,7 @@ index.md     the tracked repositories, the active plans, each with its owning se
 inbox.md     the decision inbox
 wishes.md    one line per wish
 now.md       the current state: what waits on the owner, what is in flight, and running launches
+incoming/    one file per message from another session, until you take it in
 <plan>/      one directory per plan
   plan.md    the plan's current state
   log.md     the plan's append-only log
@@ -129,6 +130,31 @@ to its source, and the repository it concerns.
 
 A wish may link a filed finding for future planning. A wish never replaces
 the finding's tracker record or reporting links.
+
+## `incoming/`
+
+Any session, such as a launch or one of the owner's own, can leave you a
+message. Each message is one Markdown file directly in `incoming/`, named
+`<UTC>-<sender>.md`: the time it was written, from
+`date -u +%Y%m%dT%H%M%SZ`, and a short name for the sending session in
+lowercase letters, digits and hyphens. Its body is the message, citing its
+sources by link.
+
+- A sender on the same host as your session writes the file into your
+  workbench checkout, at the path the owner's global agent instructions name,
+  and commits nothing.
+- A sender elsewhere commits the file in its own clone of the workbench,
+  straight to the default branch, and pushes it.
+
+The file is the message. A direct message to your session, where a harness
+offers one, is only a nudge.
+
+The [wait step](../SKILL.md#the-wait-step) watches `incoming/`. When it
+reports a new upstream commit, pull the workbench first. Take in each
+message: move it into the `log.md` of the plan it concerns, dated and citing
+its file name, or into `inbox.md` when it holds a decision for the owner,
+since the inbox holds only decisions. Then delete the file and commit, as
+[Workbench](../SKILL.md#workbench) says, before you act on the message.
 
 ## `plan.md` and `log.md`
 

@@ -250,6 +250,16 @@ repeated.
   installs none, and the core points to the contribution guide instead of
   restating it; [#790](https://github.com/lutzseverino/repo-canon/issues/790)
   records the decision.
+- On 2026-10-31 the owner decided that any session can leave the orchestrating
+  agent a message as one file in the workbench's `incoming/` directory, which
+  the wait step watches, and that a direct message between sessions is only a
+  nudge. A sender on the orchestrator's host writes the file without
+  committing; a sender elsewhere commits and pushes it, and the wait fetches a
+  workbench upstream on each poll to notice it. The orchestrating agent moves
+  each message into its plan's log or the decision inbox, which stays
+  decisions-only, and deletes the file;
+  [#792](https://github.com/lutzseverino/repo-canon/issues/792) records these
+  decisions.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
   maintainer to install from upstream at user scope; the
   [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)

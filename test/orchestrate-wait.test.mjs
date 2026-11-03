@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import {
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -190,7 +191,7 @@ test("invalid duration values fail before reading any item", async () => {
   }
 });
 
-test("items are required and must be issue, pull request or file references", async () => {
+test("items are required and must be issue, pull request, file or directory references", async () => {
   const output = capture();
   assert.equal(
     await main(durations, { connect: unreachable, ...output.streams }),
@@ -204,6 +205,7 @@ test("items are required and must be issue, pull request or file references", as
     "https://gitlab.com/example/tracker/issues/7",
     "https://github.com/example/tracker/commit/7",
     "file:",
+    "dir:",
     "--repo",
     "--interval-seconds",
   ]) {
@@ -364,6 +366,188 @@ test("a report-back file and a done mark wake the wait", async (t) => {
     assert.equal(output.stdout, `file:${item}: ${how}\n`, name);
   }
   assert.match(readFileSync(plan, "utf8"), /triaged/);
+});
+
+test("a file appearing, changing or going in a directory item wakes the wait", async (t) => {
+  const output = capture();
+  const workbench = mkdtempSync(join(tmpdir(), "orchestrate-wait-"));
+  t.after(() => rmSync(workbench, { recursive: true, force: true }));
+  const incoming = join(workbench, "incoming");
+  const message = join(incoming, "20261103T100000Z-alice.md");
+  for (const { name, change, how } of [
+    {
+      name: "created with its directory",
+      change: () => {
+        mkdirSync(incoming);
+        writeFileSync(message, "A message.\n");
+      },
+      how: "created",
+    },
+    {
+      name: "edited",
+      change: () => writeFileSync(message, "A longer message.\n"),
+      how: "changed",
+    },
+    {
+      name: "removed",
+      change: () => unlinkSync(message),
+      how: "removed",
+    },
+  ]) {
+    output.stdout = "";
+    const code = await main([...durations, `dir:${incoming}`], {
+      ...output.streams,
+      connect: unreachable,
+      pause: async () => change(),
+    });
+    assert.equal(code, 0, name);
+    assert.equal(
+      output.stdout,
+      `dir:${incoming}: file 20261103T100000Z-alice.md ${how}\n`,
+      name,
+    );
+  }
+});
+
+// Runs git with a fixed identity and no user or system configuration.
+const git = (cwd, ...args) =>
+  execFileSync("git", args, {
+    cwd,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      GIT_CONFIG_GLOBAL: "/dev/null",
+      GIT_CONFIG_NOSYSTEM: "1",
+      GIT_AUTHOR_NAME: "Sender",
+      GIT_AUTHOR_EMAIL: "sender@example.com",
+      GIT_COMMITTER_NAME: "Sender",
+      GIT_COMMITTER_EMAIL: "sender@example.com",
+    },
+  }).trim();
+
+// A bare upstream, the orchestrator's workbench clone and a sender's clone.
+function workbenches(t) {
+  const root = mkdtempSync(join(tmpdir(), "orchestrate-wait-git-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const upstream = join(root, "upstream.git");
+  const workbench = join(root, "workbench");
+  const sender = join(root, "sender");
+  git(root, "init", "--quiet", "--bare", "--initial-branch=main", upstream);
+  git(root, "clone", "--quiet", upstream, workbench);
+  writeFileSync(join(workbench, "now.md"), "# Now\n");
+  git(workbench, "add", "now.md");
+  git(workbench, "commit", "--quiet", "--message", "Seed the workbench");
+  git(workbench, "push", "--quiet", "--set-upstream", "origin", "main");
+  git(root, "clone", "--quiet", upstream, sender);
+  return { upstream, workbench, sender };
+}
+
+// Commits a sender's file and pushes it, returning the commit.
+function push(sender, path, text) {
+  mkdirSync(join(sender, path, ".."), { recursive: true });
+  writeFileSync(join(sender, path), text);
+  git(sender, "add", path);
+  git(sender, "commit", "--quiet", "--message", `Write ${path}`);
+  git(sender, "push", "--quiet", "origin", "main");
+  return git(sender, "rev-parse", "HEAD");
+}
+
+test("an upstream commit under a directory item wakes the wait, and other commits do not", async (t) => {
+  const output = capture();
+  const { workbench, sender } = workbenches(t);
+  const incoming = join(workbench, "incoming");
+  let pauses = 0;
+  let message;
+  const code = await main([...durations, `dir:${incoming}`], {
+    ...output.streams,
+    connect: unreachable,
+    pause: async () => {
+      pauses += 1;
+      if (pauses === 1) push(sender, "wishes.md", "- A wish.\n");
+      if (pauses === 2)
+        message = push(sender, "incoming/20261103T100000Z-bob.md", "Hi.\n");
+    },
+  });
+  assert.equal(code, 0, output.stderr);
+  assert.equal(pauses, 2);
+  assert.equal(
+    output.stdout,
+    `dir:${incoming}: new upstream commit ${message}\n`,
+  );
+  // The wait fetches but never merges into the workbench checkout.
+  assert.throws(() => readFileSync(join(incoming, "20261103T100000Z-bob.md")));
+});
+
+test("upstream commits fetched before arming, or pulled after it, are not new", async (t) => {
+  const output = capture();
+  const { workbench, sender } = workbenches(t);
+  const incoming = join(workbench, "incoming");
+  push(sender, "incoming/20261103T090000Z-bob.md", "Earlier.\n");
+  git(workbench, "fetch", "--quiet", "origin");
+  const unchanged = await main(
+    ["--interval", "0.02", "--max-duration", "0.2", `dir:${incoming}`],
+    { ...output.streams, connect: unreachable },
+  );
+  assert.equal(unchanged, 2, output.stdout + output.stderr);
+
+  // Pulling brings the message's file into the checkout, the only change.
+  output.stdout = "";
+  push(sender, "incoming/20261103T093000Z-bob.md", "Later.\n");
+  const code = await main([...durations, `dir:${incoming}`], {
+    ...output.streams,
+    connect: unreachable,
+    pause: async () => git(workbench, "pull", "--quiet", "--ff-only"),
+  });
+  assert.equal(code, 0, output.stderr);
+  assert.deepEqual(output.stdout.trimEnd().split("\n"), [
+    `dir:${incoming}: file 20261103T090000Z-bob.md created`,
+    `dir:${incoming}: file 20261103T093000Z-bob.md created`,
+  ]);
+});
+
+test("a workbench without a remote watches only its own directory", async (t) => {
+  const output = capture();
+  const workbench = mkdtempSync(join(tmpdir(), "orchestrate-wait-local-"));
+  t.after(() => rmSync(workbench, { recursive: true, force: true }));
+  git(workbench, "init", "--quiet", "--initial-branch=main");
+  writeFileSync(join(workbench, "now.md"), "# Now\n");
+  git(workbench, "add", "now.md");
+  git(workbench, "commit", "--quiet", "--message", "Seed the workbench");
+  const incoming = join(workbench, "incoming");
+  let pauses = 0;
+  const code = await main([...durations, `dir:${incoming}`], {
+    ...output.streams,
+    connect: unreachable,
+    pause: async () => {
+      pauses += 1;
+      if (pauses === 2) {
+        mkdirSync(incoming);
+        writeFileSync(join(incoming, "20261103T100000Z-carol.md"), "Hi.\n");
+      }
+    },
+  });
+  assert.equal(code, 0, output.stderr);
+  assert.equal(pauses, 2);
+  assert.equal(
+    output.stdout,
+    `dir:${incoming}: file 20261103T100000Z-carol.md created\n`,
+  );
+});
+
+test("a failed upstream fetch while polling is an error", async (t) => {
+  const output = capture();
+  const { upstream, workbench } = workbenches(t);
+  const code = await main(
+    [...durations, `dir:${join(workbench, "incoming")}`],
+    {
+      ...output.streams,
+      connect: unreachable,
+      pause: async () => rmSync(upstream, { recursive: true, force: true }),
+    },
+  );
+  assert.equal(code, 1);
+  assert.match(output.stderr, /^wait\.mjs: git fetch origin failed/);
+  assert.equal(output.stdout, "");
 });
 
 test("the maximum duration ends an unchanged wait with its own exit code", async () => {
