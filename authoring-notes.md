@@ -241,6 +241,15 @@ repeated.
   proposed for each repository whose code the plan changes, which the owner
   keeps or removes; [#733](https://github.com/lutzseverino/repo-canon/issues/733)
   records these decisions.
+- On 2026-10-31 the owner decided that `orchestrate` keeps a short core: its
+  `SKILL.md`, capped at 120 lines by a conformance test, holds the purpose,
+  the workbench files, the lifecycle, the wait step and the report-back rule,
+  and links references for the workbench templates, each launch's obligations
+  and the Close procedure. Factory method stays in the `factory` skill
+  installed in the repository a factory serves, since the `workbench` profile
+  installs none, and the core points to the contribution guide instead of
+  restating it; [#790](https://github.com/lutzseverino/repo-canon/issues/790)
+  records the decision.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
   maintainer to install from upstream at user scope; the
   [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)

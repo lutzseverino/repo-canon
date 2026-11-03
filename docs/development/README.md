@@ -287,7 +287,11 @@ budget covers declaration rules or retained adoption guidance. It also keeps
 the two copies of the reviewer parser identical, and keeps the user-invoked
 `orchestrate` skill application-independent, checking every file in its
 installed directory and its authoring and adoption guidance for private
-application names, tool mappings and session-reference syntax. Run it alone
+application names, tool mappings and session-reference syntax. It holds that
+skill's core `SKILL.md` to 120 lines, a constant in the test, and requires the
+core to keep its workbench, lifecycle, wait step and report-back sections, link
+its `templates`, `launches` and `close` references, and point to the `factory`
+skill installed in a repository a factory serves. Run it alone
 with `node --test test/repository-conformance.test.mjs`. It needs no separate
 CI step: `pnpm test` already runs it on every pull request.
 The same suite checks every declared source input across every profile for
