@@ -5,9 +5,9 @@ names, how to create the workbench, and the rules for writing in it.
 
 ## Creating the workbench
 
-When your global agent instructions name no workbench, create one before you
-propose a plan: a local git repository outside every project checkout, seeded
-with `index.md`, `inbox.md`, `wishes.md` and `now.md`. Tell the owner its path
+When [Workbench](../SKILL.md#workbench) says to create one, create it as a
+local git repository outside every project checkout, seeded with `index.md`,
+`inbox.md`, `wishes.md` and `now.md`. Tell the owner its path
 and the line to add to their global agent instructions, such as
 `The orchestrating agent's workbench is <path>.`
 

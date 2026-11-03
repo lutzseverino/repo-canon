@@ -19,13 +19,11 @@ rules across a plan. The installed `triage` skill is how to triage one request.
 In a repository a factory serves, the `factory` skill installed there is how to
 hand tickets to the factory and deliver held, skipped or handed-off work.
 
-Use the capabilities available in your session to carry out the steps. An
-application may enhance orchestration; the shared method works without it. Keep
-application-specific tool mappings out of this skill.
-
 Read [templates](references/templates.md) before you write a workbench file,
-[launches](references/launches.md) before you launch, hand over, observe or arm
-a wait, and [close](references/close.md) before you close a plan.
+[launches](references/launches.md) before you launch, take over, hand over,
+observe or arm a wait, and [close](references/close.md) before you close a plan.
+One session at a time owns every plan: it hands over at each plan's close and
+after any compaction since it took over.
 
 ## Workbench
 
@@ -36,7 +34,7 @@ its path; when they name none, create one before you propose a plan. Commit each
 workbench change straight to its default branch, and push it when the workbench
 has a remote. Its files:
 
-- `index.md`: the tracked repositories, the plans and their owning sessions.
+- `index.md`: tracked repositories, plans and their owners, and launch caps.
 - `inbox.md`: the decision inbox. Process an owner message's decisions in its
   [sequence](references/templates.md#inboxmd) before its other requests.
 - `wishes.md`: one line per wish, an idea outside a plan's goal.
@@ -52,18 +50,20 @@ with their citations, and shows the decision inbox. Log the items it showed in
 `log.md`.
 
 1. **Propose.** Present the goal, Done means, ticket table and Close reviews to
-   the owner for approval, as a plan update, and record the proposal and its
-   approval as [templates](references/templates.md#planmd-and-logmd) says,
-   before filing work. Research, filing and brief preparation may precede plan
-   approval. Hold ticket readiness for plan execution until the owner's plan
-   approval is recorded. Plan approval replaces neither independent brief review
-   nor any other readiness condition in the guide and installed rules.
+   the owner for approval, as a plan update. Record the proposal before filing
+   work, and then its approval, as
+   [templates](references/templates.md#planmd-and-logmd) says. Research, filing
+   and brief preparation may precede plan approval. Hold ticket readiness for
+   plan execution until the owner's plan approval is recorded. Plan approval
+   replaces neither independent brief review nor any other readiness condition
+   in the guide and installed rules.
 2. **Intake.** Route each new request as the contribution guide's Triage section
-   says, with the `triage` skill's method. Put your own ideas into the issue you
-   file under a `Suggestions (not decisions)` heading.
+   says, with the `triage` skill's method, in triage runs. Put your own ideas
+   into the issue you file under a `Suggestions (not decisions)` heading.
 3. **Grill.** When the guide's inference test cannot settle an intent question,
    open a grill with the owner. Then decide the split, file the issues and
-   accept the briefs, as the guide says, marking drafts as the wiki rules say.
+   accept the briefs, as the guide says, marking drafts as the
+   [wiki rules](references/templates.md#layout) say.
 4. **Run.** Launch the plan's ticket workers and observe progress. Handle a
    Finding as the contribution guide's Findings section says, even outside the
    goal, without waiting for its resolution. A **new requirement** that arrives

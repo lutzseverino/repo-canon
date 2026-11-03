@@ -1577,6 +1577,10 @@ test("owned handoffs invoke covering skills without copying grill procedure", ()
     );
   }
   assert.match(orchestrate, /Open each triage run with `\/triage`/);
+  assert.match(
+    orchestrateFile("SKILL.md"),
+    /with the `triage` skill's method, in triage runs/,
+  );
   assert.match(orchestrate, /Launch a ticket worker with `\/implement`/);
   assert.match(
     orchestrate,
@@ -1650,7 +1654,7 @@ test("orchestrate creates a private workbench and separates current state from h
     /## Creating the workbench (.*?) ## Layout /.exec(templates)?.[1] ?? "";
   assert.match(
     creating,
-    /create one before you propose a plan: a local git repository outside every project checkout, seeded with `index\.md`, `inbox\.md`, `wishes\.md` and `now\.md`/,
+    /create it as a local git repository outside every project checkout, seeded with `index\.md`, `inbox\.md`, `wishes\.md` and `now\.md`/,
   );
   assert.match(
     creating,
@@ -1789,25 +1793,34 @@ test("orchestrate observes filed work before approval without authorizing execut
 
 test("orchestrate has one owning session that hands over and re-arms its wake-ups", () => {
   const skill = orchestrateSkill();
-  const running =
+  const handover =
     /## Handover (.*?) ## Progress observation /.exec(
       orchestrateFile("references/launches.md"),
     )?.[1] ?? "";
   assert.doesNotMatch(skill, /long-lived/);
   assert.match(
-    running,
+    handover,
     /One orchestrating session at a time owns every plan in the workbench/,
   );
+  const core = orchestrateFile("SKILL.md");
   assert.match(
-    running,
+    core,
+    /\[launches\]\(references\/launches\.md\) before you launch, take over, hand over/,
+  );
+  assert.match(
+    core,
+    /One session at a time owns every plan: it hands over at each plan's close and after any compaction since it took over/,
+  );
+  assert.match(
+    handover,
     /It hands over at each plan's close, and whenever it has compacted since it took over/,
   );
   assert.match(
-    running,
+    handover,
     /Then stop: `index\.md` and `now\.md` are the handover/,
   );
   assert.match(
-    running,
+    handover,
     /takes over\. Before anything else, it re-arms a wake-up for every row under `now\.md`'s In flight that does not wait on the owner/,
   );
 });
@@ -1832,7 +1845,7 @@ test("orchestrate ends a turn only after arming a wake-up, with recurring checks
   assert.match(observation, /A recurring check is optional/);
   assert.match(
     observation,
-    /Where the harness can neither wait in the background nor deliver events, report that limit and re-read these records at each turn/,
+    /Where the harness can neither wait in the background nor deliver events, the wait step's fallback applies: re-read these records at each turn/,
   );
   assert.match(
     wait,
@@ -1866,23 +1879,26 @@ test("orchestrate ends a turn only after arming a wake-up, with recurring checks
 });
 
 test("orchestrate retains observation evidence and routes unexplained inactivity through existing recovery", () => {
-  const skill = orchestrateFile("references/launches.md");
+  const observation = orchestrateFile("references/launches.md");
   assert.match(
-    skill,
+    observation,
     /issue state and labels, latest comments and owner answers, blocker state, run progress and any PR/,
   );
-  assert.match(skill, /Compare with the previous dated observation/);
+  assert.match(observation, /Compare with the previous dated observation/);
   assert.match(
-    skill,
+    observation,
     /approval and blocker waits separately from unexplained lack of progress/,
   );
-  assert.match(skill, /answered owner question has no observable continuation/);
-  assert.match(skill, /current state and issue\/run\/PR evidence links/);
   assert.match(
-    skill,
+    observation,
+    /answered owner question has no observable continuation/,
+  );
+  assert.match(observation, /current state and issue\/run\/PR evidence links/);
+  assert.match(
+    observation,
     /contribution guide and applicable installed recovery rules/,
   );
-  assert.match(skill, /adds no stall timeout or recovery procedure/);
+  assert.match(observation, /adds no stall timeout or recovery procedure/);
 });
 
 test("orchestrate reconciles closure from run findings with repository identity and provenance", () => {
@@ -2031,7 +2047,7 @@ test("orchestrate plans name their Close reviews at approval", () => {
     )?.[1] ?? "";
   assert.match(
     propose,
-    /Present the goal, Done means, ticket table and Close reviews to the owner for approval, as a plan update, and record the proposal and its approval as \[templates\]\(references\/templates\.md#planmd-and-logmd\) says, before filing work/,
+    /Present the goal, Done means, ticket table and Close reviews to the owner for approval, as a plan update\. Record the proposal before filing work, and then its approval, as \[templates\]\(references\/templates\.md#planmd-and-logmd\) says/,
   );
   assert.match(
     plan,
@@ -2055,7 +2071,7 @@ test("orchestrate plans name their Close reviews at approval", () => {
   );
   assert.match(
     other,
-    /route each of its findings as \[New requirements\]\(\.\.\/SKILL\.md#lifecycle\) says: a Finding becomes an issue in that repository, and any other idea a wish naming it/,
+    /route each of its findings as \[Run\]\(\.\.\/SKILL\.md#lifecycle\) says: a Finding becomes an issue in that repository, and any other idea a wish naming it/,
   );
   assert.match(other, /Like a grill, it asks the owner its questions/);
 });

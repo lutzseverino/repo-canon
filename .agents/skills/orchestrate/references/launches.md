@@ -7,6 +7,10 @@ launches and filed work, including the wait script that wakes you.
 
 ## Starting a launch
 
+Use the capabilities available in your session to carry out the steps. An
+application may enhance orchestration; the shared method works without it.
+Keep application-specific tool mappings out of this skill.
+
 Follow `AGENTS.md`'s Agent skills requirements for delegation and session naming.
 Use the available naming capability separately from the command and task context.
 Use the session's supported invocation for the commands below, followed by their
@@ -98,9 +102,8 @@ pull request destination, as for a grill. Like a grill, it asks the owner its
 questions in its own session. Its task context also includes these
 obligations:
 
-- route each of its findings as [New requirements](../SKILL.md#lifecycle)
-  says: a Finding becomes an issue in that repository, and any other idea a
-  wish naming it;
+- route each of its findings as [Run](../SKILL.md#lifecycle) says: a Finding
+  becomes an issue in that repository, and any other idea a wish naming it;
 - write its result to the plan directory, citing those issues and wishes by
   link;
 - mark its review done on the Close reviews line in `plan.md`;
@@ -133,8 +136,8 @@ Keep that coverage when taking over or resuming a plan; refresh it as issues,
 blockers and launches are recorded. You wake on events, through the
 [wait step](../SKILL.md#the-wait-step). A recurring check is optional: use the
 harness's recurring mechanism alongside the wait step only if you choose to.
-Where the harness can neither wait in the background nor deliver events,
-report that limit and re-read these records at each turn.
+Where the harness can neither wait in the background nor deliver events, the
+wait step's fallback applies: re-read these records at each turn.
 
 Read issue state and labels, latest comments and owner answers, blocker state,
 run progress and any PR. Compare with the previous dated observation in a
