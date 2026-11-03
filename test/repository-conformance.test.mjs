@@ -150,6 +150,22 @@ function flowedText(path) {
   return readFileSync(join(root, path), "utf8").replaceAll(/\s+/g, " ");
 }
 
+// The orchestrate skill is a core `SKILL.md` and the references it links.
+const orchestrateReferences = ["templates.md", "launches.md", "close.md"];
+
+function orchestrateFile(name) {
+  return flowedText(`.agents/skills/orchestrate/${name}`);
+}
+
+function orchestrateSkill() {
+  return [
+    "SKILL.md",
+    ...orchestrateReferences.map((name) => `references/${name}`),
+  ]
+    .map(orchestrateFile)
+    .join(" ");
+}
+
 function operation(name) {
   return fileURLToPath(new URL(`../operations/${name}`, import.meta.url));
 }
@@ -1434,11 +1450,10 @@ test("installed session naming applies to launched and owned sessions where supp
     guidance,
     /Keep naming metadata outside the skill invocation and task context/,
   );
-  for (const path of [
-    ".agents/skills/orchestrate/SKILL.md",
-    ".agents/skills/triage/SKILL.md",
+  for (const skill of [
+    orchestrateSkill(),
+    flowedText(".agents/skills/triage/SKILL.md"),
   ]) {
-    const skill = flowedText(path);
     assert.match(
       skill,
       /`AGENTS\.md`'s Agent skills requirements for delegation and session naming/,
@@ -1484,6 +1499,9 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, which credi
     "CREDITS.md",
     "SKILL.md",
     "agents/openai.yaml",
+    "references/close.md",
+    "references/launches.md",
+    "references/templates.md",
     "wait.mjs",
   ]);
   const frontmatter =
@@ -1502,10 +1520,10 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, which credi
     credits,
     /`chief-of-staff` skill in \[Matt Pocock's skills\]\(https:\/\/github\.com\/mattpocock\/skills\), compared at commit `5beb35b040e3de97e54fa9e386d7e42d15c295c2`/,
   );
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const skill = orchestrateSkill();
   // A method that cites the contribution guide rather than restating it.
   assert.match(
-    skill,
+    orchestrateFile("SKILL.md"),
     /contribution guide, `CONTRIBUTING\.md`, decides triage, readiness, question routing and delivery/,
   );
   assert.doesNotMatch(
@@ -1514,8 +1532,40 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, which credi
   );
 });
 
+// The core holds the purpose, the workbench files, the lifecycle, the wait
+// step and the report-back rule; templates, launches and Close live in the
+// references it links (#790).
+const orchestrateCoreLineLimit = 120;
+
+test("orchestrate keeps its core within its line limit and links its references", () => {
+  const core = readFileSync(
+    join(root, ".agents/skills/orchestrate/SKILL.md"),
+    "utf8",
+  );
+  const lines = core.replace(/\n$/, "").split("\n").length;
+  assert.ok(
+    lines <= orchestrateCoreLineLimit,
+    `.agents/skills/orchestrate/SKILL.md has ${lines} lines; the limit is ${orchestrateCoreLineLimit}`,
+  );
+  for (const name of orchestrateReferences)
+    assert.ok(core.includes(`](references/${name}`), `links ${name}`);
+  const flowed = orchestrateFile("SKILL.md");
+  for (const section of [
+    "## Workbench",
+    "## Lifecycle",
+    "## The wait step",
+    "## Report-back",
+  ])
+    assert.ok(flowed.includes(`${section} `), section);
+  // The workbench profile installs no factory skill beside this one.
+  assert.match(
+    flowed,
+    /In a repository a factory serves, the `factory` skill installed there/,
+  );
+});
+
 test("owned handoffs invoke covering skills without copying grill procedure", () => {
-  const orchestrate = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const orchestrate = orchestrateSkill();
   const triage = flowedText(".agents/skills/triage/SKILL.md");
   for (const skill of [orchestrate, triage]) {
     assert.match(skill, /`AGENTS\.md`.*delegation/);
@@ -1548,12 +1598,9 @@ test("owned handoffs invoke covering skills without copying grill procedure", ()
 });
 
 test("orchestrate handoffs retain workbench delivery and report-back context", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
-  const intake =
-    /2\. \*\*Intake\.\*\* (.*?) 3\. \*\*Grill\./.exec(skill)?.[1] ?? "";
-  const grill =
-    /3\. \*\*Grill\.\*\* (.*?) 4\. \*\*New requirements\./.exec(skill)?.[1] ??
-    "";
+  const launches = orchestrateFile("references/launches.md");
+  const intake = /## Triage run (.*?) ## Grill /.exec(launches)?.[1] ?? "";
+  const grill = /## Grill (.*?) ## Worker /.exec(launches)?.[1] ?? "";
   assert.match(
     intake,
     /write its result to the plan directory, citing the brief or findings it posted by link/,
@@ -1576,15 +1623,20 @@ test("orchestrate handoffs retain workbench delivery and report-back context", (
     );
     assert.match(
       step,
-      /commit and push its writes, as \[Workbench\]\(#workbench\) says/,
+      /commit and push its writes, as \[Workbench\]\(\.\.\/SKILL\.md#workbench\) says/,
     );
-    assert.match(step, /report back, as \[Report-back\]\(#report-back\) says/);
+    assert.match(
+      step,
+      /report back, as \[Report-back\]\(\.\.\/SKILL\.md#report-back\) says/,
+    );
   }
 });
 
 test("orchestrate creates a private workbench and separates current state from history", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
-  const workbench = /## Workbench (.*?) ## The plan /.exec(skill)?.[1] ?? "";
+  const skill = orchestrateSkill();
+  const core = orchestrateFile("SKILL.md");
+  const templates = orchestrateFile("references/templates.md");
+  const workbench = /## Workbench (.*?) ## Lifecycle /.exec(core)?.[1] ?? "";
   // Creation and privacy.
   assert.match(
     workbench,
@@ -1592,34 +1644,38 @@ test("orchestrate creates a private workbench and separates current state from h
   );
   assert.match(
     workbench,
-    /When they name none, create one before you propose a plan: a local git repository outside every project checkout, seeded with `index\.md`, `inbox\.md`, `wishes\.md` and `now\.md`/,
+    /when they name none, create one before you propose a plan/,
+  );
+  const creating =
+    /## Creating the workbench (.*?) ## Layout /.exec(templates)?.[1] ?? "";
+  assert.match(
+    creating,
+    /create one before you propose a plan: a local git repository outside every project checkout, seeded with `index\.md`, `inbox\.md`, `wishes\.md` and `now\.md`/,
   );
   assert.match(
-    workbench,
+    creating,
     /Tell the owner its path and the line to add to their global agent instructions/,
   );
-  assert.doesNotMatch(workbench, /ask the owner for it/);
+  assert.doesNotMatch(skill, /ask the owner for it/);
   assert.match(
-    workbench,
+    creating,
     /When you create it, also offer to adopt Repo Canon's `workbench` profile into it/,
   );
   assert.match(
-    workbench,
-    /A completed adoption or update of the `workbench` profile is one such change/,
+    creating,
+    /A completed adoption or update of the `workbench` profile is one workbench change/,
   );
   assert.match(
-    workbench,
+    templates,
     /`Repositories` list names each repository the workbench tracks/,
   );
 
   // Layout and the current-state file.
+  const layout = /## Layout (.*?) ## `index\.md` /.exec(templates)?.[1] ?? "";
   for (const entry of ["now.md", "plan.md", "log.md"])
-    assert.ok(workbench.includes(` ${entry} `), entry);
-  assert.match(
-    workbench,
-    /`now\.md` and each `plan\.md` are rewritten in place/,
-  );
-  const now = /### `now\.md` (.*?) ### /.exec(workbench)?.[1] ?? "";
+    assert.ok(layout.includes(` ${entry} `), entry);
+  assert.match(layout, /`now\.md` and each `plan\.md` are rewritten in place/);
+  const now = /## `now\.md` (.*?) ## `inbox\.md` /.exec(templates)?.[1] ?? "";
   assert.match(now, /Rewrite it on every pass; never append to it/);
   assert.match(
     now,
@@ -1635,17 +1691,15 @@ test("orchestrate creates a private workbench and separates current state from h
     /Add a launch's row before you start it, and remove the row when you take in its report-back/,
   );
   assert.match(skill, /count the rows under `now\.md`'s Running launches/);
-  assert.match(
-    skill,
-    /When you take in a report-back, remove its launch's row from `now\.md`'s Running launches/,
-  );
+  assert.match(core, /take it in as `now\.md`'s Running launches says/);
   assert.match(
     skill,
     /previous dated observation in a bounded tail of the plan's `log\.md`/,
   );
 
   // The inbox holds decisions only.
-  const inbox = /### `inbox\.md` (.*?) ### /.exec(workbench)?.[1] ?? "";
+  const inbox =
+    /## `inbox\.md` (.*?) ## `wishes\.md` /.exec(templates)?.[1] ?? "";
   assert.match(inbox, /Each entry is a decision/);
   assert.match(inbox, /Notifications and chores go in `now\.md`/);
   assert.match(
@@ -1655,13 +1709,13 @@ test("orchestrate creates a private workbench and separates current state from h
 
   // Filed drafts are marked; decision records stay as written.
   assert.match(
-    workbench,
+    layout,
     /Once a draft brief is filed, add a dated line at its top linking the issues it became/,
   );
-  assert.match(workbench, /Leave decision records as written/);
+  assert.match(layout, /Leave decision records as written/);
 
   // plan.md is current state; log.md is the append-only history.
-  const plan = /## The plan (.*?) ## Lifecycle /.exec(skill)?.[1] ?? "";
+  const plan = /## `plan\.md` and `log\.md` (.*)$/.exec(templates)?.[1] ?? "";
   assert.doesNotMatch(plan, /## Log/);
   assert.match(plan, /## Current state/);
   assert.match(plan, /`log\.md` takes this shape/);
@@ -1681,27 +1735,29 @@ test("orchestrate creates a private workbench and separates current state from h
 });
 
 test("orchestrate persists decisions before other requests in a mixed owner message", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
-  const inbox = /### `inbox\.md` (.*?) ### /.exec(skill)?.[1] ?? "";
+  const inbox =
+    /## `inbox\.md` (.*?) ## `wishes\.md` /.exec(
+      orchestrateFile("references/templates.md"),
+    )?.[1] ?? "";
   assert.match(
     inbox,
     /When an owner message contains a decision, complete this sequence before acting on anything else in that message/,
   );
   assert.match(
     inbox,
-    /1\. Post a comment on each affected issue, recording the decision, its date and where the owner gave it, under the contribution guide's comment rules.*2\. Append the decision, date, source and issue links to the plan's `log\.md`.*3\. Move the answered entry under `Answered` in `inbox\.md`, keeping its question, answer, date and source.*4\. Commit the workbench writes and push when it has a remote, as \[Workbench\]\(#workbench\) says.*Only then act on the rest of the message/,
+    /1\. Post a comment on each affected issue, recording the decision, its date and where the owner gave it, under the contribution guide's comment rules.*2\. Append the decision, date, source and issue links to the plan's `log\.md`.*3\. Move the answered entry under `Answered` in `inbox\.md`, keeping its question, answer, date and source.*4\. Commit the workbench writes and push when it has a remote, as \[Workbench\]\(\.\.\/SKILL\.md#workbench\) says.*Only then act on the rest of the message/,
   );
-  const running =
-    /## Running the plan (.*?) ### Progress observation /.exec(skill)?.[1] ??
+  const workbench =
+    /## Workbench (.*?) ## Lifecycle /.exec(orchestrateFile("SKILL.md"))?.[1] ??
     "";
   assert.match(
-    running,
-    /Process owner decisions in the \[inbox sequence\]\(#inboxmd\) before other requests in the same message/,
+    workbench,
+    /Process an owner message's decisions in its \[sequence\]\(references\/templates\.md#inboxmd\) before its other requests/,
   );
 });
 
 test("orchestrate observes filed work before approval without authorizing execution", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const skill = orchestrateSkill();
   assert.match(
     skill,
     /Record the proposal in the plan directory and `index.md` before filing work/,
@@ -1732,10 +1788,11 @@ test("orchestrate observes filed work before approval without authorizing execut
 });
 
 test("orchestrate has one owning session that hands over and re-arms its wake-ups", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const skill = orchestrateSkill();
   const running =
-    /## Running the plan (.*?) ### Progress observation /.exec(skill)?.[1] ??
-    "";
+    /## Handover (.*?) ## Progress observation /.exec(
+      orchestrateFile("references/launches.md"),
+    )?.[1] ?? "";
   assert.doesNotMatch(skill, /long-lived/);
   assert.match(
     running,
@@ -1756,13 +1813,21 @@ test("orchestrate has one owning session that hands over and re-arms its wake-up
 });
 
 test("orchestrate ends a turn only after arming a wake-up, with recurring checks optional", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
-  const observation =
-    /### Progress observation (.*?) ## Report-back /.exec(skill)?.[1] ?? "";
-  const wait = /#### The wait step (.*)$/.exec(observation)?.[1] ?? "";
+  const skill = orchestrateSkill();
+  const step =
+    /## The wait step (.*?) ## Report-back /.exec(
+      orchestrateFile("SKILL.md"),
+    )?.[1] ?? "";
+  const launches = orchestrateFile("references/launches.md");
+  const observation = /## Progress observation (.*)$/.exec(launches)?.[1] ?? "";
+  const wait = /### The wait script (.*)$/.exec(observation)?.[1] ?? "";
   assert.match(
-    wait,
+    step,
     /End a turn only when every row under `now\.md`'s In flight waits on the owner or has a wake-up armed through the harness's own event mechanisms\. Its \*Next check\* names that wake-up/,
+  );
+  assert.match(
+    step,
+    /Where the harness can neither wait in the background nor deliver events, report that limit and re-read the records at each turn instead/,
   );
   assert.match(observation, /A recurring check is optional/);
   assert.match(
@@ -1801,7 +1866,7 @@ test("orchestrate ends a turn only after arming a wake-up, with recurring checks
 });
 
 test("orchestrate retains observation evidence and routes unexplained inactivity through existing recovery", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const skill = orchestrateFile("references/launches.md");
   assert.match(
     skill,
     /issue state and labels, latest comments and owner answers, blocker state, run progress and any PR/,
@@ -1821,7 +1886,7 @@ test("orchestrate retains observation evidence and routes unexplained inactivity
 });
 
 test("orchestrate reconciles closure from run findings with repository identity and provenance", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const skill = orchestrateSkill();
   assert.match(
     skill,
     /Record every issue the plan files with its repository, number and creation evidence/,
@@ -1855,12 +1920,11 @@ test("orchestrate reconciles closure from run findings with repository identity 
 });
 
 test("orchestrate closes with an independent retro between reconciliation and the announcement", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
-  const close =
-    /5\. \*\*Close\.\*\* (.*?) ## Running the plan /.exec(skill)?.[1] ?? "";
+  const skill = orchestrateSkill();
+  const close = orchestrateFile("references/close.md");
   const order = [
     "Reconcile those records with every run's findings",
-    "**The retro.**",
+    "[Retro](launches.md#retro)",
     "announce, as the last plan update",
   ].map((step) => close.indexOf(step));
   assert.ok(
@@ -1868,8 +1932,8 @@ test("orchestrate closes with an independent retro between reconciliation and th
     `${order}`,
   );
   const retro =
-    /\*\*The retro\.\*\* (.*?) - \*\*Other Close reviews\.\*\*/.exec(
-      close,
+    /## Retro (.*?) ## Architecture review /.exec(
+      orchestrateFile("references/launches.md"),
     )?.[1] ?? "";
   assert.match(
     retro,
@@ -1893,9 +1957,16 @@ test("orchestrate closes with an independent retro between reconciliation and th
   );
   assert.match(
     retro,
-    /commit and push its writes, as \[Workbench\]\(#workbench\) says/,
+    /route each lesson as \[Close\]\(close\.md#route-each-lesson\) says/,
   );
-  assert.match(retro, /report back, as \[Report-back\]\(#report-back\) says/);
+  assert.match(
+    retro,
+    /commit and push its writes, as \[Workbench\]\(\.\.\/SKILL\.md#workbench\) says/,
+  );
+  assert.match(
+    retro,
+    /report back, as \[Report-back\]\(\.\.\/SKILL\.md#report-back\) says/,
+  );
   assert.match(
     close,
     /Once every Close review is marked done, move the plan under `Closed` in `index\.md`/,
@@ -1911,11 +1982,9 @@ test("orchestrate closes with an independent retro between reconciliation and th
 });
 
 test("orchestrate routes each retro lesson to the owner of its rule", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
-  const close =
-    /5\. \*\*Close\.\*\* (.*?) ## Running the plan /.exec(skill)?.[1] ?? "";
+  const close = orchestrateFile("references/close.md");
   const routing =
-    /Each lesson goes to whoever owns the rule it concerns: (.*?) Once every Close review/.exec(
+    /Each lesson goes to whoever owns the rule it concerns: (.*?) ## Announce the close /.exec(
       close,
     )?.[1] ?? "";
   assert.match(
@@ -1944,8 +2013,10 @@ test("orchestrate routes each retro lesson to the owner of its rule", () => {
 });
 
 test("orchestrate plans name their Close reviews at approval", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
-  const plan = /## The plan (.*?) ## Lifecycle /.exec(skill)?.[1] ?? "";
+  const plan =
+    /## `plan\.md` and `log\.md` (.*)$/.exec(
+      orchestrateFile("references/templates.md"),
+    )?.[1] ?? "";
   assert.match(
     plan,
     /\*\*Approval:\*\* [^*]*\*\*Close reviews:\*\* retro; <`improve-codebase-architecture` in each repository the owner kept it for>/,
@@ -1955,24 +2026,28 @@ test("orchestrate plans name their Close reviews at approval", () => {
     /\*\*Close reviews\.\*\* The reviews Close runs, set when the owner approves the plan\. The retro is always one/,
   );
   const propose =
-    /1\. \*\*Propose\.\*\* (.*?) 2\. \*\*Intake\./.exec(skill)?.[1] ?? "";
+    /1\. \*\*Propose\.\*\* (.*?) 2\. \*\*Intake\./.exec(
+      orchestrateFile("SKILL.md"),
+    )?.[1] ?? "";
   assert.match(
     propose,
+    /Present the goal, Done means, ticket table and Close reviews to the owner for approval, as a plan update, and record the proposal and its approval as \[templates\]\(references\/templates\.md#planmd-and-logmd\) says, before filing work/,
+  );
+  assert.match(
+    plan,
     /The proposal names its Close reviews: the retro, and `improve-codebase-architecture` for each repository whose code the plan changes\. The owner keeps or removes each architecture review; the retro stays/,
   );
   assert.match(
-    propose,
+    plan,
     /On approval, write the approval line with its source and what it preapproves, and the Close reviews line the owner approved/,
   );
   assert.match(
-    skill,
-    /When it changes which repositories' code the plan changes, propose their Close reviews with it/,
+    plan,
+    /When an amendment changes which repositories' code the plan changes, propose their Close reviews with it/,
   );
-  const close =
-    /5\. \*\*Close\.\*\* (.*?) ## Running the plan /.exec(skill)?.[1] ?? "";
   const other =
-    /- \*\*Other Close reviews\.\*\* (.*?) Each lesson goes to/.exec(
-      close,
+    /## Architecture review (.*?) ## Handover /.exec(
+      orchestrateFile("references/launches.md"),
     )?.[1] ?? "";
   assert.match(
     other,
@@ -1980,13 +2055,13 @@ test("orchestrate plans name their Close reviews at approval", () => {
   );
   assert.match(
     other,
-    /route each of its findings as \[New requirements\]\(#lifecycle\) says: a Finding becomes an issue in that repository, and any other idea a wish naming it/,
+    /route each of its findings as \[New requirements\]\(\.\.\/SKILL\.md#lifecycle\) says: a Finding becomes an issue in that repository, and any other idea a wish naming it/,
   );
   assert.match(other, /Like a grill, it asks the owner its questions/);
 });
 
 test("orchestrate wishes preserve mandatory Findings reporting", () => {
-  const skill = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const skill = orchestrateSkill();
   const wish = flowedText("GLOSSARY.md")
     .split("**Wish**:")[1]
     .split("_Avoid_:")[0];
@@ -1996,10 +2071,11 @@ test("orchestrate wishes preserve mandatory Findings reporting", () => {
     /owner's quoted words or the finding|A defect others need to see may still be filed|\*\*Wish:\*\* it lies outside the goal\. Add it to `wishes\.md`, and file no issue/,
   );
   assert.doesNotMatch(wish, /or the finding|instead of an issue/);
-  assert.match(skill, /contribution guide's Findings section/);
+  // The guide's Findings section, not the skill, says to link an existing
+  // issue before filing one.
   assert.match(
     skill,
-    /first link an existing open issue reporting the finding; otherwise file it/,
+    /Handle a Finding as the contribution guide's Findings section says, even outside the goal, without waiting for its resolution/,
   );
   assert.match(
     skill,
@@ -2358,7 +2434,7 @@ test("the installed delivery route honors prescribed worker handoffs before merg
     babysit,
     /If they prescribe a worker handoff, record it on the open PR and stop/,
   );
-  const orchestrate = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const orchestrate = orchestrateSkill();
   assert.match(
     orchestrate,
     /When applicable installed rules assign a worker's merge to you, read its authoritative implementation contract and PR handoff, then resume `babysit`/,
@@ -2996,7 +3072,7 @@ test("shared delivery guidance delegates owner-question continuation to installe
     babysit,
     /On resuming a PR paused for an owner question, follow the installed continuation rules before returning to the request and wait steps/,
   );
-  const orchestrate = flowedText(".agents/skills/orchestrate/SKILL.md");
+  const orchestrate = orchestrateSkill();
   assert.match(
     orchestrate,
     /After an owner question is resolved, follow the applicable installed continuation rules to resume the worker or that same open PR/,
