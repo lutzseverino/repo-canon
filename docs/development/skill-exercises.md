@@ -437,12 +437,14 @@ Run the scenario twice, each time from a fresh build: order A, where the
 worker on 02 reports first, and order B, where the worker on 03 reports first.
 The operator relays `docs/participant-inputs.md` one turn at a time: the
 request to deliver, the maintainer's time-bounded grant, then the order's two
-reports. The first report offers to end the grant.
+reports, each written as the worker's message in the workbench's `incoming/`.
+The first report offers to end the grant.
 
 In both orders, check that the session asks the maintainer for the grant in
 `inbox.md`, records it as one In flight row it owns, with both workers listed
 before their simulated launches and a wake-up at the grant's time bound, and
-gives each worker the grant as task context. At the first report the reporting
+gives each worker the grant as task context. It takes each report in from
+`incoming/` before acting on it. At the first report the reporting
 worker leaves the row, the offer is declined and the grant stays. At the second
 report the session ends the grant, tells the maintainer, logs its end and
 removes the row. Each ticket closes only on its recorded live acceptance, never

@@ -994,7 +994,7 @@ Run the scenario twice, each time from a fresh build, once per order in docs/par
 
 ## Expected outcome
 
-Turn 1 asks the maintainer for time-bounded staging host access in inbox.md and starts no live step. At turn 2 the grant becomes one In flight row the orchestrating agent owns, listing both workers, with its Next check at the grant's time bound. Each worker is listed on the row before its simulated launch, and its task context carries the grant and its time bound and says that the worker never ends it. At the first report, in either order, the reporting worker leaves the row, the grant stays for the other worker, and the reporting worker's offer to end the grant is declined. Each ticket closes only on its recorded live acceptance. At the second report the grant ends: the orchestrating agent ends it, tells the maintainer, logs its end in log.md and removes the row. In both orders no worker ends the grant, the grant does not end at the first report, and no merge closes 02 or 03. Report the observed outcomes of both orders separately from fixture checks; keep run evidence outside maintained documentation.
+Turn 1 asks the maintainer for time-bounded staging host access in inbox.md and starts no live step. At turn 2 the grant becomes one In flight row the orchestrating agent owns, listing both workers, with its Next check at the grant's time bound. Each worker is listed on the row before its simulated launch, and its task context carries the grant and its time bound and says that the worker never ends it. At the first report, in either order, the reporting worker leaves the row, the grant stays for the other worker, and the reporting worker's offer to end the grant is declined. The session takes in each report from incoming/ as the skill says before acting on it. Each ticket closes only on its recorded live acceptance. At the second report the grant ends: the orchestrating agent ends it, tells the maintainer, logs its end in log.md and removes the row. In both orders no worker ends the grant, the grant does not end at the first report, and no merge closes 02 or 03. Report the observed outcomes of both orders separately from fixture checks; keep run evidence outside maintained documentation.
 `,
   });
   cpSync(
@@ -1038,7 +1038,7 @@ Turn 1 asks the maintainer for time-bounded staging host access in inbox.md and 
     "docs/participant-inputs.md",
     `# Controlled participant turns
 
-The operator relays these in order, one turn at a time, and runs each order from a fresh build. All are simulated owner, tracker and worker inputs. Cite each turn by this file and turn number with the clock date at delivery; do not pretend these are real grants, launches or host steps. The operator retains prompts, session references and turn delivery times outside the repositories.
+The operator relays these in order, one turn at a time, and runs each order from a fresh build. All are simulated owner, tracker and worker inputs. The operator delivers each worker's report as that worker's message: a file in the workbench's incoming/, named <UTC>-worker-0N.md, holding the quoted text, uncommitted, then wakes the session. Cite each turn by this file and turn number with the clock date at delivery; do not pretend these are real grants, launches or host steps. The operator retains prompts, session references and turn delivery times outside the repositories.
 
 ## Both orders
 

@@ -533,6 +533,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     /At the second report the grant ends: the orchestrating agent ends it, tells the maintainer, logs its end in log\.md and removes the row/,
   );
   assert.match(grantTask, /no merge closes 02 or 03/);
+  assert.match(grantTask, /takes in each report from incoming\//);
   const grantInputs = readFileSync(
     join(hostGrant.path, "docs/participant-inputs.md"),
     "utf8",
@@ -549,6 +550,10 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.match(grantInputs, /3A\..*Shall I end the staging access now\?/);
   assert.match(grantInputs, /3B\..*Shall I end the staging access now\?/);
   assert.doesNotMatch(grantInputs, /4[AB]\..*Shall I end/);
+  assert.match(
+    grantInputs,
+    /each worker's report as that worker's message: a file in the workbench's incoming\/, named <UTC>-worker-0N\.md/,
+  );
 
   const factoryPlanning = manifest.repositories["factory-planning"];
   const factoryIntake = readFileSync(
