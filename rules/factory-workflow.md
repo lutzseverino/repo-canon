@@ -122,8 +122,9 @@ factory must not pick up gets `ready-for-agent`, one `model:` label and
 the owner reviews before merge, or work whose live steps need host access the
 maintainer grants. A directly launched worker performs the agent work,
 including the source changes; host access gates only the live host steps and
-does not designate owner review of the source PR. A live-acceptance ticket
-takes this route, and a merge never closes it. The orchestrating agent that
+does not designate owner review of the source PR. A live-acceptance ticket,
+blocked by its source ticket, takes this route and closes only on its recorded
+live acceptance; a merge never closes it. The orchestrating agent that
 asked the maintainer for a time-bounded host access grant owns it and records
 the workers using it. Workers never end a grant: it ends when the last of them
 reports back, or at its own time bound.
@@ -183,8 +184,7 @@ PR being merged is exempt from its own hold; every other labelled open issue
 or PR still holds it. A held repository claims and launches nothing, so new
 expedited work runs outside factory pickup through a directly launched worker
 or the orchestrating agent. An already-open factory PR can carry the hold and
-finish through its exempt merge relaunch. Ending a time-bounded host access
-grant is not a worker's completion step.
+finish through its exempt merge relaunch.
 
 Babysit's merge check enforces the repository hold as well as the release hold
 immediately before merging, including when a hold appears mid-run. For the

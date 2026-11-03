@@ -610,7 +610,7 @@ const wordBudgets = {
   // then from 2799 to consolidate the account policy and clarify both rules
   // in one sentence while preserving delivery gates (#736), then from 2868
   // for the progress rule and the source and live-acceptance tickets (#793).
-  "CONTRIBUTING.md": 2908,
+  "CONTRIBUTING.md": 2909,
   // Raised from 108 for general delegation (#693), then from 193 for
   // supported session naming alongside that installed rule (#748).
   "AGENTS.md": 223,
@@ -1107,7 +1107,7 @@ test("owned skills state what the rules require instead of being overridden", ()
   assert.doesNotMatch(toTickets, /share an integration branch/);
   assert.match(
     toTickets,
-    /Every ticket merges into its base branch on its own, with its checks passing/,
+    /Every ticket's change merges into its base branch on its own, with its checks passing/,
   );
   assert.doesNotMatch(toTickets, /Apply the `ready-for-agent` triage label/);
   assert.doesNotMatch(toTickets, /otherwise set each ticket's "Blocked by"/);
@@ -2603,7 +2603,7 @@ test("host-access skips gate live steps without designating source PR review, wh
   assert.match(shared, /Any head change requires renewed owner approval/);
 });
 
-// Owner decision D13 (#793): progress stays out of the implementation
+// The owner's decision in #793: progress stays out of the implementation
 // contract, and work shown on a live system splits into a source ticket and a
 // live-acceptance ticket that no merge closes.
 test("contracts record no progress, and live acceptance is a ticket of its own", () => {
@@ -2634,7 +2634,7 @@ test("contracts record no progress, and live acceptance is a ticket of its own",
   );
   assert.match(
     flowedText("rules/factory-workflow.md"),
-    /A live-acceptance ticket takes this route, and a merge never closes it/,
+    /A live-acceptance ticket, blocked by its source ticket, takes this route and closes only on its recorded live acceptance; a merge never closes it/,
   );
 
   const tickets = flowedText(".agents/skills/to-tickets/SKILL.md");
@@ -2674,7 +2674,7 @@ test("contracts record no progress, and live acceptance is a ticket of its own",
   );
 });
 
-// Owner decision D14 (#793): a shared host access grant has one owner, the
+// The owner's decision in #793: a shared host access grant has one owner, the
 // orchestrating agent that asked for it; no worker ends it.
 test("the orchestrating agent that asked for a host access grant owns it, and no worker ends it", () => {
   const rules = flowedText("rules/factory-workflow.md");
@@ -2698,7 +2698,7 @@ test("the orchestrating agent that asked for a host access grant owns it, and no
   );
   assert.match(
     skip,
-    /A live-acceptance ticket takes this route\. It closes only once its live acceptance is recorded on it, never on a merge/,
+    /A live-acceptance ticket takes this route\. Its worker records the ticket's live acceptance on it instead of opening a PR, and reports back\. It closes only once its live acceptance is recorded on it, never on a merge/,
   );
 
   const templates = orchestrateFile("references/templates.md");

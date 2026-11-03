@@ -68,9 +68,10 @@ After resolution and any required renewed readiness, resume the worker if no
 PR exists, or continue the same open PR and its handoff. Live host access gates
 only the authorized live steps.
 
-A live-acceptance ticket takes this route. It closes only once its live
-acceptance is recorded on it, never on a merge; its source ticket's PR links it
-without a closing reference. A time-bounded host access grant belongs to the
+A live-acceptance ticket takes this route. Its worker records the ticket's live
+acceptance on it instead of opening a PR, and reports back. It closes only once
+its live acceptance is recorded on it, never on a merge; its source ticket's PR
+links it without a closing reference. A time-bounded host access grant belongs to the
 orchestrating agent that asked the maintainer for it, which records the workers
 using it. Workers never end it: it ends when the last of them reports back, or
 at its own time bound.

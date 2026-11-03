@@ -27,10 +27,10 @@ Before implementing, read the whole issue, its discussion, its parent
 specification, and its blockers, and clarify contradictions. Start a ticket
 only after its blockers are closed.
 
-Every ticket merges into its base branch on its own, with its checks passing.
-An issue closes when its own acceptance criteria hold. After readiness, nobody
-edits an implementation contract to record progress: progress lives in linked
-pull requests, sub-issue states and comments.
+Every ticket's change merges into its base branch on its own, with its checks
+passing. An issue closes when its own acceptance criteria hold. After
+readiness, nobody edits an implementation contract to record progress: progress
+lives in linked pull requests, sub-issue states and comments.
 
 Work that must be shown on a live system splits into a source ticket, which
 closes when its pull request merges, and a live-acceptance ticket, blocked by
