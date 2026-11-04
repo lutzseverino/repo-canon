@@ -260,6 +260,18 @@ repeated.
   decisions-only, and deletes the file;
   [#792](https://github.com/lutzseverino/repo-canon/issues/792) records these
   decisions.
+- On 2026-10-31 the owner decided that their request to do something now is
+  that work's approval and skips only the plan. `orchestrate` first records
+  the quoted words under the decision inbox's `Answered`, tracks the work in
+  `now.md` and, inside an open plan's goal, as an expedited row of that plan,
+  with no new file; each repository's own delivery rules, such as its Direct
+  change, still apply. To make room, the orchestrating agent pauses only what
+  it owns, its new launches and its merges, until the change merges, because
+  interrupting a running session needs the owner's word; running sessions
+  continue unless the owner stops them, and a factory serving the repository
+  pauses through the `factory` skill installed there;
+  [#791](https://github.com/lutzseverino/repo-canon/issues/791) records the
+  decision.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
   maintainer to install from upstream at user scope; the
   [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)

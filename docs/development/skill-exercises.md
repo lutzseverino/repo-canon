@@ -320,9 +320,11 @@ Use the planning builder above from the candidate checkout. Its manifest entry
 `repositories.orchestrate` names the disposable project, its initial commit,
 and a separate `workbench` with its own initial commit. Both start clean on
 `main` with local signing disabled and no remote. The project links the exact
-candidate `.agents/skills/orchestrate` directory, whose digest the manifest
-records alongside the source HEAD and builder/input hashes. No package install
-is needed. Keep the workbench path in the exercise sandbox's writable roots.
+candidate `.agents/skills/orchestrate` and `.agents/skills/factory`
+directories, whose digests the manifest records alongside the source HEAD and
+builder/input hashes, and copies the source's `.factory/config.json` for the
+factory's labels. No package install is needed. Keep the workbench path in the
+exercise sandbox's writable roots.
 
 Prerequisites are Node.js 24 or 26, Git, an agent harness that supports a fresh
 session and returning to an existing one, and an operator playing the controlled
@@ -343,7 +345,7 @@ wait for the next controlled turn.
 
 Allow at most 10 minutes per session, 20 minutes total. The operator reads
 `docs/participant-inputs.md` and relays turns 1–7 to session one at their stated
-checkpoints, including 1a–1c and 6a–6c. Before approval, observe registration
+checkpoints, including 1a–1c and 6a–6e. Before approval, observe registration
 of the proposal, filing without readiness, and wake-up coverage of the filed
 factory ticket and its recorded blocker without a PR or directly launched
 worker. The operator's wake-ups stand for wait exits; start no live wait or
@@ -365,6 +367,18 @@ on review ticket 01 (there is no PR), and the optional planning wish links the
 reported finding without replacing its issue or reporting links. The method
 follows the contribution guide's Findings section, including its reporting
 fallback when filing fails; neither repair delays the documentation plan.
+Turns 6d–6e bring the owner's "do this now" while ticket 01's factory run and
+ticket 03's research run are running and ticket 02's worker launch is due. Check
+that the request is recorded under `inbox.md`'s `Answered` before any other
+action, and that it skips only the plan: an expedited `now.md` In flight row
+states the pause, and an expedited plan row without an issue follows from the
+approved goal. The pause holds only 02's launch and merges the orchestrating
+agent would make; the running sessions continue. The factory pause puts the
+configured hold label on the change's simulated PR 12 through the linked
+`factory` skill. After PR 12 merges, check that no open hold remains, the held
+launch starts, the `Answered` entry records the outcome and the expedited row
+ends with the merged pull request, which the close accepts in place of a closed
+issue.
 At turn 7 relay `docs/closure-inputs.md` and materialize its simulated PR
 findings, no-PR issue comments, issue-less run's final message and current
 tracker records. Keep the factory-only finding out of the ticket table and
