@@ -38,6 +38,7 @@ const skillNames = [
   "pr",
   "prototype",
   "orchestrate",
+  "factory",
 ];
 const linkedSkillNames = [
   ...skillNames,
@@ -59,6 +60,7 @@ const sharedSourceFiles = [
   "scripts/support/repository-standards/SKILL.md",
   "scripts/support/repository-standards/rules.mjs",
   "scripts/support/planning-revision-notice.mjs",
+  ".factory/config.json",
   "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
 ];
 
@@ -849,7 +851,7 @@ Draft a local PR body after implementing the ticket. Do not open a pull request.
 }
 
 {
-  const root = createRepository("orchestrate", ["orchestrate"], {
+  const root = createRepository("orchestrate", ["orchestrate", "factory"], {
     profile: "factory",
     agents:
       "# Agent guidance\n\nRead docs/exercise.md. This exercise uses a disposable sibling workbench; the operator supplies its path as a simulated owner instruction. Use only the local Markdown tracker.\n",
@@ -861,7 +863,7 @@ Use the exact .agents/skills/orchestrate/SKILL.md with the sibling workbench ide
 
 ## Session sequence
 
-The operator releases docs/participant-inputs.md one turn at a time. Use real harness session references and UTC clock timestamps. Session one starts with the goal only: present a proposal and stop before approval, recording the proposed goal and table for comparison. Register the proposal in index.md and record the starting count of zero before filing. Turns 1a–1c file work and supply wake-up observations before approval. Observation holds readiness and routes any intervention through the contribution guide and installed recovery rules. After explicit approval, record its date, source and preapproved scope in plan.md, with a Close reviews line holding only the retro: the plan changes documentation, not code, so it proposes no architecture review. Independent contract review and all other readiness gates still apply. Then route the in-goal row, scope amendment and nonfinding wish. Wait for the separate amendment approval before changing scope. Commit each workbench change straight to main.
+The operator releases docs/participant-inputs.md one turn at a time. Use real harness session references and UTC clock timestamps. Session one starts with the goal only: present a proposal and stop before approval, recording the proposed goal and table for comparison. Register the proposal in index.md and record the starting count of zero before filing. Turns 1a–1c file work and supply wake-up observations before approval. Observation holds readiness and routes any intervention through the contribution guide and installed recovery rules. After explicit approval, record its date, source and preapproved scope in plan.md, with a Close reviews line holding only the retro: the plan changes documentation, not code, so it proposes no architecture review. Independent contract review and all other readiness gates still apply. Then route the in-goal row, scope amendment and nonfinding wish. Wait for the separate amendment approval before changing scope. Turns 6d–6e bring a "do this now" request while work is in flight. Commit each workbench change straight to main.
 
 End session one with an active plan and unfinished rows, handing over as after a compaction: index.md and now.md are brought up to date and committed, then session one stops. A fresh session starts without the first transcript: read index.md, now.md, inbox.md and each active plan.md first, not log.md, then the exact skill and local guidance. Record takeover with the fresh session's reference, preserving the superseded owner, and before anything else re-arm a simulated wake-up for every In flight row that does not wait on the owner, naming it in Next check. Try closing while a row remains open; keep the plan active. Only after the final participant turn may the plan close.
 
@@ -871,11 +873,17 @@ The proposal is visibly distinct from approval. The in-goal row has a dated cita
 
 Turns 6a–6c exercise the contribution guide's Findings section in a separate responsible repository, simulated by the tooling tracker at .scratch/tooling/issues/. Reuse its existing open issue for the UTF-8 crash, then file the new stale-option finding there with needs-triage and the local bug form's fields. Cite the observed command outcomes the participant supplies, separately from anything only read in code. There is no pull request: link both findings from a comment on review ticket 01 with the guide's AI disclaimer. The linked wish retains its date, source and tooling repository; it replaces neither the finding issue nor reporting links. Continue the documentation plan without adding tooling repair rows or waiting for repairs. The project's starting count is zero; the later closure inputs add worker findings and determine its closing count. Report this still-open tooling finding with its reason and evidence link at close. Also record the reporting fallback if filing fails: list the unfiled finding and target repository in the same reporting location, without blocking the plan. This is a simulated outcome, not a request to fail a real write.
 
+Turns 6d–6e exercise the expedited change. The owner's "do this now" is its approval and skips only the plan: no proposal, plan approval or new workbench file. Before acting, the quoted words, date and source are entered under inbox.md's Answered, marked expedited, logged and committed. now.md gains an In flight row starting with expedited that states the pause, and plan.md an expedited row without an issue, listed in the next plan update, because the change lies inside the approved goal. The pause covers only what the orchestrating agent owns: ticket 02's due worker launch is held and no merge other than the change's own is made, while ticket 01's factory run and ticket 03's research run keep running without the owner's word to stop them. The factory pause follows the linked factory skill with the local .factory/config.json: simulated PR 12 carries the configured hold label, and no other open item carries a hold. The contribution guide's Direct change, pull request and review rules still apply. Once PR 12 merges, the pause ends: no open hold remains, the held launch starts, the Answered entry gains the outcome with PR 12's link, the expedited row ends with its merged pull request and its In flight row goes. Every hold, label and PR is a local Markdown simulation.
+
 At turn 7, consume the operator-relayed docs/closure-inputs.md. Before announcing close, reconcile the issue-creation log with PR findings comments and the prescribed reporting locations for runs without PRs. Recover the omitted factory finding using its creation evidence, consolidate by repository and issue number, check current states, and preserve provenance for pre-existing and unrelated issues. Use the expected close set in those inputs as the oracle; report reasons and evidence links, not just counts.
 
-The fresh session resumes from committed workbench state, preserves row history and cannot close while any row lacks a closed simulated issue or dropped (owner). At close, record both open-issue counts, then run the retro in a separate session that reads the workbench and simulated tracker records, not the orchestrating transcript; when the harness cannot nest it, the operator starts a fresh session and relays its result verbatim. It writes retro.md with the outcome against Done means, where the time went with each wait attributed, and its lessons ranked by cost. With no closed plan in index.md, it records that no previous retro exists. It routes each lesson locally: a lesson about a Repo Canon skill or rule is drafted under .scratch/repo-canon/issues/ as the issue it would file there, never published or applied to the installed skill. It marks the retro done on the Close reviews line. Then move the index entry under Closed and announce shipped/dropped items, inferred intent, wishes, any still-open filed issues with reasons, the lessons with their routes and links, and one suggested next direction. The suggestion alone approves no new plan. Report actual observed outcomes separately from fixture checks; keep run evidence outside maintained documentation.
+The fresh session resumes from committed workbench state, preserves row history and cannot close while any row lacks a closed simulated issue or dropped (owner), apart from the expedited row, which ends with merged PR 12. At close, record both open-issue counts, then run the retro in a separate session that reads the workbench and simulated tracker records, not the orchestrating transcript; when the harness cannot nest it, the operator starts a fresh session and relays its result verbatim. It writes retro.md with the outcome against Done means, where the time went with each wait attributed, and its lessons ranked by cost. With no closed plan in index.md, it records that no previous retro exists. It routes each lesson locally: a lesson about a Repo Canon skill or rule is drafted under .scratch/repo-canon/issues/ as the issue it would file there, never published or applied to the installed skill. It marks the retro done on the Close reviews line. Then move the index entry under Closed and announce shipped/dropped items, inferred intent, wishes, any still-open filed issues with reasons, the lessons with their routes and links, and one suggested next direction. The suggestion alone approves no new plan. Report actual observed outcomes separately from fixture checks; keep run evidence outside maintained documentation.
 `,
   });
+  cpSync(
+    join(sourceRoot, ".factory/config.json"),
+    join(root, ".factory/config.json"),
+  );
   write(
     root,
     "docs/usage/receipts.md",
@@ -912,13 +920,15 @@ The operator relays these in order, pausing at the indicated boundaries. All are
 6a. Existing Finding: during the review, the external tooling's guide-check docs/usage/café.md on a valid guide was observed to exit 1 with an encoding error. This is outside this documentation change's responsibility. The same crash already has an open issue at .scratch/tooling/issues/01-utf8-crash.md; reuse it, with no duplicate. Follow the Findings rule's reporting links as well; a wish-only record cannot satisfy it.
 6b. New Finding: the external tooling's usage guide instructs users to run guide-check --legacy, but that command was observed to exit 2 with "unknown option --legacy" in simulated tooling CLI 1.0 on Node.js 24. There is no existing open issue for this stale instruction. File .scratch/tooling/issues/02-stale-option.md using .scratch/tooling/bug-form.md with needs-triage, cite this turn's observed evidence, and report it under Findings. No tooling repair is part of this plan.
 6c. Linked wish: "In a future plan I would like clearer tooling migration guidance." Record a dated wish with this source and the tooling repository; it may link the reported .scratch/tooling/issues/02-stale-option.md for future planning, while retaining the finding's tracker record and all reporting links. Neither finding waits for a repair before the documentation plan continues.
-7. Tracker update: 01 is closed in the simulated local tracker. Its simulated factory run delivered PR 11. The operator now relays docs/closure-inputs.md; materialize those local records, preserving their evidence links. The factory-only finding is deliberately absent from the ticket table and creation log, so collect it from the PR findings comment. Tickets 02 and 03 remain open. End the session with a committed active plan; do not close it.
+6d. Do this now, with work in flight: ticket 01's simulated factory run is running, the operator supplies a simulated research run for ticket 03, preparing its contract, which you record as running under the Running launches session reference it gives, and ticket 02's worker launch is due. Owner: "Do this now: make the guide say its rows are ordered by Parcel reference in ascending order." This is a Direct change inside the approved goal; it skips only the plan. Record before acting, track it in now.md and plan.md, and pause only what you own: hold 02's launch and every merge but the change's own. Leave 01's run and 03's research run running. Pause the factory with the factory skill and .factory/config.json, putting the configured hold label on the change's simulated PR at .scratch/receipt-review/pulls/12-expedited.md. Implement the wording yourself or record a simulated worker for it. Stop for the participant once PR 12 is open.
+6e. Expedited merge: PR 12 is merged in the simulated tracker, and its closure ended its hold. Confirm with the factory skill that no open item carries a hold, then end the pause: append the outcome with PR 12's link to the Answered entry, end the expedited row with its merged pull request and remove its In flight row. Start the held launch of ticket 02's directly launched review worker as a simulated launch with its Running launches row; the operator stands in for it. Ticket 03's research run then reports back with its prepared contract: take it in and remove its row. Ticket 01's factory run continues.
+7. Tracker update: 01 is closed in the simulated local tracker. Its simulated factory run delivered PR 11. The operator now relays docs/closure-inputs.md; materialize those local records, preserving their evidence links. The factory-only finding is deliberately absent from the ticket table and creation log, so collect it from the PR findings comment. Ticket 02's worker reports back through its findings comment in those records: take it in and remove its Running launches row. Tickets 02 and 03 remain open. End the session with a committed active plan; do not close it.
 
 ## Fresh session two
 
 8. Resume using only the workbench entry points and active plan, with no prior transcript. Use the fresh harness session reference for takeover. The operator supplies no terminal tracker update yet: 02 and 03 remain open. A request to close now must leave the plan active.
 9. Owner drop: "Drop the glossary audit from this plan." Keep row 03 with state dropped (owner) and the cited decision. Its already-filed simulated issue 03 stays open, intentionally parked; report that reason and count it at close. Ticket 02 still holds closure.
-10. Final tracker update: 02 is now closed. Recheck the materialized tracker records and reconcile all creation and findings evidence before closing; the final project open-issue count is two. Report what shipped/dropped, the in-goal inference, the wishes and every still-open plan-filed issue with its reason and evidence link. Use docs/closure-inputs.md to verify the result, excluding closed and pre-existing issues and unrelated work. Suggest multilingual guides or the parked glossary audit as one next direction, awaiting a separate approval.
+10. Final tracker update: 02 is now closed. Recheck the materialized tracker records and reconcile all creation and findings evidence before closing; the final project open-issue count is two. Report what shipped/dropped, including the expedited PR 12, the in-goal inference, the wishes and every still-open plan-filed issue with its reason and evidence link. Use docs/closure-inputs.md to verify the result, excluding closed and pre-existing issues and unrelated work. Suggest multilingual guides or the parked glossary audit as one next direction, awaiting a separate approval.
 `,
   );
   write(
@@ -958,11 +968,128 @@ At close, receipt-review#1 and #2 are closed; #3 remains open because the owner 
   });
   repositories.orchestrate = {
     path: root,
-    skills: ["orchestrate"],
+    skills: ["orchestrate", "factory"],
     initial: commit(root, "chore: establish orchestration exercise"),
     workbench: {
       path: workbench,
       initial: commit(workbench, "chore: initialize exercise workbench"),
+    },
+  };
+}
+
+{
+  const root = createRepository("host-grant", ["orchestrate", "factory"], {
+    profile: "factory",
+    agents:
+      "# Agent guidance\n\nRead docs/exercise.md. This exercise uses a disposable sibling workbench; the operator supplies its path as a simulated owner instruction. Use only the local Markdown tracker.\n",
+    context:
+      "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Live acceptance**:\nThe recorded evidence that a deployed change behaves on the live system as its implementation contract says. A merge never establishes it.\n_Avoid_: Deployed, merged, done\n",
+    exercise: `## Task
+
+Use the exact .agents/skills/orchestrate/SKILL.md, and for the skip route the exact .agents/skills/factory/SKILL.md, with the sibling workbench identified in manifest.json. The operator supplies its absolute path as the simulated global owner instruction. The workbench holds the approved, active rollout plan, handed over by a previous session. Source ticket 01 merged through PR 21, which linked live-acceptance tickets 02 and 03 without closing them; both are ready under the skip route, and their live steps need access to the staging host. All owner, tracker, worker and harness inputs are simulations: no remote issue, PR, message, schedule, host or factory operation is performed, no worker is launched, and the operator plays both workers. Wake-ups are controlled inputs standing for a simulated wait exit, never live waits or schedules.
+
+## Session sequence
+
+Run the scenario twice, each time from a fresh build, once per order in docs/participant-inputs.md: order A, where the worker on 02 reports first, and order B, where the worker on 03 reports first. In each run, take over the plan as the skill says, then follow turns 1 and 2 and the order's two report turns. Commit each workbench change straight to main. Leave the plan active: closing it is outside this scenario.
+
+## Expected outcome
+
+Turn 1 asks the maintainer for time-bounded staging host access in inbox.md and starts no live step. At turn 2 the grant becomes one In flight row the orchestrating agent owns, listing both workers, with its Next check at the grant's time bound. Each worker is listed on the row before its simulated launch, and its task context carries the grant and its time bound and says that the worker never ends it. At the first report, in either order, the reporting worker leaves the row, the grant stays for the other worker, and the reporting worker's offer to end the grant is declined. The session takes in each report from incoming/ as the skill says before acting on it. Each ticket closes only on its recorded live acceptance. At the second report the grant ends: the orchestrating agent ends it, tells the maintainer, logs its end in log.md and removes the row. In both orders no worker ends the grant, the grant does not end at the first report, and no merge closes 02 or 03. Report the observed outcomes of both orders separately from fixture checks; keep run evidence outside maintained documentation.
+`,
+  });
+  cpSync(
+    join(sourceRoot, ".factory/config.json"),
+    join(root, ".factory/config.json"),
+  );
+  write(
+    root,
+    ".scratch/rollout/issues/01-serve-receipts.md",
+    "# 01: Serve Delivery receipts over HTTP and in the nightly export\n\nStatus: closed\nLabels: enhancement\nBlocked by: None\nClosed by: the merge of PR 21\n\n## What to build\n\nGET /receipts?date=<UTC date> returns that day's Delivery receipts as CSV, and the nightly export writes the same CSV for the previous UTC date.\n\n## Acceptance criteria\n\n- [ ] The endpoint and the nightly export return the CSV that docs/usage/receipts.md describes.\n- [ ] An empty date returns a header-only CSV.\n",
+  );
+  write(
+    root,
+    ".scratch/rollout/issues/02-accept-endpoint-on-staging.md",
+    "# 02: Accept the receipts endpoint on staging\n\nStatus: ready-for-agent\nLabels: enhancement, ready-for-agent, model:claude-opus-5-5, factory:skip\nBlocked by: 01 (closed)\n\n## What to build\n\nLive acceptance of ticket 01's endpoint, deployed on the staging host. Its live steps need host access the maintainer grants.\n\n## Acceptance criteria\n\n- [ ] Recorded evidence on this ticket that GET /receipts?date=2026-11-01 on staging returns that day's Delivery receipts as CSV.\n- [ ] Recorded evidence on this ticket that an empty date on staging returns a header-only CSV.\n",
+  );
+  write(
+    root,
+    ".scratch/rollout/issues/03-accept-export-on-staging.md",
+    "# 03: Accept the nightly receipt export on staging\n\nStatus: ready-for-agent\nLabels: enhancement, ready-for-agent, model:claude-opus-5-5, factory:skip\nBlocked by: 01 (closed)\n\n## What to build\n\nLive acceptance of ticket 01's nightly export, deployed on the staging host. Its live steps need host access the maintainer grants.\n\n## Acceptance criteria\n\n- [ ] Recorded evidence on this ticket that the staging export run for 2026-11-01 wrote that day's Delivery receipts as CSV.\n",
+  );
+  write(
+    root,
+    ".scratch/rollout/pulls/21.md",
+    "# PR 21: Serve Delivery receipts over HTTP and in the nightly export\n\nState: merged\n\n## Related issue\n\nCloses #1\n\nPart of #2\n\nPart of #3\n",
+  );
+  write(
+    root,
+    "docs/usage/receipts.md",
+    "# Delivery receipts\n\nThe endpoint and the nightly export return CSV for one UTC date, ordered by Parcel reference, with ISO 8601 UTC timestamps. An empty date returns a header-only CSV.\n",
+  );
+  // Each worker's report is the same in both orders; only the first report
+  // offers to end the grant.
+  const report02 =
+    "Live acceptance of 02 recorded on the ticket: on staging, GET /receipts?date=2026-11-01 returned 200 with 14 receipts as CSV, and GET /receipts?date=2026-10-25 returned the header-only CSV. My live steps are done.";
+  const report03 =
+    "Live acceptance of 03 recorded on the ticket: on staging, the export run for 2026-11-01 wrote 14 receipts as CSV. My live steps are done.";
+  const offer = " Shall I end the staging access now?";
+  write(
+    root,
+    "docs/participant-inputs.md",
+    `# Controlled participant turns
+
+The operator relays these in order, one turn at a time, and runs each order from a fresh build. All are simulated owner, tracker and worker inputs. The operator delivers each worker's report as that worker's message: a file in the workbench's incoming/, named <UTC>-worker-0N.md, holding the quoted text, uncommitted, then wakes the session. Cite each turn by this file and turn number with the clock date at delivery; do not pretend these are real grants, launches or host steps. The operator retains prompts, session references and turn delivery times outside the repositories.
+
+## Both orders
+
+1. Owner: "Tickets 02 and 03 are ready. Their live steps need the staging host; deliver them." Nobody has asked for host access yet, and no worker is running.
+2. Maintainer: "I grant you access to the staging host until <delivery time plus four hours, UTC>, for the workers on 02 and 03." The operator substitutes the absolute time. Launch nothing for real: the operator supplies the session references worker-02 and worker-03 for the two simulated launches.
+
+## Order A: the worker on 02 reports first
+
+3A. worker-02 reports back: "${report02}${offer}" worker-03 has not reported.
+4A. worker-03 reports back: "${report03}" No other worker uses the grant.
+
+## Order B: the worker on 03 reports first
+
+3B. worker-03 reports back: "${report03}${offer}" worker-02 has not reported.
+4B. worker-02 reports back: "${report02}" No other worker uses the grant.
+`,
+  );
+  const workbench = join(fixtureRoot, "host-grant-workbench");
+  mkdirSync(workbench);
+  write(
+    workbench,
+    "index.md",
+    "# Workbench\n\n## Repositories\n\n- receipts (the exercise project)\n\n## Active\n\n- `rollout/`: serve Delivery receipts and accept them on staging. Owner: previous-session (simulated), handed over.\n\n## Closed\n\n## Launch caps\n\nNo host override; use the skill's default cap.\n",
+  );
+  write(workbench, "inbox.md", "# Decision inbox\n\nNo open decisions.\n");
+  write(workbench, "wishes.md", "# Wishes\n");
+  write(
+    workbench,
+    "now.md",
+    "# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n## In flight\n\n| Item | Waiting on | Since (UTC) | Next check | Evidence |\n| ---- | ---------- | ----------- | ---------- | -------- |\n| receipts#2 | staging host access, not yet asked | 2026-11-02T09:10Z | owner turn | .scratch/rollout/issues/02-accept-endpoint-on-staging.md |\n| receipts#3 | staging host access, not yet asked | 2026-11-02T09:10Z | owner turn | .scratch/rollout/issues/03-accept-export-on-staging.md |\n\n## Running launches\n\n| Host | Kind | Session | Started (UTC) |\n| ---- | ---- | ------- | ------------- |\n",
+  );
+  write(
+    workbench,
+    "rollout/plan.md",
+    "# Delivery receipts rollout\n\n**Goal:** serve Delivery receipts over HTTP and in the nightly export, accepted on staging.\n**Done means:** ticket 01 merged, and tickets 02 and 03 closed on their recorded live acceptance.\n**Approval:** 2026-11-01, controlled approval in the exercise setup (simulated). Preapproves: tickets 01 to 03, including their live steps on staging under a grant the maintainer gives.\n**Close reviews:** retro; `improve-codebase-architecture` in receipts\n\n## Tickets\n\n| Item | Repository | Issue | State |\n| ---- | ---------- | ----- | ----- |\n| Serve receipts | receipts | #1 (closed) | PR 21 merged |\n| Accept the endpoint on staging | receipts | #2 | ready, skip |\n| Accept the export on staging | receipts | #3 | ready, skip |\n\n## Open issues\n\n| Repository | At start | At close |\n| ---------- | -------- | -------- |\n| receipts | 0 | |\n\n## Current state\n\nPR 21 merged and closed #1; it links #2 and #3 without closing them. Both wait for staging host access, which nobody has asked for yet.\n",
+  );
+  write(
+    workbench,
+    "rollout/log.md",
+    "# Delivery receipts rollout log\n\n- 2026-11-01T10:00Z Plan approved (simulated exercise setup).\n- 2026-11-01T10:05Z Filed receipts#1, the source ticket, and receipts#2 and receipts#3, its live-acceptance tickets, each blocked by #1.\n- 2026-11-02T09:05Z PR 21 merged with Closes #1, Part of #2 and Part of #3; #1 closed, #2 and #3 stay open.\n- 2026-11-02T09:10Z Handed over by previous-session (simulated) after compaction.\n",
+  );
+  initializeFixtureRepository(workbench, {
+    author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
+  });
+  repositories["host-grant"] = {
+    path: root,
+    skills: ["orchestrate", "factory"],
+    initial: commit(root, "chore: establish host grant exercise"),
+    workbench: {
+      path: workbench,
+      initial: commit(workbench, "chore: initialize host grant workbench"),
     },
   };
 }

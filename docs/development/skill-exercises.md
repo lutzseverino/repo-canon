@@ -128,8 +128,8 @@ node scripts/create-planning-skill-fixtures.mjs
 pnpm run test:planning-skill-fixtures
 ```
 
-The builder writes `manifest.json` under its root and prints that path. Seven
-repositories cover nine skills: `project-agent-guidance`, which links no skill,
+The builder writes `manifest.json` under its root and prints that path. Eight
+repositories cover ten skills: `project-agent-guidance`, which links no skill,
 supplies existing project-specific `AGENTS.md` instructions for the
 `project-agent-guidance` contextual work described in
 [adoption compatibility](adoption-compatibility.md#preserving-project-instructions);
@@ -137,6 +137,7 @@ supplies existing project-specific `AGENTS.md` instructions for the
 `triage-wayfinder` for `triage` and `wayfinder`; `factory-planning` for
 factory-profile triage and readiness decisions; `triage-routing` for routing
 by uncertainty and brief acceptance; `orchestrate` for the workbench plan lifecycle;
+`host-grant` for `orchestrate` and `factory` with a shared host access grant;
 and `delivery` for
 `implement`, `pr`, and `prototype`. The delivery repository
 includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
@@ -161,7 +162,7 @@ adopting-repository conformance. Root guidance points to this adapter; the
 upstream workflow skills remain intact.
 
 All scenarios explicitly use `standard`, except `factory-planning`,
-`triage-routing` and `orchestrate`, which use `factory`. Standard scenarios
+`triage-routing`, `orchestrate` and `host-grant`, which use `factory`. Standard scenarios
 expose GitHub repository configuration rules without factory workflow rules.
 
 For `triage-wayfinder`, follow the numbered checkpoints in `docs/exercise.md`
@@ -320,9 +321,11 @@ Use the planning builder above from the candidate checkout. Its manifest entry
 `repositories.orchestrate` names the disposable project, its initial commit,
 and a separate `workbench` with its own initial commit. Both start clean on
 `main` with local signing disabled and no remote. The project links the exact
-candidate `.agents/skills/orchestrate` directory, whose digest the manifest
-records alongside the source HEAD and builder/input hashes. No package install
-is needed. Keep the workbench path in the exercise sandbox's writable roots.
+candidate `.agents/skills/orchestrate` and `.agents/skills/factory`
+directories, whose digests the manifest records alongside the source HEAD and
+builder/input hashes, and copies the source's `.factory/config.json` for the
+factory's labels. No package install is needed. Keep the workbench path in the
+exercise sandbox's writable roots.
 
 Prerequisites are Node.js 24 or 26, Git, an agent harness that supports a fresh
 session and returning to an existing one, and an operator playing the controlled
@@ -343,7 +346,7 @@ wait for the next controlled turn.
 
 Allow at most 10 minutes per session, 20 minutes total. The operator reads
 `docs/participant-inputs.md` and relays turns 1–7 to session one at their stated
-checkpoints, including 1a–1c and 6a–6c. Before approval, observe registration
+checkpoints, including 1a–1c and 6a–6e. Before approval, observe registration
 of the proposal, filing without readiness, and wake-up coverage of the filed
 factory ticket and its recorded blocker without a PR or directly launched
 worker. The operator's wake-ups stand for wait exits; start no live wait or
@@ -365,6 +368,18 @@ on review ticket 01 (there is no PR), and the optional planning wish links the
 reported finding without replacing its issue or reporting links. The method
 follows the contribution guide's Findings section, including its reporting
 fallback when filing fails; neither repair delays the documentation plan.
+Turns 6d–6e bring the owner's "do this now" while ticket 01's factory run and
+ticket 03's research run are running and ticket 02's worker launch is due. Check
+that the request is recorded under `inbox.md`'s `Answered` before any other
+action, and that it skips only the plan: an expedited `now.md` In flight row
+states the pause, and an expedited plan row without an issue follows from the
+approved goal. The pause holds only 02's launch and merges the orchestrating
+agent would make; the running sessions continue. The factory pause puts the
+configured hold label on the change's simulated PR 12 through the linked
+`factory` skill. After PR 12 merges, check that no open hold remains, the held
+launch starts, the `Answered` entry records the outcome and the expedited row
+ends with the merged pull request, which the close accepts in place of a closed
+issue.
 At turn 7 relay `docs/closure-inputs.md` and materialize its simulated PR
 findings, no-PR issue comments, issue-less run's final message and current
 tracker records. Keep the factory-only finding out of the ticket table and
@@ -405,3 +420,33 @@ and times, observed proposal/approval and routing checkpoints, fresh-session
 resume and closure, and any limits. Retain transcripts and resulting workbench
 commits outside maintained documentation. Builder tests establish setup
 correctness; only these agent sessions establish exercise outcomes.
+
+## Orchestrate and factory: a shared host access grant
+
+Use the planning builder above from the candidate checkout. Its manifest entry
+`repositories.host-grant` names the disposable project, which links the exact
+candidate `orchestrate` and `factory` skills, and a separate workbench holding
+an approved, active plan handed over by a simulated previous session. Source
+ticket 01 has merged through a pull request that links live-acceptance tickets
+02 and 03 without closing them. Both are ready under the skip route, and their
+live steps need the same staging host. Prerequisites and the session limits
+match the [orchestrate exercise](#orchestrate-two-sessions-and-a-local-workbench);
+no worker is launched, and the operator plays both workers.
+
+Run the scenario twice, each time from a fresh build: order A, where the
+worker on 02 reports first, and order B, where the worker on 03 reports first.
+The operator relays `docs/participant-inputs.md` one turn at a time: the
+request to deliver, the maintainer's time-bounded grant, then the order's two
+reports, each written as the worker's message in the workbench's `incoming/`.
+The first report offers to end the grant.
+
+In both orders, check that the session asks the maintainer for the grant in
+`inbox.md`, records it as one In flight row it owns, with both workers listed
+before their simulated launches and a wake-up at the grant's time bound, and
+gives each worker the grant as task context. It takes each report in from
+`incoming/` before acting on it. At the first report the reporting
+worker leaves the row, the offer is declined and the grant stays. At the second
+report the session ends the grant, tells the maintainer, logs its end and
+removes the row. Each ticket closes only on its recorded live acceptance, never
+on the merge. Report both orders' observed outcomes, session references and
+workbench commits with the pull request that needs them.

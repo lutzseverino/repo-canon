@@ -39,7 +39,9 @@ Break the work into **tracer bullet** tickets.
 
 Give each ticket its **blocking edges**: the other tickets that must complete before it can start. A ticket with no blockers can start immediately.
 
-**Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. Every ticket merges into its base branch on its own, with its checks passing: when even the batches can't stay green alone, fold the batches that can't into one ticket.
+**Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. Every ticket's change merges into its base branch on its own, with its checks passing: when even the batches can't stay green alone, fold the batches that can't into one ticket.
+
+**Live acceptance is a ticket of its own.** When work must be shown on a live system, split it into a **source ticket**, which closes when its pull request merges, and a **live-acceptance ticket**, blocked by the source ticket, whose acceptance criteria are the recorded evidence that the deployed change behaves on the live system as its contract says. A merge never closes it: the source ticket's pull request links it without a closing reference, and it closes only once that evidence is recorded on it. Its live steps take the route the installed rules give work that needs host access.
 
 ### 4. Quiz the user
 
@@ -67,6 +69,8 @@ Publish the approved tickets. **How** depends on the configured tracker; the tic
 Publish each ticket awaiting review, without the AFK-ready role: readiness is a separate review of each published ticket, by someone other than you who holds a role the repository authorizes for readiness, after any revision notice the tracker posts, with the companion labels its rules require. A parent's readiness follows the publication of its tickets.
 
 Once reviewed, work the **frontier**: any ready ticket whose blockers are all done. For a purely linear chain that means top to bottom.
+
+Once a ticket is ready, nobody edits it to record progress, ticking its acceptance criteria included: progress lives in linked pull requests, sub-issue states and comments. A ticket closes when its own acceptance criteria hold.
 
 Do NOT close or modify any parent issue.
 
@@ -121,7 +125,8 @@ Paths are relative to the repository root.
   decisions to respect. When either is missing, use the codebase's own words.
 - The installed rules, such as the `github-repository-configuration` rules,
   which the `repository-standards` skill looks up: the companion labels
-  readiness needs. When they are missing, readiness carries no companion
-  labels.
+  readiness needs, and the route for work that needs host access. When they
+  are missing, readiness carries no companion labels, and a live-acceptance
+  ticket takes no route of its own.
 - `.scratch/`: the local-files tracker's tickets. When it is missing, create
   it as step 5 says.

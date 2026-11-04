@@ -165,7 +165,7 @@ and validates every profile.
 ## Validation boundary
 
 Public CLI 10.0.0 on stable Node.js 24 or 26 returns `valid: true`, no errors,
-and the `standard`, `factory` and `workbench` profiles with 60, 64 and 33
+and the `standard`, `factory` and `workbench` profiles with 60, 65 and 33
 declarations for the source, matching the inventory above. Local validation and CI install
 `@lutzseverino/repo-standards@10.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why

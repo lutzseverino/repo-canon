@@ -103,7 +103,8 @@ _Avoid_: Owner questions comment, needs-input queue
 **Plan**:
 An owner-approved goal, with what Done means, that the orchestrating agent
 runs across tickets, kept in the workbench; it closes once each of its tickets
-ends with a closed issue or the owner's drop.
+ends with a closed issue or the owner's drop; an expedited change's ticket
+without an issue ends with its merged pull request.
 _Avoid_: Roadmap, specification
 
 **Close review**:

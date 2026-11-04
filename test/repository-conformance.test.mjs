@@ -608,8 +608,9 @@ const wordBudgets = {
   // and the installed approval-pause continuation pointer (#632), then for
   // grill domain-document delivery (#693), then closed-issue label cleanup (#735),
   // then from 2799 to consolidate the account policy and clarify both rules
-  // in one sentence while preserving delivery gates (#736).
-  "CONTRIBUTING.md": 2868,
+  // in one sentence while preserving delivery gates (#736), then from 2868
+  // for the progress rule and the source and live-acceptance tickets (#793).
+  "CONTRIBUTING.md": 2909,
   // Raised from 108 for general delegation (#693), then from 193 for
   // supported session naming alongside that installed rule (#748).
   "AGENTS.md": 223,
@@ -1106,7 +1107,7 @@ test("owned skills state what the rules require instead of being overridden", ()
   assert.doesNotMatch(toTickets, /share an integration branch/);
   assert.match(
     toTickets,
-    /Every ticket merges into its base branch on its own, with its checks passing/,
+    /Every ticket's change merges into its base branch on its own, with its checks passing/,
   );
   assert.doesNotMatch(toTickets, /Apply the `ready-for-agent` triage label/);
   assert.doesNotMatch(toTickets, /otherwise set each ticket's "Blocked by"/);
@@ -1760,6 +1761,63 @@ test("orchestrate persists decisions before other requests in a mixed owner mess
   );
 });
 
+// The owner's "do this now" approves work without a plan, and the
+// orchestrating agent pauses only what it owns to make room for it (#791).
+test("orchestrate expedites an owner's request for now and pauses only its own work", () => {
+  const core = orchestrateFile("SKILL.md");
+  const propose =
+    /1\. \*\*Propose\.\*\* (.*?) 2\. \*\*Intake/.exec(core)?.[1] ?? "";
+  assert.match(
+    propose,
+    /An owner's request for something now skips only the plan: \[Expedited change\]\(references\/launches\.md#expedited-change\)/,
+  );
+  assert.match(
+    core,
+    /A \*\*new requirement\*\* that arrives mid-plan, unless the owner wants it now, takes one route/,
+  );
+  const launches = orchestrateFile("references/launches.md");
+  const expedited =
+    /## Expedited change (.*?) ## Retro /.exec(launches)?.[1] ?? "";
+  for (const rule of [
+    /When the owner asks for something now, their request is its approval and skips only the plan: no proposal, no plan approval and no new file/,
+    /Each repository's contribution guide and installed rules still decide the change's delivery, such as its Direct change, pull request, review and merge rules/,
+    /1\. \*\*Record\.\*\* Before acting, complete the decision \[sequence\]\(templates\.md#inboxmd\) for the request/,
+    /2\. \*\*Track\.\*\* Add its `now\.md` In flight row, which states the pause below\. When the change falls inside an open plan's goal, also add an expedited row to that plan/,
+    /3\. \*\*Pause\.\*\* Pause only what you own: start no launch and make no merge other than the change's own; hold the rest\. Running sessions keep running unless the owner says to stop one/,
+    /In a repository a factory serves, also pause the factory with the `factory` skill installed there, as its Pause and resume one repository section says/,
+    /5\. \*\*End\.\*\* The pause ends when the change merges\. Resume the factory through that same `factory` section, then the launches and merges you held\. Append the outcome, with its pull request link, to the change's `Answered` entry, and end its rows/,
+  ])
+    assert.match(expedited, rule);
+  const order = [
+    "**Record.**",
+    "**Track.**",
+    "**Pause.**",
+    "**Deliver.**",
+    "**End.**",
+  ].map((step) => expedited.indexOf(step));
+  assert.ok(
+    order.every((at, index) => at > (order[index - 1] ?? -1)),
+    `${order}`,
+  );
+  assert.match(
+    /## Handover (.*?) ## Progress observation /.exec(launches)?.[1] ?? "",
+    /keeps the pause an expedited row states/,
+  );
+  const templates = orchestrateFile("references/templates.md");
+  assert.match(
+    templates,
+    /An \[expedited change\]\(launches\.md#expedited-change\)'s row starts its Item with `expedited`, links its `Answered` entry and pull request in Evidence, and states the pause it holds/,
+  );
+  assert.match(
+    templates,
+    /An \[expedited change\]\(launches\.md#expedited-change\)'s request has no open entry: step 3 enters it under `Answered` directly, marked expedited, with the owner's quoted words, date and source, and step 2 applies only when it falls inside a plan's goal\. The entry later gains its outcome/,
+  );
+  assert.match(
+    templates,
+    /Every row ends with a closed issue in its Issue column, `dropped \(owner\)` in its State or, for an expedited row without an issue, its merged pull request in its State; the plan closes only then/,
+  );
+});
+
 test("orchestrate observes filed work before approval without authorizing execution", () => {
   const skill = orchestrateSkill();
   assert.match(
@@ -1876,6 +1934,45 @@ test("orchestrate ends a turn only after arming a wake-up, with recurring checks
       /--(?:interval|max-duration)[ =]\d|default (?:interval|duration|cadence|timeout|polling)|defaults? to \d/i,
     );
   assert.match(script, /Both durations are required/);
+});
+
+test("orchestrate takes messages from any session through the workbench's incoming directory (#792)", () => {
+  const core = orchestrateFile("SKILL.md");
+  const templates = orchestrateFile("references/templates.md");
+  const launches = orchestrateFile("references/launches.md");
+  const workbench = /## Workbench (.*?) ## Lifecycle /.exec(core)?.[1] ?? "";
+  const step = /## The wait step (.*?) ## Report-back /.exec(core)?.[1] ?? "";
+  const incoming =
+    /## `incoming\/` (.*?) ## `plan\.md` and `log\.md` /.exec(templates)?.[1] ??
+    "";
+  assert.match(
+    workbench,
+    /`incoming\/`: \[messages\]\(references\/templates\.md#incoming\)/,
+  );
+  assert.match(step, /Every wait also watches `incoming\/`/);
+  // The message shape, both sender paths and the take-in step.
+  assert.match(
+    incoming,
+    /one Markdown file directly in `incoming\/`, named `<UTC>-<sender>\.md`/,
+  );
+  assert.match(incoming, /A sender on the same host .* commits nothing/);
+  assert.match(
+    incoming,
+    /A sender elsewhere commits the file in its own clone of the workbench, .* and pushes it/,
+  );
+  assert.match(
+    core,
+    /A direct message to your session, where a harness offers one, is only a nudge/,
+  );
+  assert.match(
+    incoming,
+    /Take in each message: move it into the `log\.md` of the plan it concerns, .* or into `inbox\.md` when it holds a decision for the owner, since the inbox holds only decisions\. Then delete the file and commit/,
+  );
+  assert.match(
+    launches,
+    /Give every wait the item `dir:<workbench>\/incoming`/,
+  );
+  assert.match(launches, /each poll fetches it/);
 });
 
 test("orchestrate retains observation evidence and routes unexplained inactivity through existing recovery", () => {
@@ -2504,6 +2601,139 @@ test("host-access skips gate live steps without designating source PR review, wh
     /Owner review is required when either the authoritative implementation contract or the worker's handoff says so/,
   );
   assert.match(shared, /Any head change requires renewed owner approval/);
+});
+
+// The owner's decision in #793: progress stays out of the implementation
+// contract, and work shown on a live system splits into a source ticket and a
+// live-acceptance ticket that no merge closes.
+test("contracts record no progress, and live acceptance is a ticket of its own", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  const contracts =
+    /## Implementation contracts (.*?) ## Triage /.exec(guide)?.[1] ?? "";
+  assert.match(
+    contracts,
+    /An issue closes when its own acceptance criteria hold/,
+  );
+  assert.match(
+    contracts,
+    /After readiness, nobody edits an implementation contract to record progress: progress lives in linked pull requests, sub-issue states and comments/,
+  );
+  assert.match(
+    contracts,
+    /Work that must be shown on a live system splits into a source ticket, which closes when its pull request merges, and a live-acceptance ticket, blocked by the source ticket, which closes only on its recorded live acceptance/,
+  );
+  const pullRequests =
+    /## Pull requests (.*?)### Opening a pull request/.exec(guide)?.[1] ?? "";
+  assert.match(
+    pullRequests,
+    /A source pull request links its live-acceptance ticket this way, because a merge never closes one/,
+  );
+  assert.match(
+    flowedText("GLOSSARY.md"),
+    /\*\*Live acceptance\*\*: The recorded evidence that a deployed change behaves on the live system as its implementation contract says\. A merge never establishes it\./,
+  );
+  assert.match(
+    flowedText("rules/factory-workflow.md"),
+    /A live-acceptance ticket, blocked by its source ticket, takes this route and closes only on its recorded live acceptance; a merge never closes it/,
+  );
+
+  const tickets = flowedText(".agents/skills/to-tickets/SKILL.md");
+  assert.match(
+    tickets,
+    /\*\*Live acceptance is a ticket of its own\.\*\* When work must be shown on a live system, split it into a \*\*source ticket\*\*, which closes when its pull request merges, and a \*\*live-acceptance ticket\*\*, blocked by the source ticket/,
+  );
+  assert.match(
+    tickets,
+    /A merge never closes it: the source ticket's pull request links it without a closing reference/,
+  );
+  assert.match(
+    tickets,
+    /Once a ticket is ready, nobody edits it to record progress, ticking its acceptance criteria included: progress lives in linked pull requests, sub-issue states and comments/,
+  );
+
+  const brief = flowedText(".agents/skills/triage/AGENT-BRIEF.md");
+  assert.match(
+    brief,
+    /### Progress stays out of the brief After readiness, nobody edits the brief to record progress, ticking its acceptance criteria included: editing it removes its readiness/,
+  );
+  assert.match(
+    brief,
+    /Progress lives in linked pull requests, sub-issue states and comments, and the issue closes when its own acceptance criteria hold/,
+  );
+  assert.match(
+    brief,
+    /### Live acceptance gets its own ticket When work must be shown on a live system, write two briefs/,
+  );
+  assert.match(
+    brief,
+    /A merge never closes the live-acceptance ticket: the source pull request links it without a closing reference/,
+  );
+  assert.match(
+    flowedText(".agents/skills/triage/SKILL.md"),
+    /Work that must be shown on a live system is split as \[AGENT-BRIEF\.md\]\(AGENT-BRIEF\.md#live-acceptance-gets-its-own-ticket\) says/,
+  );
+});
+
+// The owner's decision in #793: a shared host access grant has one owner, the
+// orchestrating agent that asked for it; no worker ends it.
+test("the orchestrating agent that asked for a host access grant owns it, and no worker ends it", () => {
+  const rules = flowedText("rules/factory-workflow.md");
+  const route =
+    /work whose live steps need host access the maintainer grants\. (.*?) ## Merging /.exec(
+      rules,
+    )?.[1] ?? "";
+  assert.match(
+    route,
+    /The orchestrating agent that asked the maintainer for a time-bounded host access grant owns it and records the workers using it\. Workers never end a grant: it ends when the last of them reports back, or at its own time bound/,
+  );
+
+  const factory = flowedText(".agents/skills/factory/SKILL.md");
+  const skip =
+    /## Take the skip route (.*?) ## Finish a handed-off factory PR /.exec(
+      factory,
+    )?.[1] ?? "";
+  assert.match(
+    skip,
+    /A time-bounded host access grant belongs to the orchestrating agent that asked the maintainer for it, which records the workers using it\. Workers never end it: it ends when the last of them reports back, or at its own time bound/,
+  );
+  assert.match(
+    skip,
+    /A live-acceptance ticket takes this route\. Its worker records the ticket's live acceptance on it instead of opening a PR, and reports back\. It closes only once its live acceptance is recorded on it, never on a merge/,
+  );
+
+  const templates = orchestrateFile("references/templates.md");
+  const inFlight =
+    /- \*\*In flight\*\* (.*?) - \*\*Running launches\*\*/.exec(
+      templates,
+    )?.[1] ?? "";
+  assert.match(
+    inFlight,
+    /A time-bounded host access grant you asked the maintainer for is one row you own: \*Waiting on\* lists the workers using it, and its \*Next check\* names a wake-up at its time bound/,
+  );
+  assert.match(
+    inFlight,
+    /When a listed worker reports back, remove it from the row\. When the last one reports, end the grant, tell the maintainer, log its end in `log\.md` and remove the row\. At its own time bound the grant has ended, whoever still uses it/,
+  );
+  const worker =
+    /## Worker (.*?) ## /.exec(
+      orchestrateFile("references/launches.md"),
+    )?.[1] ?? "";
+  assert.match(
+    worker,
+    /Ask the maintainer for time-bounded host access in `inbox\.md`\. List each worker on the grant's row before you launch it, and give it the grant and its time bound as task context; the worker never ends the grant/,
+  );
+  assert.match(
+    worker,
+    /Launch a listed worker only while the grant lasts; once it has ended, ask again\. In a repository a factory serves, deliver that work on the skip route, with the `factory` skill installed there/,
+  );
+
+  // The ownership rule names no way of granting or ending access.
+  for (const text of [route, skip, inFlight, worker])
+    for (const sentence of text.match(/[^.]*\bgrant\b[^.]*\./g) ?? [])
+      assert.doesNotMatch(
+        sentence,
+        /\b(?:SSH|VPN|token|password|credential|key|account|sudo|firewall)s?\b/i,
+      );
 });
 
 test("owner-review designation includes directly authored body contracts and latest triaged briefs", () => {

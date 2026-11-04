@@ -1,8 +1,9 @@
 # Launches
 
 Each agent launch you start, with the task context and obligations it
-carries; the handover to the next orchestrating session; and how you observe
-launches and filed work, including the wait script that wakes you.
+carries; the expedited change and the pause that makes room for it; the
+handover to the next orchestrating session; and how you observe launches and
+filed work, including the wait script that wakes you.
 [Lifecycle](../SKILL.md#lifecycle) says when each launch starts.
 
 ## Starting a launch
@@ -69,6 +70,39 @@ including when resuming a plan. After an owner question is resolved, follow
 the applicable installed continuation rules to resume the worker or that same
 open PR.
 
+Workers' live steps on a host need access the maintainer grants. Ask the
+maintainer for time-bounded host access in `inbox.md`. List each worker on the
+grant's row before you launch it, and give it the grant and its time bound as
+task context; the worker never ends the grant. The grant's row in `now.md`'s
+In flight, as [templates](templates.md#nowmd) says, is how you own it. Launch
+a listed worker only while the grant lasts; once it has ended, ask again. In a
+repository a factory serves, deliver that work on the skip route, with the
+`factory` skill installed there.
+
+## Expedited change
+
+When the owner asks for something now, their request is its approval and
+skips only the plan: no proposal, no plan approval and no new file. Each
+repository's contribution guide and installed rules still decide the change's
+delivery, such as its Direct change, pull request, review and merge rules.
+
+1. **Record.** Before acting, complete the decision
+   [sequence](templates.md#inboxmd) for the request.
+2. **Track.** Add its `now.md` In flight row, which states the pause below.
+   When the change falls inside an open plan's goal, also add an expedited row
+   to that plan and list it in the next plan update.
+3. **Pause.** Pause only what you own: start no launch and make no merge other
+   than the change's own; hold the rest. Running sessions keep running unless
+   the owner says to stop one. In a repository a factory serves, also pause
+   the factory with the `factory` skill installed there, as its Pause and
+   resume one repository section says.
+4. **Deliver.** Launch the change's worker within the launch cap, as
+   [Worker](#worker) says, or implement it yourself.
+5. **End.** The pause ends when the change merges. Resume the factory through
+   that same `factory` section, then the launches and merges you held. Append
+   the outcome, with its pull request link, to the change's `Answered` entry,
+   and end its rows.
+
 ## Retro
 
 Start a separate session that reads primary sources, such as the plan
@@ -125,7 +159,8 @@ then records its own session reference as each active plan's owner in
 `index.md`, marking the previous reference superseded, and takes over.
 Before anything else, it re-arms a wake-up for every row under `now.md`'s In
 flight that does not wait on the owner, as the
-[wait step](../SKILL.md#the-wait-step) says.
+[wait step](../SKILL.md#the-wait-step) says, and keeps the pause an expedited
+row states.
 
 ## Progress observation
 
@@ -160,16 +195,23 @@ node <this skill's directory>/wait.mjs --interval <seconds> --max-duration <seco
 ```
 
 - An item is an issue or pull request, as `<owner>/<name>#<number>` or its
-  `https://github.com` link, or a file, as `file:<path>`. For a launch, watch
-  its report-back file in the plan directory and the plan's `plan.md`, where it
-  sets its done mark. A file item reads the workbench checkout the wait runs
-  in, so a launch writing in another clone wakes it only once its push is
-  pulled here; arm such a launch's wake-up on its tracker items or the
-  harness's own events instead.
+  `https://github.com` link, a file, as `file:<path>`, or a directory, as
+  `dir:<path>`. For a launch, watch its report-back file in the plan directory
+  and the plan's `plan.md`, where it sets its done mark. A file item reads the
+  workbench checkout the wait runs in, so a launch writing in another clone
+  wakes it only once its push is pulled here; arm such a launch's wake-up on
+  its tracker items or the harness's own events instead.
+- Give every wait the item `dir:<workbench>/incoming`, for
+  [messages](templates.md#incoming). A directory item also reads the
+  checkout's upstream, when its branch has one: each poll fetches it, and an
+  upstream commit touching a file directly in the directory that the checkout
+  has not pulled is a change, even one fetched before the wait started.
+  Without an upstream, it reads only the checkout.
 - It exits when any item changes: an issue's or pull request's state, labels,
-  or new comments, an issue's linked pull requests, or a file's creation, edit
-  or removal. It measures changes from when it starts, so arm it after your
-  own writes to watched files and before you read the items' current state.
+  or new comments, an issue's linked pull requests, a file's creation, edit
+  or removal, or such a change to a file directly in a directory. It measures
+  changes from when it starts, so arm it after your own writes to watched
+  files and before you read the items' current state.
 - `--interval` is the time between polls and `--max-duration` the longest the
   wait runs. Both are required; choose both for each invocation.
 - It needs Node.js 24 or 26, and the GitHub CLI's current credential for
@@ -181,4 +223,5 @@ Its exit code says what comes next:
   [Progress observation](#progress-observation) says, then arm the wait again.
 - `2`: the maximum duration passed with no change; arm the wait again.
 - `1`: follow the contribution guide's Credentials section for a permission
-  refusal; otherwise fix the invocation or platform error and arm it again.
+  refusal; otherwise fix the invocation or platform error, such as a failed
+  upstream fetch, and arm it again.

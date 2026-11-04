@@ -117,7 +117,12 @@ the published bundle with an injected fetch transport.
 Run `node --test test/orchestrate-wait.test.mjs` for the `orchestrate` wait
 script's three exits (an item changed, the maximum duration reached, and an
 error), driven by a stubbed tracker through the published bundle with an
-injected fetch transport and by workbench files. It also covers each required
+injected fetch transport and by workbench files. Its directory item cases
+cover a file created, edited or removed in the directory, and, in real
+temporary Git repositories, an upstream commit touching it pushed from another
+clone, one fetched before arming and then pulled, one touching only a nested
+directory, a workbench with no remote, and a failed upstream fetch, which is an
+error. It also covers each required
 duration's omission and invalid values and the script's plain `node` run. The
 script reuses `babysit`'s GitHub CLI connection, as the triage readiness
 command does.
