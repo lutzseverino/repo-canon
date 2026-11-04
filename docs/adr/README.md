@@ -111,3 +111,9 @@ involve real alternatives.
   the issue-contract validator alone decides contracts and readiness and posts
   a versioned result, which the factory checks against platform facts without
   interpreting the contract itself.
+- [Let the factory's triage run accept its own brief](0030-let-factory-triage-accept-its-own-brief.md):
+  the factory's triage run writes and accepts the brief for an issue it did
+  not write, and the review run's Spec review is the independent check.
+- [Name labels by family](0031-name-labels-by-family.md): `state:`, `gate:`,
+  `factory:`, `type:`, `priority:` and `model:` families, with one workflow
+  state naming whom an issue waits on.
