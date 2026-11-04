@@ -6,6 +6,8 @@ The skill differs from its upstream base as follows. `SKILL.md` states that a pr
 
 `ready.mjs` is Repo Canon's original readiness acceptance command. The acceptance step calls it to apply the reviewed revision and confirm the validator recorded it.
 
+The research handoff identifies the issue comments as the assigned research artifacts and destinations, composing with the research skill's direct investigation and assigned publication method. The code-bound brief followed by triage notes and intent-bound fact-finding notes remain distinct deliverables.
+
 ## License notices
 
 ```text
