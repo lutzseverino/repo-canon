@@ -74,9 +74,10 @@ Workers' live steps on a host need access the maintainer grants. Ask the
 maintainer for time-bounded host access in `inbox.md`. List each worker on the
 grant's row before you launch it, and give it the grant and its time bound as
 task context; the worker never ends the grant. The grant's row in `now.md`'s
-In flight, as [templates](templates.md#nowmd) says, is how you own it. In a
-repository a factory serves, the `factory` skill installed there is how to
-deliver that skip-route work.
+In flight, as [templates](templates.md#nowmd) says, is how you own it. Launch
+a listed worker only while the grant lasts; once it has ended, ask again. In a
+repository a factory serves, deliver that work on the skip route, with the
+`factory` skill installed there.
 
 ## Expedited change
 

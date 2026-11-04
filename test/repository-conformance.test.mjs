@@ -2715,7 +2715,7 @@ test("the orchestrating agent that asked for a host access grant owns it, and no
     /When a listed worker reports back, remove it from the row\. When the last one reports, end the grant, tell the maintainer, log its end in `log\.md` and remove the row\. At its own time bound the grant has ended, whoever still uses it/,
   );
   const worker =
-    /## Worker (.*?) ## Retro /.exec(
+    /## Worker (.*?) ## /.exec(
       orchestrateFile("references/launches.md"),
     )?.[1] ?? "";
   assert.match(
@@ -2724,7 +2724,7 @@ test("the orchestrating agent that asked for a host access grant owns it, and no
   );
   assert.match(
     worker,
-    /In a repository a factory serves, the `factory` skill installed there is how to deliver that skip-route work/,
+    /Launch a listed worker only while the grant lasts; once it has ended, ask again\. In a repository a factory serves, deliver that work on the skip route, with the `factory` skill installed there/,
   );
 
   // The ownership rule names no way of granting or ending access.
