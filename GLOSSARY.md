@@ -129,14 +129,17 @@ _Avoid_: Backlog item, suggestion
 **Research run**:
 The sub-agent that gathers the facts for one request and, once nothing of the
 owner's intent is open, writes its Agent Brief unless a grilling session
-drafts it. It never accepts its own brief.
+drafts it. Started by the orchestrating agent, it never accepts its own brief;
+run as the factory's triage, it accepts the brief it wrote for an issue it did
+not write.
 _Avoid_: Orchestrating agent, reviewer
 
 **Readiness**:
 The reviewed state of an implementation contract that an authorized reviewer
 considers sufficiently specified for work, granting it to an agent; the
-factory accepts it only from a person whose current repository role the host
-configuration authorizes, after the implementation contract's last edit. A
+factory accepts it from a person whose current repository role the host
+configuration authorizes, or from its own triage run, after the implementation
+contract's last edit. A
 parent never runs, but its readiness releases its tickets and survives later
 links only when complete history shows every addition at or after readiness
 was made by an authorized person; without complete history, the platform's
@@ -150,6 +153,22 @@ pull request of its own, with the model its label names. It never runs a
 parent; a parent's readiness releases its tickets, each as its own run. It is
 a product of its own, separate from Repo Canon and Repository Standards.
 _Avoid_: Pipeline, orchestrator
+
+**Workflow state**:
+The one `state:` label an open issue carries, naming whom it waits on: triage,
+an outside reporter, a grill, the owner, or the factory once ready.
+_Avoid_: Status label, needs-input
+
+**Owner gate**:
+A `gate:` label the owner, or a grill at the owner's request, sets before the
+work, which stops the factory at ready-to-merge until the owner clears it; it
+never asks for a manual merge.
+_Avoid_: Owner review, ready-for-human, approval pause
+
+**Outside reporter**:
+The author of an issue who is neither the owner nor an agent working in the
+owner's environment, and so may hold a fact no agent can reach.
+_Avoid_: Reporter, when meaning the owner or the factory
 
 **Frontier**:
 The open issues the factory may pick up: those carrying readiness it accepts,

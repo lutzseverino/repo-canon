@@ -1,5 +1,11 @@
 # Infer cited intent and route owner questions through one inbox
 
+Status: that the writer of a brief never accepts it is superseded for the
+factory's triage run by
+[ADR 0030](0030-let-factory-triage-accept-its-own-brief.md), and
+`factory:needs-input` by [ADR 0031](0031-name-labels-by-family.md); the rest
+stands.
+
 The orchestrating agent answers an intent question itself only when it can cite
 the answer's source, the owner's approved goal for the work, a recorded owner
 decision or wish, or the owner's quoted words, each with its date; when the
