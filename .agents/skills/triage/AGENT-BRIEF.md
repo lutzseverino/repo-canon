@@ -36,6 +36,14 @@ The agent needs to know when it's done. Every agent brief must have concrete, te
 - **Good:** "Running `gh issue list --label needs-triage` returns issues that have been through initial classification"
 - **Bad:** "Triage should work correctly"
 
+### Progress stays out of the brief
+
+After readiness, nobody edits the brief to record progress, ticking its acceptance criteria included: editing it removes its readiness. Progress lives in linked pull requests, sub-issue states and comments, and the issue closes when its own acceptance criteria hold.
+
+### Live acceptance gets its own ticket
+
+When work must be shown on a live system, write two briefs. The source ticket's brief covers the change, and its issue closes when the pull request merges. The live-acceptance ticket's brief, blocked by the source ticket, has acceptance criteria that are the recorded evidence that the deployed change behaves on the live system as its contract says. A merge never closes the live-acceptance ticket: the source pull request links it without a closing reference, and it closes only once that evidence is recorded on it. Its readiness follows the installed rules for work whose live steps need host access.
+
 ### Explicit scope boundaries
 
 State what is out of scope. This prevents the agent from gold-plating or making assumptions about adjacent features.

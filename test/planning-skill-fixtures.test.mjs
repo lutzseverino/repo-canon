@@ -38,6 +38,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.deepEqual(Object.keys(manifest.repositories).sort(), [
     "delivery",
     "factory-planning",
+    "host-grant",
     "orchestrate",
     "planning",
     "project-agent-guidance",
@@ -78,6 +79,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "pr",
       "prototype",
       "orchestrate",
+      "factory",
     ],
   );
   const naming = manifest.repositories["session-naming"];
@@ -122,6 +124,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       manifest.repositories["factory-planning"],
       manifest.repositories["triage-routing"],
       manifest.repositories.orchestrate,
+      manifest.repositories["host-grant"],
     ].includes(repository);
     assert.equal(repository.profile, factory ? "factory" : "standard");
     const lookup = execFileSync(
@@ -454,6 +457,104 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     orchestrateTask,
     /reconcile.*PR findings comments.*runs without PRs/,
   );
+  // Two workers share one host access grant and report in either order.
+  const hostGrant = manifest.repositories["host-grant"];
+  assert.deepEqual(hostGrant.skills, ["orchestrate", "factory"]);
+  for (const skill of hostGrant.skills)
+    assert.equal(
+      realpathSync(join(hostGrant.path, ".agents/skills", skill)),
+      realpathSync(join(root, ".agents/skills", skill)),
+    );
+  assert.equal(
+    readFileSync(join(hostGrant.path, ".factory/config.json"), "utf8"),
+    readFileSync(join(root, ".factory/config.json"), "utf8"),
+  );
+  const grantWorkbench = hostGrant.workbench.path;
+  for (const path of [hostGrant.path, grantWorkbench]) {
+    assert.equal(
+      execFixtureGit(["remote"], { cwd: path, encoding: "utf8" }),
+      "",
+    );
+    assert.equal(
+      execFixtureGit(["status", "--porcelain"], {
+        cwd: path,
+        encoding: "utf8",
+      }),
+      "",
+    );
+  }
+  assert.deepEqual(
+    readdirSync(grantWorkbench)
+      .filter((name) => name !== ".git")
+      .sort(),
+    ["inbox.md", "index.md", "now.md", "rollout", "wishes.md"],
+  );
+  assert.match(
+    readFileSync(join(grantWorkbench, "rollout/plan.md"), "utf8"),
+    /\*\*Approval:\*\* .*Preapproves: .*live steps on staging/,
+  );
+  assert.match(
+    readFileSync(join(grantWorkbench, "now.md"), "utf8"),
+    /\| receipts#2 \| staging host access, not yet asked \|/,
+  );
+  const rollout = join(hostGrant.path, ".scratch/rollout");
+  assert.match(
+    readFileSync(join(rollout, "issues/01-serve-receipts.md"), "utf8"),
+    /^Status: closed$/m,
+  );
+  for (const ticket of [
+    "02-accept-endpoint-on-staging.md",
+    "03-accept-export-on-staging.md",
+  ]) {
+    const text = readFileSync(join(rollout, "issues", ticket), "utf8");
+    assert.match(text, /^Status: ready-for-agent$/m);
+    assert.match(text, /^Labels: .*model:.*factory:skip$/m);
+    assert.match(text, /^Blocked by: 01 \(closed\)$/m);
+    assert.match(text, /host access the maintainer grants/);
+  }
+  const sourcePull = readFileSync(join(rollout, "pulls/21.md"), "utf8");
+  assert.match(sourcePull, /^Closes #1$/m);
+  assert.match(sourcePull, /^Part of #2$/m);
+  assert.match(sourcePull, /^Part of #3$/m);
+  assert.doesNotMatch(sourcePull, /Closes #[23]/);
+  const grantTask = readFileSync(
+    join(hostGrant.path, "docs/exercise.md"),
+    "utf8",
+  );
+  assert.match(
+    grantTask,
+    /twice.*fresh build.*order A.*02 reports first.*order B.*03 reports first/,
+  );
+  assert.match(grantTask, /Next check at the grant's time bound/);
+  assert.match(grantTask, /grant stays for the other worker/);
+  assert.match(grantTask, /offer to end the grant is declined/);
+  assert.match(
+    grantTask,
+    /At the second report the grant ends: the orchestrating agent ends it, tells the maintainer, logs its end in log\.md and removes the row/,
+  );
+  assert.match(grantTask, /no merge closes 02 or 03/);
+  assert.match(grantTask, /takes in each report from incoming\//);
+  const grantInputs = readFileSync(
+    join(hostGrant.path, "docs/participant-inputs.md"),
+    "utf8",
+  );
+  for (const turn of [
+    "1. Owner",
+    "2. Maintainer",
+    "3A. worker-02",
+    "4A. worker-03",
+    "3B. worker-03",
+    "4B. worker-02",
+  ])
+    assert.ok(grantInputs.includes(turn), `host-grant turn: ${turn}`);
+  assert.match(grantInputs, /3A\..*Shall I end the staging access now\?/);
+  assert.match(grantInputs, /3B\..*Shall I end the staging access now\?/);
+  assert.doesNotMatch(grantInputs, /4[AB]\..*Shall I end/);
+  assert.match(
+    grantInputs,
+    /each worker's report as that worker's message: a file in the workbench's incoming\/, named <UTC>-worker-0N\.md/,
+  );
+
   const factoryPlanning = manifest.repositories["factory-planning"];
   const factoryIntake = readFileSync(
     join(

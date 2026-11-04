@@ -608,8 +608,9 @@ const wordBudgets = {
   // and the installed approval-pause continuation pointer (#632), then for
   // grill domain-document delivery (#693), then closed-issue label cleanup (#735),
   // then from 2799 to consolidate the account policy and clarify both rules
-  // in one sentence while preserving delivery gates (#736).
-  "CONTRIBUTING.md": 2868,
+  // in one sentence while preserving delivery gates (#736), then from 2868
+  // for the progress rule and the source and live-acceptance tickets (#793).
+  "CONTRIBUTING.md": 2909,
   // Raised from 108 for general delegation (#693), then from 193 for
   // supported session naming alongside that installed rule (#748).
   "AGENTS.md": 223,
@@ -1106,7 +1107,7 @@ test("owned skills state what the rules require instead of being overridden", ()
   assert.doesNotMatch(toTickets, /share an integration branch/);
   assert.match(
     toTickets,
-    /Every ticket merges into its base branch on its own, with its checks passing/,
+    /Every ticket's change merges into its base branch on its own, with its checks passing/,
   );
   assert.doesNotMatch(toTickets, /Apply the `ready-for-agent` triage label/);
   assert.doesNotMatch(toTickets, /otherwise set each ticket's "Blocked by"/);
@@ -2600,6 +2601,139 @@ test("host-access skips gate live steps without designating source PR review, wh
     /Owner review is required when either the authoritative implementation contract or the worker's handoff says so/,
   );
   assert.match(shared, /Any head change requires renewed owner approval/);
+});
+
+// The owner's decision in #793: progress stays out of the implementation
+// contract, and work shown on a live system splits into a source ticket and a
+// live-acceptance ticket that no merge closes.
+test("contracts record no progress, and live acceptance is a ticket of its own", () => {
+  const guide = flowedText("CONTRIBUTING.md");
+  const contracts =
+    /## Implementation contracts (.*?) ## Triage /.exec(guide)?.[1] ?? "";
+  assert.match(
+    contracts,
+    /An issue closes when its own acceptance criteria hold/,
+  );
+  assert.match(
+    contracts,
+    /After readiness, nobody edits an implementation contract to record progress: progress lives in linked pull requests, sub-issue states and comments/,
+  );
+  assert.match(
+    contracts,
+    /Work that must be shown on a live system splits into a source ticket, which closes when its pull request merges, and a live-acceptance ticket, blocked by the source ticket, which closes only on its recorded live acceptance/,
+  );
+  const pullRequests =
+    /## Pull requests (.*?)### Opening a pull request/.exec(guide)?.[1] ?? "";
+  assert.match(
+    pullRequests,
+    /A source pull request links its live-acceptance ticket this way, because a merge never closes one/,
+  );
+  assert.match(
+    flowedText("GLOSSARY.md"),
+    /\*\*Live acceptance\*\*: The recorded evidence that a deployed change behaves on the live system as its implementation contract says\. A merge never establishes it\./,
+  );
+  assert.match(
+    flowedText("rules/factory-workflow.md"),
+    /A live-acceptance ticket, blocked by its source ticket, takes this route and closes only on its recorded live acceptance; a merge never closes it/,
+  );
+
+  const tickets = flowedText(".agents/skills/to-tickets/SKILL.md");
+  assert.match(
+    tickets,
+    /\*\*Live acceptance is a ticket of its own\.\*\* When work must be shown on a live system, split it into a \*\*source ticket\*\*, which closes when its pull request merges, and a \*\*live-acceptance ticket\*\*, blocked by the source ticket/,
+  );
+  assert.match(
+    tickets,
+    /A merge never closes it: the source ticket's pull request links it without a closing reference/,
+  );
+  assert.match(
+    tickets,
+    /Once a ticket is ready, nobody edits it to record progress, ticking its acceptance criteria included: progress lives in linked pull requests, sub-issue states and comments/,
+  );
+
+  const brief = flowedText(".agents/skills/triage/AGENT-BRIEF.md");
+  assert.match(
+    brief,
+    /### Progress stays out of the brief After readiness, nobody edits the brief to record progress, ticking its acceptance criteria included: editing it removes its readiness/,
+  );
+  assert.match(
+    brief,
+    /Progress lives in linked pull requests, sub-issue states and comments, and the issue closes when its own acceptance criteria hold/,
+  );
+  assert.match(
+    brief,
+    /### Live acceptance gets its own ticket When work must be shown on a live system, write two briefs/,
+  );
+  assert.match(
+    brief,
+    /A merge never closes the live-acceptance ticket: the source pull request links it without a closing reference/,
+  );
+  assert.match(
+    flowedText(".agents/skills/triage/SKILL.md"),
+    /Work that must be shown on a live system is split as \[AGENT-BRIEF\.md\]\(AGENT-BRIEF\.md#live-acceptance-gets-its-own-ticket\) says/,
+  );
+});
+
+// The owner's decision in #793: a shared host access grant has one owner, the
+// orchestrating agent that asked for it; no worker ends it.
+test("the orchestrating agent that asked for a host access grant owns it, and no worker ends it", () => {
+  const rules = flowedText("rules/factory-workflow.md");
+  const route =
+    /work whose live steps need host access the maintainer grants\. (.*?) ## Merging /.exec(
+      rules,
+    )?.[1] ?? "";
+  assert.match(
+    route,
+    /The orchestrating agent that asked the maintainer for a time-bounded host access grant owns it and records the workers using it\. Workers never end a grant: it ends when the last of them reports back, or at its own time bound/,
+  );
+
+  const factory = flowedText(".agents/skills/factory/SKILL.md");
+  const skip =
+    /## Take the skip route (.*?) ## Finish a handed-off factory PR /.exec(
+      factory,
+    )?.[1] ?? "";
+  assert.match(
+    skip,
+    /A time-bounded host access grant belongs to the orchestrating agent that asked the maintainer for it, which records the workers using it\. Workers never end it: it ends when the last of them reports back, or at its own time bound/,
+  );
+  assert.match(
+    skip,
+    /A live-acceptance ticket takes this route\. Its worker records the ticket's live acceptance on it instead of opening a PR, and reports back\. It closes only once its live acceptance is recorded on it, never on a merge/,
+  );
+
+  const templates = orchestrateFile("references/templates.md");
+  const inFlight =
+    /- \*\*In flight\*\* (.*?) - \*\*Running launches\*\*/.exec(
+      templates,
+    )?.[1] ?? "";
+  assert.match(
+    inFlight,
+    /A time-bounded host access grant you asked the maintainer for is one row you own: \*Waiting on\* lists the workers using it, and its \*Next check\* names a wake-up at its time bound/,
+  );
+  assert.match(
+    inFlight,
+    /When a listed worker reports back, remove it from the row\. When the last one reports, end the grant, tell the maintainer, log its end in `log\.md` and remove the row\. At its own time bound the grant has ended, whoever still uses it/,
+  );
+  const worker =
+    /## Worker (.*?) ## /.exec(
+      orchestrateFile("references/launches.md"),
+    )?.[1] ?? "";
+  assert.match(
+    worker,
+    /Ask the maintainer for time-bounded host access in `inbox\.md`\. List each worker on the grant's row before you launch it, and give it the grant and its time bound as task context; the worker never ends the grant/,
+  );
+  assert.match(
+    worker,
+    /Launch a listed worker only while the grant lasts; once it has ended, ask again\. In a repository a factory serves, deliver that work on the skip route, with the `factory` skill installed there/,
+  );
+
+  // The ownership rule names no way of granting or ending access.
+  for (const text of [route, skip, inFlight, worker])
+    for (const sentence of text.match(/[^.]*\bgrant\b[^.]*\./g) ?? [])
+      assert.doesNotMatch(
+        sentence,
+        /\b(?:SSH|VPN|token|password|credential|key|account|sudo|firewall)s?\b/i,
+      );
 });
 
 test("owner-review designation includes directly authored body contracts and latest triaged briefs", () => {

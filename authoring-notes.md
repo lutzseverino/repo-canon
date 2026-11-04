@@ -400,6 +400,13 @@ repeated.
   worker, including PRs without a skip label; see
   [#739](https://github.com/lutzseverino/repo-canon/issues/739). Host access gates
   only live host steps and does not designate owner review of the source PR.
+  On 2026-10-31, the owner decided that nobody edits a ready implementation
+  contract to record progress, and that work shown on a live system splits into
+  a source ticket, closed by its merge, and a live-acceptance ticket that takes
+  this route and closes only on its recorded live acceptance. The owner also
+  gave a time-bounded host access grant one owner: the orchestrating agent that
+  asked for it, so no worker ends it. See
+  [#793](https://github.com/lutzseverino/repo-canon/issues/793).
 - Designated owner review has one current-head approval gate in the standard
   and factory profiles,
   stated in the [GitHub repository configuration rules](rules/github-repository-configuration.md#designated-owner-review).

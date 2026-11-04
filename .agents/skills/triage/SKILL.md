@@ -110,7 +110,7 @@ Every research run, on either path, does two checks first:
 
 2. **Review.** Read the published brief as a reviewer who did not write it. Check it against the issue and the code yourself, not against the research run's own summary:
    - **Evidence**: each claim the brief rests on traces to a code path, a reproduction, or the issue. Spot-check the one the change depends on. Verify every required input under [Available inputs](AGENT-BRIEF.md#available-inputs).
-   - **Scope**: desired behavior is what the request asks for; nothing the request needs is dropped, nothing beyond it is added, and out of scope names the adjacent work an agent might reach for.
+   - **Scope**: desired behavior is what the request asks for; nothing the request needs is dropped, nothing beyond it is added, and out of scope names the adjacent work an agent might reach for. Work that must be shown on a live system is split as [AGENT-BRIEF.md](AGENT-BRIEF.md#live-acceptance-gets-its-own-ticket) says.
    - **Acceptance criteria**: each is concrete, testable, and independently verifiable, and together they cover the edge cases the request and the code expose.
    - **Dependencies**: work that must land first is named, so it can be recorded as a blocker.
    - **Open questions**: none remain, including missing required inputs. Route unavailable material as [Route questions](#route-questions) says. An open intent question, an option list, or an unchosen value means the request is intent-bound; switch paths.
