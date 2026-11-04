@@ -20,7 +20,7 @@ Start every comment or issue body you post to the issue tracker during triage wi
 
 The contribution guide's Triage and Readiness sections and the installed rules decide routing, acceptance, readiness, model labels, and owner questions. This skill is how to carry them out.
 
-Follow `AGENTS.md`'s Agent skills requirements for delegation and session naming. Use the available naming capability separately from the command and task context. For each research run below, apply that rule to its research task and use the listed issue references and deliverables as task context.
+Follow `AGENTS.md`'s Agent skills requirements for delegation and session naming. Use the available naming capability separately from the command and task context. For each research run below, apply that rule to its research task and use the listed issue references and deliverables as task context. The issue comments below are its assigned research artifacts and destinations.
 
 ## Reference docs
 
