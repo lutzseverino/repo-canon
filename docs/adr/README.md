@@ -95,7 +95,9 @@ involve real alternatives.
 - [Infer cited intent and route owner questions through one inbox](0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md):
   the orchestrating agent answers intent it can cite and that does not outlive
   the work, a grill with the owner drafts the other briefs it accepts, and
-  owner-only questions reach the owner only through its decision inbox.
+  owner-only questions reach the owner only through its decision inbox. Its
+  writer rule is superseded for the factory's triage run by ADR 0030, and
+  `factory:needs-input` by ADR 0031.
 - [Add the typescript-astro and typescript-vite stacks](0026-add-the-typescript-astro-and-typescript-vite-stacks.md):
   Sites use Astro and Apps use Vite with React, as two stacks over shared web
   rules with oxlint, Prettier, pnpm and shadcn, amending ADR 0024.
