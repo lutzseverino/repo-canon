@@ -12,12 +12,12 @@ You are the orchestrating agent. Turn the owner's feature or problem into a plan
 they approve, with a definite goal; keep the plan's state in the workbench; and
 run the plan to an announced close.
 
-Each repository's contribution guide, `CONTRIBUTING.md`, decides triage,
-readiness, question routing and delivery for its work: its Triage, Readiness,
-Comments, Findings and Pull requests sections. This skill is how to carry those
-rules across a plan. The installed `triage` skill is how to triage one request.
-In a repository a factory serves, the `factory` skill installed there is how to
-hand tickets to the factory and deliver held, skipped or handed-off work.
+Each repository's `CONTRIBUTING.md` decides triage, readiness, question routing
+and delivery: its Triage, Readiness, Owner questions, Findings and Pull requests
+sections, and the installed comment rules what you post. This skill carries
+those rules across a plan; the installed `triage` skill triages one request.
+Where a factory serves, its installed `factory` skill hands it tickets and
+delivers held, skipped or handed-off work.
 
 Read [templates](references/templates.md) before you write a workbench file,
 [launches](references/launches.md) before you launch, take over, hand over,
@@ -58,12 +58,13 @@ their citations, and shows the decision inbox; log those items in `log.md`.
    replaces neither independent brief review nor any other readiness condition
    in the guide and installed rules. An owner's request for something now skips
    only the plan: [Expedited change](references/launches.md#expedited-change).
-2. **Intake.** Route each new request as the contribution guide's Triage section
-   says, with the `triage` skill's method, in triage runs. Put your own ideas
-   into the issue you file under a `Suggestions (not decisions)` heading.
+2. **Intake.** Route each new request as the guide's Triage section says, with
+   the `triage` skill's method, in triage runs. Put your own ideas under
+   `Suggestions (not decisions)` in the issue you file, posted as
+   `.repo-standards/rules/comments.md#disclaimers` says.
 3. **Grill.** When the guide's inference test cannot settle an intent question,
-   open a grill with the owner. Then decide the split, file the issues and
-   accept the briefs, as the guide says, marking drafts as the
+   open a grill with the owner. Then decide the split, file the issues as step 2
+   says and accept the briefs, as the guide says, marking drafts as the
    [wiki rules](references/templates.md#layout) say.
 4. **Run.** Launch the plan's ticket workers and observe progress. Handle a
    Finding as the contribution guide's Findings section says, even outside the
@@ -71,9 +72,8 @@ their citations, and shows the decision inbox; log those items in `log.md`.
    mid-plan, unless the owner wants it now, takes one route:
    - **Row:** it serves the goal and passes the guide's inference test. Add it
      as a row, log it, and list it in the next plan update.
-   - **Amendment:** it changes the goal or the scope. Propose the amendment; it
-     applies once the owner approves it, recorded as a new approval line that
-     supersedes the old one.
+   - **Amendment:** it changes the goal or scope. Propose it; it applies once
+     the owner approves, recorded as a new approval line superseding the old.
    - **Wish:** it lies outside the goal and is not a Finding. Add it to
      `wishes.md`; it needs no issue merely because it is a wish.
 5. **Close.** Once every row has ended, reconcile the plan's issues, run its
@@ -102,9 +102,9 @@ files. Where none is offered, the owner also tells you when a grill is done.
 Repository paths are relative to each tracked repository's root, and workbench
 paths to the workbench's.
 
-- `CONTRIBUTING.md`: its Triage, Readiness, Comments, Findings and Pull requests
-  sections. When it is missing, carry out this method as written, and put each
-  rule it leaves to the guide in `inbox.md` as a decision for the owner.
+- `CONTRIBUTING.md` and `.repo-standards/rules/comments.md`: the sections and
+  comment rules named above. When either is missing, carry out this method as
+  written, and put each rule it leaves to it in `inbox.md` for the owner.
 - `AGENTS.md`: its Agent skills requirements for delegation and session naming.
   When it is missing, give each launch only its task context, and name each
   session for its operation and target where naming is supported.

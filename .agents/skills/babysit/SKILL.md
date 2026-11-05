@@ -6,12 +6,14 @@ description: Babysit an opened pull request through checks and review to merge o
 A prompt or brief naming this skill is its invocation.
 
 Take the pull request through its authorized delivery. `CONTRIBUTING.md` and the
-`github-repository-configuration` rules hold the merge conditions and the
-wording rules.
+`github-repository-configuration` rules hold the merge conditions, and the
+installed `comments` rules hold what you post. Each step that posts names the
+section of `.repo-standards/rules/comments.md` to read before posting.
 
 Before requesting or waiting, establish your delivery role from
 `CONTRIBUTING.md`'s Merging section and applicable installed rules. If they
-prescribe a worker handoff, record it on the open PR and stop. The designated
+prescribe a worker handoff, record it on the open PR as
+`.repo-standards/rules/comments.md#delivery-records` says, and stop. The designated
 merging agent resumes here from the handoff, carrying its review requirements
 and outstanding findings into the steps below.
 On resuming a PR paused for an owner question, follow the installed continuation
@@ -74,15 +76,16 @@ body was checked. Link-free bodies need no reconstruction.
    - `3` or `4`: checks passed and the configured reviewer did not review this head (`3`
      unavailable, `4` for the reason its line gives); go to step 2 and follow
      the `github-repository-configuration` rules for merging without that
-     review.
+     review; record the absent review as
+     `.repo-standards/rules/comments.md#delivery-records` says.
    - `5`: still waiting; run it again.
    - `6`: checks passed and external review was skipped by app-author policy;
-     go to step 2. After completing both internal reviews, replace both outcome
-     placeholders in the printed full-head template and post it as a PR comment
-     under the rules' policy-skip merge outcome requirements. The unfilled
-     template is not completed review evidence.
-   - `7`: invalid trusted review configuration. Record an owner question under
-     the contribution guide's Comments rules, identifying the destination
+     go to step 2. After completing both internal reviews, read
+     `.repo-standards/rules/comments.md#reviews`, fill every placeholder in
+     the printed full-head template and post it as a pull request review. The
+     unfilled template is not completed review evidence.
+   - `7`: invalid trusted review configuration. Record an owner question, as
+     `.repo-standards/rules/comments.md#owner-questions` says, identifying the destination
      repository, selected revision, affected declaration and validation problem
      from the diagnostic, and the correction needed. Follow applicable installed
      continuation rules, leave the PR open and stop babysitting. This outcome
@@ -94,12 +97,14 @@ body was checked. Link-free bodies need no reconstruction.
 2. Verify each failing check and review finding against the source, including
    findings that arrive on a policy-skipped pull request. Follow the
    `github-repository-configuration` rules for applicable internal Standards and
-   Spec reviews and their merge record.
+   Spec reviews, posting each round as
+   `.repo-standards/rules/comments.md#reviews` says.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
-   every review thread as it requires, following its Comments section.
+   every review thread as it requires. Before replying, read
+   `.repo-standards/rules/comments.md#review-thread-replies`.
 4. Apply the review request rule to each new head after a fix push. When it
-   requires a request, post the review request comment as the
-   `github-repository-configuration` rules describe, using `request.mjs` as above
+   requires a request, post the review request comment as
+   `.repo-standards/rules/comments.md#review-request-comments` describes, using `request.mjs` as above
    so the app-author policy takes precedence. After any push or
    re-request, return to step 1.
 5. Before each merge attempt, verify merge ownership and any required owner
@@ -107,20 +112,25 @@ body was checked. Link-free bodies need no reconstruction.
    Read the authoritative implementation contract and any worker handoff and
    apply the `github-repository-configuration` rules' Designated owner review gate.
    Read the PR comments carrying designation provenance and current-head approval,
-   and record approval there under that gate.
+   and record approval there under that gate, as
+   `.repo-standards/rules/comments.md#delivery-records` says.
    When required approval is missing, use the contribution guide's
-   owner-question handoff and stop with the PR unmerged. Once the merge
+   owner-question handoff, posting as
+   `.repo-standards/rules/comments.md#owner-questions` says, and stop with the
+   PR unmerged. Once the merge
    conditions hold on the latest head, run
    `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
    the full SHA that starts the wait's latest line. Exit `0` means merged;
    `2` means the head changed or current-head validation has not succeeded,
    so return to step 1; `3` means it did not merge
-   and needs the owner, so hand off with a question under
-   `CONTRIBUTING.md`'s Comments section, without retrying the merge;
+   and needs the owner, so hand off with a question as
+   `.repo-standards/rules/comments.md#owner-questions` says, without retrying
+   the merge;
    `4` means the base is stale: follow Branch-update recovery only if its one
    attempt is unused; otherwise record the owner handoff and stop;
-   `5` means the current-head policy-skip outcome comment is missing or incomplete:
-   complete both internal reviews, post their actual outcomes using the wait's
+   `5` means the current-head policy-skip review is missing or incomplete:
+   complete both internal reviews, post the review
+   `.repo-standards/rules/comments.md#reviews` describes, using the wait's
    template for that full head, then rerun the merge after verifying the other
    merge conditions. This is a post-and-rerun result, not an owner handoff;
    `9` means another open issue or PR carries the configured repository-hold
@@ -130,9 +140,10 @@ body was checked. Link-free bodies need no reconstruction.
    `1` means follow
    `CONTRIBUTING.md`'s Credentials section for a permission refusal;
    otherwise fix the invocation or other platform error and
-   run it again. On exit `0`, record any merge outcome comment the installed rules
-   require, using the delivered head, validation and review results, and merge
-   commit SHA printed by the command.
+   run it again. On exit `0`, record any merge outcome the installed rules
+   require, as `.repo-standards/rules/comments.md#delivery-records` says, using
+   the delivered head, validation and review results, and merge commit SHA
+   printed by the command.
 6. Stop.
 
 The merge command independently resolves trusted review configuration and checks
@@ -148,6 +159,9 @@ hold, excluding only the PR being merged. An absent file or key adds no hold. Un
 permit no merge write and follow the freshness-read failure handling.
 
 ## Branch-update recovery
+
+Every owner handoff in this section and in step 5 posts its question as
+`.repo-standards/rules/comments.md#owner-questions` says.
 
 Only recognized plan-limit 403 responses for both classic protection and
 rulesets on a private repository permit merging-agent freshness verification.
@@ -195,15 +209,19 @@ section.
 
 Paths are relative to the repository root.
 
-- `CONTRIBUTING.md`: the merge conditions and the Merging, Comments and
+- `CONTRIBUTING.md`: the merge conditions and the Merging, Owner questions and
   Credentials sections the steps name. When it is missing, carry out the
   steps and the commands' own checks as written, and hand off to the owner in
   one PR comment for any rule the steps leave to the guide.
+- `.repo-standards/rules/comments.md`: the installed comment rules, whose
+  sections the steps name before each post. When it is missing, post each
+  record or question the steps name as one comment, and each review in the
+  shape the wait prints.
 - The installed rules the steps name, such as the
   `github-repository-configuration` rules, which the `repository-standards`
   skill looks up. When they are missing, the commands' own behavior stands, no
-  rule prescribes a worker handoff, owner approval or merge outcome comment,
-  and `CONTRIBUTING.md` alone sets the merge and wording rules.
+  rule prescribes a worker handoff, owner approval or merge outcome record,
+  and `CONTRIBUTING.md` alone sets the merge rules.
 - `.github/pull-request-reviewer.json`: the optional reviewer declaration.
   When it is missing at the selected commit, no reviewer is configured.
 - `.github/factory-review-policy.json`: the optional app-author review policy.

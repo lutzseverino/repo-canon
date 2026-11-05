@@ -144,8 +144,8 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
     }
   }
   // The other profiles keep their resolved declarations.
-  assert.equal(validation.profiles.standard.declarations.length, 60);
-  assert.equal(validation.profiles.factory.declarations.length, 65);
+  assert.equal(validation.profiles.standard.declarations.length, 61);
+  assert.equal(validation.profiles.factory.declarations.length, 66);
 
   const { source, env, git, publish } = fixtureSource(directory, validation);
   git(source, "-c", "tag.gpgsign=false", "tag", "v1.0.0");

@@ -2,10 +2,11 @@
 
 These rules apply to all work in a repository a factory serves, including
 tracker work that changes no file. The contribution guide holds the general
-implementation contract, readiness, owner-question, credential, comment and
-pull request requirements. The `factory` skill holds the method for handing
-work to the factory, interpreting holds, delivering skipped and handed-off
-work, and pausing or resuming one repository.
+implementation contract, readiness, owner-question, credential and pull request
+requirements, and the `comments` rules hold what agents post on issues and pull
+requests. The `factory` skill holds the method for handing work to the factory,
+interpreting holds, delivering skipped and handed-off work, and pausing or
+resuming one repository.
 
 ## Implementation inputs
 
@@ -107,7 +108,7 @@ work the factory must not pick up, an agent adds `factory:needs-input` with its
 question, and the factory adds `factory:running` while it holds an issue,
 `factory:failed` after a run fails for good, and `factory:paused` when it
 pauses a run. `factory:paused` means the factory paused the run and resumes it
-by itself, and its comment on the issue says why, so nobody removes the label
+by itself, and its run comment says why, so nobody removes the label
 by hand. Remove `factory:failed` to run the issue again once its failure note
 or the factory's comment is dealt with, subject to the existing pickup gates.
 For ordinary runs, removing `factory:needs-input` after resolving the question
@@ -137,15 +138,13 @@ before merge, the orchestrating agent merges it after the owner's review.
 ## Merging
 
 For every skip-labelled PR and every PR opened by a directly launched worker,
-including a PR without a skip label, the implementing worker delivers an open
-PR and hands it to the orchestrating agent without merging. Worker completion is the
-recorded PR handoff; the issue stays open until delivery finishes. The handoff
-records the PR's current head, validation and internal review outcomes,
-outstanding findings, and any owner-review requirement with its source. The
-orchestrating agent continues `babysit` and owns the merge under the
-contribution guide and applicable review rules. For a qualifying ordinary factory
-handoff, the orchestrating agent may also take merge ownership under Ordinary
-factory runs below.
+including a PR without a skip label, the implementing worker delivers an open PR
+and hands it to the orchestrating agent without merging. Worker completion is
+the recorded PR handoff, a delivery record under the `comments` rules; the issue
+stays open until delivery finishes. The orchestrating agent continues `babysit`
+and owns the merge under the contribution guide and applicable review rules. For
+a qualifying ordinary factory handoff, the orchestrating agent may also take
+merge ownership under Ordinary factory runs below.
 
 Apply the `github-repository-configuration` rules' Designated owner review gate
 for designation, provenance and current-head approval. The skip marker alone
@@ -219,41 +218,41 @@ implement that policy. Without a declaration, keep configured reviewer
 behavior; absence needs no owner question. The host does not choose a
 repository's reviewer policy.
 
-A policy skip preserves required checks and their waits, internal Standards
-and Spec reviews defined by the `github-repository-configuration` rules'
-Internal Standards and Spec reviews section, merge authorization, and handling of findings that arrive.
-Those rules hold the skip outcome wording and internal review record;
-the contribution guide's supplied-credential restrictions still apply.
+A policy skip preserves required checks and their waits, internal Standards and
+Spec reviews defined by the `github-repository-configuration` rules' Internal
+Standards and Spec reviews section, merge authorization, and handling of
+findings that arrive. Those rules hold the skip outcome, and the `comments`
+rules' Reviews section holds the internal review; the contribution guide's
+supplied-credential restrictions still apply.
 
 ## Owner handoff and recovery
 
-The factory records actionable holds on the held issue, one marker-keyed
-comment per reason: refused readiness, a parent not ready, a model-label error
-(several labels, an unresolvable label or an unlisted model), or a repository
-paused for its configuration. Changed details update the comment in place;
-cleared reasons are marked resolved, and recurrence reuses the same comment,
-including after host restarts. Hold comments are never deleted.
+The factory records actionable holds on the held issue through its run comment
+and action comments, under the `comments` rules' Factory comments section:
+refused readiness, a parent not ready, a model-label error (several labels, an
+unresolvable label or an unlisted model), or a repository paused for its
+configuration. Changed details update the run comment in place; cleared
+reasons are marked resolved, and recurrence reuses the same run comment,
+including after host restarts. The factory never deletes its comments.
 
 Open blockers, including a parent's blockers, usage drains or owner holds,
 provider caps and states already carrying labels or notices (running, paused,
 needs-input, failed and skip) remain log-only, as do transient unreadable role
-lookups. Existing awaiting-merge,
-failure, pause and close notices keep their own lifecycle. Without a cached
-valid repository configuration, the host cannot read its issues and posts no
-hold comment.
+lookups. Awaiting-merge, failure and pause states appear in the run comment,
+with an action comment when a person must act; a parent's close notice keeps
+its own lifecycle. Without a cached valid repository configuration, the host
+cannot read its issues and posts no comment.
 
 When an agent needs an answer only the owner can give, follow the contribution
-guide's owner-question and comment rules and add `factory:needs-input` to the
-issue. Work without an issue uses no factory state label. The question reaches
-the orchestrating agent first, as those rules say: it answers on the issue when
-the triage inference test lets it, and otherwise puts the question in its
-decision inbox for the owner.
+guide's owner-question handoff, post the question as the `comments` rules say,
+and add `factory:needs-input` to the issue. Work without an issue uses no
+factory state label. The question reaches the orchestrating agent first, as
+those rules say: it answers on the issue when the triage inference test lets it,
+and otherwise puts the question in its decision inbox for the owner.
 
 An agent that stops without a pull request and without a question under
-`factory:needs-input` comments one short paragraph on the issue explaining why
-it stopped, in its own words. Never paste log output, environment values or
-tokens into that note: this repository and repositories that adopt these rules
-may be public.
+`factory:needs-input` posts a stop note on the issue under the `comments`
+rules.
 
 ### Skipped work
 
@@ -334,8 +333,7 @@ hands the still-unmerged PR to the owner with its failure reason. Pending or
 failed checks permit no merge; obsolete-head checks and approval never qualify
 a replacement head. The supplied-credential restrictions still apply: a
 permission refusal ends the attempt without another push or identity switch.
-Record the merge outcome in a PR comment, retaining the delivered head,
-validation and applicable review results, and resulting merge commit SHA.
+Record the merge outcome as a delivery record under the `comments` rules.
 Deliver several waiting PRs sequentially, refreshing the default branch for
 each PR; create no shared queue.
 

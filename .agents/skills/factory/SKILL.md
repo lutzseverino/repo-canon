@@ -6,8 +6,8 @@ description: Hand ready tickets to the factory, resolve holds, deliver skipped o
 A prompt or brief naming this skill is its invocation.
 
 Work in the repository the factory serves. Read `CONTRIBUTING.md`, the
-installed `factory-workflow` and `github-repository-configuration` rules, and
-`.factory/config.json` before acting. The guide and rules hold the requirements;
+installed `factory-workflow`, `github-repository-configuration` and `comments`
+rules, and `.factory/config.json` before acting. The guide and rules hold the requirements;
 this skill supplies the method. Use the configured label roles rather than
 assuming the shipped strings. Read the issue's authoritative contract, comments,
 blockers, and any existing PR and handoff before choosing a path below.
@@ -32,7 +32,7 @@ blockers, and any existing PR and handoff before choosing a path below.
 
 ## Read a hold
 
-Read the factory's issue comment and current labels first. Match the reason
+Read the factory's run comment and current labels first. Match the reason
 rather than clearing a state label to see what happens:
 
 | Observation | Next action |
@@ -43,14 +43,14 @@ rather than clearing a state label to see what happens:
 | Open blockers, capacity or usage drain | Resolve blockers or wait for the host's gate to clear; no label reset bypasses it. |
 | Repository or release hold | Find the labelled open items and use Pause and resume below. |
 | Running or paused | Read the factory notice; the factory owns the run and its automatic resumption. |
-| Needs input | Answer through the guide's owner-question route. If the contract changes, wait for its revised notice, independent review and renewed readiness before continuation. |
+| Needs input | Answer through the guide's owner-question route, posting as `.repo-standards/rules/comments.md#disclaimers` says. If the contract changes, wait for its revised notice, independent review and renewed readiness before continuation. |
 | Failed | Address the failure note first, then remove the failed label to request a retry subject to pickup gates. |
 | Skip | Use the directly launched path below; clearing a waiting marker does not request a factory retry. |
 
-Actionable hold comments update in place and mark cleared reasons resolved.
-Other gates may be log-only under the rules. If no comment explains a held
-issue, ask the host operator for its reason; a host with no cached valid
-configuration cannot post an issue hold comment. Keep credentials and secret
+The run comment records actionable holds in place and marks cleared reasons
+resolved. Other gates may be log-only under the rules. If no comment explains a
+held issue, ask the host operator for its reason; a host with no cached valid
+configuration cannot comment on the issue. Keep credentials and secret
 host material out of tracker records.
 
 ## Take the skip route
@@ -58,9 +58,8 @@ host material out of tracker records.
 For work excluded by the installed rules, arrange the ready, model and skip
 labels together through the authorized readiness path. Launch `implement`
 directly with the contract, evidence, decisions, issue link and delivery role.
-The worker opens the PR and records its current head, validation, both internal
-review outcomes, outstanding findings and owner-review designation with its
-source. Continue as the orchestrating agent through `babysit` from that handoff;
+The worker opens the PR and records its handoff as
+`.repo-standards/rules/comments.md#delivery-records` says. Continue as the orchestrating agent through `babysit` from that handoff;
 apply its current-head owner-approval gate when designated.
 
 For an unanswered owner question, retain the skip and needs-input markers.
@@ -69,7 +68,8 @@ PR exists, or continue the same open PR and its handoff. Live host access gates
 only the authorized live steps.
 
 A live-acceptance ticket takes this route. Its worker records the ticket's live
-acceptance on it instead of opening a PR, and reports back. It closes only once
+acceptance on it, as `.repo-standards/rules/comments.md#disclaimers` says,
+instead of opening a PR, and reports back. It closes only once
 its live acceptance is recorded on it, never on a merge; its source ticket's PR
 links it without a closing reference. A time-bounded host access grant belongs to the
 orchestrating agent that asked the maintainer for it, which records the workers
@@ -89,9 +89,11 @@ In an owned checkout, preserve all work and review context, fetch origin and
 resolve its default branch, inspect outgoing commits per merge parent and the
 whole change, and rebase or replay only this issue's changes onto that base.
 Follow babysit's validation, publication, repeated review and one-attempt
-recovery method. Record its delivered head, checks, applicable review outcomes
-and merge commit on the PR. Uncertain ownership, conflicts, failed recovery,
-a second stale base or a permission refusal goes to the guide's owner handoff.
+recovery method. Record the merge outcome on the PR as
+`.repo-standards/rules/comments.md#delivery-records` says. Uncertain ownership,
+conflicts, failed recovery, a second stale base or a permission refusal goes to
+the guide's owner handoff, posted as
+`.repo-standards/rules/comments.md#owner-questions` says.
 
 If factory resumption is chosen instead, remove needs-input only after the
 question and any required renewed readiness are resolved. The factory resumes
@@ -106,7 +108,8 @@ sequentially, refreshing the base separately for each.
    repository hold from the release hold and the factory's per-run paused state.
 2. For an expedited change with an existing PR, put the hold on that PR. If
    work starts before its PR exists, put it on the change's issue first and
-   record why the repository is paused and which change will carry it.
+   record why the repository is paused and which change will carry it, as
+   `.repo-standards/rules/comments.md#disclaimers` says.
 3. Deliver the expedited change outside factory pickup: launch a worker
    directly or implement as the orchestrating agent. A held repository launches
    no new work. An already-open factory PR can instead carry the hold and finish
@@ -127,13 +130,16 @@ sequentially, refreshing the base separately for each.
 
 Paths are relative to the repository root.
 
-- `CONTRIBUTING.md`: contract, readiness, delivery, question, comment and
-  credential requirements. When it is missing, use the installed rules and
+- `CONTRIBUTING.md`: contract, readiness, delivery, question and credential
+  requirements. When it is missing, use the installed rules and
   hand off any unresolved delivery or authorization question on the issue or PR.
 - The installed `factory-workflow` and `github-repository-configuration` rules,
   located with `repository-standards`. When they are missing, use the guide
   and configured roles; ask the owner before a route or merge-ownership decision
   that those sources do not settle.
+- `.repo-standards/rules/comments.md`: the installed comment rules, whose
+  sections the posting steps name. When it is missing, post each record the
+  steps name as one comment.
 - `.factory/config.json`: configured label roles. When it is missing or
   unreadable, perform read-only diagnosis and ask the owner to establish the
   factory configuration before changing factory labels.

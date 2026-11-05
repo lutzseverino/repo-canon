@@ -128,10 +128,11 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       repository.ruleInputs,
       factory
         ? [
+            "rules/comments.md",
             "rules/github-repository-configuration.md",
             "rules/factory-workflow.md",
           ]
-        : ["rules/github-repository-configuration.md"],
+        : ["rules/comments.md", "rules/github-repository-configuration.md"],
     );
     for (const input of repository.ruleInputs) {
       assert.equal(
@@ -174,6 +175,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   }
 
   for (const path of [
+    "rules/comments.md",
     "rules/github-repository-configuration.md",
     "rules/factory-workflow.md",
     "scripts/support/repository-standards/SKILL.md",

@@ -63,8 +63,8 @@ preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
 Run `node --test test/repository-wide-rules.test.mjs` for a fresh adoption of
 the standard and factory profiles and repository-wide rules lookup with public
-CLI 10.0.0: the GitHub rules in both and the factory workflow rules only in
-the factory profile. It confirms no `typescript-node-stack` scope in both profiles,
+CLI 10.0.0: the comment and GitHub rules in both and the factory workflow
+rules only in the factory profile. It confirms no `typescript-node-stack` scope in both profiles,
 so no stack rules are installed and `repo-standards check` runs no stack check,
 and adopts a third copy with one conforming package, whose `package.json` the
 stack rules cover and whose stack check passes. It also checks that adoption installs the contribution guide
@@ -212,8 +212,8 @@ rules and the examples that the validator and the command both run.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
 and head-change retry behavior against the same Postern transport fixture,
 including independent trusted-policy selection and the current-head internal
-review outcome gate. Missing or incomplete outcome evidence returns merge exit
-`5`: post the completed record, then rerun. Wait exit `6` prints its full-head
+review gate. A missing or incomplete current-head review returns merge exit
+`5`: post the completed review, then rerun. Wait exit `6` prints its full-head
 template; an unfilled template never counts as completed review evidence.
 The merge fixtures also cover the repository- and release-hold exit `9`,
 labelled issues and PRs, the shipped configuration, self-exemption,

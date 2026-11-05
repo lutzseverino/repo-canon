@@ -5,7 +5,8 @@ installs, the optional pull request reviewer file, and the GitHub side of
 issue and pull request work. They apply to all work in the repository,
 including tracker work that changes no file. The contribution guide holds the
 general issue, implementation contract, readiness, check, review thread,
-findings, delivery, credential and comment requirements.
+findings, delivery and credential requirements, and the `comments` rules hold
+what agents post on issues and pull requests.
 
 ## Labels
 
@@ -103,21 +104,20 @@ or the worker's handoff says so. Resolve the authoritative implementation
 contract under the contribution guide's Implementation contracts section.
 Read both sources; an omission in one does not cancel a designation in the
 other. Carry that designation and its source into the PR handoff.
-Record the designation and its source in a PR comment, including when no worker
-handoff is required.
+Record the designation and its source as a delivery record under the
+`comments` rules, including when no worker handoff is required.
 
-Before merging a designated PR, the merging agent verifies the owner's
-explicit approval of the current head. Record the approval's source and head
-SHA in a PR comment. Any head change requires renewed owner approval; approval
-of an earlier head does not authorize the new one. Passing checks, a configured
-external review, its absence or timeout, and an app-author review-policy skip
-never substitute for owner approval. When approval is missing, follow the
-contribution guide's owner-question handoff and leave the PR unmerged.
+Before merging a designated PR, the merging agent verifies the owner's explicit
+approval of the current head. Record the approval's source and head SHA as a
+delivery record under the `comments` rules. Any head change requires renewed
+owner approval; approval of an earlier head does not authorize the new one.
+Passing checks, a configured external review, its absence or timeout, and an
+app-author review-policy skip never substitute for owner approval. When approval
+is missing, follow the contribution guide's owner-question handoff and leave the
+PR unmerged.
 
-Read these PR comments when verifying designation and current-head approval,
-including after a handoff or resumed delivery. For adoption PRs, keep both
-records in comments and preserve the body under the contribution guide's
-adoption-record contract.
+Read these records when verifying designation and current-head approval,
+including after a handoff or resumed delivery.
 
 This gate applies in both profiles and does not assign merge ownership.
 In the standard profile, the otherwise authorized merging agent, ordinarily
@@ -236,12 +236,12 @@ invalid trusted configuration, is an explicit error before any review-request
 mutation. It authorizes no skip and permits no fallback to local files, the
 head or another revision.
 
-Invalid JSON or a schema-invalid declaration requires an owner handoff:
-identify the destination repository, selected default-branch revision, affected
-file and validation problem, and name the correction needed. Record the owner
-question under the contribution guide's comment rules and applicable installed
-continuation rules, leave the PR open, and stop babysitting. Do not retry the
-unchanged invalid configuration or proceed to merge.
+Invalid JSON or a schema-invalid declaration requires an owner handoff: identify
+the destination repository, selected default-branch revision, affected file and
+validation problem, and name the correction needed. Record the owner question
+under the `comments` rules and applicable installed continuation rules, leave
+the PR open, and stop babysitting. Do not retry the unchanged invalid
+configuration or proceed to merge.
 
 The correction must land on the destination default branch through the
 applicable owner-handoff and merge procedure. A correcting PR's proposed
@@ -326,8 +326,9 @@ When an applicable workflow calls for internal review, use the installed
 `code-review` workflow: Standards checks the change against the repository's
 documented standards; Spec checks it against its originating implementation
 contract, including the workflow's handling of a missing specification.
-Review the current head and record the actual outcomes of both axes. These
-reviews are distinct from the configured external reviewer.
+Review the current head and post the actual outcomes of both axes as the review
+the `comments` rules' Reviews section describes. These reviews are distinct
+from the configured external reviewer.
 
 Policy-skipped pull requests require both reviews before merge. Nonmatching
 and absent-policy pull requests retain their existing applicable internal-review
@@ -369,22 +370,20 @@ runs. For a matching author, issue no external review request and impose no
 external response/review wait, regardless of opening-request settings or
 request bounds. Classify this outcome as a policy skip, separately from
 external approval, reviewer unavailability or a timeout. Complete the shared
-[internal reviews](#internal-standards-and-spec-reviews) and post their actual
-outcomes in one PR comment before merge. Exit `6` from wait prints a copyable
-template with `Head: <full current SHA>`, `Standards: <actual outcome>` and
-`Spec: <actual outcome>` lines and the exact sentence "No external reviewer
-runs on app-authored PRs." Replace both outcome placeholders and follow the
-contribution guide's comment rules. Use plain text lines for these fields;
-quoted or fenced examples and unfilled placeholders are not completed evidence.
+[internal reviews](#internal-standards-and-spec-reviews) and post their review
+of the current head before merge. Exit `6` from wait prints that review's
+template for the full current head; an unfilled template is not completed
+evidence.
 
 At every invocation, merge independently checks the platform PR author and the
 trusted destination policy, including without a prior wait. A caller's wait
 result or PR-branch policy never authorizes a skip. For a matching author, it
-requires one complete comment with the current full SHA, both populated outcome
-fields and the exact sentence. Missing, incomplete or stale evidence returns
-merge exit `5` without a merge write: post the completed current-head outcome,
-then rerun. That retry is distinct from owner handoff (`3`), head changed (`2`)
-and stale base (`4`); every other merge condition still applies.
+requires a complete pull request review of the current head in the shape the
+`comments` rules' Reviews section gives; an issue comment or an earlier record
+shape does not count. Missing, incomplete or stale evidence returns merge exit
+`5` without a merge write: post the completed current-head review, then rerun.
+That retry is distinct from owner handoff (`3`), head changed (`2`) and stale
+base (`4`); every other merge condition still applies.
 
 Required checks and their waits, internal Standards and Spec reviews, merge
 authorization, and handling of findings that actually arrive remain enforced.
@@ -413,7 +412,8 @@ request rules below govern authors it does not exempt.
 
 With a reviewer file, a review request is the pull request's opening when
 `request.onOpen` is true, or a later comment whose whole trimmed body equals
-`request.comment`; a push is never one.
+`request.comment`; a push is never one. The `comments` rules say how to write
+the review request comment.
 
 When `request.onOpen` is false and the pull request has had no review request,
 an agent must post the review request comment for its head before it first
@@ -441,15 +441,6 @@ issue. After the bound is reached, fix every finding the contribution guide
 does not let the agent decline and push without another request, and answer
 any review that arrives anyway.
 
-## Review request comments
-
-Write the configured reviewer's request phrase only in a comment that requests
-a review. That comment holds exactly `request.comment`, with no AI disclaimer:
-it is exempt from the contribution guide's disclaimer rule. The phrase never
-appears in prose, quotations, or code spans in any other comment, issue or pull
-request title, or body. To mention the request, describe it as "the review
-request comment".
-
 ## Merging with a configured reviewer
 
 Apply the [app-author policy](#factory-app-author-review-policy) first; the
@@ -461,11 +452,9 @@ not review the latest head, because it is unavailable, no review was requested
 after the head's push, it did not respond within `bounds.responseMinutes` of
 the latest review request, or no review arrived within `bounds.reviewMinutes`
 of it, the pull request merges once the contribution guide's other merge
-conditions hold. The merging agent then comments on it that the configured
-reviewer did not review that head and why, under the contribution guide's
-comment rules. For a head with no request after its push, the comment says
-whether the request rule required none or the bound was reached. Without the
-file, no reviewer wait or comment about an absent review is required.
+conditions hold. The merging agent then records the absent review as a delivery
+record under the `comments` rules. Without the file, no reviewer wait or record
+of an absent review is required.
 
 ## Pull request head with no check
 
@@ -523,15 +512,8 @@ When adding a native blocker, pass the blocking issue's numeric database ID as
 The issue-contract workflow enforces this shape for a triaged request's Agent
 Brief comment; the `triage` skill is a method for writing one.
 
-The comment starts with the triage disclaimer, then a blank line, then the
-`## Agent Brief` heading:
-
-<!-- prettier-ignore -->
-```markdown
-> *This was generated by AI during triage.*
-
-## Agent Brief
-```
+The comment starts with the `comments` rules' triage disclaimer, then a blank
+line, then the `## Agent Brief` heading.
 
 Nothing else comes between the disclaimer and the heading; other triage notes
 follow the brief. Under the heading, each of these fields starts a line with

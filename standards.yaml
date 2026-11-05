@@ -21,6 +21,12 @@ defaults:
       target: .github/ISSUE_TEMPLATE/bug-report.yml
       exact: .github/ISSUE_TEMPLATE/bug-report.yml
 
+    comments:
+      kind: repository
+      rules: rules/comments.md
+      guidance: guidance/comments.md
+      discovery: discovery/comments.md
+
     contribution-guidance:
       kind: file
       target: CONTRIBUTING.md
@@ -604,6 +610,7 @@ profiles:
       agent-configuration-index: { exclude: true }
       agent-guidance: { exclude: true }
       bug-report-template: { exclude: true }
+      comments: { exclude: true }
       contribution-guidance: { exclude: true }
       documentation: { exclude: true }
       domain-configuration: { exclude: true }

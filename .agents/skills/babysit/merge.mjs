@@ -19,7 +19,7 @@ import {
   trustedReviewConfiguration,
 } from "./trusted-review-config.mjs";
 import { skipsExternalReview } from "./review-policy.mjs";
-import { completeReviewOutcome } from "./review-outcome.mjs";
+import { completeReview, reviewsSection } from "./review-outcome.mjs";
 
 import { checkStates, decide } from "./wait.mjs";
 
@@ -222,17 +222,15 @@ export async function main(argv = process.argv.slice(2), connection) {
     throw error;
   }
   if (skipsExternalReview(configuration.policy, pullRequest.author?.login)) {
-    const comments = await pages(
-      connection,
-      `/repos/${connection.repository.path}/issues/${number}/comments?per_page=100`,
-    );
+    const reviews = await connection.pullRequests.reviews(Number(number));
     if (
-      !comments
-        .flat()
-        .some((comment) => completeReviewOutcome(comment.body, head))
+      !reviews.some(
+        (review) =>
+          review.state !== "PENDING" && completeReview(review.body, head),
+      )
     ) {
       console.error(
-        `Post a complete current-head review outcome comment for ${head}, then rerun merge.mjs; ${configuration.evidence}.`,
+        `Post a complete review of ${head} as ${reviewsSection} describes, then rerun merge.mjs; ${configuration.evidence}.`,
       );
       process.exitCode = 5;
       return;

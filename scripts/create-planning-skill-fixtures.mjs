@@ -57,6 +57,7 @@ const sharedSourceFiles = [
   "docs/agents/domain.md",
   "docs/agents/issue-tracker.md",
   "docs/agents/triage-labels.md",
+  "rules/comments.md",
   "rules/github-repository-configuration.md",
   "rules/factory-workflow.md",
   "scripts/support/repository-standards/SKILL.md",
@@ -127,7 +128,7 @@ function createRepository(
     join(root, ".agents/skills/repository-standards"),
     { recursive: true },
   );
-  const declarations = ["github-repository-configuration"];
+  const declarations = ["comments", "github-repository-configuration"];
   if (profile === "factory") declarations.push("factory-workflow");
   const rules = declarations.map((declaration) => {
     const input = `rules/${declaration}.md`;
