@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { readReviewer as readOperationReviewer } from "../operations/lib/pull-request-reviewer.mjs";
-import { readReviewer as readInstalledReviewer } from "../.agents/skills/babysit/pull-request-reviewer.mjs";
+import { readReviewer } from "../.agents/skills/babysit/pull-request-reviewer.mjs";
 import {
   fixture,
   invokeCheck,
@@ -41,25 +40,23 @@ const check = (t, files, executable = script) => {
   return outcome;
 };
 
-test("both reviewer readers identify malformed JSON and retain the parse explanation", (t) => {
-  for (const readReviewer of [readOperationReviewer, readInstalledReviewer]) {
-    for (const { content, explanation } of malformedCases) {
-      const project = fixture({ [target]: content });
-      t.after(project.close);
-      assert.throws(
-        () => readReviewer(project.root),
-        (error) => {
-          assert.ok(error instanceof Error);
-          assert.ok(error.message.includes(target), error.message);
-          assert.match(error.message, explanation);
-          return true;
-        },
-      );
-    }
+test("the reviewer reader identifies malformed JSON and retains the parse explanation", (t) => {
+  for (const { content, explanation } of malformedCases) {
+    const project = fixture({ [target]: content });
+    t.after(project.close);
+    assert.throws(
+      () => readReviewer(project.root),
+      (error) => {
+        assert.ok(error instanceof Error);
+        assert.ok(error.message.includes(target), error.message);
+        assert.match(error.message, explanation);
+        return true;
+      },
+    );
   }
 });
 
-test("both reviewer readers reject completion patterns that only compile inside a wrapper", (t) => {
+test("the reviewer reader rejects completion patterns that only compile inside a wrapper", (t) => {
   const reviewer = JSON.parse(valid);
   reviewer.finished = {
     commentMarker: "done",
@@ -67,11 +64,10 @@ test("both reviewer readers reject completion patterns that only compile inside 
   };
   const project = fixture({ [target]: JSON.stringify(reviewer) });
   t.after(project.close);
-  for (const readReviewer of [readOperationReviewer, readInstalledReviewer])
-    assert.throws(
-      () => readReviewer(project.root),
-      /reviewer\.finished\.line must be a valid regular expression/,
-    );
+  assert.throws(
+    () => readReviewer(project.root),
+    /reviewer\.finished\.line must be a valid regular expression/,
+  );
 });
 
 test("the optional reviewer check passes without a file", (t) => {
@@ -118,7 +114,7 @@ test("the optional reviewer check rejects invalid review request bounds", (t) =>
   }
 });
 
-test("both reviewer readers and the check agree on default, finite and unbounded requests", (t) => {
+test("the reviewer reader and the check agree on default, finite and unbounded requests", (t) => {
   for (const [configured, effective] of [
     [undefined, 4],
     [2, 2],
@@ -129,8 +125,7 @@ test("both reviewer readers and the check agree on default, finite and unbounded
     const content = JSON.stringify(reviewer);
     const project = fixture({ [target]: content });
     t.after(project.close);
-    for (const readReviewer of [readOperationReviewer, readInstalledReviewer])
-      assert.equal(readReviewer(project.root).bounds.reviewRequests, effective);
+    assert.equal(readReviewer(project.root).bounds.reviewRequests, effective);
     assert.equal(check(t, { [target]: content }).result.status, "passed");
   }
 });

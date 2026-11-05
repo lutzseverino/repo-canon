@@ -10,6 +10,7 @@ import {
   executedAsScript,
   pages,
   requestData,
+  pinnedFiles,
   checkRollup,
   workflowRuns,
 } from "./platform.mjs";
@@ -143,41 +144,15 @@ async function baseIsStale(connection, branch, head) {
 
 // This last preflight shares the review snapshot, never the proposed PR tree.
 async function mergeHolds(connection, revision, number) {
-  const [owner, name] = connection.repository.path.split("/");
-  const response = await requestData(connection, {
-    method: "POST",
-    path: "/graphql",
-    body: {
-      query: `query BabysitReleaseHold($owner: String!, $name: String!, $revision: GitObjectID!, $factory: String!) {
-        repository(owner: $owner, name: $name) {
-          commit: object(oid: $revision) { __typename oid }
-          factory: object(expression: $factory) { __typename ... on Blob { text isTruncated } }
-        }
-      }`,
-      variables: {
-        owner,
-        name,
-        revision,
-        factory: `${revision}:.factory/config.json`,
-      },
+  const { files } = await pinnedFiles(
+    connection,
+    {
+      factory: ".factory/config.json",
     },
-  });
-  const files = response?.data?.repository;
-  if (
-    response?.errors?.length ||
-    files?.commit?.__typename !== "Commit" ||
-    files.commit.oid !== revision
-  )
-    throw new Error("Could not read the pinned factory configuration commit.");
-  const blob = files.factory;
-  if (blob === null) return [];
-  if (
-    blob?.__typename !== "Blob" ||
-    blob.isTruncated !== false ||
-    typeof blob.text !== "string"
-  )
-    throw new Error("Could not read complete .factory/config.json.");
-  const config = JSON.parse(blob.text);
+    { revision, evidence: `${connection.repository.path}@${revision}` },
+  );
+  if (files.factory === null) return [];
+  const config = JSON.parse(files.factory);
   if (
     !config ||
     Array.isArray(config) ||

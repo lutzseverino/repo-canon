@@ -117,7 +117,7 @@ async function exercise(options = {}, command = main) {
     }
     if (
       url.pathname === "/graphql" &&
-      body.query.includes("TriageReadinessPolicy")
+      body.query.includes("PinnedFilesRevision")
     ) {
       assert.equal(body.variables.owner, owner);
       assert.equal(body.variables.name, name);
@@ -140,7 +140,7 @@ async function exercise(options = {}, command = main) {
     }
     if (
       url.pathname === "/graphql" &&
-      body.query.includes("TriageFactoryRules")
+      body.query.includes("query PinnedFiles(")
     ) {
       assert.equal(body.variables.revision, policyRevision);
       assert.equal(
@@ -155,7 +155,14 @@ async function exercise(options = {}, command = main) {
         data: {
           repository: {
             commit: { __typename: "Commit", oid: policyRevision },
-            rules: options.factory === false ? null : { __typename: "Blob" },
+            rules:
+              options.factory === false
+                ? null
+                : {
+                    __typename: "Blob",
+                    text: "factory rules",
+                    isTruncated: false,
+                  },
             ...options.policyFiles,
           },
         },

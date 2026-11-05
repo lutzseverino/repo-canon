@@ -128,13 +128,13 @@ script reuses `babysit`'s GitHub CLI connection, as the triage readiness
 command does.
 Run `node --test test/pull-request-reviewer-check.test.mjs`
 for the optional reviewer schema check, including retained operation resources;
-the check's parser, `operations/lib/pull-request-reviewer.mjs`, has a
-byte-identical copy in `babysit`'s directory for the wait.
+the check imports babysit's `pull-request-reviewer.mjs` directly from its
+source-relative retained resource path.
 Run `node --test test/factory-review-policy-check.test.mjs` for the optional
 policy adoption check's absence, app identities, invalid schemas, file-read
 errors and preservation, including retained resources without runtime packages.
-Its reader, `operations/lib/review-policy.mjs`, is byte-identical to babysit's
-`review-policy.mjs`; conformance coverage keeps both schema readers aligned.
+The check imports babysit's `review-policy.mjs` as a retained resource too;
+CLI 10.0.0 preserves both resources' source-relative paths.
 Run `node --test test/babysit-request.test.mjs test/babysit-wait.test.mjs`
 for app-author policy matching, explicit rejection of human-login declarations
 with or without a reviewer, independent request emission and wait classification,
@@ -156,6 +156,8 @@ pre-commit output, cover appended and mismatching sections, install/generation
 failures and missing local bases, and verify cleanup and author-worktree
 preservation. Production installs the head's runtime lockfile with `npm ci`;
 these fixtures never contact the registry.
+Run `node --test test/pinned-files.test.mjs` for the shared pinned file reader's
+complete text, verified absence, truncation and moving-tip cases.
 Run `node --test test/babysit-trusted-config.test.mjs` for installed request and
 wait regressions against independent remote configuration and proposed local
 files. Run `node --test test/babysit-destination.test.mjs` for installed request,
@@ -293,8 +295,7 @@ maximal run of non-whitespace characters as a word; a document over its limit
 fails naming the document, its count, and the limit. The limits are constants
 in the test, so raising one is an explicit edit in the same pull request. No
 budget covers declaration rules or retained adoption guidance. It also keeps
-the two copies of the reviewer parser identical, and keeps the user-invoked
-`orchestrate` skill application-independent, checking every file in its
+the user-invoked `orchestrate` skill application-independent, checking every file in its
 installed directory and its authoring and adoption guidance for private
 application names, tool mappings and session-reference syntax. It holds that
 skill's core `SKILL.md` to 120 lines, a constant in the test, and requires the

@@ -142,7 +142,7 @@ export function contractWorld({
                 : { __typename: "User", login, databaseId: 7 },
             },
           });
-        if (query.includes("TriageReadinessPolicy"))
+        if (query.includes("PinnedFilesRevision"))
           return json({
             data: {
               repository: {
@@ -154,12 +154,18 @@ export function contractWorld({
               },
             },
           });
-        if (query.includes("TriageFactoryRules"))
+        if (query.includes("query PinnedFiles("))
           return json({
             data: {
               repository: {
                 commit: { __typename: "Commit", oid: "b".repeat(40) },
-                rules: factory ? { __typename: "Blob" } : null,
+                rules: factory
+                  ? {
+                      __typename: "Blob",
+                      text: "factory rules",
+                      isTruncated: false,
+                    }
+                  : null,
               },
             },
           });

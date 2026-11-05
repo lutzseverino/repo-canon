@@ -519,37 +519,6 @@ test("neither the GitHub rules nor babysit names a particular reviewer", () => {
   }
 });
 
-test("the reviewer check and babysit validate the reviewer file with one parser", () => {
-  const parser = "operations/lib/pull-request-reviewer.mjs";
-  assert.equal(
-    readFileSync(
-      join(root, ".agents/skills/babysit/pull-request-reviewer.mjs"),
-      "utf8",
-    ),
-    readFileSync(join(root, parser), "utf8"),
-    `babysit's pull-request-reviewer.mjs is a byte-identical copy of ${parser}`,
-  );
-  assert.doesNotMatch(
-    readFileSync(
-      join(root, "operations/check-pull-request-reviewer.mjs"),
-      "utf8",
-    ),
-    /\.agents\/skills/,
-  );
-  const manifest = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.match(
-    manifest,
-    /script: operations\/check-pull-request-reviewer\.mjs\n {12}resources:\n {14}- operations\/lib\/pull-request-reviewer\.mjs\n {12}arguments/,
-  );
-});
-
-test("adoption and babysit keep the policy reader byte-identical", () => {
-  assert.deepEqual(
-    readFileSync(join(root, "operations/lib/review-policy.mjs")),
-    readFileSync(join(root, ".agents/skills/babysit/review-policy.mjs")),
-  );
-});
-
 test("the GitHub rules hold the runner variable, and its guidance the assessment", () => {
   const rules = flowedText("rules/github-repository-configuration.md");
   for (const requirement of [
