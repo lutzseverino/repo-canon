@@ -653,51 +653,6 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         const expected = profiles.includes(profile) ? 1 : 0;
         assert.equal(rules.length, expected, `${profile} ${declaration}`);
         if (!expected) continue;
-        if (declaration === "github-repository-configuration") {
-          const gate = rules[0].content.replace(/\s+/g, " ");
-          assert.match(gate, /## Designated owner review/);
-          assert.match(
-            gate,
-            /Owner review is required when either the authoritative implementation contract or the worker's handoff says so/,
-          );
-          assert.match(
-            gate,
-            /Resolve the authoritative implementation contract under the contribution guide's Implementation contracts section/,
-          );
-          const guide = readFileSync(
-            join(project, "CONTRIBUTING.md"),
-            "utf8",
-          ).replace(/\s+/g, " ");
-          assert.match(
-            guide,
-            /A directly authored specification or implementation ticket carries its implementation contract in its issue body/,
-          );
-          assert.match(
-            guide,
-            /A triaged request's contract is its latest Agent Brief comment/,
-          );
-          assert.match(
-            gate,
-            /Read both sources; an omission in one does not cancel a designation in the other/,
-          );
-          assert.match(gate, /Any head change requires renewed owner approval/);
-          assert.match(
-            gate,
-            /Record the designation and its source in a PR comment/,
-          );
-          assert.match(
-            gate,
-            /Record the approval's source and head SHA in a PR comment/,
-          );
-          assert.match(
-            gate,
-            /Read these PR comments when verifying designation and current-head approval, including after a handoff or resumed delivery/,
-          );
-          assert.match(
-            gate,
-            /For adoption PRs, keep both records in comments and preserve the body under the contribution guide's adoption-record contract/,
-          );
-        }
         assert.equal(rules[0].coverage, "repository");
         assert.equal(
           rules[0].content,

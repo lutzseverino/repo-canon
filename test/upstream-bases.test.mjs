@@ -321,6 +321,10 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
   const copy = fixture(t);
   const next = nextSnapshot(copy);
   const skill = (name, path) => `skills/engineering/${name}/${path}`;
+  const originalSkill = readFileSync(
+    join(copy, ".agents/skills/grill-with-docs/SKILL.md"),
+    "utf8",
+  );
 
   // A nonconflicting owned skill takes the upstream change.
   edit(next, skill("grill-with-docs", "SKILL.md"), (text) =>
@@ -395,16 +399,9 @@ test("reconciliation three-way merges upstream changes into the owned files", (t
     join(copy, ".agents/skills/grill-with-docs/SKILL.md"),
     "utf8",
   );
-  assert.match(
-    mergedSkill,
-    /A prompt or brief naming this skill is its invocation\./,
-  );
   assert.equal(
-    mergedSkill.replace(
-      "\nA prompt or brief naming this skill is its invocation.\n",
-      "",
-    ),
-    readFileSync(join(next, skill("grill-with-docs", "SKILL.md")), "utf8"),
+    mergedSkill,
+    originalSkill.replace(/\n/, "\nUpstream addition.\n"),
   );
   assert.deepEqual(
     readFileSync(join(copy, ".agents/skills/tdd/NEW.md")),

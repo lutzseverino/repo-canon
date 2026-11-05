@@ -219,18 +219,11 @@ The merge fixtures also cover the repository- and release-hold exit `9`,
 labelled issues and PRs, the shipped configuration, self-exemption,
 multiple holds, closed PRs, removed labels, absent configuration and keys,
 trusted pinned factory configuration, and failed reads without merge writes.
-The delivery conformance cases in `test/repository-conformance.test.mjs`
-cover the shared owner-review gate in both profiles, either designation source
-and its provenance, renewed approval after a head change, standard merge
-ownership, undesignated delivery, and factory worker handoffs and approval-pause
-continuation. They also cover ordinary stopped-run handoff eligibility, retained
-waiting markers, one local recovery before request/wait, replacement-head review
-and approval, merge records and sequential base refresh; the installed babysit
-scripts make no GitHub update-branch call. The merge fixtures exercise a behind
-PR and two initially green PRs delivered sequentially, refusing pending or
-failed replacement-head checks. The public-CLI adoption fixtures in
+The merge fixtures exercise a behind PR and two initially green PRs delivered
+sequentially, refusing pending or failed replacement-head checks.
+The public-CLI adoption fixtures in
 `test/repository-wide-rules.test.mjs` verify that both profiles install the
-shared gate.
+shared GitHub rules byte for byte.
 The public source-validation command and its boundary are described in
 [the source profile](source-profile.md).
 
@@ -273,41 +266,26 @@ Tests check behaviour and structure, never the wording of rules, skills or
 documents; license notices are the one exact text they compare
 ([ADR 0032](../adr/0032-test-behaviour-and-structure-not-wording.md)).
 
-This repository takes the same path every adopter takes, so the suite also runs
-the shipped Repository README, Project README, and documentation checks against
-this repository's own root through the operation request helper, with the
-documentation tree, the root [glossary](../../GLOSSARY.md), and the
-[authoring notes](../../authoring-notes.md) as its documentation scope. The
-repository has no Project README, and `standards.yaml` supplies the other
-active file declarations. The same fixture asserts that only the
-`factory` profile declares the `.factory/` files and the sandbox image
-workflow, that `standards.yaml` declares no pull request reviewer file, and
-that `.factory/config.json` holds factory configuration version 2 with Repo
-Canon's labels, model label prefix, `implement` skill, `#{issue}` arguments,
-and contract-result marker and trusted author, without a `prompt`. It also
-fails if any tracked file reaches the CLI's 8 MiB per-file observation limit,
-which would make the repository uninspectable before any report. It lists each
-declaration that has rules or adoption guidance with its decided outcome, keeps
-every rules file in `rules/`, rejects a rules file holding a one-time step's
-marker phrase, and keeps rules paths out of `AGENTS.md`. It also holds
-`CONTRIBUTING.md` and `AGENTS.md` to fixed word budgets, counting each
-maximal run of non-whitespace characters as a word; a document over its limit
-fails naming the document, its count, and the limit. The limits are constants
-in the test, so raising one is an explicit edit in the same pull request. No
-budget covers declaration rules or retained adoption guidance. It also keeps
-the user-invoked `orchestrate` skill application-independent, checking every file in its
-installed directory and its authoring and adoption guidance for private
-application names, tool mappings and session-reference syntax. It holds that
-skill's core `SKILL.md` to 120 lines, a constant in the test, and requires the
-core to keep its workbench, lifecycle, wait step and report-back sections, link
-its `templates`, `launches` and `close` references, and point to the `factory`
-skill installed in a repository a factory serves. Run it alone
-with `node --test test/repository-conformance.test.mjs`. It needs no separate
-CI step: `pnpm test` already runs it on every pull request.
-The same suite checks every declared source input across every profile for
-branch-following GitHub document links to `lutzseverino` repositories. It
-accepts full commit SHAs and reads published tag and branch refs with
-`git ls-remote`, so this check requires network access to those repositories.
+Run `node --test test/repository-conformance.test.mjs` for the repository's
+own documentation and README checks, profile declarations, factory
+configuration, source size limits, upstream snapshot integrity, installed skill
+structure, and license notices. The suite uses the shared YAML reader for
+`standards.yaml` and the rendered Markdown readers for headings and links.
+It preserves single-home checks, entry-document word budgets, and
+`orchestrate`'s required sections, reference links, application independence and
+120-line core limit. License notices in owned skills and notices linked from
+`THIRD_PARTY_NOTICES.md` are checked against their vendored licenses, including
+fixtures with dropped or altered notices. Rule and skill wording stays with
+pull request review and release skill exercises, as ADR 0032 decides above.
+The fixture-builder suites check repositories' files, issue metadata, linked
+skills, provenance and Git state, and execute their local commands without
+pinning exercise prose.
+
+The conformance suite also checks every declared source input across all
+profiles for branch-following GitHub document links to `lutzseverino`
+repositories. It accepts full commit SHAs and reads published tag and branch
+refs with `git ls-remote`, so this check requires network access. `pnpm test`
+already runs the suite on every pull request.
 
 ## Documents
 
