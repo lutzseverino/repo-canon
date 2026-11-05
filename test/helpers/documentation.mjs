@@ -1,5 +1,4 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { declarations } from "../../scripts/standards-declarations.mjs";
 import { fileURLToPath } from "node:url";
 
 const sourceRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -49,12 +48,12 @@ export const exactOwnedAgentConfiguration = [
 // agent configuration, as covered by scope, so the file declarations of
 // `standards.yaml` are passed as the CLI would.
 export function fileDeclarations() {
-  return readFileSync(join(sourceRoot, "standards.yaml"), "utf8")
-    .split("\n")
-    .flatMap((line) => {
-      const target = /^\s+target: (\S+)$/.exec(line);
-      return target
-        ? [{ kind: "file", target: target[1], checks: [], fixes: [] }]
-        : [];
-    });
+  return [
+    ...new Set(
+      Object.values(declarations(sourceRoot))
+        .flat()
+        .filter(({ kind }) => kind === "file")
+        .map(({ target }) => target),
+    ),
+  ].map((target) => ({ kind: "file", target, checks: [], fixes: [] }));
 }

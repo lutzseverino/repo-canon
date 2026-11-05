@@ -1,3 +1,5 @@
+import { parseStandards } from "../standards-declarations.mjs";
+
 // Finds the Repo Canon and Repository Standards CLI versions that the
 // maintained documents and CI name, and reports where they disagree or where
 // the public copy names a version it must not.
@@ -31,9 +33,6 @@ const cliDocumentationLink =
 const otherTool =
   /\b(?:Git|GitHub CLI|Marked|parse5|Postern)\s+$|`node --version`\s+constrained\s+to\s+`>=(?:\d+\.\d+\.\d+\s+<\d+\.\d+\.\d+\s+\|\|\s+>=)*(?:\d+\.\d+\.\d+\s+<)?$/;
 const repoCanonBaseline = /\bstable\s+`?$/;
-const requiresBlock = /^requires:[ \t]*\r?\n((?:[ \t]+\S.*(?:\r?\n|$))+)/m;
-const requiresFloor =
-  /^[ \t]+repo-standards:[ \t]*(["']?)>=[ \t]*(\d+\.\d+\.\d+)\1[ \t]*\r?$/m;
 
 // Returns each named version with its kind, `repo-canon` or `cli`, and line.
 export function namedVersions(path, text) {
@@ -55,8 +54,10 @@ export function namedVersions(path, text) {
 
 // Returns the CLI version floor of an open-ended `requires` minimum, or null.
 export function cliFloor(standardsText) {
-  const requires = standardsText.match(requiresBlock)?.[1] ?? "";
-  return requires.match(requiresFloor)?.[2] ?? null;
+  const floor = parseStandards(standardsText)?.requires?.["repo-standards"];
+  return typeof floor === "string"
+    ? (floor.match(/^>=\s*(\d+\.\d+\.\d+)$/)?.[1] ?? null)
+    : null;
 }
 
 function location(mention) {

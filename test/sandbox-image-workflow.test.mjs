@@ -1,3 +1,5 @@
+import { declarations } from "../scripts/standards-declarations.mjs";
+import { fileURLToPath } from "node:url";
 import {
   execFixtureGit,
   fixtureGitEnvironment,
@@ -232,14 +234,14 @@ test("the shared workflow always reports on pull requests with read-only permiss
   assert.match(text, /ref: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
   assert.match(text, /fetch-depth: 0/);
   assert.match(text, /persist-credentials: false/);
-  const declarations = readFileSync(
-    new URL("../standards.yaml", import.meta.url),
-    "utf8",
-  );
-  assert.ok(
-    declarations.includes(
-      `factory-sandbox-image-workflow:\n        kind: file\n        target: ${workflowPath}\n        exact: ${workflowPath}\n`,
-    ),
-    "the factory profile declares the workflow",
+  const profiles = declarations(fileURLToPath(new URL("..", import.meta.url)));
+  assert.deepEqual(
+    profiles.factory.find(({ id }) => id === "factory-sandbox-image-workflow"),
+    {
+      id: "factory-sandbox-image-workflow",
+      kind: "file",
+      target: workflowPath,
+      exact: workflowPath,
+    },
   );
 });

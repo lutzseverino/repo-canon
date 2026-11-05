@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -32,11 +33,13 @@ function fixture(t) {
     "standards.yaml",
     "upstream-bases.json",
     "scripts/upstream-bases.mjs",
+    "scripts/standards-declarations.mjs",
     "docs/agents",
     snapshotPath,
     ...ownedSkills(root).map(({ source }) => source),
   ])
     cpSync(join(root, path), join(copy, path), { recursive: true });
+  symlinkSync(join(root, "node_modules"), join(copy, "node_modules"), "dir");
   return copy;
 }
 
@@ -270,7 +273,7 @@ test("a skill taken from upstream without its license notice fails", (t) => {
   ]);
 });
 
-test("malformed edit records and declarations fail instead of passing unchecked", (t) => {
+test("malformed records fail while reordered declaration fields remain valid", (t) => {
   const copy = fixture(t);
   changeRecord(copy, (record) => {
     delete record.files["docs/agents/domain.md"].edits;
@@ -282,9 +285,7 @@ test("malformed edit records and declarations fail instead of passing unchecked"
       "      source: .agents/skills/tdd\n      name: tdd",
     ),
   );
-  const declared = ownedSkills(root).length;
   assert.deepEqual(checkUpstreamBases(copy), [
-    `standards.yaml declares ${declared} skills, but only ${declared - 1} read as kind, name and source in that order`,
     "docs/agents/domain.md (upstream-bases.json) must record edits as null or a summary of how the file differs",
     "docs/agents/triage-labels.md (upstream-bases.json) must record edits as null or a summary of how the file differs",
   ]);

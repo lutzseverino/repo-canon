@@ -1,3 +1,4 @@
+import { parseStandards } from "../standards-declarations.mjs";
 // Verifies an update from the preceding public release without editing the
 // adopted fixture, answering the scope, remote setup and assessment questions.
 // A profile that the preceding release does not declare has no update to
@@ -244,23 +245,13 @@ function checkUpdate({
   });
 }
 
-// The profile names that a `standards.yaml` declares.
-function profileNames(standardsText) {
-  const profiles = /^profiles:[ \t]*\r?\n((?:(?:[ \t]+.*)?\r?\n?)*)/m.exec(
-    standardsText,
-  )?.[1];
-  return [...(profiles ?? "").matchAll(/^ {2}([A-Za-z0-9._-]+):/gm)].map(
-    ([, name]) => name,
-  );
-}
-
 export function checkUpdates(source, version, commit, profiles) {
   try {
     const previous = previousRelease(version);
     const manifest = filesAt(resolveTag(previous))("standards.yaml");
     const floor = cliFloor(manifest);
     if (!floor) fail(`${previous} declares no open-ended CLI minimum.`);
-    const declared = profileNames(manifest);
+    const declared = Object.keys(parseStandards(manifest).profiles ?? {});
     const newest = parseJson(
       successful("npm", [
         "view",

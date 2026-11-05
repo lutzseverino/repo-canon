@@ -1,3 +1,4 @@
+import { declarations } from "../scripts/standards-declarations.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -6,10 +7,14 @@ import test from "node:test";
 const repositoryRoot = new URL("..", import.meta.url).pathname;
 
 function sharedWorkflows() {
-  const profile = readFileSync(join(repositoryRoot, "standards.yaml"), "utf8");
   return [
-    ...profile.matchAll(/^\s+exact: (\.github\/workflows\/\S+\.ya?ml)$/gm),
-  ].map(([, path]) => path);
+    ...new Set(
+      Object.values(declarations(repositoryRoot))
+        .flat()
+        .map(({ exact }) => exact)
+        .filter((path) => path?.startsWith(".github/workflows/")),
+    ),
+  ];
 }
 
 function workflow(path) {

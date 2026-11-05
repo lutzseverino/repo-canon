@@ -1,3 +1,4 @@
+import { declarations } from "../scripts/standards-declarations.mjs";
 import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -13,7 +14,7 @@ import {
   repository,
 } from "./helpers/issue-contracts.mjs";
 import { fileDeclarations } from "./helpers/documentation.mjs";
-import { invokeCheck } from "./helpers/operation.mjs";
+import { declaredOperations, invokeCheck } from "./helpers/operation.mjs";
 
 // Run the shipped documentation checks against the repository's documentation.
 // Source-side guidance, discovery instructions, and vendored material stay out
@@ -37,16 +38,14 @@ function trackedFiles() {
 // Read every source reference in the authored manifest, across both profiles.
 // Directory references select their descendants; adopter target paths do not.
 function sourceInputFiles() {
-  const manifest = readFileSync(join(root, "standards.yaml"), "utf8");
   const paths = new Set(["standards.yaml"]);
-  for (const [, path] of manifest.matchAll(
-    /^\s+(?:exact|guidance|rules|discovery|source|script): (\S+)$/gm,
-  ))
-    paths.add(path);
-  for (const [, resources] of manifest.matchAll(
-    /^\s+resources:\n((?: +-[^\n]+\n)+)/gm,
-  ))
-    for (const [, path] of resources.matchAll(/^ +- (\S+)$/gm)) paths.add(path);
+  for (const declaration of manifestDeclarations())
+    for (const field of ["exact", "guidance", "rules", "discovery", "source"])
+      if (declaration[field]) paths.add(declaration[field]);
+  for (const { run } of declaredOperations(root)) {
+    paths.add(run.script);
+    for (const path of run.resources ?? []) paths.add(path);
+  }
 
   return [...paths].flatMap((path) =>
     lstatSync(join(root, path)).isDirectory()
@@ -212,15 +211,6 @@ test("the repository passes the Repository README check at its root", () => {
   assert.equal(outcome.result.status, "passed", outcome.result.message);
 });
 
-// The declarations of one profile in `standards.yaml`, as its block of text,
-// without the blank lines before the next profile.
-function profileDeclarations(declarations, name) {
-  return new RegExp(
-    `^ {2}${name}:\\n {4}description: .+\\n {4}declarations:((?: \\{\\}|\\n(?: {6}.*\\n|\\n(?= {6}))*))`,
-    "m",
-  ).exec(declarations)?.[1];
-}
-
 // The factory's repository files, which only the factory profile installs.
 const factoryFiles = [
   ".factory/config.json",
@@ -229,82 +219,76 @@ const factoryFiles = [
 ];
 
 test("the standard profile installs no factory file, and the factory profile adds exactly the factory's", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.deepEqual(
-    [...declarations.matchAll(/^ {2}([a-z0-9-]+):\n {4}description:/gm)].map(
-      ([, name]) => name,
-    ),
-    ["standard", "factory", "workbench"],
-  );
-  const defaults = /^defaults:\n([\s\S]*?)^profiles:\n/m.exec(declarations)[1];
-  assert.equal(profileDeclarations(declarations, "standard"), " {}");
-  assert.ok(!defaults.includes("factory-workflow"));
+  const profiles = declarations(root);
+  assert.deepEqual(Object.keys(profiles), ["standard", "factory", "workbench"]);
   for (const path of factoryFiles)
-    assert.ok(
-      !defaults.includes(path),
-      `the standard profile must not install ${path}`,
-    );
-
-  assert.equal(
-    profileDeclarations(declarations, "factory"),
-    `
-      skill-factory:
-        kind: skill
-        name: factory
-        source: .agents/skills/factory
-
-      factory-configuration:
-        kind: file
-        target: .factory/config.json
-        exact: .factory/config.json
-
-      factory-workflow:
-        kind: repository
-        rules: rules/factory-workflow.md
-        guidance: guidance/factory-workflow.md
-        discovery: discovery/factory-workflow.md
-
-      factory-sandbox-image:
-        kind: file
-        target: .factory/Dockerfile
-        rules: rules/factory-sandbox-image.md
-        guidance: guidance/factory-sandbox-image.md
-
-      factory-sandbox-image-workflow:
-        kind: file
-        target: .github/workflows/sandbox-image.yml
-        exact: .github/workflows/sandbox-image.yml
-`,
-    "the factory profile adds the configuration exactly, the Dockerfile as contextual with its rules and adoption guidance, and the workflow exactly",
+    assert.ok(!profiles.standard.some(({ target }) => target === path));
+  assert.ok(!profiles.standard.some(({ id }) => id === "factory-workflow"));
+  assert.deepEqual(
+    profiles.factory.filter(
+      ({ id }) => !profiles.standard.some((entry) => entry.id === id),
+    ),
+    [
+      {
+        id: "skill-factory",
+        kind: "skill",
+        name: "factory",
+        source: ".agents/skills/factory",
+      },
+      {
+        id: "factory-configuration",
+        kind: "file",
+        target: ".factory/config.json",
+        exact: ".factory/config.json",
+      },
+      {
+        id: "factory-workflow",
+        kind: "repository",
+        rules: "rules/factory-workflow.md",
+        guidance: "guidance/factory-workflow.md",
+        discovery: "discovery/factory-workflow.md",
+      },
+      {
+        id: "factory-sandbox-image",
+        kind: "file",
+        target: ".factory/Dockerfile",
+        rules: "rules/factory-sandbox-image.md",
+        guidance: "guidance/factory-sandbox-image.md",
+      },
+      {
+        id: "factory-sandbox-image-workflow",
+        kind: "file",
+        target: ".github/workflows/sandbox-image.yml",
+        exact: ".github/workflows/sandbox-image.yml",
+      },
+    ],
   );
 });
 
 test("both profiles inherit the exact standards update workflow from defaults", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  const defaults = /^defaults:\n([\s\S]*?)^profiles:\n/m.exec(declarations)[1];
-  assert.match(
-    defaults,
-    /^ {4}standards-update-workflow:\n {6}kind: file\n {6}target: \.github\/workflows\/standards-update.yml\n {6}exact: \.github\/workflows\/standards-update.yml$/m,
-  );
   for (const profile of ["standard", "factory"])
-    assert.doesNotMatch(
-      profileDeclarations(declarations, profile),
-      /standards-update-workflow:/,
+    assert.deepEqual(
+      declarations(root)[profile].find(
+        ({ id }) => id === "standards-update-workflow",
+      ),
+      {
+        id: "standards-update-workflow",
+        kind: "file",
+        target: ".github/workflows/standards-update.yml",
+        exact: ".github/workflows/standards-update.yml",
+      },
     );
 });
 
 test("the standards retire the in-repository factory, its sandbox base, and the issue-contract kind runtime", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  const manifest = JSON.stringify(declarations(root));
   for (const retired of [
     ".sandcastle",
     "sandbox-image-base",
     "check-sandbox-image",
     "issue-contract-kind",
   ])
-    assert.ok(
-      !declarations.includes(retired),
-      `standards.yaml names ${retired}`,
-    );
+    assert.ok(!manifest.includes(retired), `standards.yaml names ${retired}`);
   for (const path of [
     ".sandcastle",
     "operations/check-sandbox-image.mjs",
@@ -355,16 +339,13 @@ test("self-adoption leaves Repo Canon's own installed source unvendored", () => 
 // Every declaration in `standards.yaml`, with the source files its `guidance`
 // and `rules` fields name.
 function manifestDeclarations() {
-  const manifest = readFileSync(join(root, "standards.yaml"), "utf8");
   return [
-    ...manifest.matchAll(
-      /^( +)([a-z0-9-]+):\n(\1 {2}kind: .*\n(?:\1 {2}.*\n)*)/gm,
-    ),
-  ].map(([, indent, id, body]) => {
-    const field = (name) =>
-      new RegExp(`^${indent} {2}${name}: (\\S+)$`, "m").exec(body)?.[1];
-    return { id, guidance: field("guidance"), rules: field("rules") };
-  });
+    ...new Map(
+      Object.values(declarations(root))
+        .flat()
+        .map((entry) => [JSON.stringify(entry), entry]),
+    ).values(),
+  ];
 }
 
 test("each declaration with rules or adoption guidance has its decided outcome", () => {
@@ -636,7 +617,7 @@ test("CONTRIBUTING.md and AGENTS.md stay within their word budgets", () => {
 
 test("standards.yaml declares no pull request reviewer file", () => {
   assert.doesNotMatch(
-    readFileSync(join(root, "standards.yaml"), "utf8"),
+    JSON.stringify(declarations(root)),
     /pull-request-reviewer\.json/,
   );
 });
@@ -708,12 +689,9 @@ const upstreamManifest = JSON.parse(
 );
 
 function declaredSkills() {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  return [
-    ...declarations.matchAll(
-      /^ {6,8}kind: skill\n {6,8}name: ([^\s]+)\n {6,8}source: ([^\s]+)/gm,
-    ),
-  ].map((match) => ({ name: match[1], source: match[2] }));
+  return manifestDeclarations()
+    .filter(({ kind }) => kind === "skill")
+    .map(({ name, source }) => ({ name, source }));
 }
 
 function snapshotFiles(directory, prefix = "") {
@@ -792,19 +770,18 @@ test("adoption declares exactly the workflow skills and no show-me skill", () =>
 });
 
 test("both profiles install HumanLayer's pinned upstream license beside the skills", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  const defaults = /^defaults:\n([\s\S]*?)^profiles:\n/m.exec(declarations)[1];
-  assert.match(
-    defaults,
-    /^ {4}humanlayer-skills-license:\n {6}kind: file\n {6}target: \.agents\/skills\/LICENSE\.humanlayer-skills\n {6}exact: vendor\/humanlayer-skills\/LICENSE$/m,
-  );
-  for (const profile of ["standard", "factory"]) {
-    assert.doesNotMatch(
-      profileDeclarations(declarations, profile),
-      /humanlayer-skills-license/,
-      `${profile} inherits the default license declaration unchanged`,
+  for (const profile of ["standard", "factory"])
+    assert.deepEqual(
+      declarations(root)[profile].find(
+        ({ id }) => id === "humanlayer-skills-license",
+      ),
+      {
+        id: "humanlayer-skills-license",
+        kind: "file",
+        target: ".agents/skills/LICENSE.humanlayer-skills",
+        exact: "vendor/humanlayer-skills/LICENSE",
+      },
     );
-  }
 
   const directory = join(root, "vendor/humanlayer-skills");
   assert.deepEqual(snapshotFiles(directory).sort(), [
@@ -850,13 +827,8 @@ test("operations retaining third-party notices also retain every linked license"
   const licenses = [...notices.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)].map(
     ([, path]) => path,
   );
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  const resources = [
-    ...declarations.matchAll(/^([ ]+)resources:\n((?:\1 {2}- [^\n]+\n)+)/gm),
-  ]
-    .map(([, , block]) =>
-      [...block.matchAll(/- ([^\n]+)/g)].map(([, path]) => path),
-    )
+  const resources = declaredOperations(root)
+    .map(({ run }) => run.resources ?? [])
     .filter((paths) => paths.includes("THIRD_PARTY_NOTICES.md"));
   assert.ok(resources.length > 0, "at least one operation retains the notices");
   for (const paths of resources) {
@@ -942,7 +914,7 @@ test("installed skills route to no uninstalled vendored skill", () => {
 });
 
 test("the owned setup files install from themselves and record how they differ from their v1.3.1 seeds", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
+  const declared = manifestDeclarations();
   const bases = JSON.parse(
     readFileSync(join(root, "upstream-bases.json"), "utf8"),
   ).files;
@@ -960,7 +932,9 @@ test("the owned setup files install from themselves and record how they differ f
     },
   ]) {
     assert.ok(
-      declarations.includes(`target: ${target}\n      exact: ${target}\n`),
+      declared.some(
+        (entry) => entry.target === target && entry.exact === target,
+      ),
     );
     const sameAsSeed =
       createHash("sha256")
@@ -1141,12 +1115,11 @@ test("owned skills state what the rules require instead of being overridden", ()
 });
 
 test("adoption installs the model-invocable babysit skill in place of deliver", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.match(
-    declarations,
-    /\n {4}skill-babysit:\n {6}kind: skill\n {6}name: babysit\n {6}source: \.agents\/skills\/babysit\n/,
+  assert.deepEqual(
+    declaredSkills().find((skill) => skill.name === "babysit"),
+    { name: "babysit", source: ".agents/skills/babysit" },
   );
-  assert.doesNotMatch(declarations, /deliver/);
+  assert.ok(!declaredSkills().some(({ name }) => name === "deliver"));
   const frontmatter =
     /^---\n([\s\S]*?)\n---\n/.exec(
       readFileSync(join(root, ".agents/skills/babysit/SKILL.md"), "utf8"),
@@ -1176,10 +1149,9 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
 });
 
 test("adoption installs Repo Canon's own triage, which credits its upstream base", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.match(
-    declarations,
-    /\n {4}skill-triage:\n {6}kind: skill\n {6}name: triage\n {6}source: \.agents\/skills\/triage\n/,
+  assert.deepEqual(
+    declaredSkills().find((skill) => skill.name === "triage"),
+    { name: "triage", source: ".agents/skills/triage" },
   );
   const owned = join(root, ".agents/skills/triage");
   assert.deepEqual(snapshotFiles(owned).sort(), [
@@ -1392,10 +1364,14 @@ test("triage keeps workflow-only skips undesignated and factory routing conditio
 });
 
 test("installed agent guidance governs covered and uncovered delegation by every agent", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.match(
-    declarations,
-    /\n {4}agent-guidance:\n {6}kind: file\n {6}target: AGENTS\.md\n {6}exact: AGENTS\.md\n/,
+  assert.deepEqual(
+    declarations(root).standard.find((entry) => entry.id === "agent-guidance"),
+    {
+      id: "agent-guidance",
+      kind: "file",
+      target: "AGENTS.md",
+      exact: "AGENTS.md",
+    },
   );
   const guidance = flowedText("AGENTS.md");
   for (const requirement of [
@@ -1436,10 +1412,16 @@ test("installed session naming applies to launched and owned sessions where supp
 });
 
 test("installed contribution guidance separates grill domain edits from workbench delivery", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.match(
-    declarations,
-    /\n {4}contribution-guidance:\n {6}kind: file\n {6}target: CONTRIBUTING\.md\n {6}exact: CONTRIBUTING\.md\n/,
+  assert.deepEqual(
+    declarations(root).standard.find(
+      (entry) => entry.id === "contribution-guidance",
+    ),
+    {
+      id: "contribution-guidance",
+      kind: "file",
+      target: "CONTRIBUTING.md",
+      exact: "CONTRIBUTING.md",
+    },
   );
   const triage = flowedText("CONTRIBUTING.md")
     .split("## Triage ")[1]
@@ -1459,10 +1441,9 @@ test("installed contribution guidance separates grill domain edits from workbenc
 });
 
 test("adoption installs Repo Canon's user-invoked orchestrate skill, which credits chief-of-staff", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.match(
-    declarations,
-    /\n {4}skill-orchestrate:\n {6}kind: skill\n {6}name: orchestrate\n {6}source: \.agents\/skills\/orchestrate\n/,
+  assert.deepEqual(
+    declaredSkills().find((skill) => skill.name === "orchestrate"),
+    { name: "orchestrate", source: ".agents/skills/orchestrate" },
   );
   const directory = join(root, ".agents/skills/orchestrate");
   assert.deepEqual(snapshotFiles(directory).sort(), [
@@ -2380,7 +2361,7 @@ test("only first factory selection asks about separate post-run app-author polic
     /Repo Canon ships no policy declaration or default exemption/,
   );
   assert.doesNotMatch(
-    readFileSync(join(root, "standards.yaml"), "utf8"),
+    JSON.stringify(declarations(root)),
     /factory-review-policy\.json|pull-request-reviewer\.json/,
   );
 });
@@ -2491,8 +2472,11 @@ test("both babysit exit-1 instructions defer permission refusals to Credentials"
 });
 
 test("the installed delivery route honors prescribed worker handoffs before merging", () => {
-  const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
-  assert.ok(declarations.includes("target: AGENTS.md\n      exact: AGENTS.md"));
+  assert.ok(
+    manifestDeclarations().some(
+      ({ target, exact }) => target === "AGENTS.md" && exact === target,
+    ),
+  );
   assert.ok(
     flowedText("AGENTS.md").includes(
       "Deliver every change as one pull request: open it and write its body as `CONTRIBUTING.md` says, using `pr` where it directs, then `babysit` it through merge or the prescribed handoff.",

@@ -1,3 +1,4 @@
+import { parseStandards } from "../scripts/standards-declarations.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -70,7 +71,9 @@ function oneOccurrenceChanged(text, literal, replacement) {
 
 // The CLI floor, read independently of the checker.
 function cliFloor(files) {
-  return files.get(standards).match(/repo-standards: ">=(\d+\.\d+\.\d+)"/)[1];
+  return parseStandards(files.get(standards)).requires["repo-standards"].slice(
+    2,
+  );
 }
 
 test("the named Repo Canon and CLI versions agree on main", () => {

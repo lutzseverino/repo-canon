@@ -1,3 +1,4 @@
+import { declarations } from "../scripts/standards-declarations.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
@@ -248,9 +249,9 @@ test("Repo Canon keeps its own reviewer data outside standards ownership", () =>
     ),
   );
   assert.equal(configured.account, "chatgpt-codex-connector[bot]");
-  const declarations = readFileSync(
-    new URL("../standards.yaml", import.meta.url),
-    "utf8",
+  assert.ok(
+    !Object.values(declarations(sourceRoot))
+      .flat()
+      .some(({ target }) => target === ".github/pull-request-reviewer.json"),
   );
-  assert.doesNotMatch(declarations, /pull-request-reviewer\.json/);
 });
