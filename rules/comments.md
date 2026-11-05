@@ -144,9 +144,9 @@ such an issue, never into a separate unticketed pull request.
 
 In a repository a factory serves, issues stay clean. Beyond its contract and
 triage notes, an issue carries the factory's run comment and action comments,
-and a parent its close notice. An agent's posts on an issue are action comments
-too: a question for the owner, a reporter or a grill, its answer or recorded
-decision, or a stop note. Findings, reviews, delivery records and fix
+and a parent its close notice. An agent posts on an issue only when a person
+must act or has acted: a question for the owner, a reporter or a grill, its
+answer or recorded decision, or a stop note. Findings, reviews, delivery records and fix
 discussion go on the pull request; a run without one links its findings where
 the contribution guide's Findings section says.
 

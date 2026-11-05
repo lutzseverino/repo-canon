@@ -63,8 +63,8 @@ their citations, and shows the decision inbox; log those items in `log.md`.
    `Suggestions (not decisions)` in the issue you file, posted as
    `.repo-standards/rules/comments.md#disclaimers` says.
 3. **Grill.** When the guide's inference test cannot settle an intent question,
-   open a grill with the owner. Then decide the split, file the issues and
-   accept the briefs, as the guide says, marking drafts as the
+   open a grill with the owner. Then decide the split, file the issues as step 2
+   says and accept the briefs, as the guide says, marking drafts as the
    [wiki rules](references/templates.md#layout) say.
 4. **Run.** Launch the plan's ticket workers and observe progress. Handle a
    Finding as the contribution guide's Findings section says, even outside the
@@ -72,8 +72,8 @@ their citations, and shows the decision inbox; log those items in `log.md`.
    mid-plan, unless the owner wants it now, takes one route:
    - **Row:** it serves the goal and passes the guide's inference test. Add it
      as a row, log it, and list it in the next plan update.
-   - **Amendment:** it changes the goal or the scope. Propose it; once the owner
-     approves, it applies, recorded as a new approval line superseding the old one.
+   - **Amendment:** it changes the goal or scope. Propose it; it applies once
+     the owner approves, recorded as a new approval line superseding the old.
    - **Wish:** it lies outside the goal and is not a Finding. Add it to
      `wishes.md`; it needs no issue merely because it is a wish.
 5. **Close.** Once every row has ended, reconcile the plan's issues, run its
