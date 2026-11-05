@@ -93,7 +93,7 @@ defaults:
             executable: node
             script: operations/check-pull-request-reviewer.mjs
             resources:
-              - operations/lib/pull-request-reviewer.mjs
+              - .agents/skills/babysit/pull-request-reviewer.mjs
             arguments: []
           prerequisite:
             version-arguments: ["--version"]
@@ -104,7 +104,7 @@ defaults:
             executable: node
             script: operations/check-factory-review-policy.mjs
             resources:
-              - operations/lib/review-policy.mjs
+              - .agents/skills/babysit/review-policy.mjs
             arguments: []
           prerequisite:
             version-arguments: ["--version"]

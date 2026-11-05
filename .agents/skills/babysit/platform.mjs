@@ -107,6 +107,89 @@ export async function requestData(connection, request) {
   return (await connection.access.request(request)).data;
 }
 
+// Paths are named by the caller. An existing snapshot keeps later reads at the
+// same immutable revision, including the merge guard's final configuration read.
+export async function pinnedFiles(connection, paths, snapshot) {
+  const repository = connection.repository.path;
+  const [owner, name] = repository.split("/");
+  const query = async (source, variables = {}) => {
+    const response = await requestData(connection, {
+      method: "POST",
+      path: "/graphql",
+      body: { query: source, variables: { owner, name, ...variables } },
+    });
+    if (response?.errors?.length || !response?.data?.repository)
+      throw new Error(`Could not read pinned files for ${repository}.`);
+    return response.data.repository;
+  };
+  if (!snapshot) {
+    const destination =
+      await query(`query PinnedFilesRevision($owner: String!, $name: String!) {
+      repository(owner: $owner, name: $name) {
+        nameWithOwner
+        defaultBranchRef { name target { __typename oid } }
+      }
+    }`);
+    const branch = destination.defaultBranchRef;
+    const revision = branch?.target?.oid;
+    if (
+      destination.nameWithOwner?.toLowerCase() !== repository.toLowerCase() ||
+      typeof branch?.name !== "string" ||
+      !branch.name ||
+      branch.target?.__typename !== "Commit" ||
+      !/^[0-9a-f]{40}$/i.test(revision ?? "")
+    )
+      throw new Error(
+        `Could not resolve the default-branch commit for ${repository}.`,
+      );
+    snapshot = {
+      revision,
+      evidence: `${repository} default branch ${branch.name}@${revision}`,
+    };
+  }
+  const { revision, evidence } = snapshot;
+  try {
+    const entries = Object.entries(paths);
+    const result = await query(
+      `query PinnedFiles($owner: String!, $name: String!, $revision: GitObjectID!${entries.map(([key]) => `, $${key}: String!`).join("")}) {
+        repository(owner: $owner, name: $name) {
+          commit: object(oid: $revision) { __typename oid }
+          ${entries.map(([key]) => `${key}: object(expression: $${key}) { __typename ... on Blob { text isTruncated } }`).join("\n")}
+        }
+      }`,
+      {
+        revision,
+        ...Object.fromEntries(
+          entries.map(([key, path]) => [key, `${revision}:${path}`]),
+        ),
+      },
+    );
+    if (
+      result.commit?.__typename !== "Commit" ||
+      result.commit.oid !== revision
+    )
+      throw new Error("Could not read the pinned commit.");
+    const files = Object.fromEntries(
+      entries.map(([key, path]) => {
+        const blob = result[key];
+        // Only explicit null in a successful response proves optional absence.
+        if (blob === null) return [key, null];
+        if (
+          blob?.__typename !== "Blob" ||
+          blob.isTruncated !== false ||
+          typeof blob.text !== "string"
+        )
+          throw new Error(`Could not read complete ${path}.`);
+        return [key, blob.text];
+      }),
+    );
+    return { revision, files, evidence };
+  } catch (error) {
+    if (error instanceof PlatformError) throw error;
+    throw new Error(`${evidence}: ${error.message}`, { cause: error });
+  }
+}
+
 export async function pages(connection, path) {
   return (await connection.access.requestPages({ path })).map(
     (page) => page.data,

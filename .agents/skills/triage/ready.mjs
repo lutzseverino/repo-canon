@@ -8,6 +8,7 @@ import {
 import {
   connectionFor,
   executedAsScript,
+  pinnedFiles,
   requestData,
 } from "../babysit/platform.mjs";
 
@@ -16,61 +17,17 @@ const readiness = new Set(["ready-for-agent", "ready-for-human"]);
 // Eligibility follows installed rules in the selected destination, independently
 // of the checkout that supplies this command. Pin the default tip before reading.
 async function factoryPolicy(connection) {
-  const repository = connection.repository.path;
-  const [owner, name] = repository.split("/");
-  const query = async (source, variables = {}) => {
-    const response = await requestData(connection, {
-      method: "POST",
-      path: "/graphql",
-      body: { query: source, variables: { owner, name, ...variables } },
+  try {
+    const { files, evidence } = await pinnedFiles(connection, {
+      rules: ".repo-standards/rules/factory-workflow.md",
     });
-    if (response?.errors?.length || !response?.data?.repository)
-      throw new Error(
-        `Could not establish factory applicability for ${repository}.`,
-      );
-    return response.data.repository;
-  };
-  const destination =
-    await query(`query TriageReadinessPolicy($owner: String!, $name: String!) {
-    repository(owner: $owner, name: $name) {
-      nameWithOwner
-      defaultBranchRef { name target { __typename oid } }
-    }
-  }`);
-  const branch = destination.defaultBranchRef;
-  const revision = branch?.target?.oid;
-  if (
-    destination.nameWithOwner?.toLowerCase() !== repository.toLowerCase() ||
-    typeof branch?.name !== "string" ||
-    !branch.name ||
-    branch.target?.__typename !== "Commit" ||
-    !/^[0-9a-f]{40}$/i.test(revision ?? "")
-  )
+    return { factory: files.rules !== null, evidence };
+  } catch (error) {
     throw new Error(
-      `Could not establish factory applicability for ${repository}: missing default-branch commit.`,
+      `Could not establish factory applicability: ${error.message}`,
+      { cause: error },
     );
-  const evidence = `${repository} default branch ${branch.name}@${revision}`;
-  const files = await query(
-    `query TriageFactoryRules($owner: String!, $name: String!, $revision: GitObjectID!, $rules: String!) {
-    repository(owner: $owner, name: $name) {
-      commit: object(oid: $revision) { __typename oid }
-      rules: object(expression: $rules) { __typename }
-    }
-  }`,
-    {
-      revision,
-      rules: `${revision}:.repo-standards/rules/factory-workflow.md`,
-    },
-  );
-  if (
-    files.commit?.__typename !== "Commit" ||
-    files.commit.oid !== revision ||
-    !(files.rules === null || files.rules?.__typename === "Blob")
-  )
-    throw new Error(
-      `Could not establish factory applicability at ${evidence}.`,
-    );
-  return { factory: files.rules !== null, evidence };
+  }
 }
 
 async function actingAccount(connection) {

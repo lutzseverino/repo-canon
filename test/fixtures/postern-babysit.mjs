@@ -133,7 +133,10 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       );
     }
     if (path === "/graphql") {
-      if (body.query.includes("BabysitReleaseHold")) {
+      if (
+        body.query.includes("query PinnedFiles(") &&
+        "factory" in body.variables
+      ) {
         if (state.afterReleaseHold) {
           Object.assign(state, state.afterReleaseHold);
           delete state.afterReleaseHold;
@@ -175,7 +178,7 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
           },
         );
       }
-      if (body.query.includes("BabysitReviewRevision")) {
+      if (body.query.includes("PinnedFilesRevision")) {
         if (state.traceReviewConfiguration) {
           state.configurationReads = [
             ...(state.configurationReads ?? []),
@@ -202,7 +205,7 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
           },
         );
       }
-      if (body.query.includes("BabysitReviewConfiguration")) {
+      if (body.query.includes("query PinnedFiles(")) {
         const revision = body.variables.revision;
         const config =
           state.reviewSnapshots?.[revision] ?? state.reviewConfiguration ?? {};
