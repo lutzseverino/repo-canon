@@ -5,8 +5,7 @@ import { parse } from "yaml";
 // Release checks also read historical manifests supplied as text.
 export const parseStandards = parse;
 
-// Resolved declarations retain the manifest's fields, including operation runs.
-// Profile entries replace defaults; exclusions remove a declaration entirely.
+// Resolve defaults, replacements and exclusions without changing other fields.
 export function declarations(root) {
   const { defaults = {}, profiles } = parseStandards(
     readFileSync(join(root, "standards.yaml"), "utf8"),
