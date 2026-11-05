@@ -137,6 +137,28 @@ test("every lutzseverino GitHub document link in source inputs is pinned", () =>
   }
 });
 
+// ADR 0031 renamed the workflow states and categories into label families and
+// removed `factory:needs-input`. Installed text names only the new labels; the
+// vendored upstream snapshot and each skill's credits describe upstream's own
+// roles, the triage label mapping's first column names them, and label setup
+// names the former labels it renames.
+test("no source input names a label that ADR 0031 renamed or removed", () => {
+  const former =
+    /(?<![\w-])(?:needs-triage|needs-info|ready-for-agent|ready-for-human|needs-input|needsInput)(?![\w-])/;
+  for (const path of sourceInputFiles()) {
+    if (
+      path.startsWith("vendor/") ||
+      path.endsWith("/CREDITS.md") ||
+      path === "operations/setup-github-labels.mjs"
+    )
+      continue;
+    let text = readFileSync(join(root, path), "utf8");
+    if (path === "docs/agents/triage-labels.md")
+      text = text.replace(/^\| `[\w-]+` +\|/gm, "|");
+    assert.doesNotMatch(text, former, path);
+  }
+});
+
 test("no source input names the retained source layout", () => {
   // Repository Standards runs and retains source inputs; they cite its
   // commands, never where it keeps them.
@@ -536,10 +558,11 @@ test("standards.yaml declares no pull request reviewer or app-author policy file
   );
 });
 
-// The shipped configuration targets Scriptorium v3.0.0's configuration version 2:
-// exactly these fields, eight labels distinct ignoring case, the skill and its
-// issue argument, and the contract result's marker and trusted author. This
-// repository imports no factory code; the exact shape pins the file.
+// The shipped configuration keeps configuration version 2's fields without
+// `needsInput`, which ADR 0031 removes: seven labels distinct ignoring case,
+// the skill and its issue argument, and the contract result's marker and
+// trusted author. This repository imports no factory code; the exact shape
+// pins the file.
 test("the factory configuration names Repo Canon's labels, skill, and trusted contract result", () => {
   const configuration = JSON.parse(
     readFileSync(join(root, ".factory/config.json"), "utf8"),
@@ -554,13 +577,12 @@ test("the factory configuration names Repo Canon's labels, skill, and trusted co
   assert.deepEqual(configuration, {
     version: 2,
     labels: {
-      ready: "ready-for-agent",
+      ready: "state:ready",
       skip: "factory:skip",
       hold: "factory:hold",
       releaseHold: "factory:release-hold",
       running: "factory:running",
       failed: "factory:failed",
-      needsInput: "factory:needs-input",
       paused: "factory:paused",
     },
     modelLabelPrefix: "model:",
@@ -1193,7 +1215,7 @@ test("delivery and triage requirements keep their single homes", () => {
     ],
     [
       [".agents/skills/orchestrate/SKILL.md"],
-      /Never infer a default|readiness label|`ready-for-agent`/,
+      /Never infer a default|readiness label|`state:ready`/,
     ],
     [
       [
@@ -1311,7 +1333,7 @@ test("the comment rules' triage disclaimer example passes the issue-contract che
     issue: {
       number: 42,
       body: featureBody,
-      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+      labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
       state: "open",
     },
     comments: [

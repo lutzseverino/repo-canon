@@ -12,7 +12,12 @@ function fixture() {
       {
         number: 1,
         state: "closed",
-        labels: ["ready-for-agent", "factory:failed", "model:x", "enhancement"],
+        labels: [
+          "state:ready",
+          "factory:failed",
+          "model:x",
+          "type:enhancement",
+        ],
       },
     ],
     [
@@ -20,12 +25,16 @@ function fixture() {
       {
         number: 2,
         state: "closed",
-        labels: ["wontfix", "model:x", "bug", "unrelated"],
+        labels: ["wontfix", "model:x", "type:bug", "unrelated"],
       },
     ],
     [
       3,
-      { number: 3, state: "open", labels: ["needs-info", "factory:running"] },
+      {
+        number: 3,
+        state: "open",
+        labels: ["state:reporter", "factory:running"],
+      },
     ],
   ]);
   const connection = {
@@ -74,9 +83,9 @@ test("dry run reports exact per-repository removals without writes", async () =>
   );
   assert.deepEqual(state.writes, []);
   assert.deepEqual(state.output, [
-    'owner/one#1: would remove ["ready-for-agent","factory:failed"]',
+    'owner/one#1: would remove ["state:ready","factory:failed"]',
     "owner/one: dry run; 3 scanned, 1 needing cleanup, 0 labels removed, 0 failures",
-    'owner/two#1: would remove ["ready-for-agent","factory:failed"]',
+    'owner/two#1: would remove ["state:ready","factory:failed"]',
     "owner/two: dry run; 3 scanned, 1 needing cleanup, 0 labels removed, 0 failures",
   ]);
 });
@@ -85,15 +94,15 @@ test("execution clears only closed issues and a second sweep writes nothing", as
   const state = fixture();
   assert.equal(await run(state, ["--repo", "owner/one", "--apply"]), 0);
   assert.deepEqual(state.writes, [
-    [1, "ready-for-agent"],
+    [1, "state:ready"],
     [1, "factory:failed"],
   ]);
   assert.deepEqual(
     [...state.issues.values()].map(({ labels }) => labels),
     [
-      ["model:x", "enhancement"],
-      ["wontfix", "model:x", "bug", "unrelated"],
-      ["needs-info", "factory:running"],
+      ["model:x", "type:enhancement"],
+      ["wontfix", "model:x", "type:bug", "unrelated"],
+      ["state:reporter", "factory:running"],
     ],
   );
   assert.equal(
@@ -123,7 +132,7 @@ test("failures are reported per repository with partial removals and a failing r
     (line) => state.output.push(line),
   );
   assert.equal(code, 1);
-  assert.deepEqual(state.writes, [[1, "ready-for-agent"]]);
+  assert.deepEqual(state.writes, [[1, "state:ready"]]);
   assert.ok(state.output.includes("owner/one#1: FAILED: GitHub unavailable"));
   assert.ok(
     state.output.includes(
@@ -154,7 +163,7 @@ test("a permission refusal stops all targets without a second mutation or identi
     );
     assert.equal(code, 1);
     assert.deepEqual(targets, ["owner/one"]);
-    assert.deepEqual(state.writes, [[1, "ready-for-agent"]]);
+    assert.deepEqual(state.writes, [[1, "state:ready"]]);
     assert.equal(
       state.output.at(-1),
       "owner/one: applied; 1 scanned, 1 needing cleanup, 0 labels removed, 1 failures",

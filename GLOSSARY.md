@@ -172,10 +172,10 @@ _Avoid_: Reporter, when meaning the owner or the factory
 
 **Frontier**:
 The open issues the factory may pick up: those carrying readiness it accepts,
-with no open native blocker, and neither claimed, marked failed or skipped,
-nor waiting for an answer under `factory:needs-input`. An issue a gate holds
-stays on the frontier; one waiting for an answer returns when its question is
-answered and the label removed.
+with no open native blocker, and neither claimed, marked failed or skipped.
+An issue a gate holds stays on the frontier; one waiting for an answer in
+another workflow state returns when its question is answered and it is back
+in `state:ready`.
 _Avoid_: Backlog, queue
 
 **Host configuration**:

@@ -202,8 +202,8 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     join(triageWayfinder.path, ".scratch/triage/01-export-receipts.md"),
     "utf8",
   );
-  assert.match(triageIntake, /^Status: needs-triage$/m);
-  assert.doesNotMatch(triageIntake, /ready-for-agent/);
+  assert.match(triageIntake, /^Status: state:triage$/m);
+  assert.doesNotMatch(triageIntake, /state:ready/);
   assert.equal(
     readdirSync(join(triageWayfinder.path, ".scratch/triage")).includes(
       "revisions",
@@ -222,7 +222,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     );
     assert.ok(text.includes(`Blocked by: ${blocker}\n`));
     assert.ok(text.includes(`Status: ${status}\n`));
-    assert.doesNotMatch(text, /ready-for-agent|needs-triage|model:/);
+    assert.doesNotMatch(text, /state:ready|state:triage|model:/);
   }
   const routing = manifest.repositories["triage-routing"];
   const orchestrate = manifest.repositories.orchestrate;
@@ -311,7 +311,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "03-accept-export-on-staging.md",
   ]) {
     const text = readFileSync(join(rollout, "issues", ticket), "utf8");
-    assert.match(text, /^Status: ready-for-agent$/m);
+    assert.match(text, /^Status: state:ready$/m);
     assert.match(text, /^Labels: .*model:.*factory:skip$/m);
     assert.match(text, /^Blocked by: 01 \(closed\)$/m);
   }
@@ -328,7 +328,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     ),
     "utf8",
   );
-  assert.match(factoryIntake, /^Status: needs-triage$/m);
+  assert.match(factoryIntake, /^Status: state:triage$/m);
   assert.deepEqual(routing.skills, ["triage"]);
   const issues = join(routing.path, ".scratch/routing/issues");
   assert.deepEqual(readdirSync(issues).sort(), [
@@ -344,7 +344,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   ])
     assert.match(
       readFileSync(join(issues, file), "utf8"),
-      new RegExp(`^Status: needs-triage\nCategory: ${category}$`, "m"),
+      new RegExp(`^Status: state:triage\nCategory: ${category}$`, "m"),
     );
   // The seeded first revision passes the shape check yet must not be
   // accepted, so the exercise can show that structure never grants it.
@@ -364,7 +364,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       number: 1,
       node_id: "ISSUE_1",
       body: "## Problem\n\nExporting a date with no deliveries fails.\n",
-      labels: [{ name: "bug" }, { name: "needs-triage" }],
+      labels: [{ name: "type:bug" }, { name: "state:triage" }],
       state: "open",
     },
     comments: [
@@ -422,7 +422,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       issue: {
         number: 1,
         body: "Intake context.",
-        labels: [{ name: "bug" }, { name: "needs-triage" }],
+        labels: [{ name: "type:bug" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [

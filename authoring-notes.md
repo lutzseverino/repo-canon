@@ -378,11 +378,28 @@ repeated.
   and the mechanism that
   enforces them in
   [issue contract validation](docs/development/issue-contract-validation.md).
-- `ready-for-human` marks only work that needs the owner's own accounts or
-  credentials, or a taste call the owner reserved. The owner decided this on
-  2026-10-25, after the label had also marked agent work the factory could not
-  run and confused them. Agent work the factory must not pick up carries
-  `ready-for-agent`, a `model:` label and `factory:skip`. The
+- Every label Repo Canon defines, apart from `wontfix`, belongs to a family
+  named by its prefix, as
+  [ADR 0031](docs/adr/0031-name-labels-by-family.md) decides: exactly one
+  `state:` label on an open issue names whom it waits on (`triage`,
+  `reporter`, `grill`, `owner`, `ready`), and `gate:`, `factory:`, `type:`,
+  `priority:` and `model:` are separate families. The owner decided this on
+  2026-11-04 (plan 16, D11), removing `factory:needs-input`: a stop on a
+  question sets the state for whoever must answer, and an answered question
+  returns to `state:ready`. `state:reporter` is only for a fact an outside
+  reporter holds (D10). Triage sets `priority:` by the rubric in the
+  [GitHub repository configuration rules](rules/github-repository-configuration.md#labels)
+  and never replaces a person's (D12). The brief named no family for
+  `wontfix`, so it stays the closing outcome. Label setup renames each former
+  label with a one-to-one successor in place: `needs-triage`,
+  `ready-for-agent`, `ready-for-human`, `bug` and `enhancement`. `needs-info`
+  and `factory:needs-input` split across several states, so they are left for
+  triage to route.
+- `state:owner`, formerly `ready-for-human`, marks work that needs the owner's
+  own accounts or credentials, or a taste call the owner reserved. The owner
+  decided this on 2026-10-25, after the label had also marked agent work the
+  factory could not run and confused them. Agent work the factory must not
+  pick up carries `state:ready`, a `model:` label and `factory:skip`. The
   [factory workflow rules](rules/factory-workflow.md) own that routing; canonical
   label setup provisions skip only for the factory profile. On 2026-10-29, the
   owner extended skip routing to work whose live steps need host access the

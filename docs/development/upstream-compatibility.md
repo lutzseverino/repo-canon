@@ -220,13 +220,13 @@ adapt Repo Canon conventions; the owned copies carry them.
 The four public templates do not prohibit the installed skills' native issue
 formats. Validation must recognize the applicable contract and workflow.
 
-| Shape                        | Required structure and readiness meaning                                                                                                                                                               |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Native specification         | Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope, Further Notes. A reviewed specification can be ready-for-agent without intake triage or a brief. |
-| Native implementation ticket | Optional Parent, What to build, Acceptance criteria, Blocked by. A reviewed ticket can be ready-for-agent even when blockers remain open.                                                              |
-| Triaged request              | Agent Brief comment with Category, Summary, Current behavior, Desired behavior, Key interfaces, Acceptance criteria, Out of scope; original body/discussion is intake context.                         |
-| Wayfinder map                | Destination, Notes, Decisions so far, Not yet specified, Out of scope. An initially empty decisions section is valid; label wayfinder:map.                                                             |
-| Wayfinder child              | Question; one wayfinder research/prototype/grilling/task label. Eligibility uses open state, assignment, and blockers rather than requiring intake labels or a brief.                                  |
+| Shape                        | Required structure and readiness meaning                                                                                                                                                             |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Native specification         | Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope, Further Notes. A reviewed specification can be `state:ready` without intake triage or a brief. |
+| Native implementation ticket | Optional Parent, What to build, Acceptance criteria, Blocked by. A reviewed ticket can be `state:ready` even when blockers remain open.                                                              |
+| Triaged request              | Agent Brief comment with Category, Summary, Current behavior, Desired behavior, Key interfaces, Acceptance criteria, Out of scope; original body/discussion is intake context.                       |
+| Wayfinder map                | Destination, Notes, Decisions so far, Not yet specified, Out of scope. An initially empty decisions section is valid; label wayfinder:map.                                                           |
+| Wayfinder child              | Question; one wayfinder research/prototype/grilling/task label. Eligibility uses open state, assignment, and blockers rather than requiring intake labels or a brief.                                |
 
 The `github-repository-configuration` rules state the Agent Brief and
 Wayfinder shapes the validator enforces, citing `triage` and `wayfinder` as
@@ -254,8 +254,9 @@ instructions. The author's whole-file ownership choice therefore relies on the
 
 The GitHub seed infers repository identity from remotes. Domain conventions
 support lazy glossaries and ADRs, including multiple contexts. Triage supplies
-five canonical states, while the complete workflow also uses bug, enhancement,
-and five Wayfinder planning labels. Writing these configuration files does not
+five canonical states, which Repo Canon maps to its `state:` labels, while the
+complete workflow also uses `type:`, `priority:` and five Wayfinder planning
+labels. Writing these configuration files does not
 provision those labels on GitHub.
 
 Source: [setup](https://github.com/mattpocock/skills/blob/24fe0ef7737efae15c87225755e9f6f5965e4888/skills/engineering/setup-matt-pocock-skills/SKILL.md).

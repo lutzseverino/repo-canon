@@ -219,6 +219,11 @@ globalThis.fetch = async (input, options = {}) => {
       );
       if (!label) return error(404, "Not Found");
       record("update label");
+      // GitHub's issues refer to the label itself, so a rename carries them.
+      for (const issue of state.issues ?? [])
+        issue.labels = issue.labels.map((current) =>
+          current === label.name ? body.new_name : current,
+        );
       Object.assign(label, {
         name: body.new_name,
         color: body.color,

@@ -93,31 +93,33 @@ and tells the owner with links. When the revision notice never arrives, or its
 credentials cannot apply readiness, it leaves readiness to the owner and tells
 them under the [comment rules](rules/comments.md) instead.
 
-Every question reaches the orchestrating agent first. `needs-info` means
-information is missing: the orchestrating agent answers what it can from code,
-logs, or a reproduction, or under the inference test, and a question for an
-outside reporter still goes to the reporter. A question only the owner can
-answer goes into its decision inbox with its recommendation; the decision inbox
+Every question reaches the orchestrating agent first. It answers what it can
+from code, logs, or a reproduction, or under the inference test. A fact only an
+outside reporter holds goes to the reporter, with the issue in
+`state:reporter`. A question only the owner can answer goes into its decision
+inbox with its recommendation, with the issue in `state:owner`, or in
+`state:grill` when a grill must settle the owner's intent; the decision inbox
 is the one channel for questions to the owner. When the owner runs triage
 themselves, they are the orchestrating agent.
 
 ## Readiness
 
-Applying `ready-for-agent` or `ready-for-human` is the review action, and the
-`github-repository-configuration` rules name the roles it needs. After
-revising a contract or posting an Agent Brief, wait for the issue-contract
-workflow's revision notice before applying readiness. Editing a contract removes its readiness. The
-workflow keeps one workflow state label on an issue: authorized readiness or a
-newly applied state replaces the previous one, and an issue left with none gets
-`needs-triage` on every run, even if it has never carried a state. This applies
+Applying `state:ready` is the review action, and the
+`github-repository-configuration` rules name the roles it needs and the
+labels. After revising a contract or posting an Agent Brief, wait for the
+issue-contract workflow's revision notice before applying readiness. Editing a
+contract removes its readiness. The workflow keeps one workflow state on an
+issue, its `state:` label or `wontfix`: authorized readiness or a newly applied
+state replaces the previous one, and an issue left with none gets
+`state:triage` on every run, even if it has never carried a state. This applies
 to open intake requests, specifications, tickets, and unrecognized issues;
 Wayfinder maps and children stay outside workflow states. The validator's own
-`needs-triage` is a fallback and never supersedes authorized readiness bound to
+`state:triage` is a fallback and never supersedes authorized readiness bound to
 the current revision, even when applied after its review. A person's later
-workflow state still supersedes readiness. A closed issue loses `needs-triage`,
-`needs-info`, `ready-for-agent`, `ready-for-human` and every `factory:*` label,
-preserving `wontfix`, category, `model:*`, unrelated labels and feedback.
-Reopening restores no removed labels; normal validation applies.
+workflow state still supersedes readiness. A closed issue loses every
+`state:`, `gate:` and `factory:` label, preserving `wontfix`, `type:`,
+`priority:`, `model:`, unrelated labels and feedback. Reopening restores no
+removed labels; normal validation applies.
 A specification or ticket can be ready while its blockers are open.
 
 ## Development setup
@@ -144,7 +146,7 @@ finding.
 
 Before filing, check for an open issue that already reports the finding and
 link it instead of creating a duplicate. Otherwise, open one issue per finding
-through the target repository's issue forms, labelled `needs-triage`. File it
+through the target repository's issue forms, labelled `state:triage`. File it
 in the repository responsible for the affected material or tooling. Each issue
 cites the run's pull request or issue and distinguishes what the run observed
 from what it only read in code. Leave the issues to triage.

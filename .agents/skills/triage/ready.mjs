@@ -12,7 +12,9 @@ import {
   requestData,
 } from "../babysit/platform.mjs";
 
-const readiness = new Set(["ready-for-agent", "ready-for-human"]);
+// Readiness is the one state an issue waits for an agent in; a companion
+// carries no other state.
+const readyLabel = "state:ready";
 
 // Eligibility follows installed rules in the selected destination, independently
 // of the checkout that supplies this command. Pin the default tip before reading.
@@ -77,7 +79,7 @@ async function snapshot(connection, number) {
   const { comment: feedback, state } = issueContractResult(comments);
   const latest = events.findLast(
     (event) =>
-      readiness.has(event.label) &&
+      event.label === readyLabel &&
       !(
         event.action === "removed" &&
         event.actor?.login === "github-actions[bot]"
@@ -130,24 +132,23 @@ function argumentsFor(argv) {
     repository = args[flag + 1];
     args.splice(flag, 2);
   }
-  const [issue, label, revision, ...companions] = args;
+  const [issue, revision, ...companions] = args;
   const number = Number(issue);
   if (
     !/^[1-9]\d*$/.test(issue ?? "") ||
     !Number.isSafeInteger(number) ||
-    !readiness.has(label) ||
     !/^sha256:[a-f0-9]{64}$/.test(revision ?? "") ||
     companions.some(
-      (name) => !name.trim() || name.startsWith("--") || readiness.has(name),
+      (name) =>
+        !name.trim() || name.startsWith("--") || name.startsWith("state:"),
     ) ||
     (flag !== -1 && (!repository || repository.startsWith("--")))
   )
     throw new Error(
-      "Usage: node ready.mjs <issue> <ready-for-agent|ready-for-human> <sha256:reviewed-revision> [companion-label ...] [--repo owner/name]",
+      "Usage: node ready.mjs <issue> <sha256:reviewed-revision> [companion-label ...] [--repo owner/name]",
     );
   return {
     number,
-    label,
     revision,
     companions: [...new Set(companions)],
     repository,
@@ -168,8 +169,8 @@ export async function main(
   pause = wait,
   now = Date.now,
 ) {
-  const { number, label, revision, companions, repository } =
-    argumentsFor(argv);
+  const { number, revision, companions, repository } = argumentsFor(argv);
+  const label = readyLabel;
   connection ??= connectionFor(repository);
   const actor = await actingAccount(connection);
   const policy = await factoryPolicy(connection);
@@ -186,7 +187,6 @@ export async function main(
     before = await snapshot(connection, number);
     if (
       policy.factory &&
-      label === "ready-for-agent" &&
       !before.issue.subIssues.length &&
       !isSpecification(before.issue)
     ) {
@@ -224,7 +224,7 @@ export async function main(
       await pause(2000);
       continue;
     }
-    if (before.issue.labels.some((name) => readiness.has(name)))
+    if (before.issue.labels.includes(label))
       throw new Error(
         "Readiness is already present; remove the stale attempt and review the revision notice again.",
       );

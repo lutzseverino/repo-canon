@@ -8,7 +8,7 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 - **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels. When the issue carries Agent Brief comments, the latest one is its implementation contract; the body and the rest of the discussion are context.
 - **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
 - **Comment on an issue**: `gh issue comment <number> --body "..."`
-- **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`. Readiness labels are the exception: apply `ready-for-agent` or `ready-for-human` only through the triage skill's readiness command.
+- **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`. Readiness is the exception: apply `state:ready` only through the triage skill's readiness command.
 - **Close**: `gh issue close <number> --comment "..."`
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.

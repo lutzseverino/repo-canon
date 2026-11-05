@@ -36,11 +36,7 @@ const brief = {
   updated_at: briefAt,
   user: { login: "triager" },
 };
-const reviewOf = (
-  label = "ready-for-agent",
-  login = "maintainer",
-  id = 101,
-) => ({
+const reviewOf = (label = "state:ready", login = "maintainer", id = 101) => ({
   id,
   event: "labeled",
   label: { name: label },
@@ -72,7 +68,7 @@ const notice = (state, kind = "triaged Agent Brief") => ({
 /** @param {Record<string, any>} options */
 function snapshot({
   body = "Intake context.",
-  labels = ["enhancement", "ready-for-agent"],
+  labels = ["type:enhancement", "state:ready"],
   comments,
   event = commentEvent("created"),
   issueEvents = [reviewOf()],
@@ -100,7 +96,7 @@ function snapshot({
   };
 }
 
-const approvedBrief = (target = brief, label = "ready-for-agent") =>
+const approvedBrief = (target = brief, label = "state:ready") =>
   notice({
     status: "approved",
     revision: briefRevision(target),
@@ -113,7 +109,7 @@ const approvedTicket = (issue = { body: ticketBody }) =>
     {
       status: "approved",
       revision: bodyRevision({ node_id: "ISSUE_42", ...issue }),
-      label: "ready-for-agent",
+      label: "state:ready",
       reviewer: "maintainer",
       reviewEventId: "101",
     },
@@ -125,7 +121,7 @@ const briefSnapshot = (changes = {}) =>
 const ticketSnapshot = (changes = {}) =>
   snapshot({
     body: ticketBody,
-    labels: ["ready-for-agent"],
+    labels: ["state:ready"],
     comments: [approvedTicket()],
     ...changes,
   });
@@ -148,7 +144,7 @@ test("the result line carries the published format with every field", () => {
     kind: "triaged Agent Brief",
     revision: briefRevision(brief),
     source: { type: "comment", id: "12", editedAt: briefAt },
-    label: "ready-for-agent",
+    label: "state:ready",
     reviewer: "maintainer",
     reviewEventId: "101",
     event: evaluated("commentCreated", "reporter", { commentId: "30" }),
@@ -200,10 +196,10 @@ test("the validator posts a current result on each evaluated event, even when it
       {
         action: "unlabeled",
         issue: { number: 42 },
-        label: { name: "needs-info" },
+        label: { name: "state:reporter" },
         sender: { login: "maintainer" },
       },
-      evaluated("unlabeled", "maintainer", { label: "needs-info" }),
+      evaluated("unlabeled", "maintainer", { label: "state:reporter" }),
     ],
     [
       "comment",
@@ -249,7 +245,7 @@ test("the validator posts a current result on each evaluated event, even when it
 test("an issue that has had a result keeps a current one when it carries no contract", () => {
   const decision = decideIssueContract(
     snapshot({
-      labels: ["enhancement", "wontfix"],
+      labels: ["type:enhancement", "wontfix"],
       comments: [brief, approvedBrief()],
       issueEvents: [],
     }),
@@ -268,7 +264,7 @@ test("an issue that has had a result keeps a current one when it carries no cont
   const intake = decideIssueContract(
     snapshot({
       body: featureBody,
-      labels: ["enhancement"],
+      labels: ["type:enhancement"],
       comments: [],
       issueEvents: [],
     }),
@@ -283,8 +279,8 @@ const kept = (decision) => {
 };
 const cancelled = (decision, status = "awaiting-review") => {
   assert.equal(decision.exitCode, 1, decision.message);
-  assert.deepEqual(decision.removeLabels, ["ready-for-agent"]);
-  assert.deepEqual(decision.addLabels, ["needs-triage"]);
+  assert.deepEqual(decision.removeLabels, ["state:ready"]);
+  assert.deepEqual(decision.addLabels, ["state:triage"]);
   const state = publishedState(decision.feedback.body);
   assert.equal(state.status, status);
   assert.equal(state.label, null);
@@ -394,12 +390,12 @@ test("only current category labels count", async (t) => {
     () => {
       const decision = decideIssueContract(
         briefSnapshot({
-          labels: ["ready-for-agent"],
+          labels: ["state:ready"],
           issueEvents: [
-            { ...reviewOf("enhancement"), id: 90 },
+            { ...reviewOf("type:enhancement"), id: 90 },
             reviewOf(),
             {
-              ...reviewOf("enhancement"),
+              ...reviewOf("type:enhancement"),
               id: 102,
               event: "unlabeled",
               created_at: "2026-09-14T17:05:00Z",
@@ -408,7 +404,7 @@ test("only current category labels count", async (t) => {
           event: {
             action: "unlabeled",
             issue: { number: 42 },
-            label: { name: "enhancement" },
+            label: { name: "type:enhancement" },
             sender: { login: "maintainer" },
           },
         }),
@@ -418,7 +414,7 @@ test("only current category labels count", async (t) => {
       assert.equal(state.reviewer, null);
       assert.deepEqual(
         state.event,
-        evaluated("unlabeled", "maintainer", { label: "enhancement" }),
+        evaluated("unlabeled", "maintainer", { label: "type:enhancement" }),
       );
     },
   );
@@ -428,9 +424,9 @@ test("only current category labels count", async (t) => {
       const decision = decideIssueContract(
         ticketSnapshot({
           issueEvents: [
-            { ...reviewOf("enhancement"), id: 90, created_at: briefAt },
+            { ...reviewOf("type:enhancement"), id: 90, created_at: briefAt },
             {
-              ...reviewOf("enhancement"),
+              ...reviewOf("type:enhancement"),
               id: 91,
               event: "unlabeled",
               created_at: briefAt,
@@ -531,12 +527,12 @@ test("the authorized roles are the rules' admin, maintain and triage roles", asy
       const decision = decideIssueContract(
         snapshot({
           comments: [brief, awaiting],
-          issueEvents: [reviewOf("ready-for-agent", login)],
+          issueEvents: [reviewOf("state:ready", login)],
           permissions: { [login]: permission },
           event: {
             action: "labeled",
             issue: { number: 42 },
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             sender: { login },
           },
         }),
@@ -551,10 +547,10 @@ test("the authorized roles are the rules' admin, maintain and triage roles", asy
 });
 
 test("the result names the readiness label it approves", () => {
-  for (const label of ["ready-for-agent", "ready-for-human"]) {
+  for (const label of ["state:ready"]) {
     const decision = decideIssueContract(
       briefSnapshot({
-        labels: ["enhancement", label],
+        labels: ["type:enhancement", label],
         comments: [brief, approvedBrief(brief, label)],
         issueEvents: [reviewOf(label)],
       }),
@@ -597,7 +593,7 @@ const stateOf = (world) =>
 async function readiness(world, revision, login = "maintainer") {
   try {
     const code = await ready(
-      ["42", "ready-for-agent", revision],
+      ["42", revision],
       world.connectionAs(login),
       world.pause,
       world.now,
@@ -635,8 +631,8 @@ test("shared examples: the validator and the readiness command agree", async (t)
         assert.equal(state.reviewer, "maintainer");
         assert.equal(state.reviewEventId, String(world.events.at(-2).id));
         assert.deepEqual(world.issue.labels, [
-          "enhancement",
-          "ready-for-agent",
+          "type:enhancement",
+          "state:ready",
         ]);
       }),
   );
@@ -682,13 +678,13 @@ test("shared examples: the validator and the readiness command agree", async (t)
       assert.notEqual(edited, reviewed);
       const stale = await readiness(world, reviewed);
       assert.match(stale.error.message, /reviewed revision differs/);
-      assert.equal(world.issue.labels.includes("ready-for-agent"), false);
+      assert.equal(world.issue.labels.includes("state:ready"), false);
       assert.deepEqual(await readiness(world, edited), { code: 0 });
       // An edit after approval cancels it, and the command refuses the old
       // revision.
       world.editComment(comment, `${completeAgentBrief} and paging`, "triager");
       assert.deepEqual(await world.deliver(), [1]);
-      assert.equal(world.issue.labels.includes("ready-for-agent"), false);
+      assert.equal(world.issue.labels.includes("state:ready"), false);
       assert.equal(stateOf(world).status, "awaiting-review");
       world.wait();
       assert.match(
@@ -708,7 +704,7 @@ test("shared examples: the validator and the readiness command agree", async (t)
       const state = stateOf(world);
       assert.equal(state.status, "awaiting-review");
       assert.equal(state.source.id, String(newer.id));
-      assert.equal(world.issue.labels.includes("ready-for-agent"), false);
+      assert.equal(world.issue.labels.includes("state:ready"), false);
       assert.match(
         (await readiness(world, first)).error.message,
         /reviewed revision differs/,
@@ -734,7 +730,7 @@ test("shared examples: the validator and the readiness command agree", async (t)
         restored.sourceInvalidation,
         `deleted-comment:COMMENT_${newer.id}`,
       );
-      assert.equal(world.issue.labels.includes("ready-for-agent"), false);
+      assert.equal(world.issue.labels.includes("state:ready"), false);
       assert.match(
         (await readiness(world, newest)).error.message,
         /reviewed revision differs/,
@@ -785,10 +781,7 @@ test("shared examples: the validator and the readiness command agree", async (t)
         "helper[bot]",
       );
       assert.match(result.error.message, /helper\[bot\] is not authorized/);
-      assert.equal(
-        unauthorized.issue.labels.includes("ready-for-agent"),
-        false,
-      );
+      assert.equal(unauthorized.issue.labels.includes("state:ready"), false);
     }),
   );
 
@@ -801,7 +794,7 @@ test("shared examples: the validator and the readiness command agree", async (t)
           world.comment(completeAgentBrief, "triager");
           await world.together(async () => {
             await world.deliver();
-            world.label("ready-for-agent", "maintainer");
+            world.label("state:ready", "maintainer");
           });
           assert.deepEqual(await world.deliver(), [1]);
           const state = stateOf(world);
@@ -828,7 +821,7 @@ test("shared examples: the validator and the readiness command agree", async (t)
             );
           const result = await readiness(world, reviewed);
           assert.match(result.error.message, /reviewed revision differs/);
-          assert.equal(world.issue.labels.includes("ready-for-agent"), false);
+          assert.equal(world.issue.labels.includes("state:ready"), false);
           assert.notEqual(stateOf(world).revision, reviewed);
         }),
     );

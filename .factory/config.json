@@ -1,13 +1,12 @@
 {
   "version": 2,
   "labels": {
-    "ready": "ready-for-agent",
+    "ready": "state:ready",
     "skip": "factory:skip",
     "hold": "factory:hold",
     "releaseHold": "factory:release-hold",
     "running": "factory:running",
     "failed": "factory:failed",
-    "needsInput": "factory:needs-input",
     "paused": "factory:paused"
   },
   "modelLabelPrefix": "model:",

@@ -170,7 +170,7 @@ within 20 minutes. The operator holds back `.scratch/triage/owner-inputs.md`
 and `review-inputs.md`; the agent must not read ahead. Begin with the unresolved
 CSV intake and a separate research session gathering facts without a brief.
 Observe the orchestrating agent's local decision inbox, the three missing
-header/interface/source choices, and `needs-info` with no brief or readiness.
+header/interface/source choices, and `state:owner` with no brief or readiness.
 Only then relay the controlled owner answers to a separate grill. These dated,
 cited answers settle exercise behavior only; the grill records them and drafts
 the brief. The accepting reviewer must be a different session from its writer.
@@ -362,7 +362,7 @@ turn 5. The in-goal row cites the approved review goal; the amendment changes sc
 future multilingual-guide capability, not a defect or Finding, and needs no issue.
 Turns 6a–6c add two out-of-goal Findings in the separate simulated tooling
 tracker: reuse the existing open UTF-8 crash issue, then file the stale-option
-finding with that tracker's bug form and `needs-triage`. Check the supplied
+finding with that tracker's bug form and `state:triage`. Check the supplied
 observed command outcomes are cited, both findings are linked from a comment
 on review ticket 01 (there is no PR), and the optional planning wish links the
 reported finding without replacing its issue or reporting links. The method

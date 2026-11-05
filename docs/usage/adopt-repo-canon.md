@@ -118,8 +118,11 @@ stacks and their checked/assessed boundary.
 Remote setup is the part of adoption that changes the repository's settings on
 GitHub. Repo Canon has two remote setup fixes:
 
-- Canonical labels creates and reconciles the triage and planning labels. Its
-  account needs write, maintain, or admin access to the repository.
+- Canonical labels creates and reconciles the workflow state, category,
+  priority and planning labels, and in the factory profile the gate and
+  factory labels. It renames each label they replace in place, such as
+  `ready-for-agent` to `state:ready`, so issues keep it. Its account needs
+  write, maintain, or admin access to the repository.
 - Pull request integration requires the `PR metadata` check and sets
   squash-only merging. Its account needs admin access.
 
@@ -143,8 +146,9 @@ npx @lutzseverino/repo-standards adopt
 Before changing a setting that already has a value, either fix asks for
 confirmation, naming the current and proposed values. Settings still at
 GitHub's stock values for a new repository need no confirmation: a label named
-`wontfix` that still has GitHub's default color and description, and merge
-settings that are all at GitHub's stock values. A single other value makes the
+`wontfix` that still has GitHub's default color and description, a label still
+at the values Repo Canon or the factory created it with, and merge settings
+that are all at GitHub's stock values. A single other value makes the
 merge settings count as chosen. The `PR metadata`
 requirement waits for the adoption to merge, because GitHub runs its workflow
 only from the default branch: the first adoption applies the merge settings

@@ -63,7 +63,7 @@ const decide = ({ body = featureBody, labels, comments = [], ...rest }) =>
     permissions: {},
     ...rest,
   });
-const decideBrief = (body, labels = ["enhancement", "needs-triage"]) =>
+const decideBrief = (body, labels = ["type:enhancement", "state:triage"]) =>
   decide({
     labels,
     comments: [{ id: 12, user: { login: "triager" }, body }],
@@ -155,7 +155,7 @@ test("Markdown variations pass, and code or comments never form a brief", () => 
 
 test("the brief's Category is bug or enhancement and equals the issue's one category label", () => {
   accepted(
-    decideBrief(brief({ category: "bug" }), ["bug"]),
+    decideBrief(brief({ category: "bug" }), ["type:bug"]),
     "triaged Agent Brief",
   );
   rejected(
@@ -163,19 +163,19 @@ test("the brief's Category is bug or enhancement and equals the issue's one cate
     "Set the Agent Brief `Category` to `bug` or `enhancement`.",
   );
   rejected(
-    decideBrief(brief({ category: "bug" }), ["enhancement"]),
-    "Apply the Agent Brief's `bug` category label.",
+    decideBrief(brief({ category: "bug" }), ["type:enhancement"]),
+    "Apply the Agent Brief's `type:bug` category label.",
   );
   rejected(
-    decideBrief(brief(), ["enhancement", "bug"]),
-    "Apply exactly one category label: `bug` or `enhancement`.",
+    decideBrief(brief(), ["type:enhancement", "type:bug"]),
+    "Apply exactly one category label: `type:bug` or `type:enhancement`.",
   );
 });
 
 test("the latest Agent Brief comment, by comment ID, is the contract", () => {
   const briefs = (complete, incomplete) =>
     decide({
-      labels: ["enhancement"],
+      labels: ["type:enhancement"],
       comments: [
         { id: complete, user: { login: "triager" }, body: brief() },
         {
@@ -290,7 +290,7 @@ test("only a native parent supplies a GitHub relationship; body references remai
 test("Wayfinder maps and children reject readiness and never gain a workflow state", () => {
   const readiness =
     "Remove readiness labels from Wayfinder planning issues; their eligibility uses open state, assignment, and blockers.";
-  for (const ready of ["ready-for-agent", "ready-for-human"]) {
+  for (const ready of ["state:ready"]) {
     const mapDecision = decide({
       body: map(),
       labels: ["wayfinder:map", ready],

@@ -25,7 +25,7 @@ const json = (data, status = 200) =>
  */
 export function contractWorld({
   body = "Intake context.",
-  labels = ["enhancement", "needs-triage"],
+  labels = ["type:enhancement", "state:triage"],
   roles = { maintainer: "admin" },
   factory = false,
   start = "2026-10-25T12:00:00Z",
