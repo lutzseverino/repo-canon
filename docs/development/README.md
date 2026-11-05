@@ -267,6 +267,10 @@ disposable local repositories used for the two productivity skill exercises.
 [Skill exercises](skill-exercises.md) describes all three fixture builders and
 the harness that exercises the skills.
 
+Tests check behaviour and structure, never the wording of rules, skills or
+documents; license notices are the one exact text they compare
+([ADR 0032](../adr/0032-test-behaviour-and-structure-not-wording.md)).
+
 This repository takes the same path every adopter takes, so the suite also runs
 the shipped Repository README, Project README, and documentation checks against
 this repository's own root through the operation request helper, with the

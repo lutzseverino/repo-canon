@@ -119,3 +119,6 @@ involve real alternatives.
 - [Name labels by family](0031-name-labels-by-family.md): `state:`, `gate:`,
   `factory:`, `type:`, `priority:` and `model:` families, with one workflow
   state naming whom an issue waits on.
+- [Test behaviour and structure, not wording](0032-test-behaviour-and-structure-not-wording.md):
+  tests check code behaviour and file structure, never the wording of rules,
+  skills or documents; license notices are compared byte for byte.
