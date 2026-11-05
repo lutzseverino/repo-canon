@@ -729,12 +729,8 @@ function checkNotices(readBytes) {
     readBytes("THIRD_PARTY_NOTICES.md").toString("utf8"),
   );
   assert.deepEqual(links.toSorted(), ["LICENSE", ...licensePaths].toSorted());
-  for (const [index, path] of links.entries())
-    assert.deepEqual(
-      readBytes(path),
-      readFileSync(join(root, ["LICENSE", ...licensePaths][index])),
-      path,
-    );
+  for (const path of links)
+    assert.deepEqual(readBytes(path), readFileSync(join(root, path)), path);
   for (const { path, license } of skillNotices())
     assert.ok(
       readBytes(path).includes(readFileSync(join(root, license))),
@@ -754,6 +750,16 @@ function skillNotices() {
 
 test("owned skills and third-party notices retain their vendored licenses byte for byte", () => {
   checkNotices((path) => readFileSync(join(root, path)));
+  const notices = read("THIRD_PARTY_NOTICES.md");
+  const reordered = notices
+    .replaceAll(licensePaths[0], "LICENSE.swap")
+    .replaceAll(licensePaths[1], licensePaths[0])
+    .replaceAll("LICENSE.swap", licensePaths[1]);
+  checkNotices((path) =>
+    path === "THIRD_PARTY_NOTICES.md"
+      ? Buffer.from(reordered)
+      : readFileSync(join(root, path)),
+  );
 });
 
 test("dropped or altered license notices fail, including linked notices", () => {
@@ -1209,7 +1215,8 @@ test("delivery and triage requirements keep their single homes", () => {
     ],
   ];
   for (const [paths, phrase] of homes)
-    for (const path of paths) assert.doesNotMatch(read(path), phrase, path);
+    for (const path of paths)
+      assert.doesNotMatch(read(path).replaceAll(/\s+/g, " "), phrase, path);
   for (const file of ["request.mjs", "wait.mjs", "merge.mjs"])
     assert.doesNotMatch(
       read(`.agents/skills/babysit/${file}`),
