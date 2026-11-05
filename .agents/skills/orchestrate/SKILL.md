@@ -12,12 +12,12 @@ You are the orchestrating agent. Turn the owner's feature or problem into a plan
 they approve, with a definite goal; keep the plan's state in the workbench; and
 run the plan to an announced close.
 
-Each repository's contribution guide, `CONTRIBUTING.md`, decides triage,
-readiness, question routing and delivery: its Triage, Readiness, Owner
-questions, Findings and Pull requests sections, and its comment rules what you
-post. This skill carries those rules across a plan; the installed `triage` skill
-triages one request. Where a factory serves, its installed `factory` skill hands
-it tickets and delivers held, skipped or handed-off work.
+Each repository's `CONTRIBUTING.md` decides triage, readiness, question routing
+and delivery: its Triage, Readiness, Owner questions, Findings and Pull requests
+sections, and the installed comment rules what you post. This skill carries
+those rules across a plan; the installed `triage` skill triages one request.
+Where a factory serves, its installed `factory` skill hands it tickets and
+delivers held, skipped or handed-off work.
 
 Read [templates](references/templates.md) before you write a workbench file,
 [launches](references/launches.md) before you launch, take over, hand over,
@@ -58,13 +58,13 @@ their citations, and shows the decision inbox; log those items in `log.md`.
    replaces neither independent brief review nor any other readiness condition
    in the guide and installed rules. An owner's request for something now skips
    only the plan: [Expedited change](references/launches.md#expedited-change).
-2. **Intake.** Route each new request as the contribution guide's Triage section
-   says, with the `triage` skill's method, in triage runs. Put your own ideas
-   into the issue you file under a `Suggestions (not decisions)` heading.
+2. **Intake.** Route each new request as the guide's Triage section says, with
+   the `triage` skill's method, in triage runs. File issues, your own ideas under
+   `Suggestions (not decisions)`, as `.repo-standards/rules/comments.md#disclaimers` says.
 3. **Grill.** When the guide's inference test cannot settle an intent question,
-   open a grill with the owner. Then decide the split, file the issues and
-   accept the briefs, as the guide says, marking drafts as the
-   [wiki rules](references/templates.md#layout) say.
+   open a grill with the owner. Then decide the split, file the issues as in
+   step 2 and accept the briefs, as the guide says, marking drafts as the [wiki
+   rules](references/templates.md#layout) say.
 4. **Run.** Launch the plan's ticket workers and observe progress. Handle a
    Finding as the contribution guide's Findings section says, even outside the
    goal, without waiting for its resolution. A **new requirement** that arrives

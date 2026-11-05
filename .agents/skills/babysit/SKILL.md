@@ -97,7 +97,8 @@ body was checked. Link-free bodies need no reconstruction.
 2. Verify each failing check and review finding against the source, including
    findings that arrive on a policy-skipped pull request. Follow the
    `github-repository-configuration` rules for applicable internal Standards and
-   Spec reviews and their review.
+   Spec reviews, posting each round as
+   `.repo-standards/rules/comments.md#reviews` says.
 3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
    every review thread as it requires. Before replying, read
    `.repo-standards/rules/comments.md#review-thread-replies`.

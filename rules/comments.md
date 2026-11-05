@@ -9,10 +9,13 @@ and attribution rules instead.
 
 ## Occasions
 
-An agent posts to record a decision, an outcome, or a question that needs an
-answer, never to narrate progress. It consolidates everything it has to say on
-one occasion into one comment. The rules that create each occasion say when it
-arises; this file says what the post holds:
+Any agent, whichever account it uses, posts only on these occasions, and only
+to record a decision, an outcome, or a question that needs an answer, never to
+narrate progress. It consolidates everything it has to say on
+one occasion into one comment. The contribution guide, the
+`github-repository-configuration` rules and, where installed, the
+`factory-workflow` rules say when each occasion arises; these rules say what
+the post holds:
 
 | Occasion                                               | Where                                             | Shape                                                 |
 | ------------------------------------------------------ | ------------------------------------------------- | ----------------------------------------------------- |
@@ -72,8 +75,9 @@ repository and repositories adopting these rules may be public.
 
 ## Reviews
 
-Post one review per review round, as a pull request review of the head it
-reviewed, with this body:
+Post one review per round of the internal Standards and Spec reviews that the
+`github-repository-configuration` rules define, as a pull request review of the
+head it reviewed, with this body:
 
 <!-- prettier-ignore -->
 ```markdown
@@ -104,14 +108,15 @@ as the contribution guide's Merging section requires.
 ## Review request comments
 
 Write the configured reviewer's request phrase only in a comment that requests
-a review. That comment holds exactly the reviewer file's `request.comment`, with
-no disclaimer. The phrase never appears in prose, quotations, or code spans in
+a review. That comment holds exactly the `request.comment` of the reviewer file
+that the `github-repository-configuration` rules describe, with no disclaimer. The phrase never appears in prose, quotations, or code spans in
 any other comment, issue or pull request title, or body. To mention the
 request, describe it as "the review request comment".
 
 ## Delivery records
 
-Each delivery record is one pull request comment:
+Each delivery record that the `github-repository-configuration` or
+`factory-workflow` rules require is one pull request comment:
 
 - A worker handoff records the pull request's current head, validation and
   internal review outcomes, outstanding findings, and any owner-review
@@ -137,10 +142,10 @@ such an issue, never into a separate unticketed pull request.
 ## Factory comments
 
 In a repository a factory serves, issues stay clean. Beyond its contract and
-triage notes, an issue carries the factory's run comment and action comments.
-An agent's posts on it are action comments too: questions, their answers and
-recorded decisions, and stop notes. Findings, reviews, delivery records and fix
-discussion go on the pull request.
+triage notes, an issue carries the factory's run comment and action comments,
+and only the agent posts that ask or answer a question, record an owner
+decision or note a stop. Findings, reviews, delivery records and fix discussion
+go on the pull request.
 
 The factory keeps one run comment on each issue it runs and edits it in place;
 agents never post or edit a run comment. The factory posts a fresh one-line

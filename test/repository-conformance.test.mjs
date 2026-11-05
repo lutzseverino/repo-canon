@@ -1262,11 +1262,7 @@ test("every skill step's comment rules section exists", () => {
 });
 
 test("the disclaimer lines live only in the comment rules and the shapes checks enforce", () => {
-  const owners = [
-    "rules/comments.md",
-    // The validator enforces the Agent Brief's start, which these rules state.
-    "rules/github-repository-configuration.md",
-  ];
+  const owners = ["rules/comments.md"];
   const documents = [
     "CONTRIBUTING.md",
     ...readdirSync(join(root, "rules")).map((name) => `rules/${name}`),

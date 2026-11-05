@@ -108,7 +108,7 @@ work the factory must not pick up, an agent adds `factory:needs-input` with its
 question, and the factory adds `factory:running` while it holds an issue,
 `factory:failed` after a run fails for good, and `factory:paused` when it
 pauses a run. `factory:paused` means the factory paused the run and resumes it
-by itself, and its comment on the issue says why, so nobody removes the label
+by itself, and its run comment says why, so nobody removes the label
 by hand. Remove `factory:failed` to run the issue again once its failure note
 or the factory's comment is dealt with, subject to the existing pickup gates.
 For ordinary runs, removing `factory:needs-input` after resolving the question
@@ -227,20 +227,21 @@ supplied-credential restrictions still apply.
 
 ## Owner handoff and recovery
 
-The factory records actionable holds on the held issue, one marker-keyed
-comment per reason: refused readiness, a parent not ready, a model-label error
-(several labels, an unresolvable label or an unlisted model), or a repository
-paused for its configuration. Changed details update the comment in place;
-cleared reasons are marked resolved, and recurrence reuses the same comment,
-including after host restarts. Hold comments are never deleted.
+The factory records actionable holds on the held issue through its run comment
+and action comments, under the `comments` rules' Factory comments section:
+refused readiness, a parent not ready, a model-label error (several labels, an
+unresolvable label or an unlisted model), or a repository paused for its
+configuration. Changed details update the run comment in place; cleared
+reasons are marked resolved, and recurrence reuses the same run comment,
+including after host restarts. The factory never deletes its comments.
 
 Open blockers, including a parent's blockers, usage drains or owner holds,
 provider caps and states already carrying labels or notices (running, paused,
 needs-input, failed and skip) remain log-only, as do transient unreadable role
-lookups. Existing awaiting-merge,
-failure, pause and close notices keep their own lifecycle. Without a cached
-valid repository configuration, the host cannot read its issues and posts no
-hold comment.
+lookups. Awaiting-merge, failure and pause states appear in the run comment,
+with an action comment when a person must act; a parent's close notice keeps
+its own lifecycle. Without a cached valid repository configuration, the host
+cannot read its issues and posts no hold comment.
 
 When an agent needs an answer only the owner can give, follow the contribution
 guide's owner-question handoff, post the question as the `comments` rules say,

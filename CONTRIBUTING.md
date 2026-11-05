@@ -335,6 +335,4 @@ continuation.
 ## Comments
 
 Every rule about what agents post on issues and pull requests, on any account,
-lives in the installed [comment rules](rules/comments.md): when to post and
-where, disclaimers, secrets, owner questions, stop notes, reviews, review
-request comments, delivery records and the factory's comments.
+lives in the installed [comment rules](rules/comments.md).

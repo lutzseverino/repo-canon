@@ -1,5 +1,4 @@
-// The review that the installed `comments` rules' Reviews section
-// (`.repo-standards/rules/comments.md#reviews`) defines. The wait prints this
+// The comment rules' Reviews section defines this review. The wait prints its
 // template; merge accepts only a completed review of the current head.
 export const reviewsSection = ".repo-standards/rules/comments.md#reviews";
 
@@ -42,17 +41,19 @@ export function completeReview(body, head) {
     new Set(entries.map(({ key }) => key)).size !== fields.length
   )
     return false;
-  const value = Object.fromEntries(entries.map((entry) => [entry.key, entry]));
-  const next = entries.find(({ index }) => index > value.Findings.index);
+  const byField = Object.fromEntries(entries.map((entry) => [entry.key, entry]));
+  const next = entries.find(({ index }) => index > byField.Findings.index);
   const findings = lines
-    .slice(value.Findings.index + 1, next?.index)
+    .slice(byField.Findings.index + 1, next?.index)
     .filter((line) => item.test(line));
-  const findingsComplete = value.Findings.value
-    ? /^None\.?$/i.test(value.Findings.value) && findings.length === 0
+  const findingsComplete = byField.Findings.value
+    ? /^None\.?$/i.test(byField.Findings.value) && findings.length === 0
     : findings.length > 0 && findings.every((line) => located.test(line));
   return (
-    value.Head.value === head &&
-    ["Standards", "Spec", "Fixed"].every((key) => completed(value[key].value)) &&
+    byField.Head.value === head &&
+    ["Standards", "Spec", "Fixed"].every((key) =>
+      completed(byField[key].value),
+    ) &&
     findingsComplete
   );
 }

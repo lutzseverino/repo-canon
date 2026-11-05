@@ -138,8 +138,10 @@ Paths are relative to the repository root.
   and configured roles; ask the owner before a route or merge-ownership decision
   that those sources do not settle.
 - `.repo-standards/rules/comments.md`: the installed comment rules, whose
-  sections the posting steps name. When it is missing, post each record as
-  one comment holding what the step names.
+  sections the posting steps name. When it is missing, post each record as one
+  comment: a handoff with the PR's head, validation, both review outcomes,
+  outstanding findings and owner-review designation with its source; a merge
+  outcome with the delivered head, checks, review outcomes and merge commit.
 - `.factory/config.json`: configured label roles. When it is missing or
   unreadable, perform read-only diagnosis and ask the owner to establish the
   factory configuration before changing factory labels.
