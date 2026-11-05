@@ -40,8 +40,8 @@ notice preservation and reconciliation on disposable copies.
 
 ## Vendored skills
 
-The record inventories the complete skill directories and setup seeds retained
-under `vendor/mattpocock-skills`.
+The record inventories the upstream bases used by owned files. The snapshot
+also retains the GitLab and local tracker setup seeds.
 
 The undeclared promoted skills are left out: `ask-matt`, `grill-me`, and
 `setup-matt-pocock-skills` only set up or route the others, `implement-spec`

@@ -63,16 +63,14 @@ installed runtime closure includes `stack-files.mjs`, `stack-scope.mjs`,
 that shared scope implementation, so release review covers these helpers along
 with all four discovery entry points and both web check entry points.
 
-The resolved `standard` profile contains 60 declarations: 31 exact files, four
-contextual files, six repository declarations, and 19 exact skill
-directories. The `factory` profile adds one exact file, one contextual file,
-the exact workflow, one repository declaration, and the `factory` skill, for
-65 declarations. Each has eight checks, two fixes, and four discovery scripts.
+The resolved `standard` profile combines exact files, contextual files,
+repository declarations and whole skill directories. The `factory` profile
+adds factory configuration, workflow and rules, and the `factory` skill.
+Each has eight checks, two fixes, and four discovery scripts.
 
-The `workbench` profile excludes the other 27 default declarations with
-`exclude: true` and adds none, for 33 declarations: the 19 exact skill
-directories and 14 exact files, with no rules, guidance, checks, fixes or
-discovery. The files are the two skill license notices, the three Postern
+The `workbench` profile excludes the other default declarations with
+`exclude: true` and adds none, retaining skill directories and their runtime
+files without rules, guidance, checks, fixes or discovery. The files are the two skill license notices, the three Postern
 files that `babysit`, the `orchestrate` wait and the issue-contract validator
 import, and that validator, which the `triage` readiness command imports, with
 the rendered-Markdown runtime and the Marked and parse5 files it imports. The
@@ -165,8 +163,7 @@ and validates every profile.
 ## Validation boundary
 
 Public CLI 10.0.0 on stable Node.js 24 or 26 returns `valid: true`, no errors,
-and the `standard`, `factory` and `workbench` profiles with 60, 65 and 33
-declarations for the source, matching the inventory above. Local validation and CI install
+and the `standard`, `factory` and `workbench` profiles for the declared source selection. Local validation and CI install
 `@lutzseverino/repo-standards@10.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
 the requirement is a minimum. The release pull request records local validation outcomes and separate CI

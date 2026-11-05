@@ -1129,7 +1129,11 @@ Allow at most two minutes per case. Record actual session references, capability
 const provenance = identifyFixtureSource({
   sourceRoot,
   builderPath: scriptSourcePath,
-  files: sharedSourceFiles,
+  files: [
+    ...sharedSourceFiles,
+    "upstream-bases.json",
+    "scripts/upstream-bases.mjs",
+  ],
   directories: Object.fromEntries(
     linkedSkillNames.map((name) => [name, skillPath(name)]),
   ),

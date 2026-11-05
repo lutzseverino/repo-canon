@@ -263,7 +263,7 @@ The focused stack check and scope-drafter suites also exercise regressions and
 valid catalogs from retained resources without the reference dependency.
 
 Run `pnpm run test:productivity-skill-fixtures` to rebuild and verify the
-disposable local repositories used for the two productivity skill exercises.
+disposable local repositories used for the productivity skill exercises.
 [Skill exercises](skill-exercises.md) describes all three fixture builders and
 the harness that exercises the skills.
 

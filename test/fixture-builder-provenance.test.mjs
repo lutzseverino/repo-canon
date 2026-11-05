@@ -182,7 +182,12 @@ test("every builder records its dirty source bytes and builds repositories with 
       builder.name,
     );
     const { inputFiles } = manifest.source;
-    for (const path of [...sharedInputs, builder.script])
+    for (const path of [
+      ...sharedInputs,
+      builder.script,
+      "upstream-bases.json",
+      "scripts/upstream-bases.mjs",
+    ])
       assert.ok(path in inputFiles, `${builder.name} records ${path}`);
     for (const [path, { sha256: recorded }] of Object.entries(inputFiles))
       assert.equal(
