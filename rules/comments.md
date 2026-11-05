@@ -146,9 +146,9 @@ In a repository a factory serves, issues stay clean. Beyond its contract and
 triage notes, an issue carries the factory's run comment and action comments,
 and a parent its close notice. An agent posts on an issue only when a person
 must act or has acted: a question for the owner, a reporter or a grill, its
-answer or recorded decision, or a stop note. Findings, reviews, delivery records and fix
-discussion go on the pull request; a run without one links its findings where
-the contribution guide's Findings section says.
+answer or recorded decision, or a stop note. Findings, reviews, delivery records
+and fix discussion go on the pull request; a run without one links its findings
+where the contribution guide's Findings section says.
 
 The factory keeps one run comment on each issue it runs and edits it in place;
 agents never post or edit a run comment. The factory posts a fresh one-line
