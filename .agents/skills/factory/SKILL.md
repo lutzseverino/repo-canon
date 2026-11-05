@@ -32,7 +32,7 @@ blockers, and any existing PR and handoff before choosing a path below.
 
 ## Read a hold
 
-Read the factory's issue comment and current labels first. Match the reason
+Read the factory's run comment and current labels first. Match the reason
 rather than clearing a state label to see what happens:
 
 | Observation | Next action |
@@ -47,10 +47,10 @@ rather than clearing a state label to see what happens:
 | Failed | Address the failure note first, then remove the failed label to request a retry subject to pickup gates. |
 | Skip | Use the directly launched path below; clearing a waiting marker does not request a factory retry. |
 
-Actionable hold comments update in place and mark cleared reasons resolved.
-Other gates may be log-only under the rules. If no comment explains a held
-issue, ask the host operator for its reason; a host with no cached valid
-configuration cannot post an issue hold comment. Keep credentials and secret
+The run comment records actionable holds in place and marks cleared reasons
+resolved. Other gates may be log-only under the rules. If no comment explains a
+held issue, ask the host operator for its reason; a host with no cached valid
+configuration cannot comment on the issue. Keep credentials and secret
 host material out of tracker records.
 
 ## Take the skip route
@@ -138,10 +138,8 @@ Paths are relative to the repository root.
   and configured roles; ask the owner before a route or merge-ownership decision
   that those sources do not settle.
 - `.repo-standards/rules/comments.md`: the installed comment rules, whose
-  sections the posting steps name. When it is missing, post each record as one
-  comment: a handoff with the PR's head, validation, both review outcomes,
-  outstanding findings and owner-review designation with its source; a merge
-  outcome with the delivered head, checks, review outcomes and merge commit.
+  sections the posting steps name. When it is missing, post each record the
+  steps name as one comment.
 - `.factory/config.json`: configured label roles. When it is missing or
   unreadable, perform read-only diagnosis and ask the owner to establish the
   factory configuration before changing factory labels.

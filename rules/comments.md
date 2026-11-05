@@ -9,13 +9,12 @@ and attribution rules instead.
 
 ## Occasions
 
-Any agent, whichever account it uses, posts only on these occasions, and only
-to record a decision, an outcome, or a question that needs an answer, never to
-narrate progress. It consolidates everything it has to say on
-one occasion into one comment. The contribution guide, the
-`github-repository-configuration` rules and, where installed, the
-`factory-workflow` rules say when each occasion arises; these rules say what
-the post holds:
+Any agent, whichever account it uses, and the factory post only on these
+occasions, and only to record a decision, an outcome, or a question that needs
+an answer, never to narrate progress. Everything to say on one occasion goes
+into one comment. The contribution guide, the `github-repository-configuration`
+rules and, where installed, the `factory-workflow` rules say when each occasion
+arises; these rules say what the post holds:
 
 | Occasion                                               | Where                                             | Shape                                                 |
 | ------------------------------------------------------ | ------------------------------------------------- | ----------------------------------------------------- |
@@ -31,6 +30,7 @@ the post holds:
 | A merge outcome a rule requires                        | The pull request                                  | [Delivery records](#delivery-records)                 |
 | Findings links and adoption check outcomes             | As the contribution guide's Findings section says | [Findings](#findings)                                 |
 | A filed issue                                          | Its body                                          | [Disclaimers](#disclaimers) and [Findings](#findings) |
+| The factory's run, action and close comments           | The issue it runs, or the parent it closes        | [Factory comments](#factory-comments)                 |
 
 ## Disclaimers
 
@@ -109,9 +109,10 @@ as the contribution guide's Merging section requires.
 
 Write the configured reviewer's request phrase only in a comment that requests
 a review. That comment holds exactly the `request.comment` of the reviewer file
-that the `github-repository-configuration` rules describe, with no disclaimer. The phrase never appears in prose, quotations, or code spans in
-any other comment, issue or pull request title, or body. To mention the
-request, describe it as "the review request comment".
+that the `github-repository-configuration` rules describe, with no disclaimer.
+The phrase never appears in prose, quotations, or code spans in any other
+comment, issue or pull request title, or body. To mention the request, describe
+it as "the review request comment".
 
 ## Delivery records
 
@@ -143,9 +144,11 @@ such an issue, never into a separate unticketed pull request.
 
 In a repository a factory serves, issues stay clean. Beyond its contract and
 triage notes, an issue carries the factory's run comment and action comments,
-and only the agent posts that ask or answer a question, record an owner
-decision or note a stop. Findings, reviews, delivery records and fix discussion
-go on the pull request.
+and a parent its close notice. An agent's posts on an issue are action comments
+too: a question for the owner, a reporter or a grill, its answer or recorded
+decision, or a stop note. Findings, reviews, delivery records and fix
+discussion go on the pull request; a run without one links its findings where
+the contribution guide's Findings section says.
 
 The factory keeps one run comment on each issue it runs and edits it in place;
 agents never post or edit a run comment. The factory posts a fresh one-line

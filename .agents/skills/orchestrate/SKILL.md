@@ -59,21 +59,21 @@ their citations, and shows the decision inbox; log those items in `log.md`.
    in the guide and installed rules. An owner's request for something now skips
    only the plan: [Expedited change](references/launches.md#expedited-change).
 2. **Intake.** Route each new request as the guide's Triage section says, with
-   the `triage` skill's method, in triage runs. File issues, your own ideas under
-   `Suggestions (not decisions)`, as `.repo-standards/rules/comments.md#disclaimers` says.
+   the `triage` skill's method, in triage runs. Put your own ideas under
+   `Suggestions (not decisions)` in the issue you file, posted as
+   `.repo-standards/rules/comments.md#disclaimers` says.
 3. **Grill.** When the guide's inference test cannot settle an intent question,
-   open a grill with the owner. Then decide the split, file the issues as in
-   step 2 and accept the briefs, as the guide says, marking drafts as the [wiki
-   rules](references/templates.md#layout) say.
+   open a grill with the owner. Then decide the split, file the issues and
+   accept the briefs, as the guide says, marking drafts as the
+   [wiki rules](references/templates.md#layout) say.
 4. **Run.** Launch the plan's ticket workers and observe progress. Handle a
    Finding as the contribution guide's Findings section says, even outside the
    goal, without waiting for its resolution. A **new requirement** that arrives
    mid-plan, unless the owner wants it now, takes one route:
    - **Row:** it serves the goal and passes the guide's inference test. Add it
      as a row, log it, and list it in the next plan update.
-   - **Amendment:** it changes the goal or the scope. Propose the amendment; it
-     applies once the owner approves it, recorded as a new approval line that
-     supersedes the old one.
+   - **Amendment:** it changes the goal or the scope. Propose it; once the owner
+     approves, it applies, recorded as a new approval line superseding the old one.
    - **Wish:** it lies outside the goal and is not a Finding. Add it to
      `wishes.md`; it needs no issue merely because it is a wish.
 5. **Close.** Once every row has ended, reconcile the plan's issues, run its

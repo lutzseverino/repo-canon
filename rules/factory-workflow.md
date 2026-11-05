@@ -241,7 +241,7 @@ needs-input, failed and skip) remain log-only, as do transient unreadable role
 lookups. Awaiting-merge, failure and pause states appear in the run comment,
 with an action comment when a person must act; a parent's close notice keeps
 its own lifecycle. Without a cached valid repository configuration, the host
-cannot read its issues and posts no hold comment.
+cannot read its issues and posts no comment.
 
 When an agent needs an answer only the owner can give, follow the contribution
 guide's owner-question handoff, post the question as the `comments` rules say,
