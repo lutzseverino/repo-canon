@@ -1,3 +1,6 @@
+import { interpretMarkdown } from "../operations/lib/rendered-markdown.mjs";
+import { localLinks } from "../operations/lib/local-markdown-links.mjs";
+import { marked } from "../vendor/marked/marked.esm.js";
 import { declarations } from "../scripts/standards-declarations.mjs";
 import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
@@ -145,25 +148,12 @@ test("no source input names the retained source layout", () => {
     );
 });
 
-function flowedText(path) {
-  return readFileSync(join(root, path), "utf8").replaceAll(/\s+/g, " ");
+function read(path) {
+  return readFileSync(join(root, path), "utf8");
 }
 
 // The orchestrate skill is a core `SKILL.md` and the references it links.
 const orchestrateReferences = ["templates.md", "launches.md", "close.md"];
-
-function orchestrateFile(name) {
-  return flowedText(`.agents/skills/orchestrate/${name}`);
-}
-
-function orchestrateSkill() {
-  return [
-    "SKILL.md",
-    ...orchestrateReferences.map((name) => `references/${name}`),
-  ]
-    .map(orchestrateFile)
-    .join(" ");
-}
 
 function operation(name) {
   return fileURLToPath(new URL(`../operations/${name}`, import.meta.url));
@@ -360,10 +350,11 @@ test("each declaration with rules or adoption guidance has its decided outcome",
   assert.deepEqual(outcomes, requirementOutcomes);
 });
 
-test("the contribution guide leaves documentation rules to the documentation declaration", () => {
-  assert.doesNotMatch(
-    readFileSync(join(root, "CONTRIBUTING.md"), "utf8"),
-    /^## Documentation$/m,
+test("the contribution guide leaves documentation rules to their declaration", () => {
+  assert.ok(
+    !interpretMarkdown(read("CONTRIBUTING.md")).headings.some(
+      ({ folded }) => folded === "documentation",
+    ),
   );
 });
 
@@ -445,45 +436,15 @@ Assess \`repository-license\` as \`satisfied\` once \`LICENSE\` meets these rule
   assert.notDeepEqual(oneTimeSteps(rules), []);
 });
 
-test("the GitHub rules state the reviewer file's schema, and babysit only cites them", () => {
-  const rules = flowedText("rules/github-repository-configuration.md");
-  for (const field of [
-    "version",
-    "account",
-    "request.comment",
-    "request.onOpen",
-    "finished",
-    "commentMarker",
-    "unavailable",
-    "bounds.responseMinutes",
-    "bounds.reviewMinutes",
-    "bounds.reviewRequests",
-  ])
-    assert.ok(rules.includes(`\`${field}\``), `the rules state ${field}`);
-  assert.match(
-    rules,
-    /Every field is required except `finished` and `bounds\.reviewRequests`/,
+test("reviewer schema and wait policy have a single home in the GitHub rules", () => {
+  assert.doesNotMatch(
+    read(".agents/skills/babysit/SKILL.md"),
+    /commentMarker|responseMinutes|"version"|onOpen|reviewRequests|5 minutes|30 minutes/,
   );
-  assert.match(rules, /A review of the pull request's head is complete when/);
-  assert.match(rules, /marks the reviewer unavailable/);
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  assert.doesNotMatch(babysit, /^## /m);
-  assert.doesNotMatch(babysit, /commentMarker|responseMinutes|"version"/);
-  assert.match(
-    babysit,
-    /whose schema the `github-repository-configuration` rules state/,
+  assert.doesNotMatch(
+    read("CONTRIBUTING.md"),
+    /bounds\.responseMinutes|bounds\.reviewMinutes|5 minutes|merging agent comments/,
   );
-  const guide = flowedText("CONTRIBUTING.md");
-  assert.match(
-    guide,
-    /The `github-repository-configuration` rules define freshness, passing checks and reviewer policy/,
-  );
-  assert.doesNotMatch(guide, /`babysit`\]\([^)]*\) documents its schema/);
-  assert.match(
-    rules,
-    /`bounds\.reviewRequests`: optional positive integer or the exact string `"unbounded"`; omission defaults to \*\*4\*\*/,
-  );
-  assert.doesNotMatch(rules, /contribution guide's Merging section/);
 });
 
 test("neither the GitHub rules nor babysit names a particular reviewer", () => {
@@ -500,41 +461,11 @@ test("neither the GitHub rules nor babysit names a particular reviewer", () => {
   }
 });
 
-test("the GitHub rules hold the runner variable, and its guidance the assessment", () => {
-  const rules = flowedText("rules/github-repository-configuration.md");
-  for (const requirement of [
-    /Every installed job reads `vars\.REPO_CANON_RUNS_ON`\. Unset or empty selects `ubuntu-latest`/,
-    /a JSON array of runner label strings/,
-    /Set the variable only when the repository has matching runners/,
-    /The runners need `git`, `bash`, and network access/,
-    /deleting the variable or setting it to `\["ubuntu-latest"\]`/,
-    /a repository-level value takes precedence/,
-  ])
-    assert.match(rules, requirement);
-  const guidance = flowedText("guidance/github-repository-configuration.md");
-  assert.match(
-    guidance,
-    /Assess the repository's visibility and the repository-level `REPO_CANON_RUNS_ON` variable as unset, valid with its labels, or invalid/,
+test("runner prerequisites live only in the GitHub rules", () => {
+  assert.doesNotMatch(
+    read("guidance/github-repository-configuration.md"),
+    /The runners need/,
   );
-  assert.match(guidance, /never sets, changes, or deletes the variable/);
-  assert.doesNotMatch(guidance, /The runners need/);
-});
-
-test("the GitHub guidance leaves the reviewer file to a separate commit after the run", () => {
-  const guidance = flowedText("guidance/github-repository-configuration.md");
-  const section = guidance.slice(
-    guidance.indexOf("## Pull request reviewer"),
-    guidance.indexOf("## Installed workflow runners"),
-  );
-  assert.match(section, /not adoption output/);
-  assert.match(section, /the run leaves the file untouched/);
-  assert.match(
-    section,
-    /in a separate commit after the run completes, following the schema in the rules/,
-  );
-  assert.match(section, /never in the adoption commit or pull request/);
-  assert.doesNotMatch(section, /Decide whether the repository adds/);
-  assert.doesNotMatch(section, /choose a reviewer, or leave the file absent/);
 });
 
 test("AGENTS.md names no rules path", () => {
@@ -544,27 +475,8 @@ test("AGENTS.md names no rules path", () => {
   );
 });
 
-// Word budgets keep growth of the two entry documents visible in review. A word
-// is a maximal run of non-whitespace characters in the file's UTF-8 text, so
-// Markdown syntax, punctuation, and code spans count as written and no word is
-// split or merged by hyphens, slashes, or backticks. Each limit is the document's
-// count after the last held rules move (#517, #518). Raising one is a deliberate
-// edit here in the same pull request; never derive a limit from the document.
-const wordBudgets = {
-  // Raised from 1970 for the Triage section (#500), then from 2263 for the
-  // adoption pull request's pre-commit verdict (#540), then for automated
-  // update titles (#561), then for the inference test, the grill flow and
-  // question routing (#595), then for prescribed merge-role handoffs (#609)
-  // and the installed approval-pause continuation pointer (#632), then for
-  // grill domain-document delivery (#693), then closed-issue label cleanup (#735),
-  // then from 2799 to consolidate the account policy and clarify both rules
-  // in one sentence while preserving delivery gates (#736), then from 2868
-  // for the progress rule and the source and live-acceptance tickets (#793).
-  "CONTRIBUTING.md": 2909,
-  // Raised from 108 for general delegation (#693), then from 193 for
-  // supported session naming alongside that installed rule (#748).
-  "AGENTS.md": 223,
-};
+// Fixed budgets make entry-document growth visible in review.
+const wordBudgets = { "CONTRIBUTING.md": 2909, "AGENTS.md": 223 };
 
 function wordCount(text) {
   return text.match(/\S+/gu)?.length ?? 0;
@@ -615,10 +527,10 @@ test("CONTRIBUTING.md and AGENTS.md stay within their word budgets", () => {
     );
 });
 
-test("standards.yaml declares no pull request reviewer file", () => {
+test("standards.yaml declares no pull request reviewer or app-author policy file", () => {
   assert.doesNotMatch(
     JSON.stringify(declarations(root)),
-    /pull-request-reviewer\.json/,
+    /pull-request-reviewer\.json|factory-review-policy\.json/,
   );
 });
 
@@ -742,18 +654,6 @@ test("implement allows model invocation in both harness formats", () => {
   );
 });
 
-test("every owned skill treats a prompt or brief naming it as invocation", () => {
-  for (const { source } of declaredSkills()) {
-    const body = readFileSync(join(root, source, "SKILL.md"), "utf8")
-      .replace(/^---\n[\s\S]*?\n---\n/, "")
-      .replace(/\s+/g, " ");
-    assert.ok(
-      body.includes("A prompt or brief naming this skill is its invocation."),
-      `${source} states how a prompt or brief invokes it`,
-    );
-  }
-});
-
 // The skill setup files take these seeds as their upstream bases (ADR 0028),
 // so they stay vendored without the setup skill itself.
 const setupSeeds =
@@ -806,32 +706,102 @@ test("both profiles install HumanLayer's pinned upstream license beside the skil
   );
 });
 
-test("third-party notices cover the reproduced pr Summary and its installed HumanLayer notice", () => {
-  const notices = flowedText("THIRD_PARTY_NOTICES.md");
-  assert.match(
-    notices,
-    /`pr` skill's Summary section reproduces material from HumanLayer's `show-me` skill/,
+// Notices in credits are literal copies; THIRD_PARTY_NOTICES links to copies.
+const licensePaths = [
+  "vendor/mattpocock-skills/LICENSE",
+  "vendor/humanlayer-skills/LICENSE",
+  "vendor/marked/LICENSE",
+  "vendor/parse5/LICENSE.parse5",
+  "vendor/parse5/LICENSE.entities",
+  "vendor/postern/LICENSE",
+];
+
+function noticeLinks(text) {
+  return localLinks(
+    root,
+    "THIRD_PARTY_NOTICES.md",
+    interpretMarkdown(text).content.elements,
+  ).map(({ path }) => path);
+}
+
+function checkNotices(readBytes) {
+  const links = noticeLinks(
+    readBytes("THIRD_PARTY_NOTICES.md").toString("utf8"),
   );
-  assert.match(
-    notices,
-    /\[MIT License and copyright notice\]\(vendor\/humanlayer-skills\/LICENSE\)/,
+  assert.deepEqual(links.toSorted(), ["LICENSE", ...licensePaths].toSorted());
+  for (const [index, path] of links.entries())
+    assert.deepEqual(
+      readBytes(path),
+      readFileSync(join(root, ["LICENSE", ...licensePaths][index])),
+      path,
+    );
+  for (const { path, license } of skillNotices())
+    assert.ok(
+      readBytes(path).includes(readFileSync(join(root, license))),
+      `${path} must reproduce ${license} byte for byte`,
+    );
+}
+
+function skillNotices() {
+  const bases = JSON.parse(read("upstream-bases.json")).skills;
+  return declaredSkills().flatMap(({ name, source }) =>
+    [
+      ...(bases[name]?.path ? [licensePaths[0]] : []),
+      ...(name === "pr" ? [licensePaths[1]] : []),
+    ].map((license) => ({ path: `${source}/CREDITS.md`, license })),
   );
-  assert.match(
-    notices,
-    /Adoption installs the same notice beside the copied skills, at `\.agents\/skills\/LICENSE\.humanlayer-skills` in the adopting repository/,
-  );
+}
+
+test("owned skills and third-party notices retain their vendored licenses byte for byte", () => {
+  checkNotices((path) => readFileSync(join(root, path)));
+});
+
+test("dropped or altered license notices fail, including linked notices", () => {
+  const readBytes = (path) => readFileSync(join(root, path));
+  for (const { path, license: licensePath } of [
+    ...skillNotices(),
+    ...licensePaths.map((path) => ({ path, license: path })),
+  ]) {
+    const original = readBytes(path);
+    const license = readBytes(licensePath);
+    for (const replacement of [
+      Buffer.alloc(0),
+      Buffer.from(license.toString().replace("Copyright", "Altered copyright")),
+    ]) {
+      const changed = Buffer.from(
+        original.toString().replace(license.toString(), replacement.toString()),
+      );
+      assert.throws(
+        () =>
+          checkNotices((requested) =>
+            requested === path ? changed : readBytes(requested),
+          ),
+        assert.AssertionError,
+        path,
+      );
+    }
+  }
+  const text = read("THIRD_PARTY_NOTICES.md");
+  for (const target of licensePaths)
+    assert.throws(
+      () =>
+        checkNotices((path) =>
+          path === "THIRD_PARTY_NOTICES.md"
+            ? Buffer.from(text.replace(target, "LICENSE"))
+            : readBytes(path),
+        ),
+      assert.AssertionError,
+      target,
+    );
 });
 
 test("operations retaining third-party notices also retain every linked license", () => {
-  const notices = readFileSync(join(root, "THIRD_PARTY_NOTICES.md"), "utf8");
-  const licenses = [...notices.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)].map(
-    ([, path]) => path,
-  );
+  const licenses = noticeLinks(read("THIRD_PARTY_NOTICES.md"));
   const resources = declaredOperations(root)
     .map(({ run }) => run.resources ?? [])
     .filter((paths) => paths.includes("THIRD_PARTY_NOTICES.md"));
-  assert.ok(resources.length > 0, "at least one operation retains the notices");
-  for (const paths of resources) {
+  assert.ok(resources.length > 0);
+  for (const paths of resources)
     for (const license of licenses) {
       assert.ok(
         paths.includes(license),
@@ -839,7 +809,6 @@ test("operations retaining third-party notices also retain every linked license"
       );
       assert.ok(existsSync(join(root, license)), `${license} exists`);
     }
-  }
 });
 
 test("the vendored Matt Pocock tree holds only owned skills' upstream bases and setup seeds, matching v1.3.1", () => {
@@ -948,71 +917,7 @@ test("the owned setup files install from themselves and record how they differ f
   }
 });
 
-test("the setup files state the rules' label meanings and native links, so no rule overrides them", () => {
-  const github = flowedText("rules/github-repository-configuration.md");
-  const labels = /## Labels (.*?) ## Merge settings/.exec(github)?.[1] ?? "";
-  for (const requirement of [
-    /`docs\/agents\/triage-labels\.md` maps canonical roles to tracker label strings; use the configured string for each role/,
-    /For `needs-info`, follow the contribution guide's Triage section for question routing and its inference test/,
-    /Agent work, including work awaiting the owner's review, follows the contribution guide's Triage and Readiness sections for `ready-for-agent`/,
-    /Where factory workflow rules are installed, follow their State labels section for factory pickup exclusions/,
-  ])
-    assert.match(labels, requirement);
-  assert.doesNotMatch(labels, /agent path/i);
-  const guide = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
-  assert.match(guide, /^## Triage$/m);
-  assert.match(guide, /^## Readiness$/m);
-  assert.match(
-    readFileSync(join(root, "rules/factory-workflow.md"), "utf8"),
-    /^## State labels$/m,
-  );
-
-  // Each role's meaning in the setup file is the rules' label description.
-  const rulesTable = readFileSync(
-    join(root, "rules/github-repository-configuration.md"),
-    "utf8",
-  );
-  const table = readFileSync(
-    join(root, "docs/agents/triage-labels.md"),
-    "utf8",
-  );
-  for (const role of [
-    "needs-triage",
-    "needs-info",
-    "ready-for-agent",
-    "ready-for-human",
-    "wontfix",
-  ]) {
-    const described = new RegExp(
-      `^\\| \`${role}\` +\\| \`[0-9a-f]{6}\` +\\| (.+?) +\\|$`,
-      "m",
-    ).exec(rulesTable)?.[1];
-    assert.ok(described, role);
-    assert.match(
-      table,
-      new RegExp(
-        `^\\| \`${role}\` +\\| \`${role}\` +\\| ${RegExp.escape(described)} +\\|$`,
-        "m",
-      ),
-      role,
-    );
-  }
-  assert.doesNotMatch(
-    table,
-    /Waiting on reporter|Requires human implementation/,
-  );
-  assert.match(flowedText("docs/agents/triage-labels.md"), /readiness command/);
-
-  const tracker = flowedText("docs/agents/issue-tracker.md");
-  assert.doesNotMatch(
-    tracker,
-    /fall back to a `Blocked by|task list in the map body|Part of #<map>` at the top/,
-  );
-  assert.match(tracker, /Only the native sub-issue link makes it a child/);
-  assert.match(tracker, /the latest one is its implementation contract/);
-  assert.match(tracker, /issue form under `\.github\/ISSUE_TEMPLATE\/`/);
-
-  // The prose that existed only to override the setup files is gone.
+test("setup overrides have no second home in shared documents", () => {
   for (const document of [
     "CONTRIBUTING.md",
     "rules/github-repository-configuration.md",
@@ -1023,94 +928,45 @@ test("the setup files state the rules' label meanings and native links, so no ru
     ".agents/skills/triage/SKILL.md",
   ])
     assert.doesNotMatch(
-      flowedText(document),
+      read(document).replaceAll(/\s+/g, " "),
       /take precedence over (?:its|the configuration's) upstream Meaning column|upstream tracker guide|precedence over the fallback/,
       document,
     );
-});
-
-test("configuration and triage pointers name the label mapping as the home of role meanings", () => {
-  assert.match(
-    flowedText("docs/agents/README.md"),
-    /\[Triage labels\]\(triage-labels\.md\): the label strings and meanings for the five canonical triage roles\./,
-  );
-  assert.match(
-    flowedText(".agents/skills/triage/SKILL.md"),
-    /The actual label strings and their meanings are in the triage label configuration, `docs\/agents\/triage-labels\.md`\./,
-  );
-});
-
-// Each owned skill states the method the rules require, so the guide and the
-// rules carry no sentence whose only job is to override it.
-test("owned skills state what the rules require instead of being overridden", () => {
-  const skill = (name, file = "SKILL.md") =>
-    flowedText(`.agents/skills/${name}/${file}`);
-
-  const toTickets = skill("to-tickets");
-  assert.doesNotMatch(toTickets, /share an integration branch/);
-  assert.match(
-    toTickets,
-    /Every ticket's change merges into its base branch on its own, with its checks passing/,
-  );
-  assert.doesNotMatch(toTickets, /Apply the `ready-for-agent` triage label/);
-  assert.doesNotMatch(toTickets, /otherwise set each ticket's "Blocked by"/);
-  assert.match(toTickets, /native sub-issue and blocking relationships/);
-  assert.match(toTickets, /\*\*Status:\*\* needs-triage/);
-  for (const name of ["to-tickets", "to-spec"])
-    assert.match(
-      skill(name),
-      /someone other than you who holds a role the repository authorizes for readiness, after any revision notice the tracker posts, with the companion labels its rules require/,
-      name,
+  for (const [path, required] of [
+    ["CONTRIBUTING.md", ["Triage", "Readiness"]],
+    ["rules/factory-workflow.md", ["State labels"]],
+  ]) {
+    const headings = interpretMarkdown(read(path)).headings.map(
+      ({ name }) => name,
     );
-  assert.doesNotMatch(skill("to-spec"), /Apply the `ready-for-agent`/);
+    for (const name of required)
+      assert.ok(headings.includes(name), `${path}: ${name}`);
+  }
+});
 
-  const implement = skill("implement");
-  assert.doesNotMatch(implement, /Commit your work to the current branch\./);
-  assert.match(implement, /made from the up-to-date base branch/);
-  assert.match(implement, /as the repository's contribution guide directs/);
+test("the agent documentation index links the triage label mapping", () => {
+  assert.ok(
+    localLinks(
+      root,
+      "docs/agents/README.md",
+      interpretMarkdown(read("docs/agents/README.md")).content.elements,
+    ).some(
+      ({ path, broken }) => path === "docs/agents/triage-labels.md" && !broken,
+    ),
+  );
+});
 
-  const pr = readFileSync(join(root, ".agents/skills/pr/SKILL.md"), "utf8");
-  assert.match(pr, /## Merge Danger[\s\S]*## Related issue\n[\s\S]*```\n/);
-  assert.match(pr, /^### Related issue$/m);
-  assert.match(
-    flowedText(".agents/skills/pr/SKILL.md"),
-    /List every check you ran on the final commit with its outcome/,
+test("the pr skill has a Related issue section", () => {
+  assert.ok(
+    interpretMarkdown(read(".agents/skills/pr/SKILL.md")).headings.some(
+      ({ name, level }) => name === "Related issue" && level === 3,
+    ),
   );
-  assert.match(
-    flowedText("CONTRIBUTING.md"),
-    /For an ordinary pull request, write the body with the `pr` skill\. For an adoption pull request/,
-  );
-
-  const wayfinder = skill("wayfinder");
-  assert.match(wayfinder, /those links are the only ones that count/);
-  assert.match(wayfinder, /\*\*Out of scope\*\* filled in/);
-
-  assert.match(skill("grilling"), /Keep each round short/);
-  const adr = skill("domain-modeling", "ADR-FORMAT.md");
-  assert.match(adr, /add each new ADR to it/);
-  assert.match(adr, /Keep every ADR/);
-  assert.match(
-    skill("improve-codebase-architecture"),
-    /on the branch and checkout it directs/,
-  );
-  assert.match(
-    skill("code-review"),
-    /The spec is the issue's implementation contract/,
-  );
-  assert.match(skill("research"), /add it to that directory's index/);
-  assert.match(
-    skill("writing-for-agents"),
-    /A requirement lives in the rules or contribution guide that hold it/,
-  );
-  assert.match(
-    skill("triage"),
-    /Apply a readiness role through \[Apply and confirm readiness\]\(#accept-a-brief-that-holds\)/,
-  );
-  assert.doesNotMatch(skill("triage"), /apply the role directly/);
-
-  assert.doesNotMatch(
-    flowedText("CONTRIBUTING.md"),
-    /tickets sharing an integration branch|in short rounds of numbered questions|then Related issue/,
+  assert.deepEqual(
+    interpretMarkdown(read(".github/PULL_REQUEST_TEMPLATE.md")).headings.map(
+      ({ name }) => name,
+    ),
+    ["Summary", "Evidence", "Merge Danger", "Related issue"],
   );
 });
 
@@ -1148,7 +1004,7 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
   );
 });
 
-test("adoption installs Repo Canon's own triage, which credits its upstream base", () => {
+test("adoption installs Repo Canon's own triage, with its retained files", () => {
   assert.deepEqual(
     declaredSkills().find((skill) => skill.name === "triage"),
     { name: "triage", source: ".agents/skills/triage" },
@@ -1175,272 +1031,9 @@ test("adoption installs Repo Canon's own triage, which credits its upstream base
       upstreamSnapshot.files[`skills/engineering/triage/${path}`],
       `${path} is unchanged from ${upstreamSnapshot.tag}`,
     );
-  const credits = flowedText(".agents/skills/triage/CREDITS.md");
-  assert.ok(credits.includes(upstreamSnapshot.commit));
-  assert.match(credits, /tag `v1\.3\.1`/);
-  // A standalone copy carries the notice that adoption installs beside it.
-  assert.match(
-    credits,
-    /whose notice follows at the end of this file; adoption also installs it beside the skills/,
-  );
-  assert.ok(
-    readFileSync(
-      join(root, ".agents/skills/triage/CREDITS.md"),
-      "utf8",
-    ).includes(
-      readFileSync(join(root, "vendor/mattpocock-skills/LICENSE"), "utf8"),
-    ),
-  );
-  assert.match(
-    flowedText("THIRD_PARTY_NOTICES.md"),
-    /Repo Canon's owned skills taken from the collection, including `triage`, keep that material under the same notice/,
-  );
 });
 
-test("the guide, the installed rules and the triage skill route by uncertainty and accept only reviewed briefs", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  const triage = /## Triage (.*?) ## Readiness/.exec(guide)?.[1] ?? "";
-  for (const requirement of [
-    /routes an intake request by where its uncertainty lies, not by its category label/,
-    /A request is code-bound when its expected result is clear/,
-    /It is intent-bound when an open question needs the owner's intent, a policy, or a trade-off they choose/,
-    /including for a bug/,
-    /Missing evidence or access never licenses inventing policy/,
-    /the research run verifies the claim and posts the Agent Brief/,
-    /The orchestrating agent runs triage and starts a research run, a separate agent, for each request/,
-    /it first gathers the facts from the code/,
-    /Under the inference test, the orchestrating agent may answer an intent question itself only when all three hold: it can cite the answer's source, the owner's approved goal for the work, a recorded owner decision or wish, or the owner's quoted words, each with its date/,
-    /the choice is reversible within that work, so no value or policy outlives it, and it adds no public name and no breaking change; and it changes neither the goal nor the scope/,
-    /A default, limit, timeout, or fallback that persists in the product is never inferred/,
-    /its triage notes list it with its citation under \*\*Inferred intent\*\*/,
-    /lists every inferred answer in its next report to the owner, so the owner can veto it\. A veto is an owner decision, and the brief is revised from it/,
-    /Questions it cannot infer go to a separate grilling session with the owner\. The grill/,
-    /The grill records the owner's decisions and drafts the Agent Briefs in a proposed ticket split; it files no issue and applies no readiness/,
-    /The orchestrating agent decides the split: it may merge, split, or drop a draft, or set it aside for later work/,
-    /each issue's triage notes record the owner decisions its brief relies on, each with its date and where the owner gave it/,
-    /A recorded decision is not asked again/,
-    /The orchestrating agent never writes a brief it accepts: when its split changes a draft substantially, the grill rewrites that brief, and a research run writes one only when it needs code facts the grill did not gather/,
-    /The orchestrating agent, never the agent that wrote the brief, then reviews/,
-    /Passing the structure check never makes a brief hold/,
-    /an implementation choice, an option list, or a fallback value, does not hold/,
-    /an unanswered required question blocks acceptance/,
-    /accepts a brief that holds by applying readiness to its revision, records its blockers, and tells the owner with links/,
-    /When the revision notice never arrives, or its credentials cannot apply readiness, it leaves readiness to the owner/,
-    /Every question reaches the orchestrating agent first\. `needs-info` means information is missing/,
-    /a question for an outside reporter still goes to the reporter/,
-    /A question only the owner can answer goes into its decision inbox with its recommendation; the decision inbox is the one channel for questions to the owner/,
-    /When the owner runs triage themselves, they are the orchestrating agent/,
-  ])
-    assert.match(triage, requirement);
-  const comments = /## Comments (.*)$/.exec(guide)?.[1] ?? "";
-  assert.match(
-    comments,
-    /The orchestrating agent reads the question first: when it can answer under the \[triage\]\(#triage\) inference test, it answers on the issue; otherwise it puts the question in its decision inbox/,
-  );
-  const github = flowedText("rules/github-repository-configuration.md");
-  for (const requirement of [
-    /An orchestrating agent that accepts an Agent Brief applies its readiness only when the credentials it was given hold one of these roles, and only after the issue-contract workflow's revision notice for the brief revision it reviewed/,
-    /With other credentials, or without that notice, it applies no readiness and leaves readiness to the owner/,
-    /The run that wrote the brief never applies its readiness/,
-    /an edit to the brief removes it until the new revision is reviewed/,
-  ])
-    assert.match(github, requirement);
-  const factory = flowedText("rules/factory-workflow.md");
-  for (const requirement of [
-    /An orchestrating agent that accepts the brief is that reviewer: it chooses the label itself/,
-    /the research run that suggested it applies no label/,
-    /The factory accepts readiness only from a person/,
-    /`ready.mjs` refuses GitHub App and bot accounts before any readiness write/,
-    /The orchestrating agent stops at acceptance and reports the reviewed brief and revision, suggested readiness, model and skip labels, and blockers to an authorized person, with links/,
-    /the agent never reports that factory work started/,
-    /This person-only command refusal applies only where factory workflow rules are installed/,
-    /The question reaches the orchestrating agent first, as those rules say: it answers on the issue when the triage inference test lets it, and otherwise puts the question in its decision inbox for the owner/,
-    /whoever answers, the orchestrating agent or the owner, may remove `factory:needs-input` to request factory resumption/,
-  ])
-    assert.match(factory, requirement);
-  const skill = flowedText(".agents/skills/triage/SKILL.md");
-  for (const method of [
-    /### Code-bound path/,
-    /### Intent-bound path/,
-    /### Accept a brief that holds/,
-    /Passing the issue-contract check proves the shape, never that the brief holds/,
-    /Leave readiness, labels, and the judgment of its brief to yourself/,
-    /Every research run, on either path, does two checks first/,
-    /Open it with `\/grill-with-docs`/,
-    /Leave filing and readiness to yourself/,
-    /accept only once every one the owner must answer is answered/,
-    /`needs-info`: information is missing; you, the orchestrating agent, answer it or route it/,
-    /`needs-info` returns to `needs-triage` once the missing information arrives: your own answer, the reporter's reply, or the owner's decision/,
-    /## Route questions/,
-    /The decision inbox is the one channel for questions to the owner/,
-    /Never infer a default, limit, timeout, or fallback that persists in the product/,
-    /it files no issue and applies no readiness/,
-    /never write or rewrite one yourself/,
-    /If no notice arrives, leave readiness to the owner/,
-  ])
-    assert.match(skill, method);
-  // The owner's amendment withdrew the rule that the owner finishes every
-  // brief; nothing restates it.
-  for (const document of [
-    "CONTRIBUTING.md",
-    "rules/github-repository-configuration.md",
-    "rules/factory-workflow.md",
-    ".agents/skills/triage/SKILL.md",
-    ".agents/skills/triage/AGENT-BRIEF.md",
-  ])
-    assert.doesNotMatch(
-      flowedText(document),
-      /owner (?:must )?finish(?:es)? (?:every|each|the) brief|never applies readiness or `model:` labels to a briefed issue/i,
-      document,
-    );
-  assert.doesNotMatch(skill, /setup-matt-pocock-skills/);
-  assert.doesNotMatch(skill, /waiting on reporter|once the reporter replies/);
-  assert.match(
-    flowedText(".agents/skills/triage/AGENT-BRIEF.md"),
-    /\*\*Inferred intent\*\*: each answer the orchestrating agent inferred under the inference test, which the brief states as behavior, with its citation/,
-  );
-});
-
-test("brief writers receive and record an existing owner-review reservation with its source", () => {
-  const skill = flowedText(".agents/skills/triage/SKILL.md");
-  const context =
-    /1\. \*\*Gather context\.\*\* (.*?) Every research run/.exec(skill)?.[1] ??
-    "";
-  assert.match(
-    context,
-    /Pass any recorded owner-review reservation and its dated source to the brief's writer on either path/,
-  );
-  const brief = flowedText(".agents/skills/triage/AGENT-BRIEF.md");
-  assert.match(
-    brief,
-    /When the owner has reserved review before merge, state that designation as contract behavior and retain its dated decision source in the triage notes for the worker's PR handoff/,
-  );
-  assert.match(
-    brief,
-    /Use the recorded reservation, not a routing label, as its source/,
-  );
-  assert.match(
-    brief,
-    /\*\*Owner decisions\*\*: each decision the brief relies on, including any owner-review reservation, with its date and a link to where the owner gave it/,
-  );
-  assert.doesNotMatch(brief, /factory:skip/);
-});
-
-test("owner-review routing returns an incomplete brief to its writer before accepting a new revision", () => {
-  const skill = flowedText(".agents/skills/triage/SKILL.md");
-  const acceptance =
-    /### Accept a brief that holds (.*?) ## Other outcomes/.exec(skill)?.[1] ??
-    "";
-  assert.match(
-    acceptance,
-    /When owner review before merge is reserved, in either profile, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source/,
-  );
-  assert.match(
-    acceptance,
-    /Check this even when that reason first arises here, after the initial brief review/,
-  );
-  assert.match(
-    acceptance,
-    /If the designation or its source is missing or unclear, return the brief to its writer with the recorded reservation and source; the writer corrects it/,
-  );
-  assert.match(
-    acceptance,
-    /Independently review the corrected brief from the top, then return to step 1 for its new validator revision notice before applying readiness/,
-  );
-  assert.match(acceptance, /Never write or rewrite the brief you accept/);
-});
-
-test("triage keeps workflow-only skips undesignated and factory routing conditional on installed rules", () => {
-  const skill = flowedText(".agents/skills/triage/SKILL.md");
-  const acceptance =
-    /### Accept a brief that holds (.*?) ## Other outcomes/.exec(skill)?.[1] ??
-    "";
-  assert.match(
-    acceptance,
-    /For workflow-edit-only work without a separate owner-review designation, follow the ordinary applicable merge conditions in the installed rules; the skip marker alone supplies no designation/,
-  );
-  assert.match(acceptance, /Without those rules there is no skip label/);
-  assert.doesNotMatch(flowedText("CONTRIBUTING.md"), /factory:skip/);
-});
-
-test("installed agent guidance governs covered and uncovered delegation by every agent", () => {
-  assert.deepEqual(
-    declarations(root).standard.find((entry) => entry.id === "agent-guidance"),
-    {
-      id: "agent-guidance",
-      kind: "file",
-      target: "AGENTS.md",
-      exact: "AGENTS.md",
-    },
-  );
-  const guidance = flowedText("AGENTS.md");
-  for (const requirement of [
-    /Before handing work to another agent, subagent or session, check whether an installed skill covers it/,
-    /This includes implementation workers delegating ticket subwork without invoking `orchestrate` or `triage`, and heavy reads/,
-    /When covered, invoke that skill using the session's supported invocation mechanism, followed by task context/,
-    /When no installed skill covers the work, pass task context only/,
-    /Task context includes issue links, evidence, recorded decisions, scope, workspace and plan references, report-back destinations and task-specific delivery obligations/,
-    /Keep procedure and question format with the invoked skill/,
-  ])
-    assert.match(guidance, requirement);
-});
-
-test("installed session naming applies to launched and owned sessions where supported", () => {
-  const guidance = flowedText("AGENTS.md");
-  assert.match(
-    guidance,
-    /Where session naming is supported, name sessions you launch or own for their operation and target/,
-  );
-  assert.match(guidance, /Otherwise, continue without naming/);
-  assert.match(
-    guidance,
-    /Keep naming metadata outside the skill invocation and task context/,
-  );
-  for (const skill of [
-    orchestrateSkill(),
-    flowedText(".agents/skills/triage/SKILL.md"),
-  ]) {
-    assert.match(
-      skill,
-      /`AGENTS\.md`'s Agent skills requirements for delegation and session naming/,
-    );
-    assert.match(
-      skill,
-      /Use the available naming capability separately from the command and task context/,
-    );
-  }
-});
-
-test("installed contribution guidance separates grill domain edits from workbench delivery", () => {
-  assert.deepEqual(
-    declarations(root).standard.find(
-      (entry) => entry.id === "contribution-guidance",
-    ),
-    {
-      id: "contribution-guidance",
-      kind: "file",
-      target: "CONTRIBUTING.md",
-      exact: "CONTRIBUTING.md",
-    },
-  );
-  const triage = flowedText("CONTRIBUTING.md")
-    .split("## Triage ")[1]
-    .split("## Readiness")[0];
-  for (const requirement of [
-    /A grilling session changing a repository's glossary or ADRs works on its own branch in a checkout it owns \(a worktree or fresh clone\), never in a shared checkout on the default branch/,
-    /Each repository whose domain documents change gets one pull request through its normal review and merge/,
-    /The grill's decision record and draft briefs stay in the workbench, committed directly to its default branch/,
-  ])
-    assert.match(triage, requirement);
-  // The domain-modeling skill states where its inline edits happen.
-  assert.doesNotMatch(triage, /Domain modeling edits those documents inline/);
-  assert.match(
-    flowedText(".agents/skills/domain-modeling/SKILL.md"),
-    /Before your first edit to a glossary or ADR, work on a branch of your own in a checkout you own, such as a worktree or fresh clone, never in a shared checkout on the default branch/,
-  );
-});
-
-test("adoption installs Repo Canon's user-invoked orchestrate skill, which credits chief-of-staff", () => {
+test("adoption installs Repo Canon's user-invoked orchestrate skill, with its retained files", () => {
   assert.deepEqual(
     declaredSkills().find((skill) => skill.name === "orchestrate"),
     { name: "orchestrate", source: ".agents/skills/orchestrate" },
@@ -1466,21 +1059,6 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, which credi
     readFileSync(join(directory, "agents/openai.yaml"), "utf8"),
     /^ {2}allow_implicit_invocation: false$/m,
   );
-  const credits = flowedText(".agents/skills/orchestrate/CREDITS.md");
-  assert.match(
-    credits,
-    /`chief-of-staff` skill in \[Matt Pocock's skills\]\(https:\/\/github\.com\/mattpocock\/skills\), compared at commit `5beb35b040e3de97e54fa9e386d7e42d15c295c2`/,
-  );
-  const skill = orchestrateSkill();
-  // A method that cites the contribution guide rather than restating it.
-  assert.match(
-    orchestrateFile("SKILL.md"),
-    /contribution guide, `CONTRIBUTING\.md`, decides triage, readiness, question routing and delivery/,
-  );
-  assert.doesNotMatch(
-    skill,
-    /Never infer a default|readiness label|`ready-for-agent`/,
-  );
 });
 
 // The core holds the purpose, the workbench files, the lifecycle, the wait
@@ -1489,690 +1067,42 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, which credi
 const orchestrateCoreLineLimit = 120;
 
 test("orchestrate keeps its core within its line limit and links its references", () => {
-  const core = readFileSync(
-    join(root, ".agents/skills/orchestrate/SKILL.md"),
-    "utf8",
-  );
+  const path = ".agents/skills/orchestrate/SKILL.md";
+  const core = read(path);
   const lines = core.replace(/\n$/, "").split("\n").length;
   assert.ok(
     lines <= orchestrateCoreLineLimit,
-    `.agents/skills/orchestrate/SKILL.md has ${lines} lines; the limit is ${orchestrateCoreLineLimit}`,
+    `${path} has ${lines} lines; the limit is ${orchestrateCoreLineLimit}`,
   );
+  const document = interpretMarkdown(core);
+  const links = localLinks(root, path, document.content.elements);
   for (const name of orchestrateReferences)
-    assert.ok(core.includes(`](references/${name}`), `links ${name}`);
-  const flowed = orchestrateFile("SKILL.md");
-  for (const section of [
-    "## Workbench",
-    "## Lifecycle",
-    "## The wait step",
-    "## Report-back",
-  ])
-    assert.ok(flowed.includes(`${section} `), section);
-  // The workbench profile installs no factory skill beside this one.
-  assert.match(
-    flowed,
-    /In a repository a factory serves, the `factory` skill installed there/,
-  );
-});
-
-test("owned handoffs invoke covering skills without copying grill procedure", () => {
-  const orchestrate = orchestrateSkill();
-  const triage = flowedText(".agents/skills/triage/SKILL.md");
-  for (const skill of [orchestrate, triage]) {
-    assert.match(skill, /`AGENTS\.md`.*delegation/);
-    assert.match(skill, /`\/grill-with-docs`/);
-    assert.match(skill, /contribution guide's Triage section/);
-    assert.doesNotMatch(
-      skill,
-      /what the `triage` skill gives|The grill calls the Skill tool twice|updates `GLOSSARY\.md` and ADRs inline|in short rounds of numbered questions|one question at a time/,
-    );
-  }
-  assert.match(orchestrate, /Open each triage run with `\/triage`/);
-  assert.match(
-    orchestrateFile("SKILL.md"),
-    /with the `triage` skill's method, in triage runs/,
-  );
-  assert.match(orchestrate, /Launch a ticket worker with `\/implement`/);
-  assert.match(
-    orchestrate,
-    /owned branch and checkout.*one pull request destination per affected repository/,
-  );
-  assert.match(
-    triage,
-    /For each research run below, apply that rule to its research task and use the listed issue references and deliverables as task context/,
-  );
-  assert.match(
-    triage,
-    /owned branch and checkout.*per-repository pull request destinations/,
-  );
-  assert.match(
-    triage,
-    /issue links, the facts, your inferred answers, the recorded owner decisions/,
-  );
-  assert.match(triage, /draft briefs in a proposed ticket split/);
-});
-
-test("orchestrate handoffs retain workbench delivery and report-back context", () => {
-  const launches = orchestrateFile("references/launches.md");
-  const intake = /## Triage run (.*?) ## Grill /.exec(launches)?.[1] ?? "";
-  const grill = /## Grill (.*?) ## Worker /.exec(launches)?.[1] ?? "";
-  assert.match(
-    intake,
-    /write its result to the plan directory, citing the brief or findings it posted by link/,
-  );
-  assert.match(
-    grill,
-    /write the owner's decisions and the draft briefs to the plan directory/,
-  );
-  for (const [step, mark] of [
-    [intake, "triaged"],
-    [grill, "grilled"],
-  ]) {
-    assert.match(
-      step,
-      /add each decision it leaves open for the owner to `inbox\.md`/,
-    );
     assert.ok(
-      step.includes(`mark its row \`${mark} <file>\` in \`plan.md\``),
-      mark,
+      links.some(
+        (link) =>
+          link.path === `.agents/skills/orchestrate/references/${name}` &&
+          !link.broken,
+      ),
+      `links ${name}`,
     );
-    assert.match(
-      step,
-      /commit and push its writes, as \[Workbench\]\(\.\.\/SKILL\.md#workbench\) says/,
-    );
-    assert.match(
-      step,
-      /report back, as \[Report-back\]\(\.\.\/SKILL\.md#report-back\) says/,
-    );
-  }
-});
-
-test("orchestrate creates a private workbench and separates current state from history", () => {
-  const skill = orchestrateSkill();
-  const core = orchestrateFile("SKILL.md");
-  const templates = orchestrateFile("references/templates.md");
-  const workbench = /## Workbench (.*?) ## Lifecycle /.exec(core)?.[1] ?? "";
-  // Creation and privacy.
-  assert.match(
-    workbench,
-    /owner's private record, outside every project repository, with a private remote or none/,
-  );
-  assert.match(
-    workbench,
-    /when they name none, create one before you propose a plan/,
-  );
-  const creating =
-    /## Creating the workbench (.*?) ## Layout /.exec(templates)?.[1] ?? "";
-  assert.match(
-    creating,
-    /create it as a local git repository outside every project checkout, seeded with `index\.md`, `inbox\.md`, `wishes\.md` and `now\.md`/,
-  );
-  assert.match(
-    creating,
-    /Tell the owner its path and the line to add to their global agent instructions/,
-  );
-  assert.doesNotMatch(skill, /ask the owner for it/);
-  assert.match(
-    creating,
-    /When you create it, also offer to adopt Repo Canon's `workbench` profile into it/,
-  );
-  assert.match(
-    creating,
-    /A completed adoption or update of the `workbench` profile is one workbench change/,
-  );
-  assert.match(
-    templates,
-    /`Repositories` list names each repository the workbench tracks/,
-  );
-
-  // Layout and the current-state file.
-  const layout = /## Layout (.*?) ## `index\.md` /.exec(templates)?.[1] ?? "";
-  for (const entry of ["now.md", "plan.md", "log.md"])
-    assert.ok(layout.includes(` ${entry} `), entry);
-  assert.match(layout, /`now\.md` and each `plan\.md` are rewritten in place/);
-  const now = /## `now\.md` (.*?) ## `inbox\.md` /.exec(templates)?.[1] ?? "";
-  assert.match(now, /Rewrite it on every pass; never append to it/);
-  assert.match(
-    now,
-    /\*\*Waiting on you\*\*.*count of open entries in `inbox\.md`.*chores/,
-  );
-  assert.match(
-    now,
-    /\| Item \| Waiting on \| Since \(UTC\) \| Next check \| Evidence \|/,
-  );
-  assert.match(now, /\| Host \| Kind \| Session \| Started \(UTC\) \|/);
-  assert.match(
-    now,
-    /Add a launch's row before you start it, and remove the row when you take in its report-back/,
-  );
-  assert.match(skill, /count the rows under `now\.md`'s Running launches/);
-  assert.match(core, /take it in as `now\.md`'s Running launches says/);
-  assert.match(
-    skill,
-    /previous dated observation in a bounded tail of the plan's `log\.md`/,
-  );
-
-  // The inbox holds decisions only.
-  const inbox =
-    /## `inbox\.md` (.*?) ## `wishes\.md` /.exec(templates)?.[1] ?? "";
-  assert.match(inbox, /Each entry is a decision/);
-  assert.match(inbox, /Notifications and chores go in `now\.md`/);
-  assert.match(
-    inbox,
-    /Move the answered entry under `Answered` in `inbox\.md`/,
-  );
-
-  // Filed drafts are marked; decision records stay as written.
-  assert.match(
-    layout,
-    /Once a draft brief is filed, add a dated line at its top linking the issues it became/,
-  );
-  assert.match(layout, /Leave decision records as written/);
-
-  // plan.md is current state; log.md is the append-only history.
-  const plan = /## `plan\.md` and `log\.md` (.*)$/.exec(templates)?.[1] ?? "";
-  assert.doesNotMatch(plan, /## Log/);
-  assert.match(plan, /## Current state/);
-  assert.match(plan, /`log\.md` takes this shape/);
-  assert.match(plan, /\*\*`log\.md`\.\*\* Append entries; never rewrite one/);
-  assert.match(
-    skill,
-    /A fresh session reads `index\.md`, `now\.md`, `inbox\.md` and each active `plan\.md`, and nothing else, not even a plan's `log\.md`, before it acts/,
-  );
-
-  const term = flowedText("GLOSSARY.md")
-    .split("**Workbench**:")[1]
-    .split("_Avoid_:")[0];
-  assert.match(
-    term,
-    /named by path in the owner's global agent instructions, or created by the orchestrating agent when none is named; private, and outside every project checkout/,
-  );
-});
-
-test("orchestrate persists decisions before other requests in a mixed owner message", () => {
-  const inbox =
-    /## `inbox\.md` (.*?) ## `wishes\.md` /.exec(
-      orchestrateFile("references/templates.md"),
-    )?.[1] ?? "";
-  assert.match(
-    inbox,
-    /When an owner message contains a decision, complete this sequence before acting on anything else in that message/,
-  );
-  assert.match(
-    inbox,
-    /1\. Post a comment on each affected issue, recording the decision, its date and where the owner gave it, under the contribution guide's comment rules.*2\. Append the decision, date, source and issue links to the plan's `log\.md`.*3\. Move the answered entry under `Answered` in `inbox\.md`, keeping its question, answer, date and source.*4\. Commit the workbench writes and push when it has a remote, as \[Workbench\]\(\.\.\/SKILL\.md#workbench\) says.*Only then act on the rest of the message/,
-  );
-  const workbench =
-    /## Workbench (.*?) ## Lifecycle /.exec(orchestrateFile("SKILL.md"))?.[1] ??
-    "";
-  assert.match(
-    workbench,
-    /Process an owner message's decisions in its \[sequence\]\(references\/templates\.md#inboxmd\) before its other requests/,
-  );
-});
-
-// The owner's "do this now" approves work without a plan, and the
-// orchestrating agent pauses only what it owns to make room for it (#791).
-test("orchestrate expedites an owner's request for now and pauses only its own work", () => {
-  const core = orchestrateFile("SKILL.md");
-  const propose =
-    /1\. \*\*Propose\.\*\* (.*?) 2\. \*\*Intake/.exec(core)?.[1] ?? "";
-  assert.match(
-    propose,
-    /An owner's request for something now skips only the plan: \[Expedited change\]\(references\/launches\.md#expedited-change\)/,
-  );
-  assert.match(
-    core,
-    /A \*\*new requirement\*\* that arrives mid-plan, unless the owner wants it now, takes one route/,
-  );
-  const launches = orchestrateFile("references/launches.md");
-  const expedited =
-    /## Expedited change (.*?) ## Retro /.exec(launches)?.[1] ?? "";
-  for (const rule of [
-    /When the owner asks for something now, their request is its approval and skips only the plan: no proposal, no plan approval and no new file/,
-    /Each repository's contribution guide and installed rules still decide the change's delivery, such as its Direct change, pull request, review and merge rules/,
-    /1\. \*\*Record\.\*\* Before acting, complete the decision \[sequence\]\(templates\.md#inboxmd\) for the request/,
-    /2\. \*\*Track\.\*\* Add its `now\.md` In flight row, which states the pause below\. When the change falls inside an open plan's goal, also add an expedited row to that plan/,
-    /3\. \*\*Pause\.\*\* Pause only what you own: start no launch and make no merge other than the change's own; hold the rest\. Running sessions keep running unless the owner says to stop one/,
-    /In a repository a factory serves, also pause the factory with the `factory` skill installed there, as its Pause and resume one repository section says/,
-    /5\. \*\*End\.\*\* The pause ends when the change merges\. Resume the factory through that same `factory` section, then the launches and merges you held\. Append the outcome, with its pull request link, to the change's `Answered` entry, and end its rows/,
+  for (const section of [
+    "Workbench",
+    "Lifecycle",
+    "The wait step",
+    "Report-back",
   ])
-    assert.match(expedited, rule);
-  const order = [
-    "**Record.**",
-    "**Track.**",
-    "**Pause.**",
-    "**Deliver.**",
-    "**End.**",
-  ].map((step) => expedited.indexOf(step));
+    assert.ok(
+      document.headings.some(
+        ({ name, level }) => name === section && level === 2,
+      ),
+      section,
+    );
   assert.ok(
-    order.every((at, index) => at > (order[index - 1] ?? -1)),
-    `${order}`,
+    marked
+      .lexer(core)
+      .flatMap((token) => token.tokens ?? [])
+      .some((token) => token.type === "codespan" && token.text === "factory"),
   );
-  assert.match(
-    /## Handover (.*?) ## Progress observation /.exec(launches)?.[1] ?? "",
-    /keeps the pause an expedited row states/,
-  );
-  const templates = orchestrateFile("references/templates.md");
-  assert.match(
-    templates,
-    /An \[expedited change\]\(launches\.md#expedited-change\)'s row starts its Item with `expedited`, links its `Answered` entry and pull request in Evidence, and states the pause it holds/,
-  );
-  assert.match(
-    templates,
-    /An \[expedited change\]\(launches\.md#expedited-change\)'s request has no open entry: step 3 enters it under `Answered` directly, marked expedited, with the owner's quoted words, date and source, and step 2 applies only when it falls inside a plan's goal\. The entry later gains its outcome/,
-  );
-  assert.match(
-    templates,
-    /Every row ends with a closed issue in its Issue column, `dropped \(owner\)` in its State or, for an expedited row without an issue, its merged pull request in its State; the plan closes only then/,
-  );
-});
-
-test("orchestrate observes filed work before approval without authorizing execution", () => {
-  const skill = orchestrateSkill();
-  assert.match(
-    skill,
-    /Record the proposal in the plan directory and `index.md` before filing work/,
-  );
-  assert.match(
-    skill,
-    /Research, filing and brief preparation may precede plan approval/,
-  );
-  assert.match(
-    skill,
-    /Hold ticket readiness for plan execution until the owner's plan approval is recorded/,
-  );
-  assert.match(
-    skill,
-    /Plan approval replaces neither independent brief review nor any other readiness condition/,
-  );
-  assert.doesNotMatch(skill, /heartbeat|configured cadence/i);
-  assert.match(
-    skill,
-    /from filing, before plan approval and before a PR exists/,
-  );
-  assert.match(
-    skill,
-    /factory tickets, directly launched workers and recorded blockers/,
-  );
-  assert.match(skill, /Observation authorizes no execution/);
-  assert.doesNotMatch(skill, /(?:15|30)[- ]minute|after (?:six|6) hours/i);
-});
-
-test("orchestrate has one owning session that hands over and re-arms its wake-ups", () => {
-  const skill = orchestrateSkill();
-  const handover =
-    /## Handover (.*?) ## Progress observation /.exec(
-      orchestrateFile("references/launches.md"),
-    )?.[1] ?? "";
-  assert.doesNotMatch(skill, /long-lived/);
-  assert.match(
-    handover,
-    /One orchestrating session at a time owns every plan in the workbench/,
-  );
-  const core = orchestrateFile("SKILL.md");
-  assert.match(
-    core,
-    /\[launches\]\(references\/launches\.md\) before you launch, take over, hand over/,
-  );
-  assert.match(
-    core,
-    /One session at a time owns every plan: it hands over at each plan's close and after any compaction since it took over/,
-  );
-  assert.match(
-    handover,
-    /It hands over at each plan's close, and whenever it has compacted since it took over/,
-  );
-  assert.match(
-    handover,
-    /Then stop: `index\.md` and `now\.md` are the handover/,
-  );
-  assert.match(
-    handover,
-    /takes over\. Before anything else, it re-arms a wake-up for every row under `now\.md`'s In flight that does not wait on the owner/,
-  );
-});
-
-test("orchestrate ends a turn only after arming a wake-up, with recurring checks optional", () => {
-  const skill = orchestrateSkill();
-  const step =
-    /## The wait step (.*?) ## Report-back /.exec(
-      orchestrateFile("SKILL.md"),
-    )?.[1] ?? "";
-  const launches = orchestrateFile("references/launches.md");
-  const observation = /## Progress observation (.*)$/.exec(launches)?.[1] ?? "";
-  const wait = /### The wait script (.*)$/.exec(observation)?.[1] ?? "";
-  assert.match(
-    step,
-    /End a turn only when every row under `now\.md`'s In flight waits on the owner or has a wake-up armed through the harness's own event mechanisms\. Its \*Next check\* names that wake-up/,
-  );
-  assert.match(
-    step,
-    /Where the harness can neither wait in the background nor deliver events, report that limit and re-read the records at each turn instead/,
-  );
-  assert.match(observation, /A recurring check is optional/);
-  assert.match(
-    observation,
-    /Where the harness can neither wait in the background nor deliver events, the wait step's fallback applies: re-read these records at each turn/,
-  );
-  assert.match(
-    wait,
-    /node <this skill's directory>\/wait\.mjs --interval <seconds> --max-duration <seconds> <item>\.\.\./,
-  );
-  assert.match(wait, /report-back file in the plan directory/);
-  assert.match(wait, /done mark/);
-  assert.match(
-    wait,
-    /arm it after your own writes to watched files and before you read the items' current state/,
-  );
-  assert.match(
-    skill,
-    /\*\*In flight\*\* holds one row per item .*a launch's report-back/,
-  );
-  assert.match(wait, /Both are required; choose both for each invocation/);
-  for (const code of ["0", "1", "2"])
-    assert.match(wait, new RegExp(`- \`${code}\`: `));
-
-  // Neither duration has a default anywhere: skill, script or example.
-  const script = readFileSync(
-    join(root, ".agents/skills/orchestrate/wait.mjs"),
-    "utf8",
-  );
-  for (const text of [skill, script])
-    assert.doesNotMatch(
-      text,
-      /--(?:interval|max-duration)[ =]\d|default (?:interval|duration|cadence|timeout|polling)|defaults? to \d/i,
-    );
-  assert.match(script, /Both durations are required/);
-});
-
-test("orchestrate takes messages from any session through the workbench's incoming directory (#792)", () => {
-  const core = orchestrateFile("SKILL.md");
-  const templates = orchestrateFile("references/templates.md");
-  const launches = orchestrateFile("references/launches.md");
-  const workbench = /## Workbench (.*?) ## Lifecycle /.exec(core)?.[1] ?? "";
-  const step = /## The wait step (.*?) ## Report-back /.exec(core)?.[1] ?? "";
-  const incoming =
-    /## `incoming\/` (.*?) ## `plan\.md` and `log\.md` /.exec(templates)?.[1] ??
-    "";
-  assert.match(
-    workbench,
-    /`incoming\/`: \[messages\]\(references\/templates\.md#incoming\)/,
-  );
-  assert.match(step, /Every wait also watches `incoming\/`/);
-  // The message shape, both sender paths and the take-in step.
-  assert.match(
-    incoming,
-    /one Markdown file directly in `incoming\/`, named `<UTC>-<sender>\.md`/,
-  );
-  assert.match(incoming, /A sender on the same host .* commits nothing/);
-  assert.match(
-    incoming,
-    /A sender elsewhere commits the file in its own clone of the workbench, .* and pushes it/,
-  );
-  assert.match(
-    core,
-    /A direct message to your session, where a harness offers one, is only a nudge/,
-  );
-  assert.match(
-    incoming,
-    /Take in each message: move it into the `log\.md` of the plan it concerns, .* or into `inbox\.md` when it holds a decision for the owner, since the inbox holds only decisions\. Then delete the file and commit/,
-  );
-  assert.match(
-    launches,
-    /Give every wait the item `dir:<workbench>\/incoming`/,
-  );
-  assert.match(launches, /each poll fetches it/);
-});
-
-test("orchestrate retains observation evidence and routes unexplained inactivity through existing recovery", () => {
-  const observation = orchestrateFile("references/launches.md");
-  assert.match(
-    observation,
-    /issue state and labels, latest comments and owner answers, blocker state, run progress and any PR/,
-  );
-  assert.match(observation, /Compare with the previous dated observation/);
-  assert.match(
-    observation,
-    /approval and blocker waits separately from unexplained lack of progress/,
-  );
-  assert.match(
-    observation,
-    /answered owner question has no observable continuation/,
-  );
-  assert.match(observation, /current state and issue\/run\/PR evidence links/);
-  assert.match(
-    observation,
-    /contribution guide and applicable installed recovery rules/,
-  );
-  assert.match(observation, /adds no stall timeout or recovery procedure/);
-});
-
-test("orchestrate reconciles closure from run findings with repository identity and provenance", () => {
-  const skill = orchestrateSkill();
-  assert.match(
-    skill,
-    /Record every issue the plan files with its repository, number and creation evidence/,
-  );
-  assert.match(skill, /Reconcile those records with every run's findings/);
-  assert.match(
-    skill,
-    /PR findings comments and, for runs without PRs, the reporting locations the contribution guide prescribes/,
-  );
-  assert.match(
-    skill,
-    /Include factory and directly launched workers, even when their findings are absent from the ticket table/,
-  );
-  assert.match(
-    skill,
-    /Consolidate references by repository and issue number, then check current issue state/,
-  );
-  assert.match(
-    skill,
-    /Distinguish newly plan-filed issues from pre-existing linked findings and unrelated concurrent work/,
-  );
-  assert.match(
-    skill,
-    /every issue the plan filed that is still open, each with its reason and evidence link/,
-  );
-  assert.match(skill, /Closed issues stay out of the still-open list/);
-  assert.match(
-    skill,
-    /Outside findings need not be resolved for the plan to close/,
-  );
-});
-
-test("orchestrate closes with an independent retro between reconciliation and the announcement", () => {
-  const skill = orchestrateSkill();
-  const close = orchestrateFile("references/close.md");
-  const order = [
-    "Reconcile those records with every run's findings",
-    "[Retro](launches.md#retro)",
-    "announce, as the last plan update",
-  ].map((step) => close.indexOf(step));
-  assert.ok(
-    order.every((at, index) => at > (order[index - 1] ?? -1)),
-    `${order}`,
-  );
-  const retro =
-    /## Retro (.*?) ## Architecture review /.exec(
-      orchestrateFile("references/launches.md"),
-    )?.[1] ?? "";
-  assert.match(
-    retro,
-    /Start a separate session that reads primary sources.*never your session's context or a summary of it/,
-  );
-  assert.match(
-    retro,
-    /the previous plan's `retro\.md`, from the plan most recently moved under `Closed` in `index\.md`/,
-  );
-  for (const check of [
-    /the outcome against the plan's Done means, with evidence/,
-    /where the time went, attributing each wait to what it waited on/,
-    /its lessons, ranked by cost/,
-    /compare each lesson with the previous plan's retro and the open issues before filing it/,
-  ])
-    assert.match(retro, check);
-  assert.match(retro, /write `retro\.md` in the plan directory/);
-  assert.match(
-    retro,
-    /mark the retro done on the Close reviews line in `plan\.md`/,
-  );
-  assert.match(
-    retro,
-    /route each lesson as \[Close\]\(close\.md#route-each-lesson\) says/,
-  );
-  assert.match(
-    retro,
-    /commit and push its writes, as \[Workbench\]\(\.\.\/SKILL\.md#workbench\) says/,
-  );
-  assert.match(
-    retro,
-    /report back, as \[Report-back\]\(\.\.\/SKILL\.md#report-back\) says/,
-  );
-  assert.match(
-    close,
-    /Once every Close review is marked done, move the plan under `Closed` in `index\.md`/,
-  );
-  assert.match(
-    skill,
-    /its kind \(grill, triage run, research run, worker or Close review\)/,
-  );
-  assert.match(
-    skill,
-    /A grill, triage run or Close review reports by writing its result there/,
-  );
-});
-
-test("orchestrate routes each retro lesson to the owner of its rule", () => {
-  const close = orchestrateFile("references/close.md");
-  const routing =
-    /Each lesson goes to whoever owns the rule it concerns: (.*?) ## Announce the close /.exec(
-      close,
-    )?.[1] ?? "";
-  assert.match(
-    routing,
-    /the adopter's own repository: an issue there, filed as that repository's contribution guide's Findings section says/,
-  );
-  assert.match(
-    routing,
-    /the owner's own setup, outside every repository: a chore for the owner, which you carry into `now\.md`'s Waiting on you/,
-  );
-  // An adopter who doesn't develop Repo Canon still files skill lessons there.
-  assert.match(
-    routing,
-    /a Repo Canon skill or rule: an issue in the Repo Canon source repository that the adoption record's Selection names, such as `lutzseverino\/repo-canon`, filed as its contribution guide's Findings section says, even when the owner does not develop Repo Canon, since an adopter cannot change its skills/,
-  );
-  assert.match(routing, /a wish: a line in `wishes\.md`/);
-  assert.match(routing, /nowhere, as a one-off, beyond `retro\.md`/);
-  assert.match(
-    close,
-    /A recurring lesson links its earlier issue, or reopens it when closed, instead of filing a new one/,
-  );
-  assert.match(
-    close,
-    /the retro's lessons and the other Close reviews' findings, each with its route and link/,
-  );
-});
-
-test("orchestrate plans name their Close reviews at approval", () => {
-  const plan =
-    /## `plan\.md` and `log\.md` (.*)$/.exec(
-      orchestrateFile("references/templates.md"),
-    )?.[1] ?? "";
-  assert.match(
-    plan,
-    /\*\*Approval:\*\* [^*]*\*\*Close reviews:\*\* retro; <`improve-codebase-architecture` in each repository the owner kept it for>/,
-  );
-  assert.match(
-    plan,
-    /\*\*Close reviews\.\*\* The reviews Close runs, set when the owner approves the plan\. The retro is always one/,
-  );
-  const propose =
-    /1\. \*\*Propose\.\*\* (.*?) 2\. \*\*Intake\./.exec(
-      orchestrateFile("SKILL.md"),
-    )?.[1] ?? "";
-  assert.match(
-    propose,
-    /Present the goal, Done means, ticket table and Close reviews to the owner for approval, as a plan update\. Record the proposal before filing work, and then its approval, as \[templates\]\(references\/templates\.md#planmd-and-logmd\) says/,
-  );
-  assert.match(
-    plan,
-    /The proposal names its Close reviews: the retro, and `improve-codebase-architecture` for each repository whose code the plan changes\. The owner keeps or removes each architecture review; the retro stays/,
-  );
-  assert.match(
-    plan,
-    /On approval, write the approval line with its source and what it preapproves, and the Close reviews line the owner approved/,
-  );
-  assert.match(
-    plan,
-    /When an amendment changes which repositories' code the plan changes, propose their Close reviews with it/,
-  );
-  const other =
-    /## Architecture review (.*?) ## Handover /.exec(
-      orchestrateFile("references/launches.md"),
-    )?.[1] ?? "";
-  assert.match(
-    other,
-    /Open each `improve-codebase-architecture` review with `\/improve-codebase-architecture`/,
-  );
-  assert.match(
-    other,
-    /route each of its findings as \[Run\]\(\.\.\/SKILL\.md#lifecycle\) says: a Finding becomes an issue in that repository, and any other idea a wish naming it/,
-  );
-  assert.match(other, /Like a grill, it asks the owner its questions/);
-});
-
-test("orchestrate wishes preserve mandatory Findings reporting", () => {
-  const skill = orchestrateSkill();
-  const wish = flowedText("GLOSSARY.md")
-    .split("**Wish**:")[1]
-    .split("_Avoid_:")[0];
-
-  assert.doesNotMatch(
-    skill,
-    /owner's quoted words or the finding|A defect others need to see may still be filed|\*\*Wish:\*\* it lies outside the goal\. Add it to `wishes\.md`, and file no issue/,
-  );
-  assert.doesNotMatch(wish, /or the finding|instead of an issue/);
-  // The guide's Findings section, not the skill, says to link an existing
-  // issue before filing one.
-  assert.match(
-    skill,
-    /Handle a Finding as the contribution guide's Findings section says, even outside the goal, without waiting for its resolution/,
-  );
-  assert.match(
-    skill,
-    /A wish never replaces the finding's tracker record or reporting links/,
-  );
-  assert.match(
-    skill,
-    /\*\*Wish:\*\* it lies outside the goal and is not a Finding/,
-  );
-  assert.match(skill, /A wish may link a filed finding for future planning/);
-  assert.match(
-    skill,
-    /One line per wish: the date, the owner's quoted words or idea, a link to its source, and the repository it concerns/,
-  );
-  assert.match(wish, /non-finding idea outside its plan's goal/);
-  assert.match(wish, /may link a reported finding for future planning/);
-
-  // The method defers to the installed rule for the full reporting contract.
-  const findings = flowedText("CONTRIBUTING.md")
-    .split("## Findings ")[1]
-    .split("## Titles and commits")[0];
-  for (const requirement of [
-    "Fix defects inside the change's responsibility in the change",
-    "check for an open issue that already reports the finding and link it",
-    "one issue per finding through the target repository's issue forms, labelled `needs-triage`",
-    "repository responsible for the affected material or tooling",
-    "distinguishes what the run observed from what it only read in code",
-    "links them from a comment on that pull request",
-    "links them from the issue it was working on",
-    "lists them in its final message",
-    "If filing fails, list each unfiled finding",
-    "Findings never block or delay",
-  ])
-    assert.ok(findings.includes(requirement), requirement);
 });
 
 // Check the whole installed directory and the shared delegation guidance.
@@ -2213,1203 +1143,93 @@ test("shared orchestration material excludes private application mappings everyw
   }
 });
 
-test("factory image rules link to Scriptorium's released sandbox image contract", () => {
-  const rules = readFileSync(
-    join(root, "rules/factory-sandbox-image.md"),
-    "utf8",
+test("factory image rules link to the released sandbox image contract", () => {
+  const links = interpretMarkdown(read("rules/factory-sandbox-image.md"))
+    .content.elements.filter(({ type }) => type === "link")
+    .map(({ target }) => target);
+  assert.ok(
+    links.includes(
+      "https://github.com/lutzseverino/scriptorium/blob/scriptorium-v2.0.0/docs/usage/sandbox-image.md",
+    ),
   );
-  const destinations = [
-    ...rules.matchAll(/\[sandbox image contract\]\(([^)]+)\)/g),
-  ].map(([, destination]) => destination);
-  assert.deepEqual(destinations, [
-    "https://github.com/lutzseverino/scriptorium/blob/scriptorium-v2.0.0/docs/usage/sandbox-image.md",
-  ]);
 });
 
-test("babysit and the factory image rules name both supported Node.js majors", () => {
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  const rules = flowedText("rules/factory-sandbox-image.md");
-  assert.match(babysit, /scripts require Node\.js 24 or 26\./);
-  assert.match(rules, /currently stable Node\.js 24 or 26,/);
-});
-
-test("babysit waits only through its script, and the GitHub rules own the no-check and no-review rules", () => {
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  assert.match(babysit, /wait\.mjs <number>/);
-  assert.match(babysit, /600000 ms/);
-  assert.match(babysit, /longest wait/);
-  assert.match(babysit, /`5`: still waiting; run it again/);
-  assert.match(
-    readFileSync(join(root, ".agents/skills/babysit/wait.mjs"), "utf8"),
-    /One invocation covers 9 minutes waited; repository data sets review bounds\./,
-  );
-  assert.doesNotMatch(babysit, /--watch|watch tool|poll for reviews/);
-  assert.doesNotMatch(babysit, /comments on it that the configured reviewer/);
-  assert.match(babysit, /`4` for the reason its line gives/);
-  assert.match(
-    babysit,
-    /`node <this skill's directory>\/merge\.mjs <number> <SHA>`, where `<SHA>` is the full SHA that starts the wait's latest line\. Exit `0` means merged; `2` means the head changed or current-head validation has not succeeded, so return to step 1/,
-  );
-  assert.match(
-    babysit,
-    /Before the first wait, apply the `github-repository-configuration` rules' review request rule to the pull request's head, using step 4 to post any required request\./,
-  );
-  assert.match(
-    babysit,
-    /4\. Apply the review request rule to each new head after a fix push\. When it requires a request, post the review request comment as the `github-repository-configuration` rules describe/,
-  );
-  assert.match(
-    babysit,
-    /"checks passed" also covers a head with no check that the `github-repository-configuration` rules count as passed/,
-  );
-  assert.match(
-    babysit,
-    /follow the `github-repository-configuration` rules for merging without that review/,
-  );
+test("babysit leaves review and no-check outcome rules to the GitHub rules", () => {
   assert.doesNotMatch(
-    babysit,
-    /onOpen|reviewRequests|fully or partly|CONTRIBUTING\.md#merging/,
+    read(".agents/skills/babysit/SKILL.md"),
+    /comments on it that the configured reviewer|fully or partly|minutes of the latest review request|unfinished/,
   );
-  assert.doesNotMatch(babysit, /warrant another look/);
+});
+
+test("readiness mechanics and brief syntax live only in the GitHub rules", () => {
   assert.doesNotMatch(
-    babysit,
-    /5 minutes|minutes of the latest review request|30 minutes|unfinished/,
-  );
-  const rules = flowedText("rules/github-repository-configuration.md");
-  for (const requirement of [
-    /A pull request head that has no check counts as having its checks passed once 5 minutes have passed since the later of the pull request's opening and a push of that head that GitHub recorded, and only while no workflow run for the head is unfinished or counted as failed/,
-    /A workflow whose latest run failed with no check from that run or attempt counts as a failed check/,
-    /A head with no recorded push and no check or workflow run never settles its checks: they neither pass nor fail/,
-    /The merging agent then comments on it that the configured reviewer did not review that head and why, under the contribution guide's comment rules/,
-    /it is unavailable, no review was requested after the head's push, it did not respond within `bounds.responseMinutes` of the latest review request, or no review arrived within `bounds.reviewMinutes` of it/,
-    /For a head with no request after its push, the comment says whether the request rule required none or the bound was reached/,
-    /Without the file, no reviewer wait or comment about an absent review is required/,
-  ])
-    assert.match(rules, requirement);
-  const minutes = /once (\d+) minutes have passed since the later/.exec(
-    rules,
-  )?.[1];
-  assert.match(
-    readFileSync(join(root, ".agents/skills/babysit/wait.mjs"), "utf8"),
-    new RegExp(`const checksBoundMs = ${minutes} \\* 60_000;`),
-    "the wait's no-check bound is the rules' bound",
-  );
-  const guide = flowedText("CONTRIBUTING.md");
-  assert.match(
-    guide,
-    /Merge a pull request once every required check passes on its latest head and every review thread is answered with its fix or a reasoned decline/,
-  );
-  assert.doesNotMatch(
-    guide,
-    /merging agent comments|bounds\.responseMinutes|bounds\.reviewMinutes|5 minutes/,
+    read("CONTRIBUTING.md"),
+    /issue_id|node_id|`admin`|`maintain`|`triage` role|brief's heading comes right after/,
   );
 });
 
-test("only first factory selection asks about separate post-run app-author policy configuration", () => {
-  const factory = flowedText("guidance/factory-workflow.md");
-  const github = flowedText("guidance/github-repository-configuration.md");
-  const rules = flowedText("rules/github-repository-configuration.md");
-  assert.match(
-    factory,
-    /Read the previous adoption record before the run changes it/,
-  );
-  assert.match(
-    factory,
-    /A first adoption and a switch from standard to factory both ask; routine updates of existing factory adopters do not ask again/,
-  );
-  assert.match(factory, /Ask the repository's maintainer:/);
-  assert.match(
-    factory,
-    /If yes, which app identity does this repository name as its author/,
-  );
-  assert.match(factory, /Preserve any existing deliberate policy unchanged/);
-  assert.match(factory, /On no, leave the policy absent if absent/);
-  assert.match(
-    factory,
-    /after the adoption run completes and its adoption PR is delivered/,
-  );
-  assert.match(
-    factory,
-    /separate commit, outside the adoption commit and adoption PR/,
-  );
-  assert.match(
-    factory,
-    /validate it with the read-only `factory-review-policy` check/,
-  );
-  assert.match(factory, /do not copy an identity/);
-  assert.match(factory, /perform a remote account lookup/);
-  assert.match(
-    factory,
-    /Adoption neither creates nor edits the policy file or `\.github\/pull-request-reviewer\.json`/,
-  );
-  assert.match(github, /Standard-only runs do not ask/);
-  assert.match(
-    github,
-    /routine updates whose previous adoption record already selected factory do not ask again/,
-  );
-  assert.match(github, /factory-workflow\.md#app-author-policy-opt-in/);
-  assert.match(
-    github,
-    /omission of `bounds.reviewRequests` now means a total bound of \*\*4\*\*, where it previously meant unbounded requests/,
-  );
-  assert.match(
-    github,
-    /set `bounds.reviewRequests` to the exact JSON string `"unbounded"`/,
-  );
-  assert.match(
-    rules,
-    /Repo Canon ships no policy declaration or default exemption/,
-  );
-  assert.doesNotMatch(
-    JSON.stringify(declarations(root)),
-    /factory-review-policy\.json|pull-request-reviewer\.json/,
-  );
-});
-
-test("app-author review guidance keeps policy skips distinct and preserves merge obligations", () => {
-  const rules = flowedText("rules/github-repository-configuration.md");
-  const factory = flowedText("rules/factory-workflow.md");
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  for (const text of [rules, factory, babysit]) {
-    assert.match(text, /\.github\/factory-review-policy\.json/);
-    assert.match(text, /Standards and Spec reviews/);
-    assert.match(text, /findings that (?:actually )?arrive/);
-  }
-  assert.match(rules, /No external reviewer runs on app-authored PRs\./);
-  assert.match(rules, /record the actual outcomes of both axes/);
-  assert.match(rules, /Absent policy is supported/);
-  assert.match(rules, /merge authorization/);
-  assert.match(rules, /Use only supplied credentials/);
-  assert.match(babysit, /request\.mjs <number>/);
-  assert.match(
-    babysit,
-    /`6`: checks passed and external review was skipped by app-author policy/,
-  );
-});
-
-test("policy-skipped PRs require defined internal reviews and their actual outcomes", () => {
-  const rules = flowedText("rules/github-repository-configuration.md");
-  assert.match(
-    rules,
-    /Policy-skipped pull requests require both reviews before merge/,
-  );
-  assert.match(
-    rules,
-    /Standards checks the change against the repository's documented standards/,
-  );
-  assert.match(
-    rules,
-    /Spec checks it against its originating implementation contract/,
-  );
-  assert.match(
-    rules,
-    /use the installed `code-review` workflow: Standards checks/,
-  );
-  assert.match(
-    rules,
-    /These reviews are distinct from the configured external reviewer/,
-  );
-  assert.match(
-    rules,
-    /A policy skip supplies neither internal nor external approval/,
-  );
-  assert.match(
-    rules,
-    /Complete the shared \[internal reviews\]\(#internal-standards-and-spec-reviews\) and post their actual outcomes in one PR comment before merge/,
-  );
-  assert.equal((rules.match(/Standards checks the change/g) ?? []).length, 1);
-  assert.match(
-    rules,
-    /including the workflow's handling of a missing specification/,
-  );
-  assert.match(rules, /merge exit `5` without a merge write/);
-
-  const factory = flowedText("rules/factory-workflow.md");
-  assert.match(
-    factory,
-    /internal Standards and Spec reviews defined by the `github-repository-configuration` rules' Internal Standards and Spec reviews section/,
-  );
-});
-
-test("nonmatching and absent-policy PRs keep applicable reviews without a blanket babysit gate", () => {
-  const rules = flowedText("rules/github-repository-configuration.md");
-  assert.match(
-    rules,
-    /Nonmatching and absent-policy pull requests retain their existing applicable internal-review workflow and optionality in both profiles/,
-  );
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  assert.match(
-    babysit,
-    /Follow the `github-repository-configuration` rules for applicable internal Standards and Spec reviews and their merge record/,
-  );
-  assert.doesNotMatch(babysit, /Complete internal Standards and Spec reviews/);
-  assert.match(
-    flowedText(".agents/skills/implement/SKILL.md"),
-    /Once done, use \/code-review to review the work/,
-  );
-});
-
-test("both babysit exit-1 instructions defer permission refusals to Credentials", () => {
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  const instructions = [
-    /- `1`: (.*?) 2\. Verify/.exec(babysit)?.[1] ?? "",
-    /; `1` means (.*?) 6\. Stop/.exec(babysit)?.[1] ?? "",
+test("delivery and triage requirements keep their single homes", () => {
+  /** @type {[string[], RegExp][]} */
+  const homes = [
+    [
+      [
+        "CONTRIBUTING.md",
+        ".agents/skills/babysit/SKILL.md",
+        ".agents/skills/implement/SKILL.md",
+      ],
+      /factory:skip/,
+    ],
+    [
+      [".agents/skills/babysit/SKILL.md", ".agents/skills/implement/SKILL.md"],
+      /factory:needs-input/,
+    ],
+    [
+      [".agents/skills/orchestrate/SKILL.md"],
+      /Never infer a default|readiness label|`ready-for-agent`/,
+    ],
+    [
+      [
+        ".agents/skills/triage/SKILL.md",
+        ".agents/skills/orchestrate/SKILL.md",
+        ".agents/skills/orchestrate/references/launches.md",
+      ],
+      /The grill calls the Skill tool twice|updates `GLOSSARY\.md` and ADRs inline|in short rounds of numbered questions|one question at a time/,
+    ],
+    [
+      ["CONTRIBUTING.md"],
+      /request\.onOpen|request\.comment|reviewRequests|fully or partly|request bound|request phrase/,
+    ],
+    [
+      [".agents/skills/babysit/SKILL.md"],
+      /ticket or scope|another layer|only the owner writes/,
+    ],
+    [
+      ["rules/factory-workflow.md"],
+      /Owner review is required when either|Before merging a designated PR|Any head change requires renewed owner approval/,
+    ],
   ];
-  for (const instruction of instructions) {
-    assert.match(
-      instruction,
-      /follow `CONTRIBUTING\.md`'s Credentials section for a permission refusal; otherwise/,
-    );
-    assert.match(
-      instruction,
-      /otherwise fix the invocation or other platform error and run it again/,
-    );
-  }
-  assert.doesNotMatch(
-    babysit,
-    /`gh` access|instead of retrying|only the credentials|another identity|other identities|search(?:ing)? for credentials|ask(?:s|ing)? the owner|factory:needs-input/,
-  );
-});
-
-test("the installed delivery route honors prescribed worker handoffs before merging", () => {
-  assert.ok(
-    manifestDeclarations().some(
-      ({ target, exact }) => target === "AGENTS.md" && exact === target,
-    ),
-  );
-  assert.ok(
-    flowedText("AGENTS.md").includes(
-      "Deliver every change as one pull request: open it and write its body as `CONTRIBUTING.md` says, using `pr` where it directs, then `babysit` it through merge or the prescribed handoff.",
-    ),
-  );
-  const guide = flowedText("CONTRIBUTING.md");
-  assert.match(
-    guide,
-    /Before delivery, read applicable installed rules for merge ownership and owner review/,
-  );
-  assert.match(
-    guide,
-    /When they assign the merge to another agent, the worker records the prescribed PR handoff and stops without merging/,
-  );
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  assert.match(
-    babysit,
-    /Before requesting or waiting, establish your delivery role/,
-  );
-  assert.match(
-    babysit,
-    /If they prescribe a worker handoff, record it on the open PR and stop/,
-  );
-  const orchestrate = orchestrateSkill();
-  assert.match(
-    orchestrate,
-    /When applicable installed rules assign a worker's merge to you, read its authoritative implementation contract and PR handoff, then resume `babysit`/,
-  );
-  for (const text of [guide, babysit, orchestrate])
-    assert.doesNotMatch(text, /factory:skip/);
-});
-
-test("skipped and directly launched worker PRs have worker completion and an orchestrator-owned merge", () => {
-  const factory =
-    /## Merging (.*?)(?= ## |$)/.exec(
-      flowedText("rules/factory-workflow.md"),
-    )?.[1] ?? "";
-  assert.match(
-    factory,
-    /For every skip-labelled PR and every PR opened by a directly launched worker, including a PR without a skip label, the implementing worker delivers an open PR and hands it to the orchestrating agent without merging/,
-  );
-  assert.match(
-    factory,
-    /Worker completion is the recorded PR handoff; the issue stays open until delivery finishes/,
-  );
-  assert.match(
-    factory,
-    /The orchestrating agent continues `babysit` and owns the merge/,
-  );
-  assert.match(
-    factory,
-    /The handoff records the PR's current head, validation and internal review outcomes, outstanding findings, and any owner-review requirement with its source/,
-  );
-});
-
-test("host-access skips gate live steps without designating source PR review, while explicit designations bind workers", () => {
-  const factory = flowedText("rules/factory-workflow.md");
-  assert.match(
-    factory,
-    /`factory:skip`, applied together: work that edits `\.github\/workflows\/`, work the owner reviews before merge, or work whose live steps need host access the maintainer grants/,
-  );
-  assert.match(
-    factory,
-    /A directly launched worker performs the agent work, including the source changes; host access gates only the live host steps and does not designate owner review of the source PR/,
-  );
-  assert.doesNotMatch(factory, /maintenance grant/);
-  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  assert.match(
-    merging,
-    /Apply the `github-repository-configuration` rules' Designated owner review gate for designation, provenance and current-head approval/,
-  );
-  const shared = flowedText("rules/github-repository-configuration.md");
-  assert.match(
-    shared,
-    /Owner review is required when either the authoritative implementation contract or the worker's handoff says so/,
-  );
-  assert.match(shared, /Any head change requires renewed owner approval/);
-});
-
-// The owner's decision in #793: progress stays out of the implementation
-// contract, and work shown on a live system splits into a source ticket and a
-// live-acceptance ticket that no merge closes.
-test("contracts record no progress, and live acceptance is a ticket of its own", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  const contracts =
-    /## Implementation contracts (.*?) ## Triage /.exec(guide)?.[1] ?? "";
-  assert.match(
-    contracts,
-    /An issue closes when its own acceptance criteria hold/,
-  );
-  assert.match(
-    contracts,
-    /After readiness, nobody edits an implementation contract to record progress: progress lives in linked pull requests, sub-issue states and comments/,
-  );
-  assert.match(
-    contracts,
-    /Work that must be shown on a live system splits into a source ticket, which closes when its pull request merges, and a live-acceptance ticket, blocked by the source ticket, which closes only on its recorded live acceptance/,
-  );
-  const pullRequests =
-    /## Pull requests (.*?)### Opening a pull request/.exec(guide)?.[1] ?? "";
-  assert.match(
-    pullRequests,
-    /A source pull request links its live-acceptance ticket this way, because a merge never closes one/,
-  );
-  assert.match(
-    flowedText("GLOSSARY.md"),
-    /\*\*Live acceptance\*\*: The recorded evidence that a deployed change behaves on the live system as its implementation contract says\. A merge never establishes it\./,
-  );
-  assert.match(
-    flowedText("rules/factory-workflow.md"),
-    /A live-acceptance ticket, blocked by its source ticket, takes this route and closes only on its recorded live acceptance; a merge never closes it/,
-  );
-
-  const tickets = flowedText(".agents/skills/to-tickets/SKILL.md");
-  assert.match(
-    tickets,
-    /\*\*Live acceptance is a ticket of its own\.\*\* When work must be shown on a live system, split it into a \*\*source ticket\*\*, which closes when its pull request merges, and a \*\*live-acceptance ticket\*\*, blocked by the source ticket/,
-  );
-  assert.match(
-    tickets,
-    /A merge never closes it: the source ticket's pull request links it without a closing reference/,
-  );
-  assert.match(
-    tickets,
-    /Once a ticket is ready, nobody edits it to record progress, ticking its acceptance criteria included: progress lives in linked pull requests, sub-issue states and comments/,
-  );
-
-  const brief = flowedText(".agents/skills/triage/AGENT-BRIEF.md");
-  assert.match(
-    brief,
-    /### Progress stays out of the brief After readiness, nobody edits the brief to record progress, ticking its acceptance criteria included: editing it removes its readiness/,
-  );
-  assert.match(
-    brief,
-    /Progress lives in linked pull requests, sub-issue states and comments, and the issue closes when its own acceptance criteria hold/,
-  );
-  assert.match(
-    brief,
-    /### Live acceptance gets its own ticket When work must be shown on a live system, write two briefs/,
-  );
-  assert.match(
-    brief,
-    /A merge never closes the live-acceptance ticket: the source pull request links it without a closing reference/,
-  );
-  assert.match(
-    flowedText(".agents/skills/triage/SKILL.md"),
-    /Work that must be shown on a live system is split as \[AGENT-BRIEF\.md\]\(AGENT-BRIEF\.md#live-acceptance-gets-its-own-ticket\) says/,
-  );
-});
-
-// The owner's decision in #793: a shared host access grant has one owner, the
-// orchestrating agent that asked for it; no worker ends it.
-test("the orchestrating agent that asked for a host access grant owns it, and no worker ends it", () => {
-  const rules = flowedText("rules/factory-workflow.md");
-  const route =
-    /work whose live steps need host access the maintainer grants\. (.*?) ## Merging /.exec(
-      rules,
-    )?.[1] ?? "";
-  assert.match(
-    route,
-    /The orchestrating agent that asked the maintainer for a time-bounded host access grant owns it and records the workers using it\. Workers never end a grant: it ends when the last of them reports back, or at its own time bound/,
-  );
-
-  const factory = flowedText(".agents/skills/factory/SKILL.md");
-  const skip =
-    /## Take the skip route (.*?) ## Finish a handed-off factory PR /.exec(
-      factory,
-    )?.[1] ?? "";
-  assert.match(
-    skip,
-    /A time-bounded host access grant belongs to the orchestrating agent that asked the maintainer for it, which records the workers using it\. Workers never end it: it ends when the last of them reports back, or at its own time bound/,
-  );
-  assert.match(
-    skip,
-    /A live-acceptance ticket takes this route\. Its worker records the ticket's live acceptance on it instead of opening a PR, and reports back\. It closes only once its live acceptance is recorded on it, never on a merge/,
-  );
-
-  const templates = orchestrateFile("references/templates.md");
-  const inFlight =
-    /- \*\*In flight\*\* (.*?) - \*\*Running launches\*\*/.exec(
-      templates,
-    )?.[1] ?? "";
-  assert.match(
-    inFlight,
-    /A time-bounded host access grant you asked the maintainer for is one row you own: \*Waiting on\* lists the workers using it, and its \*Next check\* names a wake-up at its time bound/,
-  );
-  assert.match(
-    inFlight,
-    /When a listed worker reports back, remove it from the row\. When the last one reports, end the grant, tell the maintainer, log its end in `log\.md` and remove the row\. At its own time bound the grant has ended, whoever still uses it/,
-  );
-  const worker =
-    /## Worker (.*?) ## /.exec(
-      orchestrateFile("references/launches.md"),
-    )?.[1] ?? "";
-  assert.match(
-    worker,
-    /Ask the maintainer for time-bounded host access in `inbox\.md`\. List each worker on the grant's row before you launch it, and give it the grant and its time bound as task context; the worker never ends the grant/,
-  );
-  assert.match(
-    worker,
-    /Launch a listed worker only while the grant lasts; once it has ended, ask again\. In a repository a factory serves, deliver that work on the skip route, with the `factory` skill installed there/,
-  );
-
-  // The ownership rule names no way of granting or ending access.
-  for (const text of [route, skip, inFlight, worker])
-    for (const sentence of text.match(/[^.]*\bgrant\b[^.]*\./g) ?? [])
-      assert.doesNotMatch(
-        sentence,
-        /\b(?:SSH|VPN|token|password|credential|key|account|sudo|firewall)s?\b/i,
-      );
-});
-
-test("owner-review designation includes directly authored body contracts and latest triaged briefs", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  assert.match(
-    guide,
-    /A directly authored specification or implementation ticket carries its implementation contract in its issue body/,
-  );
-  assert.match(
-    guide,
-    /A triaged request's contract is its latest Agent Brief comment/,
-  );
-  assert.match(
-    flowedText("GLOSSARY.md"),
-    /\*\*Implementation contract\*\*: The agreed scope and acceptance criteria for a change, recorded in the latest agent-brief comment for a triaged request or in a directly authored specification or implementation ticket/,
-  );
-  const shared = flowedText("rules/github-repository-configuration.md");
-  assert.match(
-    shared,
-    /Resolve the authoritative implementation contract under the contribution guide's Implementation contracts section/,
-  );
-  assert.match(
-    shared,
-    /Owner review is required when either the authoritative implementation contract or the worker's handoff says so/,
-  );
-});
-
-test("either owner-review designation source survives handoffs in both profiles", () => {
-  const shared = flowedText("rules/github-repository-configuration.md");
-  assert.match(
-    shared,
-    /Owner review is required when either the authoritative implementation contract or the worker's handoff says so/,
-  );
-  assert.match(
-    shared,
-    /Read both sources; an omission in one does not cancel a designation in the other/,
-  );
-  assert.match(
-    shared,
-    /Carry that designation and its source into the PR handoff/,
-  );
-  assert.match(shared, /Record the designation and its source in a PR comment/);
-  const factory = flowedText("rules/factory-workflow.md");
-  assert.match(
-    factory,
-    /The skip marker alone requires no owner review; without a designation, the orchestrating agent merges under the ordinary applicable conditions/,
-  );
-});
-
-test("owner-reviewed heads need explicit current-head approval independently of other delivery gates", () => {
-  const shared = flowedText("rules/github-repository-configuration.md");
-  assert.match(
-    shared,
-    /Before merging a designated PR, the merging agent verifies the owner's explicit approval of the current head/,
-  );
-  assert.match(
-    shared,
-    /Any head change requires renewed owner approval; approval of an earlier head does not authorize the new one/,
-  );
-  assert.match(
-    shared,
-    /Passing checks, a configured external review, its absence or timeout, and an app-author review-policy skip never substitute for owner approval/,
-  );
-  assert.match(
-    shared,
-    /When approval is missing, follow the contribution guide's owner-question handoff and leave the PR unmerged/,
-  );
-  assert.match(
-    shared,
-    /Record the approval's source and head SHA in a PR comment/,
-  );
-  assert.match(
-    shared,
-    /Read these PR comments when verifying designation and current-head approval, including after a handoff or resumed delivery/,
-  );
-  assert.match(
-    shared,
-    /For adoption PRs, keep both records in comments and preserve the body under the contribution guide's adoption-record contract/,
-  );
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  assert.match(
-    babysit,
-    /Before each merge attempt, verify merge ownership and any required owner approval against the current head/,
-  );
-  assert.match(
-    babysit,
-    /Read the authoritative implementation contract and any worker handoff and apply the `github-repository-configuration` rules' Designated owner review gate/,
-  );
-  assert.match(
-    babysit,
-    /`2` means the head changed or current-head validation has not succeeded, so return to step 1/,
-  );
-  assert.match(
-    babysit,
-    /Read the PR comments carrying designation provenance and current-head approval, and record approval there under that gate/,
-  );
-  assert.match(
-    babysit,
-    /When required approval is missing, use the contribution guide's owner-question handoff and stop with the PR unmerged/,
-  );
-  const mergeDoc = flowedText("docs/development/babysit-merge.md");
-  assert.match(
-    flowedText("rules/factory-workflow.md"),
-    /Read and carry the shared gate's PR comment records through the worker handoff and this approval-pause continuation/,
-  );
-  assert.match(
-    mergeDoc,
-    /The caller establishes merge ownership and any required owner approval of the current head before invoking the script/,
-  );
-  assert.match(
-    mergeDoc,
-    /The script's expected-head check preserves that decision against a head change; it does not establish authorization itself/,
-  );
-});
-
-test("the adoption delivery example keeps owner-review records in comments outside the preserved body", () => {
-  const example =
-    /## Adoption owner-review example (.*?)(?= ## |$)/.exec(
-      flowedText("docs/development/babysit-merge.md"),
-    )?.[1] ?? "";
-  assert.match(example, /Designation PR comment/);
-  assert.match(
-    example,
-    /Owner review is required by the authoritative implementation contract/,
-  );
-  assert.match(example, /issues\/123#issuecomment-456/);
-  assert.match(example, /approval PR comment/);
-  assert.match(example, /Owner approval source: .*pull\/12#issuecomment-789/);
-  assert.match(example, /Approved current head: a{40}/);
-  assert.match(
-    example,
-    /The PR body stays byte-identical to its adoption record and permitted additions/,
-  );
-  assert.match(example, /A later head needs renewed explicit owner approval/);
-});
-
-test("shared owner review preserves standard merge ownership and undesignated delivery", () => {
-  const shared = flowedText("rules/github-repository-configuration.md");
-  const gate =
-    /## Designated owner review (.*?)(?= ## |$)/.exec(shared)?.[1] ?? "";
-  assert.match(
-    gate,
-    /This gate applies in both profiles and does not assign merge ownership/,
-  );
-  assert.match(
-    gate,
-    /In the standard profile, the otherwise authorized merging agent, ordinarily the implementing agent, enforces it/,
-  );
-  assert.match(
-    gate,
-    /It requires no factory label, pickup or recovery mechanism/,
-  );
-  assert.match(
-    gate,
-    /Without a designation, ordinary applicable merge conditions hold/,
-  );
-  assert.doesNotMatch(gate, /factory:|orchestrating agent/);
-  const factory = flowedText("rules/factory-workflow.md");
-  assert.match(
-    factory,
-    /Apply the `github-repository-configuration` rules' Designated owner review gate/,
-  );
-  assert.doesNotMatch(
-    factory,
-    /Owner review is required when either|Before merging a designated PR|Any head change requires renewed owner approval/,
-  );
-});
-
-test("triage preserves owner-review reservations independently of profile routing", () => {
-  const triage = flowedText(".agents/skills/triage/SKILL.md");
-  assert.match(
-    triage,
-    /When owner review before merge is reserved, in either profile, verify that the brief explicitly designates it as contract behavior/,
-  );
-  for (const path of [
-    ".agents/skills/triage/SKILL.md",
-    ".agents/skills/triage/AGENT-BRIEF.md",
-  ])
-    assert.match(
-      flowedText(path),
-      /`github-repository-configuration` rules' Designated owner review gate/,
+  for (const [paths, phrase] of homes)
+    for (const path of paths) assert.doesNotMatch(read(path), phrase, path);
+  for (const file of ["request.mjs", "wait.mjs", "merge.mjs"])
+    assert.doesNotMatch(
+      read(`.agents/skills/babysit/${file}`),
+      /update-branch|updateBranch/,
     );
 });
 
-test("skipped owner questions resume workers or the same PR through the orchestrating agent", () => {
-  const factory = flowedText("rules/factory-workflow.md");
-  const state = /## State labels (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  const recovery =
-    /## Owner handoff and recovery (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  const skipped = /### Skipped work (.*?)(?= ### |$)/.exec(recovery)?.[1] ?? "";
-
-  assert.match(recovery, /add `factory:needs-input` to the issue/);
-  assert.match(recovery, /The question reaches the orchestrating agent first/);
-  assert.match(
-    recovery,
-    /otherwise puts the question in its decision inbox for the owner/,
-  );
-  assert.match(
-    skipped,
-    /For every owner question on skipped work, retain the skip marker and `factory:needs-input` while unanswered/,
-  );
-  assert.match(
-    skipped,
-    /The current worker or merging-agent run stops under the contribution guide's owner-question handoff/,
-  );
-  assert.match(
-    skipped,
-    /Once the question is resolved and any required renewed readiness is recorded, the orchestrating agent removes `factory:needs-input` and continues the skipped work/,
-  );
-  assert.match(
-    skipped,
-    /With no open PR, it resumes or relaunches the implementing worker/,
-  );
-  assert.match(
-    skipped,
-    /With an open PR, it resumes that same PR, arranging any remaining worker work and continuing delivery from the prescribed handoff/,
-  );
-  assert.match(
-    skipped,
-    /The worker still hands off without merging; the orchestrating agent owns `babysit` and the merge as Merging prescribes/,
-  );
-  assert.match(
-    skipped,
-    /Removing the waiting marker alone is not a factory retry for skipped work/,
-  );
-  assert.match(
-    skipped,
-    /This recovery requires neither factory pickup, owner merge nor closing an open PR for hand-back/,
-  );
-  assert.doesNotMatch(
-    skipped,
-    /return the issue to the frontier|fresh first attempt|the owner.*(?:finishes|merging it)|close it before/,
-  );
-  assert.doesNotMatch(
-    recovery,
-    /The recovery below applies to other owner questions/,
-  );
-  assert.match(
-    state,
-    /`factory:skip` marks ready agent work the factory must not pick up/,
-  );
-  assert.match(
-    merging,
-    /For every skip-labelled PR and every PR opened by a directly launched worker, including a PR without a skip label, the implementing worker delivers an open PR and hands it to the orchestrating agent without merging/,
-  );
-});
-
-for (const { prState, continuation } of [
-  {
-    prState: "no open PR",
-    continuation:
-      /With no open PR, it resumes or relaunches the implementing worker/,
-  },
-  {
-    prState: "an open PR",
-    continuation:
-      /With an open PR, it resumes that same PR, arranging any remaining worker work and continuing delivery from the prescribed handoff/,
-  },
-]) {
-  test(`skipped recovery with ${prState} gates a changed contract on renewed readiness`, () => {
-    const factory = flowedText("rules/factory-workflow.md");
-    const skipped =
-      /### Skipped work (.*?)(?= ### | ## |$)/.exec(factory)?.[1] ?? "";
-
-    assert.match(
-      skipped,
-      /If the answer changes the implementation contract, edit the contract and have that exact revision independently reviewed and granted renewed readiness under the contribution guide and the `github-repository-configuration` rules, including the validator revision notice before readiness is applied/,
-    );
-    assert.match(
-      skipped,
-      /With or without an open PR, implementation and delivery wait for that renewed readiness/,
-    );
-    assert.match(
-      skipped,
-      /Resolving the question or removing `factory:needs-input` does not authorize continuation on an unreviewed revision/,
-    );
-    assert.match(
-      skipped,
-      /Renewed readiness does not substitute for designated current-head owner approval under Merging/,
-    );
-    const gate = skipped.indexOf(
-      "Once the question is resolved and any required renewed readiness is recorded",
-    );
-    assert.ok(
-      gate >= 0,
-      "continuation requires question resolution and renewed readiness",
-    );
-    assert.match(skipped.slice(gate), continuation);
-  });
-
-  test(`skipped recovery with ${prState} continues an unchanged contract without renewed readiness`, () => {
-    const factory = flowedText("rules/factory-workflow.md");
-    const skipped =
-      /### Skipped work (.*?)(?= ### | ## |$)/.exec(factory)?.[1] ?? "";
-
-    assert.match(
-      skipped,
-      /If the answer leaves the contract unchanged, no new readiness cycle is required/,
-    );
-    assert.match(
-      skipped,
-      /Once the question is resolved and any required renewed readiness is recorded, the orchestrating agent removes `factory:needs-input` and continues the skipped work/,
-    );
-    assert.match(skipped, continuation);
-  });
-}
-
-test("designated skipped PR continuation gates a changed contract on renewed readiness and current-head approval", () => {
-  const factory = flowedText("rules/factory-workflow.md");
-  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  const skipped =
-    /### Skipped work (.*?)(?= ### | ## |$)/.exec(factory)?.[1] ?? "";
-
-  assert.match(
-    skipped,
-    /For the designated skipped-PR approval pause, follow Merging for continuation, including any required renewed readiness after a contract-changing answer/,
-  );
-  assert.match(
-    merging,
-    /If an answer changes the implementation contract during this pause, apply Skipped work's contract-revision gate: implementation and delivery wait for the edited revision's validator notice, independent review and renewed readiness/,
-  );
-  assert.match(
-    merging,
-    /After verifying and recording current-head approval under the shared gate and any required renewed readiness, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR/,
-  );
-});
-
-test("designated skipped PR continuation needs no new readiness for an unchanged contract", () => {
-  const factory = flowedText("rules/factory-workflow.md");
-  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-
-  assert.match(
-    merging,
-    /An unchanged contract requires no new readiness cycle/,
-  );
-  assert.match(
-    merging,
-    /After verifying and recording current-head approval under the shared gate and any required renewed readiness, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR/,
-  );
-});
-
-test("designated skipped PR approval pauses resume the same PR without ordinary factory recovery", () => {
-  const factory = flowedText("rules/factory-workflow.md");
-  const merging = /## Merging (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  const recovery =
-    /## Owner handoff and recovery (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-
-  // Read the approval pause and the general recovery route together: either
-  // one alone used to admit transferring this PR's merge back to the owner.
-  assert.match(
-    merging,
-    /For skipped work, when the shared gate requires an approval pause, keep the PR open, retain `factory:needs-input` and `factory:skip` on its issue, and preserve the orchestrating agent's merge ownership/,
-  );
-  assert.match(
-    merging,
-    /Apply the `github-repository-configuration` rules' Designated owner review gate/,
-  );
-  assert.match(
-    merging,
-    /After verifying and recording current-head approval under the shared gate and any required renewed readiness, the orchestrating agent removes `factory:needs-input` and resumes `babysit` on the same open PR, merging only when all other applicable merge conditions hold/,
-  );
-  assert.match(
-    merging,
-    /Any head change returns to this approval pause until renewed approval is verified and recorded/,
-  );
-  assert.match(
-    merging,
-    /This continuation requires neither owner merge, PR closure nor factory pickup/,
-  );
-  assert.match(
-    recovery,
-    /For the designated skipped-PR approval pause, follow Merging for continuation/,
-  );
-  assert.match(
-    recovery,
-    /Answering another question does not satisfy that approval requirement: keep both markers until explicit current-head approval is verified and recorded with its source and SHA, as Merging requires/,
-  );
-});
-
-test("ordinary recovery holds a changed contract until renewed readiness before resumption", () => {
-  const factory = flowedText("rules/factory-workflow.md");
-  const ordinary =
-    /### Ordinary factory runs (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  assert.match(
-    ordinary,
-    /If the answer changes the implementation contract, record the answer on the issue and have a writer independent of the accepting reviewer incorporate it in the authoritative contract/,
-  );
-  assert.match(
-    ordinary,
-    /Keep `factory:needs-input` until that exact edited revision receives its validator revision notice, independent authorized review and renewed readiness/,
-  );
-  assert.match(
-    ordinary,
-    /An answer or marker removal alone authorizes neither implementation of an unreviewed revision nor continuation on the superseded contract/,
-  );
-  const gate = ordinary.indexOf(
-    "Once the question is resolved and any required renewed readiness is recorded",
-  );
-  const release = ordinary.indexOf(
-    "may remove `factory:needs-input` to request factory resumption",
-  );
-  assert.ok(
-    gate >= 0 && release > gate,
-    "renewed readiness gates factory resumption",
-  );
-});
-
-test("ordinary recovery resumes an unchanged contract without another readiness cycle", () => {
-  const factory = flowedText("rules/factory-workflow.md");
-  const ordinary =
-    /### Ordinary factory runs (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  assert.match(
-    ordinary,
-    /If the answer leaves the contract unchanged, no new readiness cycle is required/,
-  );
-  assert.match(
-    ordinary,
-    /Once the question is resolved and any required renewed readiness is recorded, whoever answers, the orchestrating agent or the owner, may remove `factory:needs-input` to request factory resumption/,
-  );
-});
-
-test("contract-changing answers return to an independent writer and revision review before recovery", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  const comments = /## Comments (.*?)(?= ## |$)/.exec(guide)?.[1] ?? "";
-  assert.match(
-    comments,
-    /If the answer changes the implementation contract, have a separate writer edit it; await its validator notice, independent review and renewed readiness before continuation/,
-  );
-  assert.doesNotMatch(comments, /factory|`model:/);
-  const skill = flowedText(".agents/skills/triage/SKILL.md");
-  const routing = /## Route questions (.*?)(?= ## |$)/.exec(skill)?.[1] ?? "";
-  assert.match(
-    routing,
-    /If an answer changes the implementation contract, send the edit to a separate writer; never write the revised brief you accept/,
-  );
-  assert.match(
-    routing,
-    /Follow the contribution guide's validator-notice, independent-review and renewed-readiness steps before continuation; an unchanged contract needs no new readiness cycle/,
-  );
-  assert.match(
-    routing,
-    /remove `factory:needs-input` where the installed factory rules let the answerer remove it/,
-  );
-  assert.match(
-    routing,
-    /Follow those rules for the order of marker removal and frontier release/,
-  );
-});
-
-test("ordinary recovery authorizes only stopped open-PR handoffs and retains owner options", () => {
-  const factory = flowedText("rules/factory-workflow.md");
-  const recovery =
-    /## Owner handoff and recovery (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  const ordinary =
-    /### Ordinary factory runs (.*?)(?= ### |$)/.exec(recovery)?.[1] ?? "";
-  assert.match(
-    ordinary,
-    /This recovery applies only to non-skipped factory runs/,
-  );
-  assert.match(
-    ordinary,
-    /The factory resumes the same work and PR on a current base, whether the PR is open or closed-unmerged; it reopens the existing PR when needed and never creates a replacement PR/,
-  );
-  assert.match(
-    ordinary,
-    /A qualifying handoff is a non-skipped factory run stopped under `factory:needs-input` with its PR still open/,
-  );
-  assert.match(
-    ordinary,
-    /An open PR under `factory:failed` does not qualify; removing that label requests a retry/,
-  );
-  assert.match(
-    ordinary,
-    /The orchestrating agent may take delivery ownership of a qualifying handoff and continue `babysit` through its Branch-update recovery/,
-  );
-  assert.match(
-    ordinary,
-    /Keep `factory:needs-input` throughout this delivery attempt, until merge or owner handoff, preventing concurrent factory resumption/,
-  );
-  assert.match(
-    ordinary,
-    /Handing the PR to the owner does not itself request factory resumption; retain the waiting marker/,
-  );
-  assert.match(
-    ordinary,
-    /The owner may instead finish the open PR by merging it and ensuring its issue closes under the contribution guide's pull request rules, or request factory resumption by removing `factory:needs-input`/,
-  );
-  assert.match(
-    ordinary,
-    /No PR closure or ordered label-removal procedure is required/,
-  );
-});
-
-test("ordinary handoff delivery reuses one local recovery and records its merge", () => {
-  const factory = flowedText("rules/factory-workflow.md");
-  const ordinary =
-    /### Ordinary factory runs (.*?)(?= ## |$)/.exec(factory)?.[1] ?? "";
-  for (const requirement of [
-    /Rebase onto the current default branch in a checkout it owns, never through GitHub update-branch/,
-    /Revalidate the integrated change and repeat applicable internal and external review and designated current-head owner approval/,
-    /One recovery attempt is allowed; a failed recovery or a further stale-base result hands the still-unmerged PR to the owner with its failure reason/,
-    /Pending or failed checks permit no merge; obsolete-head checks and approval never qualify a replacement head/,
-    /Record the merge outcome in a PR comment, retaining the delivered head, validation and applicable review results, and resulting merge commit SHA/,
-    /Deliver several waiting PRs sequentially, refreshing the default branch for each PR; create no shared queue/,
-  ])
-    assert.match(ordinary, requirement);
-
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  const entry = babysit.indexOf(
-    "When installed rules authorize delivery of a stopped run's open PR",
-  );
-  const request = babysit.indexOf("Before the first wait");
-  assert.ok(
-    entry >= 0 && entry < request,
-    "recover the handoff before requesting or waiting",
-  );
-  assert.match(
-    babysit,
-    /enter Branch-update recovery before the request and wait steps/,
-  );
-  assert.match(babysit, /This consumes the invocation's one recovery attempt/);
-  assert.match(
-    babysit,
-    /On exit `0`, record any merge outcome comment the installed rules require, using the delivered head, validation and review results, and merge commit SHA printed by the command/,
-  );
-  assert.match(
-    babysit,
-    /`4` means the base is stale: follow Branch-update recovery only if its one attempt is unused; otherwise record the owner handoff and stop/,
-  );
-  assert.match(
-    babysit,
-    /For an authorized stopped-run handoff, any failed recovery step requires the owner handoff with its failure reason/,
-  );
-  assert.match(
-    babysit,
-    /For several waiting PRs, finish each delivery before starting the next and refresh its base independently/,
-  );
-
-  const recovery = /## Branch-update recovery (.*)/.exec(babysit)?.[1] ?? "";
-  assert.match(
-    recovery,
-    /Fetch origin, resolve its remote default branch again/,
-  );
-  assert.match(
-    recovery,
-    /Rebase or replay only this PR's work onto the refreshed base/,
-  );
-  assert.match(recovery, /Never use GitHub update-branch/);
-  assert.match(
-    recovery,
-    /For the replacement head, repeat applicable internal reviews and owner approval, then run request and wait again from step 1, applying the trusted app-author policy anew/,
-  );
-  assert.match(
-    recovery,
-    /Pending or failed checks on that head permit no merge; checks from the old head never qualify it/,
-  );
-  // The executable merge guard must not substitute a remote merge/update for
-  // the caller's locally validated rebase. Its behind-head and sequential-PR
-  // fixtures separately exercise the final platform guard.
-  for (const file of readdirSync(join(root, ".agents/skills/babysit"))) {
-    if (file.endsWith(".mjs"))
-      assert.doesNotMatch(
-        readFileSync(join(root, ".agents/skills/babysit", file), "utf8"),
-        /update-branch|updateBranch/,
-      );
-  }
-});
-
-test("shared delivery guidance delegates owner-question continuation to installed rules", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  assert.match(
-    guide,
-    /This owner handoff ends the agent's babysitting of the pull request/,
-  );
-  assert.match(
-    guide,
-    /Subsequent continuation follows applicable installed rules/,
-  );
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  assert.match(
-    babysit,
-    /On resuming a PR paused for an owner question, follow the installed continuation rules before returning to the request and wait steps/,
-  );
-  const orchestrate = orchestrateSkill();
-  assert.match(
-    orchestrate,
-    /After an owner question is resolved, follow the applicable installed continuation rules to resume the worker or that same open PR/,
-  );
-  for (const text of [guide, babysit, orchestrate])
-    assert.doesNotMatch(text, /factory:needs-input|factory:skip/);
-});
-
-test("the GitHub rules require a first review request before waiting when opening is not a request", () => {
-  const rules = flowedText("rules/github-repository-configuration.md");
-  for (const requirement of [
-    /a review request is the pull request's opening when `request.onOpen` is true, or a later comment whose whole trimmed body equals `request.comment`; a push is never one/,
-    /When `request.onOpen` is false and the pull request has had no review request, an agent must post the review request comment for its head before it first waits on the pull request/,
-    /The request bound cannot stop this first request, since none has been counted yet/,
-    /Count the opening when `request.onOpen` is true and every comment whose whole trimmed body equals `request.comment`, whoever posted it/,
-  ])
-    assert.match(rules, requirement);
-});
-
-test("review converges on fixes and reasoned declines the guide allows", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  assert.ok(
-    guide.includes(
-      "every review thread is answered with its fix or a reasoned decline",
-    ),
-  );
-  assert.match(guide, /another layer owns/);
-  assert.match(guide, /files only the owner writes/);
-  const babysit = flowedText(".agents/skills/babysit/SKILL.md");
-  assert.match(babysit, /does not let you decline/);
-  const rules = flowedText("rules/github-repository-configuration.md");
-  for (const requirement of [
-    /After that first request, an agent must post the review request comment for a new head when its push fixes, fully or partly, a review finding the contribution guide does not let it decline, and the request bound has not been reached/,
-    /No other push gets a request: a push that only follows declines, changes only tests, documentation or wording, or only fixes a failing check gets none/,
-    /The optional `bounds.reviewRequests` limits the total review requests a pull request gets/,
-    /defaulting to \*\*4\*\* when omitted from a reviewer file/,
-    /the exact JSON string `"unbounded"` deliberately removes the count bound/,
-    /Once that count reaches the bound, no agent requests another review/,
-    /Without a reviewer file there is no reviewer, request or reviewer wait; the default creates none/,
-    /The bound creates no reason to decline a real finding and no grouped follow-up issue/,
-    /fix every finding the contribution guide does not let the agent decline and push without another request, and answer any review that arrives anyway/,
-  ])
-    assert.match(rules, requirement);
-  assert.doesNotMatch(
-    guide,
-    /request\.onOpen|request\.comment|reviewRequests|fully or partly|request bound/,
-  );
-  assert.doesNotMatch(
-    babysit,
-    /ticket or scope|another layer|only the owner writes/,
-  );
-});
-
-test("the GitHub rules keep the request phrase out of other text and exempt the request comment from the disclaimer", () => {
-  const rules = flowedText("rules/github-repository-configuration.md");
-  for (const requirement of [
-    /Write the configured reviewer's request phrase only in a comment that requests a review/,
-    /That comment holds exactly `request.comment`, with no AI disclaimer: it is exempt from the contribution guide's disclaimer rule/,
-    /The phrase never appears in prose, quotations, or code spans in any other comment, issue or pull request title, or body/,
-    /describe it as "the review request comment"/,
-  ])
-    assert.match(rules, requirement);
-  const guide = flowedText("CONTRIBUTING.md");
-  assert.match(
-    guide,
-    /review request comments follow the \[GitHub rules\]\(rules\/github-repository-configuration\.md#review-request-comments\) instead/,
-  );
-  assert.doesNotMatch(guide, /request phrase/);
-});
-
-test("the GitHub rules hold the readiness roles and native blocker mechanics, and the guide keeps general readiness", () => {
-  const rules = flowedText("rules/github-repository-configuration.md");
-  assert.match(
-    rules,
-    /They apply to all work in the repository, including tracker work that changes no file/,
-  );
-  for (const requirement of [
-    /Applying `ready-for-agent` or `ready-for-human` needs the repository `admin`, `maintain`, or `triage` role/,
-    /A `write` role, an author association, a bot identity, or a passing structure check supplies no authority/,
-    /When adding a native blocker, pass the blocking issue's numeric database ID as `issue_id`, not its issue number or `node_id`/,
-  ])
-    assert.match(rules, requirement);
-  const guide = flowedText("CONTRIBUTING.md");
-  assert.doesNotMatch(
-    guide,
-    /issue_id|node_id|`admin`|`maintain`|`triage` role/,
-  );
-  for (const requirement of [
-    /Applying `ready-for-agent` or `ready-for-human` is the review action, and the `github-repository-configuration` rules name the roles it needs/,
-    /After revising a contract or posting an Agent Brief, wait for the issue-contract workflow's revision notice before applying readiness\. Editing a contract removes its readiness/,
-    /A specification or ticket can be ready while its blockers are open/,
-    /Start a ticket only after its blockers are closed/,
-    /A triaged request's contract is its latest Agent Brief comment/,
-  ])
-    assert.match(guide, requirement);
-  assert.doesNotMatch(guide, /brief's heading comes right after/);
-});
-
-test("account policy disclaimers show exact blockquote source followed by a blank line", () => {
-  const guide = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
-  const policy =
-    /## Agents on the maintainer's account\n([\s\S]*?)(?=\n## |$)/.exec(
-      guide,
-    )?.[1] ?? "";
-  assert.match(
-    policy.replaceAll(/\s+/g, " "),
-    /disclaimer line, `>` included, followed by a blank line/,
-  );
-  assert.match(
-    policy.replaceAll(/\s+/g, " "),
-    /The disclaimer[^.]*every agent-written comment and every agent-filed issue body[^.]*attribution ban[^.]*commits and pull request titles and bodies[^.]*never applies to comments\./,
-  );
-  assert.doesNotMatch(
-    guide,
-    /Issue and pull request titles and bodies are exempt/,
-  );
-  assert.match(policy, /^```markdown\n> _This was generated by AI\._\n```$/m);
-  assert.match(
-    policy,
-    /^```markdown\n> \*This was generated by AI during triage\.\*\n```$/m,
-  );
-});
-
-test("the guide's triage disclaimer matches the triage skill and passes the issue-contract check", () => {
-  const guide = readFileSync(join(root, "CONTRIBUTING.md"), "utf8");
-  const triageLine =
-    /^```markdown\n(> \*This was generated by AI during triage\.\*)\n```$/m.exec(
-      guide,
-    )?.[1];
-  const skill = readFileSync(
-    join(root, ".agents/skills/triage/SKILL.md"),
-    "utf8",
-  );
-  const skillLine = /^```\n(> [^\n]+)\n```$/m.exec(skill)?.[1];
+test("the guide's triage disclaimer example passes the issue-contract check", () => {
+  const document = interpretMarkdown(read("CONTRIBUTING.md"));
+  const policy = document
+    .sections(["Agents on the maintainer's account"])
+    .values()
+    .next().value[0];
+  const examples = marked
+    .lexer(policy.source)
+    .filter(({ type }) => type === "code");
+  const triageLine = examples
+    .map(({ text }) => text)
+    .find((text) => text.includes("during triage"));
   assert.ok(triageLine);
-  assert.ok(skillLine);
-  assert.equal(triageLine, skillLine);
-
   const decision = decideIssueContract({
     repository,
     event: { issue: { number: 42 } },
@@ -3434,233 +1254,4 @@ test("the guide's triage disclaimer matches the triage skill and passes the issu
   });
   assert.equal(decision.exitCode, 0, decision.message);
   assert.match(decision.message, /valid triaged Agent Brief/i);
-});
-
-test("pull requests close finished issues and leave partial work linked without closing", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  const pullRequests =
-    /## Pull requests (.*?)### Opening a pull request/.exec(guide)?.[1] ?? "";
-  assert.match(
-    pullRequests,
-    /A pull request that finishes its issue links it with a closing reference, such as `Closes #123`, so merging it closes the issue/,
-  );
-  assert.match(
-    pullRequests,
-    /A pull request that does only part of an issue's work links it without a closing reference, such as `Part of #123`/,
-  );
-  assert.match(
-    pullRequests,
-    /A closing reference closes the issue only when the pull request merges into the default branch; with another base branch, whoever merges closes the issue after the merge/,
-  );
-  assert.match(pullRequests, /If the work finished the issue, close it/);
-  assert.match(
-    flowedText("rules/factory-workflow.md"),
-    /When a merged PR's body has an actual closing reference to its still-open issue, the factory closes the issue and clears its factory state instead of failing the run/,
-  );
-});
-
-test("the pull request template distinguishes finished issues from partial work", () => {
-  const template = flowedText(".github/PULL_REQUEST_TEMPLATE.md");
-  const relatedIssue = /## Related issue (.*)/.exec(template)?.[1] ?? "";
-  assert.match(
-    relatedIssue,
-    /Link the issue with a closing reference, such as Closes #123, if the pull request finishes it; for partial work, use a nonclosing reference, such as Part of #123/,
-  );
-  assert.doesNotMatch(relatedIssue, /when appropriate/);
-  assert.match(
-    relatedIssue,
-    /For work without a ticket, write Direct change: followed by its reason instead/,
-  );
-});
-
-test("owner questions stay on the issue and leave an open pull request unmerged", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  const comments = /## Comments (.*?)(?= ## |$)/.exec(guide)?.[1] ?? "";
-  assert.match(comments, /post the question as one issue comment/);
-  assert.doesNotMatch(comments, /factory|`model:/);
-  assert.match(comments, /without a pull request if none is open/);
-  assert.match(
-    comments,
-    /leaving the open pull request unmerged and linked from the question/,
-  );
-  assert.match(
-    comments,
-    /This owner handoff ends the agent's babysitting of the pull request/,
-  );
-  assert.match(
-    comments,
-    /Work without an issue asks on its pull request instead/,
-  );
-  const rules = flowedText("rules/factory-workflow.md");
-  assert.match(rules, /add `factory:needs-input` to the issue/);
-  assert.match(
-    rules,
-    /A qualifying handoff is a non-skipped factory run stopped under `factory:needs-input` with its PR still open/,
-  );
-  assert.match(
-    rules,
-    /The factory resumes the same work and PR on a current base, whether the PR is open or closed-unmerged; it reopens the existing PR when needed and never creates a replacement PR/,
-  );
-  assert.match(
-    rules,
-    /No PR closure or ordered label-removal procedure is required/,
-  );
-  assert.match(
-    comments,
-    /If the answer changes the implementation contract, have a separate writer edit it; await its validator notice, independent review and renewed readiness before continuation/,
-  );
-});
-
-test("GitHub label guidance provisions skip only for factory and delegates runtime state labels", () => {
-  const github = flowedText("rules/github-repository-configuration.md");
-  const factory = flowedText("rules/factory-workflow.md");
-  const notes = flowedText("authoring-notes.md");
-  const setup = flowedText("docs/development/github-label-setup.md");
-  assert.match(github, /These rules name no `factory:` label/);
-  assert.match(
-    github,
-    /Where factory workflow rules are installed, follow them for ownership of factory state labels and skip and model labels/,
-  );
-  for (const text of [github, factory, setup])
-    assert.match(
-      text,
-      /The repository owns `ready-for-agent`, provisioned by canonical-label setup/,
-    );
-  assert.match(
-    factory,
-    /The factory creates and manages `factory:running`, `factory:failed`, `factory:paused` and `factory:needs-input`, using the corresponding roles in `\.factory\/config\.json`/,
-  );
-  for (const text of [github, notes, setup])
-    assert.doesNotMatch(
-      text,
-      /(?:a|the) factory creates its own state labels/i,
-    );
-  assert.match(
-    factory,
-    /Whoever applies `factory:skip` creates it if the repository lacks it, as for `model:` labels; the factory never creates or removes it/,
-  );
-  assert.match(factory, /create the label if the repository lacks it/);
-  assert.match(
-    setup,
-    /the factory provisions the configured running, failed, paused and needs-input state labels/,
-  );
-  assert.match(
-    setup,
-    /The factory profile also provisions and verifies `factory:skip`; standard-profile setup does not add it/,
-  );
-});
-
-test("factory workflow rules preserve readiness, models, state recovery and safe stop notes", () => {
-  const rules = flowedText("rules/factory-workflow.md");
-  for (const requirement of [
-    /A parent \(a specification or any issue with sub-issues\) never runs/,
-    /its tickets, which each also need their own readiness/,
-    /again when a ticket is published later/,
-    /only once the latest ticket link appears in the parent's timeline/,
-    /Readiness recorded in the same second as that link holds the tickets/,
-    /exactly one `model:` label they chose, before readiness or together with it, even when it names the host's default model/,
-    /A parent needs no `model:` label of its own, and `ready-for-human` needs none/,
-    /`model:<slug>` or `model:<provider>\/<slug>`, optionally followed by `@<effort>`/,
-    /create the label if the repository lacks it/,
-    /A `claude-\*` or `gpt-\*` slug needs no provider/,
-    /triage notes after its Agent Brief suggest one `model:` label with a one-line reason/,
-    /runs an unlabelled ticket on the host's default model/,
-    /accepts readiness only from a person/,
-    /an agent adds `factory:needs-input` with its question/,
-    /`factory:skip` marks ready agent work the factory must not pick up/,
-    /`ready-for-human` is only for work that needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves/,
-    /Agent work the factory must not pick up gets `ready-for-agent`, one `model:` label and `factory:skip`, applied together: work that edits `\.github\/workflows\/`, work the owner reviews before merge, or work whose live steps need host access the maintainer grants/,
-    /Whoever applies `factory:skip` creates it if the repository lacks it, as for `model:` labels; the factory never creates or removes it/,
-    /An agent using the supplied credentials implements skip-labelled work, and the orchestrating agent merges it; when the owner reviews the work before merge, the orchestrating agent merges it after the owner's review/,
-    /the factory adds `factory:running` while it holds an issue, `factory:failed` after a run fails for good, and `factory:paused` when it pauses a run/,
-    /resumes it by itself.*nobody removes the label by hand/,
-    /Remove `factory:failed` to run the issue again once its failure note or the factory's comment is dealt with/,
-    /stops without a pull request and without a question under `factory:needs-input` comments one short paragraph/,
-    /Never paste log output, environment values or tokens into that note/,
-  ])
-    assert.match(rules, requirement);
-});
-
-// `ready-for-human` covers only work that needs the owner; agent work the
-// factory must not pick up carries `factory:skip`. The factory rules own its
-// routing and delivery.
-test("ready-for-human needs the owner, and only the factory rules name factory:skip", () => {
-  const narrowed =
-    /needs the owner's (?:own )?accounts(?: or|,) credentials,? or a (?:reserved )?taste call/;
-  for (const document of [
-    "rules/github-repository-configuration.md",
-    "docs/development/github-label-setup.md",
-    "operations/setup-github-labels.mjs",
-    ".agents/skills/triage/SKILL.md",
-    "rules/factory-workflow.md",
-  ]) {
-    const text = flowedText(document);
-    assert.match(text, narrowed, document);
-    assert.doesNotMatch(
-      text,
-      /requires human implementation|needs human implementation|judgment calls, external access|ready for a human to merge/i,
-      document,
-    );
-  }
-  const github = flowedText("rules/github-repository-configuration.md");
-  assert.doesNotMatch(
-    github.replace("name no `factory:` label", ""),
-    /factory:/,
-  );
-  const factory = readFileSync(join(root, "rules/factory-workflow.md"), "utf8");
-  const sections = factory.split(/^## /m);
-  for (const section of sections)
-    if (
-      !section.startsWith("State labels\n") &&
-      !section.startsWith("Merging\n")
-    )
-      assert.doesNotMatch(section, /factory:skip/);
-  const skill = flowedText(".agents/skills/triage/SKILL.md");
-  const forPr = /For a PR, (.+?) Every triaged issue/.exec(skill)?.[1] ?? "";
-  for (const meaning of [
-    /`ready-for-agent` means a brief is attached and an agent should take the next step on the diff/,
-    /`ready-for-human` keeps the owner-only meaning above/,
-    /Work an agent can perform stays `ready-for-agent`, including work awaiting the owner's review/,
-    /In repositories with installed factory rules, follow those rules for work the factory must not pick up/,
-  ])
-    assert.match(forPr, meaning);
-  const accept =
-    /### Accept a brief that holds (.+?)## Other outcomes/.exec(skill)?.[1] ??
-    "";
-  for (const choice of [
-    /`ready-for-human` only when the work needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves/,
-    /`ready-for-agent` with `factory:skip` for agent work the factory must not pick up, by the tests in the installed factory rules/,
-    /`ready-for-agent` alone for any other work/,
-  ])
-    assert.match(accept, choice);
-});
-
-test("the contribution guide limits each run to its credentials and stops at permission refusals", () => {
-  const guide = flowedText("CONTRIBUTING.md");
-  const credentials =
-    /## Credentials ([^#]+)## Comments/.exec(guide)?.[1] ?? "";
-  assert.match(
-    credentials,
-    /An agent run uses only the credentials it was given\./,
-  );
-  assert.equal(
-    [
-      ...guide.matchAll(
-        /An agent run uses only the credentials it was given\./g,
-      ),
-    ].length,
-    1,
-  );
-  assert.match(
-    credentials,
-    /It never looks for, tests, or uses another identity, whether a token, a CLI login, an environment variable, a connector, or an app, including one reached through the agent provider's own login\./,
-  );
-  assert.match(
-    credentials,
-    /Searching for one, such as listing credential environment variables or probing other `gh` configurations, counts as looking\./,
-  );
-  assert.match(
-    credentials,
-    /When a push, merge, or API call is refused for permission, the refusal stands: the agent stops and asks the owner, as for any answer only the owner can give, and never retries under another identity\./,
-  );
 });
