@@ -24,10 +24,9 @@ replaces is renamed in place, so its issues keep it:
 | `enhancement`     | `type:enhancement` |
 
 `needs-info` and `factory:needs-input` have no single successor, so they are
-left in place; on its next run the issue-contract workflow gives an issue
-carrying only them `state:triage`, and triage routes it. Readiness recorded
-before the rename binds the former label name, so an issue renamed into
-`state:ready` needs a fresh review of its current revision.
+left in place. The
+[adoption guidance](../../guidance/github-repository-configuration.md#remote-setup)
+says what the rename means for the issues carrying them.
 
 A label with a matching case-insensitive name but different casing, color, or
 description requires confirmation before updating, and so does a former label

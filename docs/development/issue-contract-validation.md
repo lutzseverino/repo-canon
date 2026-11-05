@@ -432,8 +432,9 @@ supported issue or comment event.
 ### Workflow state
 
 Every run on an open issue that uses workflow state works out the one workflow
-state the issue should carry and removes the others. A workflow state is any
-`state:` label, of which only `state:ready` is readiness, or `wontfix`. Intake forms, triaged
+state label the issue should carry and removes the others: a `state:` label,
+of which only `state:ready` is readiness, or the closing `wontfix` in its
+place. Intake forms, triaged
 requests, direct specifications and tickets, and unrecognized issues all use
 workflow states. Wayfinder maps and children, including ones that fail structure,
 never gain a workflow state. Pull requests remain ignored. The number of

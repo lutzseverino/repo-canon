@@ -24,7 +24,7 @@ descriptions:
 | `type:bug`            | `d73a4a` | Something isn't working                                    |
 | `type:enhancement`    | `a2eeef` | New feature or request                                     |
 | `priority:high`       | `d93f0b` | Picked up before normal and low priority work              |
-| `priority:normal`     | `fbca04` | Picked up in the usual order; no priority label means this |
+| `priority:normal`     | `bfdadc` | Picked up in the usual order; no priority label means this |
 | `priority:low`        | `c2e0c6` | Picked up after high and normal priority work              |
 | `wontfix`             | `ffffff` | Will not be actioned                                       |
 | `wayfinder:map`       | `5319e7` | Planning map for related work                              |
@@ -32,9 +32,6 @@ descriptions:
 | `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                       |
 | `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                       |
 | `wayfinder:task`      | `bfd4f2` | Task in a planning map                                     |
-
-Label setup renames in place each former label these replace, so its issues
-keep it, and creates the rest.
 
 An open issue carries exactly one `state:` label, its workflow state, naming
 whom it waits on; the contribution guide's Readiness section says how the

@@ -92,7 +92,7 @@ const canonicalLabels = [
   },
   {
     name: "priority:normal",
-    color: "fbca04",
+    color: "bfdadc",
     description: "Picked up in the usual order; no priority label means this",
   },
   {
@@ -139,9 +139,9 @@ const canonicalLabels = [
   },
 ];
 
-// The factory profile's owner gates and the factory's machine state, which
-// only the factory sets. The factory creates running, failed and paused with
-// its own values when they are missing; the repository never chose those.
+// The factory profile's owner gates and factory labels. The factory creates
+// running, failed and paused with its own values when they are missing; the
+// repository never chose those.
 const factoryLabels = [
   {
     name: "gate:owner-review",

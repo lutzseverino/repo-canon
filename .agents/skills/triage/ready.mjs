@@ -170,7 +170,6 @@ export async function main(
   now = Date.now,
 ) {
   const { number, revision, companions, repository } = argumentsFor(argv);
-  const label = readyLabel;
   connection ??= connectionFor(repository);
   const actor = await actingAccount(connection);
   const policy = await factoryPolicy(connection);
@@ -207,7 +206,7 @@ export async function main(
       await pause(2000);
       continue;
     }
-    const staleParent = parentNeedsReapply(before, label);
+    const staleParent = parentNeedsReapply(before, readyLabel);
     if (
       before.state.status !== "awaiting-review" &&
       !(staleParent && before.state.status === "approved")
@@ -220,11 +219,11 @@ export async function main(
       continue;
     }
     if (staleParent) {
-      await connection.issueTracker.removeLabel(number, label);
+      await connection.issueTracker.removeLabel(number, readyLabel);
       await pause(2000);
       continue;
     }
-    if (before.issue.labels.includes(label))
+    if (before.issue.labels.includes(readyLabel))
       throw new Error(
         "Readiness is already present; remove the stale attempt and review the revision notice again.",
       );
@@ -251,14 +250,14 @@ export async function main(
         });
     }
   }
-  await connection.issueTracker.addLabels(number, [...companions, label]);
+  await connection.issueTracker.addLabels(number, [...companions, readyLabel]);
   for (;;) {
     const current = await snapshot(connection, number);
     checkContract(current, revision);
     const own = current.events.findLast(
       (event) =>
         event.action === "added" &&
-        event.label === label &&
+        event.label === readyLabel &&
         event.actor?.login === actor.login &&
         !before.events.some((previous) => previous.id === event.id),
     );
@@ -268,20 +267,20 @@ export async function main(
       if (
         current.state.status !== "approved" ||
         current.state.reviewer !== actor.login ||
-        current.state.label !== label ||
+        current.state.label !== readyLabel ||
         current.state.reviewEventId !== String(own.id) ||
-        !current.issue.labels.includes(label)
+        !current.issue.labels.includes(readyLabel)
       )
         throw new Error(
           "The validator did not approve this account's readiness event.",
         );
-      if (parentNeedsReapply(current, label)) {
-        await connection.issueTracker.removeLabel(number, label);
+      if (parentNeedsReapply(current, readyLabel)) {
+        await connection.issueTracker.removeLabel(number, readyLabel);
         await pause(2000);
         return main(argv, connection, pause, now);
       }
       console.log(
-        `Issue #${number}: ${label} approved at ${revision} by @${actor.login}.`,
+        `Issue #${number}: ${readyLabel} approved at ${revision} by @${actor.login}.`,
       );
       return 0;
     }

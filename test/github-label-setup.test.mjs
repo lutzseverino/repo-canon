@@ -46,7 +46,7 @@ const canonicalLabels = [
   },
   {
     name: "priority:normal",
-    color: "fbca04",
+    color: "bfdadc",
     description: "Picked up in the usual order; no priority label means this",
   },
   {

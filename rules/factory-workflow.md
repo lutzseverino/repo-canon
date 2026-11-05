@@ -110,9 +110,12 @@ with these colors and descriptions:
 
 Standard-profile setup provisions none of them. A `gate:` label is set before
 the work, by the owner or by a grill at the owner's request. Only the factory
-sets `factory:` labels, using the corresponding roles in
-`.factory/config.json`; it creates a missing running, failed or paused label
-itself.
+sets `factory:running`, `factory:paused` and `factory:failed`, using the
+corresponding roles in `.factory/config.json`, and it creates any of them that
+is missing itself. The skip and hold labels follow the sections below.
+
+A person applying `state:triage`, or opening an issue, is the factory's triage
+trigger; the issue-contract workflow's own fallback application never is.
 
 In a repository a factory serves, `.factory/config.json` names the factory's
 labels: `state:ready` is the ready label, `factory:skip` marks ready agent
@@ -185,9 +188,7 @@ closure nor factory pickup.
 
 The configured `labels.hold` label pauses new pickups and merges in one
 repository while any open issue or PR carries it. Runs already started finish
-without merging. Factory-profile label setup provisions and verifies
-`factory:hold` with color `c5def5` and description
-`Pause factory pickups and other merges in this repository`.
+without merging.
 
 An expedited change carries the repository hold on its own PR, so merging or
 closing that PR ends its hold. A pause begun on an issue transfers to that PR
@@ -206,8 +207,7 @@ PRs only. Its hold exit leaves the PR open; a hold is not an owner handoff.
 ### Release holds
 
 In a factory repository, a release PR carries the configured
-`labels.releaseHold` label from opening until it merges or closes. Factory-profile
-label setup provisions and verifies this release-hold label. While another
+`labels.releaseHold` label from opening until it merges or closes. While another
 open PR carries it, the factory holds merges in that repository. Babysit also
 checks immediately before its merge write, covering a release PR opened
 mid-run and every babysit merge, including orchestrator recovery and
@@ -260,8 +260,8 @@ When an agent needs an answer only the owner can give, follow the contribution
 guide's owner-question handoff, post the question as the `comments` rules say,
 and move the issue's workflow state to whoever must answer: `state:owner` for
 the owner's answer, `state:grill` for the owner's intent, or `state:reporter`
-for a fact only its outside reporter holds. Work without an issue uses no
-state label. The question reaches the orchestrating agent first, as
+for a fact only its outside reporter holds. That move is the run's `state:`
+stop. Work without an issue uses no state label. The question reaches the orchestrating agent first, as
 those rules say: it answers on the issue when the triage inference test lets it,
 and otherwise puts the question in its decision inbox for the owner.
 

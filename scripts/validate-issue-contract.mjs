@@ -744,14 +744,14 @@ function labelName(label) {
 }
 
 function validateTriagedLabels(labels, expectedCategory, errors) {
-  const categories = [...labels].filter((label) => categoryLabels.has(label));
-  if (categories.length !== 1)
+  const carried = [...labels].filter((label) => categoryLabels.has(label));
+  if (carried.length !== 1)
     errors.push(
       "Apply exactly one category label: `type:bug` or `type:enhancement`.",
     );
   if (
     expectedCategory &&
-    (categories.length !== 1 || categories[0] !== expectedCategory)
+    (carried.length !== 1 || carried[0] !== expectedCategory)
   ) {
     errors.push(
       `Use the \`${expectedCategory}\` category for this issue form.`,
