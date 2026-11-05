@@ -6,7 +6,7 @@ import { parse } from "yaml";
 export const parseStandards = parse;
 
 // Resolved declarations retain the manifest's fields, including operation runs.
-// Profile entries override defaults; exclusions remove a declaration entirely.
+// Profile entries replace defaults; exclusions remove a declaration entirely.
 export function declarations(root) {
   const { defaults = {}, profiles } = parseStandards(
     readFileSync(join(root, "standards.yaml"), "utf8"),
@@ -17,7 +17,7 @@ export function declarations(root) {
       name,
       Object.entries({ ...inherited, ...profile.declarations })
         .filter(([, declaration]) => !declaration.exclude)
-        .map(([id, declaration]) => ({ id, ...inherited[id], ...declaration })),
+        .map(([id, declaration]) => ({ id, ...declaration })),
     ]),
   );
 }

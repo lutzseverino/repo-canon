@@ -1,3 +1,4 @@
+import { declarations } from "../scripts/standards-declarations.mjs";
 import {
   execFixtureGit,
   fixtureGitEnvironment,
@@ -23,7 +24,7 @@ import {
 } from "../scripts/release/adoption-fixture.mjs";
 import { fileDeclarations } from "./helpers/documentation.mjs";
 import { exactFiles } from "./helpers/installed-validator.mjs";
-import { invokeCheck } from "./helpers/operation.mjs";
+import { declaredOperations, invokeCheck } from "./helpers/operation.mjs";
 
 // The release scripts run against disposable repositories. The public CLI and
 // `gh` are external boundaries, so stubs stand in for them: the CLI stub
@@ -303,11 +304,26 @@ test("factory package changes are outside Repo Canon release inputs", (t) => {
   // The real manifest must not select the package as a file, skill, operation,
   // or retained resource. The release fixture then exercises the input command
   // with a tracked factory subtree and an independent version stream.
-  const standards = readFileSync(join(scripts, "../../standards.yaml"), "utf8");
-  // A skill's name is not an input path to the retired factory product.
-  assert.doesNotMatch(
-    standards.replace(/^ +name:.*$/gm, ""),
-    /(?:[:-]\s+|\[)factory(?:\/|[\s\],])/,
+  const sourceRoot = resolve(scripts, "../..");
+  const paths = Object.values(declarations(sourceRoot))
+    .flat()
+    .flatMap((entry) => [
+      entry.exact,
+      entry.source,
+      entry.guidance,
+      entry.rules,
+      entry.discovery,
+    ]);
+  paths.push(
+    ...declaredOperations(sourceRoot).flatMap(({ run }) => [
+      run.script,
+      ...(run.resources ?? []),
+    ]),
+  );
+  assert.ok(
+    !paths
+      .filter(Boolean)
+      .some((path) => path === "factory" || path.startsWith("factory/")),
   );
   const repository = releasedSource(t);
   repository.commit(
@@ -1104,17 +1120,14 @@ test("release:verify rejects a version that is not a stable release tag", (t) =>
 // Every declaration with adoption guidance is assessed during adoption, in
 // one profile or both, so the fixture answers each of them.
 test("the adoption fixture assesses every declaration with adoption guidance", () => {
-  const lines = readFileSync(
-    join(scripts, "../../standards.yaml"),
-    "utf8",
-  ).split("\n");
-  const assessed = [];
-  let declaration = null;
-  for (const [index, line] of lines.entries()) {
-    const name = line.match(/^\s+([a-z0-9-]+):$/)?.[1];
-    if (name && /^\s+kind: /.test(lines[index + 1] ?? "")) declaration = name;
-    if (/^\s+guidance: /.test(line)) assessed.push(declaration);
-  }
+  const assessed = [
+    ...new Set(
+      Object.values(declarations(resolve(scripts, "../..")))
+        .flat()
+        .filter(({ guidance }) => guidance)
+        .map(({ id }) => id),
+    ),
+  ];
   assert.ok(assessed.includes("project-agent-guidance"));
   assert.deepEqual(Object.keys(adoptionAssessments).sort(), assessed.sort());
 });

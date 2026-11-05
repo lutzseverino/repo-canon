@@ -1,3 +1,4 @@
+import { parseStandards } from "../scripts/standards-declarations.mjs";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -77,24 +78,21 @@ const commands = [
 ];
 
 // The declaration IDs of `standards.yaml`'s defaults and of the workbench
-// profile's exclusions and additions, read from the manifest's own layout.
+// profile's exclusions and additions.
 function workbenchSelection() {
-  const manifest = readFileSync(join(root, "standards.yaml"), "utf8");
-  const [, defaults, profiles] =
-    /^defaults:\n {2}declarations:\n([\s\S]*?)^profiles:\n([\s\S]*)$/m.exec(
-      manifest,
-    );
-  const workbench = /^ {2}workbench:\n([\s\S]*?)(?=^ {2}\S|(?![\s\S]))/m.exec(
-    profiles,
-  )[1];
+  const manifest = parseStandards(
+    readFileSync(join(root, "standards.yaml"), "utf8"),
+  );
+  const defaults = Object.keys(manifest.defaults.declarations);
+  const entries = Object.entries(manifest.profiles.workbench.declarations);
   return {
-    defaults: [...defaults.matchAll(/^ {4}([a-z0-9-]+):$/gm)].map(
-      ([, id]) => id,
-    ),
-    excluded: [
-      ...workbench.matchAll(/^ {6}([a-z0-9-]+): \{ exclude: true \}$/gm),
-    ].map(([, id]) => id),
-    added: [...workbench.matchAll(/^ {6}([a-z0-9-]+):$/gm)].map(([, id]) => id),
+    defaults,
+    excluded: entries
+      .filter(([, declaration]) => declaration.exclude)
+      .map(([id]) => id),
+    added: entries
+      .filter(([, declaration]) => !declaration.exclude)
+      .map(([id]) => id),
   };
 }
 

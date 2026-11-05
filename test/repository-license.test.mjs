@@ -1,38 +1,27 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { declarations } from "../scripts/standards-declarations.mjs";
 
 test("the repository license has its own contextual file declaration", () => {
-  const manifest = readFileSync(
-    new URL("../standards.yaml", import.meta.url),
-    "utf8",
-  );
-  const declaration = manifest.match(
-    /^ {4}repository-license:\n((?: {6}.+\n|\n)+)/m,
-  )?.[1];
-
-  assert.ok(declaration, "standards.yaml declares repository-license");
-  assert.deepEqual(
-    declaration
-      .trim()
-      .split("\n")
-      .map((line) => line.trim()),
-    [
-      "kind: file",
-      "target: LICENSE",
-      "guidance: guidance/repository-license.md",
-      "rules: rules/repository-license.md",
-    ],
-    "the license is contextual, with adoption guidance and rules and no checks or fixes",
-  );
-  assert.equal(
-    [...manifest.matchAll(/^\s+target: LICENSE$/gm)].length,
-    1,
-    "only repository-license owns LICENSE",
-  );
-  assert.match(
-    manifest,
-    /^ {4}repository-readme:\n {6}kind: file\n {6}target: README\.md\n/m,
-    "the Repository README retains its separate README.md target",
-  );
+  const profiles = declarations(fileURLToPath(new URL("..", import.meta.url)));
+  for (const profile of [profiles.standard, profiles.factory]) {
+    assert.deepEqual(
+      profile.find(({ id }) => id === "repository-license"),
+      {
+        id: "repository-license",
+        kind: "file",
+        target: "LICENSE",
+        guidance: "guidance/repository-license.md",
+        rules: "rules/repository-license.md",
+      },
+    );
+    assert.equal(
+      profile.filter(({ target }) => target === "LICENSE").length,
+      1,
+    );
+    const readme = profile.find(({ id }) => id === "repository-readme");
+    assert.equal(readme.kind, "file");
+    assert.equal(readme.target, "README.md");
+  }
 });

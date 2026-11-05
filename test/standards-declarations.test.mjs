@@ -20,6 +20,7 @@ defaults:
       kind: file
       target: config.json
       exact: source/config.json
+      rules: rules/config.md
     documentation:
       kind: repository
       checks:
@@ -41,6 +42,8 @@ profiles:
     declarations:
       documentation: {exclude: true}
       configuration:
+        kind: file
+        target: config.json
         exact: source/minimal.json
       extra:
         kind: file
@@ -48,7 +51,7 @@ profiles:
         exact: source/extra.json
 `;
 
-test("declarations resolve profile defaults, overrides and exclusions regardless of YAML layout", (t) => {
+test("declarations resolve profile defaults, replacements and exclusions regardless of YAML layout", (t) => {
   const root = mkdtempSync(join(tmpdir(), "repo-canon-declarations-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const skill = {
@@ -62,6 +65,7 @@ test("declarations resolve profile defaults, overrides and exclusions regardless
     kind: "file",
     target: "config.json",
     exact: "source/config.json",
+    rules: "rules/config.md",
   };
   const expected = {
     standard: [
@@ -94,7 +98,12 @@ test("declarations resolve profile defaults, overrides and exclusions regardless
     ],
     minimal: [
       skill,
-      { ...file, exact: "source/minimal.json" },
+      {
+        id: "configuration",
+        kind: "file",
+        target: "config.json",
+        exact: "source/minimal.json",
+      },
       {
         id: "extra",
         kind: "file",
