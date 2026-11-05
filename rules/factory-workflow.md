@@ -123,7 +123,7 @@ work the factory must not pick up, and the factory adds `factory:running`
 while it holds an issue, `factory:failed` after a run fails for good, and
 `factory:paused` when it pauses a run. A run that stops on a question moves
 the issue's workflow state to whoever must answer, as Owner handoff and
-recovery says. `factory:paused` means the factory paused the run and resumes
+recovery says: a `state:` stop. `factory:paused` means the factory paused the run and resumes
 it by itself, and its run comment says why, so nobody removes the label by
 hand. Remove `factory:failed` to run the issue again once its failure note
 or the factory's comment is dealt with, subject to the existing pickup gates.
@@ -260,13 +260,13 @@ When an agent needs an answer only the owner can give, follow the contribution
 guide's owner-question handoff, post the question as the `comments` rules say,
 and move the issue's workflow state to whoever must answer: `state:owner` for
 the owner's answer, `state:grill` for the owner's intent, or `state:reporter`
-for a fact only its outside reporter holds. That move is the run's `state:`
-stop. Work without an issue uses no state label. The question reaches the orchestrating agent first, as
+for a fact only its outside reporter holds. Work without an issue uses no
+state label. The question reaches the orchestrating agent first, as
 those rules say: it answers on the issue when the triage inference test lets it,
 and otherwise puts the question in its decision inbox for the owner.
 
-An agent that stops without a pull request and without a question in a
-`state:` stop posts a stop note on the issue under the `comments` rules.
+An agent that stops without a pull request and without a `state:` stop posts a
+stop note on the issue under the `comments` rules.
 
 ### Skipped work
 

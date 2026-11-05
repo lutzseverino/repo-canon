@@ -7,11 +7,11 @@ or directories. Adoption installs its rules for the whole repository.
 
 The shipped `.factory/config.json` is version 2 without the label role for
 answers a run waits on, which ADR 0031 removes. Scriptorium v3 still requires
-that role and pauses a repository whose configuration lacks it, so deliver this adoption only once
-the serving host accepts the configuration; verify the serving host's release
-first.
+that role and pauses a repository whose configuration lacks it, and no
+released host accepts the configuration yet: deliver this adoption only once
+the serving host's release accepts it.
 
-The shipped configuration It names `skill` as
+The shipped configuration names `skill` as
 `implement` and `arguments` as `#{issue}`, replacing the version-1 `prompt`;
 each provider renders the skill invocation in its own syntax. Its
 `contractResult.marker` is `repo-canon:issue-contract-state` and
