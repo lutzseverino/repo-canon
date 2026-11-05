@@ -36,6 +36,7 @@ const previousVersion = "v0.18.0";
 // Declarations whose rules govern all work, with empty confirmed scope, and
 // the profiles that select them.
 const repositoryWide = {
+  comments: ["standard", "factory"],
   "github-repository-configuration": ["standard", "factory"],
   "factory-workflow": ["factory"],
 };
@@ -163,7 +164,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     const profile = validation.profiles[name];
     assert.equal(
       profile.declarations.length,
-      { standard: 60, factory: 65 }[name],
+      { standard: 61, factory: 66 }[name],
     );
     assert.deepEqual(
       profile.declarations.find(({ id }) => id === "standards-update-workflow"),

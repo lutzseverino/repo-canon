@@ -21,21 +21,25 @@ Before the queue check, it independently resolves both trusted review
 declarations through `trustedReviewConfiguration()` at one pinned destination
 default-branch commit and matches the platform PR author against that policy.
 This applies even to direct invocation without a prior wait. For a matching
-app author, Access reads the PR conversation comments and requires a complete
-current-head outcome record before any merge write. Proposed local or PR-branch
+app author, Access reads the PR's reviews and requires a submitted review of the
+current head in the shape of the installed
+[comment rules' Reviews section](../../rules/comments.md#reviews) before any
+merge write. Conversation comments, pending reviews and the earlier outcome
+record without `Fixed:` and `Findings:` do not count. Proposed local or PR-branch
 configuration and caller claims about a previous wait cannot bypass this check.
 Nonmatching and absent policies keep their existing applicability.
 
-Wait exit `6` prints a copyable comment template with the full `Head:` SHA,
-`Standards:` and `Spec:` outcome fields and the exact sentence
-"No external reviewer runs on app-authored PRs." Follow the shared internal-review
-workflow in the `github-repository-configuration` rules and replace both outcome
-placeholders with actual results before posting. The parser requires those
-three plain text fields, each once in the same comment, and the exact sentence
-on its own line. The head must be the full current SHA. Empty fields, unfilled
-angle/bracket/brace prompt values, TODO/TBD placeholder values, and fenced or HTML-comment
-examples do not count. The record documents completed reviews; it grants no
-merge authorization and does not settle review findings by itself.
+Wait exit `6` prints that review's template for the full current head. Follow
+the shared internal-review workflow in the `github-repository-configuration`
+rules and replace every placeholder with actual results before posting it as a
+pull request review. The parser in `review-outcome.mjs` requires the `Head:`,
+`Standards:`, `Spec:`, `Fixed:` and `Findings:` plain text fields, each once in
+the same review. The head must be the full current SHA. `Findings:` is `None`
+or is empty and followed by list items that each start with a `path:line`
+location. Empty fields, unfilled angle/bracket/brace prompt values, TODO/TBD
+placeholder values, and fenced or HTML-comment examples do not count. The
+review documents completed internal reviews; it grants no merge authorization
+and does not settle review findings by itself.
 
 Before merging, Access reads the destination's default branch and verifies the
 PR targets it. It reads all active branch rules, including inherited rulesets,
@@ -99,7 +103,7 @@ a newline. Failed or unconfirmed merges write no success output.
 Exit `0` means merged. Exit `3` means not merged and needs the owner: either
 the base branch requires a merge queue, or a successful merge call left the
 PR in a state other than `merged`, or neither freshness enforcement nor the proven private-plan path can be confirmed. The skill hands off with a question under
-[the contribution guide's comment rules](../../CONTRIBUTING.md#comments),
+[the comment rules' owner questions](../../rules/comments.md#owner-questions),
 without retrying the merge. Exit `2` means current-head validation has not succeeded, or the head changed
 before the merge call or after a refused merge;
 the skill returns to its wait step. Exit `1` reports an invalid invocation or
@@ -115,10 +119,10 @@ base, so a base advance returns `4` instead of being mistaken for a changed PR
 head. A failed comparison remains an explicit failure. Each platform request
 has a 45-second timeout.
 
-Exit `5` means a policy-skipped PR lacks a complete current-head outcome comment.
-It makes no merge write and identifies the head and trusted configuration snapshot.
-Complete both internal reviews, post their actual outcomes using the wait's
-template, and rerun after verifying the remaining merge conditions. This retry
+Exit `5` means a policy-skipped PR lacks a complete review of the current head.
+It makes no merge write and identifies the head, the comment rules' Reviews
+section and the trusted configuration snapshot. Complete both internal reviews,
+post the review using the wait's template, and rerun after verifying the remaining merge conditions. This retry
 is distinct from the owner handoff, head-change and stale-base exits.
 
 For exit `4`, the skill permits one branch-update recovery per invocation,
@@ -186,7 +190,8 @@ A missing `reviewCommits` capability fails the configured-reviewer wait.
 
 For a designated adoption PR, the caller follows the installed
 `github-repository-configuration` rules' Designated owner review gate using
-PR comments. The following illustrative records use placeholder links and a
+the [delivery records](../../rules/comments.md#delivery-records) the comment
+rules describe. The following illustrative records use placeholder links and a
 sample head; they introduce no required approval syntax.
 
 Designation PR comment:

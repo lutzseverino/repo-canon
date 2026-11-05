@@ -44,7 +44,7 @@ import {
   InvalidTrustedReviewConfiguration,
   trustedReviewConfiguration,
 } from "./trusted-review-config.mjs";
-import { reviewOutcomeTemplate } from "./review-outcome.mjs";
+import { reviewsSection, reviewTemplate } from "./review-outcome.mjs";
 import {
   reviewRequestedAt,
   reviewerState,
@@ -204,9 +204,9 @@ export const report = (outcome, head) => {
     ...(outcome.code === 6
       ? [
           "",
-          "Post this comment after replacing both outcome placeholders:",
+          `Post this pull request review, as ${reviewsSection} describes, after replacing every placeholder:`,
           "",
-          ...reviewOutcomeTemplate(head),
+          ...reviewTemplate(head),
         ]
       : []),
   ];

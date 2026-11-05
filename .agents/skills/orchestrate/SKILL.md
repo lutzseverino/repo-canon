@@ -13,11 +13,11 @@ they approve, with a definite goal; keep the plan's state in the workbench; and
 run the plan to an announced close.
 
 Each repository's contribution guide, `CONTRIBUTING.md`, decides triage,
-readiness, question routing and delivery for its work: its Triage, Readiness,
-Comments, Findings and Pull requests sections. This skill is how to carry those
-rules across a plan. The installed `triage` skill is how to triage one request.
-In a repository a factory serves, the `factory` skill installed there is how to
-hand tickets to the factory and deliver held, skipped or handed-off work.
+readiness, question routing and delivery: its Triage, Readiness, Owner
+questions, Findings and Pull requests sections, and its comment rules what you
+post. This skill carries those rules across a plan; the installed `triage` skill
+triages one request. Where a factory serves, its installed `factory` skill hands
+it tickets and delivers held, skipped or handed-off work.
 
 Read [templates](references/templates.md) before you write a workbench file,
 [launches](references/launches.md) before you launch, take over, hand over,
@@ -102,9 +102,9 @@ files. Where none is offered, the owner also tells you when a grill is done.
 Repository paths are relative to each tracked repository's root, and workbench
 paths to the workbench's.
 
-- `CONTRIBUTING.md`: its Triage, Readiness, Comments, Findings and Pull requests
-  sections. When it is missing, carry out this method as written, and put each
-  rule it leaves to the guide in `inbox.md` as a decision for the owner.
+- `CONTRIBUTING.md` and `.repo-standards/rules/comments.md`: the sections and
+  comment rules named above. When either is missing, carry out this method as
+  written, and put each rule it leaves to it in `inbox.md` for the owner.
 - `AGENTS.md`: its Agent skills requirements for delegation and session naming.
   When it is missing, give each launch only its task context, and name each
   session for its operation and target where naming is supported.

@@ -18,7 +18,7 @@ The issue tracker and triage label vocabulary should have been provided to you.
 
 Check with the user that these seams match their expectations.
 
-3. Write the spec using the template below, then publish it to the project issue tracker, awaiting review: it needs no further triage, but its readiness is a separate review by someone other than you who holds a role the repository authorizes for readiness, after any revision notice the tracker posts, with the companion labels its rules require. When the spec will be broken into tickets, its readiness follows their publication.
+3. Write the spec using the template below, then publish it to the project issue tracker, awaiting review, reading `.repo-standards/rules/comments.md#disclaimers` first on a hosted tracker: it needs no further triage, but its readiness is a separate review by someone other than you who holds a role the repository authorizes for readiness, after any revision notice the tracker posts, with the companion labels its rules require. When the spec will be broken into tickets, its readiness follows their publication.
 
 <spec-template>
 
@@ -85,6 +85,9 @@ Paths are relative to the repository root.
   missing and no tracker was provided, ask the user where to publish the
   spec; when the label config is missing, use the canonical role names as
   the label strings.
+- `.repo-standards/rules/comments.md`: the installed comment rules, whose
+  section the posting steps name. When it is missing, post issue bodies and
+  comments as the steps describe.
 - `GLOSSARY.md` and the ADRs in `docs/adr/`: the domain vocabulary and
   decisions to respect. When either is missing, use the codebase's own words.
 - The installed rules, such as the `github-repository-configuration` rules,

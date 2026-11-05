@@ -105,7 +105,7 @@ the responsible repository. On that issue, record:
   of the correction changes.
 
 Bring this evidence to the owner for a patch-now versus next-ordinary-release
-decision through the [owner-question route](../../CONTRIBUTING.md#comments).
+decision through the [owner-question route](../../CONTRIBUTING.md#owner-questions).
 The orchestrating agent routes the question to its decision inbox. Record the
 owner's decision and its source on the issue; follow the applicable handoff
 and continuation rules. Neither confirmation nor merging a correction
@@ -391,7 +391,7 @@ written out above.
 ### Account for tracked adopters
 
 After publication and verification, post a comment on the release PR under
-[the contribution guide's comment rules](../../CONTRIBUTING.md#comments)
+[the comment rules](../../rules/comments.md)
 accounting for every adopter the maintainer tracks. Keep that tracked list
 outside Repo Canon. For each adopter, record either that it is updated to the
 release with a link to its adoption PR, or that it is waiting with a reason.

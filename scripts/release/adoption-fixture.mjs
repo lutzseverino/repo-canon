@@ -135,6 +135,12 @@ export const workbenchFiles = {
 // The documentation declaration's script drafts its entry, which the
 // verification accepts.
 export const scopes = {
+  comments: {
+    coverage:
+      "Comment rules govern what agents post on issues and pull requests and own no project content, so the scope is intentionally empty.",
+    candidates: [],
+    unresolved: [],
+  },
   "factory-workflow": {
     coverage:
       "Factory workflow rules govern all work in the repository and own no project content, so the scope is intentionally empty.",
@@ -164,6 +170,25 @@ const unchangedScope = (explanation, evidence) => ({
 });
 
 export const assessments = {
+  comments: {
+    status: "satisfied",
+    explanation:
+      "The fixture has no tracker activity to reconcile; adoption installs the comment rules for later work.",
+    evidence: [
+      "The disposable fixture has no Git remote, issues or pull requests.",
+      "Adoption installs the comments rules alongside the exact contribution guide.",
+    ],
+    scopeValidity: {
+      afterFixes: unchangedScope(
+        "The comment rules own no project content, so the empty scope is complete.",
+        ["Comment rules govern tracker posts, not content paths."],
+      ),
+      current: unchangedScope(
+        "Contextual work changes no comment scope; it remains empty.",
+        ["No content path or directory belongs to this declaration."],
+      ),
+    },
+  },
   "git-attributes": {
     status: "satisfied",
     explanation:

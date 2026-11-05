@@ -29,14 +29,15 @@ review, as [Architecture review](launches.md#architecture-review) says.
 Each lesson goes to whoever owns the rule it concerns:
 
 - the adopter's own repository: an issue there, filed as that repository's
-  contribution guide's Findings section says;
+  contribution guide's Findings section and
+  `.repo-standards/rules/comments.md#findings` say;
 - the owner's own setup, outside every repository: a chore for the owner,
   which you carry into `now.md`'s Waiting on you;
 - a Repo Canon skill or rule: an issue in the Repo Canon source repository
   that the adoption record's Selection names, such as
   `lutzseverino/repo-canon`, filed as its contribution guide's Findings
-  section says, even when the owner does not develop Repo Canon, since an
-  adopter cannot change its skills;
+  section and `.repo-standards/rules/comments.md#findings` say, even when the
+  owner does not develop Repo Canon, since an adopter cannot change its skills;
 - a wish: a line in `wishes.md`;
 - or nowhere, as a one-off, beyond `retro.md`.
 

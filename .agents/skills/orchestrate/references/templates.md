@@ -123,7 +123,8 @@ When an owner message contains a decision, complete this sequence before
 acting on anything else in that message:
 
 1. Post a comment on each affected issue, recording the decision, its date
-   and where the owner gave it, under the contribution guide's comment rules.
+   and where the owner gave it, as the issue's repository's
+   `.repo-standards/rules/comments.md#disclaimers` says.
 2. Append the decision, date, source and issue links to the plan's `log.md`.
 3. Move the answered entry under `Answered` in `inbox.md`, keeping its
    question, answer, date and source.

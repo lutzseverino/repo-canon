@@ -482,6 +482,17 @@ repeated.
   body supplied by `babysit`. The standard declares no per-tool attribution
   settings. Published history stays unchanged because tags and adopters' locks
   pin existing commits.
+- Every rule about what agents post on issues and pull requests, on any
+  account, the factory App's included, lives in the installed
+  [comment rules](rules/comments.md); the contribution guide keeps the
+  owner-question handoff and the attribution ban, the factory and GitHub rules
+  keep their mechanics, and each skill step that posts names the section to
+  read first. One templated review per round replaces the app-author outcome
+  record, and issues a factory serves carry only the contract, the run comment
+  and action comments. The owner decided this in the plan 16 factory-pipeline
+  grill on 2026-11-03 and 2026-11-04, as the triage notes of
+  [#848](https://github.com/lutzseverino/repo-canon/issues/848#issuecomment-6658040589)
+  record.
 - The contextual `project-agent-guidance` declaration preserves useful
   repository-specific AGENTS.md instructions during adoption, under its
   [adoption guidance](guidance/project-agent-guidance.md) and

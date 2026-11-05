@@ -64,7 +64,7 @@ Iterate until the user approves the breakdown.
 Publish the approved tickets. **How** depends on the configured tracker; the tickets are the same either way, only the shape of the blocking edges changes:
 
 - **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
-- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Link each ticket to its parent and its blockers with the platform's native sub-issue and blocking relationships: the "Parent" and "Blocked by" sections restate those links for the reader and never stand in for them. If a native link can't be created, stop and report which one, rather than leaving the edge only in the body.
+- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Link each ticket to its parent and its blockers with the platform's native sub-issue and blocking relationships: the "Parent" and "Blocked by" sections restate those links for the reader and never stand in for them. If a native link can't be created, stop and report which one, rather than leaving the edge only in the body. Before publishing, read `.repo-standards/rules/comments.md#disclaimers`.
 
 Publish each ticket awaiting review, without the AFK-ready role: readiness is a separate review of each published ticket, by someone other than you who holds a role the repository authorizes for readiness, after any revision notice the tracker posts, with the companion labels its rules require. A parent's readiness follows the publication of its tickets.
 
@@ -121,6 +121,9 @@ Paths are relative to the repository root.
   is missing and no tracker was provided, ask the user whether to publish to
   local files or a real tracker; when the label config is missing, use the
   canonical role names as the label strings.
+- `.repo-standards/rules/comments.md`: the installed comment rules, whose
+  section the posting steps name. When it is missing, post issue bodies and
+  comments as the steps describe.
 - `GLOSSARY.md` and the ADRs in `docs/adr/`: the domain vocabulary and
   decisions to respect. When either is missing, use the codebase's own words.
 - The installed rules, such as the `github-repository-configuration` rules,
