@@ -1,78 +1,47 @@
 # Upstream skill compatibility
 
-The upstream base snapshot is mattpocock/skills tag `v1.3.1`, commit
-`24fe0ef7737efae15c87225755e9f6f5965e4888`. Its promoted plugin set contains 27
-regular skills. Repo Canon installs the 17 of them that are workflow skills, as
-[ADR 0018](../adr/0018-install-only-workflow-skills.md) decides, together with
-its own `babysit` and `orchestrate`, plus `factory` only in the factory profile.
-Every workflow skill is an owned skill, as
-[ADR 0028](../adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
-decides: adoption installs it from the owned tree, `.agents/skills/<name>` in
-this repository, and never from the vendored snapshot. The snapshot under
-`vendor/mattpocock-skills` holds, unedited, the upstream base of each owned
-skill taken from upstream and the setup seeds that the owned skill setup files
-take as their bases. The upstream MIT notice is retained at
-`vendor/mattpocock-skills/LICENSE` and installed beside the owned skills as
-`.agents/skills/LICENSE.mattpocock-skills`. `implement-spec` is not vendored,
-because every factory run is a direct run, as
-[ADR 0012](../adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
+Repo Canon installs workflow skills from its owned tree, `.agents/skills/`,
+under [ADR 0018](../adr/0018-install-only-workflow-skills.md) and
+[ADR 0028](../adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md).
+The unedited snapshot under `vendor/mattpocock-skills` holds their upstream
+bases and the setup seeds. Adoption installs its MIT notice beside the skills
+as `.agents/skills/LICENSE.mattpocock-skills`. `implement-spec` is excluded
+because every factory run is a direct run under
+[ADR 0012](../adr/0012-run-each-ticket-as-its-own-factory-run.md).
 
 ## Owned skills and their upstream bases
 
-Each owned skill's `CREDITS.md` says where it comes from. A skill written for
-Repo Canon, such as `babysit`, `factory` or `orchestrate`, says that it was
-written for Repo Canon and has no upstream base. A skill taken from upstream names its base in
-one sentence of this form, with the tree link at the same commit and path:
+`upstream-bases.json` records the shared upstream repository, tag and commit,
+shared skill edits, and an entry for each owned skill and setup file. Each entry
+has its upstream `path` and own `edits` summary, or `null` when it has no own
+edits. A skill written for Repo Canon has a `null` entry and no upstream base.
+Shared edits apply to upstream-derived skills outside each edit's `except` list.
+`standards.yaml` declares what adoption installs.
 
-```markdown
-Its upstream base is tag `v1.3.1`, commit `24fe0ef7737efae15c87225755e9f6f5965e4888`, at [`skills/engineering/tdd`](https://github.com/mattpocock/skills/tree/24fe0ef7737efae15c87225755e9f6f5965e4888/skills/engineering/tdd).
-```
+`node scripts/upstream-bases.mjs write` renders each upstream-derived skill's
+`CREDITS.md` provenance paragraph: its source, tag, commit, tree link, and
+shared and own edits. Every file except `CREDITS.md` is compared with the base
+to check whether the recorded edits agree with the owned bytes.
+License notices stay in each `CREDITS.md`, and upstream's own credits, such as
+`pr`'s HumanLayer credits, stay word for word. A skill installed without
+adoption therefore carries the notices that adoption installs beside it.
 
-It then says either that the skill is identical to its upstream base or that
-it differs from its upstream base, and how. The comparison covers every file
-of the skill except `CREDITS.md`. When the base has its own `CREDITS.md`, as
-`pr`'s does for the HumanLayer material, the owned `CREDITS.md` keeps that
-text word for word. All 17 skills taken from upstream differ from their bases:
-each states that a prompt or brief naming it is its invocation. `implement` also allows model
-invocation in both harness formats. `grill-with-docs` and `prototype` differ in
-nothing else; the other fifteen, including `triage` with its workflow changes,
-differ further as their `CREDITS.md` files describe. `pr` adds the screenshot
-storage and retention contract. Fourteen add a Reads section, which lists the
-repository files the skill reads and what it does when each is missing. Each
-reproduces the upstream MIT License notice from
-`vendor/mattpocock-skills/LICENSE`, and `pr`'s keeps HumanLayer's too, so a
-skill installed without adoption still carries the notices that adoption
-installs beside the skills.
+The skill setup files under `docs/agents/` install from themselves. Their
+record entries identify each setup seed and summarize its edits; `null` means
+identical to the seed. The vendored snapshot's `UPSTREAM.json` records its
+identity independently for verification.
 
-The skill setup files `docs/agents/domain.md`, `docs/agents/issue-tracker.md`
-and `docs/agents/triage-labels.md` are owned files installed from themselves.
-Adopters' `docs/agents/` has no place for a `CREDITS.md` beside each one, so
-`setup-file-bases.json` at the repository root records their bases: for each
-path, its `upstream` repository, tag, commit and seed path, and `edits`, which
-is `null` while the file is identical to its base and otherwise summarizes how
-it differs. `domain.md` is identical to its seed; `issue-tracker.md` and
-`triage-labels.md` differ, as their `edits` describe. The snapshot's own
-`UPSTREAM.json` records its repository, tag and commit; it is Repo Canon's
-provenance record, not an upstream file.
-
-`node scripts/upstream-bases.mjs check` fails, naming each problem, when a
-skill installs from anywhere but the owned tree, a setup file installs from
-anywhere but itself, an owned skill lacks its `CREDITS.md`, a recorded base
-differs from the snapshot's `UPSTREAM.json` or is missing from the snapshot, a
-skill taken from upstream does not reproduce the upstream license notice, a
-file identical to its base claims edits, a file that differs claims none, a
-setup file's `edits` is neither `null` nor a summary, a skill declaration does
-not read as `kind`, `name` and `source` in that order, or upstream's own
-credits are dropped. `test/upstream-bases.test.mjs` runs it on
-this repository and on disposable copies that break each rule.
+`node scripts/upstream-bases.mjs check` fails when rendered provenance differs
+from the record, a base differs from the snapshot or is missing, recorded edits
+disagree with the owned bytes, notices or credits are dropped, a declared skill
+has no record or credits, or installation sources violate the owned-tree and
+setup-file rules. `test/upstream-bases.test.mjs` exercises checking, rendering,
+notice preservation and reconciliation on disposable copies.
 
 ## Vendored skills
 
-| Category     | Skills                                                                                                                                                                                          |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engineering  | code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-with-docs, implement, improve-codebase-architecture, pr, prototype, research, tdd, to-spec, to-tickets, triage, wayfinder |
-| Productivity | grilling, writing-for-agents                                                                                                                                                                    |
-| Setup seeds  | `domain.md`, `issue-tracker-github.md`, `issue-tracker-gitlab.md`, `issue-tracker-local.md`, and `triage-labels.md` from `setup-matt-pocock-skills`, without its `SKILL.md` or metadata         |
+The record inventories the upstream bases used by owned files. The snapshot
+also retains the GitLab and local tracker setup seeds.
 
 The undeclared promoted skills are left out: `ask-matt`, `grill-me`, and
 `setup-matt-pocock-skills` only set up or route the others, `implement-spec`
@@ -93,13 +62,10 @@ Sources: [promoted manifest](https://github.com/mattpocock/skills/blob/24fe0ef77
 
 ## Snapshot review and verification
 
-The pinned plugin manifest was reviewed against the inventory above. All 27
-promoted regular skills are present upstream, and no experimental skill or skill
-from the upstream `in-progress`, `misc`, or `deprecated` categories is
-included. The vendored snapshot contains 55 upstream files: the 17 complete
-skill directories, the five setup seeds, the retained `LICENSE`, and the plugin
-manifest, retained at `vendor/mattpocock-skills/.claude-plugin/plugin.json` as
-provenance. Every vendored upstream byte, including referenced templates,
+The pinned plugin manifest was reviewed against the declared selection. The
+vendored snapshot contains the selected skill directories and setup seeds, the
+retained `LICENSE`, and the plugin manifest at
+`vendor/mattpocock-skills/.claude-plugin/plugin.json` as provenance. Every vendored upstream byte, including referenced templates,
 scripts, agent metadata, and supporting Markdown, matches the base commit.
 
 Concrete local links from `SKILL.md` files resolve within their complete skill
@@ -153,7 +119,7 @@ diff -ru -x UPSTREAM.json "$expected_snapshot" vendor/mattpocock-skills
 Owned skills and setup files change only through a reviewed Repo Canon
 standards release. An adopting repository's contributors do not update them
 independently. Repo Canon edits an owned skill whenever its workflow needs it,
-and records the change in the skill's `CREDITS.md`.
+and records the change in `upstream-bases.json`, then runs `write`.
 
 Each upstream release Repo Canon takes is one reconciliation ticket. A
 standards maintainer checks out the release's exact commit, reviews the plugin
@@ -212,9 +178,8 @@ A conflicting file holds `<<<<<<< owned` and `>>>>>>> upstream` markers;
 resolve each by judgment, keeping what Repo Canon's edit needs and what the
 upstream change adds. A change to upstream's own `CREDITS.md`, a file changed
 upstream but removed from the owned copy, a base missing from the staged
-snapshot, and a recorded base that is not the vendored snapshot or that a
-skill's `CREDITS.md` states unreadably are reported as conflicts to resolve by
-hand. A dry run against the
+snapshot, and a missing record or a base that is not the vendored snapshot
+are reported as conflicts to resolve by hand. A dry run against the
 current base, `node scripts/upstream-bases.mjs reconcile vendor/mattpocock-skills --dry-run`,
 prints `No owned file changes.`; `test/upstream-bases.test.mjs` runs it.
 
@@ -226,17 +191,12 @@ cp -R "$next_snapshot" vendor/mattpocock-skills
 git add vendor/mattpocock-skills
 ```
 
-Update each upstream-derived `CREDITS.md` to the new tag, commit and tree link,
-and its statement of whether the skill differs from its base and how. Update
-`setup-file-bases.json` the same way, then run
-`node scripts/upstream-bases.mjs check`. Reconcile every authoritative base,
-inventory, and skill-count reference. This includes at least
-`authoring-notes.md`, this compatibility record, and
-`docs/development/adoption-compatibility.md`; locate further references with:
+Update the shared upstream identity and affected edit summaries in
+`upstream-bases.json`, then render and verify the provenance:
 
 ```bash
-rg -n '24fe0ef7737efae15c87225755e9f6f5965e4888|all 27|27 (managed|promoted|regular|skill)|1[67] (declared|workflow)|55 upstream files|20 engineering|seven productivity' \
-  authoring-notes.md docs .agents/skills/*/CREDITS.md setup-file-bases.json
+node scripts/upstream-bases.mjs write
+node scripts/upstream-bases.mjs check
 ```
 
 Update the tag, commit, and per-file SHA-256 values in

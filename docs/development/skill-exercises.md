@@ -106,7 +106,7 @@ pnpm run test:productivity-skill-fixtures
 ```
 
 The builder prints a `repo-canon/productivity-skill-fixtures/v1` manifest. Each
-of the two skills has its own repository: `grilling` and `writing-for-agents`.
+skill has its own repository: `grilling` and `writing-for-agents`.
 The root
 `AGENTS.md` is byte-for-byte the shared guidance, and the scenario constraints
 live in `docs/agents/project.md`; the `writing-for-agents` exercise edits that
@@ -128,8 +128,8 @@ node scripts/create-planning-skill-fixtures.mjs
 pnpm run test:planning-skill-fixtures
 ```
 
-The builder writes `manifest.json` under its root and prints that path. Eight
-repositories cover ten skills: `project-agent-guidance`, which links no skill,
+The builder writes `manifest.json` under its root and prints that path. Its
+repositories cover the planning workflows: `project-agent-guidance`, which links no skill,
 supplies existing project-specific `AGENTS.md` instructions for the
 `project-agent-guidance` contextual work described in
 [adoption compatibility](adoption-compatibility.md#preserving-project-instructions);

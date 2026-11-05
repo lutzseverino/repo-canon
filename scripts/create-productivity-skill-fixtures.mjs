@@ -17,6 +17,8 @@ import {
   initializeFixtureRepository,
 } from "./support/fixture-authoring.mjs";
 
+import { upstreamBases } from "./upstream-bases.mjs";
+
 const sourceRoot = fileURLToPath(new URL("..", import.meta.url));
 const scriptSourcePath = "scripts/create-productivity-skill-fixtures.mjs";
 const skillsRoot = join(sourceRoot, ".agents/skills");
@@ -113,7 +115,7 @@ repositories["writing-for-agents"] = createRepository(
 const provenance = identifyFixtureSource({
   sourceRoot,
   builderPath: scriptSourcePath,
-  files: sharedFiles,
+  files: [...sharedFiles, "upstream-bases.json", "scripts/upstream-bases.mjs"],
   directories: Object.fromEntries(
     skillNames.map((name) => [name, join(skillsRoot, name)]),
   ),
@@ -125,7 +127,7 @@ const manifest = {
   source: {
     worktreeCommit: provenance.head,
     builderSha256: provenance.inputFiles[scriptSourcePath].sha256,
-    upstreamCommit: "24fe0ef7737efae15c87225755e9f6f5965e4888",
+    upstreamCommit: upstreamBases(sourceRoot).upstream.commit,
     directoryHashSerialization: provenance.directoryHashSerialization,
     inputFiles: provenance.inputFiles,
     skills: provenance.directories,

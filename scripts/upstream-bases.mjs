@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 
 // Owned skills and setup files and their upstream bases, as ADR 0028 decides.
-// `check` fails when a recorded base differs from the vendored snapshot or an
-// owned file's identity claim is wrong. `reconcile` three-way merges each
-// owned file from its base in the vendored snapshot to the same path in a
-// staged next snapshot.
+// `write` renders provenance; `check` verifies it and the owned bytes.
+// `reconcile` merges owned files onto a staged next snapshot.
 
 import { spawnSync } from "node:child_process";
 import {
@@ -20,18 +18,15 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const snapshotPath = "vendor/mattpocock-skills";
-export const setupFileBasesPath = "setup-file-bases.json";
+export const upstreamBasesPath = "upstream-bases.json";
 const ownedTree = ".agents/skills";
 const licensePath = `${snapshotPath}/LICENSE`;
 
-const basePattern =
-  /Its upstream base is tag `([^`]+)`, commit `([0-9a-f]{40})`, at \[`([^`]+)`\]\((https:\/\/github\.com\/[^/\s]+\/[^/\s]+)\/tree\/([0-9a-f]{40})\/([^)\s]+)\)/;
-const identicalClaim = /\bis identical to its upstream base\b/;
-const editedClaim = /\bdiffers from its upstream base\b/;
-const writtenClaim = /\bwritten for Repo Canon and has no upstream base\b/;
+export function upstreamBases(root) {
+  return JSON.parse(readFileSync(join(root, upstreamBasesPath), "utf8"));
+}
 
 /**
- * Every file under a directory, as slash-separated relative paths.
  * @param {string} directory
  * @returns {string[]}
  */
@@ -54,7 +49,6 @@ function sameBytes(left, right) {
 }
 
 /**
- * The snapshot's identity from its provenance record.
  * @param {string} root
  * @returns {{ repository: string, tag: string, commit: string }}
  */
@@ -69,10 +63,10 @@ function declarations(root) {
 }
 
 /**
- * Every `kind: skill` declaration, with its CREDITS.md record.
  * @param {string} root
  */
 export function ownedSkills(root) {
+  const record = upstreamBases(root);
   return [
     ...declarations(root).matchAll(
       /^ {6,8}kind: skill\n {6,8}name: ([^\s]+)\n {6,8}source: ([^\s]+)/gm,
@@ -82,44 +76,36 @@ export function ownedSkills(root) {
     const credits = existsSync(join(root, creditsPath))
       ? readFileSync(join(root, creditsPath), "utf8")
       : null;
-    const match = credits && basePattern.exec(credits.replace(/\s+/g, " "));
+    const entry = record.skills[name];
     return {
       name,
       source,
       creditsPath,
       credits,
-      base: match
-        ? {
-            tag: match[1],
-            commit: match[2],
-            path: match[3],
-            repository: match[4],
-            linkCommit: match[5],
-            linkPath: match[6],
-          }
-        : null,
+      base: entry?.path ? { ...record.upstream, path: entry.path } : null,
+      recorded: Object.hasOwn(record.skills, name),
+      edits: entry?.edits,
+      sharedEdits: record.sharedSkillEdits
+        .filter(({ except }) => !except.includes(name))
+        .map(({ edits }) => edits),
     };
   });
 }
 
 /**
- * The owned setup files and their recorded upstream bases.
  * @param {string} root
  * @returns {{ path: string, base: { repository: string, tag: string, commit: string, path: string }, edits: string | null }[]}
  */
 export function ownedSetupFiles(root) {
-  const record = JSON.parse(
-    readFileSync(join(root, setupFileBasesPath), "utf8"),
-  );
-  return Object.entries(record.files).map(([path, { upstream, edits }]) => ({
+  const record = upstreamBases(root);
+  return Object.entries(record.files).map(([path, entry]) => ({
     path,
-    base: upstream,
-    edits,
+    base: { ...record.upstream, path: entry.path },
+    edits: entry.edits,
   }));
 }
 
 /**
- * The paths, relative to the snapshot, that some owned file takes as its base.
  * @param {string} root
  */
 export function basePaths(root) {
@@ -129,6 +115,26 @@ export function basePaths(root) {
       .map(({ base }) => base.path),
     setupFiles: ownedSetupFiles(root).map(({ base }) => base.path),
   };
+}
+
+function provenance(skill) {
+  const { name, base, sharedEdits, edits } = skill;
+  const changes = [...sharedEdits, edits].filter(Boolean).join(" ");
+  return `# Credits
+
+This skill is Repo Canon's own, taken from the \`${name}\` skill in [Matt Pocock's skills](${base.repository}). Its upstream base is tag \`${base.tag}\`, commit \`${base.commit}\`, at [\`${base.path}\`](${base.repository}/tree/${base.commit}/${base.path}). That material is used under its MIT License, whose notice follows at the end of this file; adoption also installs it beside the skills. The skill ${changes ? `differs from its upstream base: ${changes}` : "is identical to its upstream base."}`;
+}
+
+export function writeUpstreamBases(root) {
+  for (const skill of ownedSkills(root).filter(({ base }) => base)) {
+    if (skill.credits === null)
+      throw new Error(`${skill.creditsPath} is missing`);
+    const notice = skill.credits.indexOf("\n## ");
+    writeFileSync(
+      join(root, skill.creditsPath),
+      `${provenance(skill)}\n${notice < 0 ? "" : skill.credits.slice(notice)}`,
+    );
+  }
 }
 
 function identityProblem(label, base, snapshot) {
@@ -159,7 +165,6 @@ function identicalToBase(root, source, base) {
 }
 
 /**
- * Every problem with the owned tree's upstream bases; empty when they hold.
  * @param {string} root
  * @returns {string[]}
  */
@@ -187,20 +192,16 @@ export function checkUpstreamBases(root) {
       continue;
     }
     const credits = skill.credits.replace(/\s+/g, " ");
-    if (!skill.base) {
-      if (!writtenClaim.test(credits))
-        problems.push(
-          `${label} neither records an upstream base nor says the skill was written for Repo Canon and has no upstream base`,
-        );
+    if (!skill.recorded) {
+      problems.push(`${label} has no entry in ${upstreamBasesPath}`);
       continue;
     }
-    const { base } = skill;
-    if (base.linkCommit !== base.commit || base.linkPath !== base.path) {
+    if (!skill.base) continue;
+    if (skill.credits.split("\n## ")[0].trimEnd() !== provenance(skill))
       problems.push(
-        `${label} links ${base.linkPath} at ${base.linkCommit}, not its recorded base ${base.path} at ${base.commit}`,
+        `${label} provenance differs from ${upstreamBasesPath}; run write`,
       );
-      continue;
-    }
+    const { base } = skill;
     const identity = identityProblem(label, base, snapshot);
     if (identity) {
       problems.push(identity);
@@ -214,19 +215,14 @@ export function checkUpstreamBases(root) {
       continue;
     }
     const identical = identicalToBase(root, skill.source, basePath);
-    const claimsIdentical = identicalClaim.test(credits);
-    const claimsEdits = editedClaim.test(credits);
-    if (claimsIdentical === claimsEdits)
-      problems.push(
-        `${label} must say either that the skill is identical to its upstream base or that it differs from its upstream base`,
-      );
-    else if (identical && claimsEdits)
+    const claimsEdits = skill.sharedEdits.length > 0 || skill.edits !== null;
+    if (identical && claimsEdits)
       problems.push(
         `${label} claims edits, but the skill is identical to its upstream base`,
       );
-    else if (!identical && claimsIdentical)
+    else if (!identical && !claimsEdits)
       problems.push(
-        `${label} claims the skill is identical to its upstream base, but it differs`,
+        `${label} claims no edits, but the skill differs from its upstream base`,
       );
     // Upstream's own credits travel with the skill: keep them word for word.
     const baseCredits = join(root, basePath, "CREDITS.md");
@@ -250,7 +246,7 @@ export function checkUpstreamBases(root) {
 
   const setupFiles = ownedSetupFiles(root);
   for (const { path, base, edits } of setupFiles) {
-    const label = `${path} (${setupFileBasesPath})`;
+    const label = `${path} (${upstreamBasesPath})`;
     if (
       !new RegExp(
         `\\n {6}target: ${RegExp.escape(path)}\\n {6}exact: ${RegExp.escape(path)}\\n`,
@@ -316,12 +312,7 @@ function mergeFile(owned, base, next) {
     [
       "merge-file",
       "-p",
-      "-L",
-      "owned",
-      "-L",
-      "base",
-      "-L",
-      "upstream",
+      ...["owned", "base", "upstream"].flatMap((label) => ["-L", label]),
       owned,
       base,
       next,
@@ -408,18 +399,16 @@ export function reconcileUpstreamBases(root, next, { write = false } = {}) {
       entries.push({ path: owned, ...result });
   };
 
-  for (const { source, base, credits: ownedCredits } of ownedSkills(root)) {
-    if (!base) {
-      // Only a skill written for Repo Canon has no base to merge from.
-      if (!writtenClaim.test((ownedCredits ?? "").replace(/\s+/g, " ")))
-        entries.push({
-          path: source,
-          outcome: "conflict",
-          reason:
-            "its CREDITS.md records no upstream base and does not say it was written for Repo Canon",
-        });
+  for (const { source, base, recorded } of ownedSkills(root)) {
+    if (!recorded) {
+      entries.push({
+        path: source,
+        outcome: "conflict",
+        reason: `no entry in ${upstreamBasesPath}`,
+      });
       continue;
     }
+    if (!base) continue;
     if (staleBase(source, base)) continue;
     if (!existsSync(join(next, base.path, "SKILL.md"))) {
       entries.push({
@@ -493,10 +482,14 @@ export function reconcileUpstreamBases(root, next, { write = false } = {}) {
 }
 
 const usage =
-  "Usage: node scripts/upstream-bases.mjs check | reconcile <next-snapshot> [--dry-run]";
+  "Usage: node scripts/upstream-bases.mjs check | write | reconcile <next-snapshot> [--dry-run]";
 
 function main(args) {
   const root = fileURLToPath(new URL("..", import.meta.url));
+  if (args.length === 1 && args[0] === "write") {
+    writeUpstreamBases(root);
+    return 0;
+  }
   if (args.length === 1 && args[0] === "check") {
     const problems = checkUpstreamBases(root);
     for (const problem of problems) console.error(problem);

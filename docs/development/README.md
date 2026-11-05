@@ -263,7 +263,7 @@ The focused stack check and scope-drafter suites also exercise regressions and
 valid catalogs from retained resources without the reference dependency.
 
 Run `pnpm run test:productivity-skill-fixtures` to rebuild and verify the
-disposable local repositories used for the two productivity skill exercises.
+disposable local repositories used for the productivity skill exercises.
 [Skill exercises](skill-exercises.md) describes all three fixture builders and
 the harness that exercises the skills.
 
@@ -334,8 +334,8 @@ accepts full commit SHAs and reads published tag and branch refs with
   shapes, feedback behavior, workflow state, workflow permissions, the one-time
   closed-issue label sweep, and runnable fixtures.
 - [Upstream skill compatibility](upstream-compatibility.md): the vendored
-  Matt Pocock snapshot as the owned skills' upstream base, the base records and
-  their check, the three-way reconciliation for each upstream release, the native
+  Matt Pocock snapshot as the owned skills' upstream base, the shared base record, provenance rendering and
+  its check, the three-way reconciliation for each upstream release, the native
   issue formats that
   automation must respect, and how shared instructions and configuration adapt
   upstream setup.
