@@ -4,6 +4,7 @@
 // `write` renders provenance; `check` verifies it and the owned bytes.
 // `reconcile` merges owned files onto a staged next snapshot.
 
+import { declarations } from "./standards-declarations.mjs";
 import { spawnSync } from "node:child_process";
 import {
   existsSync,
@@ -44,22 +45,12 @@ function read(root, path) {
   return readFileSync(join(root, path));
 }
 
-function sameBytes(left, right) {
-  return Buffer.compare(left, right) === 0;
-}
-
 /**
  * @param {string} root
  * @returns {{ repository: string, tag: string, commit: string }}
  */
 export function snapshotIdentity(root) {
-  return JSON.parse(
-    readFileSync(join(root, snapshotPath, "UPSTREAM.json"), "utf8"),
-  );
-}
-
-function declarations(root) {
-  return readFileSync(join(root, "standards.yaml"), "utf8");
+  return JSON.parse(read(root, `${snapshotPath}/UPSTREAM.json`).toString());
 }
 
 /**
@@ -68,10 +59,13 @@ function declarations(root) {
 export function ownedSkills(root) {
   const record = upstreamBases(root);
   return [
-    ...declarations(root).matchAll(
-      /^ {6,8}kind: skill\n {6,8}name: ([^\s]+)\n {6,8}source: ([^\s]+)/gm,
-    ),
-  ].map(([, name, source]) => {
+    ...new Map(
+      Object.values(declarations(root))
+        .flat()
+        .filter(({ kind }) => kind === "skill")
+        .map((skill) => [JSON.stringify(skill), skill]),
+    ).values(),
+  ].map(({ name, source }) => {
     const creditsPath = `${source}/CREDITS.md`;
     const credits = existsSync(join(root, creditsPath))
       ? readFileSync(join(root, creditsPath), "utf8")
@@ -156,10 +150,7 @@ function identicalToBase(root, source, base) {
     owned.every(
       (path, index) =>
         path === upstream[index] &&
-        sameBytes(
-          read(root, `${source}/${path}`),
-          read(root, `${base}/${path}`),
-        ),
+        read(root, `${source}/${path}`).equals(read(root, `${base}/${path}`)),
     )
   );
 }
@@ -171,13 +162,9 @@ function identicalToBase(root, source, base) {
 export function checkUpstreamBases(root) {
   const problems = [];
   const snapshot = snapshotIdentity(root);
-  const text = declarations(root);
+  const declared = Object.values(declarations(root)).flat();
+  const exactFiles = declared.filter(({ exact }) => exact);
   const skills = ownedSkills(root);
-  const declared = text.match(/^ {6,8}kind: skill$/gm)?.length ?? 0;
-  if (declared !== skills.length)
-    problems.push(
-      `standards.yaml declares ${declared} skills, but only ${skills.length} read as kind, name and source in that order`,
-    );
 
   for (const skill of skills) {
     const label = `${skill.name} (${skill.creditsPath})`;
@@ -248,9 +235,7 @@ export function checkUpstreamBases(root) {
   for (const { path, base, edits } of setupFiles) {
     const label = `${path} (${upstreamBasesPath})`;
     if (
-      !new RegExp(
-        `\\n {6}target: ${RegExp.escape(path)}\\n {6}exact: ${RegExp.escape(path)}\\n`,
-      ).test(text)
+      !exactFiles.some(({ target, exact }) => target === path && exact === path)
     ) {
       problems.push(
         `${label} is not declared as an exact file installed from itself`,
@@ -275,7 +260,7 @@ export function checkUpstreamBases(root) {
       );
       continue;
     }
-    const identical = sameBytes(read(root, path), read(root, basePath));
+    const identical = read(root, path).equals(read(root, basePath));
     if (identical && edits !== null)
       problems.push(
         `${label} claims edits, but the file is identical to its upstream base`,
@@ -287,15 +272,16 @@ export function checkUpstreamBases(root) {
   }
 
   // Nothing installs from the snapshot except its license notice.
-  for (const [, source] of text.matchAll(/^ {6}(?:exact|source): (\S+)$/gm))
+  for (const source of new Set(
+    declared.flatMap(({ exact, source }) => [exact, source]).filter(Boolean),
+  ))
     if (source.startsWith(`${snapshotPath}/`) && source !== licensePath)
       problems.push(
         `${source} installs from the vendored snapshot; install it from its owned copy`,
       );
-  for (const [, target] of text.matchAll(
-    /^ {6}target: (docs\/agents\/\S+)\n {6}exact: \S+$/gm,
-  ))
+  for (const { target } of exactFiles)
     if (
+      target.startsWith("docs/agents/") &&
       target !== "docs/agents/README.md" &&
       !setupFiles.some(({ path }) => path === target)
     )
@@ -334,7 +320,7 @@ function reconcileFile(owned, base, next) {
   const bytes = (path) => readFileSync(path);
   if (has(base) && has(next)) {
     if (!has(owned))
-      return sameBytes(bytes(base), bytes(next))
+      return bytes(base).equals(bytes(next))
         ? { outcome: "unchanged" }
         : {
             outcome: "conflict",
@@ -347,13 +333,13 @@ function reconcileFile(owned, base, next) {
         content: merged,
         reason: `${conflicts} conflicting hunk(s)`,
       };
-    return sameBytes(merged, bytes(owned))
+    return merged.equals(bytes(owned))
       ? { outcome: "unchanged" }
       : { outcome: "merged", content: merged };
   }
   if (has(next)) {
     if (!has(owned)) return { outcome: "added", content: bytes(next) };
-    return sameBytes(bytes(owned), bytes(next))
+    return bytes(owned).equals(bytes(next))
       ? { outcome: "unchanged" }
       : {
           outcome: "conflict",
@@ -362,7 +348,7 @@ function reconcileFile(owned, base, next) {
         };
   }
   if (has(base) && has(owned))
-    return sameBytes(bytes(owned), bytes(base))
+    return bytes(owned).equals(bytes(base))
       ? { outcome: "removed" }
       : {
           outcome: "conflict",
@@ -434,7 +420,7 @@ export function reconcileUpstreamBases(root, next, { write = false } = {}) {
     const [before, after] = [credits(snapshot), credits(next)];
     if (
       (before === null) !== (after === null) ||
-      (before && !sameBytes(before, after))
+      (before && !before.equals(after))
     )
       entries.push({
         path: `${source}/CREDITS.md`,

@@ -1,3 +1,4 @@
+import { declarations } from "../../scripts/standards-declarations.mjs";
 import {
   cpSync,
   existsSync,
@@ -14,16 +15,12 @@ const sourceRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 // The source of each exact file that `standards.yaml` installs, by its target.
 export function exactFiles() {
-  const lines = readFileSync(join(sourceRoot, "standards.yaml"), "utf8").split(
-    "\n",
+  return new Map(
+    Object.values(declarations(sourceRoot))
+      .flat()
+      .filter(({ kind, exact }) => kind === "file" && exact)
+      .map(({ target, exact }) => [target, exact]),
   );
-  const files = new Map();
-  for (const [index, line] of lines.entries()) {
-    const target = /^\s+target: (\S+)$/.exec(line);
-    const exact = /^\s+exact: (\S+)$/.exec(lines[index + 1] ?? "");
-    if (target && exact) files.set(target[1], exact[1]);
-  }
-  return files;
 }
 
 // Installs a consumer into a fresh tree from exact file and skill declarations,
@@ -40,10 +37,11 @@ export function installedValidator(t, target) {
     if (installed.has(path)) continue;
     let source = files.get(path);
     if (source === undefined) {
-      const manifest = readFileSync(join(sourceRoot, "standards.yaml"), "utf8");
-      for (const [, name, directory] of manifest.matchAll(
-        /kind: skill\n\s+name: (\S+)\n\s+source: (\S+)/g,
-      )) {
+      for (const { name, source: directory } of Object.values(
+        declarations(sourceRoot),
+      )
+        .flat()
+        .filter(({ kind }) => kind === "skill")) {
         const prefix = `.agents/skills/${name}/`;
         if (path.startsWith(prefix)) {
           const candidate = posix.join(directory, path.slice(prefix.length));

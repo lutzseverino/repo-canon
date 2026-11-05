@@ -1,3 +1,4 @@
+import { declarations } from "../../scripts/standards-declarations.mjs";
 import {
   execFixtureGit,
   fixtureGitEnvironment,
@@ -18,31 +19,31 @@ import { dirname, join, relative } from "node:path";
 
 const sourceRoot = new URL("../..", import.meta.url).pathname;
 
-// The resources that `standards.yaml` declares for an operation script, read
-// from the `resources` list directly after its `script` line.
+// Every executable run, including discovery and remote-setup probes.
+export function declaredOperations(root = sourceRoot) {
+  return Object.values(declarations(root))
+    .flat()
+    .flatMap((declaration) =>
+      [
+        declaration["discovery-script"],
+        ...(declaration.checks ?? []),
+        ...(declaration.fixes ?? []).flatMap((fix) => [
+          fix,
+          fix["remote-setup"]?.probe,
+        ]),
+      ].filter(Boolean),
+    );
+}
+
 function declaredResources(scriptPath) {
-  const lines = readFileSync(join(sourceRoot, "standards.yaml"), "utf8").split(
-    "\n",
+  const operation = declaredOperations().find(
+    ({ run }) => run.script === scriptPath,
   );
-  const scriptLine = lines.findIndex(
-    (line) => line.trim() === `script: ${scriptPath}`,
-  );
-  if (scriptLine === -1)
+  if (!operation)
     throw new Error(
       `standards.yaml declares no operation script ${scriptPath}.`,
     );
-  if (lines[scriptLine + 1]?.trim() !== "resources:") {
-    throw new Error(
-      `standards.yaml declares no resources list directly after ${scriptPath}.`,
-    );
-  }
-  const resources = [];
-  for (const line of lines.slice(scriptLine + 2)) {
-    const item = /^\s+- (\S+)$/.exec(line);
-    if (item === null) break;
-    resources.push(item[1]);
-  }
-  return resources;
+  return operation.run.resources ?? [];
 }
 
 // Copies an operation script and only its declared resources into a fresh
