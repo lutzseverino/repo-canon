@@ -291,9 +291,9 @@ repeated.
   `.github/pull-request-reviewer.json`, run in the foreground on every host.
   Those rules
   also state when a head with no check counts as passed, and that file's
-  schema, which the reviewer check and the wait validate with
-  byte-identical copies of one parser. Without that file there is no reviewer wait. Repo Canon ships no reviewer
-  file or preset; this repository carries its own configuration, outside the
+  schema, which the reviewer check and the wait validate with one shared
+  parser retained at its source-relative path. Without that file there is no
+  reviewer wait. Repo Canon ships no reviewer file or preset; this repository carries its own configuration, outside the
   declarations. The factory never reads it. Its
   source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
   other original exact files; only vendored material has a separate source
