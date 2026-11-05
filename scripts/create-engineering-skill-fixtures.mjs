@@ -18,6 +18,8 @@ import {
   initializeFixtureRepository,
 } from "./support/fixture-authoring.mjs";
 
+import { upstreamBases } from "./upstream-bases.mjs";
+
 const sourceRoot = fileURLToPath(new URL("..", import.meta.url));
 const scriptSourcePath = "scripts/create-engineering-skill-fixtures.mjs";
 const skillsRoot = join(sourceRoot, ".agents/skills");
@@ -359,7 +361,7 @@ process.stdout.write(
         ]),
         worktreeCommit: provenance.head,
         fixtureBuilderSha256: provenance.inputFiles[scriptSourcePath].sha256,
-        pinnedUpstreamCommit: "24fe0ef7737efae15c87225755e9f6f5965e4888",
+        pinnedUpstreamCommit: upstreamBases(sourceRoot).upstream.commit,
         directoryHashSerialization: provenance.directoryHashSerialization,
         inputFiles: provenance.inputFiles,
       },

@@ -30,7 +30,7 @@ function fixture(t) {
   t.after(() => rmSync(copy, { recursive: true, force: true }));
   for (const path of [
     "standards.yaml",
-    "setup-file-bases.json",
+    "upstream-bases.json",
     "scripts/upstream-bases.mjs",
     "docs/agents",
     snapshotPath,
@@ -59,6 +59,28 @@ test("every owned skill and setup file matches its recorded upstream base", () =
     assert.equal(source, `.agents/skills/${name}`, `${name} is owned`);
 });
 
+test("write restores provenance from the record without changing notices", (t) => {
+  const copy = fixture(t);
+  const creditsPath = ".agents/skills/pr/CREDITS.md";
+  const original = readFileSync(join(copy, creditsPath), "utf8");
+  edit(copy, creditsPath, (text) =>
+    text.replace("Its upstream base is", "Hand-edited base is"),
+  );
+  assert.ok(
+    checkUpstreamBases(copy).some((problem) =>
+      problem.includes("provenance differs"),
+    ),
+  );
+  const child = spawnSync(
+    process.execPath,
+    [join(copy, "scripts/upstream-bases.mjs"), "write"],
+    { encoding: "utf8" },
+  );
+  assert.equal(child.status, 0, child.stderr);
+  assert.equal(readFileSync(join(copy, creditsPath), "utf8"), original);
+  assert.deepEqual(checkUpstreamBases(copy), []);
+});
+
 test("a dry run against the current base changes no owned file", () => {
   assert.deepEqual(reconcileUpstreamBases(root, join(root, snapshotPath)), []);
   const child = spawnSync(
@@ -70,31 +92,96 @@ test("a dry run against the current base changes no owned file", () => {
   assert.equal(child.stdout, "No owned file changes.\n");
 });
 
-test("a recorded base that differs from the vendored snapshot fails", (t) => {
-  const copy = fixture(t);
-  const other = "0".repeat(40);
-  edit(copy, ".agents/skills/code-review/CREDITS.md", (text) =>
-    text.replaceAll("24fe0ef7737efae15c87225755e9f6f5965e4888", other),
+function changeRecord(copy, change) {
+  edit(copy, "upstream-bases.json", (text) => {
+    const record = JSON.parse(text);
+    change(record);
+    return JSON.stringify(record);
+  });
+}
+
+function write(copy) {
+  const child = spawnSync(
+    process.execPath,
+    [join(copy, "scripts/upstream-bases.mjs"), "write"],
+    { encoding: "utf8" },
   );
-  edit(copy, "setup-file-bases.json", (text) =>
-    text.replace('"tag": "v1.3.1"', '"tag": "v1.3.0"'),
-  );
-  assert.deepEqual(checkUpstreamBases(copy), [
-    `code-review (.agents/skills/code-review/CREDITS.md) records upstream base https://github.com/mattpocock/skills v1.3.1 (${other}), but the vendored snapshot is https://github.com/mattpocock/skills v1.3.1 (24fe0ef7737efae15c87225755e9f6f5965e4888)`,
-    "docs/agents/domain.md (setup-file-bases.json) records upstream base https://github.com/mattpocock/skills v1.3.0 (24fe0ef7737efae15c87225755e9f6f5965e4888), but the vendored snapshot is https://github.com/mattpocock/skills v1.3.1 (24fe0ef7737efae15c87225755e9f6f5965e4888)",
-  ]);
-});
+  assert.equal(child.status, 0, child.stderr);
+}
 
 test("a replaced snapshot fails every base still recorded against the old one", (t) => {
   const copy = fixture(t);
   edit(copy, `${snapshotPath}/UPSTREAM.json`, (text) =>
     text.replace('"v1.3.1"', '"v1.4.0"'),
   );
+  const record = JSON.parse(
+    readFileSync(join(copy, "upstream-bases.json"), "utf8"),
+  );
   const problems = checkUpstreamBases(copy);
-  // The 17 skills taken from upstream and the three setup files.
-  assert.equal(problems.length, 20);
+  assert.equal(
+    problems.length,
+    Object.values(record.skills).filter((entry) => entry?.path).length +
+      Object.keys(record.files).length,
+  );
   for (const problem of problems)
     assert.match(problem, /but the vendored snapshot is .* v1\.4\.0/);
+});
+
+test("shared and own edits render from the record, retaining all notices", (t) => {
+  const copy = fixture(t);
+  const before = readFileSync(
+    join(copy, ".agents/skills/pr/CREDITS.md"),
+    "utf8",
+  );
+  changeRecord(copy, (record) => {
+    record.skills.pr.edits = "Own edit from the record.";
+    record.sharedSkillEdits[0].edits = "Shared edit from the record.";
+  });
+  write(copy);
+  const after = readFileSync(
+    join(copy, ".agents/skills/pr/CREDITS.md"),
+    "utf8",
+  );
+  assert.ok(after.includes("Own edit from the record."));
+  assert.ok(after.includes("Shared edit from the record."));
+  assert.equal(
+    after.slice(after.indexOf("\n## ")),
+    before.slice(before.indexOf("\n## ")),
+  );
+  assert.deepEqual(checkUpstreamBases(copy), []);
+  write(copy);
+  assert.equal(
+    readFileSync(join(copy, ".agents/skills/pr/CREDITS.md"), "utf8"),
+    after,
+  );
+});
+
+test("updating the shared upstream identity renders every derived base and tree link", (t) => {
+  const copy = fixture(t);
+  const identity = {
+    repository: "https://github.com/mattpocock/skills",
+    tag: "v2.0.0",
+    commit: "a".repeat(40),
+  };
+  changeRecord(copy, (record) => {
+    record.upstream = identity;
+  });
+  writeFileSync(
+    join(copy, snapshotPath, "UPSTREAM.json"),
+    JSON.stringify(identity),
+  );
+  write(copy);
+  for (const { base, credits } of ownedSkills(copy).filter(
+    ({ base }) => base,
+  )) {
+    assert.ok(credits.includes(identity.tag));
+    assert.ok(
+      credits.includes(
+        `${identity.repository}/tree/${identity.commit}/${base.path}`,
+      ),
+    );
+  }
+  assert.deepEqual(checkUpstreamBases(copy), []);
 });
 
 test("an owned file identical to its base that claims edits fails", (t) => {
@@ -103,60 +190,53 @@ test("an owned file identical to its base that claims edits fails", (t) => {
     join(copy, engineering, "tdd/SKILL.md"),
     join(copy, ".agents/skills/tdd/SKILL.md"),
   );
-  edit(copy, "setup-file-bases.json", (text) => {
-    const record = JSON.parse(text);
+  changeRecord(copy, (record) => {
     record.files["docs/agents/domain.md"].edits = "Renames a heading.";
-    return JSON.stringify(record);
   });
   assert.deepEqual(checkUpstreamBases(copy), [
     "tdd (.agents/skills/tdd/CREDITS.md) claims edits, but the skill is identical to its upstream base",
-    "docs/agents/domain.md (setup-file-bases.json) claims edits, but the file is identical to its upstream base",
+    "docs/agents/domain.md (upstream-bases.json) claims edits, but the file is identical to its upstream base",
   ]);
 });
 
-test("an owned file that differs from its base and claims none fails", (t) => {
+test("a record with no edits only permits an identical skill", (t) => {
   const copy = fixture(t);
-  for (const name of ["tdd", "prototype"])
-    edit(copy, `.agents/skills/${name}/CREDITS.md`, (text) =>
-      text.replace(
-        "The skill differs from its upstream base:",
-        "The skill is identical to its upstream base:",
-      ),
-    );
-  appendFileSync(join(copy, ".agents/skills/tdd/SKILL.md"), "\nEdited.\n");
-  writeFileSync(join(copy, ".agents/skills/prototype/NOTES.md"), "Added.\n");
-  appendFileSync(join(copy, "docs/agents/domain.md"), "\nEdited.\n");
-  edit(copy, ".agents/skills/triage/CREDITS.md", (text) =>
-    text.replace(
-      "The skill differs from its upstream base as follows.",
-      "The skill is identical to its upstream base.",
+  changeRecord(copy, (record) => {
+    record.sharedSkillEdits = [];
+    record.skills.tdd.edits = null;
+  });
+  write(copy);
+  assert.ok(
+    checkUpstreamBases(copy).some(
+      (problem) =>
+        problem.startsWith("tdd ") && problem.includes("claims no edits"),
     ),
   );
-  assert.deepEqual(checkUpstreamBases(copy), [
-    "prototype (.agents/skills/prototype/CREDITS.md) claims the skill is identical to its upstream base, but it differs",
-    "tdd (.agents/skills/tdd/CREDITS.md) claims the skill is identical to its upstream base, but it differs",
-    "triage (.agents/skills/triage/CREDITS.md) claims the skill is identical to its upstream base, but it differs",
-    "docs/agents/domain.md (setup-file-bases.json) claims no edits, but the file differs from its upstream base",
-  ]);
+  cpSync(
+    join(copy, engineering, "tdd/SKILL.md"),
+    join(copy, ".agents/skills/tdd/SKILL.md"),
+  );
+  assert.ok(
+    !checkUpstreamBases(copy).some((problem) => problem.startsWith("tdd ")),
+  );
+  appendFileSync(join(copy, "docs/agents/domain.md"), "\nEdited.\n");
+  assert.ok(
+    checkUpstreamBases(copy).some(
+      (problem) =>
+        problem.startsWith("docs/agents/domain.md ") &&
+        problem.includes("claims no edits"),
+    ),
+  );
 });
 
-test("missing credits, dropped upstream credits and snapshot sources fail", (t) => {
+test("missing records, credits, upstream credits and snapshot sources fail", (t) => {
   const copy = fixture(t);
   rmSync(join(copy, ".agents/skills/babysit/CREDITS.md"));
-  edit(copy, ".agents/skills/orchestrate/CREDITS.md", (text) =>
-    text.replace(
-      ": it was written for Repo Canon and has no upstream base",
-      "",
-    ),
-  );
+  changeRecord(copy, (record) => {
+    delete record.skills.orchestrate;
+  });
   edit(copy, ".agents/skills/pr/CREDITS.md", (text) =>
     text.replace("reproduced almost word for word", "reproduced"),
-  );
-  edit(copy, ".agents/skills/research/CREDITS.md", (text) =>
-    text.replace(
-      /The skill differs from its upstream base/,
-      "The skill is changed",
-    ),
   );
   edit(copy, "standards.yaml", (text) =>
     text
@@ -172,10 +252,9 @@ test("missing credits, dropped upstream credits and snapshot sources fail", (t) 
   assert.deepEqual(checkUpstreamBases(copy), [
     "babysit (.agents/skills/babysit/CREDITS.md) is missing",
     `implement installs from ${engineering}/implement, not the owned tree at .agents/skills/implement`,
-    "orchestrate (.agents/skills/orchestrate/CREDITS.md) neither records an upstream base nor says the skill was written for Repo Canon and has no upstream base",
+    "orchestrate (.agents/skills/orchestrate/CREDITS.md) has no entry in upstream-bases.json",
     "pr (.agents/skills/pr/CREDITS.md) must keep its upstream base's CREDITS.md text word for word",
-    "research (.agents/skills/research/CREDITS.md) must say either that the skill is identical to its upstream base or that it differs from its upstream base",
-    "docs/agents/issue-tracker.md (setup-file-bases.json) is not declared as an exact file installed from itself",
+    "docs/agents/issue-tracker.md (upstream-bases.json) is not declared as an exact file installed from itself",
     `${engineering}/setup-matt-pocock-skills/issue-tracker-github.md installs from the vendored snapshot; install it from its owned copy`,
     `${engineering}/implement installs from the vendored snapshot; install it from its owned copy`,
   ]);
@@ -191,13 +270,11 @@ test("a skill taken from upstream without its license notice fails", (t) => {
   ]);
 });
 
-test("malformed records and declarations fail instead of passing unchecked", (t) => {
+test("malformed edit records and declarations fail instead of passing unchecked", (t) => {
   const copy = fixture(t);
-  edit(copy, "setup-file-bases.json", (text) => {
-    const record = JSON.parse(text);
+  changeRecord(copy, (record) => {
     delete record.files["docs/agents/domain.md"].edits;
     record.files["docs/agents/triage-labels.md"].edits = " ";
-    return JSON.stringify(record);
   });
   edit(copy, "standards.yaml", (text) =>
     text.replace(
@@ -208,48 +285,35 @@ test("malformed records and declarations fail instead of passing unchecked", (t)
   const declared = ownedSkills(root).length;
   assert.deepEqual(checkUpstreamBases(copy), [
     `standards.yaml declares ${declared} skills, but only ${declared - 1} read as kind, name and source in that order`,
-    "docs/agents/domain.md (setup-file-bases.json) must record edits as null or a summary of how the file differs",
-    "docs/agents/triage-labels.md (setup-file-bases.json) must record edits as null or a summary of how the file differs",
+    "docs/agents/domain.md (upstream-bases.json) must record edits as null or a summary of how the file differs",
+    "docs/agents/triage-labels.md (upstream-bases.json) must record edits as null or a summary of how the file differs",
   ]);
-
-  // Reconciliation still runs: these records name the right base.
   assert.deepEqual(reconcileUpstreamBases(copy, nextSnapshot(copy)), []);
 });
 
-test("reconciliation refuses to merge from a stale or unreadable base", (t) => {
+test("reconciliation refuses stale or missing records without reading prose bases", (t) => {
   const copy = fixture(t);
-  const other = "0".repeat(40);
-  edit(copy, ".agents/skills/code-review/CREDITS.md", (text) =>
-    text.replaceAll("24fe0ef7737efae15c87225755e9f6f5965e4888", other),
-  );
-  // A base sentence that no longer parses records no base at all.
-  edit(copy, ".agents/skills/tdd/CREDITS.md", (text) =>
-    text.replace("Its upstream base is", "Its upstrem base is"),
-  );
+  changeRecord(copy, (record) => {
+    record.upstream.tag = "v1.0.0";
+    delete record.skills.tdd;
+  });
   const next = nextSnapshot(copy);
-  for (const name of ["code-review", "tdd"])
-    appendFileSync(
-      join(next, `skills/engineering/${name}/SKILL.md`),
-      "\nUpstream addition.\n",
-    );
-  assert.deepEqual(reconcileUpstreamBases(copy, next, { write: true }), [
-    {
-      path: ".agents/skills/code-review",
-      outcome: "conflict",
-      reason: `.agents/skills/code-review records upstream base https://github.com/mattpocock/skills v1.3.1 (${other}), but the vendored snapshot is https://github.com/mattpocock/skills v1.3.1 (24fe0ef7737efae15c87225755e9f6f5965e4888)`,
-    },
-    {
-      path: ".agents/skills/tdd",
-      outcome: "conflict",
-      reason:
-        "its CREDITS.md records no upstream base and does not say it was written for Repo Canon",
-    },
-  ]);
-  for (const name of ["code-review", "tdd"])
-    assert.doesNotMatch(
-      readFileSync(join(copy, `.agents/skills/${name}/SKILL.md`), "utf8"),
-      /Upstream addition/,
-    );
+  appendFileSync(
+    join(next, "skills/engineering/tdd/SKILL.md"),
+    "\nUpstream addition.\n",
+  );
+  const entries = reconcileUpstreamBases(copy, next, { write: true });
+  assert.ok(entries.every(({ outcome }) => outcome === "conflict"));
+  assert.ok(
+    entries.some(
+      ({ path, reason }) =>
+        path === ".agents/skills/tdd" && reason.includes("no entry"),
+    ),
+  );
+  assert.doesNotMatch(
+    readFileSync(join(copy, ".agents/skills/tdd/SKILL.md"), "utf8"),
+    /Upstream addition/,
+  );
 });
 
 test("reconciliation three-way merges upstream changes into the owned files", (t) => {
@@ -396,7 +460,7 @@ test("the command rejects invalid arguments and reports check problems", (t) => 
     { encoding: "utf8" },
   );
   assert.equal(child.status, 1);
-  assert.match(child.stderr, /^tdd .* claims the skill is identical/m);
+  assert.match(child.stderr, /^tdd .* provenance differs/m);
   const passing = spawnSync(process.execPath, [script, "check"], {
     encoding: "utf8",
   });

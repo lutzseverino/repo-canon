@@ -334,8 +334,8 @@ accepts full commit SHAs and reads published tag and branch refs with
   shapes, feedback behavior, workflow state, workflow permissions, the one-time
   closed-issue label sweep, and runnable fixtures.
 - [Upstream skill compatibility](upstream-compatibility.md): the vendored
-  Matt Pocock snapshot as the owned skills' upstream base, the base records and
-  their check, the three-way reconciliation for each upstream release, the native
+  Matt Pocock snapshot as the owned skills' upstream base, the shared base record, provenance rendering and
+  its check, the three-way reconciliation for each upstream release, the native
   issue formats that
   automation must respect, and how shared instructions and configuration adapt
   upstream setup.

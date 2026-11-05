@@ -121,20 +121,10 @@ repeated.
   once in the shared documentation model.
 - Include only workflow skills, as
   [ADR 0018](docs/adr/0018-install-only-workflow-skills.md) decides. Upstream's
-  promoted set at tag `v1.3.1`, commit
-  `24fe0ef7737efae15c87225755e9f6f5965e4888` consists of 20 engineering and seven
-  productivity skills, matching its plugin manifest; upstream removed
-  `resolving-merge-conflicts`. Experimental skills are excluded; the upstream
-  in-progress, misc, and deprecated categories are outside the regular set.
-  Repo Canon installs 17 of them: `code-review`, `codebase-design`,
-  `diagnosing-bugs`, `domain-modeling`, `grill-with-docs`, `grilling`,
-  `implement`, `improve-codebase-architecture`, `pr`, `prototype`, `research`,
-  `tdd`, `to-spec`, `to-tickets`, `triage`, `wayfinder`, and
-  `writing-for-agents`, each an owned skill whose upstream base is that
-  release. Each states that a prompt or brief naming it is its invocation,
-  and `implement` also allows model invocation; `grill-with-docs` and
-  `prototype` differ in nothing else, and the other fifteen differ further as
-  their `CREDITS.md` files describe. `pr` adds the screenshot storage and retention contract.
+  promoted set and the selected skills are recorded in `upstream-bases.json`
+  and `standards.yaml`. Experimental skills and upstream's in-progress, misc,
+  and deprecated categories are excluded. The record holds the shared and
+  skill-specific edits from the upstream base; `CREDITS.md` renders them.
   `prototype` stays because `wayfinder` calls it. The
   vendored tree holds only those skills' bases and the setup seeds that the
   skill setup files take as theirs; `implement-spec` is not vendored, because every
@@ -146,8 +136,8 @@ repeated.
   [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
   decides. Adoption installs each skill from the owned tree, `.agents/skills/`,
   and each setup file from itself. A skill taken from upstream names its
-  upstream base in `CREDITS.md` and says whether and how it differs; the setup
-  files' bases are in `setup-file-bases.json`. The vendored snapshot stays
+  upstream base in `CREDITS.md` and says whether and how it differs, rendered
+  from `upstream-bases.json`, which also records the setup files' bases. The vendored snapshot stays
   unedited as the base, and each upstream release is one reconciliation by a
   three-way merge, following the
   [upstream-compatibility procedure](docs/development/upstream-compatibility.md#upstream-reconciliation);
@@ -429,7 +419,7 @@ repeated.
   decides in place of the verbatim rule of
   [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md).
   `domain.md` is still identical to its seed; `issue-tracker.md` and
-  `triage-labels.md` differ as `setup-file-bases.json` records, so they state
+  `triage-labels.md` differ as `upstream-bases.json` records, so they state
   what the rules require. Project-specific guidance remains separate. AGENTS.md is an
   identical standards-owned pointer file. Repository Standards owns the update
   notice through its `repository-standards` system skill
@@ -505,7 +495,7 @@ repeated.
 
 ## Verified upstream facts
 
-- The 17 installed workflow skills are self-contained with respect to concrete internal
+- The installed workflow skills are self-contained with respect to concrete internal
   skill invocations and referenced resources; none requires an experimental,
   miscellaneous, or deprecated skill. Full directories must be retained.
   Harness facilities such as subagents and context controls remain runtime

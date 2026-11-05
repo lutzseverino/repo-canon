@@ -975,7 +975,7 @@ test("installed skills route to no uninstalled vendored skill", () => {
 test("the owned setup files install from themselves and record how they differ from their v1.3.1 seeds", () => {
   const declarations = readFileSync(join(root, "standards.yaml"), "utf8");
   const bases = JSON.parse(
-    readFileSync(join(root, "setup-file-bases.json"), "utf8"),
+    readFileSync(join(root, "upstream-bases.json"), "utf8"),
   ).files;
   for (const { target, seed, edited } of [
     { target: "docs/agents/domain.md", seed: "domain.md", edited: false },

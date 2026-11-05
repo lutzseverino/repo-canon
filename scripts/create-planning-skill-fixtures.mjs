@@ -20,6 +20,8 @@ import {
   initializeFixtureRepository,
 } from "./support/fixture-authoring.mjs";
 
+import { upstreamBases } from "./upstream-bases.mjs";
+
 const sourceRoot = fileURLToPath(new URL("..", import.meta.url));
 const scriptSourcePath = "scripts/create-planning-skill-fixtures.mjs";
 const skillsRoot = join(sourceRoot, ".agents/skills");
@@ -27,7 +29,7 @@ const setupSeeds = join(
   sourceRoot,
   "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills",
 );
-const upstreamCommit = "24fe0ef7737efae15c87225755e9f6f5965e4888";
+const upstreamCommit = upstreamBases(sourceRoot).upstream.commit;
 const skillNames = [
   "grill-with-docs",
   "to-spec",
