@@ -6,7 +6,7 @@ Read `docs/agents/project.md`, when present, for repository-specific constraints
 For setup and validation commands, read `docs/development/README.md`.
 
 Deliver every change as one pull request: `implement`, then `review` in a
-separate agent, as `CONTRIBUTING.md` directs.
+separate agent when configured, as `CONTRIBUTING.md` directs.
 
 ## Agent skills
 

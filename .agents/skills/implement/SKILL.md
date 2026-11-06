@@ -1,6 +1,6 @@
 ---
 name: implement
-description: "Implement a spec or ticket to a draft pull request, or address review findings on its existing pull request."
+description: "Implement a spec or ticket, or address review findings on its existing pull request."
 ---
 
 A prompt or brief naming this skill is its invocation.
@@ -15,8 +15,15 @@ Use /tdd where possible, at pre-agreed seams.
 Run typechecking regularly, single test files regularly, and the repository's
 required validation on the final commit.
 
-For new work, commit and push the branch, write the body with `pr`, and open
-one **draft** pull request as `CONTRIBUTING.md` directs. For review findings,
+Before delivery in a factory repository, read the installed `factory-workflow`
+rules' Run kinds section and `.factory/config.json`'s `runKinds`. When no
+review run is configured, commit and push the work, write the PR body with
+`pr`, open a ready pull request (or mark its existing draft ready), and invoke
+`babysit` to deliver it under those rules, including any prescribed worker handoff.
+That route retains babysit's applicable internal reviews and merge conditions.
+
+Otherwise, for new work, commit and push the branch, write the body with `pr`,
+and open one **draft** pull request as `CONTRIBUTING.md` directs. For review findings,
 commit and push the fixes to the same pull request and leave it a draft;
 before replying to findings, read the installed `comments` rules' Review-thread
 replies section and answer there as it directs. Report the pull request,
@@ -34,3 +41,8 @@ Paths are relative to the repository root.
 - `.repo-standards/rules/comments.md`: how to reply to review findings.
   When it is missing, follow the contribution guide's comment requirements;
   without either source, report the fixes in the handoff.
+- `.repo-standards/rules/factory-workflow.md`: the factory's delivery route.
+  When it is missing, use the draft handoff above.
+- `.factory/config.json`: the configured review run under `runKinds.review`.
+  When it is missing in a factory repository, no review run is configured;
+  follow the installed factory rules' delivery route.

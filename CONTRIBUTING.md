@@ -206,8 +206,8 @@ links. The merging account already records who did the work.
 
 ## Pull requests
 
-Use `implement` to open a validated draft PR, then a separate agent runs
-`review` through merge. Address hand-backs on that draft PR.
+Use `implement`, then separate `review` through merge; factories without review
+use `babysit` instead. Address review hand-backs on the same draft PR.
 
 Keep each pull request focused. Describe the problem and resulting change,
 report the checks you ran and their outcomes, and link the relevant issue.
