@@ -43,8 +43,17 @@ destination. Its task context includes these workbench delivery obligations:
 
 ## Grill
 
-Open a grill with the owner in its own session, and record the session's
-reference in the row's State. Launch it with `/grill-with-docs`, followed by
+When the guide's inference test cannot settle an intent question, open a grill
+with the owner. On observing an issue in `state:grill`, through an event or a
+recurring progress check, add one decision-inbox entry linking the issue's
+action comment. Use the [inbox shape](templates.md#inboxmd), including your
+recommendation. Launch the grill yourself in the owner's session environment,
+within the launch cap, and link its session from that entry. Reuse the entry
+and session on repeated observations, including after takeover; when the cap
+holds the launch, keep it pending in `now.md` until a slot opens.
+
+Record the session's reference in the row's State. Launch it with
+`/grill-with-docs #N` for the issue, followed by
 the issue links, evidence, recorded decisions, unresolved questions, scope,
 plan directory and report-back destination. Supply the owned branch and
 checkout for domain-document edits and one pull request destination per
@@ -56,6 +65,11 @@ task context also includes these workbench obligations:
 - mark its row `grilled <file>` in `plan.md`;
 - commit and push its writes, as [Workbench](../SKILL.md#workbench) says;
 - report back, as [Report-back](../SKILL.md#report-back) says.
+
+For an issue routed from `state:grill`, the owner-present grill supplies the
+brief's readiness under the repository's readiness rules. The factory then
+implements the ready issue, skipping triage. Keep the plan-approval readiness
+gate in [Lifecycle](../SKILL.md#lifecycle).
 
 To take over an owner's grill or prototype, continue in that session.
 
