@@ -66,7 +66,7 @@ task context also includes these workbench obligations:
 - commit and push its writes, as [Workbench](../SKILL.md#workbench) says;
 - report back, as [Report-back](../SKILL.md#report-back) says.
 
-For an issue routed from `state:grill`, the owner-present grill supplies the
+For an issue routed from `state:grill`, have the owner in the grill supply the
 brief's readiness under the repository's readiness rules. The factory then
 implements the ready issue, skipping triage. Keep the plan-approval readiness
 gate in [Lifecycle](../SKILL.md#lifecycle).

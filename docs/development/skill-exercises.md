@@ -453,7 +453,7 @@ reuse that entry and session. With the launch cap full, check that the entry
 persists and the pending launch starts once a slot opens.
 
 Relay the owner's answers to the grill and its report back through the
-workbench. Check that the owner-present grill supplies readiness under the
+workbench. Check that the owner in the grill supplies readiness under the
 repository's rules, with plan approval still required, and the factory's next
 run implements without another triage. Report these observed outcomes
 separately from fixture and structural checks; this check does not exercise a
