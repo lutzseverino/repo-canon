@@ -138,21 +138,22 @@ _Avoid_: Orchestrating agent, reviewer
 The reviewed state of an implementation contract that an authorized reviewer
 considers sufficiently specified for work, granting it to an agent; the
 factory accepts it from a person whose current repository role the host
-configuration authorizes, or from its own triage run, after the implementation
-contract's last edit. A
-parent never runs, but its readiness releases its tickets and survives later
-links only when complete history shows every addition at or after readiness
-was made by an authorized person; without complete history, the platform's
-available link timing governs renewed readiness.
+configuration authorizes, or from its own triage run. A parent's readiness
+releases its tickets.
 _Avoid_: Passing structural validation
 
 **Factory**:
-The unattended service, installed once on a host, that takes each ready issue
-on the frontier of every repository its host configuration lists to a merged
-pull request of its own, with the model its label names. It never runs a
-parent; a parent's readiness releases its tickets, each as its own run. It is
-a product of its own, separate from Repo Canon and Repository Standards.
+The unattended service, installed once on a host, that takes the issues of
+every repository its host configuration lists through its run kinds, from
+triage to a merged pull request of their own. It never runs a parent. It is a
+product of its own, separate from Repo Canon and Repository Standards.
 _Avoid_: Pipeline, orchestrator
+
+**Run kind**:
+One of the factory's three kinds of run, triage, implement and review, each
+turned on per repository and running the skill its factory configuration maps
+to it.
+_Avoid_: Stage, phase, mode
 
 **Workflow state**:
 The one `state:` label an open issue carries, naming whom it waits on: triage,
@@ -185,8 +186,8 @@ it accepts.
 _Avoid_: Factory settings, environment
 
 **Factory configuration**:
-A repository's own statement of the labels, model label prefix and prompt the
-factory uses there.
+A repository's own statement of the run kinds the factory runs there, the
+skill each runs, and the labels and model label prefix it uses.
 _Avoid_: Factory settings, host configuration
 
 **Hosting platform**:

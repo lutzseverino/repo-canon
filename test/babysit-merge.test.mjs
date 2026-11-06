@@ -299,7 +299,7 @@ test("unreadable or invalid release configuration and PR reads never write a mer
   const failures = [
     { factoryConfiguration: "{" },
     { factoryConfiguration: [] },
-    { factoryConfiguration: { version: 3 } },
+    { factoryConfiguration: { version: 4 } },
     { factoryConfiguration: { version: 1, labels: [] } },
     ...["hold", "releaseHold"].flatMap((key) =>
       [null, "", " hold ", 42].map((value) => ({

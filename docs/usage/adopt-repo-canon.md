@@ -19,10 +19,10 @@ Repo Canon supplies three profiles:
   serves carries: its factory configuration, `.factory/config.json`; its
   toolchain image, `.factory/Dockerfile`; and the pull request workflow that
   builds that image. It also installs repository-wide factory workflow rules
-  for readiness, model selection, state labels and owner handoffs, with an
-  intentionally empty content scope. Select it only for a repository that a host-installed
+  for its run kinds and their handoffs, gates, readiness, model selection and
+  state labels, with an intentionally empty content scope. Select it only for a repository that a host-installed
   factory serves, as
-  [the factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/main/docs/usage/README.md)
+  [the factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/5e7ecf2593cd534cfb9050a7385dbda71b5102f9/docs/usage/README.md)
   describes.
 - `workbench`: only the workflow skills, with the files their scripts import
   and their license notices, for the orchestrating agent's workbench rather
@@ -35,12 +35,13 @@ answering differently when a factory starts or stops serving it.
 
 ## Coordinate the factory host
 
-The `factory` profile installs configuration version 2, which requires
-[Scriptorium major version 3](https://github.com/lutzseverino/scriptorium/releases).
+The `factory` profile installs configuration version 3, which requires
+[Scriptorium major version 4](https://github.com/lutzseverino/scriptorium/releases).
 Coordinate repository updates with the host operator. A factory-served repository
-that updates while its host runs Scriptorium v2.x stays paused until the host
-installs v3. After the host upgrade, confirm configuration acceptance and resumed
-pickups. The `standard` and `workbench` profiles need no host migration.
+that updates while its host runs Scriptorium v3.x stays paused until the host
+installs v4, so update the repository and its host together. After the host
+upgrade, confirm configuration acceptance and resumed pickups. The `standard`
+and `workbench` profiles need no host migration.
 
 ## Prepare caller compatibility
 
