@@ -164,15 +164,13 @@ The factory starts this run for one issue, read-only, and the installed factory 
 
 1. **Gather context** as [Triage a specific issue or PR](#triage-a-specific-issue-or-pr) step 1 says, and run its two checks first, yourself. Read the repository's ADRs, its glossary, and the issues the request links, with their decisions: the records the Triage run section lets you cite.
 2. **Sort** the request as [Sort by uncertainty](#sort-by-uncertainty) says. Answer each intent question the inference test lets you answer from those records, and list it with the record and its date under **Inferred intent** in the triage notes.
-3. **Choose the outcome** the Triage run section names:
-   - **Code-bound, every question answered**: write the Agent Brief and its triage notes as [AGENT-BRIEF.md](AGENT-BRIEF.md) says, review them as the [code-bound path](#code-bound-path)'s step 2 says, and correct them until they hold. Ask for `state:ready` with one `model:` label you choose from the models the factory's run facts allow, or from any when they name none, `factory:skip` when the installed factory rules say the factory must not pick the work up, and a `priority:` label as the installed rules' Labels section says, unless the issue already carries one.
-   - **A fact only the issue's outside reporter holds**: ask for `state:reporter`, with the [reporter template](#reporter-template) as the body.
-   - **A fact or decision only the owner can give**, including whether to close a request that is already implemented or matches a prior rejection: ask for `state:owner`, with the question and what you found.
-   - **The owner's intent**: ask for `state:grill`, with the facts gathered (current behavior, constraints, the records you read, the options and what each would cost) and the open questions, numbered.
-
-   In every outcome, ask for the issue's `type:` label when it has none.
-4. **Write the run result** to the path the factory gives, in the format its run-result interface defines: the state and labels you ask for, and the body, which is the brief and its triage notes, or your notes and questions. The factory's frame supplies the disclaimer, so the body starts with the brief's heading or your notes. When you cannot finish, write a failed result with the reason.
-5. **Write nothing else.** Post no comment, apply no label, push nothing, and attempt no fix, even where a credential would allow it; a reproduction stays in your sandbox. Never run `ready.mjs`.
+3. **Choose the outcome** the Triage run section names, with the labels it lists, and write its body:
+   - `state:ready`: write the Agent Brief and its triage notes as [AGENT-BRIEF.md](AGENT-BRIEF.md) says, review them as the [code-bound path](#code-bound-path)'s step 2 says, and correct them until they hold. Choose the `model:` label from the models the factory's run facts list, or from any when they list none.
+   - `state:reporter`: the [reporter template](#reporter-template).
+   - `state:owner`: the question and what you found.
+   - `state:grill`: the facts gathered (current behavior, constraints, the records you read, the options and what each would cost) and the open questions, numbered.
+4. **Write the run result** to the path the factory gives, in the format its run-result interface defines: the state and labels you ask for, and the body, with no disclaimer, as `.repo-standards/rules/comments.md#disclaimers` says. When you cannot finish, write a failed result with the reason.
+5. **Write nothing else**, as the Triage run section says, even where a credential would allow it: a reproduction stays in your sandbox, and `ready.mjs` never runs.
 
 ## Other outcomes
 

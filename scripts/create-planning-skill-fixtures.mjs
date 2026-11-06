@@ -765,7 +765,7 @@ Lookup exposes both GitHub repository configuration and factory workflow rules, 
 
 02 is an intent-bound feature: what a customer-facing PDF receipt shows and how it looks is the owner's taste and intent. ADR 0001, dated 2026-09-01, covers dispatcher CSV exports only, so no repository record settles it. Its result asks for state:grill, with the facts gathered and numbered open questions, and holds no Agent Brief and no model label.
 
-03 is an outside reporter's bug that names no version: the current 1.4.0 code keeps non-ASCII signer names, and CHANGELOG.md records that fix in 1.4.0. Its result asks for state:reporter and type:bug, with the reporter template asking for the version and the steps.
+03 is an outside reporter's bug that names neither its version nor how it opens the CSV: the current 1.4.0 code keeps non-ASCII signer names, CHANGELOG.md records that fix in 1.4.0, and the usage documentation says to open the export as UTF-8. Before 1.4.0 the report is that fixed bug; on 1.4.0 it may be a spreadsheet opening the CSV in another encoding, or a new bug. Only the reporter knows which, so nothing is yet shown to be implemented. Its result asks for state:reporter and type:bug, with the reporter template asking for the version and the steps that open the export.
 
 After all three runs, git status shows only the run results as new files: every tracker file is unchanged, and no run ran ready.mjs. The run-result bodies carry no disclaimer, because the factory's frame supplies it; check the brief's shape as if that frame's triage disclaimer preceded it. Cite the factory rules' Triage run and Model selection sections, the GitHub rules' Labels and Agent Brief sections and CONTRIBUTING.md's Triage section in the outcome.
 `,
@@ -788,7 +788,7 @@ After all three runs, git status shows only the run results as new files: every 
   write(
     root,
     "docs/usage/receipts.md",
-    "# Delivery receipt export\n\nExport the Delivery receipts of one UTC date as CSV with the header `parcel_reference,delivered_at,signer_name`. A date with no deliveries returns a CSV holding only that header row. Signer names keep every character the carrier reports.\n",
+    "# Delivery receipt export\n\nExport the Delivery receipts of one UTC date as CSV with the header `parcel_reference,delivered_at,signer_name`. A date with no deliveries returns a CSV holding only that header row. Signer names keep every character the carrier reports. The export is UTF-8 without a byte-order mark, so open it in a spreadsheet as UTF-8.\n",
   );
   write(
     root,
@@ -861,7 +861,11 @@ Signer names with accents, such as José, come out garbled in the CSV export. Pl
     `${JSON.stringify(
       {
         note: "Simulated factory run facts for this local exercise. The run-result interface is a stand-in for Scriptorium's (lutzseverino/scriptorium#116), not its definition.",
-        allowedModels: ["claude-opus-5-5", "claude-sonnet-5-5", "gpt-6.1-sol"],
+        allowedModels: [
+          "anthropic/claude-opus-5-5",
+          "anthropic/claude-sonnet-5-5",
+          "openai/gpt-6.1-sol",
+        ],
         runResult: {
           fields: {
             outcome: "One of the outcomes below.",

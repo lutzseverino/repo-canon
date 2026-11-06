@@ -289,8 +289,8 @@ written run results: a code-bound bug, whose documentation states the
 expected result, asking for `state:ready` with a brief, one allowed model and
 the owner's priority kept; a feature whose customer-facing look no dated ADR
 settles, asking for `state:grill` with facts and numbered questions; and an
-outside reporter's bug that names no version, asking for `state:reporter`
-with the reporter's questions. Check that `git status` shows only the run
+outside reporter's bug that names neither its version nor how it opens the
+export, asking for `state:reporter` with the reporter's questions. Check that `git status` shows only the run
 results: no tracker file changed, no label or comment was written, and no run
 ran `ready.mjs`.
 

@@ -96,15 +96,22 @@ it posts nothing, applies no label, pushes nothing and attempts no fix. Its run
 result asks the factory to post its brief or question and to apply the labels
 it chose, never a `gate:` label.
 
-Under the contribution guide's inference test it cites only records in the
-repository: ADRs, the glossary, and linked issues and their decisions, each
-with its date. Every other intent question, and any it is unsure of, moves the
-issue to `state:grill` with the facts gathered and the open questions. A fact
-only an outside reporter holds moves it to `state:reporter`, and one only the
-owner holds to `state:owner`, each with its question. A brief it writes with no
-open question it accepts, as the GitHub rules' Readiness roles allow: it
-chooses the `model:` label from the models the host allows, and the
-`priority:` label as the GitHub rules' Labels section says.
+It applies the contribution guide's inference test with sources recorded only
+in the repository: its ADRs, its glossary, and linked issues and their
+decisions, each cited with its date. The brief's triage notes list every
+inferred answer for the owner to veto, in place of the orchestrating agent's
+report. Every other intent question, and any it is unsure of, moves the issue
+to `state:grill` with the facts gathered and the open questions. A fact only
+an outside reporter holds moves it to `state:reporter`, and one only the owner
+holds to `state:owner`, each with its question; whether to close a request
+already implemented or rejected before is the owner's. Every outcome carries
+the issue's one `type:` label.
+
+A brief it writes with no open question it accepts, as the GitHub rules'
+Readiness roles allow, asking for `state:ready` with the labels readiness
+needs: one `model:` label it chooses from the models the host allows, any
+`factory:skip` that State labels require, and a `priority:` label as the
+GitHub rules' Labels section says.
 
 ## State labels
 

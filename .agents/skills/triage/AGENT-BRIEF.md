@@ -69,7 +69,7 @@ The triage notes that accompany a brief follow it in the same comment, never bet
 - **Path**: code-bound or intent-bound, with a one-line reason.
 - **Verification**: what was checked and how (reproduction, code path, tests run), and where the redundancy search looked.
 - **Owner decisions**: each decision the brief relies on, including any owner-review reservation, with its date and a link to where the owner gave it; for a grill's brief, pasted from the grill record.
-- **Inferred intent**: each answer inferred under the inference test, which the brief states as behavior, with its citation, its date and where it was given. In the factory's triage run, the citation is a repository record: an ADR, a glossary entry, or a linked issue and its decision.
+- **Inferred intent**: each answer inferred under the inference test, which the brief states as behavior, with its citation, its date and where it was given. In the factory's triage run, it cites a repository record, as the installed factory workflow rules' Triage run section says.
 - **Dependencies**: issues that must land first, for the reviewer to record as blockers.
 - **Model**: when the installed rules ask for it, one `model:` label with a one-line reason: a suggestion for the reviewer to apply or replace, or, in the factory's triage run, the label its run result asks for.
 - **Owner questions**: none, for a brief ready for review.
