@@ -21,7 +21,11 @@ import {
   executedAsScript,
   requestData,
 } from "../babysit/platform.mjs";
-import { completeReview, reviewsSection } from "../babysit/review-outcome.mjs";
+import {
+  completeReview,
+  reviewedHead,
+  reviewsSection,
+} from "../babysit/review-outcome.mjs";
 
 const usage =
   "Usage: round.mjs <number> [--issue <number>]... [--post <file> | --ready] [--repo <owner/name>]";
@@ -36,6 +40,10 @@ const closingIssuesQuery = `query ReviewRoundIssues($owner: String!, $name: Stri
       }
     }
   }
+}`;
+
+const readyMutation = `mutation ReviewRoundReady($id: ID!) {
+  markPullRequestReadyForReview(input: { pullRequestId: $id }) { pullRequest { isDraft } }
 }`;
 
 function options(argv) {
@@ -64,7 +72,7 @@ function options(argv) {
 export function completedReviews(reviews) {
   return reviews.flatMap((review) => {
     if (review.state === "PENDING") return [];
-    const head = /^Head:[\t ]*([0-9a-f]{40})[\t ]*$/m.exec(review.body)?.[1];
+    const head = reviewedHead(review.body);
     return head && completeReview(review.body, head) ? [head] : [];
   });
 }
@@ -170,9 +178,7 @@ export const main = async (argv = process.argv.slice(2), connection) => {
           method: "POST",
           path: "/graphql",
           body: {
-            query: `mutation ReviewRoundReady($id: ID!) {
-              markPullRequestReadyForReview(input: { pullRequestId: $id }) { pullRequest { isDraft } }
-            }`,
+            query: readyMutation,
             variables: { id: facts.pull.node_id },
           },
         }).then((response) => {

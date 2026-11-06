@@ -355,6 +355,28 @@ and absent-policy pull requests retain their existing applicable internal-review
 workflow and optionality in both profiles; this definition adds no blanket
 review requirement. A policy skip supplies neither internal nor external approval.
 
+## Review of an implemented pull request
+
+An implemented pull request reaches its merge through a review by an agent
+that wrote none of its change, with the installed `review` skill. Each round
+reviews one head with the [internal reviews](#internal-standards-and-spec-reviews),
+whose Spec axis also reads the implementation contract against its issue, and
+leaves exactly one review of that head as the `comments` rules' Reviews section
+describes. A pull request without an issue is reviewed against its
+decision-bearing body.
+
+A round fixes small findings on the pull request and revalidates. A larger
+finding (a wrong approach, a missing acceptance criterion or a large rework)
+hands the work back to implementation on the same pull request, with the
+round's review as its input; whoever ran the review relaunches it. When a later
+round still has a larger finding, the review stops without converging and
+reports why, with the pull request left a draft. A wrong or ambiguous contract
+moves the issue to `state:grill` under the contribution guide's Triage section.
+A round left with no open finding holds: the pull request is marked ready for
+review and delivered under the contribution guide's Merging section. Where
+factory workflow rules are installed, they say how an owner gate stops that
+delivery.
+
 ## Factory app-author review policy
 
 The optional repository-owned `.github/factory-review-policy.json` exempts its

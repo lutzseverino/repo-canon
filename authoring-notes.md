@@ -509,18 +509,11 @@ repeated.
   grill on 2026-11-03 and 2026-11-04, as the triage notes of
   [#848](https://github.com/lutzseverino/repo-canon/issues/848#issuecomment-6658040589)
   record.
-- An implemented pull request reaches its merge through the `review` skill,
-  run by an agent that did not write it: it reviews the current head on the
-  Standards and Spec axes, reading the contract against the issue as well as
-  the diff against the contract, fixes small findings on the PR, hands larger
-  ones back to `implement` on the same PR, stops after a second round that
-  does not converge, sends a wrong or ambiguous contract to a grill, and
-  otherwise marks the PR ready and merges it through `babysit`, stopping at an
-  owner gate. Each round leaves one review in the comment rules' template,
-  which `round.mjs` checks before posting, and a grill's domain-document pull
-  request is a draft that `review` delivers. The owner decided this in the
-  plan 16 factory-pipeline grill on 2026-11-03 and 2026-11-04, as the triage
-  notes of
+- An implemented pull request reaches its merge through an independent
+  review, stated in the
+  [GitHub repository configuration rules](rules/github-repository-configuration.md#review-of-an-implemented-pull-request)
+  and carried out by the `review` skill. The owner decided this in the plan 16
+  factory-pipeline grill on 2026-11-03 and 2026-11-04, as the triage notes of
   [#851](https://github.com/lutzseverino/repo-canon/issues/851#issuecomment-6658042133)
   record.
 - The contextual `project-agent-guidance` declaration preserves useful

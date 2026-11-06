@@ -27,6 +27,19 @@ const completed = (value) =>
   ) &&
   !placeholders.some((line) => value.includes(line.slice(line.indexOf("<"))));
 
+// The head a review names, when it names one full SHA; review-agnostic callers
+// then check completeness against it.
+export function reviewedHead(body) {
+  if (typeof body !== "string") return null;
+  const heads = body
+    .split(/\r?\n/)
+    .map((line) => field.exec(line))
+    .filter((match) => match?.[1] === "Head");
+  return heads.length === 1 && /^[0-9a-f]{40}$/.test(heads[0][2])
+    ? heads[0][2]
+    : null;
+}
+
 export function completeReview(body, head) {
   if (typeof body !== "string") return false;
   // The review is plain text, never a quoted example or HTML comment.

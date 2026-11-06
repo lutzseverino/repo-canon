@@ -109,7 +109,12 @@ with these colors and descriptions:
 | `factory:hold`         | `c5def5` | Pause factory pickups and other merges in this repository  |
 
 Standard-profile setup provisions none of them. A `gate:` label is set before
-the work, by the owner or by a grill at the owner's request. Only the factory
+the work, by the owner or by a grill at the owner's request. A `gate:` label on
+a pull request or its issue stops its review at ready-to-merge: the pull
+request is ready for review with its current head reviewed and its checks
+passed, its issue waits in `state:owner`, and nothing merges it until the owner
+removes the gate. A later review then merges it without reviewing an unchanged
+head again. Only the factory
 sets `factory:running`, `factory:paused` and `factory:failed`, using the
 corresponding roles in `.factory/config.json`, and it creates any of them that
 is missing itself. The skip and hold labels follow the sections below.
