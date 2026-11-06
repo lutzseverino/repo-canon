@@ -5,24 +5,30 @@ or directories. Adoption installs its rules for the whole repository.
 
 ## Host compatibility
 
-The shipped `.factory/config.json` is version 2 without the label role for
-answers a run waits on, which ADR 0031 removes. Scriptorium v3 still requires
-that role and pauses a repository whose configuration lacks it, and no
-released host accepts the configuration yet: deliver this adoption only once
-the serving host's release accepts it.
+The shipped `.factory/config.json` is configuration version 3. Only
+Scriptorium v4 accepts it, and no released host does yet: Scriptorium v3
+refuses it and pauses the repository. Deliver this adoption only once the
+serving host's release accepts it, updating the repository and its host
+together.
 
-The shipped configuration names `skill` as
-`implement` and `arguments` as `#{issue}`, replacing the version-1 `prompt`;
-each provider renders the skill invocation in its own syntax. Its
-`contractResult.marker` is `repo-canon:issue-contract-state` and
-`contractResult.author` is `github-actions[bot]`, the trusted author of the
-issue-contract workflow's posted result. It also names Repo Canon's labels,
-including `labels.hold` and `labels.releaseHold`, and the `model:` label prefix.
-There is no factory configuration compatibility layer.
+Version 3 replaces version 2's single `skill` and `arguments` with
+`runKinds`, which turns on `triage`, `implement` and `review` and maps each to
+the skill of the same name. Each kind's `arguments` names its work: `#{issue}`
+for triage and implement, and `#{pullRequest}` for review. Triage and review
+name the `provider`, `model` and `effort` they run on, and review sets
+`differentProvider`; implement runs on the issue's `model:` label. `labels`
+names every label the factory reads or writes by role, in the `state:`,
+`gate:`, `factory:` and `priority:` families, with no role for answers a run
+waits on. `contractResult` stays the issue-contract workflow's result, with
+`marker` `repo-canon:issue-contract-state` and `author`
+`github-actions[bot]`. `triageResult` names the marker and account of the
+factory's triage result, which the issue-contract validator reads to approve
+readiness the triage run applies. There is no factory configuration
+compatibility layer.
 
 The `babysit` merge check reads only labels from the destination default
-branch's configuration. It accepts versions 1 and 2, so an adopter still on
-version 1 can deliver this update while retaining its hold checks. The factory
+branch's configuration. It accepts versions 1, 2 and 3, so an adopter still on
+version 2 can deliver this update while retaining its hold checks. The factory
 profile installs the `factory` skill for ongoing operations, including pause
 and resume through the repository hold.
 
@@ -62,9 +68,10 @@ adoption output. Adoption neither creates nor edits the policy file or
 ## Workflow reconciliation
 
 When updating from a release that kept factory policy in `CONTRIBUTING.md`,
-review the installed `factory-workflow` rules as the new home of parent
-readiness, model selection, state labels, owner handoff and recovery, stop
-notes, and the factory consequence of leaving an issue open after merge.
+review the installed `factory-workflow` rules as the new home of run kinds
+and their handoffs, gates, parent readiness, model selection, state labels,
+questions and stops, and the factory consequence of leaving an issue open
+after merge.
 The exact contribution guide is replaced by adoption; preserve useful
 repository-specific instructions through `project-agent-guidance` rather than
 copying factory policy back into it.

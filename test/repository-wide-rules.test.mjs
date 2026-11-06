@@ -471,7 +471,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       assert.deepEqual(
         readFileSync(join(project, ".factory/config.json")),
         readFileSync(join(root, ".factory/config.json")),
-        `${label} installs the shipped version-2 factory configuration byte for byte`,
+        `${label} installs the shipped version-3 factory configuration byte for byte`,
       );
     // Exercise no scope and covered checks/rules for all stacks in both profiles,
     // including updates from a source that did not ship web declarations.

@@ -559,41 +559,177 @@ test("standards.yaml declares no pull request reviewer or app-author policy file
   );
 });
 
-// The shipped configuration keeps configuration version 2's fields without
-// `needsInput`, which ADR 0031 removes: seven labels distinct ignoring case,
-// the skill and its issue argument, and the contract result's marker and
-// trusted author. This repository imports no factory code; the exact shape
-// pins the file.
-test("the factory configuration names Repo Canon's labels, skill, and trusted contract result", () => {
+// Configuration version 3 maps each run kind a repository turns on to a skill
+// and its arguments; triage and review name their own provider, model and
+// effort, and implement takes the issue's `model:` label. Labels belong to the
+// `state:`, `gate:`, `factory:` and `priority:` families (ADR 0031), distinct
+// ignoring case. Triage needs the triage result its readiness is checked
+// against (ADR 0030). This repository imports no factory code, so the shape
+// is checked here.
+const runKindNames = ["triage", "implement", "review"];
+const labelRoles = [
+  "triage",
+  "reporter",
+  "grill",
+  "owner",
+  "ready",
+  "ownerReview",
+  "majorRelease",
+  "running",
+  "paused",
+  "failed",
+  "skip",
+  "hold",
+  "releaseHold",
+  "priorityHigh",
+  "priorityNormal",
+  "priorityLow",
+];
+
+function trimmed(value) {
+  return (
+    typeof value === "string" && value.length > 0 && value.trim() === value
+  );
+}
+
+function factoryConfigurationFailure(configuration) {
+  if (configuration?.version !== 3)
+    return `version ${configuration?.version} is not 3`;
+  const allowed = [
+    "version",
+    "labels",
+    "modelLabelPrefix",
+    "runKinds",
+    "contractResult",
+    "triageResult",
+    "comments",
+  ];
+  const unknown = Object.keys(configuration).filter(
+    (key) => !allowed.includes(key),
+  );
+  if (unknown.length) return `unknown fields: ${unknown.join(", ")}`;
+  const labels = Object.entries(configuration.labels ?? {});
+  const roles = labels.map(([role]) => role);
+  if (roles.some((role) => !labelRoles.includes(role)))
+    return `unknown label roles: ${roles.filter((role) => !labelRoles.includes(role)).join(", ")}`;
+  if (!labels.every(([, name]) => trimmed(name)))
+    return "labels need trimmed names";
+  if (
+    !labels.every(([, name]) => /^(?:state|gate|factory|priority):/.test(name))
+  )
+    return "labels outside the state:, gate:, factory: and priority: families";
+  if (
+    new Set(labels.map(([, name]) => name.toLowerCase())).size !== labels.length
+  )
+    return "labels are not distinct ignoring case";
+  for (const role of ["ready", "running", "failed", "paused"])
+    if (!configuration.labels?.[role]) return `labels.${role} is missing`;
+  if (!trimmed(configuration.modelLabelPrefix))
+    return "modelLabelPrefix is missing";
+  for (const result of ["contractResult", "triageResult"]) {
+    const value = configuration[result];
+    if (value === undefined && result === "triageResult") continue;
+    if (!trimmed(value?.marker) || !trimmed(value?.author))
+      return `${result} needs a marker and an author`;
+  }
+  const kinds = configuration.runKinds ?? {};
+  if (!kinds.implement) return "the implement run kind is missing";
+  for (const [kind, run] of Object.entries(kinds)) {
+    if (!runKindNames.includes(kind)) return `unknown run kind ${kind}`;
+    if (!trimmed(run?.skill) || typeof run.arguments !== "string")
+      return `runKinds.${kind} needs a skill and arguments`;
+    const model = ["provider", "model", "effort"];
+    if (kind === "implement") {
+      if (Object.keys(run).some((key) => !["skill", "arguments"].includes(key)))
+        return "runKinds.implement takes its model from the issue";
+    } else if (!model.every((key) => trimmed(run[key])))
+      return `runKinds.${kind} needs a provider, model and effort`;
+    const fields = ["skill", "arguments", ...model];
+    if (kind === "review") fields.push("differentProvider");
+    if (Object.keys(run).some((key) => !fields.includes(key)))
+      return `runKinds.${kind} has an unknown field`;
+    if (
+      run.differentProvider !== undefined &&
+      typeof run.differentProvider !== "boolean"
+    )
+      return "runKinds.review.differentProvider is not a boolean";
+  }
+  if (kinds.triage) {
+    for (const role of ["triage", "reporter", "grill", "owner"])
+      if (!configuration.labels?.[role]) return `triage needs labels.${role}`;
+    if (!configuration.triageResult) return "triage needs a triageResult";
+  }
+  return null;
+}
+
+test("the factory configuration is version 3 with Repo Canon's three run kinds", () => {
   const configuration = JSON.parse(
     readFileSync(join(root, ".factory/config.json"), "utf8"),
   );
-  const labels = Object.values(configuration.labels);
-  assert.ok(labels.every((label) => typeof label === "string" && label.trim()));
-  assert.equal(
-    new Set(labels.map((label) => label.toLowerCase())).size,
-    labels.length,
+  assert.equal(factoryConfigurationFailure(configuration), null);
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(configuration.runKinds).map(([kind, { skill }]) => [
+        kind,
+        skill,
+      ]),
+    ),
+    { triage: "triage", implement: "implement", review: "review" },
   );
-  assert.equal(Object.hasOwn(configuration, "prompt"), false);
-  assert.deepEqual(configuration, {
+  for (const skill of runKindNames)
+    assert.ok(existsSync(join(root, ".agents/skills", skill, "SKILL.md")));
+  assert.equal(configuration.runKinds.review.differentProvider, true);
+  assert.equal(
+    configuration.contractResult.author,
+    "github-actions[bot]",
+    "the issue-contract workflow posts the contract result",
+  );
+});
+
+test("the factory configuration check rejects version 2 and malformed version 3", () => {
+  const shipped = JSON.parse(
+    readFileSync(join(root, ".factory/config.json"), "utf8"),
+  );
+  const { runKinds, ...rest } = shipped;
+  const version2 = {
+    ...rest,
     version: 2,
-    labels: {
-      ready: "state:ready",
-      skip: "factory:skip",
-      hold: "factory:hold",
-      releaseHold: "factory:release-hold",
-      running: "factory:running",
-      failed: "factory:failed",
-      paused: "factory:paused",
-    },
-    modelLabelPrefix: "model:",
     skill: "implement",
     arguments: "#{issue}",
-    contractResult: {
-      marker: "repo-canon:issue-contract-state",
-      author: "github-actions[bot]",
+  };
+  const implementOnly = {
+    ...rest,
+    runKinds: { implement: runKinds.implement },
+  };
+  delete implementOnly.triageResult;
+  assert.equal(factoryConfigurationFailure(implementOnly), null);
+  for (const configuration of [
+    version2,
+    { ...version2, version: 3 },
+    { ...shipped, runKinds: { triage: runKinds.triage } },
+    {
+      ...shipped,
+      labels: { ...shipped.labels, needsInput: "factory:needs-input" },
     },
-  });
+    { ...shipped, labels: { ...shipped.labels, other: "State:Ready" } },
+    {
+      ...shipped,
+      runKinds: {
+        ...runKinds,
+        implement: { ...runKinds.implement, model: "claude-opus-5-5" },
+      },
+    },
+    {
+      ...shipped,
+      runKinds: { ...runKinds, review: { skill: "review", arguments: "" } },
+    },
+    { ...implementOnly, runKinds },
+  ])
+    assert.notEqual(
+      factoryConfigurationFailure(configuration),
+      null,
+      JSON.stringify(configuration),
+    );
 });
 
 test("this repository's toolchain Dockerfile has one stage and needs no build context", () => {

@@ -300,16 +300,22 @@ repeated.
   [ADR 0013](docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md)
   decides, and released from its own repository, as
   [ADR 0020](docs/adr/0020-release-the-factory-from-its-own-repository.md)
-  decides; every run is a direct run of one ticket, as
+  decides; every run works on one ticket, as
   [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md)
   decides. Repo Canon ships none of its code. A repository the factory serves
   selects the `factory` profile, which installs `.factory/config.json` as an
-  exact file: factory configuration version 2, naming Repo Canon's labels, the
-  `model:` label prefix, the `implement` skill with `#{issue}` arguments, and
-  the contract result's marker and trusted author, since the factory has no
-  default for any of them, as
+  exact file, since the factory has no default for any convention, as
   [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
-  decides. The profile installs the repository-wide
+  decides. Its configuration version 3 turns on the triage, implement and
+  review run kinds and maps each to the skill of the same name. The owner
+  chose these optional run kinds on 2026-11-03 and 2026-11-04 (plan 16, D1 to
+  D4; [#854](https://github.com/lutzseverino/repo-canon/issues/854)), with
+  Repo Canon's skills and rules owning what each run does and the factory
+  owning its mechanism, as the factory's
+  [ADR 0008](https://github.com/lutzseverino/scriptorium/blob/5e7ecf2593cd534cfb9050a7385dbda71b5102f9/docs/adr/0008-split-work-into-run-kinds-handed-off-by-the-host.md)
+  records. In the same session the owner decided that owner gates hold only
+  work only the owner can do, that no merge is manual, and that a taste call
+  goes to a grill rather than a gate (D7, D8). The profile installs the repository-wide
   [factory workflow rules](rules/factory-workflow.md), with intentionally empty
   confirmed content scope, so tracker work reads them even when it changes no
   file. The profile also installs the contextual `.factory/Dockerfile`,
@@ -318,7 +324,7 @@ repeated.
   pull request workflow that builds it. The factory workflow rules govern
   ownership of the labels named by the configuration; the canonical labels
   carry no `factory:` label and no `model:` label. The
-  [factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/main/docs/usage/README.md) describes its
+  [factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/5e7ecf2593cd534cfb9050a7385dbda71b5102f9/docs/usage/README.md) describes its
   behavior.
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the

@@ -1,6 +1,6 @@
 ---
 name: factory
-description: Hand ready tickets to the factory, resolve holds, deliver skipped or handed-off work, or pause and resume one repository.
+description: Hand ready tickets to the factory, resolve holds, resume stopped work, deliver skipped work, or pause and resume one repository.
 ---
 
 A prompt or brief naming this skill is its invocation.
@@ -42,16 +42,14 @@ rather than clearing a state label to see what happens:
 | Repository configuration refused | Ask the host operator to verify the serving release and configuration acceptance. Keep the issue's evidence available. |
 | Open blockers, capacity or usage drain | Resolve blockers or wait for the host's gate to clear; no label reset bypasses it. |
 | Repository or release hold | Find the labelled open items and use Pause and resume below. |
-| Running or paused | Read the factory notice; the factory owns the run and its automatic resumption. |
-| Needs input | Answer through the guide's owner-question route, posting as `.repo-standards/rules/comments.md#disclaimers` says. If the contract changes, wait for its revised notice, independent review and renewed readiness before continuation. |
-| Failed | Address the failure note first, then remove the failed label to request a retry subject to pickup gates. |
+| Running or paused | Read the run comment; the factory owns the run and its automatic resumption. |
+| A `state:` stop | Use Resume stopped work below. |
+| Failed | Address the failure the run comment names first, then remove the failed label to request a retry subject to pickup gates. |
 | Skip | Use the directly launched path below; clearing a waiting marker does not request a factory retry. |
 
-The run comment records actionable holds in place and marks cleared reasons
-resolved. Other gates may be log-only under the rules. If no comment explains a
-held issue, ask the host operator for its reason; a host with no cached valid
-configuration cannot comment on the issue. Keep credentials and secret
-host material out of tracker records.
+If no comment explains a held issue, ask the host operator for its reason; a
+host with no cached valid configuration cannot comment on the issue. Keep
+credentials and secret host material out of tracker records.
 
 ## Take the skip route
 
@@ -77,29 +75,18 @@ orchestrating agent that asked the maintainer for it, which records the workers
 using it. Workers never end it: it ends when the last of them reports back, or
 at its own time bound.
 
-## Finish a handed-off factory PR
+## Resume stopped work
 
-Check eligibility under the installed recovery rules: a non-skipped factory
-run stopped in a `state:` stop with its PR still open. A failed run is a retry
-path, not this handoff. Read the question, answer, accepted contract revision,
-reviews and handoff; resolve any required renewed readiness first.
-
-Take delivery ownership as the orchestrating agent while retaining that state,
-then invoke `babysit` at Branch-update recovery before requesting or waiting.
-In an owned checkout, preserve all work and review context, fetch origin and
-resolve its default branch, inspect outgoing commits per merge parent and the
-whole change, and rebase or replay only this issue's changes onto that base.
-Follow babysit's validation, publication, repeated review and one-attempt
-recovery method. Record the merge outcome on the PR as
-`.repo-standards/rules/comments.md#delivery-records` says. Uncertain ownership,
-conflicts, failed recovery, a second stale base or a permission refusal goes to
-the guide's owner handoff, posted as
-`.repo-standards/rules/comments.md#owner-questions` says.
-
-If factory resumption is chosen instead, return the issue to `state:ready` only
-after the question and any required renewed readiness are resolved. The factory resumes
-the same work and PR; no PR closure is needed. Deliver multiple handed-off PRs
-sequentially, refreshing the base separately for each.
+A run that stops on a question leaves its issue in the `state:` of whoever
+must answer, under the installed Questions and stops rule. Answer through the
+guide's owner-question route, posting as
+`.repo-standards/rules/comments.md#disclaimers` says. When the answer changes
+the contract, have it revised and wait for the revision's notice, independent
+review and renewed readiness. Then return the issue to `state:ready`: the
+factory resumes the same work and PR on a current base, reopening a closed PR
+rather than opening another. Never clear a label to request this, and never
+merge the stopped PR by hand. For skipped work, continue as Take the skip
+route says instead.
 
 ## Pause and resume one repository
 

@@ -156,14 +156,14 @@ async function mergeHolds(connection, revision, number) {
   if (
     !config ||
     Array.isArray(config) ||
-    ![1, 2].includes(config.version) ||
+    ![1, 2, 3].includes(config.version) ||
     (config.labels !== undefined &&
       (!config.labels ||
         typeof config.labels !== "object" ||
         Array.isArray(config.labels)))
   )
     throw new Error(
-      "Invalid .factory/config.json: expected version 1 or 2 and a labels object when present.",
+      "Invalid .factory/config.json: expected version 1, 2 or 3 and a labels object when present.",
     );
   const holds = new Map();
   for (const key of ["hold", "releaseHold"]) {
