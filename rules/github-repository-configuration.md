@@ -523,24 +523,28 @@ role. The `triage` role is the explicit authorization for a triaging agent. A
 check supplies no authority, and the issue-contract workflow removes readiness
 that an actor without one of these roles applied.
 
+The factory's own triage run is the one exception. Where `.factory/config.json`
+names the factory's triage result under `triageResult`, readiness its `author`
+account applies counts without a role when the current Agent Brief is the
+triage result that account posted, naming its run, and that run did not write
+the issue. Without that configuration, readiness comes only from the roles
+above.
+
 An orchestrating agent that accepts an Agent Brief applies its readiness only
 when the credentials it was given hold one of these roles, and only after the
 issue-contract workflow's revision notice for the brief revision it reviewed.
 With other credentials, or without that notice, it applies no readiness and
-leaves readiness to the owner. The run that wrote the brief never applies its
-readiness. Readiness it applies is bound to that revision like any other, so
-an edit to the brief removes it until the new revision is reviewed.
+leaves readiness to the owner. A research run that wrote the brief never
+applies its readiness; only the factory's triage run accepts a brief it wrote.
+Readiness it applies is bound to that revision like any other, so an edit to
+the brief removes it until the new revision is reviewed.
 
-Outside repositories governed by factory workflow rules, these roles authorize
-an orchestrating agent whose account is a person, bot or App alike. It applies
-readiness through triage's bundled `ready.mjs` and requires the validator's
-approval of that same account's event for the reviewed revision; its account's
-eligibility never authorizes manual labels that bypass this command or the
-validator. Where factory workflow rules are installed, their person-only
-eligibility also applies. The command establishes that boundary from the
-selected destination's installed `.repo-standards/rules/factory-workflow.md` at
-its default-branch commit, independently of the local checkout. A failed
-identity or applicability read authorizes no readiness writes.
+These roles authorize an orchestrating agent whose account is a person, bot or
+App alike. It applies readiness through triage's bundled `ready.mjs`, which
+reports the validator's verdict on that same account's event for the reviewed
+revision; its account's eligibility never authorizes manual labels that bypass
+this command or the validator. A failed identity read authorizes no readiness
+writes.
 
 ## Native blockers
 

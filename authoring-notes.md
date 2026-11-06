@@ -164,7 +164,7 @@ repeated.
   live in [`CONTRIBUTING.md`](CONTRIBUTING.md#triage), the readiness
   credentials in the
   [GitHub repository configuration rules](rules/github-repository-configuration.md),
-  and the model choice and person-only factory readiness in the
+  and the model choice and factory readiness in the
   [factory workflow rules](rules/factory-workflow.md). The method restates
   most of upstream's `triage` procedure, so the owned `triage` differs from its
   upstream base: its `CREDITS.md` names that base and what changed, and the

@@ -616,6 +616,38 @@ const silenced = async (t, run) => {
   await run();
 };
 
+test("shared examples: the factory's account applies readiness its triage result backs", async (t) => {
+  const factory = "factory[bot]";
+  const triageResult = { marker: "factory:run", author: factory };
+  for (const configured of [triageResult, null])
+    await t.test(configured ? "configured" : "not configured", (t) =>
+      silenced(t, async () => {
+        const world = contractWorld({
+          factory: true,
+          labels: ["type:enhancement", "state:triage", "model:x"],
+          triageResult: configured,
+        });
+        await briefed(
+          world,
+          `${completeAgentBrief}\n\n<!-- factory:run {"run":"triage-1"} -->`,
+          factory,
+        );
+        const { revision } = stateOf(world);
+        const result = await readiness(world, revision, factory);
+        const state = stateOf(world);
+        if (configured) {
+          assert.deepEqual(result, { code: 0 });
+          assert.equal(state.status, "approved");
+          assert.equal(state.reviewer, factory);
+        } else {
+          assert.match(result.error?.message ?? "", /not authorized/);
+          assert.equal(state.status, "awaiting-review");
+          assert.equal(world.issue.labels.includes("state:ready"), false);
+        }
+      }),
+    );
+});
+
 test("shared examples: the validator and the readiness command agree", async (t) => {
   await t.test(
     "the reviewed revision is approved for the command's label event",

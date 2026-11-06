@@ -80,17 +80,10 @@ model-label reason, never falling back to another model. The same hold applies
 to a relaunch whose recorded model is no longer listed. The host operator
 maintains the list; default and retry models alone do not define a catalog.
 
-The factory accepts readiness only from a person. In repositories governed by
-these rules, triage's bundled `ready.mjs` refuses GitHub App and bot accounts
-before any readiness write, even when their roles authorize review under the
-GitHub rules. The command checks the selected destination's installed rules,
-not an unrelated checkout. The orchestrating agent stops at acceptance and
-reports the reviewed brief and revision, suggested readiness, model and skip
-labels, and blockers to an authorized person, with links. The issue waits for
-that person's readiness; the agent never reports that factory work started.
-This person-only command refusal applies only where factory workflow rules
-are installed; elsewhere the generic readiness roles and revision-bound
-confirmation govern bot and App reviewers too.
+The factory starts work on readiness that a person applied, or that its own
+triage run applied as the GitHub rules' Readiness roles allow; readiness any
+other bot or App applies never starts a run, even when the validator approves
+it.
 
 ## State labels
 
