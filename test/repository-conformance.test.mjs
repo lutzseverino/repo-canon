@@ -260,6 +260,22 @@ test("the standard profile installs no factory file, and the factory profile add
         rules: "rules/factory-workflow.md",
         guidance: "guidance/factory-workflow.md",
         discovery: "discovery/factory-workflow.md",
+        checks: [
+          {
+            id: "factory-model-policy",
+            run: {
+              executable: "node",
+              script: "operations/check-factory-model-policy.mjs",
+              resources: ["operations/lib/factory-model-policy.mjs"],
+              arguments: [],
+            },
+            prerequisite: {
+              "version-arguments": ["--version"],
+              version: ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0",
+            },
+            "timeout-seconds": 30,
+          },
+        ],
       },
       {
         id: "factory-sandbox-image",
@@ -714,7 +730,7 @@ test("the factory configuration check rejects version 2 and malformed version 3"
     },
     {
       ...shipped,
-      runKinds: { ...runKinds, review: { skill: "review", arguments: "" } },
+      runKinds: { ...runKinds, review: { skill: "review", arguments: null } },
     },
     ...["triage", "review"].flatMap((kind) =>
       ["provider", "model", "effort"].map((field) => ({
