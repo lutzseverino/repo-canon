@@ -77,16 +77,12 @@ at its own time bound.
 
 ## Resume stopped work
 
-A run that stops on a question leaves its issue in the `state:` of whoever
-must answer, under the installed Questions and stops rule. Answer through the
-guide's owner-question route, posting as
-`.repo-standards/rules/comments.md#disclaimers` says. When the answer changes
-the contract, have it revised and wait for the revision's notice, independent
-review and renewed readiness. Then return the issue to `state:ready`: the
-factory resumes the same work and PR on a current base, reopening a closed PR
-rather than opening another. Never clear a label to request this, and never
-merge the stopped PR by hand. For skipped work, continue as Take the skip
-route says instead.
+Answer the question through the guide's owner-question route, posting as
+`.repo-standards/rules/comments.md#disclaimers` says, and meet the installed
+Questions and stops rule's conditions for a changed contract. Then return the
+issue to `state:ready`, which is the only way to resume it: never clear another
+label for it, and never merge the stopped PR by hand. For skipped work,
+continue as Take the skip route says instead.
 
 ## Pause and resume one repository
 

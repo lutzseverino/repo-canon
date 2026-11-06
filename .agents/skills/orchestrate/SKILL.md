@@ -17,7 +17,7 @@ and delivery: its Triage, Readiness, Owner questions, Findings and Pull requests
 sections, and the installed comment rules what you post. This skill carries
 those rules across a plan; the installed `triage` skill triages one request.
 Where a factory serves, its installed `factory` skill hands it tickets and
-delivers held, skipped or handed-off work.
+delivers held, stopped or skipped work.
 
 Read [templates](references/templates.md) before you write a workbench file,
 [launches](references/launches.md) before you launch, take over, hand over,

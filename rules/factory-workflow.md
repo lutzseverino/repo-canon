@@ -28,8 +28,8 @@ provider, model and effort the configuration names for them; implement runs on
 the issue's `model:` label, as Model selection says. The review's
 `differentProvider` switch asks for a provider other than the one that
 implemented the change, where the host has one. No configuration changes the
-rest: triage runs read-only, only review merges, and each run ends with a run
-result that the factory posts and turns into labels.
+rest: triage runs read-only, review is the only run kind that merges, and each
+run ends with a run result that the factory posts and turns into labels.
 
 ## Handoffs
 
@@ -159,9 +159,11 @@ GitHub rules' Labels section says.
 An owner gate holds work only for what the owner alone can do: a credential or
 grant only the owner holds, a blocker the owner tracks, or a `gate:` label. The
 owner, or a grill at the owner's request, sets a `gate:` label before the work;
-triage never sets one. A taste call in copy, UI or look is the owner's intent,
-which a grill settles before the work under the contribution guide's Triage
-section, never a gate.
+triage never sets one. A contract that designates owner review under the
+`github-repository-configuration` rules' Designated owner review section gets
+`gate:owner-review` with its readiness. A taste call in copy, UI or look is
+the owner's intent, which a grill settles before the work under the
+contribution guide's Triage section, never a gate.
 
 A `gate:` label on a pull request or its issue stops its review at
 ready-to-merge: the pull request is ready for review with its current head

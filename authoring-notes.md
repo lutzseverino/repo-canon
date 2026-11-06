@@ -313,9 +313,8 @@ repeated.
   Repo Canon's skills and rules owning what each run does and the factory
   owning its mechanism, as the factory's
   [ADR 0008](https://github.com/lutzseverino/scriptorium/blob/5e7ecf2593cd534cfb9050a7385dbda71b5102f9/docs/adr/0008-split-work-into-run-kinds-handed-off-by-the-host.md)
-  records. In the same session the owner decided that owner gates hold only
-  work only the owner can do, that no merge is manual, and that a taste call
-  goes to a grill rather than a gate (D7, D8). The profile installs the repository-wide
+  records. The [factory workflow rules](rules/factory-workflow.md) state the
+  gates the owner chose in the same session (D7, D8). The profile installs the repository-wide
   [factory workflow rules](rules/factory-workflow.md), with intentionally empty
   confirmed content scope, so tracker work reads them even when it changes no
   file. The profile also installs the contextual `.factory/Dockerfile`,
