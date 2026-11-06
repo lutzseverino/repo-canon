@@ -186,8 +186,8 @@ invocation, without a fallback to proposed or local files.
 Run `node --test test/triage-ready.test.mjs` for the triage readiness command's
 revision, account, label, validator-event and parent-link fixtures, including
 its installed layout without npm. These cover person, Bot and App accounts
-across standard and factory destinations, whose readiness the validator's
-verdict alone decides, identity and factory configuration read failures, and
+across standard and factory destinations, whose readiness the command leaves
+to the validator's verdict, identity and factory configuration read failures, and
 exact approval association. They also cover effective factory model-label
 cardinality under the configured prefix, reuse of a matching issue label,
 missing repository-label creation with shared metadata, preservation of

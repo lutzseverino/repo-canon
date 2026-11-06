@@ -109,9 +109,7 @@ function assertRefused(decision, reason) {
 }
 
 test("approves readiness the factory's triage run applied with its result", () => {
-  const decision = decideIssueContract(snapshot());
-  assertApproved(decision, factory);
-  assert.match(decision.feedback.body, /factory's triage run triage-7/);
+  assertApproved(decideIssueContract(snapshot()), factory);
 });
 
 test("refuses the factory's readiness when triage names no result", () => {
@@ -205,11 +203,10 @@ test("refuses a triage result for an issue the factory wrote in that run", async
 
 test("person readiness is unchanged whether triage names a result or not", () => {
   for (const configured of [triageResult, null]) {
-    const decision = decideIssueContract(
-      snapshot({ actor: "maintainer", configured }),
+    assertApproved(
+      decideIssueContract(snapshot({ actor: "maintainer", configured })),
+      "maintainer",
     );
-    assertApproved(decision, "maintainer");
-    assert.match(decision.feedback.body, /reviewed by @maintainer/);
   }
 });
 

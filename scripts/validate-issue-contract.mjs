@@ -1208,7 +1208,7 @@ function supersedingDeletedBrief(currentEvent, result) {
     : null;
 }
 
-// Readiness the factory's triage run applied (ADR 0030). It counts when the
+// Readiness the factory's triage run applied. It counts when the
 // current contract is the Agent Brief the factory's account posted as that
 // run's triage result, which names the run on exactly one marked line, and the
 // run did not write the issue. An issue the factory's account opened names the

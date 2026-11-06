@@ -83,7 +83,9 @@ maintains the list; default and retry models alone do not define a catalog.
 The factory starts work on readiness that a person applied, or that its own
 triage run applied as the GitHub rules' Readiness roles allow; readiness any
 other bot or App applies never starts a run, even when the validator approves
-it.
+it. An orchestrating agent working through such an account applies no
+readiness there: it stops at acceptance, as the `triage` skill describes, and
+never reports that factory work started.
 
 ## State labels
 
