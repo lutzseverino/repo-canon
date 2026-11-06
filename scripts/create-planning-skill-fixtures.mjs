@@ -44,6 +44,7 @@ const skillNames = [
 ];
 const linkedSkillNames = [
   ...skillNames,
+  "babysit",
   "code-review",
   "domain-modeling",
   "grilling",
@@ -900,10 +901,11 @@ Signer names with accents, such as José, come out garbled in the CSV export. Pl
 {
   const root = createRepository(
     "delivery",
-    ["implement", "pr", "tdd", "prototype"],
+    ["implement", "pr", "tdd", "prototype", "babysit"],
     {
+      profile: "factory",
       exercise:
-        "## Task\n\nUse implement on .scratch/delivery/issues/01-prioritize-parcels.md at the agreed scheduleDelivery seam. Use pr and docs/pr-evidence.md for the local draft PR body. Simulate opening the draft PR as .scratch/delivery/pr.md, recording its draft state, branch and full head SHA, then stop. The operator may resume implement with review findings on that same local PR; push is simulated locally. Exercise prototype separately on docs/prototype-question.md on a throwaway branch.\n\n## Expected outcome\n\nDelivery tests pass with stable urgent-first ordering and unchanged input. The local PR draft records before/after evidence and merge danger, draft state and the validated head. Implement performs no self-review, ready transition, babysit or merge. On hand-back it fixes the findings on the same branch and PR, validates the new head and stops again with the PR still a draft. The prototype exposes the three states and cancellation cases. Rule lookup uses the standard profile; no branch, issue or PR is published.\n",
+        "## Task\n\nUse implement on .scratch/delivery/issues/01-prioritize-parcels.md at the agreed scheduleDelivery seam. Use pr and docs/pr-evidence.md for the local draft PR body. Simulate opening the draft PR as .scratch/delivery/pr.md, recording its draft state, branch and full head SHA, then stop. The operator may resume implement with review findings on that same local PR; push is simulated locally. Exercise prototype separately on docs/prototype-question.md on a throwaway branch.\n\n## Expected outcome\n\nDelivery tests pass with stable urgent-first ordering and unchanged input. The local PR draft records before/after evidence and merge danger, draft state and the validated head. Implement performs no self-review, ready transition, babysit or merge. On hand-back it fixes the findings on the same branch and PR, validates the new head and stops again with the PR still a draft. The prototype exposes the three states and cancellation cases. Rule lookup uses the factory profile. After the draft and hand-back paths, the operator removes runKinds.review from .factory/config.json and resumes implement on the same simulated PR. Observe it invoking babysit for delivery under the installed rules instead of stopping at the draft; all hosting operations, checks, reviews and merge are simulated in local artifacts. Never contact remote services. No branch, issue or PR is published.\n",
       agents:
         "# Agent guidance\n\nRead the native ticket, glossary, and development commands. Use tests at the public `scheduleDelivery()` seam. Prototype work stays on a throwaway branch.\n",
       context:
@@ -997,9 +999,14 @@ This is a disposable local fixture.
 Write the simulated draft PR at .scratch/delivery/pr.md after implementing the ticket. Use pr for its body; record draft state, branch and validated full head SHA beside the body. No remote pull request is opened. Before: the urgent-Parcels test fails because a standard Parcel is ordered ahead of urgent Parcels. After: npm test passes with input preserved and submission order stable. Use a minimal visual summary and describe the reversible ordering fix's merge danger.
 `,
   );
+  mkdirSync(join(root, ".factory"), { recursive: true });
+  cpSync(
+    join(sourceRoot, ".factory/config.json"),
+    join(root, ".factory/config.json"),
+  );
   repositories.delivery = {
     path: root,
-    skills: ["implement", "pr", "prototype"],
+    skills: ["implement", "pr", "babysit", "prototype"],
     initial: commit(root, "chore: establish delivery exercises"),
   };
 }

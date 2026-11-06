@@ -52,6 +52,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "24fe0ef7737efae15c87225755e9f6f5965e4888",
   );
   assert.deepEqual(Object.keys(manifest.source.linkedSkillDirectories).sort(), [
+    "babysit",
     "code-review",
     "domain-modeling",
     "factory",
@@ -111,6 +112,12 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
 
   assert.ok(deliveryScenario.skills.includes("implement"));
   assert.ok(deliveryScenario.skills.includes("pr"));
+  assert.ok(deliveryScenario.skills.includes("babysit"));
+  const deliveryConfiguration = JSON.parse(
+    readFileSync(join(deliveryScenario.path, ".factory/config.json"), "utf8"),
+  );
+  assert.ok(deliveryConfiguration.runKinds.implement);
+  assert.ok(deliveryConfiguration.runKinds.review);
   for (const repository of Object.values(manifest.repositories)) {
     const factory = [
       manifest.repositories["factory-planning"],
@@ -118,6 +125,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       manifest.repositories["triage-routing"],
       manifest.repositories.orchestrate,
       manifest.repositories["host-grant"],
+      manifest.repositories.delivery,
     ].includes(repository);
     assert.equal(repository.profile, factory ? "factory" : "standard");
     const lookup = execFileSync(
