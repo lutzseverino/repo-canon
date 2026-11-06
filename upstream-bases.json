@@ -62,6 +62,7 @@
       "path": "skills/engineering/research",
       "edits": "Its description covers assigned artifacts and delegated triage research. The current run performs the investigation directly, including when delegated, instead of starting another background researcher. It publishes an assigned artifact at its destination with source citations; an issue artifact needs no repository findings file or index edit. Without an assigned artifact, it defaults to a single Markdown findings file where the repository's documentation rules or convention put such notes, such as beside the usage or development topic they serve, and adds it to that directory's index, creating it when those rules require one. It retains the missing-rules placement fallback. An issue or pull request artifact is posted as the installed comment rules' section it names says."
     },
+    "review": null,
     "tdd": {
       "path": "skills/engineering/tdd",
       "edits": null

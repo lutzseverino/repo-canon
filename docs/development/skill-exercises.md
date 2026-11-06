@@ -5,10 +5,12 @@ against disposable local Git repositories. Run it when a release changes a
 skill, as the [release procedure](release.md#when-selected-bytes-change)
 requires, and after an upstream reconciliation, for the changed skills. Three
 builders create the repositories: one each for the engineering, productivity,
-and planning skills, which together cover every owned skill except `babysit`.
-Repo Canon's own `babysit` skill acts on a live pull request, so no builder covers it; exercise
-it on a pull request in a disposable GitHub repository. Its wait script has
-its own fixtures, which the [development guide](README.md) names.
+and planning skills, which together cover every owned skill except `babysit`
+and `review`. Repo Canon's own `babysit` and `review` skills act on a live pull
+request, so no builder covers them; exercise them on pull requests in a
+disposable GitHub repository, as [Review](#review) describes for `review`.
+Their scripts have their own fixtures, which the
+[development guide](README.md) names.
 
 Building and testing the fixtures is a prerequisite, not an exercise. An
 exercise is an agent session that invokes the skill in a fixture repository
@@ -450,3 +452,43 @@ report the session ends the grant, tells the maintainer, logs its end and
 removes the row. Each ticket closes only on its recorded live acceptance, never
 on the merge. Report both orders' observed outcomes, session references and
 workbench commits with the pull request that needs them.
+
+## Review
+
+Exercise `review` in a disposable GitHub repository that adopts the candidate
+checkout's standard profile, with a required check, no reviewer file and the
+candidate `review`, `code-review`, `babysit` and `implement` skills. The
+operator authorizes that repository for the exercise; no other repository is
+touched. For each scenario, the operator opens one issue with an
+implementation contract and one draft pull request implementing it, as an
+implementing agent would, then starts a fresh review session that never saw
+the implementation, naming the pull request.
+
+Run five scenarios. The fourth continues the third's issue and pull request;
+the others each have their own:
+
+1. **Clean.** The change meets its contract and the standards. Observe one
+   review with no open finding, the pull request marked ready, `babysit`'s
+   wait and the merge.
+2. **Small fix.** The change carries one small defect, such as a wrong error
+   message the contract states. Observe the fix pushed to the same pull
+   request, the checks passing on the new head, one review of that head naming
+   the fix under `Fixed`, and the merge.
+3. **Hand-back.** The change misses an acceptance criterion. Observe one review
+   listing the finding with its file and line, the pull request left a draft,
+   and the run ending with a hand-back. Relaunch `implement` on the same pull
+   request with that review as its input.
+4. **Second failed round.** After the hand-back, the operator pushes a head
+   that still misses the criterion. Observe the second round's one review and
+   the run ending as failed, with the pull request a draft and its reason.
+5. **Gate.** The operator creates `gate:owner-review` and applies it to the
+   issue before the review. Observe one review, the
+   pull request marked ready, checks passed, the issue moved to `state:owner`
+   and no merge. The operator removes the gate and starts a fresh session,
+   which posts no second review of the unchanged head and merges.
+
+In every scenario, check each round's review against the comment rules'
+Reviews section and count exactly one review per reviewed head. Report the
+pull request links, heads, review links and observed outcomes with the pull
+request that needs the exercise, and delete the disposable repository
+afterwards.

@@ -109,7 +109,12 @@ with these colors and descriptions:
 | `factory:hold`         | `c5def5` | Pause factory pickups and other merges in this repository  |
 
 Standard-profile setup provisions none of them. A `gate:` label is set before
-the work, by the owner or by a grill at the owner's request. Only the factory
+the work, by the owner or by a grill at the owner's request. A `gate:` label on
+a pull request or its issue stops its review at ready-to-merge: the pull
+request is ready for review with its current head reviewed and its checks
+passed, its issue waits in `state:owner`, and nothing merges it until the owner
+removes the gate. A later review then merges it without reviewing an unchanged
+head again. Only the factory
 sets `factory:running`, `factory:paused` and `factory:failed`, using the
 corresponding roles in `.factory/config.json`, and it creates any of them that
 is missing itself. The skip and hold labels follow the sections below.
@@ -336,12 +341,11 @@ factory resumption. Returning to `state:ready` requests factory resumption, not
 orchestrator delivery. Handing the PR to the owner does not itself request
 factory resumption; keep the stop's workflow state.
 
-Rebase onto the current default branch in a checkout it owns, never through
-GitHub update-branch. Revalidate the integrated change and repeat applicable
-internal and external review and designated current-head owner approval, under
-the contribution guide and review rules, then use babysit's merge step. One
-recovery attempt is allowed; a failed recovery or a further stale-base result
-hands the still-unmerged PR to the owner with its failure reason. Pending or
+Rebase onto the current default branch in a checkout it owns. Revalidate the
+integrated change and repeat applicable internal and external review and
+designated current-head owner approval, under the contribution guide and review
+rules, then use babysit's merge step. The `github-repository-configuration`
+rules' Required-check freshness section bounds this branch update. Pending or
 failed checks permit no merge; obsolete-head checks and approval never qualify
 a replacement head. The supplied-credential restrictions still apply: a
 permission refusal ends the attempt without another push or identity switch.

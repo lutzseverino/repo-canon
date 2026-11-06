@@ -76,8 +76,10 @@ one only when it needs code facts the grill did not gather.
 
 A grilling session changing a repository's glossary or ADRs works on its own
 branch in a checkout it owns (a worktree or fresh clone), never in a shared
-checkout on the default branch. Each repository whose domain documents change
-gets one pull request through its normal review and merge. The grill's decision
+checkout on the default branch. The grill opens one draft pull request per
+repository whose domain documents change, and stops; the `review` skill
+delivers it, run by the orchestrating agent unless a factory reviews it. The
+grill's decision
 record and draft briefs stay in the workbench, committed directly to its default
 branch.
 

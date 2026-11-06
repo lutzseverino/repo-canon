@@ -209,6 +209,16 @@ wait; the command has no invocation timeout. It reads the validator's published
 result through the validator's own reader. Run
 `node --test test/issue-contract-result.test.mjs` for that result's format,
 rules and the examples that the validator and the command both run.
+Run `node --test test/review-round.test.mjs` for the `review` skill's round
+command: rounds counted by head from the running account's standing reviews
+only, owner gates on the pull request, its closing issues and named issues,
+posting only one review of the current head per account, and the `held`
+fact: the running account's latest review, including an App installation's,
+is a holding review of the current head. That fact alone resumes delivery or
+lets a draft be marked ready. The tests run against an injected fetch transport and from the
+installed layout.
+`test/babysit-merge.test.mjs` also checks that the review it posts is the
+internal review record merge accepts for an app-authored pull request.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message
 and head-change retry behavior against the same Postern transport fixture,
 including independent trusted-policy selection and the current-head internal
@@ -339,7 +349,7 @@ already runs the suite on every pull request.
   validation boundary.
 - [Skill exercises](skill-exercises.md): the procedure, fixture builders,
   common harness, and scenarios for exercising the owned workflow skills,
-  including `triage` and `babysit`.
+  including `triage`, `babysit` and `review`.
 - [TypeScript web stack checks](typescript-web-stack-check.md): manifest and
   shadcn holder checks and their assessment boundary.
 - [TypeScript web stack scope drafters](typescript-web-stack-scope-drafter.md):

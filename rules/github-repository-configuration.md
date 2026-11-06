@@ -109,7 +109,13 @@ or replay only its changes onto the refreshed default branch, and repeat
 required checks and applicable internal and external review on the replacement
 head. Checks from the old head never qualify the replacement. GitHub remains
 the final guard wherever enforcement is available; the plan-limited path repeats
-its final verification with the accepted race. Bound recovery as babysit directs.
+its final verification with the accepted race.
+
+Each delivery attempt, such as one `babysit` invocation, gets one branch
+update. Never merge the default branch into the PR branch, and never use
+GitHub's update-branch. A failed branch update, or a stale base again after it,
+leaves the PR unmerged and requires the contribution guide's owner handoff with
+its reason; it never starts another update.
 
 ## Designated owner review
 
@@ -348,6 +354,34 @@ Policy-skipped pull requests require both reviews before merge. Nonmatching
 and absent-policy pull requests retain their existing applicable internal-review
 workflow and optionality in both profiles; this definition adds no blanket
 review requirement. A policy skip supplies neither internal nor external approval.
+
+## Review of an implemented pull request
+
+An implemented pull request reaches its merge through a review by an agent
+that wrote none of its change, with the installed `review` skill. Each round
+reviews one head with the [internal reviews](#internal-standards-and-spec-reviews),
+whose Spec axis also reads the implementation contract against its issue, and
+leaves exactly one review of that head as the `comments` rules' Reviews section
+describes. A pull request without an issue is reviewed against its
+decision-bearing body.
+
+A round fixes small findings on the pull request and revalidates. A larger
+finding (a wrong approach, a missing acceptance criterion or a large rework)
+hands the work back to implementation on the same pull request, with the
+round's review as its input; whoever ran the review relaunches it. When a later
+round still has a larger finding, the review stops without converging and
+reports why, with the pull request left a draft. A wrong or ambiguous contract
+moves the issue to `state:grill` under the contribution guide's Triage section.
+A round left with no open finding holds: the pull request is marked ready for
+review and delivered under the contribution guide's Merging section. A
+round's review lists only its open findings: fixes go under `Fixed`, and a
+declined finding is answered in its review thread. Only the reviewing
+account's standing reviews, submitted on the head they name and not
+dismissed, record its rounds; another account's review never counts as one. Delivery resumes, including after an
+interruption, only while that account's latest review is a holding review of
+the current head. Where
+factory workflow rules are installed, they say how an owner gate stops that
+delivery.
 
 ## Factory app-author review policy
 

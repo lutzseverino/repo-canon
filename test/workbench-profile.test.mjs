@@ -39,6 +39,7 @@ const skills = [
   "pr",
   "prototype",
   "research",
+  "review",
   "tdd",
   "to-spec",
   "to-tickets",
@@ -144,8 +145,8 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
     }
   }
   // The other profiles keep their resolved declarations.
-  assert.equal(validation.profiles.standard.declarations.length, 61);
-  assert.equal(validation.profiles.factory.declarations.length, 66);
+  assert.equal(validation.profiles.standard.declarations.length, 62);
+  assert.equal(validation.profiles.factory.declarations.length, 67);
 
   const { source, env, git, publish } = fixtureSource(directory, validation);
   git(source, "-c", "tag.gpgsign=false", "tag", "v1.0.0");

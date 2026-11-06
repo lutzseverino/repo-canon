@@ -19,8 +19,8 @@ and outstanding findings into the steps below.
 On resuming a PR paused for an owner question, follow the installed continuation
 rules before returning to the request and wait steps.
 When installed rules authorize delivery of a stopped run's open PR, enter
-Branch-update recovery before the request and wait steps. This consumes the
-invocation's one recovery attempt. Carry the handoff's context and follow those
+Branch-update recovery before the request and wait steps. This uses the
+invocation's branch update. Carry the handoff's context and follow those
 rules for retaining its waiting marker and recording the merge outcome.
 
 The bundled scripts require Node.js 24 or 26. The request and wait read the optional
@@ -126,8 +126,9 @@ body was checked. Link-free bodies need no reconstruction.
    and needs the owner, so hand off with a question as
    `.repo-standards/rules/comments.md#owner-questions` says, without retrying
    the merge;
-   `4` means the base is stale: follow Branch-update recovery only if its one
-   attempt is unused; otherwise record the owner handoff and stop;
+   `4` means the base is stale: follow Branch-update recovery if this
+   invocation has not used its branch update; otherwise record the owner
+   handoff and stop;
    `5` means the current-head policy-skip review is missing or incomplete:
    complete both internal reviews, post the review
    `.repo-standards/rules/comments.md#reviews` describes, using the wait's
@@ -176,15 +177,14 @@ they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
 enforcement remains required wherever available. Exit `4` reports a stale base, separately from a changed
 PR head or an owner-only failure; no merge succeeded.
 
-Allow one branch-update recovery per babysit invocation. Preserve committed,
+The `github-repository-configuration` rules' Required-check freshness section
+bounds this recovery and says what it never does. Preserve committed,
 staged, unstaged and untracked work and the PR's review and handoff context
 before changing history. Fetch origin, resolve its remote default branch again,
 and inspect outgoing history (including each merge parent) and the whole diff.
 Rebase or replay only this PR's work onto the refreshed base; keep unrelated
-work preserved separately. Never merge the default branch into the PR branch.
-Never use GitHub update-branch. Uncertain ownership or reconstruction conflicts
-require the owner handoff. For an authorized stopped-run handoff, any failed
-recovery step requires the owner handoff with its failure reason.
+work preserved separately. Uncertain ownership or reconstruction conflicts
+require the owner handoff.
 
 Validate the integrated change with the repository's required local checks;
 wait for their final successful status before pushing with an explicit lease
@@ -197,8 +197,7 @@ For the replacement head, repeat applicable internal reviews and owner approval,
 then run request and wait again from step 1, applying the trusted app-author
 policy anew. Pending or failed checks on that head permit no merge; checks from
 the old head never qualify it. Re-establish merge ownership before step 5.
-If another merge attempt reports stale base, record the owner handoff and stop;
-this is not an unbounded update/retry loop. For several waiting PRs, finish each
+For several waiting PRs, finish each
 delivery before starting the next and refresh its base independently.
 
 For exit `7` from either command, follow correction and authorized continuation
