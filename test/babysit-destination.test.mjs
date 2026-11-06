@@ -161,9 +161,7 @@ process.exit(result.status ?? 1);
      catch (error) { console.error(error.message); process.exitCode = 1; }`,
       "--",
       "12",
-      ...(entry === "ready"
-        ? ["ready-for-agent", `sha256:${"a".repeat(64)}`]
-        : []),
+      ...(entry === "ready" ? [`sha256:${"a".repeat(64)}`] : []),
       ...(entry === "merge" ? [head] : []),
       ...(entry === "wait" ? ["--limit", "1", "--interval", "0.01"] : []),
       ...(explicit ? ["--repo", explicit] : []),

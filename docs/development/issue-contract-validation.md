@@ -13,10 +13,9 @@ comment Markdown only as data.
 
 The adapter fetches the issue itself before reading its discussion, timeline,
 relationships, edit revision, or actor roles. If that fetched issue is closed,
-it removes `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`
-and every `factory:*` label, then skips validation with exit status 0.
-It preserves `wontfix` as the closure outcome, category, `model:*`, unrelated
-labels and the feedback comment. An already-clean issue causes no writes.
+it removes every `state:*`, `gate:*` and `factory:*` label, then skips
+validation with exit status 0. It preserves `wontfix` as the closure outcome,
+`type:*`, `priority:*`, `model:*`, unrelated labels and the feedback comment. An already-clean issue causes no writes.
 Discussion, timeline, relationships, edit revision, and roles are not fetched.
 This applies to every issue kind, Wayfinder included, and every close reason.
 The fetched state decides this path whatever the trigger, even when the
@@ -95,8 +94,9 @@ contracts. Parse5's fragment handling continues to expose text from a bare
 evidence, while image alt text does not establish a relationship. These retain
 the issue-specific edge behavior.
 
-Triaged bug and feature requests must carry exactly one category (`bug` or
-`enhancement`); the validator settles their workflow state, as described under
+Triaged bug and feature requests must carry exactly one category label
+(`type:bug` or `type:enhancement`), matching their Agent Brief's `bug` or
+`enhancement` Category; the validator settles their workflow state, as described under
 [workflow state](#workflow-state). Direct specifications and implementation
 tickets do not need intake categories or an Agent Brief. Wayfinder planning
 labels remain separate from intake labels.
@@ -271,13 +271,8 @@ recorded review.
 
 GitHub can deliver a `labeled` webhook before its issue-event timeline records
 that label event. A human readiness trigger is a `labeled` event for
-`ready-for-agent` or `ready-for-human` by a sender other than
-`github-actions[bot]`. It is checked against the readiness label its re-fetched
-issue carries: its own label when present, and otherwise the other readiness
-label. A sender who swaps one readiness label for the other leaves the trigger's
-own label gone, and the label the issue carries is the one a lagging timeline
-could attribute to another reviewer. When the issue carries both, the trigger's
-own label is checked, and the decision rejects the two labels. The timeline
+`state:ready` by a sender other than `github-actions[bot]`, while its
+re-fetched issue still carries the label. The timeline
 records the trigger only when the checked label's latest recorded application,
 by anyone, was made by that sender and is that label's latest recorded change.
 A trigger is therefore never decided from another person's application. While
@@ -413,8 +408,8 @@ Wayfinder maps and children reject readiness labels because their native
 eligibility uses open state, assignment, and blockers instead of the readiness
 workflow, and the validator never adds a workflow state to them.
 
-On open issues, incomplete, edited, replaced, stale, unauthorized, or
-multiply-ready contracts lose `ready-for-agent` and `ready-for-human`.
+On open issues, incomplete, edited, replaced, stale, or unauthorized contracts
+lose `state:ready`.
 Corrections update the same comment with a new revision and require fresh
 review. Structural success never grants readiness, and the validator never
 starts work; the factory picks up ready issues. Reopening an issue whose contract
@@ -437,7 +432,9 @@ supported issue or comment event.
 ### Workflow state
 
 Every run on an open issue that uses workflow state works out the one workflow
-state label the issue should carry and removes the others. Intake forms, triaged
+state label the issue should carry and removes the others: a `state:` label,
+of which only `state:ready` is readiness, or the closing `wontfix` in its
+place. Intake forms, triaged
 requests, direct specifications and tickets, and unrecognized issues all use
 workflow states. Wayfinder maps and children, including ones that fail structure,
 never gain a workflow state. Pull requests remain ignored. The number of
@@ -448,13 +445,13 @@ workflow states is never a structural error.
   non-readiness state labeled before its review in the event timeline, or
   applied with the issue at creation, such as a form label, is removed. A label
   applied at creation is one the issue was opened with or whose application
-  carries the issue's creation timestamp. The validator's own `needs-triage`
+  carries the issue's creation timestamp. The validator's own `state:triage`
   application (actor `github-actions[bot]`) is a fallback for a stateless issue
   and never supersedes this readiness: it is removed even when the timeline
   records it after the review. This also handles an opening run that read a
   bare snapshot and wrote its fallback after an authorized creation review.
 - A non-readiness state applied after the review supersedes it, whatever its
-  timestamp, except for the validator's own `needs-triage` fallback: the validator
+  timestamp, except for the validator's own `state:triage` fallback: the validator
   keeps the latest such state, removes readiness and every other state, and publishes the readiness-removed notice naming that state. A carried
   state whose application the timeline has not recorded counts as later than
   every recorded event only when its latest recorded change is a removal or
@@ -465,14 +462,14 @@ workflow states is never a structural error.
 - Among non-readiness states, the one applied latest in the timeline stays.
   Several whose applications the timeline has not recorded cannot be ordered,
   so they all stay until a later run reads a timeline that orders them.
-- An open issue left with no workflow state gets `needs-triage`, whether or not
+- An open issue left with no workflow state gets `state:triage`, whether or not
   it has carried one before, on any trigger. Opening and reopening a bare issue
   therefore need no special case. The run keeps the recorded review state,
   so its rewritten result records the same decision and readiness applied
-  afterwards at the same revision is decided as if `needs-triage` had never been
+  afterwards at the same revision is decided as if `state:triage` had never been
   removed. Removing readiness, or losing it to invalidation, therefore returns a
   contract, or an unrecognized issue such as a contract edited until no contract
-  heading remains, to `needs-triage` unless another non-readiness state remains.
+  heading remains, to `state:triage` unless another non-readiness state remains.
 
 One lagging case is accepted as recorded, for workflow state. A state label
 removed and reapplied while the timeline records neither change is ordered at
@@ -480,7 +477,7 @@ its earlier recorded application. Settlement can then remove the reapplied
 label in favor of another carried state, or order it before a review. This
 needs two workflow states carried at once and a removal and reapplication
 inside the timeline's lag. An issue normally carries one state; two can coexist
-before a run settles a new label, or when the validator restores `needs-triage`
+before a run settles a new label, or when the validator restores `state:triage`
 during a removal and reapplication. A `labeled` payload carries no issue-event
 ID, and the payload's issue update time is not used to match recorded events,
 as explained above. The run therefore cannot distinguish an older recorded
@@ -617,7 +614,7 @@ listing, then fetches each issue again. Issues reopened since listing stay
 untouched. Closed issues use `decideIssueContract`'s same cleanup decision as the
 live workflow; already-clean issues cause no writes, and repeat execution is
 safe. Reopening restores none of the removed labels; normal open-issue
-validation can add `needs-triage`. The sweep never rewrites feedback or adds
+validation can add `state:triage`. The sweep never rewrites feedback or adds
 labels. Like live handling, its writes follow the fetched state; a later
 concurrent reopening is outside that snapshot.
 

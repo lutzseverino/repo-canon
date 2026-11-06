@@ -300,11 +300,11 @@ Act as the orchestrating agent using triage on .scratch/triage/01-export-receipt
 
 ### 1. Initial handoff
 
-Read only the intake and repository guidance. A separate research session gathers facts without writing a brief. The export is intent-bound: public CSV headers, invocation interface and receipt source are undecided. Record all three questions and recommendations in the local decision inbox, routed through the orchestrating agent. Observe needs-info with no brief or readiness before answers arrive. No public CSV/API/source choice is inferred or disguised as an implementation choice.
+Read only the intake and repository guidance. A separate research session gathers facts without writing a brief. The export is intent-bound: public CSV headers, invocation interface and receipt source are undecided. Record all three questions and recommendations in the local decision inbox, routed through the orchestrating agent. Observe state:owner with no brief or readiness before answers arrive. No public CSV/API/source choice is inferred or disguised as an implementation choice.
 
 ### 2. Controlled answers and draft
 
-Only after that handoff does the operator relay .scratch/triage/owner-inputs.md to a separate grill. The grill records the simulated decisions with their date and source and drafts the Agent Brief, filing nothing and applying no readiness. Post the draft and its decision citations locally, with triage notes after the brief. Return needs-info to needs-triage once the questions are settled.
+Only after that handoff does the operator relay .scratch/triage/owner-inputs.md to a separate grill. The grill records the simulated decisions with their date and source and drafts the Agent Brief, filing nothing and applying no readiness. Post the draft and its decision citations locally, with triage notes after the brief. Return state:owner to state:triage once the questions are settled.
 
 ### 3. First notice and independent review
 
@@ -339,7 +339,7 @@ The Wayfinder run selects child 02; child 03 remains blocked. Maps and children 
     ".scratch/triage/01-export-receipts.md",
     `# Export Delivery receipts
 
-Status: needs-triage
+Status: state:triage
 Category: enhancement
 
 ## Request
@@ -461,12 +461,12 @@ The parent requires no model and never runs. Parent readiness in the same second
   write(
     root,
     ".scratch/receipts/issues/01-export-receipts.md",
-    "# Export Delivery receipts\n\nStatus: needs-triage\nCategory: enhancement\nParent: ../spec.md\nBlocked by: None\n\n## Request\n\nExport parcel reference, delivered timestamp and signer name as CSV for one UTC date. Sort by Parcel reference; timestamps remain ISO 8601 UTC. An empty date produces a header-only CSV. PDF and scheduled exports are outside scope.\n",
+    "# Export Delivery receipts\n\nStatus: state:triage\nCategory: enhancement\nParent: ../spec.md\nBlocked by: None\n\n## Request\n\nExport parcel reference, delivered timestamp and signer name as CSV for one UTC date. Sort by Parcel reference; timestamps remain ISO 8601 UTC. An empty date produces a header-only CSV. PDF and scheduled exports are outside scope.\n",
   );
   write(
     root,
     ".scratch/receipts/issues/02-summary.md",
-    "# Summarize Delivery receipt exports\n\nStatus: needs-triage\nParent: ../spec.md\nBlocked by: 01\n\n## Request\n\nShow operators the count exported after the CSV is available.\n",
+    "# Summarize Delivery receipt exports\n\nStatus: state:triage\nParent: ../spec.md\nBlocked by: 01\n\n## Request\n\nShow operators the count exported after the CSV is available.\n",
   );
   write(
     root,
@@ -508,7 +508,7 @@ The operator keeps the later steps private until their checkpoints, even though 
 
 This later ledger is a simulated approved contract state for release reasoning, not evidence that the unresolved intake or summary request passed review. It supplies a reviewed specification and two independently reviewed child contracts, each with its own revision notice, chosen model and ticket readiness. For 01 it may be used only after the r2 review above succeeds. 02's hypothetical settled contract is not a brief for its actual unresolved intake.
 
-- Ticket 01 is linked at 2026-10-18T10:00:00Z. The parent receives ready-for-agent at 2026-10-18T10:00:00Z and still carries it: the same-second case holds tickets.
+- Ticket 01 is linked at 2026-10-18T10:00:00Z. The parent receives state:ready at 2026-10-18T10:00:00Z and still carries it: the same-second case holds tickets.
 - Parent readiness is removed and reapplied at 2026-10-18T10:01:00Z, after the latest link. Open, unassigned ticket 01 has no blockers and can be released once its own exact-revision readiness and model are present. The parent itself never runs.
 - Ticket 02 is linked later at 2026-10-18T11:00:00Z. The earlier parent readiness no longer releases tickets: remove and reapply it after this link, at 2026-10-18T11:01:00Z.
 - Both tickets are still open and unassigned; 02 remains blocked by open 01 despite its own readiness and the parent's renewed readiness.
@@ -535,7 +535,7 @@ Record all actions as local Markdown. Do not change actual intake status to appr
       context:
         "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Retry window**:\nThe period after a failed Parcel dispatch in which dispatch is retried.\n_Avoid_: Timeout\n",
       exercise:
-        "## Task\n\nYou are the orchestrating agent. Use triage on the three requests in .scratch/routing/issues/, with the operator releasing .scratch/routing/review-inputs.md one turn at a time. The operator keeps owner-inputs.md and unreleased turns private until their checkpoints. Sort all three. Take 01 and 02 through their paths to acceptance; for 03, record its path and reason only. Start a separate research run with a fresh context for each request you research; when the harness cannot nest sub-agents, the operator runs it and relays its messages verbatim. The operator also plays the owner and supplies revision notices; neither is a real person or GitHub event.\n\n## Expected outcome\n\n01 is code-bound: its expected result is documented. 02 is labeled bug but intent-bound, because its fix needs a Retry window nobody chose. 03 is an intent-bound feature request. Classification follows where the uncertainty lies, not the label.\n\nFor 01, the published revision r1 passes the GitHub rules' Agent Brief shape yet does not hold. The orchestrating agent checks it against the issue and code itself, names the defects it finds (an untestable criterion, scope the request never asked for, a wrong code path, and the missing dependency on 05), and sends them to the research run, which revises the brief. Only after the revision notice for the corrected revision does it accept that exact revision: it applies ready-for-agent with exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links. r1's readiness would never have been valid, and the research run applies no label.\n\nFor 02, the research run gathers code facts first and writes no brief. The Retry window persists in the product, so the orchestrating agent never infers it, not even from the operators' stated preference. It sends the question to a separate grilling session with the owner, which asks short rounds of numbered questions, each with a recommended answer, never re-asks the recorded decision on transient failures, records the owner's answers, and drafts the brief. The orchestrating agent writes no brief itself: it records the owner decisions the brief relies on in the issue's triage notes, reviews the draft as a reviewer who did not write it, and refuses any brief that leaves a choice to the implementing agent, lists options, or carries a value the owner did not choose, returning that question to the owner instead.\n\nExecute turns 5 and 6: the participant edits the accepted retained brief, readiness is lost, the new notice is withheld, then the changed revision receives its own exact notice and independent review before renewed readiness. Also record the counterfactual handoffs when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness. Never run ready.mjs; all actions are local Markdown simulations. Cite the contribution guide's Triage and Readiness sections, the GitHub rules' Readiness roles section, and the factory rules' Model selection section in the local outcome.\n",
+        "## Task\n\nYou are the orchestrating agent. Use triage on the three requests in .scratch/routing/issues/, with the operator releasing .scratch/routing/review-inputs.md one turn at a time. The operator keeps owner-inputs.md and unreleased turns private until their checkpoints. Sort all three. Take 01 and 02 through their paths to acceptance; for 03, record its path and reason only. Start a separate research run with a fresh context for each request you research; when the harness cannot nest sub-agents, the operator runs it and relays its messages verbatim. The operator also plays the owner and supplies revision notices; neither is a real person or GitHub event.\n\n## Expected outcome\n\n01 is code-bound: its expected result is documented. 02 is labeled bug but intent-bound, because its fix needs a Retry window nobody chose. 03 is an intent-bound feature request. Classification follows where the uncertainty lies, not the label.\n\nFor 01, the published revision r1 passes the GitHub rules' Agent Brief shape yet does not hold. The orchestrating agent checks it against the issue and code itself, names the defects it finds (an untestable criterion, scope the request never asked for, a wrong code path, and the missing dependency on 05), and sends them to the research run, which revises the brief. Only after the revision notice for the corrected revision does it accept that exact revision: it applies state:ready with exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links. r1's readiness would never have been valid, and the research run applies no label.\n\nFor 02, the research run gathers code facts first and writes no brief. The Retry window persists in the product, so the orchestrating agent never infers it, not even from the operators' stated preference. It sends the question to a separate grilling session with the owner, which asks short rounds of numbered questions, each with a recommended answer, never re-asks the recorded decision on transient failures, records the owner's answers, and drafts the brief. The orchestrating agent writes no brief itself: it records the owner decisions the brief relies on in the issue's triage notes, reviews the draft as a reviewer who did not write it, and refuses any brief that leaves a choice to the implementing agent, lists options, or carries a value the owner did not choose, returning that question to the owner instead.\n\nExecute turns 5 and 6: the participant edits the accepted retained brief, readiness is lost, the new notice is withheld, then the changed revision receives its own exact notice and independent review before renewed readiness. Also record the counterfactual handoffs when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness. Never run ready.mjs; all actions are local Markdown simulations. Cite the contribution guide's Triage and Readiness sections, the GitHub rules' Readiness roles section, and the factory rules' Model selection section in the local outcome.\n",
     },
   );
   write(
@@ -574,7 +574,7 @@ export function shouldRetry(failure, minutesSinceFirstFailure) {
   );
   const seededIssue = `# Exporting a date with no deliveries fails
 
-Status: needs-triage
+Status: state:triage
 Category: bug
 Blocked by: None
 
@@ -644,7 +644,7 @@ An empty date returns a CSV holding only the header row. Add a \`skipEmpty\` opt
     ".scratch/routing/issues/02-dispatch-retry-gives-up.md",
     `# Dispatch stops retrying before carriers recover
 
-Status: needs-triage
+Status: state:triage
 Category: bug
 Blocked by: None
 
@@ -666,12 +666,12 @@ Owner decisions:
   write(
     root,
     ".scratch/routing/issues/03-pdf-receipts.md",
-    "# Offer Delivery receipts as PDF\n\nStatus: needs-triage\nCategory: enhancement\nBlocked by: None\n\n## Request\n\nOperators want to send customers a PDF of a Delivery receipt, with the signer's name, instead of the CSV.\n",
+    "# Offer Delivery receipts as PDF\n\nStatus: state:triage\nCategory: enhancement\nBlocked by: None\n\n## Request\n\nOperators want to send customers a PDF of a Delivery receipt, with the signer's name, instead of the CSV.\n",
   );
   write(
     root,
     ".scratch/routing/issues/05-shared-csv-writer.md",
-    "# 05: Move receipt export to the shared CSV writer\n\nStatus: ready-for-agent\nModel: model:claude-sonnet-5-5\nBlocked by: None\n\n## What to build\n\nReplace the receipt export's inline CSV building with the shared exports CSV writer. Every later change to receipt CSV output lands after this ticket, so it is made once, in the shared writer.\n",
+    "# 05: Move receipt export to the shared CSV writer\n\nStatus: state:ready\nModel: model:claude-sonnet-5-5\nBlocked by: None\n\n## What to build\n\nReplace the receipt export's inline CSV building with the shared exports CSV writer. Every later change to receipt CSV output lands after this ticket, so it is made once, in the shared writer.\n",
   );
   write(
     root,
@@ -768,7 +768,7 @@ Record the new simulated decisions as Owner, 2026-10-26, .scratch/routing/owner-
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** state:ready
 
 - [ ] Empty input returns an empty Delivery schedule.
 - [ ] Urgent Parcels precede standard Parcels.
@@ -826,7 +826,7 @@ Implement scheduleDelivery through the existing public interface.
 A dispatcher can prioritize urgent Parcels while preserving the input.
 
 ## Implementation Decisions
-The native child ticket is [Prioritize urgent Parcels](issues/01-prioritize-parcels.md). It has no blockers and is ready-for-agent. Implement the ticket on its own branch and resolve it through the local tracker. Publish nothing.
+The native child ticket is [Prioritize urgent Parcels](issues/01-prioritize-parcels.md). It has no blockers and is state:ready. Implement the ticket on its own branch and resolve it through the local tracker. Publish nothing.
 
 ## Testing Decisions
 Use the agreed scheduleDelivery seam and the existing failing tests.
@@ -874,7 +874,7 @@ End session one with an active plan and unfinished rows, handing over as after a
 
 The proposal is visibly distinct from approval. The in-goal row has a dated citation to the approved goal, passes the inference test and appears in the next update's inferred-intent list; it adds no public name or persistent product policy. The amendment remains pending until explicitly approved, and its new approval supersedes rather than erases the old line. The wish is a future capability, not a Finding: it gains one dated quoted line with its source and repository in wishes.md and no issue. Every update shows the decision inbox.
 
-Turns 6a–6c exercise the contribution guide's Findings section in a separate responsible repository, simulated by the tooling tracker at .scratch/tooling/issues/. Reuse its existing open issue for the UTF-8 crash, then file the new stale-option finding there with needs-triage and the local bug form's fields. Cite the observed command outcomes the participant supplies, separately from anything only read in code. There is no pull request: link both findings from a comment on review ticket 01 with the guide's AI disclaimer. The linked wish retains its date, source and tooling repository; it replaces neither the finding issue nor reporting links. Continue the documentation plan without adding tooling repair rows or waiting for repairs. The project's starting count is zero; the later closure inputs add worker findings and determine its closing count. Report this still-open tooling finding with its reason and evidence link at close. Also record the reporting fallback if filing fails: list the unfiled finding and target repository in the same reporting location, without blocking the plan. This is a simulated outcome, not a request to fail a real write.
+Turns 6a–6c exercise the contribution guide's Findings section in a separate responsible repository, simulated by the tooling tracker at .scratch/tooling/issues/. Reuse its existing open issue for the UTF-8 crash, then file the new stale-option finding there with state:triage and the local bug form's fields. Cite the observed command outcomes the participant supplies, separately from anything only read in code. There is no pull request: link both findings from a comment on review ticket 01 with the guide's AI disclaimer. The linked wish retains its date, source and tooling repository; it replaces neither the finding issue nor reporting links. Continue the documentation plan without adding tooling repair rows or waiting for repairs. The project's starting count is zero; the later closure inputs add worker findings and determine its closing count. Report this still-open tooling finding with its reason and evidence link at close. Also record the reporting fallback if filing fails: list the unfiled finding and target repository in the same reporting location, without blocking the plan. This is a simulated outcome, not a request to fail a real write.
 
 Turns 6d–6e exercise the expedited change. The owner's "do this now" is its approval and skips only the plan: no proposal, plan approval or new workbench file. Before acting, the quoted words, date and source are entered under inbox.md's Answered, marked expedited, logged and committed. now.md gains an In flight row starting with expedited that states the pause, and plan.md an expedited row without an issue, listed in the next plan update, because the change lies inside the approved goal. The pause covers only what the orchestrating agent owns: ticket 02's due worker launch is held and no merge other than the change's own is made, while ticket 01's factory run and ticket 03's research run keep running without the owner's word to stop them. The factory pause follows the linked factory skill with the local .factory/config.json: simulated PR 12 carries the configured hold label, and no other open item carries a hold. The contribution guide's Direct change, pull request and review rules still apply. Once PR 12 merges, the pause ends: no open hold remains, the held launch starts, the Answered entry gains the outcome with PR 12's link, the expedited row ends with its merged pull request and its In flight row goes. Every hold, label and PR is a local Markdown simulation.
 
@@ -895,12 +895,12 @@ The fresh session resumes from committed workbench state, preserves row history 
   write(
     root,
     ".scratch/tooling/issues/01-utf8-crash.md",
-    "# Guide checker crashes on UTF-8 paths\n\nStatus: open\nLabels: needs-triage\nRepository: tooling (simulated)\n\n## Steps to reproduce\n\nObserved: running guide-check docs/usage/café.md on a valid guide exits 1 with an encoding error.\n\n## Expected behavior\n\nCheck valid UTF-8 paths successfully.\n\n## Actual behavior\n\nThe checker throws before inspecting the guide.\n\n## Environment\n\nSimulated tooling CLI 1.0, Node.js 24.\n",
+    "# Guide checker crashes on UTF-8 paths\n\nStatus: open\nLabels: state:triage\nRepository: tooling (simulated)\n\n## Steps to reproduce\n\nObserved: running guide-check docs/usage/café.md on a valid guide exits 1 with an encoding error.\n\n## Expected behavior\n\nCheck valid UTF-8 paths successfully.\n\n## Actual behavior\n\nThe checker throws before inspecting the guide.\n\n## Environment\n\nSimulated tooling CLI 1.0, Node.js 24.\n",
   );
   write(
     root,
     ".scratch/tooling/bug-form.md",
-    "# Local tooling bug form\n\nOne Markdown issue per finding in issues/, with Status, Labels and Repository, then Steps to reproduce, Expected behavior, Actual behavior and Environment. Use needs-triage. This directory represents a separate responsible repository's tracker; it is not the documentation plan's project tracker.\n",
+    "# Local tooling bug form\n\nOne Markdown issue per finding in issues/, with Status, Labels and Repository, then Steps to reproduce, Expected behavior, Actual behavior and Environment. Use state:triage. This directory represents a separate responsible repository's tracker; it is not the documentation plan's project tracker.\n",
   );
   write(
     root,
@@ -921,7 +921,7 @@ The operator relays these in order, pausing at the indicated boundaries. All are
 5. Amendment approval: "I approve adding the glossary audit to the plan's scope." Record the superseding approval and add row/ticket 03. Preserve the earlier approval text.
 6. Wish: "In a future plan I would like multilingual Delivery receipt guides." This is a desired future capability, not a Finding. Record it as a wish with its quote, source, date and this project repository; file no issue.
 6a. Existing Finding: during the review, the external tooling's guide-check docs/usage/café.md on a valid guide was observed to exit 1 with an encoding error. This is outside this documentation change's responsibility. The same crash already has an open issue at .scratch/tooling/issues/01-utf8-crash.md; reuse it, with no duplicate. Follow the Findings rule's reporting links as well; a wish-only record cannot satisfy it.
-6b. New Finding: the external tooling's usage guide instructs users to run guide-check --legacy, but that command was observed to exit 2 with "unknown option --legacy" in simulated tooling CLI 1.0 on Node.js 24. There is no existing open issue for this stale instruction. File .scratch/tooling/issues/02-stale-option.md using .scratch/tooling/bug-form.md with needs-triage, cite this turn's observed evidence, and report it under Findings. No tooling repair is part of this plan.
+6b. New Finding: the external tooling's usage guide instructs users to run guide-check --legacy, but that command was observed to exit 2 with "unknown option --legacy" in simulated tooling CLI 1.0 on Node.js 24. There is no existing open issue for this stale instruction. File .scratch/tooling/issues/02-stale-option.md using .scratch/tooling/bug-form.md with state:triage, cite this turn's observed evidence, and report it under Findings. No tooling repair is part of this plan.
 6c. Linked wish: "In a future plan I would like clearer tooling migration guidance." Record a dated wish with this source and the tooling repository; it may link the reported .scratch/tooling/issues/02-stale-option.md for future planning, while retaining the finding's tracker record and all reporting links. Neither finding waits for a repair before the documentation plan continues.
 6d. Do this now, with work in flight: ticket 01's simulated factory run is running, the operator supplies a simulated research run for ticket 03, preparing its contract, which you record as running under the Running launches session reference it gives, and ticket 02's worker launch is due. Owner: "Do this now: make the guide say its rows are ordered by Parcel reference in ascending order." This is a Direct change inside the approved goal; it skips only the plan. Record before acting, track it in now.md and plan.md, and pause only what you own: hold 02's launch and every merge but the change's own. Leave 01's run and 03's research run running. Pause the factory with the factory skill and .factory/config.json, putting the configured hold label on the change's simulated PR at .scratch/receipt-review/pulls/12-expedited.md. Implement the wording yourself or record a simulated worker for it. Stop for the participant once PR 12 is open.
 6e. Expedited merge: PR 12 is merged in the simulated tracker, and its closure ended its hold. Confirm with the factory skill that no open item carries a hold, then end the pause: append the outcome with PR 12's link to the Answered entry, end the expedited row with its merged pull request and remove its In flight row. Start the held launch of ticket 02's directly launched review worker as a simulated launch with its Running launches row; the operator stands in for it. Ticket 03's research run then reports back with its prepared contract: take it in and remove its row. Ticket 01's factory run continues.
@@ -942,11 +942,11 @@ The operator relays these in order, pausing at the indicated boundaries. All are
 Operator-only: relay at turn 7, not before. All records are local simulations. Materialize the paths below, with the stated state, origin and evidence links; never contact a service. The factory-only issue must stay absent from the plan's ticket table and initial creation log until reconciliation discovers it from the findings comment.
 
 - .scratch/receipt-review/pulls/11-findings.md: the factory run for receipt-review#1 reports newly filed tooling#4 at .scratch/tooling/issues/04-factory-only.md and tooling#5 at .scratch/tooling/issues/05-already-closed.md. It links the pre-existing tooling#1 at .scratch/tooling/issues/01-utf8-crash.md. Include two references to the same tooling#4 (relative path and repository/number), not two issues. Its creation evidence is the factory run's filing record in this comment, sourced to review ticket 01; it was missed by the orchestrator's log.
-- .scratch/tooling/issues/04-factory-only.md: open, needs-triage; filed by review ticket 01's factory run, citing PR 11's findings comment. Observed: the guide checker omits its diagnostics on an empty guide. Repair belongs to tooling and is outside the documentation plan. This issue has no plan row.
+- .scratch/tooling/issues/04-factory-only.md: open, state:triage; filed by review ticket 01's factory run, citing PR 11's findings comment. Observed: the guide checker omits its diagnostics on an empty guide. Repair belongs to tooling and is outside the documentation plan. This issue has no plan row.
 - .scratch/tooling/issues/05-already-closed.md: currently closed, filed by the same run with the same provenance. It was open when the findings comment was written; use its current state.
-- .scratch/receipt-review/issues/04-follow-up.md: open, needs-triage; receipt-review#4 was filed during the plan by a directly launched review run without a PR, with creation evidence in .scratch/receipt-review/comments/02-findings.md. Observed: the empty-date guide example lacks a caption; follow-up is outside the approved accuracy review. Tooling#4 and receipt-review#4 are different issues despite sharing a number. This issue has no plan row.
+- .scratch/receipt-review/issues/04-follow-up.md: open, state:triage; receipt-review#4 was filed during the plan by a directly launched review run without a PR, with creation evidence in .scratch/receipt-review/comments/02-findings.md. Observed: the empty-date guide example lacks a caption; follow-up is outside the approved accuracy review. Tooling#4 and receipt-review#4 are different issues despite sharing a number. This issue has no plan row.
 - .scratch/receipt-review/comments/02-findings.md: the run on ticket 02 links newly filed receipt-review#4 and the already reported tooling#2 at .scratch/tooling/issues/02-stale-option.md. This is its no-PR reporting location; it does not file tooling#2 again.
-- .scratch/runs/02-final.md: a directly launched auxiliary run without an issue or PR reports newly filed tooling#6 at .scratch/tooling/issues/06-auxiliary.md in its final message, with creation evidence attributed to this plan. Materialize that issue as open, needs-triage; observed: the checker prints an obsolete help URL. Repair is outside the documentation plan.
+- .scratch/runs/02-final.md: a directly launched auxiliary run without an issue or PR reports newly filed tooling#6 at .scratch/tooling/issues/06-auxiliary.md in its final message, with creation evidence attributed to this plan. Materialize that issue as open, state:triage; observed: the checker prints an obsolete help URL. Repair is outside the documentation plan.
 - .scratch/tooling/issues/99-unrelated.md: open, created during the same period by another plan, with no attribution to this plan's runs. It is unrelated concurrent work, not part of this close list.
 
 At close, receipt-review#1 and #2 are closed; #3 remains open because the owner dropped and parked it. The expected still-open plan-filed set is receipt-review#3, receipt-review#4, tooling#2, tooling#4 and tooling#6, each once with its reason and reporting/creation evidence. Exclude tooling#1 and #50 (pre-existing), tooling#5 (currently closed), and tooling#99 (unrelated). Counts include all currently open issues in each repository, even those outside the plan: receipt-review starts at zero and ends at two; tooling ends at five (#1, #2, #4, #6, #99). Open outside findings do not block closure once all rows have ended.
@@ -1007,17 +1007,17 @@ Turn 1 asks the maintainer for time-bounded staging host access in inbox.md and 
   write(
     root,
     ".scratch/rollout/issues/01-serve-receipts.md",
-    "# 01: Serve Delivery receipts over HTTP and in the nightly export\n\nStatus: closed\nLabels: enhancement\nBlocked by: None\nClosed by: the merge of PR 21\n\n## What to build\n\nGET /receipts?date=<UTC date> returns that day's Delivery receipts as CSV, and the nightly export writes the same CSV for the previous UTC date.\n\n## Acceptance criteria\n\n- [ ] The endpoint and the nightly export return the CSV that docs/usage/receipts.md describes.\n- [ ] An empty date returns a header-only CSV.\n",
+    "# 01: Serve Delivery receipts over HTTP and in the nightly export\n\nStatus: closed\nLabels: type:enhancement\nBlocked by: None\nClosed by: the merge of PR 21\n\n## What to build\n\nGET /receipts?date=<UTC date> returns that day's Delivery receipts as CSV, and the nightly export writes the same CSV for the previous UTC date.\n\n## Acceptance criteria\n\n- [ ] The endpoint and the nightly export return the CSV that docs/usage/receipts.md describes.\n- [ ] An empty date returns a header-only CSV.\n",
   );
   write(
     root,
     ".scratch/rollout/issues/02-accept-endpoint-on-staging.md",
-    "# 02: Accept the receipts endpoint on staging\n\nStatus: ready-for-agent\nLabels: enhancement, ready-for-agent, model:claude-opus-5-5, factory:skip\nBlocked by: 01 (closed)\n\n## What to build\n\nLive acceptance of ticket 01's endpoint, deployed on the staging host. Its live steps need host access the maintainer grants.\n\n## Acceptance criteria\n\n- [ ] Recorded evidence on this ticket that GET /receipts?date=2026-11-01 on staging returns that day's Delivery receipts as CSV.\n- [ ] Recorded evidence on this ticket that an empty date on staging returns a header-only CSV.\n",
+    "# 02: Accept the receipts endpoint on staging\n\nStatus: state:ready\nLabels: type:enhancement, state:ready, model:claude-opus-5-5, factory:skip\nBlocked by: 01 (closed)\n\n## What to build\n\nLive acceptance of ticket 01's endpoint, deployed on the staging host. Its live steps need host access the maintainer grants.\n\n## Acceptance criteria\n\n- [ ] Recorded evidence on this ticket that GET /receipts?date=2026-11-01 on staging returns that day's Delivery receipts as CSV.\n- [ ] Recorded evidence on this ticket that an empty date on staging returns a header-only CSV.\n",
   );
   write(
     root,
     ".scratch/rollout/issues/03-accept-export-on-staging.md",
-    "# 03: Accept the nightly receipt export on staging\n\nStatus: ready-for-agent\nLabels: enhancement, ready-for-agent, model:claude-opus-5-5, factory:skip\nBlocked by: 01 (closed)\n\n## What to build\n\nLive acceptance of ticket 01's nightly export, deployed on the staging host. Its live steps need host access the maintainer grants.\n\n## Acceptance criteria\n\n- [ ] Recorded evidence on this ticket that the staging export run for 2026-11-01 wrote that day's Delivery receipts as CSV.\n",
+    "# 03: Accept the nightly receipt export on staging\n\nStatus: state:ready\nLabels: type:enhancement, state:ready, model:claude-opus-5-5, factory:skip\nBlocked by: 01 (closed)\n\n## What to build\n\nLive acceptance of ticket 01's nightly export, deployed on the staging host. Its live steps need host access the maintainer grants.\n\n## Acceptance criteria\n\n- [ ] Recorded evidence on this ticket that the staging export run for 2026-11-01 wrote that day's Delivery receipts as CSV.\n",
   );
   write(
     root,

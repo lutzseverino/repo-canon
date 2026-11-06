@@ -7,7 +7,7 @@ import { main } from "../.agents/skills/triage/ready.mjs";
 import { resultFormat } from "../scripts/validate-issue-contract.mjs";
 
 const revision = `sha256:${"a".repeat(64)}`;
-const label = "ready-for-agent";
+const label = "state:ready";
 const model = "model:gpt-6.1-sol@high";
 const time = "2026-10-25T12:00:00Z";
 const policyRevision = "b".repeat(40);
@@ -30,7 +30,6 @@ const event = (
 });
 
 async function exercise(options = {}, command = main) {
-  const selectedLabel = options.argv?.[1] ?? label;
   const actor = {
     login: "maintainer",
     type: "User",
@@ -52,7 +51,7 @@ async function exercise(options = {}, command = main) {
   const repository = options.repository ?? "owner/repo";
   const [owner, name] = repository.split("/");
   const requests = [];
-  const labels = [...(options.labels ?? ["enhancement", "needs-triage"])];
+  const labels = [...(options.labels ?? ["type:enhancement", "state:triage"])];
   const repositoryLabels = [
     ...(options.repositoryLabels ?? [
       { name: model, color: "abcdef", description: "Existing model" },
@@ -242,7 +241,10 @@ async function exercise(options = {}, command = main) {
         return json(body, 201);
       }
     }
-    if (method === "DELETE" && url.pathname.endsWith(`/labels/${label}`)) {
+    if (
+      method === "DELETE" &&
+      url.pathname.endsWith(`/labels/${encodeURIComponent(label)}`)
+    ) {
       labels.splice(labels.indexOf(label), 1);
       events.push(
         event(200, label, "maintainer", "unlabeled", "2026-10-25T12:00:02Z"),
@@ -255,7 +257,7 @@ async function exercise(options = {}, command = main) {
         if (!labels.includes(name)) labels.push(name);
       ownEvent = event(
         300,
-        selectedLabel,
+        label,
         actor.login,
         "labeled",
         "2026-10-25T12:00:03Z",
@@ -279,7 +281,7 @@ async function exercise(options = {}, command = main) {
       state = {
         status: "approved",
         revision,
-        label: selectedLabel,
+        label,
         reviewer: actor.login,
         reviewEventId: String(ownEvent.id),
         ...options.after,
@@ -293,7 +295,6 @@ async function exercise(options = {}, command = main) {
     code = await command(
       options.argv ?? [
         "42",
-        label,
         revision,
         model,
         "factory:skip",
@@ -347,7 +348,7 @@ test("refuses incomplete feedback even when it carries the old awaiting state", 
 
 test("factory destinations refuse conflicting model labels and non-person accounts without writes", async () => {
   for (const options of [
-    { labels: ["enhancement", "model:other"] },
+    { labels: ["type:enhancement", "model:other"] },
     { actor: { login: "helper[bot]", type: "Bot" } },
     { actor: { login: "helper[bot]", type: "App" } },
     { actor: { login: "helper[bot]", type: "User" } },
@@ -360,10 +361,10 @@ test("factory destinations refuse conflicting model labels and non-person accoun
 
 test("factory agent readiness requires exactly one effective model label", async () => {
   for (const options of [
-    { argv: ["42", label, revision] },
-    { argv: ["42", label, revision, model, "model:other"] },
-    { labels: [model, "model:other"], argv: ["42", label, revision] },
-    { labels: ["model:other"], argv: ["42", label, revision, model] },
+    { argv: ["42", revision] },
+    { argv: ["42", revision, model, "model:other"] },
+    { labels: [model, "model:other"], argv: ["42", revision] },
+    { labels: ["model:other"], argv: ["42", revision, model] },
   ]) {
     const result = await exercise(options);
     assert.match(result.error?.message ?? "", /exactly one model:/);
@@ -372,14 +373,14 @@ test("factory agent readiness requires exactly one effective model label", async
   for (const companions of [[], [model]]) {
     const result = await exercise({
       labels: [model],
-      argv: ["42", label, revision, ...companions],
+      argv: ["42", revision, ...companions],
     });
     assert.equal(result.error, undefined);
     assert.equal(result.code, 0);
   }
 });
 
-test("parents, specifications, human readiness and standard repositories need no model", async () => {
+test("parents, specifications and standard repositories need no model", async () => {
   for (const options of [
     { parent: true, linkTime: time },
     {
@@ -387,10 +388,9 @@ test("parents, specifications, human readiness and standard repositories need no
       body: "### Problem Statement\nGroup the work.\n### Solution\nDeliver tickets.",
     },
     { factory: false },
-    { argv: ["42", "ready-for-human", revision] },
   ]) {
     const result = await exercise({
-      argv: ["42", label, revision],
+      argv: ["42", revision],
       ...options,
     });
     assert.equal(result.error, undefined);
@@ -404,7 +404,7 @@ test("creates a missing chosen repository model once before applying readiness",
     const result = await exercise({
       repository: "other/destination",
       repositoryLabels: [],
-      argv: ["42", label, revision, chosen],
+      argv: ["42", revision, chosen],
     });
     assert.equal(result.error, undefined);
     assert.equal(result.code, 0);
@@ -463,7 +463,7 @@ test("label lookup and creation failures never grant readiness", async () => {
 test("the installed readiness command enforces models and provisions missing labels", async (t) => {
   const target = installedValidator(t, ".agents/skills/triage/ready.mjs");
   const command = (await import(pathToFileURL(target).href)).main;
-  const missing = await exercise({ argv: ["42", label, revision] }, command);
+  const missing = await exercise({ argv: ["42", revision] }, command);
   assert.match(missing.error?.message ?? "", /exactly one model:/);
   assert.deepEqual(writes(missing), []);
   const created = await exercise({ repositoryLabels: [] }, command);
@@ -475,7 +475,7 @@ test("the installed readiness command enforces models and provisions missing lab
     {
       labels: [],
       body: "### Problem Statement\nGroup work.",
-      argv: ["42", label, revision],
+      argv: ["42", revision],
     },
     command,
   );
@@ -581,11 +581,12 @@ test("requires approval by the acting account at the same revision", async () =>
 test("rejects invalid invocations and failed platform reads without writes", async () => {
   for (const argv of [
     [],
-    ["42", label],
-    ["42", "needs-triage", revision],
-    ["42", label, "sha256:invalid"],
-    ["42", label, revision, "--repo"],
-    ["42", label, revision, "model:a", "model:b"],
+    ["42"],
+    ["42", revision],
+    ["42", revision, "state:owner"],
+    ["42", "sha256:invalid"],
+    ["42", revision, "--repo"],
+    ["42", revision, "model:a", "model:b"],
   ]) {
     const result = await exercise({ argv });
     assert.ok(result.error);
@@ -664,18 +665,11 @@ test("refuses a result of an unknown format without writes", async () => {
 test("applies readiness again after a notice that reports removed readiness", async () => {
   const result = await exercise({
     heading:
-      "## Issue contract readiness removed\n\nReadiness was removed: `needs-info` was applied after the review and supersedes its readiness.",
+      "## Issue contract readiness removed\n\nReadiness was removed: `state:reporter` was applied after the review and supersedes its readiness.",
   });
   assert.equal(result.error, undefined);
   assert.equal(result.code, 0);
-  assert.ok(writes(result)[0].body.labels.includes("ready-for-agent"));
-});
-
-test("accepts ready-for-human without a model label", async () => {
-  const result = await exercise({ argv: ["42", "ready-for-human", revision] });
-  assert.equal(result.error, undefined);
-  assert.equal(result.code, 0);
-  assert.deepEqual(writes(result)[0].body, { labels: ["ready-for-human"] });
+  assert.ok(writes(result)[0].body.labels.includes("state:ready"));
 });
 
 test("validator cleanup does not hide a rejection of the command's label event", async () => {
@@ -701,34 +695,25 @@ test("standard destinations permit Bot and App reviewers with validator-confirme
     { login: "helper[bot]", type: "Bot" },
     { login: "helper[bot]", type: "App" },
   ]) {
-    for (const selected of [label, "ready-for-human"]) {
-      const result = await exercise({
-        factory: false,
-        actor,
-        argv: ["42", selected, revision],
-      });
-      assert.equal(result.error, undefined);
-      assert.equal(result.code, 0);
-      assert.equal(writes(result).length, 1);
-    }
+    const result = await exercise({
+      factory: false,
+      actor,
+      argv: ["42", revision],
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+    assert.equal(writes(result).length, 1);
   }
 });
 
 test("a person retains revision-bound readiness in both destination policies", async () => {
   for (const factory of [false, true]) {
-    for (const selected of [label, "ready-for-human"]) {
-      const result = await exercise({
-        factory,
-        argv: [
-          "42",
-          selected,
-          revision,
-          ...(factory && selected === label ? [model] : []),
-        ],
-      });
-      assert.equal(result.error, undefined);
-      assert.equal(result.code, 0);
-    }
+    const result = await exercise({
+      factory,
+      argv: ["42", revision, ...(factory ? [model] : [])],
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
   }
 });
 
@@ -818,7 +803,7 @@ test("standard Bot and App reviewers still require the validator's exact approva
       { reviewer: "somebody-else" },
       { revision: `sha256:${"b".repeat(64)}` },
       { reviewEventId: "999", observedEventId: "300" },
-      { label: "ready-for-human" },
+      { label: "state:owner" },
       {
         status: "awaiting-review",
         observedEventId: "300",

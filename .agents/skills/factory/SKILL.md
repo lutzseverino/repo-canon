@@ -62,7 +62,8 @@ The worker opens the PR and records its handoff as
 `.repo-standards/rules/comments.md#delivery-records` says. Continue as the orchestrating agent through `babysit` from that handoff;
 apply its current-head owner-approval gate when designated.
 
-For an unanswered owner question, retain the skip and needs-input markers.
+For an unanswered owner question, retain the skip marker and the question's
+workflow state.
 After resolution and any required renewed readiness, resume the worker if no
 PR exists, or continue the same open PR and its handoff. Live host access gates
 only the authorized live steps.
@@ -79,11 +80,11 @@ at its own time bound.
 ## Finish a handed-off factory PR
 
 Check eligibility under the installed recovery rules: a non-skipped factory
-run stopped under needs-input with its PR still open. A failed run is a retry
+run stopped in a `state:` stop with its PR still open. A failed run is a retry
 path, not this handoff. Read the question, answer, accepted contract revision,
 reviews and handoff; resolve any required renewed readiness first.
 
-Take delivery ownership as the orchestrating agent while retaining needs-input,
+Take delivery ownership as the orchestrating agent while retaining that state,
 then invoke `babysit` at Branch-update recovery before requesting or waiting.
 In an owned checkout, preserve all work and review context, fetch origin and
 resolve its default branch, inspect outgoing commits per merge parent and the
@@ -95,8 +96,8 @@ conflicts, failed recovery, a second stale base or a permission refusal goes to
 the guide's owner handoff, posted as
 `.repo-standards/rules/comments.md#owner-questions` says.
 
-If factory resumption is chosen instead, remove needs-input only after the
-question and any required renewed readiness are resolved. The factory resumes
+If factory resumption is chosen instead, return the issue to `state:ready` only
+after the question and any required renewed readiness are resolved. The factory resumes
 the same work and PR; no PR closure is needed. Deliver multiple handed-off PRs
 sequentially, refreshing the base separately for each.
 

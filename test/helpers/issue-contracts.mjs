@@ -94,7 +94,7 @@ export function feedbackState({
   if (status === "approved") {
     return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${contractRevision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`;
   }
-  return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${contractRevision}\`.\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply one readiness label. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
+  return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${contractRevision}\`.\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply \`state:ready\`. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
 }
 
 // The maintained feedback comment, recording an approval of the direct ticket
@@ -105,7 +105,7 @@ export function approvedTicketFeedback(issue, state = {}) {
     body: feedbackState({
       status: "approved",
       revision: bodyRevision(issue),
-      label: "ready-for-agent",
+      label: "state:ready",
       reviewer: "maintainer",
       ...state,
     }),
@@ -125,7 +125,7 @@ export function awaitingTicketFeedback(issue, state = {}) {
   };
 }
 
-export const labeledBy = (login, label = "ready-for-agent", issue = {}) => ({
+export const labeledBy = (login, label = "state:ready", issue = {}) => ({
   action: "labeled",
   issue: { number: 42, body: issue.body, updated_at: issue.updated_at },
   label: { name: label },
@@ -138,7 +138,7 @@ export const creationTime = "2026-09-14T17:00:00Z";
 export const creationLabel = (overrides = {}) => ({
   id: 101,
   event: "labeled",
-  label: { name: "ready-for-agent" },
+  label: { name: "state:ready" },
   actor: { login: "maintainer" },
   created_at: creationTime,
   ...overrides,
@@ -156,9 +156,9 @@ export function createdWithReadiness({
   run,
   opener = "maintainer",
   labeler = opener,
-  labels = ["ready-for-agent"],
+  labels = ["state:ready"],
   currentLabels = labels,
-  trigger = "ready-for-agent",
+  trigger = "state:ready",
   comments = [],
   issueEvents = [creationLabel()],
   permissions = { [opener]: role("admin") },
@@ -239,58 +239,14 @@ export const reapplicationEvents = [
 ];
 export const laggingReapplicationEvents = reapplicationEvents.slice(0, 3);
 
-// The same history for `ready-for-human` through Carol's removal (204), then a
-// swap: `applier`, Alice unless stated, applied `ready-for-agent` (205), and
-// `swapper`, the applier unless stated, removed it (206) and applied
-// `ready-for-human` (207).
-export function swapEvents({ applier = "alice", swapper = applier } = {}) {
-  const human = reapplicationEvents
-    .slice(0, 4)
-    .map((event) => ({ ...event, label: { name: "ready-for-human" } }));
-  const agent = {
-    ...aliceApplication,
-    id: 205,
-    actor: { login: applier },
-    created_at: "2026-09-14T17:01:40Z",
-  };
-  return [
-    ...human,
-    agent,
-    {
-      ...agent,
-      id: 206,
-      event: "unlabeled",
-      actor: { login: swapper },
-      created_at: "2026-09-14T17:01:45Z",
-    },
-    {
-      ...human[0],
-      id: 207,
-      actor: { login: swapper },
-      created_at: "2026-09-14T17:01:50Z",
-    },
-  ];
-}
-// A lagging read of the swap ends at Bob's 203.
-export const laggingSwapEvents = swapEvents().slice(0, 3);
-
-// The `ready-for-agent` run of Alice or `sender` while `ready-for-human` is
-// present.
-export const swapRun = (options) =>
-  reapplicationRun({
-    label: "ready-for-human",
-    trigger: "ready-for-agent",
-    ...options,
-  });
-
 // The labeled run of `sender`, Alice unless stated, for `trigger` while `label`
-// is present, both `ready-for-agent` unless stated, with the notice that
+// is present, both `state:ready` unless stated, with the notice that
 // observed 100 or, when `approved`, Bob's recorded approval of 203.
 /** @param {Record<string, any>} options */
 export function reapplicationRun({
   approved = false,
   sender = "alice",
-  label = "ready-for-agent",
+  label = "state:ready",
   trigger = label,
 } = {}) {
   const issue = {
@@ -331,7 +287,7 @@ export function reapplicationRun({
 export const readinessReview = {
   id: 101,
   event: "labeled",
-  label: { name: "ready-for-agent" },
+  label: { name: "state:ready" },
   actor: { login: "maintainer" },
   created_at: "2026-09-14T17:00:00Z",
 };

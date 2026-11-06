@@ -20,7 +20,6 @@ import {
   feedbackState,
   labeledBy,
   laggingReapplicationEvents,
-  laggingSwapEvents,
   mapBody,
   neutralEvent,
   reapplicationEvents,
@@ -31,8 +30,6 @@ import {
   repository,
   role,
   specificationBody,
-  swapEvents,
-  swapRun,
   ticketBody,
   withoutEvaluatedEvent,
 } from "./helpers/issue-contracts.mjs";
@@ -280,7 +277,7 @@ const stateLabeled = (id, name) => ({
   actor: { login: "reporter" },
   created_at: "2026-09-14T16:00:00Z",
 });
-const reviewBy = (login, label = "ready-for-agent") => ({
+const reviewBy = (login, label = "state:ready") => ({
   ...readinessReview,
   label: { name: label },
   actor: { login },
@@ -302,7 +299,7 @@ function applyFeedback(comments, decision) {
 
 test("current recorded approvals report unavailable or revoked reviewer authority", async (t) => {
   for (const kind of ["direct", "brief"]) {
-    for (const label of ["ready-for-agent", "ready-for-human"]) {
+    for (const label of ["state:ready"]) {
       for (const { name, permission, reason } of [
         {
           name: "unavailable",
@@ -323,7 +320,7 @@ test("current recorded approvals report unavailable or revoked reviewer authorit
             number: 42,
             body: kind === "direct" ? ticketBody : featureBody,
             labels: [
-              ...(kind === "brief" ? [{ name: "enhancement" }] : []),
+              ...(kind === "brief" ? [{ name: "type:enhancement" }] : []),
               { name: label },
             ],
           };
@@ -361,7 +358,7 @@ test("current recorded approvals report unavailable or revoked reviewer authorit
           assertDecision(rejection, {
             exitCode: 1,
             remove: [label],
-            add: ["needs-triage"],
+            add: ["state:triage"],
             feedback: 13,
             message: reason,
             feedbackBody: [
@@ -404,7 +401,7 @@ test("current recorded approvals report unavailable or revoked reviewer authorit
           });
           assertDecision(decideIssueContract(snapshotFor(recovered)), {
             exitCode: 0,
-            remove: ["needs-triage"],
+            remove: ["state:triage"],
             feedback: 13,
             feedbackBody: /reviewed by @maintainer/,
             notFeedbackBody: /"rejectionReason":"/,
@@ -422,7 +419,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: bugBody,
-        labels: [{ name: "bug" }, { name: "needs-triage" }],
+        labels: [{ name: "type:bug" }, { name: "state:triage" }],
         state: "open",
       },
     },
@@ -434,14 +431,14 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "## Steps to reproduce\n\n_No response_\n\n## Expected behavior\n\nWorks.\n\n## Actual behavior\n\nBroken.",
-        labels: [{ name: "bug" }, { name: "ready-for-agent" }],
+        labels: [{ name: "type:bug" }, { name: "state:ready" }],
         state: "open",
       },
     },
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: "create",
       message: /Steps to reproduce/,
       feedbackBody: /Replace the placeholder under `Steps to reproduce`/,
@@ -451,13 +448,13 @@ structureTable("issue structure decides the contract and its corrections", [
     {
       name: "feature request",
       body: "### PROBLEM\n\nSearch is slow.\n\n### Desired Outcome\n\nSearch finishes quickly.",
-      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+      labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
       expected: { exitCode: 0, message: /valid feature request/i },
     },
     {
       name: "feature request with CRLF",
       body: "### Problem\r\n\r\nSearch is slow.\r\n\r\n### Desired outcome\r\n\r\nSearch finishes quickly.",
-      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+      labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
       expected: { exitCode: 0, message: /valid feature request/i },
     },
     {
@@ -466,7 +463,7 @@ structureTable("issue structure decides the contract and its corrections", [
       labels: [],
       expected: {
         exitCode: 0,
-        add: ["needs-triage"],
+        add: ["state:triage"],
         feedback: "create",
         message: /valid implementation ticket/i,
       },
@@ -477,7 +474,7 @@ structureTable("issue structure decides the contract and its corrections", [
       labels: [],
       expected: {
         exitCode: 0,
-        add: ["needs-triage"],
+        add: ["state:triage"],
         feedback: "create",
         message: /valid specification/i,
       },
@@ -500,7 +497,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "### Problem\n\nSearch is slow.\n\n#### What to build\n\nThis heading is supporting detail, not a ticket.\n\n### Desired outcome\n\nSearch finishes quickly.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
     },
@@ -512,7 +509,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "### Problem\n\n#### Actual behavior\n\nSearch is slow.\n\n### Desired outcome\n\nSearch finishes quickly.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
     },
@@ -524,7 +521,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "### Problem\n\nSearch is slow.\n\n```md\n### Problem\n\n_No response_\n\n### Desired outcome\n\n_No response_\n```\n\n### Desired outcome\n\nSearch finishes quickly.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
     },
@@ -536,14 +533,14 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ]\n\n## Blocked by\n\nNone.",
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
       },
     },
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: "create",
       message: /Acceptance criteria/,
     },
@@ -572,16 +569,16 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: `## What to build\n\n${example.value}\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\nNone.`,
-        labels: example.valid ? [] : [{ name: "ready-for-agent" }],
+        labels: example.valid ? [] : [{ name: "state:ready" }],
         state: "open",
       },
     },
     expected: example.valid
-      ? { exitCode: 0, add: ["needs-triage"], feedback: "create" }
+      ? { exitCode: 0, add: ["state:triage"], feedback: "create" }
       : {
           exitCode: 1,
-          remove: ["ready-for-agent"],
-          add: ["needs-triage"],
+          remove: ["state:ready"],
+          add: ["state:triage"],
           feedback: "create",
           message: /What to build/,
         },
@@ -593,16 +590,16 @@ structureTable("issue structure decides the contract and its corrections", [
         number: 42,
         body: bugBody,
         labels: [
-          { name: "bug" },
+          { name: "type:bug" },
           { name: "wontfix" },
-          { name: "ready-for-agent" },
+          { name: "state:ready" },
         ],
         state: "open",
       },
     },
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
+      remove: ["state:ready"],
       feedback: "create",
       message: /Add a reviewed Agent Brief before applying a readiness label/,
     },
@@ -660,19 +657,19 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: mapBody,
-        labels: [{ name: "wayfinder:map" }, { name: "ready-for-agent" }],
+        labels: [{ name: "wayfinder:map" }, { name: "state:ready" }],
         state: "open",
       },
       event: {
         action: "labeled",
         issue: { number: 42 },
-        label: { name: "ready-for-agent" },
+        label: { name: "state:ready" },
         sender: { login: "reporter" },
       },
     },
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
+      remove: ["state:ready"],
       feedback: "create",
       message: /Wayfinder planning issues/i,
       feedbackBody: /eligibility uses open state, assignment, and blockers/i,
@@ -696,14 +693,14 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "## Problem Statement\n\nA problem.\n\n## Solution\n\nA solution.\n\n## User Stories\n\n1. As a user, I want a result.\n\n## Implementation Decisions\n\nNone.\n\n## Testing Decisions\n\nNone.\n\n## Out of Scope\n\nNone.",
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
       },
     },
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: "create",
       message: /Further Notes/,
     },
@@ -714,7 +711,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: featureBody,
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [
@@ -753,7 +750,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: featureBody,
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [{ id: 12, user: { login: "maintainer" }, body }],
@@ -772,7 +769,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: featureBody,
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [
@@ -795,7 +792,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: featureBody,
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       commentPages: [
@@ -825,7 +822,7 @@ structureTable("issue structure decides the contract and its corrections", [
     {
       name: "triaged Agent Brief",
       body: "Free-form intake context.\n\n## Solution\n\nTry a cache.\n\n## Acceptance criteria\n\nThe result should be fast.",
-      labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+      labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
       feedback: "create",
     },
     {
@@ -837,7 +834,7 @@ structureTable("issue structure decides the contract and its corrections", [
     {
       name: "triaged wontfix request",
       body: "Free-form request declined with an explanation.",
-      labels: [{ name: "enhancement" }, { name: "wontfix" }],
+      labels: [{ name: "type:enhancement" }, { name: "wontfix" }],
       comments: [],
       feedback: null,
     },
@@ -856,7 +853,7 @@ structureTable("issue structure decides the contract and its corrections", [
     },
     expected: {
       exitCode: 0,
-      add: example.labels.length === 0 ? ["needs-triage"] : [],
+      add: example.labels.length === 0 ? ["state:triage"] : [],
       feedback: example.feedback,
       message: new RegExp(`valid ${example.name}`, "i"),
     },
@@ -867,14 +864,14 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: specificationBody,
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
         state: "open",
       },
     },
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: "create",
       message: /Agent Brief/,
     },
@@ -885,14 +882,14 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_\n\n## Review notes\n\nNone means no blockers.",
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
       },
     },
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: "create",
       message: /Blocked by/,
     },
@@ -903,7 +900,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "Free-form intake context.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [
@@ -925,7 +922,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: featureBody,
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [
@@ -945,7 +942,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "## Problem\n\n<!--\n## Desired outcome\n\nHidden example.\n-->\n\n_No response_\n\n## Desired outcome\n\nSearch finishes quickly.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
     },
@@ -957,7 +954,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: featureBody,
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [
@@ -977,7 +974,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "Free-form intake context.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [
@@ -1004,7 +1001,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "## Problem\n\nDocument the literal `<!--` delimiter.\n\n## Desired outcome\n\nThe documentation is clear.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
     },
@@ -1016,7 +1013,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "Free-form intake context.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [
@@ -1038,7 +1035,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "Caching notes without any contract headings.",
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
       },
       bodyLastEditedAt: "2026-09-14T17:02:00Z",
@@ -1046,8 +1043,8 @@ structureTable("issue structure decides the contract and its corrections", [
     },
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: "create",
       message: /Use one supported issue contract/,
     },
@@ -1058,7 +1055,7 @@ structureTable("issue structure decides the contract and its corrections", [
       issue: {
         number: 42,
         body: "## Steps to reproduce\n\n_No response_\n\n## Expected behavior\n\nWorks.\n\n## Actual behavior\n\nBroken.",
-        labels: [{ name: "bug" }, { name: "needs-triage" }],
+        labels: [{ name: "type:bug" }, { name: "state:triage" }],
         state: "open",
       },
       event: {
@@ -1084,7 +1081,7 @@ structureTable("issue structure decides the contract and its corrections", [
             issue: {
               number: 42,
               body: featureBody,
-              labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+              labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
               state: "open",
             },
             comments: [
@@ -1106,8 +1103,8 @@ structureTable("issue structure decides the contract and its corrections", [
         );
         assertDecision(decision, {
           exitCode: 1,
-          remove: ["ready-for-agent"],
-          add: ["needs-triage"],
+          remove: ["state:ready"],
+          add: ["state:triage"],
           feedback: "create",
           message: /Summary/,
         });
@@ -1118,7 +1115,7 @@ structureTable("issue structure decides the contract and its corrections", [
           issue: {
             number: 42,
             body: featureBody,
-            labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+            labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
             state: "open",
           },
           comments: [
@@ -1146,7 +1143,7 @@ structureTable("issue structure decides the contract and its corrections", [
           issue: {
             number: 42,
             body: featureBody,
-            labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+            labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
             state: "open",
           },
           event: {
@@ -1158,8 +1155,8 @@ structureTable("issue structure decides the contract and its corrections", [
       );
       assertDecision(deletedOnlyBrief, {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: "create",
         message: /Add a reviewed Agent Brief/,
       });
@@ -1174,7 +1171,7 @@ decisionTable("parent and blocker relationships come only from the port", [
       const issue = {
         number: 42,
         body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:00:00Z",
       };
@@ -1197,7 +1194,7 @@ decisionTable("parent and blocker relationships come only from the port", [
             body: issue.body,
             updated_at: issue.updated_at,
           },
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           sender: { login: "maintainer" },
         },
         permissions: { maintainer: role("admin") },
@@ -1206,7 +1203,7 @@ decisionTable("parent and blocker relationships come only from the port", [
     expected: {
       exitCode: 0,
       feedback: 13,
-      message: /valid implementation ticket with ready-for-agent bound/i,
+      message: /valid implementation ticket with state:ready bound/i,
     },
   },
   {
@@ -1242,7 +1239,7 @@ decisionTable("parent and blocker relationships come only from the port", [
         state: "open",
       },
     },
-    expected: { exitCode: 0, add: ["needs-triage"], feedback: "create" },
+    expected: { exitCode: 0, add: ["state:triage"], feedback: "create" },
   },
   {
     name: "native relationship changes do not revise already reviewed contract bytes",
@@ -1250,7 +1247,7 @@ decisionTable("parent and blocker relationships come only from the port", [
       const issue = {
         number: 42,
         body: "## What to build\n\nAdd caching.\n\n## Acceptance criteria\n\n- [ ] Search is fast.\n\n## Blocked by\n\n_No response_",
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
       };
       return {
@@ -1264,7 +1261,7 @@ decisionTable("parent and blocker relationships come only from the port", [
     })(),
     expected: {
       exitCode: 0,
-      message: /valid implementation ticket with ready-for-agent bound/i,
+      message: /valid implementation ticket with state:ready bound/i,
     },
   },
 ]);
@@ -1276,7 +1273,7 @@ decisionTable("the feedback comment is maintained once", [
       issue: {
         number: 42,
         body: "## Problem\n\n_No response_\n\n## Desired outcome\n\nFast search.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [
@@ -1303,7 +1300,7 @@ decisionTable("the feedback comment is maintained once", [
     },
     expected: {
       exitCode: 0,
-      add: ["needs-triage"],
+      add: ["state:triage"],
       feedback: 9,
       feedbackBody: /fresh authorized review/i,
     },
@@ -1318,7 +1315,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
         number: 42,
         node_id: "ISSUE_42",
         body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:00:00Z",
       };
@@ -1326,7 +1323,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
         issue,
         comments: [awaitingTicketFeedback(issue)],
         issueEvents: [readinessReview],
-        event: labeledBy("maintainer", "ready-for-agent", issue),
+        event: labeledBy("maintainer", "state:ready", issue),
         permissions: { maintainer: role("admin") },
       };
     })(),
@@ -1345,16 +1342,16 @@ decisionTable("an authorized review binds readiness to the exact revision", [
     },
   },
   ...[
-    ["specification", specificationBody, "ready-for-agent"],
-    ["implementation ticket", ticketBody, "ready-for-human"],
+    ["specification", specificationBody, "state:ready"],
+    ["implementation ticket", ticketBody, "state:ready"],
   ].map(([kind, body, readinessLabel]) => {
     const issue = {
       number: 42,
       node_id: "ISSUE_42",
       body,
       labels: [
-        { name: "needs-triage" },
-        { name: "needs-info" },
+        { name: "state:triage" },
+        { name: "state:reporter" },
         { name: readinessLabel },
       ],
       state: "open",
@@ -1376,8 +1373,8 @@ decisionTable("an authorized review binds readiness to the exact revision", [
           },
         ],
         issueEvents: [
-          stateLabeled(50, "needs-triage"),
-          stateLabeled(51, "needs-info"),
+          stateLabeled(50, "state:triage"),
+          stateLabeled(51, "state:reporter"),
           reviewBy("maintainer", readinessLabel),
         ],
         event: labeledBy("maintainer", readinessLabel, issue),
@@ -1385,30 +1382,30 @@ decisionTable("an authorized review binds readiness to the exact revision", [
       },
       expected: {
         exitCode: 0,
-        remove: ["needs-triage", "needs-info"],
+        remove: ["state:triage", "state:reporter"],
         feedback: 13,
         message: new RegExp(`valid ${kind} with ${readinessLabel} bound`, "i"),
       },
     };
   }),
   {
-    name: "a repeated event removes needs-triage left beside an approved direct contract",
+    name: "a repeated event removes state:triage left beside an approved direct contract",
     snapshot: (() => {
       const issue = {
         number: 42,
         body: ticketBody,
-        labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
+        labels: [{ name: "state:triage" }, { name: "state:ready" }],
         state: "open",
       };
       return {
         issue,
         comments: [approvedTicketFeedback(issue)],
         permissions: { maintainer: role("admin") },
-        issueEvents: [stateLabeled(50, "needs-triage"), readinessReview],
+        issueEvents: [stateLabeled(50, "state:triage"), readinessReview],
         event: { action: "reopened", issue: { number: 42 } },
       };
     })(),
-    expected: { exitCode: 0, remove: ["needs-triage"] },
+    expected: { exitCode: 0, remove: ["state:triage"] },
   },
   {
     name: "a triage-role reviewer can bind the latest Agent Brief after the exact revision is published",
@@ -1425,9 +1422,9 @@ decisionTable("an authorized review binds readiness to the exact revision", [
         number: 42,
         body: featureBody,
         labels: [
-          { name: "enhancement" },
-          { name: "needs-triage" },
-          { name: "ready-for-human" },
+          { name: "type:enhancement" },
+          { name: "state:triage" },
+          { name: "state:ready" },
         ],
         state: "open",
         updated_at: "2026-09-14T17:00:00Z",
@@ -1446,18 +1443,18 @@ decisionTable("an authorized review binds readiness to the exact revision", [
           },
         ],
         issueEvents: [
-          stateLabeled(50, "needs-triage"),
-          reviewBy("triager", "ready-for-human"),
+          stateLabeled(50, "state:triage"),
+          reviewBy("triager", "state:ready"),
         ],
-        event: labeledBy("triager", "ready-for-human", issue),
+        event: labeledBy("triager", "state:ready", issue),
         permissions: { triager: role("triage") },
       };
     })(),
     expected: {
       exitCode: 0,
-      remove: ["needs-triage"],
+      remove: ["state:triage"],
       feedback: 13,
-      feedbackBody: [/ready-for-human/, /reviewed by @triager/i],
+      feedbackBody: [/state:ready/, /reviewed by @triager/i],
     },
   },
   {
@@ -1474,7 +1471,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
       const issue = {
         number: 42,
         body: "Intake context.",
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:00:00Z",
       };
@@ -1482,14 +1479,14 @@ decisionTable("an authorized review binds readiness to the exact revision", [
         issue,
         comments: [brief],
         issueEvents: [reviewBy("triager")],
-        event: labeledBy("triager", "ready-for-agent", issue),
+        event: labeledBy("triager", "state:ready", issue),
         permissions: { triager: role("triage") },
       };
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: "create",
       feedbackBody: /wait for the validator to publish/i,
     },
@@ -1511,7 +1508,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
     const issue = {
       number: 42,
       body: ticketBody,
-      labels: [{ name: "ready-for-agent" }],
+      labels: [{ name: "state:ready" }],
       state: "open",
       updated_at: "2026-09-14T17:00:00Z",
     };
@@ -1528,13 +1525,13 @@ decisionTable("an authorized review binds readiness to the exact revision", [
           },
         ],
         issueEvents: [reviewBy(example.login)],
-        event: labeledBy(example.login, "ready-for-agent", issue),
+        event: labeledBy(example.login, "state:ready", issue),
         permissions: { [example.login]: example.permission },
       },
       expected: {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: 13,
         feedbackBody: example.rejection,
       },
@@ -1546,7 +1543,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
       const issue = {
         number: 42,
         body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:00:00Z",
       };
@@ -1554,7 +1551,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
         issue,
         comments: [awaitingTicketFeedback(issue)],
         issueEvents: [readinessReview],
-        event: labeledBy("maintainer", "ready-for-agent", issue),
+        event: labeledBy("maintainer", "state:ready", issue),
         permissions: {
           maintainer: {
             error:
@@ -1565,8 +1562,8 @@ decisionTable("an authorized review binds readiness to the exact revision", [
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
       message: /could not verify/i,
     },
@@ -1577,7 +1574,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
       const issue = {
         number: 42,
         body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:02:00Z",
       };
@@ -1591,28 +1588,28 @@ decisionTable("an authorized review binds readiness to the exact revision", [
             body: issue.body,
             updated_at: "2026-09-14T17:01:00Z",
           },
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           sender: { login: "maintainer" },
         },
         issueEvents: [
           {
             id: 101,
             event: "labeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "maintainer" },
             created_at: "2026-09-14T17:00:00Z",
           },
           {
             id: 102,
             event: "unlabeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "maintainer" },
             created_at: "2026-09-14T17:01:00Z",
           },
           {
             id: 103,
             event: "labeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "writer" },
             created_at: "2026-09-14T17:02:00Z",
           },
@@ -1622,8 +1619,8 @@ decisionTable("an authorized review binds readiness to the exact revision", [
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
       message: /@writer is not authorized/,
       feedbackBody: /"observedEventId":"103"/,
@@ -1642,7 +1639,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
       const issue = {
         number: 42,
         body: "Intake context.",
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:02:00Z",
       };
@@ -1655,7 +1652,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
             body: feedbackState({
               status: "approved",
               revision: briefRevision(brief),
-              label: "ready-for-agent",
+              label: "state:ready",
               reviewer: "triager",
               kind: "triaged Agent Brief",
             }),
@@ -1666,21 +1663,21 @@ decisionTable("an authorized review binds readiness to the exact revision", [
           {
             id: 101,
             event: "labeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "triager" },
             created_at: "2026-09-14T17:00:00Z",
           },
           {
             id: 102,
             event: "unlabeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "maintainer" },
             created_at: "2026-09-14T17:01:00Z",
           },
           {
             id: 103,
             event: "labeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "second-triager" },
             created_at: "2026-09-14T17:02:00Z",
           },
@@ -1692,7 +1689,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
             body: issue.body,
             updated_at: "2026-09-14T17:01:00Z",
           },
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           sender: { login: "maintainer" },
         },
         permissions: { "second-triager": role("triage") },
@@ -1717,7 +1714,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
       const issue = {
         number: 42,
         body: "Intake context.",
-        labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:01:00Z",
       };
@@ -1730,7 +1727,7 @@ decisionTable("an authorized review binds readiness to the exact revision", [
             body: feedbackState({
               status: "approved",
               revision: briefRevision(brief),
-              label: "ready-for-agent",
+              label: "state:ready",
               reviewer: "triager",
               kind: "triaged Agent Brief",
             }),
@@ -1739,12 +1736,12 @@ decisionTable("an authorized review binds readiness to the exact revision", [
         ],
         permissions: { triager: role("triage") },
         issueEvents: [reviewBy("triager")],
-        event: labeledBy("triager", "ready-for-agent", issue),
+        event: labeledBy("triager", "state:ready", issue),
       };
     })(),
     expected: {
       exitCode: 0,
-      message: /valid triaged Agent Brief with ready-for-agent bound/i,
+      message: /valid triaged Agent Brief with state:ready bound/i,
     },
   },
 ]);
@@ -1772,7 +1769,7 @@ function applyLabelChanges(state, removeLabels, addLabels) {
 // The labels and timeline of an issue that `opener` created with readiness,
 // before any validator run.
 const creationState = (opener) => ({
-  labels: ["ready-for-agent"],
+  labels: ["state:ready"],
   issueEvents: [creationLabel({ actor: { login: opener } })],
 });
 
@@ -1850,10 +1847,10 @@ const unauthorizedOpeners = [
   },
 ];
 
-const lostCreationReadiness = (message, remove = ["ready-for-agent"]) => ({
+const lostCreationReadiness = (message, remove = ["state:ready"]) => ({
   exitCode: 1,
   remove,
-  add: ["needs-triage"],
+  add: ["state:triage"],
   feedback: "create",
   message,
 });
@@ -1867,17 +1864,17 @@ decisionTable(
         "both label applications recorded in the creation second",
         [
           creationLabel(),
-          creationLabel({ id: 102, label: { name: "needs-triage" } }),
+          creationLabel({ id: 102, label: { name: "state:triage" } }),
         ],
       ],
     ].map(([history, issueEvents]) => ({
-      name: `an authorized native issue creation with needs-triage keeps only its readiness state: ${history}`,
+      name: `an authorized native issue creation with state:triage keeps only its readiness state: ${history}`,
       snapshot: (() => {
         const issue = {
           number: 42,
           node_id: "ISSUE_42",
           body: ticketBody,
-          labels: [{ name: "needs-triage" }, { name: "ready-for-agent" }],
+          labels: [{ name: "state:triage" }, { name: "state:ready" }],
           state: "open",
           created_at: "2026-09-14T17:00:00Z",
           updated_at: "2026-09-14T17:00:00Z",
@@ -1901,9 +1898,9 @@ decisionTable(
       })(),
       expected: {
         exitCode: 0,
-        remove: ["needs-triage"],
+        remove: ["state:triage"],
         feedback: "create",
-        message: /valid implementation ticket with ready-for-agent bound/i,
+        message: /valid implementation ticket with state:ready bound/i,
       },
     })),
     {
@@ -1913,7 +1910,7 @@ decisionTable(
           number: 42,
           node_id: "ISSUE_42",
           body: specificationBody,
-          labels: [{ name: "ready-for-agent" }],
+          labels: [{ name: "state:ready" }],
           state: "open",
           created_at: "2026-09-14T17:00:00Z",
           updated_at: "2026-09-14T17:00:00Z",
@@ -1938,48 +1935,7 @@ decisionTable(
       expected: {
         exitCode: 0,
         feedback: "create",
-        message: /valid specification with ready-for-agent bound/i,
-      },
-    },
-    {
-      name: "a repeated multiply-ready opening cannot approve the one remaining label",
-      snapshot: {
-        issue: {
-          number: 42,
-          node_id: "ISSUE_42",
-          body: ticketBody,
-          labels: [{ name: "ready-for-agent" }],
-          state: "open",
-          created_at: "2026-09-14T17:00:00Z",
-          updated_at: "2026-09-14T17:01:00Z",
-        },
-        issueEvents: [
-          {
-            id: 102,
-            event: "unlabeled",
-            label: { name: "ready-for-human" },
-            actor: { login: "maintainer" },
-            created_at: "2026-09-14T17:01:00Z",
-          },
-        ],
-        event: {
-          action: "opened",
-          issue: {
-            number: 42,
-            body: ticketBody,
-            labels: [{ name: "ready-for-agent" }, { name: "ready-for-human" }],
-            created_at: "2026-09-14T17:00:00Z",
-            updated_at: "2026-09-14T17:00:00Z",
-          },
-          sender: { login: "maintainer" },
-        },
-        permissions: { maintainer: role("admin") },
-      },
-      expected: {
-        exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
-        feedback: "create",
+        message: /valid specification with state:ready bound/i,
       },
     },
     {
@@ -1989,7 +1945,7 @@ decisionTable(
           number: 42,
           node_id: "ISSUE_42",
           body: ticketBody,
-          labels: [{ name: "ready-for-agent" }],
+          labels: [{ name: "state:ready" }],
           state: "open",
           created_at: "2026-09-14T17:00:00Z",
           updated_at: "2026-09-14T17:02:00Z",
@@ -2000,21 +1956,21 @@ decisionTable(
             {
               id: 101,
               event: "labeled",
-              label: { name: "ready-for-agent" },
+              label: { name: "state:ready" },
               actor: { login: "maintainer" },
               created_at: "2026-09-14T17:00:00Z",
             },
             {
               id: 102,
               event: "unlabeled",
-              label: { name: "ready-for-agent" },
+              label: { name: "state:ready" },
               actor: { login: "maintainer" },
               created_at: "2026-09-14T17:01:00Z",
             },
             {
               id: 103,
               event: "labeled",
-              label: { name: "ready-for-agent" },
+              label: { name: "state:ready" },
               actor: { login: "maintainer" },
               created_at: "2026-09-14T17:02:00Z",
             },
@@ -2035,8 +1991,8 @@ decisionTable(
       })(),
       expected: {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: "create",
       },
     },
@@ -2044,16 +2000,16 @@ decisionTable(
       name: "a creation-time workflow label event is replaced by the same-second review",
       snapshot: {
         ...supersessionSnapshot({
-          labels: ["needs-triage", "ready-for-agent"],
+          labels: ["state:triage", "state:ready"],
           created_at: "2026-09-14T17:00:00Z",
           issueEvents: [
             readinessReview,
             {
-              ...stateLabeled(102, "needs-triage"),
+              ...stateLabeled(102, "state:triage"),
               created_at: "2026-09-14T17:00:00Z",
             },
           ],
-          event: labeledBy("maintainer", "needs-triage", {
+          event: labeledBy("maintainer", "state:triage", {
             body: ticketBody,
             updated_at: "2026-09-14T17:00:00Z",
           }),
@@ -2061,8 +2017,8 @@ decisionTable(
       },
       expected: {
         exitCode: 0,
-        remove: ["needs-triage"],
-        message: /valid implementation ticket with ready-for-agent bound/i,
+        remove: ["state:triage"],
+        message: /valid implementation ticket with state:ready bound/i,
       },
     },
     ...[null, "2026-09-14T17:00:04Z"].map((updatedAt) => ({
@@ -2074,7 +2030,7 @@ decisionTable(
           labeledPayloadUpdatedAt: updatedAt,
         });
         assert.match(comments[0].body, notAuthorized);
-        assert.deepEqual(labels, ["needs-triage"]);
+        assert.deepEqual(labels, ["state:triage"]);
         assert.equal(comments.length, 1);
       },
     })),
@@ -2096,7 +2052,7 @@ decisionTable(
         });
         assertDecision(second, { exitCode: 0 });
         assert.match(comments[0].body, notAuthorized);
-        assert.deepEqual(labels, ["needs-triage"]);
+        assert.deepEqual(labels, ["state:triage"]);
         assert.equal(comments.length, 1);
       },
     },
@@ -2122,7 +2078,7 @@ decisionTable(
           feedbackBody: notAuthorized,
         });
         assert.match(comments[0].body, notAuthorized);
-        assert.deepEqual(labels, ["needs-triage"]);
+        assert.deepEqual(labels, ["state:triage"]);
         assert.equal(comments.length, 1);
       },
     },
@@ -2130,16 +2086,16 @@ decisionTable(
       name: "the labeled run for a workflow state created beside readiness keeps only the readiness state",
       snapshot: createdWithReadiness({
         run: "labeled",
-        labels: ["needs-triage", "ready-for-agent"],
-        trigger: "needs-triage",
+        labels: ["state:triage", "state:ready"],
+        trigger: "state:triage",
         issueEvents: [
           creationLabel(),
-          creationLabel({ id: 102, label: { name: "needs-triage" } }),
+          creationLabel({ id: 102, label: { name: "state:triage" } }),
         ],
       }),
       expected: {
         exitCode: 0,
-        remove: ["needs-triage"],
+        remove: ["state:triage"],
         feedback: "create",
         feedbackBody: /"reviewEventId":"101"/,
       },
@@ -2152,23 +2108,23 @@ decisionTable(
           assertDecision(first, {
             exitCode: 0,
             feedback: "create",
-            message: /valid implementation ticket with ready-for-agent bound/i,
+            message: /valid implementation ticket with state:ready bound/i,
           });
           assertDecision(second, {
             exitCode: 0,
-            message: /valid implementation ticket with ready-for-agent bound/i,
+            message: /valid implementation ticket with state:ready bound/i,
           });
           assert.deepEqual(recordedState(comments[0].body), {
             status: "approved",
             revision: bodyRevision(
               createdWithReadiness({ run: "opened" }).issue,
             ),
-            label: "ready-for-agent",
+            label: "state:ready",
             reviewer: "maintainer",
             reviewEventId: "101",
             sourceInvalidation: null,
           });
-          assert.deepEqual(labels, ["ready-for-agent"]);
+          assert.deepEqual(labels, ["state:ready"]);
           assert.equal(comments.length, 1);
         },
       },
@@ -2189,7 +2145,7 @@ decisionTable(
             message: /awaiting authorized review/i,
           });
           assert.match(comments[0].body, opener.rejection);
-          assert.deepEqual(labels, ["needs-triage"]);
+          assert.deepEqual(labels, ["state:triage"]);
           assert.equal(comments.length, 1);
         },
       })),
@@ -2213,21 +2169,6 @@ decisionTable(
         bodyLastEditedAt: "2026-09-14T17:00:30Z",
       }),
       expected: lostCreationReadiness(/wait for the validator to publish/i),
-    },
-    {
-      name: "two readiness labels lose readiness when the labeled run arrives first",
-      snapshot: createdWithReadiness({
-        run: "labeled",
-        labels: ["ready-for-agent", "ready-for-human"],
-        issueEvents: [
-          creationLabel(),
-          creationLabel({ id: 102, label: { name: "ready-for-human" } }),
-        ],
-      }),
-      expected: lostCreationReadiness(/only one readiness label/i, [
-        "ready-for-agent",
-        "ready-for-human",
-      ]),
     },
     {
       name: "a later re-add without a revision notice loses readiness",
@@ -2309,9 +2250,9 @@ function rejectedCreationSnapshot() {
 // grant and its cleanup, with the timeline that run reads.
 function freshGrantSnapshot() {
   const snapshot = rejectedCreationSnapshot();
-  snapshot.issue.labels.push({ name: "ready-for-agent" });
+  snapshot.issue.labels.push({ name: "state:ready" });
   snapshot.issue.updated_at = "2026-09-14T17:01:00Z";
-  snapshot.event = labeledBy("maintainer", "ready-for-agent", snapshot.issue);
+  snapshot.event = labeledBy("maintainer", "state:ready", snapshot.issue);
   snapshot.permissions.maintainer = role("admin");
   return snapshot;
 }
@@ -2323,7 +2264,7 @@ function laterGrantSnapshot({ feedback, issueEvents, sender }) {
     number: 42,
     node_id: "ISSUE_42",
     body: ticketBody,
-    labels: [{ name: "ready-for-agent" }],
+    labels: [{ name: "state:ready" }],
     state: "open",
     user: { login: "author" },
     created_at: "2026-09-14T16:00:00Z",
@@ -2333,7 +2274,7 @@ function laterGrantSnapshot({ feedback, issueEvents, sender }) {
     issue,
     comments: [feedback(issue)],
     issueEvents,
-    event: labeledBy(sender, "ready-for-agent", issue),
+    event: labeledBy(sender, "state:ready", issue),
     permissions: {
       author: role("admin"),
       maintainer: role("admin"),
@@ -2342,13 +2283,13 @@ function laterGrantSnapshot({ feedback, issueEvents, sender }) {
   };
 }
 
-// The maintainer applied and removed `ready-for-human`, the author applied
-// `ready-for-agent`, and the maintainer's removal and reapplication of
-// `ready-for-agent` are unrecorded when the maintainer's labeled run reads it.
+// The maintainer applied and removed `state:owner`, the author applied
+// `state:ready`, and the maintainer's removal and reapplication of
+// `state:ready` are unrecorded when the maintainer's labeled run reads it.
 function crossLabelSnapshot() {
   const maintainerHuman = creationLabel({
     id: 201,
-    label: { name: "ready-for-human" },
+    label: { name: "state:owner" },
     created_at: "2026-09-14T17:01:00Z",
   });
   return laterGrantSnapshot({
@@ -2426,14 +2367,14 @@ decisionTable(
         const decision = decideIssueContract(snapshotFor(snapshot));
         assertDecision(decision, {
           exitCode: 0,
-          remove: ["needs-triage"],
+          remove: ["state:triage"],
           feedback: 99,
-          message: /valid implementation ticket with ready-for-agent bound/i,
+          message: /valid implementation ticket with state:ready bound/i,
         });
         assert.deepEqual(recordedState(decision.feedback.body), {
           status: "approved",
           revision: bodyRevision(snapshot.issue),
-          label: "ready-for-agent",
+          label: "state:ready",
           reviewer: "maintainer",
           reviewEventId: "300",
           sourceInvalidation: null,
@@ -2449,21 +2390,21 @@ decisionTable(
         "a trigger by github-actions[bot]",
         () => ({
           ...freshGrantSnapshot(),
-          event: labeledBy(bot.login, "ready-for-agent"),
+          event: labeledBy(bot.login, "state:ready"),
         }),
       ],
       [
         "a non-readiness label",
         () => ({
           ...freshGrantSnapshot(),
-          event: labeledBy("maintainer", "needs-triage"),
+          event: labeledBy("maintainer", "state:triage"),
         }),
       ],
       [
         "a readiness trigger whose label is gone from the re-fetched issue",
         () => {
           const snapshot = freshGrantSnapshot();
-          snapshot.issue.labels = [{ name: "needs-triage" }];
+          snapshot.issue.labels = [{ name: "state:triage" }];
           return snapshot;
         },
       ],
@@ -2495,14 +2436,14 @@ decisionTable(
       }),
       expected: {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: 13,
         message: /timeline does not contain the current readiness label event/,
       },
     })),
     {
-      name: "the sender's application of the other readiness label leaves the trigger unrecorded",
+      name: "the sender's application of another state leaves the trigger unrecorded",
       run: () =>
         assert.equal(
           readinessTriggerUnrecorded(snapshotFor(crossLabelSnapshot())),
@@ -2510,12 +2451,12 @@ decisionTable(
         ),
     },
     {
-      name: "the sender's application of the other readiness label fails closed rather than binding another person's application",
+      name: "the sender's application of another state fails closed rather than binding another person's application",
       snapshot: crossLabelSnapshot(),
       expected: {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: 13,
         message: /timeline does not contain the current readiness label event/,
       },
@@ -2544,8 +2485,8 @@ decisionTable(
       }),
       expected: {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: 13,
         message: /timeline does not contain the current readiness label event/,
         notFeedbackBody: /reviewed by @triager/,
@@ -2556,7 +2497,7 @@ decisionTable(
       snapshot: createdWithReadiness({
         run: "labeled",
         labeler: "documenter",
-        currentLabels: ["ready-for-agent", "documentation"],
+        currentLabels: ["state:ready", "documentation"],
         trigger: "documentation",
         issueEvents: [
           creationLabel(),
@@ -2572,7 +2513,7 @@ decisionTable(
       expected: {
         exitCode: 0,
         feedback: "create",
-        message: /valid implementation ticket with ready-for-agent bound/i,
+        message: /valid implementation ticket with state:ready bound/i,
         feedbackBody: [/reviewed by @maintainer/, /"reviewEventId":"101"/],
       },
     },
@@ -2611,7 +2552,7 @@ decisionTable(
         const rejection = decideIssueContract(snapshotFor(labeled));
         assertDecision(rejection, {
           ...lostCreationReadiness(notAuthorized),
-          feedbackBody: /"rejectedCreationLabel":"ready-for-agent"/,
+          feedbackBody: /"rejectedCreationLabel":"state:ready"/,
         });
         applyFeedback(comments, rejection);
         applyLabelChanges(state, rejection.removeLabels, rejection.addLabels);
@@ -2628,7 +2569,7 @@ decisionTable(
         const kept = decideIssueContract(snapshotFor(opened));
         assertDecision(kept, { exitCode: 0 });
         assert.match(comments[0].body, notAuthorized);
-        assert.deepEqual(state.labels, ["needs-triage"]);
+        assert.deepEqual(state.labels, ["state:triage"]);
       },
     },
   ],
@@ -2684,8 +2625,8 @@ decisionTable(
       snapshot: retrySnapshot({ issueEvents: [rejectedGrant] }),
       expected: {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: 13,
         message: /timeline does not contain the current readiness label event/,
         notMessage: /wait for the validator to publish/i,
@@ -2701,12 +2642,12 @@ decisionTable(
         assertDecision(decision, {
           exitCode: 0,
           feedback: 13,
-          message: /valid implementation ticket with ready-for-agent bound/i,
+          message: /valid implementation ticket with state:ready bound/i,
         });
         assert.deepEqual(recordedState(decision.feedback.body), {
           status: "approved",
           revision: bodyRevision(snapshot.issue),
-          label: "ready-for-agent",
+          label: "state:ready",
           reviewer: "maintainer",
           reviewEventId: "203",
           sourceInvalidation: null,
@@ -2725,7 +2666,7 @@ decisionTable(
         assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), false);
         assertDecision(decideIssueContract(snapshotFor(snapshot)), {
           exitCode: 0,
-          message: /valid implementation ticket with ready-for-agent bound/i,
+          message: /valid implementation ticket with state:ready bound/i,
         });
       },
     },
@@ -2736,8 +2677,8 @@ decisionTable(
         assert.equal(readinessTriggerUnrecorded(snapshotFor(snapshot)), true);
         assertDecision(decideIssueContract(snapshotFor(snapshot)), {
           exitCode: 1,
-          remove: ["ready-for-agent"],
-          add: ["needs-triage"],
+          remove: ["state:ready"],
+          add: ["state:triage"],
           feedback: 13,
           message:
             /timeline does not contain the current readiness label event/,
@@ -2756,8 +2697,8 @@ decisionTable(
         (snapshot) =>
           assertDecision(decideIssueContract(snapshotFor(snapshot)), {
             exitCode: 1,
-            remove: ["ready-for-agent"],
-            add: ["needs-triage"],
+            remove: ["state:ready"],
+            add: ["state:triage"],
             feedback: 13,
             message:
               /timeline does not contain the current readiness label event/,
@@ -2808,8 +2749,8 @@ decisionTable(
         }),
         expected: {
           exitCode: 1,
-          remove: ["ready-for-agent"],
-          add: ["needs-triage"],
+          remove: ["state:ready"],
+          add: ["state:triage"],
           feedback: 13,
           message:
             /timeline does not contain the current readiness label event/,
@@ -2822,8 +2763,8 @@ decisionTable(
 // A reapplication run's fail-closed decision.
 const reapplicationFailsClosed = {
   exitCode: 1,
-  remove: ["ready-for-agent"],
-  add: ["needs-triage"],
+  remove: ["state:ready"],
+  add: ["state:triage"],
   feedback: 13,
   message: /timeline does not contain the current readiness label event/,
 };
@@ -2874,8 +2815,8 @@ decisionTable(
           assert.equal(readinessTriggerUnrecorded(snapshot), false);
           assertDecision(decideIssueContract(snapshot), {
             exitCode: 1,
-            remove: ["ready-for-agent"],
-            add: ["needs-triage"],
+            remove: ["state:ready"],
+            add: ["state:triage"],
             feedback: 13,
             message: /@alice is not authorized/,
           });
@@ -2894,12 +2835,12 @@ decisionTable(
         assertDecision(decision, {
           exitCode: 0,
           feedback: 13,
-          message: /valid implementation ticket with ready-for-agent bound/i,
+          message: /valid implementation ticket with state:ready bound/i,
         });
         assert.deepEqual(recordedState(decision.feedback.body), {
           status: "approved",
           revision: bodyRevision(snapshot.issue),
-          label: "ready-for-agent",
+          label: "state:ready",
           reviewer: "bob",
           reviewEventId: "203",
           sourceInvalidation: null,
@@ -2909,160 +2850,22 @@ decisionTable(
   ],
 );
 
-// A swap run's fail-closed decision.
-const swapFailsClosed = {
-  ...reapplicationFailsClosed,
-  remove: ["ready-for-human"],
-};
-
 decisionTable(
-  "a readiness trigger whose label is gone is checked against the readiness label the issue carries",
+  "a readiness trigger whose label is gone awaits no timeline application",
   [
-    ...[
-      ["awaits review", {}],
-      ["records Bob's approval", { approved: true }],
-    ].flatMap(([name, options]) => [
-      {
-        name: `Alice's ready-for-agent trigger over a timeline ending at Bob's ready-for-human is unrecorded while the feedback ${name}`,
-        run: () =>
-          assert.equal(
-            readinessTriggerUnrecorded(
-              snapshotFor({
-                ...swapRun(options),
-                issueEvents: laggingSwapEvents,
-              }),
-            ),
-            true,
-          ),
-      },
-      {
-        name: `Alice's ready-for-agent trigger over a timeline ending at Bob's ready-for-human fails closed rather than binding Bob's review while the feedback ${name}`,
-        snapshot: { ...swapRun(options), issueEvents: laggingSwapEvents },
-        expected: swapFailsClosed,
-        check: keepsNoApproval,
-      },
-      {
-        name: `Alice's ready-for-agent trigger over the complete swap is rejected as unauthorized while the feedback ${name}`,
-        run: () => {
-          const snapshot = snapshotFor({
-            ...swapRun(options),
-            issueEvents: swapEvents(),
-          });
-          assert.equal(readinessTriggerUnrecorded(snapshot), false);
-          assertDecision(decideIssueContract(snapshot), {
-            exitCode: 1,
-            remove: ["ready-for-human"],
-            add: ["needs-triage"],
-            feedback: 13,
-            message: /@alice is not authorized/,
-          });
-        },
-      },
-    ]),
     {
-      name: "Alice's ready-for-agent trigger over her own ready-for-human at the barrier is unrecorded and fails closed",
+      name: "Alice's state:ready trigger stays recorded over a lagging timeline when the issue carries no readiness label",
       run: () => {
-        const snapshot = snapshotFor({
-          ...swapRun(),
-          issueEvents: swapEvents().slice(0, 1),
-        });
-        assert.equal(readinessTriggerUnrecorded(snapshot), true);
-        assertDecision(decideIssueContract(snapshot), swapFailsClosed);
-      },
-    },
-    {
-      name: "Alice's delayed ready-for-agent trigger over Bob's recorded swap to ready-for-human is unrecorded and fails closed",
-      run: () => {
-        const snapshot = snapshotFor({
-          ...swapRun(),
-          issueEvents: swapEvents({ swapper: "bob" }),
-        });
-        assert.equal(readinessTriggerUnrecorded(snapshot), true);
-        const decision = decideIssueContract(snapshot);
-        assertDecision(decision, {
-          ...swapFailsClosed,
-          notFeedbackBody: /reviewed by @bob/,
-        });
-        keepsNoApproval(decision);
-      },
-    },
-    {
-      name: "Bob's ready-for-agent trigger over his own recorded swap binds his ready-for-human application",
-      run: () => {
-        const snapshot = snapshotFor({
-          ...swapRun({ sender: "bob" }),
-          issueEvents: swapEvents({ applier: "bob" }),
-        });
-        assert.equal(readinessTriggerUnrecorded(snapshot), false);
-        const decision = decideIssueContract(snapshot);
-        assertDecision(decision, {
-          exitCode: 0,
-          feedback: 13,
-          message: /valid implementation ticket with ready-for-human bound/i,
-        });
-        assert.deepEqual(recordedState(decision.feedback.body), {
-          status: "approved",
-          revision: bodyRevision(snapshot.issue),
-          label: "ready-for-human",
-          reviewer: "bob",
-          reviewEventId: "207",
-          sourceInvalidation: null,
-        });
-      },
-    },
-    {
-      name: "Alice's ready-for-agent trigger stays recorded over a lagging timeline when the issue carries no readiness label",
-      run: () => {
-        const run = swapRun();
-        run.issue.labels = [{ name: "needs-triage" }];
+        const run = reapplicationRun();
+        run.issue.labels = [{ name: "state:triage" }];
         assert.equal(
           readinessTriggerUnrecorded(
-            snapshotFor({ ...run, issueEvents: laggingSwapEvents }),
+            snapshotFor({ ...run, issueEvents: laggingReapplicationEvents }),
           ),
           false,
         );
       },
     },
-    ...[
-      ["ready-for-agent", "ready-for-human"],
-      ["ready-for-human", "ready-for-agent"],
-    ].flatMap(([trigger, other]) =>
-      [
-        [trigger, other],
-        [other, trigger],
-      ].map((carried) => ({
-        name: `Alice's ${trigger} trigger over an issue carrying ${carried.join(" and ")} is checked against her own ${trigger}, not Bob's ${other}`,
-        run: () => {
-          // Alice's ready-for-human (100) and the bot's removal (101), then
-          // Alice's application of the trigger's label (300) and Bob's of the
-          // other (301).
-          const issueEvents = [
-            ...swapEvents().slice(0, 2),
-            creationLabel({
-              id: 300,
-              label: { name: trigger },
-              actor: { login: "alice" },
-              created_at: "2026-09-14T17:02:00Z",
-            }),
-            creationLabel({
-              id: 301,
-              label: { name: other },
-              actor: { login: "bob" },
-              created_at: "2026-09-14T17:02:10Z",
-            }),
-          ];
-          const run = reapplicationRun({ trigger });
-          const carrying = (labels) =>
-            snapshotFor({
-              ...run,
-              issue: { ...run.issue, labels: labels.map((name) => ({ name })) },
-              issueEvents,
-            });
-          assert.equal(readinessTriggerUnrecorded(carrying(carried)), false);
-          assert.equal(readinessTriggerUnrecorded(carrying([other])), true);
-        },
-      })),
-    ),
   ],
 );
 
@@ -3070,59 +2873,11 @@ decisionTable(
   "a recorded readiness rejection lasts until another review or contract change",
   [
     {
-      name: "a multiple-labels rejection survives the next run on the state its cleanup left",
-      run: () => {
-        const comments = [];
-        const state = {
-          labels: ["ready-for-agent", "ready-for-human"],
-          issueEvents: [
-            creationLabel(),
-            creationLabel({ id: 102, label: { name: "ready-for-human" } }),
-          ],
-        };
-        const snapshot = createdWithReadiness({
-          run: "labeled",
-          labels: state.labels,
-          issueEvents: state.issueEvents,
-          comments,
-        });
-        const rejection = decideIssueContract(snapshotFor(snapshot));
-        assertDecision(
-          rejection,
-          lostCreationReadiness(/only one readiness label/, state.labels),
-        );
-        applyFeedback(comments, rejection);
-        applyLabelChanges(state, rejection.removeLabels, rejection.addLabels);
-        snapshot.issue.labels = state.labels.map((name) => ({ name }));
-        snapshot.event = { action: "reopened", issue: { number: 42 } };
-        const next = decideIssueContract(snapshotFor(snapshot));
-        assertDecision(next, { exitCode: 0 });
-        assert.deepEqual(recordedState(comments[0].body), {
-          status: "awaiting-review",
-          revision: bodyRevision(snapshot.issue),
-          label: null,
-          reviewer: null,
-          observedEventId: "102",
-          sourceInvalidation: null,
-          rejectionReason:
-            "Apply only one readiness label to an implementation contract.",
-        });
-        assert.match(
-          comments[0].body,
-          /^Readiness was removed: Apply only one readiness label to an implementation contract\.$/m,
-        );
-        assert.match(
-          comments[0].body,
-          /The validator removed `ready-for-agent` and `ready-for-human` from the implementation ticket/,
-        );
-      },
-    },
-    {
       name: "a previous validator's record without rejectionReason keeps the plain notice unchanged",
       run: () => {
         const issue = createdWithReadiness({
           run: "opened",
-          currentLabels: ["needs-triage"],
+          currentLabels: ["state:triage"],
         }).issue;
         const previous = awaitingTicketFeedback(issue, {
           observedEventId: "101",
@@ -3149,7 +2904,7 @@ decisionTable(
         for (const event of [
           {
             action: "unlabeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             sender: bot,
           },
           { action: "created", comment: { id: 100, body: "Discussion." } },
@@ -3167,21 +2922,17 @@ decisionTable(
       name: "an authorized readiness event replaces the rejection with approval",
       run: () => {
         const snapshot = rejectedCreationSnapshot();
-        snapshot.issue.labels.push({ name: "ready-for-agent" });
+        snapshot.issue.labels.push({ name: "state:ready" });
         snapshot.issue.updated_at = "2026-09-14T17:01:00Z";
         snapshot.issueEvents.push(
           creationLabel({ id: 300, created_at: snapshot.issue.updated_at }),
         );
-        snapshot.event = labeledBy(
-          "maintainer",
-          "ready-for-agent",
-          snapshot.issue,
-        );
+        snapshot.event = labeledBy("maintainer", "state:ready", snapshot.issue);
         snapshot.permissions.maintainer = role("admin");
         const decision = decideIssueContract(snapshotFor(snapshot));
         assertDecision(decision, {
           exitCode: 0,
-          remove: ["needs-triage"],
+          remove: ["state:triage"],
           feedback: 99,
           feedbackBody: /reviewed by @maintainer/,
         });
@@ -3212,7 +2963,7 @@ decisionTable(
           ];
         assertDecision(decideIssueContract(snapshotFor(snapshot)), {
           exitCode: 1,
-          remove: ["ready-for-agent"],
+          remove: ["state:ready"],
           feedback,
           message:
             /timeline does not contain the current readiness label event/,
@@ -3279,7 +3030,7 @@ decisionTable(
       },
     })),
     ...[
-      ["a different readiness label", labeledBy("reporter", "ready-for-human")],
+      ["a different state", labeledBy("reporter", "state:owner")],
       [
         "a readiness removal",
         { ...labeledBy("reporter"), action: "unlabeled" },
@@ -3332,16 +3083,16 @@ function supersessionSnapshot({
 
 const supersededBy = (state) => ({
   exitCode: 0,
-  remove: ["ready-for-agent"],
+  remove: ["state:ready"],
   feedback: 13,
-  message: new RegExp(`\`${state}\` superseded ready-for-agent`),
+  message: new RegExp(`\`${state}\` superseded state:ready`),
   feedbackBody: [
     /^## Issue contract readiness removed$/m,
     new RegExp(
       `^Readiness was removed: \`${state}\` was applied after the review and supersedes its readiness\\.$`,
       "m",
     ),
-    /The validator removed `ready-for-agent` from the /,
+    /The validator removed `state:ready` from the /,
     /A fresh authorized review is required to restore readiness/,
     /wait for this revision notice before applying the label/,
   ],
@@ -3349,10 +3100,10 @@ const supersededBy = (state) => ({
 });
 
 decisionTable("workflow states are ordered against the review", [
-  ...["wontfix", "needs-info", "needs-triage"].map((state) => ({
+  ...["wontfix", "state:reporter", "state:triage"].map((state) => ({
     name: `a workflow state applied after a direct contract's review supersedes its readiness: ${state}`,
     snapshot: supersessionSnapshot({
-      labels: ["ready-for-agent", state],
+      labels: ["state:ready", state],
       issueEvents: [
         readinessReview,
         {
@@ -3375,12 +3126,12 @@ decisionTable("workflow states are ordered against the review", [
   {
     name: "a superseding workflow state becomes the only workflow state",
     snapshot: supersessionSnapshot({
-      labels: ["needs-triage", "ready-for-agent", "wontfix"],
+      labels: ["state:triage", "state:ready", "wontfix"],
       issueEvents: [
         {
           id: 100,
           event: "labeled",
-          label: { name: "needs-triage" },
+          label: { name: "state:triage" },
           actor: { login: "reporter" },
           created_at: "2026-09-14T16:59:00Z",
         },
@@ -3400,7 +3151,7 @@ decisionTable("workflow states are ordered against the review", [
     }),
     expected: {
       ...supersededBy("wontfix"),
-      remove: ["needs-triage", "ready-for-agent"],
+      remove: ["state:triage", "state:ready"],
     },
   },
   ...[
@@ -3410,14 +3161,14 @@ decisionTable("workflow states are ordered against the review", [
   ].map(([name, updatedAt]) => ({
     name: `a workflow state labeled after the review survives a lagging event timeline: ${name}`,
     snapshot: supersessionSnapshot({
-      labels: ["ready-for-agent", "needs-info"],
+      labels: ["state:ready", "state:reporter"],
       issueEvents: [readinessReview],
-      event: labeledBy("maintainer", "needs-info", {
+      event: labeledBy("maintainer", "state:reporter", {
         body: ticketBody,
         updated_at: updatedAt,
       }),
     }),
-    expected: supersededBy("needs-info"),
+    expected: supersededBy("state:reporter"),
   })),
   ...[
     ["never recorded", []],
@@ -3443,7 +3194,7 @@ decisionTable("workflow states are ordered against the review", [
   ].map(([name, stateEvents]) => ({
     name: `a workflow state the timeline has not recorded supersedes the review in another event's run: ${name}`,
     snapshot: supersessionSnapshot({
-      labels: ["ready-for-agent", "wontfix"],
+      labels: ["state:ready", "wontfix"],
       issueEvents: [...stateEvents, readinessReview],
       event: { action: "reopened", issue: { number: 42 } },
     }),
@@ -3463,8 +3214,8 @@ decisionTable("workflow states are ordered against the review", [
         number: 42,
         body: "Intake context.",
         labels: [
-          { name: "enhancement" },
-          { name: "ready-for-agent" },
+          { name: "type:enhancement" },
+          { name: "state:ready" },
           { name: "wontfix" },
         ],
         state: "open",
@@ -3478,7 +3229,7 @@ decisionTable("workflow states are ordered against the review", [
             body: feedbackState({
               status: "approved",
               revision: briefRevision(brief),
-              label: "ready-for-agent",
+              label: "state:ready",
               reviewer: "triager",
               kind: "triaged Agent Brief",
             }),
@@ -3489,7 +3240,7 @@ decisionTable("workflow states are ordered against the review", [
           {
             id: 101,
             event: "labeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "triager" },
             created_at: "2026-09-14T17:00:00Z",
           },
@@ -3505,7 +3256,7 @@ decisionTable("workflow states are ordered against the review", [
         event: {
           action: "labeled",
           issue: { number: 42, body: issue.body },
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           sender: { login: "triager" },
         },
       };
@@ -3519,12 +3270,12 @@ decisionTable("workflow states are ordered against the review", [
       feedbackBody: /## Issue contract not required/,
     },
   },
-  ...["needs-info", "ready-for-agent"].map((trigger) => {
-    const state = "needs-info";
+  ...["state:reporter", "state:ready"].map((trigger) => {
+    const state = "state:reporter";
     return {
       name: `a workflow state recorded after the review in the same second supersedes it: in the run for ${trigger}`,
       snapshot: supersessionSnapshot({
-        labels: ["ready-for-agent", state],
+        labels: ["state:ready", state],
         created_at: "2026-09-14T16:00:00Z",
         issueEvents: [
           readinessReview,
@@ -3544,23 +3295,23 @@ decisionTable("workflow states are ordered against the review", [
       expected: supersededBy(state),
     };
   }),
-  ...["needs-info", "ready-for-agent"].map((trigger) => ({
+  ...["state:reporter", "state:ready"].map((trigger) => ({
     name: `a workflow state recorded before the review in the same second is replaced: in the run for ${trigger}`,
     snapshot: supersessionSnapshot({
-      labels: ["needs-info", "ready-for-agent"],
+      labels: ["state:reporter", "state:ready"],
       created_at: "2026-09-14T16:00:00Z",
       issueEvents: [
         {
           id: 101,
           event: "labeled",
-          label: { name: "needs-info" },
+          label: { name: "state:reporter" },
           actor: { login: "maintainer" },
           created_at: "2026-09-14T17:00:00Z",
         },
         {
           id: 102,
           event: "labeled",
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           actor: { login: "maintainer" },
           created_at: "2026-09-14T17:00:00Z",
         },
@@ -3572,9 +3323,9 @@ decisionTable("workflow states are ordered against the review", [
     }),
     expected: {
       exitCode: 0,
-      remove: ["needs-info"],
+      remove: ["state:reporter"],
       feedback: 13,
-      message: /valid implementation ticket with ready-for-agent bound/i,
+      message: /valid implementation ticket with state:ready bound/i,
     },
   })),
   .../** @type {[string, object[], boolean][]} */ ([
@@ -3584,14 +3335,14 @@ decisionTable("workflow states are ordered against the review", [
         {
           id: 99,
           event: "labeled",
-          label: { name: "needs-info" },
+          label: { name: "state:reporter" },
           actor: { login: "maintainer" },
           created_at: "2026-09-14T17:00:00Z",
         },
         {
           id: 100,
           event: "unlabeled",
-          label: { name: "needs-info" },
+          label: { name: "state:reporter" },
           actor: { login: "maintainer" },
           created_at: "2026-09-14T17:00:00Z",
         },
@@ -3604,7 +3355,7 @@ decisionTable("workflow states are ordered against the review", [
         {
           id: 100,
           event: "labeled",
-          label: { name: "needs-info" },
+          label: { name: "state:reporter" },
           actor: { login: "maintainer" },
           created_at: "2026-09-14T16:59:59Z",
         },
@@ -3615,31 +3366,31 @@ decisionTable("workflow states are ordered against the review", [
     [
       [
         "its own run with a later payload time",
-        labeledBy("maintainer", "needs-info", {
+        labeledBy("maintainer", "state:reporter", {
           body: ticketBody,
           updated_at: "2026-09-14T17:00:04Z",
         }),
       ],
       [
         "its own run without a payload time",
-        labeledBy("maintainer", "needs-info", { body: ticketBody }),
+        labeledBy("maintainer", "state:reporter", { body: ticketBody }),
       ],
       ["another event's run", { action: "reopened", issue: { number: 42 } }],
     ].map(([run, event]) => ({
       name: `a carried workflow state is ordered by its latest recorded change: ${name}, in ${run}`,
       snapshot: supersessionSnapshot({
-        labels: ["ready-for-agent", "needs-info"],
+        labels: ["state:ready", "state:reporter"],
         created_at: "2026-09-14T15:00:00Z",
         issueEvents: [...stateEvents, readinessReview],
         event,
       }),
       expected: superseded
-        ? supersededBy("needs-info")
+        ? supersededBy("state:reporter")
         : {
             exitCode: 0,
-            remove: ["needs-info"],
+            remove: ["state:reporter"],
             feedback: null,
-            message: /valid implementation ticket with ready-for-agent bound/i,
+            message: /valid implementation ticket with state:ready bound/i,
           },
     })),
   ),
@@ -3659,14 +3410,14 @@ decisionTable("workflow states are ordered against the review", [
         event: {
           action: "unlabeled",
           issue: { number: 42, body: issue.body },
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           sender: { login: "maintainer" },
         },
       };
     })(),
     expected: {
       exitCode: 0,
-      add: ["needs-triage"],
+      add: ["state:triage"],
       feedback: 13,
       feedbackBody: /awaiting review/i,
     },
@@ -3677,21 +3428,21 @@ decisionTable("workflow states are ordered against the review", [
       const issue = {
         number: 42,
         body: ticketBody,
-        labels: [{ name: "needs-info" }],
+        labels: [{ name: "state:reporter" }],
         state: "open",
       };
       return {
         issue,
         comments: [approvedTicketFeedback(issue)],
         issueEvents: [
-          stateLabeled(50, "needs-info"),
+          stateLabeled(50, "state:reporter"),
           readinessReview,
           readinessRemoved,
         ],
         event: {
           action: "unlabeled",
           issue: { number: 42, body: issue.body },
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           sender: { login: "maintainer" },
         },
       };
@@ -3712,7 +3463,7 @@ decisionTable("workflow states are ordered against the review", [
         issue: {
           number: 42,
           body: "Intake context.",
-          labels: [{ name: "enhancement" }],
+          labels: [{ name: "type:enhancement" }],
           state: "open",
         },
         comments: [
@@ -3722,7 +3473,7 @@ decisionTable("workflow states are ordered against the review", [
             body: feedbackState({
               status: "approved",
               revision: briefRevision(brief),
-              label: "ready-for-agent",
+              label: "state:ready",
               reviewer: "triager",
               kind: "triaged Agent Brief",
             }),
@@ -3733,14 +3484,14 @@ decisionTable("workflow states are ordered against the review", [
         event: {
           action: "unlabeled",
           issue: { number: 42, body: "Intake context." },
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           sender: { login: "maintainer" },
         },
       };
     })(),
     expected: {
       exitCode: 0,
-      add: ["needs-triage"],
+      add: ["state:triage"],
       feedback: 13,
       feedbackBody: /awaiting review/i,
     },
@@ -3748,7 +3499,7 @@ decisionTable("workflow states are ordered against the review", [
 ]);
 
 // A triaged bug whose Agent Brief awaits review at its published revision, as
-// on #353: `bug` and `needs-triage` applied at creation, and `labels` and
+// on #353: `bug` and `state:triage` applied at creation, and `labels` and
 // `events` since. `maintainer` holds the admin role and `writer` the write
 // role.
 const triagedBrief = {
@@ -3802,8 +3553,8 @@ function triagedSnapshot({
     },
     comments: [brief, briefNotice],
     issueEvents: [
-      triagedLabel(1, "bug", triagedAt),
-      triagedLabel(2, "needs-triage", triagedAt),
+      triagedLabel(1, "type:bug", triagedAt),
+      triagedLabel(2, "state:triage", triagedAt),
       ...events,
     ],
     permissions: { maintainer: role("admin"), writer: role("write") },
@@ -3822,10 +3573,10 @@ const triggers = (applier = "maintainer") => [
 // The 10:00 round: the model label, then readiness after the notice.
 const firstRound = (event) =>
   triagedSnapshot({
-    labels: ["bug", "needs-triage", modelLabel, "ready-for-agent"],
+    labels: ["type:bug", "state:triage", modelLabel, "state:ready"],
     events: [
       triagedLabel(3, modelLabel, "2026-10-13T10:00:48Z"),
-      triagedLabel(4, "ready-for-agent", "2026-10-13T10:00:49Z"),
+      triagedLabel(4, "state:ready", "2026-10-13T10:00:49Z"),
     ],
     event,
   });
@@ -3835,28 +3586,28 @@ const firstRound = (event) =>
 const skipRound = (event) =>
   triagedSnapshot({
     labels: [
-      "bug",
-      "needs-triage",
+      "type:bug",
+      "state:triage",
       modelLabel,
       "factory:skip",
-      "ready-for-agent",
+      "state:ready",
     ],
     events: [
       triagedLabel(3, modelLabel, "2026-10-13T10:00:48Z"),
       triagedLabel(4, "factory:skip", "2026-10-13T10:00:48Z"),
-      triagedLabel(5, "ready-for-agent", "2026-10-13T10:00:48Z"),
+      triagedLabel(5, "state:ready", "2026-10-13T10:00:48Z"),
     ],
     event,
   });
 
 // The 10:02 round with the notice intact: readiness applied and
-// `needs-triage` removed in one edit.
+// `state:triage` removed in one edit.
 const secondRound = (event) =>
   triagedSnapshot({
-    labels: ["bug", "ready-for-agent"],
+    labels: ["type:bug", "state:ready"],
     events: [
-      triagedLabel(3, "ready-for-agent", "2026-10-13T10:02:27Z"),
-      triagedUnlabel(4, "needs-triage", "2026-10-13T10:02:28Z"),
+      triagedLabel(3, "state:ready", "2026-10-13T10:02:27Z"),
+      triagedUnlabel(4, "state:triage", "2026-10-13T10:02:28Z"),
     ],
     event,
   });
@@ -3864,13 +3615,13 @@ const secondRound = (event) =>
 const approvedAtBrief = {
   exitCode: 0,
   feedback: 13,
-  message: /valid triaged Agent Brief with ready-for-agent bound/i,
+  message: /valid triaged Agent Brief with state:ready bound/i,
 };
 const assertBindsBrief = (decision, reviewEventId) =>
   assert.deepEqual(recordedState(decision.feedback.body), {
     status: "approved",
     revision: briefRevision(triagedBrief),
-    label: "ready-for-agent",
+    label: "state:ready",
     reviewer: "maintainer",
     reviewEventId,
     sourceInvalidation: null,
@@ -3880,9 +3631,9 @@ decisionTable(
   "every run settles the workflow state from the issue's current state",
   [
     ...triggers().map(([name, event]) => ({
-      name: `the 10:00 round approves readiness and removes needs-triage in the run for ${name}`,
+      name: `the 10:00 round approves readiness and removes state:triage in the run for ${name}`,
       snapshot: firstRound(event),
-      expected: { ...approvedAtBrief, remove: ["needs-triage"] },
+      expected: { ...approvedAtBrief, remove: ["state:triage"] },
       check: (decision) => assertBindsBrief(decision, "4"),
     })),
     {
@@ -3908,9 +3659,9 @@ decisionTable(
       },
     },
     {
-      name: "readiness applied with factory:skip is approved, and the issue keeps ready-for-agent and factory:skip",
+      name: "readiness applied with factory:skip is approved, and the issue keeps state:ready and factory:skip",
       snapshot: skipRound(labeledBy("maintainer")),
-      expected: { ...approvedAtBrief, remove: ["needs-triage"] },
+      expected: { ...approvedAtBrief, remove: ["state:triage"] },
       check: (decision) => {
         assertBindsBrief(decision, "5");
         const labels = afterWrites(
@@ -3918,18 +3669,18 @@ decisionTable(
           decision,
         ).issue.labels.map(({ name }) => name);
         assert.deepEqual(labels, [
-          "bug",
+          "type:bug",
           modelLabel,
           "factory:skip",
-          "ready-for-agent",
+          "state:ready",
         ]);
       },
     },
     .../** @type {[string, any][]} */ ([
       ["readiness", labeledBy("maintainer")],
       [
-        "needs-triage",
-        { ...labeledBy("maintainer", "needs-triage"), action: "unlabeled" },
+        "state:triage",
+        { ...labeledBy("maintainer", "state:triage"), action: "unlabeled" },
       ],
     ]).map(([first, firstEvent]) => ({
       name: `the 10:02 round approves readiness whichever run goes first: ${first}`,
@@ -3942,7 +3693,7 @@ decisionTable(
         const other =
           firstEvent.action === "labeled"
             ? {
-                ...labeledBy("maintainer", "needs-triage"),
+                ...labeledBy("maintainer", "state:triage"),
                 action: "unlabeled",
               }
             : labeledBy("maintainer");
@@ -3955,20 +3706,20 @@ decisionTable(
       },
     })),
     {
-      name: "removing needs-triage while the brief awaits review restores it and keeps the notice, and readiness afterwards is approved",
+      name: "removing state:triage while the brief awaits review restores it and keeps the notice, and readiness afterwards is approved",
       run: () => {
         const removed = triagedSnapshot({
-          labels: ["bug"],
-          events: [triagedUnlabel(3, "needs-triage", "2026-10-13T10:02:27Z")],
+          labels: ["type:bug"],
+          events: [triagedUnlabel(3, "state:triage", "2026-10-13T10:02:27Z")],
           event: {
-            ...labeledBy("maintainer", "needs-triage"),
+            ...labeledBy("maintainer", "state:triage"),
             action: "unlabeled",
           },
         });
         const restore = decideIssueContract(snapshotFor(removed));
         assertDecision(restore, {
           exitCode: 0,
-          add: ["needs-triage"],
+          add: ["state:triage"],
           message: /awaiting authorized review/i,
         });
         const restored = afterWrites(removed, restore);
@@ -3976,41 +3727,41 @@ decisionTable(
           ...restored,
           issue: {
             ...restored.issue,
-            labels: [...restored.issue.labels, { name: "ready-for-agent" }],
+            labels: [...restored.issue.labels, { name: "state:ready" }],
           },
           issueEvents: [
             ...restored.issueEvents,
-            triagedLabel(5, "ready-for-agent", "2026-10-13T10:05:00Z"),
+            triagedLabel(5, "state:ready", "2026-10-13T10:05:00Z"),
           ],
           event: labeledBy("maintainer"),
         };
         const approval = decideIssueContract(snapshotFor(ready));
         assertDecision(approval, {
           ...approvedAtBrief,
-          remove: ["needs-triage"],
+          remove: ["state:triage"],
         });
         assertBindsBrief(approval, "5");
       },
     },
     ...[
       [
-        "needs-info applied after needs-triage",
-        [triagedLabel(3, "needs-info", "2026-10-13T10:00:00Z")],
-        "needs-triage",
+        "state:reporter applied after state:triage",
+        [triagedLabel(3, "state:reporter", "2026-10-13T10:00:00Z")],
+        "state:triage",
       ],
       [
-        "needs-triage re-applied after needs-info",
+        "state:triage re-applied after state:reporter",
         [
-          triagedLabel(3, "needs-info", "2026-10-13T10:00:00Z"),
-          triagedUnlabel(4, "needs-triage", "2026-10-13T10:00:01Z"),
-          triagedLabel(5, "needs-triage", "2026-10-13T10:00:02Z"),
+          triagedLabel(3, "state:reporter", "2026-10-13T10:00:00Z"),
+          triagedUnlabel(4, "state:triage", "2026-10-13T10:00:01Z"),
+          triagedLabel(5, "state:triage", "2026-10-13T10:00:02Z"),
         ],
-        "needs-info",
+        "state:reporter",
       ],
     ].map(([name, events, removed]) => ({
       name: `of two non-readiness states, the one applied later stays: ${name}`,
       snapshot: triagedSnapshot({
-        labels: ["bug", "needs-info", "needs-triage"],
+        labels: ["type:bug", "state:reporter", "state:triage"],
         events,
       }),
       expected: {
@@ -4022,8 +3773,8 @@ decisionTable(
     {
       name: "two states whose applications the timeline has not recorded both stay until a run can order them",
       snapshot: triagedSnapshot({
-        labels: ["bug", "needs-info", "wontfix"],
-        events: [triagedUnlabel(3, "needs-triage", "2026-10-13T10:00:00Z")],
+        labels: ["type:bug", "state:reporter", "wontfix"],
+        events: [triagedUnlabel(3, "state:triage", "2026-10-13T10:00:00Z")],
       }),
       expected: {
         exitCode: 0,
@@ -4035,26 +3786,26 @@ decisionTable(
     {
       name: "two unrecorded states applied after an approved review both supersede it",
       snapshot: supersessionSnapshot({
-        labels: ["ready-for-agent", "needs-info", "wontfix"],
+        labels: ["state:ready", "state:reporter", "wontfix"],
         issueEvents: [readinessReview],
         event: commentEdited,
       }),
       expected: {
-        ...supersededBy("needs-info"),
-        message: /`needs-info` and `wontfix` superseded ready-for-agent/,
+        ...supersededBy("state:reporter"),
+        message: /`state:reporter` and `wontfix` superseded state:ready/,
         feedbackBody:
-          /`needs-info` and `wontfix` were applied after the review and supersede its readiness/,
+          /`state:reporter` and `wontfix` were applied after the review and supersede its readiness/,
       },
     },
     ...[
-      ["needs-info", "wontfix", /valid triaged wontfix request/i],
-      ["wontfix", "needs-info", /valid triaged Agent Brief; awaiting/i],
+      ["state:reporter", "wontfix", /valid triaged wontfix request/i],
+      ["wontfix", "state:reporter", /valid triaged Agent Brief; awaiting/i],
     ].map(([earlier, later, message]) => ({
-      name: `wontfix beside needs-info is decided by the state applied later: ${later}`,
+      name: `wontfix beside state:reporter is decided by the state applied later: ${later}`,
       snapshot: triagedSnapshot({
-        labels: ["bug", "needs-info", "wontfix"],
+        labels: ["type:bug", "state:reporter", "wontfix"],
         events: [
-          triagedUnlabel(3, "needs-triage", "2026-10-13T10:00:00Z"),
+          triagedUnlabel(3, "state:triage", "2026-10-13T10:00:00Z"),
           triagedLabel(4, earlier, "2026-10-13T10:00:01Z"),
           triagedLabel(5, later, "2026-10-13T10:00:02Z"),
         ],
@@ -4093,20 +3844,20 @@ decisionTable(
       ],
     ]).flatMap(([name, applier, brief, appliedAt, message]) =>
       triggers(applier).map(([trigger, event]) => ({
-        name: `${name} is removed and needs-triage restored in the run for ${trigger}`,
+        name: `${name} is removed and state:triage restored in the run for ${trigger}`,
         snapshot: triagedSnapshot({
-          labels: ["bug", "ready-for-agent"],
+          labels: ["type:bug", "state:ready"],
           brief,
           events: [
-            triagedUnlabel(3, "needs-triage", "2026-10-13T09:20:00Z"),
-            triagedLabel(4, "ready-for-agent", appliedAt, applier),
+            triagedUnlabel(3, "state:triage", "2026-10-13T09:20:00Z"),
+            triagedLabel(4, "state:ready", appliedAt, applier),
           ],
           event,
         }),
         expected: {
           exitCode: 1,
-          remove: ["ready-for-agent"],
-          add: ["needs-triage"],
+          remove: ["state:ready"],
+          add: ["state:triage"],
           feedback: 13,
           message,
         },
@@ -4116,8 +3867,8 @@ decisionTable(
       name: "a structural failure's result approves nothing, so its correction is published again before readiness",
       run: () => {
         const failing = triagedSnapshot({
-          labels: ["bug", "enhancement", "needs-triage"],
-          events: [triagedLabel(3, "enhancement", "2026-10-13T10:00:00Z")],
+          labels: ["type:bug", "type:enhancement", "state:triage"],
+          events: [triagedLabel(3, "type:enhancement", "2026-10-13T10:00:00Z")],
         });
         const failure = decideIssueContract(snapshotFor(failing));
         assertDecision(failure, {
@@ -4137,7 +3888,7 @@ decisionTable(
         const failed = afterWrites(failing, failure);
         const fixedLabels = [
           ...failed.issueEvents,
-          triagedUnlabel(4, "enhancement", "2026-10-13T19:00:00Z"),
+          triagedUnlabel(4, "type:enhancement", "2026-10-13T19:00:00Z"),
         ];
         // Readiness applied with the correction follows no published
         // revision, so it is rejected.
@@ -4147,21 +3898,21 @@ decisionTable(
             issue: {
               ...failed.issue,
               labels: [
-                { name: "bug" },
-                { name: "needs-triage" },
-                { name: "ready-for-agent" },
+                { name: "type:bug" },
+                { name: "state:triage" },
+                { name: "state:ready" },
               ],
             },
             issueEvents: [
               ...fixedLabels,
-              triagedLabel(5, "ready-for-agent", "2026-10-13T19:00:01Z"),
+              triagedLabel(5, "state:ready", "2026-10-13T19:00:01Z"),
             ],
             event: labeledBy("maintainer"),
           }),
         );
         assertDecision(early, {
           exitCode: 1,
-          remove: ["ready-for-agent"],
+          remove: ["state:ready"],
           feedback: 13,
           message:
             /Wait for the validator to publish the exact contract revision/,
@@ -4172,11 +3923,11 @@ decisionTable(
           ...failed,
           issue: {
             ...failed.issue,
-            labels: [{ name: "bug" }, { name: "needs-triage" }],
+            labels: [{ name: "type:bug" }, { name: "state:triage" }],
           },
           issueEvents: fixedLabels,
           event: {
-            ...labeledBy("maintainer", "enhancement"),
+            ...labeledBy("maintainer", "type:enhancement"),
             action: "unlabeled",
           },
         };
@@ -4196,18 +3947,18 @@ decisionTable(
             ...published,
             issue: {
               ...published.issue,
-              labels: [...published.issue.labels, { name: "ready-for-agent" }],
+              labels: [...published.issue.labels, { name: "state:ready" }],
             },
             issueEvents: [
               ...published.issueEvents,
-              triagedLabel(5, "ready-for-agent", "2026-10-13T19:30:00Z"),
+              triagedLabel(5, "state:ready", "2026-10-13T19:30:00Z"),
             ],
             event: labeledBy("maintainer"),
           }),
         );
         assertDecision(approval, {
           ...approvedAtBrief,
-          remove: ["needs-triage"],
+          remove: ["state:triage"],
         });
         assertBindsBrief(approval, "5");
       },
@@ -4225,7 +3976,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
       const issue = {
         ...reviewed,
         body: ticketBody.replace("Add caching.", "Add the revised cache."),
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:01:00Z",
       };
@@ -4239,7 +3990,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
         ],
         bodyLastEditedAt: "2026-09-14T17:01:00Z",
         issueEvents: [readinessReview],
-        event: labeledBy("maintainer", "ready-for-agent", {
+        event: labeledBy("maintainer", "state:ready", {
           body: reviewed.body,
           updated_at: "2026-09-14T17:00:00Z",
         }),
@@ -4248,8 +3999,8 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
       message: /wait for the validator to publish/i,
     },
@@ -4263,7 +4014,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
       const issue = {
         number: 42,
         body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:02:00Z",
       };
@@ -4277,7 +4028,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
         ],
         bodyLastEditedAt: "2026-09-14T17:02:00Z",
         issueEvents: [readinessReview],
-        event: labeledBy("maintainer", "ready-for-agent", {
+        event: labeledBy("maintainer", "state:ready", {
           body: ticketBody,
           updated_at: "2026-09-14T17:00:00Z",
         }),
@@ -4286,8 +4037,8 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
       message: /wait for the validator to publish/i,
     },
@@ -4299,7 +4050,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
         number: 42,
         node_id: "ISSUE_42",
         body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
       };
       return {
@@ -4317,8 +4068,8 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
       feedbackBody: /fresh authorized review/i,
     },
@@ -4330,7 +4081,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
       const issue = {
         ...oldIssue,
         body: ticketBody.replace("Add caching.", "Add bounded caching."),
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
       };
       return {
@@ -4346,14 +4097,14 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
           {
             id: 102,
             event: "unlabeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "maintainer" },
             created_at: "2026-09-14T17:01:00Z",
           },
           {
             id: 103,
             event: "labeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "maintainer" },
             created_at: "2026-09-14T17:02:00Z",
           },
@@ -4364,8 +4115,8 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
     },
   },
@@ -4390,7 +4141,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
         issue: {
           number: 42,
           body: "Intake context.",
-          labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+          labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
           state: "open",
         },
         comments: [
@@ -4400,7 +4151,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
             body: feedbackState({
               status: "approved",
               revision: briefRevision(oldBrief),
-              label: "ready-for-agent",
+              label: "state:ready",
               reviewer: "triager",
             }),
             user: bot,
@@ -4417,8 +4168,8 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
     },
   },
@@ -4436,7 +4187,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
         issue: {
           number: 42,
           body: "Intake context.",
-          labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+          labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
           state: "open",
         },
         comments: [
@@ -4446,7 +4197,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
             body: feedbackState({
               status: "approved",
               revision: briefRevision(oldBrief),
-              label: "ready-for-agent",
+              label: "state:ready",
               reviewer: "triager",
               kind: "triaged Agent Brief",
             }),
@@ -4464,8 +4215,8 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
     },
   },
@@ -4476,7 +4227,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
       const issue = {
         ...oldIssue,
         body: ticketBody.replace("Add caching.", "Add bounded caching."),
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:02:00Z",
       };
@@ -4490,14 +4241,14 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
         {
           id: 102,
           event: "unlabeled",
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           actor: { login: "maintainer" },
           created_at: "2026-09-14T17:01:00Z",
         },
         {
           id: 103,
           event: "labeled",
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           actor: { login: "second-maintainer" },
           created_at: "2026-09-14T17:02:00Z",
         },
@@ -4520,15 +4271,15 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
               body: oldIssue.body,
               updated_at: "2026-09-14T17:01:00Z",
             },
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             sender: { login: "maintainer" },
           },
         }),
       );
       assertDecision(delayedRemoval, {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: 13,
         feedbackBody: /"observedEventId":"103"/,
       });
@@ -4544,19 +4295,19 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
             {
               id: 104,
               event: "unlabeled",
-              label: { name: "ready-for-agent" },
+              label: { name: "state:ready" },
               actor: bot,
               created_at: "2026-09-14T17:02:00Z",
             },
             {
               id: 105,
               event: "labeled",
-              label: { name: "ready-for-agent" },
+              label: { name: "state:ready" },
               actor: { login: "second-maintainer" },
               created_at: "2026-09-14T17:03:00Z",
             },
           ],
-          event: labeledBy("second-maintainer", "ready-for-agent", {
+          event: labeledBy("second-maintainer", "state:ready", {
             body: issue.body,
             updated_at: "2026-09-14T17:02:00Z",
           }),
@@ -4578,7 +4329,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
       const issue = {
         number: 42,
         body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
       };
       return {
@@ -4594,14 +4345,14 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
           {
             id: 102,
             event: "unlabeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "maintainer" },
             created_at: "2026-09-14T17:01:00Z",
           },
           {
             id: 103,
             event: "labeled",
-            label: { name: "ready-for-agent" },
+            label: { name: "state:ready" },
             actor: { login: "second-maintainer" },
             created_at: "2026-09-14T17:02:00Z",
           },
@@ -4613,7 +4364,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
             body: issue.body,
             updated_at: "2026-09-14T17:01:00Z",
           },
-          label: { name: "ready-for-agent" },
+          label: { name: "state:ready" },
           sender: { login: "maintainer" },
         },
         permissions: { "second-maintainer": role("maintain") },
@@ -4621,7 +4372,7 @@ decisionTable("edits, replacements, and stale events invalidate readiness", [
     })(),
     expected: {
       exitCode: 0,
-      message: /valid implementation ticket with ready-for-agent bound/i,
+      message: /valid implementation ticket with state:ready bound/i,
     },
   },
 ]);
@@ -4645,7 +4396,7 @@ function deletedBriefSnapshot(deleted) {
     issue: {
       number: 42,
       body: "Intake context.",
-      labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+      labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
       state: "open",
     },
     comments: [
@@ -4655,7 +4406,7 @@ function deletedBriefSnapshot(deleted) {
         body: feedbackState({
           status: "approved",
           revision: briefRevision(current),
-          label: "ready-for-agent",
+          label: "state:ready",
           reviewer: "triager",
           kind: "triaged Agent Brief",
         }),
@@ -4666,7 +4417,7 @@ function deletedBriefSnapshot(deleted) {
       {
         id: 101,
         event: "labeled",
-        label: { name: "ready-for-agent" },
+        label: { name: "state:ready" },
         actor: { login: "triager" },
         created_at: "2026-09-14T17:10:00Z",
       },
@@ -4692,7 +4443,7 @@ function openingBarrierSnapshot({
     number: 42,
     node_id: "ISSUE_42",
     body: ticketBody,
-    labels: [{ name: "ready-for-agent" }],
+    labels: [{ name: "state:ready" }],
     state: "open",
     created_at: "2026-09-14T16:00:00Z",
     updated_at: "2026-09-14T17:00:00Z",
@@ -4705,7 +4456,7 @@ function openingBarrierSnapshot({
         : awaitingTicketFeedback(issue, { observedEventId: barrier }),
     ],
     issueEvents,
-    event: labeledBy("maintainer", "ready-for-agent", issue),
+    event: labeledBy("maintainer", "state:ready", issue),
     permissions: { maintainer: role("admin") },
   };
 }
@@ -4717,7 +4468,7 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
       const issue = {
         number: 42,
         body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:00:00Z",
       };
@@ -4730,14 +4481,14 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
           },
         ],
         issueEvents: [readinessReview],
-        event: labeledBy("maintainer", "ready-for-agent", issue),
+        event: labeledBy("maintainer", "state:ready", issue),
         permissions: { maintainer: role("admin") },
       };
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
       message: /wait for the validator to publish/i,
     },
@@ -4748,7 +4499,7 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
       const issue = {
         number: 42,
         body: ticketBody,
-        labels: [{ name: "ready-for-agent" }],
+        labels: [{ name: "state:ready" }],
         state: "open",
         updated_at: "2026-09-14T17:00:00Z",
       };
@@ -4756,24 +4507,24 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
         issue,
         comments: [awaitingTicketFeedback(issue, { observedEventId: "101" })],
         issueEvents: [readinessReview],
-        event: labeledBy("maintainer", "ready-for-agent", issue),
+        event: labeledBy("maintainer", "state:ready", issue),
         permissions: { maintainer: role("admin") },
       };
     })(),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
       message: /timeline does not contain the current readiness label event/,
     },
   },
-  ...["needs-info", "ready-for-agent"].map((trigger) => {
-    const state = "needs-info";
+  ...["state:reporter", "state:ready"].map((trigger) => {
+    const state = "state:reporter";
     return {
       name: `a workflow state recorded after the review with an earlier timestamp supersedes it: in the run for ${trigger}`,
       snapshot: supersessionSnapshot({
-        labels: ["ready-for-agent", state],
+        labels: ["state:ready", state],
         created_at: "2026-09-14T16:00:00Z",
         issueEvents: [
           readinessReview,
@@ -4796,7 +4547,7 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
   {
     name: "a workflow state recorded after the review with an earlier timestamp supersedes it in another event's run",
     snapshot: supersessionSnapshot({
-      labels: ["ready-for-agent", "wontfix"],
+      labels: ["state:ready", "wontfix"],
       created_at: "2026-09-14T16:00:00Z",
       issueEvents: [
         readinessReview,
@@ -4818,7 +4569,7 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
       issue: {
         number: 42,
         body: "Intake context.",
-        labels: [{ name: "enhancement" }, { name: "needs-triage" }],
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
         state: "open",
       },
       comments: [
@@ -4846,7 +4597,7 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
       expected: {
         exitCode: 0,
         feedback: 13,
-        message: /valid implementation ticket with ready-for-agent bound/i,
+        message: /valid implementation ticket with state:ready bound/i,
         feedbackBody: /"reviewEventId":"101"/,
       },
     },
@@ -4855,8 +4606,8 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
       snapshot: openingBarrierSnapshot({ status, barrier: otherOpening }),
       expected: {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: 13,
         message:
           status === "awaiting-review"
@@ -4874,8 +4625,8 @@ decisionTable("issue-contract events are ordered by one timeline rule", [
     }),
     expected: {
       exitCode: 1,
-      remove: ["ready-for-agent"],
-      add: ["needs-triage"],
+      remove: ["state:ready"],
+      add: ["state:triage"],
       feedback: 13,
       message: /timeline does not contain the current readiness label event/i,
     },
@@ -4900,7 +4651,7 @@ decisionTable(
           issue: {
             number: 42,
             body: "Intake context.",
-            labels: [{ name: "enhancement" }, { name: "ready-for-agent" }],
+            labels: [{ name: "type:enhancement" }, { name: "state:ready" }],
             state: "open",
           },
           comments: [
@@ -4910,7 +4661,7 @@ decisionTable(
               body: feedbackState({
                 status: "approved",
                 revision: briefRevision(brief),
-                label: "ready-for-agent",
+                label: "state:ready",
                 reviewer: "triager",
                 reviewEventId: "103",
                 sourceInvalidation: "deleted-comment:COMMENT_14",
@@ -4923,21 +4674,21 @@ decisionTable(
             {
               id: 101,
               event: "labeled",
-              label: { name: "ready-for-agent" },
+              label: { name: "state:ready" },
               actor: { login: "triager" },
               created_at: "2026-09-14T17:01:00Z",
             },
             {
               id: 102,
               event: "unlabeled",
-              label: { name: "ready-for-agent" },
+              label: { name: "state:ready" },
               actor: bot,
               created_at: "2026-09-14T17:02:00Z",
             },
             {
               id: 103,
               event: "labeled",
-              label: { name: "ready-for-agent" },
+              label: { name: "state:ready" },
               actor: { login: "triager" },
               created_at: "2026-09-14T17:03:00Z",
             },
@@ -4957,7 +4708,7 @@ decisionTable(
       })(),
       expected: {
         exitCode: 0,
-        message: /valid triaged Agent Brief with ready-for-agent bound/i,
+        message: /valid triaged Agent Brief with state:ready bound/i,
       },
     },
     {
@@ -4965,7 +4716,7 @@ decisionTable(
       snapshot: deletedBriefSnapshot(agentBrief(12, "2026-09-14T17:05:00Z")),
       expected: {
         exitCode: 0,
-        message: /valid triaged Agent Brief with ready-for-agent bound/i,
+        message: /valid triaged Agent Brief with state:ready bound/i,
       },
     },
     {
@@ -4973,8 +4724,8 @@ decisionTable(
       snapshot: deletedBriefSnapshot(agentBrief(25, "2026-09-14T16:55:00Z")),
       expected: {
         exitCode: 1,
-        remove: ["ready-for-agent"],
-        add: ["needs-triage"],
+        remove: ["state:ready"],
+        add: ["state:triage"],
         feedback: 30,
         feedbackBody: /"sourceInvalidation":"deleted-comment:COMMENT_25"/,
       },
@@ -4984,21 +4735,21 @@ decisionTable(
 
 decisionTable("bare open issues receive their first workflow state", [
   ...["opened", "reopened", "edited", "created", "labeled"].map((action) => ({
-    name: `a bare native ticket gets needs-triage from ${action}`,
+    name: `a bare native ticket gets state:triage from ${action}`,
     snapshot: {
       issue: { number: 42, body: ticketBody, labels: [], state: "open" },
       event: { action, issue: { number: 42, labels: [] } },
     },
-    expected: { exitCode: 0, add: ["needs-triage"], feedback: "create" },
+    expected: { exitCode: 0, add: ["state:triage"], feedback: "create" },
   })),
   ...[
     { name: "specification", body: specificationBody, feedback: "create" },
-    { name: "bug form", body: bugBody, labels: ["bug"] },
-    { name: "feature form", body: featureBody, labels: ["enhancement"] },
+    { name: "bug form", body: bugBody, labels: ["type:bug"] },
+    { name: "feature form", body: featureBody, labels: ["type:enhancement"] },
     {
       name: "triaged request",
       body: featureBody,
-      labels: ["enhancement"],
+      labels: ["type:enhancement"],
       comments: [
         { id: 12, body: completeAgentBrief, user: { login: "triager" } },
       ],
@@ -5021,7 +4772,7 @@ decisionTable("bare open issues receive their first workflow state", [
       feedback = null,
       message,
     }) => ({
-      name: `a bare ${name} gets needs-triage`,
+      name: `a bare ${name} gets state:triage`,
       snapshot: {
         issue: {
           number: 42,
@@ -5031,7 +4782,7 @@ decisionTable("bare open issues receive their first workflow state", [
         },
         comments,
       },
-      expected: { exitCode, add: ["needs-triage"], feedback, message },
+      expected: { exitCode, add: ["state:triage"], feedback, message },
     }),
   ),
   ...[
@@ -5072,15 +4823,15 @@ decisionTable("bare open issues receive their first workflow state", [
 decisionTable(
   "the validator's fallback never supersedes authorized readiness",
   ["github-actions[bot]", "maintainer"].map((actor) => ({
-    name: `needs-triage applied after the review by ${actor}`,
+    name: `state:triage applied after the review by ${actor}`,
     snapshot: supersessionSnapshot({
-      labels: ["ready-for-agent", "needs-triage"],
+      labels: ["state:ready", "state:triage"],
       issueEvents: [
         readinessReview,
         {
           id: 102,
           event: "labeled",
-          label: { name: "needs-triage" },
+          label: { name: "state:triage" },
           actor: { login: actor },
           created_at: "2026-09-14T17:05:00Z",
         },
@@ -5091,23 +4842,27 @@ decisionTable(
       actor === "github-actions[bot]"
         ? {
             exitCode: 0,
-            remove: ["needs-triage"],
-            message: /ready-for-agent bound/,
+            remove: ["state:triage"],
+            message: /state:ready bound/,
           }
-        : supersededBy("needs-triage"),
+        : supersededBy("state:triage"),
   })),
 );
 
 decisionTable("closed issues clear workflow and factory labels", [
   ...[
-    "needs-triage",
-    "needs-info",
-    "ready-for-agent",
-    "ready-for-human",
+    "state:triage",
+    "state:reporter",
+    "state:grill",
+    "state:owner",
+    "state:ready",
+    "state:future",
+    "gate:owner-review",
+    "gate:major-release",
     "factory:running",
     "factory:failed",
     "factory:paused",
-    "factory:needs-input",
+    "factory:hold",
     "factory:skip",
     "factory:future",
   ].map((label) => ({
@@ -5123,7 +4878,7 @@ decisionTable("closed issues clear workflow and factory labels", [
   ...[
     ["native ticket", ticketBody, []],
     ["specification", specificationBody, []],
-    ["form intake", bugBody, ["bug", "enhancement"]],
+    ["form intake", bugBody, ["type:bug", "type:enhancement"]],
     ["Wayfinder map", mapBody, ["wayfinder:map"]],
     ["Wayfinder child", "Incomplete.", ["wayfinder:research"]],
   ].flatMap(([kind, body, kindLabels]) =>
@@ -5138,15 +4893,16 @@ decisionTable("closed issues clear workflow and factory labels", [
             ...kindLabels,
             "wontfix",
             "model:x",
+            "priority:high",
             "unrelated",
             "factory-other",
-            "ready-for-custom",
+            "state-custom",
             ...(cleanup
               ? [
-                  "needs-triage",
-                  "needs-info",
-                  "ready-for-agent",
-                  "ready-for-human",
+                  "state:triage",
+                  "state:owner",
+                  "state:ready",
+                  "gate:owner-review",
                   "factory:failed",
                 ]
               : []),
@@ -5165,10 +4921,10 @@ decisionTable("closed issues clear workflow and factory labels", [
         exitCode: 0,
         remove: cleanup
           ? [
-              "needs-triage",
-              "needs-info",
-              "ready-for-agent",
-              "ready-for-human",
+              "state:triage",
+              "state:owner",
+              "state:ready",
+              "gate:owner-review",
               "factory:failed",
             ]
           : [],
@@ -5186,7 +4942,7 @@ decisionTable(
     [
       ...runOrders.map((order) => ({
         order,
-        createdLabels: ["ready-for-agent"],
+        createdLabels: ["state:ready"],
         name: order.join(" then "),
       })),
       {
@@ -5207,11 +4963,11 @@ decisionTable(
         const fallback = decideIssueContract(snapshotFor(snapshot));
         assertDecision(fallback, {
           exitCode: 0,
-          add: ["needs-triage"],
+          add: ["state:triage"],
           feedback: "create",
         });
         snapshot = afterWrites(snapshot, fallback);
-        snapshot.issue.labels.push({ name: "ready-for-agent" });
+        snapshot.issue.labels.push({ name: "state:ready" });
         // The opening run fetched a bare snapshot before readiness became
         // visible, then wrote its fallback after the creation-second review.
         snapshot.issueEvents = [creationLabel(), ...snapshot.issueEvents];
@@ -5227,15 +4983,15 @@ decisionTable(
             run === order[0]
               ? {
                   exitCode: 0,
-                  remove: ["needs-triage"],
+                  remove: ["state:triage"],
                   feedback: 99,
-                  message: /ready-for-agent bound/,
+                  message: /state:ready bound/,
                 }
               : { exitCode: 0 },
           );
           snapshot = afterWrites(snapshot, decision);
         }
-        assert.deepEqual(snapshot.issue.labels, [{ name: "ready-for-agent" }]);
+        assert.deepEqual(snapshot.issue.labels, [{ name: "state:ready" }]);
       },
     })),
   ),
@@ -5264,7 +5020,7 @@ test("deleted Briefs without a global identifier preserve numeric marker parity"
     };
     const first = decideIssueContract(snapshotFor(input));
     assert.equal(first.exitCode, 1);
-    assert.deepEqual(first.removeLabels, ["ready-for-agent"]);
+    assert.deepEqual(first.removeLabels, ["state:ready"]);
     assert.equal(
       recordedState(first.feedback.body).sourceInvalidation,
       "deleted-comment:25",
@@ -5282,7 +5038,7 @@ test("deleted Briefs without a global identifier preserve numeric marker parity"
       const replay = decideIssueContract(snapshotFor(input));
       assert.equal(replay.exitCode, previous === "deleted-comment:25" ? 0 : 1);
       if (previous !== "deleted-comment:25")
-        assert.deepEqual(replay.removeLabels, ["ready-for-agent"]);
+        assert.deepEqual(replay.removeLabels, ["state:ready"]);
     }
   }
 });

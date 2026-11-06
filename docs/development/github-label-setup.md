@@ -2,50 +2,42 @@
 
 The GitHub label setup is a repeat-safe Repository Standards fixes operation.
 It reads the adopting repository identity from Git remotes, verifies that the
-GitHub API resolves the same repository, and reconciles these labels:
-
-| Label                 | Color    | Description                                                                |
-| --------------------- | -------- | -------------------------------------------------------------------------- |
-| `needs-triage`        | `fbca04` | Requires review or renewed review                                          |
-| `needs-info`          | `d4c5f9` | Missing information; the orchestrating agent answers or routes it          |
-| `ready-for-agent`     | `0e8a16` | Reviewed and sufficiently specified for agent implementation               |
-| `ready-for-human`     | `1d76db` | Reviewed; needs the owner's accounts, credentials or a reserved taste call |
-| `wontfix`             | `ffffff` | Will not be actioned                                                       |
-| `bug`                 | `d73a4a` | Something isn't working                                                    |
-| `enhancement`         | `a2eeef` | New feature or request                                                     |
-| `wayfinder:map`       | `5319e7` | Planning map for related work                                              |
-| `wayfinder:research`  | `bfd4f2` | Research question in a planning map                                        |
-| `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                                       |
-| `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                                       |
-| `wayfinder:task`      | `bfd4f2` | Task in a planning map                                                     |
-
-The repository owns `ready-for-agent`, provisioned by canonical-label setup.
-The factory profile also provisions and verifies `factory:skip`; standard-profile
-setup does not add it. Its canonical color is `c5def5` and its description is
-`Ready agent work the factory must not pick up`.
-Factory-profile setup also provisions and verifies `factory:release-hold`,
-with color `c5def5` and description `Hold other merges while a release PR is open`.
-Factory-profile setup also provisions and verifies `factory:hold`, with color
-`c5def5` and description `Pause factory pickups and other merges in this repository`.
-Standard-profile setup adds neither hold label.
-The operation selects labels from the request's `profile`, independently of
-existing local factory files or installed rules. Where factory workflow rules
-are installed, follow their [label ownership rules](../../rules/factory-workflow.md#state-labels):
-the factory provisions the configured running, failed, paused and needs-input
-state labels. The applier still creates a missing skip label before applying
-it, as for model labels; the factory never creates or removes skip.
+GitHub API resolves the same repository, and reconciles the canonical labels
+the [GitHub repository configuration rules](../../rules/github-repository-configuration.md#labels)
+list. The factory profile also reconciles the `gate:` and `factory:` labels
+the [factory workflow rules](../../rules/factory-workflow.md#state-labels)
+list; standard-profile setup adds none of them. The operation selects labels
+from the request's `profile`, independently of existing local factory files or
+installed rules. The factory itself still creates a missing running, failed or
+paused label with its own values.
 
 Matching labels are left alone. Missing canonical labels are created freely.
-A label with a matching case-insensitive name but
-different casing, color, or description requires confirmation before updating,
-unless the label is still at both of GitHub's
+A canonical label that is missing while the repository carries a label it
+replaces is renamed in place, so its issues keep it:
+
+| Former label      | Renamed to         |
+| ----------------- | ------------------ |
+| `needs-triage`    | `state:triage`     |
+| `ready-for-agent` | `state:ready`      |
+| `ready-for-human` | `state:owner`      |
+| `bug`             | `type:bug`         |
+| `enhancement`     | `type:enhancement` |
+
+`needs-info` and `factory:needs-input` have no single successor, so they are
+left in place. The
+[adoption guidance](../../guidance/github-repository-configuration.md#remote-setup)
+says what the rename means for the issues carrying them.
+
+A label with a matching case-insensitive name but different casing, color, or
+description requires confirmation before updating, and so does a former label
+whose color or description the repository changed. A label still at values
+the repository never chose is updated without confirmation: GitHub's
 [documented default values](https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/managing-labels#about-default-labels)
-for its name: the repository never chose it, so it is updated without
-confirmation. Today only `wontfix`, whose default description is "This will not
-be worked on", differs from the table. A custom default set by an owner or
-organization counts as chosen.
-Other labels are never deleted or edited, including factory state labels and,
-in the standard profile, any existing skip, repository-hold or release-hold label.
+for its name, a former Repo Canon label at its former values, or a factory
+label at the values the factory creates it with. A custom default set by an
+owner or organization counts as chosen.
+Other labels are never deleted or edited, including, in the standard profile,
+any existing gate, factory state, skip, repository-hold or release-hold label.
 
 ## Prerequisites and identity
 
@@ -145,9 +137,11 @@ and token reads. They never call GitHub or change live repository settings:
 node --test test/github-label-setup.test.mjs
 ```
 
-These fixtures cover factory-only skip, repository-hold and release-hold creation and readback, repeat runs,
-overwrite confirmation, mismatched skip readback and preservation of unrelated
-labels, including existing skip labels under the standard profile. The factory
+These fixtures cover factory-only gate and factory label creation and
+readback, renaming former labels in place on a fixture whose issues carry them,
+repeat runs, overwrite confirmation, mismatched skip readback and preservation
+of unrelated labels, including existing skip labels under the standard
+profile. The factory
 creation fixture runs from only the installed operation's declared resources.
 
 The operation fixtures run each fix and probe from only its declared

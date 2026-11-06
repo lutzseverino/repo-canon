@@ -51,6 +51,13 @@ remote setup once its probe is ready. A probe changes nothing, locally or on
 GitHub, and does not read the labels, rules, or settings its fix reconciles,
 so a ready fix can still return `confirmation-required` or `blocked`.
 
+`canonical-labels` renames each workflow state or category label the rules'
+families replace in place, so its issues keep it. Readiness approved before the
+rename names the former label, so the issue-contract workflow removes it on
+its next run; review each such issue's current revision again before applying
+`state:ready`. Issues left with a former label that has no single successor
+get `state:triage` and go back to triage.
+
 ## Pull request reviewer
 
 The optional `.github/pull-request-reviewer.json` is the repository's own

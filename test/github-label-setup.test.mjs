@@ -9,34 +9,52 @@ import { retainedCheck, snapshot } from "./helpers/operation.mjs";
 
 const canonicalLabels = [
   {
-    name: "needs-triage",
+    name: "state:triage",
     color: "fbca04",
-    description: "Requires review or renewed review",
+    description: "Waits on triage to review it, or review it again",
   },
   {
-    name: "needs-info",
+    name: "state:reporter",
     color: "d4c5f9",
-    description:
-      "Missing information; the orchestrating agent answers or routes it",
+    description: "Waits on its outside reporter for a fact only they hold",
   },
   {
-    name: "ready-for-agent",
-    color: "0e8a16",
-    description: "Reviewed and sufficiently specified for agent implementation",
+    name: "state:grill",
+    color: "d876e3",
+    description: "Waits on a grilling session for the owner's intent",
   },
   {
-    name: "ready-for-human",
+    name: "state:owner",
     color: "1d76db",
-    description:
-      "Reviewed; needs the owner's accounts, credentials or a reserved taste call",
+    description: "Waits on the owner's answer or work only the owner can do",
   },
-  { name: "wontfix", color: "ffffff", description: "Will not be actioned" },
-  { name: "bug", color: "d73a4a", description: "Something isn't working" },
   {
-    name: "enhancement",
+    name: "state:ready",
+    color: "0e8a16",
+    description: "Reviewed; waits on an agent to implement it",
+  },
+  { name: "type:bug", color: "d73a4a", description: "Something isn't working" },
+  {
+    name: "type:enhancement",
     color: "a2eeef",
     description: "New feature or request",
   },
+  {
+    name: "priority:high",
+    color: "d93f0b",
+    description: "Picked up before normal and low priority work",
+  },
+  {
+    name: "priority:normal",
+    color: "bfdadc",
+    description: "Picked up in the usual order; no priority label means this",
+  },
+  {
+    name: "priority:low",
+    color: "c2e0c6",
+    description: "Picked up after high and normal priority work",
+  },
+  { name: "wontfix", color: "ffffff", description: "Will not be actioned" },
   {
     name: "wayfinder:map",
     color: "5319e7",
@@ -63,6 +81,9 @@ const canonicalLabels = [
     description: "Task in a planning map",
   },
 ];
+const canonical = (name) =>
+  canonicalLabels.find((label) => label.name === name);
+const missing = canonicalLabels.length - 1;
 
 function setup(t, options) {
   return githubSetup(t, githubLabelSetup, options);
@@ -85,13 +106,42 @@ const factoryHold = {
   color: "c5def5",
   description: "Pause factory pickups and other merges in this repository",
 };
-const factoryLabels = [factorySkip, factoryReleaseHold, factoryHold];
-
-test("factory setup provisions and verifies skip and both holds, preserves unrelated labels and is repeat-safe", (t) => {
-  const unrelated = {
+const factoryLabels = [
+  {
+    name: "gate:owner-review",
+    color: "e99695",
+    description: "Waits on the owner's review before its pull request merges",
+  },
+  {
+    name: "gate:major-release",
+    color: "e99695",
+    description: "Waits on the owner's go-ahead for a major release",
+  },
+  {
     name: "factory:running",
     color: "0052cc",
-    description: "Claimed by a factory run",
+    description: "Waits on the factory run that holds it",
+  },
+  {
+    name: "factory:paused",
+    color: "c5def5",
+    description: "Waits on the factory to resume the run it paused",
+  },
+  {
+    name: "factory:failed",
+    color: "b60205",
+    description: "Waits on a person to deal with the failed run",
+  },
+  factorySkip,
+  factoryReleaseHold,
+  factoryHold,
+];
+
+test("factory setup provisions and verifies the gate and factory labels, preserves unrelated labels and is repeat-safe", (t) => {
+  const unrelated = {
+    name: "factory:other",
+    color: "0052cc",
+    description: "Kept by the repository",
   };
   const scenario = githubSetup(
     t,
@@ -105,10 +155,15 @@ test("factory setup provisions and verifies skip and both holds, preserves unrel
   const outcome = scenario.invoke({ profile: "factory" });
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
-  assert.match(outcome.result.message, /created 3 labels/);
   assert.match(
     outcome.result.message,
-    /Readback confirmed all 15 canonical labels/,
+    new RegExp(`created ${factoryLabels.length} labels`),
+  );
+  assert.match(
+    outcome.result.message,
+    new RegExp(
+      `Readback confirmed all ${canonicalLabels.length + factoryLabels.length} canonical labels`,
+    ),
   );
   assert.deepEqual(scenario.readState().labels, [
     ...canonicalLabels,
@@ -120,7 +175,7 @@ test("factory setup provisions and verifies skip and both holds, preserves unrel
     scenario.invoke({ profile: "factory" }).result.status,
     "unchanged",
   );
-  assert.equal(scenario.readState().mutations, 3);
+  assert.equal(scenario.readState().mutations, factoryLabels.length);
   assertProjectUnchanged(before, scenario);
 });
 
@@ -176,7 +231,7 @@ test("provisions every canonical label in an empty repository and is unchanged o
   const repeat = scenario.invoke();
   assert.equal(repeat.status, 0, repeat.stderr);
   assert.equal(repeat.result.status, "unchanged");
-  assert.equal(scenario.readState().mutations, 12);
+  assert.equal(scenario.readState().mutations, canonicalLabels.length);
   assertProjectUnchanged(before, scenario);
 });
 
@@ -217,12 +272,14 @@ test("leaves the retired run:orchestrated label in place without provisioning it
 // The factory creates its own state labels from the repository's factory
 // configuration. Standard-profile setup provisions no factory label and
 // leaves all existing factory labels alone, including skip and release hold.
-test("standard setup creates no factory label and leaves existing factory labels in place", (t) => {
+test("standard setup creates no gate or factory label and leaves existing ones in place", (t) => {
   const empty = setup(t);
   const created = empty.invoke();
   assert.equal(created.status, 0, created.stderr);
   assert.deepEqual(
-    empty.readState().labels.filter(({ name }) => name.startsWith("factory:")),
+    empty
+      .readState()
+      .labels.filter(({ name }) => /^(?:gate|factory):/.test(name)),
     [],
   );
 
@@ -248,6 +305,11 @@ test("standard setup creates no factory label and leaves existing factory labels
       color: "c5def5",
       description: "The factory paused this run and resumes it by itself",
     },
+    {
+      name: "gate:owner-review",
+      color: "000000",
+      description: "Keep chosen gate metadata",
+    },
   ];
   const scenario = setup(t, {
     state: {
@@ -267,7 +329,7 @@ test("standard setup creates no factory label and leaves existing factory labels
 test("reconciles conflicting desired label values without replacing unrelated labels", (t) => {
   const labels = structuredClone(canonicalLabels);
   labels[0] = {
-    name: "Needs-Triage",
+    name: "State:Triage",
     color: "000000",
     description: "Old meaning",
   };
@@ -283,7 +345,7 @@ test("reconciles conflicting desired label values without replacing unrelated la
   assert.equal(outcome.result.status, "changed");
   assert.equal(
     outcome.result.message,
-    `GitHub label setup changed acme/widgets: updated needs-triage. Readback confirmed all ${canonicalLabels.length} canonical labels; unrelated labels were preserved.`,
+    `GitHub label setup changed acme/widgets: updated state:triage. Readback confirmed all ${canonicalLabels.length} canonical labels; unrelated labels were preserved.`,
   );
   assert.deepEqual(scenario.readState().labels, [
     canonicalLabels[0],
@@ -331,14 +393,14 @@ test("reports partial effects and completes missing work after a transient API f
 
   assert.equal(first.status, 0, first.stderr);
   assert.equal(first.result.status, "blocked");
-  assert.match(first.result.message, /created needs-triage/);
-  assert.match(first.result.message, /11 labels remain/);
+  assert.match(first.result.message, /created state:triage/);
+  assert.match(first.result.message, new RegExp(`${missing} labels remain`));
   assert.equal(scenario.readState().labels.length, 1);
 
   const retry = scenario.invoke();
   assert.equal(retry.status, 0, retry.stderr);
   assert.equal(retry.result.status, "changed");
-  assert.match(retry.result.message, /created 11 labels/);
+  assert.match(retry.result.message, new RegExp(`created ${missing} labels`));
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });
 
@@ -353,7 +415,7 @@ test("recovers after interruption by applying only labels still missing", (t) =>
   const retry = scenario.invoke();
   assert.equal(retry.status, 0, retry.stderr);
   assert.equal(retry.result.status, "changed");
-  assert.match(retry.result.message, /created 11 labels/);
+  assert.match(retry.result.message, new RegExp(`created ${missing} labels`));
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });
 
@@ -363,7 +425,10 @@ test("blocks when readback disagrees and reports the changes already applied", (
 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "blocked");
-  assert.match(outcome.result.message, /created 12 labels/);
+  assert.match(
+    outcome.result.message,
+    new RegExp(`created ${canonicalLabels.length} labels`),
+  );
   assert.match(outcome.result.message, /readback did not match/);
   assert.deepEqual(scenario.readState().labels, canonicalLabels);
 });
@@ -371,7 +436,7 @@ test("blocks when readback disagrees and reports the changes already applied", (
 test("asks before updating drifted labels and creates nothing until confirmed", (t) => {
   const labels = [
     { ...canonicalLabels[0], color: "000000", description: "Custom meaning" },
-    { ...canonicalLabels[1], description: "Custom needs-info" },
+    { ...canonicalLabels[1], description: "Custom reporter" },
   ];
   const scenario = setup(t, { state: { labels } });
   const before = snapshot(scenario.project.root);
@@ -379,13 +444,13 @@ test("asks before updating drifted labels and creates nothing until confirmed", 
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "confirmation-required");
   for (const value of [
-    "needs-triage",
+    "state:triage",
     "000000",
     "fbca04",
     "Custom meaning",
     canonicalLabels[0].description,
-    "needs-info",
-    "Custom needs-info",
+    "state:reporter",
+    "Custom reporter",
     canonicalLabels[1].description,
   ])
     assert.ok(outcome.result.message.includes(value), value);
@@ -409,27 +474,27 @@ test("updates a label still at GitHub's stock values without confirmation and cr
   assert.equal(outcome.status, 0, outcome.stderr);
   assert.equal(outcome.result.status, "changed");
   assert.match(outcome.result.message, /updated wontfix/);
-  assert.match(outcome.result.message, /created 11 labels/);
+  assert.match(outcome.result.message, new RegExp(`created ${missing} labels`));
   assert.deepEqual(
     scenario.readState().labels.find(({ name }) => name === "wontfix"),
-    canonicalLabels[4],
+    canonical("wontfix"),
   );
   assert.equal(scenario.readState().labels.length, canonicalLabels.length);
 });
 
 test("asks about a label that differs from both the standard and GitHub's stock values", (t) => {
   for (const labels of [
-    [{ ...canonicalLabels[4], description: "Closed without a fix" }],
+    [{ ...canonical("wontfix"), description: "Closed without a fix" }],
     [
       {
-        ...canonicalLabels[4],
+        ...canonical("wontfix"),
         color: "000000",
         description: "This will not be worked on",
       },
     ],
     [
       {
-        ...canonicalLabels[4],
+        ...canonical("wontfix"),
         description: "This will not be worked on",
         color: "ffffff",
         name: "Wontfix",
@@ -476,4 +541,153 @@ test("reconciles a label on a later page and reads all pages back", (t) => {
   assert.equal(scenario.readState().mutations, 1);
   assert.equal(scenario.invoke().result.status, "unchanged");
   assert.deepEqual([...new Set(scenario.readState().apiHosts)], ["github.com"]);
+});
+
+// Labels named before ADR 0031's families, at the values Repo Canon or GitHub
+// gave them, and the issues that carry them.
+const formerLabels = [
+  {
+    name: "needs-triage",
+    color: "fbca04",
+    description: "Requires review or renewed review",
+  },
+  {
+    name: "needs-info",
+    color: "d4c5f9",
+    description:
+      "Missing information; the orchestrating agent answers or routes it",
+  },
+  {
+    name: "ready-for-agent",
+    color: "0e8a16",
+    description: "Reviewed and sufficiently specified for agent implementation",
+  },
+  {
+    name: "ready-for-human",
+    color: "1d76db",
+    description:
+      "Reviewed; needs the owner's accounts, credentials or a reserved taste call",
+  },
+  { name: "bug", color: "d73a4a", description: "Something isn't working" },
+  {
+    name: "enhancement",
+    color: "a2eeef",
+    description: "New feature or request",
+  },
+  {
+    name: "factory:needs-input",
+    color: "fbca04",
+    description: "Factory state: needsInput",
+  },
+];
+const formerIssues = [
+  { number: 1, labels: ["enhancement", "ready-for-agent", "model:x"] },
+  { number: 2, labels: ["bug", "needs-triage"] },
+  { number: 3, labels: ["enhancement", "ready-for-human"] },
+  { number: 4, labels: ["bug", "needs-info"] },
+  {
+    number: 5,
+    labels: ["enhancement", "ready-for-agent", "factory:needs-input"],
+  },
+];
+
+test("renames former labels in place, so their issues keep them, and leaves split ones alone", (t) => {
+  for (const profile of ["standard", "factory"]) {
+    const scenario = setup(t, {
+      state: {
+        labels: structuredClone(formerLabels),
+        issues: structuredClone(formerIssues),
+      },
+    });
+    const outcome = scenario.invoke({ profile, overwriteAllowed: false });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, "changed");
+    assert.match(outcome.result.message, /renamed 5 labels/);
+    const { labels, issues, mutationLog } = scenario.readState();
+    for (const name of ["needs-info", "factory:needs-input"])
+      assert.deepEqual(
+        labels.find((label) => label.name === name),
+        formerLabels.find((label) => label.name === name),
+      );
+    for (const desired of canonicalLabels)
+      assert.deepEqual(
+        labels.find(({ name }) => name === desired.name),
+        desired,
+      );
+    assert.equal(
+      labels.length,
+      canonicalLabels.length +
+        2 +
+        (profile === "factory" ? factoryLabels.length : 0),
+    );
+    assert.equal(
+      mutationLog.filter((action) => action === "update label").length,
+      5,
+    );
+    assert.deepEqual(issues, [
+      { number: 1, labels: ["type:enhancement", "state:ready", "model:x"] },
+      { number: 2, labels: ["type:bug", "state:triage"] },
+      { number: 3, labels: ["type:enhancement", "state:owner"] },
+      { number: 4, labels: ["type:bug", "needs-info"] },
+      {
+        number: 5,
+        labels: ["type:enhancement", "state:ready", "factory:needs-input"],
+      },
+    ]);
+    assert.equal(scenario.invoke({ profile }).result.status, "unchanged");
+  }
+});
+
+test("asks before renaming a former label the repository changed", (t) => {
+  const chosen = {
+    name: "ready-for-agent",
+    color: "000000",
+    description: "Our own readiness",
+  };
+  const scenario = setup(t, {
+    state: { labels: [chosen], issues: [{ number: 1, labels: [chosen.name] }] },
+  });
+  const confirmation = scenario.invoke();
+  assert.equal(confirmation.result.status, "confirmation-required");
+  for (const value of ["ready-for-agent", "state:ready", "Our own readiness"])
+    assert.ok(confirmation.result.message.includes(value), value);
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+
+  const confirmed = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(confirmed.result.status, "changed");
+  assert.match(
+    confirmed.result.message,
+    /renamed ready-for-agent to state:ready/,
+  );
+  assert.deepEqual(scenario.readState().issues, [
+    { number: 1, labels: ["state:ready"] },
+  ]);
+});
+
+test("keeps a successor that already exists and leaves its former label alone", (t) => {
+  const former = formerLabels.find(({ name }) => name === "ready-for-agent");
+  const scenario = setup(t, {
+    state: { labels: [...structuredClone(canonicalLabels), former] },
+  });
+  const outcome = scenario.invoke();
+  assert.equal(outcome.result.status, "unchanged");
+  assert.deepEqual(scenario.readState().labels, [...canonicalLabels, former]);
+});
+
+test("factory setup updates factory labels still at the factory's own values without confirmation", (t) => {
+  const created = ["running", "paused", "failed"].map((role) => ({
+    ...factoryLabels.find(({ name }) => name === `factory:${role}`),
+    description: `Factory state: ${role}`,
+  }));
+  const scenario = setup(t, {
+    state: { labels: [...structuredClone(canonicalLabels), ...created] },
+  });
+  const outcome = scenario.invoke({ profile: "factory" });
+  assert.equal(outcome.result.status, "changed");
+  assert.match(outcome.result.message, /updated 3 labels/);
+  for (const desired of factoryLabels)
+    assert.deepEqual(
+      scenario.readState().labels.find(({ name }) => name === desired.name),
+      desired,
+    );
 });

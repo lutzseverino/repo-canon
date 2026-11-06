@@ -190,7 +190,7 @@ test("unavailable prerequisite reads abort; role failures reach authorization cl
         nodeId: "ISSUE_42",
         body: ticketBody,
         state: "open",
-        labels: ["ready-for-agent"],
+        labels: ["state:ready"],
         createdAt: "2026-09-14T16:00:00Z",
         bodyEditTime: null,
         parent: null,
@@ -214,7 +214,7 @@ test("unavailable prerequisite reads abort; role failures reach authorization cl
             {
               id: 101,
               action: "added",
-              label: "ready-for-agent",
+              label: "state:ready",
               actor: { login: "maintainer", bot: false },
               time: "2026-09-14T17:00:00Z",
             },

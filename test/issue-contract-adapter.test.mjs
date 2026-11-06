@@ -65,7 +65,7 @@ async function exercise(
   const current = {
     number: 42,
     body: bugBody,
-    labels: [{ name: "bug" }, { name: "needs-triage" }],
+    labels: [{ name: "type:bug" }, { name: "state:triage" }],
     state: "open",
     ...issue,
   };
@@ -387,15 +387,15 @@ test("a fetched closed issue clears workflow and factory labels on any trigger w
       body: "Incomplete contract.",
       labels: [
         ...kindLabels,
-        "needs-triage",
-        "ready-for-agent",
-        "ready-for-human",
-        "needs-info",
+        "state:triage",
+        "state:ready",
+        "gate:owner-review",
+        "state:reporter",
         "wontfix",
         "factory:failed",
         "factory:future",
         "model:x",
-        "enhancement",
+        "type:enhancement",
         "unrelated",
       ],
     };
@@ -408,14 +408,14 @@ test("a fetched closed issue clears workflow and factory labels on any trigger w
         ...(action === "created"
           ? { comment: { id: 14, body: "Finished." } }
           : {}),
-        ...(action === "labeled" ? { label: { name: "ready-for-agent" } } : {}),
+        ...(action === "labeled" ? { label: { name: "state:ready" } } : {}),
       },
     });
     assertDecision(result, decisionFor({ issue }), [
-      ["DELETE", `${issuePath}/labels/needs-triage`, null],
-      ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
-      ["DELETE", `${issuePath}/labels/ready-for-human`, null],
-      ["DELETE", `${issuePath}/labels/needs-info`, null],
+      ["DELETE", `${issuePath}/labels/state%3Atriage`, null],
+      ["DELETE", `${issuePath}/labels/state%3Aready`, null],
+      ["DELETE", `${issuePath}/labels/gate%3Aowner-review`, null],
+      ["DELETE", `${issuePath}/labels/state%3Areporter`, null],
       ["DELETE", `${issuePath}/labels/factory%3Afailed`, null],
       ["DELETE", `${issuePath}/labels/factory%3Afuture`, null],
     ]);
@@ -425,7 +425,7 @@ test("a fetched closed issue clears workflow and factory labels on any trigger w
 });
 
 test("current issue, complete discussion and role facts bind the unchanged revision", async (t) => {
-  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
   const result = await exercise(t, {
     issue,
     comments: [[], [awaitingTicketFeedback(issue)]],
@@ -434,7 +434,7 @@ test("current issue, complete discussion and role facts bind the unchanged revis
     event: {
       action: "labeled",
       sender: account("maintainer"),
-      label: { name: "ready-for-agent" },
+      label: { name: "state:ready" },
       issue: { number: 42, body: "stale and ignored" },
     },
   });
@@ -524,7 +524,12 @@ test("unchanged direct and Agent Brief contracts keep pre-migration golden revis
   const brief = decideIssueContract({
     repository,
     event: {},
-    issue: { number: 42, state: "open", body: "", labels: ["enhancement"] },
+    issue: {
+      number: 42,
+      state: "open",
+      body: "",
+      labels: ["type:enhancement"],
+    },
     comments: [
       {
         id: 17,
@@ -554,7 +559,7 @@ test("the installed neutral command resolves issue consumers without package ins
 });
 
 test("timeline lag retries authoritative label changes within the existing bound", async (t) => {
-  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
   for (const recorded of [true, false]) {
     const waits = [];
     const result = await exercise(t, {
@@ -563,7 +568,7 @@ test("timeline lag retries authoritative label changes within the existing bound
       event: {
         action: "labeled",
         sender: account("maintainer"),
-        label: { name: "ready-for-agent" },
+        label: { name: "state:ready" },
       },
       permissions: { maintainer: "admin" },
       eventReads: recorded ? [[], [], [readinessReview]] : [[]],
@@ -580,7 +585,7 @@ test("timeline lag retries authoritative label changes within the existing bound
       event: {
         kind: "labeled",
         actor: account("maintainer"),
-        label: "ready-for-agent",
+        label: "state:ready",
       },
       events: recorded ? [readinessReview] : [],
       permissions: { maintainer: "admin" },
@@ -591,8 +596,8 @@ test("timeline lag retries authoritative label changes within the existing bound
       recorded
         ? [feedbackWrite(decision, 13)]
         : [
-            ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
-            ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+            ["DELETE", `${issuePath}/labels/state%3Aready`, null],
+            ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
             feedbackWrite(decision, 13),
           ],
     );
@@ -605,7 +610,7 @@ test("timeline lag retries authoritative label changes within the existing bound
 
 test("late prerequisite read failures abort before label or feedback mutation", async (t) => {
   for (const path of ["/comments", "/events"]) {
-    const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+    const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
     const result = await exercise(t, {
       issue,
       comments: [awaitingTicketFeedback(issue)],
@@ -613,7 +618,7 @@ test("late prerequisite read failures abort before label or feedback mutation", 
       event: {
         action: "labeled",
         sender: account("maintainer"),
-        label: { name: "ready-for-agent" },
+        label: { name: "state:ready" },
       },
       permissions: { maintainer: "admin" },
       failure: 403,
@@ -651,7 +656,7 @@ test("comment global identifiers remain available through the actual published e
     const result = await exercise(t, {
       issue: {
         body: "Intake context",
-        labels: ["enhancement", "ready-for-agent"],
+        labels: ["type:enhancement", "state:ready"],
       },
       comments: [current],
       events: [readinessReview],
@@ -668,7 +673,7 @@ test("comment global identifiers remain available through the actual published e
     const decision = decisionFor({
       issue: {
         body: "Intake context",
-        labels: ["enhancement", "ready-for-agent"],
+        labels: ["type:enhancement", "state:ready"],
       },
       comments: [{ ...current, updated_at: time }],
       events: [readinessReview],
@@ -684,15 +689,15 @@ test("comment global identifiers remain available through the actual published e
       new RegExp(`deleted-comment:${marker}`),
     );
     assertDecision(result, decision, [
-      ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
-      ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+      ["DELETE", `${issuePath}/labels/state%3Aready`, null],
+      ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
       feedbackWrite(decision),
     ]);
   }
 });
 
 test("opening labels and author facts authorize only the existing creation review", async (t) => {
-  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
   for (const role of ["admin", "write"]) {
     const result = await exercise(t, {
       issue,
@@ -711,7 +716,7 @@ test("opening labels and author facts authorize only the existing creation revie
       event: {
         kind: "opened",
         actor: account(),
-        openingLabels: ["ready-for-agent"],
+        openingLabels: ["state:ready"],
       },
       permissions: { reporter: role },
     });
@@ -721,8 +726,8 @@ test("opening labels and author facts authorize only the existing creation revie
       role === "admin"
         ? [feedbackWrite(decision)]
         : [
-            ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
-            ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+            ["DELETE", `${issuePath}/labels/state%3Aready`, null],
+            ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
             feedbackWrite(decision),
           ],
     );
@@ -764,7 +769,7 @@ test("native blockers supply relationship facts while named-section requirements
     assert.equal(decision.exitCode, expectedCode);
     assert.match(decision.feedback.body, expectedMessage);
     assertDecision(result, decision, [
-      ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+      ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
       feedbackWrite(decision),
     ]);
     assert.equal(
@@ -776,7 +781,7 @@ test("native blockers supply relationship facts while named-section requirements
 
 test("a retry read failure cannot apply a decision from an earlier timeline", async (t) => {
   let reads = 0;
-  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
   const result = await exercise(t, {
     issue,
     comments: [awaitingTicketFeedback(issue)],
@@ -784,7 +789,7 @@ test("a retry read failure cannot apply a decision from an earlier timeline", as
     event: {
       action: "labeled",
       sender: account("maintainer"),
-      label: { name: "ready-for-agent" },
+      label: { name: "state:ready" },
     },
     permissions: { maintainer: "admin" },
     pause: async () => {},
@@ -801,12 +806,12 @@ test("the adapter applies the decision's writes in order and exits with its stat
     number: 42,
     state: "open",
     body: "## Steps to reproduce\n\n_No response_\n\n## Expected behavior\n\nWorks.\n\n## Actual behavior\n\nBroken.",
-    labels: ["bug", "ready-for-agent"],
+    labels: ["type:bug", "state:ready"],
   };
   const invalidDecision = decisionFor({ issue: invalid });
   assertDecision(await exercise(t, { issue: invalid }), invalidDecision, [
-    ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
-    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    ["DELETE", `${issuePath}/labels/state%3Aready`, null],
+    ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
     feedbackWrite(invalidDecision),
   ]);
   const issue = { number: 42, body: ticketBody, labels: [], state: "open" };
@@ -823,7 +828,7 @@ test("the adapter applies the decision's writes in order and exits with its stat
   const event = {
     action: "unlabeled",
     sender: account("maintainer"),
-    label: { name: "ready-for-agent" },
+    label: { name: "state:ready" },
   };
   const decision = decisionFor({
     issue,
@@ -832,26 +837,26 @@ test("the adapter applies the decision's writes in order and exits with its stat
     event: {
       kind: "unlabeled",
       actor: account("maintainer"),
-      label: "ready-for-agent",
+      label: "state:ready",
     },
   });
   assertDecision(
     await exercise(t, { issue, comments, events, event }),
     decision,
     [
-      ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+      ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
       feedbackWrite(decision, 13),
     ],
   );
 });
 
 test("a missing reviewer role is a definite unauthorized answer", async (t) => {
-  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
   const comments = [awaitingTicketFeedback(issue)];
   const event = {
     action: "labeled",
     sender: account("maintainer"),
-    label: { name: "ready-for-agent" },
+    label: { name: "state:ready" },
   };
   const decision = decisionFor({
     issue,
@@ -860,7 +865,7 @@ test("a missing reviewer role is a definite unauthorized answer", async (t) => {
     event: {
       kind: "labeled",
       actor: account("maintainer"),
-      label: "ready-for-agent",
+      label: "state:ready",
     },
   });
   assert.equal(decision.exitCode, 1);
@@ -874,8 +879,8 @@ test("a missing reviewer role is a definite unauthorized answer", async (t) => {
     failurePath: (path) => path.endsWith("/permission"),
   });
   assertDecision(result, decision, [
-    ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
-    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    ["DELETE", `${issuePath}/labels/state%3Aready`, null],
+    ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
     feedbackWrite(decision, 13),
   ]);
 });
@@ -884,7 +889,7 @@ test("editing or commenting on a closed ready issue clears readiness and leaves 
   const before = {
     number: 42,
     body: ticketBody,
-    labels: ["ready-for-agent"],
+    labels: ["state:ready"],
     state: "closed",
   };
   for (const action of ["edited", "created"]) {
@@ -903,7 +908,7 @@ test("editing or commenting on a closed ready issue clears readiness and leaves 
         },
       });
       assertDecision(result, decisionFor({ issue }), [
-        ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+        ["DELETE", `${issuePath}/labels/state%3Aready`, null],
       ]);
       assert.equal(result.requests.length, 2);
       assert.equal(result.requests[0].path, "/graphql");
@@ -915,7 +920,7 @@ test("an edit received while open is skipped when the fetched issue is closed", 
   const issue = {
     number: 42,
     body: ticketBody,
-    labels: ["ready-for-agent"],
+    labels: ["state:ready"],
     state: "closed",
   };
   const result = await exercise(t, {
@@ -924,7 +929,7 @@ test("an edit received while open is skipped when the fetched issue is closed", 
     comments: [approvedTicketFeedback(issue)],
   });
   assertDecision(result, decisionFor({ issue }), [
-    ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
+    ["DELETE", `${issuePath}/labels/state%3Aready`, null],
   ]);
   assert.equal(result.requests.length, 2);
 });
@@ -933,7 +938,7 @@ test("reopening an issue with a changed contract invalidates readiness", async (
   const before = {
     number: 42,
     body: ticketBody,
-    labels: ["ready-for-agent"],
+    labels: ["state:ready"],
     state: "closed",
   };
   const issue = {
@@ -961,18 +966,18 @@ test("reopening an issue with a changed contract invalidates readiness", async (
     permissions: { maintainer: "admin" },
   });
   assertDecision(result, decision, [
-    ["DELETE", `${issuePath}/labels/ready-for-agent`, null],
-    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    ["DELETE", `${issuePath}/labels/state%3Aready`, null],
+    ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
     feedbackWrite(decision, 13),
   ]);
 });
 
-test("reopening a bare native issue restores needs-triage", async (t) => {
+test("reopening a bare native issue restores state:triage", async (t) => {
   const issue = { number: 42, body: ticketBody, labels: [], state: "open" };
   const decision = decisionFor({ issue, event: { kind: "reopened" } });
   const result = await exercise(t, { issue, event: { action: "reopened" } });
   assertDecision(result, decision, [
-    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
     feedbackWrite(decision),
   ]);
 });
@@ -980,7 +985,7 @@ test("reopening a bare native issue restores needs-triage", async (t) => {
 test("an already-clean closed issue causes no label or feedback writes", async (t) => {
   const issue = {
     state: "closed",
-    labels: ["wontfix", "bug", "model:x", "unrelated"],
+    labels: ["wontfix", "type:bug", "model:x", "unrelated"],
   };
   const result = await exercise(t, { issue, event: { action: "closed" } });
   assertDecision(result, decisionFor({ issue }), []);
@@ -995,14 +1000,14 @@ test("reopening a cleaned issue restores no historical routing labels", async (t
   const result = await exercise(t, { issue, event: { action: "reopened" } });
   const decision = decisionFor({ issue, event: { kind: "reopened" } });
   assertDecision(result, decision, [
-    ["POST", `${issuePath}/labels`, { labels: ["needs-triage"] }],
+    ["POST", `${issuePath}/labels`, { labels: ["state:triage"] }],
     feedbackWrite(decision),
   ]);
 });
 
 test("unavailable reviewer roles reject readiness with cleanup and useful feedback", async (t) => {
   for (const failure of [401, 403, 409, 422, 429, 500]) {
-    const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+    const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
     const result = await exercise(t, {
       issue,
       comments: [awaitingTicketFeedback(issue)],
@@ -1010,7 +1015,7 @@ test("unavailable reviewer roles reject readiness with cleanup and useful feedba
       event: {
         action: "labeled",
         sender: account("maintainer"),
-        label: { name: "ready-for-agent" },
+        label: { name: "state:ready" },
       },
       failure,
       failurePath: (path) => path.endsWith("/permission"),
@@ -1020,19 +1025,19 @@ test("unavailable reviewer roles reject readiness with cleanup and useful feedba
     assert.deepEqual(
       writes(result).map(({ method, path }) => [method, path]),
       [
-        ["DELETE", `${issuePath}/labels/ready-for-agent`],
+        ["DELETE", `${issuePath}/labels/state%3Aready`],
         ["POST", `${issuePath}/labels`],
         ["PATCH", "/repos/example/repository/issues/comments/13"],
       ],
     );
-    assert.deepEqual(writes(result)[1].body, { labels: ["needs-triage"] });
+    assert.deepEqual(writes(result)[1].body, { labels: ["state:triage"] });
     const feedback = writes(result).at(-1).body.body;
     assert.match(feedback, /^## Issue contract readiness removed$/m);
     assert.match(
       feedback,
       /^Readiness was removed: Could not verify @maintainer's review authority:/m,
     );
-    assert.match(feedback, /The validator removed `ready-for-agent` from the /);
+    assert.match(feedback, /The validator removed `state:ready` from the /);
     assert.match(feedback, /A fresh authorized review is required/);
     assert.match(
       result.stderr,
@@ -1044,7 +1049,7 @@ test("unavailable reviewer roles reject readiness with cleanup and useful feedba
 });
 
 test("role failures on an unchanged recorded approval publish the authority cause safely", async (t) => {
-  const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+  const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
   const result = await exercise(t, {
     issue,
     comments: [approvedTicketFeedback(issue)],
@@ -1057,12 +1062,12 @@ test("role failures on an unchanged recorded approval publish the authority caus
   assert.deepEqual(
     writes(result).map(({ method, path }) => [method, path]),
     [
-      ["DELETE", `${issuePath}/labels/ready-for-agent`],
+      ["DELETE", `${issuePath}/labels/state%3Aready`],
       ["POST", `${issuePath}/labels`],
       ["PATCH", "/repos/example/repository/issues/comments/13"],
     ],
   );
-  assert.deepEqual(writes(result)[1].body, { labels: ["needs-triage"] });
+  assert.deepEqual(writes(result)[1].body, { labels: ["state:triage"] });
   const feedback = writes(result).at(-1).body.body;
   const reason = /Could not verify @maintainer's review authority:/;
   assert.match(feedback, reason);
@@ -1080,12 +1085,12 @@ test("role failures on an unchanged recorded approval publish the authority caus
 test("role failures clean up edited approved contracts and recovery requires fresh review", async (t) => {
   for (const kind of ["brief", "direct"]) {
     for (const edit of ["body", "revision metadata"]) {
-      for (const label of ["ready-for-agent", "ready-for-human"]) {
+      for (const label of ["state:ready"]) {
         await t.test(`${kind}, ${edit}, ${label}`, async (t) => {
           const before = {
             number: 42,
             body: kind === "brief" ? "Intake context" : ticketBody,
-            labels: kind === "brief" ? ["enhancement", label] : [label],
+            labels: kind === "brief" ? ["type:enhancement", label] : [label],
           };
           const brief = {
             id: 20,
@@ -1154,13 +1159,13 @@ test("role failures clean up edited approved contracts and recovery requires fre
           assert.deepEqual(
             writes(failed).map(({ method, path }) => [method, path]),
             [
-              ["DELETE", `${issuePath}/labels/${label}`],
+              ["DELETE", `${issuePath}/labels/${encodeURIComponent(label)}`],
               ["POST", `${issuePath}/labels`],
               ["PATCH", "/repos/example/repository/issues/comments/13"],
             ],
           );
           assert.deepEqual(writes(failed)[1].body, {
-            labels: ["needs-triage"],
+            labels: ["state:triage"],
           });
           const noticeBody = writes(failed).at(-1).body.body;
           assert.equal(recordedState(noticeBody).status, "awaiting-review");
@@ -1197,8 +1202,8 @@ test("role failures clean up edited approved contracts and recovery requires fre
             issue: {
               ...issue,
               labels: [
-                ...(kind === "brief" ? ["enhancement"] : []),
-                "needs-triage",
+                ...(kind === "brief" ? ["type:enhancement"] : []),
+                "state:triage",
               ],
             },
             comments: kind === "brief" ? [changedBrief, notice] : [notice],
@@ -1209,7 +1214,7 @@ test("role failures clean up edited approved contracts and recovery requires fre
                 ...removed,
                 id: 103,
                 event: "labeled",
-                label: { name: "needs-triage" },
+                label: { name: "state:triage" },
               },
             ],
             permissions: { maintainer: "admin" },
@@ -1251,11 +1256,11 @@ test("role failures clean up edited approved contracts and recovery requires fre
 
 test("mutation failures during permission-error cleanup remain visible", async (t) => {
   for (const failedWrite of [
-    `${issuePath}/labels/ready-for-agent`,
+    `${issuePath}/labels/state%3Aready`,
     `${issuePath}/labels`,
     "/repos/example/repository/issues/comments/13",
   ]) {
-    const issue = { number: 42, body: ticketBody, labels: ["ready-for-agent"] };
+    const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
     const result = await exercise(t, {
       issue,
       comments: [approvedTicketFeedback(issue)],

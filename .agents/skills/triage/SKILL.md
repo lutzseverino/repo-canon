@@ -27,24 +27,27 @@ Follow `AGENTS.md`'s Agent skills requirements for delegation and session naming
 
 Two **category** roles:
 
-- `bug`: something is broken
-- `enhancement`: new feature or improvement
+- `type:bug`: something is broken
+- `type:enhancement`: new feature or improvement
 
-Five **state** roles:
+Five **state** roles, each naming whom the issue waits on, and one closing outcome:
 
-- `needs-triage`: maintainer needs to evaluate
-- `needs-info`: information is missing; you, the orchestrating agent, answer it or route it (see [Route questions](#route-questions))
-- `ready-for-agent`: fully specified, ready for an AFK agent
-- `ready-for-human`: needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves
+- `state:triage`: triage needs to evaluate it
+- `state:reporter`: a fact only its outside reporter holds is missing; ask them (see [Route questions](#route-questions))
+- `state:grill`: the owner's intent is open; a grilling session settles it
+- `state:owner`: the owner's answer, or work that needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves
+- `state:ready`: fully specified, ready for an AFK agent
 - `wontfix`: will not be actioned
 
-For a PR, the same states read against the attached code: `ready-for-agent` means a brief is attached and an agent should take the next step on the diff; `ready-for-human` keeps the owner-only meaning above. Work an agent can perform stays `ready-for-agent`, including work awaiting the owner's review. In repositories with installed factory rules, follow those rules for work the factory must not pick up.
+For a PR, the same states read against the attached code: `state:ready` means a brief is attached and an agent should take the next step on the diff; `state:owner` keeps the owner-only meaning above. Work an agent can perform stays `state:ready`, including work awaiting the owner's review. In repositories with installed factory rules, follow those rules for work the factory must not pick up and for owner gates.
 
 Every triaged issue should carry exactly one category role and one state role. If state roles conflict, flag it and ask the maintainer before doing anything else.
 
-These are canonical role names. The actual label strings and their meanings are in the triage label configuration, `docs/agents/triage-labels.md`.
+Set one `priority:` label by the installed rules' rubric, unless a person already set one; never replace theirs.
 
-State transitions: an unlabeled issue normally goes to `needs-triage` first; from there it moves to `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`. `needs-info` returns to `needs-triage` once the missing information arrives: your own answer, the reporter's reply, or the owner's decision. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
+These are canonical role names. The actual label strings are in the triage label configuration, `docs/agents/triage-labels.md`, and the installed `github-repository-configuration` rules hold their meanings.
+
+State transitions: an unlabeled issue normally goes to `state:triage` first; from there it moves to `state:reporter`, `state:grill`, `state:owner`, `state:ready`, or `wontfix`. An issue waiting on someone returns to `state:triage` once the missing information arrives: your own answer, the reporter's reply, or the owner's decision. An answered question on ready work returns it to `state:ready` instead, under the contribution guide's Readiness section. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
 
 ## Who does what
 
@@ -61,7 +64,7 @@ The maintainer invokes `/triage` and describes what they want in natural languag
 
 - "Show me anything that needs my attention"
 - "Let's look at #42" (issue or PR)
-- "Move #42 to ready-for-agent"
+- "Move #42 to state:ready"
 - "What's ready for agents to pick up?"
 
 ## Show what needs attention
@@ -69,8 +72,8 @@ The maintainer invokes `/triage` and describes what they want in natural languag
 Query the issue tracker and present three buckets, oldest first:
 
 1. **Unlabeled**: never triaged.
-2. **`needs-triage`**: evaluation in progress.
-3. **`needs-info` with reporter activity or an owner decision since the last triage notes**: needs re-evaluation.
+2. **`state:triage`**: evaluation in progress.
+3. **`state:reporter`, `state:grill` or `state:owner` with reporter activity or an owner decision since the last triage notes**: needs re-evaluation.
 
 When PRs are in scope, include external PRs in these buckets and tag each line `[PR]` or `[issue]`. Discovery surfaces only *external* PRs (the tracker config defines who counts as external), so a collaborator's in-flight PR is not triage work. This filter is discovery-only; an explicitly named PR is always triaged regardless of author.
 
@@ -83,7 +86,7 @@ Before any research, decide where the answer to the request's open questions liv
 - **Code-bound**: the expected result is clear, and the code, logs, or a reproduction can answer everything else. A bug whose report or documentation states what should happen is usually code-bound.
 - **Intent-bound**: the missing answer is the owner's intent, a policy, or a trade-off only they can choose: a new capability, a "should" question, a limit, a default, a timeout, a naming or scope call.
 
-The test: if the brief would have to carry an open question for the owner, a list of options for someone to pick from, or a value nobody chose (a fallback, a default, a limit), the request is intent-bound. That holds for a request labeled `bug` too: a bug whose fix needs a policy choice is intent-bound. Missing evidence or missing access never licenses inventing the policy; it is a `needs-info` question, routed as [Route questions](#route-questions) says.
+The test: if the brief would have to carry an open question for the owner, a list of options for someone to pick from, or a value nobody chose (a fallback, a default, a limit), the request is intent-bound. That holds for a request labeled `type:bug` too: a bug whose fix needs a policy choice is intent-bound. Missing evidence or missing access never licenses inventing the policy; it is a question, routed as [Route questions](#route-questions) says.
 
 A request can move from code-bound to intent-bound when research turns up an intent question. It moves back only when the owner's answers, or answers you infer under the [inference test](#intent-bound-path), settle every such question.
 
@@ -96,9 +99,9 @@ Every research run, on either path, does two checks first:
 - **Redundancy**: search for an existing implementation of the requested behavior by domain concept (not just the request's wording), and report where it looked.
 - **Verify the claim.** For a bug, reproduce it from the reporter's steps. For a PR, confirm the diff does what it claims: check it out, run the relevant tests or commands. Report what happened: confirmed (with code path), failed, or insufficient detail.
 
-2. **Recommend.** Tell the maintainer your category, path (code-bound or intent-bound), and state recommendation with a one-line reason each. Continue unless they redirect you.
+2. **Recommend.** Tell the maintainer your category, path (code-bound or intent-bound), priority, and state recommendation with a one-line reason each. Continue unless they redirect you.
 
-3. **Take the request's path**, below. Either path can end early: a redundant request is an already-implemented `wontfix`, a claim that fails verification or lacks detail is `needs-info`, and a rejected request is `wontfix` (see [Other outcomes](#other-outcomes)).
+3. **Take the request's path**, below. Either path can end early: a redundant request is an already-implemented `wontfix`, a claim that fails verification or lacks detail waits on whoever holds the missing fact, and a rejected request is `wontfix` (see [Other outcomes](#other-outcomes)).
 
 ### Code-bound path
 
@@ -139,10 +142,10 @@ Every research run, on either path, does two checks first:
 ### Accept a brief that holds
 
 1. **Wait for the revision notice** the issue-contract workflow posts for the brief revision you reviewed. If the brief changed after your review, review the new revision. If no notice arrives, leave readiness to the owner and tell them the notice is missing.
-2. **Choose the readiness**:
-   - `ready-for-human` only when the work needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves.
-   - `ready-for-agent` with `factory:skip` for agent work the factory must not pick up, by the tests in the installed factory rules, which also say who creates the label and who merges. Without those rules there is no skip label.
-   - `ready-for-agent` alone for any other work.
+2. **Choose the state**:
+   - `state:owner` only when the work needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves. It is not readiness: apply it with the tracker's own client and a note naming what the owner must supply, and skip the readiness command.
+   - `state:ready` with `factory:skip` for agent work the factory must not pick up, by the tests in the installed factory rules, which also say who creates the label and who merges. Without those rules there is no skip label.
+   - `state:ready` alone for any other work.
 
    When owner review before merge is reserved, in either profile, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source. Check this even when that reason first arises here, after the initial brief review. If the designation or its source is missing or unclear, return the brief to its writer with the recorded reservation and source; the writer corrects it. Independently review the corrected brief from the top, then return to step 1 for its new validator revision notice before applying readiness. Never write or rewrite the brief you accept.
 
@@ -154,10 +157,10 @@ Every research run, on either path, does two checks first:
 4. **Apply and confirm readiness** with the bundled command, using the `sha256:` revision from the notice you reviewed and the companion labels you chose:
 
    ```sh
-   node <this skill's directory>/ready.mjs <issue> ready-for-agent <sha256:reviewed-revision> <model-label>
+   node <this skill's directory>/ready.mjs <issue> <sha256:reviewed-revision> <model-label>
    ```
 
-   For `ready-for-human`, name the account, credential, or reserved taste call the work needs in a note, and omit the model label when none is needed. Additional companion labels, such as `factory:skip`, follow the revision; `--repo owner/name` selects another repository. Run with Node.js 24 or 26 in the foreground, bounded by the caller's command timeout. The command uses the current `gh` credential through the vendored Postern bundle and needs no install step. It checks account eligibility against the selected destination's installed factory workflow rules at its default-branch commit, independently of this checkout. Outside factory repositories, role-authorized person, bot and App reviewers use the same revision-bound flow; factory repositories require a person and refuse bot/App accounts before readiness writes. For factory non-parent agent readiness, it requires exactly one model in the combined existing and companion labels. It creates a missing chosen repository model label using the installed factory rules' color and description format, and preserves an existing label unchanged. Failed identity, applicability or model-label provisioning applies no readiness. Exit zero confirms the validator approved that revision by the acting account; a nonzero exit explains the refusal or rejection. Review a changed revision again before retrying. For a parent it waits for the latest child link and reapplies readiness when its timestamp is not newer than that link.
+   The command applies `state:ready`. Omit the model label when the installed rules ask for none. Additional companion labels, such as `factory:skip`, follow the revision; `--repo owner/name` selects another repository. Run with Node.js 24 or 26 in the foreground, bounded by the caller's command timeout. The command uses the current `gh` credential through the vendored Postern bundle and needs no install step. It checks account eligibility against the selected destination's installed factory workflow rules at its default-branch commit, independently of this checkout. Outside factory repositories, role-authorized person, bot and App reviewers use the same revision-bound flow; factory repositories require a person and refuse bot/App accounts before readiness writes. For factory non-parent agent readiness, it requires exactly one model in the combined existing and companion labels. It creates a missing chosen repository model label using the installed factory rules' color and description format, and preserves an existing label unchanged. Failed identity, applicability or model-label provisioning applies no readiness. Exit zero confirms the validator approved that revision by the acting account; a nonzero exit explains the refusal or rejection. Review a changed revision again before retrying. For a parent it waits for the latest child link and reapplies readiness when its timestamp is not newer than that link.
 
 5. **Record blockers.** Add a native blocker for each issue whose work must land first.
 6. **Tell the owner** what you accepted, with links to each brief, the labels you applied, the blockers you added, and every answer you inferred, so they can veto it.
@@ -168,29 +171,29 @@ When your credentials cannot apply readiness, stop at acceptance: tell the owner
 
 Before posting a comment for any outcome below, read `.repo-standards/rules/comments.md#disclaimers`.
 
-- `needs-info`: route the missing information as [Route questions](#route-questions) says; for a question to an outside reporter, post triage notes (template below).
+- A missing fact or decision: route it as [Route questions](#route-questions) says; for a question to an outside reporter, post triage notes (template below).
 - For `wontfix`, close the issue, with the comment depending on *why*:
   - **Already implemented**: the change already exists in the codebase. Point to where it lives; do **not** write to `.out-of-scope/` (that KB is for *rejected* requests, not built ones).
   - **Rejected (bug)**: give a polite explanation, then close.
   - **Rejected (enhancement)**: write to `.out-of-scope/`, link to it from a comment, then close ([OUT-OF-SCOPE.md](OUT-OF-SCOPE.md)).
-- `needs-triage`: apply the role. Optional comment if there's partial progress.
+- `state:triage`: apply the role. Optional comment if there's partial progress.
 
 ## Route questions
 
-Every question reaches you first, whoever raises it: a research run, a grill, or an agent's issue comment, including one under `needs-info` or `factory:needs-input`.
+Every question reaches you first, whoever raises it: a research run, a grill, or an agent's issue comment, including one in `state:reporter`, `state:grill` or `state:owner`.
 
 If an answer changes the implementation contract, send the edit to a separate writer; never write the revised brief you accept. Follow the contribution guide's validator-notice, independent-review and renewed-readiness steps before continuation; an unchanged contract needs no new readiness cycle.
 
 - **Answer what you can**: from code, logs, or a reproduction, or by inference under the [inference test](#intent-bound-path). Post an answer on the issue as `.repo-standards/rules/comments.md#disclaimers` says.
-- **Ask an outside reporter** what only they know, with the needs-info template below.
-- **Put an owner-only question in your decision inbox**, with your recommendation. The decision inbox is the one channel for questions to the owner.
-- **An agent's question to the owner**, posted as `.repo-standards/rules/comments.md#owner-questions` says: read it first. When the inference test lets you answer, answer on the issue, and remove `factory:needs-input` where the installed factory rules let the answerer remove it. Follow those rules for the order of marker removal and frontier release. Otherwise put it in your decision inbox.
+- **Ask an outside reporter** what only they know, with the reporter template below, and move the issue to `state:reporter`. Use it only when the issue's author is an outside reporter; a fact the owner or an agent filing the issue lacks goes to the owner.
+- **Put an owner-only question in your decision inbox**, with your recommendation, and move the issue to `state:owner`, or to `state:grill` when a grill must settle the owner's intent. The decision inbox is the one channel for questions to the owner.
+- **An agent's question to the owner**, posted as `.repo-standards/rules/comments.md#owner-questions` says: read it first. When the inference test lets you answer, answer on the issue, and return the issue to the state the installed rules name for an answered question, such as `state:ready` for ready work through [Apply and confirm readiness](#accept-a-brief-that-holds). Otherwise put it in your decision inbox.
 
 ## Quick state override
 
-If the maintainer says "move #42 to ready-for-agent", trust them: that is their review, not yours. Confirm what you're about to do (role changes, comment, close), then act, posting any comment as `.repo-standards/rules/comments.md#disclaimers` says. Skip grilling. Apply a readiness role through [Apply and confirm readiness](#accept-a-brief-that-holds), with the revision from the issue's current revision notice and the model and skip labels the installed rules ask for; when the command refuses your account, hand the maintainer those details instead. If moving to `ready-for-agent` without a brief, ask whether they want one written.
+If the maintainer says "move #42 to state:ready", trust them: that is their review, not yours. Confirm what you're about to do (role changes, comment, close), then act, posting any comment as `.repo-standards/rules/comments.md#disclaimers` says. Skip grilling. Apply a readiness role through [Apply and confirm readiness](#accept-a-brief-that-holds), with the revision from the issue's current revision notice and the model and skip labels the installed rules ask for; when the command refuses your account, hand the maintainer those details instead. If moving to `state:ready` without a brief, ask whether they want one written.
 
-## Needs-info template
+## Reporter template
 
 ```markdown
 ## Triage Notes

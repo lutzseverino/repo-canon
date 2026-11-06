@@ -22,8 +22,8 @@ sandbox access.
 
 A parent (a specification or any issue with sub-issues) never runs; its
 readiness releases its tickets, which each also need their own readiness.
-Parenthood grants no Agent Brief exemption: a non-specification parent labelled
-`bug` or `enhancement` needs its own complete Agent Brief and revision-bound
+Parenthood grants no Agent Brief exemption: a non-specification parent with a
+`type:` label needs its own complete Agent Brief and revision-bound
 readiness under the contribution guide and issue-contract validator.
 
 With complete sub-issue link actor history, later links preserve the parent's
@@ -44,10 +44,10 @@ link check; contract-review and authorization gates still apply.
 ## Model selection
 
 The factory picks up ready issues and runs each ticket on its own. In a
-repository a factory serves, whoever applies `ready-for-agent` to a non-parent
+repository a factory serves, whoever applies `state:ready` to a non-parent
 issue must apply exactly one `model:` label they chose, before readiness or
 together with it, even when it names the host's default model. A parent needs
-no `model:` label of its own, and `ready-for-human` needs none.
+no `model:` label of its own.
 
 Work needing design judgment, ambiguous scope or a long cross-cutting change
 uses a stronger model. The chosen model label uses
@@ -94,32 +94,48 @@ confirmation govern bot and App reviewers too.
 
 ## State labels
 
-The factory creates and manages `factory:running`, `factory:failed`,
-`factory:paused` and `factory:needs-input`, using the corresponding roles in
-`.factory/config.json`. The repository owns `ready-for-agent`, provisioned by
-canonical-label setup. In the factory profile, that setup also provisions and
-verifies `factory:skip` with color `c5def5` and description
-`Ready agent work the factory must not pick up`. Standard-profile setup does
-not provision it.
+The factory profile's label setup also provisions and verifies these labels,
+with these colors and descriptions:
+
+| Label                  | Color    | Description                                                |
+| ---------------------- | -------- | ---------------------------------------------------------- |
+| `gate:owner-review`    | `e99695` | Waits on the owner's review before its pull request merges |
+| `gate:major-release`   | `e99695` | Waits on the owner's go-ahead for a major release          |
+| `factory:running`      | `0052cc` | Waits on the factory run that holds it                     |
+| `factory:paused`       | `c5def5` | Waits on the factory to resume the run it paused           |
+| `factory:failed`       | `b60205` | Waits on a person to deal with the failed run              |
+| `factory:skip`         | `c5def5` | Ready agent work the factory must not pick up              |
+| `factory:release-hold` | `c5def5` | Hold other merges while a release PR is open               |
+| `factory:hold`         | `c5def5` | Pause factory pickups and other merges in this repository  |
+
+Standard-profile setup provisions none of them. A `gate:` label is set before
+the work, by the owner or by a grill at the owner's request. Only the factory
+sets `factory:running`, `factory:paused` and `factory:failed`, using the
+corresponding roles in `.factory/config.json`, and it creates any of them that
+is missing itself. The skip and hold labels follow the sections below.
+
+A person applying `state:triage`, or opening an issue, is the factory's triage
+trigger; the issue-contract workflow's own fallback application never is.
 
 In a repository a factory serves, `.factory/config.json` names the factory's
-labels: `ready-for-agent` is the ready label, `factory:skip` marks ready agent
-work the factory must not pick up, an agent adds `factory:needs-input` with its
-question, and the factory adds `factory:running` while it holds an issue,
-`factory:failed` after a run fails for good, and `factory:paused` when it
-pauses a run. `factory:paused` means the factory paused the run and resumes it
-by itself, and its run comment says why, so nobody removes the label
-by hand. Remove `factory:failed` to run the issue again once its failure note
+labels: `state:ready` is the ready label, `factory:skip` marks ready agent
+work the factory must not pick up, and the factory adds `factory:running`
+while it holds an issue, `factory:failed` after a run fails for good, and
+`factory:paused` when it pauses a run. A run that stops on a question moves
+the issue's workflow state to whoever must answer, as Owner handoff and
+recovery says: a `state:` stop. `factory:paused` means the factory paused the run and resumes
+it by itself, and its run comment says why, so nobody removes the label by
+hand. Remove `factory:failed` to run the issue again once its failure note
 or the factory's comment is dealt with, subject to the existing pickup gates.
-For ordinary runs, removing `factory:needs-input` after resolving the question
-resumes the same work and PR on a current base, whether the PR is open or
-closed-unmerged. Removing `factory:failed` requests a retry, not the stopped-PR
-orchestrator handoff described below.
+For ordinary runs, returning an answered issue to `state:ready` resumes the
+same work and PR on a current base, whether the PR is open or
+closed-unmerged. Removing `factory:failed` requests a retry, not the
+stopped-PR orchestrator handoff described below.
 
-`ready-for-human` is only for work that needs the owner's own accounts or
-credentials, or a taste call the owner reserved for themselves. Agent work the
-factory must not pick up gets `ready-for-agent`, one `model:` label and
-`factory:skip`, applied together: work that edits `.github/workflows/`, work
+`state:owner` is for work that needs the owner's own accounts or credentials,
+or a taste call the owner reserved for themselves. Agent work the factory must
+not pick up gets `state:ready`, one `model:` label and `factory:skip`, applied
+together: work that edits `.github/workflows/`, work
 the owner reviews before merge, or work whose live steps need host access the
 maintainer grants. A directly launched worker performs the agent work,
 including the source changes; host access gates only the live host steps and
@@ -152,16 +168,16 @@ requires no owner review; without a designation, the orchestrating agent merges
 under the ordinary applicable conditions.
 
 For skipped work, when the shared gate requires an approval pause, keep the PR
-open, retain `factory:needs-input` and `factory:skip` on its issue, and preserve the
-orchestrating agent's merge ownership.
+open, keep `factory:skip` on its issue with the workflow state `state:owner`,
+and preserve the orchestrating agent's merge ownership.
 If an answer changes the implementation contract during this pause, apply
 Skipped work's contract-revision gate: implementation and delivery wait for the
 edited revision's validator notice, independent review and renewed readiness.
 An unchanged contract requires no new readiness cycle.
 After verifying and recording current-head approval under the shared gate and
-any required renewed readiness, the orchestrating agent removes
-`factory:needs-input` and resumes `babysit` on the same open PR, merging only
-when all other applicable merge conditions hold.
+any required renewed readiness, the issue returns to `state:ready` and the
+orchestrating agent resumes `babysit` on the same open PR, merging only when
+all other applicable merge conditions hold.
 Read and carry the shared gate's PR comment records through the worker handoff
 and this approval-pause continuation.
 Any head change returns to this approval pause until renewed approval is
@@ -172,9 +188,7 @@ closure nor factory pickup.
 
 The configured `labels.hold` label pauses new pickups and merges in one
 repository while any open issue or PR carries it. Runs already started finish
-without merging. Factory-profile label setup provisions and verifies
-`factory:hold` with color `c5def5` and description
-`Pause factory pickups and other merges in this repository`.
+without merging.
 
 An expedited change carries the repository hold on its own PR, so merging or
 closing that PR ends its hold. A pause begun on an issue transfers to that PR
@@ -193,8 +207,7 @@ PRs only. Its hold exit leaves the PR open; a hold is not an owner handoff.
 ### Release holds
 
 In a factory repository, a release PR carries the configured
-`labels.releaseHold` label from opening until it merges or closes. Factory-profile
-label setup provisions and verifies this release-hold label. While another
+`labels.releaseHold` label from opening until it merges or closes. While another
 open PR carries it, the factory holds merges in that repository. Babysit also
 checks immediately before its merge write, covering a release PR opened
 mid-run and every babysit merge, including orchestrator recovery and
@@ -237,7 +250,7 @@ including after host restarts. The factory never deletes its comments.
 
 Open blockers, including a parent's blockers, usage drains or owner holds,
 provider caps and states already carrying labels or notices (running, paused,
-needs-input, failed and skip) remain log-only, as do transient unreadable role
+failed, skip and the `state:` stops) remain log-only, as do transient unreadable role
 lookups. Awaiting-merge, failure and pause states appear in the run comment,
 with an action comment when a person must act; a parent's close notice keeps
 its own lifecycle. Without a cached valid repository configuration, the host
@@ -245,46 +258,46 @@ cannot read its issues and posts no comment.
 
 When an agent needs an answer only the owner can give, follow the contribution
 guide's owner-question handoff, post the question as the `comments` rules say,
-and add `factory:needs-input` to the issue. Work without an issue uses no
-factory state label. The question reaches the orchestrating agent first, as
+and move the issue's workflow state to whoever must answer: `state:owner` for
+the owner's answer, `state:grill` for the owner's intent, or `state:reporter`
+for a fact only its outside reporter holds. Work without an issue uses no
+state label. The question reaches the orchestrating agent first, as
 those rules say: it answers on the issue when the triage inference test lets it,
 and otherwise puts the question in its decision inbox for the owner.
 
-An agent that stops without a pull request and without a question under
-`factory:needs-input` posts a stop note on the issue under the `comments`
-rules.
+An agent that stops without a pull request and without a `state:` stop posts a
+stop note on the issue under the `comments` rules.
 
 ### Skipped work
 
-For every owner question on skipped work, retain the skip marker and
-`factory:needs-input` while unanswered. The current worker or merging-agent
+For every owner question on skipped work, retain the skip marker and the
+question's workflow state while unanswered. The current worker or merging-agent
 run stops under the contribution guide's owner-question handoff.
 
 For the designated skipped-PR approval pause, follow Merging for
 continuation, including any required renewed readiness after a contract-changing
 answer. Answering another question does not satisfy that approval
-requirement: keep both markers until explicit current-head approval is verified
-and recorded with its source and SHA, as Merging requires.
+requirement: keep the skip marker and `state:owner` until explicit current-head
+approval is verified and recorded with its source and SHA, as Merging requires.
 
 If the answer changes the implementation contract, edit the contract and have
 that exact revision independently reviewed and granted renewed readiness under
 the contribution guide and the `github-repository-configuration` rules,
 including the validator revision notice before readiness is applied. With or
 without an open PR, implementation
-and delivery wait for that renewed readiness. Resolving the question or
-removing `factory:needs-input` does not authorize continuation on an unreviewed
-revision. Renewed readiness does not substitute for designated current-head
+and delivery wait for that renewed readiness. Resolving the question does not
+authorize continuation on an unreviewed revision. Renewed readiness does not substitute for designated current-head
 owner approval under Merging.
 If the answer leaves the contract unchanged, no new readiness cycle is required.
 
-Once the question is resolved and any required renewed readiness is recorded,
-the orchestrating agent removes `factory:needs-input` and continues the skipped
-work. With no open PR, it resumes
+Once the question is resolved and the issue is back in `state:ready`, with any
+required renewed readiness recorded, the orchestrating agent continues the
+skipped work. With no open PR, it resumes
 or relaunches the implementing worker. With an open PR, it resumes that same PR,
 arranging any remaining worker work and continuing delivery from the prescribed
 handoff. The worker still hands off without merging; the orchestrating agent
-owns `babysit` and the merge as Merging prescribes. Removing the waiting
-marker alone is not a factory retry for skipped work. This recovery requires
+owns `babysit` and the merge as Merging prescribes. Returning to `state:ready`
+is not a factory retry for skipped work. This recovery requires
 neither factory pickup, owner merge nor closing an open PR for hand-back.
 
 ### Ordinary factory runs
@@ -293,17 +306,16 @@ This recovery applies only to non-skipped factory runs.
 
 If the answer changes the implementation contract, record the answer on the
 issue and have a writer independent of the accepting reviewer incorporate it
-in the authoritative contract. Keep `factory:needs-input` until that exact
-edited revision receives its validator revision notice, independent authorized
+in the authoritative contract. Keep the question's workflow state until that
+exact edited revision receives its validator revision notice, independent authorized
 review and renewed readiness under the contribution guide and the
-`github-repository-configuration` rules. An answer or marker removal alone
-authorizes neither implementation of an unreviewed revision nor continuation
+`github-repository-configuration` rules. An answer alone authorizes neither implementation of an unreviewed revision nor continuation
 on the superseded contract.
 If the answer leaves the contract unchanged, no new readiness cycle is required.
 
 Once the question is resolved and any required renewed readiness is recorded,
-whoever answers, the orchestrating agent or the owner, may remove
-`factory:needs-input` to request factory resumption. The factory resumes the
+returning the issue to `state:ready` under the contribution guide's Readiness
+section requests factory resumption. The factory resumes the
 same work and PR on a current base, whether the PR is open or closed-unmerged;
 it reopens the existing PR when needed and never creates a replacement PR.
 With no PR, it continues the preserved issue work. Resumption starts a fresh
@@ -314,15 +326,15 @@ or replay only the issue's changes, and revalidate before delivery; never merge
 the default branch into the issue branch. Uncertain ownership requires an
 owner handoff.
 
-A qualifying handoff is a non-skipped factory run stopped under
-`factory:needs-input` with its PR still open. An open PR under `factory:failed`
+A qualifying handoff is a non-skipped factory run stopped in a `state:` stop
+with its PR still open. An open PR under `factory:failed`
 does not qualify; removing that label requests a retry. The orchestrating agent
 may take delivery ownership of a qualifying handoff and continue `babysit`
-through its Branch-update recovery. Keep `factory:needs-input` throughout this
-delivery attempt, until merge or owner handoff, preventing concurrent factory
-resumption. Removing it requests factory resumption, not orchestrator delivery.
-Handing the PR to the owner does not itself request factory resumption; retain
-the waiting marker.
+through its Branch-update recovery. Keep the stop's workflow state throughout
+this delivery attempt, until merge or owner handoff, preventing concurrent
+factory resumption. Returning to `state:ready` requests factory resumption, not
+orchestrator delivery. Handing the PR to the owner does not itself request
+factory resumption; keep the stop's workflow state.
 
 Rebase onto the current default branch in a checkout it owns, never through
 GitHub update-branch. Revalidate the integrated change and repeat applicable
@@ -339,8 +351,8 @@ each PR; create no shared queue.
 
 The owner may instead finish the open PR by merging it and ensuring its issue
 closes under the contribution guide's pull request rules, or request factory
-resumption by removing `factory:needs-input` once the question and any required
-renewed readiness are resolved. No PR closure or ordered label-removal
+resumption by returning the issue to `state:ready` once the question and any
+required renewed readiness are resolved. No PR closure or ordered label-removal
 procedure is required. Removing `factory:failed` retries only when the existing
 pickup gates allow it; it does not grant orchestrator delivery ownership.
 

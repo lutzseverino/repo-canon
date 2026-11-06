@@ -10,36 +10,50 @@ what agents post on issues and pull requests.
 
 ## Labels
 
-The repository carries these canonical issue labels, with these colors and
+Apart from `wontfix`, each label belongs to a family named by its prefix. The
+repository carries these canonical issue labels, with these colors and
 descriptions:
 
-| Label                 | Color    | Description                                                                |
-| --------------------- | -------- | -------------------------------------------------------------------------- |
-| `needs-triage`        | `fbca04` | Requires review or renewed review                                          |
-| `needs-info`          | `d4c5f9` | Missing information; the orchestrating agent answers or routes it          |
-| `ready-for-agent`     | `0e8a16` | Reviewed and sufficiently specified for agent implementation               |
-| `ready-for-human`     | `1d76db` | Reviewed; needs the owner's accounts, credentials or a reserved taste call |
-| `wontfix`             | `ffffff` | Will not be actioned                                                       |
-| `bug`                 | `d73a4a` | Something isn't working                                                    |
-| `enhancement`         | `a2eeef` | New feature or request                                                     |
-| `wayfinder:map`       | `5319e7` | Planning map for related work                                              |
-| `wayfinder:research`  | `bfd4f2` | Research question in a planning map                                        |
-| `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                                       |
-| `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                                       |
-| `wayfinder:task`      | `bfd4f2` | Task in a planning map                                                     |
+| Label                 | Color    | Description                                                |
+| --------------------- | -------- | ---------------------------------------------------------- |
+| `state:triage`        | `fbca04` | Waits on triage to review it, or review it again           |
+| `state:reporter`      | `d4c5f9` | Waits on its outside reporter for a fact only they hold    |
+| `state:grill`         | `d876e3` | Waits on a grilling session for the owner's intent         |
+| `state:owner`         | `1d76db` | Waits on the owner's answer or work only the owner can do  |
+| `state:ready`         | `0e8a16` | Reviewed; waits on an agent to implement it                |
+| `type:bug`            | `d73a4a` | Something isn't working                                    |
+| `type:enhancement`    | `a2eeef` | New feature or request                                     |
+| `priority:high`       | `d93f0b` | Picked up before normal and low priority work              |
+| `priority:normal`     | `bfdadc` | Picked up in the usual order; no priority label means this |
+| `priority:low`        | `c2e0c6` | Picked up after high and normal priority work              |
+| `wontfix`             | `ffffff` | Will not be actioned                                       |
+| `wayfinder:map`       | `5319e7` | Planning map for related work                              |
+| `wayfinder:research`  | `bfd4f2` | Research question in a planning map                        |
+| `wayfinder:prototype` | `bfd4f2` | Prototype question in a planning map                       |
+| `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                       |
+| `wayfinder:task`      | `bfd4f2` | Task in a planning map                                     |
 
-`docs/agents/triage-labels.md` maps canonical roles to tracker label strings;
-use the configured string for each role.
+An open issue carries exactly one `state:` label, its workflow state, naming
+whom it waits on; the contribution guide's Readiness section says how the
+issue-contract workflow keeps it. `state:reporter` is only for a fact the
+issue's outside reporter holds. A fact the owner or an agent filing the issue
+lacks waits on the owner in `state:owner`, or in `state:grill` when it is the
+owner's intent. Follow the contribution guide's Triage section for question
+routing and its inference test. `state:ready` is readiness, and the repository
+owns it. `wontfix` marks an issue closed as will not be actioned.
 
-For `needs-info`, follow the contribution guide's Triage section for question
-routing and its inference test. Agent work, including work awaiting the owner's
-review, follows the contribution guide's Triage and Readiness sections for
-`ready-for-agent`. Where factory workflow rules are installed, follow their
-State labels section for factory pickup exclusions.
+A triaged request carries one `type:` label, its category.
 
-The repository owns `ready-for-agent`, provisioned by canonical-label setup.
-These rules name no `factory:` label. Where factory workflow rules are installed,
-follow them for ownership of factory state labels and skip and model labels.
+A `priority:` label orders pickup, and an issue without one is normal. Triage
+sets it by this rubric: a broken workflow, data loss or a security problem is
+`priority:high`; most work is `priority:normal`; a cleanup with no user effect
+is `priority:low`. Triage never replaces a priority a person set, and the owner
+may change it at any time.
+
+`docs/agents/triage-labels.md` maps the triage skills' roles to these labels.
+
+These rules name no `gate:` or `factory:` label. Where factory workflow rules
+are installed, follow them for those families and for `model:` labels.
 
 ## Merge settings
 
@@ -469,12 +483,11 @@ wait applies this rule.
 
 ## Readiness roles
 
-Applying `ready-for-agent` or `ready-for-human` needs the repository `admin`,
-`maintain`, or `triage` role. The `triage` role is the
-explicit authorization for a triaging agent. A `write` role, an author
-association, a bot identity, or a passing structure check supplies no
-authority, and the issue-contract workflow removes readiness that an actor
-without one of these roles applied.
+Applying `state:ready` needs the repository `admin`, `maintain`, or `triage`
+role. The `triage` role is the explicit authorization for a triaging agent. A
+`write` role, an author association, a bot identity, or a passing structure
+check supplies no authority, and the issue-contract workflow removes readiness
+that an actor without one of these roles applied.
 
 An orchestrating agent that accepts an Agent Brief applies its readiness only
 when the credentials it was given hold one of these roles, and only after the
@@ -528,9 +541,9 @@ is not a placeholder:
 - Acceptance criteria
 - Out of scope
 
-Category is `bug` or `enhancement`, and the issue's one category label is the
-same. Empty content, template comments, empty task list items, GitHub's
-`_No response_`, `TBD`, `TODO` and bracketed prompts such as
+Category is `bug` or `enhancement`, and the issue's one `type:` label names
+the same category. Empty content, template comments, empty task list items,
+GitHub's `_No response_`, `TBD`, `TODO` and bracketed prompts such as
 `[describe the bug]` are placeholders. Heading level, heading style and the
 casing of the heading and field names do not matter, and the workflow also
 accepts the disclaimer emphasized with `_` or without the blank line before

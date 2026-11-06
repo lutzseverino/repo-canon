@@ -236,8 +236,8 @@ test("an issue's state, labels, comments and linked pull requests each wake the 
     },
     {
       name: "labels",
-      change: (item) => (item.labels = ["ready-for-agent", "factory:running"]),
-      line: "example/tracker#7: labels added factory:running; removed needs-triage",
+      change: (item) => (item.labels = ["state:ready", "factory:running"]),
+      line: "example/tracker#7: labels added factory:running; removed state:triage",
     },
     {
       name: "comments",
@@ -258,7 +258,7 @@ test("an issue's state, labels, comments and linked pull requests each wake the 
     output.stdout = "";
     const items = {
       "example/tracker#7": {
-        labels: ["ready-for-agent", "needs-triage"],
+        labels: ["state:ready", "state:triage"],
         comments: [comment(1)],
         linked: [pull(11, "OPEN")],
       },
@@ -321,11 +321,11 @@ test("only the changed item is reported among several", async () => {
     {
       ...output.streams,
       connect,
-      pause: async () => (items["example/other#3"].labels = ["needs-info"]),
+      pause: async () => (items["example/other#3"].labels = ["state:reporter"]),
     },
   );
   assert.equal(code, 0);
-  assert.equal(output.stdout, "example/other#3: labels added needs-info\n");
+  assert.equal(output.stdout, "example/other#3: labels added state:reporter\n");
 });
 
 test("a report-back file and a done mark wake the wait", async (t) => {
