@@ -54,6 +54,13 @@ These are canonical role names. The actual label strings are in the triage label
 
 State transitions: an unlabeled issue normally goes to `state:triage` first; from there it moves to `state:reporter`, `state:grill`, `state:owner`, `state:ready`, or `wontfix`. An issue waiting on someone returns to `state:triage` once the missing information arrives, or to the state the contribution guide's Readiness section names for answered ready work. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
 
+Repository issues, briefs, comments and decision records must contain every
+decision their work relies on, with its date and quoted words, even when
+copied from a private record. Never reference or require the private
+workbench in those records: no URL, host path or instruction to consult it
+as input or provenance. Cite repository records instead; private planning
+records may retain their own sources.
+
 ## Who does what
 
 - **You, the orchestrating agent**: the session the maintainer invoked, in the role the contribution guide's Triage section gives it. You sort each request, start its research run, receive every question first, keep the decision inbox, and review and accept briefs.
@@ -108,7 +115,7 @@ Every research run, on either path, does two checks first:
 1. **Research.** Start the research run with the issue link, its path, [AGENT-BRIEF.md](AGENT-BRIEF.md), the two checks, and this task: when the claim is confirmed, post the agent brief, followed by its triage notes, on the issue as `.repo-standards/rules/comments.md#disclaimers` says, and report any question it could not answer from code or logs instead of guessing at it.
 
 2. **Review.** Read the published brief as a reviewer who did not write it. Check it against the issue and the code yourself, not against the research run's own summary:
-   - **Evidence**: each claim the brief rests on traces to a code path, a reproduction, or the issue. Spot-check the one the change depends on. Verify every required input under [Available inputs](AGENT-BRIEF.md#available-inputs).
+   - **Evidence**: each claim the brief rests on traces to a code path, a reproduction, or the issue. Spot-check the one the change depends on. Verify every required input under [Available inputs](AGENT-BRIEF.md#available-inputs); reject a private-workbench reference in place of copied decision content.
    - **Scope**: desired behavior is what the request asks for; nothing the request needs is dropped, nothing beyond it is added, and out of scope names the adjacent work an agent might reach for. Work that must be shown on a live system is split as [AGENT-BRIEF.md](AGENT-BRIEF.md#live-acceptance-gets-its-own-ticket) says.
    - **Acceptance criteria**: each is concrete, testable, and independently verifiable, and together they cover the edge cases the request and the code expose.
    - **Dependencies**: work that must land first is named, so it can be recorded as a blocker.
@@ -128,7 +135,7 @@ Every research run, on either path, does two checks first:
 
 4. **Decide the split** as the contribution guide's Triage section says, and send any draft your split changes substantially back to the grill, or to a research run when it needs code facts the grill did not gather.
 
-5. **File** the issues with the grill's briefs: post each brief on its intake issue, or file a new issue for it, as `.repo-standards/rules/comments.md#disclaimers` says, with the owner decisions it relies on pasted from the grill record into its triage notes.
+5. **File** the issues with the grill's briefs: post each brief on its intake issue, or file a new issue for it, as `.repo-standards/rules/comments.md#disclaimers` says, with the owner decisions it relies on copied with their dates and quoted words into its triage notes, without a reference to the private record.
 
 6. **Review** each brief as on the code-bound path, and refuse one that leaves owner intent open as the contribution guide's Triage section says. Route each such question as [Route questions](#route-questions) says, and accept only once every one the owner must answer is answered. A question a recorded decision already settles goes back to the brief's writer as a correction instead.
 

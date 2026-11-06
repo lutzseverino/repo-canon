@@ -12,6 +12,13 @@ Use the capabilities available in your session to carry out the steps. An
 application may enhance orchestration; the shared method works without it.
 Keep application-specific tool mappings out of this skill.
 
+Supply each launch with the decisions it needs, including dates and quoted
+words. Its private task context may name planning and report-back locations;
+its repository deliverables follow [Workbench](../SKILL.md#workbench): copy
+needed decisions without referencing or requiring the private workbench.
+Before launching a worker, verify its repository contract contains those
+decisions and is implementable without the private record.
+
 Follow `AGENTS.md`'s Agent skills requirements for delegation and session naming.
 Use the available naming capability separately from the command and task context.
 Use the session's supported invocation for the commands below, followed by their
