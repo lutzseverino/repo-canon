@@ -16,6 +16,8 @@ import { renderedAdoptionRecord } from "./fixtures/adoption-record.mjs";
 import { main as wait } from "../.agents/skills/babysit/wait.mjs";
 import { connect } from "../vendor/postern/postern.mjs";
 import { fixtureFetch } from "./fixtures/postern-babysit.mjs";
+import { main as reviewRound } from "../.agents/skills/review/round.mjs";
+import { roundConnection } from "./fixtures/postern-review-round.mjs";
 
 const head = "a".repeat(40);
 const policy = { version: 1, author: "app/factory-app" };
@@ -429,6 +431,29 @@ No external reviewer runs on app-authored PRs.`;
     });
     assert.equal(result.status, 5, result.stderr);
     assert.equal(result.state.merge, undefined);
+  }
+});
+
+test("the review skill's posted round review is the app-author internal review record", async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "babysit-review-round-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const path = join(directory, "review.md");
+  writeFileSync(path, outcome);
+  const round = { pull: { number: 12, head, draft: true, closes: [] } };
+  t.mock.method(process.stdout, "write", () => true);
+  assert.equal(
+    await reviewRound(["12", "--post", path], roundConnection(round)),
+    0,
+  );
+  t.mock.restoreAll();
+  const [posted] = round.reviews;
+  for (const reviews of [[], [posted]]) {
+    const result = run(t, {
+      author: "factory-app[bot]",
+      reviewConfiguration: { policy },
+      reviews,
+    });
+    assert.equal(result.status, reviews.length ? 0 : 5, result.stderr);
   }
 });
 

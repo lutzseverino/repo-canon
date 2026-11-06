@@ -336,12 +336,11 @@ factory resumption. Returning to `state:ready` requests factory resumption, not
 orchestrator delivery. Handing the PR to the owner does not itself request
 factory resumption; keep the stop's workflow state.
 
-Rebase onto the current default branch in a checkout it owns, never through
-GitHub update-branch. Revalidate the integrated change and repeat applicable
-internal and external review and designated current-head owner approval, under
-the contribution guide and review rules, then use babysit's merge step. One
-recovery attempt is allowed; a failed recovery or a further stale-base result
-hands the still-unmerged PR to the owner with its failure reason. Pending or
+Rebase onto the current default branch in a checkout it owns. Revalidate the
+integrated change and repeat applicable internal and external review and
+designated current-head owner approval, under the contribution guide and review
+rules, then use babysit's merge step. The `github-repository-configuration`
+rules' Required-check freshness section bounds this branch update. Pending or
 failed checks permit no merge; obsolete-head checks and approval never qualify
 a replacement head. The supplied-credential restrictions still apply: a
 permission refusal ends the attempt without another push or identity switch.

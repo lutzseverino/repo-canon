@@ -42,6 +42,7 @@ agent, it prints an answers file to fill in with you and its next steps.
 - Ship the workflow skills as Repo Canon's own into `.agents/skills/`, sixteen of them taken from [Matt Pocock's skills](https://github.com/mattpocock/skills), those the shared workflow relies on, each crediting the upstream release it was reconciled with and saying whether and how it differs.
 - Ship a `triage` skill, taken from his and reworked, that routes each request by where its uncertainty lies: an independent review of its researched issue contract, or the owner's answers before one is written.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.
+- Ship a `review` skill with which an agent that did not write a pull request reviews it, fixes or hands it back, and takes it to its merge.
 - Ship an `orchestrate` skill that turns a feature or problem into a plan the owner approves, keeps it in a workbench of plain Markdown, and runs it to an announced close.
 - Offer a `factory` profile that adds factory workflow rules, configuration and the toolchain image a host-installed factory, an unattended ticket-running service, needs to serve the repository.
 - Offer a `workbench` profile that installs only the workflow skills into the orchestrating agent's private workbench, with no rules, CI or branch requirements.

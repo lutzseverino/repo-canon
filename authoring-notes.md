@@ -278,10 +278,8 @@ repeated.
   settles its findings, and merges it, stating no rule the guide or installed
   rules hold. Review follows the guide's
   [review finding rules](CONTRIBUTING.md#merging) and the
-  request rule in the
-  [GitHub repository configuration rules](rules/github-repository-configuration.md),
-  with a total request bound of four when the repository's reviewer data omits
-  it, a positive-integer override, and an explicit `"unbounded"` choice. The
+  request rule and its bound in the
+  [GitHub repository configuration rules](rules/github-repository-configuration.md). The
   [owner decision for #746](https://github.com/lutzseverino/repo-canon/issues/746#issuecomment-6533150044)
   also makes first factory selection ask about post-run app-author policy
   configuration using the repository's own app identity. Standard-only runs and
@@ -292,8 +290,7 @@ repeated.
   Those rules
   also state when a head with no check counts as passed, and that file's
   schema, which the reviewer check and the wait validate with one shared
-  parser retained at its source-relative path. Without that file there is no
-  reviewer wait. Repo Canon ships no reviewer file or preset; this repository carries its own configuration, outside the
+  parser retained at its source-relative path. Repo Canon ships no reviewer file or preset; this repository carries its own configuration, outside the
   declarations. The factory never reads it. Its
   source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
   other original exact files; only vendored material has a separate source
@@ -459,8 +456,10 @@ repeated.
 - Required checks include the current default branch through GitHub's strict
   up-to-date-branch enforcement for every adopter. Setup reconciles classic
   protection and managed rulesets with confirmation and readback, preserving
-  unrelated policy. Babysit returns a stale PR to a bounded branch update,
-  validation and review cycle; GitHub guards the race wherever offered.
+  unrelated policy. A stale PR returns to one branch update, validation and
+  review cycle, bounded in the
+  [GitHub repository configuration rules](rules/github-repository-configuration.md#required-check-freshness);
+  GitHub guards the race wherever offered.
   On proven private-plan unavailability of both enforcement mechanisms, the
   merging agent verifies exact-head validation and current-base ancestry
   immediately before merge. The owner accepted the residual concurrent-base
@@ -509,6 +508,20 @@ repeated.
   and action comments. The owner decided this in the plan 16 factory-pipeline
   grill on 2026-11-03 and 2026-11-04, as the triage notes of
   [#848](https://github.com/lutzseverino/repo-canon/issues/848#issuecomment-6658040589)
+  record.
+- An implemented pull request reaches its merge through the `review` skill,
+  run by an agent that did not write it: it reviews the current head on the
+  Standards and Spec axes, reading the contract against the issue as well as
+  the diff against the contract, fixes small findings on the PR, hands larger
+  ones back to `implement` on the same PR, stops after a second round that
+  does not converge, sends a wrong or ambiguous contract to a grill, and
+  otherwise marks the PR ready and merges it through `babysit`, stopping at an
+  owner gate. Each round leaves one review in the comment rules' template,
+  which `round.mjs` checks before posting, and a grill's domain-document pull
+  request is a draft that `review` delivers. The owner decided this in the
+  plan 16 factory-pipeline grill on 2026-11-03 and 2026-11-04, as the triage
+  notes of
+  [#851](https://github.com/lutzseverino/repo-canon/issues/851#issuecomment-6658042133)
   record.
 - The contextual `project-agent-guidance` declaration preserves useful
   repository-specific AGENTS.md instructions during adoption, under its

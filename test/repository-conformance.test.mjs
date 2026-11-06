@@ -336,6 +336,7 @@ test("self-adoption leaves Repo Canon's own installed source unvendored", () => 
     "scripts/validate.mjs",
     "operations/lib/rendered-markdown.mjs",
     ".agents/skills/triage/ready.mjs",
+    ".agents/skills/review/round.mjs",
     ...readdirSync(join(root, ".agents/skills/babysit"))
       .filter((name) => name.endsWith(".mjs"))
       .map((name) => `.agents/skills/babysit/${name}`),
@@ -641,7 +642,7 @@ function snapshotFiles(directory, prefix = "") {
 
 // Adoption installs only workflow skills, as ADR 0018 decides, each an owned
 // skill (ADR 0028): 17 taken from upstream, triage among them (ADR 0021), and
-// babysit and orchestrate, written for Repo Canon.
+// babysit, factory, orchestrate and review, written for Repo Canon.
 const workflowSkills = [
   "babysit",
   "code-review",
@@ -657,6 +658,7 @@ const workflowSkills = [
   "pr",
   "prototype",
   "research",
+  "review",
   "tdd",
   "to-spec",
   "to-tickets",

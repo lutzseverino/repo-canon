@@ -1,0 +1,219 @@
+#!/usr/bin/env node
+
+// Usage: node round.mjs <number> [--issue <number>]... [--repo <owner/name>]
+//        node round.mjs <number> --post <file> [--repo <owner/name>]
+//        node round.mjs <number> --ready [--repo <owner/name>]
+//
+// Without an action, prints the pull request's review round: its head, the
+// round number, whether that head already has a complete review, whether the
+// PR is a draft, the issues it closes (plus each --issue) and every owner gate
+// (`gate:` label) on the PR or those issues.
+// --post posts the file as this round's review of the current head, once it is
+// a complete review of that head and the head has none yet.
+// --ready marks the draft PR ready for review once its current head has a
+// complete review.
+// Exit 0: done. 1: invocation or platform error. 2: the file is not a complete
+// review of the current head (--post), or the current head has no complete
+// review (--ready). 3: the current head already has a complete review (--post).
+import { readFileSync } from "node:fs";
+import {
+  connectionFor,
+  executedAsScript,
+  requestData,
+} from "../babysit/platform.mjs";
+import { completeReview, reviewsSection } from "../babysit/review-outcome.mjs";
+
+const usage =
+  "Usage: round.mjs <number> [--issue <number>]... [--post <file> | --ready] [--repo <owner/name>]";
+const positive = /^[1-9]\d*$/;
+
+const closingIssuesQuery = `query ReviewRoundIssues($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      closingIssuesReferences(first: 50) {
+        nodes { number labels(first: 100) { nodes { name } pageInfo { hasNextPage } } }
+        pageInfo { hasNextPage }
+      }
+    }
+  }
+}`;
+
+function options(argv) {
+  const [number, ...flags] = argv;
+  if (!positive.test(number ?? "")) throw new Error(usage);
+  const parsed = { number: Number(number), issues: [], action: null };
+  for (let index = 0; index < flags.length; index++) {
+    const flag = flags[index];
+    const value = flags[index + 1];
+    if (flag === "--issue" && positive.test(value ?? "")) {
+      parsed.issues.push(Number(value));
+      index++;
+    } else if (flag === "--post" && value && !parsed.action) {
+      parsed.action = { post: value };
+      index++;
+    } else if (flag === "--ready" && !parsed.action) parsed.action = "ready";
+    else if (flag === "--repo" && value) {
+      parsed.repository = value;
+      index++;
+    } else throw new Error(usage);
+  }
+  return parsed;
+}
+
+// A complete review names its own head; count it against that head.
+export function completedReviews(reviews) {
+  return reviews.flatMap((review) => {
+    if (review.state === "PENDING") return [];
+    const head = /^Head:[\t ]*([0-9a-f]{40})[\t ]*$/m.exec(review.body)?.[1];
+    return head && completeReview(review.body, head) ? [head] : [];
+  });
+}
+
+const labelNames = (labels) => labels.map((label) => label.name);
+
+async function closingIssues(connection, number) {
+  const [owner, name] = connection.repository.path.split("/");
+  const response = await requestData(connection, {
+    method: "POST",
+    path: "/graphql",
+    body: { query: closingIssuesQuery, variables: { owner, name, number } },
+  });
+  const references =
+    response?.data?.repository?.pullRequest?.closingIssuesReferences;
+  if (response?.errors?.length || !references)
+    throw new Error(`Could not read the issues pull request #${number} closes.`);
+  if (
+    references.pageInfo.hasNextPage ||
+    references.nodes.some((issue) => issue.labels.pageInfo.hasNextPage)
+  )
+    throw new Error(
+      `Pull request #${number} closes more issues or labels than one read holds.`,
+    );
+  return references.nodes.map((issue) => ({
+    number: issue.number,
+    labels: labelNames(issue.labels.nodes),
+  }));
+}
+
+async function round(connection, { number, issues: extra }) {
+  const repository = connection.repository.path;
+  const pull = await requestData(connection, {
+    method: "GET",
+    path: `/repos/${repository}/pulls/${number}`,
+  });
+  const head = pull?.head?.sha;
+  if (!/^[0-9a-f]{40}$/.test(head ?? "") || pull.state !== "open")
+    throw new Error(`Pull request #${number} is not open with a readable head.`);
+  const issues = await closingIssues(connection, number);
+  for (const issue of extra.filter(
+    (candidate) => !issues.some(({ number }) => number === candidate),
+  )) {
+    const read = await requestData(connection, {
+      method: "GET",
+      path: `/repos/${repository}/issues/${issue}`,
+    });
+    issues.push({ number: issue, labels: labelNames(read.labels ?? []) });
+  }
+  const gates = [
+    ...labelNames(pull.labels ?? []).map((label) => [label, "the PR"]),
+    ...issues.flatMap(({ number, labels }) =>
+      labels.map((label) => [label, `#${number}`]),
+    ),
+  ]
+    .filter(([label]) => label.startsWith("gate:"))
+    .map(([label, where]) => `${label} on ${where}`);
+  // Each reviewed head is one round; the current head's round is the next one
+  // until its review is posted.
+  const reviewed = new Set(
+    completedReviews(await connection.pullRequests.reviews(number)),
+  );
+  const headReviewed = reviewed.has(head);
+  return {
+    pull,
+    head,
+    round: reviewed.size + (headReviewed ? 0 : 1),
+    reviewed: headReviewed,
+    issues,
+    gates,
+  };
+}
+
+const report = (facts) =>
+  [
+    `head ${facts.head}`,
+    `round ${facts.round}`,
+    `reviewed ${facts.reviewed ? "yes" : "no"}`,
+    `draft ${facts.pull.draft ? "yes" : "no"}`,
+    `issues ${facts.issues.map(({ number }) => `#${number}`).join(" ") || "none"}`,
+    `gates ${facts.gates.join(", ") || "none"}`,
+  ].join("\n") + "\n";
+
+export const main = async (argv = process.argv.slice(2), connection) => {
+  try {
+    const parsed = options(argv);
+    connection ??= connectionFor(parsed.repository);
+    const facts = await round(connection, parsed);
+    const { number, action } = parsed;
+    if (action === null) {
+      process.stdout.write(report(facts));
+      return 0;
+    }
+    if (action === "ready") {
+      if (!facts.reviewed) {
+        process.stderr.write(
+          `round.mjs: ${facts.head} has no complete review; post one as ${reviewsSection} describes before marking #${number} ready.\n`,
+        );
+        return 2;
+      }
+      if (facts.pull.draft)
+        await requestData(connection, {
+          method: "POST",
+          path: "/graphql",
+          body: {
+            query: `mutation ReviewRoundReady($id: ID!) {
+              markPullRequestReadyForReview(input: { pullRequestId: $id }) { pullRequest { isDraft } }
+            }`,
+            variables: { id: facts.pull.node_id },
+          },
+        }).then((response) => {
+          if (
+            response?.errors?.length ||
+            response?.data?.markPullRequestReadyForReview?.pullRequest
+              ?.isDraft !== false
+          )
+            throw new Error(`Could not mark #${number} ready for review.`);
+        });
+      process.stdout.write(`${facts.head}: #${number} is ready for review\n`);
+      return 0;
+    }
+    const body = readFileSync(action.post, "utf8");
+    if (!completeReview(body, facts.head)) {
+      process.stderr.write(
+        `round.mjs: the file is not a complete review of ${facts.head}; fill the template ${reviewsSection} gives, with that head.\n`,
+      );
+      return 2;
+    }
+    if (facts.reviewed) {
+      process.stderr.write(
+        `round.mjs: ${facts.head} already has its round's review; post none for it.\n`,
+      );
+      return 3;
+    }
+    const posted = await requestData(connection, {
+      method: "POST",
+      path: `/repos/${connection.repository.path}/pulls/${number}/reviews`,
+      body: { commit_id: facts.head, body, event: "COMMENT" },
+    });
+    process.stdout.write(
+      `${facts.head}: posted round ${facts.round} review ${posted?.html_url ?? ""}\n`,
+    );
+    return 0;
+  } catch (error) {
+    process.stderr.write(`round.mjs: ${error.message}\n`);
+    return 1;
+  }
+};
+
+if (import.meta.main ?? executedAsScript(import.meta.url)) {
+  process.exitCode = await main();
+}

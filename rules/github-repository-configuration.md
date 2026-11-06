@@ -109,7 +109,13 @@ or replay only its changes onto the refreshed default branch, and repeat
 required checks and applicable internal and external review on the replacement
 head. Checks from the old head never qualify the replacement. GitHub remains
 the final guard wherever enforcement is available; the plan-limited path repeats
-its final verification with the accepted race. Bound recovery as babysit directs.
+its final verification with the accepted race.
+
+Each delivery attempt, such as one `babysit` invocation, gets one branch
+update. Never merge the default branch into the PR branch, and never use
+GitHub's update-branch. A failed branch update, or a stale base again after it,
+leaves the PR unmerged and requires the contribution guide's owner handoff with
+its reason; it never starts another update.
 
 ## Designated owner review
 
