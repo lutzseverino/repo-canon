@@ -160,12 +160,12 @@ Every research run, on either path, does two checks first:
    node <this skill's directory>/ready.mjs <issue> <sha256:reviewed-revision> <model-label>
    ```
 
-   The command applies `state:ready`. Omit the model label when the installed rules ask for none. Additional companion labels, such as `factory:skip`, follow the revision; `--repo owner/name` selects another repository. Run with Node.js 24 or 26 in the foreground, bounded by the caller's command timeout. The command uses the current `gh` credential through the vendored Postern bundle and needs no install step. It checks account eligibility against the selected destination's installed factory workflow rules at its default-branch commit, independently of this checkout. Outside factory repositories, role-authorized person, bot and App reviewers use the same revision-bound flow; factory repositories require a person and refuse bot/App accounts before readiness writes. For factory non-parent agent readiness, it requires exactly one model in the combined existing and companion labels. It creates a missing chosen repository model label using the installed factory rules' color and description format, and preserves an existing label unchanged. Failed identity, applicability or model-label provisioning applies no readiness. Exit zero confirms the validator approved that revision by the acting account; a nonzero exit explains the refusal or rejection. Review a changed revision again before retrying. For a parent it waits for the latest child link and reapplies readiness when its timestamp is not newer than that link.
+   The command applies `state:ready`. Omit the model label when the installed rules ask for none. Additional companion labels, such as `factory:skip`, follow the revision; `--repo owner/name` selects another repository. Run with Node.js 24 or 26 in the foreground, bounded by the caller's command timeout. The command uses the current `gh` credential through the vendored Postern bundle and needs no install step. Person, bot and App accounts use the same revision-bound flow, and the validator's verdict decides whether your account's readiness is approved. Where the selected destination's installed factory workflow rules and `.factory/config.json`, read at its default-branch commit independently of this checkout, name this ready label, non-parent agent readiness requires exactly one label with the configured model label prefix in the combined existing and companion labels. It creates a missing chosen repository model label using the installed factory rules' color and description format, and preserves an existing label unchanged. A failed identity read, factory configuration read or model-label provisioning applies no readiness. Exit zero confirms the validator approved that revision by the acting account; a nonzero exit explains the refusal or rejection. Review a changed revision again before retrying. For a parent it waits for the latest child link and reapplies readiness when its timestamp is not newer than that link.
 
 5. **Record blockers.** Add a native blocker for each issue whose work must land first.
 6. **Tell the owner** what you accepted, with links to each brief, the labels you applied, the blockers you added, and every answer you inferred, so they can veto it.
 
-When your credentials cannot apply readiness, stop at acceptance: tell the owner, with links, which revision holds, the readiness, model and skip labels you chose, and the blockers to record. When the command refuses your account because the destination's factory rules require a person, give those details to an authorized person in the same way and report that factory work has not started.
+When your credentials cannot apply readiness, stop at acceptance: tell the owner, with links, which revision holds, the readiness, model and skip labels you chose, and the blockers to record. When the destination's factory workflow rules say its factory starts no work on your account's readiness, give those details to an authorized person in the same way and report that factory work has not started. Both govern the research-run briefs you accept, not the factory's own triage run.
 
 ## Other outcomes
 
@@ -248,6 +248,7 @@ Paths are relative to the repository root.
   both. When either is missing, `ready.mjs` cannot start: apply the readiness
   and companion labels with the tracker's own client, and confirm they hold on
   the issue.
-- `.repo-standards/rules/factory-workflow.md` at the destination's default
-  branch: `ready.mjs` reads it to tell whether factory rules apply. When it is
-  missing there, the generic account policy applies.
+- `.repo-standards/rules/factory-workflow.md` and `.factory/config.json` at
+  the destination's default branch: `ready.mjs` reads both to tell whether a
+  model label applies and its prefix. When the rules are missing there, it
+  requires no model label.

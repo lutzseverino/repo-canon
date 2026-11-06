@@ -26,7 +26,9 @@ decision that reads one snapshot and returns the label changes, the feedback
 comment write, and the exit status, with no network or file access. Its closed
 path needs only the fetched issue, and its open path needs the contract snapshot.
 The file also exports `readinessTriggerUnrecorded`, a pure predicate over the same
-snapshot. Its
+snapshot, and, for the `triage` readiness command, `readyLabels`, the notice
+barrier `noticePrecedes` and `observedChangeId`, so the command copies none of
+the rules they decide. Its
 GitHub adapter runs only when the workflow executes the file: for an open issue,
 it fetches the complete snapshot before deciding, waiting within a bound for the
 issue-event timeline to record a human readiness trigger, then applies the
@@ -184,7 +186,8 @@ contracts itself:
 - Readiness binds to one revision of one Agent Brief. Editing or deleting that
   Brief, or posting a newer one, cancels it; deleting an older, superseded
   Brief does not.
-- Only the `admin`, `maintain` and `triage` roles authorize readiness, as the
+- Only the `admin`, `maintain` and `triage` roles, or the factory's
+  [triage result](#factory-triage-readiness), authorize readiness, as the
   [readiness roles](../../rules/github-repository-configuration.md#readiness-roles)
   rules state.
 - The result names the readiness label it approves.
@@ -402,7 +405,45 @@ lost when a newer event's run replaces that `deleted` run while it is pending.
 The event actor is authorized only when GitHub reports the repository `admin`,
 `maintain`, or `triage` role. The triage role is the explicit authorization for
 a triaging agent. A `write` role, `author_association`, login shape, bot identity,
-heading, preamble, or structural pass supplies no authority.
+heading, preamble, or structural pass supplies no authority. The factory's
+triage run is the one exception.
+
+### Factory triage readiness
+
+The factory's triage run accepts the brief it wrote
+([ADR 0030](../adr/0030-let-factory-triage-accept-its-own-brief.md)). The
+adapter reads the factory's triage result from `.factory/config.json` in the
+trusted checkout, through the exported `factoryTriageResult`:
+
+```json
+{ "triageResult": { "marker": "scriptorium:run", "author": "factory[bot]" } }
+```
+
+`author` is the account that posts the result and applies its readiness, and
+`marker` marks the line naming its run. A repository without the file or the
+key has none, and only roles authorize readiness; a malformed `triageResult`
+fails the run. The triage result is the Agent Brief comment that `author`
+posts for the run. It names the run on exactly one line of its own:
+
+```markdown
+<!-- scriptorium:run {"run":"<run>"} -->
+```
+
+The brief's shape still applies, so the line comes after the triage
+disclaimer, such as below the brief. The result names its brief revision by
+being that revision's source: an edit makes a new revision, and a newer Agent
+Brief replaces it as the contract.
+
+A readiness label event by `author` is approved, without a role, when the
+current contract is that comment with one marked run line, and the event
+follows the revision notice like any other review. An issue that `author`
+opened must name the run that wrote it with one marked line in its body, and
+that run must not be the triage run; an issue `author` opened without one is
+refused, because its writer is unknown. Any other refusal is recorded as the
+rejection reason, and the label is removed as for any unauthorized reviewer. The approval's
+`reviewer` is `author` and its notice names the run. Readiness by every other
+account, `author` included when no triage result is configured, needs a role
+as before.
 
 Wayfinder maps and children reject readiness labels because their native
 eligibility uses open state, assignment, and blockers instead of the readiness
@@ -547,7 +588,11 @@ issues, the validator's fallback applied after a creation review in either run
 order, and closed-issue cleanup of workflow-state and factory labels without
 further context reads (including an open event whose fetched issue is closed),
 readiness invalidation when a changed contract is reopened, and hostile Markdown
-that must remain inert. Run `node --test test/issue-contract-result.test.mjs` for the published
+that must remain inert. Run
+`node --test test/issue-contract-triage-readiness.test.mjs` for the factory
+triage path: approval with a matching result, refusal without one, for another
+revision, or for an issue the same or an unnamed run wrote, person readiness
+either way, and the configuration reader. Run `node --test test/issue-contract-result.test.mjs` for the published
 result: its complete v1 line, its write on every evaluated event, each rule
 above, and unknown formats and other authors. Its shared examples run the
 validator's adapter and the `triage` readiness command against one in-memory

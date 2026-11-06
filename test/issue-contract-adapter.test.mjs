@@ -18,6 +18,7 @@ import { installedValidator } from "./helpers/installed-validator.mjs";
 import {
   approvedTicketFeedback,
   bugBody,
+  featureBody,
   ticketBody,
   completeAgentBrief,
   awaitingTicketFeedback,
@@ -57,6 +58,7 @@ async function exercise(
     pause,
     failurePath,
     bodyLastEditedAt = null,
+    triageResult,
   } = {},
 ) {
   const root = await mkdtemp(join(tmpdir(), "postern-issue-"));
@@ -239,6 +241,8 @@ async function exercise(
               { credential: "fixture-credential", fetch },
             ).issueTracker.issue(reference.number),
           pause,
+          undefined,
+          triageResult,
         );
       }
     } else {
@@ -775,6 +779,56 @@ test("native blockers supply relationship facts while named-section requirements
     assert.equal(
       result.requests.filter(({ path }) => path === "/graphql").length,
       1,
+    );
+  }
+});
+
+test("the adapter approves the factory's readiness only where its configuration names the triage result", async (t) => {
+  const factory = "factory[bot]";
+  const brief = {
+    id: 12,
+    node_id: "COMMENT_12",
+    body: `${completeAgentBrief}\n\n<!-- factory:run {"run":"triage-7"} -->`,
+    user: account(factory),
+  };
+  const notice = {
+    id: 13,
+    body: feedbackState({
+      status: "awaiting-review",
+      revision: briefRevision({ ...brief, updated_at: time }),
+      kind: "triaged Agent Brief",
+    }),
+    user: account("github-actions[bot]"),
+    updated_at: time,
+  };
+  for (const triageResult of [
+    { marker: "factory:run", author: factory },
+    undefined,
+  ]) {
+    const result = await exercise(t, {
+      issue: { body: featureBody, labels: ["type:enhancement", "state:ready"] },
+      comments: [brief, notice],
+      events: [
+        {
+          ...readinessReview,
+          actor: { login: factory },
+          created_at: "2026-09-14T16:00:10Z",
+        },
+      ],
+      event: {
+        action: "labeled",
+        sender: account(factory),
+        label: { name: "state:ready" },
+      },
+      pause: async () => {},
+      triageResult,
+    });
+    assert.equal(result.error, undefined);
+    const posted = writes(result).find(({ method }) => method === "PATCH");
+    assert.equal(result.code, triageResult ? 0 : 1);
+    assert.equal(
+      recordedState(posted.body.body).status,
+      triageResult ? "approved" : "awaiting-review",
     );
   }
 });

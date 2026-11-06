@@ -28,6 +28,7 @@ export function contractWorld({
   labels = ["type:enhancement", "state:triage"],
   roles = { maintainer: "admin" },
   factory = false,
+  triageResult = null,
   start = "2026-10-25T12:00:00Z",
 } = {}) {
   let clock = Date.parse(start);
@@ -134,12 +135,8 @@ export function contractWorld({
           return json({
             data: {
               viewer: isBot(login)
-                ? {
-                    __typename: "Bot",
-                    login: login.slice(0, -5),
-                    databaseId: 7,
-                  }
-                : { __typename: "User", login, databaseId: 7 },
+                ? { __typename: "Bot", login: login.slice(0, -5) }
+                : { __typename: "User", login },
             },
           });
         if (query.includes("PinnedFilesRevision"))
@@ -163,6 +160,16 @@ export function contractWorld({
                   ? {
                       __typename: "Blob",
                       text: "factory rules",
+                      isTruncated: false,
+                    }
+                  : null,
+                configuration: factory
+                  ? {
+                      __typename: "Blob",
+                      text: JSON.stringify({
+                        labels: { ready: "state:ready" },
+                        modelLabelPrefix: "model:",
+                      }),
                       isTruncated: false,
                     }
                   : null,
@@ -192,10 +199,6 @@ export function contractWorld({
             },
           },
         });
-      }
-      if (path.startsWith("/users/")) {
-        const name = decodeURIComponent(path.slice("/users/".length));
-        return json({ ...account(name), id: 7 });
       }
       if (path === `${repo}/issues/42/comments` && method === "GET")
         return json(comments.map(restComment));
@@ -276,6 +279,7 @@ export function contractWorld({
               async () => null,
               noPause,
               () => clock,
+              triageResult,
             ),
           );
         } finally {

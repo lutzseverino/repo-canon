@@ -107,10 +107,10 @@ themselves, they are the orchestrating agent.
 ## Readiness
 
 Applying `state:ready` is the review action, and the
-`github-repository-configuration` rules name the roles it needs and the
-labels. After revising a contract or posting an Agent Brief, wait for the
-issue-contract workflow's revision notice before applying readiness. Editing a
-contract removes its readiness. The workflow keeps one workflow state label on
+`github-repository-configuration` rules name the roles it needs, the factory
+triage run's exception to them, and the labels. After revising a contract or
+posting an Agent Brief, wait for the issue-contract workflow's revision notice
+before applying readiness. Editing a contract removes its readiness. The workflow keeps one workflow state label on
 an issue, a `state:` label or the closing `wontfix` in its place: authorized
 readiness or a newly applied state replaces the previous one, and an issue left with none gets
 `state:triage` on every run, even if it has never carried a state. This applies

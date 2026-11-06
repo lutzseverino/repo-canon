@@ -33,16 +33,14 @@ async function exercise(options = {}, command = main) {
   const actor = {
     login: "maintainer",
     type: "User",
-    id: 7,
     ...options.actor,
   };
   // GraphQL names a Bot without the "[bot]" suffix that REST logins carry.
   const viewer =
     actor.type === "User"
-      ? { __typename: "User", login: actor.login, databaseId: actor.id }
+      ? { __typename: "User", login: actor.login }
       : {
           __typename: "Bot",
-          databaseId: actor.id,
           login:
             typeof actor.login === "string"
               ? actor.login.replace(/\[bot\]$/, "")
@@ -87,14 +85,6 @@ async function exercise(options = {}, command = main) {
       return json({ message: "Fixture failure" }, options.failure);
     if (url.pathname === "/user")
       return json({ message: "Resource not accessible by integration" }, 403);
-    if (url.pathname.startsWith("/users/")) {
-      if (Object.hasOwn(options, "identityResponse"))
-        return json(options.identityResponse);
-      return decodeURIComponent(url.pathname.slice("/users/".length)) ===
-        actor.login
-        ? json(actor)
-        : json({ message: "Not Found" }, 404);
-    }
     if (
       url.pathname === "/graphql" &&
       body.query.includes("TriageActingAccount")
@@ -146,6 +136,10 @@ async function exercise(options = {}, command = main) {
         body.variables.rules,
         `${policyRevision}:.repo-standards/rules/factory-workflow.md`,
       );
+      assert.equal(
+        body.variables.configuration,
+        `${policyRevision}:.factory/config.json`,
+      );
       if (options.rulesFailure)
         return json({ message: "Rules unavailable" }, options.rulesFailure);
       if (options.rulesErrors)
@@ -160,6 +154,19 @@ async function exercise(options = {}, command = main) {
                 : {
                     __typename: "Blob",
                     text: "factory rules",
+                    isTruncated: false,
+                  },
+            configuration:
+              options.factory === false || options.configuration === null
+                ? null
+                : {
+                    __typename: "Blob",
+                    text: JSON.stringify(
+                      options.configuration ?? {
+                        labels: { ready: label },
+                        modelLabelPrefix: "model:",
+                      },
+                    ),
                     isTruncated: false,
                   },
             ...options.policyFiles,
@@ -346,15 +353,78 @@ test("refuses incomplete feedback even when it carries the old awaiting state", 
   assert.deepEqual(writes(result), []);
 });
 
-test("factory destinations refuse conflicting model labels and non-person accounts without writes", async () => {
+test("factory destinations refuse conflicting model labels without writes", async () => {
+  const result = await exercise({
+    labels: ["type:enhancement", "model:other"],
+  });
+  assert.match(result.error?.message ?? "", /exactly one model:/);
+  assert.deepEqual(writes(result), []);
+});
+
+test("factory Bot and App readiness reaches the validator, whose verdict decides it", async () => {
+  for (const type of ["Bot", "App"]) {
+    const actor = { login: "helper[bot]", type };
+    const approved = await exercise({ actor });
+    assert.equal(approved.error, undefined);
+    assert.equal(approved.code, 0);
+    const rejected = await exercise({
+      actor,
+      after: {
+        status: "awaiting-review",
+        observedEventId: "300",
+        reviewEventId: undefined,
+        rejectionReason: "@helper[bot] is not authorized to grant readiness.",
+      },
+    });
+    assert.match(rejected.error?.message ?? "", /not authorized/);
+    assert.equal(writes(rejected).length, 1);
+  }
+});
+
+test("the model prefix and ready label come from the destination's pinned factory configuration", async () => {
+  const configuration = (ready, modelLabelPrefix) => ({
+    labels: { ready },
+    modelLabelPrefix,
+  });
+  const llm = await exercise({
+    configuration: configuration(label, "llm:"),
+    repositoryLabels: [],
+    argv: ["42", revision, model],
+  });
+  assert.match(llm.error?.message ?? "", /exactly one llm: label/);
+  assert.deepEqual(writes(llm), []);
+  const created = await exercise({
+    configuration: configuration(label, "llm:"),
+    repositoryLabels: [],
+    argv: ["42", revision, "llm:fast"],
+  });
+  assert.equal(created.error, undefined);
+  assert.deepEqual(writes(created)[0].body, {
+    name: "llm:fast",
+    color: "5319e7",
+    description: "Factory model: fast",
+  });
+  // A factory whose ready label is another one asks no model of this one.
+  const other = await exercise({
+    configuration: configuration("ready-for-agent", "model:"),
+    argv: ["42", revision],
+  });
+  assert.equal(other.error, undefined);
+  assert.deepEqual(writes(other), [
+    {
+      method: "POST",
+      path: "/repos/owner/repo/issues/42/labels",
+      body: { labels: [label] },
+    },
+  ]);
   for (const options of [
-    { labels: ["type:enhancement", "model:other"] },
-    { actor: { login: "helper[bot]", type: "Bot" } },
-    { actor: { login: "helper[bot]", type: "App" } },
-    { actor: { login: "helper[bot]", type: "User" } },
+    { configuration: null },
+    { configuration: { labels: { ready: label } } },
+    { configuration: configuration(label, " ") },
+    { policyFiles: { configuration: { __typename: "Tree" } } },
   ]) {
     const result = await exercise(options);
-    assert.match(result.error?.message ?? "", /model:|person|bot|App/);
+    assert.match(result.error?.message ?? "", /factory applicability/);
     assert.deepEqual(writes(result), []);
   }
 });
@@ -609,16 +679,8 @@ test("the installed triage command resolves the declared bundle without npm", as
       { login: "helper[bot]", type: "App" },
     ]) {
       const result = await exercise({ factory, actor }, command);
-      if (factory && actor.type !== "User") {
-        assert.match(
-          result.error?.message ?? "",
-          /authorized person.*No factory work was started/,
-        );
-        assert.deepEqual(writes(result), []);
-      } else {
-        assert.equal(result.error, undefined);
-        assert.equal(result.code, 0);
-      }
+      assert.equal(result.error, undefined);
+      assert.equal(result.code, 0);
     }
   }
 });
@@ -717,19 +779,15 @@ test("a person retains revision-bound readiness in both destination policies", a
   }
 });
 
-test("eligibility follows the connected destination rather than this factory checkout", async () => {
+test("model policy follows the connected destination rather than this factory checkout", async () => {
   for (const factory of [false, true]) {
     const result = await exercise({
       factory,
       repository: "other/selected",
-      actor: { login: "helper[bot]", type: "Bot" },
-      args: ["--repo", "other/selected"],
+      argv: ["42", revision, "--repo", "other/selected"],
     });
     if (factory) {
-      assert.match(
-        result.error?.message ?? "",
-        /other\/selected default branch main@b{40}.*person/,
-      );
+      assert.match(result.error?.message ?? "", /exactly one model:/);
       assert.deepEqual(writes(result), []);
     } else {
       assert.equal(result.error, undefined);
@@ -743,25 +801,15 @@ test("eligibility follows the connected destination rather than this factory che
 
 test("unreadable identity or destination policy never authorizes readiness writes", async () => {
   for (const options of [
-    { identityResponse: null },
-    { identityResponse: { login: "another-reviewer", type: "User" } },
     { viewerResponse: null },
     { viewerResponse: {} },
-    { viewerResponse: { login: "maintainer", databaseId: 7 } },
-    {
-      viewerResponse: {
-        __typename: "Organization",
-        login: "maintainer",
-        databaseId: 7,
-      },
-    },
-    { viewerResponse: { __typename: "User", login: "maintainer" } },
+    { viewerResponse: { login: "maintainer" } },
+    { viewerResponse: { __typename: "Organization", login: "maintainer" } },
     { viewerErrors: true },
     ...[401, 403, 503].map((status) => ({ viewerFailure: status })),
     { actor: { login: null } },
     { actor: { login: 123 } },
     { actor: { login: " " } },
-    { actor: { type: "Unknown" } },
     { destination: { nameWithOwner: "different/repo" } },
     { destination: { defaultBranchRef: null } },
     {
@@ -873,20 +921,13 @@ test("an App installation reviewer resolves its authenticated viewer without the
     factory: false,
     actor: { login: "integration[bot]", type: "Bot" },
     // An installation token's viewer is typed User and keeps the suffix.
-    viewerResponse: {
-      __typename: "User",
-      login: "integration[bot]",
-      databaseId: 7,
-    },
+    viewerResponse: { __typename: "User", login: "integration[bot]" },
   });
   assert.equal(result.error, undefined);
   assert.equal(result.code, 0);
   assert.equal(
-    result.requests.some(({ path }) => path === "/user"),
+    result.requests.some(({ path }) => path.startsWith("/user")),
     false,
-  );
-  assert.ok(
-    result.requests.some(({ path }) => path === "/users/integration%5Bbot%5D"),
   );
   assert.equal(writes(result).length, 1);
 });
@@ -896,26 +937,9 @@ test("a GraphQL Bot viewer resolves its suffixed account rather than a same-name
     const result = await exercise({
       factory,
       actor: { login: "helper[bot]", type: "Bot" },
-      viewerResponse: { __typename: "Bot", login: "helper", databaseId: 7 },
+      viewerResponse: { __typename: "Bot", login: "helper" },
     });
-    assert.equal(
-      result.requests.some(({ path }) => path === "/users/helper"),
-      false,
-    );
-    assert.equal(result.error === undefined, !factory);
-    assert.equal(writes(result).length, factory ? 0 : 1);
-  }
-});
-
-test("a viewer resolving to a same-named account with another ID applies no readiness", async () => {
-  for (const factory of [false, true]) {
-    const result = await exercise({
-      factory,
-      actor: { login: "helper[bot]", type: "Bot", id: 41 },
-      viewerResponse: { __typename: "User", login: "helper", databaseId: 41 },
-      identityResponse: { login: "helper", type: "User", id: 42 },
-    });
-    assert.match(result.error?.message ?? "", /acting account/);
-    assert.deepEqual(writes(result), []);
+    assert.equal(result.error, undefined);
+    assert.equal(writes(result).length, 1);
   }
 });
