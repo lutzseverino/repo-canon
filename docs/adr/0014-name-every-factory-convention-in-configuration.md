@@ -1,5 +1,10 @@
 # Name every factory convention in configuration
 
+The repository's ownership of values in the exact factory configuration,
+including its ready label, is superseded by
+[ADR 0033](0033-give-every-value-one-value-owner.md): those values belong to
+the standard. The factory's separation from Repo Canon conventions remains.
+
 The factory knows no Repo Canon convention. A repository's factory
 configuration names its labels, its model label prefix and its prompt, and
 the factory has no default for any of them. The host configuration names the

@@ -54,7 +54,8 @@ involve real alternatives.
   repository.
 - [Name every factory convention in configuration](0014-name-every-factory-convention-in-configuration.md):
   the repository's factory configuration names its labels and prompt with no
-  defaults, and the factory checks readiness against roles the host names.
+  defaults, and the factory checks readiness against roles the host names;
+  ADR 0033 supersedes repository ownership of the exact configuration's values.
 - [Configure the pull request reviewer as repository data](0015-configure-the-pull-request-reviewer-as-repository-data.md):
   an optional data file names the reviewer `babysit` waits for, and its absence
   means no reviewer.
