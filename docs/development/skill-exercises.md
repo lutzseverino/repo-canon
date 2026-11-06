@@ -440,6 +440,25 @@ resume and closure, and any limits. Retain transcripts and resulting workbench
 commits outside maintained documentation. Builder tests establish setup
 correctness; only these agent sessions establish exercise outcomes.
 
+### Focused grill routing check
+
+In a disposable workbench, give the orchestrating session a simulated issue in
+`state:grill` with an action comment containing facts and unresolved owner
+questions. Deliver it once as an incoming event and again as a recurring-check
+observation. Use local tracker records and simulated launch references only.
+Check that one inbox entry links the action comment, carries a recommendation,
+and links the grill the orchestrator launches in the owner's session
+environment with `grill-with-docs #N`. Re-observation and fresh-session takeover
+reuse that entry and session. With the launch cap full, check that the entry
+persists and the pending launch starts once a slot opens.
+
+Relay the owner's answers to the grill and its report back through the
+workbench. Check that the owner in the grill supplies readiness under the
+repository's rules, with plan approval still required, and the factory's next
+run implements without another triage. Report these observed outcomes
+separately from fixture and structural checks; this check does not exercise a
+live factory or authorize remote operations.
+
 ## Orchestrate and factory: a shared host access grant
 
 Use the planning builder above from the candidate checkout. Its manifest entry

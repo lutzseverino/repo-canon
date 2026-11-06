@@ -62,8 +62,8 @@ their citations, and shows the decision inbox; log those items in `log.md`.
    the `triage` skill's method, in triage runs. Put your own ideas under
    `Suggestions (not decisions)` in the issue you file, posted as
    `.repo-standards/rules/comments.md#disclaimers` says.
-3. **Grill.** When the guide's inference test cannot settle an intent question,
-   open a grill with the owner. Then decide the split, file the issues as step 2
+3. **Grill.** Follow the [Grill path](references/launches.md#grill) for intent
+   questions and issues waiting on a grill. Then decide the split, file issues as step 2
    says and accept the briefs, as the guide says, marking drafts as the
    [wiki rules](references/templates.md#layout) say.
 4. **Run.** Launch the plan's ticket workers and observe progress. Handle a
