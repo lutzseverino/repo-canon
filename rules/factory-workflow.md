@@ -66,7 +66,8 @@ its Agent Brief suggest one `model:` label with a one-line reason, for the
 reviewer to apply or replace. The suggestion is a triage note, not a field of
 the brief. An orchestrating agent that accepts the brief is that reviewer: it
 chooses the label itself, weighing the suggestion, and the research run that
-suggested it applies no label.
+suggested it applies no label. The factory's triage run chooses its own, as
+Triage run says.
 
 The factory runs an unlabelled ticket on the host's default model; a parent's
 label chooses none of its tickets' models.
@@ -86,6 +87,24 @@ other bot or App applies never starts a run, even when the validator approves
 it. An orchestrating agent working through such an account applies no
 readiness there: it stops at acceptance, as the `triage` skill describes, and
 never reports that factory work started.
+
+## Triage run
+
+The factory's triage run triages one issue with the `triage` skill, with no
+orchestrating agent, workbench or decision inbox. It reads and never writes:
+it posts nothing, applies no label, pushes nothing and attempts no fix. Its run
+result asks the factory to post its brief or question and to apply the labels
+it chose, never a `gate:` label.
+
+Under the contribution guide's inference test it cites only records in the
+repository: ADRs, the glossary, and linked issues and their decisions, each
+with its date. Every other intent question, and any it is unsure of, moves the
+issue to `state:grill` with the facts gathered and the open questions. A fact
+only an outside reporter holds moves it to `state:reporter`, and one only the
+owner holds to `state:owner`, each with its question. A brief it writes with no
+open question it accepts, as the GitHub rules' Readiness roles allow: it
+chooses the `model:` label from the models the host allows, and the
+`priority:` label as the GitHub rules' Labels section says.
 
 ## State labels
 

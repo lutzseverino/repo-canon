@@ -41,15 +41,16 @@ the source ticket, which closes only on its recorded live acceptance.
 Triage routes an intake request by where its uncertainty lies, not by its
 category label. A request is code-bound when its expected result is clear and
 code, logs, or a reproduction can answer the rest. It is intent-bound when an
-open question needs the owner's intent, a policy, or a trade-off they choose,
-as when its brief would otherwise leave an owner question, offer options, or
+open question needs the owner's intent, a policy, a trade-off they choose, or
+their taste in copy, UI or look, as when its brief would otherwise leave an owner question, offer options, or
 set a value nobody chose, including for a bug. Missing evidence or access never
 licenses inventing policy.
 
 The orchestrating agent runs triage and starts a research run, a separate
 agent, for each request. For a code-bound request, the research run verifies
 the claim and posts the Agent Brief. For an intent-bound request, it first
-gathers the facts from the code.
+gathers the facts from the code. Where a factory runs triage itself, the
+factory workflow rules' Triage run section sets that run's limits.
 
 Under the inference test, the orchestrating agent may answer an intent question
 itself only when all three hold: it can cite the answer's source, the owner's

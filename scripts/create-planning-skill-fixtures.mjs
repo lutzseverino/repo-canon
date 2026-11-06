@@ -747,6 +747,153 @@ Record the new simulated decisions as Owner, 2026-10-26, .scratch/routing/owner-
 }
 
 {
+  const root = createRepository("factory-triage", ["triage"], {
+    profile: "factory",
+    agents:
+      "# Agent guidance\n\nRead docs/agents/project.md and docs/exercise.md before tracker work. This is a local simulation of a repository a factory serves.\n",
+    context:
+      "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Signer name**:\nThe name of the person who signed for a Parcel, as the carrier reports it.\n_Avoid_: Recipient\n",
+    exercise: `## Task
+
+Run the triage skill as the factory's triage run, three times, once per entry in .scratch/factory-triage/run-facts.json. Start each run in a fresh session with no other run's context, and give it only the factory's facts for that run: the issue, the run, the run-result path, the allowed models and the run-result interface. Each run reads the repository and writes its run result; it posts nothing, applies no label, pushes nothing and attempts no fix. The run-result interface in run-facts.json is this exercise's local stand-in for Scriptorium's run-result interface (lutzseverino/scriptorium#116), not its definition. No orchestrating agent, research run, grill, workbench or person takes part. Publish nothing and launch no factory.
+
+## Expected outcome
+
+Lookup exposes both GitHub repository configuration and factory workflow rules, including the factory rules' Triage run section.
+
+01 is a code-bound bug: the receipt export documentation states the expected result, and the run reproduces the failure from the code. Its result asks for state:ready with exactly one model label from the allowed models, and its body holds an Agent Brief in the GitHub rules' shape followed by its triage notes. It keeps the owner's priority:low and asks for no other priority label, asks for no gate: label and no factory:skip, and the issue keeps its type:bug.
+
+02 is an intent-bound feature: what a customer-facing PDF receipt shows and how it looks is the owner's taste and intent. ADR 0001, dated 2026-09-01, covers dispatcher CSV exports only, so no repository record settles it. Its result asks for state:grill, with the facts gathered and numbered open questions, and holds no Agent Brief and no model label.
+
+03 is an outside reporter's bug that names no version: the current 1.4.0 code keeps non-ASCII signer names, and CHANGELOG.md records that fix in 1.4.0. Its result asks for state:reporter and type:bug, with the reporter template asking for the version and the steps.
+
+After all three runs, git status shows only the run results as new files: every tracker file is unchanged, and no run ran ready.mjs. The run-result bodies carry no disclaimer, because the factory's frame supplies it; check the brief's shape as if that frame's triage disclaimer preceded it. Cite the factory rules' Triage run and Model selection sections, the GitHub rules' Labels and Agent Brief sections and CONTRIBUTING.md's Triage section in the outcome.
+`,
+  });
+  write(
+    root,
+    "package.json",
+    `${JSON.stringify(
+      {
+        name: "repo-canon-factory-triage-exercise",
+        version: "1.4.0",
+        private: true,
+        type: "module",
+        scripts: { test: "node --test" },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  write(
+    root,
+    "docs/usage/receipts.md",
+    "# Delivery receipt export\n\nExport the Delivery receipts of one UTC date as CSV with the header `parcel_reference,delivered_at,signer_name`. A date with no deliveries returns a CSV holding only that header row. Signer names keep every character the carrier reports.\n",
+  );
+  write(
+    root,
+    "src/receipts.mjs",
+    `const header = "parcel_reference,delivered_at,signer_name";
+
+export function exportReceipts(receipts, date) {
+  const rows = receipts.filter(({ deliveredAt }) => deliveredAt.startsWith(date));
+  if (rows.length === 0) throw new Error(\`No Delivery receipts for \${date}\`);
+  return [header, ...rows.map((row) => [row.reference, row.deliveredAt, row.signer.normalize("NFC")].join(","))].join("\\n");
+}
+`,
+  );
+  write(
+    root,
+    "CHANGELOG.md",
+    "# Changelog\n\n## 1.4.0 (2026-10-01)\n\n- Signer names keep non-ASCII characters in CSV exports.\n\n## 1.3.0 (2026-09-01)\n\n- Export Delivery receipts as CSV for one UTC date.\n",
+  );
+  write(
+    root,
+    "docs/adr/README.md",
+    "# Architecture decisions\n\n- [Export Delivery receipts as CSV for dispatchers](0001-export-receipts-as-csv-for-dispatchers.md): the export's format and audience.\n",
+  );
+  write(
+    root,
+    "docs/adr/0001-export-receipts-as-csv-for-dispatchers.md",
+    "# Export Delivery receipts as CSV for dispatchers\n\nDate: 2026-09-01\n\nDispatchers reconcile Delivery receipts in spreadsheets, so the export writes CSV, one row per receipt. The owner chose CSV over a dashboard view because dispatchers already work in spreadsheets. Documents for customers were not part of this decision.\n",
+  );
+  const issues = {
+    "01-empty-date-export-fails.md": `# Exporting a date with no deliveries fails
+
+Author: the owner
+Status: state:triage
+Labels: type:bug, priority:low (applied by the owner)
+Blocked by: None
+
+## Request
+
+Exporting Delivery receipts for a UTC date with no deliveries fails with "No Delivery receipts for 2026-10-04". The receipt export documentation says such a date returns a header-only CSV.
+`,
+    "02-receipt-pdf.md": `# Offer Delivery receipts as PDF for customers
+
+Author: a maintainer
+Status: state:triage
+Labels: type:enhancement
+Blocked by: None
+Links: docs/adr/0001-export-receipts-as-csv-for-dispatchers.md
+
+## Request
+
+Operators want to send a customer a PDF of their Delivery receipt, showing the signer's name, instead of the dispatchers' CSV.
+`,
+    "03-garbled-signer-names.md": `# Signer names come out garbled
+
+Author: harbor-ops, an outside reporter with no repository role
+Status: state:triage
+Labels: none
+Blocked by: None
+
+## Request
+
+Signer names with accents, such as José, come out garbled in the CSV export. Please fix.
+`,
+  };
+  for (const [name, text] of Object.entries(issues))
+    write(root, `.scratch/factory-triage/issues/${name}`, text);
+  write(
+    root,
+    ".scratch/factory-triage/run-facts.json",
+    `${JSON.stringify(
+      {
+        note: "Simulated factory run facts for this local exercise. The run-result interface is a stand-in for Scriptorium's (lutzseverino/scriptorium#116), not its definition.",
+        allowedModels: ["claude-opus-5-5", "claude-sonnet-5-5", "gpt-6.1-sol"],
+        runResult: {
+          fields: {
+            outcome: "One of the outcomes below.",
+            state: "The state label the run asks the factory to apply.",
+            labels: "Every other label the run asks the factory to apply.",
+            body: "Markdown the factory posts on the issue in its frame, which supplies the disclaimer and run marker.",
+            reason: "Why the run failed; only with outcome failed.",
+          },
+          outcomes: {
+            done: "The issue is ready: state is state:ready.",
+            stop: "The issue waits on someone: state names whom.",
+            failed: "The run could not finish: reason says why.",
+          },
+        },
+        runs: Object.keys(issues).map((name, index) => ({
+          issue: `.scratch/factory-triage/issues/${name}`,
+          run: `triage-${index + 1}`,
+          result: `.scratch/factory-triage/results/${name.slice(0, 2)}.json`,
+        })),
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  repositories["factory-triage"] = {
+    path: root,
+    skills: ["triage"],
+    initial: commit(root, "chore: establish factory triage run exercise"),
+  };
+}
+
+{
   const root = createRepository(
     "delivery",
     ["implement", "pr", "tdd", "code-review", "prototype"],
