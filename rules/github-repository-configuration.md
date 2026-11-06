@@ -373,7 +373,13 @@ round still has a larger finding, the review stops without converging and
 reports why, with the pull request left a draft. A wrong or ambiguous contract
 moves the issue to `state:grill` under the contribution guide's Triage section.
 A round left with no open finding holds: the pull request is marked ready for
-review and delivered under the contribution guide's Merging section. Where
+review and delivered under the contribution guide's Merging section. A
+round's review lists only its open findings: fixes go under `Fixed`, and a
+declined finding is answered in its review thread. Only the reviewing
+account's standing reviews, submitted on the head they name and not
+dismissed, record its rounds; another account's review never counts as one. Delivery resumes, including after an
+interruption, only while that account's latest review is a holding review of
+the current head. Where
 factory workflow rules are installed, they say how an owner gate stops that
 delivery.
 

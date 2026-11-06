@@ -19,17 +19,20 @@ The review works in **rounds**, one reviewed head each. A round **holds**,
 
 `node <this skill's directory>/round.mjs <number>`, run from the repository
 root, prints the PR's `head`, its `round`, whether that head is already
-`reviewed`, whether it is a `draft`, the `issues` it closes and every owner
-`gates` label on the PR or those issues. Add `--issue <n>` for an issue the PR
-links without closing. It requires Node.js 24 or 26 and uses the GitHub CLI's
-credential. Exit `1` is an invocation or platform error, including more
-closing issues or labels than one read holds: follow `CONTRIBUTING.md`'s
-Credentials section for a permission refusal; otherwise fix the cause and run
-it again.
+`reviewed`, whether the review `held`, whether it is a `draft`, the `issues` it
+closes and every owner `gates` label on the PR or those issues. It counts
+only the standing reviews of the account you run as, as the rules say: the
+review held when that account's latest one is a holding review of the head.
+Add `--issue <n>` for an issue the PR links without closing. It requires
+Node.js 24 or 26 and uses the GitHub CLI's credential. Exit `1` is an
+invocation or platform error, including more closing issues or labels than one
+read holds: follow `CONTRIBUTING.md`'s Credentials section for a permission
+refusal; otherwise fix the cause and run it again.
 
-1. **Read the round.** Run `round.mjs`. When it reports `reviewed yes`, this
-   head already has its round's review: on a PR that is no longer a draft, as
-   after a cleared gate, go to step 5; on a draft, that round did not hold, so
+1. **Read the round.** Run `round.mjs`. When it reports `held yes`, delivery
+   already started, as after a run stopped before step 5 finished, a later
+   babysit round or a cleared gate: go to step 5. When it reports
+   `reviewed yes` and `held no`, your round on this head left a finding open:
    stop and report that the head waits for the implementation or grill its
    review asked for. Otherwise read the authoritative implementation contract
    under `CONTRIBUTING.md`'s Implementation contracts section, the whole issue
@@ -56,10 +59,11 @@ it again.
 4. **Post the round's review**, after reading
    `.repo-standards/rules/comments.md#reviews`: the actual Standards and Spec
    outcomes, the fixes under `Fixed`, and each open finding under `Findings`
-   with its file and line, all in its body. Post it with
-   `round.mjs <number> --post <file>`; exit `2` means the file is not a
-   complete review of the current head, so correct it and post again; exit `3`
-   means this head already has its review, so post none. Then:
+   with its file and line, all in its body, listing only the findings the
+   rules count as open. Post it with `round.mjs <number> --post <file>`;
+   exit `2` means the file is not a complete review of the current head, so
+   correct it and post again; exit `3` means this head already has your
+   review, so post none. Then:
    - The round **holds**: go to step 5.
    - A **larger** finding in round 1 **hands back**: leave the PR a draft and
      end the run, reporting the hand-back with the review's link, so `implement`
@@ -71,12 +75,13 @@ it again.
      to `state:grill`, leave the PR a draft and stop under
      `CONTRIBUTING.md`'s owner-question handoff.
 5. **Deliver.** Mark the PR ready with `round.mjs <number> --ready`; exit `2`
-   means the current head has no complete review, so return to step 1. Then
-   run `babysit` on the PR, posting each internal review round it calls for
-   with `round.mjs --post`. Before each of babysit's merge attempts, run
-   `round.mjs` again. When it reports a gate, stop at ready-to-merge as the
-   `factory-workflow` rules say: leave the PR open, move its issue, if it has
-   one, to `state:owner`, and end the run, reporting the gate.
+   means the review has not held, so return to step 1. Then run `babysit` on
+   the PR, posting each internal review round it calls for with
+   `round.mjs --post`, in the same shape as step 4. Before each of babysit's
+   merge attempts, run `round.mjs` again. When it reports a gate, stop at
+   ready-to-merge as the `factory-workflow` rules say: leave the PR open, move
+   its issue, if it has one, to `state:owner`, and end the run, reporting the
+   gate.
 
 ## Reads
 

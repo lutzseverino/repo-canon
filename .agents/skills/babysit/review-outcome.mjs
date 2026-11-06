@@ -27,23 +27,13 @@ const completed = (value) =>
   ) &&
   !placeholders.some((line) => value.includes(line.slice(line.indexOf("<"))));
 
-// The head a review names, when it names one full SHA; review-agnostic callers
-// then check completeness against it.
-export function reviewedHead(body) {
+// A review's fields in the template's shape, or null when it is not one: the
+// head it names, whether it is complete, and whether it holds (complete, with
+// no open finding).
+function readReview(body) {
   if (typeof body !== "string") return null;
-  const heads = body
-    .split(/\r?\n/)
-    .map((line) => field.exec(line))
-    .filter((match) => match?.[1] === "Head");
-  return heads.length === 1 && /^[0-9a-f]{40}$/.test(heads[0][2])
-    ? heads[0][2]
-    : null;
-}
-
-export function completeReview(body, head) {
-  if (typeof body !== "string") return false;
   // The review is plain text, never a quoted example or HTML comment.
-  if (/^\s*(?:`{3,}|~{3,})/m.test(body) || body.includes("<!--")) return false;
+  if (/^\s*(?:`{3,}|~{3,})/m.test(body) || body.includes("<!--")) return null;
   const lines = body.split(/\r?\n/);
   const entries = lines.flatMap((line, index) => {
     const match = field.exec(line);
@@ -53,20 +43,36 @@ export function completeReview(body, head) {
     entries.length !== fields.length ||
     new Set(entries.map(({ key }) => key)).size !== fields.length
   )
-    return false;
+    return null;
   const byField = Object.fromEntries(entries.map((entry) => [entry.key, entry]));
   const next = entries.find(({ index }) => index > byField.Findings.index);
   const findings = lines
     .slice(byField.Findings.index + 1, next?.index)
     .filter((line) => item.test(line));
+  const none = /^None\.?$/i.test(byField.Findings.value);
   const findingsComplete = byField.Findings.value
-    ? /^None\.?$/i.test(byField.Findings.value) && findings.length === 0
+    ? none && findings.length === 0
     : findings.length > 0 && findings.every((line) => located.test(line));
-  return (
-    byField.Head.value === head &&
+  const complete =
     ["Standards", "Spec", "Fixed"].every((key) =>
       completed(byField[key].value),
-    ) &&
-    findingsComplete
-  );
+    ) && findingsComplete;
+  return { head: byField.Head.value, complete, holds: complete && none };
+}
+
+// The full head SHA a review in the template names, if any.
+export function reviewedHead(body) {
+  const head = readReview(body)?.head;
+  return /^[0-9a-f]{40}$/.test(head ?? "") ? head : null;
+}
+
+export function completeReview(body, head) {
+  const review = readReview(body);
+  return review !== null && review.head === head && review.complete;
+}
+
+// A review holds when it is complete and leaves no open finding.
+export function holdingReview(body, head) {
+  const review = readReview(body);
+  return review !== null && review.head === head && review.holds;
 }

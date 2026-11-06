@@ -82,6 +82,7 @@ test("a fresh draft is round 1, unreviewed, with its closing issue and no gate",
     head,
     round: "1",
     reviewed: "no",
+    held: "no",
     draft: "yes",
     issues: "#5",
     gates: "none",
@@ -109,6 +110,7 @@ test("owner gates on the PR, its closing issues and named issues are reported", 
     head,
     round: "1",
     reviewed: "no",
+    held: "no",
     draft: "yes",
     issues: "#5 #7 #8",
     gates:
@@ -130,6 +132,12 @@ test("each completed review of a head is one round; other reviews are not", asyn
       ),
     ),
     restReview(`\`\`\`markdown\n${reviewBody(head)}\n\`\`\``),
+    // Only this account's standing reviews are rounds: another account's
+    // review, and this account's dismissed one, are not.
+    restReview(reviewBody(head), {
+      user: { login: "implementer", type: "User" },
+    }),
+    restReview(reviewBody(head), { state: "DISMISSED" }),
   ];
   let result = await run(t, ["12"], pullState({}, { reviews: others }));
   assert.equal(result.status, 0, result.stderr);
@@ -167,15 +175,22 @@ test("post leaves exactly one complete review of the current head per round", as
   }
   assert.equal(state.posted, undefined);
 
+  // Another account's review of this head is no round of this account's.
+  state.reviews = [
+    restReview(reviewBody(head), {
+      user: { login: "implementer", type: "User" },
+    }),
+  ];
   let result = await run(t, ["12", "--post", file(t, handBack(head))], state);
   assert.equal(result.status, 0, result.stderr);
   assert.match(
     result.stdout,
-    /posted round 1 review https:\/\/github\.com\/\S+pullrequestreview-1/,
+    /posted round 1 review https:\/\/github\.com\/\S+pullrequestreview-2/,
   );
   assert.deepEqual(state.posted, [
     { commit_id: head, body: handBack(head), event: "COMMENT" },
   ]);
+  assert.equal(state.reviews.length, 2);
 
   result = await run(t, ["12", "--post", file(t, reviewBody(head))], state);
   assert.equal(result.status, 3);
@@ -193,30 +208,98 @@ test("post leaves exactly one complete review of the current head per round", as
   assert.match(result.stdout, /posted round 2 review/);
 });
 
-test("ready needs the current head's review and marks only a draft", async (t) => {
+test("ready needs this account's held review and marks only a draft", async (t) => {
   const state = pullState();
   let result = await run(t, ["12", "--ready"], state);
   assert.equal(result.status, 2);
   assert.equal(state.pull.draft, true);
 
-  state.reviews = [restReview(reviewBody(earlier), { commit_id: earlier })];
-  result = await run(t, ["12", "--ready"], state);
-  assert.equal(result.status, 2);
-  assert.equal(state.pull.draft, true);
+  // An earlier head's, another author's or a non-holding review is not enough.
+  for (const review of [
+    restReview(reviewBody(earlier), { commit_id: earlier }),
+    restReview(reviewBody(head), {
+      user: { login: "implementer", type: "User" },
+    }),
+    restReview(handBack(head)),
+  ]) {
+    state.reviews = [review];
+    result = await run(t, ["12", "--ready"], state);
+    assert.equal(result.status, 2, review.body);
+    assert.match(result.stderr, /has not held for this account/);
+    assert.equal(state.pull.draft, true);
+  }
 
-  state.reviews.push(restReview(reviewBody(head)));
+  state.reviews = [restReview(reviewBody(head))];
   result = await run(t, ["12", "--ready"], state);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(state.pull.draft, false);
+  assert.equal(state.readied, 1);
 
-  state.requests = [];
   result = await run(t, ["12", "--ready"], state);
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    state.requests.filter((request) => request === "POST /graphql").length,
-    1,
-    "only the closing-issues read; no second ready mutation",
+  assert.equal(state.readied, 1, "a ready PR is not marked again");
+});
+
+test("only this account's latest holding review of the current head has held", async (t) => {
+  const other = { user: { login: "implementer", type: "User" } };
+  const holdEarlier = restReview(reviewBody(earlier), { commit_id: earlier });
+  const babysitRound = restReview(
+    reviewBody(head).replace(
+      "Fixed: Nothing",
+      "Fixed: the external reviewer's off-by-one in the ledger total.",
+    ),
   );
+  /** @type {[any[], string, string][]} */
+  const cases = [
+    // A holding round posted before the run stopped short of --ready.
+    [[restReview(reviewBody(head))], "yes", "yes"],
+    // Babysit's later round on a new head, its fixes under Fixed.
+    [[holdEarlier, babysitRound], "yes", "yes"],
+    // A later round that fails leaves an earlier hold behind.
+    [[holdEarlier, restReview(handBack(head))], "yes", "no"],
+    // An earlier hold does not cover a head this account never reviewed.
+    [[holdEarlier], "no", "no"],
+    // This account's round that handed back or found the contract wanting.
+    [[restReview(handBack(head))], "yes", "no"],
+    // A review posted on another commit than the head it names is no round.
+    [[restReview(reviewBody(head), { commit_id: earlier })], "no", "no"],
+    // Another account's or a dismissed or pending review is no round at all.
+    [[restReview(reviewBody(head), other)], "no", "no"],
+    [[holdEarlier, restReview(reviewBody(head), other)], "no", "no"],
+    [[restReview(reviewBody(head), { state: "DISMISSED" })], "no", "no"],
+    [
+      [
+        restReview(reviewBody(head), {
+          state: "PENDING",
+          submitted_at: undefined,
+        }),
+      ],
+      "no",
+      "no",
+    ],
+  ];
+  for (const [reviews, reviewed, held] of cases) {
+    const result = await run(t, ["12"], pullState({}, { reviews }));
+    assert.equal(result.status, 0, result.stderr);
+    const label = reviews.map(({ body }) => body).join("\n---\n");
+    assert.equal(facts(result.stdout).reviewed, reviewed, label);
+    assert.equal(facts(result.stdout).held, held, label);
+  }
+
+  // An App installation's viewer has no [bot] suffix; its REST reviews do.
+  const app = pullState(
+    {},
+    {
+      viewer: { __typename: "Bot", login: "factory-app" },
+      reviews: [
+        restReview(reviewBody(head), {
+          user: { login: "factory-app[bot]", type: "Bot" },
+        }),
+      ],
+    },
+  );
+  const result = await run(t, ["12"], app);
+  assert.equal(facts(result.stdout).held, "yes", result.stderr);
 });
 
 test("invocation and platform errors exit 1 without writes", async (t) => {
@@ -232,6 +315,11 @@ test("invocation and platform errors exit 1 without writes", async (t) => {
     [["12"], pullState({}, { moreIssues: true })],
     [["12", "--issue", "9"], pullState()],
     [["12"], pullState({}, { fail: true })],
+    [["12"], pullState({}, { viewer: { __typename: "User", login: " " } })],
+    [
+      ["12"],
+      pullState({}, { viewer: { __typename: "Organization", login: "x" } }),
+    ],
   ];
   for (const [argv, state] of cases) {
     const result = await run(t, argv, state);

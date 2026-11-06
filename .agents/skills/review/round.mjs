@@ -4,17 +4,20 @@
 //        node round.mjs <number> --post <file> [--repo <owner/name>]
 //        node round.mjs <number> --ready [--repo <owner/name>]
 //
-// Without an action, prints the pull request's review round: its head, the
-// round number, whether that head already has a complete review, whether the
-// PR is a draft, the issues it closes (plus each --issue) and every owner gate
-// (`gate:` label) on the PR or those issues.
+// Rounds are the standing (submitted, undismissed) reviews in the comment
+// rules' template that the account running this command posted; no other
+// account's review counts. Without an action, prints the pull request's
+// round: its head, the round number, whether that head already has this
+// account's review, whether the review held (this account's latest review is
+// of the head and leaves no open finding), whether the PR is a draft, the
+// issues it closes (plus each --issue) and every owner gate (`gate:` label)
+// on the PR or those issues.
 // --post posts the file as this round's review of the current head, once it is
-// a complete review of that head and the head has none yet.
-// --ready marks the draft PR ready for review once its current head has a
-// complete review.
+// a complete review of that head and the head has none of this account's yet.
+// --ready marks the draft PR ready for review once the review held.
 // Exit 0: done. 1: invocation or platform error. 2: the file is not a complete
-// review of the current head (--post), or the current head has no complete
-// review (--ready). 3: the current head already has a complete review (--post).
+// review of the current head (--post), or the review has not held (--ready).
+// 3: the current head already has this account's review (--post).
 import { readFileSync } from "node:fs";
 import {
   connectionFor,
@@ -23,6 +26,7 @@ import {
 } from "../babysit/platform.mjs";
 import {
   completeReview,
+  holdingReview,
   reviewedHead,
   reviewsSection,
 } from "../babysit/review-outcome.mjs";
@@ -41,6 +45,11 @@ const closingIssuesQuery = `query ReviewRoundIssues($owner: String!, $name: Stri
     }
   }
 }`;
+
+// The account this command runs as, the identity whose holding review it
+// trusts. GraphQL's viewer serves App installation tokens too; it names a Bot
+// without the `[bot]` suffix that REST review authors carry.
+const viewerQuery = "query ReviewRoundViewer { viewer { __typename login } }";
 
 const readyMutation = `mutation ReviewRoundReady($id: ID!) {
   markPullRequestReadyForReview(input: { pullRequestId: $id }) { pullRequest { isDraft } }
@@ -68,12 +77,16 @@ function options(argv) {
   return parsed;
 }
 
-// A complete review names its own head; count it against that head.
+// A complete review names its own head, the commit it was posted on; count it
+// against that head.
 export function completedReviews(reviews) {
   return reviews.flatMap((review) => {
-    if (review.state === "PENDING") return [];
     const head = reviewedHead(review.body);
-    return head && completeReview(review.body, head) ? [head] : [];
+    return head &&
+      (review.commit ?? head) === head &&
+      completeReview(review.body, head)
+      ? [{ head, holds: holdingReview(review.body, head) }]
+      : [];
   });
 }
 
@@ -103,6 +116,24 @@ async function closingIssues(connection, number) {
   }));
 }
 
+async function viewerLogin(connection) {
+  const response = await requestData(connection, {
+    method: "POST",
+    path: "/graphql",
+    body: { query: viewerQuery },
+  });
+  const viewer = response?.data?.viewer;
+  if (
+    response?.errors?.length ||
+    !["User", "Bot"].includes(viewer?.__typename) ||
+    !viewer.login?.trim()
+  )
+    throw new Error("Could not read the account this command runs as.");
+  return viewer.__typename === "Bot" && !viewer.login.endsWith("[bot]")
+    ? `${viewer.login}[bot]`
+    : viewer.login;
+}
+
 async function round(connection, { number, issues: extra }) {
   const repository = connection.repository.path;
   const pull = await requestData(connection, {
@@ -130,17 +161,26 @@ async function round(connection, { number, issues: extra }) {
   ]
     .filter(([label]) => label.startsWith("gate:"))
     .map(([label, where]) => `${label} on ${where}`);
-  // Each reviewed head is one round; the current head's round is the next one
-  // until its review is posted.
-  const reviewed = new Set(
-    completedReviews(await connection.pullRequests.reviews(number)),
+  // Only this account's standing reviews record rounds, oldest first. Each
+  // reviewed head is one round; the current head's round is the next one until
+  // its review is posted. The review held when the latest one is a holding
+  // review of the current head.
+  const viewer = (await viewerLogin(connection)).toLowerCase();
+  const rounds = completedReviews(
+    (await connection.pullRequests.reviews(number)).filter(
+      (review) =>
+        !["PENDING", "DISMISSED"].includes(review.state) &&
+        review.author?.login?.toLowerCase() === viewer,
+    ),
   );
-  const headReviewed = reviewed.has(head);
+  const heads = new Set(rounds.map((entry) => entry.head));
+  const latest = rounds.at(-1);
   return {
     pull,
     head,
-    round: reviewed.size + (headReviewed ? 0 : 1),
-    reviewed: headReviewed,
+    round: heads.size + (heads.has(head) ? 0 : 1),
+    reviewed: heads.has(head),
+    held: latest?.head === head && latest.holds,
     issues,
     gates,
   };
@@ -151,6 +191,7 @@ const report = (facts) =>
     `head ${facts.head}`,
     `round ${facts.round}`,
     `reviewed ${facts.reviewed ? "yes" : "no"}`,
+    `held ${facts.held ? "yes" : "no"}`,
     `draft ${facts.pull.draft ? "yes" : "no"}`,
     `issues ${facts.issues.map(({ number }) => `#${number}`).join(" ") || "none"}`,
     `gates ${facts.gates.join(", ") || "none"}`,
@@ -167,9 +208,9 @@ export const main = async (argv = process.argv.slice(2), connection) => {
       return 0;
     }
     if (action === "ready") {
-      if (!facts.reviewed) {
+      if (!facts.held) {
         process.stderr.write(
-          `round.mjs: ${facts.head} has no complete review; post one as ${reviewsSection} describes before marking #${number} ready.\n`,
+          `round.mjs: the review of ${facts.head} has not held for this account; a round holds only once this account's review, posted as ${reviewsSection} describes, leaves no open finding.\n`,
         );
         return 2;
       }
@@ -201,7 +242,7 @@ export const main = async (argv = process.argv.slice(2), connection) => {
     }
     if (facts.reviewed) {
       process.stderr.write(
-        `round.mjs: ${facts.head} already has its round's review; post none for it.\n`,
+        `round.mjs: ${facts.head} already has this account's review; post none for it.\n`,
       );
       return 3;
     }

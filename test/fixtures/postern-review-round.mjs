@@ -79,12 +79,19 @@ export function roundConnection(state, connectTo = connect) {
           },
         },
       });
+    if (url.pathname === "/graphql" && /viewer/.test(body.query))
+      return json({
+        data: {
+          viewer: state.viewer ?? { __typename: "User", login: "reviewer" },
+        },
+      });
     if (
       url.pathname === "/graphql" &&
       /markPullRequestReadyForReview/.test(body.query)
     ) {
       assert(body.variables.id === "PR_node", "ready names the PR node");
       pull.draft = false;
+      state.readied = (state.readied ?? 0) + 1;
       return json({
         data: {
           markPullRequestReadyForReview: { pullRequest: { isDraft: false } },
