@@ -273,8 +273,8 @@ repeated.
   [ADR 0010](docs/adr/0010-carry-delivery-rules-in-the-environment.md)
   decides: [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests) says how to open
   a pull request, an adoption pull request included, and when it may merge,
-  and the installed `AGENTS.md` points every change through `pr` and
-  `babysit`. The model-invocable `babysit` skill watches the pull request,
+  and the installed `AGENTS.md` points every change through `implement`,
+  then `review` in a separate agent. The model-invocable `babysit` skill watches the pull request,
   settles its findings, and merges it, stating no rule the guide or installed
   rules hold. Review follows the guide's
   [review finding rules](CONTRIBUTING.md#merging) and the

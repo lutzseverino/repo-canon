@@ -43,7 +43,7 @@
     },
     "implement": {
       "path": "skills/engineering/implement",
-      "edits": "`SKILL.md` drops `disable-model-invocation` and `agents/openai.yaml` enables `policy.allow_implicit_invocation`. It also commits the work to a branch holding only it, made from the up-to-date base branch, and delivers it as the repository's contribution guide directs, instead of committing to the current branch."
+      "edits": "`SKILL.md` drops `disable-model-invocation` and `agents/openai.yaml` enables `policy.allow_implicit_invocation`. It reads branch and validation requirements from the contribution guide instead of repeating its branch rule. It replaces self-review and direct delivery with validated draft pull request creation using `pr`, then stops for a separate `review` agent. Given review findings, it pushes fixes to the same draft pull request and stops again. Without a contribution guide, it uses a dedicated branch and available checks before opening the draft."
     },
     "improve-codebase-architecture": {
       "path": "skills/engineering/improve-codebase-architecture",

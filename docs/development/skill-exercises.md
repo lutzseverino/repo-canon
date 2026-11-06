@@ -143,7 +143,12 @@ factory's triage run; `orchestrate` for the workbench plan lifecycle;
 `host-grant` for `orchestrate` and `factory` with a shared host access grant;
 and `delivery` for
 `implement`, `pr`, and `prototype`. The delivery repository
-includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
+includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a simulated draft PR. Exercise `implement`
+first with the ticket, then resume it with a review finding supplied by the
+operator on that same local PR. Record each validated head, the draft state,
+and the unchanged PR and branch identity. Observe that both runs stop without
+self-review, a ready transition, babysitting or merging. The operator supplies
+the finding; `implement` does not produce its own review. The manifest also records the
 support skills that exercised skills depend on, such as the productivity
 `grilling` skill that `grill-with-docs` uses.
 
