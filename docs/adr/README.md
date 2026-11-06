@@ -122,3 +122,8 @@ involve real alternatives.
 - [Test behaviour and structure, not wording](0032-test-behaviour-and-structure-not-wording.md):
   tests check code behaviour and file structure, never the wording of rules,
   skills or documents; license notices are compared byte for byte.
+- [Choose where checks run at adoption](0034-choose-where-checks-run-at-adoption.md):
+  `github`, `runner` or `self-reported`, chosen in the selection, one check
+  command, and the merge gate enforced by Repo Canon's tooling.
+- [Keep the implementation contract in the issue body](0035-keep-the-implementation-contract-in-the-issue-body.md):
+  triage writes the Agent Brief over the body and keeps the original request.
