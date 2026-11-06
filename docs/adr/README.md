@@ -122,3 +122,7 @@ involve real alternatives.
 - [Test behaviour and structure, not wording](0032-test-behaviour-and-structure-not-wording.md):
   tests check code behaviour and file structure, never the wording of rules,
   skills or documents; license notices are compared byte for byte.
+- [Give every value one value owner](0033-give-every-value-one-value-owner.md):
+  each value lives only in its value owner's file: exact files hold the
+  standard's values, repository-owned files the repository's, host
+  configuration the host's, and labels the issue's.
