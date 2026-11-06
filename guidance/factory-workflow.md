@@ -14,9 +14,12 @@ together.
 Version 3 replaces version 2's single `skill` and `arguments` with
 `runKinds`, which turns on `triage`, `implement` and `review` and maps each to
 the skill of the same name. Each kind's `arguments` names its work: `#{issue}`
-for triage and implement, and `#{pullRequest}` for review. Triage and review
-name the `provider`, `model` and `effort` they run on, and review sets
-`differentProvider`; implement runs on the issue's `model:` label. `labels`
+for triage and implement, and `#{pullRequest}` for review. Review sets `differentProvider`; execution choices live outside exact
+mechanics. Host configuration supplies capabilities, credentials and per-kind
+defaults, including implement retry. The optional repository-owned
+`.github/factory-model-policy.json` supplies preferences and explicit fallback
+under the factory-workflow rules; the issue label selects initial implement
+only unless another stage explicitly selects its reuse. `labels`
 names every label the factory reads or writes by role, in the `state:`,
 `gate:`, `factory:` and `priority:` families, with no role for answers a run
 waits on. `contractResult` stays the issue-contract workflow's result, with
@@ -83,3 +86,19 @@ absence and the installed rules. If an unresolved workflow conflict prevents
 conformance, assess it as `blocked` and explain the conflict. Confirm scope
 validity after fixes and again after contextual work: it stays empty because
 the declaration governs work, not project content.
+
+## Repository model policy configuration
+
+The read-only `factory-model-policy` check validates optional policy structure
+using retained resources without network or host access. Absence retains host
+defaults. Adoption never installs policy values or declares the policy file as
+owned content. Preserve existing bytes on adoption, update, removal and
+re-adoption; invalid data fails validation rather than being repaired.
+
+A maintainer may deliberately configure or change the policy in a separate
+post-adoption commit, outside the adoption PR, using the authoritative
+Repository model policy contract in the factory-workflow rules. Never seed it
+from source examples, fixtures, another repository or generated output. No
+policy values are chosen for this source itself. Scriptorium v4 resolves the
+contract within host capabilities; deploying it and proving real runs are
+separate from this source change.

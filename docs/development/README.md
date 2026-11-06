@@ -130,6 +130,8 @@ Run `node --test test/pull-request-reviewer-check.test.mjs`
 for the optional reviewer schema check, including retained operation resources;
 the check imports babysit's `pull-request-reviewer.mjs` directly from its
 source-relative retained resource path.
+Run `node --test test/factory-model-policy-check.test.mjs` for optional model
+policy validation, read-only preservation and execution from retained resources.
 Run `node --test test/factory-review-policy-check.test.mjs` for the optional
 policy adoption check's absence, app identities, invalid schemas, file-read
 errors and preservation, including retained resources without runtime packages.
