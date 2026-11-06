@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Move issues and external PRs through a state machine of triage roles, sort each request by where its uncertainty lies, and bring its agent brief to acceptance through research and independent review, or through a grilling session with the owner.
+description: Move issues and external PRs through a state machine of triage roles, sort each request by where its uncertainty lies, and bring its agent brief to acceptance through research and independent review, or through a grilling session with the owner. Also runs unattended as the factory's triage run, which writes nothing and ends with a run result.
 disable-model-invocation: true
 ---
 
@@ -14,9 +14,14 @@ If this repo treats external pull requests as a request surface (see the issue-t
 
 Before every comment or issue body you post to the issue tracker during triage, read `.repo-standards/rules/comments.md#disclaimers` for its triage disclaimer. Each step below that posts names the section to read.
 
-The contribution guide's Triage and Readiness sections and the installed rules decide routing, acceptance, readiness, model labels, and owner questions. This skill is how to carry them out.
+The contribution guide's Triage and Readiness sections and the installed rules decide routing, inference, acceptance, readiness, labels, and owner questions. This skill is how to carry them out: where a step names one of those decisions, apply it from there.
 
 Follow `AGENTS.md`'s Agent skills requirements for delegation and session naming. Use the available naming capability separately from the command and task context. For each research run below, apply that rule to its research task and use the listed issue references and deliverables as task context. The issue comments below are its assigned research artifacts and destinations.
+
+## Modes
+
+- **Orchestrating agent**, the default: the maintainer invokes you, and you start research runs and grills. Every section below applies except [Factory triage run](#factory-triage-run).
+- **Factory triage run**: the factory starts you as its triage run kind for one issue and gives you a path for its run result. Follow [Factory triage run](#factory-triage-run), with the sections it names, and nothing else.
 
 ## Reference docs
 
@@ -33,28 +38,28 @@ Two **category** roles:
 Five **state** roles, each naming whom the issue waits on, and one closing outcome:
 
 - `state:triage`: triage needs to evaluate it
-- `state:reporter`: a fact only its outside reporter holds is missing; ask them (see [Route questions](#route-questions))
-- `state:grill`: the owner's intent is open; a grilling session settles it
-- `state:owner`: the owner's answer, or work that needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves
-- `state:ready`: fully specified, ready for an AFK agent
+- `state:reporter`: its outside reporter, for a missing fact
+- `state:grill`: a grilling session, for the owner's intent
+- `state:owner`: the owner
+- `state:ready`: an AFK agent
 - `wontfix`: will not be actioned
 
-For a PR, the same states read against the attached code: `state:ready` means a brief is attached and an agent should take the next step on the diff; `state:owner` keeps the owner-only meaning above. Work an agent can perform stays `state:ready`, including work awaiting the owner's review. In repositories with installed factory rules, follow those rules for work the factory must not pick up and for owner gates.
+For a PR, the same states read against the attached code: `state:ready` means a brief is attached and an agent should take the next step on the diff.
 
 Every triaged issue should carry exactly one category role and one state role. If state roles conflict, flag it and ask the maintainer before doing anything else.
 
-Set one `priority:` label by the installed rules' rubric, unless a person already set one; never replace theirs.
+Set one `priority:` label as the installed rules' Labels section says.
 
 These are canonical role names. The actual label strings are in the triage label configuration, `docs/agents/triage-labels.md`, and the installed `github-repository-configuration` rules hold their meanings.
 
-State transitions: an unlabeled issue normally goes to `state:triage` first; from there it moves to `state:reporter`, `state:grill`, `state:owner`, `state:ready`, or `wontfix`. An issue waiting on someone returns to `state:triage` once the missing information arrives: your own answer, the reporter's reply, or the owner's decision. An answered question on ready work returns it to `state:ready` instead, under the contribution guide's Readiness section. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
+State transitions: an unlabeled issue normally goes to `state:triage` first; from there it moves to `state:reporter`, `state:grill`, `state:owner`, `state:ready`, or `wontfix`. An issue waiting on someone returns to `state:triage` once the missing information arrives, or to the state the contribution guide's Readiness section names for answered ready work. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
 
 ## Who does what
 
-- **You, the orchestrating agent**: the session the maintainer invoked. You sort each request, start its research run, receive every question first, answer the intent questions you can cite, send the rest to a grill with the owner, keep the decision inbox, review each brief as if a stranger wrote it, and accept a brief that holds. You never write a brief you accept. When the owner runs triage themselves, they are the orchestrating agent.
-- **The research run**: a sub-agent you start for one request, with a fresh context. It gathers facts and verifies the claim, then writes the brief once no intent question is open, unless a grill drafts it. Leave readiness, labels, and the judgment of its brief to yourself.
-- **The grill**: a grilling session with the owner, in its own session, for intent questions you cannot infer. It records the owner's decisions and drafts the briefs; it files no issue and applies no readiness.
-- **The owner**: holds the project's intent. Questions for the owner reach them only through your decision inbox, or in a grill they join. Leave readiness to them only when you cannot apply it; never ask them to finish a brief.
+- **You, the orchestrating agent**: the session the maintainer invoked, in the role the contribution guide's Triage section gives it. You sort each request, start its research run, receive every question first, keep the decision inbox, and review and accept briefs.
+- **The research run**: a sub-agent you start for one request, with a fresh context. It gathers facts and verifies the claim, then writes the brief once no intent question is open, unless a grill drafts it. Leave labels and the judgment of its brief to yourself.
+- **The grill**: a grilling session with the owner, in its own session, for intent questions you cannot infer.
+- **The owner**: holds the project's intent. Never ask them to finish a brief.
 
 If you cannot start a sub-agent, do the research yourself, post the brief, and stop: tell the owner, with a link, that the brief still needs a reviewer who did not write it.
 
@@ -81,14 +86,9 @@ Show counts and a one-line summary per item. Let the maintainer pick.
 
 ## Sort by uncertainty
 
-Before any research, decide where the answer to the request's open questions lives. The category label does not decide it.
+Before any research, sort the request as code-bound or intent-bound by the contribution guide's Triage section. Its category label does not decide it. A bug whose report or documentation states what should happen is usually code-bound; a new capability, a "should" question, a limit, a default, a timeout, or a naming or scope call usually is not.
 
-- **Code-bound**: the expected result is clear, and the code, logs, or a reproduction can answer everything else. A bug whose report or documentation states what should happen is usually code-bound.
-- **Intent-bound**: the missing answer is the owner's intent, a policy, or a trade-off only they can choose: a new capability, a "should" question, a limit, a default, a timeout, a naming or scope call.
-
-The test: if the brief would have to carry an open question for the owner, a list of options for someone to pick from, or a value nobody chose (a fallback, a default, a limit), the request is intent-bound. That holds for a request labeled `type:bug` too: a bug whose fix needs a policy choice is intent-bound. Missing evidence or missing access never licenses inventing the policy; it is a question, routed as [Route questions](#route-questions) says.
-
-A request can move from code-bound to intent-bound when research turns up an intent question. It moves back only when the owner's answers, or answers you infer under the [inference test](#intent-bound-path), settle every such question.
+A request can move from code-bound to intent-bound when research turns up an intent question. It moves back only when the owner's answers, or answers inferred under the inference test, settle every such question.
 
 ## Triage a specific issue or PR
 
@@ -112,7 +112,7 @@ Every research run, on either path, does two checks first:
    - **Scope**: desired behavior is what the request asks for; nothing the request needs is dropped, nothing beyond it is added, and out of scope names the adjacent work an agent might reach for. Work that must be shown on a live system is split as [AGENT-BRIEF.md](AGENT-BRIEF.md#live-acceptance-gets-its-own-ticket) says.
    - **Acceptance criteria**: each is concrete, testable, and independently verifiable, and together they cover the edge cases the request and the code expose.
    - **Dependencies**: work that must land first is named, so it can be recorded as a blocker.
-   - **Open questions**: none remain, including missing required inputs. Route unavailable material as [Route questions](#route-questions) says. An open intent question, an option list, or an unchosen value means the request is intent-bound; switch paths.
+   - **Open questions**: none remain, including missing required inputs. Route unavailable material as [Route questions](#route-questions) says. An open intent question means the request is intent-bound; switch paths.
 
    Passing the issue-contract check proves the shape, never that the brief holds. When it does not hold, send the research run the specific corrections; it edits the brief, and you review the new revision from the top.
 
@@ -122,50 +122,55 @@ Every research run, on either path, does two checks first:
 
 1. **Fact-finding.** Start the research run with the issue link, its path, the two checks, and this task: gather the code facts the owner's decision needs (current behavior, constraints, prior decisions in the issue, ADRs, and glossary, and the options with what each would cost), and write no brief yet. Post its findings as a triage notes comment, as `.repo-standards/rules/comments.md#disclaimers` says, when the owner will read them on the issue.
 
-2. **Infer what you can cite.** Answer an intent question yourself only when all three hold:
-   - **Cited**: you can cite the answer's source, with its date: the owner's approved goal for the work, a recorded owner decision, a recorded owner wish, or the owner's quoted words.
-   - **Reversible within the work**: no value or policy outlives it, and it adds no public name and no breaking change. Never infer a default, limit, timeout, or fallback that persists in the product.
-   - **Within the goal**: it changes neither the goal nor the scope.
+2. **Infer what you can cite.** Answer each intent question the contribution guide's inference test lets you answer, and record it as that test says. When you infer every one, have the research run write the brief from the facts and your inferred answers, then go to step 6.
 
-   Otherwise the question goes to the owner. Each inferred answer is stated as behavior in the brief and listed with its citation under **Inferred intent** in the triage notes. List every inferred answer in your next report to the owner, so they can veto it; a veto is an owner decision, and the brief is revised from it. When you infer every intent question, have the research run write the brief from the facts and your inferred answers, then go to step 6.
+3. **Grill the owner** on the questions you cannot infer, in a grilling session of its own. Open it with `/grill-with-docs` using the session's supported invocation, followed by task context: the issue links, the facts, your inferred answers, the recorded owner decisions, unresolved questions, scope and [AGENT-BRIEF.md](AGENT-BRIEF.md). Include the owned branch and checkout for domain-document edits, the per-repository pull request destinations and the workbench destination required by the contribution guide's Triage section. Its deliverables are the decision record and draft briefs in a proposed ticket split, with the report-back destination. When the owner cannot join a grill now, put the request in your decision inbox with your recommendation.
 
-3. **Grill the owner** on the questions you cannot infer, in a grilling session of its own. Open it with `/grill-with-docs` using the session's supported invocation, followed by task context: the issue links, the facts, your inferred answers, the recorded owner decisions, unresolved questions, scope and [AGENT-BRIEF.md](AGENT-BRIEF.md). Include the owned branch and checkout for domain-document edits, the per-repository pull request destinations and the workbench destination required by the contribution guide's Triage section. Its deliverables are the decision record and draft briefs in a proposed ticket split, with the report-back destination. Leave filing and readiness to yourself. When the owner cannot join a grill now, put the request in your decision inbox with your recommendation.
+4. **Decide the split** as the contribution guide's Triage section says, and send any draft your split changes substantially back to the grill, or to a research run when it needs code facts the grill did not gather.
 
-4. **Decide the split.** Merge, split, or drop a draft, or set it aside for later work. When your split changes a draft substantially, have the grill rewrite that brief; never write or rewrite one yourself. Start a research run to write a brief only when it needs code facts the grill did not gather.
+5. **File** the issues with the grill's briefs: post each brief on its intake issue, or file a new issue for it, as `.repo-standards/rules/comments.md#disclaimers` says, with the owner decisions it relies on pasted from the grill record into its triage notes.
 
-5. **File** the issues with the grill's briefs: post each brief on its intake issue, or file a new issue for it, as `.repo-standards/rules/comments.md#disclaimers` says. Each issue's triage notes record the owner decisions its brief relies on, pasted from the grill record, each with its date and where the owner gave it, so later triage reuses them.
-
-6. **Review** each brief as on the code-bound path, as a reviewer who did not write it, and also refuse a brief that carries owner intent in disguise: a choice left to the implementing agent, an option list, a fallback or default nobody decided, or an open question. Route each such question as [Route questions](#route-questions) says, and accept only once every one the owner must answer is answered. A question a recorded decision already settles goes back to the brief's writer as a correction instead.
+6. **Review** each brief as on the code-bound path, and refuse one that leaves owner intent open as the contribution guide's Triage section says. Route each such question as [Route questions](#route-questions) says, and accept only once every one the owner must answer is answered. A question a recorded decision already settles goes back to the brief's writer as a correction instead.
 
 7. **Accept** each brief that holds, as below.
 
 ### Accept a brief that holds
 
-1. **Wait for the revision notice** the issue-contract workflow posts for the brief revision you reviewed. If the brief changed after your review, review the new revision. If no notice arrives, leave readiness to the owner and tell them the notice is missing.
-2. **Choose the state**:
-   - `state:owner` only when the work needs the owner's own accounts or credentials, or a taste call the owner reserved for themselves. It is not readiness: apply it with the tracker's own client and a note naming what the owner must supply, and skip the readiness command.
-   - `state:ready` with `factory:skip` for agent work the factory must not pick up, by the tests in the installed factory rules, which also say who creates the label and who merges. Without those rules there is no skip label.
+1. **Wait for the revision notice** for the brief revision you reviewed, as the contribution guide's Readiness section says. If the brief changed after your review, review the new revision. If no notice arrives, leave readiness to the owner and tell them the notice is missing.
+2. **Choose the state** the installed rules give the work:
+   - `state:owner` for work only the owner can do. It is not readiness: apply it with the tracker's own client and a note naming what the owner must supply, and skip the readiness command.
+   - `state:ready` with `factory:skip` for agent work the installed factory rules say the factory must not pick up. Without those rules there is no skip label.
    - `state:ready` alone for any other work.
 
-   When owner review before merge is reserved, in either profile, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source. Check this even when that reason first arises here, after the initial brief review. If the designation or its source is missing or unclear, return the brief to its writer with the recorded reservation and source; the writer corrects it. Independently review the corrected brief from the top, then return to step 1 for its new validator revision notice before applying readiness. Never write or rewrite the brief you accept.
+   When owner review before merge is reserved, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source. Check this even when that reason first arises here, after the initial brief review. If the designation or its source is missing or unclear, return the brief to its writer with the recorded reservation and source; the writer corrects it. Independently review the corrected brief from the top, then return to step 1 for its new validator revision notice before applying readiness.
 
-   Follow the `github-repository-configuration` rules' Designated owner review gate for delivery. Standard-profile delivery keeps its otherwise authorized merge actor; installed factory rules govern factory merge ownership and approval-pause continuation.
-
-   For workflow-edit-only work without a separate owner-review designation, follow the ordinary applicable merge conditions in the installed rules; the skip marker alone supplies no designation.
-
-3. **Choose the model**, when the installed rules ask for a `model:` label: weigh the triage notes' suggestion against the work, and pick one label yourself, including for the host default. Keep a matching model already on the issue, or remove a conflicting model before applying readiness; never infer a default.
+3. **Choose the model**, when the installed rules ask for a `model:` label: weigh the triage notes' suggestion against the work, and pick one label yourself. Keep a matching model already on the issue, or remove a conflicting one before applying readiness.
 4. **Apply and confirm readiness** with the bundled command, using the `sha256:` revision from the notice you reviewed and the companion labels you chose:
 
    ```sh
    node <this skill's directory>/ready.mjs <issue> <sha256:reviewed-revision> <model-label>
    ```
 
-   The command applies `state:ready`. Omit the model label when the installed rules ask for none. Additional companion labels, such as `factory:skip`, follow the revision; `--repo owner/name` selects another repository. Run with Node.js 24 or 26 in the foreground, bounded by the caller's command timeout. The command uses the current `gh` credential through the vendored Postern bundle and needs no install step. Person, bot and App accounts use the same revision-bound flow, and the validator's verdict decides whether your account's readiness is approved. Where the selected destination's installed factory workflow rules and `.factory/config.json`, read at its default-branch commit independently of this checkout, name this ready label, non-parent agent readiness requires exactly one label with the configured model label prefix in the combined existing and companion labels. It creates a missing chosen repository model label using the installed factory rules' color and description format, and preserves an existing label unchanged. A failed identity read, factory configuration read or model-label provisioning applies no readiness. Exit zero confirms the validator approved that revision by the acting account; a nonzero exit explains the refusal or rejection. Review a changed revision again before retrying. For a parent it waits for the latest child link and reapplies readiness when its timestamp is not newer than that link.
+   The command applies `state:ready`. Omit the model label when the installed rules ask for none. Additional companion labels, such as `factory:skip`, follow the revision; `--repo owner/name` selects another repository. Run it with Node.js 24 or 26 in the foreground, bounded by your command timeout; it uses the current `gh` credential and needs no install step. It reads the destination's factory configuration at its default branch to tell whether a model label applies, and creates a missing chosen model label. Exit zero confirms the validator approved that revision by your account; a nonzero exit explains the refusal or rejection. Review a changed revision again before retrying. For a parent it waits for the latest child link and reapplies readiness when needed.
 
 5. **Record blockers.** Add a native blocker for each issue whose work must land first.
 6. **Tell the owner** what you accepted, with links to each brief, the labels you applied, the blockers you added, and every answer you inferred, so they can veto it.
 
-When your credentials cannot apply readiness, stop at acceptance: tell the owner, with links, which revision holds, the readiness, model and skip labels you chose, and the blockers to record. When the destination's factory workflow rules say its factory starts no work on your account's readiness, give those details to an authorized person in the same way and report that factory work has not started. Both govern the research-run briefs you accept, not the factory's own triage run.
+When your credentials cannot apply readiness, or the destination's factory workflow rules say its factory starts no work on your account's readiness, stop at acceptance: tell the owner or another authorized person, with links, which revision holds, the readiness, model and skip labels you chose, and the blockers to record, and report that factory work has not started.
+
+## Factory triage run
+
+The factory starts this run for one issue, read-only, and the installed factory workflow rules' Triage run section sets its limits. There is no orchestrating agent, research run, grill or workbench to hand anything to: you research, write and review the brief yourself, and everything you produce goes into one run result, which the factory posts and turns into labels.
+
+1. **Gather context** as [Triage a specific issue or PR](#triage-a-specific-issue-or-pr) step 1 says, and run its two checks first, yourself. Read the repository's ADRs, its glossary, and the issues the request links, with their decisions: the records the Triage run section lets you cite.
+2. **Sort** the request as [Sort by uncertainty](#sort-by-uncertainty) says. Answer each intent question the inference test lets you answer from those records, and list it with the record and its date under **Inferred intent** in the triage notes.
+3. **Choose the outcome** the Triage run section names, with the labels it lists, and write its body:
+   - `state:ready`: write the Agent Brief and its triage notes as [AGENT-BRIEF.md](AGENT-BRIEF.md) says, review them as the [code-bound path](#code-bound-path)'s step 2 says, and correct them until they hold. Choose the `model:` label from the models the factory's run facts list, or from any when they list none.
+   - `state:reporter`: the [reporter template](#reporter-template).
+   - `state:owner`: the question and what you found.
+   - `state:grill`: the facts gathered (current behavior, constraints, the records you read, the options and what each would cost) and the open questions, numbered.
+4. **Write the run result** to the path the factory gives, in the format its run-result interface defines: the state and labels you ask for, and the body, with no disclaimer, as `.repo-standards/rules/comments.md#disclaimers` says. When you cannot finish, write a failed result with the reason.
+5. **Write nothing else**, as the Triage run section says, even where a credential would allow it: a reproduction stays in your sandbox, and `ready.mjs` never runs.
 
 ## Other outcomes
 
@@ -180,14 +185,14 @@ Before posting a comment for any outcome below, read `.repo-standards/rules/comm
 
 ## Route questions
 
-Every question reaches you first, whoever raises it: a research run, a grill, or an agent's issue comment, including one in `state:reporter`, `state:grill` or `state:owner`.
+Every question reaches you first, whoever raises it: a research run, a grill, or an agent's issue comment, in any waiting state. Route it as the contribution guide's Triage section says:
 
-If an answer changes the implementation contract, send the edit to a separate writer; never write the revised brief you accept. Follow the contribution guide's validator-notice, independent-review and renewed-readiness steps before continuation; an unchanged contract needs no new readiness cycle.
+- **An answer you can give**, from code, logs, or a reproduction, or under the inference test: post it on the issue as `.repo-standards/rules/comments.md#disclaimers` says.
+- **A fact only an outside reporter holds**: ask them with the reporter template below, and move the issue to `state:reporter`.
+- **An owner-only question**: put it in your decision inbox with your recommendation, and move the issue to the state the guide names.
+- **An agent's question to the owner**, posted as `.repo-standards/rules/comments.md#owner-questions` says: read it first. When you can answer it, answer on the issue, and return the issue to the state the installed rules name for an answered question, such as `state:ready` through [Apply and confirm readiness](#accept-a-brief-that-holds). Otherwise put it in your decision inbox.
 
-- **Answer what you can**: from code, logs, or a reproduction, or by inference under the [inference test](#intent-bound-path). Post an answer on the issue as `.repo-standards/rules/comments.md#disclaimers` says.
-- **Ask an outside reporter** what only they know, with the reporter template below, and move the issue to `state:reporter`. Use it only when the issue's author is an outside reporter; a fact the owner or an agent filing the issue lacks goes to the owner.
-- **Put an owner-only question in your decision inbox**, with your recommendation, and move the issue to `state:owner`, or to `state:grill` when a grill must settle the owner's intent. The decision inbox is the one channel for questions to the owner.
-- **An agent's question to the owner**, posted as `.repo-standards/rules/comments.md#owner-questions` says: read it first. When the inference test lets you answer, answer on the issue, and return the issue to the state the installed rules name for an answered question, such as `state:ready` for ready work through [Apply and confirm readiness](#accept-a-brief-that-holds). Otherwise put it in your decision inbox.
+When an answer changes the implementation contract, follow the contribution guide's Owner questions section: a separate writer edits it.
 
 ## Quick state override
 
@@ -217,7 +222,9 @@ If prior triage notes exist on the issue or PR, read them and the recorded owner
 
 ## Reads
 
-Paths are relative to the repository root.
+Paths are relative to the repository root. The installed rules' paths follow
+Repository Standards'
+[rules reference](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/rules.md).
 
 - `CONTRIBUTING.md`: its Triage, Readiness and Owner questions sections. When
   it is missing, carry out this skill's method as written, and ask the owner
@@ -245,9 +252,8 @@ Paths are relative to the repository root.
   rejection, as [OUT-OF-SCOPE.md](OUT-OF-SCOPE.md) says.
 - `scripts/validate-issue-contract.mjs`, Repo Canon's issue-contract
   validator, and the `babysit` skill's GitHub connection: `ready.mjs` imports
-  both. When either is missing, `ready.mjs` cannot start: apply the readiness
-  and companion labels with the tracker's own client, and confirm they hold on
-  the issue.
+  both. When either is missing, `ready.mjs` cannot start: stop at acceptance,
+  as when your credentials cannot apply readiness.
 - `.repo-standards/rules/factory-workflow.md` and `.factory/config.json` at
   the destination's default branch: `ready.mjs` reads both to tell whether a
   model label applies and its prefix. When the rules are missing there, it

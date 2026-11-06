@@ -90,9 +90,9 @@ themselves is the orchestrating agent.
 _Avoid_: Factory, research run
 
 **Inferred intent**:
-An answer to an intent question that the orchestrating agent settled under the
-contribution guide's inference test, with its citation to the owner's approved
-goal, a recorded owner decision or wish, or the owner's quoted words.
+An answer to an intent question settled under the contribution guide's
+inference test, which the Agent Brief states as behavior and its triage notes
+cite with a date.
 _Avoid_: Assumption, agent's choice
 
 **Decision inbox**:

@@ -38,6 +38,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.deepEqual(Object.keys(manifest.repositories).sort(), [
     "delivery",
     "factory-planning",
+    "factory-triage",
     "host-grant",
     "orchestrate",
     "planning",
@@ -113,6 +114,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   for (const repository of Object.values(manifest.repositories)) {
     const factory = [
       manifest.repositories["factory-planning"],
+      manifest.repositories["factory-triage"],
       manifest.repositories["triage-routing"],
       manifest.repositories.orchestrate,
       manifest.repositories["host-grant"],
@@ -320,6 +322,58 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.match(sourcePull, /^Part of #2$/m);
   assert.match(sourcePull, /^Part of #3$/m);
   assert.doesNotMatch(sourcePull, /Closes #[23]/);
+  // The factory triage run gets one run per issue, each with its own result
+  // path, and the tracker starts with every issue waiting on triage.
+  const factoryTriage = manifest.repositories["factory-triage"];
+  assert.deepEqual(factoryTriage.skills, ["triage"]);
+  const runFacts = JSON.parse(
+    readFileSync(
+      join(factoryTriage.path, ".scratch/factory-triage/run-facts.json"),
+      "utf8",
+    ),
+  );
+  assert.ok(runFacts.allowedModels.length > 0);
+  assert.equal(
+    new Set(runFacts.allowedModels).size,
+    runFacts.allowedModels.length,
+  );
+  assert.deepEqual(Object.keys(runFacts.runResult).sort(), [
+    "fields",
+    "outcomes",
+  ]);
+  assert.equal(runFacts.runs.length, 3);
+  assert.equal(
+    new Set(runFacts.runs.map(({ result }) => result)).size,
+    runFacts.runs.length,
+  );
+  assert.equal(
+    readdirSync(join(factoryTriage.path, ".scratch/factory-triage")).includes(
+      "results",
+    ),
+    false,
+    "each run writes its own result",
+  );
+  const intakes = runFacts.runs.map(({ issue, run }) => {
+    assert.ok(run);
+    const text = readFileSync(join(factoryTriage.path, issue), "utf8");
+    assert.match(text, /^Status: state:triage$/m);
+    assert.doesNotMatch(text, /state:ready|model:|gate:/);
+    return text;
+  });
+  // One issue carries a person's priority, and one comes from an outside
+  // reporter without a category.
+  assert.equal(
+    intakes.filter((text) => /^Labels: .*priority:/m.test(text)).length,
+    1,
+  );
+  const outside = intakes.filter((text) =>
+    /^Author: .*outside reporter/m.test(text),
+  );
+  assert.equal(outside.length, 1);
+  assert.doesNotMatch(outside[0], /^Labels: .*type:/m);
+  for (const record of ["CHANGELOG.md", "docs/adr/README.md"])
+    assert.ok(statSync(join(factoryTriage.path, record)).isFile(), record);
+
   const factoryPlanning = manifest.repositories["factory-planning"];
   const factoryIntake = readFileSync(
     join(

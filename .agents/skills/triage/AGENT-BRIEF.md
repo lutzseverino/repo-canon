@@ -1,6 +1,6 @@
 # Writing Agent Briefs
 
-An agent brief is a structured comment posted on a GitHub issue or PR before it moves to `state:ready`; readiness follows a review by someone who did not write it, as [SKILL.md](SKILL.md) describes. It is the authoritative specification that an AFK agent will work from. The original body and discussion are context: the agent brief is the contract.
+An agent brief is a structured comment posted on a GitHub issue or PR before it moves to `state:ready`; readiness follows its acceptance, as [SKILL.md](SKILL.md) describes. It is the authoritative specification that an AFK agent will work from. The original body and discussion are context: the agent brief is the contract.
 
 The brief states **what the agent should do**, which stretches to both surfaces: for an issue, that's building the change from nothing; for a PR, it's what's left to do *to the existing diff*: finish it, close gaps, address review points. Same principles either way; the PR example below shows the difference.
 
@@ -50,7 +50,7 @@ State what is out of scope. This prevents the agent from gold-plating or making 
 
 ### Decisions, not options
 
-The implementing agent can't ask the owner anything, so a brief settles every question of intent before it is accepted. State each owner decision as behavior. A brief that needs one of these is not finished; its question goes to the orchestrating agent, which infers the answer under the inference test or takes it to the owner:
+The implementing agent can't ask the owner anything, so a brief settles every question of intent before it is accepted. State each owner decision as behavior. A brief that needs one of these is not finished; its question is routed as [SKILL.md](SKILL.md) says, to be inferred under the inference test or answered by the owner:
 
 - **Bad:** "Retry for a reasonable period (agent's choice)"
 - **Bad:** "Either drop the row or fail the export"
@@ -69,9 +69,9 @@ The triage notes that accompany a brief follow it in the same comment, never bet
 - **Path**: code-bound or intent-bound, with a one-line reason.
 - **Verification**: what was checked and how (reproduction, code path, tests run), and where the redundancy search looked.
 - **Owner decisions**: each decision the brief relies on, including any owner-review reservation, with its date and a link to where the owner gave it; for a grill's brief, pasted from the grill record.
-- **Inferred intent**: each answer the orchestrating agent inferred under the inference test, which the brief states as behavior, with its citation: the owner's approved goal, recorded decision or wish, or quoted words, with its date and where it was given.
+- **Inferred intent**: each answer inferred under the inference test, which the brief states as behavior, with its citation, its date and where it was given. In the factory's triage run, it cites a repository record, as the installed factory workflow rules' Triage run section says.
 - **Dependencies**: issues that must land first, for the reviewer to record as blockers.
-- **Model**: when the installed rules ask for it, one suggested `model:` label with a one-line reason, for the reviewer to apply or replace.
+- **Model**: when the installed rules ask for it, one `model:` label with a one-line reason: a suggestion for the reviewer to apply or replace, or, in the factory's triage run, the label its run result asks for.
 - **Owner questions**: none, for a brief ready for review.
 
 ## Template

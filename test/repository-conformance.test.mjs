@@ -1220,6 +1220,10 @@ test("delivery and triage requirements keep their single homes", () => {
       /Never infer a default|readiness label|`state:ready`/,
     ],
     [
+      [".agents/skills/triage/SKILL.md"],
+      /Never infer a default|Reversible within the work|one channel (?:for questions )?to the owner|never write a brief you accept|applies no readiness|cites only records in the repository/i,
+    ],
+    [
       [
         ".agents/skills/triage/SKILL.md",
         ".agents/skills/orchestrate/SKILL.md",

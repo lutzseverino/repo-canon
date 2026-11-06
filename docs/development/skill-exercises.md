@@ -138,7 +138,8 @@ supplies existing project-specific `AGENTS.md` instructions for the
 `planning` for `grill-with-docs`, `to-spec`, and `to-tickets`;
 `triage-wayfinder` for `triage` and `wayfinder`; `factory-planning` for
 factory-profile triage and readiness decisions; `triage-routing` for routing
-by uncertainty and brief acceptance; `orchestrate` for the workbench plan lifecycle;
+by uncertainty and brief acceptance; `factory-triage` for `triage` run as the
+factory's triage run; `orchestrate` for the workbench plan lifecycle;
 `host-grant` for `orchestrate` and `factory` with a shared host access grant;
 and `delivery` for
 `implement`, `pr`, and `prototype`. The delivery repository
@@ -164,7 +165,8 @@ adopting-repository conformance. Root guidance points to this adapter; the
 upstream workflow skills remain intact.
 
 All scenarios explicitly use `standard`, except `factory-planning`,
-`triage-routing`, `orchestrate` and `host-grant`, which use `factory`. Standard scenarios
+`triage-routing`, `factory-triage`, `orchestrate` and `host-grant`, which use
+`factory`. Standard scenarios
 expose GitHub repository configuration rules without factory workflow rules.
 
 For `triage-wayfinder`, follow the numbered checkpoints in `docs/exercise.md`
@@ -276,6 +278,21 @@ contracts, notices and observed outcomes with the run outside maintained
 documentation. Fixture regression checks verify these inputs and their
 revision associations; they do not establish that an agent performed the
 exercise.
+
+The `factory-triage` scenario runs `triage` as the factory's triage run three
+times, each in a fresh session given only one entry of
+`.scratch/factory-triage/run-facts.json`: its issue, run, run-result path, the
+allowed models and the run-result interface. That interface is a local
+stand-in for Scriptorium's, not its definition. No orchestrating agent,
+research run, grill or person takes part. Observe three outcomes in the
+written run results: a code-bound bug, whose documentation states the
+expected result, asking for `state:ready` with a brief, one allowed model and
+the owner's priority kept; a feature whose customer-facing look no dated ADR
+settles, asking for `state:grill` with facts and numbered questions; and an
+outside reporter's bug that names neither its version nor how it opens the
+export, asking for `state:reporter` with the reporter's questions. Check that `git status` shows only the run
+results: no tracker file changed, no label or comment was written, and no run
+ran `ready.mjs`.
 
 Check produced briefs against the discovered GitHub rules' shape and ordering,
 and readiness decisions against those rules and `CONTRIBUTING.md`. Record the
