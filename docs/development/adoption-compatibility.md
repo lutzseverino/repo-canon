@@ -120,3 +120,17 @@ documents describe each probe.
 Sources: [script protocol](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/script-protocol.md),
 [remote setup](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/adoption.md#remote-setup),
 [architecture](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/development/architecture.md).
+
+The factory profile's `factory-workflow` declaration retains the read-only
+`factory-model-policy` check and `operations/lib/factory-model-policy.mjs`,
+with no parser packages or network dependency. The optional repository-owned
+`.github/factory-model-policy.json` is never an exact, copied, reconciled or
+discovery-owned file. Adoption, update, removal and re-adoption preserve it
+byte for byte, and validation reports invalid values without repairing them.
+Deliberate policy changes belong in a separate post-adoption commit. Exact
+configuration version 3 holds mechanics only; Scriptorium v4 resolves repository
+preferences and fallback within host capabilities and credentials. Absence
+retains host per-kind defaults, including implement retry. See the
+[factory workflow rules](../../rules/factory-workflow.md#repository-model-policy)
+for the authoritative schema and resolution contract. Host deployment and live
+acceptance remain separate work.
