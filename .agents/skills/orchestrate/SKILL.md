@@ -45,6 +45,10 @@ each other; private planning retains its own sources. Its files:
 
 ## Lifecycle
 
+On the next pass after inbox rules change, reconcile every open entry as
+[the inbox contract](references/templates.md#inboxmd) says, including on
+[fresh-session takeover](references/launches.md#handover).
+
 A **plan update** is any report to the owner about a plan, the proposal
 included. Each lists the inferred-intent items the owner has not yet seen, with
 their citations, and shows the decision inbox; log those items in `log.md`.
