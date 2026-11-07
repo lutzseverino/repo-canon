@@ -35,8 +35,8 @@ repository: no URL, host path or instruction to consult it as input or provenanc
 each other; private planning retains its own sources. Its files:
 
 - `index.md`: tracked repositories, plans and their owners, and launch caps.
-- `inbox.md`: the decision inbox. Process an owner message's decisions in its
-  [sequence](references/templates.md#inboxmd) before its other requests.
+- `inbox.md`: the decision inbox. [Reconcile after rule updates and process
+  owner decisions](references/templates.md#inboxmd) before other work.
 - `wishes.md`: one line per wish, an idea outside a plan's goal.
 - `now.md`: the current state, rewritten on every pass.
 - `incoming/`: [messages](references/templates.md#incoming) from any session.

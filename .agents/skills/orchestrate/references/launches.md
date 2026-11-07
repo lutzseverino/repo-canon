@@ -181,7 +181,8 @@ then records its own session reference as each active plan's owner in
 Before anything else, it re-arms a wake-up for every row under `now.md`'s In
 flight that does not wait on the owner, as the
 [wait step](../SKILL.md#the-wait-step) says, and keeps the pause an expedited
-row states.
+row states. Then perform the [inbox reconciliation](templates.md#inboxmd)
+against the active rules before resuming plan work.
 
 ## Progress observation
 
