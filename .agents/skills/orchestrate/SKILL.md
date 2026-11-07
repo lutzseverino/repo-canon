@@ -27,12 +27,12 @@ after any compaction since it took over.
 
 ## Workbench
 
-The workbench is a git repository of plain Markdown holding the state of every
-plan you own. It is the owner's private record, outside every project
-repository, with a private remote or none. Your global agent instructions name
-its path; when they name none, create one before you propose a plan. Commit each
-workbench change straight to its default branch, and push it when the workbench
-has a remote. Its files:
+The workbench is a private Markdown git repository outside projects. Use the path in your global instructions,
+or create one before proposing a plan. Commit straight to its default branch; push if it has a private remote.
+Repository issues, briefs, comments and decision records must be self-contained: copy every relied-on decision,
+with its date and quoted words, even when duplicated. Never reference or require the private workbench from a
+repository: no URL, host path or instruction to consult it as input or provenance. Repository records may cite
+each other; private planning retains its own sources. Its files:
 
 - `index.md`: tracked repositories, plans and their owners, and launch caps.
 - `inbox.md`: the decision inbox. Process an owner message's decisions in its

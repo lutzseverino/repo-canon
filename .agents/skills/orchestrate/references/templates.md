@@ -44,7 +44,9 @@ of the workbench is a wiki:
 
 - Date every entry.
 - Cite each source, such as an issue, pull request, comment or session, by its
-  link or reference, and leave its content where it is.
+  link or reference. Private planning retains these sources; repository-facing
+  records instead copy needed decisions, dates and quoted words under
+  [Workbench](../SKILL.md#workbench), with no private-workbench reference.
 - Leave a superseded entry's text as written: mark it superseded, dated, and
   point to the entry that replaces it.
 - Once a draft brief is filed, add a dated line at its top linking the issues
@@ -123,7 +125,9 @@ When an owner message contains a decision, complete this sequence before
 acting on anything else in that message:
 
 1. Post a comment on each affected issue, recording the decision, its date
-   and where the owner gave it, as the issue's repository's
+   and quoted words, with a repository citation when available. Copy private
+   decisions without referencing the private record, as
+   [Workbench](../SKILL.md#workbench) requires, and post as the repository's
    `.repo-standards/rules/comments.md#disclaimers` says.
 2. Append the decision, date, source and issue links to the plan's `log.md`.
 3. Move the answered entry under `Answered` in `inbox.md`, keeping its
