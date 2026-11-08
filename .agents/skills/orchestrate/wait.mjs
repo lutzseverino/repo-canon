@@ -1,86 +1,54 @@
 #!/usr/bin/env node
 
-// Waits until any watched tracker item changes, polling GitHub through Postern
-// and reading workbench files and directories. It prints nothing while
-// waiting and, when it exits, one line per change naming the item and how it
-// changed. Its exit code names the outcome:
-//
-//   0  an item changed
-//   1  usage or platform error
-//   2  the maximum duration passed with no change; arm the wait again
-//
-// An item is an issue or pull request, as <owner>/<name>#<number> or its
-// https://github.com link, a file, as file:<path>, or a directory, as
-// dir:<path>. An issue changes when its state, labels or linked pull requests
-// do or it gets a new comment; a pull request when its state (including
-// merging) or labels do or it gets a new comment; a file when it is created,
-// edited or removed, as a report-back or a done mark in plan.md is; a
-// directory when a file directly in it is, as a message in incoming/ is. A
-// missing directory holds no files.
-//
-// When a directory lies in a git checkout whose current branch has an
-// upstream, each poll also fetches that upstream's remote, and the directory
-// changes when an upstream commit touching a file directly in it is not yet
-// in the checkout, as a message another host pushed is until it is pulled. A
-// failed fetch is a platform error. A checkout without an upstream, or a
-// directory outside any checkout, is read only on disk.
-// Other changes are measured from the first read, when the wait is armed.
-//
+// Wait for tracker/file/directory changes or a launch report's final marker.
+// Explicit items retain first-read baselines unless JSON supplies expected facts.
+// --from reloads template-owned records without resetting unchanged watches.
+// Exit 0: event or maximum duration (re-arm); exit 1: usage/platform error.
 // Usage: node wait.mjs --interval <seconds> --max-duration <seconds> <item>...
-//
-// Both durations are required; the caller chooses them for each invocation.
-// Each platform request and each fetch has a 45-second timeout.
+//        node wait.mjs --interval <seconds> --max-duration <seconds> --from now.md
+//        node wait.mjs --status --from now.md
+// Wait durations are required positive finite caller choices, without defaults.
+// Tracker requests and upstream fetches retain their 45-second timeout.
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { promisify } from "node:util";
 import { connectionFor, executedAsScript } from "../babysit/platform.mjs";
 
+import {
+  UsageError,
+  parseItem,
+  unionWatches,
+  normalizeChecks,
+  launchComplete,
+  readRecords,
+  renderStatus,
+} from "./records.mjs";
+
 const usage =
-  "usage: wait.mjs --interval <seconds> --max-duration <seconds> <item>..., where an item is <owner>/<name>#<number>, its https://github.com link, file:<path> or dir:<path>";
-
-class UsageError extends Error {}
-
-const parseItem = (reference) => {
-  const local = /^(file|dir):/.exec(reference)?.[1];
-  if (local) {
-    const path = reference.slice(`${local}:`.length);
-    if (path === "") throw new UsageError(`unrecognized item ${reference}`);
-    const absolute = resolve(path);
-    return {
-      reference,
-      kind: local,
-      key: `${local}:${absolute}`,
-      path: absolute,
-    };
-  }
-  const match =
-    /^([a-z0-9_.-]+)\/([a-z0-9_.-]+)#([1-9]\d*)$/i.exec(reference) ??
-    /^https:\/\/github\.com\/([a-z0-9_.-]+)\/([a-z0-9_.-]+)\/(?:issues|pull)\/([1-9]\d*)\/?$/i.exec(
-      reference,
-    );
-  if (!match) throw new UsageError(`unrecognized item ${reference}`);
-  const repository = `${match[1]}/${match[2]}`;
-  return {
-    reference,
-    kind: "tracker",
-    key: `${repository.toLowerCase()}#${match[3]}`,
-    repository,
-    number: Number(match[3]),
-  };
-};
+  "usage: wait.mjs --interval <seconds> --max-duration <seconds> <item>... | --from <now.md>; wait.mjs --status --from <now.md>";
 
 const parseArguments = (argv) => {
   const options = {};
-  const items = new Map();
+  const items = [];
   for (let index = 0; index < argv.length; index += 1) {
-    const flag = /^--(interval|max-duration)$/.exec(argv[index])?.[1];
+    const argument = argv[index];
+    if (argument === "--status" || argument === "--from") {
+      const key = argument.slice(2);
+      if (Object.hasOwn(options, key))
+        throw new UsageError(`${argument} is given more than once`);
+      options[key] = key === "status" ? true : argv[++index];
+      if (key === "from" && (!options[key] || options[key].startsWith("--")))
+        throw new UsageError("--from needs a records path");
+      continue;
+    }
+    const flag = /^--(interval|max-duration)$/.exec(argument)?.[1];
     if (!flag) {
       if (argv[index].startsWith("--"))
         throw new UsageError(`unrecognized option ${argv[index]}; ${usage}`);
       const item = parseItem(argv[index]);
-      if (!items.has(item.key)) items.set(item.key, item);
+      items.push(item);
       continue;
     }
     if (Object.hasOwn(options, flag))
@@ -95,16 +63,29 @@ const parseArguments = (argv) => {
     }
     options[flag] = seconds;
   }
+  if (options.status) {
+    if (
+      !options.from ||
+      items.length ||
+      options.interval ||
+      options["max-duration"]
+    )
+      throw new UsageError("--status requires only --from <now.md>");
+    return { status: true, from: options.from };
+  }
+  if (options.from && items.length)
+    throw new UsageError("--from cannot be combined with explicit items");
   const missing = ["interval", "max-duration"]
     .filter((flag) => !Object.hasOwn(options, flag))
     .map((flag) => `--${flag} is required`);
   if (missing.length > 0)
     throw new UsageError(`${missing.join("; ")}; ${usage}`);
-  if (items.size === 0) throw new UsageError(usage);
+  if (items.length === 0 && !options.from) throw new UsageError(usage);
   return {
     interval: options.interval,
     maxDuration: options["max-duration"],
-    items: [...items.values()],
+    items: unionWatches(items),
+    from: options.from,
   };
 };
 
@@ -223,7 +204,42 @@ const readTracker = async (item, connection) => {
     connection.issueTracker.comments(item.number),
     pull ? [] : connection.pullRequests.closing(item.number),
   ]);
+  let headFacts = {};
+  if (pull) {
+    const { data: detail } = await connection.access.request({
+      path: `/repos/${item.repository}/pulls/${item.number}`,
+    });
+    const head = detail.head.sha;
+    const [runPages, statusPages] = await Promise.all([
+      connection.access.requestPages({
+        path: `/repos/${item.repository}/commits/${head}/check-runs?filter=all`,
+      }),
+      connection.access.requestPages({
+        path: `/repos/${item.repository}/commits/${head}/status`,
+      }),
+    ]);
+    headFacts = {
+      head,
+      checks: normalizeChecks({
+        runs: runPages
+          .flatMap((page) => page.data.check_runs)
+          .map(({ id, name, status, conclusion }) => ({
+            id,
+            name,
+            status,
+            conclusion,
+          })),
+        statuses: statusPages
+          .flatMap((page) => page.data.statuses)
+          .map(({ id, context, state }) => ({ id, context, state })),
+      }),
+    };
+  } else if (item.expected?.head || item.expected?.checks)
+    throw new UsageError(
+      `${item.reference}: head/check expectations require a pull request`,
+    );
   return {
+    ...headFacts,
     state: pull && data.pull_request.merged_at ? "merged" : data.state,
     labels: data.labels
       .map((label) => (typeof label === "string" ? label : label.name))
@@ -257,6 +273,7 @@ const look = async (items, connectionOf, { readUpstream }) => {
   };
   const read = {
     file: async (item) => fileDigest(item.path),
+    launch: async (item) => launchComplete(item.path),
     dir: async (item) => {
       if (!item.upstream || !readUpstream)
         return { files: directoryDigests(item.path), commits: [] };
@@ -300,10 +317,21 @@ const changes = (item, before, after) => {
     return found;
   }
   const found = [];
-  if (before.state !== after.state)
+  if (Object.hasOwn(before, "head") && before.head !== after.head)
+    found.push(`head changed from ${before.head} to ${after.head}`);
+  if (
+    Object.hasOwn(before, "checks") &&
+    JSON.stringify(before.checks) !== JSON.stringify(after.checks)
+  )
+    found.push(
+      `checks changed from ${JSON.stringify(before.checks)} to ${JSON.stringify(after.checks)}`,
+    );
+  if (Object.hasOwn(before, "state") && before.state !== after.state)
     found.push(`state changed from ${before.state} to ${after.state}`);
-  const added = after.labels.filter((label) => !before.labels.includes(label));
-  const removed = before.labels.filter(
+  const added = before.labels
+    ? after.labels.filter((label) => !before.labels.includes(label))
+    : [];
+  const removed = (before.labels ?? []).filter(
     (label) => !after.labels.includes(label),
   );
   if (added.length > 0 || removed.length > 0)
@@ -315,10 +343,14 @@ const changes = (item, before, after) => {
         .filter(Boolean)
         .join("; ")}`,
     );
-  const seen = new Set(before.comments.map((comment) => comment.id));
+  const seen = new Set(
+    (before.comments ?? after.comments).map((comment) => comment.id),
+  );
   for (const comment of after.comments)
     if (!seen.has(comment.id)) found.push(`new comment ${comment.url}`);
-  const known = new Map(before.linked.map((pull) => [pull.url, pull.state]));
+  const known = new Map(
+    (before.linked ?? after.linked).map((pull) => [pull.url, pull.state]),
+  );
   for (const pull of after.linked) {
     const state = known.get(pull.url);
     if (state === undefined)
@@ -354,15 +386,25 @@ export const main = async (
     pause: pauseFor = pause,
     stdout = process.stdout,
     stderr = process.stderr,
+    now: nowAt = Date.now,
   } = {},
 ) => {
-  const startedAt = Date.now();
+  const startedAt = nowAt();
   let options;
   try {
     options = parseArguments(argv);
   } catch (error) {
     stderr.write(`${error.message}\n`);
     return 1;
+  }
+  if (options.status) {
+    try {
+      stdout.write(renderStatus(readRecords(options.from)));
+      return 0;
+    } catch (error) {
+      stderr.write(`wait.mjs: ${error.message}\n`);
+      return 1;
+    }
   }
   const connections = new Map();
   const connectionOf = (repository) => {
@@ -371,41 +413,75 @@ export const main = async (
     return connections.get(key);
   };
   const limitMs = options.maxDuration * 1000;
-  let before;
+  const observations = new Map();
   try {
-    for (const item of options.items)
-      if (item.kind === "dir") item.upstream = await upstreamOf(item.path);
-    before = await look(options.items, connectionOf, { readUpstream: false });
+    for (;;) {
+      // Re-read before polling so deletions stop participating immediately.
+      const selected = options.from
+        ? readRecords(options.from).watches
+        : options.items;
+      const active = new Set(selected.map((item) => item.key));
+      for (const key of observations.keys())
+        if (!active.has(key)) observations.delete(key);
+      const items = await Promise.all(
+        selected.map(async (item) => {
+          const prior = observations.get(item.key);
+          const signature = JSON.stringify(item.expected);
+          if (prior && prior.signature === signature) return prior.item;
+          if (item.kind === "dir") item.upstream = await upstreamOf(item.path);
+          observations.set(item.key, { item, signature, facts: undefined });
+          return item;
+        }),
+      );
+      const fresh = items.filter(
+        (item) => observations.get(item.key).facts === undefined,
+      );
+      const initial = await look(fresh, connectionOf, { readUpstream: false });
+      const lines = [];
+      for (const item of fresh) {
+        const facts = initial.get(item.key);
+        if (item.kind === "launch" && facts)
+          lines.push(`finished: read ${item.report}`);
+        else if (item.expected)
+          lines.push(
+            ...changes(item, item.expected, facts).map(
+              (change) => `${item.reference}: ${change}`,
+            ),
+          );
+        observations.get(item.key).facts = facts;
+      }
+      const continuing = items.filter((item) => !fresh.includes(item));
+      const after = await look(continuing, connectionOf, {
+        readUpstream: true,
+      });
+      for (const item of continuing) {
+        const facts = after.get(item.key);
+        if (item.kind === "launch") {
+          if (facts) lines.push(`finished: read ${item.report}`);
+        } else
+          lines.push(
+            ...changes(item, observations.get(item.key).facts, facts).map(
+              (change) => `${item.reference}: ${change}`,
+            ),
+          );
+        observations.get(item.key).facts = facts;
+      }
+      if (lines.length) {
+        stdout.write(`${lines.join("\n")}\n`);
+        return 0;
+      }
+      const remaining = startedAt + limitMs - nowAt();
+      if (remaining <= 0) {
+        stdout.write(
+          `no item changed within the maximum duration of ${options.maxDuration} seconds; arm the wait again\n`,
+        );
+        return 0;
+      }
+      await pauseFor(Math.min(options.interval * 1000, remaining));
+    }
   } catch (error) {
     stderr.write(`wait.mjs: ${error.message}\n`);
     return 1;
-  }
-  for (;;) {
-    const remaining = startedAt + limitMs - Date.now();
-    if (remaining <= 0) {
-      stdout.write(
-        `no item changed within the maximum duration of ${options.maxDuration} seconds; arm the wait again\n`,
-      );
-      return 2;
-    }
-    await pauseFor(Math.min(options.interval * 1000, remaining));
-    let after;
-    try {
-      after = await look(options.items, connectionOf, { readUpstream: true });
-    } catch (error) {
-      stderr.write(`wait.mjs: ${error.message}\n`);
-      return 1;
-    }
-    const lines = options.items.flatMap((item) =>
-      changes(item, before.get(item.key), after.get(item.key)).map(
-        (change) => `${item.reference}: ${change}`,
-      ),
-    );
-    if (lines.length > 0) {
-      stdout.write(`${lines.join("\n")}\n`);
-      return 0;
-    }
-    before = after;
   }
 };
 

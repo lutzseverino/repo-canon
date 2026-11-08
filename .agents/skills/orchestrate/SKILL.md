@@ -9,8 +9,7 @@ A prompt or brief naming this skill is its invocation.
 # Orchestrate
 
 You are the orchestrating agent. Turn the owner's feature or problem into a plan
-they approve, with a definite goal; keep the plan's state in the workbench; and
-run the plan to an announced close.
+they approve; keep its state in the workbench and run it to an announced close.
 
 Each repository's `CONTRIBUTING.md` decides triage, readiness, question routing
 and delivery: its Triage, Readiness, Owner questions, Findings and Pull requests
@@ -22,8 +21,7 @@ delivers held, stopped or skipped work.
 Read [templates](references/templates.md) before you write a workbench file,
 [launches](references/launches.md) before you launch, take over, hand over,
 observe or arm a wait, and [close](references/close.md) before you close a plan.
-One session at a time owns every plan: it hands over at each plan's close and
-after any compaction since it took over.
+One session owns each plan, handing over at close and after compaction.
 
 ## Workbench
 
@@ -81,21 +79,23 @@ their citations, and shows the decision inbox; log those items in `log.md`.
 
 ## The wait step
 
-End a turn only when every row under `now.md`'s In flight waits on the owner or
-has a wake-up armed through the harness's own event mechanisms. Its *Next check*
-names that wake-up; arm it with the wait script where the harness can. Every
-wait also watches `incoming/`, and one watches it alone when nothing else needs
-one. Where the harness can neither wait in the background nor deliver events,
-report that limit and re-read the records at each turn instead.
+Keep one background wait continuously armed during foreground work and between
+turns, covering every In-flight wake mechanism, current launch report and incoming
+message. Owner-only rows use recorded owner waits and incoming responses; keep an
+incoming-only wait with no other work. Use harness events for events the script
+cannot observe. On wake or timeout, minimally reconcile, update expected facts and
+records, then immediately re-arm before other work or a substantive owner update.
+Rewrite records to change watches. Where the harness can neither wait in the
+background nor deliver events, report the limit and reread records each turn.
 
 ## Report-back
 
-The file in the plan directory is the contract. A grill, triage run or Close
-review reports by writing its result there, setting its done mark in `plan.md`,
-and committing and pushing both; take it in as `now.md`'s Running launches says.
-Any other session writes to `incoming/`. A direct message to your session, where
-a harness offers one, is only a nudge, and losing it loses nothing: act on the
-files. Where none is offered, the owner also tells you when a grill is done.
+Every launch writes its designated current-turn report, ending its complete
+content with the final line `status: done`, including when owner steps end its
+turn. Preserve each launch's row marks, owner questions and commit/push duties
+in [launches](references/launches.md); consume it as [templates](references/templates.md#nowmd)
+says. Other sessions write to `incoming/`. Harness messages are only nudges;
+act on the files. Without messaging, the owner also announces completed grills.
 
 ## Reads
 

@@ -14,6 +14,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { connect } from "../vendor/postern/postern.mjs";
 import { main } from "../.agents/skills/orchestrate/wait.mjs";
+import { readRecords } from "../.agents/skills/orchestrate/records.mjs";
 
 const script = fileURLToPath(
   new URL("../.agents/skills/orchestrate/wait.mjs", import.meta.url),
@@ -77,6 +78,26 @@ function tracker(items) {
           },
         },
       });
+    }
+    const pr = /^\/repos\/([^/]+)\/([^/]+)\/pulls\/(\d+)$/.exec(path);
+    if (pr) {
+      const item = items[`${pr[1]}/${pr[2]}#${pr[3]}`];
+      return json({ head: { sha: item.head ?? "a".repeat(40) } });
+    }
+    const checks =
+      /^\/repos\/([^/]+)\/([^/]+)\/commits\/([^/]+)\/(check-runs|status)$/.exec(
+        path,
+      );
+    if (checks) {
+      const item = Object.entries(items).find(
+        ([key, value]) =>
+          key.startsWith(`${checks[1]}/${checks[2]}#`) && value.pull,
+      )?.[1];
+      return json(
+        checks[4] === "check-runs"
+          ? { check_runs: item.runs ?? [] }
+          : { statuses: item.statuses ?? [] },
+      );
     }
     const match =
       /^\/repos\/([^/]+)\/([^/]+)\/issues\/(\d+)(\/comments)?$/.exec(path);
@@ -532,7 +553,7 @@ test("an upstream commit only below a directory item's own files does not wake t
       },
     },
   );
-  assert.equal(code, 2, output.stdout + output.stderr);
+  assert.equal(code, 0, output.stdout + output.stderr);
 });
 
 test("a workbench without a remote watches only its own directory", async (t) => {
@@ -580,7 +601,7 @@ test("a failed upstream fetch while polling is an error", async (t) => {
   assert.equal(output.stdout, "");
 });
 
-test("the maximum duration ends an unchanged wait with its own exit code", async () => {
+test("the maximum duration ends an unchanged wait with exit zero", async () => {
   const output = capture();
   const { connect } = tracker({ "example/tracker#7": { comments: [] } });
   const startedAt = Date.now();
@@ -588,7 +609,7 @@ test("the maximum duration ends an unchanged wait with its own exit code", async
     ["--interval", "0.02", "--max-duration", "0.1", "example/tracker#7"],
     { connect, ...output.streams },
   );
-  assert.equal(code, 2);
+  assert.equal(code, 0);
   assert.ok(Date.now() - startedAt >= 100);
   assert.equal(
     output.stdout,
@@ -641,12 +662,595 @@ test("the installed script runs with plain node and reports each exit", () => {
       "0.2",
       "file:now.md",
     );
-    assert.equal(timeout.status, 2, timeout.stderr);
+    writeFileSync(join(workbench, "now.md"), recordText());
+    const status = run("--status", "--from", "now.md");
+    assert.equal(status.status, 0, status.stderr);
+    assert.equal(status.stdout.trimEnd().split("\n").length, 2);
+    assert.equal(timeout.status, 0, timeout.stderr);
     assert.match(
       timeout.stdout,
       /^no item changed within the maximum duration/,
     );
   } finally {
     rmSync(workbench, { recursive: true, force: true });
+  }
+});
+
+const expectedItem = (item, expected) => JSON.stringify({ item, expected });
+const runCheck = (id = 1, status = "in_progress", conclusion = null) => ({
+  id,
+  name: "Test",
+  status,
+  conclusion,
+});
+
+test("caller observations compare labels before the first pause, independent of order", async () => {
+  for (const { labels, expected, pattern } of [
+    {
+      labels: ["new"],
+      expected: ["old"],
+      pattern: /labels added new; removed old/,
+    },
+    { labels: ["b", "a"], expected: ["a", "b"], pattern: /no item changed/ },
+  ]) {
+    const output = capture();
+    let paused = false;
+    let elapsed = 0;
+    const code = await main(
+      [
+        "--interval",
+        "0.01",
+        "--max-duration",
+        "0.03",
+        expectedItem("example/tracker#7", { labels: expected }),
+      ],
+      {
+        ...output.streams,
+        connect: tracker({ "example/tracker#7": { labels } }).connect,
+        now: () => elapsed,
+        pause: async (ms) => {
+          paused = true;
+          elapsed += ms;
+        },
+      },
+    );
+    assert.equal(code, 0, output.stderr);
+    assert.match(output.stdout, pattern);
+    assert.equal(paused, labels.includes("a"));
+  }
+});
+
+test("PR pre-arm head and raw check/status sets compare without success policy", async () => {
+  const head = "a".repeat(40);
+  const checks = {
+    runs: [runCheck()],
+    statuses: [{ id: 2, context: "deploy", state: "pending" }],
+  };
+  const cases = [
+    { expected: { labels: ["old"] }, pattern: /labels removed old/ },
+    { expected: { head: "b".repeat(40) }, pattern: /head changed/ },
+    {
+      expected: { head, checks: { ...checks, runs: [] } },
+      pattern: /checks changed/,
+    },
+    {
+      expected: {
+        head,
+        checks: { ...checks, runs: [runCheck(1, "completed", "failure")] },
+      },
+      pattern: /checks changed/,
+    },
+    {
+      expected: { head, checks: { ...checks, statuses: [] } },
+      pattern: /checks changed/,
+    },
+    {
+      expected: {
+        head,
+        checks: {
+          ...checks,
+          statuses: [{ id: 2, context: "deploy", state: "success" }],
+        },
+      },
+      pattern: /checks changed/,
+    },
+  ];
+  for (const { expected, pattern } of cases) {
+    const output = capture();
+    assert.equal(
+      await main([...durations, expectedItem("example/tracker#12", expected)], {
+        ...output.streams,
+        connect: tracker({
+          "example/tracker#12": { pull: true, head, ...checks },
+        }).connect,
+        pause: unreachable,
+      }),
+      0,
+      output.stderr,
+    );
+    assert.match(output.stdout, pattern);
+  }
+  const output = capture();
+  let pauses = 0;
+  const item = {
+    pull: true,
+    head,
+    runs: [runCheck(2), runCheck(1)],
+    statuses: [],
+  };
+  assert.equal(
+    await main(
+      [
+        ...durations,
+        expectedItem("example/tracker#12", {
+          head,
+          checks: { runs: [...item.runs].reverse(), statuses: [] },
+        }),
+      ],
+      {
+        ...output.streams,
+        connect: tracker({ "example/tracker#12": item }).connect,
+        pause: async () => {
+          if (++pauses === 2) item.runs.pop();
+        },
+      },
+    ),
+    0,
+    output.stderr,
+  );
+  assert.equal(pauses, 2);
+  assert.match(output.stdout, /checks changed/);
+});
+
+test("launch watches ignore progress, creation and removal until the exact final line", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "orchestrate-launch-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const report = join(root, "report.md");
+  for (const ending of ["status: done", "status: done\n", "status: done\r\n"]) {
+    rmSync(report, { force: true });
+    const output = capture();
+    let pauses = 0;
+    assert.equal(
+      await main([...durations, `launch:${report}`], {
+        ...output.streams,
+        connect: unreachable,
+        pause: async () => {
+          pauses++;
+          if (pauses === 1) writeFileSync(report, "progress\n");
+          if (pauses === 2)
+            writeFileSync(report, "status: done\nlater content\n");
+          if (pauses === 3) unlinkSync(report);
+          if (pauses === 4) writeFileSync(report, "status: done\n\n");
+          if (pauses === 5)
+            writeFileSync(report, `Owner steps remain.\n${ending}`);
+        },
+      }),
+      0,
+      output.stderr,
+    );
+    assert.equal(pauses, 5);
+    assert.equal(output.stdout, `finished: read ${report}\n`);
+    output.stdout = "";
+    assert.equal(
+      await main([...durations, `launch:${report}`], {
+        ...output.streams,
+        connect: unreachable,
+        pause: unreachable,
+      }),
+      0,
+    );
+    assert.equal(output.stdout, `finished: read ${report}\n`);
+  }
+});
+
+const recordText = ({ flight = [], launches = [], owner = [] } = {}) => `# Now
+
+## Waiting on you
+
+${owner.length} open decisions in inbox.
+
+| Item | Decision/owner action | Since (UTC) | Next check |
+| ---- | --------------------- | ----------- | ---------- |
+${owner.join("\n")}
+
+## In flight
+
+| Item | Waiting on | Since (UTC) | Next check | Evidence | Watches |
+| ---- | ---------- | ----------- | ---------- | -------- | ------- |
+${flight.join("\n")}
+
+## Running launches
+
+| Host | Kind | Session | Started (UTC) | Item | Report | Next check |
+| ---- | ---- | ------- | ------------- | ---- | ------ | ---------- |
+${launches.join("\n")}
+`;
+const flightRow = (code, watches, waiting = "CI") =>
+  `| [${code}](plan.md#${code.toLowerCase()}) | ${waiting} | 2026-11-08T18:00Z | check event | evidence | \`${JSON.stringify(watches)}\` |`;
+const launchRow = (code, report, kind = "worker") =>
+  `| host | ${kind} | opaque/session | 2026-11-08T18:${code === "D" ? "15" : "05"}Z | [${code}](plan.md#${code.toLowerCase()}) | \`${report}\` | launch marker |`;
+const ownerRow = (
+  code,
+  action = "approve access",
+  time = "10",
+  next = "owner reply",
+) =>
+  `| [${code}](plan.md#${code.toLowerCase()}) | [${action}](inbox.md#${code.toLowerCase()}) | 2026-11-08T18:${time}Z | ${next} |`;
+function records(t, text = recordText()) {
+  const root = mkdtempSync(join(tmpdir(), "orchestrate-records-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const path = join(root, "now.md");
+  writeFileSync(path, text);
+  return {
+    root,
+    path,
+    write: (value) => writeFileSync(path, recordText(value)),
+  };
+}
+
+test("status renders the fixed records-only table, pending reports and consumed owner outcome", async (t) => {
+  const { root, path, write } = records(t);
+  const rows = {
+    flight: [
+      flightRow("R", [
+        {
+          item: "example/tracker#12",
+          expected: {
+            labels: [],
+            head: "a".repeat(40),
+            checks: { runs: [], statuses: [] },
+          },
+        },
+      ]),
+    ],
+    launches: [
+      launchRow("L", "reports/l.md"),
+      launchRow("D", "reports/d.md", "grill"),
+    ],
+    owner: [ownerRow("O")],
+  };
+  mkdirSync(join(root, "reports"));
+  writeFileSync(join(root, "reports/d.md"), "Owner steps.\nstatus: done\n");
+  write(rows);
+  const output = capture();
+  assert.equal(
+    await main(["--status", "--from", path], {
+      ...output.streams,
+      connect: unreachable,
+      pause: unreachable,
+    }),
+    0,
+    output.stderr,
+  );
+  const lines = output.stdout.trimEnd().split("\n");
+  assert.equal(
+    lines[0],
+    "| Item | Running | Waiting on owner | Since (UTC) | Next check |",
+  );
+  assert.deepEqual(
+    new Set(lines.slice(2)),
+    new Set([
+      "| [R](plan.md#r) | CI | — | 2026-11-08T18:00Z | check event |",
+      "| [L](plan.md#l) | worker | — | 2026-11-08T18:05Z | launch marker |",
+      "| [O](plan.md#o) | — | [approve access](inbox.md#o) | 2026-11-08T18:10Z | owner reply |",
+      "| [D](plan.md#d) | turn ended; read report | — | 2026-11-08T18:15Z | read [reports/d.md](reports/d.md) |",
+    ]),
+  );
+  rows.launches.pop();
+  rows.owner.push(ownerRow("D", "run step", "20", "owner output"));
+  write(rows);
+  output.stdout = "";
+  await main(["--status", "--from", path], {
+    ...output.streams,
+    connect: unreachable,
+  });
+  assert.match(
+    output.stdout,
+    /\| \[D\]\(plan.md#d\) \| — \| \[run step\]\(inbox.md#d\) \| 2026-11-08T18:20Z \| owner output \|/,
+  );
+  write({});
+  output.stdout = "";
+  await main(["--status", "--from", path], {
+    ...output.streams,
+    connect: unreachable,
+  });
+  assert.equal(output.stdout.trimEnd().split("\n").length, 2);
+});
+
+test("live reload removes watches, preserves unrelated baselines and inspects completed additions", async (t) => {
+  const { root, path, write } = records(t);
+  write({
+    flight: [
+      flightRow("R", [{ item: "file:keep.md" }, { item: "file:remove.md" }]),
+    ],
+  });
+  const output = capture();
+  let pauses = 0;
+  assert.equal(
+    await main([...durations, "--from", path], {
+      ...output.streams,
+      connect: unreachable,
+      pause: async () => {
+        pauses++;
+        if (pauses === 1) {
+          write({
+            flight: [
+              flightRow("R", [{ item: "file:keep.md" }], "different activity"),
+            ],
+          });
+          writeFileSync(
+            join(root, "remove.md"),
+            "removed watch must stay quiet",
+          );
+        }
+        if (pauses === 2) {
+          writeFileSync(join(root, "done.md"), "status: done\n");
+          write({
+            flight: [flightRow("R", [{ item: "file:keep.md" }])],
+            launches: [launchRow("L", "done.md")],
+          });
+        }
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(pauses, 2);
+  assert.equal(output.stdout, "finished: read done.md\n");
+  output.stdout = "";
+  write({ flight: [flightRow("R", [{ item: "file:keep.md" }])] });
+  assert.equal(
+    await main([...durations, "--from", path], {
+      ...output.streams,
+      connect: unreachable,
+      pause: async () => {
+        write({
+          flight: [flightRow("R", [{ item: "file:keep.md" }], "rewritten")],
+        });
+        writeFileSync(
+          join(root, "keep.md"),
+          "must retain baseline across rewrite",
+        );
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.match(output.stdout, /file:keep.md: created/);
+});
+
+test("reload compares changed expectations without resetting unchanged trackers", async (t) => {
+  const { path, write } = records(t);
+  const watch = (labels) => ({
+    item: "example/tracker#7",
+    expected: { labels },
+  });
+  write({ flight: [flightRow("R", [watch(["ready"])])] });
+  const output = capture();
+  let pauses = 0;
+  assert.equal(
+    await main([...durations, "--from", path], {
+      ...output.streams,
+      connect: tracker({ "example/tracker#7": { labels: ["ready"] } }).connect,
+      pause: async () => {
+        pauses++;
+        write({ flight: [flightRow("R", [watch(["old"])])] });
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(pauses, 1);
+  assert.match(output.stdout, /labels added ready; removed old/);
+});
+
+test("invalid records fail by name; empty records still watch incoming", async (t) => {
+  const { root, path, write } = records(t);
+  const output = capture();
+  for (const text of [
+    "# no tables\n",
+    recordText({ flight: [flightRow("R", [])] }),
+    recordText({ flight: [flightRow("R", [{ item: "example/tracker#7" }])] }),
+    recordText({
+      flight: [
+        flightRow("R", [
+          { item: "example/tracker#7", expected: { labels: [] } },
+          {
+            item: "https://github.com/example/tracker/issues/7",
+            expected: { labels: ["conflict"] },
+          },
+        ]),
+      ],
+    }),
+    recordText({ launches: [launchRow("L", "")] }),
+    recordText({
+      launches: [launchRow("L", "report.md").replace("2026-11-08T18:05Z", "")],
+    }),
+    recordText({ owner: [ownerRow("O").replace("[O](plan.md#o)", "O")] }),
+  ]) {
+    writeFileSync(path, text);
+    output.stderr = "";
+    assert.equal(
+      await main(["--status", "--from", path], {
+        ...output.streams,
+        connect: unreachable,
+      }),
+      1,
+      text,
+    );
+    assert.match(output.stderr, /now\.md/);
+  }
+  unlinkSync(path);
+  assert.equal(
+    await main(["--status", "--from", path], {
+      ...output.streams,
+      connect: unreachable,
+    }),
+    1,
+  );
+  write({});
+  output.stdout = "";
+  assert.equal(
+    await main([...durations, "--from", path], {
+      ...output.streams,
+      connect: unreachable,
+      pause: async () => {
+        mkdirSync(join(root, "incoming"));
+        writeFileSync(join(root, "incoming/message.md"), "hello");
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.match(output.stdout, /message.md created/);
+});
+
+test("joined identities keep all canonical watches while status retains launch timing", async (t) => {
+  const { root, path, write } = records(t);
+  const watch = { item: "Example/Tracker#7", expected: { labels: ["b", "a"] } };
+  write({
+    flight: [
+      flightRow("L", [
+        watch,
+        {
+          item: "https://github.com/example/tracker/issues/7",
+          expected: { labels: ["a", "b"] },
+        },
+        { item: "file:note.md" },
+        { item: "file:./note.md" },
+        { event: "session stopped" },
+      ]),
+    ],
+    launches: [launchRow("L", "report.md")],
+  });
+  const parsed = readRecords(path);
+  assert.equal(parsed.items.length, 1);
+  assert.equal(parsed.watches.length, 4); // tracker, file, launch and incoming
+  const output = capture();
+  assert.equal(
+    await main(["--status", "--from", path], {
+      ...output.streams,
+      connect: unreachable,
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(
+    output.stdout.trimEnd().split("\n").at(-1),
+    "| [L](plan.md#l) | CI | — | 2026-11-08T18:05Z | launch marker |",
+  );
+  write({
+    flight: [flightRow("L", [{ owner: true }], "owner")],
+    launches: [launchRow("L", "report.md")],
+    owner: [ownerRow("L")],
+  });
+  writeFileSync(join(root, "report.md"), "status: done\n");
+  output.stdout = "";
+  await main(["--status", "--from", path], {
+    ...output.streams,
+    connect: unreachable,
+  });
+  assert.match(
+    output.stdout,
+    /turn ended; read report \| — \| 2026-11-08T18:05Z/,
+  );
+});
+
+test("unrelated reload and changed expectations preserve other tracker observations", async (t) => {
+  const { path, write } = records(t);
+  const watch = (number, labels) => ({
+    item: `example/tracker#${number}`,
+    expected: { labels },
+  });
+  write({
+    flight: [flightRow("R", [watch(7, ["ready"]), watch(8, ["ready"])])],
+  });
+  const item = { labels: ["ready"], comments: [] };
+  const output = capture();
+  assert.equal(
+    await main([...durations, "--from", path], {
+      ...output.streams,
+      connect: tracker({
+        "example/tracker#7": { labels: ["ready"] },
+        "example/tracker#8": item,
+      }).connect,
+      pause: async () => {
+        write({
+          flight: [flightRow("R", [watch(7, []), watch(8, ["ready"])])],
+        });
+        item.comments.push(comment(4));
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.match(output.stdout, /labels added ready/);
+  // Both simultaneous events must survive the reload/recomparison.
+  assert.match(output.stdout, /new comment/);
+});
+
+test("reloads do not restart the overall deadline and invalid reloads never retain stale coverage", async (t) => {
+  const { path, write } = records(t);
+  write({ flight: [flightRow("R", [{ event: "worker stopped" }])] });
+  let elapsed = 0;
+  let pauses = 0;
+  const output = capture();
+  assert.equal(
+    await main(["--interval", "1", "--max-duration", "3", "--from", path], {
+      ...output.streams,
+      connect: unreachable,
+      now: () => elapsed,
+      pause: async (ms) => {
+        elapsed += ms;
+        pauses++;
+        write({
+          flight: [flightRow("R", [{ event: `worker stopped ${pauses}` }])],
+        });
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(pauses, 3);
+  assert.match(output.stdout, /maximum duration of 3 seconds/);
+  output.stdout = "";
+  assert.equal(
+    await main([...durations, "--from", path], {
+      ...output.streams,
+      connect: unreachable,
+      pause: async () => writeFileSync(path, "# broken records\n"),
+    }),
+    1,
+  );
+  assert.match(output.stderr, /now.md.*table/);
+  assert.equal(output.stdout, "");
+});
+
+test("expected observations reject checks without their head and malformed raw states", async () => {
+  for (const expected of [
+    { checks: { runs: [], statuses: [] } },
+    { labels: "ready" },
+    { head: "short" },
+    {
+      head: "a".repeat(40),
+      checks: {
+        runs: [{ name: "Test", status: "queued", conclusion: null }],
+        statuses: [],
+      },
+    },
+    {
+      head: "a".repeat(40),
+      checks: { runs: [], statuses: [{ id: 1, context: "deploy" }] },
+    },
+  ]) {
+    const output = capture();
+    assert.equal(
+      await main([...durations, expectedItem("example/tracker#7", expected)], {
+        ...output.streams,
+        connect: unreachable,
+      }),
+      1,
+    );
+    assert.notEqual(output.stderr, "");
   }
 });

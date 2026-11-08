@@ -114,18 +114,14 @@ with the validator's accepted and rejected issues. Run
 decision, driven by reviewer data fixtures (including real summary comments),
 and its silence, driven by
 the published bundle with an injected fetch transport.
-Run `node --test test/orchestrate-wait.test.mjs` for the `orchestrate` wait
-script's three exits (an item changed, the maximum duration reached, and an
-error), driven by a stubbed tracker through the published bundle with an
-injected fetch transport and by workbench files. Its directory item cases
-cover a file created, edited or removed in the directory, and, in real
-temporary Git repositories, an upstream commit touching it pushed from another
-clone, one fetched before arming and then pulled, one touching only a nested
-directory, a workbench with no remote, and a failed upstream fetch, which is an
-error. It also covers each required
-duration's omission and invalid values and the script's plain `node` run. The
-script reuses `babysit`'s GitHub CLI connection, as the triage readiness
-command does.
+Run `node --test test/orchestrate-wait.test.mjs` for explicit and records-driven
+waits, pre-arm expected labels/PR head/raw check observations, report final markers,
+live watch reload and the shared records-only status table. Published Postern
+transport fixtures preserve issue/PR state, comments and linked-PR observations;
+real temporary Git repositories cover raw file/directory changes, incoming upstream
+commits (including fetched-but-unpulled commits), nested-only changes, no remote
+and fetch failures. Fixtures cover required finite positive durations, timeout
+exit 0, errors exit 1 and plain Node execution without runtime packages.
 Run `node --test test/pull-request-reviewer-check.test.mjs`
 for the optional reviewer schema check, including retained operation resources;
 the check imports babysit's `pull-request-reviewer.mjs` directly from its
