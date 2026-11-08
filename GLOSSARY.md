@@ -59,9 +59,10 @@ by Repo Canon and reconciled with an upstream setup seed as its upstream base.
 _Avoid_: Agent docs, tracker guidance
 
 **Implementation contract**:
-The agreed scope and acceptance criteria for a change, recorded in the latest
-agent-brief comment for a triaged request or in a directly authored
-specification or implementation ticket.
+The agreed scope and acceptance criteria for a change, recorded in its issue's
+body: a directly authored specification or implementation ticket, or the Agent
+Brief that triage writes over a request, keeping the reporter's text as the
+original request.
 _Avoid_: Intake report, any comment, inferred scope
 
 **Live acceptance**:
@@ -106,6 +107,26 @@ runs across tickets, kept in the workbench; it closes once each of its tickets
 ends with a closed issue or the owner's drop; an expedited change's ticket
 without an issue ends with its merged pull request.
 _Avoid_: Roadmap, specification
+
+**Specification**:
+The issue a grill's decisions become, in the repository most of its work
+touches, parent of the tickets that deliver it; a plan groups specifications.
+_Avoid_: Spec file, draft brief, plan
+
+**Amendment grill**:
+A grill, as small as one round, that any change to a plan's goal, its Done
+means or a ticket's scope requires before the specification and tickets change.
+_Avoid_: Conversational amendment
+
+**Factory gap**:
+A pipeline stage the factory cannot yet perform for a repository, which the
+orchestrating agent performs by hand to the same contract and logs.
+_Avoid_: Manual override, workaround
+
+**Launch report**:
+The file a launched session writes for the orchestrating agent, its only
+channel back, whose closing done line marks that the session's turn has ended.
+_Avoid_: Hand-back message, nudge
 
 **Close review**:
 A review of a finished plan, run before its closing announcement and named
@@ -311,6 +332,21 @@ _Avoid_: Orchestrator profile
 Applying a selected standards source to a repository within its confirmed
 scope and satisfying the source's requirements there.
 _Avoid_: Publication, copying shared files
+
+**Check location**:
+Where a repository's required checks run, chosen at adoption: GitHub's hosted
+runners, a runner the repository names, or self-reported.
+_Avoid_: Runner variable, CI mode
+
+**Independent check**:
+A required check run on the pushed head by a process the authoring agent does
+not control.
+_Avoid_: Local run, worker's check
+
+**Self-reported check**:
+A required check the authoring agent ran on its own and reported in the pull
+request, which the review run repeats before merging.
+_Avoid_: Unchecked, skipped checks
 
 **Plan-gated requirement**:
 A source requirement that a hosting platform offers only for some repository
