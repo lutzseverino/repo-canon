@@ -68,7 +68,7 @@ rules only in the factory profile. It confirms no `typescript-node-stack` scope 
 so no stack rules are installed and `repo-standards check` runs no stack check,
 and adopts a third copy with one conforming package, whose `package.json` the
 stack rules cover and whose stack check passes. It also checks that adoption installs the contribution guide
-byte for byte, every owned skill whole from `.agents/skills/`, and, apart
+byte for byte, every selected owned skill whole from `.agents/skills/`, and, apart
 from each skill's `CREDITS.md`, the upstream base's bytes for every skill and
 setup file identical to its base. It uses
 the release fixture's answers and a disposable source containing only declared
