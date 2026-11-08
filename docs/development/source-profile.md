@@ -70,7 +70,8 @@ adds factory configuration, workflow and rules, and the `factory` skill.
 Each has eight checks, two fixes, and four discovery scripts.
 
 The `workbench` profile excludes the other default declarations with
-`exclude: true` and adds none, retaining skill directories and their runtime
+`exclude: true` and adds the `create-repository` and `create-adopted-repo` skill
+declarations, which standard and factory exclude. It retains skill directories and their runtime
 files without rules, guidance, checks, fixes or discovery. The files are the two skill license notices, the three Postern
 files that `babysit`, the `orchestrate` wait and the issue-contract validator
 import, and that validator, which the `triage` readiness command imports, with

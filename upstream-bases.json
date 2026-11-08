@@ -24,6 +24,8 @@
       "path": "skills/engineering/codebase-design",
       "edits": null
     },
+    "create-adopted-repo": null,
+    "create-repository": null,
     "diagnosing-bugs": {
       "path": "skills/engineering/diagnosing-bugs",
       "edits": null

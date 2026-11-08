@@ -53,6 +53,10 @@ agent, it prints an answers file to fill in with you and its next steps.
 
 ## Usage
 
+For a new repository, [Create a repository](docs/usage/create-repository.md)
+shows how to install the creation skills at user scope, interview the
+maintainer, offer adoption and route the vision.
+
 Adoption installs Repo Canon's files, skills, and rules, then has you or your
 agent bring the README, license, documentation, and agent instructions in line
 with the rules. Your repository-specific agent instructions move to
