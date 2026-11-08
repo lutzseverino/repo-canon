@@ -123,6 +123,11 @@ A pipeline stage the factory cannot yet perform for a repository, which the
 orchestrating agent performs by hand to the same contract and logs.
 _Avoid_: Manual override, workaround
 
+**Launch report**:
+The file a launched session writes for the orchestrating agent, its only
+channel back, whose closing done line marks that the session's turn has ended.
+_Avoid_: Hand-back message, nudge
+
 **Close review**:
 A review of a finished plan, run before its closing announcement and named
 when the owner approves the plan. The plan's retro, a review of its outcome,
