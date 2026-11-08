@@ -1236,6 +1236,7 @@ test("adoption installs Repo Canon's user-invoked orchestrate skill, with its re
     "CREDITS.md",
     "SKILL.md",
     "agents/openai.yaml",
+    "records.mjs",
     "references/close.md",
     "references/launches.md",
     "references/templates.md",

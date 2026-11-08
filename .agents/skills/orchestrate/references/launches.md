@@ -1,39 +1,27 @@
 # Launches
 
-Each agent launch you start, with the task context and obligations it
-carries; the expedited change and the pause that makes room for it; the
-handover to the next orchestrating session; and how you observe launches and
-filed work, including the wait script that wakes you.
-[Lifecycle](../SKILL.md#lifecycle) says when each launch starts.
+[Lifecycle](../SKILL.md#lifecycle) decides when launches start. This reference
+covers their context, reports, handover and observation.
 
 ## Starting a launch
 
-Use the capabilities available in your session to carry out the steps. An
-application may enhance orchestration; the shared method works without it.
-Keep application-specific tool mappings out of this skill.
+Use available capabilities; keep application-specific mappings outside this skill.
+Follow `AGENTS.md` for skills and naming, separate from command/task context.
+Supply decisions with dates and quoted words, scope, checkout, plan and designated
+current-turn report. Repository deliverables copy relied-on decisions without
+requiring private workbench records, as [Workbench](../SKILL.md#workbench) says;
+verify each worker's contract is self-contained before launch.
 
-Supply each launch with the decisions it needs, including dates and quoted
-words. Its private task context may name planning and report-back locations;
-its repository deliverables follow [Workbench](../SKILL.md#workbench): copy
-needed decisions without referencing or requiring the private workbench.
-Before launching a worker, verify its repository contract contains those
-decisions and is implementable without the private record.
+Record each launch as [templates](templates.md#nowmd) says **before** starting it,
+including report path and linked Item; on resumption use a fresh report or clear
+the previous final marker first. Every template below carries the shared
+[Report-back](../SKILL.md#report-back) duty: complete the designated report with
+final line `status: done`, including owner-step turns, and preserve its other
+row-marking, owner-question and commit/push obligations.
 
-Follow `AGENTS.md`'s Agent skills requirements for delegation and session naming.
-Use the available naming capability separately from the command and task context.
-Use the session's supported invocation for the commands below, followed by their
-task context. Illustrative names include `triage repo-canon#726`,
-`grill plan 07` and `orchestrate: plans 07–10`; case and punctuation are flexible.
-
-Run at most three agent launches you started at once, or the cap `index.md`
-names for this host's hostname. To check the cap, count the rows under
-`now.md`'s Running launches for this host: every grill, triage run, research
-run, worker and Close review has one.
-
-Give heavy reads, such as whole session transcripts, long logs and large
-diffs, to a subagent that returns what the step needs, or read a bounded
-tail. Select any covering installed skill under `AGENTS.md`'s delegation
-requirements; an uncovered read needs only its task context.
+Run at most three launches you started at once, or the host cap in `index.md`.
+Count every Running-launch row on this host. For heavy reads, delegate through
+any covering installed skill or read a bounded tail; otherwise pass task context.
 
 ## Triage run
 
@@ -50,14 +38,11 @@ destination. Its task context includes these workbench delivery obligations:
 
 ## Grill
 
-When the guide's inference test cannot settle an intent question, open a grill
-with the owner. On observing an issue in `state:grill`, through an event or a
-recurring progress check, add one decision-inbox entry linking the issue's
-action comment. Use the [inbox shape](templates.md#inboxmd), including your
-recommendation. Launch the grill yourself in the owner's session environment,
-within the launch cap, and link its session from that entry. Reuse the entry
-and session on repeated observations, including after takeover; when the cap
-holds the launch, keep it pending in `now.md` until a slot opens.
+When intent needs the owner, open a grill. For an issue in `state:grill`, add
+one [inbox entry](templates.md#inboxmd) linking its action comment, with your
+recommendation. Launch the grill in the owner's session environment within the
+cap, linking it from that entry. Reuse both across observations/takeover; if the
+cap holds it, keep it pending in `now.md`.
 
 Record the session's reference in the row's State. Launch it with
 `/grill-with-docs #N` for the issue, followed by
@@ -83,7 +68,8 @@ To take over an owner's grill or prototype, continue in that session.
 ## Worker
 
 Launch a ticket worker with `/implement`, followed by its issue, scope,
-repository checkout and report-back destination. Workers deliver as the
+repository checkout and designated report-back destination. Write the complete
+turn report with final line `status: done`, including owner-step stops. Workers deliver as the
 contribution guide's Pull requests section says.
 When applicable installed rules assign a worker's merge to you, read its
 authoritative implementation contract and PR handoff, then resume `babysit`,
@@ -91,21 +77,15 @@ including when resuming a plan. After an owner question is resolved, follow
 the applicable installed continuation rules to resume the worker or that same
 open PR.
 
-Workers' live steps on a host need access the maintainer grants. Ask the
-maintainer for time-bounded host access in `inbox.md`. List each worker on the
-grant's row before you launch it, and give it the grant and its time bound as
-task context; the worker never ends the grant. The grant's row in `now.md`'s
-In flight, as [templates](templates.md#nowmd) says, is how you own it. Launch
-a listed worker only while the grant lasts; once it has ended, ask again. In a
-repository a factory serves, deliver that work on the skip route, with the
-`factory` skill installed there.
+For live steps, request time-bounded host access in `inbox.md`. List workers on
+its [grant row](templates.md#nowmd) before launch; supply the grant and bound.
+Workers never end it. Launch only while it lasts, asking again after expiry.
+In a factory repository use the installed `factory` skill's skip route.
 
 ## Expedited change
 
-When the owner asks for something now, their request is its approval and
-skips only the plan: no proposal, no plan approval and no new file. Each
-repository's contribution guide and installed rules still decide the change's
-delivery, such as its Direct change, pull request, review and merge rules.
+An owner's request for work now approves it and skips only the plan (no proposal
+or new file). Repository delivery, review and merge rules still apply.
 
 1. **Record.** Before acting, complete the decision
    [sequence](templates.md#inboxmd) for the request.
@@ -126,13 +106,10 @@ delivery, such as its Direct change, pull request, review and merge rules.
 
 ## Retro
 
-Start a separate session that reads primary sources, such as the plan
-directory and the issues, pull requests, comments and run records it cites,
-and never your session's context or a summary of it. Select any covering
-installed skill under `AGENTS.md`'s delegation requirements. Its task context
-is the plan directory, the repository checkouts, the previous plan's
-`retro.md`, from the plan most recently moved under `Closed` in `index.md`,
-and the report-back destination, with these obligations:
+Start a separate session reading primary sources: plan files and cited issues,
+PRs, comments and run records, never your context or its summary. Invoke any
+covering skill under `AGENTS.md`. Supply the plan directory, checkouts, previous
+`retro.md` (the latest Closed plan in `index.md`) and designated report, requiring:
 
 - write `retro.md` in the plan directory, with the outcome against the plan's
   Done means, with evidence; where the time went, attributing each wait to
@@ -149,13 +126,10 @@ and the report-back destination, with these obligations:
 
 ## Architecture review
 
-Open each `improve-codebase-architecture` review with
-`/improve-codebase-architecture`, followed by its repository checkout, the
-plan's changes there, the plan directory and report-back destination. Supply
-the owned branch and checkout for domain-document edits and that repository's
-pull request destination, as for a grill. Like a grill, it asks the owner its
-questions in its own session. Its task context also includes these
-obligations:
+Invoke `/improve-codebase-architecture` with checkout, changes, plan directory
+and designated report. Supply an owned checkout/branch and repository PR
+destination for domain edits, as for a grill. It asks owner questions in its own
+session. Its duties:
 
 - route each of its findings as [Run](../SKILL.md#lifecycle) says: a Finding
   becomes an issue in that repository, and any other idea a wish naming it;
@@ -174,27 +148,21 @@ the workbench, start a fresh session with `/orchestrate` and the workbench
 path where your harness can, and otherwise tell the owner the handover is
 ready. Then stop: `index.md` and `now.md` are the handover.
 
-A fresh session reads `index.md`, `now.md`, `inbox.md` and each active
-`plan.md`, and nothing else, not even a plan's `log.md`, before it acts. It
-then records its own session reference as each active plan's owner in
-`index.md`, marking the previous reference superseded, and takes over.
-Before anything else, it re-arms a wake-up for every row under `now.md`'s In
-flight that does not wait on the owner, as the
-[wait step](../SKILL.md#the-wait-step) says, and keeps the pause an expedited
-row states. Then perform the [inbox reconciliation](templates.md#inboxmd)
-against the active rules before resuming plan work.
+A fresh session reads `index.md`, `now.md`, `inbox.md` and active `plan.md`
+files before acting, records itself as owner and marks prior references superseded.
+Immediately arm continuous coverage from `now.md`, including launches and incoming,
+as [the wait step](../SKILL.md#the-wait-step) says; keep any expedited pause.
+Then [reconcile the inbox](templates.md#inboxmd) before resuming plan work.
 
 ## Progress observation
 
-Observe unresolved filed work associated with the plan from filing, before
-plan approval and before a PR exists: factory tickets, directly launched
-workers and recorded blockers, plus the report-back of every running launch.
-Keep that coverage when taking over or resuming a plan; refresh it as issues,
-blockers and launches are recorded. You wake on events, through the
-[wait step](../SKILL.md#the-wait-step). A recurring check is optional: use the
-harness's recurring mechanism alongside the wait step only if you choose to.
-Where the harness can neither wait in the background nor deliver events, the
-wait step's fallback applies: re-read these records at each turn.
+Continuously cover unresolved filed work from filing, before approval or a PR:
+factory tickets, direct workers, blockers and every launch report. Update records
+as they change; the running wait reloads them. On wake/timeout, take only the
+observations needed to reconcile and record expected facts, then immediately
+re-arm before foreground processing or a substantive owner update. Harness-only
+events retain their recorded event coverage. The unsupported-harness fallback is
+[the wait step](../SKILL.md#the-wait-step)'s; recurring checks remain optional.
 
 Read issue state and labels, latest comments and owner answers, blocker state,
 run progress and any PR. Compare with the previous dated observation in a
@@ -208,42 +176,48 @@ authorizes no execution and adds no stall timeout or recovery procedure.
 
 ### The wait script
 
-Where the harness can run a command in the background and wake you when it
-exits, arm each wake-up the [wait step](../SKILL.md#the-wait-step) needs with
-this skill's wait script, in the background:
+With background-command wake support, run one wait continuously from records:
 
 ```sh
-node <this skill's directory>/wait.mjs --interval <seconds> --max-duration <seconds> <item>...
+node <skill>/wait.mjs --interval <seconds> --max-duration <seconds> --from <workbench>/now.md
+node <skill>/wait.mjs --status --from <workbench>/now.md
 ```
 
-- An item is an issue or pull request, as `<owner>/<name>#<number>` or its
-  `https://github.com` link, a file, as `file:<path>`, or a directory, as
-  `dir:<path>`. For a launch, watch its report-back file in the plan directory
-  and the plan's `plan.md`, where it sets its done mark. A file item reads the
-  workbench checkout the wait runs in, so a launch writing in another clone
-  wakes it only once its push is pulled here; arm such a launch's wake-up on
-  its tracker items or the harness's own events instead.
-- Give every wait the item `dir:<workbench>/incoming`, for
-  [messages](templates.md#incoming). A directory item also reads the
-  checkout's upstream, when its branch has one: each poll fetches it, and an
-  upstream commit touching a file directly in the directory that the checkout
-  has not pulled is a change, even one fetched before the wait started.
-  Without an upstream, it reads only the checkout.
-- It exits when any item changes: an issue's or pull request's state, labels,
-  or new comments, an issue's linked pull requests, a file's creation, edit
-  or removal, or such a change to a file directly in a directory. It measures
-  changes from when it starts, so arm it after your own writes to watched
-  files and before you read the items' current state.
-- `--interval` is the time between polls and `--max-duration` the longest the
-  wait runs. Both are required; choose both for each invocation.
-- It needs Node.js 24 or 26, and the GitHub CLI's current credential for
-  issues and pull requests. It prints nothing while it waits.
+Records reload on each poll, adding/removing watches without replacing the process
+or restarting its deadline. Unchanged watches keep observations; new expectations
+compare anew. Keep harness events armed for events unavailable to the script.
 
-Its exit code says what comes next:
+Explicit callers may instead supply `<item>...`: `org/repo#7`, its GitHub issue/PR
+URL, `file:<path>`, `dir:<path>` or `launch:<report>`. Paths are invocation-relative.
+A JSON item supplies expected observations; quote it as one shell argument:
 
-- `0`: an item changed; each line names the item and how. Observe as
-  [Progress observation](#progress-observation) says, then arm the wait again.
-- `2`: the maximum duration passed with no change; arm the wait again.
-- `1`: follow the contribution guide's Credentials section for a permission
-  refusal; otherwise fix the invocation or platform error, such as a failed
-  upstream fetch, and arm it again.
+```sh
+node <skill>/wait.mjs --interval 10 --max-duration 300 '{"item":"org/repo#7","expected":{"labels":["state:ready"]}}' dir:incoming
+```
+
+Expected labels compare as sets before the first pause. For a PR, optional `head`
+is the full observed SHA; `checks` requires that same observed head and contains
+`{"runs":[{"id":1,"name":"Test","status":"in_progress","conclusion":null}],"statuses":[{"id":2,"context":"deploy","state":"pending"}]}`.
+Record all observed check runs (`filter=all`) and current commit statuses for that
+head, including their IDs and raw values. Order is irrelevant; additions, removals
+and value changes wake without interpreting success. Missing expected fields use
+first-read baselines. Later state, labels, comments, linked PRs, head and checks
+remain observable. Identical watches deduplicate; conflicting expectations fail.
+
+`launch:<report>` fires only when the final line is exactly `status: done` (LF,
+CRLF or no terminal newline), including already-complete reports. Progress,
+creation and removal alone stay quiet. It prints `finished: read <report>`:
+reconcile the report even if it ends on owner steps. File/launch readers see only
+this checkout; for another clone's unpulled report, use tracker/harness events.
+Raw file watches still wake on any creation/edit/removal. Directory watches cover
+direct files and fetch upstream commits not yet pulled, including ones fetched
+before arming; no upstream means disk-only. Fetch failures remain errors.
+
+Waits require positive finite caller-chosen `--interval` and `--max-duration`,
+with no defaults. They need Node.js 24/26 and the current GitHub CLI credential
+for trackers, remain silent while polling, and return:
+
+- `0`: change, completed launch or maximum duration diagnostic. Minimally
+  reconcile/update records and immediately re-arm before other work.
+- `1`: fix usage/read/platform errors and re-arm; permission refusals follow
+  the contribution guide's Credentials section.
