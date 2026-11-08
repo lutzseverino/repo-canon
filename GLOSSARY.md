@@ -207,9 +207,27 @@ it accepts.
 _Avoid_: Factory settings, environment
 
 **Factory configuration**:
-A repository's own statement of the run kinds the factory runs there, the
-skill each runs, and the labels and model label prefix it uses.
-_Avoid_: Factory settings, host configuration
+The standard's statement of the factory's mechanics in a repository it
+serves: the run kinds, the skill each runs, and the labels and model label
+prefix they use, the same in every such repository.
+_Avoid_: Factory settings, host configuration, model policy
+
+**Value owner**:
+The one party that chooses a value, whether the standard, the repository, the
+host or the issue, and whose own file is the only place the value lives.
+_Avoid_: Owner, when meaning the party rather than the person; authority
+
+**Ownership check**:
+The question asked of a change that adds or moves a value, configuration kind,
+variant, or file, or that edits vendored code or crosses a repository or host:
+who the value owner is, how many consumers there are, whether it can be
+reversed, and what it costs now and to carry.
+_Avoid_: Owner-and-seam check, owner check
+
+**Deferred seam**:
+A seam judged possible but not yet built, recorded where the code would hold
+it together with its count of consumers.
+_Avoid_: Door, TODO
 
 **Hosting platform**:
 The service that hosts a repository and its collaboration features, including

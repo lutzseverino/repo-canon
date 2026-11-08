@@ -8,7 +8,7 @@ The brief states **what the agent should do**, which stretches to both surfaces:
 
 ### Available inputs
 
-A brief's required implementation material must be in the repository, the issue and its comments, or public URLs. A host-only path cannot be the sole required source. Before readiness, check host material for secrets and post the non-secret material on the issue, quoted or attached, then cite it from the brief. Independent acceptance review verifies input availability along with the brief's other requirements.
+A brief's required implementation material must be in the repository, the issue and its comments, or public URLs. A host-only path cannot be the sole required source. Before readiness, check host material for secrets and post the non-secret material on the issue, quoted or attached, then cite it from the brief. Copy every relied-on decision into the repository-facing record with its date and quoted words, even when this duplicates a private record. Never cite or require the private workbench: no URL, host path or instruction to consult it, including for provenance. Repository records may cite one another. Independent acceptance review rejects a private-workbench reference as a substitute for copied decision content and verifies input availability along with the brief's other requirements.
 
 ### Durability over precision
 
@@ -56,7 +56,7 @@ The implementing agent can't ask the owner anything, so a brief settles every qu
 - **Bad:** "Either drop the row or fail the export"
 - **Bad:** "Fall back to 60 minutes when no window is configured", when nobody chose 60 minutes
 - **Bad:** "Open question: should admins be exempt?"
-- **Good:** "Retry for 30 minutes after the first failure, then mark the Parcel failed", with the owner's decision linked from the triage notes
+- **Good:** "Retry for 30 minutes after the first failure, then mark the Parcel failed", with the owner's dated, quoted decision in the triage notes
 
 When the owner has reserved review before merge, state that designation as contract behavior and retain its dated decision source in the triage notes for the worker's PR handoff. Use the recorded reservation, not a routing label, as its source. Follow the `github-repository-configuration` rules' Designated owner review gate in both profiles; applicable installed rules retain merge ownership and continuation.
 
@@ -68,8 +68,8 @@ The triage notes that accompany a brief follow it in the same comment, never bet
 
 - **Path**: code-bound or intent-bound, with a one-line reason.
 - **Verification**: what was checked and how (reproduction, code path, tests run), and where the redundancy search looked.
-- **Owner decisions**: each decision the brief relies on, including any owner-review reservation, with its date and a link to where the owner gave it; for a grill's brief, pasted from the grill record.
-- **Inferred intent**: each answer inferred under the inference test, which the brief states as behavior, with its citation, its date and where it was given. In the factory's triage run, it cites a repository record, as the installed factory workflow rules' Triage run section says.
+- **Owner decisions**: each decision the brief relies on, including any owner-review reservation, with its date and quoted words; for a grill's brief, copied from the grill record. Cite a repository record when available, never the private workbench.
+- **Inferred intent**: each answer inferred under the inference test, which the brief states as behavior, with its date, quoted decision content and repository citation when available; copy private-source content without referencing the private record. In the factory's triage run, it cites a repository record, as the installed factory workflow rules' Triage run section says.
 - **Dependencies**: issues that must land first, for the reviewer to record as blockers.
 - **Model**: when the installed rules ask for it, one `model:` label with a one-line reason: a suggestion for the reviewer to apply or replace, or, in the factory's triage run, the label its run result asks for.
 - **Owner questions**: none, for a brief ready for review.

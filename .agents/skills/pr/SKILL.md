@@ -169,7 +169,7 @@ Concrete evidence that the change works. Show a before and after.
 
 Screenshots are S-tier - when the environment is set up for it and the change is visual.
 
-Store screenshots on an orphan branch named `pr-assets/<topic>`, keeping them out of the default branch's history. Link each image by its full commit SHA. Never delete the asset branch; preserve `pr-assets/*` during branch cleanup so merged PRs keep their images.
+Store screenshots on an orphan branch named `pr-assets/<topic>`, keeping them out of the default branch's history. Link each image by its full commit SHA. Follow the installed `github-repository-configuration` rules' Pull request asset branches section for permanent retention during branch cleanup.
 
 Execution-based evidence is A-tier. Test results, console output. Show the exact test that now fails and passes, using pseudocode.
 
@@ -193,3 +193,6 @@ Paths are relative to the repository root.
 
 - `GLOSSARY.md`: the user's domain language. When it is missing, use the
   words the code and its issues use.
+- `.repo-standards/rules/github-repository-configuration.md`: permanent
+  asset-branch retention. When it is missing, preserve the asset branch so
+  the pull request's images remain available.

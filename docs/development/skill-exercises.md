@@ -142,8 +142,18 @@ by uncertainty and brief acceptance; `factory-triage` for `triage` run as the
 factory's triage run; `orchestrate` for the workbench plan lifecycle;
 `host-grant` for `orchestrate` and `factory` with a shared host access grant;
 and `delivery` for
-`implement`, `pr`, and `prototype`. The delivery repository
-includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a local PR body draft. The manifest also records the
+`implement`, `pr`, `babysit`, and `prototype`. The delivery repository
+includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a simulated draft PR. Exercise `implement`
+first with the ticket, then resume it with a review finding supplied by the
+operator on that same local PR. Record each validated head, the draft state,
+and the unchanged PR and branch identity. Observe that both runs stop without
+self-review, a ready transition, babysitting or merging. The operator supplies
+the finding; `implement` does not produce its own review on this route. Then
+remove `runKinds.review` from the delivery fixture's factory configuration and
+resume implementation. Observe it invoking `babysit` for delivery under the
+factory rules, including applicable internal reviews and merge conditions,
+instead of stopping at the draft. Keep all hosting operations simulated locally.
+The manifest also records the
 support skills that exercised skills depend on, such as the productivity
 `grilling` skill that `grill-with-docs` uses.
 
@@ -439,6 +449,39 @@ and times, observed proposal/approval and routing checkpoints, fresh-session
 resume and closure, and any limits. Retain transcripts and resulting workbench
 commits outside maintained documentation. Builder tests establish setup
 correctness; only these agent sessions establish exercise outcomes.
+
+### Focused inbox reconciliation check
+
+Build the planning fixtures from the candidate checkout and use two local
+copies of the same seeded orchestration state. In each, seed several older
+open inbox entries missing current context or recommendations, plus an
+`Answered` entry whose bytes you retain for comparison. Keep dated source
+records supplying the missing context. Include two open plan rows with
+executable owner chores: an optional submission and a required submission
+blocked by a third-party form. Neither has an owner drop or deadline.
+
+Invoke the exact candidate `orchestrate` skill in one bounded agent session
+as the next pass after a rule update. Start another fresh session on the
+second copy as a takeover, with only its project and state paths, no previous
+transcript or summary. Use the common harness's local-only restrictions and
+simulated wake-ups. Observe both sessions repairing every open entry against
+the active rules without answering any, and compare the previously answered
+history byte for byte. In both copies, check that each owner chore remains
+executable and links its affected row and a decision with do/defer/drop,
+a recommendation and explicit optional and third-party-blocked status. Rows
+stay tracked with no invented deadline or silent drop.
+
+Return to one session with a bulk owner reply answering only some entries;
+include an entry to which that reply does not apply. Check that only answered
+entries move to history with their answer, date and source; all others keep
+their context and recommendations. Relay an explicit owner deferral, then a
+separate owner drop. Verify that deferral retains tracking and only the
+recorded drop authorizes `dropped (owner)`. Retain the delivered prompts,
+initial and resulting commits, session references, skill digests and observed
+comparisons outside maintained documentation and report outcomes on the PR.
+This focused check supplements the lifecycle exercise above; filing-time
+observation, approval-gated readiness, current-head owner approval in delivery,
+and findings-based closure retain their existing requirements and exercises.
 
 ### Focused grill routing check
 

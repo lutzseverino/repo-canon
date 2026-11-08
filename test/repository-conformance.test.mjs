@@ -260,6 +260,22 @@ test("the standard profile installs no factory file, and the factory profile add
         rules: "rules/factory-workflow.md",
         guidance: "guidance/factory-workflow.md",
         discovery: "discovery/factory-workflow.md",
+        checks: [
+          {
+            id: "factory-model-policy",
+            run: {
+              executable: "node",
+              script: "operations/check-factory-model-policy.mjs",
+              resources: ["operations/lib/factory-model-policy.mjs"],
+              arguments: [],
+            },
+            prerequisite: {
+              "version-arguments": ["--version"],
+              version: ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0",
+            },
+            "timeout-seconds": 30,
+          },
+        ],
       },
       {
         id: "factory-sandbox-image",
@@ -552,16 +568,15 @@ test("CONTRIBUTING.md and AGENTS.md stay within their word budgets", () => {
     );
 });
 
-test("standards.yaml declares no pull request reviewer or app-author policy file", () => {
+test("standards.yaml declares no repository-owned optional policy file", () => {
   assert.doesNotMatch(
     JSON.stringify(declarations(root)),
-    /pull-request-reviewer\.json|factory-review-policy\.json/,
+    /pull-request-reviewer\.json|factory-review-policy\.json|factory-model-policy\.json/,
   );
 });
 
 // Configuration version 3 maps each run kind a repository turns on to a skill
-// and its arguments; triage and review name their own provider, model and
-// effort, and implement takes the issue's `model:` label. Labels belong to the
+// and its arguments; policy and host own execution choices. Labels belong to the
 // `state:`, `gate:`, `factory:` and `priority:` families (ADR 0031), distinct
 // ignoring case. Triage needs the triage result its readiness is checked
 // against (ADR 0030). This repository imports no factory code, so the shape
@@ -638,13 +653,7 @@ function factoryConfigurationFailure(configuration) {
     if (!runKindNames.includes(kind)) return `unknown run kind ${kind}`;
     if (!trimmed(run?.skill) || typeof run.arguments !== "string")
       return `runKinds.${kind} needs a skill and arguments`;
-    const model = ["provider", "model", "effort"];
-    if (kind === "implement") {
-      if (Object.keys(run).some((key) => !["skill", "arguments"].includes(key)))
-        return "runKinds.implement takes its model from the issue";
-    } else if (!model.every((key) => trimmed(run[key])))
-      return `runKinds.${kind} needs a provider, model and effort`;
-    const fields = ["skill", "arguments", ...model];
+    const fields = ["skill", "arguments"];
     if (kind === "review") fields.push("differentProvider");
     if (Object.keys(run).some((key) => !fields.includes(key)))
       return `runKinds.${kind} has an unknown field`;
@@ -721,7 +730,23 @@ test("the factory configuration check rejects version 2 and malformed version 3"
     },
     {
       ...shipped,
-      runKinds: { ...runKinds, review: { skill: "review", arguments: "" } },
+      runKinds: { ...runKinds, review: { skill: "review", arguments: null } },
+    },
+    ...["triage", "review"].flatMap((kind) =>
+      ["provider", "model", "effort"].map((field) => ({
+        ...shipped,
+        runKinds: {
+          ...runKinds,
+          [kind]: { ...runKinds[kind], [field]: "embedded-choice" },
+        },
+      })),
+    ),
+    {
+      ...shipped,
+      runKinds: {
+        ...runKinds,
+        implement: { ...runKinds.implement, retry: {} },
+      },
     },
     { ...implementOnly, runKinds },
   ])

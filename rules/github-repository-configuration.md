@@ -68,6 +68,13 @@ requirement is unavailable, not optional, and applies once GitHub offers
 either. GitHub runs the PR metadata validation workflow only from the default
 branch, so the check is required once the workflow is on the default branch.
 
+## Pull request asset branches
+
+Keep `pr-assets/*` branches permanently so pull request screenshots remain
+available. Preserve them during branch cleanup, including after the associated
+pull request merges. Ordinary implementation branches remain eligible for
+cleanup.
+
 ## Required-check freshness
 
 Every adopter requires GitHub's “Require branches to be up to date before

@@ -23,11 +23,10 @@ arguments:
 
 Every kind is optional, and implement is the minimum. Without triage,
 readiness comes only from a person; without review, the implement skill
-delivers and merges its own pull request. Triage and review run on the
-provider, model and effort the configuration names for them; implement runs on
-the issue's `model:` label, as Model selection says. The review's
-`differentProvider` switch asks for a provider other than the one that
-implemented the change, where the host has one. No configuration changes the
+delivers and merges its own pull request. Execution choices resolve under
+Repository model policy below; exact configuration holds only mechanics.
+The review's `differentProvider` switch follows Provider diversity below.
+No configuration changes the
 rest: triage runs read-only, review is the only run kind that merges, and each
 run ends with a run result that the factory posts and turns into labels.
 
@@ -117,17 +116,93 @@ chooses the label itself, weighing the suggestion, and the research run that
 suggested it applies no label. The factory's triage run chooses its own, as
 Triage run says.
 
-The factory runs an unlabelled ticket on the host's default model; a parent's
-label chooses none of its tickets' models.
+Repository preferences constrain the label triage suggests or chooses: select
+within the repository's initial-implement preference and host capabilities.
+The reviewer weighs that preference when applying or replacing the suggestion.
+A parent's label chooses none of its tickets' models.
 
-The host operator may set an optional `models.allowed` list in the host
-configuration. It is a nonempty list of unique, resolvable provider/model names without
-`@<effort>` and must include the default and retry models when set; membership
-compares provider and model, ignoring effort. An absent list adds no membership
-restriction. A `model:` label outside the list holds the issue with a visible
-model-label reason, never falling back to another model. The same hold applies
-to a relaunch whose recorded model is no longer listed. The host operator
-maintains the list; default and retry models alone do not define a catalog.
+The host owns capabilities, credentials and per-kind defaults, including the
+implement retry default. Defaults alone never define the capability catalog.
+Malformed, conflicting or host-forbidden model labels hold work with a visible
+model-label reason, including a relaunch whose recorded choice is forbidden.
+Repository fallback never bypasses those shared-gate holds. Temporary
+unavailability of an otherwise valid choice instead uses repository fallback.
+Preserve model-label syntax, provisioning and parent semantics above.
+
+## Repository model policy
+
+The optional repository-owned `.github/factory-model-policy.json` has this
+one authoritative structural contract. A present file is a JSON object with
+exactly these required root fields:
+
+- `version`: the number `1`.
+- `fallback`: `"wait"` or `"host-default"`.
+- `runKinds`: an object with optional `triage`, `implement` and `review` keys.
+  `triage` and `review` each hold a Selection. `implement` is an object with
+  optional `initial` and `retry` keys, each a Selection.
+
+A Selection is exactly `{ "provider": string, "model": string, "effort"?: string }`
+or exactly `{ "source": "issue-label" }`. Every string is nonempty and trimmed.
+Omitted effort inherits host/provider configuration. Unknown fields at every
+level, mixed selectors, wrong types, non-object roots, malformed JSON and
+unsupported versions are invalid. Empty `runKinds` and empty `implement`
+objects are valid inheritance. A present file requires explicit fallback;
+Repo Canon chooses no fallback, provider, model or effort for adopters.
+The read-only `factory-model-policy` check passes absence as unconfigured and
+fails invalid or unreadable files with their path and an actionable correction.
+It validates syntax and structure locally, without a live host catalog or
+credentials. Capability membership and temporary availability are host duties.
+
+Scriptorium v4 resolves selections within host capabilities. The issue label
+selects the initial implement attempt only: label, then initial-implement
+policy, then host default. Triage, review and implement retry use their stage's
+policy, then host default. A stage can explicitly reuse the issue label with
+`{ "source": "issue-label" }`, which requires a usable issue label at runtime.
+Missing preferences or a missing file retain host defaults, including retry;
+they never imply a Repo Canon model choice.
+
+For an otherwise valid preference that is unavailable, `wait` preserves the
+issue, work and PR without launching until it is usable or configuration
+changes. `host-default` uses the available host default for that kind/attempt,
+otherwise waits. Neither authorizes arbitrary catalog substitution, credential
+expansion, retry loops, label rewrites or bypassing a bad-label hold.
+
+The repository deliberately creates or changes its policy in a separate
+post-adoption commit. Adoption owns validation only: it never creates,
+rewrites, normalizes, deletes or copies policy values, including on update,
+removal or re-adoption. Invalid data is reported, never repaired. The
+repository that deliberately configures the policy supplies all its values.
+
+### Provider diversity
+
+`runKinds.review.differentProvider` remains mechanics. When true, compare the
+chosen review provider with the implement attempt that actually produced the
+reviewed PR, including retries and hand-backs. If they match, the sole
+alternative is the host's explicitly configured per-kind review default.
+Switch only when no policy file exists or fallback is `host-default`, and
+that default is available within capabilities on a different provider.
+Otherwise run on the chosen provider and report unavailable diversity; never
+wait solely for diversity or scan the catalog. This applies even when the
+review preference itself is available. False or absent adds no diversity
+requirement.
+
+These acceptance examples use placeholder providers/models only, never shipped
+defaults. Each assumes `runKinds.review.differentProvider: true`, implement's
+PR-producing attempt on `provider-a/model-impl`, and all named models available
+within capabilities unless stated otherwise:
+
+- Policy `{ "version": 1, "fallback": "host-default", "runKinds": { "review": { "provider": "provider-a", "model": "model-review" } } }`
+  initially chooses `provider-a/model-review`. Host review default
+  `provider-b/model-host` replaces it for diversity even though the preference
+  is available.
+- The same policy with `fallback: "wait"` retains `provider-a/model-review`
+  and reports unavailable diversity without waiting. With `host-default` but
+  a missing host review default, one on provider A, or an unavailable
+  provider-B default, it likewise retains that choice and reports unavailable
+  diversity.
+- Without a policy, host review default `provider-b/model-host` already
+  satisfies diversity. Host review default `provider-a/model-host` instead
+  stays chosen with an unavailable-diversity report: no scan and no wait.
 
 ## Triage run
 
@@ -150,7 +225,8 @@ the issue's one `type:` label.
 
 A brief it writes with no open question it accepts, as the GitHub rules'
 Readiness roles allow, asking for `state:ready` with the labels readiness
-needs: one `model:` label it chooses from the models the host allows, any
+needs: one `model:` label it chooses under Model selection and Repository model
+policy, within host capabilities, any
 `factory:skip` that Skipped work requires, and a `priority:` label as the
 GitHub rules' Labels section says.
 

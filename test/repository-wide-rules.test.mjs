@@ -216,7 +216,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
             operation.prerequisite.version,
           );
     }
-  assert.equal(prerequisites.size, 16);
+  assert.equal(prerequisites.size, 17);
   for (const [script, range] of prerequisites)
     assert.equal(range, ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0", script);
 
@@ -247,7 +247,22 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       ]),
     ),
     ["standard-update", "standard", {}],
-    ["factory-update", "factory", {}],
+    [
+      "factory-policy",
+      "factory",
+      {
+        ".github/factory-model-policy.json":
+          '{ "version": 1, "fallback": "wait", "runKinds": {} }\n',
+      },
+    ],
+    [
+      "factory-update",
+      "factory",
+      {
+        ".github/factory-model-policy.json":
+          '{ "version": 1, "fallback": "host-default", "runKinds": { "implement": { "retry": { "source": "issue-label" } } } }\n',
+      },
+    ],
   ])) {
     const web = label.startsWith("astro-")
       ? "astro"
@@ -473,6 +488,33 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         readFileSync(join(root, ".factory/config.json")),
         `${label} installs the shipped version-3 factory configuration byte for byte`,
       );
+    const modelPolicy = ".github/factory-model-policy.json";
+    if (Object.hasOwn(extraFiles, modelPolicy))
+      assert.equal(
+        readFileSync(join(project, modelPolicy), "utf8"),
+        extraFiles[modelPolicy],
+        `${label} preserves repository policy bytes`,
+      );
+    else
+      assert.equal(
+        existsSync(join(project, modelPolicy)),
+        false,
+        `${label} never seeds model policy`,
+      );
+    if (profile === "factory") {
+      const policyCheck = () =>
+        invoke("check").report.checks.find(
+          ({ id }) => id === "factory-model-policy",
+        );
+      assert.equal(policyCheck().status, "passed");
+      if (label === "factory-policy") {
+        const invalid = '{ "version": 99, "fallback": "invalid" }\n';
+        writeFileSync(join(project, modelPolicy), invalid);
+        assert.equal(policyCheck().status, "failed");
+        assert.equal(readFileSync(join(project, modelPolicy), "utf8"), invalid);
+        writeFileSync(join(project, modelPolicy), extraFiles[modelPolicy]);
+      }
+    }
     // Exercise no scope and covered checks/rules for all stacks in both profiles,
     // including updates from a source that did not ship web declarations.
     const checks = invoke("check").report.checks;

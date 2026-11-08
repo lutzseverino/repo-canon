@@ -206,6 +206,9 @@ links. The merging account already records who did the work.
 
 ## Pull requests
 
+Use `implement`, then separate `review` through merge; factories without review
+use `babysit` instead. Address review hand-backs on the same draft PR.
+
 Keep each pull request focused. Describe the problem and resulting change,
 report the checks you ran and their outcomes, and link the relevant issue.
 A pull request that finishes its issue links it with a closing reference, such

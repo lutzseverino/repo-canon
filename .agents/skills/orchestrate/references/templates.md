@@ -44,7 +44,9 @@ of the workbench is a wiki:
 
 - Date every entry.
 - Cite each source, such as an issue, pull request, comment or session, by its
-  link or reference, and leave its content where it is.
+  link or reference. Private planning retains these sources; repository-facing
+  records instead copy needed decisions, dates and quoted words under
+  [Workbench](../SKILL.md#workbench), with no private-workbench reference.
 - Leave a superseded entry's text as written: mark it superseded, dated, and
   point to the entry that replaces it.
 - Once a draft brief is filed, add a dated line at its top linking the issues
@@ -91,7 +93,9 @@ Take its times from the clock, in UTC, as `log.md` does.
 
 - **Waiting on you** holds the count of open entries in `inbox.md`, plus the
   chores and notifications for the owner. Carry each one into every rewrite
-  until the owner has done or acknowledged it.
+  until the owner has done or acknowledged it. An owner-only step holding a
+  plan row open also needs the [linked decision](#inboxmd); keep its executable
+  chore tracking linked to that decision and the affected row.
 - **In flight** holds one row per item that waits on someone or something,
   such as a run, a review, a blocker, plan approval or a launch's report-back,
   with the link that shows it. Its *Next check* names the wake-up armed for
@@ -119,11 +123,31 @@ its plan, a link to its source, the date it opened, and your recommendation.
 Notifications and chores go in `now.md`. Grills and triage runs add entries
 too. Keep open decisions separate from the inbox's `Answered` history.
 
+After an inbox rule update, reconcile every currently open entry against the
+active rules on the next pass, including takeover. Repair missing context
+(question, plan, source and opening date) and recommendations from the records;
+when a fact is unavailable, state the gap rather than invent it. An entry's age
+never exempts it. A repair leaves it open and leaves previously answered
+history unchanged.
+
+For each owner-only step holding a plan row open, link a decision offering
+**do, defer and drop**, with a recommendation and explicit status: whether
+the step is optional and whether a third party blocks it, with the blocker
+when present. Link the decision, executable chore in `now.md` and affected
+plan row to each other. Keep the row tracked pending the owner's decision;
+deferral keeps it tracked too. Record an owner drop and its source before
+marking the row `dropped (owner)`. Invent no deadline and silently drop no row.
+
 When an owner message contains a decision, complete this sequence before
-acting on anything else in that message:
+acting on anything else in that message. For a bulk reply, identify exactly
+which entries it answers; apply the sequence only to those entries. Preserve
+every unanswered entry with its context and recommendation, including entries
+to which the reply does not apply:
 
 1. Post a comment on each affected issue, recording the decision, its date
-   and where the owner gave it, as the issue's repository's
+   and quoted words, with a repository citation when available. Copy private
+   decisions without referencing the private record, as
+   [Workbench](../SKILL.md#workbench) requires, and post as the repository's
    `.repo-standards/rules/comments.md#disclaimers` says.
 2. Append the decision, date, source and issue links to the plan's `log.md`.
 3. Move the answered entry under `Answered` in `inbox.md`, keeping its

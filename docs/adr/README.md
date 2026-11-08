@@ -54,7 +54,8 @@ involve real alternatives.
   repository.
 - [Name every factory convention in configuration](0014-name-every-factory-convention-in-configuration.md):
   the repository's factory configuration names its labels and prompt with no
-  defaults, and the factory checks readiness against roles the host names.
+  defaults, and the factory checks readiness against roles the host names;
+  ADR 0033 supersedes repository ownership of the exact configuration's values.
 - [Configure the pull request reviewer as repository data](0015-configure-the-pull-request-reviewer-as-repository-data.md):
   an optional data file names the reviewer `babysit` waits for, and its absence
   means no reviewer.
@@ -122,6 +123,10 @@ involve real alternatives.
 - [Test behaviour and structure, not wording](0032-test-behaviour-and-structure-not-wording.md):
   tests check code behaviour and file structure, never the wording of rules,
   skills or documents; license notices are compared byte for byte.
+- [Give every value one value owner](0033-give-every-value-one-value-owner.md):
+  each value lives only in its value owner's file: exact files hold the
+  standard's values, repository-owned files the repository's, host
+  configuration the host's, and labels the issue's.
 - [Choose where checks run at adoption](0034-choose-where-checks-run-at-adoption.md):
   `github`, `runner` or `self-reported`, chosen in the selection, one check
   command, and the merge gate enforced by Repo Canon's tooling.
