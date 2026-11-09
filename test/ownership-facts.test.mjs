@@ -154,3 +154,21 @@ test("reads newly added attribution at the pinned head", (t) => {
     { kind: "vendored", path: "copies/ui.mjs", sources: ["linguist-vendored"] },
   ]);
 });
+
+test("ignores local and global attribute overrides of pinned trees", (t) => {
+  const { root, git, write, commit, run } = fixture(t);
+  write(".gitattributes", "copies/** linguist-vendored\n");
+  write("copies/ui.mjs");
+  write("src/ordinary.mjs");
+  const base = commit();
+  write("copies/ui.mjs", "changed\n");
+  write("src/ordinary.mjs", "changed\n");
+  const head = commit();
+  write(".git/info/attributes", "copies/** -linguist-vendored\n");
+  const attributes = join(root, "global-attributes");
+  writeFileSync(attributes, "src/** linguist-vendored\n");
+  git("config", "core.attributesFile", attributes);
+  assert.deepEqual(run(base, head), [
+    { kind: "vendored", path: "copies/ui.mjs", sources: ["linguist-vendored"] },
+  ]);
+});
