@@ -244,6 +244,37 @@ such as a temporary Git worktree. Run a check that reads a diff, such as
 For an ordinary pull request, write the body with the `pr` skill. For an
 adoption pull request, use the adoption record as described below.
 
+### Worker handoff
+
+Before reporting a successful handoff, the worker waits until every required
+check passes on the latest pushed pull request head at the repository's
+configured check location. Every location runs the same repository-required
+check command:
+
+- `github`: use the required hosted check results for that head.
+- `runner`: use each required result from the runner the repository names,
+  posted as a commit status for that head.
+- `self-reported`: run the required local check command on that head and
+  report its outcomes.
+
+A changed head invalidates all passing evidence from earlier heads. Pending,
+missing, failing, unavailable or not-yet-run required results cannot qualify
+for success. Actions being unavailable never substitutes a worker's local
+run for a configured runner's pending or failing result. Fix failures and
+revalidate the current head, or use the existing blocked or failure delivery
+route, naming the checks and reason; add no timeout, fallback or silent bypass.
+
+The handoff records the full head SHA, configured check location, required
+command and checks, and each outcome, alongside the applicable delivery
+records. This condition applies both to a draft handed to a separate review
+agent and to delivery without a configured review run; each route retains its
+existing review and merge ownership and gates.
+
+A successful self-reported worker handoff satisfies only this worker condition.
+Before merging, the independent review run, another agent and sandbox, reruns
+the same command on the current head. The worker's report cannot substitute
+for that rerun or clear designated owner review.
+
 ### Adoption pull requests
 
 An adoption pull request holds only one completed Repository Standards adoption or
