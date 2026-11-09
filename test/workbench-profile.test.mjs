@@ -23,12 +23,13 @@ import {
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-// The workflow skills, which the workbench profile installs as the standard
-// profile does.
+// The workflow skills, including the workbench-only creation entry points.
 const skills = [
   "babysit",
   "code-review",
   "codebase-design",
+  "create-adopted-repo",
+  "create-repository",
   "diagnosing-bugs",
   "domain-modeling",
   "grill-with-docs",
@@ -101,17 +102,19 @@ const allowed = [
   ...skills.map((name) => `skill-${name}`),
   ...Object.keys(support),
 ].sort();
+const workbenchOnly = ["create-adopted-repo", "create-repository"];
+const additions = workbenchOnly.map((name) => `skill-${name}`).sort();
 
 test("the workbench profile excludes every default but the workflow skills, their support files and license notices", () => {
   const { defaults, excluded, added } = workbenchSelection();
-  assert.deepEqual(added, [], "the workbench profile adds no declaration");
+  assert.deepEqual(added.sort(), additions);
   for (const id of excluded)
     assert.ok(defaults.includes(id), `${id} is a default declaration`);
   // A new default declaration fails here until the workbench excludes it or
   // this list admits it.
   assert.deepEqual(
     defaults.filter((id) => !excluded.includes(id)).sort(),
-    allowed,
+    allowed.filter((id) => !additions.includes(id)),
   );
   for (const id of [
     "issue-contract-workflow",
@@ -147,6 +150,15 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
   // The other profiles keep their resolved declarations.
   assert.equal(validation.profiles.standard.declarations.length, 62);
   assert.equal(validation.profiles.factory.declarations.length, 67);
+  for (const name of workbenchOnly) {
+    for (const profile of ["standard", "factory"])
+      assert.ok(
+        !validation.profiles[profile].declarations.some(
+          (declaration) => declaration.name === name,
+        ),
+        `${profile} excludes ${name}`,
+      );
+  }
 
   const { source, env, git, publish } = fixtureSource(directory, validation);
   git(source, "-c", "tag.gpgsign=false", "tag", "v1.0.0");

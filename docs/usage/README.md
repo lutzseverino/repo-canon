@@ -19,6 +19,9 @@ describes running it.
 - [Install a skill without adoption](install-skills.md): installing a
   Repo Canon skill from a release tag through the skills CLI, whether the listing
   pins a release, and what a skill needs on its own.
+- [Create a repository](create-repository.md): user-scope skill installation,
+  the founding interview, optional adoption, vision routing and local-only
+  continuation.
 - [Release versioning](versioning.md): version increments, breaking standards
   changes, and selecting an adoptable release.
 - [Recommended stacks](stacks.md): a stack is a named set of development tools;

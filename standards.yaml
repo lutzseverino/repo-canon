@@ -625,6 +625,14 @@ profiles:
   workbench:
     description: Only the workflow skills, with the files they need to run and their license notices, for the orchestrating agent's workbench
     declarations:
+      skill-create-repository:
+        kind: skill
+        name: create-repository
+        source: .agents/skills/create-repository
+      skill-create-adopted-repo:
+        kind: skill
+        name: create-adopted-repo
+        source: .agents/skills/create-adopted-repo
       agent-configuration-index: { exclude: true }
       agent-guidance: { exclude: true }
       bug-report-template: { exclude: true }

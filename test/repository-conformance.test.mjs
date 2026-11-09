@@ -803,11 +803,13 @@ function snapshotFiles(directory, prefix = "") {
 
 // Adoption installs only workflow skills, as ADR 0018 decides, each an owned
 // skill (ADR 0028): 17 taken from upstream, triage among them (ADR 0021), and
-// babysit, factory, orchestrate and review, written for Repo Canon.
+// the creation skills, babysit, factory, orchestrate and review, written for Repo Canon.
 const workflowSkills = [
   "babysit",
   "code-review",
   "codebase-design",
+  "create-adopted-repo",
+  "create-repository",
   "diagnosing-bugs",
   "domain-modeling",
   "factory",
@@ -839,6 +841,30 @@ test("implement allows model invocation in both harness formats", () => {
     readFileSync(join(directory, "agents/openai.yaml"), "utf8"),
     /^ {2}allow_implicit_invocation: true$/m,
   );
+});
+
+test("creation entry points are discoverable standalone and allow model invocation", () => {
+  const bundled = readdirSync(join(root, ".agents/skills"), {
+    withFileTypes: true,
+  })
+    .filter((entry) => entry.isDirectory())
+    .filter((entry) =>
+      existsSync(join(root, ".agents/skills", entry.name, "SKILL.md")),
+    )
+    .map((entry) => entry.name);
+  for (const name of ["create-repository", "create-adopted-repo"]) {
+    assert.ok(bundled.includes(name), name);
+    const directory = join(root, ".agents/skills", name);
+    const frontmatter = /^---\n([\s\S]*?)\n---\n/.exec(
+      readFileSync(join(directory, "SKILL.md"), "utf8"),
+    )?.[1];
+    assert.ok(frontmatter);
+    assert.match(frontmatter, /^disable-model-invocation: false$/m);
+    assert.match(
+      readFileSync(join(directory, "agents/openai.yaml"), "utf8"),
+      /^ {2}allow_implicit_invocation: true$/m,
+    );
+  }
 });
 
 // The skill setup files take these seeds as their upstream bases (ADR 0028),

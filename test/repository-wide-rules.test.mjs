@@ -612,16 +612,20 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         readFileSync(join(root, path)),
         `${profile} installs ${path}`,
       );
-    // Every owned skill installs whole from the owned tree. Apart from the
+    // Every selected owned skill installs whole from the owned tree. Apart from the
     // CREDITS.md each gains, a skill identical to its upstream base installs
     // the base's bytes, as it did when it installed from the snapshot, and
     // the setup files install their seeds' bytes.
     for (const { name, source, base } of ownedSkills(root)) {
-      if (name === "factory" && profile !== "factory") {
+      const selected = validation.profiles[profile].declarations.some(
+        (declaration) =>
+          declaration.kind === "skill" && declaration.name === name,
+      );
+      if (!selected) {
         assert.equal(
           existsSync(join(project, source)),
           false,
-          `${profile} excludes factory`,
+          `${profile} excludes ${name}`,
         );
         continue;
       }

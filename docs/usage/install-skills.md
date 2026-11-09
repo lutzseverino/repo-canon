@@ -54,3 +54,7 @@ skill's Reads section says how to carry on without them.
 Each skill taken from Matt Pocock's skills keeps the upstream MIT License
 notice in its `CREDITS.md`, and `pr` also keeps HumanLayer's, so a copy
 installed on its own carries them.
+
+To start outside any checkout, see [Create a repository](create-repository.md)
+for tagged user-scope installation of `create-repository`, its adoption wrapper,
+the chosen vision route's dependencies and the separately sourced adoption skill.
