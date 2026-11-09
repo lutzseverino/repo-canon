@@ -52,9 +52,8 @@ Pick the smallest view that makes the key point clear.
 
 ```text
 on(save)
-  if content is unchanged
-    return cached result
-  write new content
+  if unchanged: return cached result
+  write content
   return fresh result
 ```
 
@@ -63,7 +62,6 @@ on(save)
 ```text
 submitForm
   createSession
-    persistPrompt
     launchAgent
   navigateToSession
 ```
@@ -73,78 +71,33 @@ submitForm
 ```text
 <SessionPage> (apps/example/src/routes/session.tsx)
   useSessionEvents()
-  <SessionToolbar>
-    <RunSkillButton> (packages/ui)
+  <RunSkillButton /> (packages/ui)
 ```
 
 - Show file responsibility or a broad refactor as a shallow file tree:
 
 ```text
 src/
-├── commands/       # parses user actions
-├── sessions/       # owns session state
-└── transport/      # sends API requests
+├── commands/    # parses user actions
+└── transport/   # sends API requests
 ```
 
 - Show component interaction, control flow, or data flow with Mermaid:
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant UI
-    participant Daemon
     User->>UI: choose command
     UI->>Daemon: send expanded prompt
     Daemon-->>UI: stream result
 ```
 
-- Use `diff` when the point is what changes and the surrounding shape already exists. Match the diff shape to the topic.
-
-For a component change:
-
-```diff
- <SessionPage>
-   useSessionEvents()
-   <SessionToolbar>
-+    <RunSkillButton />
-   <SessionTimeline>
-+    <SkillResultCard />
-```
-
-For a file-layout change:
-
-```diff
- src/
- ├── commands/
-+│   └── show-me.ts       # expands the slash command
- ├── sessions/
--└── transport.ts
-+└── transport/
-+    ├── client.ts
-+    └── stream.ts
-```
-
-For a call-tree or call-stack change:
-
-```diff
- submitForm
-   createSession
-     persistPrompt
-+    expandSkillMention
-     launchAgent
--  navigateToSession
-+  navigateToSession
-+    subscribeToEvents
-```
-
-For a state or control-flow change:
+- Use `diff` when the point is what changes and the surrounding shape already exists. Match the diff shape to the topic: component, file layout, call tree/stack, or state/control flow.
 
 ```diff
  on(save)
 -  write content
-+  if content is unchanged
-+    return cached result
-+  write new content
++  if unchanged: return cached result
++  write content
 +  invalidate cache
 ```
 
@@ -152,8 +105,7 @@ For a state or control-flow change:
 
 ```ts
 function expandSkill(command: string): string {
-  const skillName = command.slice(1);
-  return `use the ${skillName} skill`;
+  return `use the ${command.slice(1)} skill`;
 }
 ```
 
