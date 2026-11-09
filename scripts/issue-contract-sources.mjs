@@ -59,7 +59,18 @@ export function sourceSelection(snapshot, briefs, revisionOf) {
   const eligible = receipt.issues.find(
     (entry) => entry.issue === identity,
   )?.legacy;
-  if (bodyBrief && (hasCategory || eligible || next.migrated || next.retired))
+  const unchangedCutoffBody =
+    eligible &&
+    record.cutoffBodyEdit &&
+    same(record.cutoffBodyEdit, {
+      id: snapshot.bodyRevision?.editId,
+      editedAt: snapshot.bodyRevision?.lastEditedAt ?? null,
+    });
+  if (
+    bodyBrief &&
+    (hasCategory || eligible || next.migrated || next.retired) &&
+    !(unchangedCutoffBody && !next.migrated)
+  )
     next = { ...next, migrated: true, retired: true };
   // Any observed edit/deletion/replacement retires the old source permanently.
   // Edit IDs also detect an edit-and-restore between evaluations.

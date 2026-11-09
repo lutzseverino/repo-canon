@@ -510,3 +510,21 @@ test("factory acceptance follows the first matching proof notice, independently 
     "a rewrite never moves the first proof notice past a valid later acceptance",
   );
 });
+
+test("activation retains an unchanged legacy approval when its intake already contained a Brief heading", () => {
+  const s = snapshot();
+  s.issue.body = completeAgentBrief;
+  s.bodyRevision.editId = "PRE_CUTOFF_BODY";
+  s.contractSources.record.cutoffBodyEdit = {
+    id: "PRE_CUTOFF_BODY",
+    editedAt: null,
+  };
+  s.contractSources.mode = "prepared";
+  s.comments.push(noticeFor(result(decideIssueContract(s))));
+  ready(s);
+  s.contractSources.mode = "body";
+  const decision = decideIssueContract(s);
+  assert.equal(result(decision).status, "approved");
+  assert.equal(result(decision).source.type, "comment");
+  assert.equal(decision.sourceRecord.migrated, false);
+});

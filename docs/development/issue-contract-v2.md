@@ -107,7 +107,9 @@ receipt and records, repair forward, and never roll back to comment selection.
 
 An eligible comment must keep its exact content revision and edit identity.
 A new/replacement Brief, source edit or deletion retires it. Editing and restoring
-identical bytes produces a different platform edit ID. A selected body Brief retires the old route; ordinary intake-context edits do
+identical bytes produces a different platform edit ID. A heading already present in the unchanged cutoff intake does not select a new
+body contract or invalidate its legacy approval. A selected new body Brief
+retires the old route; ordinary intake-context edits do
 not change an otherwise unchanged legacy comment contract. Once a body Brief is selected,
 `migrated` and `retired` remain true: newer comments, deleted feedback/body,
 category removal/re-add and reopen cannot resurrect a comment. Original request
