@@ -200,7 +200,7 @@ describes its pins and validation.
 
 ## Orchestrate plans
 
-Every profile installs the `orchestrate` skill, which only you can invoke.
+Only the `workbench` profile installs the `orchestrate` skill, which only you can invoke.
 With it, the orchestrating agent turns a feature or problem into a plan you
 approve, keeps the plan's state in a workbench, and runs the plan to an
 announced close. The workbench is a private git repository of plain Markdown,

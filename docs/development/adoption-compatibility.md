@@ -85,6 +85,26 @@ the file remains under `project-agent-guidance`.
 Sources: [inspection](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/inspection.md),
 [adoption sequence](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/src/adoption.ts).
 
+## Workbench-only orchestrate migration
+
+Only the `workbench` profile selects `skill-orchestrate`. Fresh `standard`
+and `factory` adoptions install none of its files. Updating either profile
+from a release that selected it records and removes the installed skill,
+its skill link and its retained source inputs through the CLI's existing
+selected-file removal machinery. The CLI keeps locally edited retired
+installations under its normal ownership policy; removal does not bypass
+that protection. Other skills keep their
+profile membership; workbench updates retain the complete skill, its runtime
+dependencies and notices. Adopt workbench in the separate workbench repository
+to continue using the skill, or use the standalone release-tag bundle.
+
+Canon's authoritative `.agents/skills/orchestrate/` source, credits and
+standalone bundle remain published. Canon's own non-workbench adoption has a
+one-time source transition described in
+[authoring and publication](authoring-and-publication.md#canons-self-adoption).
+That source restoration applies only to Canon; downstream standard/factory
+adopters receive the normal removal.
+
 ## GitHub repository settings
 
 Labels, required checks, and squash defaults need remote configuration and

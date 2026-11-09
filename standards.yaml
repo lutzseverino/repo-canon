@@ -413,11 +413,6 @@ defaults:
       name: improve-codebase-architecture
       source: .agents/skills/improve-codebase-architecture
 
-    skill-orchestrate:
-      kind: skill
-      name: orchestrate
-      source: .agents/skills/orchestrate
-
     skill-pr:
       kind: skill
       name: pr
@@ -648,6 +643,10 @@ profiles:
         kind: skill
         name: create-adopted-repo
         source: .agents/skills/create-adopted-repo
+      skill-orchestrate:
+        kind: skill
+        name: orchestrate
+        source: .agents/skills/orchestrate
       agent-configuration-index: { exclude: true }
       agent-guidance: { exclude: true }
       bug-report-template: { exclude: true }

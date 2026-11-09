@@ -73,7 +73,11 @@ from each skill's `CREDITS.md`, the upstream base's bytes for every skill and
 setup file identical to its base. It uses
 the release fixture's answers and a disposable source containing only declared
 inputs; GitHub HTTP responses and Git transport use local fixtures, with no
-in-tree factory dependency. Set `REPO_STANDARDS_PREFIX` to reuse that public
+in-tree factory dependency. Standard/factory updates from an orchestrate-owning
+release verify removal of the whole skill, its link and retained inputs,
+including the CLI's normal preservation of edited installations. A disposable
+source-authoring update restores Canon's tracked source from its pre-update
+commit and verifies that later updates leave it alone. Set `REPO_STANDARDS_PREFIX` to reuse that public
 CLI installation, or the test installs it outside the checkout. Runtime
 preparation also needs npm registry access.
 Run `node --test test/workbench-profile.test.mjs` for the `workbench` profile.
@@ -86,7 +90,9 @@ commit. The adoption must ask no scope, assessment or remote setup question,
 write no rules, `.github/` file or `AGENTS.md`, and leave every installed skill
 command able to import its modules. An update to a release that changes one
 skill then lands as one direct commit on `main` touching only that skill and
-the CLI's records.
+the CLI's records. These fixtures also verify the complete orchestrate directory,
+runtime dependencies and notices in the workbench and standalone tag bundle,
+and rejection of source validation when its authoritative source is missing.
 
 Node.js 24 remains the default toolchain and installed automation runtime.
 CI runs one job on each of Node.js 24 and 26 that installs the development
