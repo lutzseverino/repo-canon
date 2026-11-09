@@ -18,11 +18,11 @@
     "babysit": null,
     "code-review": {
       "path": "skills/engineering/code-review",
-      "edits": "It also drops the route to `setup-matt-pocock-skills` when the tracker configuration is missing, and its spec search reviews against the issue's implementation contract where the tracker configuration says which comment or body holds it."
+      "edits": "It also drops the route to `setup-matt-pocock-skills` when the tracker configuration is missing, and its spec search reviews against the issue's implementation contract where the tracker configuration says which comment or body holds it. It pins both comparison commits and the merge-base, runs the bundled ownership-facts.mjs collector before the independent axes, and passes its facts and codebase-design's Ownership check to Standards. Both prompts apply that section's cleanup allowance against the PR body and retain contract-based judgment and the contribution guide's Findings route."
     },
     "codebase-design": {
       "path": "skills/engineering/codebase-design",
-      "edits": null
+      "edits": "It adds the shared Ownership check section: value owners, triggers and cost read, wrapping and extraction defaults, deferred seams, narrow touched-code cleanup, contract disagreement routing, and capability/policy and vendored UI examples. Its description and Reads section expose that reference."
     },
     "create-adopted-repo": null,
     "create-repository": null,
@@ -49,7 +49,7 @@
     },
     "improve-codebase-architecture": {
       "path": "skills/engineering/improve-codebase-architecture",
-      "edits": "It also makes the grilling loop's domain-model edits on the branch and checkout `domain-modeling` directs."
+      "edits": "It also makes the grilling loop's domain-model edits on the branch and checkout `domain-modeling` directs. Named ownership exploration uses codebase-design's Ownership check for misplaced values, configuration kinds and surprising layout, passing that reference to its exploring sub-agent."
     },
     "orchestrate": null,
     "pr": {
@@ -75,7 +75,7 @@
     },
     "to-tickets": {
       "path": "skills/engineering/to-tickets",
-      "edits": "It also drops both routes to `setup-matt-pocock-skills`. Expand–contract batches that cannot each stay green become one ticket instead of sharing an integration branch, since every ticket merges on its own with its checks passing. On a real tracker, parent and blocker links are native only, and a link that cannot be created is reported instead of written into the body. Tickets are published awaiting an independent readiness review instead of carrying `ready-for-agent`, and the local ticket template's status is `state:triage`. Work that must be shown on a live system splits into a source ticket and a live-acceptance ticket that no merge closes, and nobody edits a ready ticket to record progress. Each step that publishes an issue body or posts a comment on a hosted tracker names the installed comment rules' section to read first."
+      "edits": "It also drops both routes to `setup-matt-pocock-skills`. Expand\u2013contract batches that cannot each stay green become one ticket instead of sharing an integration branch, since every ticket merges on its own with its checks passing. On a real tracker, parent and blocker links are native only, and a link that cannot be created is reported instead of written into the body. Tickets are published awaiting an independent readiness review instead of carrying `ready-for-agent`, and the local ticket template's status is `state:triage`. Work that must be shown on a live system splits into a source ticket and a live-acceptance ticket that no merge closes, and nobody edits a ready ticket to record progress. Each step that publishes an issue body or posts a comment on a hosted tracker names the installed comment rules' section to read first."
     },
     "triage": {
       "path": "skills/engineering/triage",
