@@ -70,6 +70,13 @@ The recorded evidence that a deployed change behaves on the live system as its
 implementation contract says. A merge never establishes it.
 _Avoid_: Deployed, merged, done
 
+**Intake**:
+The first pipeline stage, by which an owner's idea or a filed request becomes
+work: an idea through a conversation with the orchestrating agent and then a
+grill, unless the owner approves a shorter path for it; a filed request
+through triage.
+_Avoid_: Idea capture, backlog grooming
+
 **Code-bound request**:
 An intake request whose expected result is clear and whose remaining questions
 the code, logs, or a reproduction can answer, so research writes its Agent
@@ -83,11 +90,11 @@ written from the owner's recorded decisions and any inferred intent.
 _Avoid_: Feature request, when meaning the triage path
 
 **Orchestrating agent**:
-The agent a maintainer runs to triage requests, which starts their research
-runs and grilling sessions, receives every question first, records inferred
-intent, keeps the decision inbox, reviews each brief independently, and
-accepts a brief that holds by applying readiness. An owner who triages
-themselves is the orchestrating agent.
+The agent a maintainer runs to take their ideas through intake and to triage
+requests, which schedules grilling sessions and starts research runs, receives
+every question first, records inferred intent, keeps the decision inbox,
+reviews each brief independently, and accepts a brief that holds by applying
+readiness. An owner who triages themselves is the orchestrating agent.
 _Avoid_: Factory, research run
 
 **Inferred intent**:
