@@ -19,6 +19,25 @@ where named below, with the absent-input fallbacks under Reads.
 Use [AGENT-BRIEF.md](AGENT-BRIEF.md) for durable briefs and triage notes, and
 [OUT-OF-SCOPE.md](OUT-OF-SCOPE.md) for the `.out-of-scope/` rejection records.
 
+## Publication mode
+
+Read the validator's current mode and selected source before publishing a
+brief. Prepared mode keeps the comment route. After explicit body-mode
+activation, new/revised contracts replace the issue body and preserve one
+verbatim Original request at its end, as [AGENT-BRIEF.md](AGENT-BRIEF.md) says.
+An exact unchanged inventoried legacy comment stays authoritative until its
+next revision; no new or edited comment becomes a contract after cutoff.
+Missing/ambiguous original input or unknown mode holds publication/readiness.
+Ordinary research notes, progress and questions remain comments.
+
+A factory agent remains read-only and returns its brief as before. The host
+chooses the verified publication route, captures intake author/writer proof
+before replacement, and publishes separate body attestation evidence. Mutable
+run reports are not contract evidence. Wait for a matching validator notice
+and current-event approval; arbitrary app bodies/markers grant no authority.
+The body protocol is an explicit adopter activation, never a package-install
+side effect; no live activation occurs while implementing its source ticket.
+
 ## Modes and roles
 
 - **Orchestrating agent**, the default maintainer invocation: follow every section except Factory triage run. Sort requests, start a fresh-context research run per request, receive every question first, keep the decision inbox, and independently review and accept briefs.
@@ -31,7 +50,8 @@ and link the owner to it for review by someone who did not write it.
 Follow `AGENTS.md`'s Agent skills delegation and session-naming requirements;
 name separately from the invocation and task context. Each research handoff
 uses its listed issue references and deliverables as task context, assigning
-the issue comments as its research artifacts and destinations.
+ordinary research notes to comments and the brief to the verified publication
+route above.
 
 Canonical categories are `type:bug` (broken) and `type:enhancement` (improvement).
 States name the wait: `state:triage` (evaluation), `state:reporter` (outside reporter's fact), `state:grill` (owner-intent grill), `state:owner` (owner), `state:ready` (AFK agent); `wontfix` closes work that will not be actioned. For a PR, ready means a brief is attached and an agent takes the next diff step.
@@ -51,7 +71,7 @@ Query the issue tracker and present three buckets, oldest first:
 2. **`state:triage`**: evaluation in progress.
 3. **`state:reporter`, `state:grill` or `state:owner` with reporter activity or an owner decision since the last triage notes**: needs re-evaluation.
 
-When PRs are in scope, include external PRs in these buckets and tag each line `[PR]` or `[issue]`. Discovery surfaces only *external* PRs (the tracker config defines who counts as external), so a collaborator's in-flight PR is not triage work. This filter is discovery-only; an explicitly named PR is always triaged regardless of author.
+When PRs are in scope, include external PRs in these buckets and tag each line `[PR]` or `[issue]`. Discovery surfaces only _external_ PRs (the tracker config defines who counts as external), so a collaborator's in-flight PR is not triage work. This filter is discovery-only; an explicitly named PR is always triaged regardless of author.
 
 Show counts and a one-line summary per item. Let the maintainer pick.
 
@@ -99,7 +119,7 @@ Once it holds, [accept it](#accept-a-brief-that-holds).
 
 4. **Decide the split** as the contribution guide's Triage section says, and send any draft your split changes substantially back to the grill, or to a research run when it needs code facts the grill did not gather.
 
-5. **File** the issues with the grill's briefs: post each brief on its intake issue, or file a new issue for it, as `.repo-standards/rules/comments.md#disclaimers` says, with the owner decisions it relies on copied with their dates and quoted words into its triage notes, without a reference to the private record.
+5. **File** the issues with the grill's briefs: publish each brief through the verified route on its intake issue, or file a new issue for it, as `.repo-standards/rules/comments.md#disclaimers` says, with the owner decisions it relies on copied with their dates and quoted words into its triage notes, without a reference to the private record.
 
 6. **Review and accept** each brief as on the code-bound path, and refuse one that leaves owner intent open as the contribution guide's Triage section says. Route each such question as [Route questions](#route-questions) says, and accept only once every one the owner must answer is answered. A question a recorded decision already settles goes back to the brief's writer as a correction instead.
 
@@ -146,8 +166,8 @@ The factory starts this run for one issue, read-only, and the installed factory 
 Before posting a comment for any outcome below, read `.repo-standards/rules/comments.md#disclaimers`.
 
 - A missing fact or decision: route it as [Route questions](#route-questions) says; for a question to an outside reporter, post triage notes (template below).
-- For `wontfix`, close the issue, with the comment depending on *why*:
-  - **Already implemented**: the change already exists in the codebase. Point to where it lives; do **not** write to `.out-of-scope/` (that KB is for *rejected* requests, not built ones).
+- For `wontfix`, close the issue, with the comment depending on _why_:
+  - **Already implemented**: the change already exists in the codebase. Point to where it lives; do **not** write to `.out-of-scope/` (that KB is for _rejected_ requests, not built ones).
   - **Rejected (bug)**: give a polite explanation, then close.
   - **Rejected (enhancement)**: write to `.out-of-scope/`, link to it from a comment, then close ([OUT-OF-SCOPE.md](OUT-OF-SCOPE.md)).
 - `state:triage`: apply the role. Optional comment if there's partial progress.

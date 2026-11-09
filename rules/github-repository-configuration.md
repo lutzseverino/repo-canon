@@ -544,9 +544,16 @@ When adding a native blocker, pass the blocking issue's numeric database ID as
 ## Agent Brief
 
 The issue-contract workflow enforces this shape for a triaged request's Agent
-Brief comment; the `triage` skill is a method for writing one.
+Brief; the `triage` skill is a method for writing one. Prepared mode retains
+comment publication and v1 decisions. Explicit body-mode activation requires a
+trusted complete cutoff, a compatible v1/v2 reader and dual-route poster, and
+frozen publication during capture. Body mode, v2 results and refusal of new
+comment contracts start together; downloading a release never activates them.
+Only an exact unchanged inventoried legacy comment remains eligible, without
+expiry, until its next revision moves to the body. Follow the validator's
+selected source rather than selecting a competing comment.
 
-The comment starts with the `comments` rules' triage disclaimer, then a blank
+The selected source starts with the `comments` rules' triage disclaimer, then a blank
 line, then the `## Agent Brief` heading.
 
 Nothing else comes between the disclaimer and the heading; other triage notes
@@ -570,6 +577,16 @@ casing of the heading and field names do not matter, and the workflow also
 accepts the disclaimer emphasized with `_` or without the blank line before
 the heading. Contract syntax inside code or HTML comments is example content,
 not part of the brief.
+
+In body mode, place `## Original request` at the end, preserving the reporter's
+original text verbatim exactly once through every revision. Reuse a correctly
+preserved original; missing or ambiguous original input holds body conversion. Capture
+intake author/writer proof before overwriting the body. A factory's configured
+author posts a separate exact-revision attestation; app authorship or a copied
+marker alone never authorizes readiness. The validator verifies durable
+publication proof, the matching notice and the current ready event; authorized
+person review remains available. Retain cutoff, selection and retirement facts
+outside replaceable issue text/feedback across deletion, reopen and upgrades.
 
 ## Wayfinder maps and children
 

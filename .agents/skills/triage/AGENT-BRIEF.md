@@ -1,8 +1,21 @@
 # Writing Agent Briefs
 
-An agent brief is a structured comment posted on a GitHub issue or PR before it moves to `state:ready`; readiness follows its acceptance, as [SKILL.md](SKILL.md) describes. It is the authoritative specification that an AFK agent will work from. The original body and discussion are context: the agent brief is the contract.
+An agent brief is the implementation contract accepted before `state:ready`.
+Read the validator's source/mode first: prepared mode publishes a brief comment;
+after explicit body-mode activation, new/revised briefs replace the issue body.
+Only an exact unchanged inventoried legacy comment remains authoritative until
+its next revision. Readiness follows independent acceptance, as
+[SKILL.md](SKILL.md) describes. Never pick a competing comment after migration.
 
-The brief states **what the agent should do**, which stretches to both surfaces: for an issue, that's building the change from nothing; for a PR, it's what's left to do *to the existing diff*: finish it, close gaps, address review points. Same principles either way; the PR example below shows the difference.
+In body mode, preserve the reporter's request verbatim once under
+`## Original request` at the end, after the brief and triage notes. On first
+conversion capture the original before replacing intake; reuse a correctly
+preserved original on later revisions. Never nest a previous brief/body or
+invent missing text. Missing or ambiguous original input blocks publication
+and readiness. Progress and questions remain comments. The host captures
+intake author/run-writer proof independently before body replacement.
+
+The brief states **what the agent should do**, which stretches to both surfaces: for an issue, that's building the change from nothing; for a PR, it's what's left to do _to the existing diff_: finish it, close gaps, address review points. Same principles either way; the PR example below shows the difference.
 
 ## Principles
 
@@ -56,7 +69,7 @@ Implementation choices that don't change what users or operators see stay with t
 
 ## Triage notes
 
-The triage notes that accompany a brief follow it in the same comment, never between the disclaimer and the `## Agent Brief` heading. Fact-finding and owner decisions posted before the brief exists are separate triage notes comments. A brief's notes cover:
+The triage notes that accompany a brief follow it in the selected body or eligible legacy comment, never between the disclaimer and the `## Agent Brief` heading. Fact-finding and owner decisions posted before the brief exists are separate triage notes comments. A brief's notes cover:
 
 - **Path**: code-bound or intent-bound, with a one-line reason.
 - **Verification**: what was checked and how (reproduction, code path, tests run), and where the redundancy search looked.
@@ -83,15 +96,18 @@ Describe what should happen after the agent's work is complete.
 Be specific about edge cases and error conditions.
 
 **Key interfaces:**
+
 - `TypeName`: what needs to change and why
 - `functionName()` return type: what it currently returns vs what it should return
 - Config shape: any new configuration options needed
 
 **Acceptance criteria:**
+
 - [ ] Specific, testable criterion 1
 - [ ] Specific, testable criterion 2
 
 **Out of scope:**
+
 - Thing that should NOT be changed or addressed in this issue
 ```
 
@@ -110,15 +126,18 @@ Be specific about edge cases and error conditions.
 **Desired behavior:** Break at the last word boundary before 1024 characters and append "...".
 
 **Key interfaces:**
+
 - `SkillMetadata.description`: keep its type; populate it at word boundaries
 - Functions reading SKILL.md frontmatter to extract the description
 
 **Acceptance criteria:**
+
 - [ ] Under 1024 chars: unchanged
 - [ ] Over 1024 chars: truncate at the last word boundary before the limit
 - [ ] Truncated output ends with "..."; total length is at most 1024 chars
 
 **Out of scope:**
+
 - Changing the limit or supporting multi-line descriptions
 ```
 
@@ -139,17 +158,20 @@ Record rejected features in `.out-of-scope/<concept>.md`, including the decision
 reasoning and all requesting issue links. Check for matches during triage.
 
 **Key interfaces:**
+
 - Each record: `# Concept Name`, `**Decision:**`, `**Reason:**`, and a
   `**Prior requests:**` issue-link list
 - Triage: read all `.out-of-scope/*.md` early; match by concept similarity
 
 **Acceptance criteria:**
+
 - [ ] Closing a feature as wontfix creates/updates its record with the decision,
       reasoning and closed-issue link
 - [ ] Matching records gain a Prior requests link rather than a duplicate file
 - [ ] Triage checks records and surfaces matching prior rejections
 
 **Out of scope:**
+
 - Automated matching: a human confirms each match
 - Reopening rejections or recording bugs (only enhancements belong here)
 ```
@@ -171,10 +193,12 @@ on success, but errors remain human text and the flag lacks tests.
 exit codes and the existing human-readable output without the flag.
 
 **Key interfaces:**
+
 - Error path: emit `{ "error": string }` under `--json`
 - Reuse the PR's serializer
 
 **Acceptance criteria:**
+
 - [ ] `triage list --json` emits valid JSON for both success and error cases
 - [ ] Exit codes match the non-JSON command
 - [ ] A test covers the `--json` success output and one error case

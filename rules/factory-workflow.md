@@ -59,6 +59,27 @@ sole required source. Independent acceptance checks input availability with
 the other requirements; a passing structure check grants no readiness. Sandbox
 access is unchanged.
 
+## Contract publication mode
+
+Before publishing triage, the host verifies the repository's mode and cutoff.
+Preparation retains legacy comment publication and v1 authorization. An explicit
+per-repository cutoff activates body publication, v2 decisions and rejection of
+new comment contracts together, after a bridge reader/poster is installed.
+Freeze new/revised publication during complete inventory and its final re-read;
+include held and skip-routed issues. Unknown mode or proof holds publication.
+
+In body mode the read-only agent still returns its brief; the host preserves
+one verbatim Original request and independently captured intake author/writer
+proof, publishes the body, and posts separate immutable exact-revision
+attestation evidence with one configured run marker. Mutable run reports never
+replace contract evidence. Wait for the validator's matching body/proof notice,
+then request readiness and wait for approval of that current event. Consume the
+validator's verified v2 association; never parse a competing contract or infer
+authority from an app author. Retain the exact unchanged inventoried legacy
+exception indefinitely; edits move it into the body, and deletion cannot resurrect it.
+Compatible release/adoption/host activation and actual pickup evidence belong
+to their separately closing live-acceptance ticket, never to source closure.
+
 ## Parent readiness
 
 A parent (a specification or any issue with sub-issues) never runs; its

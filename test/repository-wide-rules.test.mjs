@@ -164,7 +164,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     const profile = validation.profiles[name];
     assert.equal(
       profile.declarations.length,
-      { standard: 62, factory: 67 }[name],
+      { standard: 65, factory: 70 }[name],
     );
     assert.deepEqual(
       profile.declarations.find(({ id }) => id === "standards-update-workflow"),
@@ -564,6 +564,9 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     );
     const countedFiles = [
       "scripts/validate-issue-contract.mjs",
+      "scripts/issue-contract-sources.mjs",
+      "scripts/issue-contract-store.mjs",
+      "scripts/issue-contract-cutoff.mjs",
       "scripts/validate.mjs",
       "operations/lib/rendered-markdown.mjs",
       ".agents/skills/triage/ready.mjs",

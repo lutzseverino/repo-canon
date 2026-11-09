@@ -7,6 +7,7 @@ import {
   noticePrecedes,
   observedChangeId,
   readyLabels,
+  readIssueContractObservation,
 } from "../../../scripts/validate-issue-contract.mjs";
 import {
   connectionFor,
@@ -50,7 +51,9 @@ async function actingLogin(connection) {
   const identity = await requestData(connection, {
     method: "POST",
     path: "/graphql",
-    body: { query: "query TriageActingAccount { viewer { __typename login } }" },
+    body: {
+      query: "query TriageActingAccount { viewer { __typename login } }",
+    },
   });
   const viewer = identity?.data?.viewer;
   if (
@@ -72,13 +75,25 @@ async function snapshot(connection, number) {
   const comments = await tracker.comments(number);
   const events = await tracker.labelChanges(number);
   // The validator's own reader interprets its published result.
-  return { issue, events, ...issueContractResult(comments) };
+  const result = issueContractResult(comments);
+  const current =
+    result.state?.format === "repo-canon/issue-contract-state/v2"
+      ? result.state.observation ===
+        (await readIssueContractObservation(
+          connection,
+          issue,
+          comments,
+          events,
+        ))
+      : true;
+  return { issue, events, current, ...result };
 }
 
 // Whether the result has observed the latest readiness change.
-const processed = ({ state, events }) =>
+const processed = ({ state, events, current }) =>
+  current &&
   (state?.observedEventId ?? state?.reviewEventId ?? null) ===
-  observedChangeId(events);
+    observedChangeId(events);
 
 function parentNeedsReapply({ issue, events }, label) {
   if (

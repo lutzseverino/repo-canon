@@ -4,7 +4,10 @@ import { connect } from "../vendor/postern/postern.mjs";
 import { pathToFileURL } from "node:url";
 import { installedValidator } from "./helpers/installed-validator.mjs";
 import { main } from "../.agents/skills/triage/ready.mjs";
-import { resultFormat } from "../scripts/validate-issue-contract.mjs";
+import {
+  resultFormat,
+  issueContractObservation,
+} from "../scripts/validate-issue-contract.mjs";
 
 const revision = `sha256:${"a".repeat(64)}`;
 const label = "state:ready";
@@ -174,6 +177,19 @@ async function exercise(options = {}, command = main) {
         },
       });
     }
+    if (
+      url.pathname === "/graphql" &&
+      body.query.includes("ContractSourceEdits")
+    )
+      return json({
+        data: {
+          nodes: body.variables.ids.map((id) => ({
+            id,
+            lastEditedAt: null,
+            userContentEdits: { nodes: [] },
+          })),
+        },
+      });
     if (url.pathname === "/graphql")
       return json({
         data: {
@@ -221,13 +237,67 @@ async function exercise(options = {}, command = main) {
           : state.status === "approved"
             ? "## Issue contract readiness recorded"
             : "## Issue contract awaiting review");
+      const v2 = options.v2
+        ? {
+            format: "repo-canon/issue-contract-state/v2",
+            label: state.label ?? null,
+            reviewer: state.reviewer ?? null,
+            reviewEventId: state.reviewEventId ?? null,
+            observedEventId: state.observedEventId ?? null,
+            kind: "triaged Agent Brief",
+            source: {
+              type: "issue-body",
+              editedAt: null,
+              editId: "created:ISSUE_42",
+            },
+            event: { kind: null, actor: null, label: null, commentId: null },
+            evaluatedAt: time,
+            sourceInvalidation: null,
+            publishedAt: time,
+            rejectionReason: null,
+            rejectedCreationLabel: null,
+            selection: {
+              mode: "body",
+              cutoff: {
+                id: "a".repeat(40),
+                release: "v1",
+                sha: "b".repeat(40),
+                epoch: time,
+              },
+              state: "migrated",
+              reason: null,
+            },
+            factoryTriage: null,
+            observation:
+              options.staleObservation && waits === 0
+                ? `sha256:${"a".repeat(64)}`
+                : issueContractObservation({
+                    issue: {
+                      nodeId: "ISSUE_42",
+                      body: options.body ?? "Intake",
+                      labels,
+                    },
+                    comments: [],
+                    sourceEdits: {
+                      ISSUE_42: { id: "created:ISSUE_42", editedAt: null },
+                    },
+                    events: events.map((change) => ({
+                      id: change.id,
+                      action: change.event === "labeled" ? "added" : "removed",
+                      label: change.label.name,
+                      actor: change.actor,
+                      time: change.created_at,
+                    })),
+                  }),
+          }
+        : {};
       const feedback = {
         id: 10,
         node_id: "COMMENT_10",
         html_url: "https://github.com/owner/repo/issues/42#issuecomment-10",
         // The current result format unless the fixture asks for another,
         // or for the earlier unversioned line.
-        body: `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${JSON.stringify(options.legacy ? state : { format: options.format ?? resultFormat, ...state })} -->\n${heading}`,
+        body: `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${JSON.stringify(options.legacy ? state : { format: options.format ?? resultFormat, ...state, ...v2 })} -->\n${heading}`,
         user: { login: "github-actions[bot]", type: "Bot" },
         created_at: time,
         updated_at: time,
@@ -942,4 +1012,25 @@ test("a GraphQL Bot viewer resolves its suffixed account rather than a same-name
     assert.equal(result.error, undefined);
     assert.equal(writes(result).length, 1);
   }
+});
+
+test("v2 readiness waits for all platform facts to be evaluated before writing readiness", async () => {
+  const result = await exercise({
+    v2: true,
+    staleObservation: true,
+    onWait({ phase, requests, waits }) {
+      if (waits === 1) {
+        assert.equal(phase, "before");
+        assert.ok(
+          !requests.some(
+            (request) =>
+              request.method === "POST" && request.path.endsWith("/labels"),
+          ),
+        );
+      }
+    },
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.code, 0);
+  assert.equal(writes(result).length, 1);
 });
