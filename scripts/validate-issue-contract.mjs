@@ -11,6 +11,24 @@ import {
   markdownTokenSpans,
 } from "../operations/lib/rendered-markdown.mjs";
 
+import {
+  bodyResultFormat,
+  sourceSelection,
+  originalMatches,
+  bodyTriageAssociation,
+  same,
+  intakeOriginal,
+  digest,
+} from "./issue-contract-sources.mjs";
+
+import {
+  loadContractSources,
+  saveContractSourceRecord,
+  sourceEditIdentities,
+  captureContractIntake,
+  contractSourceConfiguration,
+} from "./issue-contract-store.mjs";
+
 // How the validator identifies an issue's contract kind and the parent its
 // `Parent` section names, with the issue Markdown parsing they rest on.
 // A triaged request's category, which its Agent Brief names and its one
@@ -211,6 +229,83 @@ const wayfinderChildFields = new Set(["parent", "question"]);
 // An open issue's evaluation always writes its result, unless the issue carries
 // no implementation contract and has never had a result.
 export function decideIssueContract(snapshot) {
+  if (
+    snapshot.issue.state === "closed" ||
+    !snapshot.contractSources ||
+    snapshot.contractSources.mode === "prepared"
+  )
+    return decideCurrentContract(snapshot);
+  const selected = selectedSource(snapshot);
+  // The receipt/ledger retains notice and acceptance when replaceable feedback
+  // is deleted. It never overrides a newer live feedback record.
+  const saved = selected.record?.notice ?? selected.legacy?.notice;
+  const effective = {
+    ...snapshot,
+    selectedSource: selected,
+    comments:
+      !findFeedback(snapshot.comments) && saved
+        ? [...snapshot.comments, saved]
+        : snapshot.comments,
+  };
+  const decision = decideCurrentContract(effective);
+  if (decision.feedback) {
+    const line = feedbackStateLine(decision.feedback.body);
+    const state = JSON.parse(line.slice(feedbackStatePrefix.length, -4));
+    state.format = bodyResultFormat;
+    state.selection = selected.selection;
+    state.observation = issueContractObservation({
+      ...snapshot,
+      issue: {
+        ...snapshot.issue,
+        labels: [
+          ...new Set([
+            ...snapshot.issue.labels
+              .map(labelName)
+              .filter((label) => !decision.removeLabels.includes(label)),
+            ...decision.addLabels,
+          ]),
+        ],
+      },
+    });
+    state.factoryTriage = null;
+    const assessed = assessStructure(effective);
+    if (assessed.valid && assessed.contract?.type === "issue-body")
+      state.factoryTriage = bodyTriageAssociation(
+        effective,
+        contractRevision(effective, assessed),
+      );
+    decision.feedback.body = decision.feedback.body.replace(
+      line,
+      `${feedbackStatePrefix}${JSON.stringify(state)} -->`,
+    );
+    // A restored durable notice must recreate the platform comment.
+    decision.feedback.commentId = findFeedback(snapshot.comments)?.id ?? null;
+  }
+  return {
+    ...decision,
+    sourceRecord: selected.record,
+    selection: selected.selection,
+  };
+}
+
+function selectedSource(snapshot) {
+  return sourceSelection(
+    {
+      ...snapshot,
+      bodyBrief: Boolean(agentBriefHeading(snapshot.issue.body ?? "")),
+    },
+    snapshot.comments.filter((comment) =>
+      agentBriefHeading(comment.body ?? ""),
+    ),
+    (comment) =>
+      contractRevision(snapshot, {
+        kind: "triaged Agent Brief",
+        contract: { type: "comment", comment, body: comment.body },
+      }),
+  );
+}
+
+function decideCurrentContract(snapshot) {
   if (snapshot.issue.state === "closed") {
     const removeLabels = (snapshot.issue.labels ?? [])
       .map(labelName)
@@ -465,6 +560,11 @@ function assessStructure(snapshot) {
     blockedBy: relationships.blockedBy,
     parent: relationships.parent,
     relationshipErrors: relationships.errors,
+    selected:
+      snapshot.selectedSource ??
+      (snapshot.contractSources?.mode !== "prepared" && snapshot.contractSources
+        ? selectedSource(snapshot)
+        : null),
   });
 }
 
@@ -500,6 +600,7 @@ function validate({
   blockedBy,
   parent,
   relationshipErrors,
+  selected,
 }) {
   const labels = new Set((issue.labels ?? []).map(labelName));
   const body = issue.body ?? "";
@@ -522,7 +623,25 @@ function validate({
     return outcome("Wayfinder child", errors, labels, false);
   }
 
-  const brief = latestAgentBrief(comments);
+  if (selected?.error) {
+    errors.push(selected.error);
+    return outcome("triaged Agent Brief", errors, labels, true);
+  }
+  if (selected?.type === "issue-body") {
+    validateTriagedLabels(labels, null, errors);
+    validateAgentBrief(body, labels, errors);
+    if (!originalMatches(body, selected.record?.intake))
+      errors.push(
+        "Keep the authenticated Original request verbatim exactly once at the end of the body.",
+      );
+    return outcome("triaged Agent Brief", errors, labels, true, {
+      type: "issue-body",
+      body,
+    });
+  }
+  const brief = selected
+    ? (selected.comment ?? null)
+    : latestAgentBrief(comments);
   const hasTriageCategory = [...labels].some((label) =>
     categoryLabels.has(label),
   );
@@ -912,7 +1031,13 @@ function contractRevision({ bodyRevision }, result) {
       editedAt: bodyRevision.lastEditedAt ?? null,
     };
     publishedSource = { type: "issue-body", editedAt: source.editedAt };
-    openingEligible = bodyRevision.lastEditedAt == null;
+    openingEligible =
+      bodyRevision.lastEditedAt == null &&
+      result.kind !== "triaged Agent Brief";
+    if (result.kind === "triaged Agent Brief" && bodyRevision.editId) {
+      source.editId = bodyRevision.editId;
+      publishedSource.editId = bodyRevision.editId;
+    }
   } else {
     const comment = result.contract.comment;
     source = {
@@ -1011,6 +1136,24 @@ function assessReadiness({
         observedEventId,
         sourceInvalidation,
       };
+    if (
+      result.kind === "triaged Agent Brief" &&
+      result.contract.type === "issue-body" &&
+      grant.reviewer === snapshot.triageResult?.author
+    ) {
+      const association = bodyTriageAssociation(
+        snapshot,
+        contractRevision(snapshot, result),
+      );
+      if (!association || !same(recorded?.factoryTriage, association))
+        return {
+          valid: false,
+          error:
+            "Factory proof changed or has not been evaluated in this body's revision notice; publish matching proof, wait for its notice and request fresh acceptance.",
+          observedEventId,
+          sourceInvalidation,
+        };
+    }
     const authority =
       grant.reviewer === snapshot.triageResult?.author
         ? triageAuthority(snapshot, result)
@@ -1213,8 +1356,20 @@ function supersedingDeletedBrief(currentEvent, result) {
 // run's triage result, which names the run on exactly one marked line, and the
 // run did not write the issue. An issue the factory's account opened names the
 // run that wrote it on one marked line too; without one, the writer is unknown.
-function triageAuthority({ issue, triageResult }, result) {
+function triageAuthority(snapshot, result) {
+  const { issue, triageResult } = snapshot;
   const { marker, author } = triageResult;
+  if (result.contract.type === "issue-body") {
+    const association = bodyTriageAssociation(
+      snapshot,
+      contractRevision(snapshot, result),
+    );
+    if (association) return { authorized: true, run: association.run };
+    return {
+      authorized: false,
+      refusal: `@${author}'s readiness lacks authenticated exact-body factory triage proof. A person must review it.`,
+    };
+  }
   const brief = result.contract.comment;
   const runs =
     brief && (brief.user ?? brief.author)?.login === author
@@ -1315,7 +1470,10 @@ function feedbackState(body) {
   }
   if (!state || typeof state !== "object" || Array.isArray(state)) return null;
   if (Object.hasOwn(state, "format"))
-    return state.format === resultFormat ? state : null;
+    return state.format === resultFormat ||
+      (state.format === bodyResultFormat && validBodyResult(state))
+      ? state
+      : null;
   const notice = normalizeMarkdown(body);
   const carriedUnder = notice.includes(needsAttentionHeading)
     ? "needs-attention"
@@ -1820,6 +1978,7 @@ export async function runIssueContractValidation(
   pause = wait,
   now = Date.now,
   triageResult = factoryTriageResult(),
+  sourceConfiguration = contractSourceConfiguration(),
 ) {
   const tracker = connection.issueTracker;
   if (!event) {
@@ -1872,6 +2031,37 @@ export async function runIssueContractValidation(
     permissions: {},
     triageResult,
   };
+  const facts = await loadContractSources(
+    connection,
+    issueNumber,
+    sourceConfiguration,
+  );
+  if (facts.mode === "body") {
+    snapshot.contractSources = facts;
+    snapshot.sourceEdits = await sourceEditIdentities(connection, [
+      current.nodeId,
+      ...observationComments(snapshot.comments).map(
+        (comment) => comment.node_id,
+      ),
+    ]);
+    snapshot.bodyRevision.editId = snapshot.sourceEdits[current.nodeId].id;
+    if (!facts.record && !agentBriefHeading(issue.body ?? ""))
+      await captureContractIntake(
+        connection,
+        issueNumber,
+        triageResult,
+        facts,
+        current,
+        snapshot.sourceEdits,
+      );
+    const selected = selectedSource(snapshot);
+    await saveContractSourceRecord(
+      connection,
+      issueNumber,
+      facts,
+      selected.record,
+    );
+  }
   const readTimeline = async () =>
     (await tracker.labelChanges(issueNumber)).map(timelineEvent);
   let needs = snapshotNeeds(snapshot);
@@ -1913,13 +2103,234 @@ export async function runIssueContractValidation(
     await tracker.removeLabel(issueNumber, label);
   if (decision.addLabels.length)
     await tracker.addLabels(issueNumber, decision.addLabels);
+  let writtenFeedback;
   if (decision.feedback?.commentId == null && decision.feedback)
-    await tracker.createComment(issueNumber, decision.feedback.body);
+    writtenFeedback = await tracker.createComment(
+      issueNumber,
+      decision.feedback.body,
+    );
   else if (decision.feedback)
-    await tracker.updateComment(
+    writtenFeedback = await tracker.updateComment(
       decision.feedback.commentId,
       decision.feedback.body,
     );
+  if (facts.mode === "body" && decision.feedback && facts.record) {
+    const notice = {
+      id: writtenFeedback?.id ?? decision.feedback.commentId,
+      body: decision.feedback.body,
+      user: { login: "github-actions[bot]" },
+      updated_at: writtenFeedback?.updatedAt ?? snapshot.evaluatedAt,
+    };
+    await saveContractSourceRecord(connection, issueNumber, facts, {
+      ...facts.record,
+      notice,
+    });
+  }
   (decision.exitCode === 0 ? console.log : console.error)(decision.message);
   return decision.exitCode;
+}
+
+// Repository-facing cutoff input. Uses the same selector, revision and result
+// reader as live validation; inventory inclusion never implies approval.
+export async function contractCutoffInventory(connection) {
+  const listed = await connection.issueTracker.issues({ state: "open" });
+  const issues = [];
+  for (const item of listed) {
+    const issue = await connection.issueTracker.issue(item.number);
+    if (issue.state !== "open")
+      throw new Error("Open issue inventory changed while reading.");
+    const comments = (await connection.issueTracker.comments(item.number)).map(
+      (comment) => ({
+        ...comment,
+        node_id: comment.nodeId,
+        updated_at: comment.updatedAt,
+        user: comment.author,
+      }),
+    );
+    const brief = latestAgentBrief(comments);
+    const edits = await sourceEditIdentities(connection, [
+      issue.nodeId,
+      brief?.node_id,
+    ]);
+    const labels = issue.labels.map(labelName);
+    const eligible = brief && labels.some((label) => categoryLabels.has(label));
+    const original = intakeOriginal(issue.body ?? "");
+    const triageResult = factoryTriageResult();
+    const intake =
+      original === null
+        ? null
+        : {
+            original,
+            author: issue.author.login,
+            writerRun:
+              triageResult &&
+              original === issue.body &&
+              markedRuns(original, triageResult.marker).length === 1
+                ? markedRuns(original, triageResult.marker)[0]
+                : null,
+            sourceEdit: edits[issue.nodeId],
+          };
+    const contract = eligible
+      ? contractRevision(
+          { bodyRevision: null },
+          {
+            kind: "triaged Agent Brief",
+            contract: { type: "comment", comment: brief, body: brief.body },
+          },
+        )
+      : null;
+    const feedback = findFeedback(comments);
+    issues.push({
+      number: issue.number,
+      issue: issue.nodeId,
+      bodyEdit: edits[issue.nodeId],
+      intake,
+      legacy: contract
+        ? { ...contract, edit: edits[brief.node_id], notice: feedback ?? null }
+        : null,
+    });
+  }
+  issues.sort((a, b) => a.number - b.number);
+  return { complete: true, issues };
+}
+
+function observationComments(comments) {
+  return comments.filter(
+    (comment) =>
+      !(
+        (comment.user ?? comment.author)?.login === "github-actions[bot]" &&
+        comment.body?.includes(feedbackMarker)
+      ),
+  );
+}
+
+// V2 freshness is a digest of platform facts, without parsing a contract. Every
+// discussion edit/deletion participates, including report-like evidence.
+export function issueContractObservation(snapshot) {
+  const issue = snapshot.issue;
+  const node = issue.node_id ?? issue.nodeId;
+  const comments = observationComments(snapshot.comments)
+    .map((comment) => ({
+      id: String(comment.id),
+      body: comment.body,
+      author: (comment.user ?? comment.author)?.login,
+      editedAt: comment.updated_at ?? comment.updatedAt ?? null,
+      edit: snapshot.sourceEdits?.[comment.node_id ?? comment.nodeId] ?? null,
+    }))
+    .sort((a, b) =>
+      BigInt(a.id) < BigInt(b.id) ? -1 : BigInt(a.id) > BigInt(b.id) ? 1 : 0,
+    );
+  return digest(
+    JSON.stringify({
+      issue: node,
+      body: issue.body,
+      bodyEdit: snapshot.sourceEdits?.[node] ?? null,
+      labels: issue.labels.map(labelName).sort(),
+      comments,
+      observedEventId: snapshot.issueEvents
+        ? eventId(issueTimeline(snapshot).latestObservedTransition())
+        : observedChangeId(snapshot.events ?? []),
+    }),
+  );
+}
+
+export async function readIssueContractObservation(
+  connection,
+  issue,
+  comments,
+  events,
+) {
+  const sourceEdits = await sourceEditIdentities(connection, [
+    issue.nodeId,
+    ...observationComments(comments).map((comment) => comment.nodeId),
+  ]);
+  return issueContractObservation({ issue, comments, events, sourceEdits });
+}
+
+function validBodyResult(state) {
+  const nullableString = (value) => value === null || typeof value === "string";
+  const hash = (value) => /^sha256:[a-f0-9]{64}$/.test(value ?? "");
+  const source = state.source;
+  const validSource =
+    source === null ||
+    Boolean(
+      source &&
+      nullableString(source.editedAt) &&
+      (source.type === "comment"
+        ? /^\d+$/.test(source.id ?? "")
+        : source.type === "issue-body" &&
+          (source.editId === undefined ||
+            (typeof source.editId === "string" && source.editId))),
+    );
+  if (
+    !["approved", "awaiting-review", "needs-attention", "no-contract"].includes(
+      state.status,
+    ) ||
+    typeof state.kind !== "string" ||
+    !(state.revision === null || hash(state.revision)) ||
+    !validSource ||
+    ![
+      "label",
+      "reviewer",
+      "reviewEventId",
+      "evaluatedAt",
+      "observedEventId",
+      "sourceInvalidation",
+      "publishedAt",
+      "rejectionReason",
+      "rejectedCreationLabel",
+    ].every((key) => Object.hasOwn(state, key) && nullableString(state[key])) ||
+    !state.event ||
+    !["kind", "actor", "label", "commentId"].every(
+      (key) =>
+        Object.hasOwn(state.event, key) && nullableString(state.event[key]),
+    )
+  )
+    return false;
+  if (
+    state.status === "approved" &&
+    (!hash(state.revision) ||
+      !source ||
+      !readyLabels.has(state.label) ||
+      !state.reviewer ||
+      !state.reviewEventId)
+  )
+    return false;
+  const selection = state.selection;
+  const proof = state.factoryTriage;
+  if (
+    selection?.mode !== "body" ||
+    !["eligible", "migrated", "held", "native"].includes(selection.state) ||
+    !hash(state.observation) ||
+    !nullableString(selection.reason)
+  )
+    return false;
+  const cutoff = selection.cutoff;
+  if (
+    cutoff !== null &&
+    (!/^[a-f0-9]{40}$/.test(cutoff?.id ?? "") ||
+      !/^[a-f0-9]{40}$/.test(cutoff?.sha ?? "") ||
+      !cutoff.release ||
+      !Number.isFinite(Date.parse(cutoff.epoch)))
+  )
+    return false;
+  if (selection.state !== "held" && !cutoff) return false;
+  return (
+    proof === null ||
+    Boolean(
+      proof &&
+      proof.revision === state.revision &&
+      same(proof.source, state.source) &&
+      source?.type === "issue-body" &&
+      source.editId &&
+      typeof proof.run === "string" &&
+      proof.run.trim() &&
+      typeof proof.attestation?.id === "string" &&
+      hash(proof.attestation.revision) &&
+      typeof proof.attestation.edit?.id === "string" &&
+      nullableString(proof.attestation.edit.editedAt) &&
+      typeof proof.intake?.author === "string" &&
+      nullableString(proof.intake.writerRun),
+    )
+  );
 }

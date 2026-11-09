@@ -319,6 +319,8 @@ already runs the suite on every pull request.
 - [Issue contract validation](issue-contract-validation.md): supported issue
   shapes, feedback behavior, workflow state, workflow permissions, the one-time
   closed-issue label sweep, and runnable fixtures.
+- [Body contract protocol](issue-contract-v2.md): explicit activation, durable
+  legacy selection, host publication and the public v2 wire interface.
 - [Upstream skill compatibility](upstream-compatibility.md): the vendored
   Matt Pocock snapshot as the owned skills' upstream base, the shared base record, provenance rendering and
   its check, the three-way reconciliation for each upstream release, the native

@@ -220,13 +220,13 @@ adapt Repo Canon conventions; the owned copies carry them.
 The four public templates do not prohibit the installed skills' native issue
 formats. Validation must recognize the applicable contract and workflow.
 
-| Shape                        | Required structure and readiness meaning                                                                                                                                                             |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Native specification         | Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope, Further Notes. A reviewed specification can be `state:ready` without intake triage or a brief. |
-| Native implementation ticket | Optional Parent, What to build, Acceptance criteria, Blocked by. A reviewed ticket can be `state:ready` even when blockers remain open.                                                              |
-| Triaged request              | Agent Brief comment with Category, Summary, Current behavior, Desired behavior, Key interfaces, Acceptance criteria, Out of scope; original body/discussion is intake context.                       |
-| Wayfinder map                | Destination, Notes, Decisions so far, Not yet specified, Out of scope. An initially empty decisions section is valid; label wayfinder:map.                                                           |
-| Wayfinder child              | Question; one wayfinder research/prototype/grilling/task label. Eligibility uses open state, assignment, and blockers rather than requiring intake labels or a brief.                                |
+| Shape                        | Required structure and readiness meaning                                                                                                                                                                          |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Native specification         | Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope, Further Notes. A reviewed specification can be `state:ready` without intake triage or a brief.              |
+| Native implementation ticket | Optional Parent, What to build, Acceptance criteria, Blocked by. A reviewed ticket can be `state:ready` even when blockers remain open.                                                                           |
+| Triaged request              | Agent Brief with the seven required fields; prepared mode keeps comments, active body mode selects the body or exact unchanged inventoried legacy source. Body migration preserves one verbatim Original request. |
+| Wayfinder map                | Destination, Notes, Decisions so far, Not yet specified, Out of scope. An initially empty decisions section is valid; label wayfinder:map.                                                                        |
+| Wayfinder child              | Question; one wayfinder research/prototype/grilling/task label. Eligibility uses open state, assignment, and blockers rather than requiring intake labels or a brief.                                             |
 
 The `github-repository-configuration` rules state the Agent Brief and
 Wayfinder shapes the validator enforces, citing `triage` and `wayfinder` as

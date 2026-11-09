@@ -75,8 +75,8 @@ The `workbench` profile excludes the other default declarations with
 declarations, which standard and factory exclude. It retains skill directories and their runtime
 files without rules, guidance, checks, fixes or discovery. The files are the two skill license notices, the three Postern
 files that `babysit`, the `orchestrate` wait and the issue-contract validator
-import, and that validator, which the `triage` readiness command imports, with
-the rendered-Markdown runtime and the Marked and parse5 files it imports. The
+import, and that validator, which the `triage` readiness command imports, with its
+body-source/ledger modules and the rendered-Markdown runtime and the Marked and parse5 files it imports. The
 excluded declarations include all three default workflows,
 `issue-contract-workflow`, `pr-metadata-workflow` and
 `standards-update-workflow`, so the profile installs nothing under `.github/`.

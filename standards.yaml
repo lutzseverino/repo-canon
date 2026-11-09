@@ -223,6 +223,21 @@ defaults:
       target: scripts/validate-issue-contract.mjs
       exact: scripts/validate-issue-contract.mjs
 
+    issue-contract-sources:
+      kind: file
+      target: scripts/issue-contract-sources.mjs
+      exact: scripts/issue-contract-sources.mjs
+
+    issue-contract-store:
+      kind: file
+      target: scripts/issue-contract-store.mjs
+      exact: scripts/issue-contract-store.mjs
+
+    issue-contract-cutoff:
+      kind: file
+      target: scripts/issue-contract-cutoff.mjs
+      exact: scripts/issue-contract-cutoff.mjs
+
     issue-contract-workflow:
       kind: file
       target: .github/workflows/issue-contracts.yml
@@ -646,6 +661,7 @@ profiles:
       github-validator-trigger: { exclude: true }
       implementation-ticket-template: { exclude: true }
       issue-contract-workflow: { exclude: true }
+      issue-contract-cutoff: { exclude: true }
       issue-tracker-configuration: { exclude: true }
       pr-metadata-validator: { exclude: true }
       pr-metadata-workflow: { exclude: true }

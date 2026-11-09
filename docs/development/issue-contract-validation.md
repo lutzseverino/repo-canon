@@ -11,6 +11,12 @@ describes prerequisites, inheritance, and fallback.
 The workflow checks out the default branch explicitly and treats issue and
 comment Markdown only as data.
 
+The explicit prepared/body protocol, durable cutoff, exact v2 wire schema and
+host publication interface are documented in [body contract protocol](issue-contract-v2.md).
+Preparation preserves every v1 behavior below. After cutoff, source selection,
+edit identities and factory attestation use that protocol; native contracts and
+readiness role, timeline, notice and workflow-state rules remain applicable.
+
 The adapter fetches the issue itself before reading its discussion, timeline,
 relationships, edit revision, or actor roles. If that fetched issue is closed,
 it removes every `state:*`, `gate:*` and `factory:*` label, then skips
@@ -21,7 +27,7 @@ This applies to every issue kind, Wayfinder included, and every close reason.
 The fetched state decides this path whatever the trigger, even when the
 triggering event says the issue was open.
 
-The validator is one file. It exports `decideIssueContract`, a synchronous
+The validator exports `decideIssueContract`, a synchronous
 decision that reads one snapshot and returns the label changes, the feedback
 comment write, and the exit status, with no network or file access. Its closed
 path needs only the fetched issue, and its open path needs the contract snapshot.
@@ -50,7 +56,7 @@ only when its latest recorded change is a removal or nothing. A label the issue
 was opened with is the exception.
 Timestamps are used only for what has no timeline position (the feedback
 comment and Agent Brief comments) and to recognize labels applied at creation.
-Agent Brief comments are ordered among themselves by comment ID: the latest
+In prepared legacy mode, Agent Brief comments are ordered by comment ID: the latest
 Agent Brief is the Brief comment with the highest comment ID, for both the
 contract lookup and a deleted Brief.
 
@@ -61,7 +67,7 @@ shapes for adopters:
 - bug and feature request forms, including optional unanswered fields;
 - specification forms and native specifications;
 - implementation forms and native tickets, with an optional parent;
-- triaged requests whose latest Agent Brief uses the upstream AI preamble, with
+- triaged requests whose selected Agent Brief uses the upstream AI preamble, with
   the `Agent Brief` heading directly after it and any triage notes below the
   brief;
 - Wayfinder maps, whose initial `Decisions so far` section alone may be empty;
@@ -73,8 +79,9 @@ empty content, template comments, and GitHub's `_No response_` placeholder.
 The validator uses the repository's pinned Marked and parse5 resources so
 contract syntax in fenced or indented code, inline code, and HTML comments
 remains example content, and required fields are evaluated by their rendered
-visible content. For category-labeled triaged requests, the latest Agent Brief
-is the contract and contract-like headings in the intake body remain context.
+visible content. Prepared mode retains the latest-comment contract and intake
+body context. Active body mode selects a body Agent Brief or the exact
+unchanged legacy source inventoried at cutoff; it never selects a new comment.
 Native specifications and implementation tickets remain authoritative when the
 issue does not carry a triage category. Wayfinder labels select the Wayfinder
 contract before either form. The validator alone identifies a contract's kind
@@ -422,7 +429,8 @@ trusted checkout, through the exported `factoryTriageResult`:
 `author` is the account that posts the result and applies its readiness, and
 `marker` marks the line naming its run. A repository without the file or the
 key has none, and only roles authorize readiness; a malformed `triageResult`
-fails the run. The triage result is the Agent Brief comment that `author`
+fails the run. In prepared mode and for an eligible unchanged legacy source, the triage result
+is the Agent Brief comment that `author`
 posts for the run. It names the run on exactly one line of its own:
 
 ```markdown
@@ -456,7 +464,8 @@ review. Structural success never grants readiness, and the validator never
 starts work; the factory picks up ready issues. Reopening an issue whose contract
 changed while closed removes readiness and requires fresh review.
 
-The workflow needs `contents: read` to load trusted code and `issues: write` to
+The workflow needs `contents: write` for the dedicated durable contract-ledger
+branch in active body mode (preparation performs no ledger writes), to load trusted code and `issues: write` to
 read issue context and maintain labels and comments. GitHub's metadata access
 must expose collaborator roles, and the supplied workflow credential must read issue edit metadata through
 Postern. Node.js

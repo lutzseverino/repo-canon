@@ -55,6 +55,8 @@ const skills = [
 // and that validator import Postern.
 const support = {
   "humanlayer-skills-license": ".agents/skills/LICENSE.humanlayer-skills",
+  "issue-contract-sources": "scripts/issue-contract-sources.mjs",
+  "issue-contract-store": "scripts/issue-contract-store.mjs",
   "issue-contract-validator": "scripts/validate-issue-contract.mjs",
   "marked-license": "vendor/marked/LICENSE",
   "marked-parser": "vendor/marked/marked.esm.js",
@@ -148,8 +150,8 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
     }
   }
   // The other profiles keep their resolved declarations.
-  assert.equal(validation.profiles.standard.declarations.length, 62);
-  assert.equal(validation.profiles.factory.declarations.length, 67);
+  assert.equal(validation.profiles.standard.declarations.length, 65);
+  assert.equal(validation.profiles.factory.declarations.length, 70);
   for (const name of workbenchOnly) {
     for (const profile of ["standard", "factory"])
       assert.ok(

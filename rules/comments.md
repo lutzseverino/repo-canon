@@ -43,7 +43,8 @@ by a blank line:
 ```
 
 During triage, use the triage variant instead, which the issue-contract
-workflow requires at the start of an Agent Brief comment:
+workflow requires at the start of the selected Agent Brief source (body in active body mode,
+comment only under the prepared/unchanged-legacy route):
 
 <!-- prettier-ignore -->
 ```markdown

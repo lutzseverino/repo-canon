@@ -47,6 +47,8 @@ test("importing consumers never runs a trigger, including before import.meta.mai
     "scripts/validate.mjs",
     ".github/scripts/validate.mjs",
     "scripts/validate-issue-contract.mjs",
+    "scripts/issue-contract-sources.mjs",
+    "scripts/issue-contract-store.mjs",
     ".github/scripts/validate-pr-metadata.mjs",
     ".agents/skills/babysit/wait.mjs",
     ".agents/skills/babysit/merge.mjs",
