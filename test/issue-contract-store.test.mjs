@@ -544,3 +544,104 @@ test("proof-persistence retries request evaluation even when evidence is already
     /positive/,
   );
 });
+
+test("a missing inventoried record cannot reset migration history or restore legacy readiness", async () => {
+  const fixture = JSON.parse(
+    readFileSync(
+      new URL("./fixtures/issue-contract-v2.json", import.meta.url),
+      "utf8",
+    ),
+  ).cases.find((c) => c.name === "eligible unchanged approved legacy");
+  const s = structuredClone(fixture.snapshot);
+  const { connection, files, nodes } = store();
+  connection.repository.path = s.repository;
+  const issue = {
+    ...s.issue,
+    body: "",
+    nodeId: s.issue.node_id,
+    author: s.issue.user,
+    bodyEditTime: null,
+    parent: null,
+  };
+  const comments = s.comments.map((c) => ({
+    ...c,
+    nodeId: c.node_id,
+    author: c.user,
+    updatedAt: c.updated_at,
+  }));
+  for (const [id, edit] of Object.entries(s.sourceEdits))
+    nodes[id] = {
+      id,
+      lastEditedAt: edit.editedAt,
+      userContentEdits: {
+        nodes: [{ id: edit.id, editedAt: edit.editedAt, deletedAt: null }],
+      },
+    };
+  nodes.I42 = {
+    id: "I42",
+    lastEditedAt: null,
+    userContentEdits: { nodes: [] },
+  };
+  files.set("cutoff.json", {
+    value: s.contractSources.receipt,
+    sha: "receipt",
+  });
+  connection.access.role = async () => "admin";
+  connection.issueTracker = {
+    capabilities: { bodyEditTime: true },
+    issue: async () => issue,
+    comments: async () => comments,
+    labelChanges: async () =>
+      s.issueEvents.map((e) => ({
+        id: e.id,
+        action: "added",
+        label: e.label.name,
+        actor: e.actor,
+        time: e.created_at,
+      })),
+    async addLabels(number, labels) {
+      issue.labels.push(...labels);
+    },
+    async removeLabel(number, label) {
+      issue.labels = issue.labels.filter((name) => name !== label);
+    },
+    async createComment(number, body) {
+      const comment = {
+        id: 91,
+        nodeId: "N91",
+        body,
+        author: { login: "github-actions[bot]" },
+        updatedAt: "2026-11-09T01:01:00Z",
+      };
+      comments.push(comment);
+      return comment;
+    },
+    async updateComment(id, body) {
+      const comment = comments.find((c) => c.id === id);
+      comment.body = body;
+      return comment;
+    },
+  };
+  await runIssueContractValidation(
+    {
+      kind: "commentDeleted",
+      issue: 42,
+      repository: s.repository,
+      actor: { login: "reporter" },
+    },
+    connection,
+    async () => null,
+    undefined,
+    () => Date.parse("2026-11-09T01:01:00Z"),
+    null,
+    { mode: "body", cutoff: s.contractSources.cutoff },
+  );
+  const result = issueContractResult(comments).state;
+  assert.equal(result.selection.state, "held");
+  assert.ok(!issue.labels.includes("state:ready"));
+  assert.equal(
+    files.has("issues/42.json"),
+    false,
+    "recover history; never initialize an inventoried issue as unmigrated",
+  );
+});

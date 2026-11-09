@@ -2075,7 +2075,10 @@ export async function runIssueContractValidation(
       ),
     ]);
     snapshot.bodyRevision.editId = snapshot.sourceEdits[current.nodeId].id;
-    if (!facts.record && !agentBriefHeading(issue.body ?? ""))
+    const inventoried = facts.receipt?.issues?.some(
+      (entry) => entry.issue === current.nodeId,
+    );
+    if (!facts.record && !inventoried && !agentBriefHeading(issue.body ?? ""))
       await captureContractIntake(
         connection,
         issueNumber,

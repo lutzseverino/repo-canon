@@ -100,7 +100,9 @@ A missing/incomplete/wrong-repository receipt, missing record, unreadable edit
 history or lost proof holds the affected case with a recovery diagnostic. An
 unrecorded new/reopened issue can capture its current intake, but gains no legacy
 eligibility: its triage contract must be a body. Recover lost trusted records
-from Git history; never reconstruct eligibility from current comments. A
+from Git history; never reconstruct eligibility from current comments. An issue
+already inventoried at cutoff never receives a replacement empty source record:
+a missing ledger entry holds until its history is recovered. A
 partially prepared ledger before mode activation can be removed and recaptured
 by its authorized operator under the freeze; after activation preserve the
 receipt and records, repair forward, and never roll back to comment selection.
