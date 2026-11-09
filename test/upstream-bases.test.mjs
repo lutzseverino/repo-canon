@@ -255,8 +255,8 @@ test("missing records, credits, upstream credits and snapshot sources fail", (t)
   assert.deepEqual(checkUpstreamBases(copy), [
     "babysit (.agents/skills/babysit/CREDITS.md) is missing",
     `implement installs from ${engineering}/implement, not the owned tree at .agents/skills/implement`,
-    "orchestrate (.agents/skills/orchestrate/CREDITS.md) has no entry in upstream-bases.json",
     "pr (.agents/skills/pr/CREDITS.md) must keep its upstream base's CREDITS.md text word for word",
+    "orchestrate (.agents/skills/orchestrate/CREDITS.md) has no entry in upstream-bases.json",
     "docs/agents/issue-tracker.md (upstream-bases.json) is not declared as an exact file installed from itself",
     `${engineering}/setup-matt-pocock-skills/issue-tracker-github.md installs from the vendored snapshot; install it from its owned copy`,
     `${engineering}/implement installs from the vendored snapshot; install it from its owned copy`,
