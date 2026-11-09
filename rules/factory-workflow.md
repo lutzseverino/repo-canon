@@ -10,9 +10,8 @@ resuming one repository.
 
 ## Run kinds
 
-The factory runs up to three run kinds in a repository. `.factory/config.json`
-turns each one on under `runKinds` and maps it to a skill and that skill's
-arguments:
+`.factory/config.json` enables run kinds under `runKinds`, mapping each to a
+skill and its arguments:
 
 - **Triage** researches one issue and ends with its Agent Brief or the
   question that stops it, changing no code, as Triage run says.
@@ -21,33 +20,28 @@ arguments:
   it, under the `github-repository-configuration` rules' Review of an
   implemented pull request section, and delivers it to its merge.
 
-Every kind is optional, and implement is the minimum. Without triage,
-readiness comes only from a person; without review, the implement skill
-delivers and merges its own pull request. Execution choices resolve under
-Repository model policy below; exact configuration holds only mechanics.
-The review's `differentProvider` switch follows Provider diversity below.
-No configuration changes the
-rest: triage runs read-only, review is the only run kind that merges, and each
-run ends with a run result that the factory posts and turns into labels.
+Implement is the minimum; triage and review are optional. Without triage,
+readiness comes only from a person; without review, implement delivers and
+merges its own PR. Otherwise only review merges. Triage stays read-only, and
+every run ends with a result the factory posts and turns into labels.
+Configuration holds mechanics; execution choices follow Repository model
+policy and review's `differentProvider` follows Provider diversity below.
 
 ## Handoffs
 
-Work moves from one run kind to the next through the issue's workflow state
-and its pull request:
+Runs hand off through the issue's workflow state and pull request:
 
-1. **Trigger.** Triage starts when a person whose current repository role the
-   host configuration authorizes opens the issue or applies `state:triage`. An
-   agent working on that person's account counts as that person. The
-   issue-contract workflow's own fallback application never triggers triage,
-   so an outside reporter's issue waits for such a person.
+1. **Trigger.** A person whose current repository role the host authorizes
+   starts triage by opening the issue or applying `state:triage`; an agent on
+   their account counts as that person. The issue-contract workflow's fallback
+   never triggers triage, so an outside reporter's issue waits for that person.
 2. **Triage** ends with `state:ready` and the labels readiness needs, or in a
    `state:` stop.
-3. **Readiness** starts implement when a person applied it, or the factory's
-   own triage run did as the GitHub rules' Readiness roles allow. Readiness any
-   other bot or App applies never starts a run, even when the validator
-   approves it. An orchestrating agent working through such an account applies
-   no readiness there: it stops at acceptance, as the `triage` skill
-   describes, and never reports that factory work started.
+3. **Readiness** starts implement when applied by a person or the factory's
+   own triage run under the GitHub rules' Readiness roles. Other bot/App
+   readiness never starts a run, even if validator-approved. An orchestrating
+   agent on such an account applies no readiness: it stops at acceptance under
+   `triage` and never reports factory work started.
 4. **Implement** ends at a draft pull request, which starts review on it.
 5. **Review** ends in a merge, a hand-back to implement on the same pull
    request, a stop at an owner gate, or a `state:grill` stop for a wrong or
@@ -58,13 +52,12 @@ and its pull request:
 
 ## Implementation inputs
 
-An Agent Brief's required inputs must be in the repository, the issue and its
-comments, or public URLs. Before readiness, check material originating on a host
-for secrets and post the non-secret material on the issue, quoted or attached.
-A host-only path cannot be the sole required source. Independent acceptance
-review checks input availability like the brief's other requirements; a passing
-structure check alone grants no readiness. This boundary requires no change to
-sandbox access.
+Required Agent Brief inputs must be in the repository, issue/comments or public
+URLs. Before readiness, check host-originated material for secrets and quote
+or attach the non-secret material on the issue; a host-only path cannot be the
+sole required source. Independent acceptance checks input availability with
+the other requirements; a passing structure check grants no readiness. Sandbox
+access is unchanged.
 
 ## Parent readiness
 
@@ -90,11 +83,10 @@ check; contract-review and authorization gates still apply.
 
 ## Model selection
 
-The factory picks up ready issues and runs each ticket on its own. In a
-repository a factory serves, whoever applies `state:ready` to a non-parent
-issue must apply exactly one `model:` label they chose, before readiness or
-together with it, even when it names the host's default model. A parent needs
-no `model:` label of its own.
+The factory runs each ready ticket on its own. Whoever applies `state:ready`
+to a non-parent must apply exactly one chosen `model:` label before or with
+readiness, even for the host default. A parent needs no model label and chooses
+none of its tickets' models.
 
 Work needing design judgment, ambiguous scope or a long cross-cutting change
 uses a stronger model. The chosen model label uses
@@ -119,15 +111,13 @@ Triage run says.
 Repository preferences constrain the label triage suggests or chooses: select
 within the repository's initial-implement preference and host capabilities.
 The reviewer weighs that preference when applying or replacing the suggestion.
-A parent's label chooses none of its tickets' models.
 
 The host owns capabilities, credentials and per-kind defaults, including the
 implement retry default. Defaults alone never define the capability catalog.
 Malformed, conflicting or host-forbidden model labels hold work with a visible
 model-label reason, including a relaunch whose recorded choice is forbidden.
-Repository fallback never bypasses those shared-gate holds. Temporary
-unavailability of an otherwise valid choice instead uses repository fallback.
-Preserve model-label syntax, provisioning and parent semantics above.
+Repository fallback never bypasses those shared-gate holds; it handles
+temporary unavailability of an otherwise valid choice.
 
 ## Repository model policy
 
@@ -186,31 +176,24 @@ wait solely for diversity or scan the catalog. This applies even when the
 review preference itself is available. False or absent adds no diversity
 requirement.
 
-These acceptance examples use placeholder providers/models only, never shipped
-defaults. Each assumes `runKinds.review.differentProvider: true`, implement's
-PR-producing attempt on `provider-a/model-impl`, and all named models available
-within capabilities unless stated otherwise:
+Acceptance examples use placeholders, never shipped defaults: diversity is
+true, the PR-producing implement attempt used `provider-a/model-impl`, and
+named models are available within capabilities unless stated otherwise.
 
-- Policy `{ "version": 1, "fallback": "host-default", "runKinds": { "review": { "provider": "provider-a", "model": "model-review" } } }`
-  initially chooses `provider-a/model-review`. Host review default
-  `provider-b/model-host` replaces it for diversity even though the preference
-  is available.
-- The same policy with `fallback: "wait"` retains `provider-a/model-review`
-  and reports unavailable diversity without waiting. With `host-default` but
-  a missing host review default, one on provider A, or an unavailable
-  provider-B default, it likewise retains that choice and reports unavailable
-  diversity.
-- Without a policy, host review default `provider-b/model-host` already
-  satisfies diversity. Host review default `provider-a/model-host` instead
-  stays chosen with an unavailable-diversity report: no scan and no wait.
+| Review preference                     | Fallback       | Host review default                            | Outcome                                                          |
+| ------------------------------------- | -------------- | ---------------------------------------------- | ---------------------------------------------------------------- |
+| `provider-a/model-review` (available) | `host-default` | `provider-b/model-host`                        | Switch to the host default for diversity                         |
+| `provider-a/model-review`             | `wait`         | `provider-b/model-host`                        | Keep preference; report unavailable diversity without waiting    |
+| `provider-a/model-review`             | `host-default` | Missing, provider A, or unavailable provider B | Keep preference; report unavailable diversity without waiting    |
+| No policy                             | —              | `provider-b/model-host`                        | Host default satisfies diversity                                 |
+| No policy                             | —              | `provider-a/model-host`                        | Keep host default; report unavailable diversity, no scan or wait |
 
 ## Triage run
 
-The factory's triage run triages one issue with the `triage` skill, with no
-orchestrating agent, workbench or decision inbox. It reads and never writes:
-it posts nothing, applies no label, pushes nothing and attempts no fix. Its run
-result asks the factory to post its brief or question and to apply the labels
-it chose, never a `gate:` label.
+Factory triage uses `triage` on one issue, without an orchestrating agent,
+workbench or decision inbox. It only reads: no posts, labels, pushes or fixes.
+Its result asks the factory to post its brief or question and apply its chosen
+labels, never a `gate:` label.
 
 It applies the contribution guide's inference test with sources recorded only
 in the repository: its ADRs, its glossary, and linked issues and their
@@ -253,8 +236,7 @@ maintainer's grant, as Skipped work says.
 
 ## State labels
 
-The factory profile's label setup also provisions and verifies these labels,
-with these colors and descriptions:
+Factory-profile setup provisions and verifies these labels:
 
 | Label                  | Color    | Description                                                |
 | ---------------------- | -------- | ---------------------------------------------------------- |
@@ -267,15 +249,13 @@ with these colors and descriptions:
 | `factory:release-hold` | `c5def5` | Hold other merges while a release PR is open               |
 | `factory:hold`         | `c5def5` | Pause factory pickups and other merges in this repository  |
 
-Standard-profile setup provisions none of them. `.factory/config.json` names,
-by role, every label the factory reads or writes. Only the factory sets
-`factory:running`, `factory:paused` and `factory:failed`, and it creates any of
-them that is missing itself. `factory:running` marks an issue a run holds.
-`factory:paused` means the factory paused the run and resumes it by itself, so
-nobody removes it by hand. Remove `factory:failed` to run the issue again once
-the cause of the failure is dealt with, subject to the pickup gates; removing
-it requests a retry, never a resumption. The skip and hold labels follow
-Skipped work and Repository and release holds.
+Standard-profile setup provisions none. `.factory/config.json` names every
+factory-read/written label by role. Only the factory sets `factory:running`,
+`factory:paused` and `factory:failed`, creating any missing ones. Running marks
+an issue a run holds; paused means the factory resumes its own paused run, so
+nobody removes it by hand. After fixing a failure's cause, remove
+`factory:failed` to request a retry, subject to pickup gates, never a resumption.
+Skip and hold labels follow Skipped work and Repository and release holds.
 
 `state:owner` is for an answer, an account, a credential or a grant only the
 owner has, and for work an owner gate stopped.
@@ -320,18 +300,16 @@ not a factory retry and needs no factory pickup.
 
 ## Repository and release holds
 
-The configured `labels.hold` label pauses new pickups and merges in one
-repository while any open issue or PR carries it. Runs already started finish
-without merging.
+While any open issue or PR carries configured `labels.hold`, that repository
+pauses new pickups and merges; started runs finish without merging.
 
-An expedited change carries the repository hold on its own PR, so merging or
-closing that PR ends its hold. A pause begun on an issue transfers to that PR
-before merge, with the PR labelled before the issue label is removed. Only the
-PR being merged is exempt from its own hold; every other labelled open issue
-or PR still holds it. A held repository claims and launches nothing, so new
-expedited work runs outside factory pickup through a directly launched worker
-or the orchestrating agent. An already-open factory PR can carry the hold and
-finish through its exempt merge relaunch.
+An expedited change carries the hold on its PR until merge or closure. Transfer
+an issue's hold to that PR before merge, labelling the PR before removing the
+issue label. Only the merging PR is exempt from its own hold; other labelled
+open issues/PRs still hold it. A held repository claims and launches nothing:
+new expedited work uses a direct worker or the orchestrating agent outside
+factory pickup. An open factory PR may carry the hold and finish through its
+exempt merge relaunch.
 
 Babysit's merge check enforces the repository hold as well as the release hold
 immediately before merging, including when a hold appears mid-run. For the
@@ -340,13 +318,11 @@ PRs only. Its hold exit leaves the PR open; a hold is not an owner handoff.
 
 ### Release holds
 
-In a factory repository, a release PR carries the configured
-`labels.releaseHold` label from opening until it merges or closes. While another
-open PR carries it, the factory holds merges in that repository. Babysit also
-checks immediately before its merge write, covering a release PR opened
-mid-run and every babysit merge, including orchestrator recovery and
-handed-off worker PRs. The labelled PR is exempt from its own hold. Merges
-outside babysit are unaffected by its check.
+Every factory-repository release PR carries configured `labels.releaseHold`
+from opening until merge or closure, holding other PRs' merges. Babysit checks
+immediately before every merge write, including mid-run release openings,
+orchestrator recovery and handed-off worker PRs. The labelled PR is exempt
+from its own hold; merges outside babysit are unaffected by its check.
 
 Babysit reads the hold configuration from the destination default branch at
 the same pinned revision as trusted review configuration; proposed PR changes
@@ -356,14 +332,13 @@ merge. The check accepts configuration versions 1, 2 and 3.
 
 ## External review of factory pull requests
 
-Before requesting or waiting for external review, apply the optional
-repository-owned `.github/factory-review-policy.json` under the
-`github-repository-configuration` rules' trusted review configuration,
-selected from the destination default branch at a pinned commit, including
-after fixes, rebases, retries and resumed runs. The installed `babysit` request and wait commands
-implement that policy. Without a declaration, keep configured reviewer
-behavior; absence needs no owner question. The host does not choose a
-repository's reviewer policy.
+Before requesting or waiting for external review, including after fixes,
+rebases, retries and resumed runs, apply optional repository-owned
+`.github/factory-review-policy.json` from the pinned destination default-branch
+commit under the `github-repository-configuration` rules' trusted review
+configuration. Installed `babysit` request/wait commands implement it. Absence
+keeps configured reviewer behavior without an owner question; the host never
+chooses the repository's reviewer policy.
 
 A policy skip preserves required checks and their waits, internal Standards and
 Spec reviews defined by the `github-repository-configuration` rules' Internal
