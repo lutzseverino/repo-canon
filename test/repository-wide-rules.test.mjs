@@ -582,81 +582,88 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         "-m",
         `Adopt ${baselineVersion}`,
       );
-      const skill = ".agents/skills/orchestrate";
-      assert.ok(existsSync(join(project, skill, "SKILL.md")));
-      if (baselineVersion === orchestrateVersion)
-        assert.ok(existsSync(join(project, skill, "wait.mjs")));
-      if (authoring || edited) {
-        if (authoring) {
-          for (const file of ["SKILL.md", "CREDITS.md"])
-            assert.notDeepEqual(
-              readFileSync(join(project, skill, file)),
-              readFileSync(join(root, skill, file)),
-              `Canon has authored ${file} since its recorded baseline`,
+      // v0.18.0 predates orchestrate; those cases exercise stack updates only.
+      if (baselineVersion !== previousVersion) {
+        const skill = ".agents/skills/orchestrate";
+        assert.ok(existsSync(join(project, skill, "SKILL.md")));
+        if (baselineVersion === orchestrateVersion)
+          assert.ok(existsSync(join(project, skill, "wait.mjs")));
+        if (authoring || edited) {
+          if (authoring) {
+            for (const file of ["SKILL.md", "CREDITS.md"])
+              assert.notDeepEqual(
+                readFileSync(join(project, skill, file)),
+                readFileSync(join(root, skill, file)),
+                `Canon has authored ${file} since its recorded baseline`,
+              );
+            assert.deepEqual(
+              readFileSync(join(project, skill, "agents/openai.yaml")),
+              readFileSync(join(root, skill, "agents/openai.yaml")),
             );
+            for (const file of [
+              "wait.mjs",
+              "records.mjs",
+              "references/close.md",
+              "references/launches.md",
+              "references/templates.md",
+            ])
+              assert.equal(
+                existsSync(join(project, skill, file)),
+                false,
+                `${file} is newer authoring source`,
+              );
+            cpSync(join(root, skill), join(project, skill), {
+              recursive: true,
+            });
+          } else
+            writeFileSync(
+              join(project, skill, "SKILL.md"),
+              "# Local skill edits\n",
+            );
+          git(project, "add", skill);
+          git(
+            project,
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "--quiet",
+            "-m",
+            "Author the skill",
+          );
+        }
+        const { report: inspection } = invoke(
+          "inspect",
+          "--source",
+          sourceUrl,
+          "--standards-version",
+          version,
+          "--profile",
+          profile,
+        );
+        const removal = inspection.removed.find(
+          ({ target }) => target === skill,
+        );
+        if (authoring || edited) {
+          assert.equal(removal, undefined);
+          assert.ok(inspection.kept.some(({ target }) => target === skill));
+        } else {
+          assert.ok(removal, `${label} records the selected removal`);
           assert.deepEqual(
-            readFileSync(join(project, skill, "agents/openai.yaml")),
-            readFileSync(join(root, skill, "agents/openai.yaml")),
+            removal.files.map(({ path }) => path).sort(),
+            readdirSync(join(project, skill), {
+              recursive: true,
+              withFileTypes: true,
+            })
+              .filter((entry) => entry.isFile())
+              .map((entry) =>
+                relative(project, join(entry.parentPath, entry.name)),
+              )
+              .sort(),
+            `${label} records the whole skill's selected removal`,
           );
-          for (const file of [
-            "wait.mjs",
-            "records.mjs",
-            "references/close.md",
-            "references/launches.md",
-            "references/templates.md",
-          ])
-            assert.equal(
-              existsSync(join(project, skill, file)),
-              false,
-              `${file} is newer authoring source`,
-            );
-          cpSync(join(root, skill), join(project, skill), { recursive: true });
-        } else
-          writeFileSync(
-            join(project, skill, "SKILL.md"),
-            "# Local skill edits\n",
-          );
-        git(project, "add", skill);
-        git(
-          project,
-          "-c",
-          "commit.gpgsign=false",
-          "commit",
-          "--quiet",
-          "-m",
-          "Author the skill",
-        );
+        }
+        assert.equal(inspection.confirmation.required, false);
       }
-      const { report: inspection } = invoke(
-        "inspect",
-        "--source",
-        sourceUrl,
-        "--standards-version",
-        version,
-        "--profile",
-        profile,
-      );
-      const removal = inspection.removed.find(({ target }) => target === skill);
-      if (authoring || edited) {
-        assert.equal(removal, undefined);
-        assert.ok(inspection.kept.some(({ target }) => target === skill));
-      } else {
-        assert.ok(removal, `${label} records the selected removal`);
-        assert.deepEqual(
-          removal.files.map(({ path }) => path).sort(),
-          readdirSync(join(project, skill), {
-            recursive: true,
-            withFileTypes: true,
-          })
-            .filter((entry) => entry.isFile())
-            .map((entry) =>
-              relative(project, join(entry.parentPath, entry.name)),
-            )
-            .sort(),
-          `${label} records the whole skill's selected removal`,
-        );
-      }
-      assert.equal(inspection.confirmation.required, false);
     }
     // The local preceding release has identical contextual rules, so the CLI
     // reuses its assessment; the historical release requires a new one.
