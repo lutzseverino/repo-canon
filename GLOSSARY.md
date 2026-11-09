@@ -202,8 +202,9 @@ _Avoid_: Backlog, queue
 
 **Host configuration**:
 The factory operator's settings for one host: the repositories it serves, its
-providers and their caps, its models with their model guidance and effort, and
-the repository roles whose readiness it accepts.
+providers and their caps, its models with their model guidance, one host-wide
+effort level with optional per-model overrides, and the repository roles whose
+readiness it accepts.
 _Avoid_: Factory settings, environment
 
 **Model guidance**:
