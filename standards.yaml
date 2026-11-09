@@ -206,8 +206,8 @@ defaults:
 
     validator-command:
       kind: file
-      target: scripts/validate.mjs
-      exact: scripts/validate.mjs
+      target: vendor/repo-canon/validate.mjs
+      exact: vendor/repo-canon/validate.mjs
 
     github-validator-trigger:
       kind: file
@@ -231,8 +231,8 @@ defaults:
 
     issue-contract-validator:
       kind: file
-      target: scripts/validate-issue-contract.mjs
-      exact: scripts/validate-issue-contract.mjs
+      target: vendor/repo-canon/validate-issue-contract.mjs
+      exact: vendor/repo-canon/validate-issue-contract.mjs
 
     issue-contract-sources:
       kind: file

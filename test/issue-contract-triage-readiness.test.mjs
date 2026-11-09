@@ -7,7 +7,7 @@ import {
   decideIssueContract,
   factoryTriageResult,
   observedChangeId,
-} from "../scripts/validate-issue-contract.mjs";
+} from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   bot,
   briefRevision,

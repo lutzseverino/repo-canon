@@ -212,7 +212,7 @@ Repository Standards'
 - `docs/agents/triage-labels.md`: role label strings. If missing, use canonical role names.
 - `.out-of-scope/`, with `.out-of-scope/<concept>.md`: prior rejections. If missing,
   none were; create it on the first rejection as [OUT-OF-SCOPE.md](OUT-OF-SCOPE.md) says.
-- `scripts/validate-issue-contract.mjs` and the `babysit` skill's GitHub connection:
+- `vendor/repo-canon/validate-issue-contract.mjs` and the `babysit` skill's GitHub connection:
   `ready.mjs` imports both. If either is missing it cannot start; stop at acceptance
   as for credentials that cannot apply readiness.
 - `.repo-standards/rules/factory-workflow.md` and `.factory/config.json` at the

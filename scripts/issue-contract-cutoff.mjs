@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import { executedAsScript } from "./validate.mjs";
+import { executedAsScript } from "../vendor/repo-canon/validate.mjs";
 import { connectionFor } from "../.agents/skills/babysit/platform.mjs";
 import {
   contractCutoffInventory,
   issueContractResult,
   readIssueContractObservation,
-} from "./validate-issue-contract.mjs";
+} from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   captureContractCutoff,
   installContractCutoff,

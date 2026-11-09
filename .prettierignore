@@ -1,5 +1,6 @@
 # Vendored code retains upstream bytes and notices.
-vendor/
+vendor/*
+!vendor/repo-canon/
 
 # Installed Repository Standards state changes only through adoption.
 .repo-standards/

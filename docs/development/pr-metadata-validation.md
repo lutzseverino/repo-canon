@@ -107,7 +107,7 @@ The workflow uses `pull_request_target` so GitHub loads its definition from the
 base repository. It checks out the pull request's base commit explicitly, does
 not persist credentials, and only grants `contents: read` to its token. The thin `.github/scripts/validate.mjs` trigger reads title and body values
 from the event JSON and passes a neutral snapshot to the shared
-`scripts/validate.mjs` command; it does not check out
+`vendor/repo-canon/validate.mjs` command; it does not check out
 or execute the proposed head revision. No `run:` step interpolates the pull
 request title or body, so command-like values in fork metadata and descriptions
 reach the validator only as data in that file; a workflow test fails if a shared

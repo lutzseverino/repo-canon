@@ -19,7 +19,7 @@ import {
 import { fixtureFetch } from "./fixtures/postern-babysit.mjs";
 import { main as wait } from "../.agents/skills/babysit/wait.mjs";
 import { main as merge } from "../.agents/skills/babysit/merge.mjs";
-import { runIssueContractValidation } from "../scripts/validate-issue-contract.mjs";
+import { runIssueContractValidation } from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   awaitingTicketFeedback,
   ticketBody,

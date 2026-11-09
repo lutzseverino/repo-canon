@@ -5,7 +5,7 @@ import {
   executedAsScript,
 } from "../.agents/skills/babysit/platform.mjs";
 import { PlatformError } from "../vendor/postern/postern.mjs";
-import { decideIssueContract } from "./validate-issue-contract.mjs";
+import { decideIssueContract } from "../vendor/repo-canon/validate-issue-contract.mjs";
 
 function argumentsFor(argv) {
   const repositories = [];

@@ -42,3 +42,11 @@ test("every file the type check treats as vendored exists", () => {
   for (const path of vendoredFiles)
     assert.ok(existsSync(join(root, path)), path);
 });
+
+test("Canon's authored validator diagnostics are never filtered as vendored", () => {
+  const diagnostic =
+    "vendor/repo-canon/validate.mjs(1,1): error TS2322: Type 'string' is not assignable to type 'number'.";
+  assert.deepEqual(authoredDiagnostics(`${vendored}${diagnostic}`), [
+    diagnostic,
+  ]);
+});

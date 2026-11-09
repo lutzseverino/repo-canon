@@ -618,7 +618,7 @@ claim that a reviewer made a sound semantic judgment.
 
 The trusted `.github/scripts/validate.mjs issue-contract` trigger normalizes
 the GitHub event with Postern's `issueTracker.issueEvent` and calls the common
-`scripts/validate.mjs` interface. The decision consumes neutral event facts;
+`vendor/repo-canon/validate.mjs` interface. The decision consumes neutral event facts;
 current issues, comments, label changes, edit times and relationships come from
 Postern's ports. Repository roles come from Access. Every read completes before
 label or feedback mutation. Failed prerequisite reads abort without writing;
@@ -631,7 +631,7 @@ requirements; links in those sections alone do not create relationships. The
 connection supplies `relationshipSections: { parent: "Parent", blockedBy: "Blocked by" }`
 for ports that use named sections.
 
-For a standalone run, `node scripts/validate.mjs <neutral-input.json>` reads
+For a standalone run, `node vendor/repo-canon/validate.mjs <neutral-input.json>` reads
 a neutral object with `kind: "issue-contract"`, a Postern repository identity
 or remote URL in `repository`, and a normalized `event`. The command uses
 `POSTERN_TOKEN` as its supplied credential. The trusted GitHub trigger instead

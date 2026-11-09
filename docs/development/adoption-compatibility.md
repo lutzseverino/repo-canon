@@ -105,6 +105,62 @@ on the normal preservation of its locally edited source, as described in
 It needs no restore step or CLI state edit; downstream standard/factory
 adopters receive the normal removal of unchanged installations.
 
+## Validator executable migration
+
+Fresh adoption installs only the new exact targets, without compatibility copies:
+
+| Former installed path                 | New installed path                              |
+| ------------------------------------- | ----------------------------------------------- |
+| `scripts/validate.mjs`                | `vendor/repo-canon/validate.mjs`                |
+| `scripts/validate-issue-contract.mjs` | `vendor/repo-canon/validate-issue-contract.mjs` |
+
+Direct callers and imports must migrate. For example, use
+`node vendor/repo-canon/validate.mjs <neutral-input.json>`. This public path
+incompatibility is a breaking change under the existing
+[versioning policy](../usage/versioning.md#compatibility-for-adopters); release
+notes must identify it and its caller migration. This guidance assigns no
+release number and records no publication or adopter rollout.
+
+Standard and factory select both validators; workbench selects only the
+issue-contract module for triage readiness and still installs no GitHub files.
+The trusted workflow commands `node .github/scripts/validate.mjs issue-contract`
+and `node .github/scripts/validate.mjs pr-metadata` keep their entrypoints and
+trusted checkout boundaries.
+
+Use the ordinary `repo-standards adopt` update, review its inspection and
+confirmation, complete contextual work, and check integrity. The CLI removes
+former recorded targets matching their installed baseline and installs the
+new selection. An edited retired target follows existing `kept` behavior:
+it stays as project-owned content and leaves the installed inventory.
+Reconcile its callers and configuration explicitly; retirement does not
+guarantee deletion. Existing collision and confirmation rules protect content
+at the new targets. Preserve unrelated scripts and configuration; leave CLI
+state to the CLI.
+
+The five adopters evidenced in [#927](https://github.com/lutzseverino/repo-canon/issues/927)
+already exclude `vendor/` in both lint and format configuration. This category
+covers the new namespace and later executables without inventory edits. Vendor
+exclusions are repository-owned conventions, not universal tool defaults. A
+repository without vendor treatment can exclude the category once. Canon
+installs no tool-configuration block or replacement per-validator entries.
+
+Before cleaning up ignore entries, establish ownership from the previous
+installed inventory and the update's removed/kept results. Remove exact
+exclusions for `scripts/validate.mjs` and `scripts/validate-issue-contract.mjs`
+only after those installed copies retire and no retained or project-owned code
+needs them. Remove `scripts/validate*.mjs` only when it existed solely for those
+validators and covers no remaining code needing exclusion; otherwise preserve
+it. Keep every unrelated setting and add no shared `scripts/**` exemption.
+Exact document, template and workflow formatting exclusions remain outside
+this change's executable-layout completion claim.
+
+For Linguist, follow the [Git attributes guidance](../../guidance/git-attributes.md):
+derive counted files from the new resolved selection, remove obsolete
+Canon-owned old-path entries only after establishing their ownership, and
+preserve repository-owned lines. Vendor targets already receive Linguist's
+vendor treatment and need no added entries. Canon's self-adoption exception
+still leaves its source without explicit vendored attributes.
+
 ## GitHub repository settings
 
 Labels, required checks, and squash defaults need remote configuration and

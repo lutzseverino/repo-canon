@@ -12,9 +12,9 @@ through contextual work; this declaration has no deterministic fix or check.
    [overrides documentation](https://github.com/github-linguist/linguist/blob/main/docs/overrides.md)
    and [default vendor list](https://github.com/github-linguist/linguist/blob/main/lib/linguist/vendor.yml).
    `vendor/` and `.github/` are already excluded. For the current profiles,
-   the counted files are the issue-contract validator and its source-selection,
-   ledger and cutoff commands, the common validator
-   command, the rendered-Markdown runtime, the babysit skill's `.mjs` files,
+   the counted files are the issue-contract source-selection,
+   ledger and cutoff commands, the rendered-Markdown runtime, the babysit
+   skill's `.mjs` files,
    the triage skill's `ready.mjs`,
    the review skill's `round.mjs`, and the diagnosing-bugs skill's shell
    template. Derive the inventory anew on each update; this example is not a
@@ -30,11 +30,9 @@ through contextual work; this declaration has no deterministic fix or check.
 
    ```gitattributes
    # BEGIN Repo Canon linguist-vendored
-   scripts/validate-issue-contract.mjs linguist-vendored
    scripts/issue-contract-sources.mjs linguist-vendored
    scripts/issue-contract-store.mjs linguist-vendored
    scripts/issue-contract-cutoff.mjs linguist-vendored
-   scripts/validate.mjs linguist-vendored
    operations/lib/rendered-markdown.mjs linguist-vendored
    .agents/skills/babysit/** linguist-vendored
    .agents/skills/review/** linguist-vendored

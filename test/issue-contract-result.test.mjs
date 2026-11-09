@@ -8,7 +8,7 @@ import {
   decideIssueContract,
   issueContractResult,
   resultFormat,
-} from "../scripts/validate-issue-contract.mjs";
+} from "../vendor/repo-canon/validate-issue-contract.mjs";
 import { main as ready } from "../.agents/skills/triage/ready.mjs";
 import { contractWorld } from "./helpers/contract-world.mjs";
 import {

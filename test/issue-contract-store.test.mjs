@@ -413,7 +413,7 @@ import {
   runIssueContractValidation,
   issueContractResult,
   readIssueContractObservation,
-} from "../scripts/validate-issue-contract.mjs";
+} from "../vendor/repo-canon/validate-issue-contract.mjs";
 test("active adapter durably records migration before feedback and cannot resurrect it after deletion", async () => {
   const fixture = JSON.parse(
     readFileSync(
