@@ -1252,7 +1252,26 @@ test("adoption installs Repo Canon's own triage, with its retained files", () =>
     );
 });
 
-test("adoption installs Repo Canon's user-invoked orchestrate skill, with its retained files", () => {
+test("only workbench installs orchestrate, while Canon retains its complete standalone source", () => {
+  for (const [profile, selected] of Object.entries(declarations(root))) {
+    assert.deepEqual(
+      selected
+        .filter(({ kind }) => kind === "skill")
+        .map(({ name }) => name)
+        .sort(),
+      workflowSkills.filter((name) =>
+        profile === "workbench"
+          ? name !== "factory"
+          : ![
+              "create-adopted-repo",
+              "create-repository",
+              "orchestrate",
+            ].includes(name) &&
+            (profile === "factory" || name !== "factory"),
+      ),
+      `${profile} skill membership`,
+    );
+  }
   assert.deepEqual(
     declaredSkills().find((skill) => skill.name === "orchestrate"),
     { name: "orchestrate", source: ".agents/skills/orchestrate" },

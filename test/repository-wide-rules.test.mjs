@@ -2,7 +2,9 @@ import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
+  cpSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -14,6 +16,8 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { parseStandards } from "../scripts/standards-declarations.mjs";
+import { stringify } from "yaml";
 import {
   ownedSetupFiles,
   ownedSkills,
@@ -33,6 +37,8 @@ import {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const version = "v1.0.0";
 const previousVersion = "v0.18.0";
+const orchestrateVersion = "v0.99.0";
+const sourceVersion = "v0.19.0";
 // Declarations whose rules govern all work, with empty confirmed scope, and
 // the profiles that select them.
 const repositoryWide = {
@@ -164,7 +170,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     const profile = validation.profiles[name];
     assert.equal(
       profile.declarations.length,
-      { standard: 65, factory: 70 }[name],
+      { standard: 64, factory: 69 }[name],
     );
     assert.deepEqual(
       profile.declarations.find(({ id }) => id === "standards-update-workflow"),
@@ -221,6 +227,47 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     assert.equal(range, ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0", script);
 
   const { source, env, git, publish } = fixtureSource(directory, validation);
+  // A preceding local release selects today's complete orchestrate from
+  // defaults, so removal exercises its executable and reference inventory.
+  const candidateManifest = readFileSync(
+    join(source, "standards.yaml"),
+    "utf8",
+  );
+  const legacy = parseStandards(candidateManifest);
+  const attributesPath = join(source, "guidance/git-attributes.md");
+  const candidateAttributes = readFileSync(attributesPath, "utf8");
+  writeFileSync(
+    attributesPath,
+    candidateAttributes.replace(
+      "   .agents/skills/babysit/** linguist-vendored\n",
+      "   .agents/skills/babysit/** linguist-vendored\n   .agents/skills/orchestrate/** linguist-vendored\n",
+    ),
+  );
+  legacy.defaults.declarations["skill-orchestrate"] =
+    legacy.profiles.workbench.declarations["skill-orchestrate"];
+  delete legacy.profiles.workbench.declarations["skill-orchestrate"];
+  writeFileSync(join(source, "standards.yaml"), stringify(legacy));
+  git(
+    source,
+    "-c",
+    "commit.gpgsign=false",
+    "commit",
+    "--quiet",
+    "-am",
+    "Legacy selection",
+  );
+  git(source, "-c", "tag.gpgsign=false", "tag", orchestrateVersion);
+  writeFileSync(join(source, "standards.yaml"), candidateManifest);
+  writeFileSync(attributesPath, candidateAttributes);
+  git(
+    source,
+    "-c",
+    "commit.gpgsign=false",
+    "commit",
+    "--quiet",
+    "-am",
+    "Workbench-only selection",
+  );
   git(source, "-c", "tag.gpgsign=false", "tag", version);
   // Fetch the actual previous release even in a shallow CI checkout, then
   // serve its objects alongside the candidate through the local fixture.
@@ -231,7 +278,14 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     "https://github.com/lutzseverino/repo-canon",
     `refs/tags/${previousVersion}:refs/tags/${previousVersion}`,
   );
-  publish([version, previousVersion]);
+  git(
+    source,
+    "fetch",
+    "--quiet",
+    "https://github.com/lutzseverino/repo-canon",
+    `refs/tags/${sourceVersion}:refs/tags/${sourceVersion}`,
+  );
+  publish([version, orchestrateVersion, sourceVersion, previousVersion]);
   for (const [
     label,
     profile,
@@ -239,6 +293,10 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
   ] of /** @type {[string, string, object][]} */ ([
     ["standard", "standard", {}],
     ["factory", "factory", {}],
+    ["source-update", "factory", {}],
+    ["edited-update", "standard", {}],
+    ["standard-orchestrate-update", "standard", {}],
+    ["factory-orchestrate-update", "factory", {}],
     ["node", "standard", nodeProject],
     ...["astro", "vite"].flatMap((stack) =>
       ["standard", "factory"].flatMap((profile) => [
@@ -271,6 +329,13 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         : null;
     const node = label === "node";
     const selectedStack = web ?? (node ? "node" : null);
+    const authoring = label === "source-update";
+    const edited = label === "edited-update";
+    const baselineVersion = authoring
+      ? sourceVersion
+      : edited || label.includes("-orchestrate-")
+        ? orchestrateVersion
+        : previousVersion;
     const project = join(directory, label);
     mkdirSync(project);
     for (const [path, content] of Object.entries({ ...files, ...extraFiles })) {
@@ -350,11 +415,11 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         if (report.missing.includes("assessment:git-attributes")) {
           attributesRequested = true;
           const guidance =
-            selectedVersion === previousVersion
+            selectedVersion !== version
               ? git(
                   source,
                   "show",
-                  `${previousVersion}:guidance/git-attributes.md`,
+                  `${selectedVersion}:guidance/git-attributes.md`,
                 )
               : readFileSync(join(root, "guidance/git-attributes.md"), "utf8");
           const block = /```gitattributes\n([\s\S]*?)\n\s*```/.exec(guidance);
@@ -374,6 +439,46 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
             if (/^typescript-(?:node|astro|vite)-stack$/.test(name))
               answer = question.details?.draft ?? answer;
             answer ??= scopes[name];
+            if (
+              (authoring || edited) &&
+              name === "documentation" &&
+              selectedVersion === version
+            ) {
+              const draft = question.details?.draft;
+              if (
+                draft?.unresolved.some((question) =>
+                  question.includes(".agents/skills/orchestrate/"),
+                )
+              ) {
+                const source = ".agents/skills/orchestrate";
+                answer = {
+                  ...draft,
+                  unresolved: [],
+                  candidates: [
+                    ...draft.candidates,
+                    ...readdirSync(join(project, source), {
+                      recursive: true,
+                      withFileTypes: true,
+                    })
+                      .filter(
+                        (entry) => entry.isFile() && entry.name.endsWith(".md"),
+                      )
+                      .map((entry) => ({
+                        path: relative(
+                          project,
+                          join(entry.parentPath, entry.name),
+                        ),
+                        decision: "exclude",
+                        reason:
+                          "Authoritative skill source, outside repository documentation.",
+                        evidence: [
+                          relative(project, join(entry.parentPath, entry.name)),
+                        ],
+                      })),
+                  ],
+                };
+              }
+            }
           }
           if (kind === "assessment" && report.missing.includes(question.id))
             answer =
@@ -451,21 +556,22 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     };
     if (label.endsWith("-update")) {
       assert.equal(
-        adopt(previousVersion),
+        adopt(baselineVersion),
         true,
         `${label} records the previous release's requested Git attributes assessment`,
       );
-      assert.equal(
-        git(
-          project,
-          "check-attr",
-          "linguist-vendored",
-          "--",
-          ".agents/skills/triage/ready.mjs",
-        ),
-        ".agents/skills/triage/ready.mjs: linguist-vendored: unspecified",
-        "the conforming previous adoption has no triage executable entry",
-      );
+      if (baselineVersion === previousVersion)
+        assert.equal(
+          git(
+            project,
+            "check-attr",
+            "linguist-vendored",
+            "--",
+            ".agents/skills/triage/ready.mjs",
+          ),
+          ".agents/skills/triage/ready.mjs: linguist-vendored: unspecified",
+          "the conforming previous adoption has no triage executable entry",
+        );
       git(project, "add", "--all");
       git(
         project,
@@ -474,14 +580,159 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         "commit",
         "--quiet",
         "-m",
-        `Adopt ${previousVersion}`,
+        `Adopt ${baselineVersion}`,
       );
+      // v0.18.0 predates orchestrate; those cases exercise stack updates only.
+      if (baselineVersion !== previousVersion) {
+        const skill = ".agents/skills/orchestrate";
+        assert.ok(existsSync(join(project, skill, "SKILL.md")));
+        if (baselineVersion === orchestrateVersion)
+          assert.ok(existsSync(join(project, skill, "wait.mjs")));
+        if (authoring || edited) {
+          if (authoring) {
+            for (const file of ["SKILL.md", "CREDITS.md"])
+              assert.notDeepEqual(
+                readFileSync(join(project, skill, file)),
+                readFileSync(join(root, skill, file)),
+                `Canon has authored ${file} since its recorded baseline`,
+              );
+            assert.deepEqual(
+              readFileSync(join(project, skill, "agents/openai.yaml")),
+              readFileSync(join(root, skill, "agents/openai.yaml")),
+            );
+            for (const file of [
+              "wait.mjs",
+              "records.mjs",
+              "references/close.md",
+              "references/launches.md",
+              "references/templates.md",
+            ])
+              assert.equal(
+                existsSync(join(project, skill, file)),
+                false,
+                `${file} is newer authoring source`,
+              );
+            cpSync(join(root, skill), join(project, skill), {
+              recursive: true,
+            });
+          } else
+            writeFileSync(
+              join(project, skill, "SKILL.md"),
+              "# Local skill edits\n",
+            );
+          git(project, "add", skill);
+          git(
+            project,
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "--quiet",
+            "-m",
+            "Author the skill",
+          );
+        }
+        const { report: inspection } = invoke(
+          "inspect",
+          "--source",
+          sourceUrl,
+          "--standards-version",
+          version,
+          "--profile",
+          profile,
+        );
+        const removal = inspection.removed.find(
+          ({ target }) => target === skill,
+        );
+        if (authoring || edited) {
+          assert.equal(removal, undefined);
+          assert.ok(inspection.kept.some(({ target }) => target === skill));
+        } else {
+          assert.ok(removal, `${label} records the selected removal`);
+          assert.deepEqual(
+            removal.files.map(({ path }) => path).sort(),
+            readdirSync(join(project, skill), {
+              recursive: true,
+              withFileTypes: true,
+            })
+              .filter((entry) => entry.isFile())
+              .map((entry) =>
+                relative(project, join(entry.parentPath, entry.name)),
+              )
+              .sort(),
+            `${label} records the whole skill's selected removal`,
+          );
+        }
+        assert.equal(inspection.confirmation.required, false);
+      }
     }
+    // The local preceding release has identical contextual rules, so the CLI
+    // reuses its assessment; the historical release requires a new one.
     assert.equal(
       adopt(version),
-      true,
-      `${label} includes assessment:git-attributes in report.missing`,
+      !label.endsWith("-update") || baselineVersion !== orchestrateVersion,
+      `${label} preserves the CLI's contextual assessment reuse`,
     );
+    for (const path of [
+      ".agents/skills/orchestrate",
+      ".claude/skills/orchestrate",
+    ])
+      assert.equal(
+        !!lstatSync(join(project, path), { throwIfNoEntry: false }),
+        authoring || edited,
+        `${label} removes unchanged installations and keeps local edits at ${path}`,
+      );
+    assert.equal(
+      existsSync(
+        join(
+          project,
+          ".repo-standards/inputs/source/.agents/skills/orchestrate",
+        ),
+      ),
+      false,
+    );
+    if (edited)
+      assert.equal(
+        readFileSync(
+          join(project, ".agents/skills/orchestrate/SKILL.md"),
+          "utf8",
+        ),
+        "# Local skill edits\n",
+      );
+    if (authoring) {
+      // Canon's real source differs from its recorded adoption. Normal
+      // retirement keeps the whole edited tree, including unchanged files.
+      for (const entry of readdirSync(
+        join(root, ".agents/skills/orchestrate"),
+        {
+          recursive: true,
+          withFileTypes: true,
+        },
+      ).filter((entry) => entry.isFile())) {
+        const path = relative(root, join(entry.parentPath, entry.name));
+        assert.deepEqual(
+          readFileSync(join(project, path)),
+          readFileSync(join(root, path)),
+          path,
+        );
+      }
+      assert.ok(
+        !JSON.parse(
+          readFileSync(
+            join(project, ".repo-standards/inputs/resolved.json"),
+            "utf8",
+          ),
+        ).declarations.some(({ id }) => id === "skill-orchestrate"),
+      );
+      assert.equal(invoke("status").report.readyToCommit, true);
+      const lock = JSON.parse(
+        readFileSync(join(project, ".repo-standards/lock.json"), "utf8"),
+      );
+      assert.ok(
+        !Object.keys(lock.files).some((path) =>
+          path.startsWith(".agents/skills/orchestrate/"),
+        ),
+      );
+    }
     if (profile === "factory")
       assert.deepEqual(
         readFileSync(join(project, ".factory/config.json")),
@@ -627,7 +878,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       if (!selected) {
         assert.equal(
           existsSync(join(project, source)),
-          false,
+          (authoring || edited) && name === "orchestrate",
           `${profile} excludes ${name}`,
         );
         continue;
@@ -677,6 +928,27 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
             `${profile} installs ${name}/${path} unchanged from its base`,
           );
       }
+    }
+    if (authoring) {
+      git(project, "add", "--all");
+      git(
+        project,
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "--quiet",
+        "-m",
+        "Update while retaining authoring source",
+      );
+      adopt(version);
+      assert.ok(
+        existsSync(join(project, ".agents/skills/orchestrate/SKILL.md")),
+      );
+      assert.equal(
+        git(project, "diff", "--", ".agents/skills/orchestrate"),
+        "",
+        "a later self-update leaves the now-unowned authoring source unchanged",
+      );
     }
     for (const { path, base, edits } of ownedSetupFiles(root))
       if (edits === null)

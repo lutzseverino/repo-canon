@@ -8,6 +8,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -104,7 +105,11 @@ const allowed = [
   ...skills.map((name) => `skill-${name}`),
   ...Object.keys(support),
 ].sort();
-const workbenchOnly = ["create-adopted-repo", "create-repository"];
+const workbenchOnly = [
+  "create-adopted-repo",
+  "create-repository",
+  "orchestrate",
+];
 const additions = workbenchOnly.map((name) => `skill-${name}`).sort();
 
 test("the workbench profile excludes every default but the workflow skills, their support files and license notices", () => {
@@ -137,6 +142,11 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
   );
   assert.equal(validation.valid, true);
   const resolved = validation.profiles.workbench.declarations;
+  const supportSources = Object.fromEntries(
+    resolved
+      .filter(({ kind }) => kind === "file")
+      .map(({ target, exact }) => [target, exact]),
+  );
   assert.deepEqual(resolved.map(({ id }) => id).sort(), allowed);
   for (const declaration of resolved) {
     assert.ok(["file", "skill"].includes(declaration.kind), declaration.id);
@@ -149,9 +159,9 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
       assert.ok(declaration.exact, declaration.id);
     }
   }
-  // The other profiles keep their resolved declarations.
-  assert.equal(validation.profiles.standard.declarations.length, 65);
-  assert.equal(validation.profiles.factory.declarations.length, 70);
+  // The other profiles lose only orchestrate; creation remains workbench-only.
+  assert.equal(validation.profiles.standard.declarations.length, 64);
+  assert.equal(validation.profiles.factory.declarations.length, 69);
   for (const name of workbenchOnly) {
     for (const profile of ["standard", "factory"])
       assert.ok(
@@ -163,6 +173,21 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
   }
 
   const { source, env, git, publish } = fixtureSource(directory, validation);
+  // Source validation covers every profile, even when Canon itself adopts
+  // factory. A missed source restore after self-update cannot validate.
+  const skillPath = ".agents/skills/orchestrate";
+  const saved = join(directory, "authoring-source");
+  renameSync(join(source, skillPath), saved);
+  const missingSource = spawnSync(
+    cli,
+    ["source", "validate", source, "--json"],
+    {
+      encoding: "utf8",
+    },
+  );
+  assert.equal(missingSource.status, 1, missingSource.stdout);
+  assert.equal(JSON.parse(missingSource.stdout).valid, false);
+  renameSync(saved, join(source, skillPath));
   git(source, "-c", "tag.gpgsign=false", "tag", "v1.0.0");
   // The next release changes one installed skill.
   appendFileSync(
@@ -172,6 +197,24 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
   git(source, "-c", "commit.gpgsign=false", "commit", "--quiet", "-am", "Next");
   git(source, "-c", "tag.gpgsign=false", "tag", "v1.0.1");
   publish(["v1.0.1", "v1.0.0"]);
+  // The release-tag bundle retains all source files and runtime/notices,
+  // independently of the standard/factory installation selection.
+  for (const path of [
+    ...readdirSync(join(root, skillPath), {
+      recursive: true,
+      withFileTypes: true,
+    })
+      .filter((entry) => entry.isFile())
+      .map((entry) =>
+        join(entry.parentPath, entry.name).slice(root.length + 1),
+      ),
+    ...Object.values(supportSources),
+  ])
+    assert.equal(
+      git(source, "show", `v1.0.1:${path}`),
+      readFileSync(join(source, path), "utf8").trim(),
+      `standalone release retains ${path}`,
+    );
 
   const project = join(directory, "workbench");
   mkdirSync(project);
@@ -250,6 +293,25 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
     ".agents/skills/factory",
   ])
     assert.equal(existsSync(join(project, path)), false, path);
+  for (const name of skills)
+    for (const entry of readdirSync(join(source, ".agents/skills", name), {
+      recursive: true,
+      withFileTypes: true,
+    }).filter((entry) => entry.isFile())) {
+      const path = join(entry.parentPath, entry.name).slice(source.length + 1);
+      // v1.0.0 precedes the fixture's one skill edit.
+      assert.equal(
+        readFileSync(join(project, path), "utf8").trim(),
+        git(source, "show", `v1.0.0:${path}`),
+        path,
+      );
+    }
+  for (const path of Object.values(support))
+    assert.deepEqual(
+      readFileSync(join(project, path)),
+      readFileSync(join(source, supportSources[path])),
+      path,
+    );
   const { report: lookup, child: lookupChild } = invoke("rules");
   assert.equal(lookupChild.status, 0, JSON.stringify(lookup));
   assert.deepEqual(lookup.rules, []);
