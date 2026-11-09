@@ -232,6 +232,10 @@ export async function captureContractIntake(
     await saveContractSourceRecord(connection, number, facts, record);
     return record;
   }
+  if (facts.receipt.issues.some((entry) => entry.number === number))
+    throw new Error(
+      "Inventoried source history or original intake is unavailable; recover authenticated history before publication.",
+    );
   issue ??= await connection.issueTracker.issue(number);
   const original = intakeOriginal(issue.body ?? "");
   if (original === null)

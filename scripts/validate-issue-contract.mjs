@@ -2078,15 +2078,29 @@ export async function runIssueContractValidation(
     const inventoried = facts.receipt?.issues?.some(
       (entry) => entry.issue === current.nodeId,
     );
-    if (!facts.record && !inventoried && !agentBriefHeading(issue.body ?? ""))
-      await captureContractIntake(
-        connection,
-        issueNumber,
-        triageResult,
-        facts,
-        current,
-        snapshot.sourceEdits,
-      );
+    if (!facts.record && !inventoried) {
+      if (!agentBriefHeading(issue.body ?? ""))
+        await captureContractIntake(
+          connection,
+          issueNumber,
+          triageResult,
+          facts,
+          current,
+          snapshot.sourceEdits,
+        );
+      else if (
+        !issue.labels.some((label) => categoryLabels.has(labelName(label)))
+      )
+        // A native contract may mention Agent Brief as context. Preserve its
+        // native shape without certifying that text as original triage intake.
+        await saveContractSourceRecord(connection, issueNumber, facts, {
+          issue: current.nodeId,
+          cutoff: facts.cutoff,
+          migrated: false,
+          retired: false,
+          intake: null,
+        });
+    }
     const selected = selectedSource(snapshot);
     await saveContractSourceRecord(
       connection,

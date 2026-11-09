@@ -316,6 +316,99 @@ test("capture takes original and author/writer proof from platform before body p
   assert.equal(intakeOriginal(completeAgentBrief), null);
 });
 
+test("host intake capture refuses missing inventoried history and original intake", async () => {
+  for (const record of [null, { issue: "I42", intake: null }]) {
+    const { connection, writes } = store();
+    const facts = {
+      trusted: true,
+      receipt: {
+        ...receipt,
+        issues: [{ number: 42, issue: "I42", legacy: null }],
+      },
+      cutoff: "b".repeat(40),
+      record,
+      recordSha: null,
+    };
+    await assert.rejects(
+      () =>
+        captureContractIntake(
+          connection,
+          42,
+          null,
+          facts,
+          {
+            nodeId: "I42",
+            body: "Current text",
+            author: { login: "reporter" },
+          },
+          { I42: { id: "created:I42", editedAt: null } },
+        ),
+      /recover authenticated history/,
+    );
+    assert.equal(
+      writes.length,
+      0,
+      "do not recreate retirement or intake facts",
+    );
+  }
+});
+
+test("active adapter initializes new native tickets with incidental Brief headings", async () => {
+  const { connection, files, nodes } = store();
+  const issue = {
+    number: 42,
+    nodeId: "I42",
+    state: "open",
+    labels: [],
+    author: { login: "reporter" },
+    body: "## What to build\n\nCache results.\n\n## Acceptance criteria\n\nFast results.\n\n## Blocked by\n\nNone.\n\n## Agent Brief\n\nContext only.",
+    bodyEditTime: null,
+    parent: null,
+    blockedBy: [],
+  };
+  const comments = [];
+  nodes.I42 = { id: "I42", lastEditedAt: null };
+  files.set("cutoff.json", { value: receipt, sha: "receipt" });
+  connection.issueTracker = {
+    capabilities: { bodyEditTime: true },
+    issue: async () => issue,
+    comments: async () => comments,
+    labelChanges: async () => [],
+    async addLabels(number, labels) {
+      issue.labels.push(...labels);
+    },
+    async createComment(number, body) {
+      const comment = {
+        id: 90,
+        body,
+        author: { login: "github-actions[bot]" },
+        updatedAt: "2026-11-09T01:00:00Z",
+      };
+      comments.push(comment);
+      return comment;
+    },
+  };
+  await runIssueContractValidation(
+    {
+      kind: "opened",
+      issue: 42,
+      repository: "owner/repo",
+      actor: { login: "reporter" },
+    },
+    connection,
+    async () => null,
+    undefined,
+    () => Date.parse("2026-11-09T01:00:00Z"),
+    null,
+    { mode: "body", cutoff: "b".repeat(40) },
+  );
+  const state = issueContractResult(comments).state;
+  assert.equal(state.kind, "implementation ticket");
+  assert.equal(state.status, "awaiting-review");
+  assert.equal(state.selection.state, "native");
+  assert.equal(files.get("issues/42.json").value.intake, null);
+});
+
 import {
   runIssueContractValidation,
   issueContractResult,
