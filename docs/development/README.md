@@ -129,6 +129,10 @@ real temporary Git repositories cover raw file/directory changes, incoming upstr
 commits (including fetched-but-unpulled commits), nested-only changes, no remote
 and fetch failures. Fixtures cover required finite positive durations, timeout
 exit 0, errors exit 1 and plain Node execution without runtime packages.
+Run `node --test test/required-checks.test.mjs test/babysit-merge.test.mjs`
+for the required-name schema, retained read-only check, positive current-head
+evidence, configured-reviewer thread resolution and final freshness gates
+in standalone and installed execution.
 Run `node --test test/pull-request-reviewer-check.test.mjs`
 for the optional reviewer schema check, including retained operation resources;
 the check imports babysit's `pull-request-reviewer.mjs` directly from its

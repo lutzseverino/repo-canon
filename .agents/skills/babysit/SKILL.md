@@ -60,7 +60,8 @@ body was checked. Link-free bodies need no reconstruction.
    root in the foreground until it exits. It silently waits for checks and the
    configured reviewer's review of the head. Use a 600000 ms command timeout
    where supported and ask for the longest wait whenever it yields.
-   "Checks passed" includes no-check heads the rules count as passed.
+   Wait requires positive current-head success for every name in trusted
+   `.github/required-checks.json`; no-check timeouts never qualify.
 
    | Exit | Outcome and action |
    | --- | --- |
@@ -103,9 +104,19 @@ body was checked. Link-free bodies need no reconstruction.
    | `3` | Not merged; owner needed. Hand off under `.repo-standards/rules/comments.md#owner-questions`, without retrying merge. |
    | `4` | Stale base. Enter Branch-update recovery if this invocation has not used its branch update; otherwise record the owner handoff and stop. |
    | `5` | Current-head policy-skip review missing/incomplete. Complete both internal reviews, post under `.repo-standards/rules/comments.md#reviews` using wait's full-head template, verify other merge conditions and rerun merge. No owner handoff. |
+   | `6` | Configured-reviewer threads remain unresolved. Resolve them on the platform, verify the other gates and rerun merge. Replies alone do not resolve threads. |
    | `9` | Another open issue/PR has the repository-hold label, or another open PR has the release-hold label. Leave this PR open; retry only after the hold ends. Factory runs end for factory relaunch after the hold; other runs rerun merge after it ends. No owner handoff. |
    | `1` | For permission refusal, follow `CONTRIBUTING.md`'s Credentials section; otherwise fix the invocation or platform error and rerun. |
 6. Stop.
+
+Wait and merge require `.github/required-checks.json` from the pinned trusted
+default branch; absent, invalid or unreadable declarations refuse delivery.
+Correct the declaration on that trusted branch through the applicable owner
+procedure, then invoke again. Local or PR-branch files supply no bootstrap bypass.
+Merge independently checks every declared name for positive current-head success
+and all configured-reviewer threads for resolution, on both freshness paths.
+Unreadable or incomplete check/thread evidence permits no merge. After slow
+gates it rechecks the head, live destination and current-base ancestry.
 
 The merge command independently resolves trusted review configuration and checks
 the platform PR author on every invocation, even without a prior wait. Invalid
@@ -178,6 +189,9 @@ Paths are relative to the repository root.
   skill looks up. When they are missing, the commands' own behavior stands, no
   rule prescribes a worker handoff, owner approval or merge outcome record,
   and `CONTRIBUTING.md` alone sets the merge rules.
+- `.github/required-checks.json`: the required-name authority for wait and merge.
+  Missing, invalid or unreadable at the selected trusted commit stops delivery
+  and requires correction on the destination default branch before reinvocation.
 - `.github/pull-request-reviewer.json`: the optional reviewer declaration.
   When it is missing at the selected commit, no reviewer is configured.
 - `.github/factory-review-policy.json`: the optional app-author review policy.

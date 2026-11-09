@@ -61,6 +61,7 @@ function command(t, entry, { trusted = {}, local = {}, remote = {} } = {}) {
       createdAt: date,
       pushedAt: date,
       committedAt: date,
+      checks: [passed],
       reviewConfiguration: trusted,
       traceReviewConfiguration: true,
       ...remote,

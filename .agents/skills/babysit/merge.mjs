@@ -4,6 +4,7 @@
 // Exit codes: 0 merged, 1 usage or platform error, 2 head changed or validation not successful; wait again,
 // 3 not merged; needs the owner, 4 stale base; update and validate,
 // 5 missing review outcome; post the completed record and rerun,
+// 6 unresolved configured-reviewer threads; resolve and rerun,
 // 9 repository or release hold; leave open and resume after the hold ends.
 import {
   connectionFor,
@@ -13,6 +14,7 @@ import {
   pinnedFiles,
   checkRollup,
   workflowRuns,
+  unresolvedReviewerThreads,
 } from "./platform.mjs";
 import {
   InvalidTrustedReviewConfiguration,
@@ -21,7 +23,8 @@ import {
 import { skipsExternalReview } from "./review-policy.mjs";
 import { completeReview, reviewsSection } from "./review-outcome.mjs";
 
-import { checkStates, decide } from "./wait.mjs";
+import { decide } from "./wait.mjs";
+import { validationCheckStates } from "./required-checks.mjs";
 
 function needsOwner(message) {
   console.error(message);
@@ -201,6 +204,26 @@ async function mergeHolds(connection, revision, number) {
   return [...holds.values()];
 }
 
+async function held(connection, revision, number) {
+  try {
+    const holds = await mergeHolds(connection, revision, number);
+    if (holds.length) {
+      console.error(
+        `Repository or release merge hold: ${holds.map((pull) => `#${pull.number}`).join(", ")}. Leave this PR open and resume after the hold ends.`,
+      );
+      process.exitCode = 9;
+      return true;
+    }
+  } catch (error) {
+    if (["forbidden", "unauthenticated"].includes(error.reason)) throw error;
+    needsOwner(
+      `Could not confirm merge holds at ${revision}: ${error.message}`,
+    );
+    return true;
+  }
+  return false;
+}
+
 export async function main(argv = process.argv.slice(2), connection) {
   const [number, head, ...extra] = argv;
   if (
@@ -215,7 +238,9 @@ export async function main(argv = process.argv.slice(2), connection) {
   if (pullRequest.headCommit !== head) return retry();
   let configuration;
   try {
-    configuration = await trustedReviewConfiguration(connection);
+    configuration = await trustedReviewConfiguration(connection, {
+      requiredChecks: true,
+    });
   } catch (error) {
     if (error instanceof InvalidTrustedReviewConfiguration)
       return needsOwner(error.message);
@@ -269,42 +294,9 @@ export async function main(argv = process.argv.slice(2), connection) {
   } catch (error) {
     return unreadableFreshness(error);
   }
+  if (await held(connection, configuration.revision, Number(number))) return;
   try {
-    const holds = await mergeHolds(
-      connection,
-      configuration.revision,
-      Number(number),
-    );
-    if (holds.length) {
-      console.error(
-        `Repository or release merge hold: ${holds.map((pull) => `#${pull.number}`).join(", ")}. Leave this PR open and resume after the hold ends.`,
-      );
-      process.exitCode = 9;
-      return;
-    }
-  } catch (error) {
-    if (["forbidden", "unauthenticated"].includes(error.reason)) throw error;
-    return needsOwner(
-      `Could not confirm merge holds at ${configuration.revision}: ${error.message}`,
-    );
-  }
-  if (freshness === "plan-limited") {
-    try {
-      const current = await connection.pullRequests.pullRequest(Number(number));
-      if (current.headCommit !== head) return retry();
-      const repository = await requestData(connection, {
-        path: `/repos/${connection.repository.path}`,
-      });
-      branch = repository?.default_branch;
-      if (
-        typeof branch !== "string" ||
-        !branch ||
-        current.baseBranch !== branch ||
-        repository.private !== true
-      )
-        return needsOwner(
-          "Could not confirm the PR targets the current private default branch; needs the owner.",
-        );
+    if (freshness === "plan-limited") {
       const workflowPath = ".github/workflows/pr-metadata.yml";
       const workflow = await requestData(connection, {
         path: `/repos/${connection.repository.path}/contents/${workflowPath}?ref=${encodeURIComponent(branch)}`,
@@ -313,75 +305,84 @@ export async function main(argv = process.argv.slice(2), connection) {
         return needsOwner(
           "Could not confirm the default-branch PR metadata workflow; needs the owner.",
         );
-      // Reuse wait's selection and attempt semantics, but require positive
-      // validation: its no-check timeout is not successful evidence here.
-      const rollup = await checkRollup(connection, head);
-      const checks = checkStates(rollup);
-      // Metadata is required even without platform enforcement. Unlike wait's
-      // general checks, this validation must succeed, not merely skip or settle.
-      const metadataChecks = checkStates(
-        rollup
-          .filter((item) => (item.name ?? item.context) === "PR metadata")
-          .map((item) =>
-            item.__typename === "CheckRun"
-              ? {
-                  ...item,
-                  conclusion:
-                    item.conclusion === "SUCCESS" ? "SUCCESS" : "FAILURE",
-                }
-              : item,
-          ),
-      );
-      const runs = workflowRuns(
-        await pages(
-          connection,
-          `/repos/${connection.repository.path}/actions/runs?head_sha=${head}&per_page=100`,
-        ),
-      );
-      const now = Date.now();
-      const validation = decide({
-        checks,
-        runs,
-        head,
-        now,
-        startedAt: now,
-        limitMs: 0,
-        comments: [],
-        requestedAt: now,
-        pushedAt: now,
-        pushRecorded: false,
-        reviewer: null,
-        policy: null,
-        author: current.author?.login,
-      });
-      if (
-        !metadataChecks.length ||
-        metadataChecks.some((check) => check.state !== "pass") ||
-        validation.code !== 0
-      ) {
-        console.error(
-          "Current-head validation has not succeeded; wait again before merging.",
-        );
-        process.exitCode = 2;
-        return;
-      }
-      const finalPull = await connection.pullRequests.pullRequest(
-        Number(number),
-      );
-      if (finalPull.headCommit !== head) return retry();
-      const finalRepository = await requestData(connection, {
-        path: `/repos/${connection.repository.path}`,
-      });
-      if (
-        finalRepository?.default_branch !== branch ||
-        finalRepository.private !== true ||
-        finalPull.baseBranch !== branch
-      )
-        return needsOwner("The PR destination changed; needs the owner.");
-      if (await baseIsStale(connection, branch, head)) return staleBase();
-    } catch (error) {
-      return unreadableFreshness(error);
     }
+    const rollup = await checkRollup(connection, head);
+    const runs = workflowRuns(
+      await pages(
+        connection,
+        `/repos/${connection.repository.path}/actions/runs?head_sha=${head}&per_page=100`,
+      ),
+    );
+    const checks = validationCheckStates(
+      rollup,
+      configuration.requiredChecks,
+      runs,
+    );
+    const required = checks.filter((check) =>
+      configuration.requiredChecks.includes(check.name),
+    );
+    const now = Date.now();
+    const validation = decide({
+      checks,
+      runs,
+      head,
+      now,
+      startedAt: now,
+      limitMs: 0,
+      comments: [],
+      requestedAt: now,
+      pushedAt: now,
+      reviewer: null,
+      policy: null,
+      author: pullRequest.author?.login,
+    });
+    if (validation.code !== 0) {
+      console.error(
+        `Current-head validation has not succeeded for ${head}; required checks: ${
+          required
+            .filter((check) => check.state !== "pass")
+            .map((check) => `${check.name} (${check.state})`)
+            .join(", ") || "observed checks/workflow attempts"
+        }; ${configuration.evidence}.`,
+      );
+      process.exitCode = 2;
+      return;
+    }
+    const threads = await unresolvedReviewerThreads(
+      connection,
+      Number(number),
+      configuration.reviewer,
+    );
+    if (threads.length) {
+      console.error(
+        `Unresolved configured-reviewer threads: ${threads.join(", ")}; ${configuration.evidence}. Resolve the threads and rerun merge.mjs.`,
+      );
+      process.exitCode = 6;
+      return;
+    }
+  } catch (error) {
+    if (["forbidden", "unauthenticated"].includes(error.reason)) throw error;
+    return needsOwner(
+      `Could not establish required-check or reviewer-thread evidence for ${head}; required names: ${configuration.requiredChecks.join(", ")}; ${configuration.evidence}: ${error.message}`,
+    );
+  }
+  if (await held(connection, configuration.revision, Number(number))) return;
+  // All slow gates precede this final head, live destination and ancestry read.
+  try {
+    const finalPull = await connection.pullRequests.pullRequest(Number(number));
+    if (finalPull.headCommit !== head) return retry();
+    const finalRepository = await requestData(connection, {
+      path: `/repos/${connection.repository.path}`,
+    });
+    if (
+      finalRepository?.default_branch !== branch ||
+      finalPull.baseBranch !== branch ||
+      (freshness === "plan-limited" && finalRepository.private !== true)
+    )
+      return needsOwner("The PR destination changed; needs the owner.");
+    if (await baseIsStale(connection, branch, head)) return staleBase();
+  } catch (error) {
+    return unreadableFreshness(error);
   }
   let mergedCommit;
   try {

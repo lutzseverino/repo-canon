@@ -21,7 +21,8 @@ review run is configured, commit and push the work, write the PR body with
 `pr`, open a ready pull request (or mark its existing draft ready), and invoke
 `babysit` to deliver it under those rules, including any prescribed worker handoff.
 Before reporting success, satisfy `CONTRIBUTING.md`'s Worker handoff condition
-and include its head, check-location, command and outcome record.
+and include its head, trusted required-check authority, check-location, command
+and outcome record.
 That route retains babysit's applicable internal reviews and merge conditions.
 
 Otherwise, for new work, commit and push the branch, write the body with `pr`,
@@ -30,8 +31,8 @@ commit and push the fixes to the same pull request and leave it a draft;
 before replying to findings, read the installed `comments` rules' Review-thread
 replies section and answer there as it directs.
 Before reporting success, satisfy `CONTRIBUTING.md`'s Worker handoff condition.
-Report the pull request and its required head, check-location, command and
-outcome record, then stop. Leave review, marking ready,
+Report the pull request and its required head, trusted required-check authority,
+check-location, command and outcome record, then stop. Leave review, marking ready,
 babysitting and merging to the separate agent running `review`; do not run a
 self-review.
 

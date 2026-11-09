@@ -234,6 +234,13 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
                 commit: { __typename: "Commit", oid: revision },
                 policy: blob(config.policy),
                 reviewer: blob(config.reviewer),
+                requiredChecks: blob(
+                  Object.hasOwn(config, "requiredChecks")
+                    ? config.requiredChecks
+                    : Object.hasOwn(state, "requiredChecks")
+                      ? state.requiredChecks
+                      : { version: 1, checks: ["CI"] },
+                ),
               },
             },
           },
@@ -249,24 +256,64 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
             },
           },
         });
+      if (body.query.includes("BabysitReviewThreads")) {
+        if (state.failThreads)
+          return json({ message: "thread read refused" }, state.failThreads);
+        if (state.afterThreads) {
+          Object.assign(state, state.afterThreads);
+          delete state.afterThreads;
+          save();
+        }
+        const index =
+          body.variables.after === null ? 0 : Number(body.variables.after);
+        const threadPages = state.threadPages ?? [state.threads ?? []];
+        if (state.failThreadPage === index)
+          return json({ errors: [{ message: "thread page failed" }] });
+        const page = connection(threadPages[index]);
+        page.pageInfo = {
+          hasNextPage: index + 1 < threadPages.length,
+          endCursor: String(index + 1),
+        };
+        return json(
+          state.threadsResponse ?? {
+            data: { repository: { pullRequest: { reviewThreads: page } } },
+          },
+        );
+      }
       if (body.query.includes("BabysitChecks")) {
-        const checks = state.checksByHead
-          ? (state.checksByHead[body.variables.head] ?? [])
-          : (state.checks ?? []);
+        const index =
+          body.variables.after === null ? 0 : Number(body.variables.after);
+        if (state.failCheckPage === index)
+          return json({ errors: [{ message: "check page failed" }] });
+        if (state.failChecks)
+          return json({ message: "check read refused" }, state.failChecks);
+        const checks = state.checkPages
+          ? state.checkPages[index]
+          : state.checksByHead
+            ? (state.checksByHead[body.variables.head] ?? [])
+            : (state.checks ?? []);
         if (state.afterChecks) {
           Object.assign(state, state.afterChecks);
           delete state.afterChecks;
           save();
         }
-        return json({
-          data: {
-            repository: {
-              object: {
-                statusCheckRollup: { contexts: connection(checks) },
+        const page = connection(checks);
+        if (state.checkPages)
+          page.pageInfo = {
+            hasNextPage: index + 1 < state.checkPages.length,
+            endCursor: String(index + 1),
+          };
+        return json(
+          state.checksResponse ?? {
+            data: {
+              repository: {
+                object: {
+                  statusCheckRollup: { contexts: page },
+                },
               },
             },
           },
-        });
+        );
       }
       const pull = {
         number: 12,
@@ -378,10 +425,12 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
     if (path.endsWith("/actions/runs")) {
       if (state.failRuns)
         return json({ message: "runs refused" }, state.failRuns);
-      return json({
-        total_count: (state.runs ?? []).length,
-        workflow_runs: state.runs ?? [],
-      });
+      return json(
+        state.runsResponse ?? {
+          total_count: (state.runs ?? []).length,
+          workflow_runs: state.runs ?? [],
+        },
+      );
     }
     let values;
     if (path.endsWith("/reviews")) {

@@ -53,30 +53,44 @@ reads classic protection, requiring nonempty strict checks enforced for admins
 too. These are read-only policy checks; setup and delivery
 never change bypass settings to make a merge pass.
 
+Both merge paths independently require `.github/required-checks.json` from the
+same pinned trusted snapshot as reviewer configuration. The shared
+`required-checks.mjs` reader also backs the read-only adoption check and wait.
+It validates `version: 1` and a nonempty list of exact check names. Missing,
+invalid and unreadable declarations refuse delivery with the path and trusted
+revision when known. Correct the trusted default branch through the applicable
+owner procedure and invoke again; a local or PR-branch file cannot repair it,
+and no bootstrap bypass exists. The standard never installs repository names.
+
+Merge reads paginated current-head check runs, commit statuses and workflow
+attempts. Every declared name needs positive success: absence, pending, failure,
+cancellation, timeout, skipped and neutral are insufficient. Older heads and
+earlier attempts cannot satisfy newer pending/failed evidence. Existing waits
+on observed checks and workflow attempts remain. Wait shares the same
+interpretation and cannot report success after a no-check timeout.
+
+With a configured reviewer, merge independently paginates the complete thread
+set, including outdated threads, and requires every thread that reviewer opened
+to be resolved. Replies, acknowledgements and completed reviews cannot resolve
+threads. Incomplete or unreadable check/thread evidence fails closed. No reviewer
+adds no thread requirement; app-author policy cannot waive configured threads.
+
 Only recognized plan-limit 403 responses for both classic protection and
 rulesets on a private repository permit merging-agent freshness verification.
-After slow gates, immediately before the expected-head merge, verify the live
-default destination, unchanged validated/reviewed head, successful applicable
-validation on that exact head, and current default-tip ancestry. Missing or
-unreadable evidence, ordinary permission refusals, missing workflow and deferred
-setup grant no exception. Another writer can advance the base after this final
-check and the merge can succeed: the owner accepts this residual concurrent-base
-race only on this proven plan-limited path. Immediate checks narrow the window;
-they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
-enforcement remains required wherever available.
+That path retains its default-branch PR metadata workflow-presence check.
+After all slow gates on either path, immediately before expected-head merging,
+verify the unchanged head, live default destination and current default-tip
+ancestry. Missing evidence, ordinary permission refusals and deferred setup
+grant no exception. Another writer can advance the base after the final check:
+the owner accepts this residual concurrent-base race only on the proven
+plan-limited path. Strict non-bypassable GitHub enforcement supplies an additional
+atomic guard wherever available. A stale base returns exit `4` for branch-update
+recovery; a changed head returns `2` for new evidence.
 
-Access then compares the default branch against the waited head. A stale branch
-returns exit `4` for branch-update recovery. The comparison is preflight only:
-GitHub's strict required-check enforcement supplies the final guard if the base
-moves before the merge request. With enforcement confirmed and preflight fresh,
-it calls `PullRequests.squashMerge` with an expected head and an explicit
-subject and body. The subject is `<title> (#<number>)`; the body passes verbatim
-through the port's JSON transport, preserving quotes, backticks, dollar signs,
-line endings, and multiple paragraphs. No shell interprets the metadata.
-GitHub's default squash message therefore does not add co-author trailers.
-For adoption and update PRs, this includes the byte-preserved adoption record,
-any Impact/Migration sections, and a trailing `## Related issue` section with
-its closing or partial-work reference.
+The expected-head squash call sends the subject `<title> (#<number>)` and the
+current body verbatim through JSON transport, preserving quotes, backticks,
+dollar signs, line endings and paragraphs. No shell interprets metadata and
+GitHub's default squash message cannot add co-author trailers.
 
 Immediately before the merge write, Access reads `.factory/config.json` at
 the same destination default-branch SHA selected by
@@ -102,7 +116,7 @@ a newline. Failed or unconfirmed merges write no success output.
 
 Exit `0` means merged. Exit `3` means not merged and needs the owner: either
 the base branch requires a merge queue, or a successful merge call left the
-PR in a state other than `merged`, or neither freshness enforcement nor the proven private-plan path can be confirmed. The skill hands off with a question under
+PR in a state other than `merged`, or neither freshness enforcement nor the proven private-plan path can be confirmed, or required-check/reviewer-thread evidence cannot be established. The skill hands off with a question under
 [the comment rules' owner questions](../../rules/comments.md#owner-questions),
 without retrying the merge. Exit `2` means current-head validation has not succeeded, or the head changed
 before the merge call or after a refused merge;
@@ -124,6 +138,10 @@ It makes no merge write and identifies the head, the comment rules' Reviews
 section and the trusted configuration snapshot. Complete both internal reviews,
 post the review using the wait's template, and rerun after verifying the remaining merge conditions. This retry
 is distinct from the owner handoff, head-change and stale-base exits.
+
+Exit `6` means configured-reviewer threads remain unresolved, naming their IDs
+and trusted revision. Resolve them on the platform and rerun with all other
+gates enforced; a reply alone cannot clear them.
 
 For exit `4`, the skill permits one branch-update recovery per invocation,
 preserving all work and PR context before rebasing or replaying only the PR's

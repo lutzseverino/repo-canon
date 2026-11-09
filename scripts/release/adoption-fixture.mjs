@@ -33,6 +33,10 @@ SOFTWARE.
 
 // The fixture's files, by repository-relative path.
 export const files = {
+  ".github/required-checks.json": JSON.stringify({
+    version: 1,
+    checks: ["PR metadata", "Wordtally tests"],
+  }),
   ".gitattributes": `* text=auto eol=lf
 # BEGIN Repo Canon linguist-vendored
 scripts/validate-issue-contract.mjs linguist-vendored

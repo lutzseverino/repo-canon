@@ -58,6 +58,18 @@ its next run; review each such issue's current revision again before applying
 `state:ready`. Issues left with a former label that has no single successor
 get `state:triage` and go back to triage.
 
+## Required checks
+
+The required repository-owned `.github/required-checks.json` follows the rules'
+Required-check authority and merge gate schema. The declaration owns no file or
+names and adoption never creates or rewrites it. Its read-only check fails on
+absence, malformed data or an empty list. Establish repository-chosen names before starting adoption, in
+a separate repository-policy change outside the adoption commit and PR.
+An absent trusted declaration stops wait and merge: correct it on the destination
+default branch through the applicable owner procedure, then invoke again.
+Do not infer names from observed results or GitHub settings, or bypass the gate
+to bootstrap a declaration present only locally or on the PR branch.
+
 ## Pull request reviewer
 
 The optional `.github/pull-request-reviewer.json` is the repository's own

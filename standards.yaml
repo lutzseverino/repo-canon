@@ -94,6 +94,17 @@ defaults:
       rules: rules/github-repository-configuration.md
       discovery: discovery/github-repository-configuration.md
       checks:
+        - id: required-checks
+          run:
+            executable: node
+            script: operations/check-required-checks.mjs
+            resources:
+              - .agents/skills/babysit/required-checks.mjs
+            arguments: []
+          prerequisite:
+            version-arguments: ["--version"]
+            version: ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0"
+          timeout-seconds: 30
         - id: pull-request-reviewer
           run:
             executable: node
