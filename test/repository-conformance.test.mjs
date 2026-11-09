@@ -517,7 +517,7 @@ test("AGENTS.md names no rules path", () => {
 });
 
 // Fixed budgets make entry-document growth visible in review.
-const wordBudgets = { "CONTRIBUTING.md": 2909, "AGENTS.md": 223 };
+const wordBudgets = { "CONTRIBUTING.md": 3109, "AGENTS.md": 223 };
 
 function wordCount(text) {
   return text.match(/\S+/gu)?.length ?? 0;

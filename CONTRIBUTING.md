@@ -246,34 +246,29 @@ adoption pull request, use the adoption record as described below.
 
 ### Worker handoff
 
-Before reporting a successful handoff, the worker waits until every required
-check passes on the latest pushed pull request head at the repository's
-configured check location. Every location runs the same repository-required
-check command:
+Before successful worker handoff, every required check must pass on the latest
+pushed PR head at the repository's configured check location. Every location
+runs the same required command:
 
-- `github`: use the required hosted check results for that head.
-- `runner`: use each required result from the runner the repository names,
-  posted as a commit status for that head.
-- `self-reported`: run the required local check command on that head and
-  report its outcomes.
+- `github`: use required hosted check results on that head.
+- `runner`: use required commit statuses from the repository's named runner
+  on that head.
+- `self-reported`: run and report the required local command on that head.
 
-A changed head invalidates all passing evidence from earlier heads. Pending,
-missing, failing, unavailable or not-yet-run required results cannot qualify
-for success. Actions being unavailable never substitutes a worker's local
-run for a configured runner's pending or failing result. Fix failures and
-revalidate the current head, or use the existing blocked or failure delivery
-route, naming the checks and reason; add no timeout, fallback or silent bypass.
+Changing the head invalidates earlier passing evidence. Pending, missing,
+failing, unavailable or not-yet-run required results cannot qualify. Unavailable
+Actions never substitutes a local pass for configured runner results. Fix and
+revalidate, or use existing blocked/failure delivery rules, naming checks and
+reasons. Add no timeout, fallback or bypass.
 
-The handoff records the full head SHA, configured check location, required
-command and checks, and each outcome, alongside the applicable delivery
-records. This condition applies both to a draft handed to a separate review
-agent and to delivery without a configured review run; each route retains its
-existing review and merge ownership and gates.
+Record the full head SHA, configured location, required command and checks,
+and each outcome in the handoff. Both draft-to-separate-review and no-review
+delivery retain their review/merge ownership and gates and require this condition.
 
-A successful self-reported worker handoff satisfies only this worker condition.
-Before merging, the independent review run, another agent and sandbox, reruns
-the same command on the current head. The worker's report cannot substitute
-for that rerun or clear designated owner review.
+Self-reported worker success still requires the independent review run,
+another agent and sandbox, to rerun the same command on the current head before
+merge. The worker report cannot replace that rerun or clear designated owner
+review.
 
 ### Adoption pull requests
 
