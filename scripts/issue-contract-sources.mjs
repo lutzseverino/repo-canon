@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { interpretMarkdown } from "../operations/lib/rendered-markdown.mjs";
 
 export const bodyResultFormat = "repo-canon/issue-contract-state/v2";
@@ -6,8 +7,7 @@ export const cutoffFormat = "repo-canon/issue-contract-cutoff/v1";
 export const attestationFormat = "repo-canon/triage-attestation/v1";
 export const digest = (value) =>
   `sha256:${createHash("sha256").update(value).digest("hex")}`;
-export const same = (left, right) =>
-  JSON.stringify(left) === JSON.stringify(right);
+export const same = isDeepStrictEqual;
 
 // Value owners: the standard owns the protocol; the repository owns its cutoff
 // and durable per-issue facts; the issue owns its contract. Consumers: validator,
@@ -79,7 +79,12 @@ export function sourceSelection(snapshot, briefs, revisionOf) {
   const replacement =
     eligible &&
     briefs.some((brief) => BigInt(brief.id) > BigInt(eligible.source.id));
-  if (eligible && (!unchanged || replacement)) next.retired = true;
+  const deletedReplacement =
+    eligible &&
+    snapshot.deletedBrief &&
+    BigInt(snapshot.deletedBrief.id) > BigInt(eligible.source.id);
+  if (eligible && (!unchanged || replacement || deletedReplacement))
+    next.retired = true;
   if (next.migrated) {
     if (!bodyBrief || !hasCategory)
       return held(

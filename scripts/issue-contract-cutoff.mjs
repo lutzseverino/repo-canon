@@ -11,6 +11,7 @@ import {
   installContractCutoff,
   loadContractSources,
   readContractSourceConfiguration,
+  requestContractEvaluation,
 } from "./issue-contract-store.mjs";
 
 export async function main(
@@ -36,13 +37,18 @@ export async function main(
     flags.set(flag, flag === "--publication-frozen" ? true : options.shift());
   }
   if (
-    !["activate", "inspect"].includes(action) ||
+    !["activate", "inspect", "evaluate"].includes(action) ||
     typeof flags.get("--repo") !== "string"
   )
     throw new Error(
-      "Usage: issue-contract-cutoff.mjs inspect --repo OWNER/REPO | activate --repo OWNER/REPO --release TAG --sha FULL_SHA --epoch UTC --publication-frozen",
+      "Usage: issue-contract-cutoff.mjs inspect --repo OWNER/REPO [--issue NUMBER] | evaluate --repo OWNER/REPO --issue NUMBER | activate --repo OWNER/REPO --release TAG --sha FULL_SHA --epoch UTC --publication-frozen",
     );
   const connection = connect(flags.get("--repo"));
+  if (action === "evaluate") {
+    await requestContractEvaluation(connection, Number(flags.get("--issue")));
+    console.log("Requested current issue-contract evaluation.");
+    return;
+  }
   if (action === "inspect") {
     const configuration = await readContractSourceConfiguration(connection);
     const number = flags.get("--issue") ? Number(flags.get("--issue")) : null;

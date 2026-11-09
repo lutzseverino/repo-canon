@@ -293,6 +293,11 @@ function selectedSource(snapshot) {
     {
       ...snapshot,
       bodyBrief: Boolean(agentBriefHeading(snapshot.issue.body ?? "")),
+      deletedBrief:
+        snapshot.event?.kind === "commentDeleted" &&
+        agentBriefHeading(snapshot.event.comment?.body ?? "")
+          ? snapshot.event.comment
+          : null,
     },
     snapshot.comments.filter((comment) =>
       agentBriefHeading(comment.body ?? ""),

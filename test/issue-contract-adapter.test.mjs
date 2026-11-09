@@ -250,7 +250,11 @@ async function exercise(
         "issue-contract",
         {
           GITHUB_EVENT_PATH: eventPath,
-          GITHUB_EVENT_NAME: event.comment ? "issue_comment" : "issues",
+          GITHUB_EVENT_NAME: event.client_payload
+            ? "repository_dispatch"
+            : event.comment
+              ? "issue_comment"
+              : "issues",
           GITHUB_REPOSITORY: repository,
           GITHUB_TOKEN: "fixture-credential",
         },
@@ -1330,4 +1334,20 @@ test("mutation failures during permission-error cleanup remain visible", async (
     assert.equal(result.stdout, "");
     assert.equal(result.stderr, "");
   }
+});
+
+test("publication dispatch re-evaluates current state without treating its sender as acceptance", async (t) => {
+  const result = await exercise(t, {
+    event: {
+      action: "repo-canon-issue-contract",
+      client_payload: { issue: 42 },
+    },
+    issue: { body: ticketBody, labels: [{ name: "state:triage" }] },
+  });
+  assert.equal(result.code, 0);
+  assert.ok(
+    !result.requests.some((request) =>
+      request.body?.labels?.includes("state:ready"),
+    ),
+  );
 });

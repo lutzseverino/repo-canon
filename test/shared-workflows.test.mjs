@@ -227,7 +227,7 @@ test("the issue contract workflow covers issue and comment changes using default
   assert.match(text, /issues: write/);
   assert.match(
     text,
-    /group: issue-contract-\$\{\{ github\.event\.issue\.number \}\}/,
+    /group: issue-contract-\$\{\{ github\.event\.issue\.number \|\| github\.event\.client_payload\.issue \}\}/,
   );
   assert.match(text, /cancel-in-progress: false/);
   assert.doesNotMatch(text, /github\.event\.issue\.body/);

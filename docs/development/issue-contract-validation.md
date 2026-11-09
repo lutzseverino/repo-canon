@@ -3,7 +3,10 @@
 The `Issue contracts` workflow validates issue structure from the repository's
 trusted default-branch code. It runs when issues open, reopen, or close, for
 issue body and label changes, and for created, edited, or deleted issue comments.
-Pull request comments are ignored.
+Pull request comments are ignored. A `repo-canon-issue-contract` repository
+dispatch requests a fresh evaluation after host proof persistence or activation;
+it carries an issue number, shares that issue's serialization and grants no
+acceptance to its sender.
 Its `validate` job runs on `ubuntu-latest` unless the `REPO_CANON_RUNS_ON`
 variable names other runner labels as a JSON array. Unset or empty keeps the
 hosted default; the [runner rules](../../rules/github-repository-configuration.md#installed-workflow-runners)

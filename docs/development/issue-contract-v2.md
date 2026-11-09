@@ -29,6 +29,7 @@ node scripts/issue-contract-cutoff.mjs activate --repo OWNER/REPO \
   --release INSTALLED_TAG --sha INSTALLED_FULL_SHA --epoch UTC_TIMESTAMP \
   --publication-frozen
 node scripts/issue-contract-cutoff.mjs inspect --repo OWNER/REPO --issue 123
+node scripts/issue-contract-cutoff.mjs evaluate --repo OWNER/REPO --issue 123
 ```
 
 `--publication-frozen` attests an operator-maintained freeze, not an automatic
@@ -54,8 +55,15 @@ and writes `.github/issue-contracts.json` on the default branch:
 { "mode": "body", "cutoff": "<immutable full receipt commit SHA>" }
 ```
 
+A dispatched evaluation carries only a positive issue number. The trusted
+trigger re-fetches current issue facts and grants no authority to its sender.
+It shares the issue's concurrency group with body, comment and label events.
+The `evaluate` command can retry this request during recovery.
+
 Body publication, v2 decisions and refusal of new comment contracts start
-together through that configuration. The trusted default-branch workflow reads
+together through that configuration. Activation requests fresh evaluation of each
+inventoried issue; inspect the resulting v2 decisions before lifting the freeze.
+The trusted default-branch workflow reads
 it locally; the bridge host uses `readContractSourceConfiguration(connection)`
 to pin/read it from the destination, independently of its checkout. An explicit
 `{"mode":"prepared"}` also selects preparation before activation.
@@ -139,6 +147,11 @@ and `scripts/issue-contract-sources.mjs`:
    verifies the exact payload and intake, and stores immutable publication proof.
    Never edit evidence in place. Retry the same verified evidence or publish a
    new evidence comment for fresh acceptance. A changed body needs new proof.
+   After persistence, this operation requests `repo-canon-issue-contract`
+   repository dispatch, using the host's existing ledger Contents-write
+   authority. It requests evaluation even on an idempotent retry. This closes
+   the race where the attestation's workflow evaluated before proof persistence;
+   a failed dispatch can be retried without changing evidence or readiness.
 5. Wait for a matching current validator notice that includes the verified
    association; only then request readiness through the existing event. Wait
    for `approved` bound to that current ready event before implement admission.

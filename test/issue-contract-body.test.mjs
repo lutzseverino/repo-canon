@@ -453,3 +453,18 @@ test("a known different factory intake writer qualifies, while null-run evidence
   ready(bad, "factory[bot]");
   assert.notEqual(result(decideIssueContract(bad)).status, "approved");
 });
+
+test("an observed deletion of a newer Brief retires legacy even if its creation was not evaluated", () => {
+  const s = snapshot();
+  s.event = {
+    kind: "commentDeleted",
+    actor: { login: "reporter" },
+    comment: { id: 99, body: completeAgentBrief },
+  };
+  const decision = decideIssueContract(s);
+  assert.equal(decision.sourceRecord.retired, true);
+  assert.equal(result(decision).selection.state, "held");
+  s.contractSources.record = decision.sourceRecord;
+  s.event = { kind: "commentCreated", actor: { login: "reporter" } };
+  assert.equal(result(decideIssueContract(s)).selection.state, "held");
+});

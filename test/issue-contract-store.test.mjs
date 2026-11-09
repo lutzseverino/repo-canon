@@ -12,6 +12,8 @@ import {
   captureContractCutoff,
   installContractCutoff,
   captureContractIntake,
+  recordContractPublication,
+  requestContractEvaluation,
 } from "../scripts/issue-contract-store.mjs";
 import {
   cutoffFormat,
@@ -84,7 +86,8 @@ function store() {
           return { data: { default_branch: "main" } };
         if (path.includes("/git/ref/heads/"))
           return { data: { object: { sha: "c".repeat(40) } } };
-        if (path.endsWith("/git/refs")) return { data: {} };
+        if (path.endsWith("/git/refs") || path.endsWith("/dispatches"))
+          return { data: {} };
         throw new Error(`Unexpected ${input.path}`);
       },
     },
@@ -422,5 +425,89 @@ test("fenced Brief/Original request examples stay intake rather than becoming pr
   assert.equal(
     intakeOriginal(bodyWithOriginal(completeAgentBrief, intake)),
     intake,
+  );
+});
+
+test("proof-persistence retries request evaluation even when evidence is already recorded", async () => {
+  const fixture = JSON.parse(
+    readFileSync(
+      new URL("./fixtures/issue-contract-v2.json", import.meta.url),
+      "utf8",
+    ),
+  ).cases.find((c) => c.name === "exact body factory approval");
+  const s = structuredClone(fixture.snapshot);
+  const { connection, writes, nodes } = store();
+  connection.repository.path = s.repository;
+  const issue = {
+    ...s.issue,
+    nodeId: s.issue.node_id,
+    author: s.issue.user,
+    bodyEditTime: s.bodyRevision.lastEditedAt,
+  };
+  const comments = s.comments.map((c) => ({
+    ...c,
+    nodeId: c.node_id,
+    author: c.user,
+    updatedAt: c.updated_at,
+  }));
+  for (const [id, edit] of Object.entries(s.sourceEdits))
+    nodes[id] = {
+      id,
+      lastEditedAt: edit.editedAt,
+      userContentEdits: {
+        nodes: [{ id: edit.id, editedAt: edit.editedAt, deletedAt: null }],
+      },
+    };
+  nodes.I42 = {
+    id: "I42",
+    lastEditedAt: issue.bodyEditTime,
+    userContentEdits: {
+      nodes: [
+        {
+          id: s.bodyRevision.editId,
+          editedAt: issue.bodyEditTime,
+          deletedAt: null,
+        },
+      ],
+    },
+  };
+  connection.issueTracker = {
+    issue: async () => issue,
+    comments: async () => comments,
+  };
+  const original = connection.access.request;
+  let fail = true;
+  connection.access.request = async (input) => {
+    if (fail && input.path.endsWith("/dispatches"))
+      throw new Error("Wake unavailable");
+    return original(input);
+  };
+  await assert.rejects(
+    () =>
+      recordContractPublication(
+        connection,
+        42,
+        s.contractSources,
+        s.triageResult,
+        { attestationId: "20" },
+      ),
+    /Wake unavailable/,
+  );
+  fail = false;
+  await recordContractPublication(
+    connection,
+    42,
+    s.contractSources,
+    s.triageResult,
+    { attestationId: 20 },
+  );
+  assert.deepEqual(writes.at(-1).body, {
+    event_type: "repo-canon-issue-contract",
+    client_payload: { issue: 42 },
+  });
+  assert.ok(!writes.some((write) => write.method === "PUT"));
+  await assert.rejects(
+    () => requestContractEvaluation(connection, -1),
+    /positive/,
   );
 });

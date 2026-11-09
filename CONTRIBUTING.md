@@ -20,9 +20,9 @@ and trailing periods; aim for roughly 72 characters without a hard limit.
 
 A directly authored specification or implementation ticket carries its
 implementation contract in its issue body and needs no intake triage, Agent
-Brief, or category label. A triaged request uses the validator's selected body Agent Brief after explicit
+Brief, or category label. A triaged request uses the validator's body Agent Brief after explicit
 activation. Preparation retains latest-comment contracts; cutoff preserves exact unchanged
-inventoried comments until their next revision into the body. Preserve one verbatim `Original request` at the body's end.
+inventoried comments until revision into the body. Preserve one verbatim `Original request` at the body's end.
 See [the protocol](docs/development/issue-contract-v2.md).
 
 Before implementing, read the whole issue, its discussion, its parent

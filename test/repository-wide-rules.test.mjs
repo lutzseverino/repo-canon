@@ -566,6 +566,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       "scripts/validate-issue-contract.mjs",
       "scripts/issue-contract-sources.mjs",
       "scripts/issue-contract-store.mjs",
+      "scripts/issue-contract-cutoff.mjs",
       "scripts/validate.mjs",
       "operations/lib/rendered-markdown.mjs",
       ".agents/skills/triage/ready.mjs",

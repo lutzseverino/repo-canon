@@ -308,7 +308,10 @@ export async function recordContractPublication(
       revision: digest(comment.body),
     },
   };
-  if (facts.record.publication && same(facts.record.publication, proof)) return;
+  if (facts.record.publication && same(facts.record.publication, proof)) {
+    await requestContractEvaluation(connection, number);
+    return;
+  }
   if (facts.record.publication?.attestation.id === String(comment.id))
     throw new Error(
       "Publication evidence is immutable; an edited or replaced attestation needs fresh person acceptance or a new body revision.",
@@ -319,6 +322,7 @@ export async function recordContractPublication(
     retired: true,
     publication: proof,
   });
+  await requestContractEvaluation(connection, number);
 }
 
 // Operator capture enumerates every open issue through the complete port list,
@@ -403,5 +407,23 @@ export async function installContractCutoff(connection, receipt, inventory) {
     config?.sha,
     repository.default_branch,
   );
+  for (const entry of receipt.issues)
+    await requestContractEvaluation(connection, entry.number);
   return cutoff;
+}
+
+// Repository dispatch needs the same Contents-write host authority as ledger
+// persistence. Its only effect is a fresh trusted evaluation, never acceptance.
+// Retry even when proof was already recorded, so a failed wake is recoverable.
+export async function requestContractEvaluation(connection, number) {
+  if (!Number.isSafeInteger(number) || number < 1)
+    throw new Error("A positive issue number is required for evaluation.");
+  await request(connection, {
+    method: "POST",
+    path: `${base(connection)}/dispatches`,
+    body: {
+      event_type: "repo-canon-issue-contract",
+      client_payload: { issue: number },
+    },
+  });
 }
