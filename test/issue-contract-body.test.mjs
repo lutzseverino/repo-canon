@@ -436,6 +436,13 @@ test("a known different factory intake writer qualifies, while null-run evidence
   s.issue.user.login = "factory[bot]";
   s.contractSources.record.intake.author = "factory[bot]";
   s.contractSources.record.intake.writerRun = "writer-1";
+  s.contractSources.record.intake.sourceEdit = { id: "INTAKE", editedAt: null };
+  s.contractSources.record.intake.writerProof = {
+    repository: s.repository,
+    issue: "I42",
+    run: "writer-1",
+    sourceEdit: s.contractSources.record.intake.sourceEdit,
+  };
   bodyProof(s);
   s.comments.push(noticeFor(result(decideIssueContract(s))));
   ready(s, "factory[bot]");

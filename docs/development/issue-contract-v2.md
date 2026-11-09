@@ -108,9 +108,10 @@ identical bytes produces a different platform edit ID. A selected body Brief ret
 not change an otherwise unchanged legacy comment contract. Once a body Brief is selected,
 `migrated` and `retired` remain true: newer comments, deleted feedback/body,
 category removal/re-add and reopen cannot resurrect a comment. Original request
-is the exact stored text at the body's end, once. A prior correctly preserved
-Original request can be reused; unavailable/ambiguous original input holds
-migration. Factory writer proof is never recovered from that preserved text.
+is the exact stored text at the body's end, once. A correctly preserved Original request is reused from its trusted intake record.
+A heading in an already-replaced body alone is not historical proof: when that
+record is missing, recover authenticated original intake or hold migration.
+Factory writer proof is never recovered from preserved/model-supplied text.
 
 ## Host body publication
 
@@ -124,8 +125,17 @@ and `scripts/issue-contract-sources.mjs`:
 2. Before replacing intake, call `captureContractIntake`. It reads platform
    author/body/run facts and persists them independently. A factory-authored
    intake requires one known writer run different from this triage run.
-   Unknown or same-run intake never gets factory authority. Existing stored
-   original intake is immutable; a recovered Original request supplies no writer
+   Unknown or same-run intake never gets factory authority. The optional final
+   `writerProof` argument to `captureContractIntake(connection, number,
+triageResult, facts, issue?, edits?, writerProof?)` comes from the host's
+   independently retained issue-publication record, not Markdown or model text:
+   `{repository, issue, run, sourceEdit:{id,editedAt}}`. It must match the preserved
+   intake identity/edit. Cutoff capture records unknown writers as null; a host
+   may fill that unknown once with matching authenticated proof, without
+   changing original bytes, author or intake edit. A known writer cannot be
+   replaced. Missing historical writer proof preserves person acceptance, not
+   the factory exception. Optional issue/edit arguments are authenticated
+   platform snapshots only. Existing stored original intake is immutable; a recovered Original request supplies no writer
    proof. Use `bodyWithOriginal(brief, original)` to append the exact original
    once after disclaimer, complete seven-field Brief, applicable Seams and notes.
 3. Publish the body; refetch its exact validator revision/source. Publish a

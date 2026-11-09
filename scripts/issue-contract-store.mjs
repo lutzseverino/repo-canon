@@ -174,7 +174,21 @@ export async function saveContractSourceRecord(
   if (
     (facts.record?.migrated && !record.migrated) ||
     (facts.record?.retired && !record.retired) ||
-    (facts.record?.intake && !same(facts.record.intake, record.intake))
+    (facts.record?.intake &&
+      !same(facts.record.intake, record.intake) &&
+      !(
+        facts.record.intake.writerRun === null &&
+        record.intake?.writerRun &&
+        record.intake.writerProof &&
+        same(
+          {
+            ...facts.record.intake,
+            writerRun: record.intake.writerRun,
+            writerProof: record.intake.writerProof,
+          },
+          record.intake,
+        )
+      ))
   )
     throw new Error(
       "Cannot reset durable contract migration, retirement or original intake.",
@@ -198,13 +212,26 @@ export async function captureContractIntake(
   facts,
   issue,
   edits,
+  writerProof = null,
 ) {
   if (
     !facts.trusted ||
     !validReceipt(facts.receipt, connection.repository.path)
   )
     throw new Error("Trusted cutoff required.");
-  if (facts.record?.intake) return facts.record;
+  if (facts.record?.intake) {
+    if (!writerProof) return facts.record;
+    const intake = intakeWithWriter(
+      facts.record.intake,
+      writerProof,
+      connection.repository.path,
+      facts.record.issue,
+      triageResult,
+    );
+    const record = { ...facts.record, intake };
+    await saveContractSourceRecord(connection, number, facts, record);
+    return record;
+  }
   issue ??= await connection.issueTracker.issue(number);
   const original = intakeOriginal(issue.body ?? "");
   if (original === null)
@@ -221,15 +248,40 @@ export async function captureContractIntake(
     intake: {
       original,
       author: issue.author.login,
-      writerRun:
-        triageResult && original === issue.body
-          ? markedRun(issue.body, triageResult.marker)
-          : null,
+      writerRun: null,
+      writerProof: null,
       sourceEdit: edits[issue.nodeId],
     },
   };
+  if (writerProof)
+    record.intake = intakeWithWriter(
+      record.intake,
+      writerProof,
+      connection.repository.path,
+      issue.nodeId,
+      triageResult,
+    );
   await saveContractSourceRecord(connection, number, facts, record);
   return record;
+}
+
+// The host supplies this fact from its independently retained issue-publication
+// record. No body marker or model-supplied Original request can mint it.
+function intakeWithWriter(intake, proof, repository, issue, triageResult) {
+  if (
+    intake.author !== triageResult?.author ||
+    proof.repository !== repository ||
+    proof.issue !== issue ||
+    !same(proof.sourceEdit, intake.sourceEdit) ||
+    typeof proof.run !== "string" ||
+    !proof.run.trim() ||
+    proof.run.trim() !== proof.run ||
+    (intake.writerRun && intake.writerRun !== proof.run)
+  )
+    throw new Error(
+      "Authenticated intake writer proof does not match the preserved issue/source.",
+    );
+  return { ...intake, writerRun: proof.run, writerProof: proof };
 }
 
 // Host records the observed platform publication, not an agent-provided claim.

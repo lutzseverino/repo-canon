@@ -249,6 +249,16 @@ export function bodyTriageAssociation(snapshot, contract) {
       (!intake.writerRun || intake.writerRun === payload.run))
   )
     return null;
+  if (
+    intake.author === config.author &&
+    (!intake.writerProof ||
+      intake.writerProof.run !== intake.writerRun ||
+      intake.writerProof.repository !== snapshot.repository ||
+      intake.writerProof.issue !==
+        String(snapshot.issue.node_id ?? snapshot.issue.nodeId) ||
+      !same(intake.writerProof.sourceEdit, intake.sourceEdit))
+  )
+    return null;
   return {
     run: payload.run,
     revision: contract.revision,
@@ -262,17 +272,11 @@ export function bodyTriageAssociation(snapshot, contract) {
   };
 }
 
-// Capture only an unambiguous existing preserved original; never a prior brief
-// recursively. A missing original on a body that is already a brief is held.
+// A preserved heading alone is not authenticated intake. Reuse an existing
+// original from the trusted record; without that record, recover historical
+// intake rather than certifying agent-supplied Original request text.
 export function intakeOriginal(body) {
-  if (!namedHeadings(body, "agent brief").length) return body;
-  const matches = namedHeadings(body, "original request");
-  if (matches.length !== 1) return null;
-  const heading = matches[0];
-  const suffix = body.slice(heading.index + heading.length);
-  // The separator belongs to the section, not the preserved reporter bytes.
-  if (!suffix.startsWith("\n\n")) return null;
-  return suffix.slice(2);
+  return namedHeadings(body, "agent brief").length ? null : body;
 }
 
 function namedHeadings(body, name) {

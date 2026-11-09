@@ -265,22 +265,54 @@ test("capture takes original and author/writer proof from platform before body p
     edits,
   );
   assert.equal(record.intake.original, issue.body);
-  assert.equal(record.intake.writerRun, "writer-1");
+  assert.equal(
+    record.intake.writerRun,
+    null,
+    "a copied body marker is not writer proof",
+  );
+  const proof = {
+    repository: "owner/repo",
+    issue: "I42",
+    run: "writer-1",
+    sourceEdit: edits.I42,
+  };
+  const verified = await captureContractIntake(
+    connection,
+    42,
+    { marker: "factory:run", author: "factory[bot]" },
+    facts,
+    issue,
+    edits,
+    proof,
+  );
+  assert.equal(verified.intake.writerRun, "writer-1");
+  assert.deepEqual(verified.intake.writerProof, proof);
   const second = store();
   const migrated = {
     ...issue,
     body: bodyWithOriginal(completeAgentBrief, issue.body),
   };
-  const captured = await captureContractIntake(
-    second.connection,
+  await assert.rejects(
+    () =>
+      captureContractIntake(
+        second.connection,
+        42,
+        { marker: "factory:run", author: "factory[bot]" },
+        { ...facts, record: null, recordSha: null },
+        migrated,
+        edits,
+      ),
+    /unavailable or ambiguous/,
+  );
+  const reused = await captureContractIntake(
+    connection,
     42,
     { marker: "factory:run", author: "factory[bot]" },
-    { ...facts, record: null, recordSha: null },
+    facts,
     migrated,
     edits,
   );
-  assert.equal(captured.intake.original, issue.body);
-  assert.equal(captured.intake.writerRun, null);
+  assert.deepEqual(reused.intake, verified.intake);
   assert.equal(intakeOriginal(completeAgentBrief), null);
 });
 
@@ -424,7 +456,7 @@ test("fenced Brief/Original request examples stay intake rather than becoming pr
   assert.equal(intakeOriginal(intake), intake);
   assert.equal(
     intakeOriginal(bodyWithOriginal(completeAgentBrief, intake)),
-    intake,
+    null,
   );
 });
 

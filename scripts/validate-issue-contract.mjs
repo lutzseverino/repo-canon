@@ -2160,19 +2160,14 @@ export async function contractCutoffInventory(connection) {
     const labels = issue.labels.map(labelName);
     const eligible = brief && labels.some((label) => categoryLabels.has(label));
     const original = intakeOriginal(issue.body ?? "");
-    const triageResult = factoryTriageResult();
     const intake =
       original === null
         ? null
         : {
             original,
             author: issue.author.login,
-            writerRun:
-              triageResult &&
-              original === issue.body &&
-              markedRuns(original, triageResult.marker).length === 1
-                ? markedRuns(original, triageResult.marker)[0]
-                : null,
+            writerRun: null,
+            writerProof: null,
             sourceEdit: edits[issue.nodeId],
           };
     const contract = eligible
