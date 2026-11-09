@@ -16,6 +16,11 @@ profile, the factory configuration and the sandbox image workflow. It is install
 identically in every adopting repository that selects its profile and changes
 only through a Repo Canon release.
 
+Exact files carry only the standard's values. [ADR 0033](docs/adr/0033-give-every-value-one-value-owner.md)
+places repository choices in repository-owned files with a Canon-supplied
+schema and check, keeps per-repository values out of host configuration, and
+places per-issue choices in labels.
+
 `rules/` holds each declaration's lasting rules, which adoption installs in
 the adopting repository and an agent changing a covered file later reads, as
 [ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md) decides.
