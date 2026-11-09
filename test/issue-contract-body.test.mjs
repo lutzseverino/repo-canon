@@ -475,3 +475,38 @@ test("an observed deletion of a newer Brief retires legacy even if its creation 
   s.event = { kind: "commentCreated", actor: { login: "reporter" } };
   assert.equal(result(decideIssueContract(s)).selection.state, "held");
 });
+
+test("factory acceptance follows the first matching proof notice, independently of the earlier body notice", () => {
+  const s = bodySnapshot();
+  const bodyNotice = result(decideIssueContract(s));
+  bodyNotice.publishedAt = "2026-11-09T00:59:00Z";
+  s.comments.push(noticeFor(bodyNotice));
+  bodyProof(s);
+  const proofNotice = result(decideIssueContract(s));
+  s.comments = s.comments.filter((c) => c.id !== 90);
+  s.comments.push({
+    ...noticeFor(proofNotice),
+    updated_at: "2026-11-09T01:00:20Z",
+  });
+  ready(s, "factory[bot]");
+  const refused = decideIssueContract(s);
+  assert.notEqual(
+    result(refused).status,
+    "approved",
+    "a label before its proof notice cannot be accepted",
+  );
+  s.contractSources.record = refused.sourceRecord;
+  s.comments = s.comments.filter((c) => c.id !== 90);
+  s.comments.push({
+    ...noticeFor(result(refused)),
+    updated_at: "2026-11-09T01:00:30Z",
+  });
+  s.issue.labels = ["type:enhancement"];
+  ready(s, "factory[bot]", 102);
+  s.issueEvents.at(-1).created_at = "2026-11-09T01:00:25Z";
+  assert.equal(
+    result(decideIssueContract(s)).status,
+    "approved",
+    "a rewrite never moves the first proof notice past a valid later acceptance",
+  );
+});

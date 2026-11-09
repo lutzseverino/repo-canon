@@ -507,6 +507,7 @@ test("proof-persistence retries request evaluation even when evidence is already
     issue: async () => issue,
     comments: async () => comments,
   };
+  s.contractSources.record.publication.noticedAt = "2026-11-09T01:00:00Z";
   const original = connection.access.request;
   let fail = true;
   connection.access.request = async (input) => {

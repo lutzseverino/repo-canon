@@ -360,7 +360,16 @@ export async function recordContractPublication(
       revision: digest(comment.body),
     },
   };
-  if (facts.record.publication && same(facts.record.publication, proof)) {
+  if (
+    facts.record.publication &&
+    same(
+      {
+        payload: facts.record.publication.payload,
+        attestation: facts.record.publication.attestation,
+      },
+      proof,
+    )
+  ) {
     await requestContractEvaluation(connection, number);
     return;
   }

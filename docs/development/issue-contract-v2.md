@@ -82,7 +82,10 @@ commit SHA is its identity; the receipt is read at that immutable commit.
 The mutable ledger records each issue's cutoff identity, immutable intake
 (original bytes, author, writer run or null, source edit), migration/retirement
 booleans, cutoff body edit, latest durable validator notice, and host publication
-proof when present. Contents writes use file-SHA compare-and-swap. The adapter
+proof when present. The publication record retains `noticedAt`, the actual
+first publication time of its matching proof notice, separately from the body's
+first revision notice. Rewrites never move either barrier; a ready event must
+follow both applicable notices. Contents writes use file-SHA compare-and-swap. The adapter
 persists migration/retirement before label or feedback writes, then retains the
 published notice. Lost writes fail visibly; restarting cannot reset facts.
 

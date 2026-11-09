@@ -241,12 +241,27 @@ export function decideIssueContract(snapshot) {
   const saved = selected.record?.notice ?? selected.legacy?.notice;
   const effective = {
     ...snapshot,
+    contractSources: { ...snapshot.contractSources, record: selected.record },
     selectedSource: selected,
     comments:
       !findFeedback(snapshot.comments) && saved
         ? [...snapshot.comments, saved]
         : snapshot.comments,
   };
+  const assessed = assessStructure(effective);
+  const association =
+    assessed.valid && assessed.contract?.type === "issue-body"
+      ? bodyTriageAssociation(effective, contractRevision(effective, assessed))
+      : null;
+  const previous = findFeedback(effective.comments);
+  if (
+    association &&
+    same(feedbackState(previous?.body)?.factoryTriage, association) &&
+    selected.record?.publication &&
+    !selected.record.publication.noticedAt
+  )
+    selected.record.publication.noticedAt =
+      previous.updated_at ?? previous.updatedAt ?? null;
   const decision = decideCurrentContract(effective);
   if (decision.feedback) {
     const line = feedbackStateLine(decision.feedback.body);
@@ -267,13 +282,7 @@ export function decideIssueContract(snapshot) {
         ],
       },
     });
-    state.factoryTriage = null;
-    const assessed = assessStructure(effective);
-    if (assessed.valid && assessed.contract?.type === "issue-body")
-      state.factoryTriage = bodyTriageAssociation(
-        effective,
-        contractRevision(effective, assessed),
-      );
+    state.factoryTriage = association;
     decision.feedback.body = decision.feedback.body.replace(
       line,
       `${feedbackStatePrefix}${JSON.stringify(state)} -->`,
@@ -1155,6 +1164,22 @@ function assessReadiness({
           valid: false,
           error:
             "Factory proof changed or has not been evaluated in this body's revision notice; publish matching proof, wait for its notice and request fresh acceptance.",
+          observedEventId,
+          sourceInvalidation,
+        };
+      const proofNotice =
+        snapshot.contractSources?.record?.publication?.noticedAt;
+      if (
+        !proofNotice ||
+        !noticePrecedes(
+          { comment: previousFeedback, state: { publishedAt: proofNotice } },
+          labelEvent?.created_at,
+        )
+      )
+        return {
+          valid: false,
+          error:
+            "Wait for the matching factory proof notice before requesting acceptance of this body.",
           observedEventId,
           sourceInvalidation,
         };
@@ -2104,6 +2129,13 @@ export async function runIssueContractValidation(
     .toISOString()
     .replace(".000Z", "Z");
   const decision = decideIssueContract(snapshot);
+  if (facts.mode === "body" && decision.sourceRecord)
+    await saveContractSourceRecord(
+      connection,
+      issueNumber,
+      facts,
+      decision.sourceRecord,
+    );
   for (const label of decision.removeLabels)
     await tracker.removeLabel(issueNumber, label);
   if (decision.addLabels.length)
@@ -2126,10 +2158,20 @@ export async function runIssueContractValidation(
       user: { login: "github-actions[bot]" },
       updated_at: writtenFeedback?.updatedAt ?? snapshot.evaluatedAt,
     };
-    await saveContractSourceRecord(connection, issueNumber, facts, {
+    const record = {
       ...facts.record,
       notice,
-    });
+    };
+    if (
+      feedbackState(decision.feedback.body)?.factoryTriage &&
+      record.publication &&
+      !record.publication.noticedAt
+    )
+      record.publication = {
+        ...record.publication,
+        noticedAt: notice.updated_at,
+      };
+    await saveContractSourceRecord(connection, issueNumber, facts, record);
   }
   (decision.exitCode === 0 ? console.log : console.error)(decision.message);
   return decision.exitCode;
