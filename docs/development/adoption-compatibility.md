@@ -99,11 +99,11 @@ dependencies and notices. Adopt workbench in the separate workbench repository
 to continue using the skill, or use the standalone release-tag bundle.
 
 Canon's authoritative `.agents/skills/orchestrate/` source, credits and
-standalone bundle remain published. Canon's own non-workbench adoption has a
-one-time source transition described in
+standalone bundle remain published. Canon's own non-workbench adoption relies
+on the normal preservation of its locally edited source, as described in
 [authoring and publication](authoring-and-publication.md#canons-self-adoption).
-That source restoration applies only to Canon; downstream standard/factory
-adopters receive the normal removal.
+It needs no restore step or CLI state edit; downstream standard/factory
+adopters receive the normal removal of unchanged installations.
 
 ## GitHub repository settings
 

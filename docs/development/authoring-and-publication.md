@@ -16,27 +16,24 @@ Source authoring, publication, and adoption are separate stages:
 
 ## Canon's self-adoption
 
-Canon authors skills at the same paths that adoption installs. When its own
-`standard` or `factory` lock still owns `.agents/skills/orchestrate`, the
-first update to workbench-only selection removes that installed directory.
-Preserve the authoritative source as a one-time transition:
+Canon authors skills at the same paths that adoption installs. Its edited
+orchestrate files and newer source files differ from the recorded adoption.
+When its non-workbench update retires that installation, the CLI's normal
+ownership policy keeps the whole locally edited skill directory, including
+files that still match their installed baseline. Verify that inspection
+reports the source as kept and that the completed run is ready to commit.
+The new lock no longer owns orchestrate; later updates leave it alone, like
+the workbench-only creation skills. No special restore or CLI state edit is
+needed or permitted within the adoption pull request.
 
-1. From the clean authoring checkout, record the pre-update commit with
-   `authoring_head=$(git rev-parse HEAD)` before running the normal adoption.
-2. Complete the CLI run, including its normal ownership/conflict handling.
-   Then restore only the tracked source with
-   `git restore --source="$authoring_head" -- .agents/skills/orchestrate`.
-3. Before committing, run `pnpm validate`, all-profile source validation as
-   described in the [source profile](source-profile.md#executable-prerequisites),
-   and the normal adoption status check. The repository conformance suite
-   requires the complete orchestrate source and credits even under Canon's
-   factory adoption; missing source fails `pnpm validate`.
-
-Do not edit CLI state or exempt removed installations. After this run the
-lock no longer owns orchestrate; later updates leave its authoring source
-alone, like the workbench-only creation skills. This restore applies only
-to Canon while its lock still owns orchestrate. Other standard/factory
-adopters receive the normal selected removal described in
+Before committing, run `pnpm validate` and all-profile source validation as
+described in the [source profile](source-profile.md#executable-prerequisites).
+Repository conformance requires the complete orchestrate source and credits
+even under Canon's factory adoption; missing or incomplete source fails
+`pnpm validate`. If an update proposes source removal or loses a source file,
+stop for a supported transition rather than committing that deletion.
+Downstream standard/factory adopters receive the normal removal of unchanged
+installations described in
 [adoption compatibility](adoption-compatibility.md#workbench-only-orchestrate-migration).
 If later documentation discovery asks about the now-unselected skill's
 Markdown files, exclude them as source authoring, like the creation skills'

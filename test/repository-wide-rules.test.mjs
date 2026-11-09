@@ -2,6 +2,7 @@ import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
+  cpSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -37,6 +38,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const version = "v1.0.0";
 const previousVersion = "v0.18.0";
 const orchestrateVersion = "v0.99.0";
+const sourceVersion = "v0.19.0";
 // Declarations whose rules govern all work, with empty confirmed scope, and
 // the profiles that select them.
 const repositoryWide = {
@@ -276,7 +278,14 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     "https://github.com/lutzseverino/repo-canon",
     `refs/tags/${previousVersion}:refs/tags/${previousVersion}`,
   );
-  publish([version, orchestrateVersion, previousVersion]);
+  git(
+    source,
+    "fetch",
+    "--quiet",
+    "https://github.com/lutzseverino/repo-canon",
+    `refs/tags/${sourceVersion}:refs/tags/${sourceVersion}`,
+  );
+  publish([version, orchestrateVersion, sourceVersion, previousVersion]);
   for (const [
     label,
     profile,
@@ -322,8 +331,9 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     const selectedStack = web ?? (node ? "node" : null);
     const authoring = label === "source-update";
     const edited = label === "edited-update";
-    const baselineVersion =
-      authoring || edited || label.includes("-orchestrate-")
+    const baselineVersion = authoring
+      ? sourceVersion
+      : edited || label.includes("-orchestrate-")
         ? orchestrateVersion
         : previousVersion;
     const project = join(directory, label);
@@ -576,11 +586,36 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       assert.ok(existsSync(join(project, skill, "SKILL.md")));
       if (baselineVersion === orchestrateVersion)
         assert.ok(existsSync(join(project, skill, "wait.mjs")));
-      if (edited) {
-        writeFileSync(
-          join(project, skill, "SKILL.md"),
-          "# Local skill edits\n",
-        );
+      if (authoring || edited) {
+        if (authoring) {
+          for (const file of ["SKILL.md", "CREDITS.md"])
+            assert.notDeepEqual(
+              readFileSync(join(project, skill, file)),
+              readFileSync(join(root, skill, file)),
+              `Canon has authored ${file} since its recorded baseline`,
+            );
+          assert.deepEqual(
+            readFileSync(join(project, skill, "agents/openai.yaml")),
+            readFileSync(join(root, skill, "agents/openai.yaml")),
+          );
+          for (const file of [
+            "wait.mjs",
+            "records.mjs",
+            "references/close.md",
+            "references/launches.md",
+            "references/templates.md",
+          ])
+            assert.equal(
+              existsSync(join(project, skill, file)),
+              false,
+              `${file} is newer authoring source`,
+            );
+          cpSync(join(root, skill), join(project, skill), { recursive: true });
+        } else
+          writeFileSync(
+            join(project, skill, "SKILL.md"),
+            "# Local skill edits\n",
+          );
         git(project, "add", skill);
         git(
           project,
@@ -602,7 +637,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         profile,
       );
       const removal = inspection.removed.find(({ target }) => target === skill);
-      if (edited) {
+      if (authoring || edited) {
         assert.equal(removal, undefined);
         assert.ok(inspection.kept.some(({ target }) => target === skill));
       } else {
@@ -623,12 +658,11 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       }
       assert.equal(inspection.confirmation.required, false);
     }
-    const authoringHead = git(project, "rev-parse", "HEAD");
     // The local preceding release has identical contextual rules, so the CLI
     // reuses its assessment; the historical release requires a new one.
     assert.equal(
       adopt(version),
-      !label.endsWith("-update") || baselineVersion === previousVersion,
+      !label.endsWith("-update") || baselineVersion !== orchestrateVersion,
       `${label} preserves the CLI's contextual assessment reuse`,
     );
     for (const path of [
@@ -637,7 +671,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     ])
       assert.equal(
         !!lstatSync(join(project, path), { throwIfNoEntry: false }),
-        edited,
+        authoring || edited,
         `${label} removes unchanged installations and keeps local edits at ${path}`,
       );
     assert.equal(
@@ -658,15 +692,8 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         "# Local skill edits\n",
       );
     if (authoring) {
-      // Canon's one-time transition restores source from the pre-update HEAD,
-      // after the CLI has relinquished ownership and before validation/commit.
-      git(
-        project,
-        "restore",
-        `--source=${authoringHead}`,
-        "--",
-        ".agents/skills/orchestrate",
-      );
+      // Canon's real source differs from its recorded adoption. Normal
+      // retirement keeps the whole edited tree, including unchanged files.
       for (const entry of readdirSync(
         join(root, ".agents/skills/orchestrate"),
         {
@@ -904,7 +931,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         "commit",
         "--quiet",
         "-m",
-        "Update and preserve authoring source",
+        "Update while retaining authoring source",
       );
       adopt(version);
       assert.ok(

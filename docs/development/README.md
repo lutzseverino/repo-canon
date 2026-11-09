@@ -76,8 +76,9 @@ inputs; GitHub HTTP responses and Git transport use local fixtures, with no
 in-tree factory dependency. Standard/factory updates from an orchestrate-owning
 release verify removal of the whole skill, its link and retained inputs,
 including the CLI's normal preservation of edited installations. A disposable
-source-authoring update restores Canon's tracked source from its pre-update
-commit and verifies that later updates leave it alone. Set `REPO_STANDARDS_PREFIX` to reuse that public
+source-authoring update starts from Canon's actual recorded baseline, overlays
+its current authored source and verifies whole-directory preservation,
+ready-to-commit status and retention through later updates. Set `REPO_STANDARDS_PREFIX` to reuse that public
 CLI installation, or the test installs it outside the checkout. Runtime
 preparation also needs npm registry access.
 Run `node --test test/workbench-profile.test.mjs` for the `workbench` profile.
