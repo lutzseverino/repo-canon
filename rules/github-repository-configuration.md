@@ -33,22 +33,20 @@ descriptions:
 | `wayfinder:grilling`  | `bfd4f2` | Design decision requiring discussion                       |
 | `wayfinder:task`      | `bfd4f2` | Task in a planning map                                     |
 
-An open issue carries exactly one `state:` label, its workflow state, naming
-whom it waits on; the contribution guide's Readiness section says how the
-issue-contract workflow keeps it. `state:reporter` is only for a fact the
-issue's outside reporter holds. A fact the owner or an agent filing the issue
-lacks waits on the owner in `state:owner`, or in `state:grill` when it is the
-owner's intent. Follow the contribution guide's Triage section for question
-routing and its inference test. `state:ready` is readiness, and the repository
-owns it. `wontfix` marks an issue closed as will not be actioned.
+An open issue carries exactly one `state:` label naming whom it waits on;
+the contribution guide's Readiness section governs its maintenance.
+`state:reporter` is only for a fact the outside reporter holds. Facts the
+owner or filing agent lacks wait in `state:owner`, or `state:grill` for the
+owner's intent. Follow the guide's Triage section for question routing and
+inference. The repository owns `state:ready` readiness; `wontfix` marks an
+issue closed as will not be actioned.
 
 A triaged request carries one `type:` label, its category.
 
-A `priority:` label orders pickup, and an issue without one is normal. Triage
-sets it by this rubric: a broken workflow, data loss or a security problem is
-`priority:high`; most work is `priority:normal`; a cleanup with no user effect
-is `priority:low`. Triage never replaces a priority a person set, and the owner
-may change it at any time.
+Triage sets pickup priority: a broken workflow, data loss or security problem
+is `priority:high`; most work is `priority:normal`; cleanup with no user effect
+is `priority:low`. No priority label means normal. Triage never replaces a
+person's priority; the owner may change it at any time.
 
 `docs/agents/triage-labels.md` maps the triage skills' roles to these labels.
 
@@ -126,13 +124,12 @@ its reason; it never starts another update.
 
 ## Designated owner review
 
-Owner review is required when either the authoritative implementation contract
-or the worker's handoff says so. Resolve the authoritative implementation
-contract under the contribution guide's Implementation contracts section.
-Read both sources; an omission in one does not cancel a designation in the
-other. Carry that designation and its source into the PR handoff.
-Record the designation and its source as a delivery record under the
-`comments` rules, including when no worker handoff is required.
+Read both the authoritative implementation contract, resolved under the
+contribution guide's Implementation contracts section, and the worker's
+handoff. Either can require owner review; an omission in one cancels no
+designation in the other. Carry the designation and its source into the PR
+handoff and a delivery record under the `comments` rules, even when no worker
+handoff is required.
 
 Before merging a designated PR, the merging agent verifies the owner's explicit
 approval of the current head. Record the approval's source and head SHA as a
@@ -143,15 +140,12 @@ app-author review-policy skip never substitute for owner approval. When approval
 is missing, follow the contribution guide's owner-question handoff and leave the
 PR unmerged.
 
-Read these records when verifying designation and current-head approval,
-including after a handoff or resumed delivery.
-
-This gate applies in both profiles and does not assign merge ownership.
-In the standard profile, the otherwise authorized merging agent, ordinarily
-the implementing agent, enforces it. It requires no factory label, pickup or
-recovery mechanism. Where factory workflow rules are installed, follow them
-for merge ownership and approval-pause continuation. Without a designation,
-ordinary applicable merge conditions hold.
+Verify designation and current-head approval from these records, including
+after handoff or resumption. Both profiles enforce this gate without changing
+merge ownership. In standard, the otherwise authorized merging agent,
+ordinarily the implementer, enforces it without factory labels, pickup or
+recovery. Follow installed factory workflow rules for merge ownership and
+approval-pause continuation. Without a designation, ordinary merge conditions hold.
 
 ## Preserved settings
 
@@ -162,20 +156,18 @@ settings stay as the repository has them.
 ## Installed workflow runners
 
 Every installed job reads `vars.REPO_CANON_RUNS_ON`. Unset or empty selects
-`ubuntu-latest`; a public repository normally leaves it unset. A private
-repository that needs its own runners can set it to a JSON array of runner
-label strings, for example `["self-hosted", "homelab"]`. The array must be
-non-empty and contain only non-empty strings. A runner must carry every listed
-label. Set the variable only when the repository has matching runners.
-A repository's own workflows may read the same variable too.
+`ubuntu-latest`; public repositories normally leave it unset. Private
+repositories needing their own runners can use a non-empty JSON array of
+non-empty runner label strings, such as `["self-hosted", "homelab"]`. Set it
+only with matching runners, each carrying every listed label. Repository-owned
+workflows may read it too.
 
-An organization-level variable of the same name also reaches these jobs, and
-a repository-level value takes precedence. The installed jobs use no
-environments. Never rely on invalid values falling back: malformed JSON or an
-unusable `runs-on` value makes every installed job fail during GitHub's
-evaluation, before any steps run. The expression does not validate the value's
-schema: parsed falsy JSON such as `false`, `0`, `null`, or `""` also selects
-the hosted default, but such a value is still invalid.
+Repository-level values override an organization-level variable of the same
+name; installed jobs use no environments. Malformed JSON or unusable `runs-on`
+values fail every installed job during GitHub evaluation, before any steps.
+The expression does not validate the schema: parsed falsy JSON (`false`, `0`,
+`null`, `""`) selects the hosted default but remains invalid. Never rely on
+invalid-value fallback.
 
 The runners need `git`, `bash`, and network access for Node.js setup through
 `actions/setup-node`. The factory profile's sandbox-image job also needs a
@@ -194,19 +186,16 @@ runner matching the variable's labels must be suitable for that workload;
 runner isolation is a host provisioning responsibility. See GitHub's
 [self-hosted runner security guidance](https://docs.github.com/en/actions/reference/security/secure-use#hardening-for-self-hosted-runners).
 
-If the self-hosted runners are unavailable, return to GitHub-hosted runners by
-deleting the variable or setting it to `["ubuntu-latest"]`, without editing
-installed files. Deleting a repository-level variable exposes an inherited
-organization-level value if one exists; set `["ubuntu-latest"]` to override
-that value. A runner on another machine carrying the same labels takes the jobs
-with no change at all. Changing the variable selects runners for new jobs;
-cancel and rerun a job already queued on unavailable labels.
+For unavailable self-hosted runners, delete the variable or set
+`["ubuntu-latest"]` without editing installed files. Deletion exposes any
+inherited organization value; `["ubuntu-latest"]` overrides it. Another machine
+with the same runner labels needs no change. Variable changes affect new jobs;
+cancel and rerun jobs already queued on unavailable labels.
 
 ## Automated standards updates
 
-The standard and factory profiles install
-`.github/workflows/standards-update.yml`. Its daily
-schedule and manual `workflow_dispatch` run the job only when
+Standard and factory install `.github/workflows/standards-update.yml`. Its daily
+schedule and manual `workflow_dispatch` run only when
 `REPO_CANON_UPDATES` is `true`; installing the file opts nobody in. The job
 reads `vars.REPO_CANON_RUNS_ON`, checks out the default branch, and serializes
 runs through one concurrency group. Workflow-level permissions are empty; its
@@ -232,13 +221,12 @@ This job puts the App private key and a write token on the
 `REPO_CANON_RUNS_ON` runners, so the warning above about persistent runners
 running untrusted pull request code applies to it too.
 
-The action moves both pins together to the newest CLI and standards release.
-It maintains one rolling pull request on `repo-standards/update` when the
-headless update completes, or one rolling issue carrying the open questions
-when it stops or a push is refused. A newer target refreshes the rolling item;
-the same target leaves it untouched. Remote setup is deferred until the next
-local `adopt`. The installed caller never sets `agent-command`; an adopter
-wanting that input writes a repository-owned caller workflow.
+The action moves both pins together to the newest CLI and standards release,
+maintaining one rolling PR on `repo-standards/update` on headless completion,
+or one rolling issue with open questions on a stop or refused push. A newer
+target refreshes the item; the same target leaves it untouched. Remote setup
+waits for the next local `adopt`. The installed caller never sets
+`agent-command`; that input needs a repository-owned caller workflow.
 
 ## Trusted review configuration
 
@@ -252,32 +240,27 @@ missing-outcome diagnostic. A wait keeps the snapshot across
 all polls and head changes; each new invocation resolves the current default
 tip again, including after fixes, rebases, retries and resumed runs.
 
-Configuration additions, edits and deletions take effect only after they land
-on the destination default branch. The PR's head, source fork, chosen base
-branch or retargeting, local branch and dirty or untracked files never select
-or override this configuration.
+Only configuration landed on the destination default branch takes effect,
+including deletions. PR heads, source forks, chosen bases or retargeting, local
+branches and dirty or untracked files never select or override it.
 
-Only verified absence at the selected commit invokes the optional-file
-behavior below. A repository, default-branch, commit or file-read failure, or
-invalid trusted configuration, is an explicit error before any review-request
-mutation. It authorizes no skip and permits no fallback to local files, the
-head or another revision.
+Only verified absence at the selected commit invokes optional-file behavior.
+Repository, default-branch, commit or file-read failures and invalid trusted
+configuration error before any review-request mutation, authorizing neither
+skip nor fallback to local files, the head or another revision.
 
-Invalid JSON or a schema-invalid declaration requires an owner handoff: identify
-the destination repository, selected default-branch revision, affected file and
-validation problem, and name the correction needed. Record the owner question
-under the `comments` rules and applicable installed continuation rules, leave
-the PR open, and stop babysitting. Do not retry the unchanged invalid
-configuration or proceed to merge.
+Invalid JSON or a schema-invalid declaration requires an owner handoff naming
+the destination repository, selected default-branch revision, file, validation
+problem and needed correction. Record the owner question under the `comments`
+and installed continuation rules; leave the PR open and stop babysitting,
+without retrying unchanged invalid configuration or proceeding to merge.
 
-The correction must land on the destination default branch through the
-applicable owner-handoff and merge procedure. A correcting PR's proposed
-configuration cannot govern its own delivery before it lands; this repair
-grants no new merge exception. After the correction lands and continuation is
-authorized, a fresh invocation resolves the current default
-branch and uses the corrected configuration. Invocation errors, permission
-refusals, platform failures and verified optional-file absence retain their
-existing handling.
+Land the correction on the destination default branch through the applicable
+owner-handoff and merge procedure; proposed configuration cannot govern its
+correcting PR's delivery or grant a merge exception. Once landed and
+continuation authorized, a fresh invocation resolves the current default
+branch and uses the correction. Invocation errors, permission refusals,
+platform failures and verified optional-file absence retain their handling.
 
 ## Pull request reviewer file
 
@@ -364,31 +347,27 @@ review requirement. A policy skip supplies neither internal nor external approva
 
 ## Review of an implemented pull request
 
-An implemented pull request reaches its merge through a review by an agent
-that wrote none of its change, with the installed `review` skill. Each round
-reviews one head with the [internal reviews](#internal-standards-and-spec-reviews),
-whose Spec axis also reads the implementation contract against its issue, and
-leaves exactly one review of that head as the `comments` rules' Reviews section
-describes. A pull request without an issue is reviewed against its
-decision-bearing body.
+An agent that wrote none of the change reviews an implemented PR through merge
+with the installed `review` skill. Each round uses the
+[internal reviews](#internal-standards-and-spec-reviews) on one head, checks the
+implementation contract against its issue on the Spec axis, and leaves exactly
+one review of that head under the `comments` rules' Reviews section. Without
+an issue, review against the PR's decision-bearing body.
 
-A round fixes small findings on the pull request and revalidates. A larger
-finding (a wrong approach, a missing acceptance criterion or a large rework)
-hands the work back to implementation on the same pull request, with the
-round's review as its input; whoever ran the review relaunches it. When a later
-round still has a larger finding, the review stops without converging and
-reports why, with the pull request left a draft. A wrong or ambiguous contract
-moves the issue to `state:grill` under the contribution guide's Triage section.
-A round left with no open finding holds: the pull request is marked ready for
-review and delivered under the contribution guide's Merging section. A
-round's review lists only its open findings: fixes go under `Fixed`, and a
-declined finding is answered in its review thread. Only the reviewing
-account's standing reviews, submitted on the head they name and not
-dismissed, record its rounds; another account's review never counts as one. Delivery resumes, including after an
-interruption, only while that account's latest review is a holding review of
-the current head. Where
-factory workflow rules are installed, they say how an owner gate stops that
-delivery.
+Fix small findings and revalidate. Larger findings (wrong approach, missing
+acceptance criterion or large rework) return to implementation on the same PR
+with that round's review as input; whoever ran the review relaunches it. A later
+round still carrying a larger finding stops without converging, reports why
+and leaves the PR draft. Wrong or ambiguous contracts move the issue to
+`state:grill` under the guide's Triage section.
+
+A round with no open finding holds: mark the PR ready and deliver under the
+guide's Merging section. List only open findings in the round's review, fixes
+under `Fixed`, and answer declines in their threads. Only the reviewing
+account's undismissed standing reviews submitted on the head they name count
+as its rounds. Resume delivery, including after interruption, only while that
+account's latest review holds on the current head. Installed factory workflow
+rules govern owner-gate stops.
 
 ## Factory app-author review policy
 
@@ -415,9 +394,8 @@ login is an invalid declaration, regardless of the PR author or whether a
 reviewer is configured; fail with a configuration error before any review
 request or policy skip. No remote account-type lookup is required. Compare
 authors case-insensitively, treating those REST and CLI forms as the same app.
-A plain human login `<slug>` remains distinct from that app.
-A different or missing PR author is not exempt. Invalid declarations
-fail explicitly and never authorize a skip.
+A plain human login `<slug>` remains distinct from that app; different or
+missing PR authors are not exempt. Invalid declarations never authorize a skip.
 
 Apply this policy before the review request rules and reviewer wait
 classification, on every head, including fixes, rebases, retries and resumed
@@ -470,10 +448,9 @@ With a reviewer file, a review request is the pull request's opening when
 `request.comment`; a push is never one. The `comments` rules say how to write
 the review request comment.
 
-When `request.onOpen` is false and the pull request has had no review request,
-an agent must post the review request comment for its head before it first
-waits on the pull request. The request bound cannot stop this first request,
-since none has been counted yet.
+When `request.onOpen` is false and no request exists, an agent must post the
+review request comment for the head before first waiting. The request bound
+cannot stop this first request.
 
 After that first request, an agent must post the review request comment for a
 new head when its push fixes, fully or partly, a review finding the
@@ -482,14 +459,13 @@ reached. No other push gets a request: a push that only follows declines,
 changes only tests, documentation or wording, or only fixes a failing check
 gets none.
 
-The optional `bounds.reviewRequests` limits the total review requests a pull
-request gets, defaulting to **4** when omitted from a reviewer file. An explicit
-positive integer overrides that default; the exact JSON string `"unbounded"`
-deliberately removes the count bound. Count the opening when `request.onOpen`
-is true and every comment whose whole trimmed body equals `request.comment`,
-whoever posted it. Once that
-count reaches the bound, no agent requests another review. Without a reviewer
-file there is no reviewer, request or reviewer wait; the default creates none.
+`bounds.reviewRequests` limits total requests, defaulting to **4** when omitted
+from a reviewer file. A positive integer overrides the default; exact JSON
+`"unbounded"` removes the count bound. Count opening when `request.onOpen` is
+true and every comment whose whole trimmed body equals `request.comment`,
+whoever posted it. At the bound, no agent requests another review. Without a
+reviewer file there is no reviewer, request or reviewer wait; the default
+creates none.
 
 The bound creates no reason to decline a real finding and no grouped follow-up
 issue. After the bound is reached, fix every finding the contribution guide
