@@ -31,10 +31,11 @@ the exact published contract and factual/test-seam evidence to the orchestrating
 agent for its split decision and acceptance under the guide's Triage and
 Readiness sections and the installed parent-readiness rules.
 
-For a grill's publication, continue with `to-tickets` after the specification
-exists. For an amendment under the guide's Triage rules, consume the amendment
-grill's decisions, revise the specification and invoke `to-tickets` on the
-delta. Return revised contracts for the guide's acceptance process.
+Return the published specification's link and exact revision to the caller,
+which starts or resumes its ticket-publication step. For an amendment under
+the guide's Triage rules, consume the amendment grill's decisions, revise the
+specification and return its link and revision for the caller's delta-ticket
+step and the guide's acceptance process.
 
 <spec-template>
 
@@ -116,5 +117,3 @@ Paths are relative to the repository root.
   user without repeating recorded answers.
 - The `grilling` skill: the inference fallback, only when the contribution
   guide is missing. If also missing, report it and stop for the missing policy.
-- The `to-tickets` skill: ticket publication after a grill or amendment. If
-  missing, report it and stop at the published specification awaiting review.
