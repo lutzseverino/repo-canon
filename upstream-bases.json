@@ -49,7 +49,7 @@
     },
     "improve-codebase-architecture": {
       "path": "skills/engineering/improve-codebase-architecture",
-      "edits": "It also makes the grilling loop's domain-model edits on the branch and checkout `domain-modeling` directs. Named ownership exploration uses codebase-design's Ownership check for misplaced values, configuration kinds and surprising layout, passing that reference to its exploring sub-agent."
+      "edits": "It also makes the grilling loop's domain-model edits on the branch and checkout `domain-modeling` directs. Named ownership exploration uses codebase-design's Ownership check for misplaced values, configuration kinds and surprising layout, passing that reference to its exploring sub-agent. An orchestrated launch writes Markdown candidates to its designated report and stops before the HTML report and grilling loop."
     },
     "orchestrate": null,
     "pr": {

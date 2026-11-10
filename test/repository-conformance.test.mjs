@@ -176,7 +176,12 @@ function read(path) {
 }
 
 // The orchestrate skill is a core `SKILL.md` and the references it links.
-const orchestrateReferences = ["templates.md", "launches.md", "close.md"];
+const orchestrateReferences = [
+  "templates.md",
+  "launches.md",
+  "close.md",
+  "intake.md",
+];
 
 function operation(name) {
   return fileURLToPath(new URL(`../operations/${name}`, import.meta.url));
@@ -1284,6 +1289,7 @@ test("only workbench installs orchestrate, while Canon retains its complete stan
     "agents/openai.yaml",
     "records.mjs",
     "references/close.md",
+    "references/intake.md",
     "references/launches.md",
     "references/templates.md",
     "wait.mjs",
@@ -1342,6 +1348,96 @@ test("orchestrate keeps its core within its line limit and links its references"
       .lexer(core)
       .flatMap((token) => token.tokens ?? [])
       .some((token) => token.type === "codespan" && token.text === "factory"),
+  );
+});
+
+test("all hand launches share one invocation-and-context template", () => {
+  const tokens = marked.lexer(
+    read(".agents/skills/orchestrate/references/launches.md"),
+  );
+  const templates = tokens.filter(
+    (token) => token.type === "code" && token.lang === "text",
+  );
+  assert.equal(templates.length, 1);
+  const [invocation, ...body] = templates[0].text.split("\n");
+  assert.equal(invocation, "<skill invocation>");
+  assert.deepEqual(
+    body
+      .filter((line) => /^[A-Z][^:]+:/.test(line))
+      .map((line) => line.split(":")[0]),
+    [
+      "Issues",
+      "Evidence",
+      "Recorded decisions",
+      "Scope",
+      "Workspace",
+      "Plan references",
+      "Model",
+      "Effective effort",
+      "Launch report",
+    ],
+  );
+  assert.ok(templates[0].text.endsWith("status: done"));
+  const sections = new Map();
+  let section;
+  for (const token of tokens) {
+    if (token.type === "heading" && token.depth === 2) {
+      section = token.text;
+      sections.set(section, []);
+    } else if (section) sections.get(section).push(token);
+  }
+  /** @type {[string, string[]][]} */
+  const launches = [
+    ["Triage run", ["/triage"]],
+    ["Grill", ["/grill-with-docs"]],
+    ["Publication and review", ["/to-spec", "/to-tickets", "/review"]],
+    ["Worker", ["/implement"]],
+    ["Architecture review", ["/improve-codebase-architecture"]],
+    ["Handover", ["/orchestrate"]],
+    ["Retro", []],
+  ];
+  for (const [name, commands] of launches) {
+    const role = sections.get(name);
+    assert.ok(role, name);
+    assert.ok(
+      !role.some((token) => token.type === "code"),
+      `${name} uses the shared template`,
+    );
+    const spans = role
+      .flatMap((token) => token.tokens ?? [])
+      .filter((token) => token.type === "codespan")
+      .map((token) => token.text);
+    for (const command of commands)
+      assert.ok(spans.includes(command), `${name}: ${command}`);
+  }
+});
+
+test("orchestration text stays within its per-file and total budgets", () => {
+  const paths = [
+    "SKILL.md",
+    ...orchestrateReferences.map((name) => `references/${name}`),
+  ];
+  let total = 0;
+  for (const path of paths) {
+    const lines = read(`.agents/skills/orchestrate/${path}`)
+      .trimEnd()
+      .split("\n").length;
+    assert.ok(lines <= 200, `${path}: ${lines} > 200`);
+    total += lines;
+  }
+  // Revision 2 recorded 686 orchestration lines before this rewrite.
+  assert.ok(total < 686, `orchestration text grew to ${total} lines`);
+  const architectureText = read(
+    ".agents/skills/improve-codebase-architecture/SKILL.md",
+  );
+  const architectureLines = architectureText.trimEnd().split("\n").length;
+  assert.ok(architectureLines <= 200);
+  assert.ok(total + architectureLines <= 686 + 90, "net skill text grows");
+  const architecture = interpretMarkdown(architectureText);
+  const headings = architecture.headings.map(({ name }) => name);
+  assert.ok(headings.includes("Orchestrated launch"));
+  assert.ok(
+    headings.indexOf("Orchestrated launch") < headings.indexOf("Process"),
   );
 });
 

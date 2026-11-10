@@ -888,6 +888,195 @@ function records(t, text = recordText()) {
   };
 }
 
+test("status includes the supplied Scriptorium budget without platform reads or invented availability", async (t) => {
+  const { root, path } = records(t);
+  const observation = {
+    state: "last-observed",
+    source: "status.json",
+    at: "2026-11-10T10:00:00Z",
+  };
+  const budget = {
+    version: 1,
+    observedAt: "2026-11-10T10:01:00Z",
+    models: {
+      effort: "high",
+      defaults: {
+        default: { provider: "codex", model: "model-a", effort: "high" },
+      },
+      catalog: [
+        {
+          identity: "codex/model-a",
+          guidance: "Policy edits",
+          effectiveEffort: "high",
+        },
+      ],
+    },
+    capacity: {
+      counting: "non-ended-runs",
+      observation,
+      host: {
+        runKinds: { implement: 1, triage: 0, review: 0 },
+        implement: { limit: 2, running: 1, free: 1 },
+      },
+      repositories: [],
+    },
+    providers: [
+      {
+        provider: "codex",
+        cap: 3,
+        running: 1,
+        free: 2,
+        claimsHeld: true,
+        ownerHold: { at: "2026-11-10T09:00:00Z" },
+        usageHold: null,
+        launchPermission: "not-established",
+        observations: {
+          work: observation,
+          owner: observation,
+          usage: {
+            state: "unavailable",
+            source: "usage.json",
+            at: null,
+            problem: "missing record",
+          },
+        },
+      },
+    ],
+    futureField: { retained: true },
+  };
+  const budgetPath = join(root, "budget.json");
+  const input = JSON.stringify(budget);
+  writeFileSync(budgetPath, input);
+  const output = capture();
+  assert.equal(
+    await main(["--status", "--from", path, "--budget", budgetPath], {
+      ...output.streams,
+      connect: unreachable,
+      pause: unreachable,
+    }),
+    0,
+    output.stderr,
+  );
+  assert.ok(
+    output.stdout.startsWith(
+      "| Item | Running | Waiting on owner | Since (UTC) | Next check |\n",
+    ),
+  );
+  const rendered = /```json\n([\s\S]+?)\n```/.exec(output.stdout);
+  assert.ok(rendered, output.stdout);
+  assert.deepEqual(JSON.parse(rendered[1]), budget);
+  assert.match(output.stdout, /not a launch grant or reservation/);
+  assert.equal(readFileSync(budgetPath, "utf8"), input);
+  const cli = spawnSync(
+    process.execPath,
+    [script, "--status", "--from", "now.md", "--budget", "budget.json"],
+    {
+      cwd: root,
+      encoding: "utf8",
+      timeout: 30_000,
+    },
+  );
+  assert.equal(cli.status, 0, cli.stderr);
+  assert.equal(cli.stdout, output.stdout);
+});
+
+test("budget input errors name the file and never print a partial status or change wait modes", async (t) => {
+  const { root, path } = records(t);
+  const budgetPath = join(root, "budget.json");
+  for (const input of [
+    null,
+    "{",
+    "null",
+    '{"version":2}',
+    '{"version":1,"observedAt":"bad"}',
+  ]) {
+    if (input !== null) writeFileSync(budgetPath, input);
+    const output = capture();
+    assert.equal(
+      await main(["--status", "--from", path, "--budget", budgetPath], {
+        ...output.streams,
+        connect: unreachable,
+        pause: unreachable,
+      }),
+      1,
+    );
+    assert.ok(output.stderr.includes(budgetPath), output.stderr);
+    assert.equal(output.stdout, "");
+  }
+  for (const args of [
+    [...durations, "--from", path, "--budget", budgetPath],
+    ["--status", "--from", path, "--budget"],
+    [
+      "--status",
+      "--from",
+      path,
+      "--budget",
+      budgetPath,
+      "--budget",
+      budgetPath,
+    ],
+  ]) {
+    const output = capture();
+    assert.equal(
+      await main(args, {
+        ...output.streams,
+        connect: unreachable,
+        pause: unreachable,
+      }),
+      1,
+    );
+    assert.match(output.stderr, /--budget/);
+    assert.equal(output.stdout, "");
+  }
+});
+
+test("arrivals leave watches unchanged while queued and open grills show distinct waits", async (t) => {
+  const { path } = records(
+    t,
+    recordText({
+      flight: [
+        flightRow(
+          "queued",
+          [{ event: "open grill completion" }],
+          "orchestrating agent: grill queue",
+        ),
+      ],
+      launches: [launchRow("open", "grill.md", "grill")],
+      owner: [
+        ownerRow(
+          "open",
+          "answer grill",
+          "10",
+          "owner answers, at your pace",
+        ).replace("inbox.md#open", "grill.md#questions"),
+      ],
+    }) +
+      "\n## Arrived since last update\n\n- [request](https://github.com/example/tracker/issues/7) — reporter — waiting for the owner's word\n",
+  );
+  const watches = readRecords(path).watches;
+  assert.equal(watches.length, 2); // open grill report and incoming
+  const output = capture();
+  assert.equal(
+    await main(["--status", "--from", path], {
+      ...output.streams,
+      connect: unreachable,
+      pause: unreachable,
+    }),
+    0,
+    output.stderr,
+  );
+  assert.ok(
+    output.stdout.includes(
+      "| [queued](plan.md#queued) | orchestrating agent: grill queue | — |",
+    ),
+  );
+  assert.ok(
+    output.stdout.includes(
+      "| [open](plan.md#open) | — | [answer grill](grill.md#questions) | 2026-11-08T18:10Z | owner answers, at your pace |",
+    ),
+  );
+});
+
 test("status renders the fixed records-only table, pending reports and consumed owner outcome", async (t) => {
   const { root, path, write } = records(t);
   const rows = {

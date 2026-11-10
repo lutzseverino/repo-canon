@@ -332,6 +332,29 @@ export function readRecords(path) {
   }
 }
 
+// Scriptorium owns validation and projection. Preserve its facts, provenance,
+// unavailable values and additive fields without deriving admission policy.
+export function renderBudget(path) {
+  try {
+    const budget = JSON.parse(readFileSync(path, "utf8"));
+    if (
+      !object(budget) ||
+      budget.version !== 1 ||
+      !text(budget.observedAt) ||
+      !Number.isFinite(Date.parse(budget.observedAt)) ||
+      !object(budget.models) ||
+      !object(budget.capacity) ||
+      !Array.isArray(budget.providers)
+    )
+      fail(
+        "expected Scriptorium status version 1 with models, capacity and providers",
+      );
+    return `\n## Launch budget\n\nObserved ${budget.observedAt}; not a launch grant or reservation.\n\n\`\`\`json\n${JSON.stringify(budget, null, 2)}\n\`\`\`\n`;
+  } catch (error) {
+    throw new UsageError(`${path}: ${error.message}`, { cause: error });
+  }
+}
+
 export function renderStatus(records) {
   const rows = records.items.map((item) => {
     const { flight, launch, owner } = item;
