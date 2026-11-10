@@ -60,9 +60,20 @@ then push the default branch and any deliverable branches.
 
 ## Adopt, when enabled
 
+For remote GitHub project adoption, first have the owner establish the
+repository-chosen exact check names in `.github/required-checks.json` on the
+destination default branch through the source's owner correction procedure.
+This is a separate repository-policy change after the README-only founding
+commit, outside the adoption commit and PR; adoption supplies neither this
+file nor its names. If it is missing or invalid, stop before adoption, report
+that owner action and retain the repository and interview answers for
+continuation. A local or proposed declaration cannot satisfy the trusted-default
+prerequisite. Local-only and workbench adoption keep their delivery below.
+
 In the new repository, invoke `adopt-repository-standards` from the clean
-founding commit. Pass a source only when the person named one; otherwise keep
-that skill's Repo Canon default. Let `adopt` supply its profile descriptions
+default branch after any prerequisite policy change. Pass a source only when
+the person named one; otherwise keep that skill's Repo Canon default. Let
+`adopt` supply its profile descriptions
 and questions: standard for a repository no factory serves, factory only for
 one served by a host-installed factory, workbench for a workbench. Add no
 source or profile selector of your own. Pass the interview's license answer
@@ -76,6 +87,15 @@ adoption branch, complete adoption record, separate review and squash merge.
 The standard profile has no configured PR reviewer by default; follow its
 contribution-guide delivery without imposing factory review-agent configuration.
 A workbench commits each completed adoption directly on its default branch.
+
+When the first remote project adoption installs the metadata workflow absent
+from default, carry its explicit owner-delivery stop through separate review,
+including on a private plan without protection or rulesets. Leave the PR open
+and stop with the exact reviewed head, saved pre-commit summary and verdict,
+validation outcomes, missing prerequisites, required owner action and next
+adoption continuation. Distinguish local validation from absent hosted checks.
+This handoff grants no alternate merge authority: wait/merge refusals stand,
+and owner delivery or correction must be confirmed before continuing below.
 
 For local-only project adoption, commit the completed run on its adoption
 branch and leave it ready to push and open its adoption PR once a remote exists. Report
@@ -125,6 +145,10 @@ Paths are relative to the new repository root.
 - `CONTRIBUTING.md`: adoption and domain-document delivery. When missing before
   adoption, let adoption install it; without adoption, leave vision edits on
   their own branch as `domain-modeling` directs.
+- `.github/required-checks.json`: repository-owned check names for remote
+  GitHub project adoption. When missing or invalid, retain the created
+  repository and hand the separate default-branch policy change to the owner
+  before adoption; local-only and workbench delivery need no remote prerequisite.
 - The pinned CLI runtime and adoption state under `.repo-standards/`, including
   the `status --summary` adoption record: completion, recovery and pre-commit
   evidence. When missing before adoption, let `adopt-repository-standards` start

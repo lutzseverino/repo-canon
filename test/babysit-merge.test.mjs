@@ -1057,6 +1057,73 @@ const planLimited = {
   ],
 };
 
+test("first private adoption refuses missing prerequisites and resumes after owner delivery", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const body = `${renderedAdoptionRecord}\n## Related issue\n\nCloses #933\n`;
+  for (const target of [undefined, installed]) {
+    const adoption = {
+      ...planLimited,
+      title: "chore: adopt repo-canon v0.16.0 with CLI 8.0.0",
+      body,
+      author: "factory-app[bot]",
+      reviewConfiguration: { policy },
+      reviews: [review(outcome)],
+      localReviewConfiguration: { requiredChecks: planLimited.requiredChecks },
+    };
+    const missingDeclaration = run(
+      t,
+      { ...adoption, requiredChecks: null, workflowStatus: 404 },
+      undefined,
+      target,
+    );
+    assert.equal(missingDeclaration.status, 3, missingDeclaration.stderr);
+    assert.match(missingDeclaration.stderr, /required-checks.json.*missing/);
+    assert.match(
+      missingDeclaration.stderr,
+      /Correct.*destination default branch/,
+    );
+    assert.equal(missingDeclaration.state.merge, undefined);
+
+    const missingWorkflow = run(
+      t,
+      { ...adoption, workflowStatus: 404 },
+      undefined,
+      target,
+    );
+    assert.equal(missingWorkflow.status, 3, missingWorkflow.stderr);
+    assert.match(missingWorkflow.stderr, /pr-metadata.yml.*404/);
+    assert.equal(missingWorkflow.state.merge, undefined);
+
+    // Model the next adoption after the owner's policy/workflow delivery.
+    const revision = "d".repeat(40),
+      nextHead = "e".repeat(40);
+    const next = {
+      ...adoption,
+      defaultRevision: revision,
+      testedBase: revision,
+      head: nextHead,
+    };
+    const oldReview = run(t, next, ["13", nextHead], target);
+    assert.equal(oldReview.status, 5, oldReview.stderr);
+    assert.equal(oldReview.state.merge, undefined);
+    const delivered = run(
+      t,
+      {
+        ...next,
+        reviews: [
+          review(outcome.replaceAll(head, nextHead), { commit_id: nextHead }),
+        ],
+      },
+      ["13", nextHead],
+      target,
+    );
+    assert.equal(delivered.status, 0, delivered.stderr);
+    assert.equal(delivered.state.merge.expectedHead, nextHead);
+    assert.equal(delivered.state.merge.body, body);
+    assert.equal(delivered.state.merge.title, `${adoption.title} (#13)`);
+  }
+});
+
 test("private plan-limited installed delivery verifies the head and preserves squash bytes", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const body = "Quotes: `code`, $HOME, $(false).\r\n\nCloses #814\n";

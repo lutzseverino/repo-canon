@@ -491,6 +491,56 @@ test("is unchanged when the plan offers no enforcement and merge settings alread
   assert.equal(scenario.readState().mutations ?? 0, 0);
 });
 
+test("first private adoption names owner delivery until the default workflow exists", (t) => {
+  const scenario = setup(t, {
+    state: {
+      private: true,
+      workflow: "absent",
+      forbidden: { protection: planLimit, rulesets: planLimit },
+    },
+  });
+  const before = snapshot(scenario.project.root);
+  for (const status of ["changed", "unchanged"]) {
+    const run = scenario.invoke({ overwriteAllowed: true });
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(run.result.status, status);
+    assert.match(run.result.message, unavailableRequirement);
+    assert.match(run.result.message, /default branch `main`.*does not carry/);
+    assert.match(run.result.message, /Merge this adoption through the owner/);
+    assert.match(run.result.message, /unattended merging stops/);
+    assert.doesNotMatch(run.result.message, /babysit verifies/);
+  }
+  assert.deepEqual(scenario.readState().mutationLog, [
+    "update squash settings",
+  ]);
+  assertProjectUnchanged(before, scenario);
+
+  scenario.updateState({ workflow: "present" });
+  const next = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(next.result.status, "unchanged");
+  assert.match(next.result.message, unavailableRequirement);
+  assert.match(next.result.message, /babysit verifies current-head validation/);
+  assert.doesNotMatch(
+    next.result.message,
+    /Merge this adoption through the owner/,
+  );
+  assertProjectUnchanged(before, scenario);
+});
+
+test("private plan limits do not conceal an unreadable default workflow", (t) => {
+  const scenario = setup(t, {
+    state: {
+      private: true,
+      workflow: "failed",
+      forbidden: { protection: planLimit, rulesets: planLimit },
+    },
+  });
+  const run = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(run.result.status, "blocked");
+  assert.match(run.result.message, /could not read.*pr-metadata.yml.*main/);
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+});
+
 test("blocks with GitHub's reason unless both reads hit the plan limit on a private repository", async (t) => {
   for (const { name, state, message } of [
     {
@@ -804,25 +854,6 @@ test("requires PR metadata on the run after the workflow reaches the default bra
     assert.match(next.result.message, /updated required-check ruleset/);
     assert.deepEqual(scenario.readState().rulesets, [canonicalRuleset()]);
   });
-});
-
-test("reports the plan limit regardless of the workflow read", async (t) => {
-  for (const workflow of ["absent", "failed"])
-    await t.test(workflow, (st) => {
-      const scenario = setup(st, {
-        state: {
-          private: true,
-          settings: matchingSettings,
-          forbidden: { protection: planLimit, rulesets: planLimit },
-          workflow,
-        },
-      });
-      const outcome = scenario.invoke({ overwriteAllowed: true });
-      assert.equal(outcome.status, 0, outcome.stderr);
-      assert.equal(outcome.result.status, "unchanged");
-      assert.match(outcome.result.message, unavailableRequirement);
-      assert.ok(!scenario.readState().requests.includes(workflowRead));
-    });
 });
 
 test("creates missing merge settings and enforcement without confirmation", (t) => {

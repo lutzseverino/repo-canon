@@ -16,6 +16,16 @@ Until the PR metadata validation workflow is on the default branch, requiring
 the check is deferred, and the next adoption or update after the workflow
 merges requires it.
 
+For a first adoption that installs the workflow absent from default, deliver
+through the owner, including when both protection mechanisms are proven
+unavailable on the private plan. After separate review, leave the PR open and
+stop with its exact reviewed head, pre-commit ready-to-commit summary and
+verdict, validation outcomes, missing prerequisites and owner action. Record
+absent hosted checks as absent, not passed. This bootstrap step grants no agent
+merge exception and changes no wait or merge refusal. Once owner delivery or
+correction is confirmed, continue from clean updated default with the next
+full adoption, preserving its own pre-commit evidence and ordinary gates.
+
 The fix establishes and reads back strict required-check freshness through
 classic protection or its managed ruleset when it establishes the required
 check, preserving other checks, rules and bypass settings. Changes to existing

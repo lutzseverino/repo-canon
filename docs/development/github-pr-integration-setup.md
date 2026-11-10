@@ -189,6 +189,10 @@ them and `unchanged` when they already matched. Its message says the
 integration matches what GitHub offers the repository, names the unavailable
 requirement and its reason, and asks to upgrade the plan or make the repository
 public; the next adoption or update then requires the check as usual.
+The operation also reads workflow presence on default on this path. When it
+is absent, the result explicitly hands delivery to the owner and stops
+unattended merging; it does not promise ordinary plan-limited delivery.
+An unreadable workflow blocks setup before merge-setting changes.
 
 Only recognized plan-limit 403 responses for both classic protection and
 rulesets on a private repository permit merging-agent freshness verification.
@@ -215,6 +219,17 @@ names the deferred requirement and the default branch that lacks the workflow,
 and asks the owner to merge the adoption. Once the adoption pull request merges and the
 workflow is on the default branch, the next adoption or update, including one
 with an unchanged selection, requires the check as usual.
+
+Before first remote project adoption, establish the repository-owned trusted
+required-check declaration through the owner procedure in a separate policy
+change, outside the adoption commit and PR, as the
+[adoption guidance](../../guidance/github-repository-configuration.md#required-checks)
+directs. Missing trusted declarations and missing default workflows remain
+helper refusals, even with green checks and a local or proposed declaration.
+The owner handoff retains the exact reviewed head, pre-commit adoption record
+and verdict, validation outcomes, missing prerequisites and continuation.
+Only confirmed owner delivery or correction allows continuation from updated
+default through the next full adoption and ordinary review and merge gates.
 
 Missing or incompatible tools, uncertain identity, authentication failure,
 insufficient permission, an unreadable rule configuration, an API failure, or
