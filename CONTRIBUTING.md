@@ -248,29 +248,28 @@ adoption pull request, use the adoption record as described below.
 
 ### Worker handoff
 
-Before successful worker handoff, every required check must pass on the latest
-pushed PR head at the repository's configured check location. Every location
-runs the same required command:
+Before worker handoff, every required check must pass on the latest pushed PR
+head. Required names come from the pinned trusted default-branch
+`.github/required-checks.json` under the `github-repository-configuration`
+rules. Every configured location runs the same required command:
 
 - `github`: use required hosted check results on that head.
-- `runner`: use required commit statuses from the repository's named runner
-  on that head.
+- `runner`: use required commit statuses from the repository's named runner.
 - `self-reported`: run and report the required local command on that head.
 
-Changing the head invalidates earlier passing evidence. Pending, missing,
-failing, unavailable or not-yet-run required results cannot qualify. Unavailable
-Actions never substitutes a local pass for configured runner results. Fix and
-revalidate, or use existing blocked/failure delivery rules, naming checks and
-reasons. Add no timeout, fallback or bypass.
+A head change invalidates earlier evidence. Pending, missing, failing,
+unavailable or unrun required results cannot qualify. Unavailable Actions cannot
+substitute a local pass for configured runner results. Fix and revalidate, or
+follow existing blocked/failure delivery rules, naming checks and reasons.
+Add no timeout, fallback or bypass.
 
-Record the full head SHA, configured location, required command and checks,
-and each outcome in the handoff. Both draft-to-separate-review and no-review
-delivery retain their review/merge ownership and gates and require this condition.
+Record the full head SHA, trusted declaration revision, location, required command,
+names and outcomes. Draft-to-separate-review and no-review handoffs both retain
+review/merge ownership and gates.
 
-Self-reported worker success still requires the independent review run,
-another agent and sandbox, to rerun the same command on the current head before
-merge. The worker report cannot replace that rerun or clear designated owner
-review.
+Self-reported success requires the independent review run, another agent and
+sandbox, to rerun the same command on the current head before merging. The
+worker report cannot replace that rerun or clear designated owner review.
 
 ### Adoption pull requests
 

@@ -624,13 +624,24 @@ function run(
           ".github",
           key === "policy"
             ? "factory-review-policy.json"
-            : "pull-request-reviewer.json",
+            : key === "requiredChecks"
+              ? "required-checks.json"
+              : "pull-request-reviewer.json",
         ),
         JSON.stringify(value),
       );
     }
   }
-  writeFileSync(statePath, JSON.stringify({ head, ...state }));
+  writeFileSync(
+    statePath,
+    JSON.stringify({
+      head,
+      checks: [
+        { __typename: "StatusContext", context: "CI", state: "SUCCESS" },
+      ],
+      ...state,
+    }),
+  );
   const result = spawnSync(
     process.execPath,
     [
@@ -1035,6 +1046,7 @@ const planLimited = {
   planRulesets: true,
   planProtection: true,
   strict: false,
+  requiredChecks: { version: 1, checks: ["PR metadata"] },
   checks: [
     {
       __typename: "StatusContext",
@@ -1217,4 +1229,430 @@ test("plan-limited metadata validation must succeed on this exact head", (t) => 
     ],
   });
   assert.equal(rerun.status, 0, rerun.stderr);
+});
+
+const declared = { version: 1, checks: ["Required"] };
+const requiredStatus = {
+  __typename: "StatusContext",
+  context: "Required",
+  state: "SUCCESS",
+};
+const requiredRun = {
+  __typename: "CheckRun",
+  name: "Required",
+  status: "COMPLETED",
+  conclusion: "SUCCESS",
+  startedAt: "2026-11-09T10:00:00Z",
+};
+const configuredReviewer = JSON.parse(
+  readFileSync(
+    new URL("./fixtures/reviewers/codex.json", import.meta.url),
+    "utf8",
+  ),
+);
+const thread = (
+  id,
+  isResolved = false,
+  login = configuredReviewer.account,
+) => ({
+  id,
+  isResolved,
+  comments: {
+    nodes: [
+      {
+        author: {
+          __typename: login.endsWith("[bot]") ? "Bot" : "User",
+          login: login.replace(/\[bot\]$/, ""),
+        },
+      },
+    ],
+  },
+});
+
+test("both merge paths enforce trusted required declarations, never local or proposed authority", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const target of [undefined, installed])
+    for (const path of [{}, planLimited]) {
+      for (const requiredChecks of [
+        null,
+        { version: 1 },
+        { version: 1, checks: [] },
+        "{",
+        { version: 2, checks: ["CI"] },
+      ]) {
+        const result = run(
+          t,
+          {
+            ...path,
+            requiredChecks,
+            localReviewConfiguration: {
+              requiredChecks: { version: 1, checks: ["CI"] },
+            },
+            checks: [
+              requiredStatus,
+              { __typename: "StatusContext", context: "CI", state: "SUCCESS" },
+            ],
+          },
+          undefined,
+          target,
+        );
+        assert.equal(result.status, 3, result.stderr);
+        assert.match(result.stderr, /required-checks\.json/);
+        assert.match(result.stderr, new RegExp("b".repeat(40)));
+        assert.match(result.stderr, /Correct.*destination default branch/);
+        assert.equal(result.state.merge, undefined);
+      }
+      const unreadable = run(
+        t,
+        {
+          ...path,
+          requiredChecks: declared,
+          reviewFilesResponse: {
+            data: {
+              repository: {
+                commit: { __typename: "Commit", oid: "b".repeat(40) },
+                policy: null,
+                reviewer: null,
+                requiredChecks: {
+                  __typename: "Blob",
+                  isTruncated: true,
+                  text: JSON.stringify(declared),
+                },
+              },
+            },
+          },
+        },
+        undefined,
+        target,
+      );
+      assert.equal(unreadable.status, 1, unreadable.stderr);
+      assert.equal(unreadable.state.merge, undefined);
+    }
+});
+
+test("both merge paths require current-head positive named check-run and status results", (t) => {
+  for (const path of [{}, planLimited]) {
+    for (const checks of [
+      [],
+      [{ ...requiredStatus, context: "required" }],
+      [{ ...requiredStatus, context: "Required!" }],
+      ...["FAILURE", "ERROR", "PENDING"].map((state) => [
+        { ...requiredStatus, state },
+      ]),
+      ...["FAILURE", "CANCELLED", "TIMED_OUT", "SKIPPED", "NEUTRAL"].map(
+        (conclusion) => [{ ...requiredRun, conclusion }],
+      ),
+      [{ ...requiredRun, status: "QUEUED", conclusion: null }],
+      [
+        requiredRun,
+        {
+          ...requiredRun,
+          startedAt: "2026-11-09T11:00:00Z",
+          conclusion: "FAILURE",
+        },
+      ],
+      [
+        requiredRun,
+        {
+          ...requiredRun,
+          status: "IN_PROGRESS",
+          startedAt: "2026-11-09T11:00:00Z",
+        },
+      ],
+    ]) {
+      const result = run(t, { ...path, requiredChecks: declared, checks });
+      assert.equal(result.status, 2, result.stderr);
+      assert.match(result.stderr, /Required/);
+      assert.equal(result.state.merge, undefined);
+    }
+    for (const checks of [[requiredStatus], [requiredRun]]) {
+      const result = run(t, { ...path, requiredChecks: declared, checks });
+      assert.equal(result.status, 0, result.stderr);
+    }
+    const old = run(t, {
+      ...path,
+      requiredChecks: declared,
+      checksByHead: { ["d".repeat(40)]: [requiredStatus] },
+    });
+    assert.equal(old.status, 2, old.stderr);
+    assert.equal(old.state.merge, undefined);
+  }
+});
+
+test("partial, failed and ambiguous check evidence cannot authorize either merge path", (t) => {
+  for (const path of [{}, planLimited])
+    for (const evidence of [
+      {
+        checkPages: [
+          [requiredStatus],
+          [{ ...requiredStatus, state: "PENDING" }],
+        ],
+        failCheckPage: 1,
+      },
+      {
+        checksResponse: {
+          data: {
+            repository: {
+              object: {
+                statusCheckRollup: {
+                  contexts: {
+                    nodes: [requiredStatus],
+                    pageInfo: { hasNextPage: true, endCursor: null },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        checksResponse: {
+          data: {
+            repository: {
+              object: {
+                statusCheckRollup: { contexts: { nodes: [requiredStatus] } },
+              },
+            },
+          },
+        },
+      },
+      { failChecks: 502 },
+      { runsResponse: { total_count: 1, workflow_runs: [] } },
+      { checks: [requiredStatus, { ...requiredStatus, state: "FAILURE" }] },
+    ]) {
+      const result = run(t, { ...path, requiredChecks: declared, ...evidence });
+      assert.equal(result.status, 3, result.stderr);
+      assert.equal(result.state.merge, undefined);
+      assert.match(result.stderr, /Required/);
+      assert.match(result.stderr, new RegExp("b".repeat(40)));
+    }
+  const paged = run(t, {
+    requiredChecks: declared,
+    checkPages: [[{ ...requiredStatus, context: "Other" }], [requiredStatus]],
+  });
+  assert.equal(paged.status, 0, paged.stderr);
+});
+
+test("configured-reviewer thread gate includes later pages and ignores replies without resolution", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const target of [undefined, installed])
+    for (const path of [{}, planLimited]) {
+      for (const resolved of [false, true]) {
+        const result = run(
+          t,
+          {
+            ...path,
+            requiredChecks: declared,
+            checks: [requiredStatus],
+            reviewConfiguration: { reviewer: configuredReviewer },
+            threadPages: [
+              [thread("other", false, "somebody")],
+              [thread("reviewer-old-diff", resolved)],
+            ],
+            reviewComments: [
+              {
+                body: "Addressed",
+                in_reply_to_id: 1,
+                pull_request_review_id: 1,
+              },
+            ],
+          },
+          undefined,
+          target,
+        );
+        assert.equal(result.status, resolved ? 0 : 6, result.stderr);
+        if (!resolved) {
+          assert.equal(result.state.merge, undefined);
+          assert.match(result.stderr, /reviewer-old-diff/);
+        }
+      }
+      for (const evidence of [
+        { failThreads: 502 },
+        {
+          threadsResponse: {
+            data: {
+              repository: { pullRequest: { reviewThreads: { nodes: [] } } },
+            },
+          },
+        },
+        { threads: [{ id: "x", isResolved: false, comments: { nodes: [] } }] },
+        { threadPages: [[thread("resolved", true)], []], failThreadPage: 1 },
+      ]) {
+        const result = run(
+          t,
+          {
+            ...path,
+            requiredChecks: declared,
+            checks: [requiredStatus],
+            reviewConfiguration: { reviewer: configuredReviewer },
+            ...evidence,
+          },
+          undefined,
+          target,
+        );
+        assert.equal(result.status, 3, result.stderr);
+        assert.equal(result.state.merge, undefined);
+      }
+      const none = run(
+        t,
+        {
+          ...path,
+          requiredChecks: declared,
+          checks: [requiredStatus],
+          reviewConfiguration: { reviewer: null },
+          failThreads: 403,
+        },
+        undefined,
+        target,
+      );
+      assert.equal(none.status, 0, none.stderr);
+    }
+});
+
+test("both paths recheck head, destination and base after slow checks", (t) => {
+  for (const path of [{}, planLimited])
+    for (const [afterChecks, code] of [
+      [{ head: "d".repeat(40) }, 2],
+      [{ baseBranch: "other" }, 3],
+      [{ defaultBranch: "other" }, 3],
+      [{ defaultRevision: "e".repeat(40) }, 4],
+    ]) {
+      const result = run(t, {
+        ...path,
+        requiredChecks: declared,
+        checks: [requiredStatus],
+        afterChecks,
+      });
+      assert.equal(result.status, code, result.stderr);
+      assert.equal(result.state.merge, undefined);
+    }
+});
+
+test("required names stay at the pinned trusted revision despite local edits and a moving default", (t) => {
+  const revision = "b".repeat(40),
+    next = "d".repeat(40);
+  const result = run(t, {
+    defaultRevision: revision,
+    moveDefaultTo: next,
+    testedBase: next,
+    traceReviewConfiguration: true,
+    reviewSnapshots: {
+      [revision]: { requiredChecks: declared },
+      [next]: { requiredChecks: { version: 1, checks: ["CI"] } },
+    },
+    localReviewConfiguration: {
+      requiredChecks: { version: 1, checks: ["CI"] },
+    },
+    checks: [{ __typename: "StatusContext", context: "CI", state: "SUCCESS" }],
+  });
+  assert.equal(result.status, 2, result.stderr);
+  assert.match(result.stderr, /Required/);
+  assert.equal(result.state.merge, undefined);
+  const read = result.state.configurationReads.find(
+    (entry) => entry.kind === "files",
+  );
+  assert.equal(read.requiredChecks, `${revision}:.github/required-checks.json`);
+});
+
+test("new invocations select current required authority rather than reuse wait evidence", async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "babysit-required-change-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const statePath = join(directory, "state.json");
+  const previous = "b".repeat(40),
+    current = "d".repeat(40);
+  writeFileSync(
+    statePath,
+    JSON.stringify({
+      head,
+      pushedAt: "2026-10-11T05:00:00Z",
+      checks: [requiredStatus],
+      defaultRevision: previous,
+      reviewSnapshots: {
+        [previous]: { requiredChecks: declared },
+        [current]: {
+          requiredChecks: { version: 1, checks: ["New requirement"] },
+        },
+      },
+    }),
+  );
+  t.mock.method(process.stdout, "write", () => true);
+  assert.equal(
+    await wait(
+      ["12"],
+      connect("https://github.com/example/repository", {
+        credential: "fixture-credential",
+        fetch: fixtureFetch(statePath),
+      }),
+    ),
+    0,
+  );
+  const result = run(t, {
+    ...JSON.parse(readFileSync(statePath, "utf8")),
+    defaultRevision: current,
+    testedBase: current,
+  });
+  assert.equal(result.status, 2, result.stderr);
+  assert.match(result.stderr, /New requirement/);
+  assert.match(result.stderr, new RegExp(current));
+  assert.equal(result.state.merge, undefined);
+});
+
+test("slow gates cannot hide a newly active repository hold or base advance", (t) => {
+  for (const path of [{}, planLimited]) {
+    const held = run(t, {
+      ...path,
+      requiredChecks: declared,
+      checks: [requiredStatus],
+      factoryConfiguration,
+      afterChecks: { releaseIssues: [releaseIssue(24)] },
+    });
+    assert.equal(held.status, 9, held.stderr);
+    assert.equal(held.state.merge, undefined);
+    const stale = run(t, {
+      ...path,
+      requiredChecks: declared,
+      checks: [requiredStatus],
+      reviewConfiguration: { reviewer: configuredReviewer },
+      afterThreads: { defaultRevision: "d".repeat(40) },
+    });
+    assert.equal(stale.status, 4, stale.stderr);
+    assert.equal(stale.state.merge, undefined);
+  }
+});
+
+test("thread identities match raw GraphQL bots and people without confusing their logins", (t) => {
+  for (const path of [{}, planLimited]) {
+    const bot = configuredReviewer.account.replace(/\[bot\]$/, "");
+    for (const [reviewer, author, status] of [
+      [configuredReviewer, { __typename: "Bot", login: bot }, 6],
+      [
+        configuredReviewer,
+        { __typename: "Bot", login: configuredReviewer.account },
+        6,
+      ],
+      [configuredReviewer, { __typename: "User", login: bot }, 0],
+      [
+        { ...configuredReviewer, account: "maintainer" },
+        { __typename: "User", login: "Maintainer" },
+        6,
+      ],
+      [configuredReviewer, { login: bot }, 3],
+    ]) {
+      const result = run(t, {
+        ...path,
+        requiredChecks: declared,
+        checks: [requiredStatus],
+        reviewConfiguration: { reviewer },
+        threads: [
+          {
+            id: "raw-thread",
+            isResolved: false,
+            comments: { nodes: [{ author }] },
+          },
+        ],
+      });
+      assert.equal(result.status, status, result.stderr);
+      if (status !== 0) assert.equal(result.state.merge, undefined);
+    }
+  }
 });

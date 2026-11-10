@@ -794,47 +794,18 @@ test("a fresh head with no checks keeps the checks pending", () => {
   }
 });
 
-test("no checks after 5 minutes settles like passed checks in every Codex state", () => {
-  for (const [state, overrides] of Object.entries(reviewerStates)) {
-    const pushedAt = overrides.pushedAt ?? Date.parse("2026-10-11T05:39:50Z");
-    const now = Math.max(
-      overrides.now ?? Date.parse("2026-10-11T05:43:00Z"),
-      pushedAt + 5 * minute,
-    );
-    /** @type {Record<string, any>} */
-    const look = { ...overrides, now, startedAt: now };
-    // Keep the pending fixture inside its reviewer bounds.
-    if (state === "pending") look.requestedAt = now - minute;
-    const passed = decision(look);
-    assert.equal(passed.reviewer, state);
-    for (const runs of [[], [{ status: "completed" }]]) {
-      const outcome = decision({ ...look, checks: [], runs });
-      assert.equal(outcome.code, passed.code);
-      assert.equal(outcome.reviewer, state);
-      assert.deepEqual(outcome.failing, []);
-      if (passed.code === null) {
-        const limited = decision({
-          ...look,
-          checks: [],
-          runs,
-          startedAt: now - 9 * minute,
-        });
-        assert.equal(limited.code, 5);
-        assert.deepEqual(report(limited, head), [
-          `${head}: still waiting on reviewer; run again`,
-        ]);
-      } else {
-        assert.deepEqual(
-          report(outcome, head),
-          report(passed, head).map((line) =>
-            line.replace(
-              "checks passed",
-              "no checks within 5 minutes of the push",
-            ),
-          ),
-        );
-      }
-    }
+test("empty check evidence never passes, even long after a recorded push", () => {
+  for (const overrides of Object.values(reviewerStates)) {
+    const now = overrides.now ?? Date.parse("2026-10-11T05:43:00Z");
+    const look = {
+      ...overrides,
+      now,
+      startedAt: now,
+      checks: [],
+      pushedAt: now - 24 * 60 * minute,
+    };
+    assert.equal(decision(look).code, null);
+    assert.equal(decision({ ...look, startedAt: now - 9 * minute }).code, 5);
   }
 });
 
@@ -1423,7 +1394,7 @@ test("check states follow the latest run of each check", () => {
 
 const checkRun = (overrides) => ({
   __typename: "CheckRun",
-  name: "Validate example",
+  name: "test",
   workflowName: "CI",
   startedAt: "2026-10-11T23:00:00Z",
   status: "COMPLETED",
@@ -1448,7 +1419,7 @@ test("queued reruns keep prior successes and failures pending in either order", 
       ]) {
         assert.deepEqual(checkStates(rollup), [
           {
-            name: "Validate example",
+            name: "test",
             state: "pending",
             link: "fixture:queued",
             workflowName: "CI",
@@ -1473,7 +1444,7 @@ test("an older unfinished run keeps a newer completed run pending", () => {
   ]) {
     assert.deepEqual(checkStates(rollup), [
       {
-        name: "Validate example",
+        name: "test",
         state: "pending",
         link: "fixture:unfinished",
         workflowName: "CI",
@@ -1507,7 +1478,7 @@ test("completed runs use the later start's state and link in either order", () =
       ]) {
         assert.deepEqual(checkStates(rollup), [
           {
-            name: "Validate example",
+            name: "test",
             state,
             link: "fixture:later",
             workflowName: "CI",
@@ -1554,14 +1525,14 @@ test("unfinished runs hold only their own workflow and check", () => {
     ]),
     [
       {
-        name: "Validate example",
+        name: "test",
         state: "pending",
         link: "fixture:previous",
         workflowName: "CI",
         checkRunStartedAt: null,
       },
       {
-        name: "Validate example",
+        name: "test",
         state: "fail",
         link: "fixture:previous",
         workflowName: "Other CI",
@@ -1608,6 +1579,8 @@ const run = (
   writeFileSync(
     statePath,
     JSON.stringify({
+      requiredChecks: { version: 1, checks: ["test"] },
+      checks: [checkRun()],
       reviewConfiguration: { policy, reviewer },
       ...state,
     }),
@@ -1645,6 +1618,9 @@ const run = (
       const finalState = JSON.parse(readFileSync(statePath, "utf8"));
       if (!Object.hasOwn(state, "reviewConfiguration"))
         delete finalState.reviewConfiguration;
+      if (!Object.hasOwn(state, "checks")) delete finalState.checks;
+      if (!Object.hasOwn(state, "requiredChecks"))
+        delete finalState.requiredChecks;
       rmSync(directory, { recursive: true, force: true });
       resolve({
         code,
@@ -2014,7 +1990,7 @@ test("a fresh push with no checks yet waits silently until its limit", async () 
   assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
 });
 
-test("an old push with no checks or runs settles at once", async () => {
+test("an old push with no checks or runs cannot satisfy required names", async () => {
   const result = await run(
     {
       ...pendingPullRequest,
@@ -2025,13 +2001,13 @@ test("an old push with no checks or runs settles at once", async () => {
     },
     ["12", "--limit", "2", "--interval", "0.2"],
   );
-  assert.equal(result.code, 4);
+  assert.equal(result.code, 5);
   assert.equal(result.stderr, "");
   assert.equal(
     result.stdout,
-    `${head}: no checks within 5 minutes of the push, review not requested for this head; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
+    `${head}: still waiting on checks; run again; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
   );
-  assert.ok(result.firstWrite < 1900, `wrote after ${result.firstWrite} ms`);
+  assert.ok(result.firstWrite >= 1900, `wrote after ${result.firstWrite} ms`);
 });
 
 test("the script reports a completed failed workflow with no check (#293)", async () => {
@@ -2088,7 +2064,7 @@ test("the script uses check start times to settle later runs and attempts (#296)
       assert.equal(result.stderr, "");
       assert.equal(
         result.stdout,
-        `${head}: 1 check failed, reviewer unavailable; review configuration: example/repository default branch main@${"b".repeat(40)}\n${currentCheck ? `Validate example ${checkLink}` : `CI ${runUrl(id)}`}\n`,
+        `${head}: 1 check failed, reviewer unavailable; review configuration: example/repository default branch main@${"b".repeat(40)}\n${currentCheck ? `test ${checkLink}` : `CI ${runUrl(id)}`}\n`,
       );
     }
   }
@@ -2151,7 +2127,7 @@ test("the script matches checks to same-named workflows by their run links", asy
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: 1 check failed, reviewer unavailable; review configuration: example/repository default branch main@${"b".repeat(40)}\n${id === 21 ? `Validate example ${runUrl(21)}/job/1` : `CI ${runUrl(21)}`}\n`,
+      `${head}: 1 check failed, reviewer unavailable; review configuration: example/repository default branch main@${"b".repeat(40)}\n${id === 21 ? `test ${runUrl(21)}/job/1` : `CI ${runUrl(21)}`}\n`,
     );
   }
 });
@@ -2159,10 +2135,7 @@ test("the script matches checks to same-named workflows by their run links", asy
 test("the script uses a workflow's checks without hiding another workflow's failure", async () => {
   for (const [checks, expected] of [
     [[checkRun({ workflowName: "Other CI" })], `CI ${failedRun.html_url}`],
-    [
-      [checkRun({ conclusion: "FAILURE" })],
-      "Validate example fixture:previous",
-    ],
+    [[checkRun({ conclusion: "FAILURE" })], "test fixture:previous"],
   ]) {
     const result = await run(
       {
@@ -2208,7 +2181,7 @@ test("an unrecorded push with old dates waits silently until its limit", async (
   }
 });
 
-test("a push recorded after the first look settles within the invocation", async () => {
+test("recording a push does not satisfy absent required names", async () => {
   for (const failActivityReads of [0, 1]) {
     const result = await run(
       {
@@ -2224,14 +2197,14 @@ test("a push recorded after the first look settles within the invocation", async
       },
       ["12", "--limit", "3", "--interval", "0.2"],
     );
-    assert.equal(result.code, 4, result.stderr);
+    assert.equal(result.code, 5, result.stderr);
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
-      `${head}: no checks within 5 minutes of the push, review not requested for this head; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
+      `${head}: still waiting on checks; run again; review configuration: example/repository default branch main@${"b".repeat(40)}\n`,
     );
-    assert.equal(result.activityReads, 2);
-    assert.ok(result.elapsed < 2900, `settled after ${result.elapsed} ms`);
+    assert.ok(result.activityReads >= 2);
+    assert.ok(result.elapsed >= 2900, `waited ${result.elapsed} ms`);
   }
 });
 
@@ -2501,11 +2474,11 @@ test("completion lines need the configured account, marker, head and timestamp",
   assert.equal(noRequest.code, 4);
 });
 
-test("without a reviewer the check grace period and invocation limit still apply", () => {
+test("without a reviewer missing checks remain pending until the invocation limit", () => {
   const now = Date.parse("2026-10-11T05:43:00Z");
   assert.equal(
     decision({ reviewer: null, checks: [], pushedAt: now - 5 * minute }).code,
-    0,
+    null,
   );
   assert.equal(
     decision({ reviewer: null, checks: [], pushedAt: now }).code,
@@ -2693,4 +2666,51 @@ test("a proposed self-exemption cannot disable the trusted wait", async () => {
     result.stdout,
     /review configuration: example\/repository default branch main@b{40}/,
   );
+});
+
+test("standalone and installed wait fail closed on missing and invalid trusted required lists", async (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/wait.mjs");
+  for (const target of [undefined, installed]) {
+    for (const requiredChecks of [
+      null,
+      "{",
+      { version: 1 },
+      { version: 1, checks: [] },
+      { version: 1, checks: [""] },
+    ]) {
+      const result = await run(
+        { head, requiredChecks, checks: [checkRun()] },
+        ["12", "--limit", "0.01"],
+        null,
+        target,
+      );
+      assert.equal(result.code, 7, result.stderr);
+      assert.match(result.stderr, /required-checks\.json/);
+      assert.match(result.stderr, new RegExp("b".repeat(40)));
+      assert.equal(result.stdout, "");
+    }
+    for (const checks of [[], [checkRun({ name: "Test" })]]) {
+      const result = await run(
+        { head, checks, pushedAt: "2026-10-11T05:00:00Z" },
+        ["12", "--limit", "0.01"],
+        null,
+        target,
+      );
+      assert.equal(result.code, 5, result.stderr);
+      assert.match(result.stdout, /still waiting on checks/);
+    }
+    for (const conclusion of ["SKIPPED", "NEUTRAL"]) {
+      const result = await run(
+        {
+          head,
+          pushedAt: "2026-10-11T05:00:00Z",
+          checks: [checkRun({ conclusion })],
+        },
+        ["12", "--limit", "0.01"],
+        null,
+        target,
+      );
+      assert.equal(result.code, 2, result.stderr);
+    }
+  }
 });

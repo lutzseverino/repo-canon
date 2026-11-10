@@ -68,7 +68,7 @@ with all four discovery entry points and both web check entry points.
 The resolved `standard` profile combines exact files, contextual files,
 repository declarations and whole skill directories. The `factory` profile
 adds factory configuration, workflow and rules, and the `factory` skill.
-Each has eight checks, two fixes, and four discovery scripts.
+Each has nine checks, two fixes, and four discovery scripts.
 
 The `workbench` profile excludes the other default declarations with
 `exclude: true` and adds the `create-repository`, `create-adopted-repo` and `orchestrate` skill

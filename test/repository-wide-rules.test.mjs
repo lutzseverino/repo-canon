@@ -200,8 +200,8 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     );
     assert.deepEqual(
       github.checks.map(({ id }) => id),
-      ["pull-request-reviewer", "factory-review-policy"],
-      `${name} validates both optional repository-owned configurations`,
+      ["required-checks", "pull-request-reviewer", "factory-review-policy"],
+      `${name} validates required check names and both optional review configurations`,
     );
   }
   // Every authored Node prerequisite must retain the same stable-major union,
@@ -222,7 +222,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
             operation.prerequisite.version,
           );
     }
-  assert.equal(prerequisites.size, 17);
+  assert.equal(prerequisites.size, 18);
   for (const [script, range] of prerequisites)
     assert.equal(range, ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0", script);
 

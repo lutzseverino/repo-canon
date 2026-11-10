@@ -147,6 +147,51 @@ ordinarily the implementer, enforces it without factory labels, pickup or
 recovery. Follow installed factory workflow rules for merge ownership and
 approval-pause continuation. Without a designation, ordinary merge conditions hold.
 
+## Required-check authority and merge gate
+
+The repository owns `.github/required-checks.json`. It is a JSON object with
+required `version: 1` and a required nonempty `checks` array of nonempty
+strings. Each name matches a GitHub check run or commit status exactly,
+including case, spaces and punctuation. Repo Canon supplies its schema,
+read-only `required-checks` check and shared interpretation, never repository
+names. The declaration is neither an exact standard file nor adoption output.
+
+Wait and merge read it from the same pinned destination default-branch commit
+as trusted reviewer configuration. Each merge invocation selects current trusted
+configuration independently; prior waits, local edits, proposed PR configuration,
+GitHub rulesets and observed checks cannot replace this authority. A missing,
+invalid or unreadable declaration fails closed, naming its path, problem and
+trusted revision when available. Correct it on the trusted default branch
+through the applicable owner correction and merge procedure, then invoke again
+to select the current revision. A proposed file alone cannot repair an invocation;
+there is no bootstrap bypass and no automatic selection of required names.
+
+At every check location (`github`, `runner` and `self-reported`), merge itself
+requires positive success for every declared name on the exact current head.
+A completed successful check run or successful commit status qualifies. Missing,
+pending, failed, cancelled, timed-out, skipped and neutral results do not.
+Older-head success and earlier attempts cannot satisfy later pending or failed
+attempts. Incomplete, unreadable or ambiguous evidence refuses merging. Wait
+uses this same authority and interpretation: absence of checks never turns
+into success after a timeout. Worker handoff and location/factory integrations
+consume this declaration rather than maintaining separate required-name lists.
+Existing waits on observed checks and workflow attempts still apply.
+
+Before merging, independently read all review threads, including outdated
+threads and later pages. Any unresolved thread opened by the configured
+reviewer's account blocks merging, even after a reply, acknowledgement or
+completed review. Only platform resolution clears it. Unreadable or incomplete
+thread evidence refuses merging. Without a configured reviewer, this thread
+gate adds no reviewer requirement. App-author policy does not waive it.
+
+After slow gates, immediately before the expected-head merge, verify the
+unchanged head, live default destination and ancestry containing its current
+tip. A new head needs new evidence; a stale base requires branch update and
+validation. Existing authorization, review, holds and refusal handling remain.
+Strict GitHub enforcement stays an additional guard wherever available; the
+Required-check freshness section retains the proven private-plan exception
+and its accepted concurrent-base race.
+
 ## Preserved settings
 
 The GitHub configuration changes only the labels, merge settings, required check,
@@ -486,17 +531,6 @@ of it, the pull request merges once the contribution guide's other merge
 conditions hold. The merging agent then records the absent review as a delivery
 record under the `comments` rules. Without the file, no reviewer wait or record
 of an absent review is required.
-
-## Pull request head with no check
-
-A pull request head that has no check counts as having its checks passed once
-5 minutes have passed since the later of the pull request's opening and a push
-of that head that GitHub recorded, and only while no workflow run for the head
-is unfinished or counted as failed. A
-workflow whose latest run failed with no check from that run or attempt counts
-as a failed check. A head with no recorded push and no check or workflow run
-never settles its checks: they neither pass nor fail. The `babysit` skill's
-wait applies this rule.
 
 ## Readiness roles
 

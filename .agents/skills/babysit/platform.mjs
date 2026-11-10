@@ -12,9 +12,8 @@ export function connectionFor(repository) {
   let remote = repository ?? process.env.GH_REPO ?? defaultRemote();
   if (!remote.includes(":")) {
     // CLI selectors accept [HOST/]OWNER/REPO; retain an explicit host.
-    const selector = /^(?:([a-z0-9.-]+)\/)?([a-z0-9_.-]+)\/([a-z0-9_.-]+)$/i.exec(
-      remote,
-    );
+    const selector =
+      /^(?:([a-z0-9.-]+)\/)?([a-z0-9_.-]+)\/([a-z0-9_.-]+)$/i.exec(remote);
     if (!selector)
       throw new PlatformError(
         "unsupported",
@@ -185,7 +184,10 @@ export async function pinnedFiles(connection, paths, snapshot) {
     );
     return { revision, files, evidence };
   } catch (error) {
-    if (error instanceof PlatformError) throw error;
+    if (error instanceof PlatformError) {
+      error.message = `${evidence}: ${error.message}`;
+      throw error;
+    }
     throw new Error(`${evidence}: ${error.message}`, { cause: error });
   }
 }
@@ -210,7 +212,7 @@ export async function checkRollup(connection, head) {
       body: {
         query: `query BabysitChecks($owner: String!, $name: String!, $head: String!, $after: String) {
           repository(owner: $owner, name: $name) { object(expression: $head) { ... on Commit { statusCheckRollup { contexts(first: 100, after: $after) {
-            nodes { __typename ... on CheckRun { name status conclusion detailsUrl startedAt checkSuite { workflowRun { workflow { name } } } } ... on StatusContext { context state targetUrl } }
+            nodes { __typename ... on CheckRun { name status conclusion detailsUrl startedAt checkSuite { workflowRun { workflow { name } } } } ... on StatusContext { context state targetUrl createdAt } }
             pageInfo { hasNextPage endCursor }
           } } } } }
         }`,
@@ -324,6 +326,15 @@ export function workflowRuns(pages) {
       runs.push(run);
     }
   }
+  const total = pages[0]?.total_count;
+  if (
+    total !== undefined &&
+    (!Number.isSafeInteger(total) ||
+      total < 0 ||
+      total !== runs.length ||
+      pages.some((page) => page.total_count !== total))
+  )
+    unreadable("complete workflow runs");
   return runs;
 }
 
@@ -408,3 +419,72 @@ export const pushTime = async (pull, connection) => {
     pushRecorded: Boolean(recorded),
   };
 };
+
+// Thread resolution is a platform fact, independent of replies or review state.
+// The first comment identifies the opener; query all threads, including outdated.
+export async function unresolvedReviewerThreads(connection, number, reviewer) {
+  if (!reviewer) return [];
+  const [owner, name] = connection.repository.path.split("/");
+  const unresolved = [];
+  const cursors = new Set();
+  let after = null;
+  for (;;) {
+    const result = await requestData(connection, {
+      method: "POST",
+      path: "/graphql",
+      body: {
+        query: `query BabysitReviewThreads($owner: String!, $name: String!, $number: Int!, $after: String) {
+          repository(owner: $owner, name: $name) { pullRequest(number: $number) {
+            reviewThreads(first: 100, after: $after) {
+              nodes { id isResolved comments(first: 1) { nodes { author { __typename login } } } }
+              pageInfo { hasNextPage endCursor }
+            }
+          } }
+        }`,
+        variables: { owner, name, number, after },
+      },
+    });
+    const page = result?.data?.repository?.pullRequest?.reviewThreads;
+    if (
+      result?.errors?.length ||
+      !Array.isArray(page?.nodes) ||
+      typeof page.pageInfo?.hasNextPage !== "boolean"
+    )
+      throw new Error("Could not read complete configured-reviewer threads.");
+    for (const thread of page.nodes) {
+      const comments = thread?.comments?.nodes;
+      if (
+        typeof thread?.id !== "string" ||
+        !thread.id ||
+        typeof thread.isResolved !== "boolean" ||
+        !Array.isArray(comments) ||
+        comments.length !== 1 ||
+        typeof comments[0]?.author?.__typename !== "string" ||
+        !comments[0].author.__typename ||
+        typeof comments[0]?.author?.login !== "string" ||
+        !comments[0].author.login
+      )
+        throw new Error(
+          "Could not read a configured-reviewer thread opener or resolution.",
+        );
+      const author = comments[0].author;
+      // GraphQL omits the bot suffix that REST and reviewer declarations use,
+      // matching Postern's GraphQL account interpretation.
+      const login =
+        author.__typename === "Bot" && !author.login.endsWith("[bot]")
+          ? `${author.login}[bot]`
+          : author.login;
+      if (
+        login.toLowerCase() === reviewer.account.toLowerCase() &&
+        !thread.isResolved
+      )
+        unresolved.push(thread.id);
+    }
+    if (!page.pageInfo.hasNextPage) return unresolved;
+    const cursor = page.pageInfo.endCursor;
+    if (typeof cursor !== "string" || !cursor || cursors.has(cursor))
+      throw new Error("Could not read complete configured-reviewer threads.");
+    cursors.add(cursor);
+    after = cursor;
+  }
+}

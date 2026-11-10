@@ -1,4 +1,8 @@
-// One destination default-branch snapshot governs both files for an invocation.
+// One destination default-branch snapshot governs an invocation's trusted files.
+import {
+  parseRequiredChecks,
+  requiredChecksTarget,
+} from "./required-checks.mjs";
 import { pinnedFiles } from "./platform.mjs";
 import { parseReviewPolicy, policyTarget } from "./review-policy.mjs";
 import { parseReviewer, reviewerTarget } from "./pull-request-reviewer.mjs";
@@ -14,12 +18,18 @@ export class InvalidTrustedReviewConfiguration extends Error {
   }
 }
 
-export async function trustedReviewConfiguration(connection) {
+export async function trustedReviewConfiguration(
+  connection,
+  options = { requiredChecks: false },
+) {
   let snapshot;
   try {
     snapshot = await pinnedFiles(connection, {
       policy: policyTarget,
       reviewer: reviewerTarget,
+      ...(options.requiredChecks
+        ? { requiredChecks: requiredChecksTarget }
+        : {}),
     });
   } catch (error) {
     throw new Error(
@@ -36,7 +46,22 @@ export async function trustedReviewConfiguration(connection) {
       throw new InvalidTrustedReviewConfiguration(evidence, target, error);
     }
   };
+  let requiredChecks;
+  if (options.requiredChecks) {
+    if (snapshot.files.requiredChecks === null)
+      throw new InvalidTrustedReviewConfiguration(
+        evidence,
+        requiredChecksTarget,
+        new Error("required declaration is missing"),
+      );
+    requiredChecks = parseFile(
+      snapshot.files.requiredChecks,
+      requiredChecksTarget,
+      parseRequiredChecks,
+    );
+  }
   return {
+    requiredChecks,
     policy: parseFile(snapshot.files.policy, policyTarget, parseReviewPolicy),
     reviewer: parseFile(snapshot.files.reviewer, reviewerTarget, parseReviewer),
     evidence,
