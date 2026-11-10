@@ -2287,7 +2287,8 @@ export async function runIssueContractValidation(
     sourceConfiguration,
   );
   if (
-    (agentBriefHeading(issue.body ?? "") &&
+    ((agentBriefHeading(issue.body ?? "") ||
+      latestAgentBrief(snapshot.comments)) &&
       issue.labels.some((label) => categoryLabels.has(labelName(label)))) ||
     assessStructure(snapshot).kind === "triaged Agent Brief" ||
     [

@@ -686,6 +686,65 @@ test("the adapter leaves labels and feedback untouched when release resolution f
   assert.deepEqual(writes, []);
 });
 
+test("the adapter resolves a comment Brief's boundary before timeline state can select it", async () => {
+  for (const resolved of [true, false]) {
+    let resolutions = 0;
+    const writes = [];
+    const connection = {
+      issueTracker: {
+        capabilities: { bodyEditTime: true },
+        issue: async () => ({
+          number: 42,
+          state: "open",
+          body: "Intake",
+          labels: ["type:enhancement", "wontfix", "state:reporter"],
+        }),
+        comments: async () => [
+          { id: 12, nodeId: "C12", body: completeAgentBrief },
+        ],
+        labelChanges: async () =>
+          ["wontfix", "state:reporter"].map((label, index) => ({
+            id: String(100 + index),
+            action: "added",
+            label,
+            actor: { login: "maintainer" },
+            time: `2026-11-11T00:00:0${index}Z`,
+          })),
+        removeLabel: async (_number, label) => writes.push(["remove", label]),
+        addLabels: async (_number, labels) => writes.push(["add", labels]),
+        createComment: async (_number, body) => writes.push(["feedback", body]),
+      },
+    };
+    const code = await runIssueContractValidation(
+      { issue: 42, kind: "labeled", label: "state:reporter" },
+      connection,
+      undefined,
+      undefined,
+      undefined,
+      null,
+      { mode: "prepared" },
+      async () => {
+        resolutions++;
+        if (!resolved) throw Error("Unresolved Seams release boundary");
+        return seamsBoundary;
+      },
+    );
+    assert.equal(resolutions, 1);
+    assert.equal(code, resolved ? 0 : 1);
+    if (resolved) {
+      assert.deepEqual(
+        writes.filter(([kind]) => kind !== "feedback"),
+        [["remove", "wontfix"]],
+      );
+      assert.equal(writes.filter(([kind]) => kind === "feedback").length, 1);
+      assert.match(
+        writes.find(([kind]) => kind === "feedback")[1],
+        /awaiting-review/,
+      );
+    } else assert.deepEqual(writes, []);
+  }
+});
+
 test("release preparation pins once and later releases retain the first shipping tag", (t) => {
   const root = mkdtempSync(join(tmpdir(), "rc-seams-release-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
