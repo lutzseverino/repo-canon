@@ -1960,7 +1960,7 @@ const triggerWaitBound = 30000;
 // readiness.
 /** @param {string | URL} [path] */
 export function factoryTriageResult(
-  path = new URL("../.factory/config.json", import.meta.url),
+  path = new URL("../../.factory/config.json", import.meta.url),
 ) {
   let source;
   try {

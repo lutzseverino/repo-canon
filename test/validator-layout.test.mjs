@@ -279,12 +279,20 @@ test("public CLI relocates validators in every fresh profile and preceding-relea
         ".agents/skills/triage/ready.mjs",
         ...(profile === "workbench" ? [] : [".github/scripts/validate.mjs"]),
       ];
+      const configuration = join(project, ".factory/config.json");
+      const triageResult = existsSync(configuration)
+        ? (JSON.parse(readFileSync(configuration, "utf8")).triageResult ?? null)
+        : null;
       const child = spawnSync(
         process.execPath,
         [
           "--input-type=module",
           "-e",
-          `globalThis.fetch = () => { throw new Error("Unexpected network"); }; for (const path of ${JSON.stringify(imports)}) await import(new URL(path, "file://" + process.cwd() + "/"));`,
+          `import assert from "node:assert/strict";
+globalThis.fetch = () => { throw new Error("Unexpected network"); };
+for (const path of ${JSON.stringify(imports)}) await import(new URL(path, "file://" + process.cwd() + "/"));
+const { factoryTriageResult } = await import("./vendor/repo-canon/validate-issue-contract.mjs");
+assert.deepEqual(factoryTriageResult(), ${JSON.stringify(triageResult)});`,
         ],
         { cwd: project, env: { PATH: process.env.PATH }, encoding: "utf8" },
       );
