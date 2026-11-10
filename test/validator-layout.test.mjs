@@ -69,6 +69,8 @@ test("public CLI relocates validators in every fresh profile and preceding-relea
         [own]: ownBytes,
         ".gitattributes": attributes,
       })) {
+        // Workbench starts without repository-owned GitHub check configuration.
+        if (profile === "workbench" && path.startsWith(".github/")) continue;
         mkdirSync(dirname(join(project, path)), { recursive: true });
         writeFileSync(join(project, path), content);
       }
