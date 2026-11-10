@@ -8,7 +8,7 @@ import {
   observedChangeId,
   readyLabels,
   readIssueContractObservation,
-} from "../../../scripts/validate-issue-contract.mjs";
+} from "../../../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   connectionFor,
   executedAsScript,

@@ -5,7 +5,7 @@ import {
   decideIssueContract as decide,
   issueContractResult,
   readinessTriggerUnrecorded,
-} from "../scripts/validate-issue-contract.mjs";
+} from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   approvedTicketFeedback,
   awaitingTicketFeedback,

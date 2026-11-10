@@ -12,5 +12,13 @@
     "noEmit": true
   },
   "include": ["**/*.mjs", "**/*.js"],
-  "exclude": ["node_modules", ".repo-standards", "vendor"]
+  "exclude": [
+    "node_modules",
+    ".repo-standards",
+    "vendor/marked",
+    "vendor/parse5",
+    "vendor/postern",
+    "vendor/mattpocock-skills",
+    "vendor/humanlayer-skills"
+  ]
 }

@@ -3,13 +3,13 @@
 import { setTimeout as wait } from "node:timers/promises";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { PlatformError } from "../vendor/postern/postern.mjs";
-import { lexer } from "../vendor/marked/marked.esm.js";
+import { PlatformError } from "../postern/postern.mjs";
+import { lexer } from "../marked/marked.esm.js";
 import {
   interpretMarkdown,
   markdownInlineText,
   markdownTokenSpans,
-} from "../operations/lib/rendered-markdown.mjs";
+} from "../../operations/lib/rendered-markdown.mjs";
 
 import {
   bodyResultFormat,
@@ -19,7 +19,7 @@ import {
   same,
   intakeOriginal,
   digest,
-} from "./issue-contract-sources.mjs";
+} from "../../scripts/issue-contract-sources.mjs";
 
 import {
   loadContractSources,
@@ -27,7 +27,7 @@ import {
   sourceEditIdentities,
   captureContractIntake,
   contractSourceConfiguration,
-} from "./issue-contract-store.mjs";
+} from "../../scripts/issue-contract-store.mjs";
 
 // How the validator identifies an issue's contract kind and the parent its
 // `Parent` section names, with the issue Markdown parsing they rest on.
@@ -1960,7 +1960,7 @@ const triggerWaitBound = 30000;
 // readiness.
 /** @param {string | URL} [path] */
 export function factoryTriageResult(
-  path = new URL("../.factory/config.json", import.meta.url),
+  path = new URL("../../.factory/config.json", import.meta.url),
 ) {
   let source;
   try {

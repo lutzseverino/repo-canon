@@ -5,7 +5,7 @@
 // queued event in order, as the workflow's per-issue serialization does. The
 // validator's own writes queue nothing, as with `GITHUB_TOKEN`.
 import { connect } from "../../vendor/postern/postern.mjs";
-import { runIssueContractValidation } from "../../scripts/validate-issue-contract.mjs";
+import { runIssueContractValidation } from "../../vendor/repo-canon/validate-issue-contract.mjs";
 
 export const worldRepository = "owner/repo";
 export const validatorLogin = "github-actions[bot]";

@@ -7,7 +7,7 @@ import { main } from "../.agents/skills/triage/ready.mjs";
 import {
   resultFormat,
   issueContractObservation,
-} from "../scripts/validate-issue-contract.mjs";
+} from "../vendor/repo-canon/validate-issue-contract.mjs";
 
 const revision = `sha256:${"a".repeat(64)}`;
 const label = "state:ready";

@@ -2,7 +2,10 @@
 
 import { readFile } from "node:fs/promises";
 import { connect } from "../../vendor/postern/postern.mjs";
-import { validate, executedAsScript } from "../../scripts/validate.mjs";
+import {
+  validate,
+  executedAsScript,
+} from "../../vendor/repo-canon/validate.mjs";
 
 // Only this trusted trigger reads GitHub's event. PR metadata remains the
 // pull_request_target snapshot: no later read or proposed-head code is used.

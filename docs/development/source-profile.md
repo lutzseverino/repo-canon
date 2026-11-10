@@ -65,6 +65,12 @@ installed runtime closure includes `stack-files.mjs`, `stack-scope.mjs`,
 that shared scope implementation, so release review covers these helpers along
 with all four discovery entry points and both web check entry points.
 
+The exact validators install under `vendor/repo-canon/`: `validate.mjs` and
+`validate-issue-contract.mjs`. Canon authors them at those same paths and
+includes them in its source checks. The
+[validator migration](adoption-compatibility.md#validator-executable-migration)
+describes direct callers and retirement of the former `scripts/` targets.
+
 The resolved `standard` profile combines exact files, contextual files,
 repository declarations and whole skill directories. The `factory` profile
 adds factory configuration, workflow and rules, and the `factory` skill.

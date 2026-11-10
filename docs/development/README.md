@@ -40,7 +40,9 @@ Use the same setting for later installs with that store. pnpm 11 reads
 Run `pnpm run format` to format supported files locally with Prettier's defaults;
 there is no configuration file. `.prettierignore` excludes vendored code,
 installed Repository Standards state, installed skills (including Repo Canon's
-own `babysit` skill), and the pnpm lockfile.
+own `babysit` skill), and the pnpm lockfile. Canon's authored validators in
+`vendor/repo-canon/` remain included in formatting, lint, syntax and JavaScript
+type checks; the other vendor directories keep their exclusions.
 
 Run `pnpm validate`, focused tests for the changed behavior, and
 `git diff --check` before opening a PR. `pnpm validate` runs, in order,
@@ -50,8 +52,8 @@ syntax check), `pnpm run typecheck`, and `pnpm test`.
 `pnpm run typecheck` runs `scripts/typecheck.mjs`, which runs TypeScript 7
 with `tsconfig.json`: `checkJs`, without `strict` and with Node.js 24's types,
 over every `.mjs` and `.js` file outside `node_modules/`, the installed
-Repository Standards state in `.repo-standards/`, and `vendor/`. Authored code
-stays JavaScript, typed with JSDoc where the checker needs it, so installed
+Repository Standards state in `.repo-standards/`, and third-party vendor
+directories. Authored code stays JavaScript, typed with JSDoc where the checker needs it, so installed
 scripts still run with plain `node` and no install. Imports bring three
 vendored bundles into the program: `vendor/marked/marked.esm.js`,
 `vendor/parse5/parse5.esm.js`, and `vendor/postern/postern.mjs`. They keep

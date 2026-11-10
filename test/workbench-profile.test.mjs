@@ -58,7 +58,7 @@ const support = {
   "humanlayer-skills-license": ".agents/skills/LICENSE.humanlayer-skills",
   "issue-contract-sources": "scripts/issue-contract-sources.mjs",
   "issue-contract-store": "scripts/issue-contract-store.mjs",
-  "issue-contract-validator": "scripts/validate-issue-contract.mjs",
+  "issue-contract-validator": "vendor/repo-canon/validate-issue-contract.mjs",
   "marked-license": "vendor/marked/LICENSE",
   "marked-parser": "vendor/marked/marked.esm.js",
   "marked-provenance": "vendor/marked/README.md",

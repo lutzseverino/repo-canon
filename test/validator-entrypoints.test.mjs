@@ -44,11 +44,12 @@ globalThis.fetch = () => { throw new Error("Unexpected network access"); };
 
 test("importing consumers never runs a trigger, including before import.meta.main", (t) => {
   const files = [
-    "scripts/validate.mjs",
+    "vendor/repo-canon/validate.mjs",
     ".github/scripts/validate.mjs",
-    "scripts/validate-issue-contract.mjs",
+    "vendor/repo-canon/validate-issue-contract.mjs",
     "scripts/issue-contract-sources.mjs",
     "scripts/issue-contract-store.mjs",
+    ".agents/skills/triage/ready.mjs",
     ".github/scripts/validate-pr-metadata.mjs",
     ".agents/skills/babysit/wait.mjs",
     ".agents/skills/babysit/merge.mjs",
@@ -81,7 +82,7 @@ test("installed trusted trigger and neutral command execute before import.meta.m
   const { directory, preload, event, neutral } = fixture(t);
   for (const [target, args] of [
     [".github/scripts/validate.mjs", ["pr-metadata"]],
-    ["scripts/validate.mjs", [neutral]],
+    ["vendor/repo-canon/validate.mjs", [neutral]],
   ]) {
     const script = installedValidator(t, target);
     const result = spawnSync(
@@ -115,7 +116,7 @@ test("installed babysit entrypoints reject invalid arguments on the older runtim
 
 test("common command consumes neutral PR data and does not reinterpret a GitHub payload", (t) => {
   const { directory, event, neutral } = fixture(t);
-  const script = join(root, "scripts/validate.mjs");
+  const script = join(root, "vendor/repo-canon/validate.mjs");
   const valid = spawnSync(process.execPath, [script, neutral], {
     cwd: directory,
     encoding: "utf8",
@@ -178,7 +179,7 @@ test("babysit reads only the current CLI credential and redacts acquisition fail
 test("script detection throws when either compared path cannot be resolved", (t) => {
   const { directory, event } = fixture(t);
   for (const path of [
-    "scripts/validate.mjs",
+    "vendor/repo-canon/validate.mjs",
     ".agents/skills/babysit/platform.mjs",
   ]) {
     const url = new URL(`../${path}`, import.meta.url).href;

@@ -7,7 +7,7 @@ import { githubValidation } from "../.github/scripts/validate.mjs";
 import {
   decideIssueContract,
   runIssueContractValidation,
-} from "../scripts/validate-issue-contract.mjs";
+} from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   connect,
   PlatformError,
@@ -558,8 +558,9 @@ test("unchanged direct and Agent Brief contracts keep pre-migration golden revis
 });
 
 test("the installed neutral command resolves issue consumers without package installation", async (t) => {
-  const command = (await import(installedValidator(t, "scripts/validate.mjs")))
-    .main;
+  const command = (
+    await import(installedValidator(t, "vendor/repo-canon/validate.mjs"))
+  ).main;
   const result = await exercise(t, { command });
   assert.equal(result.error, undefined);
   assert.equal(result.code, 0);

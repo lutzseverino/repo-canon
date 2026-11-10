@@ -10,7 +10,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { basePaths, snapshotIdentity } from "../scripts/upstream-bases.mjs";
-import { decideIssueContract } from "../scripts/validate-issue-contract.mjs";
+import { decideIssueContract } from "../vendor/repo-canon/validate-issue-contract.mjs";
 import { completeReview } from "../.agents/skills/babysit/review-outcome.mjs";
 import {
   completeAgentBrief,
@@ -348,8 +348,8 @@ const requirementOutcomes = {
 
 test("self-adoption leaves Repo Canon's own installed source unvendored", () => {
   const paths = [
-    "scripts/validate-issue-contract.mjs",
-    "scripts/validate.mjs",
+    "vendor/repo-canon/validate-issue-contract.mjs",
+    "vendor/repo-canon/validate.mjs",
     "operations/lib/rendered-markdown.mjs",
     ".agents/skills/triage/ready.mjs",
     ".agents/skills/review/round.mjs",
