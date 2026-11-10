@@ -371,6 +371,135 @@ test("body-mode category repair retains historical proof without reviving readin
   );
 });
 
+for (const mode of ["comment", "body"]) {
+  test(`${mode}: first-cutover category repair retains the original approval evidence`, () => {
+    const s = historical(mode);
+    s.issue.labels = ["state:ready"];
+    const held = decide(s);
+    assert.equal(stateOf(held).status, "needs-attention");
+    assert.equal(
+      stateOf(held).seamsExemption?.evaluatedAt,
+      "2026-11-09T01:00:20Z",
+    );
+    rewrite(s, held);
+    s.issue.labels = ["type:enhancement"];
+    const repaired = decide(s);
+    assert.equal(stateOf(repaired).status, "awaiting-review");
+    assert.equal(
+      stateOf(repaired).seamsExemption?.evaluatedAt,
+      "2026-11-09T01:00:20Z",
+    );
+    assert.ok(!repaired.addLabels.includes("state:ready"));
+  });
+}
+
+test("the adapter loads historical authority before a first-cutover category repair", async () => {
+  for (const category of [null, "type:bug"]) {
+    const s = historical("prepared");
+    s.issue.labels = ["state:ready", ...(category ? [category] : [])];
+    const roles = [];
+    const connection = {
+      access: {
+        role: async (login) => {
+          roles.push(login);
+          return "admin";
+        },
+      },
+      issueTracker: {
+        capabilities: { bodyEditTime: true },
+        issue: async () => ({
+          ...s.issue,
+          nodeId: s.issue.node_id,
+          author: s.issue.user,
+        }),
+        comments: async () =>
+          s.comments.map((comment) => ({
+            ...comment,
+            nodeId: comment.node_id,
+            author: comment.user,
+            createdAt: comment.created_at,
+            updatedAt: comment.updated_at,
+          })),
+        labelChanges: async () =>
+          s.issueEvents.map((event) => ({
+            id: String(event.id),
+            action: event.event === "labeled" ? "added" : "removed",
+            label: event.label.name,
+            actor: event.actor,
+            time: event.created_at,
+          })),
+        removeLabel: async (_number, label) => {
+          s.issue.labels = s.issue.labels.filter((name) => name !== label);
+        },
+        addLabels: async (_number, labels) => {
+          s.issue.labels.push(...labels);
+        },
+        updateComment: async (id, body) => {
+          s.comments.find((comment) => comment.id === id).body = body;
+        },
+      },
+    };
+    const evaluate = () =>
+      runIssueContractValidation(
+        {
+          issue: s.issue.number,
+          kind: "edited",
+          actor: { login: "maintainer" },
+        },
+        connection,
+        undefined,
+        undefined,
+        () => Date.parse(s.evaluatedAt),
+        null,
+        { mode: "prepared" },
+        async () => seamsBoundary,
+      );
+    assert.equal(await evaluate(), 1);
+    assert.deepEqual(roles, ["maintainer"]);
+    assert.equal(
+      previous(s).seamsExemption?.evaluatedAt,
+      "2026-11-09T01:00:20Z",
+    );
+    s.issue.labels = ["type:enhancement"];
+    assert.equal(await evaluate(), 0);
+    assert.equal(previous(s).status, "awaiting-review");
+    assert.equal(
+      previous(s).seamsExemption?.evaluatedAt,
+      "2026-11-09T01:00:20Z",
+    );
+    assert.ok(!s.issue.labels.includes("state:ready"));
+  }
+});
+
+test("a held legacy selector authenticates historical factory approval without selecting it", () => {
+  const s = historical("comment");
+  const brief = s.comments[0];
+  brief.body += '\n\n<!-- factory:run {"run":"triage-7"} -->';
+  brief.user = { login: "factory[bot]" };
+  s.triageResult = { author: "factory[bot]", marker: "factory:run" };
+  const original = previous(s);
+  original.reviewer = "factory[bot]";
+  original.revision = revision({
+    kind: "triaged Agent Brief",
+    source: { ...original.source, id: brief.node_id },
+    body: brief.body,
+  });
+  s.contractSources.receipt.issues[0].legacy.revision = original.revision;
+  s.issueEvents[0].actor = { login: "factory[bot]" };
+  setPrevious(s, original);
+  s.issue.labels = ["state:ready"];
+  const held = decide(s);
+  assert.equal(stateOf(held).revision, null);
+  assert.equal(stateOf(held).status, "needs-attention");
+  assert.equal(stateOf(held).seamsExemption?.reviewer, "factory[bot]");
+  rewrite(s, held);
+  s.issue.labels = ["type:enhancement"];
+  const repaired = decide(s);
+  assert.equal(stateOf(repaired).status, "awaiting-review");
+  assert.equal(stateOf(repaired).seamsExemption?.revision, original.revision);
+  assert.ok(!repaired.addLabels.includes("state:ready"));
+});
+
 test("superseding states keep exemption evidence without preserving readiness", () => {
   const s = historical("prepared");
   rewrite(s, decide(s));

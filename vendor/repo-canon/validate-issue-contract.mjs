@@ -280,9 +280,9 @@ const wayfinderChildFields = new Set(["parent", "question"]);
 //   records;
 // - `triageResult`: the factory's triage result as `factoryTriageResult`
 //   reads it, `null` when only people grant readiness.
-// The timeline is read whenever the issue uses workflow state, permissions only
-// for a structurally complete contract, and `bodyRevision` only for a
-// direct-body contract. Permissions cover every actor on a readiness-label
+// The timeline is read whenever the issue uses workflow state, permissions for
+// a structurally complete contract or Seams migration evidence, and
+// `bodyRevision` only for a direct-body contract. Permissions cover every actor on a readiness-label
 // event, the recorded reviewer, and an opening sender.
 
 // Decides one issue from its snapshot without network or file access. The
@@ -408,12 +408,9 @@ function decideCurrentContract(snapshot) {
   const recorded = feedbackState(previousFeedback?.body);
   const timeline = result.usesWorkflowState ? issueTimeline(snapshot) : null;
   let exemption = null;
-  const retainedEvidence =
+  let retainedEvidence =
     recorded?.format === seamsResultFormat ? recorded.seamsExemption : null;
-  if (
-    (result.kind === "triaged Agent Brief" && result.contract) ||
-    retainedEvidence
-  ) {
+  if (result.kind === "triaged Agent Brief" || retainedEvidence) {
     if (!validSeamsBoundary(snapshot.seamsBoundary))
       return issueDecision({
         exitCode: 1,
@@ -429,8 +426,14 @@ function decideCurrentContract(snapshot) {
         message:
           "Unresolved Seams release boundary: public identity disagrees with the retained immutable boundary; no labels or feedback changed.",
       });
+    retainedEvidence = historicalSeamsApproval(snapshot, recorded);
     if (result.contract && result.kind === "triaged Agent Brief") {
-      exemption = seamsExemption(snapshot, result, recorded);
+      const contract = contractRevision(snapshot, result);
+      exemption =
+        retainedEvidence?.revision === contract.revision &&
+        same(retainedEvidence.source, contract.source)
+          ? retainedEvidence
+          : null;
       result = assessStructure(snapshot, !exemption);
     }
   }
@@ -573,23 +576,13 @@ function decideCurrentContract(snapshot) {
 // Eligibility is about the exact revision's historical approval, not today's
 // readiness. A trusted v3 result carries that original evidence through label
 // removals and re-reviews; the existing readiness engine still decides authority.
-function seamsExemption(snapshot, result, recorded) {
-  const contract = contractRevision(snapshot, result);
+function historicalSeamsApproval(snapshot, recorded) {
   const boundary = snapshot.seamsBoundary;
   if (!recorded) return null;
   if (recorded.format === seamsResultFormat) {
     const evidence = recorded.seamsExemption;
-    return same(evidence.boundary, boundary) &&
-      evidence.revision === contract.revision &&
-      same(evidence.source, contract.source)
-      ? evidence
-      : null;
+    return same(evidence.boundary, boundary) ? evidence : null;
   }
-  if (
-    recorded.revision !== contract.revision ||
-    !same(recorded.source, contract.source)
-  )
-    return null;
   if (
     ![resultFormat, bodyResultFormat].includes(recorded.format) ||
     recorded.status !== "approved" ||
@@ -605,14 +598,34 @@ function seamsExemption(snapshot, result, recorded) {
       event.label?.name === recorded.label &&
       event.actor?.login === recorded.reviewer,
   );
-  const authority =
-    recorded.reviewer === snapshot.triageResult?.author
-      ? triageAuthority(snapshot, result)
-      : reviewerAuthority(snapshot.permissions, recorded.reviewer);
+  let authority = reviewerAuthority(snapshot.permissions, recorded.reviewer);
+  if (recorded.reviewer === snapshot.triageResult?.author) {
+    // Authenticate historical proof without selecting it as today's contract.
+    // Only the source selector and the exact match above can grant eligibility.
+    if (recorded.source?.type === "issue-body")
+      authority = {
+        authorized: Boolean(bodyTriageAssociation(snapshot, recorded)),
+      };
+    else {
+      const comment = snapshot.comments.find(
+        (candidate) => String(candidate.id) === recorded.source?.id,
+      );
+      const historical = {
+        kind: "triaged Agent Brief",
+        contract: { type: "comment", comment, body: comment?.body ?? "" },
+      };
+      const contract = comment && contractRevision(snapshot, historical);
+      authority =
+        contract?.revision === recorded.revision &&
+        same(contract.source, recorded.source)
+          ? triageAuthority(snapshot, historical)
+          : { authorized: false };
+    }
+  }
   const evidence = {
     boundary,
-    revision: contract.revision,
-    source: contract.source,
+    revision: recorded.revision,
+    source: recorded.source,
     evaluatedAt: recorded.evaluatedAt,
     publishedAt: recorded.publishedAt,
     reviewedAt: review?.created_at,
@@ -2353,6 +2366,8 @@ export async function runIssueContractValidation(
       await pause(triggerWaitInterval);
       snapshot.issueEvents = await readTimeline();
     }
+  }
+  if (needs.contract || snapshot.seamsBoundary) {
     for (const login of reviewerLogins(snapshot)) {
       try {
         snapshot.permissions[login] = {
