@@ -138,7 +138,7 @@ Once it holds, [accept it](#accept-a-brief-that-holds).
 
    When owner review before merge is reserved, verify that the brief explicitly designates it as contract behavior and its triage notes retain the dated decision source. Check this even when that reason first arises here, after the initial brief review. If the designation or its source is missing or unclear, return the brief to its writer with the recorded reservation and source; the writer corrects it. Independently review the corrected brief from the top, then return to step 1 for its new validator revision notice before applying readiness.
 
-3. **Choose the model**, when the installed rules ask for a `model:` label: weigh the triage notes' suggestion against the work, and pick one label yourself. Keep a matching model already on the issue, or remove a conflicting one before applying readiness.
+3. **Choose the model**, when the installed rules ask for a `model:` label: apply their Model selection rule to the triage notes' suggestion and the work, pick one label yourself, and give the guidance-based reason. Keep a matching model already on the issue, or remove a conflicting one before applying readiness.
 4. **Apply and confirm readiness** with the bundled command, using the `sha256:` revision from the notice you reviewed and the companion labels you chose:
 
    ```sh
@@ -159,7 +159,7 @@ The factory starts this run for one issue, read-only, and the installed factory 
 1. **Gather context** as [Triage a specific issue or PR](#triage-a-specific-issue-or-pr) step 1 says, and run its two checks first, yourself. Read the repository's ADRs, its glossary, and the issues the request links, with their decisions: the records the Triage run section lets you cite.
 2. **Sort** the request as [Sort by uncertainty](#sort-by-uncertainty) says. Answer each intent question the inference test lets you answer from those records, and list it with the record and its date under **Inferred intent** in the triage notes.
 3. **Choose the outcome** the Triage run section names, with the labels it lists, and write its body:
-   - `state:ready`: write the Agent Brief and its triage notes as [AGENT-BRIEF.md](AGENT-BRIEF.md) says, review them as the [code-bound path](#code-bound-path)'s step 2 says, and correct them until they hold. Choose the `model:` label from the models the factory's run facts list, or from any when they list none.
+   - `state:ready`: write the Agent Brief and its triage notes as [AGENT-BRIEF.md](AGENT-BRIEF.md) says, review them as the [code-bound path](#code-bound-path)'s step 2 says, and correct them until they hold. Choose the `model:` label under the installed Model selection rule, within the host capabilities the factory supplies, and record its reason in the triage notes.
    - `state:reporter`: the [reporter template](#reporter-template).
    - `state:owner`: the question and what you found.
    - `state:grill`: the facts gathered (current behavior, constraints, the records you read, the options and what each would cost) and the open questions, numbered.

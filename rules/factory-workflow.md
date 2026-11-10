@@ -136,8 +136,19 @@ to a non-parent must apply exactly one chosen `model:` label before or with
 readiness, even for the host default. A parent needs no model label and chooses
 none of its tickets' models.
 
-Work needing design judgment, ambiguous scope or a long cross-cutting change
-uses a stronger model. The chosen model label uses
+Triage's suggestion, the accepting reviewer's label, factory triage's issue
+label and every hand launch, including hand reviews, choose by the host's
+Model guidance: fit first, then the cheaper model when several fit. Host
+guidance owns the fit and cost information; Repo Canon supplies no model
+ranking or task-difficulty ladder. Repository preferences and host capabilities
+bound choices. The one-line model reason identifies the actual guidance used.
+A model without guidance is never chosen by judgment: it runs only when the
+owner explicitly names it for a launch or as a configured default. When
+guidance leaves the choice open, use the configured host default
+(`models.default`), even if unguided, and say that guidance did not settle it.
+
+Prefer omitting `@<effort>` to inherit the per-model override or host-wide
+effort. Explicit effort remains valid. The chosen model label uses
 `model:<slug>` or `model:<provider>/<slug>`, optionally followed by
 `@<effort>`; create the label if the repository lacks it. A `claude-*` or
 `gpt-*` slug needs no provider. Create missing model labels with color
@@ -166,6 +177,42 @@ Malformed, conflicting or host-forbidden model labels hold work with a visible
 model-label reason, including a relaunch whose recorded choice is forbidden.
 Repository fallback never bypasses those shared-gate holds; it handles
 temporary unavailability of an otherwise valid choice.
+
+For a hand launch whose fitting provider is draining or paused, wait or choose
+another model whose guidance also fits. Never choose an unfitting model to
+avoid quota. Factory review and implement retry retain deterministic repository
+policy and host per-kind defaults, the `wait`/`host-default` fallback and
+provider diversity below; guidance adds no per-issue factory review chooser.
+
+### Choosing examples
+
+These placeholders illustrate choices, not shipped model guidance, costs or
+effort values. Assume host capabilities and repository preferences permit the
+named choices. The host's guidance says `provider-a/model-docs` suits
+"documentation and policy edits; lower cost", `provider-b/model-general` suits
+"documentation, policy edits and code review; higher cost", and
+`provider-c/model-ui` suits "visual design; lowest cost".
+`provider-d/model-unguided` has no guidance. All providers are available unless
+stated otherwise. Each quoted reason is the one-line reason for that choice.
+
+| Consumer and work                                                               | Choice and reason                                                                                                                                              |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Triage suggestion for a policy edit                                             | Suggest `model:provider-a/model-docs`: "Host guidance fits documentation and policy edits; lower cost than the other fitting model-general."                   |
+| Accepting reviewer of that edit, with model-general suggested                   | Choose `model:provider-a/model-docs`: "Both guidance entries fit policy edits; model-docs is lower cost."                                                      |
+| Factory triage's issue label for a documentation edit                           | Ask for `model:provider-a/model-docs`: "Host guidance fits documentation at lower cost than model-general; model-ui only fits visual design."                  |
+| Hand review of a code change                                                    | Choose `provider-b/model-general`: "Host guidance fits code review; the cheaper models' guidance does not."                                                    |
+| Hand documentation launch, considering the unguided model                       | Choose `provider-a/model-docs`: "Host guidance fits documentation at lower cost; model-unguided has no guidance for a judgment choice."                        |
+| Owner explicitly names model-unguided for a hand launch                         | Use `provider-d/model-unguided`: "Owner explicitly named this model; no guidance-based choice was made."                                                       |
+| Guidance leaves a hand launch's choice open; `models.default` is model-unguided | Use `provider-d/model-unguided`: "Guidance does not settle this work; use the configured host default, which has no guidance."                                 |
+| Hand documentation launch; provider A is draining or paused                     | Wait for A, or choose `provider-b/model-general`: "Host guidance also fits documentation; provider A is held, and available model-ui fits visual design only." |
+
+For effort examples only, suppose host effort is `high` and model-docs has a
+`medium` override. `model:provider-a/model-docs` inherits `medium`;
+`model:provider-b/model-general` inherits `high`.
+`model:provider-a/model-docs@high` explicitly selects `high`; all three are
+valid selections. These choosing examples supply no launch templates: the
+orchestration integration owns the validated status read, effective model and
+effort on each template, and budget in the records-only status view.
 
 ## Repository model policy
 
