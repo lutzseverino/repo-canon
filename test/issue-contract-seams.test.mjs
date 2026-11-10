@@ -25,6 +25,7 @@ import { checkSeamsRelease } from "../scripts/release/verify.mjs";
 import {
   bot,
   completeAgentBrief,
+  mapBody,
   revision,
 } from "./helpers/issue-contracts.mjs";
 import { seamsBoundary } from "./helpers/contract-decision.mjs";
@@ -791,6 +792,85 @@ test("the adapter resolves a comment Brief's boundary before timeline state can 
     } else assert.deepEqual(writes, []);
   }
 });
+
+for (const planningLabel of ["wayfinder:map", "wayfinder:research"]) {
+  test(`${planningLabel}: inherited Brief history never requires a timeline, role or Seams lookup`, async () => {
+    for (const v3 of [false, true]) {
+      for (const boundaryAvailable of [true, false]) {
+        const s = historical("prepared");
+        if (v3) rewrite(s, decide(s));
+        const evidence = previous(s).seamsExemption;
+        const child = planningLabel !== "wayfinder:map";
+        const issue = {
+          ...s.issue,
+          nodeId: s.issue.node_id,
+          author: s.issue.user,
+          body: child
+            ? "## Question\n\nExplore search behavior.\n\n## Parent\n\n#1"
+            : mapBody,
+          labels: [planningLabel, "type:enhancement", "state:ready"],
+          parent: child ? { repository: s.repository, number: 1 } : null,
+        };
+        const reads = [];
+        const connection = {
+          access: {
+            role: async () => {
+              reads.push("role");
+              return "admin";
+            },
+          },
+          issueTracker: {
+            capabilities: { bodyEditTime: true },
+            issue: async () => issue,
+            comments: async () =>
+              s.comments.map((comment) => ({
+                ...comment,
+                nodeId: comment.node_id,
+                author: comment.user,
+                createdAt: comment.created_at,
+                updatedAt: comment.updated_at,
+              })),
+            labelChanges: async () => {
+              reads.push("timeline");
+              return [];
+            },
+            removeLabel: async (_number, label) => {
+              issue.labels = issue.labels.filter((value) => value !== label);
+            },
+            addLabels: async () =>
+              assert.fail("planning issues must not gain workflow labels"),
+            updateComment: async (id, body) => {
+              s.comments.find((comment) => comment.id === id).body = body;
+            },
+          },
+        };
+        const code = await runIssueContractValidation(
+          { kind: "labeled", issue: 42, label: planningLabel },
+          connection,
+          async () => ({ number: 1, labels: ["wayfinder:map"] }),
+          undefined,
+          () => Date.parse(s.evaluatedAt),
+          null,
+          { mode: "prepared" },
+          async () => {
+            reads.push("boundary");
+            if (!boundaryAvailable)
+              throw Error("Unresolved Seams release boundary");
+            return seamsBoundary;
+          },
+        );
+        assert.equal(code, 1, "reject inherited readiness without throwing");
+        assert.deepEqual(reads, []);
+        assert.ok(!issue.labels.includes("state:ready"));
+        const state = previous(s);
+        assert.equal(state.kind, child ? "Wayfinder child" : "Wayfinder map");
+        assert.equal(state.status, "needs-attention");
+        assert.equal(state.label, null);
+        if (v3) assert.deepEqual(state.seamsExemption, evidence);
+      }
+    }
+  });
+}
 
 test("release preparation pins once and later releases retain the first shipping tag", (t) => {
   const root = mkdtempSync(join(tmpdir(), "rc-seams-release-"));

@@ -410,10 +410,13 @@ function decideCurrentContract(snapshot) {
   let exemption = null;
   let retainedEvidence =
     recorded?.format === seamsResultFormat ? recorded.seamsExemption : null;
+  // Planning can retain past proof without selecting or authorizing a Brief.
   if (
-    result.kind === "triaged Agent Brief" ||
-    (result.kind === "triaged wontfix request" && latestAgentBrief(comments)) ||
-    retainedEvidence
+    result.usesWorkflowState &&
+    (result.kind === "triaged Agent Brief" ||
+      (result.kind === "triaged wontfix request" &&
+        latestAgentBrief(comments)) ||
+      retainedEvidence)
   ) {
     if (!validSeamsBoundary(snapshot.seamsBoundary))
       return issueDecision({
@@ -2293,23 +2296,25 @@ export async function runIssueContractValidation(
   const legacy = facts.receipt?.issues?.find(
     (entry) => entry.issue === snapshot.issue.node_id,
   )?.legacy;
+  const initialStructure = assessStructure(snapshot);
   // These source histories may be held until category/source repair, even
   // when the first structural probe cannot select their Agent Brief yet.
   if (
-    ((agentBriefHeading(issue.body ?? "") ||
+    initialStructure.usesWorkflowState &&
+    (((agentBriefHeading(issue.body ?? "") ||
       latestAgentBrief(snapshot.comments)) &&
       issue.labels.some((label) => categoryLabels.has(labelName(label)))) ||
-    assessStructure(snapshot).kind === "triaged Agent Brief" ||
-    facts.record?.migrated ||
-    facts.record?.retired ||
-    legacy ||
-    [
-      findFeedback(snapshot.comments),
-      facts.record?.notice,
-      legacy?.notice,
-    ].some(
-      (notice) => feedbackState(notice?.body)?.format === seamsResultFormat,
-    )
+      initialStructure.kind === "triaged Agent Brief" ||
+      facts.record?.migrated ||
+      facts.record?.retired ||
+      legacy ||
+      [
+        findFeedback(snapshot.comments),
+        facts.record?.notice,
+        legacy?.notice,
+      ].some(
+        (notice) => feedbackState(notice?.body)?.format === seamsResultFormat,
+      ))
   ) {
     try {
       snapshot.seamsBoundary = await resolveBoundary(connection);
@@ -2378,7 +2383,7 @@ export async function runIssueContractValidation(
       snapshot.issueEvents = await readTimeline();
     }
   }
-  if (needs.contract || snapshot.seamsBoundary) {
+  if (needs.contract || (needs.timeline && snapshot.seamsBoundary)) {
     for (const login of reviewerLogins(snapshot)) {
       try {
         snapshot.permissions[login] = {
