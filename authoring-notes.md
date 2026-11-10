@@ -160,9 +160,9 @@ repeated.
   [ADR 0021](docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md)
   decides: research and independent acceptance by the orchestrating agent for
   a code-bound request, and fact-finding and a grilling session with the owner
-  before the brief for an intent-bound one. The orchestrating agent infers only
-  intent it can cite that does not outlive the work, the grill drafts the
-  briefs it accepts, and owner-only questions reach the owner only through its
+  before publication for an intent-bound one. The orchestrating agent infers only
+  intent it can cite that does not outlive the work, the grill writer publishes the
+  contracts it independently accepts, and owner-only questions reach the owner only through its
   decision inbox, as
   [ADR 0025](docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md)
   decides. The routing and acceptance rules
@@ -175,6 +175,16 @@ repeated.
   upstream base: its `CREDITS.md` names that base and what changed, and the
   upstream material keeps the upstream notice. The owner first approved a rule that the owner finish
   every brief, then replaced it the same day; no rule restores it.
+- The canonical pipeline and configured run-kind coverage live in the
+  [factory workflow rules](rules/factory-workflow.md#canonical-stages).
+  The contribution guide's [Triage section](CONTRIBUTING.md#triage) owns grill
+  publication and amendment authority: `grill-with-docs` composes `to-spec`
+  and `to-tickets`, whose direct issue-body contracts await independent review.
+  The owner settled publication and the inference boundary on 2026-11-06 and
+  2026-11-08, and intake's two entries on 2026-11-09, as
+  [#912](https://github.com/lutzseverino/repo-canon/issues/912#issuecomment-6750712597)
+  records. The existing orchestrate Lifecycle awaits its separate consumer
+  conversion in #693; that follow-up depends on the canonical definition.
 - Repo Canon writes and installs `orchestrate`, the method by which the
   orchestrating agent the contribution guide names runs a plan across
   tickets. It is a workflow skill under

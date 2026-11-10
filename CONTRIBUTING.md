@@ -66,37 +66,44 @@ citation under **Inferred intent**. The orchestrating agent lists every
 inferred answer in its next report to the owner, so the owner can veto it. A
 veto is an owner decision, and the brief is revised from it.
 
-Questions it cannot infer go to a separate grilling session with the owner. The
-grill records the owner's decisions and drafts the Agent Briefs in a proposed
-ticket split; it files no issue and applies no readiness. The orchestrating
-agent decides the split: it may merge, split, or drop a draft, or set it aside
-for later work. It files the issues with the grill's briefs, and each issue's
-triage notes record the owner decisions its brief relies on, each with its date
-and where the owner gave it. A recorded decision is not asked again. The
-orchestrating agent never writes a brief it accepts: when its split changes a
-draft substantially, the grill rewrites that brief, and a research run writes
-one only when it needs code facts the grill did not gather.
+Owner ideas take conversation and a grill unless the owner approves a shorter
+path for that idea; filed requests take triage. Grills reuse answers and ask
+only about one-way doors or unchosen values. List other answers passing the
+inference test under **Inferred, listed for the owner**, with dated sources
+and veto. Grill answers and plan approval remain gates.
 
-A grilling session changing a repository's glossary or ADRs works on its own
-branch in a checkout it owns (a worktree or fresh clone), never in a shared
-checkout on the default branch. The grill opens one draft pull request per
-repository whose domain documents change, and stops; the `review` skill
-delivers it, run by the orchestrating agent unless a factory reviews it. The
-grill's decision
-record and draft briefs stay in the workbench, committed directly to its default
-branch.
+The grill writer invokes `to-spec`, then `to-tickets`, publishing direct body
+contracts for independent review, without intake triage, redundant Agent
+Briefs or category labels. One specification lives in the repository
+containing most work; tickets in their responsible repositories are its native
+sub-issues with blockers. Copy relied-on decisions, dates and quotes into
+every contract. A failed native edge stops progression: report the exact
+missing relationship and platform failure.
 
-The orchestrating agent, never the agent that wrote the brief, then reviews its
-evidence, scope, acceptance criteria, dependencies, and open questions. Passing
-the structure check never makes a brief hold. A brief that leaves owner intent
-open, or disguises it as an implementation choice, an option list, or a
-fallback value, does not hold: questions the inference test cannot settle go to
-the owner, and an unanswered required question blocks acceptance. Any other gap
-goes back to the brief's writer for correction. The orchestrating agent accepts
-a brief that holds by applying readiness to its revision, records its blockers,
-and tells the owner with links. When the revision notice never arrives, or its
-credentials cannot apply readiness, it leaves readiness to the owner and tells
-them under the [comment rules](rules/comments.md) instead.
+The orchestrating agent decides the final split, merging, splitting, dropping
+or setting aside drafts, and never accepts its own contract. Substantial split
+changes return to the writer; missing code facts go to independent research.
+Review checks evidence, scope, granularity, dependencies, acceptance criteria,
+test seams and open questions without an owner quiz or settled-seam
+confirmation. Reject unresolved or disguised owner intent; correct settled
+questions. Structure and publication grant no readiness. Apply Readiness to
+each exact contract, parent readiness after tickets under installed later-link
+rules, and closed blockers before implementation. Without notice or authority,
+leave readiness to the owner, reporting links under comment rules.
+
+Changes to a plan's goal, Done means or row scope require an amendment grill,
+possibly one round: revise the specification, then run `to-tickets` on the
+delta, updating affected contracts and native links. Edited accepted contracts
+lose readiness; require new notice, independent review and renewed readiness.
+Findings, follow-ups passing the inference test and reorderings already
+permitted by blockers need no amendment. Progress never edits ready contracts.
+
+Grills edit domain documents on their own branch and checkout, never a shared
+default-branch checkout. Open one draft PR per repository with domain changes,
+delivered by separate `review`, run by the orchestrating agent unless a
+factory reviews it. Return contracts for acceptance. Decision records stay in
+the workbench, committed directly to its default branch; authoritative
+contracts stay in repository issues.
 
 Every question reaches the orchestrating agent first. It answers what it can
 from code, logs, or a reproduction, or under the inference test. A fact only an

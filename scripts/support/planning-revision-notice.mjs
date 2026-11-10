@@ -2,24 +2,32 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
 // A local participant relay only: no readiness, credentials or remote access.
-const [path, id, editedAt] = process.argv.slice(2);
-if (process.argv.length !== 5 || !path || !id || !editedAt)
+const [path, id, editedAt, kind = "triaged Agent Brief"] =
+  process.argv.slice(2);
+if (
+  ![5, 6].includes(process.argv.length) ||
+  !path ||
+  !id ||
+  !editedAt ||
+  !["triaged Agent Brief", "specification", "implementation ticket"].includes(
+    kind,
+  )
+)
   throw new Error(
-    "Usage: node revision-notice.mjs <retained-brief.md> <simulated-comment-id> <edited-at-or-null>",
+    "Usage: node revision-notice.mjs <retained-contract.md> <simulated-source-id> <edited-at-or-null> [kind]",
   );
 if (editedAt !== "null" && !Number.isFinite(Date.parse(editedAt)))
   throw new Error("edited-at must be a timestamp or null");
 
-// Match the issue-contract validator's comment revision convention, including
-// the entire comment body (triage notes and whitespace included).
+// Match the validator's source convention and entire body, including notes.
 const source = {
-  type: "comment",
+  type: kind === "triaged Agent Brief" ? "comment" : "issue-body",
   id,
   editedAt: editedAt === "null" ? null : editedAt,
 };
 const value = JSON.stringify({
   format: "repo-canon/issue-contract-revision/v1",
-  kind: "triaged Agent Brief",
+  kind,
   source,
   body: readFileSync(path, "utf8"),
 });
