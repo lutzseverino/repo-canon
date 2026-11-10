@@ -6,7 +6,7 @@
 // Exit 0: event or maximum duration (re-arm); exit 1: usage/platform error.
 // Usage: node wait.mjs --interval <seconds> --max-duration <seconds> <item>...
 //        node wait.mjs --interval <seconds> --max-duration <seconds> --from now.md
-//        node wait.mjs --status --from now.md
+//        node wait.mjs --status --from now.md [--budget <status.json>]
 // Wait durations are required positive finite caller choices, without defaults.
 // Tracker requests and upstream fetches retain their 45-second timeout.
 import { execFile } from "node:child_process";
@@ -24,23 +24,24 @@ import {
   launchComplete,
   readRecords,
   renderStatus,
+  renderBudget,
 } from "./records.mjs";
 
 const usage =
-  "usage: wait.mjs --interval <seconds> --max-duration <seconds> <item>... | --from <now.md>; wait.mjs --status --from <now.md>";
+  "usage: wait.mjs --interval <seconds> --max-duration <seconds> <item>... | --from <now.md>; wait.mjs --status --from <now.md> [--budget <status.json>]";
 
 const parseArguments = (argv) => {
   const options = {};
   const items = [];
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
-    if (argument === "--status" || argument === "--from") {
+    if (["--status", "--from", "--budget"].includes(argument)) {
       const key = argument.slice(2);
       if (Object.hasOwn(options, key))
         throw new UsageError(`${argument} is given more than once`);
       options[key] = key === "status" ? true : argv[++index];
-      if (key === "from" && (!options[key] || options[key].startsWith("--")))
-        throw new UsageError("--from needs a records path");
+      if (key !== "status" && (!options[key] || options[key].startsWith("--")))
+        throw new UsageError(`${argument} needs a path`);
       continue;
     }
     const flag = /^--(interval|max-duration)$/.exec(argument)?.[1];
@@ -70,9 +71,12 @@ const parseArguments = (argv) => {
       options.interval ||
       options["max-duration"]
     )
-      throw new UsageError("--status requires only --from <now.md>");
-    return { status: true, from: options.from };
+      throw new UsageError(
+        "--status requires --from <now.md> and optional --budget <status.json>",
+      );
+    return { status: true, from: options.from, budget: options.budget };
   }
+  if (options.budget) throw new UsageError("--budget requires --status");
   if (options.from && items.length)
     throw new UsageError("--from cannot be combined with explicit items");
   const missing = ["interval", "max-duration"]
@@ -399,7 +403,9 @@ export const main = async (
   }
   if (options.status) {
     try {
-      stdout.write(renderStatus(readRecords(options.from)));
+      const table = renderStatus(readRecords(options.from));
+      const budget = options.budget ? renderBudget(options.budget) : "";
+      stdout.write(table + budget);
       return 0;
     } catch (error) {
       stderr.write(`wait.mjs: ${error.message}\n`);

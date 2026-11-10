@@ -604,6 +604,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
               "wait.mjs",
               "records.mjs",
               "references/close.md",
+              "references/intake.md",
               "references/launches.md",
               "references/templates.md",
             ])
