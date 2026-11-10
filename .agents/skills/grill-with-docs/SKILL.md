@@ -11,6 +11,7 @@ amendments. Invoke `grilling` and `domain-modeling` through the session's
 supported skill mechanism, with the request, recorded decisions and dated
 sources as context. Apply the guide's Triage inference and question-routing
 rules during the interview, and gather missing facts yourself.
+Invoke `codebase-design` and apply its [Ownership check](../codebase-design/SKILL.md#ownership-check) to proposed designs during the interview.
 
 Once the interview and the guide's applicable owner gates are complete, invoke
 `to-spec`, then `to-tickets`. Pass the dated decisions and quoted words to both
@@ -31,5 +32,7 @@ Paths are relative to each responsible repository root.
 - `CONTRIBUTING.md`: Triage, implementation contracts and readiness. If missing,
   use this method with independent review and `grilling`'s missing-guide fallback.
 - The `grilling`, `domain-modeling`, `to-spec` and `to-tickets` skills:
-  interview, domain documents and publication methods. If one is missing,
-  report it and stop that step rather than inventing a substitute.
+  interview, domain documents and publication methods.
+  If one is missing, report it and stop that step rather than inventing a substitute.
+- The `codebase-design` skill: the design check applied during the interview.
+  If missing, report the missing definition and stop that step.

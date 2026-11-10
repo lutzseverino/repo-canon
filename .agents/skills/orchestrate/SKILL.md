@@ -16,6 +16,7 @@ its `factory` skill delivers tickets and held, stopped or skipped work.
 Read [templates](references/templates.md) before you write a workbench file,
 [launches](references/launches.md) before you launch, take over, hand over,
 observe or arm a wait, and [close](references/close.md) before you close a plan.
+Apply `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check) to your inbox recommendations, plan updates and friction.
 
 ## Workbench
 
@@ -45,7 +46,7 @@ row, record or issue; expand unfamiliar codes once per message. Deferred checker
 implement over `now.md`, `inbox.md` and `plan.md` only at the first recorded
 post-release bare-code slip. The later [launch rewrite](https://github.com/lutzseverino/repo-canon/issues/693)
 owns status/model/effort reads and budget integration, preserving this interface
-for every launcher.
+and the Ownership check reference above for every launcher.
 
 1. **Propose.** Present the goal, Done means, ticket table and Close reviews to
    the owner for approval, as a plan update. Record the proposal before filing
@@ -66,10 +67,9 @@ for every launcher.
    [wiki rules](references/templates.md#layout) say.
 4. **Run.** Launch workers and observe progress. Record friction in `log.md` with
    evidence, **Value owner**, exposed seam and route (plan row, finding or wish).
-   Apply `codebase-design`'s Ownership check; deferrals stay at their code location,
-   never in the friction log. Route Findings under the guide even outside the
-   goal, without waiting for resolution. A **new requirement** that arrives
-   mid-plan, unless the owner wants it now, takes one route:
+   Deferrals stay at their code location, never in the friction log. Route Findings
+   under the guide even outside the goal, without waiting for resolution. A **new requirement**
+   that arrives mid-plan, unless the owner wants it now, takes one route:
    - **Row:** it serves the goal and passes the guide's inference test. Add it
      as a row, log it, and list it in the next plan update.
    - **Amendment:** it changes the goal or scope. Propose it; it applies once
