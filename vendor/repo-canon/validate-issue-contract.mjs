@@ -31,7 +31,7 @@ import {
 
 // Pinned once by release:prepare for the first stable release shipping Seams.
 // The annotated tag and GitHub release are the immutable public identity.
-export const seamsReleaseTag = null;
+export const seamsReleaseTag = "v0.26.0";
 export const seamsResultFormat = "repo-canon/issue-contract-state/v3";
 const seamsSource = "/repos/lutzseverino/repo-canon";
 const utcTime = (value) =>
