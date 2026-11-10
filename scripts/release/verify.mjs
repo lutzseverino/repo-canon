@@ -35,6 +35,50 @@ import {
   withTemporaryDirectory,
 } from "./support.mjs";
 
+import { executedAsScript } from "../../vendor/repo-canon/validate.mjs";
+import { releaseSeamsTag } from "./prepare.mjs";
+import { resolveSeamsBoundary } from "../../vendor/repo-canon/validate-issue-contract.mjs";
+
+export async function checkSeamsRelease(version, releaseCommit, read, request) {
+  const tag = releaseSeamsTag(read);
+  if (tag === undefined)
+    return { pass: "historical release predates the Seams boundary." };
+  if (tag === null)
+    return {
+      failures: [
+        "Unresolved Seams release boundary; run release:prepare before publication.",
+      ],
+    };
+  try {
+    const identity = await resolveSeamsBoundary({ access: { request } }, tag);
+    if (tag === version && identity.commit !== releaseCommit)
+      return {
+        failures: [
+          "The first Seams release tag does not identify the verified release commit.",
+        ],
+      };
+    if (
+      tag !== version &&
+      run("git", [
+        "merge-base",
+        "--is-ancestor",
+        identity.commit,
+        releaseCommit,
+      ]).status !== 0
+    )
+      return {
+        failures: [
+          "The Seams release commit is not an ancestor of this release; fetch its immutable tag.",
+        ],
+      };
+    return {
+      pass: `Seams boundary ${identity.tag} resolves to ${identity.commit}, first published ${identity.publishedAt}.`,
+    };
+  } catch (error) {
+    return { failures: [error.message] };
+  }
+}
+
 const sourceRepository = "https://github.com/lutzseverino/repo-canon";
 const profiles = ["standard", "factory", "workbench"];
 
@@ -214,31 +258,44 @@ function report(check) {
   return !outcome.failures;
 }
 
-await runScript(
-  "release:verify",
-  "pnpm run release:verify <version> <release-commit>",
-  2,
-  (version, releaseRevision) => {
-    if (!/^v\d+\.\d+\.\d+$/.test(version))
-      fail(`${version} is not a stable release version such as v1.2.3.`);
-    const releaseCommit = resolveCommit(releaseRevision);
-    const read = filesAt(releaseCommit);
-    const results = [
-      report(() => checkTag(version, releaseCommit)),
-      report(() => checkGitHubRelease(version)),
-      ...profiles.map((profile) =>
-        report(() => checkInspection(version, releaseCommit, read, profile)),
-      ),
-      ...profiles.map((profile) =>
-        report(() => checkFixtureAdoption(version, read, profile)),
-      ),
-      ...checkUpdates(sourceRepository, version, releaseCommit, profiles).map(
-        (outcome) => report(() => outcome),
-      ),
-      report(() => checkDocuments(read)),
-    ];
-    if (results.includes(false))
-      fail(`${version} did not verify; see the failed checks above.`);
-    console.log(`${version} verified at ${releaseCommit}.`);
-  },
-);
+if (executedAsScript(import.meta.url))
+  await runScript(
+    "release:verify",
+    "pnpm run release:verify <version> <release-commit>",
+    2,
+    async (version, releaseRevision) => {
+      if (!/^v\d+\.\d+\.\d+$/.test(version))
+        fail(`${version} is not a stable release version such as v1.2.3.`);
+      const releaseCommit = resolveCommit(releaseRevision);
+      const read = filesAt(releaseCommit);
+      const boundary = await checkSeamsRelease(
+        version,
+        releaseCommit,
+        read,
+        async ({ path }) => {
+          const child = run("gh", ["api", path]);
+          if (child.status !== 0)
+            fail(`gh api ${path} failed: ${child.stderr.trim()}`);
+          return { data: parseJson(child.stdout, `gh api ${path}`) };
+        },
+      );
+      const results = [
+        report(() => boundary),
+        report(() => checkTag(version, releaseCommit)),
+        report(() => checkGitHubRelease(version)),
+        ...profiles.map((profile) =>
+          report(() => checkInspection(version, releaseCommit, read, profile)),
+        ),
+        ...profiles.map((profile) =>
+          report(() => checkFixtureAdoption(version, read, profile)),
+        ),
+        ...checkUpdates(sourceRepository, version, releaseCommit, profiles).map(
+          (outcome) => report(() => outcome),
+        ),
+        report(() => checkDocuments(read)),
+      ];
+      if (results.includes(false))
+        fail(`${version} did not verify; see the failed checks above.`);
+      console.log(`${version} verified at ${releaseCommit}.`);
+    },
+  );

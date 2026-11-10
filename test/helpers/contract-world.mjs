@@ -7,6 +7,8 @@
 import { connect } from "../../vendor/postern/postern.mjs";
 import { runIssueContractValidation } from "../../vendor/repo-canon/validate-issue-contract.mjs";
 
+import { resolveBoundary } from "./contract-decision.mjs";
+
 export const worldRepository = "owner/repo";
 export const validatorLogin = "github-actions[bot]";
 const page = (nodes) => ({
@@ -280,6 +282,8 @@ export function contractWorld({
               noPause,
               () => clock,
               triageResult,
+              undefined,
+              resolveBoundary,
             ),
           );
         } finally {

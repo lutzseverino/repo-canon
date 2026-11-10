@@ -29,6 +29,73 @@ import {
   contractSourceConfiguration,
 } from "../../scripts/issue-contract-store.mjs";
 
+// Pinned once by release:prepare for the first stable release shipping Seams.
+// The annotated tag and GitHub release are the immutable public identity.
+export const seamsReleaseTag = null;
+export const seamsResultFormat = "repo-canon/issue-contract-state/v3";
+const seamsSource = "/repos/lutzseverino/repo-canon";
+const utcTime = (value) =>
+  typeof value === "string" &&
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(value) &&
+  Number.isFinite(Date.parse(value));
+
+export function validSeamsBoundary(identity) {
+  return Boolean(
+    identity &&
+    /^v\d+\.\d+\.\d+$/.test(identity.tag ?? "") &&
+    /^[a-f0-9]{40}$/.test(identity.commit ?? "") &&
+    utcTime(identity.publishedAt),
+  );
+}
+
+// Uses the same authenticated GitHub transport as issue evidence, against the
+// standard's repository, never the adopter's tags or installation timestamp.
+export async function resolveSeamsBoundary(connection, tag = seamsReleaseTag) {
+  const unresolved = (reason) =>
+    new Error(
+      `Unresolved Seams release boundary ${tag ?? "(not prepared)"}: ${reason}`,
+    );
+  if (!/^v\d+\.\d+\.\d+$/.test(tag ?? ""))
+    throw unresolved(
+      "run release:prepare before publishing the shipping release.",
+    );
+  const read = async (path) => (await connection.access.request({ path })).data;
+  try {
+    const release = await read(`${seamsSource}/releases/tags/${tag}`);
+    const ref = await read(`${seamsSource}/git/ref/tags/${tag}`);
+    if (
+      release.tag_name !== tag ||
+      release.draft !== false ||
+      release.prerelease !== false ||
+      !utcTime(release.published_at) ||
+      ref.ref !== `refs/tags/${tag}` ||
+      ref.object?.type !== "tag" ||
+      !/^[a-f0-9]{40}$/.test(ref.object.sha ?? "")
+    )
+      throw new Error(
+        "a matching stable release and annotated tag are required.",
+      );
+    const annotated = await read(`${seamsSource}/git/tags/${ref.object.sha}`);
+    const identity = {
+      tag,
+      commit: annotated.object?.sha,
+      publishedAt: release.published_at,
+    };
+    if (
+      annotated.tag !== tag ||
+      annotated.sha !== ref.object.sha ||
+      annotated.object?.type !== "commit" ||
+      !validSeamsBoundary(identity)
+    )
+      throw new Error(
+        "the annotated tag does not resolve to its source commit.",
+      );
+    return identity;
+  } catch (error) {
+    throw unresolved(error instanceof Error ? error.message : String(error));
+  }
+}
+
 // How the validator identifies an issue's contract kind and the parent its
 // `Parent` section names, with the issue Markdown parsing they rest on.
 // A triaged request's category, which its Agent Brief names and its one
@@ -266,7 +333,8 @@ export function decideIssueContract(snapshot) {
   if (decision.feedback) {
     const line = feedbackStateLine(decision.feedback.body);
     const state = JSON.parse(line.slice(feedbackStatePrefix.length, -4));
-    state.format = bodyResultFormat;
+    if (state.format === seamsResultFormat) state.baseFormat = bodyResultFormat;
+    else state.format = bodyResultFormat;
     state.selection = selected.selection;
     state.observation = issueContractObservation({
       ...snapshot,
@@ -335,16 +403,53 @@ function decideCurrentContract(snapshot) {
   }
 
   const { comments } = snapshot;
-  const result = assessStructure(snapshot);
+  let result = assessStructure(snapshot);
   const previousFeedback = findFeedback(comments);
   const recorded = feedbackState(previousFeedback?.body);
   const timeline = result.usesWorkflowState ? issueTimeline(snapshot) : null;
+  let exemption = null;
+  const retainedEvidence =
+    recorded?.format === seamsResultFormat ? recorded.seamsExemption : null;
+  if (
+    (result.kind === "triaged Agent Brief" && result.contract) ||
+    retainedEvidence
+  ) {
+    if (!validSeamsBoundary(snapshot.seamsBoundary))
+      return issueDecision({
+        exitCode: 1,
+        message:
+          "Unresolved Seams release boundary; no labels or feedback changed.",
+      });
+    if (
+      recorded?.format === seamsResultFormat &&
+      !same(recorded.seamsExemption.boundary, snapshot.seamsBoundary)
+    )
+      return issueDecision({
+        exitCode: 1,
+        message:
+          "Unresolved Seams release boundary: public identity disagrees with the retained immutable boundary; no labels or feedback changed.",
+      });
+    if (result.contract && result.kind === "triaged Agent Brief") {
+      exemption = seamsExemption(snapshot, result, recorded);
+      result = assessStructure(snapshot, !exemption);
+    }
+  }
   const stateWrites = (kept = null) =>
     timeline
       ? settledStates(result.labels, timeline, kept)
       : { removeLabels: readinessLabels(result.labels), addLabels: [] };
   // What every result written by this evaluation records about it.
   const evaluation = {
+    // A held selector has no current contract. Retain historical proof without
+    // claiming a selected revision, so a label-only repair does not erase it.
+    seamsExemption: exemption ?? (!result.contract ? retainedEvidence : null),
+    ...(exemption
+      ? {
+          revision: exemption.revision,
+          source: exemption.source,
+          publishedAt: recorded.publishedAt,
+        }
+      : {}),
     kind: result.kind,
     event: evaluatedEvent(snapshot.event),
     evaluatedAt: snapshot.evaluatedAt ?? null,
@@ -465,6 +570,84 @@ function decideCurrentContract(snapshot) {
   });
 }
 
+// Eligibility is about the exact revision's historical approval, not today's
+// readiness. A trusted v3 result carries that original evidence through label
+// removals and re-reviews; the existing readiness engine still decides authority.
+function seamsExemption(snapshot, result, recorded) {
+  const contract = contractRevision(snapshot, result);
+  const boundary = snapshot.seamsBoundary;
+  if (!recorded) return null;
+  if (recorded.format === seamsResultFormat) {
+    const evidence = recorded.seamsExemption;
+    return same(evidence.boundary, boundary) &&
+      evidence.revision === contract.revision &&
+      same(evidence.source, contract.source)
+      ? evidence
+      : null;
+  }
+  if (
+    recorded.revision !== contract.revision ||
+    !same(recorded.source, contract.source)
+  )
+    return null;
+  if (
+    ![resultFormat, bodyResultFormat].includes(recorded.format) ||
+    recorded.status !== "approved" ||
+    !readyLabels.has(recorded.label) ||
+    !recorded.reviewer ||
+    !recorded.reviewEventId
+  )
+    return null;
+  const review = snapshot.issueEvents?.find(
+    (event) =>
+      String(event.id) === recorded.reviewEventId &&
+      event.event === "labeled" &&
+      event.label?.name === recorded.label &&
+      event.actor?.login === recorded.reviewer,
+  );
+  const authority =
+    recorded.reviewer === snapshot.triageResult?.author
+      ? triageAuthority(snapshot, result)
+      : reviewerAuthority(snapshot.permissions, recorded.reviewer);
+  const evidence = {
+    boundary,
+    revision: contract.revision,
+    source: contract.source,
+    evaluatedAt: recorded.evaluatedAt,
+    publishedAt: recorded.publishedAt,
+    reviewedAt: review?.created_at,
+    reviewer: recorded.reviewer,
+    reviewEventId: recorded.reviewEventId,
+    label: recorded.label,
+  };
+  return authority.authorized && validSeamsExemption(evidence)
+    ? evidence
+    : null;
+}
+
+function validSeamsExemption(evidence) {
+  if (
+    !validSeamsBoundary(evidence?.boundary) ||
+    !/^sha256:[a-f0-9]{64}$/.test(evidence.revision ?? "") ||
+    !evidence.source ||
+    !evidence.reviewer ||
+    !evidence.reviewEventId ||
+    !readyLabels.has(evidence.label)
+  )
+    return false;
+  const before = (time) =>
+    utcTime(time) &&
+    Date.parse(time) < Date.parse(evidence.boundary.publishedAt);
+  return (
+    [evidence.evaluatedAt, evidence.publishedAt, evidence.reviewedAt].every(
+      before,
+    ) &&
+    (evidence.source.editedAt === null || before(evidence.source.editedAt)) &&
+    Date.parse(evidence.publishedAt) < Date.parse(evidence.reviewedAt) &&
+    Date.parse(evidence.reviewedAt) <= Date.parse(evidence.evaluatedAt)
+  );
+}
+
 // The event this evaluation decided, as far as its facts identify it.
 function evaluatedEvent(event) {
   return {
@@ -557,7 +740,7 @@ function issueDecision({
 // workflow states is not structure: the decision settles it. A `wontfix` that
 // a later state replaces does not make the issue a `wontfix` outcome; without a
 // timeline yet, as when the adapter first reads the issue, it does.
-function assessStructure(snapshot) {
+function assessStructure(snapshot, seamsRequired = false) {
   const { issue, comments } = snapshot;
   const relationships = resolveRelationships(snapshot);
   const timeline = Array.isArray(snapshot.issueEvents)
@@ -568,6 +751,7 @@ function assessStructure(snapshot) {
     .filter((label) => isWorkflowLabel(label) && !readyLabels.has(label));
   return validate({
     issue,
+    seamsRequired,
     wontfixSettled:
       !timeline || timeline.latestApplied(states).includes("wontfix"),
     comments,
@@ -615,6 +799,7 @@ function validate({
   parent,
   relationshipErrors,
   selected,
+  seamsRequired,
 }) {
   const labels = new Set((issue.labels ?? []).map(labelName));
   const body = issue.body ?? "";
@@ -643,7 +828,7 @@ function validate({
   }
   if (selected?.type === "issue-body") {
     validateTriagedLabels(labels, null, errors);
-    validateAgentBrief(body, labels, errors);
+    validateAgentBrief(body, labels, errors, seamsRequired);
     if (!originalMatches(body, selected.record?.intake))
       errors.push(
         "Keep the authenticated Original request verbatim exactly once at the end of the body.",
@@ -673,7 +858,7 @@ function validate({
   }
   if (brief && hasTriageCategory) {
     validateTriagedLabels(labels, null, errors);
-    validateAgentBrief(brief.body, labels, errors);
+    validateAgentBrief(brief.body, labels, errors, seamsRequired);
     return outcome("triaged Agent Brief", errors, labels, true, {
       type: "comment",
       comment: brief,
@@ -716,7 +901,7 @@ function validate({
 
   if (brief) {
     validateTriagedLabels(labels, null, errors);
-    validateAgentBrief(brief.body, labels, errors);
+    validateAgentBrief(brief.body, labels, errors, seamsRequired);
     return outcome("triaged Agent Brief", errors, labels, true, {
       type: "comment",
       comment: brief,
@@ -937,7 +1122,7 @@ function latestAgentBrief(comments) {
   return latest;
 }
 
-function validateAgentBrief(body, labels, errors) {
+function validateAgentBrief(body, labels, errors, seamsRequired) {
   body = normalizeMarkdown(body);
   const heading = agentBriefHeading(body);
   const preamble = agentBriefPreamble(body.slice(0, heading.index));
@@ -959,6 +1144,7 @@ function validateAgentBrief(body, labels, errors) {
     "Key interfaces",
     "Acceptance criteria",
     "Out of scope",
+    ...(seamsRequired ? ["Seams"] : []),
   ]) {
     if (
       !fields.has(normalize(name)) ||
@@ -1499,6 +1685,24 @@ function feedbackState(body) {
     return null;
   }
   if (!state || typeof state !== "object" || Array.isArray(state)) return null;
+  if (state.format === seamsResultFormat) {
+    if (
+      !validSeamsExemption(state.seamsExemption) ||
+      !(
+        (state.revision === null &&
+          state.source === null &&
+          ["needs-attention", "no-contract"].includes(state.status)) ||
+        (state.seamsExemption.revision === state.revision &&
+          same(state.seamsExemption.source, state.source))
+      )
+    )
+      return null;
+    if (state.baseFormat === bodyResultFormat)
+      return validBodyResult(state) ? state : null;
+    return state.baseFormat === resultFormat && validResultCore(state)
+      ? state
+      : null;
+  }
   if (Object.hasOwn(state, "format"))
     return state.format === resultFormat ||
       (state.format === bodyResultFormat && validBodyResult(state))
@@ -1867,9 +2071,11 @@ function resultLine({
   publishedAt = null,
   rejectionReason = null,
   rejectedCreationLabel = null,
+  seamsExemption = null,
 }) {
   const state = JSON.stringify({
-    format: resultFormat,
+    format: seamsExemption ? seamsResultFormat : resultFormat,
+    ...(seamsExemption ? { baseFormat: resultFormat, seamsExemption } : {}),
     status,
     kind,
     revision,
@@ -2009,6 +2215,7 @@ export async function runIssueContractValidation(
   now = Date.now,
   triageResult = factoryTriageResult(),
   sourceConfiguration = contractSourceConfiguration(),
+  resolveBoundary = resolveSeamsBoundary,
 ) {
   const tracker = connection.issueTracker;
   if (!event) {
@@ -2066,6 +2273,27 @@ export async function runIssueContractValidation(
     issueNumber,
     sourceConfiguration,
   );
+  if (
+    (agentBriefHeading(issue.body ?? "") &&
+      issue.labels.some((label) => categoryLabels.has(labelName(label)))) ||
+    assessStructure(snapshot).kind === "triaged Agent Brief" ||
+    [
+      findFeedback(snapshot.comments),
+      facts.record?.notice,
+      facts.receipt?.issues?.find(
+        (entry) => entry.issue === snapshot.issue.node_id,
+      )?.legacy?.notice,
+    ].some(
+      (notice) => feedbackState(notice?.body)?.format === seamsResultFormat,
+    )
+  ) {
+    try {
+      snapshot.seamsBoundary = await resolveBoundary(connection);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
+      return 1;
+    }
+  }
   if (facts.mode === "body") {
     snapshot.contractSources = facts;
     snapshot.sourceEdits = await sourceEditIdentities(connection, [
@@ -2306,7 +2534,7 @@ export async function readIssueContractObservation(
   return issueContractObservation({ issue, comments, events, sourceEdits });
 }
 
-function validBodyResult(state) {
+function validResultCore(state) {
   const nullableString = (value) => value === null || typeof value === "string";
   const hash = (value) => /^sha256:[a-f0-9]{64}$/.test(value ?? "");
   const source = state.source;
@@ -2355,6 +2583,14 @@ function validBodyResult(state) {
       !state.reviewEventId)
   )
     return false;
+  return true;
+}
+
+function validBodyResult(state) {
+  if (!validResultCore(state)) return false;
+  const source = state.source;
+  const nullableString = (value) => value === null || typeof value === "string";
+  const hash = (value) => /^sha256:[a-f0-9]{64}$/.test(value ?? "");
   const selection = state.selection;
   const proof = state.factoryTriage;
   if (

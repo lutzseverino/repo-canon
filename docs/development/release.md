@@ -145,6 +145,31 @@ release decision or publication claim for an existing defect.
 
 ## Prepare the release pull request
 
+Choose the stable release tag and prepare it in the release PR:
+
+```sh
+pnpm run release:prepare "$version"
+```
+
+This pins the first shipping Seams tag in the standard-owned distributed
+validator; later preparations retain that original tag. Include this source edit
+in the reviewed release inputs. `release:check-merge` refuses an unprepared
+boundary, so it cannot pass the publication sequence below with a null pin.
+There is no separate release receipt or adopter-selected cutover configuration.
+The validator resolves the pinned annotated tag's source commit and the ordinary
+GitHub release's first `published_at` at evaluation. Before publication or on a
+failed/mismatched resolution it leaves labels and feedback untouched with an
+unresolved-boundary diagnostic. Never move or republish that boundary.
+
+`release:verify` resolves the same public identity, checks the first tag against
+the release commit (or its ancestry for later releases), and prints its exact
+tag, full commit and first-publication UTC timestamp. Retain that output in the
+verified release notes with the normal verification evidence. Before adoption,
+prepare downstream readers for the [v3 exemption result](issue-contract-validation.md#exemption-result-v3).
+The first shipping release's migration notes explain that exact pre-cutover
+approved revisions stay eligible without bulk renewal, while their next actual
+revision requires Seams; current readiness and authorization rules still apply.
+
 Each release is one pull request into `main`, and nothing is committed for the
 release after it merges. It carries the changes the release itself needs, such
 as documents that name a moved required CLI version, and it closes the issue

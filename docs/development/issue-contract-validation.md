@@ -113,6 +113,76 @@ Triaged bug and feature requests must carry exactly one category label
 tickets do not need intake categories or an Agent Brief. Wayfinder planning
 labels remain separate from intake labels.
 
+## Seams release boundary
+
+New Agent Brief revisions require non-placeholder **Seams** after Out of scope.
+The writer and independent reviewer use `codebase-design`'s
+[Ownership check](../../.agents/skills/codebase-design/SKILL.md#ownership-check).
+`No trigger` passes structure; the validator makes no semantic ownership judgment.
+Native specifications and implementation tickets keep their existing shapes.
+
+`release:prepare <version>` pins `seamsReleaseTag` once in the distributed
+validator for the first stable shipping release. Later releases retain that tag.
+At evaluation, `resolveSeamsBoundary(connection)` uses the authenticated GitHub
+transport against Repo Canon, reading the pinned tag's annotated object/commit
+and its ordinary release's `published_at`. The resulting
+`{tag,commit,publishedAt}` is the standard-owned immutable identity. No new
+receipt, adopter configuration, clock, issue-age or install-date inference is used.
+A missing/unprepared/mismatched/lightweight tag, missing/draft/prerelease release,
+or failed read reports an unresolved Seams boundary and writes no labels or
+feedback. The [release procedure](release.md) gates publication and verifies and
+records the resolved identity. Publication and tags remain immutable.
+
+The synchronous `decideIssueContract` consumes that resolved identity as
+`snapshot.seamsBoundary`; offline callers supply the authenticated fixed facts,
+as the fixtures do. A Brief without a resolved identity holds without mutation.
+The adapter resolves it before any source-ledger or readiness mutation. Its
+optional final resolver argument is a dependency-injection seam, not a repository
+policy or environment setting; the neutral CLI and trusted trigger use the same
+resolver and accept an injected resolver in their programmatic options.
+
+Before enforcing Seams, classification uses the body migration's selected
+source and unchanged revision serialization. Only a trusted versioned validator
+approval of that exact revision/source can establish an exemption. Its evaluation,
+first revision publication and actual authorized label-review event must all
+strictly predate the cutover; equality is new work. The publication precedes the
+review, the review precedes or equals its evaluation, and any source edit time
+also predates cutover. Missing/unreadable/unrelated or awaiting-review evidence
+never qualifies. Pre-release age alone never qualifies an unapproved Brief.
+
+### Exemption result v3
+
+An exempt revision publishes `format: "repo-canon/issue-contract-state/v3"`,
+with every field and meaning of its `baseFormat` (`v1` prepared or `v2` body),
+plus `baseFormat` and `seamsExemption`. The
+[machine schema](../../test/fixtures/issue-contract-v3.schema.json) describes the
+shape; [offline migration fixtures](../../test/issue-contract-seams.test.mjs)
+exercise both bases. Nonexempt results retain their existing v1/v2 format.
+Body-mode selection, proof and observation remain authoritative in v3; this
+extension introduces no source selector or activation mode.
+
+`seamsExemption` records `{boundary,revision,source,evaluatedAt,publishedAt,
+reviewedAt,reviewer,reviewEventId,label}`. `boundary` is the resolved release
+identity. The remaining values identify the original exact pre-cutover approval,
+its publication and its authorized review. A held source selection can retain
+this historical proof while its top-level revision/source are null; it grants
+no eligibility until the selector again proves that exact unchanged revision.
+They persist unchanged on repeated
+evaluations, readiness removal, superseding states and fresh review of that same
+revision. The top-level current approval fields keep their existing meanings:
+exemption is never authorization. A changed revision/source loses the exemption
+and requires Seams. Recovered body-mode ledger notices preserve it through
+replaceable feedback deletion by the existing storage mechanism.
+
+Readers explicitly accept v3, validate its base and exemption, and continue
+checking the current ready event and v2 observation when its base is v2. Unknown
+formats, malformed evidence and revision/source mismatches refuse eligibility.
+Update downstream result readers before adopting the shipping release; this is
+separate from #919's body-mode activation. No bulk brief edits or readiness
+renewal are needed for unchanged eligible approvals. Readiness removal does not
+restore a label: fresh authorized review follows the existing notice/event rules.
+Add Seams when a Brief is actually revised, then obtain its new notice and review.
+
 ## Published result
 
 The validator's result on an issue is its feedback comment: the latest comment

@@ -17,7 +17,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { decideIssueContract } from "../vendor/repo-canon/validate-issue-contract.mjs";
+import { decideIssueContract } from "./helpers/contract-decision.mjs";
 import { repository as contractRepository } from "./helpers/issue-contracts.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));

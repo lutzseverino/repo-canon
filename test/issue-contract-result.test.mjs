@@ -5,10 +5,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  decideIssueContract,
   issueContractResult,
   resultFormat,
 } from "../vendor/repo-canon/validate-issue-contract.mjs";
+import { decideIssueContract } from "./helpers/contract-decision.mjs";
 import { main as ready } from "../.agents/skills/triage/ready.mjs";
 import { contractWorld } from "./helpers/contract-world.mjs";
 import {

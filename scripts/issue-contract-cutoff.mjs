@@ -68,7 +68,8 @@ export async function main(
       result = {
         state,
         current:
-          state?.format === "repo-canon/issue-contract-state/v2"
+          state?.format === "repo-canon/issue-contract-state/v2" ||
+          state?.baseFormat === "repo-canon/issue-contract-state/v2"
             ? state.observation ===
               (await readIssueContractObservation(
                 connection,

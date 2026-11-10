@@ -4,10 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { githubValidation } from "../.github/scripts/validate.mjs";
+import { runIssueContractValidation } from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   decideIssueContract,
-  runIssueContractValidation,
-} from "../vendor/repo-canon/validate-issue-contract.mjs";
+  resolveBoundary,
+} from "./helpers/contract-decision.mjs";
 import {
   connect,
   PlatformError,
@@ -230,6 +231,7 @@ async function exercise(
         code = await command([inputPath], {
           credential: "fixture-credential",
           fetch,
+          resolveBoundary,
         });
       } else {
         code = await runIssueContractValidation(
@@ -243,6 +245,8 @@ async function exercise(
           pause,
           undefined,
           triageResult,
+          undefined,
+          resolveBoundary,
         );
       }
     } else {
@@ -258,7 +262,7 @@ async function exercise(
           GITHUB_REPOSITORY: repository,
           GITHUB_TOKEN: "fixture-credential",
         },
-        { fetch },
+        { fetch, resolveBoundary },
       );
     }
   } catch (caught) {
@@ -521,8 +525,16 @@ test("unchanged direct and Agent Brief contracts keep pre-migration golden revis
     comments: [],
     parent: null,
     blockedBy: [],
-    issueEvents: [],
-    permissions: {},
+    issueEvents: [
+      {
+        id: 101,
+        event: "labeled",
+        actor: { login: "maintainer" },
+        label: { name: "state:ready" },
+        created_at: "2026-10-01T01:02:00Z",
+      },
+    ],
+    permissions: { maintainer: { role: "admin" } },
     bodyRevision: { id: "ISSUE_42", lastEditedAt: null },
   });
   assert.match(
@@ -542,14 +554,44 @@ test("unchanged direct and Agent Brief contracts keep pre-migration golden revis
       {
         id: 17,
         node_id: "COMMENT_17",
-        body: completeAgentBrief,
+        body: completeAgentBrief.replace("\n\n**Seams:** No trigger", ""),
         updated_at: "2026-10-01T01:00:00Z",
+      },
+      {
+        id: 18,
+        user: { login: "github-actions[bot]" },
+        body: `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${JSON.stringify(
+          {
+            format: "repo-canon/issue-contract-state/v1",
+            status: "approved",
+            revision:
+              "sha256:a3d73c28a7802d7c97278ec699b4f5a22760b3d0bb01f97354403e59dfa79d7c",
+            source: {
+              type: "comment",
+              id: "17",
+              editedAt: "2026-10-01T01:00:00Z",
+            },
+            reviewer: "maintainer",
+            label: "state:ready",
+            reviewEventId: "101",
+            evaluatedAt: "2026-10-01T01:03:00Z",
+            publishedAt: "2026-10-01T01:01:00Z",
+          },
+        )} -->`,
       },
     ],
     parent: null,
     blockedBy: [],
-    issueEvents: [],
-    permissions: {},
+    issueEvents: [
+      {
+        id: 101,
+        event: "labeled",
+        actor: { login: "maintainer" },
+        label: { name: "state:ready" },
+        created_at: "2026-10-01T01:02:00Z",
+      },
+    ],
+    permissions: { maintainer: { role: "admin" } },
   });
   assert.match(
     brief.feedback.body,

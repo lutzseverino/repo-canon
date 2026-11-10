@@ -1,3 +1,4 @@
+import { resolveBoundary } from "./helpers/contract-decision.mjs";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
@@ -401,6 +402,9 @@ test("active adapter initializes new native tickets with incidental Brief headin
     () => Date.parse("2026-11-09T01:00:00Z"),
     null,
     { mode: "body", cutoff: "b".repeat(40) },
+    async () => {
+      throw new Error("native contracts must not resolve Seams");
+    },
   );
   const state = issueContractResult(comments).state;
   assert.equal(state.kind, "implementation ticket");
@@ -515,6 +519,7 @@ test("active adapter durably records migration before feedback and cannot resurr
     () => Date.parse("2026-11-09T01:00:00Z"),
     null,
     { mode: "body", cutoff: s.contractSources.cutoff },
+    resolveBoundary,
   );
   const state = issueContractResult(comments).state;
   assert.equal(state.status, "awaiting-review");
@@ -538,6 +543,7 @@ test("active adapter durably records migration before feedback and cannot resurr
     () => Date.parse("2026-11-09T01:00:01Z"),
     null,
     { mode: "body", cutoff: s.contractSources.cutoff },
+    resolveBoundary,
   );
   assert.equal(issueContractResult(comments).state.selection.state, "held");
   assert.equal(files.get("issues/42.json").value.migrated, true);
@@ -728,6 +734,7 @@ test("a missing inventoried record cannot reset migration history or restore leg
     () => Date.parse("2026-11-09T01:01:00Z"),
     null,
     { mode: "body", cutoff: s.contractSources.cutoff },
+    resolveBoundary,
   );
   const result = issueContractResult(comments).state;
   assert.equal(result.selection.state, "held");

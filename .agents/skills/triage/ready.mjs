@@ -77,7 +77,8 @@ async function snapshot(connection, number) {
   // The validator's own reader interprets its published result.
   const result = issueContractResult(comments);
   const current =
-    result.state?.format === "repo-canon/issue-contract-state/v2"
+    (result.state?.format === "repo-canon/issue-contract-state/v2" ||
+     result.state?.baseFormat === "repo-canon/issue-contract-state/v2")
       ? result.state.observation ===
         (await readIssueContractObservation(
           connection,

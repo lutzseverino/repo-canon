@@ -5,12 +5,15 @@
 
 import {
   fail,
+  filesAt,
   git,
   resolveCommit,
   runScript,
   sourceInputsAt,
   union,
 } from "./support.mjs";
+
+import { releaseSeamsTag } from "./prepare.mjs";
 
 await runScript(
   "release:check-merge",
@@ -19,6 +22,10 @@ await runScript(
   (reviewedRevision, mergeRevision) => {
     const reviewedHead = resolveCommit(reviewedRevision);
     const mergeCommit = resolveCommit(mergeRevision);
+    if (releaseSeamsTag(filesAt(mergeCommit)) === null)
+      fail(
+        "Unresolved Seams release boundary; run release:prepare in the release PR before publishing.",
+      );
     const inputs = union(
       sourceInputsAt(reviewedHead),
       sourceInputsAt(mergeCommit),

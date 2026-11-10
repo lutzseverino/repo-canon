@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  decideIssueContract,
-  issueContractResult,
-} from "../vendor/repo-canon/validate-issue-contract.mjs";
+import { issueContractResult } from "../vendor/repo-canon/validate-issue-contract.mjs";
+import { decideIssueContract } from "./helpers/contract-decision.mjs";
 import { cutoffFormat } from "../scripts/issue-contract-sources.mjs";
 import {
   completeAgentBrief,
