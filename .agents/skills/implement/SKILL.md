@@ -10,6 +10,8 @@ validation requirements. Implement the work described in the spec or tickets.
 When the input is review findings on an existing pull request, read the
 findings and continue on that pull request's branch.
 
+Apply `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check) to the change, including its contract-disagreement route.
+
 Use /tdd where possible, at pre-agreed seams.
 
 Run typechecking regularly, single test files regularly, and the repository's
@@ -51,3 +53,6 @@ Paths are relative to the repository root.
 - `.factory/config.json`: the configured review run under `runKinds.review`.
   When it is missing in a factory repository, no review run is configured;
   follow the installed factory rules' delivery route.
+- The `codebase-design` skill: the check applied above. When missing, report
+  the gap through the contribution guide's Findings route, or in the handoff
+  when the guide is missing; retain the recorded contract.

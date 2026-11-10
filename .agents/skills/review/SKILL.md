@@ -41,7 +41,9 @@ refusal; otherwise fix the cause and run it again.
    head, the round number, the contract and the issue.
 2. **Review.** Check out the head in a checkout you own and run `code-review`
    with the merge-base of the PR's base branch as the fixed point and the
-   contract as the spec. Give its Spec axis this task context: also read the
+   contract as the spec.
+   Apply `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check) through `code-review`'s Standards axis, judging against the recorded contract.
+   Give its Spec axis this task context: also read the
    contract against the issue, and report where the contract contradicts,
    drops or invents what the issue and its recorded decisions ask, or leaves it
    ambiguous. A PR without an issue has no such check. Verify every finding
@@ -108,3 +110,6 @@ Paths are relative to the repository root.
   start: stop and report that this skill needs it.
 - The `implement` skill, which takes a hand-back on the same PR. When it is
   missing, report the hand-back with the review's link and stop.
+- The `codebase-design` skill: the check used through Standards above. When
+  missing, report the gap through the contribution guide's Findings route, or
+  in the handoff without the guide; retain the recorded contract as the baseline.

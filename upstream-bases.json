@@ -37,7 +37,7 @@
     "factory": null,
     "grill-with-docs": {
       "path": "skills/engineering/grill-with-docs",
-      "edits": "It composes grilling and domain-modeling with to-spec then to-tickets, publishing one cross-repository specification and proposed direct tickets for independent exact-revision review. It reuses dated decisions, applies the contribution guide’s inference boundary, reports native-link failures, and handles amendment grills through specification revisions and delta tickets, with Reads fallbacks."
+      "edits": "It composes grilling and domain-modeling with to-spec then to-tickets, publishing one cross-repository specification and proposed direct tickets for independent exact-revision review. It reuses dated decisions, applies the contribution guide’s inference boundary, reports native-link failures, and handles amendment grills through specification revisions and delta tickets, with Reads fallbacks. It invokes codebase-design and applies its single Ownership check to proposed designs during the interview."
     },
     "grilling": {
       "path": "skills/productivity/grilling",
@@ -45,7 +45,7 @@
     },
     "implement": {
       "path": "skills/engineering/implement",
-      "edits": "`SKILL.md` drops `disable-model-invocation` and `agents/openai.yaml` enables `policy.allow_implicit_invocation`. It reads branch and validation requirements from the contribution guide instead of repeating its branch rule. It replaces self-review and direct delivery with validated draft pull request creation using `pr`, then stops for a separate `review` agent. Given review findings, it pushes fixes to the same draft pull request and stops again. A factory without a configured review run retains delivery through `babysit` under its installed rules, including applicable internal reviews, merge conditions and worker handoffs. Both delivery routes cite the contribution guide's Worker handoff condition before reporting success and carry its head, trusted required-check authority, check-location, command and outcome record. Without a contribution guide, it uses a dedicated branch and available checks before opening the draft."
+      "edits": "`SKILL.md` drops `disable-model-invocation` and `agents/openai.yaml` enables `policy.allow_implicit_invocation`. It reads branch and validation requirements from the contribution guide instead of repeating its branch rule. It replaces self-review and direct delivery with validated draft pull request creation using `pr`, then stops for a separate `review` agent. Given review findings, it pushes fixes to the same draft pull request and stops again. A factory without a configured review run retains delivery through `babysit` under its installed rules, including applicable internal reviews, merge conditions and worker handoffs. Both delivery routes cite the contribution guide's Worker handoff condition before reporting success and carry its head, trusted required-check authority, check-location, command and outcome record. Without a contribution guide, it uses a dedicated branch and available checks before opening the draft. It applies codebase-design’s single Ownership check to its change, including that section’s contract-disagreement route, with a missing-skill fallback in Reads."
     },
     "improve-codebase-architecture": {
       "path": "skills/engineering/improve-codebase-architecture",
