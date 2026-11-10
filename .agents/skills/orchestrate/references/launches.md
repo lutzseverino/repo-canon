@@ -14,27 +14,45 @@ verify each worker's contract is self-contained before launch.
 
 Record each launch as [templates](templates.md#nowmd) says **before** starting it,
 including report path and linked Item; on resumption use a fresh report or clear
-the previous final marker first. Every template below carries the shared
-[Report-back](../SKILL.md#report-back) duty: complete the designated report with
-final line `status: done`, including owner-step turns, and preserve its other
-row-marking, owner-question and commit/push obligations.
+the previous final marker first. All launches hand back solely through
+[Report-back](../SKILL.md#report-back), preserving owner-question duties. Triage
+and grill runs add open decisions to `inbox.md`; all workbench writers commit
+and push as [Workbench](../SKILL.md#workbench) says.
 
 Run at most three launches you started at once, or the host cap in `index.md`.
 Count every Running-launch row on this host. For heavy reads, delegate through
 any covering installed skill or read a bounded tail; otherwise pass task context.
 
+## Owner steps
+
+Include this duty in every launch: before entering an operation that would make
+relay late, expose prerequisite owner steps in the designated report, with the
+preceding operation's timing/evidence and actual latest start time when one
+exists. End the owner-wait turn with the complete report and `status: done`.
+Completion-only reporting after the opportunity passes fails the relay.
+
+Consume that report and relay all owner-run steps in one owner-facing message
+before the preceding time-sensitive operation ends: deadline first (actual
+latest start when supplied), then complete copy-paste commands and needed
+steps/output. Relay commands verbatim, preserving quoting and operational
+content; never send the owner to the worker's thread. Record report availability,
+relay time and supplied deadline/preceding-operation evidence in `log.md`.
+Untimed steps get no invented deadline, lead time or timeout.
+
+Commands start on the owner's workstation and name the target host under the
+repository's convention. Supply that convention to the worker; if absent, ask
+once through the existing owner-question route and record the answer through a
+finding. Seam (deferred): a generic workstation-command rule; one repository
+consumer; revisit on another consumer under the Ownership check. Return the
+owner's output to the same worker session, with a fresh current-turn report as
+[Starting a launch](#starting-a-launch) requires.
+
 ## Triage run
 
 Open each triage run with `/triage`, followed by the issue, evidence, recorded
 decisions, scope, repository checkout, plan directory and report-back
-destination. Its task context includes these workbench delivery obligations:
-
-- write its result to the plan directory, citing the brief or findings it
-  posted by link;
-- add each decision it leaves open for the owner to `inbox.md`;
-- mark its row `triaged <file>` in `plan.md`;
-- commit and push its writes, as [Workbench](../SKILL.md#workbench) says;
-- report back, as [Report-back](../SKILL.md#report-back) says.
+destination. It writes its result in the plan directory with links to posted
+brief/findings and marks its `plan.md` row `triaged <file>`.
 
 ## Grill
 
@@ -49,14 +67,9 @@ Record the session's reference in the row's State. Launch it with
 the issue links, evidence, recorded decisions, unresolved questions, scope,
 plan directory and report-back destination. Supply the owned branch and
 checkout for domain-document edits and one pull request destination per
-affected repository, as the contribution guide's Triage section requires. Its
-task context also includes these workbench obligations:
-
-- write the owner's decisions and the draft briefs to the plan directory;
-- add each decision it leaves open for the owner to `inbox.md`;
-- mark its row `grilled <file>` in `plan.md`;
-- commit and push its writes, as [Workbench](../SKILL.md#workbench) says;
-- report back, as [Report-back](../SKILL.md#report-back) says.
+affected repository, as the contribution guide's Triage section requires. It
+writes the owner's decisions and draft briefs in the plan directory and marks
+its `plan.md` row `grilled <file>`.
 
 For an issue routed from `state:grill`, have the owner in the grill supply the
 brief's readiness under the repository's readiness rules. The factory then
@@ -68,9 +81,8 @@ To take over an owner's grill or prototype, continue in that session.
 ## Worker
 
 Launch a ticket worker with `/implement`, followed by its issue, scope,
-repository checkout and designated report-back destination. Write the complete
-turn report with final line `status: done`, including owner-step stops. Workers deliver as the
-contribution guide's Pull requests section says.
+repository checkout and designated report-back destination. Workers deliver
+under the contribution guide's Pull requests section.
 When applicable installed rules assign a worker's merge to you, read its
 authoritative implementation contract and PR handoff, then resume `babysit`,
 including when resuming a plan. After an owner question is resolved, follow
@@ -106,38 +118,26 @@ or new file). Repository delivery, review and merge rules still apply.
 
 ## Retro
 
-Start a separate session reading primary sources: plan files and cited issues,
-PRs, comments and run records, never your context or its summary. Invoke any
-covering skill under `AGENTS.md`. Supply the plan directory, checkouts, previous
-`retro.md` (the latest Closed plan in `index.md`) and designated report, requiring:
+Start a separate session reading primary plan files and cited issues, PRs,
+comments and run records, never your context or summary. Invoke any covering
+skill under `AGENTS.md`; supply plan directory, checkouts, previous `retro.md`
+(from the latest Closed plan in `index.md`) and designated report. It writes:
 
-- write `retro.md` in the plan directory, with the outcome against the plan's
-  Done means, with evidence; where the time went, attributing each wait to
-  what it waited on, such as the owner, a review, a check, a blocker or a
-  launch; and its lessons, ranked by cost;
-- compare each lesson with the previous plan's retro and the open issues
-  before filing it;
-- route each lesson as [Close](close.md#route-each-lesson) says, recording its
-  route and link in `retro.md`, and record each issue it files or reopens in
-  `log.md` with its creation evidence;
-- mark the retro done on the Close reviews line in `plan.md`;
-- commit and push its writes, as [Workbench](../SKILL.md#workbench) says;
-- report back, as [Report-back](../SKILL.md#report-back) says.
+- `retro.md`: evidenced outcome against Done means, time spent with each wait
+  attributed (owner, review, check, blocker, launch), and lessons ranked by cost;
+- each lesson's route/link in `retro.md` under [Close](close.md#route-each-lesson), comparing
+  with the previous retro and open issues before filing; filed/reopened issues
+  in `log.md` with creation evidence;
+- its done mark on `plan.md`'s Close reviews line.
 
 ## Architecture review
 
 Invoke `/improve-codebase-architecture` with checkout, changes, plan directory
-and designated report. Supply an owned checkout/branch and repository PR
-destination for domain edits, as for a grill. It asks owner questions in its own
-session. Its duties:
-
-- route each of its findings as [Run](../SKILL.md#lifecycle) says: a Finding
-  becomes an issue in that repository, and any other idea a wish naming it;
-- write its result to the plan directory, citing those issues and wishes by
-  link;
-- mark its review done on the Close reviews line in `plan.md`;
-- commit and push its writes, as [Workbench](../SKILL.md#workbench) says;
-- report back, as [Report-back](../SKILL.md#report-back) says.
+and designated report; supply an owned checkout/branch and repository PR
+destination for domain edits, as for a grill. It asks owner questions in its
+own session, routes Findings to repository issues and other ideas to wishes
+naming the repository under [Run](../SKILL.md#lifecycle), writes its result with
+those links in the plan directory, and marks its Close review done in `plan.md`.
 
 ## Handover
 

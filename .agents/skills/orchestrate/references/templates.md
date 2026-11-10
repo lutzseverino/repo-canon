@@ -194,8 +194,8 @@ the finding's tracker record or reporting links.
 
 ## `incoming/`
 
-Any session, such as a launch or one of the owner's own, can leave you a
-message. Each message is one Markdown file directly in `incoming/`, named
+Other sessions leave messages here; launched workers use their designated
+reports. Each message is one Markdown file directly in `incoming/`, named
 `<UTC>-<sender>.md`: the time it was written, from
 `date -u +%Y%m%dT%H%M%SZ`, and a short name for the sending session in
 lowercase letters, digits and hyphens. Its body is the message, citing its
