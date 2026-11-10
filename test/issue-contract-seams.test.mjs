@@ -518,6 +518,53 @@ test("superseding states keep exemption evidence without preserving readiness", 
   assert.deepEqual(stateOf(d).seamsExemption, evidence);
 });
 
+for (const mode of ["prepared", "comment"]) {
+  test(`${mode}: first-cutover wontfix retains proof for a later workflow state`, () => {
+    const s = historical(mode);
+    s.issue.labels = ["type:enhancement", "wontfix"];
+    s.issueEvents.push(
+      {
+        id: 102,
+        event: "unlabeled",
+        label: { name: "state:ready" },
+        actor: { login: "maintainer" },
+        created_at: "2026-11-11T00:00:00Z",
+      },
+      {
+        id: 103,
+        event: "labeled",
+        label: { name: "wontfix" },
+        actor: { login: "maintainer" },
+        created_at: "2026-11-11T00:00:01Z",
+      },
+    );
+    const settled = decide(s);
+    assert.equal(stateOf(settled).status, "no-contract");
+    assert.equal(
+      stateOf(settled).seamsExemption?.evaluatedAt,
+      "2026-11-09T01:00:20Z",
+    );
+    rewrite(s, settled);
+    s.issue.labels.push("state:reporter");
+    s.issueEvents.push({
+      id: 104,
+      event: "labeled",
+      label: { name: "state:reporter" },
+      actor: { login: "maintainer" },
+      created_at: "2026-11-11T00:00:02Z",
+    });
+    const resumed = decide(s);
+    assert.equal(resumed.exitCode, 0);
+    assert.equal(stateOf(resumed).status, "awaiting-review");
+    assert.equal(
+      stateOf(resumed).seamsExemption?.evaluatedAt,
+      "2026-11-09T01:00:20Z",
+    );
+    assert.deepEqual(resumed.removeLabels, ["wontfix"]);
+    assert.ok(!resumed.addLabels.includes("state:ready"));
+  });
+}
+
 test("missing or changed release identity holds without modifying approval or labels", () => {
   const s = historical("prepared");
   for (const seamsBoundary of [null, undefined, { tag: "v99.0.0" }]) {

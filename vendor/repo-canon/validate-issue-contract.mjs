@@ -410,7 +410,11 @@ function decideCurrentContract(snapshot) {
   let exemption = null;
   let retainedEvidence =
     recorded?.format === seamsResultFormat ? recorded.seamsExemption : null;
-  if (result.kind === "triaged Agent Brief" || retainedEvidence) {
+  if (
+    result.kind === "triaged Agent Brief" ||
+    (result.kind === "triaged wontfix request" && latestAgentBrief(comments)) ||
+    retainedEvidence
+  ) {
     if (!validSeamsBoundary(snapshot.seamsBoundary))
       return issueDecision({
         exitCode: 1,
@@ -2286,17 +2290,23 @@ export async function runIssueContractValidation(
     issueNumber,
     sourceConfiguration,
   );
+  const legacy = facts.receipt?.issues?.find(
+    (entry) => entry.issue === snapshot.issue.node_id,
+  )?.legacy;
+  // These source histories may be held until category/source repair, even
+  // when the first structural probe cannot select their Agent Brief yet.
   if (
     ((agentBriefHeading(issue.body ?? "") ||
       latestAgentBrief(snapshot.comments)) &&
       issue.labels.some((label) => categoryLabels.has(labelName(label)))) ||
     assessStructure(snapshot).kind === "triaged Agent Brief" ||
+    facts.record?.migrated ||
+    facts.record?.retired ||
+    legacy ||
     [
       findFeedback(snapshot.comments),
       facts.record?.notice,
-      facts.receipt?.issues?.find(
-        (entry) => entry.issue === snapshot.issue.node_id,
-      )?.legacy?.notice,
+      legacy?.notice,
     ].some(
       (notice) => feedbackState(notice?.body)?.format === seamsResultFormat,
     )
