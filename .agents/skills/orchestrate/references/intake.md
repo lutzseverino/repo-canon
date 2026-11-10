@@ -45,11 +45,11 @@ is never counted as an intake gap. Other uncovered stages retain gap accounting.
 
 Every retro, including a session retro outside plan closure, routes lessons
 under [Close](close.md#route-each-lesson). Intent-bound triage outcomes join the
-grill queue. For architecture candidates, pick under the owner's delegation
-(2026-11-05: “the orchestrator decides architecture cleanup changes, weighting
-simplicity and less code”), and file each picked candidate for triage. Intent
-beyond that delegation goes through triage to `state:grill` and the queue;
-unpicked candidates stay in the review record.
+grill queue. For architecture candidates, read the current owner's recorded
+delegation, pick within it and file each picked candidate for triage. Without
+that delegation, or for intent beyond it, use triage's normal intent-question
+route to `state:grill` and the queue. Unpicked candidates stay in the review
+record.
 
 Seam (deferred): intake as a reusable skill; consumers: 1 (orchestrate); extract
 at a second consumer under the Ownership check.
