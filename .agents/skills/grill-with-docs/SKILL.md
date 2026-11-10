@@ -9,33 +9,27 @@ A prompt or brief naming this skill is its invocation.
 Read the contribution guide's Triage rules for publication, inference and
 amendments. Invoke `grilling` and `domain-modeling` through the session's
 supported skill mechanism, with the request, recorded decisions and dated
-sources as context. Reuse settled answers; ask only the owner questions the
-guide permits, and list qualifying inferences under **Inferred, listed for the
-owner**, with dated sources and owner veto. Gather missing facts yourself.
+sources as context. Apply the guide's Triage inference and question-routing
+rules during the interview, and gather missing facts yourself.
 
-Once the owner's required answers are recorded, invoke `to-spec`, then
-`to-tickets`, retaining the applicable plan-approval gate. Publish one
-specification in the repository containing most of the work and its proposed
-tickets in their responsible repositories, retaining relied-on dated decisions and quoted words in every
-contract. Return the issue links, actual native parent/blocker relationships,
-inferences and any open factual verification to the orchestrating agent for
-its split decision and independent exact-revision review. Apply no readiness
-to contracts you wrote. A native-link failure stops publication progression
-with the exact missing edge and platform failure.
+Once the interview and the guide's applicable owner gates are complete, invoke
+`to-spec`, then `to-tickets`. Pass the dated decisions and quoted words to both
+publication steps. Return the issue links, actual native parent/blocker
+relationships, inferences and open factual verification to the orchestrating
+agent for the guide's split decision and independent acceptance. At each native
+write, inspect the response; on failure, stop and report the exact missing edge
+and platform failure under the guide's publication rule.
 
-For an amendment, use the same grill boundary, record a specification revision
-and invoke `to-tickets` on the delta. Update affected contracts and native
-links, returning edited accepted contracts for a new notice, independent review
-and readiness. Use the guide's exemption for findings, qualifying follow-ups
-and reorderings already allowed by blockers.
+For an amendment under the guide's Triage rules, interview, record the
+specification revision and invoke `to-tickets` on the delta. Return the changed
+contracts and native links for acceptance under the guide's Readiness section.
 
 ## Reads
 
 Paths are relative to each responsible repository root.
 
 - `CONTRIBUTING.md`: Triage, implementation contracts and readiness. If missing,
-  use this method with independent review, and ask the owner for unresolved
-  intent under the same inference boundary as `grilling`.
+  use this method with independent review and `grilling`'s missing-guide fallback.
 - The `grilling`, `domain-modeling`, `to-spec` and `to-tickets` skills:
   interview, domain documents and publication methods. If one is missing,
   report it and stop that step rather than inventing a substitute.

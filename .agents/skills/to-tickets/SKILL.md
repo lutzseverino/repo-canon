@@ -22,11 +22,9 @@ For a grill, consume the single specification published by `to-spec`; if it
 does not exist yet, invoke `to-spec` first. Keep that specification as the
 parent across repositories. Copy relied-on decisions with their dates and
 quoted words into every ticket contract, so private records are unnecessary.
-For an amendment to a plan's goal, Done means or row scope, first follow the
-contribution guide's amendment-grill rule and record the specification revision;
-work only the delta, revising affected contracts and native relationships.
-Findings, follow-ups passing its inference test and reorderings already
-permitted by blockers need no amendment grill.
+For an amendment, first apply the contribution guide's Triage amendment rule
+and consume the revised specification; work only the delta, revising affected
+contracts and native relationships.
 
 ### 2. Explore the codebase (optional)
 
@@ -49,7 +47,7 @@ Break the work into **tracer bullet** tickets.
 
 Give each ticket its **blocking edges**: the other tickets that must complete
 before it can start. Keep dependencies cycle-free. A ticket with no blockers
-still needs its own exact-revision readiness and applicable parent readiness.
+uses the contribution guide's Readiness and installed parent-readiness rules.
 
 **Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. Every ticket's change merges into its base branch on its own, with its checks passing: when even the batches can't stay green alone, fold the batches that can't into one ticket.
 
@@ -65,18 +63,13 @@ Present the proposed breakdown as a numbered list. For each ticket, show:
 
 Attach evidence for granularity, real dependencies, independently mergeable
 slices and test seams, and identify any factual verification the independent
-reviewer must finish. Reuse recorded answers and plan approval. Apply the
-contribution guide's full inference test: list qualifying reversible in-scope
-answers under **Inferred, listed for the owner**, with dated sources and owner
-veto. Only a one-way door or a value no recorded decision chose takes the
-owner-question route. New public names, breaking policy, persistent defaults,
-limits, timeouts or fallbacks, and goal/scope changes cannot be inferred.
+reviewer must finish. Reuse recorded answers and plan approval. Read and apply
+the contribution guide's Triage inference test, inferred-list and
+owner-question rules to unanswered choices.
 
-The orchestrating agent decides the final split, including merging, splitting,
-dropping or setting aside drafts. Substantial changes return to the writer;
-missing code facts go to independent fact-finding. Independent review judges
-the split and evidence; it cannot settle unresolved owner intent. There is no
-owner breakdown quiz or additional approval gate.
+Return the proposed split and evidence for the orchestrating agent's decision
+and independent acceptance under the guide's Triage rules. Use its correction
+and fact-finding routes for feedback rather than an owner breakdown quiz.
 
 ### 5. Publish the tickets to the configured tracker
 
@@ -87,15 +80,10 @@ edges changes:
 - **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
 - **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in its responsible repository, in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Link each ticket to the one specification parent and its blockers with the platform's native sub-issue and blocking relationships: the "Parent" and "Blocked by" sections restate those links for the reader and never stand in for them. If a native link can't be created, stop publication progression and report the exact missing parent/blocker relationship and platform failure. A text-only edge is never reported as established. Before publishing, read `.repo-standards/rules/comments.md#disclaimers`.
 
-Each issue body is a direct implementation contract: no intake triage,
-redundant Agent Brief or category label is needed. Publication grants no
-readiness. Return the proposed split and established native links to the
-orchestrating agent. Someone other than the writer, independently authorized
-for readiness, reviews each exact published contract after its validator
-revision notice and applies readiness with required companion labels. Parent
-readiness follows ticket publication and installed later-link rules. An edited
-accepted contract loses readiness until its own new notice, independent review
-and renewed readiness; progress alone never revises it.
+Use the guide's direct-body-contract publication route. Return the proposed
+split, exact published contracts and established native links to the
+orchestrating agent for acceptance under the guide's Triage and Readiness
+sections and the installed parent-readiness rules, including after amendments.
 
 Once reviewed, work the **frontier**: any ready ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 
@@ -164,8 +152,10 @@ Paths are relative to the repository root.
 - `.scratch/`: the local-files tracker's tickets. When it is missing, create
   it as step 5 says.
 - `CONTRIBUTING.md`: inference, split authority, amendments and readiness. If
-  missing, use the boundary above and independent exact-revision review, and
+  missing, use `grilling`'s missing-guide fallback and independent exact-revision review, and
   ask the user only for unresolved owner choices.
+- The `grilling` skill: the inference fallback, only when the contribution
+  guide is missing. If also missing, report it and stop for the missing policy.
 - The `to-spec` skill: publish the single specification before a grill's
   tickets. If missing, report it and stop ticket publication until a
   specification exists.

@@ -16,37 +16,25 @@ The issue tracker and triage label vocabulary should have been provided to you.
 
 2. Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better - the ideal number is one.
 
-Reuse recorded test-seam decisions with their dates and quoted words. Gather
-missing code facts and record seam evidence for independent review. Apply the
-contribution guide's inference test: list reversible in-scope answers under
-**Inferred, listed for the owner**, with dated sources and owner veto. Only a
-one-way door or a value no recorded decision chose takes the owner-question
-route. A new public name, breaking change, persistent default, limit, timeout
-or fallback, or a goal/scope change cannot be inferred. Reuse settled answers
-and plan approval; factual and seam review belongs to the independent reviewer.
+Reuse recorded test-seam decisions and plan approval with their dates and
+quoted words. Gather missing code facts and record seam evidence for review.
+Before proposing an unanswered decision, read and apply the contribution
+guide's Triage inference test, inferred-list and owner-question rules.
 
 3. Write the spec using the template below. Copy every relied-on owner decision
 with its date and quoted words into the issue-facing contract; private records
 are not required inputs. Publish one specification issue in the repository
 containing most of the work, reading `.repo-standards/rules/comments.md#disclaimers`
 first on a hosted tracker. Cross-repository tickets remain children of that one
-specification. Its body is a direct implementation contract, needing no intake
-triage, redundant Agent Brief or category label. Publication awaits review and
-grants no readiness. The orchestrating agent decides the final split and never
-accepts a contract it wrote; substantial split changes return to the writer,
-and missing code facts go to independent fact-finding. Review checks the exact
-contract, factual/test-seam evidence and unresolved intent. An independently
-authorized reviewer applies readiness only after its validator revision notice,
-with required companion labels. The parent's readiness follows ticket
-publication and the installed later-link rules.
+specification. Use the guide's direct-body-contract publication route. Return
+the exact published contract and factual/test-seam evidence to the orchestrating
+agent for its split decision and acceptance under the guide's Triage and
+Readiness sections and the installed parent-readiness rules.
 
 For a grill's publication, continue with `to-tickets` after the specification
-exists. A plan goal, Done means or row-scope amendment first needs an amendment
-grill under the contribution guide, then a specification revision and
-`to-tickets` on the delta. Edited accepted contracts lose readiness and need
-their own new notice, independent review and renewed readiness. Progress stays
-outside ready contracts; findings, qualifying follow-ups and allowed
-reorderings use the guide's exemption.
+exists. For an amendment under the guide's Triage rules, consume the amendment
+grill's decisions, revise the specification and invoke `to-tickets` on the
+delta. Return revised contracts for the guide's acceptance process.
 
 <spec-template>
 
@@ -123,8 +111,10 @@ Paths are relative to the repository root.
   readiness needs. When they are missing, readiness carries no companion
   labels.
 - `CONTRIBUTING.md`: Triage inference, publication, amendments and readiness.
-  If missing, use the inference boundary above, independent exact-revision
+  If missing, use `grilling`'s missing-guide fallback, independent exact-revision
   review and the tracker rules provided; route unresolved owner choices to the
   user without repeating recorded answers.
+- The `grilling` skill: the inference fallback, only when the contribution
+  guide is missing. If also missing, report it and stop for the missing policy.
 - The `to-tickets` skill: ticket publication after a grill or amendment. If
   missing, report it and stop at the published specification awaiting review.
