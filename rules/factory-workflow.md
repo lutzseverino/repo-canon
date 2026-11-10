@@ -8,6 +8,33 @@ issues and pull requests. The `factory` skill holds the method for handing work
 to the factory, interpreting holds, delivering skipped work, and pausing or
 resuming one repository.
 
+## Canonical stages
+
+This is the canonical ordered pipeline. Coverage depends on the repository's
+configured run kinds; an uncovered stage is a factory gap, not a capability
+implied by its place in this list.
+
+| Stage                      | Configured factory coverage                                                                                                                                                                                                                                                                     |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Intake                     | An owner's idea enters through conversation with the orchestrating agent, then a grill, unless the owner approves a shorter path for that idea. No run kind covers intake of ideas. A filed request enters through triage, covered by the triage run where enabled, within Triage run's limits. |
+| Grill                      | No run kind conducts the owner grill. Triage can gather facts and prepare its questions; the owner answers under the contribution guide.                                                                                                                                                        |
+| Specification              | No run kind publishes the grill's specification. The grill writer uses `to-spec` under the contribution guide.                                                                                                                                                                                  |
+| Tickets                    | No run kind publishes the grill's ticket split. The writer uses `to-tickets` with native parent and blocking links.                                                                                                                                                                             |
+| Brief review and readiness | Triage prepares research and briefs and accepts only within Triage run's installed exception. Direct specification and ticket contracts need independent authorized acceptance of their exact revisions. Plan approval remains the owner's gate; Parent readiness still applies.                |
+| Implement                  | Implement takes an eligible ready ticket through code and checks to a draft PR. Readiness alone never bypasses blockers.                                                                                                                                                                        |
+| Review                     | Configured review independently reviews the implemented draft and handles findings under Run kinds.                                                                                                                                                                                             |
+| Merge                      | Configured review delivers through merge; without it, implement follows Run kinds' existing delivery route. Skipped work retains its separate merge ownership.                                                                                                                                  |
+| Release                    | No configured run kind supplies a release stage; release work follows the repository's existing rules.                                                                                                                                                                                          |
+| Live acceptance            | No run kind supplies live access. The separately blocked live-acceptance ticket closes only on its recorded live evidence, as Skipped work says.                                                                                                                                                |
+| Close                      | Issue closure follows the contract and Issue closure below. A merged source PR never closes its live-acceptance ticket. No run kind supplies plan closure.                                                                                                                                      |
+
+Owner grills, plan approval, independent contract acceptance and live access
+retain their existing gates. The contribution guide owns publication authority
+and amendment rules. Consumers reference this definition. The existing
+`orchestrate` Lifecycle is a temporary consumer awaiting conversion in
+[repo-canon #693](https://github.com/lutzseverino/repo-canon/issues/693), which
+depends on this definition; that conversion does not block this change.
+
 ## Run kinds
 
 `.factory/config.json` enables run kinds under `runKinds`, mapping each to a

@@ -245,8 +245,51 @@ const repositories = {};
     "planning",
     ["grill-with-docs", "to-spec", "to-tickets", "domain-modeling", "grilling"],
     {
-      exercise:
-        "## Task\n\nUse grill-with-docs, to-spec and to-tickets on docs/planning/intake-batch-discussion.md, with the participant supplying unresolved decisions. Write a native specification and separate tickets in the local tracker.\n\n## Expected outcome\n\nThe specification preserves atomic Intake batches and the accepted scope. Tickets form independently releasable slices, with explicit blockers. Record readiness separately from blocker eligibility using controlled local review inputs. Standard-profile work requires no factory model selection or parent release gate.\n",
+      exercise: `## Task
+
+Use grill-with-docs on docs/planning/intake-batch-discussion.md, then its
+to-spec/to-tickets endpoint. Read .scratch/planning/scenarios.json for controlled
+dated decisions and simulated native tracker responses. These are local inputs,
+not real owner approval or platform authority; contact no remote service.
+
+## Checkpoints
+
+1. Reuse the settled decisions, including the public HTTP test seam and plan
+   approval, without asking them again. Publish one specification followed by
+   independently mergeable tickets in their responsible simulated repositories.
+   Copy decisions, dates and quoted words into each body. The orchestrating
+   reviewer, a different session, checks the split, native dependencies and seam
+   evidence. Report the missing HTTP implementation as factual verification;
+   do not ask the owner to inspect code. No redundant Agent Brief or category
+   label is added and the writer applies no readiness.
+2. Use the native relationships in the simulated responses as distinct from
+   body references. Record actual graph writes locally. Then inject linkFailure:
+   stop publication progression and report the exact missing edge and platform
+   failure. Do not record a text-only edge as successful.
+3. Relay each intentProbe separately. Route unchosen persistent defaults, new
+   public names, breaking policy and the one-way deletion to the owner through
+   the orchestrating agent. List the reversible in-scope ordering inference
+   under Inferred, listed for the owner with its dated source and owner veto.
+4. Use amendment as the controlled owner answer to a one-round amendment grill.
+   Revise the specification, then invoke to-tickets on the delta, changing the
+   affected source and live-acceptance contracts and native edges only. Retain
+   old/new exact bodies. Observe lost readiness until a new notice and actual
+   independent review authorize each new revision. Also classify each exemption
+   without changing the approved scope or editing contracts to record progress.
+5. Supply local simulated notices only after bodies exist. Review the parent
+   after ticket publication under both actor-history and latest-link-time
+   fallback rules. Each ticket needs its own readiness and closed blockers;
+   source merge leaves the live-acceptance ticket open until live evidence.
+
+## Expected outcome
+
+Retain local bodies, graph writes/failure, inferred list, questions, split-review
+verdicts and exact-revision notices/readiness. Check factory coverage against
+the canonical stages in the source factory rules, including owner idea intake's
+gap and optional triage/review. This standard-profile fixture does not acquire
+factory capabilities or model labels. Fixture/test success alone does not
+establish an agent exercise or real native tracker publication.
+`,
       agents:
         "# Agent guidance\n\nRead `CONTRIBUTING.md`, `docs/agents/issue-tracker.md`, and `docs/agents/domain.md` before planning. Native specifications and tickets are implementation contracts. Readiness does not bypass blockers.\n",
       context:
@@ -271,6 +314,176 @@ const repositories = {};
 Operators need to submit up to 100 Parcel declarations as one Intake batch. The accepted decisions are: JSON input only; validation reports every row error in one response; duplicate carrier references reject the full Intake batch; no partial acceptance; the existing single-Parcel endpoint remains; authentication and rate limits are unchanged. A prototype is unnecessary because the API shape is understood. The first releasable slice should accept and validate a batch through the public HTTP interface, and a later slice may add an operator-facing summary without blocking API use.
 `,
   );
+  const decision = {
+    date: "2026-10-18",
+    source: "Controlled owner input for this local simulation",
+    quote:
+      "JSON only, atomic batches of up to 100, all row errors, duplicate carrier references reject the batch. Keep the single-Parcel endpoint, authentication and rate limits. Test through public HTTP. Add an operator summary after the API, and verify the source on staging in a separate ticket. Plan approved.",
+  };
+  const decisions = `## Owner decisions\n\n${decision.date}, ${decision.source}: “${decision.quote}”`;
+  const parent = "example/parcel-api#10";
+  const ticket = (what, criteria, blockers) =>
+    `## Parent\n\n${parent}\n\n## What to build\n\n${what}\n\n## Acceptance criteria\n\n${criteria.map((criterion) => `- [ ] ${criterion}`).join("\n")}\n\n## Blocked by\n\n${blockers.join(", ") || "None"}\n\n${decisions}\n`;
+  write(
+    root,
+    ".scratch/planning/scenarios.json",
+    `${JSON.stringify(
+      {
+        decision,
+        contracts: [
+          {
+            id: parent,
+            kind: "specification",
+            body: `## Problem Statement\n\nOperators submit Parcels one at a time.\n\n## Solution\n\nAccept atomic JSON Intake batches and show a later operator summary.\n\n## User Stories\n\n1. As an operator, I submit a batch so I can validate all rows together.\n2. As an operator, I see the accepted count.\n\n## Implementation Decisions\n\n${decision.quote}\n\n## Testing Decisions\n\nExercise acceptance and full rejection through the public HTTP boundary; the current fixture has only single-Parcel code, so independent review must verify HTTP feasibility.\n\n## Out of Scope\n\nChanging authentication, rate limits or the single-Parcel endpoint.\n\n## Further Notes\n\nOne specification owns the cross-repository work.\n\n${decisions}\n`,
+          },
+          {
+            id: "example/parcel-api#11",
+            kind: "implementation ticket",
+            body: ticket(
+              "Accept atomic JSON Intake batches through public HTTP.",
+              [
+                "Up to 100 rows are accepted together.",
+                "Every row error is returned; duplicate carrier references reject the full batch.",
+                "Existing single-Parcel, authentication and rate limits are preserved.",
+              ],
+              [],
+            ),
+          },
+          {
+            id: "example/parcel-ops#20",
+            kind: "implementation ticket",
+            body: ticket(
+              "Show the accepted Intake batch count to the operator.",
+              [
+                "The summary reflects the API's accepted count and does not gate API use.",
+              ],
+              ["example/parcel-api#11"],
+            ),
+          },
+          {
+            id: "example/parcel-api#12",
+            kind: "implementation ticket",
+            body: ticket(
+              "Record staging evidence that atomic batches and the operator summary satisfy the specification.",
+              [
+                "Live evidence is recorded on this ticket; source merge alone leaves it open.",
+              ],
+              ["example/parcel-api#11", "example/parcel-ops#20"],
+            ),
+          },
+        ],
+        nativeRelationships: {
+          subIssues: [
+            { parent, child: "example/parcel-api#11" },
+            { parent, child: "example/parcel-ops#20" },
+            { parent, child: "example/parcel-api#12" },
+          ],
+          blockedBy: [
+            {
+              issue: "example/parcel-ops#20",
+              blocker: "example/parcel-api#11",
+            },
+            {
+              issue: "example/parcel-api#12",
+              blocker: "example/parcel-api#11",
+            },
+            {
+              issue: "example/parcel-api#12",
+              blocker: "example/parcel-ops#20",
+            },
+          ],
+        },
+        linkFailure: {
+          relationship: "blockedBy",
+          issue: "example/parcel-ops#20",
+          blocker: "example/parcel-api#11",
+          platformFailure:
+            "HTTP 422: native issue dependencies unavailable for this repository",
+        },
+        intentProbes: [
+          {
+            request: "Use a new persistent retry limit of 3",
+            route: "owner",
+            reason: "persistent default not chosen",
+          },
+          {
+            request: "Call the new public endpoint bulkUpload",
+            route: "owner",
+            reason: "new public name not chosen",
+          },
+          {
+            request: "Remove support for the existing single-Parcel endpoint",
+            route: "owner",
+            reason: "breaking policy and scope change",
+          },
+          {
+            request: "Delete the historical production intake records",
+            route: "owner",
+            reason: "one-way door",
+          },
+          {
+            request:
+              "Schedule the unblocked API slice before the optional summary",
+            route: "inference",
+            source: decision,
+            reason:
+              "reversible in-scope ordering, no persistent value or public name",
+          },
+        ],
+        amendment: {
+          date: "2026-10-19",
+          quote:
+            "Amend the approved scope to reject an empty Intake batch. Agreed.",
+          specification: parent,
+          affectedTickets: ["example/parcel-api#12", "example/parcel-api#13"],
+          delta:
+            "Reject empty batches through public HTTP and record that rejection on staging.",
+          newTicket: {
+            id: "example/parcel-api#13",
+            kind: "implementation ticket",
+            body: `${ticket(
+              "Reject an empty Intake batch through public HTTP.",
+              [
+                "An empty batch returns a validation error and creates no Parcels.",
+              ],
+              ["example/parcel-api#11"],
+            )}\n2026-10-19, controlled owner amendment: “Amend the approved scope to reject an empty Intake batch. Agreed.”\n`,
+          },
+          addRelationships: {
+            subIssues: [{ parent, child: "example/parcel-api#13" }],
+            blockedBy: [
+              {
+                issue: "example/parcel-api#13",
+                blocker: "example/parcel-api#11",
+              },
+              {
+                issue: "example/parcel-api#12",
+                blocker: "example/parcel-api#13",
+              },
+            ],
+          },
+        },
+        exemptions: [
+          {
+            kind: "finding",
+            action:
+              "File the unrelated broken documentation link under Findings.",
+          },
+          {
+            kind: "follow-up",
+            action:
+              "Add another atomic-rejection test within the approved behavior, citing the dated decision and inference test.",
+          },
+          {
+            kind: "reordering",
+            action: "Start the API slice first as its recorded blockers allow.",
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+  );
   write(
     root,
     "src/intake.mjs",
@@ -288,6 +501,9 @@ Operators need to submit up to 100 Parcel declarations as one Intake batch. The 
     "triage-wayfinder",
     [
       "triage",
+      "grill-with-docs",
+      "to-spec",
+      "to-tickets",
       "wayfinder",
       "grilling",
       "domain-modeling",
@@ -305,7 +521,7 @@ Read only the intake and repository guidance. A separate research session gather
 
 ### 2. Controlled answers and draft
 
-Only after that handoff does the operator relay .scratch/triage/owner-inputs.md to a separate grill. The grill records the simulated decisions with their date and source and drafts the Agent Brief, filing nothing and applying no readiness. Post the draft and its decision citations locally, with triage notes after the brief. Return state:owner to state:triage once the questions are settled.
+Only after that handoff does the operator relay .scratch/triage/owner-inputs.md to a separate grill. The grill records the simulated decisions with dates and quoted words, then uses to-spec and to-tickets to publish direct specification/ticket bodies in the local tracker, with no redundant Agent Brief or self-readiness. Retain the specification and export ticket with their decision citations; independent review decides the split and factual/test-seam evidence. Return state:owner to state:triage once the questions are settled.
 
 ### 3. First notice and independent review
 
@@ -313,7 +529,7 @@ Only after the draft exists, relay step 1 of .scratch/triage/review-inputs.md. R
 
 ### 4. Edit and invalidation
 
-Relay step 2 of review-inputs.md: apply the supplied Summary edit, retain r2's exact text alongside r1, and invalidate r1 readiness immediately. Observe no readiness for r2 while its notice and independent review are withheld.
+Relay step 2 of review-inputs.md: apply the supplied What to build edit, retain r2's exact text alongside r1, and invalidate r1 readiness immediately. Observe no readiness for r2 while its notice and independent review are withheld.
 
 ### 5. Second notice and independent review
 
@@ -325,7 +541,7 @@ Choose the next eligible child of the shipping map without settling its Retry wi
 
 ## Expected outcome
 
-Standard-profile lookup exposes only the GitHub repository rules, without factory workflow rules; standard-profile triage has no factory model suggestion requirement. The initial handoff, dated controlled answers, independent review results, retained r1/r2 texts, notices and readiness invalidation are observable local simulations, never real hosting-platform authority. The accepted CSV brief preserves the intake's column meanings, ISO 8601 UTC timestamps, Parcel-reference ordering, header-only empty dates and export exclusions. Cite CONTRIBUTING.md's Triage and Readiness and the GitHub rules' Agent Brief, Readiness roles and Wayfinder sections with the outcomes.
+Standard-profile lookup exposes only the GitHub repository rules, without factory workflow rules; standard-profile triage has no factory model suggestion requirement. The initial handoff, dated controlled answers, independent review results, retained r1/r2 texts, notices and readiness invalidation are observable local simulations, never real hosting-platform authority. The accepted direct CSV ticket preserves the intake's column meanings, ISO 8601 UTC timestamps, Parcel-reference ordering, header-only empty dates and export exclusions. Cite CONTRIBUTING.md's Triage and Readiness and the GitHub rules' Agent Brief, Readiness roles and Wayfinder sections with the outcomes.
 
 The Wayfinder run selects child 02; child 03 remains blocked. Maps and children carry no readiness or workflow state.
 `,
@@ -374,7 +590,7 @@ Keep the intake's column meanings, ISO 8601 UTC timestamps, Parcel-reference ord
 These are simulated participant inputs, not GitHub events or actual authority. The operator releases each step only at its docs/exercise.md checkpoint. They supply notices and review conditions, not acceptance decisions. Use a simulated person's account with repository triage authority; no real account or permission is asserted.
 
 1. After the grill draft exists, call it r1 and retain its exact text in .scratch/triage/revisions/r1.md. Supply a local simulated issue-contract revision notice for r1 only after the draft exists, identifying that retained text. The accepting reviewer did not write r1 and independently checks it against the intake, controlled decisions and discovered GitHub rules. Record the actual accept/reject outcome; no preapproved verdict substitutes for this review. If r1 holds, record readiness bound to r1 only after its notice and review. Otherwise return corrections to the grill and retain the corrected text and its own notice/review before proceeding.
-2. Replace only the Summary field's content with: Export Delivery receipts as date-filtered CSV text from caller-supplied receipts. Keep every other field and the decision citations unchanged; retain the edited text in .scratch/triage/revisions/r2.md, preserving both texts. r1 readiness is invalidated immediately by the edit. Observe that r2 has no readiness at this checkpoint. Withhold r2 readiness until the operator supplies r2's revision notice and the independent reviewer reviews that exact text again.
+2. Replace only the What to build section content with: Export Delivery receipts as date-filtered CSV text from caller-supplied receipts. Keep every other field and the decision citations unchanged; retain the edited text in .scratch/triage/revisions/r2.md, preserving both texts. r1 readiness is invalidated immediately by the edit. Observe that r2 has no readiness at this checkpoint. Withhold r2 readiness until the operator supplies r2's revision notice and the independent reviewer reviews that exact text again.
 3. Only after invalidation is recorded, supply a new local simulated revision notice identifying the retained r2 text. The independent reviewer checks r2 and records its actual verdict. Renew readiness bound to r2 only if accepted; rejection returns to the writer for correction, its own notice and renewed independent review. Neither the earlier notice nor the earlier acceptance authorizes r2.
 
 Keep all notices, review outcomes and readiness records local. No model label or factory release ledger is required by this standard-profile exercise. These inputs never approve a Wayfinder map or child.
@@ -431,7 +647,16 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
 {
   const root = createRepository(
     "factory-planning",
-    ["triage", "grilling", "domain-modeling", "research", "prototype"],
+    [
+      "triage",
+      "grill-with-docs",
+      "to-spec",
+      "to-tickets",
+      "grilling",
+      "domain-modeling",
+      "research",
+      "prototype",
+    ],
     {
       profile: "factory",
       agents:
@@ -440,7 +665,7 @@ Use the Parcel operations glossary and local tracker. Planning only; do not impl
         "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n",
       exercise: `## Task
 
-You are the orchestrating agent. Use triage on .scratch/receipts/issues/01-export-receipts.md in stages. First read only the intake and gather repository facts in a separate research session. Record the missing decisions in a local decision inbox and route them through the orchestrating agent to a separate grilling session. Stop this stage with no brief or readiness. The operator then supplies .scratch/receipts/owner-inputs.md as controlled owner answers to that grill; the grill records the decisions and drafts the brief, filing nothing and applying no label. When nested sessions are unavailable, the operator starts fresh sessions and relays their results verbatim.
+You are the orchestrating agent. Use triage on .scratch/receipts/issues/01-export-receipts.md in stages. First read only the intake and gather repository facts in a separate research session. Record the missing decisions in a local decision inbox and route them through the orchestrating agent to a separate grilling session. Stop this stage with no brief or readiness. The operator then supplies .scratch/receipts/owner-inputs.md as controlled owner answers to that grill; the grill records the dated decisions and quoted words and uses to-spec then to-tickets to publish direct contracts locally, applying no readiness or category label. When nested sessions are unavailable, the operator starts fresh sessions and relays their results verbatim.
 
 Review the completed draft independently; never author a brief you accept. Only then assess .scratch/receipts/review-inputs.md in order and record the simulated model/readiness actions locally. Keep the unresolved intake separate from the simulated approved contract. Publish nothing and launch no factory.
 
@@ -448,7 +673,7 @@ Review the completed draft independently; never author a brief you accept. Only 
 
 Lookup exposes both GitHub repository configuration and factory workflow rules. The export is intent-bound: public CSV header names, invocation interface and receipt source are undecided. No public CSV/API/source choice is inferred or disguised as an implementation choice. The first stage identifies all three questions and routes them through the orchestrating agent, with no brief or readiness until controlled owner answers settle them.
 
-After the answers, the grill's Agent Brief follows the GitHub shape and order and cites the controlled decisions with their date and source. A model suggestion and reason follow in triage notes, outside the brief; the grill applies no label. The independent accepting reviewer chooses exactly one model label, weighing or replacing that suggestion, before or with ticket readiness. A revision notice and independent review bind readiness to the exact revision. An edit invalidates it until a new notice and review; a valid shape alone grants nothing.
+After the answers, the grill publishes one specification and direct tickets with copied dated decisions and quoted words. No redundant Agent Brief or category label is added. The writer may suggest a model in separate notes; the independent reviewer chooses it, and the writer applies no readiness. The independent accepting reviewer chooses exactly one model label, weighing or replacing that suggestion, before or with ticket readiness. A revision notice and independent review bind readiness to the exact revision. An edit invalidates it until a new notice and review; a valid shape alone grants nothing.
 
 The parent requires no model and never runs. Parent readiness in the same second as the latest ticket link does not release tickets; remove and reapply it later. A later ticket requires another parent readiness application. Tickets also require their own readiness and closed blockers. Use the explicitly simulated approved inputs for those release decisions, not the unresolved intake. Cite CONTRIBUTING.md's Triage and Readiness, the GitHub rules' Agent Brief and Readiness roles, and the factory rules' Parent readiness and Model selection sections in the outcome.
 `,
@@ -503,7 +728,7 @@ The operator keeps the later steps private until their checkpoints, even though 
 - Call the completed grill draft r1 and retain its exact text locally. The operator supplies a simulated issue-contract revision notice for r1 only after the draft exists.
 - The accepting reviewer did not write r1, works through a simulated person's account with repository triage authority, and independently checks the contract and owner-decision citations. Record the actual accept/reject outcome; no preapproved verdict substitutes for this review.
 - If r1 holds, record the reviewer's chosen model and readiness bound to r1. Retain the grill's model suggestion separately.
-- The operator then edits only the summary wording to create r2; retain both texts. r1 readiness is invalidated. Withhold r2 readiness until the operator supplies r2's revision notice and the independent reviewer reviews that exact text again.
+- The operator then edits only the What to build wording to create r2; retain both texts. r1 readiness is invalidated. Withhold r2 readiness until the operator supplies r2's revision notice and the independent reviewer reviews that exact text again.
 
 ## Release ledger: simulated approved contracts
 
@@ -528,7 +753,14 @@ Record all actions as local Markdown. Do not change actual intake status to appr
 {
   const root = createRepository(
     "triage-routing",
-    ["triage", "grilling", "domain-modeling"],
+    [
+      "triage",
+      "grill-with-docs",
+      "to-spec",
+      "to-tickets",
+      "grilling",
+      "domain-modeling",
+    ],
     {
       profile: "factory",
       agents:
@@ -536,7 +768,7 @@ Record all actions as local Markdown. Do not change actual intake status to appr
       context:
         "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Retry window**:\nThe period after a failed Parcel dispatch in which dispatch is retried.\n_Avoid_: Timeout\n",
       exercise:
-        "## Task\n\nYou are the orchestrating agent. Use triage on the three requests in .scratch/routing/issues/, with the operator releasing .scratch/routing/review-inputs.md one turn at a time. The operator keeps owner-inputs.md and unreleased turns private until their checkpoints. Sort all three. Take 01 and 02 through their paths to acceptance; for 03, record its path and reason only. Start a separate research run with a fresh context for each request you research; when the harness cannot nest sub-agents, the operator runs it and relays its messages verbatim. The operator also plays the owner and supplies revision notices; neither is a real person or GitHub event.\n\n## Expected outcome\n\n01 is code-bound: its expected result is documented. 02 is labeled bug but intent-bound, because its fix needs a Retry window nobody chose. 03 is an intent-bound feature request. Classification follows where the uncertainty lies, not the label.\n\nFor 01, the published revision r1 passes the GitHub rules' Agent Brief shape yet does not hold. The orchestrating agent checks it against the issue and code itself, names the defects it finds (an untestable criterion, scope the request never asked for, a wrong code path, and the missing dependency on 05), and sends them to the research run, which revises the brief. Only after the revision notice for the corrected revision does it accept that exact revision: it applies state:ready with exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links. r1's readiness would never have been valid, and the research run applies no label.\n\nFor 02, the research run gathers code facts first and writes no brief. The Retry window persists in the product, so the orchestrating agent never infers it, not even from the operators' stated preference. It sends the question to a separate grilling session with the owner, which asks short rounds of numbered questions, each with a recommended answer, never re-asks the recorded decision on transient failures, records the owner's answers, and drafts the brief. The orchestrating agent writes no brief itself: it records the owner decisions the brief relies on in the issue's triage notes, reviews the draft as a reviewer who did not write it, and refuses any brief that leaves a choice to the implementing agent, lists options, or carries a value the owner did not choose, returning that question to the owner instead.\n\nExecute turns 5 and 6: the participant edits the accepted retained brief, readiness is lost, the new notice is withheld, then the changed revision receives its own exact notice and independent review before renewed readiness. Also record the counterfactual handoffs when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness. Never run ready.mjs; all actions are local Markdown simulations. Cite the contribution guide's Triage and Readiness sections, the GitHub rules' Readiness roles section, and the factory rules' Model selection section in the local outcome.\n",
+        "## Task\n\nYou are the orchestrating agent. Use triage on the three requests in .scratch/routing/issues/, with the operator releasing .scratch/routing/review-inputs.md one turn at a time. The operator keeps owner-inputs.md and unreleased turns private until their checkpoints. Sort all three. Take 01 and 02 through their paths to acceptance; for 03, record its path and reason only. Start a separate research run with a fresh context for each request you research; when the harness cannot nest sub-agents, the operator runs it and relays its messages verbatim. The operator also plays the owner and supplies revision notices; neither is a real person or GitHub event.\n\n## Expected outcome\n\n01 is code-bound: its expected result is documented. 02 is labeled bug but intent-bound, because its fix needs a Retry window nobody chose. 03 is an intent-bound feature request. Classification follows where the uncertainty lies, not the label.\n\nFor 01, the published revision r1 passes the GitHub rules' Agent Brief shape yet does not hold. The orchestrating agent checks it against the issue and code itself, names the defects it finds (an untestable criterion, scope the request never asked for, a wrong code path, and the missing dependency on 05), and sends them to the research run, which revises the brief. Only after the revision notice for the corrected revision does it accept that exact revision: it applies state:ready with exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links. r1's readiness would never have been valid, and the research run applies no label.\n\nFor 02, the research run gathers code facts first and writes no brief. The Retry window persists in the product, so the orchestrating agent never infers it, not even from the operators' stated preference. It sends the question to a separate grilling session with the owner, which asks short rounds of numbered questions, each with a recommended answer, never re-asks the recorded decision on transient failures, records the owner's answers, and publishes a specification and direct tickets locally. The orchestrating agent writes no contract it accepts: it checks copied dated decisions and quoted words in each direct body, reviews the contract as a reviewer who did not write it, and refuses any contract that leaves a choice to the implementing agent, lists options, or carries a value the owner did not choose, returning that question to the owner instead.\n\nExecute turns 5 and 6: the participant edits the accepted retained brief, readiness is lost, the new notice is withheld, then the changed revision receives its own exact notice and independent review before renewed readiness. Also record the counterfactual handoffs when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness. Never run ready.mjs; all actions are local Markdown simulations. Cite the contribution guide's Triage and Readiness sections, the GitHub rules' Readiness roles section, and the factory rules' Model selection section in the local outcome.\n",
     },
   );
   write(
@@ -688,22 +920,22 @@ Release at startup. The orchestrating agent uses a simulated person's delegated 
 
 ## Turn 2: Owner answers after questions
 
-Release only after the separate grill asks its numbered questions for 02. Relay the matching numbered answers from .scratch/routing/owner-inputs.md verbatim. The recorded 2026-10-10 transient-failure decision stands and must not be asked again. The grill records the new simulated decisions with their date and source and drafts the settled brief; the orchestrating agent does not write it. An unresolved owner choice returns to the grill, never to an implementing agent.
+Release only after the separate grill asks its numbered questions for 02. Relay the matching numbered answers from .scratch/routing/owner-inputs.md verbatim. The recorded 2026-10-10 transient-failure decision stands and must not be asked again. The grill records the new simulated decisions with their date and source and publishes a specification and direct ticket bodies through to-spec then to-tickets; the orchestrating agent does not write contracts it accepts. An unresolved owner choice returns to the grill, never to an implementing agent.
 
 ## Turn 3: Corrected contracts and notices
 
-Release after 01's research correction and 02's grill draft exist. Retain each entire exact comment, including triage notes and whitespace, separately from the issue wrapper, revision notices and outcome ledger. Use contracts/01-r2.md and contracts/02-r1.md under .scratch/routing/. The simulated comment IDs remain routing-01 and routing-02 respectively; the corrected 01 comment has editedAt 2026-10-26T10:01:00Z, and the first 02 comment has editedAt null. These are synthetic source metadata, not relay clock times.
+Release after 01's research correction and 02's published direct ticket exist. Retain the entire exact 01 comment, including triage notes and whitespace, and 02 issue body separately from wrappers, notices and outcomes. Use contracts/01-r2.md and contracts/02-r1.md under .scratch/routing/. The simulated source IDs are routing-01 (comment) and routing-02 (issue-body); corrected 01 has editedAt 2026-10-26T10:01:00Z and first 02 has editedAt null. Retain 02's specification and native parent separately. These are synthetic source metadata, not relay clock times.
 
 Run these local hash-only commands from the fixture root only after those files exist, and relay their full output as simulated notices:
 
 - node docs/revision-notice.mjs .scratch/routing/contracts/01-r2.md routing-01 2026-10-26T10:01:00Z
-- node docs/revision-notice.mjs .scratch/routing/contracts/02-r1.md routing-02 null
+- node docs/revision-notice.mjs .scratch/routing/contracts/02-r1.md routing-02 null "implementation ticket"
 
-Retain each output beside its contract. Every notice must carry the computed sha256: identifier with 64 hexadecimal digits, never a placeholder or r1/r2 name alone. The command uses the validator's repo-canon/issue-contract-revision/v1 convention: kind triaged Agent Brief, comment source id and editedAt, and full body. If a writer revises again, retain a new file, advance the synthetic edit timestamp and compute a new notice after the exact text exists. Never reuse a notice for changed text. The command checks no structure and grants no readiness.
+Retain each output beside its contract. Every notice must carry the computed sha256: identifier with 64 hexadecimal digits, never a placeholder or r1/r2 name alone. The command uses the validator's repo-canon/issue-contract-revision/v1 convention: kind triaged Agent Brief/comment source for 01, implementation ticket/issue-body source for 02, source id and editedAt, and full body. If a writer revises again, retain a new file, advance the synthetic edit timestamp and compute a new notice after the exact text exists. Never reuse a notice for changed text. The command checks no structure and grants no readiness.
 
 ## Turn 4: Independent acceptance
 
-Release only after turn 3's notices are relayed. A reviewer who did not write either brief checks the exact retained text against code, intake and the owner-decision citations, and records its actual verdict. Return defects to the appropriate writer, then repeat retention, a new notice and independent review. Before reporting acceptance of 01, record the reviewer's chosen single model label (recorded separately from the writer's suggestion), ticket 05 as its blocker, readiness bound to the exact revision and the local owner notification with links. Do the corresponding independent review and model/readiness record for 02 only once all its owner questions are settled. No simulated ticket launches a factory.
+Release only after turn 3's notices are relayed. A reviewer who wrote neither contract checks the exact retained text against code, intake and the owner-decision citations, and records its actual verdict. Return defects to the appropriate writer, then repeat retention, a new notice and independent review. Before reporting acceptance of 01, record the reviewer's chosen single model label (recorded separately from the writer's suggestion), ticket 05 as its blocker, readiness bound to the exact revision and the local owner notification with links. Do the corresponding independent review and model/readiness record for 02 only once all its owner questions are settled. No simulated ticket launches a factory.
 
 ## Turn 5: Edit after readiness; withhold the notice
 
@@ -738,7 +970,7 @@ Operator-only: release only after the separate grill asks its numbered questions
 3. Retain the existing decision: only transient carrier failures are retried; validation failures never are. Cite Owner, 2026-10-10, in the earlier owner thread retained in issues/02-dispatch-retry-gives-up.md; do not ask it again.
 4. Change only the window in the existing shouldRetry(failure, minutesSinceFirstFailure) behavior. No new backoff or retry cadence, storage, automatic replay, CLI, HTTP interface or monitoring feature is requested. Keep the existing non-transient behavior and other dispatch behavior.
 
-Record the new simulated decisions as Owner, 2026-10-26, .scratch/routing/owner-inputs.md, answers 1, 2 and 4, with the actual relay time separately. The grill cites that date and source in its draft's triage notes and leaves no policy choice to the implementer. For questions already answered by the intake or recorded decision, cite that source. If a question requires a new policy outside these inputs, record an exercise limit rather than inventing an answer.
+Record the new simulated decisions as Owner, 2026-10-26, .scratch/routing/owner-inputs.md, answers 1, 2 and 4, with the actual relay time separately. The grill copies that date, quoted words and source into its direct contracts and leaves no policy choice to the implementer. For questions already answered by the intake or recorded decision, cite that source. If a question requires a new policy outside these inputs, record an exercise limit rather than inventing an answer.
 `,
   );
   repositories["triage-routing"] = {

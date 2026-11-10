@@ -19,6 +19,10 @@ where named below, with the absent-input fallbacks under Reads.
 Use [AGENT-BRIEF.md](AGENT-BRIEF.md) for durable briefs and triage notes, and
 [OUT-OF-SCOPE.md](OUT-OF-SCOPE.md) for the `.out-of-scope/` rejection records.
 
+For direct specification and ticket bodies, use the contribution guide's
+direct-contract route and the acceptance steps below, applying brief-specific
+shape checks only to Agent Briefs.
+
 ## Publication mode
 
 Read the validator's current mode and selected source before publishing a
@@ -41,7 +45,7 @@ side effect; no live activation occurs while implementing its source ticket.
 ## Modes and roles
 
 - **Orchestrating agent**, the default maintainer invocation: follow every section except Factory triage run. Sort requests, start a fresh-context research run per request, receive every question first, keep the decision inbox, and independently review and accept briefs.
-- **Research run**: gathers facts, verifies claims and writes briefs once intent is settled, unless a grill drafts them. It applies no labels and never judges its own brief.
+- **Research run**: gathers facts, verifies claims and writes briefs once intent is settled, unless a grill publishes direct contracts. It applies no labels and never judges its own brief.
 - **Grill**: a separate session with the owner for intent you cannot infer. The owner holds intent; never ask them to finish a brief.
 - **Factory triage run**: receives one issue and a result path. Follow only [Factory triage run](#factory-triage-run) and the sections it names.
 
@@ -116,13 +120,13 @@ Once it holds, [accept it](#accept-a-brief-that-holds).
 
 2. **Infer what you can cite.** Answer each intent question the contribution guide's inference test lets you answer, and record it as that test says. When you infer every one, have the research run write the brief from the facts and your inferred answers, then go to step 6.
 
-3. **Grill the owner** on the questions you cannot infer, in a grilling session of its own. Open it with `/grill-with-docs` using the session's supported invocation, followed by task context: the issue links, the facts, your inferred answers, the recorded owner decisions, unresolved questions, scope and [AGENT-BRIEF.md](AGENT-BRIEF.md). Include the owned branch and checkout for domain-document edits, the per-repository pull request destinations and the workbench destination required by the contribution guide's Triage section. Its deliverables are the decision record and draft briefs in a proposed ticket split, with the report-back destination. When the owner cannot join a grill now, put the request in your decision inbox with your recommendation.
+3. **Grill the owner** on the one-way doors or unchosen values the full inference test cannot settle, in a grilling session of its own. Open it with `/grill-with-docs` using the session's supported invocation, followed by task context: the issue links, facts, inferred answers, dated recorded decisions with quoted words, unresolved questions and scope. Include the owned branch and checkout for domain-document edits, per-repository PR destinations, the decision-record destination and report-back destination. Its deliverables are the decision record and, through `to-spec` then `to-tickets`, one published specification and proposed tickets in their responsible repositories with actual native parent/blocker links, awaiting independent review. Have it reuse settled answers and list qualifying inferences under **Inferred, listed for the owner**, with dated sources and owner veto. When the owner cannot join a grill now, put the request in your decision inbox with your recommendation.
 
-4. **Decide the split** as the contribution guide's Triage section says, and send any draft your split changes substantially back to the grill, or to a research run when it needs code facts the grill did not gather.
+4. **Decide the split** as the contribution guide's Triage section says. Inspect granularity, dependencies and factual/test-seam evidence, and use its correction and fact-finding routes. For failed native writes, report the exact missing relationship and platform response under the guide's publication rule.
 
-5. **File** the issues with the grill's briefs: publish each brief through the verified route on its intake issue, or file a new issue for it, as `.repo-standards/rules/comments.md#disclaimers` says, with the owner decisions it relies on copied with their dates and quoted words into its triage notes, without a reference to the private record.
+5. **Check publication** by the grill writer against the guide's Triage publication rules. Inspect the specification and ticket bodies, native parent/blocker relationships and copied decisions. The original intake's triaged contract, if revised, still follows Publication mode above; do not create a second authoritative contract for the same work.
 
-6. **Review and accept** each brief as on the code-bound path, and refuse one that leaves owner intent open as the contribution guide's Triage section says. Route each such question as [Route questions](#route-questions) says, and accept only once every one the owner must answer is answered. A question a recorded decision already settles goes back to the brief's writer as a correction instead.
+6. **Review and accept** each exact contract independently as on the code-bound path, using the direct specification/ticket shape rather than Agent Brief fields where applicable. Route open questions as [Route questions](#route-questions) says, and return settled questions to the writer for correction. Apply the guide's Readiness section and installed parent-readiness rules. For amendments, check the revised specification and delta contracts through this same review process under the guide's Triage amendment rules.
 
 ### Accept a brief that holds
 

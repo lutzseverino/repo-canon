@@ -179,6 +179,15 @@ All scenarios explicitly use `standard`, except `factory-planning`,
 `factory`. Standard scenarios
 expose GitHub repository configuration rules without factory workflow rules.
 
+For `planning`, follow the five checkpoints in its exercise and use
+`.scratch/planning/scenarios.json` as controlled local inputs. Review the settled
+cross-repository specification/ticket publication, inferred list and owner-only
+questions, native-edge failure, delta amendment and renewed revision readiness.
+Record graph writes separately from body references; native responses are
+simulations, never live tracker evidence. Check coverage against the canonical
+stage definition in the source factory rules. Report the scenario walkthrough
+separately from validator/fixture results and from any actual agent exercise.
+
 For `triage-wayfinder`, follow the numbered checkpoints in `docs/exercise.md`
 within 20 minutes. The operator holds back `.scratch/triage/owner-inputs.md`
 and `review-inputs.md`; the agent must not read ahead. Begin with the unresolved
@@ -186,8 +195,8 @@ CSV intake and a separate research session gathering facts without a brief.
 Observe the orchestrating agent's local decision inbox, the three missing
 header/interface/source choices, and `state:owner` with no brief or readiness.
 Only then relay the controlled owner answers to a separate grill. These dated,
-cited answers settle exercise behavior only; the grill records them and drafts
-the brief. The accepting reviewer must be a different session from its writer.
+cited answers settle exercise behavior only; the grill records them and invokes `to-spec`, then `to-tickets`, publishing
+one specification and direct ticket bodies in the simulated tracker. The accepting reviewer must be a different session from its writer.
 When the harness cannot nest sessions, start fresh research and grill sessions
 and relay their outputs verbatim to the orchestrating reviewer.
 
@@ -196,7 +205,7 @@ text, supply the simulated revision notice identifying it, and record the
 independent review's actual acceptance or rejection. Rejection returns to the
 writer for correction and another notice/review; no input preapproves a draft.
 Only an accepted revision with its notice may receive simulated readiness.
-Then relay step 2's supplied Summary edit, retain r2 alongside r1, and observe
+Then relay step 2's supplied What to build edit, retain r2 alongside r1, and observe
 readiness invalidated while r2 has neither its notice nor renewed review.
 Only then relay step 3's r2 notice and independently review that exact text
 before renewing readiness if accepted. The Wayfinder outcome still selects
@@ -215,12 +224,12 @@ public CSV headers, invocation interface and receipt source are missing:
 research gathers facts, and the questions reach a separate grill through the
 orchestrating agent's decision inbox. Expect no brief or readiness at this
 checkpoint. Only then relay `.scratch/receipts/owner-inputs.md` as controlled
-participant answers. The grill records those answers and drafts the brief;
-the orchestrating agent reviews it independently and never authors a brief it
-accepts. The answers choose only simulated exercise behavior.
+participant answers. The grill copies the dated answers and quoted words into a specification and
+direct ticket bodies through `to-spec` and `to-tickets`; the orchestrating
+agent reviews them independently and never authors a contract it accepts. The answers choose only simulated exercise behavior.
 
 Next relay `.scratch/receipts/review-inputs.md` one checkpoint step at a time.
-First have the brief's writer cite the synthetic host-only sample as a required
+First have the ticket's writer cite the synthetic host-only sample as a required
 input. Retain that candidate and its notice, and observe independent rejection
 with no readiness. Only then release the sample, check it for secrets, and quote
 or attach the same non-secret material to the simulated issue. The writer
@@ -232,9 +241,8 @@ the fixture grants no host access and preapproves no draft.
 
 Continue with the corrected draft as r1: retain r1's exact
 text, supply its simulated revision notice, record the independent review and
-reviewer's chosen model, then edit the summary to r2. Readiness is invalidated
-until r2 has its own notice and independent review. A model suggestion follows
-the completed brief in triage notes; the accepting reviewer chooses the label.
+reviewer's chosen model, then edit What to build to r2. Readiness is invalidated
+until r2 has its own notice and independent review. A model suggestion is recorded separately from the direct contract; the accepting reviewer chooses the label.
 The later release ledger explicitly supplies simulated approved parent/child
 contracts; it does not grant the unresolved intake approval. It covers the
 parent never running, same-second and later-ticket parent readiness, each
@@ -262,14 +270,15 @@ not review, so its outcomes cover the challenge, the research run's
 correction, and acceptance of the corrected revision with a chosen model label
 and a recorded blocker. The second bug's outcomes cover fact-finding, a persisting
 Retry window the orchestrating agent never infers, a separate grilling session
-that asks numbered owner questions with recommendations and drafts the brief,
+that asks numbered owner questions with recommendations and publishes a
+specification and direct tickets,
 a recorded owner decision reused rather than asked again, and refusal of a
 brief that leaves owner intent open.
 
-Turn 3 retains the complete corrected comments, including triage notes and
-whitespace, and computes their notices with the fixture's local
+Turn 3 retains the complete corrected 01 comment and direct 02 ticket body,
+including notes and whitespace, and computes their notices with the fixture's local
 `docs/revision-notice.mjs`. Each notice binds a concrete `sha256:` identifier
-to the retained text and simulated comment identity/edit timestamp using the
+to the retained text and simulated comment/body identity/edit timestamp using the
 issue-contract validator's revision convention. Dynamic drafts receive no
 identifier before their text exists. The helper computes identity only;
 structure and independent acceptance remain separate checks. Turn 4 requires

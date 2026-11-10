@@ -207,6 +207,104 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     manifest.source.linkedSkillDirectories,
   ))
     assert.equal(path, realpathSync(join(root, ".agents/skills", name)), name);
+  // Direct grill contracts stay body contracts in either repository. Exercise
+  // the real validator and hash relay without any tracker publication or prose
+  // assertions about what an agent should say.
+  const planning = manifest.repositories.planning;
+  const scenarios = JSON.parse(
+    readFileSync(
+      join(planning.path, ".scratch/planning/scenarios.json"),
+      "utf8",
+    ),
+  );
+  const contracts = new Map(
+    [...scenarios.contracts, scenarios.amendment.newTicket].map((contract) => [
+      contract.id,
+      contract,
+    ]),
+  );
+  function nativeIssue(id) {
+    const contract = contracts.get(id);
+    assert.ok(contract, `native relationship target ${id}`);
+    return {
+      number: Number(id.split("#")[1]),
+      node_id: id,
+      html_url: `https://github.com/${id.replace("#", "/issues/")}`,
+      body: contract.body,
+      labels: [],
+      state: "open",
+    };
+  }
+  for (const contract of contracts.values()) {
+    const issue = nativeIssue(contract.id);
+    const parentEdge = [
+      ...scenarios.nativeRelationships.subIssues,
+      ...scenarios.amendment.addRelationships.subIssues,
+    ].find(({ child }) => child === contract.id);
+    const blockedBy = [
+      ...scenarios.nativeRelationships.blockedBy,
+      ...scenarios.amendment.addRelationships.blockedBy,
+    ]
+      .filter(({ issue }) => issue === contract.id)
+      .map(({ blocker }) => nativeIssue(blocker));
+    const result = decideIssueContract({
+      repository: contract.id.split("#")[0],
+      event: { issue: { number: issue.number } },
+      issue,
+      bodyRevision: { id: issue.node_id, lastEditedAt: null },
+      comments: [],
+      issueEvents: [],
+      parent: parentEdge ? nativeIssue(parentEdge.parent) : null,
+      blockedBy,
+      relatedIssues: {},
+      permissions: {},
+    });
+    assert.equal(result.exitCode, 0, result.message);
+    assert.match(result.message, new RegExp(`valid ${contract.kind}`, "i"));
+    assert.doesNotMatch(result.message, /with state:ready bound/i);
+    const path = ".scratch/planning/retained-contract.md";
+    writeFileSync(join(planning.path, path), contract.body);
+    // Use the copied source relay; no runtime packages or hosting credentials.
+    const notice = execFileSync(
+      process.execPath,
+      [
+        join(root, "scripts/support/planning-revision-notice.mjs"),
+        path,
+        issue.node_id,
+        "null",
+        contract.kind,
+      ],
+      {
+        cwd: planning.path,
+        encoding: "utf8",
+        env: { ...process.env, PATH: "" },
+      },
+    );
+    const hash = /sha256:[0-9a-f]{64}/.exec(result.feedback.body)?.[0];
+    assert.ok(hash);
+    assert.ok(notice.includes(hash), contract.id);
+    assert.ok(notice.includes('"type":"issue-body"'));
+  }
+  assert.equal(
+    scenarios.nativeRelationships.subIssues.length,
+    scenarios.contracts.length - 1,
+  );
+  assert.equal(
+    new Set(scenarios.nativeRelationships.subIssues.map(({ parent }) => parent))
+      .size,
+    1,
+  );
+  assert.equal(
+    new Set(scenarios.contracts.map(({ id }) => id.split("#")[0])).size,
+    2,
+  );
+  // This is an injected platform failure, never successful graph evidence.
+  assert.ok(scenarios.linkFailure.platformFailure);
+  assert.ok(contracts.has(scenarios.linkFailure.issue));
+  assert.ok(contracts.has(scenarios.linkFailure.blocker));
+  assert.ok(contracts.has(scenarios.amendment.specification));
+  for (const id of scenarios.amendment.affectedTickets)
+    assert.ok(contracts.has(id));
   const triageWayfinder = manifest.repositories["triage-wayfinder"];
   const triageIntake = readFileSync(
     join(triageWayfinder.path, ".scratch/triage/01-export-receipts.md"),
