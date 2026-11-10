@@ -85,7 +85,7 @@ The triage notes that accompany a brief follow it in the selected body or eligib
 - **Owner decisions**: each decision the brief relies on, including any owner-review reservation, with its date and quoted words; for a grill's brief, copied from the grill record. Cite a repository record when available, never the private workbench.
 - **Inferred intent**: each answer inferred under the inference test, which the brief states as behavior, with its date, quoted decision content and repository citation when available; copy private-source content without referencing the private record. In the factory's triage run, it cites a repository record, as the installed factory workflow rules' Triage run section says.
 - **Dependencies**: issues that must land first, for the reviewer to record as blockers.
-- **Model**: when the installed rules ask for it, one `model:` label with a one-line reason: a suggestion for the reviewer to apply or replace, or, in the factory's triage run, the label its run result asks for.
+- **Model**: when the installed rules ask for it, one `model:` label and the one-line reason their Model selection rule requires: a suggestion for the reviewer to apply or replace, or, in the factory's triage run, the label its run result asks for.
 - **Owner questions**: none, for a brief ready for review.
 
 ## Template
