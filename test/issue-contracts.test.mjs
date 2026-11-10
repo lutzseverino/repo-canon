@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { isDeepStrictEqual } from "node:util";
 import test from "node:test";
 import {
-  decideIssueContract as decide,
   issueContractResult,
   readinessTriggerUnrecorded,
 } from "../vendor/repo-canon/validate-issue-contract.mjs";
+import { decideIssueContract as decide } from "./helpers/contract-decision.mjs";
 import {
   approvedTicketFeedback,
   awaitingTicketFeedback,

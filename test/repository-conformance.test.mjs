@@ -10,7 +10,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { basePaths, snapshotIdentity } from "../scripts/upstream-bases.mjs";
-import { decideIssueContract } from "../vendor/repo-canon/validate-issue-contract.mjs";
+import { decideIssueContract } from "./helpers/contract-decision.mjs";
 import { completeReview } from "../.agents/skills/babysit/review-outcome.mjs";
 import {
   completeAgentBrief,

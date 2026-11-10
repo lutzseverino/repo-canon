@@ -66,11 +66,15 @@ export async function githubValidation(
       payload,
     });
   }
-  return validate({ kind, event }, connection, (reference) =>
-    connect(
-      `https://github.com/${reference.repository}`,
-      connectionOptions,
-    ).issueTracker.issue(reference.number),
+  return validate(
+    { kind, event },
+    connection,
+    (reference) =>
+      connect(
+        `https://github.com/${reference.repository}`,
+        connectionOptions,
+      ).issueTracker.issue(reference.number),
+    options.resolveBoundary,
   );
 }
 

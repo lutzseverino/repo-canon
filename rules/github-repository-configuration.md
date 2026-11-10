@@ -579,8 +579,8 @@ When adding a native blocker, pass the blocking issue's numeric database ID as
 
 The issue-contract workflow enforces this shape for a triaged request's Agent
 Brief; the `triage` skill is a method for writing one. Prepared mode retains
-comment publication and v1 decisions. Explicit body-mode activation requires a
-trusted complete cutoff, a compatible v1/v2 reader and dual-route poster, and
+comment publication and the v1 base decision; Seams exemptions use v3. Explicit body-mode activation requires a
+trusted complete cutoff, a compatible result reader and dual-route poster, and
 frozen publication during capture. Body mode, v2 results and refusal of new
 comment contracts start together; downloading a release never activates them.
 Only an exact unchanged inventoried legacy comment remains eligible, without
@@ -602,6 +602,15 @@ is not a placeholder:
 - Key interfaces
 - Acceptance criteria
 - Out of scope
+- Seams
+
+The writer fills Seams from `codebase-design`'s Ownership check: `No trigger`
+or its triggered read and selected default or accepted override. Independent
+brief review assesses honesty, Value owner, consumers, reversibility and cost;
+the validator checks non-placeholder content only. The fixed first-shipping
+release boundary preserves an exact revision with trusted pre-release approval
+evidence, until its next revision; it never grants or restores readiness.
+The validator reports that exemption in its versioned result.
 
 Category is `bug` or `enhancement`, and the issue's one `type:` label names
 the same category. Empty content, template comments, empty task list items,

@@ -1,3 +1,4 @@
+import { resolveBoundary } from "./helpers/contract-decision.mjs";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
@@ -401,6 +402,9 @@ test("active adapter initializes new native tickets with incidental Brief headin
     () => Date.parse("2026-11-09T01:00:00Z"),
     null,
     { mode: "body", cutoff: "b".repeat(40) },
+    async () => {
+      throw new Error("native contracts must not resolve Seams");
+    },
   );
   const state = issueContractResult(comments).state;
   assert.equal(state.kind, "implementation ticket");
@@ -414,6 +418,135 @@ import {
   issueContractResult,
   readIssueContractObservation,
 } from "../vendor/repo-canon/validate-issue-contract.mjs";
+
+test("body-only historical approval resolves its boundary before category-error writes", async () => {
+  const fixture = JSON.parse(
+    readFileSync(
+      new URL("./fixtures/issue-contract-v2.json", import.meta.url),
+      "utf8",
+    ),
+  ).cases.find((entry) => entry.name === "body awaits authorized review");
+  for (const resolved of [true, false]) {
+    const s = structuredClone(fixture.snapshot);
+    const { connection, files, writes, nodes } = store();
+    connection.repository.path = s.repository;
+    for (const entry of s.contractSources.receipt.issues) delete entry.legacy;
+    const issue = {
+      ...s.issue,
+      nodeId: s.issue.node_id,
+      author: s.issue.user,
+      bodyEditTime: s.bodyRevision.lastEditedAt,
+      labels: ["state:ready"],
+    };
+    const original = {
+      ...fixture.state,
+      status: "approved",
+      label: "state:ready",
+      reviewer: "maintainer",
+      reviewEventId: "101",
+      observedEventId: "101",
+      publishedAt: "2026-11-09T01:00:00Z",
+      evaluatedAt: "2026-11-09T01:00:20Z",
+    };
+    const comments = [
+      {
+        id: 90,
+        nodeId: "N90",
+        author: { login: "github-actions[bot]" },
+        body: `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${JSON.stringify(original)} -->`,
+        updatedAt: original.evaluatedAt,
+      },
+    ];
+    nodes.I42 = {
+      id: "I42",
+      lastEditedAt: issue.bodyEditTime,
+      userContentEdits: {
+        nodes: [
+          {
+            id: s.bodyRevision.editId,
+            editedAt: issue.bodyEditTime,
+            deletedAt: null,
+          },
+        ],
+      },
+    };
+    files.set("cutoff.json", {
+      value: s.contractSources.receipt,
+      sha: "receipt",
+    });
+    files.set("issues/42.json", {
+      value: { ...s.contractSources.record, migrated: true, retired: true },
+      sha: "record",
+    });
+    const roles = [];
+    connection.access.role = async (login) => {
+      roles.push(login);
+      return "admin";
+    };
+    connection.issueTracker = {
+      capabilities: { bodyEditTime: true },
+      issue: async () => issue,
+      comments: async () => comments,
+      labelChanges: async () => [
+        {
+          id: "101",
+          action: "added",
+          label: "state:ready",
+          actor: { login: "maintainer" },
+          time: "2026-11-09T01:00:10Z",
+        },
+      ],
+      removeLabel: async (_number, label) => {
+        writes.push({ label });
+        issue.labels = issue.labels.filter((value) => value !== label);
+      },
+      addLabels: async (_number, labels) => {
+        writes.push({ labels });
+        issue.labels.push(...labels);
+      },
+      updateComment: async (id, body) => {
+        writes.push({ feedback: true });
+        const comment = comments.find((entry) => entry.id === id);
+        comment.body = body;
+        return comment;
+      },
+    };
+    let resolutions = 0;
+    const code = await runIssueContractValidation(
+      { kind: "edited", issue: 42, repository: s.repository },
+      connection,
+      undefined,
+      undefined,
+      () => Date.parse("2026-11-11T00:00:00Z"),
+      null,
+      { mode: "body", cutoff: s.contractSources.cutoff },
+      async () => {
+        resolutions++;
+        assert.equal(
+          writes.length,
+          0,
+          "resolve before source or readiness writes",
+        );
+        if (!resolved) throw new Error("Unresolved Seams release boundary");
+        return resolveBoundary();
+      },
+    );
+    assert.equal(resolutions, 1);
+    assert.equal(code, 1);
+    if (resolved) {
+      assert.deepEqual(roles, ["maintainer"]);
+      const state = issueContractResult(comments).state;
+      assert.equal(state.status, "needs-attention");
+      assert.equal(state.seamsExemption.evaluatedAt, original.evaluatedAt);
+      assert.ok(!issue.labels.includes("state:ready"));
+    } else {
+      assert.deepEqual(writes, []);
+      assert.deepEqual(issue.labels, ["state:ready"]);
+      assert.equal(issueContractResult(comments).state.status, "approved");
+    }
+  }
+});
+
 test("active adapter durably records migration before feedback and cannot resurrect it after deletion", async () => {
   const fixture = JSON.parse(
     readFileSync(
@@ -515,6 +648,7 @@ test("active adapter durably records migration before feedback and cannot resurr
     () => Date.parse("2026-11-09T01:00:00Z"),
     null,
     { mode: "body", cutoff: s.contractSources.cutoff },
+    resolveBoundary,
   );
   const state = issueContractResult(comments).state;
   assert.equal(state.status, "awaiting-review");
@@ -538,6 +672,7 @@ test("active adapter durably records migration before feedback and cannot resurr
     () => Date.parse("2026-11-09T01:00:01Z"),
     null,
     { mode: "body", cutoff: s.contractSources.cutoff },
+    resolveBoundary,
   );
   assert.equal(issueContractResult(comments).state.selection.state, "held");
   assert.equal(files.get("issues/42.json").value.migrated, true);
@@ -728,6 +863,7 @@ test("a missing inventoried record cannot reset migration history or restore leg
     () => Date.parse("2026-11-09T01:01:00Z"),
     null,
     { mode: "body", cutoff: s.contractSources.cutoff },
+    resolveBoundary,
   );
   const result = issueContractResult(comments).state;
   assert.equal(result.selection.state, "held");

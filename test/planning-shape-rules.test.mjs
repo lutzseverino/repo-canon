@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { decideIssueContract } from "../vendor/repo-canon/validate-issue-contract.mjs";
+import { decideIssueContract } from "./helpers/contract-decision.mjs";
 import { featureBody, repository } from "./helpers/issue-contracts.mjs";
 
 // Public issue-contract inputs; prose in the rules is reviewed separately.
@@ -14,6 +14,7 @@ const briefFields = [
   "Key interfaces",
   "Acceptance criteria",
   "Out of scope",
+  "Seams",
 ];
 const placeholders = ["_No response_", "TBD", "TODO", "[describe the bug]"];
 const mapSections = [

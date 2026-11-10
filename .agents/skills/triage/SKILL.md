@@ -103,6 +103,7 @@ Every research run, on either path, does two checks first:
    - **Scope**: desired behavior is what the request asks for; nothing the request needs is dropped, nothing beyond it is added, and out of scope names the adjacent work an agent might reach for. Work that must be shown on a live system is split as [AGENT-BRIEF.md](AGENT-BRIEF.md#live-acceptance-gets-its-own-ticket) says.
    - **Acceptance criteria**: each is concrete, testable, and independently verifiable, and together they cover the edge cases the request and the code expose.
    - **Dependencies**: work that must land first is named, so it can be recorded as a blocker.
+   - **Seams**: assess the writer's result under `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check), including its honesty, Value owner, consumers, reversibility and cost read. The validator checks structure only.
    - **Open questions**: none remain, including missing required inputs. Route unavailable material as [Route questions](#route-questions) says. An open intent question means the request is intent-bound; switch paths.
 
    Passing the issue-contract check proves the shape, never that the brief holds. When it does not hold, send the research run the specific corrections; it edits the brief, and you review the new revision from the top.
@@ -205,6 +206,9 @@ Repository Standards'
 - Installed rules, such as `github-repository-configuration` and factory workflow,
   looked up by `repository-standards`. If missing, use [AGENT-BRIEF.md](AGENT-BRIEF.md)
   for brief shape, this skill for role meanings, and no `model:` or `factory:` label.
+- The `codebase-design` skill: its Ownership check supplies the Seams read
+  and independent assessment. If missing, report the missing definition and
+  stop brief writing or acceptance until it is available.
 - `AGENTS.md`: Agent skills delegation and naming. If missing, give research runs
   only task context and name sessions for operation and target where supported.
 - `docs/agents/issue-tracker.md`: tracker and external-PR scope. If missing,

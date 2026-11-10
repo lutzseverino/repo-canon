@@ -416,6 +416,23 @@ test("release:check-merge fails and names the input that changed after review", 
   assert.match(output, /skill\/SKILL\.md/);
 });
 
+test("release:check-merge refuses an unprepared Seams boundary", (t) => {
+  const repository = releasedSource(t);
+  const candidate = repository.commit(
+    {
+      "vendor/repo-canon/validate-issue-contract.mjs":
+        "export const seamsReleaseTag = null;\n",
+    },
+    "unprepared Seams release",
+  );
+  const result = repository.run("check-merge.mjs", [candidate, candidate]);
+  assert.equal(result.status, 1);
+  assert.match(
+    result.output,
+    /Unresolved Seams release boundary.*release:prepare/,
+  );
+});
+
 test("release:check-merge fails clearly for a commit that is not present", (t) => {
   const repository = releasedSource(t);
   const reviewedHead = repository.git("rev-parse", "HEAD");

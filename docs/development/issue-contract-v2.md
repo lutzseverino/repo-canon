@@ -9,8 +9,10 @@ live pickup evidence. A source merge closes only #919, never activation.
 ## Preparation and activation
 
 No configuration file means **prepared** mode. Installing this release leaves
-comment selection, revision serialization, v1 results, notice barriers,
+comment selection, revision serialization, the v1 base result, notice barriers,
 authority, `ready.mjs`, native contracts and workflow-state behavior intact.
+The independent [Seams release extension](issue-contract-validation.md#seams-release-boundary)
+can wrap an exempt revision's v1/v2 base as v3 without activating body mode.
 No package version or installation date activates body mode. An unchanged
 legacy source has no expiry date.
 
@@ -144,7 +146,7 @@ triageResult, facts, issue?, edits?, writerProof?)` comes from the host's
    the factory exception. Optional issue/edit arguments are authenticated
    platform snapshots only. Existing stored original intake is immutable; a recovered Original request supplies no writer
    proof. Use `bodyWithOriginal(brief, original)` to append the exact original
-   once after disclaimer, complete seven-field Brief, applicable Seams and notes.
+   once after disclaimer, complete Brief (including required Seams) and notes.
 3. Publish the body; refetch its exact validator revision/source. Publish a
    separate configured-author attestation comment, with exactly one configured
    run line and one payload line:
@@ -180,7 +182,7 @@ triageResult, facts, issue?, edits?, writerProof?)` comes from the host's
 
 The feedback marker/author remain `repo-canon:issue-contract-state` and
 `github-actions[bot]`. The JSON line uses
-`format: "repo-canon/issue-contract-state/v2"`. Preparation emits v1 unchanged.
+`format: "repo-canon/issue-contract-state/v2"`. Preparation emits the v1 base; exempt Seams revisions use its documented v3 wrapper.
 The machine schema is [issue-contract-v2.schema.json](../../test/fixtures/issue-contract-v2.schema.json);
 shared positive/negative platform snapshots and literal decisions are
 [issue-contract-v2.json](../../test/fixtures/issue-contract-v2.json).

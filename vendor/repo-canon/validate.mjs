@@ -8,9 +8,23 @@ import { runIssueContractValidation } from "./validate-issue-contract.mjs";
 import { validatePullRequestMetadata } from "../../.github/scripts/validate-pr-metadata.mjs";
 
 // Both paths consume neutral input; the trusted trigger owns event decoding.
-export async function validate(input, connection, resolveIssue) {
+export async function validate(
+  input,
+  connection,
+  resolveIssue,
+  resolveBoundary,
+) {
   if (input.kind === "issue-contract")
-    return runIssueContractValidation(input.event, connection, resolveIssue);
+    return runIssueContractValidation(
+      input.event,
+      connection,
+      resolveIssue,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      resolveBoundary,
+    );
   if (input.kind === "pr-metadata")
     return validatePullRequestMetadata(input.pullRequest);
   throw new Error("Choose issue-contract or pr-metadata validation.");
@@ -39,11 +53,15 @@ export async function main(
     input.kind === "issue-contract"
       ? connect(input.repository, options)
       : undefined;
-  return validate(input, connection, (reference) =>
-    connect(
-      { ...connection.repository, path: reference.repository },
-      options,
-    ).issueTracker.issue(reference.number),
+  return validate(
+    input,
+    connection,
+    (reference) =>
+      connect(
+        { ...connection.repository, path: reference.repository },
+        options,
+      ).issueTracker.issue(reference.number),
+    connectionOptions.resolveBoundary,
   );
 }
 

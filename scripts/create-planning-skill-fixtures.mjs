@@ -610,12 +610,13 @@ An empty date returns a CSV holding only the header row. Add a \`skipEmpty\` opt
 **Out of scope:**
 - PDF export
 
+**Seams:** No trigger
+
 ## Triage Notes
 
 - Path: code-bound; the documentation states the expected result.
 - Model: suggest \`model:claude-haiku-4-5-20251001\`, a one-function fix.
 - Dependencies: none.
-
 `;
   const retainedBrief = ".scratch/routing/contracts/01-r1.md";
   write(

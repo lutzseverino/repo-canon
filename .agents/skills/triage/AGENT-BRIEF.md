@@ -53,6 +53,15 @@ When work must be shown on a live system, write two briefs. The source ticket's 
 
 State what is out of scope. This prevents the agent from gold-plating or making assumptions about adjacent features.
 
+### Seams
+
+After Out of scope, the writer supplies **Seams** using
+`codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check):
+`No trigger`, or the triggered read and selected default or accepted override.
+Independent brief review assesses the claim's honesty, Value owner, consumers,
+reversibility and cost read. Structural validation checks only that the field
+has non-placeholder content.
+
 ### Decisions, not options
 
 The implementing agent can't ask the owner anything, so a brief settles every question of intent before it is accepted. State each owner decision as behavior. A brief that needs one of these is not finished; its question is routed as [SKILL.md](SKILL.md) says, to be inferred under the inference test or answered by the owner:
@@ -109,6 +118,9 @@ Be specific about edge cases and error conditions.
 **Out of scope:**
 
 - Thing that should NOT be changed or addressed in this issue
+
+**Seams:**
+Record the Ownership check's result.
 ```
 
 ## Examples
@@ -139,6 +151,8 @@ Be specific about edge cases and error conditions.
 **Out of scope:**
 
 - Changing the limit or supporting multi-line descriptions
+
+**Seams:** No trigger
 ```
 
 ### Good agent brief (enhancement)
@@ -174,6 +188,11 @@ reasoning and all requesting issue links. Check for matches during triage.
 
 - Automated matching: a human confirms each match
 - Reopening rejections or recording bugs (only enhancements belong here)
+
+**Seams:** A new decision record triggers the Ownership check. The repository
+owns its rejected-feature decisions; triage and maintainers consume them.
+The Markdown record is reversible, cost now S and carrying cost S. Choose the
+cheapest local record; defer a shared record interface until another consumer.
 ```
 
 ### Good agent brief (PR)
@@ -205,6 +224,8 @@ exit codes and the existing human-readable output without the flag.
 - [ ] Default (non-JSON) output is byte-for-byte unchanged
 
 **Out of scope:** Other commands or changes to the PR's success JSON shape
+
+**Seams:** No trigger
 ```
 
 ### Bad agent brief
