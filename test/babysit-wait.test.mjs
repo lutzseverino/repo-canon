@@ -1762,6 +1762,31 @@ test("wait reloads ready history during polling and preserves request bounds aft
   assert.match(pushed.stdout, /review request bound reached \(2\)/);
 });
 
+test("policy-skipped waits do not depend on ready history", async (t) => {
+  for (const installed of [false, true]) {
+    for (const history of [{ failTimeline: 404 }, { timelinePages: [{}] }]) {
+      const result = await waitAt(
+        t,
+        {
+          ...history,
+          author: "factory-app[bot]",
+          reviewConfiguration: {
+            reviewer: codexReviewer,
+            policy: { version: 1, author: "app/factory-app" },
+          },
+        },
+        "2026-10-11T06:01:00Z",
+        { installed },
+      );
+      assert.equal(result.code, 6, result.stderr);
+      assert.match(
+        result.stdout,
+        /external review skipped by app-author policy/,
+      );
+    }
+  }
+});
+
 test("unreadable or malformed ready history fails the wait instead of using opening time", async (t) => {
   for (const state of [
     { failTimeline: 404 },

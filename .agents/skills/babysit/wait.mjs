@@ -45,6 +45,7 @@ import {
   trustedReviewConfiguration,
 } from "./trusted-review-config.mjs";
 import { reviewsSection, reviewTemplate } from "./review-outcome.mjs";
+import { skipsExternalReview } from "./review-policy.mjs";
 import {
   reviewRequestedAt,
   reviewerState,
@@ -282,7 +283,10 @@ const look = async (
         `${path}/actions/runs?head_sha=${pull.headCommit}&per_page=100`,
       ),
       pushTimes.get(pull.headCommit) ?? pushTime(pull, connection),
-      reviewer?.request.onOpen ? readyForReviewTime(connection, number) : null,
+      reviewer?.request.onOpen &&
+      !skipsExternalReview(policy, pull.author?.login)
+        ? readyForReviewTime(connection, number)
+        : null,
     ]);
   const commentsByReview = new Map();
   for (const comment of reviewComments(reviewCommentPages)) {
