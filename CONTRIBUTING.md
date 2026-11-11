@@ -54,17 +54,17 @@ the claim and posts the Agent Brief. For an intent-bound request, it first
 gathers the facts from the code. Where a factory runs triage itself, the
 factory workflow rules' Triage run section sets that run's limits.
 
-Under the inference test, the orchestrating agent may answer an intent question
-itself only when all three hold: it can cite the answer's source, the owner's
-approved goal for the work, a recorded owner decision or wish, or the owner's
+Under the inference test, whoever answers for the maintainer may settle a
+question that would otherwise go to the owner only when all three hold: it can
+cite the answer's source, the owner's approved goal for the work, a recorded
+owner decision or wish, or the owner's
 quoted words, each with its date; the choice is reversible within that work, so
 no value or policy outlives it, and it adds no public name and no breaking
 change; and it changes neither the goal nor the scope. A default, limit,
 timeout, or fallback that persists in the product is never inferred. The brief
 states each inferred answer as behavior, and its triage notes list it with its
-citation under **Inferred intent**. The orchestrating agent lists every
-inferred answer in its next report to the owner, so the owner can veto it. A
-veto is an owner decision, and the brief is revised from it.
+citation under **Inferred intent**. A veto is an owner decision, and the brief
+is revised from it.
 
 Owner ideas take conversation and a grill unless the owner approves a shorter
 path for that idea; filed requests take triage. Grills reuse answers and ask
@@ -101,18 +101,13 @@ permitted by blockers need no amendment. Progress never edits ready contracts.
 Grills edit domain documents on their own branch and checkout, never a shared
 default-branch checkout. Open one draft PR per repository with domain changes,
 delivered by separate `review`, run by the orchestrating agent unless a
-factory reviews it. Return contracts for acceptance. Decision records stay in
-the workbench, committed directly to its default branch; authoritative
-contracts stay in repository issues.
+factory reviews it. Return contracts for acceptance. Authoritative contracts
+stay in repository issues.
 
-Every question reaches the orchestrating agent first. It answers what it can
-from code, logs, or a reproduction, or under the inference test. A fact only an
-outside reporter holds goes to the reporter, with the issue in
-`state:reporter`. A question only the owner can answer goes into its decision
-inbox with its recommendation, with the issue in `state:owner`, or in
-`state:grill` when a grill must settle the owner's intent; the decision inbox
-is the one channel for questions to the owner. When the owner runs triage
-themselves, they are the orchestrating agent.
+A fact only an outside reporter holds goes to the reporter, with the issue in
+`state:reporter`. A question only the owner can answer goes to the owner with
+its recommendation, with the issue in `state:owner`, or in `state:grill` when
+a grill must settle the owner's intent.
 
 ## Readiness
 
@@ -365,10 +360,7 @@ the [comment rules](rules/comments.md#owner-questions) say, and stops without a
 pull request if none is open, or leaving the open pull request unmerged and
 linked from the question. This owner handoff ends the agent's babysitting of
 the pull request. The agent neither closes the pull request nor waits for the
-answer. Subsequent continuation follows applicable installed rules. The
-orchestrating agent reads the question first: when it can answer under the
-[triage](#triage) inference test, it answers on the issue; otherwise it puts the
-question in its decision inbox.
+answer. Subsequent continuation follows applicable installed rules.
 
 If the answer changes the implementation contract, have a separate writer edit
 it; await its validator notice, independent review and renewed readiness before

@@ -115,8 +115,8 @@ a missing report is incomplete, not invalid. Empty work tables keep incoming-onl
 ## `inbox.md`
 
 One entry per open owner decision across plans: question, plan, source link,
-opening date and recommendation. Notifications/chores live in `now.md`; launched
-sessions add open decisions here. Separate open entries from Answered history.
+opening date and recommendation. Notifications/chores live in `now.md`; only the
+orchestrating agent writes this inbox. Separate open entries from Answered history.
 On handover move Answered entries intact to `inbox-archive.md`.
 After a rule update, including takeover, reconcile all open entries against it;
 repair missing context/recommendations from records, naming unavailable facts.
