@@ -4,8 +4,8 @@
 
 ## Starting a launch
 
-Keep application mappings outside this skill. Follow `AGENTS.md` for skill invocation
-and naming, with naming metadata outside task context. Verify repository contracts are self-contained
+Keep application mappings outside this skill. Follow `AGENTS.md` for skill invocation.
+Name each hand launch and its thread, where supported, `<stage>: <item>` using the canonical stage in lowercase; keep naming metadata outside task context. Verify repository contracts are self-contained
 under [Workbench](../SKILL.md#workbench). For heavy reads, use a covering
 installed skill or read a bounded tail; without one, pass context only.
 
@@ -30,9 +30,9 @@ observation without reading a harness. Refresh for each later launch.
 
 ### Shared launch template
 
-Every launch below uses this shape unchanged: the covering skill invocation
-through the supported mechanism, followed by these named fields and fixed duties.
-With no covering installed skill, omit only the invocation. Fill context, not
+Every hand launch invokes its Canonical stages hand skill through the supported
+mechanism, then uses these fields and fixed duties. A stage with none still runs
+with its gap line; file its missing skill once under Findings. Fill context, not
 skill procedure or question format; there is no procedure field.
 
 ```text
@@ -74,13 +74,13 @@ output to the same worker with a fresh report.
 
 ## Triage run
 
-Use `/triage`; Scope names the request and plan-directory result linking brief/findings.
+Scope names the request and plan-directory result linking brief/findings.
 Plan references sets `triaged <file>` on its `plan.md` row.
 
 ## Grill
 
 Start from the [intake queue](intake.md#grill-queue), in the owner's session
-environment. Use `/grill-with-docs`; Evidence includes unresolved questions and
+environment. Evidence includes unresolved questions and
 Scope names the decision record in the plan directory. Workspace supplies the
 owned branch/checkout and one PR destination per repository for domain edits,
 as the contribution guide requires. Plan references sets `grilled <file>` and
@@ -91,13 +91,12 @@ grill or prototype in that same session when taking it over.
 
 ## Publication and review
 
-Use `/to-spec`, `/to-tickets` or `/review` for uncovered stages, naming contract
-inputs/destinations in Scope/Workspace. Retain contribution-guide authority and
+Name contract inputs/destinations in Scope/Workspace. Retain contribution-guide authority and
 independent acceptance; a publisher never accepts its own contract.
 
 ## Worker
 
-Use `/implement` with the authoritative issue contract. Workers deliver under
+Supply the authoritative issue contract. Workers deliver under
 the contribution guide. When installed rules assign merge ownership to you,
 read the contract/PR handoff and resume `babysit`, including on takeover;
 after a resolved question use the installed continuation rules for that worker
@@ -120,7 +119,7 @@ and end the rows.
 
 ## Retro
 
-Use a covering installed skill, else context only, in a separate session. Evidence
+Use a separate Close session. Evidence
 supplies primary plan files, cited issues/PRs/comments/run records and the latest
 Closed plan's `retro.md`, never your summary/context.
 Scope names `retro.md`: outcome against Done means; time, with waits by owner/review/check/blocker/launch;
@@ -133,12 +132,13 @@ Session retros outside plan closure use the same lesson and gap routes.
 
 ## Architecture review
 
-Use `/improve-codebase-architecture`; Scope names repository/changes, Evidence names
+Scope names repository/changes, Evidence names
 sources, Plan references marks the review `done <file>`. Route its report through
 [intake](intake.md#filed-requests-and-reports).
 
 ## Handover
 
+Handover starts a successor orchestrating session, outside the stage pipeline.
 One session owns all plans. At plan close or compaction since takeover, update
 records, move Answered entries intact to `inbox-archive.md`, log the former owner
 reference, and commit/push. Start a fresh
