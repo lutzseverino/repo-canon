@@ -156,8 +156,8 @@ minimally reconcile and update expected facts, then immediately re-arm before
 foreground work or updates; keep harness-only event coverage. The unsupported
 fallback is [the wait step](../SKILL.md#the-wait-step); recurring checks are optional.
 Read state/labels, comments, owner answers, blockers, run progress and PRs against
-a bounded dated log tail. Separate approval/blocker waits from unexplained lack
-of progress in In flight. Surface answered questions lacking continuation with
+a bounded dated log tail. In-flight Waiting on names who causes the event;
+use `orchestrator` when it is you. Surface answered questions lacking continuation with
 current issue/run/PR evidence, including absent evidence. Installed recovery
 rules govern intervention; observation authorizes no execution or stall timeout.
 

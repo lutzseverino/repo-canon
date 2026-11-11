@@ -865,7 +865,7 @@ ${flight.join("\n")}
 | ---- | ---- | ------- | ------------- | ---- | ------ | ---------- |
 ${launches.join("\n")}
 `;
-const flightRow = (code, watches, waiting = "CI") =>
+const flightRow = (code, watches, waiting = "factory: CI") =>
   `| [${code}](plan.md#${code.toLowerCase()}) | ${waiting} | 2026-11-08T18:00Z | check event | evidence | \`${JSON.stringify(watches)}\` |`;
 const launchRow = (code, report, kind = "worker") =>
   `| host | ${kind} | opaque/session | 2026-11-08T18:${code === "D" ? "15" : "05"}Z | [${code}](plan.md#${code.toLowerCase()}) | \`${report}\` | launch marker |`;
@@ -1038,7 +1038,7 @@ test("arrivals leave watches unchanged while queued and open grills show distinc
         flightRow(
           "queued",
           [{ event: "open grill completion" }],
-          "orchestrating agent: grill queue",
+          "orchestrator: grill queue",
         ),
       ],
       launches: [launchRow("open", "grill.md", "grill")],
@@ -1067,7 +1067,7 @@ test("arrivals leave watches unchanged while queued and open grills show distinc
   );
   assert.ok(
     output.stdout.includes(
-      "| [queued](plan.md#queued) | orchestrating agent: grill queue | — |",
+      "| [queued](plan.md#queued) | your move: grill queue | — |",
     ),
   );
   assert.ok(
@@ -1091,6 +1091,10 @@ test("status renders the fixed records-only table, pending reports and consumed 
           },
         },
       ]),
+      flightRow("Y", [{ event: "next action" }], "orchestrator: dispatch"),
+      flightRow("O", [{ owner: true }], "orchestrator"),
+      flightRow("D", [{ event: "read report" }], "orchestrator: reconcile"),
+      flightRow("Z", [{ event: "next action" }], "orchestrator"),
     ],
     launches: [
       launchRow("L", "reports/l.md"),
@@ -1116,15 +1120,14 @@ test("status renders the fixed records-only table, pending reports and consumed 
     lines[0],
     "| Item | Running | Waiting on owner | Since (UTC) | Next check |",
   );
-  assert.deepEqual(
-    new Set(lines.slice(2)),
-    new Set([
-      "| [R](plan.md#r) | CI | — | 2026-11-08T18:00Z | check event |",
-      "| [L](plan.md#l) | worker | — | 2026-11-08T18:05Z | launch marker |",
-      "| [O](plan.md#o) | — | [approve access](inbox.md#o) | 2026-11-08T18:10Z | owner reply |",
-      "| [D](plan.md#d) | turn ended; read report | — | 2026-11-08T18:15Z | read [reports/d.md](reports/d.md) |",
-    ]),
-  );
+  assert.deepEqual(lines.slice(2), [
+    "| [Y](plan.md#y) | your move: dispatch | — | 2026-11-08T18:00Z | check event |",
+    "| [O](plan.md#o) | — | [approve access](inbox.md#o) | 2026-11-08T18:10Z | owner reply |",
+    "| [D](plan.md#d) | turn ended; read report | — | 2026-11-08T18:15Z | read [reports/d.md](reports/d.md) |",
+    "| [Z](plan.md#z) | your move | — | 2026-11-08T18:00Z | check event |",
+    "| [R](plan.md#r) | factory: CI | — | 2026-11-08T18:00Z | check event |",
+    "| [L](plan.md#l) | worker | — | 2026-11-08T18:05Z | launch marker |",
+  ]);
   rows.launches.pop();
   rows.owner.push(ownerRow("D", "run step", "20", "owner output"));
   write(rows);
@@ -1164,7 +1167,7 @@ test("live reload removes watches, preserves unrelated baselines and inspects co
         if (pauses === 1) {
           write({
             flight: [
-              flightRow("R", [{ item: "file:keep.md" }], "different activity"),
+              flightRow("R", [{ item: "file:keep.md" }], "third party: CI"),
             ],
           });
           writeFileSync(
@@ -1175,7 +1178,7 @@ test("live reload removes watches, preserves unrelated baselines and inspects co
         if (pauses === 2) {
           writeFileSync(join(root, "done.md"), "status: done\n");
           write({
-            flight: [flightRow("R", [{ item: "file:keep.md" }])],
+            flight: [flightRow("R", [{ item: "file:keep.md" }], "launch")],
             launches: [launchRow("L", "done.md")],
           });
         }
@@ -1194,7 +1197,9 @@ test("live reload removes watches, preserves unrelated baselines and inspects co
       connect: unreachable,
       pause: async () => {
         write({
-          flight: [flightRow("R", [{ item: "file:keep.md" }], "rewritten")],
+          flight: [
+            flightRow("R", [{ item: "file:keep.md" }], "date: 2026-11-12"),
+          ],
         });
         writeFileSync(
           join(root, "keep.md"),
@@ -1238,6 +1243,18 @@ test("invalid records fail by name; empty records still watch incoming", async (
   const output = capture();
   for (const text of [
     "# no tables\n",
+    ...[
+      "CI",
+      "orchestrating agent: queue",
+      "orchestratorish",
+      "owner:",
+      "third party",
+      "date: ",
+    ].map((waiting) =>
+      recordText({
+        flight: [flightRow("invalid-wait", [{ event: "wake" }], waiting)],
+      }),
+    ),
     recordText({ flight: [flightRow("R", [])] }),
     recordText({ flight: [flightRow("R", [{ item: "example/tracker#7" }])] }),
     recordText({
@@ -1268,6 +1285,8 @@ test("invalid records fail by name; empty records still watch incoming", async (
       text,
     );
     assert.match(output.stderr, /now\.md/);
+    if (text.includes("invalid-wait"))
+      assert.match(output.stderr, /In flight.*invalid-wait.*Waiting on/);
   }
   unlinkSync(path);
   assert.equal(
@@ -1326,7 +1345,7 @@ test("joined identities keep all canonical watches while status retains launch t
   );
   assert.equal(
     output.stdout.trimEnd().split("\n").at(-1),
-    "| [L](plan.md#l) | CI | — | 2026-11-08T18:05Z | launch marker |",
+    "| [L](plan.md#l) | factory: CI | — | 2026-11-08T18:05Z | launch marker |",
   );
   write({
     flight: [flightRow("L", [{ owner: true }], "owner")],

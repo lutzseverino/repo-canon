@@ -279,6 +279,8 @@ export function readRecords(path) {
     };
     for (const row of tables["In flight"]) {
       const item = add(row, "flight");
+      if (!/^(?:(?:owner|factory|launch|orchestrator)(?:: \S.*)?|(?:third party|date): \S.*)$/.test(row["Waiting on"]))
+        fail(`In flight ${row.Item}: invalid Waiting on ${row["Waiting on"]}`);
       let specs;
       try {
         specs = JSON.parse(literal(row.Watches));
@@ -356,7 +358,9 @@ export function renderBudget(path) {
 }
 
 export function renderStatus(records) {
-  const rows = records.items.map((item) => {
+  const yourMove = (item) => /^orchestrator(?::|$)/.test(item.flight?.["Waiting on"]);
+  const ordered = records.items.toSorted((a, b) => Number(yourMove(b)) - Number(yourMove(a)));
+  const rows = ordered.map((item) => {
     const { flight, launch, owner } = item;
     if (launch && launchComplete(launch.path))
       return [
@@ -376,7 +380,7 @@ export function renderStatus(records) {
       ];
     return [
       item.item,
-      flight?.["Waiting on"] ?? launch.Kind,
+      flight?.["Waiting on"]?.replace(/^orchestrator(?=:|$)/, "your move") ?? launch.Kind,
       "—",
       launch?.["Started (UTC)"] ?? flight["Since (UTC)"],
       launch?.["Next check"] ?? flight["Next check"],

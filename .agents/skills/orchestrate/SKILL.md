@@ -42,17 +42,17 @@ by hand to the same contract with the factory's own scripts. Log one
 Intake of ideas is permanent orchestrating work, exempt from gap logging and
 retro counts; [intake](references/intake.md) owns its method.
 
-A **plan update** includes proposals and heartbeat replies. Open each with
+A **plan update** includes proposals and heartbeat replies. Open with
 `wait.mjs --status --from <now.md>`, adding `--budget <status.json>` for the
 Scriptorium observation from [launches](references/launches.md#starting-a-launch).
-Keep `Item | Running | Waiting on owner | Since (UTC) | Next check` unchanged;
-read records and budget only, never harness thread lists or a second view.
-Then show arrivals as [templates](references/templates.md#nowmd) says, the inbox
-and unseen inferred-intent items with citations; log those items. Link every
-row/decision code and issue number to its row, record or issue in owner-facing
-material; expand unfamiliar codes once per message. Deferred checker: implement
-over `now.md`, `inbox.md` and `plan.md` only at the first recorded post-release
-bare-code slip.
+Keep `Item | Running | Waiting on owner | Since (UTC) | Next check`; read only
+records/budget, never harness thread lists or a second view. In this update, act
+on each `your move` row or turn it into a real wait: launch, factory, owner,
+named third party or date. Show arrivals as [templates](references/templates.md#nowmd) says,
+the inbox and unseen inferred-intent items with citations; log those items.
+Link every row/decision code and issue number to its row, record or issue;
+expand unfamiliar codes once per owner-facing message. Deferred checker: implement over
+`now.md`, `inbox.md` and `plan.md` only at the first recorded post-release bare-code slip.
 
 Present goal, Done means, specifications, tickets and Close reviews for approval;
 [record proposal and approval](references/templates.md#planmd-and-logmd) before execution.
