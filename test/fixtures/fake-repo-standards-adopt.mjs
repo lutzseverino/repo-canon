@@ -20,6 +20,15 @@ import {
 import { dirname, join } from "node:path";
 
 const scenario = process.env.FAKE_ADOPT ?? "complete";
+const cli11 = process.env.STUB_CLI_VERSION === "11.0.0";
+const updateCli = ["10.0.0", "11.0.0"].includes(process.env.STUB_CLI_VERSION);
+const answersFormat = cli11
+  ? "repo-standards/answers/v2"
+  : "repo-standards/answers/v1";
+const statusFormat = cli11
+  ? "repo-standards/status/v10"
+  : "repo-standards/status/v9";
+const checkSelection = cli11 ? { checks: "github" } : {};
 const args = process.argv.slice(2);
 const option = (name) => {
   const index = args.indexOf(name);
@@ -87,16 +96,16 @@ if (args[0] === "status") {
   print(
     state?.phase === "complete"
       ? {
-          format: "repo-standards/status/v9",
+          format: statusFormat,
           readyToCommit: !(
             state.version === "v1.0.0" &&
-            process.env.STUB_CLI_VERSION === "10.0.0" &&
+            updateCli &&
             process.env.FAKE_UPDATE === "not-ready"
           ),
           readinessReasons: [],
           deferred:
             state.version === "v1.0.0" &&
-            process.env.STUB_CLI_VERSION === "10.0.0" &&
+            updateCli &&
             process.env.FAKE_UPDATE === "undeferred"
               ? []
               : state.deferred,
@@ -106,24 +115,23 @@ if (args[0] === "status") {
               repository: source,
               version: state.version,
               commit:
-                process.env.FAKE_UPDATE === "wrong-commit" &&
-                process.env.STUB_CLI_VERSION === "10.0.0"
+                process.env.FAKE_UPDATE === "wrong-commit" && updateCli
                   ? "0".repeat(40)
                   : process.env.STUB_RESOLVED_COMMIT,
             },
             profile: state.profile,
+            ...checkSelection,
           },
           impact: {
             derived:
-              process.env.FAKE_UPDATE === "missing-line" &&
-              process.env.STUB_CLI_VERSION === "10.0.0"
+              process.env.FAKE_UPDATE === "missing-line" && updateCli
                 ? null
                 : (state.line ??
                   "Exact update: the run asks for no contextual work."),
           },
         }
       : {
-          format: "repo-standards/status/v9",
+          format: statusFormat,
           readyToCommit: false,
           readinessReasons: ["No complete adoption is recorded."],
           deferred: [],
@@ -133,9 +141,19 @@ if (args[0] === "status") {
 }
 
 const answersPath = option("--answers");
-const questions = answersPath
-  ? JSON.parse(readFileSync(answersPath, "utf8")).questions
-  : [];
+const submitted = answersPath
+  ? JSON.parse(readFileSync(answersPath, "utf8"))
+  : null;
+const questions = submitted?.questions ?? [];
+if (submitted && state?.version === "v1.0.0" && updateCli) {
+  if (submitted.format !== answersFormat || submitted.source !== source)
+    reject("The update answers must retain their protocol and source.");
+  if (process.env.FAKE_ADOPT_LOG)
+    appendFileSync(
+      process.env.FAKE_ADOPT_LOG,
+      JSON.stringify({ answersFormat: submitted.format }) + "\n",
+    );
+}
 const given = new Map(
   questions.map((question) => [question.id, question.answer]),
 );
@@ -162,20 +180,24 @@ const report = (outcome, asked, rest = {}) => ({
   format:
     process.env.STUB_CLI_VERSION === "6.0.0"
       ? "repo-standards/adopt/v1"
-      : "repo-standards/adopt/v2",
+      : cli11
+        ? "repo-standards/adopt/v3"
+        : "repo-standards/adopt/v2",
   outcome,
   selection: {
     cli: process.env.STUB_CLI_VERSION,
     source,
     version: state?.version ?? given.get("version") ?? "v9.9.9",
     profile,
+    platform: "github",
+    ...checkSelection,
   },
   missing: asked
     .filter((question) => question.answer === null)
     .map((question) => question.id),
   blockers: [],
   answers: {
-    format: "repo-standards/answers/v1",
+    format: answersFormat,
     source,
     questions: asked,
   },
@@ -183,11 +205,7 @@ const report = (outcome, asked, rest = {}) => ({
   ...rest,
 });
 
-if (
-  state?.phase === "complete" &&
-  !answersPath &&
-  process.env.STUB_CLI_VERSION === "10.0.0"
-) {
+if (state?.phase === "complete" && !answersPath && updateCli) {
   const count = execFixtureGit(["-C", project, "rev-list", "--count", "HEAD"], {
     encoding: "utf8",
   }).trim();
@@ -227,8 +245,21 @@ if (
     line,
   });
   const rest = {
-    selection: { cli: "10.0.0", source, version: "v1.0.0", profile },
+    selection: {
+      cli: process.env.STUB_CLI_VERSION,
+      source,
+      version: "v1.0.0",
+      profile,
+      platform: "github",
+      ...checkSelection,
+    },
     inspection: { summary: "## Adopter action\n\n" + line },
+    ...(updateScenario === "unknown-format"
+      ? { format: "repo-standards/adopt/v999" }
+      : {}),
+    ...(updateScenario === "complete-missing"
+      ? { missing: ["scope:documentation"] }
+      : {}),
   };
   if (updateScenario === "quota")
     print(
@@ -287,7 +318,7 @@ if (
       ),
     );
   }
-  if (updateScenario === "confirmation" || updateScenario === "question")
+  if (["confirmation", "question", "checks"].includes(updateScenario))
     print(
       report(
         "answers-required",
@@ -296,7 +327,9 @@ if (
             id:
               updateScenario === "confirmation"
                 ? "confirmation"
-                : "surprise:documentation",
+                : updateScenario === "checks"
+                  ? "checks"
+                  : "surprise:documentation",
             answer: null,
           },
         ],
