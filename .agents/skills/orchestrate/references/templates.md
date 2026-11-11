@@ -104,7 +104,7 @@ only for new issues, after the opening status projection in updates and heartbea
   overrides stale rows with `turn ended; read report`, owner `—`, Started and
   `read [<report>](<report>)` until consumption. No prose classifies owner work; elapsed time invents no deadline.
 - **Special rows:** expedited Item starts with `expedited`, Evidence links its
-  Answered entry and PR, Waiting on is `owner: expedited pause`. A time-bounded
+  Answered entry and PR, Waiting on names who moves next. A time-bounded
   grant uses `launch: <workers>` and its bound event under Watches/Next check. Remove
   reporting workers; at the last report or bound, end/log the grant, tell the
   maintainer and remove its row, preserving plan/decision/chore tracking.
