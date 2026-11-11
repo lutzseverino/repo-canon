@@ -77,12 +77,12 @@ only for new issues, after the opening status projection in updates and heartbea
 - **Owner waits:** dated rows link the decision/action. Since is the wait's
   actual beginning, never derived from report prose. Retain outstanding/deferred
   owner steps under [inbox](#inboxmd)'s do/defer/drop rules.
-- **In flight:** retain activity, Since, Next check and Evidence. Watches is an
-  inline-code JSON array naming the actual wake mechanism; Evidence implies no
-  watch. Owner-only rows use `[{"owner":true}]` and a matching owner row.
-  Example: `[{"item":"org/repo#7","expected":{"labels":["state:ready"]}}]`.
-  Tracker expectations require observed labels and/or head/checks as
-  [the wait script](launches.md#the-wait-script) describes.
+- **In flight:** retain Since, Next check and Evidence. Waiting on takes `owner`,
+  `factory`, `launch`, `third party: <name>`, `date: <UTC date or time>` or
+  `orchestrator`, optionally followed by `: <detail>`; third party/date require theirs.
+  Watches is inline-code JSON naming wake mechanisms; Evidence implies no watch.
+  Owner-only rows use `[{"owner":true}]` and a matching owner row. Tracker watches
+  require observed labels and/or head/checks per [the wait script](launches.md#the-wait-script).
 - **Launches:** record every column **before** launch, initially Session `pending`.
   Reports supply launch watches. Resumption needs a fresh report or cleared old
   final marker. Consume a report by removing its launch row and reconciling work
@@ -98,18 +98,18 @@ only for new issues, after the opening status projection in updates and heartbea
   provenance, holds, unknown values and additive fields, without another status
   read. Missing, malformed or incompatible supplied JSON is an error, never free
   capacity. The fixed table is `Item | Running | Waiting on owner | Since (UTC) | Next check`.
-  Running uses In flight activity, else Kind; owner rows use `—`. Launches use
+  Orchestrator rows lead in record order as `your move[: <detail>]`; others retain order.
+  Running otherwise uses Waiting on, else Kind; owner rows use `—`. Launches use
   Started/Next check, others Since/Next check. A final `status: done`
   overrides stale rows with `turn ended; read report`, owner `—`, Started and
-  `read [<report>](<report>)` until consumption. No prose classifies owner work;
-  elapsed time invents no deadline.
+  `read [<report>](<report>)` until consumption. No prose classifies owner work; elapsed time invents no deadline.
 - **Special rows:** expedited Item starts with `expedited`, Evidence links its
-  Answered entry and PR, activity states the pause. A time-bounded grant lists
-  workers under Waiting on and a bound event under Watches/Next check. Remove
+  Answered entry and PR, Waiting on is `owner: expedited pause`. A time-bounded
+  grant uses `launch: <workers>` and its bound event under Watches/Next check. Remove
   reporting workers; at the last report or bound, end/log the grant, tell the
   maintainer and remove its row, preserving plan/decision/chore tracking.
 
-Repair named missing fields/tables, invalid Watches and conflicting expectations;
+Repair named missing fields/tables, invalid Waiting on/Watches and conflicting expectations;
 a missing report is incomplete, not invalid. Empty work tables keep incoming-only coverage.
 
 ## `inbox.md`
