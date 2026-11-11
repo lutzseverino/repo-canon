@@ -132,3 +132,6 @@ involve real alternatives.
   command, and the merge gate enforced by Repo Canon's tooling.
 - [Keep the implementation contract in the issue body](0035-keep-the-implementation-contract-in-the-issue-body.md):
   triage writes the Agent Brief over the body and keeps the original request.
+- [Launch hand stages with identifiers only](0036-launch-hand-stages-with-identifiers-only.md):
+  a hand launch is its stage's hand skill and stage input, with the model from
+  the anchor's label and no free text.

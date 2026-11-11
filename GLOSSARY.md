@@ -131,9 +131,18 @@ orchestrating agent performs by hand to the same contract and logs.
 _Avoid_: Manual override, workaround
 
 **Launch report**:
-The file a launched session writes for the orchestrating agent, its only
-channel back, whose closing done line marks that the session's turn has ended.
-_Avoid_: Hand-back message, nudge
+The workbench record a launched stage writes when its output is a workbench
+record, such as a grill's decision record; the orchestrating agent writes its
+header before the launch, and its closing done line marks that the session's
+turn has ended. A stage whose output is a tracker record reports through that
+record instead.
+_Avoid_: Hand-back message, nudge, worker report
+
+**Stage input**:
+The identifiers a hand launch passes to its stage's hand skill, and its whole
+prompt: an issue, a pull request or a launch report. The skill reads
+everything else from those records.
+_Avoid_: Brief, task context, launch notes
 
 **Close review**:
 A review of a finished plan, run before its closing announcement and named
