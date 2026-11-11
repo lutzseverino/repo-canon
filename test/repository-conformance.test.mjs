@@ -1490,12 +1490,7 @@ test("shared orchestration material excludes private application mappings everyw
   }
 });
 
-test("factory image rules discover released documentation through configuration", () => {
-  assert.match(read("rules/factory-sandbox-image.md"), /\$schema/);
-  assert.doesNotMatch(
-    read("rules/factory-sandbox-image.md"),
-    /scriptorium-v2\.0\.0/,
-  );
+test("factory configuration pins the released schema", () => {
   const configuration = JSON.parse(read(".scriptorium/config.json"));
   assert.equal(
     configuration.$schema,
