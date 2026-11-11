@@ -125,7 +125,7 @@ supplies primary plan files, cited issues/PRs/comments/run records and the lates
 Closed plan's `retro.md`, never your summary/context.
 Scope names `retro.md`: outcome against Done means; time, with waits by owner/review/check/blocker/launch;
 cost-ranked lessons and [routes/links](close.md#route-each-lesson); comparison with the previous retro
-and open issues; filed/reopened issues in `log.md` with creation evidence; owner answers matching
+and open issues; filed/reopened issues in `log.md` with creation evidence; counts of owner answers matching
 recommendations by decision type, proposing preapproval of a type the owner always accepted.
 Count the friction log's gap lines and file the top recurring gap in Scriptorium;
 exclude intake of ideas. Plan references marks the Close review `done <file>`.
