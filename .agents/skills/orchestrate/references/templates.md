@@ -83,7 +83,7 @@ only for new issues, after the opening status projection in updates and heartbea
   Watches is inline-code JSON naming wake mechanisms; Evidence implies no watch.
   Owner-only rows use `[{"owner":true}]` and a matching owner row. Tracker watches
   require observed labels and/or head/checks per [the wait script](launches.md#the-wait-script).
-- **Launches:** record every column **before** launch, initially Session `pending`.
+- **Launches:** For hand stage launches, Kind is the canonical stage in lowercase. Record every column **before** launch, initially Session `pending`.
   Reports supply launch watches. Resumption needs a fresh report or cleared old
   final marker. Consume a report by removing its launch row and reconciling work
   and owner rows; keep owner outcomes in explicit rows until resolved. A marker

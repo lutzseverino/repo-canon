@@ -37,8 +37,8 @@ each other; private planning retains its own sources. Its files:
 Use the **Canonical stages** in the repository's installed `factory-workflow`
 rules (source: `rules/factory-workflow.md`). Read coverage with `.scriptorium/config.json`. <!-- Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967. -->
 For each covered stage hand off through `factory` and wait; otherwise perform it
-by hand to the same contract with the factory's own scripts. Log one
-`Gap | <stage> | <repository> | <why>` line in the friction log, `log.md`.
+by hand to the same contract with the factory's own scripts. When recording its
+launch in `now.md`, log `Gap | <stage> | <repository> | <why>` in `log.md`.
 Intake of ideas is permanent orchestrating work, exempt from gap logging and
 retro counts; [intake](references/intake.md) owns its method.
 

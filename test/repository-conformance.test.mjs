@@ -1376,17 +1376,9 @@ test("all hand launches share one invocation-and-context template", () => {
     body
       .filter((line) => /^[A-Z][^:]+:/.test(line))
       .map((line) => line.split(":")[0]),
-    [
-      "Issues",
-      "Evidence",
-      "Recorded decisions",
-      "Scope",
-      "Workspace",
-      "Plan references",
-      "Model",
-      "Effective effort",
-      "Launch report",
-    ],
+    "Issues,Evidence,Recorded decisions,Scope,Workspace,Plan references,Model,Effective effort,Launch report".split(
+      ",",
+    ),
   );
   assert.ok(templates[0].text.endsWith("status: done"));
   const sections = new Map();
@@ -1397,29 +1389,29 @@ test("all hand launches share one invocation-and-context template", () => {
       sections.set(section, []);
     } else if (section) sections.get(section).push(token);
   }
-  /** @type {[string, string[]][]} */
-  const launches = [
-    ["Triage run", ["/triage"]],
-    ["Grill", ["/grill-with-docs"]],
-    ["Publication and review", ["/to-spec", "/to-tickets", "/review"]],
-    ["Worker", ["/implement"]],
-    ["Architecture review", ["/improve-codebase-architecture"]],
-    ["Handover", ["/orchestrate"]],
-    ["Retro", []],
-  ];
-  for (const [name, commands] of launches) {
+  const launches =
+    "Triage run|Grill|Publication and review|Worker|Architecture review|Handover|Retro".split(
+      "|",
+    );
+  for (const name of launches) {
     const role = sections.get(name);
     assert.ok(role, name);
     assert.ok(
       !role.some((token) => token.type === "code"),
       `${name} uses the shared template`,
     );
-    const spans = role
-      .flatMap((token) => token.tokens ?? [])
-      .filter((token) => token.type === "codespan")
-      .map((token) => token.text);
-    for (const command of commands)
-      assert.ok(spans.includes(command), `${name}: ${command}`);
+  }
+  const stages = marked
+    .lexer(read("rules/factory-workflow.md"))
+    .find((token) => token.type === "table");
+  assert.ok(stages?.type === "table");
+  assert.equal(stages.header.length, 3);
+  for (const [stage, , skill] of stages.rows) {
+    assert.ok(
+      skill.tokens.some((token) => token.type === "codespan") ||
+        /^none\b/i.test(skill.text),
+      `${stage.text}: hand skill or none`,
+    );
   }
 });
 
