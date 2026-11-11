@@ -114,7 +114,10 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.ok(deliveryScenario.skills.includes("pr"));
   assert.ok(deliveryScenario.skills.includes("babysit"));
   const deliveryConfiguration = JSON.parse(
-    readFileSync(join(deliveryScenario.path, ".factory/config.json"), "utf8"),
+    readFileSync(
+      join(deliveryScenario.path, ".scriptorium/config.json"),
+      "utf8",
+    ),
   );
   assert.ok(deliveryConfiguration.runKinds.implement);
   assert.ok(deliveryConfiguration.runKinds.review);
@@ -190,7 +193,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "rules/factory-workflow.md",
     "scripts/support/repository-standards/SKILL.md",
     "scripts/support/repository-standards/rules.mjs",
-    ".factory/config.json",
+    ".scriptorium/config.json",
     "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
   ]) {
     assert.equal(
@@ -342,8 +345,8 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     );
   // The factory skill pauses the repository with its configured hold label.
   assert.equal(
-    readFileSync(join(orchestrate.path, ".factory/config.json"), "utf8"),
-    readFileSync(join(root, ".factory/config.json"), "utf8"),
+    readFileSync(join(orchestrate.path, ".scriptorium/config.json"), "utf8"),
+    readFileSync(join(root, ".scriptorium/config.json"), "utf8"),
   );
   const workbench = orchestrate.workbench.path;
   for (const path of [orchestrate.path, workbench]) {
@@ -386,8 +389,8 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       realpathSync(join(root, ".agents/skills", skill)),
     );
   assert.equal(
-    readFileSync(join(hostGrant.path, ".factory/config.json"), "utf8"),
-    readFileSync(join(root, ".factory/config.json"), "utf8"),
+    readFileSync(join(hostGrant.path, ".scriptorium/config.json"), "utf8"),
+    readFileSync(join(root, ".scriptorium/config.json"), "utf8"),
   );
   const grantWorkbench = hostGrant.workbench.path;
   for (const path of [hostGrant.path, grantWorkbench]) {

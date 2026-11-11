@@ -361,7 +361,7 @@ and a separate `workbench` with its own initial commit. Both start clean on
 `main` with local signing disabled and no remote. The project links the exact
 candidate `.agents/skills/orchestrate` and `.agents/skills/factory`
 directories, whose digests the manifest records alongside the source HEAD and
-builder/input hashes, and copies the source's `.factory/config.json` for the
+builder/input hashes, and copies the source's `.scriptorium/config.json` for the
 factory's labels. No package install is needed. Keep the workbench path in the
 exercise sandbox's writable roots.
 

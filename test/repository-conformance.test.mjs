@@ -231,8 +231,8 @@ test("the repository passes the Repository README check at its root", () => {
 
 // The factory's repository files, which only the factory profile installs.
 const factoryFiles = [
-  ".factory/config.json",
-  ".factory/Dockerfile",
+  ".scriptorium/config.json",
+  ".scriptorium/Dockerfile",
   ".github/workflows/sandbox-image.yml",
 ];
 
@@ -256,8 +256,8 @@ test("the standard profile installs no factory file, and the factory profile add
       {
         id: "factory-configuration",
         kind: "file",
-        target: ".factory/config.json",
-        exact: ".factory/config.json",
+        target: ".scriptorium/config.json",
+        exact: ".scriptorium/config.json",
       },
       {
         id: "factory-workflow",
@@ -284,8 +284,15 @@ test("the standard profile installs no factory file, and the factory profile add
       },
       {
         id: "factory-sandbox-image",
-        kind: "file",
-        target: ".factory/Dockerfile",
+        kind: "repository",
+        targets: {
+          paths: [
+            ".scriptorium/Dockerfile",
+            ".factory/Dockerfile",
+            ".factory/config.json",
+          ],
+          directories: [],
+        },
         rules: "rules/factory-sandbox-image.md",
         guidance: "guidance/factory-sandbox-image.md",
       },
@@ -616,6 +623,7 @@ function factoryConfigurationFailure(configuration) {
   if (configuration?.version !== 3)
     return `version ${configuration?.version} is not 3`;
   const allowed = [
+    "$schema",
     "version",
     "labels",
     "modelLabelPrefix",
@@ -678,7 +686,7 @@ function factoryConfigurationFailure(configuration) {
 
 test("the factory configuration is version 3 with Repo Canon's three run kinds", () => {
   const configuration = JSON.parse(
-    readFileSync(join(root, ".factory/config.json"), "utf8"),
+    readFileSync(join(root, ".scriptorium/config.json"), "utf8"),
   );
   assert.equal(factoryConfigurationFailure(configuration), null);
   assert.deepEqual(
@@ -702,7 +710,7 @@ test("the factory configuration is version 3 with Repo Canon's three run kinds",
 
 test("the factory configuration check rejects version 2 and malformed version 3", () => {
   const shipped = JSON.parse(
-    readFileSync(join(root, ".factory/config.json"), "utf8"),
+    readFileSync(join(root, ".scriptorium/config.json"), "utf8"),
   );
   const { runKinds, ...rest } = shipped;
   const version2 = {
@@ -763,7 +771,10 @@ test("the factory configuration check rejects version 2 and malformed version 3"
 });
 
 test("this repository's toolchain Dockerfile has one stage and needs no build context", () => {
-  const dockerfile = readFileSync(join(root, ".factory/Dockerfile"), "utf8");
+  const dockerfile = readFileSync(
+    join(root, ".scriptorium/Dockerfile"),
+    "utf8",
+  );
   assert.equal([...dockerfile.matchAll(/^FROM\s/gim)].length, 1);
   assert.doesNotMatch(dockerfile, /^(?:COPY|ADD|ENTRYPOINT|CMD)\s/im);
 });
@@ -1479,14 +1490,11 @@ test("shared orchestration material excludes private application mappings everyw
   }
 });
 
-test("factory image rules link to the released sandbox image contract", () => {
-  const links = interpretMarkdown(read("rules/factory-sandbox-image.md"))
-    .content.elements.filter(({ type }) => type === "link")
-    .map(({ target }) => target);
-  assert.ok(
-    links.includes(
-      "https://github.com/lutzseverino/scriptorium/blob/scriptorium-v2.0.0/docs/usage/sandbox-image.md",
-    ),
+test("factory configuration pins the released schema", () => {
+  const configuration = JSON.parse(read(".scriptorium/config.json"));
+  assert.equal(
+    configuration.$schema,
+    "https://raw.githubusercontent.com/lutzseverino/scriptorium/scriptorium-v4.1.0/schemas/factory-configuration.schema.json",
   );
 });
 

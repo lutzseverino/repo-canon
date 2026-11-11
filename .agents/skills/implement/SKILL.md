@@ -18,7 +18,7 @@ Run typechecking regularly, single test files regularly, and the repository's
 required validation on the final commit.
 
 Before delivery in a factory repository, read the installed `factory-workflow`
-rules' Run kinds section and `.factory/config.json`'s `runKinds`. When no
+rules' Run kinds section and `.scriptorium/config.json`'s `runKinds`. When no
 review run is configured, commit and push the work, write the PR body with
 `pr`, open a ready pull request (or mark its existing draft ready), and invoke
 `babysit` to deliver it under those rules, including any prescribed worker handoff.
@@ -38,6 +38,8 @@ check-location, command and outcome record, then stop. Leave review, marking rea
 babysitting and merging to the separate agent running `review`; do not run a
 self-review.
 
+<!-- Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967. -->
+
 ## Reads
 
 Paths are relative to the repository root.
@@ -50,7 +52,7 @@ Paths are relative to the repository root.
   without either source, report the fixes in the handoff.
 - `.repo-standards/rules/factory-workflow.md`: the factory's delivery route.
   When it is missing, use the draft handoff above.
-- `.factory/config.json`: the configured review run under `runKinds.review`.
+- `.scriptorium/config.json`: the configured review run under `runKinds.review`.
   When it is missing in a factory repository, no review run is configured;
   follow the installed factory rules' delivery route.
 - The `codebase-design` skill: the check applied above. When missing, report

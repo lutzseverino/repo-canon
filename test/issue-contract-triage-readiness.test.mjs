@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
+import { installedValidator } from "./helpers/installed-validator.mjs";
 import {
   factoryTriageResult,
   observedChangeId,
@@ -274,4 +276,47 @@ test("names the latest readiness change a result observes", () => {
     ]),
     "2",
   );
+});
+
+test("installed validator reads only the canonical triage identity and preserves missing/invalid behavior", async (t) => {
+  const target = installedValidator(
+    t,
+    "vendor/repo-canon/validate-issue-contract.mjs",
+  );
+  const root = resolve(dirname(target), "../..");
+  const { factoryTriageResult: readResult } = await import(
+    pathToFileURL(target).href
+  );
+  mkdirSync(join(root, ".factory"));
+  mkdirSync(join(root, ".scriptorium"));
+  const legacy = { marker: "legacy:run", author: "legacy[bot]" };
+  const canonical = {
+    marker: "canonical:result",
+    author: "canonical-reviewer[bot]",
+  };
+  writeFileSync(
+    join(root, ".factory/config.json"),
+    JSON.stringify({ triageResult: legacy }),
+  );
+  assert.equal(
+    readResult(),
+    null,
+    "legacy-only inputs supply no triage identity",
+  );
+  const config = join(root, ".scriptorium/config.json");
+  writeFileSync(config, JSON.stringify({ triageResult: canonical }));
+  assert.deepEqual(
+    readResult(),
+    canonical,
+    "canonical identity wins over conflicting legacy input",
+  );
+  writeFileSync(config, "{");
+  assert.throws(() => readResult(), SyntaxError);
+  writeFileSync(
+    config,
+    JSON.stringify({
+      triageResult: { marker: " bad", author: "canonical[bot]" },
+    }),
+  );
+  assert.throws(() => readResult(), /triageResult/);
 });

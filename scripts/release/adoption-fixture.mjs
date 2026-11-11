@@ -121,7 +121,7 @@ This directory explains how to set up and validate Wordtally.
 Install Node.js 24. Wordtally has no dependencies to install. Run
 \`node --test\` from the repository root before opening a pull request.
 `,
-  ".factory/Dockerfile": `FROM node:24-bookworm
+  ".scriptorium/Dockerfile": `FROM node:24-bookworm
 `,
 };
 
@@ -368,7 +368,7 @@ export const assessments = {
     explanation:
       "The toolchain image starts from node:24-bookworm, which provides the supported Node.js 24 selected by the development guide and compatible with the babysit scripts.",
     evidence: [
-      ".factory/Dockerfile holds only FROM node:24-bookworm.",
+      ".scriptorium/Dockerfile holds only FROM node:24-bookworm.",
       `${developmentGuide} requires only Node.js 24.`,
     ],
   },

@@ -223,6 +223,6 @@ Repository Standards'
 - `vendor/repo-canon/validate-issue-contract.mjs` and the `babysit` skill's GitHub connection:
   `ready.mjs` imports both. If either is missing it cannot start; stop at acceptance
   as for credentials that cannot apply readiness.
-- `.repo-standards/rules/factory-workflow.md` and `.factory/config.json` at the
+- `.repo-standards/rules/factory-workflow.md` and `.scriptorium/config.json` at the
   destination default branch: `ready.mjs` reads both for model applicability
   and prefix. If rules are missing there, it requires no model label.

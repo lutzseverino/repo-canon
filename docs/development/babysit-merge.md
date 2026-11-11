@@ -92,7 +92,7 @@ current body verbatim through JSON transport, preserving quotes, backticks,
 dollar signs, line endings and paragraphs. No shell interprets metadata and
 GitHub's default squash message cannot add co-author trailers.
 
-Immediately before the merge write, Access reads `.factory/config.json` at
+Immediately before the merge write, Access reads `.scriptorium/config.json` at
 the same destination default-branch SHA selected by
 `trustedReviewConfiguration()`. A missing file or `labels.releaseHold` key
 adds no check. With a configured label, it paginates open labelled issues,

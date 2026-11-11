@@ -24,7 +24,7 @@ const validationInputs = [
   developmentGuide,
   sourceProfile,
   authoringNotes,
-  ".factory/Dockerfile",
+  ".scriptorium/Dockerfile",
 ];
 
 // A sentence naming versions that are not the CLI: other tools, the Node.js
@@ -173,7 +173,7 @@ test("changing any one CLI version in the validation inputs fails the agreement"
 
 test("the toolchain image must name a pinned CLI version", () => {
   const files = workingTree();
-  const path = ".factory/Dockerfile";
+  const path = ".scriptorium/Dockerfile";
   for (const content of [
     "FROM node:24-bookworm\n",
     "FROM node:24-bookworm\nRUN npm install --global @lutzseverino/repo-standards\n",
@@ -182,7 +182,7 @@ test("the toolchain image must name a pinned CLI version", () => {
     const changed = new Map(files).set(path, content);
     assert.ok(
       versionDisagreements(reader(changed)).includes(
-        ".factory/Dockerfile names no CLI version.",
+        ".scriptorium/Dockerfile names no CLI version.",
       ),
       content,
     );

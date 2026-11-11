@@ -540,7 +540,7 @@ role. The `triage` role is the explicit authorization for a triaging agent. A
 check supplies no authority, and the issue-contract workflow removes readiness
 that an actor without one of these roles applied.
 
-The factory's own triage run is the one exception. Where `.factory/config.json`
+The factory's own triage run is the one exception. Where `.scriptorium/config.json`
 names the factory's triage result under `triageResult`, readiness its `author`
 account applies counts without a role when the current Agent Brief is the
 triage result that account posted, naming its run, and that run did not write

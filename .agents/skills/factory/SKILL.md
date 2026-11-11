@@ -7,7 +7,7 @@ A prompt or brief naming this skill is its invocation.
 
 Work in the repository the factory serves. Read `CONTRIBUTING.md`, the
 installed `factory-workflow`, `github-repository-configuration` and `comments`
-rules, and `.factory/config.json` before acting. The guide and rules hold the requirements;
+rules, and `.scriptorium/config.json` before acting. The guide and rules hold the requirements;
 this skill supplies the method. Use the configured label roles rather than
 assuming the shipped strings. Read the issue's authoritative contract, comments,
 blockers, and any existing PR and handoff before choosing a path below.
@@ -110,6 +110,8 @@ continue as Take the skip route says instead.
    it; leave other owners' holds alone. Confirm no remaining open hold and
    report the resulting state. A release hold still restricts merges separately.
 
+<!-- Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967. -->
+
 ## Reads
 
 Paths are relative to the repository root.
@@ -124,6 +126,6 @@ Paths are relative to the repository root.
 - `.repo-standards/rules/comments.md`: the installed comment rules, whose
   sections the posting steps name. When it is missing, post each record the
   steps name as one comment.
-- `.factory/config.json`: configured label roles. When it is missing or
+- `.scriptorium/config.json`: configured label roles. When it is missing or
   unreadable, perform read-only diagnosis and ask the owner to establish the
   factory configuration before changing factory labels.

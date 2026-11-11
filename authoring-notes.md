@@ -43,7 +43,7 @@ agent guidance has the fixed target `docs/agents/project.md`. The root
 through its [rules](rules/git-attributes.md) and
 [adoption guidance](guidance/git-attributes.md), preserving project content.
 In the factory
-profile, the toolchain image has the fixed target `.factory/Dockerfile`, which
+profile, the toolchain image has the fixed target `.scriptorium/Dockerfile`, which
 holds only the repository's toolchain, because each repository's toolchain
 differs and the factory adds its own agent layer. Discovery proposes the
 concrete paths of Project READMEs at arbitrary locations and of documentation
@@ -318,7 +318,7 @@ repeated.
   decides; every run works on one ticket, as
   [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md)
   decides. Repo Canon ships none of its code. A repository the factory serves
-  selects the `factory` profile, which installs `.factory/config.json` as an
+  selects the `factory` profile, which installs `.scriptorium/config.json` as an
   exact file, since the factory has no default for any convention, as
   [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
   decides. Its configuration version 3 turns on the triage, implement and
@@ -332,7 +332,7 @@ repeated.
   gates the owner chose in the same session (D7, D8). The profile installs the repository-wide
   [factory workflow rules](rules/factory-workflow.md), with intentionally empty
   confirmed content scope, so tracker work reads them even when it changes no
-  file. The profile also installs the contextual `.factory/Dockerfile`,
+  file. The profile also installs the contextual `.scriptorium/Dockerfile`,
   toolchain only and Debian-based, as the
   [toolchain image rules](rules/factory-sandbox-image.md) state, and the
   pull request workflow that builds it. The factory workflow rules govern

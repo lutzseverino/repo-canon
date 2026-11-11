@@ -281,7 +281,7 @@ test("public CLI relocates validators in every fresh profile and preceding-relea
         ".agents/skills/triage/ready.mjs",
         ...(profile === "workbench" ? [] : [".github/scripts/validate.mjs"]),
       ];
-      const configuration = join(project, ".factory/config.json");
+      const configuration = join(project, ".scriptorium/config.json");
       const triageResult = existsSync(configuration)
         ? (JSON.parse(readFileSync(configuration, "utf8")).triageResult ?? null)
         : null;

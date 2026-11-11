@@ -16,8 +16,8 @@ Repo Canon supplies three profiles:
 - `standard`: everything Repo Canon installs except the factory's repository
   files and workflow rules. Select it for every repository that no factory serves.
 - `factory`: the standard profile plus the files a repository that a factory
-  serves carries: its factory configuration, `.factory/config.json`; its
-  toolchain image, `.factory/Dockerfile`; and the pull request workflow that
+  serves carries: its factory configuration, `.scriptorium/config.json`; its
+  toolchain image, `.scriptorium/Dockerfile`; and the pull request workflow that
   builds that image. It also installs repository-wide factory workflow rules
   for its run kinds and their handoffs, gates, readiness, model selection and
   state labels, with an intentionally empty content scope. Select it only for a repository that a host-installed
@@ -42,6 +42,15 @@ that updates while its host runs Scriptorium v3.x stays paused until the host
 installs v4, so update the repository and its host together. After the host
 upgrade, confirm configuration acceptance and resumed pickups. The `standard`
 and `workbench` profiles need no host migration.
+
+The factory input paths are now `.scriptorium/config.json` and
+`.scriptorium/Dockerfile`. Follow the [canonical input migration](../development/adoption-compatibility.md#scriptorium-canonical-input-migration)
+within the supported update run: preserve the repository-owned Dockerfile bytes,
+prefer existing canonical content, and remove both legacy files and their empty
+directory. Unknown legacy files block completion and stay untouched.
+Before merging, record that no open issue or pull request carries either hold
+label from the legacy config; the migration guidance explains the trusted-base
+window and the exact-file confirmation.
 
 ## Prepare caller compatibility
 
