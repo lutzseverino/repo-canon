@@ -324,13 +324,15 @@ fields are invalid, at every level.
 - `request.comment`: a nonempty, trimmed string. A request comment's whole
   trimmed body must equal it; a mention within other text never counts.
 - `request.onOpen`: boolean; whether opening the pull request counts as a
-  request. A push never counts.
+  request. When true, ready-for-review transitions also supply request timing
+  and push freshness as defined under [review requests](#review-requests).
+  A push never counts.
 - `finished`: optional object with a nonempty `commentMarker` and a nonempty
   `line`, a valid regular expression interpreted with the Unicode flag that
   has named `sha` and `at` groups.
 - `unavailable`: array of nonempty reply texts; an empty array is valid.
 - `bounds.responseMinutes` and `bounds.reviewMinutes`: positive finite numbers
-  measured from the latest request.
+  measured from the effective request time defined under review requests.
 - `bounds.reviewRequests`: optional positive integer or the exact string
   `"unbounded"`; omission defaults to **4**. The total request bound is defined
   under [review requests](#review-requests).
@@ -343,14 +345,21 @@ A review of the pull request's head is complete when either holds:
   with an empty body and only replies to existing threads;
 - with `finished`, a comment by `account` containing `commentMarker` has a line
   matching `line` whose `sha` prefixes the head and whose `at` parses as a time
-  at or after the latest request.
+  at or after the latest opening request or exact request comment. A later
+  ready transition does not replace this completion-evidence cutoff.
 
-A comment by `account` at or after the latest request that contains one of the
-`unavailable` texts marks the reviewer unavailable. Any comment by `account` at
-or after the request counts as a response, except a request comment, which is
-never a response. The reviewer did not respond when no response arrives within
-`bounds.responseMinutes` of the latest request, and did not review when no
-completed review arrives within `bounds.reviewMinutes` of it.
+A comment by `account` at or after the latest opening request or exact request
+comment that contains one of the `unavailable` texts marks the reviewer
+unavailable. Ready transitions never discard a current-head completion or
+unavailability reply these rules already recognize, including evidence recorded
+during draft. Native review evidence remains head-specific as above.
+
+Any comment by `account` at or after the effective request time counts as a
+response, except a request comment, which is never a response. The reviewer did
+not respond when no response arrives within `bounds.responseMinutes` of that
+time, and did not review when no completed review arrives within
+`bounds.reviewMinutes` of it. With `request.onOpen: false`, all these cutoffs
+retain the existing explicit-request time unchanged across ready transitions.
 
 For example, with placeholder values:
 
@@ -493,6 +502,21 @@ With a reviewer file, a review request is the pull request's opening when
 `request.comment`; a push is never one. The `comments` rules say how to write
 the review request comment.
 
+When `request.onOpen` is true, the effective request time for response/review
+bounds and push freshness is the latest of opening, exact request comments and
+ready-for-review transitions. The latest transition restarts both bounds; a
+later exact request comment takes precedence. Use the actual transition history
+on every poll and resumed invocation, regardless of the PR's current draft
+state. With no transition, opening and explicit-request behavior is unchanged.
+A head pushed during draft before ready is covered by the ready-triggered
+request: neither normal request nor a request for review fixes posts an extra
+request for that covered head, subject to the existing request-bound reporting.
+A push after the effective request time follows the fresh-request rule below.
+
+When `request.onOpen` is false, ready transitions create no request, move no
+explicit request time and add no request trigger. Existing draft-period requests
+retain their request, freshness, completion and wait behavior.
+
 When `request.onOpen` is false and no request exists, an agent must post the
 review request comment for the head before first waiting. The request bound
 cannot stop this first request.
@@ -512,6 +536,8 @@ whoever posted it. At the bound, no agent requests another review. Without a
 reviewer file there is no reviewer, request or reviewer wait; the default
 creates none.
 
+Ready transitions do not count toward, reset or replenish this budget.
+
 The bound creates no reason to decline a real finding and no grouped follow-up
 issue. After the bound is reached, fix every finding the contribution guide
 does not let the agent decline and push without another request, and answer
@@ -526,7 +552,7 @@ With a reviewer file, a pull request also waits for the configured reviewer's
 review of its latest head before it merges. When the configured reviewer does
 not review the latest head, because it is unavailable, no review was requested
 after the head's push, it did not respond within `bounds.responseMinutes` of
-the latest review request, or no review arrived within `bounds.reviewMinutes`
+the effective request time above, or no review arrived within `bounds.reviewMinutes`
 of it, the pull request merges once the contribution guide's other merge
 conditions hold. The merging agent then records the absent review as a delivery
 record under the `comments` rules. Without the file, no reviewer wait or record

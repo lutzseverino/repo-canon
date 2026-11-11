@@ -68,6 +68,10 @@ const run = (
     trustedReviewer = config,
     body = "",
     branch = "factory/issue-719",
+    timeline = [],
+    isDraft = false,
+    timelinePages,
+    failTimeline,
   } = {},
 ) => {
   const directory = mkdtempSync(join(tmpdir(), "babysit-request-"));
@@ -96,6 +100,10 @@ const run = (
       createdAt: openedAt,
       pushedAt: push,
       comments,
+      timeline,
+      isDraft,
+      timelinePages,
+      failTimeline,
       reviewConfiguration: { policy: trustedPolicy, reviewer: trustedReviewer },
     }),
   );
@@ -125,6 +133,168 @@ const run = (
     emitted: JSON.parse(readFileSync(state, "utf8")).emitted ?? [],
   };
 };
+
+test("ready-triggered review covers a head pushed during a long draft", (t) => {
+  for (const isDraft of [false, true]) {
+    for (const args of [[], ["--fixes-review"]]) {
+      const result = run(t, {
+        isDraft,
+        args,
+        push: pushedAt,
+        timeline: [
+          { event: "ready_for_review", created_at: "2026-10-11T06:00:00Z" },
+        ],
+      });
+      assert.equal(result.code, 0, result.stderr);
+      assert.deepEqual(result.emitted, []);
+      assert.match(
+        result.stdout,
+        args.length
+          ? /review already requested for this head/
+          : /request rule requires no new request/,
+      );
+    }
+  }
+});
+
+test("current draft state alone preserves the request rule when no ready transition exists", (t) => {
+  for (const isDraft of [false, true]) {
+    for (const args of [[], ["--fixes-review"]]) {
+      const result = run(t, { isDraft, args, push: pushedAt });
+      assert.equal(result.code, 0, result.stderr);
+      assert.equal(result.emitted.length, args.length ? 1 : 0);
+    }
+  }
+});
+
+test("ready freshness follows the latest transition or later exact request, including installed requests", (t) => {
+  const target = pathToFileURL(
+    installedValidator(t, ".agents/skills/babysit/request.mjs"),
+  );
+  for (const [push, comments, expected] of [
+    ["2026-10-11T06:05:00Z", [], 0],
+    ["2026-10-11T06:11:00Z", [], 1],
+    [
+      "2026-10-11T06:11:00Z",
+      [
+        {
+          login: "owner",
+          createdAt: "2026-10-11T06:12:00Z",
+          body: reviewer.request.comment,
+        },
+      ],
+      0,
+    ],
+    [
+      "2026-10-11T06:11:00Z",
+      [
+        {
+          login: "owner",
+          createdAt: "2026-10-11T06:12:00Z",
+          body: `Fixed: ${reviewer.request.comment}`,
+        },
+      ],
+      1,
+    ],
+  ]) {
+    const result = run(t, {
+      target,
+      push,
+      comments,
+      args: ["--fixes-review"],
+      timelinePages: [
+        [{ event: "ready_for_review", created_at: "2026-10-11T06:00:00Z" }],
+        [
+          { event: "ready_for_review", created_at: "2026-10-11T06:10:00Z" },
+          { event: "converted_to_draft", created_at: "2026-10-11T06:10:30Z" },
+        ],
+      ],
+    });
+    assert.equal(result.code, 0, result.stderr);
+    assert.equal(result.emitted.length, expected);
+  }
+});
+
+test("draft-period requests and repeated ready events neither consume nor replenish the request budget", (t) => {
+  for (const bound of [2, 3]) {
+    for (const push of [pushedAt, "2026-10-11T06:11:00Z"]) {
+      const result = run(t, {
+        config: {
+          ...reviewer,
+          bounds: { ...reviewer.bounds, reviewRequests: bound },
+        },
+        push,
+        args: ["--fixes-review"],
+        comments: [
+          {
+            login: "owner",
+            createdAt: "2026-10-11T05:20:00Z",
+            body: reviewer.request.comment,
+          },
+        ],
+        timeline: [
+          { event: "ready_for_review", created_at: "2026-10-11T06:00:00Z" },
+          { event: "ready_for_review", created_at: "2026-10-11T06:10:00Z" },
+        ],
+      });
+      assert.equal(result.code, 0, result.stderr);
+      assert.equal(
+        result.emitted.length,
+        bound === 3 && push !== pushedAt ? 1 : 0,
+      );
+      if (bound === 2)
+        assert.match(result.stdout, /review request bound reached/);
+      else if (push === pushedAt)
+        assert.match(result.stdout, /review already requested/);
+    }
+  }
+});
+
+test("explicit-only requests retain their first-request and push rules across ready transitions", (t) => {
+  for (const args of [[], ["--fixes-review"]]) {
+    for (const [createdAt, expected] of [
+      [null, 1],
+      ["2026-10-11T05:05:00Z", args.length ? 1 : 0],
+      ["2026-10-11T06:01:00Z", 0],
+    ]) {
+      const result = run(t, {
+        config: {
+          ...reviewer,
+          request: { ...reviewer.request, onOpen: false },
+        },
+        args,
+        push: pushedAt,
+        comments: createdAt
+          ? [{ login: "owner", createdAt, body: reviewer.request.comment }]
+          : [],
+        timeline: [
+          { event: "ready_for_review", created_at: "2026-10-11T06:00:00Z" },
+        ],
+        // An explicit-only request has no dependency on reading ready history.
+        failTimeline: 404,
+      });
+      assert.equal(result.code, 0, result.stderr);
+      assert.equal(result.emitted.length, expected);
+    }
+  }
+});
+
+test("unreadable or malformed ready history permits no request mutation", (t) => {
+  for (const history of [
+    { failTimeline: 404 },
+    { timelinePages: [{}] },
+    { timeline: [{ event: "ready_for_review", created_at: "invalid" }] },
+  ]) {
+    const result = run(t, {
+      ...history,
+      args: ["--fixes-review"],
+      push: pushedAt,
+    });
+    assert.equal(result.code, 1, result.stderr);
+    assert.deepEqual(result.emitted, []);
+    assert.match(result.stderr, /timeline|ready-for-review/);
+  }
+});
 
 test("omitted request bounds stop at four and count only enabled openings and exact comments", (t) => {
   for (const onOpen of [false, true]) {

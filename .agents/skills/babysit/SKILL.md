@@ -38,6 +38,12 @@ any required request under step 4 or reporting why none is needed. Add
 Exit `0` means the rule was applied, not that review occurred; `1` and `7`
 use the wait's error and owner-handoff actions below.
 
+Request and wait read the paginated ready-for-review history when automatic
+opening requests are enabled. They apply the rules' effective request time to
+bounds and head freshness while retaining the original completion and
+unavailability evidence cutoffs. Polls and resumed invocations use platform
+timestamps, including when the PR has returned to draft.
+
 Request checks the PR body's own-head file links before any request or policy
 skip. Exit `8` lists links to replace with commit-SHA links; correct the body
 and rerun request before waiting. It never rewrites the body; external

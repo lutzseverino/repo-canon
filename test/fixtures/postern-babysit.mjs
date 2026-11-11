@@ -331,6 +331,7 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
             ? null
             : { __typename: "User", login: state.author ?? "owner" },
         createdAt: state.createdAt ?? "2026-10-11T05:00:00Z",
+        isDraft: state.isDraft ?? false,
         headRefName: state.branch ?? "fixture",
         headRefOid: state.head,
         baseRefName: state.baseBranch ?? "main",
@@ -436,7 +437,11 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       );
     }
     let values;
-    if (path.endsWith("/reviews")) {
+    if (/\/issues\/\d+\/timeline$/.test(path)) {
+      if (state.failTimeline)
+        return json({ message: "timeline read failed" }, state.failTimeline);
+      values = state.timelinePages ?? [state.timeline ?? []];
+    } else if (path.endsWith("/reviews")) {
       if (state.rejectReviewReads)
         return json({ message: "unexpected review read" }, 500);
       values = state.reviewPages ?? [state.reviews ?? []];
