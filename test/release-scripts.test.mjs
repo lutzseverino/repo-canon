@@ -100,7 +100,7 @@ const { mkdirSync, writeFileSync, chmodSync } = require('node:fs');
 const { join } = require('node:path');
 const args = process.argv.slice(2);
 if (args[0] === 'view') {
-  console.log(JSON.stringify('10.0.0'));
+  console.log(JSON.stringify(process.env.STUB_NEWEST_CLI || '10.0.0'));
 } else if (args[0] === 'install') {
   const version = args.at(-1).split('@').at(-1);
   const path = join(args[args.indexOf('--prefix') + 1], 'node_modules/.bin/repo-standards');
@@ -658,6 +658,25 @@ for (const [name, overrides, failure] of wrongInspectionSelections) {
   });
 }
 
+test("release:verify accepts published CLI 11 update reports for every profile", (t) => {
+  const { status, output } = verifyAdoption(
+    t,
+    "complete",
+    {
+      STUB_NEWEST_CLI: "11.0.0",
+    },
+    ["standard", "factory", "workbench"],
+  );
+  assert.equal(status, 0, output);
+  for (const profile of ["standard", "factory", "workbench"])
+    assert.match(
+      output,
+      new RegExp(
+        `pass: CLI 6\\.0\\.0 adopted v0\\.9\\.0; CLI 11\\.0\\.0 updated to v1\\.0\\.0 with the ${profile} profile; questions none; outcome complete`,
+      ),
+    );
+});
+
 test("release:verify updates from the previous stable release per profile using the newest CLI", (t) => {
   const { status, output, calls } = verifyAdoption(t, "complete");
 
@@ -707,155 +726,193 @@ test("release:verify updates the workbench profile once the previous release dec
   assert.deepEqual(workbench.args, ["adopt", "--json"]);
 });
 
-for (const scenario of ["questions", "fallback-scope"]) {
-  test(`release:verify answers renewed scope, new discovery and remote setup questions (${scenario})`, (t) => {
-    const { status, output, calls } = verifyAdoption(t, "complete", {
-      FAKE_UPDATE: scenario,
-    });
-    assert.equal(status, 0, output);
-    for (const id of [
-      "scope:documentation",
-      "scope:typescript-node-stack",
-      "scope:typescript-astro-stack",
-      "scope:typescript-vite-stack",
-      "remote-setup",
-      "assessment:repository-readme",
-    ])
-      assert.match(output, new RegExp(id));
-    const submitted = calls.filter(
-      (entry) =>
-        entry["scope:documentation"] &&
-        entry["scope:typescript-node-stack"] &&
-        entry["scope:typescript-astro-stack"] &&
-        entry["scope:typescript-vite-stack"] &&
-        entry["remote-setup"] === "defer" &&
-        entry.inspection === "sha256:update",
-    );
-    assert.equal(
-      submitted.length,
-      2,
-      "one scope and deferral submission per profile",
-    );
-    for (const entry of submitted) {
-      assert.equal(
-        entry["scope:documentation"].coverage,
-        "The previous adoption scope, proposed for validation.",
-      );
-      for (const stack of ["node", "astro", "vite"])
-        assert.equal(entry[`scope:typescript-${stack}-stack`].noScope, true);
-      if (scenario === "fallback-scope")
-        assert.deepEqual(entry["scope:project-readmes"].candidates, []);
-    }
-  });
-}
-
-for (const scenario of ["contextual", "extra-assessment"]) {
-  test(`release:verify submits requested contextual assessments (${scenario}) and requires completion`, (t) => {
-    const { status, output, calls } = verifyAdoption(t, "complete", {
-      FAKE_UPDATE: scenario,
-    });
-    assert.equal(status, 0, output);
-    assert.match(
-      output,
-      /outcome complete.*Adopter action: Contextual update: the run asks for contextual work on repository-readme/,
-    );
-    assert.equal(calls.filter((entry) => entry.update).length, 2);
-    const submitted = calls.filter(
-      (entry) =>
-        entry["assessment:repository-readme"] &&
-        Object.keys(entry).length === (scenario === "extra-assessment" ? 2 : 1),
-    );
-    assert.equal(submitted.length, 2, "one assessment submission per profile");
-    if (scenario === "extra-assessment") {
-      for (const entry of submitted)
-        assert.deepEqual(
-          entry["assessment:documentation"],
-          adoptionAssessments.documentation,
+for (const newest of ["10.0.0", "11.0.0"]) {
+  for (const scenario of ["questions", "fallback-scope"]) {
+    test(`CLI ${newest}: release:verify answers renewed scope, new discovery and remote setup questions (${scenario})`, (t) => {
+      const { status, output, calls } = verifyAdoption(t, "complete", {
+        STUB_NEWEST_CLI: newest,
+        FAKE_UPDATE: scenario,
+      });
+      assert.equal(status, 0, output);
+      const protocols = calls.filter((entry) => entry.answersFormat);
+      assert.equal(protocols.length, 4);
+      for (const entry of protocols)
+        assert.equal(
+          entry.answersFormat,
+          newest === "11.0.0"
+            ? "repo-standards/answers/v2"
+            : "repo-standards/answers/v1",
         );
-    }
-  });
-}
-
-test("release:verify reports a stopped update's quota reason and retry time", (t) => {
-  const { status, output } = verifyAdoption(t, "complete", {
-    FAKE_UPDATE: "quota",
-  });
-  assert.equal(status, 1, output);
-  assert.match(
-    output,
-    /the update stopped with outcome blocked; missing none\. The GitHub API quota is exhausted\. Retry at 2026-10-24T20:00:00Z\./,
-  );
-});
-
-test("release:verify reports a stopped update without optional cause fields", (t) => {
-  const { status, output } = verifyAdoption(t, "complete", {
-    FAKE_UPDATE: "no-cause",
-  });
-  assert.equal(status, 1, output);
-  assert.match(
-    output,
-    /the update stopped with outcome blocked; missing none\./,
-  );
-  assert.doesNotMatch(output, /undefined|TypeError/);
-});
-
-test("release:verify preserves blockers, failed checks and the update stop reason together", (t) => {
-  const { status, output } = verifyAdoption(t, "complete", {
-    FAKE_UPDATE: "all-diagnostics",
-  });
-  assert.equal(status, 1, output);
-  assert.match(output, /outcome blocked; missing scope:documentation\./);
-  assert.match(output, /A blocker\./);
-  assert.match(output, /A failed check\./);
-  assert.match(output, /The update could not continue\./);
-});
-
-for (const [scenario, message] of /** @type {[string, RegExp][]} */ ([
-  ["rejected-scope", /CLI rejected the scope answer/],
-  ["scope-repeat", /stopped again after answering scope:documentation/],
-  ["question", /unexpected question surprise:documentation/],
-  ["confirmation", /confirmation-required change/],
-  ["blocked", /the update has blockers or failed checks:.*A blocker\./],
-  [
-    "failed-checks",
-    /the update has blockers or failed checks:.*A failed check\./,
-  ],
-  ["missing-assessment", /stopped with outcome contextual/],
-  ["nonzero", /the complete update exited 1/],
-  ["not-ready", /status does not report the run ready to commit/],
-  ["undeferred", /status does not list remote setup/],
-  ["wrong-version", /the update selected/],
-  ["wrong-commit", /the ready status does not identify the verified release/],
-  ["missing-line", /did not report a derived adopter-action line/],
-])) {
-  test(`release:verify fails an update with ${scenario}`, (t) => {
-    const { status, output, calls } = verifyAdoption(t, "complete", {
-      FAKE_UPDATE: scenario,
+      for (const id of [
+        "scope:documentation",
+        "scope:typescript-node-stack",
+        "scope:typescript-astro-stack",
+        "scope:typescript-vite-stack",
+        "remote-setup",
+        "assessment:repository-readme",
+      ])
+        assert.match(output, new RegExp(id));
+      const submitted = calls.filter(
+        (entry) =>
+          entry["scope:documentation"] &&
+          entry["scope:typescript-node-stack"] &&
+          entry["scope:typescript-astro-stack"] &&
+          entry["scope:typescript-vite-stack"] &&
+          entry["remote-setup"] === "defer" &&
+          entry.inspection === "sha256:update",
+      );
+      assert.equal(
+        submitted.length,
+        2,
+        "one scope and deferral submission per profile",
+      );
+      for (const entry of submitted) {
+        assert.equal(
+          entry["scope:documentation"].coverage,
+          "The previous adoption scope, proposed for validation.",
+        );
+        for (const stack of ["node", "astro", "vite"])
+          assert.equal(entry[`scope:typescript-${stack}-stack`].noScope, true);
+        if (scenario === "fallback-scope")
+          assert.deepEqual(entry["scope:project-readmes"].candidates, []);
+      }
     });
-    assert.notEqual(status, 0, output);
-    assert.match(output, message);
-    assert.equal(calls.filter((entry) => entry.update).length, 2);
-    assert.ok(
-      !calls.some(
+  }
+
+  for (const scenario of ["contextual", "extra-assessment"]) {
+    test(`CLI ${newest}: release:verify submits requested contextual assessments (${scenario}) and requires completion`, (t) => {
+      const { status, output, calls } = verifyAdoption(t, "complete", {
+        STUB_NEWEST_CLI: newest,
+        FAKE_UPDATE: scenario,
+      });
+      assert.equal(status, 0, output);
+      const protocols = calls.filter((entry) => entry.answersFormat);
+      assert.equal(protocols.length, 2);
+      for (const entry of protocols)
+        assert.equal(
+          entry.answersFormat,
+          newest === "11.0.0"
+            ? "repo-standards/answers/v2"
+            : "repo-standards/answers/v1",
+        );
+      assert.match(
+        output,
+        /outcome complete.*Adopter action: Contextual update: the run asks for contextual work on repository-readme/,
+      );
+      assert.equal(calls.filter((entry) => entry.update).length, 2);
+      const submitted = calls.filter(
         (entry) =>
           entry["assessment:repository-readme"] &&
-          Object.keys(entry).length === 1,
-      ),
-      "never answers unexpected stops",
+          Object.keys(entry).length ===
+            (scenario === "extra-assessment" ? 2 : 1),
+      );
+      assert.equal(
+        submitted.length,
+        2,
+        "one assessment submission per profile",
+      );
+      if (scenario === "extra-assessment") {
+        for (const entry of submitted)
+          assert.deepEqual(
+            entry["assessment:documentation"],
+            adoptionAssessments.documentation,
+          );
+      }
+    });
+  }
+
+  test(`CLI ${newest}: release:verify reports a stopped update's quota reason and retry time`, (t) => {
+    const { status, output } = verifyAdoption(t, "complete", {
+      STUB_NEWEST_CLI: newest,
+      FAKE_UPDATE: "quota",
+    });
+    assert.equal(status, 1, output);
+    assert.match(
+      output,
+      /the update stopped with outcome blocked; missing none\. The GitHub API quota is exhausted\. Retry at 2026-10-24T20:00:00Z\./,
+    );
+  });
+
+  test(`CLI ${newest}: release:verify reports a stopped update without optional cause fields`, (t) => {
+    const { status, output } = verifyAdoption(t, "complete", {
+      STUB_NEWEST_CLI: newest,
+      FAKE_UPDATE: "no-cause",
+    });
+    assert.equal(status, 1, output);
+    assert.match(
+      output,
+      /the update stopped with outcome blocked; missing none\./,
+    );
+    assert.doesNotMatch(output, /undefined|TypeError/);
+  });
+
+  test(`CLI ${newest}: release:verify preserves blockers, failed checks and the update stop reason together`, (t) => {
+    const { status, output } = verifyAdoption(t, "complete", {
+      STUB_NEWEST_CLI: newest,
+      FAKE_UPDATE: "all-diagnostics",
+    });
+    assert.equal(status, 1, output);
+    assert.match(output, /outcome blocked; missing scope:documentation\./);
+    assert.match(output, /A blocker\./);
+    assert.match(output, /A failed check\./);
+    assert.match(output, /The update could not continue\./);
+  });
+
+  for (const [scenario, message] of /** @type {[string, RegExp][]} */ ([
+    [
+      "unknown-format",
+      /unsupported adopt report:.*repo-standards\/adopt\/v999/,
+    ],
+    ["checks", /unexpected question checks/],
+    ["complete-missing", /complete update exited 0 with open questions/],
+    ["rejected-scope", /CLI rejected the scope answer/],
+    ["scope-repeat", /stopped again after answering scope:documentation/],
+    ["question", /unexpected question surprise:documentation/],
+    ["confirmation", /confirmation-required change/],
+    ["blocked", /the update has blockers or failed checks:.*A blocker\./],
+    [
+      "failed-checks",
+      /the update has blockers or failed checks:.*A failed check\./,
+    ],
+    ["missing-assessment", /stopped with outcome contextual/],
+    ["nonzero", /the complete update exited 1/],
+    ["not-ready", /status does not report the run ready to commit/],
+    ["undeferred", /status does not list remote setup/],
+    ["wrong-version", /the update selected/],
+    ["wrong-commit", /the ready status does not identify the verified release/],
+    ["missing-line", /did not report a derived adopter-action line/],
+  ])) {
+    test(`CLI ${newest}: release:verify fails an update with ${scenario}`, (t) => {
+      const { status, output, calls } = verifyAdoption(t, "complete", {
+        STUB_NEWEST_CLI: newest,
+        FAKE_UPDATE: scenario,
+      });
+      assert.notEqual(status, 0, output);
+      assert.match(output, message);
+      assert.equal(calls.filter((entry) => entry.update).length, 2);
+      assert.ok(
+        !calls.some(
+          (entry) =>
+            entry["assessment:repository-readme"] &&
+            Object.keys(entry).length === 1,
+        ),
+        "never answers unexpected stops",
+      );
+    });
+  }
+
+  test(`CLI ${newest}: release:verify fails if submitting the named contextual assessments does not complete`, (t) => {
+    const { status, output } = verifyAdoption(t, "complete", {
+      STUB_NEWEST_CLI: newest,
+      FAKE_UPDATE: "contextual-repeat",
+    });
+    assert.notEqual(status, 0, output);
+    assert.match(
+      output,
+      /stopped again after answering assessment:repository-readme/,
     );
   });
 }
-
-test("release:verify fails if submitting the named contextual assessments does not complete", (t) => {
-  const { status, output } = verifyAdoption(t, "complete", {
-    FAKE_UPDATE: "contextual-repeat",
-  });
-  assert.notEqual(status, 0, output);
-  assert.match(
-    output,
-    /stopped again after answering assessment:repository-readme/,
-  );
-});
 
 test("release:verify fails when no previous stable release is published", (t) => {
   const { status, output } = verifyAdoption(t, "complete", {

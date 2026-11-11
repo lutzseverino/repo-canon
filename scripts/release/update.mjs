@@ -83,7 +83,12 @@ function update(cli, project, args = []) {
     child.stdout || child.stderr,
     "the update adopt output",
   );
-  if (report.format !== "repo-standards/adopt/v2")
+  // Seam (deferred): published adopt report variants; consumers: 1; broader readers in #962.
+  if (
+    !["repo-standards/adopt/v2", "repo-standards/adopt/v3"].includes(
+      report.format,
+    )
+  )
     fail(
       `the update returned an unsupported adopt report: ${child.stdout || child.stderr}`,
     );
