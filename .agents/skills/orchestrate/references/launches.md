@@ -50,7 +50,7 @@ Launch report: <current-turn report path>
 Before an operation makes relay late, expose prerequisite owner steps in the
 report, with the preceding operation's timing/evidence and actual latest start
 when one exists; complete the owner-wait report before that opportunity passes.
-Write the complete launch report, put open owner decisions in the inbox, set the
+Write the complete launch report, put open questions in the report, set the
 specified completion mark, commit the workbench writes and push when it has a
 remote. Hand back through the report only; send no closing message to the
 orchestrating thread. End the report with the final line exactly: status: done
@@ -123,10 +123,10 @@ and end the rows.
 Use a covering installed skill, else context only, in a separate session. Evidence
 supplies primary plan files, cited issues/PRs/comments/run records and the latest
 Closed plan's `retro.md`, never your summary/context.
-Scope names `retro.md`: outcome against Done means, time with waits attributed
-(owner, review, check, blocker, launch), cost-ranked lessons, their routes/links
-under [Close](close.md#route-each-lesson), comparison with the previous retro and
-open issues, and filed/reopened issues in `log.md` with creation evidence.
+Scope names `retro.md`: outcome against Done means; time, with waits by owner/review/check/blocker/launch;
+cost-ranked lessons and [routes/links](close.md#route-each-lesson); comparison with the previous retro
+and open issues; filed/reopened issues in `log.md` with creation evidence; counts of owner answers matching
+recommendations by decision type, proposing preapproval of a type the owner always accepted.
 Count the friction log's gap lines and file the top recurring gap in Scriptorium;
 exclude intake of ideas. Plan references marks the Close review `done <file>`.
 Session retros outside plan closure use the same lesson and gap routes.

@@ -49,7 +49,7 @@ Keep `Item | Running | Waiting on owner | Since (UTC) | Next check`; read only
 records/budget, never harness thread lists or a second view. In this update, act
 on each `your move` row or turn it into a real wait: launch, factory, owner,
 named third party or date. Show arrivals as [templates](references/templates.md#nowmd) says,
-the inbox and unseen inferred-intent items with citations; log those items.
+the inbox and every choice made alone since the last update, with dated sources for veto; log each.
 Link every row/decision code and issue number to its row, record or issue;
 expand unfamiliar codes once per owner-facing message. Deferred checker: implement over
 `now.md`, `inbox.md` and `plan.md` only at the first recorded post-release bare-code slip.
@@ -60,8 +60,8 @@ Research, filing and contract preparation may precede it; execution readiness
 waits for approval, which replaces no independent review or readiness condition. An owner's
 request for work now skips only the plan: [Expedited change](references/launches.md#expedited-change).
 
-Read [intake](references/intake.md) when an owner's idea, a `state:grill` issue,
-or a retro or architecture-review report arrives. After a grill, retain the
+Read [intake](references/intake.md) for ideas, `state:grill` issues, retro/architecture
+reports, or questions from launch reports, issues or incoming messages. After a grill, retain the
 contribution guide's writer publication, final split and independent acceptance
 responsibilities; use `to-spec` and `to-tickets` through the launch template.
 

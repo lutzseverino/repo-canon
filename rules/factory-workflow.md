@@ -449,8 +449,7 @@ contribution guide's owner-question handoff and moves the issue's workflow
 state to whoever must answer: `state:owner` for the owner's answer,
 `state:grill` for the owner's intent, or `state:reporter` for a fact only its
 outside reporter holds. A factory run asks for that state in its run result.
-Work without an issue uses no state label. The question reaches the
-orchestrating agent first, as the contribution guide says.
+Work without an issue uses no state label.
 
 An answered question returns the issue to `state:ready`, which resumes the
 same work and pull request on a current base, whether the pull request is open
