@@ -492,7 +492,7 @@ triage run is the one exception.
 
 The factory's triage run accepts the brief it wrote
 ([ADR 0030](../adr/0030-let-factory-triage-accept-its-own-brief.md)). The
-adapter reads the factory's triage result from `.factory/config.json` in the
+adapter reads the factory's triage result from `.scriptorium/config.json` in the
 trusted checkout, through the exported `factoryTriageResult`:
 
 ```json

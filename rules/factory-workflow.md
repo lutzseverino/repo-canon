@@ -37,7 +37,7 @@ depends on this definition; that conversion does not block this change.
 
 ## Run kinds
 
-`.factory/config.json` enables run kinds under `runKinds`, mapping each to a
+`.scriptorium/config.json` enables run kinds under `runKinds`, mapping each to a
 skill and its arguments:
 
 - **Triage** researches one issue and ends with its Agent Brief or the
@@ -344,7 +344,7 @@ Factory-profile setup provisions and verifies these labels:
 | `factory:release-hold` | `c5def5` | Hold other merges while a release PR is open               |
 | `factory:hold`         | `c5def5` | Pause factory pickups and other merges in this repository  |
 
-Standard-profile setup provisions none. `.factory/config.json` names every
+Standard-profile setup provisions none. `.scriptorium/config.json` names every
 factory-read/written label by role. Only the factory sets `factory:running`,
 `factory:paused` and `factory:failed`, creating any missing ones. Running marks
 an issue a run holds; paused means the factory resumes its own paused run, so

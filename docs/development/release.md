@@ -181,11 +181,11 @@ Canon version or the Repository README names a CLI version, and until the CLI
 version named in the adoption guide, CI, the [development guide](README.md), the
 [source profile](source-profile.md), and the
 [authoring notes](../../authoring-notes.md), plus the toolchain image's
-`.factory/Dockerfile`, equals the floor of the `requires` minimum in
+`.scriptorium/Dockerfile`, equals the floor of the `requires` minimum in
 `standards.yaml`.
 
 Open the release PR with the configured `labels.releaseHold` label from
-`.factory/config.json` (Repo Canon uses `factory:release-hold`), for example
+`.scriptorium/config.json` (Repo Canon uses `factory:release-hold`), for example
 by passing `--label factory:release-hold` to `gh pr create`. Keep that label
 on the PR until it merges or closes, and confirm it is present immediately
 before merging. Factory-profile label setup provisions it.

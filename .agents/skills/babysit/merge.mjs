@@ -145,12 +145,13 @@ async function baseIsStale(connection, branch, head) {
   return comparison.behind_by > 0;
 }
 
+// Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967.
 // This last preflight shares the review snapshot, never the proposed PR tree.
 async function mergeHolds(connection, revision, number) {
   const { files } = await pinnedFiles(
     connection,
     {
-      factory: ".factory/config.json",
+      factory: ".scriptorium/config.json",
     },
     { revision, evidence: `${connection.repository.path}@${revision}` },
   );
@@ -166,7 +167,7 @@ async function mergeHolds(connection, revision, number) {
         Array.isArray(config.labels)))
   )
     throw new Error(
-      "Invalid .factory/config.json: expected version 1, 2 or 3 and a labels object when present.",
+      "Invalid .scriptorium/config.json: expected version 1, 2 or 3 and a labels object when present.",
     );
   const holds = new Map();
   for (const key of ["hold", "releaseHold"]) {
@@ -174,7 +175,7 @@ async function mergeHolds(connection, revision, number) {
     if (label === undefined) continue;
     if (typeof label !== "string" || !label.trim() || label !== label.trim())
       throw new Error(
-        `Invalid .factory/config.json labels.${key}: expected a nonempty, trimmed label.`,
+        `Invalid .scriptorium/config.json labels.${key}: expected a nonempty, trimmed label.`,
       );
     const issuePages = await pages(
       connection,

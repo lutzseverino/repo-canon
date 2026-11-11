@@ -9,6 +9,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -294,6 +295,8 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     ["standard", "standard", {}],
     ["factory", "factory", {}],
     ["source-update", "factory", {}],
+    ["factory-both-update", "factory", {}],
+    ["source-unknown-update", "factory", {}],
     ["edited-update", "standard", {}],
     ["standard-orchestrate-update", "standard", {}],
     ["factory-orchestrate-update", "factory", {}],
@@ -329,7 +332,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         : null;
     const node = label === "node";
     const selectedStack = web ?? (node ? "node" : null);
-    const authoring = label === "source-update";
+    const authoring = label.startsWith("source-");
     const edited = label === "edited-update";
     const baselineVersion = authoring
       ? sourceVersion
@@ -340,7 +343,11 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     mkdirSync(project);
     for (const [path, content] of Object.entries({ ...files, ...extraFiles })) {
       mkdirSync(dirname(join(project, path)), { recursive: true });
-      writeFileSync(join(project, path), content);
+      const target = label.endsWith("-update")
+        ? join(project, path.replace(".scriptorium/", ".factory/"))
+        : join(project, path);
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, content);
     }
     const originalAttributes =
       "* text=auto eol=lf\n*.bat text eol=crlf\n# Project-owned attributes\n";
@@ -409,6 +416,39 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
               directories: [],
             });
           }
+        }
+        if (
+          selectedVersion === version &&
+          report.missing.includes("assessment:factory-sandbox-image")
+        ) {
+          const entry = report.contextual.find(
+            ({ id }) => id === "factory-sandbox-image",
+          );
+          assert.deepEqual(entry.allowedTargets, {
+            paths: [
+              ".scriptorium/Dockerfile",
+              ".factory/Dockerfile",
+              ".factory/config.json",
+            ],
+            directories: [],
+          });
+          // Execute the contextual instructions inside the active public-CLI run.
+          // Exact config installation/retirement and all state remain CLI-owned.
+          const canonical = join(project, ".scriptorium/Dockerfile");
+          const legacy = join(project, ".factory/Dockerfile");
+          mkdirSync(dirname(canonical), { recursive: true });
+          if (!existsSync(canonical) && existsSync(legacy))
+            renameSync(legacy, canonical);
+          if (!existsSync(canonical))
+            writeFileSync(canonical, "FROM node:24-bookworm\n");
+          rmSync(legacy, { force: true });
+          rmSync(join(project, ".factory/config.json"), { force: true });
+          const oldDirectory = join(project, ".factory");
+          if (
+            existsSync(oldDirectory) &&
+            readdirSync(oldDirectory).length === 0
+          )
+            rmSync(oldDirectory, { recursive: true });
         }
         // The contextual inventory includes reused assessments. Only an actual
         // missing question authorizes new contextual work and a new judgment.
@@ -541,6 +581,21 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
             assert.deepEqual(answer.candidates, []);
             assert.deepEqual(answer.unresolved, []);
           }
+          if (kind === "confirmation") answer = question.details.identity;
+          if (
+            selectedVersion === version &&
+            label === "source-unknown-update" &&
+            kind === "assessment" &&
+            name === "factory-sandbox-image"
+          )
+            answer = {
+              status: "blocked",
+              explanation:
+                "The legacy directory contains an unknown file outside the explicit file targets; preserve it and stop migration completion.",
+              evidence: [
+                ".factory/extra.txt remains byte for byte; only the two known legacy files were removed.",
+              ],
+            };
           return { ...question, answer };
         });
         const answers = join(directory, `${label}-answers.json`);
@@ -549,9 +604,33 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
           JSON.stringify({ ...report.answers, questions }),
         );
         ({ report } = invoke("adopt", "--answers", answers));
+        if (
+          selectedVersion === version &&
+          label === "source-unknown-update" &&
+          report.run?.reason?.startsWith("ASSESSMENT_BLOCKED:")
+        ) {
+          assert.equal(report.outcome, "contextual");
+          assert.equal(report.run.outcome, "incomplete");
+          assert.equal(report.run.phase, "assessment");
+          const status = invoke("status").report;
+          assert.equal(status.readyToCommit, false);
+          assert.deepEqual(status.readinessReasons, [
+            "An adoption run is active.",
+          ]);
+          assert.equal(
+            readFileSync(join(project, ".factory/extra.txt"), "utf8"),
+            "unknown repository content\n",
+          );
+          return false;
+        }
       }
       assert.equal(report.outcome, "complete", JSON.stringify(report));
-      assert.equal(invoke("status").report.readyToCommit, true);
+      const status = invoke("status").report;
+      assert.equal(
+        status.readyToCommit,
+        true,
+        `${label}: ${JSON.stringify(status)}`,
+      );
       return attributesRequested;
     };
     if (label.endsWith("-update")) {
@@ -582,6 +661,40 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         "-m",
         `Adopt ${baselineVersion}`,
       );
+      if (profile === "factory") {
+        const distinctive = Buffer.from(
+          "FROM node:24-bookworm\r\n# repository-owned old-only toolchain\r\n",
+        );
+        writeFileSync(join(project, ".factory/Dockerfile"), distinctive);
+        if (label === "factory-both-update") {
+          mkdirSync(join(project, ".scriptorium"), { recursive: true });
+          writeFileSync(
+            join(project, ".scriptorium/Dockerfile"),
+            "FROM node:26-bookworm\n# canonical content wins\n",
+          );
+          writeFileSync(
+            join(project, ".scriptorium/config.json"),
+            '{"version":3,"comments":"replace through normal exact-file confirmation"}\n',
+          );
+          writeFileSync(
+            join(project, ".factory/config.json"),
+            '{"version":3,"comments":"edited legacy config must be deleted"}\n',
+          );
+        }
+        if (label === "source-unknown-update")
+          writeFileSync(
+            join(project, ".factory/extra.txt"),
+            "unknown repository content\n",
+          );
+        git(project, "add", "--all");
+        git(
+          project,
+          "commit",
+          "--quiet",
+          "-m",
+          "Repository-owned toolchain and migration inputs",
+        );
+      }
       // v0.18.0 predates orchestrate; those cases exercise stack updates only.
       if (baselineVersion !== previousVersion) {
         const skill = ".agents/skills/orchestrate";
@@ -666,6 +779,14 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         assert.equal(inspection.confirmation.required, false);
       }
     }
+    if (label === "source-unknown-update") {
+      adopt(version);
+      assert.equal(
+        readFileSync(join(project, ".factory/extra.txt"), "utf8"),
+        "unknown repository content\n",
+      );
+      continue;
+    }
     // The local preceding release has identical contextual rules, so the CLI
     // reuses its assessment; the historical release requires a new one.
     assert.equal(
@@ -734,10 +855,36 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         ),
       );
     }
+    if (profile === "factory") {
+      assert.equal(
+        existsSync(join(project, ".factory")),
+        false,
+        `${label} deletes legacy inputs within the run`,
+      );
+      const dockerfile = readFileSync(join(project, ".scriptorium/Dockerfile"));
+      if (label.endsWith("-update")) {
+        assert.deepEqual(
+          dockerfile,
+          Buffer.from(
+            label === "factory-both-update"
+              ? "FROM node:26-bookworm\n# canonical content wins\n"
+              : "FROM node:24-bookworm\r\n# repository-owned old-only toolchain\r\n",
+          ),
+        );
+        git(project, "add", "--all");
+        git(project, "commit", "--quiet", "-m", "Complete canonical migration");
+        adopt(version);
+        assert.deepEqual(
+          readFileSync(join(project, ".scriptorium/Dockerfile")),
+          dockerfile,
+        );
+        assert.equal(existsSync(join(project, ".factory")), false);
+      }
+    }
     if (profile === "factory")
       assert.deepEqual(
-        readFileSync(join(project, ".factory/config.json")),
-        readFileSync(join(root, ".factory/config.json")),
+        readFileSync(join(project, ".scriptorium/config.json")),
+        readFileSync(join(root, ".scriptorium/config.json")),
         `${label} installs the shipped version-3 factory configuration byte for byte`,
       );
     const modelPolicy = ".github/factory-model-policy.json";
@@ -961,7 +1108,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       false,
       `${profile} never enrolls an adopter in app-author review skipping`,
     );
-    for (const path of [null, "wordtally.mjs", ".factory/config.json"]) {
+    for (const path of [null, "wordtally.mjs", ".scriptorium/config.json"]) {
       const { report: lookup, child } = invoke(
         "rules",
         ...(path ? [path] : []),
@@ -995,7 +1142,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     (declaration) => declaration.id === "factory-configuration",
   );
   assert.equal(configuration.kind, "file");
-  assert.equal(configuration.target, ".factory/config.json");
-  assert.equal(configuration.exact, ".factory/config.json");
+  assert.equal(configuration.target, ".scriptorium/config.json");
+  assert.equal(configuration.exact, ".scriptorium/config.json");
   assert.equal(configuration.rules, undefined);
 });

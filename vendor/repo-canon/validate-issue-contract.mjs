@@ -2179,6 +2179,7 @@ function noContractFeedback(evaluation, corrected) {
 const triggerWaitInterval = 2000;
 const triggerWaitBound = 30000;
 
+// Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967.
 // The factory's triage result as the repository's factory configuration names
 // it under `triageResult`: the `marker` of the line naming the run and the
 // `author` account that posts the result. `null` when the repository has no
@@ -2186,7 +2187,7 @@ const triggerWaitBound = 30000;
 // readiness.
 /** @param {string | URL} [path] */
 export function factoryTriageResult(
-  path = new URL("../../.factory/config.json", import.meta.url),
+  path = new URL("../../.scriptorium/config.json", import.meta.url),
 ) {
   let source;
   try {

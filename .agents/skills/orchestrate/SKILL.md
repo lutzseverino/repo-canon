@@ -35,7 +35,7 @@ each other; private planning retains its own sources. Its files:
 ## Lifecycle
 
 Use the **Canonical stages** in the repository's installed `factory-workflow`
-rules (source: `rules/factory-workflow.md`). Read coverage with `.factory/config.json`.
+rules (source: `rules/factory-workflow.md`). Read coverage with `.scriptorium/config.json`. <!-- Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967. -->
 For each covered stage hand off through `factory` and wait; otherwise perform it
 by hand to the same contract with the factory's own scripts. Log one
 `Gap | <stage> | <repository> | <why>` line in the friction log, `log.md`.
@@ -111,7 +111,7 @@ Paths are relative to each repository or the workbench.
 - A tracked repository's Repository Standards adoption record: the Repo Canon
   source its Selection names, for the `workbench` profile offer and lessons
   about a Repo Canon skill or rule. When it is missing, use the example source.
-- `.repo-standards/rules/factory-workflow.md` and `.factory/config.json`: stages,
+- `.repo-standards/rules/factory-workflow.md` and `.scriptorium/config.json`: stages,
   coverage and Model selection. When configuration is missing, do uncovered work by hand;
   when rules are missing, consult source `rules/factory-workflow.md` for the stages.
 - Scriptorium status JSON: budget/model observations. When absent or unavailable,

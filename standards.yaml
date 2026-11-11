@@ -610,8 +610,8 @@ profiles:
 
       factory-configuration:
         kind: file
-        target: .factory/config.json
-        exact: .factory/config.json
+        target: .scriptorium/config.json
+        exact: .scriptorium/config.json
 
       factory-workflow:
         kind: repository
@@ -633,8 +633,11 @@ profiles:
             timeout-seconds: 30
 
       factory-sandbox-image:
-        kind: file
-        target: .factory/Dockerfile
+        kind: repository
+        targets:
+          paths:
+            [.scriptorium/Dockerfile, .factory/Dockerfile, .factory/config.json]
+          directories: []
         rules: rules/factory-sandbox-image.md
         guidance: guidance/factory-sandbox-image.md
 

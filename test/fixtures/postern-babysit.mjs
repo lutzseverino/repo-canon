@@ -149,7 +149,10 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
           );
         const revision = body.variables.revision;
         const configuration =
-          state.factorySnapshots?.[revision] ?? state.factoryConfiguration;
+          body.variables.factory === `${revision}:.factory/config.json`
+            ? state.legacyFactoryConfiguration
+            : (state.factorySnapshots?.[revision] ??
+              state.factoryConfiguration);
         if (state.traceReviewConfiguration) {
           state.configurationReads = [
             ...(state.configurationReads ?? []),

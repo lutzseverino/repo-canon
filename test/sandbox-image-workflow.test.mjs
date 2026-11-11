@@ -16,13 +16,25 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
+import { stringify } from "yaml";
+import { parseStandards } from "../scripts/standards-declarations.mjs";
+import {
+  fixtureSource,
+  publicCli,
+  sourceUrl,
+} from "./helpers/fixture-source.mjs";
 
 const workflowPath = ".github/workflows/sandbox-image.yml";
-const dockerfilePath = ".factory/Dockerfile";
+const dockerfilePath = ".scriptorium/Dockerfile";
 const workflow = () =>
   readFileSync(new URL(`../${workflowPath}`, import.meta.url), "utf8");
 
-function fixture(t, changes, dockerfile = "FROM scratch\n") {
+function fixture(
+  t,
+  changes,
+  dockerfile = "FROM scratch\n",
+  installedWorkflow = workflow(),
+) {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-sandbox-workflow-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const repository = join(directory, "repository");
@@ -67,7 +79,7 @@ function fixture(t, changes, dockerfile = "FROM scratch\n") {
       git("checkout", "--quiet", "--detach", head);
     },
     run() {
-      const script = workflow().match(/\n {8}run: \|\n([\s\S]+)$/)?.[1];
+      const script = installedWorkflow.match(/\n {8}run: \|\n([\s\S]+)$/)?.[1];
       assert.ok(script, "the workflow has an executable build step");
       return spawnSync(
         "bash",
@@ -158,9 +170,11 @@ for (const path of [dockerfilePath, workflowPath]) {
 // Only the Dockerfile builds the image, so other factory files, and paths
 // that merely start like it, need no build.
 for (const path of [
+  ".scriptorium/config.json",
+  ".scriptorium/Dockerfile.old",
+  ".scriptorium/nested/tool\nwith a newline",
+  ".factory/Dockerfile",
   ".factory/config.json",
-  ".factory/Dockerfile.old",
-  ".factory/nested/tool\nwith a newline",
   ".sandcastle/Dockerfile",
 ]) {
   test(`a change to ${JSON.stringify(path)} alone does not build`, (t) => {
@@ -173,7 +187,7 @@ for (const path of [
   });
 }
 
-test("moving the Dockerfile out of .factory fails instead of skipping the build", (t) => {
+test("moving the Dockerfile out of .scriptorium fails instead of skipping the build", (t) => {
   const f = fixture(t, {
     [dockerfilePath]: null,
     Dockerfile: "FROM scratch\n",
@@ -181,7 +195,7 @@ test("moving the Dockerfile out of .factory fails instead of skipping the build"
   stubDocker(f);
   const result = f.run();
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /\.factory\/Dockerfile/);
+  assert.match(result.stderr, /\.scriptorium\/Dockerfile/);
 });
 
 test("a failed Docker build fails the job and preserves its diagnostic", (t) => {
@@ -244,4 +258,128 @@ test("the shared workflow always reports on pull requests with read-only permiss
       exact: workflowPath,
     },
   );
+});
+
+test("public CLI installs the workflow whose executable step builds canonical inputs only", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "sandbox-installed-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const root = fileURLToPath(new URL("..", import.meta.url));
+  const cli = publicCli(directory);
+  // Install the production exact configuration/workflow declarations. Full
+  // factory/standard/workbench selection is covered by the adoption suites.
+  const ids = ["factory-configuration", "factory-sandbox-image-workflow"];
+  const selected = declarations(root).factory.filter(({ id }) =>
+    ids.includes(id),
+  );
+  const { source, env, git, publish } = fixtureSource(directory, {
+    profiles: { factory: { declarations: selected } },
+  });
+  const manifest = parseStandards(
+    readFileSync(join(root, "standards.yaml"), "utf8"),
+  );
+  manifest.defaults = { declarations: {} };
+  manifest.profiles = {
+    factory: {
+      description: manifest.profiles.factory.description,
+      declarations: Object.fromEntries(
+        selected.map(({ id, ...declaration }) => [id, declaration]),
+      ),
+    },
+  };
+  writeFileSync(join(source, "standards.yaml"), stringify(manifest));
+  git(source, "add", "standards.yaml");
+  git(
+    source,
+    "commit",
+    "--quiet",
+    "-m",
+    "Select production sandbox declarations",
+  );
+  git(source, "tag", "v1.0.0");
+  publish(["v1.0.0"]);
+  const project = join(directory, "project");
+  mkdirSync(project);
+  git(project, "init", "--quiet");
+  git(project, "commit", "--quiet", "--allow-empty", "-m", "Fixture");
+  const invoke = (...args) => {
+    const child = spawnSync(cli, [...args, "--project", project, "--json"], {
+      env,
+      encoding: "utf8",
+    });
+    assert.ifError(child.error);
+    const report = JSON.parse(child.stdout || child.stderr);
+    assert.ok([0, 1].includes(child.status), JSON.stringify(report));
+    return report;
+  };
+  let report = invoke(
+    "adopt",
+    sourceUrl,
+    "--standards-version",
+    "v1.0.0",
+    "--profile",
+    "factory",
+  );
+  if (report.outcome === "answers-required") {
+    const answers = join(directory, "answers.json");
+    writeFileSync(
+      answers,
+      JSON.stringify({
+        ...report.answers,
+        questions: report.answers.questions.map((question) => ({
+          ...question,
+          answer: question.id === "inspection" ? true : question.answer,
+        })),
+      }),
+    );
+    report = invoke("adopt", "--answers", answers);
+  }
+  assert.equal(report.outcome, "complete", JSON.stringify(report));
+  assert.equal(invoke("status").readyToCommit, true);
+  const installed = readFileSync(join(project, workflowPath), "utf8");
+  assert.equal(installed, workflow());
+  assert.deepEqual(
+    readFileSync(join(project, ".scriptorium/config.json")),
+    readFileSync(join(root, ".scriptorium/config.json")),
+  );
+  for (const path of [
+    dockerfilePath,
+    workflowPath,
+    ".scriptorium/config.json",
+    ".factory/Dockerfile",
+    "README.md",
+  ]) {
+    const f = fixture(
+      t,
+      { [path]: "FROM scratch\n# installed workflow exercise\n" },
+      "FROM scratch\n",
+      installed,
+    );
+    const capture = stubDocker(f);
+    assert.equal(f.run().status, 0);
+    if ([dockerfilePath, workflowPath].includes(path))
+      assert.deepEqual(capture(), {
+        args: ["build", "-"],
+        input:
+          path === dockerfilePath
+            ? "FROM scratch\n# installed workflow exercise\n"
+            : "FROM scratch\n",
+      });
+    else assert.throws(capture, { code: "ENOENT" });
+  }
+  const missing = fixture(
+    t,
+    { [dockerfilePath]: null },
+    "FROM scratch\n",
+    installed,
+  );
+  stubDocker(missing);
+  assert.notEqual(missing.run().status, 0);
+  const broken = fixture(
+    t,
+    { [dockerfilePath]: "FROM scratch\n# broken\n" },
+    "FROM scratch\n",
+    installed,
+  );
+  stubDocker(broken, 17);
+  assert.equal(broken.run().status, 17);
 });

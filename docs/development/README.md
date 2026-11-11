@@ -205,7 +205,7 @@ missing repository-label creation with shared metadata, preservation of
 existing labels, provisioning failures without readiness, and parent,
 specification and standard-profile exemptions. The model prefix and ready
 label come from the selected destination's installed
-`.repo-standards/rules/factory-workflow.md` and `.factory/config.json` at one
+`.repo-standards/rules/factory-workflow.md` and `.scriptorium/config.json` at one
 pinned default-branch commit; verified absence of the rules requires no model
 label, while a failed read permits no readiness writes. Actor discovery uses
 GraphQL `viewer`'s type and login with the same credential, which supports App

@@ -157,7 +157,7 @@ triageResult, facts, issue?, edits?, writerProof?)` comes from the host's
    ```
 
    The configured author and marker still come from `factoryTriageResult` and
-   `.factory/config.json`'s `triageResult`. The evidence is not a run report,
+   `.scriptorium/config.json`'s `triageResult`. The evidence is not a run report,
    even when both use the same configured marker name. Ordinary disclaimer
    framing may surround these lines; no contract Brief appears in attestation.
 

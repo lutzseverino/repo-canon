@@ -131,13 +131,13 @@ export function versionDisagreements(read) {
     adoptionGuidePath,
     ciWorkflowPath,
     ...developmentDocumentPaths,
-    ".factory/Dockerfile",
+    ".scriptorium/Dockerfile",
   ]) {
     const cliMentions = cliMentionsIn(read, path);
     if (
       (path === adoptionGuidePath ||
         path === ciWorkflowPath ||
-        path === ".factory/Dockerfile") &&
+        path === ".scriptorium/Dockerfile") &&
       cliMentions.length === 0
     ) {
       problems.push(`${path} names no CLI version.`);

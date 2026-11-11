@@ -141,8 +141,13 @@ async function exercise(options = {}, command = main) {
       );
       assert.equal(
         body.variables.configuration,
-        `${policyRevision}:.factory/config.json`,
+        `${policyRevision}:.scriptorium/config.json`,
       );
+      const selectedConfiguration =
+        body.variables.configuration ===
+        `${policyRevision}:.factory/config.json`
+          ? options.legacyConfiguration
+          : options.configuration;
       if (options.rulesFailure)
         return json({ message: "Rules unavailable" }, options.rulesFailure);
       if (options.rulesErrors)
@@ -160,12 +165,12 @@ async function exercise(options = {}, command = main) {
                     isTruncated: false,
                   },
             configuration:
-              options.factory === false || options.configuration === null
+              options.factory === false || selectedConfiguration === null
                 ? null
                 : {
                     __typename: "Blob",
                     text: JSON.stringify(
-                      options.configuration ?? {
+                      selectedConfiguration ?? {
                         labels: { ready: label },
                         modelLabelPrefix: "model:",
                       },
@@ -1033,4 +1038,32 @@ test("v2 readiness waits for all platform facts to be evaluated before writing r
   assert.equal(result.error, undefined);
   assert.equal(result.code, 0);
   assert.equal(writes(result).length, 1);
+});
+
+test("canonical readiness policy ignores conflicting and legacy-only configuration", async () => {
+  const legacy = {
+    labels: { ready: label },
+    modelLabelPrefix: "legacy-model:",
+  };
+  const result = await exercise({
+    configuration: { labels: { ready: label }, modelLabelPrefix: "chosen:" },
+    legacyConfiguration: legacy,
+    argv: ["42", revision, "chosen:small@high"],
+  });
+  assert.equal(result.error, undefined);
+  assert.ok(result.labels.includes("chosen:small@high"));
+  const missing = await exercise({
+    configuration: null,
+    legacyConfiguration: legacy,
+  });
+  assert.match(missing.error?.message ?? "", /factory applicability/);
+  assert.deepEqual(writes(missing), []);
+  const malformed = await exercise({
+    policyFiles: {
+      configuration: { __typename: "Blob", text: "{", isTruncated: false },
+    },
+    legacyConfiguration: legacy,
+  });
+  assert.match(malformed.error?.message ?? "", /factory applicability/);
+  assert.deepEqual(writes(malformed), []);
 });

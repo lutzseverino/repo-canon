@@ -5,7 +5,7 @@ or directories. Adoption installs its rules for the whole repository.
 
 ## Host compatibility
 
-The shipped `.factory/config.json` is configuration version 3. Only
+The shipped `.scriptorium/config.json` is configuration version 3. Only
 Scriptorium v4 accepts it, and no released host does yet: Scriptorium v3
 refuses it and pauses the repository. Deliver this adoption only once the
 serving host's release accepts it, updating the repository and its host

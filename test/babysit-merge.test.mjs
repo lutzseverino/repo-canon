@@ -58,7 +58,10 @@ const releaseIssue = (
 test("installed merge accepts the shipped configuration and version 1 on the default branch", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const shipped = JSON.parse(
-    readFileSync(new URL("../.factory/config.json", import.meta.url), "utf8"),
+    readFileSync(
+      new URL("../.scriptorium/config.json", import.meta.url),
+      "utf8",
+    ),
   );
   for (const configuration of [shipped, factoryConfiguration]) {
     for (const held of [false, true]) {
@@ -81,7 +84,10 @@ test("installed merge accepts the shipped configuration and version 1 on the def
 test("repository holds cover issues and other PRs, exempt only this PR, and resume after removal", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const shipped = JSON.parse(
-    readFileSync(new URL("../.factory/config.json", import.meta.url), "utf8"),
+    readFileSync(
+      new URL("../.scriptorium/config.json", import.meta.url),
+      "utf8",
+    ),
   );
   for (const configuration of [
     { version: 1, labels: { hold: "factory:hold" } },
@@ -263,7 +269,7 @@ test("release hold uses the pinned destination snapshot despite a moving default
       .map((read) => read.revision),
     [revision, revision],
   );
-  assert.equal(reads.at(-1).factory, `${revision}:.factory/config.json`);
+  assert.equal(reads.at(-1).factory, `${revision}:.scriptorium/config.json`);
   const proposed = run(t, {
     factoryConfiguration: { version: 1, labels: {} },
     localReviewConfiguration: { factory: factoryConfiguration },
@@ -608,9 +614,9 @@ function run(
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const statePath = join(directory, "state.json");
   if (state.localReviewConfiguration?.factory) {
-    mkdirSync(join(directory, ".factory"));
+    mkdirSync(join(directory, ".scriptorium"));
     writeFileSync(
-      join(directory, ".factory/config.json"),
+      join(directory, ".scriptorium/config.json"),
       JSON.stringify(state.localReviewConfiguration.factory),
     );
   }
@@ -1721,5 +1727,40 @@ test("thread identities match raw GraphQL bots and people without confusing thei
       assert.equal(result.status, status, result.stderr);
       if (status !== 0) assert.equal(result.state.merge, undefined);
     }
+  }
+});
+
+test("canonical holds ignore conflicting legacy labels and legacy-only config supplies no hold", (t) => {
+  const legacy = {
+    version: 3,
+    labels: { hold: "legacy:hold", releaseHold: "legacy:release" },
+  };
+  const canonical = {
+    version: 3,
+    labels: { hold: "canonical:hold", releaseHold: "canonical:release" },
+  };
+  for (const configuration of [undefined, canonical]) {
+    const result = run(t, {
+      factoryConfiguration: configuration,
+      legacyFactoryConfiguration: legacy,
+      releaseIssues: [
+        releaseIssue(24, "open", ["legacy:hold", "legacy:release"]),
+      ],
+      traceReviewConfiguration: true,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      result.state.configurationReads.at(-1).factory,
+      `${"b".repeat(40)}:.scriptorium/config.json`,
+    );
+  }
+  for (const label of ["canonical:hold", "canonical:release"]) {
+    const result = run(t, {
+      factoryConfiguration: canonical,
+      legacyFactoryConfiguration: legacy,
+      releaseIssues: [releaseIssue(24, "open", [label])],
+    });
+    assert.equal(result.status, 9, result.stderr);
+    assert.equal(result.state.merge, undefined);
   }
 });

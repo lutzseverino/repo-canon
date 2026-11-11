@@ -19,6 +19,7 @@ import {
 // The validator binds one ready label; a companion carries no other state.
 const [readyLabel] = readyLabels;
 
+// Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967.
 // The model label prefix this readiness needs, or null: only where the
 // destination's installed factory rules apply and its factory configuration
 // names this ready label. Both come from one pinned default-branch commit,
@@ -27,14 +28,14 @@ async function modelPolicy(connection) {
   try {
     const { files, evidence } = await pinnedFiles(connection, {
       rules: ".repo-standards/rules/factory-workflow.md",
-      configuration: ".factory/config.json",
+      configuration: ".scriptorium/config.json",
     });
     if (files.rules === null) return null;
     const { labels, modelLabelPrefix } =
       JSON.parse(files.configuration ?? "null") ?? {};
     if (typeof labels?.ready !== "string" || !modelLabelPrefix?.trim?.())
       throw new Error(
-        `${evidence}: .factory/config.json names no ready label and model label prefix.`,
+        `${evidence}: .scriptorium/config.json names no ready label and model label prefix.`,
       );
     return labels.ready === readyLabel ? modelLabelPrefix : null;
   } catch (error) {

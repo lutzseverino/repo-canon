@@ -125,7 +125,7 @@ configuration returns `1` and permits no merge. A prior wait result and proposed
 PR-branch policy cannot bypass the outcome check.
 Immediately before its merge write, it reads `labels.hold` and
 `labels.releaseHold` from
-`.factory/config.json` at that same destination default-branch snapshot and
+`.scriptorium/config.json` at that same destination default-branch snapshot and
 lists open issues and PRs for the repository hold and open PRs for the release
 hold, excluding only the PR being merged. An absent file or key adds no hold. Unreadable or invalid configuration or issue/PR reads
 permit no merge write and follow the freshness-read failure handling.
@@ -200,7 +200,7 @@ Paths are relative to the repository root.
 - `.github/workflows/pr-metadata.yml`: the workflow whose presence the merge
   command verifies on the live default branch for plan-limited delivery. When
   missing or unreadable, that path permits no merge.
-- `.factory/config.json`: its `labels.hold` and `labels.releaseHold`, which the
+- `.scriptorium/config.json`: its `labels.hold` and `labels.releaseHold`, which the
   merge command reads. When the file or a key is missing, that hold does not apply.
 - `.repo-standards/runtime/`: the pinned Repository Standards runtime, its
   `package-lock.json` and `node_modules/.bin/repo-standards`, which the

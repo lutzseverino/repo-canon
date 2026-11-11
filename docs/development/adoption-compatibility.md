@@ -105,6 +105,42 @@ on the normal preservation of its locally edited source, as described in
 It needs no restore step or CLI state edit; downstream standard/factory
 adopters receive the normal removal of unchanged installations.
 
+## Scriptorium canonical input migration
+
+The factory profile installs `.scriptorium/config.json` and
+`.scriptorium/Dockerfile`. Its exact version-3 configuration links the published
+`scriptorium-v4.1.0` schema through `$schema`; that schema links matching
+configuration and sandbox-image documentation. All current consumers read only
+this canonical configuration. Labels, skill/rule names and separate policy files
+retain their meanings and locations. Standard/workbench profiles install neither
+factory input, and orchestrate stays workbench-only.
+
+Use the supported `repo-standards adopt` update and complete its contextual
+`factory-sandbox-image` assessment. It permits only `.scriptorium/Dockerfile`,
+`.factory/Dockerfile` and `.factory/config.json`, with no directory targets:
+preserve an existing canonical Dockerfile, otherwise move the legacy Dockerfile
+byte for byte, then delete both legacy files (including edited config) and remove
+the empty legacy directory. Unknown legacy files stay untouched and block the
+assessment until separately resolved; they are outside the allowed targets.
+Explicit file targets avoid the directory-removal readiness defect in public
+CLI 10.0.0 ([repo-standards #497](https://github.com/lutzseverino/repo-standards/issues/497)).
+Canonical content takes precedence without a migration conflict stop or content merge. The separate exact-file declaration
+installs canonical config with normal exact-file confirmation. A canonical-only
+repeat update keeps Dockerfile bytes. Leave CLI-owned state to the CLI; perform
+all migration work within the update run.
+
+Before either the source PR or an adopter migration PR merges, read the legacy
+config from its pre-update snapshot and verify that no open issue or pull request
+carries either configured `labels.hold` or `labels.releaseHold`. Record the
+labels, query, time and absence in that PR. The new delivery helper reads only
+canonical config from the trusted base; a legacy-only base supplies no holds
+during migration. This breaking path change has no fallback. Move direct callers
+to canonical inputs and use a Scriptorium release supporting them. Canon's own
+source files move in its source PR, leaving `.repo-standards/` records untouched
+until supported self-adoption. Repo-canon pickup remains paused from merge until
+the separately owned live v4 switch; this source work does not deploy a host,
+update adopters or publish a release.
+
 ## Validator executable migration
 
 Fresh adoption installs only the new exact targets, without compatibility copies:
