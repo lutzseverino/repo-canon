@@ -1635,6 +1635,371 @@ const run = (
   });
 };
 
+// Exercise real request reads and polling with only platform transport and time
+// controlled. Historical timestamps stay deterministic across resumed calls.
+async function waitAt(
+  t,
+  state,
+  now,
+  { limit = 60, installed = false, onPoll = (..._args) => {} } = {},
+) {
+  const directory = mkdtempSync(join(tmpdir(), "babysit-ready-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const statePath = join(directory, "state.json");
+  writeFileSync(
+    statePath,
+    JSON.stringify({
+      head,
+      createdAt: "2026-10-11T05:00:00Z",
+      pushedAt: "2026-10-11T05:10:00Z",
+      requiredChecks: { version: 1, checks: ["test"] },
+      checks: [checkRun()],
+      reviewConfiguration: { reviewer: codexReviewer },
+      ...state,
+    }),
+  );
+  let clock = Date.parse(now);
+  const mockNow = t.mock.method(Date, "now", () => clock);
+  const mockTimer = t.mock.method(
+    globalThis,
+    "setTimeout",
+    (callback, delay) => {
+      clock += delay;
+      queueMicrotask(callback);
+    },
+  );
+  let stdout = "";
+  let stderr = "";
+  const mockOutput = t.mock.method(process.stdout, "write", (chunk) => {
+    stdout += chunk;
+    return true;
+  });
+  const mockError = t.mock.method(process.stderr, "write", (chunk) => {
+    stderr += chunk;
+    return true;
+  });
+  const fetch = fixtureFetch(statePath);
+  const polls = [];
+  const connection = connect("https://github.com/example/repository", {
+    credential: "fixture-credential",
+    fetch: async (input, options) => {
+      if (
+        options.body &&
+        JSON.parse(options.body).query?.includes("PosternPullRequest(")
+      ) {
+        polls.push(clock);
+        const current = JSON.parse(readFileSync(statePath, "utf8"));
+        onPoll(current, clock);
+        writeFileSync(statePath, JSON.stringify(current));
+      }
+      return fetch(input, options);
+    },
+  });
+  const waitMain = installed
+    ? (
+        await import(
+          pathToFileURL(
+            installedValidator(t, ".agents/skills/babysit/wait.mjs"),
+          ).href
+        )
+      ).main
+    : main;
+  const code = await waitMain(
+    ["12", "--limit", String(limit), "--interval", "30"],
+    connection,
+  );
+  mockNow.mock.restore();
+  mockTimer.mock.restore();
+  mockOutput.mock.restore();
+  mockError.mock.restore();
+  return { code, stdout, stderr, polls };
+}
+
+const readyTimeline = [
+  { event: "ready_for_review", created_at: "2026-10-11T06:00:00Z" },
+];
+
+test("wait reloads ready history during polling and preserves request bounds after a later push", async (t) => {
+  const changed = await waitAt(
+    t,
+    { timeline: readyTimeline },
+    "2026-10-11T06:04:30Z",
+    {
+      onPoll(state, now) {
+        if (now >= Date.parse("2026-10-11T06:05:00Z"))
+          state.timeline = [
+            ...readyTimeline,
+            { event: "ready_for_review", created_at: "2026-10-11T06:05:00Z" },
+          ];
+      },
+    },
+  );
+  assert.equal(changed.code, 5, changed.stdout);
+  assert.equal(changed.polls.length, 3);
+  const reviewer = {
+    ...codexReviewer,
+    bounds: { ...codexReviewer.bounds, reviewRequests: 2 },
+  };
+  const state = {
+    reviewConfiguration: { reviewer },
+    timeline: readyTimeline,
+    comments: [
+      {
+        login: "owner",
+        createdAt: "2026-10-11T05:20:00Z",
+        body: reviewer.request.comment,
+      },
+    ],
+  };
+  const covered = await waitAt(t, state, "2026-10-11T06:01:00Z");
+  assert.equal(covered.code, 5, covered.stdout);
+  const pushed = await waitAt(
+    t,
+    { ...state, pushedAt: "2026-10-11T06:00:30Z" },
+    "2026-10-11T06:01:00Z",
+  );
+  assert.equal(pushed.code, 4, pushed.stdout);
+  assert.match(pushed.stdout, /review request bound reached \(2\)/);
+});
+
+test("unreadable or malformed ready history fails the wait instead of using opening time", async (t) => {
+  for (const state of [
+    { failTimeline: 404 },
+    { timelinePages: [{}] },
+    { timeline: [{ event: "ready_for_review", created_at: "invalid" }] },
+  ]) {
+    const result = await waitAt(t, state, "2026-10-11T06:01:00Z");
+    assert.equal(result.code, 1, result.stdout);
+    assert.match(result.stderr, /timeline|ready-for-review/);
+  }
+});
+
+test("ready restarts both bounds without a response or with an in-progress response", async (t) => {
+  for (const [
+    now,
+    comments,
+    code,
+    phrase,
+  ] of /** @type {Array<[string, any[], number, RegExp]>} */ ([
+    ["2026-10-11T06:01:00Z", [], 5, /still waiting on reviewer/],
+    ["2026-10-11T06:05:00Z", [], 4, /did not respond within 5 minutes/],
+    [
+      "2026-10-11T06:28:00Z",
+      [{ login: codex, createdAt: "2026-10-11T06:00:05Z", body: "Reviewing" }],
+      5,
+      /still waiting on reviewer/,
+    ],
+    [
+      "2026-10-11T06:30:00Z",
+      [{ login: codex, createdAt: "2026-10-11T06:00:05Z", body: "Reviewing" }],
+      4,
+      /did not review within 30 minutes/,
+    ],
+  ])) {
+    const result = await waitAt(t, { timeline: readyTimeline, comments }, now);
+    assert.equal(result.code, code, result.stdout);
+    assert.match(result.stdout, phrase);
+  }
+});
+
+test("ready preserves draft-period finished comments, native reviews and unavailability", async (t) => {
+  const request = {
+    login: "owner",
+    createdAt: "2026-10-11T05:20:00Z",
+    body: codexReviewer.request.comment,
+  };
+  for (const installed of [false, true]) {
+    for (const evidence of [
+      {
+        comments: [request, summary(completed, head)],
+        code: 0,
+        phrase: /reviewer reviewed/,
+      },
+      {
+        comments: [request],
+        reviews: [
+          {
+            user: { login: codex },
+            commit_id: head,
+            state: "APPROVED",
+            body: "",
+          },
+        ],
+        code: 0,
+        phrase: /reviewer reviewed/,
+      },
+      {
+        comments: [request, unavailable("2026-10-11T05:40:00Z")],
+        code: 3,
+        phrase: /reviewer unavailable/,
+      },
+    ]) {
+      const result = await waitAt(
+        t,
+        { timeline: readyTimeline, ...evidence },
+        "2026-10-11T06:01:00Z",
+        { installed },
+      );
+      assert.equal(result.code, evidence.code, result.stdout);
+      assert.match(result.stdout, evidence.phrase);
+    }
+  }
+  // A later explicit request still invalidates older comment evidence.
+  const result = await waitAt(
+    t,
+    {
+      timeline: readyTimeline,
+      comments: [
+        summary(completed, head),
+        unavailable("2026-10-11T05:40:00Z"),
+        { ...request, createdAt: "2026-10-11T06:02:00Z" },
+      ],
+    },
+    "2026-10-11T06:07:00Z",
+  );
+  assert.equal(result.code, 4, result.stdout);
+  assert.match(result.stdout, /did not respond/);
+});
+
+test("latest ready history and later explicit requests win regardless of current draft state", async (t) => {
+  for (const isDraft of [false, true]) {
+    for (const comments of [
+      [],
+      [
+        {
+          login: "owner",
+          createdAt: "2026-10-11T06:20:00Z",
+          body: codexReviewer.request.comment,
+        },
+      ],
+    ]) {
+      const result = await waitAt(
+        t,
+        {
+          isDraft,
+          // Latest event is on the second page, with an unrelated event after it.
+          timelinePages: [
+            readyTimeline,
+            [
+              { event: "ready_for_review", created_at: "2026-10-11T06:10:00Z" },
+              {
+                event: "converted_to_draft",
+                created_at: "2026-10-11T06:21:00Z",
+              },
+            ],
+          ],
+          comments,
+        },
+        comments.length ? "2026-10-11T06:21:00Z" : "2026-10-11T06:11:00Z",
+      );
+      assert.equal(result.code, 5, result.stdout);
+    }
+    const unchanged = await waitAt(
+      t,
+      { isDraft, timeline: [], pushedAt: "2026-10-11T05:00:00Z" },
+      "2026-10-11T06:01:00Z",
+    );
+    assert.equal(unchanged.code, 4, unchanged.stdout);
+    assert.match(unchanged.stdout, /did not respond/);
+  }
+});
+
+test("explicit-only waits ignore ready history for missing, draft-period and later requests", async (t) => {
+  const reviewer = {
+    ...codexReviewer,
+    request: { ...codexReviewer.request, onOpen: false },
+  };
+  for (const [
+    comments,
+    code,
+    phrase,
+  ] of /** @type {Array<[any[], number, RegExp]>} */ ([
+    [[], 4, /review not requested/],
+    [
+      [
+        {
+          login: "owner",
+          createdAt: "2026-10-11T05:20:00Z",
+          body: reviewer.request.comment,
+        },
+      ],
+      4,
+      /did not respond/,
+    ],
+    [
+      [
+        {
+          login: "owner",
+          createdAt: "2026-10-11T05:20:00Z",
+          body: reviewer.request.comment,
+        },
+        summary(completed, head),
+      ],
+      0,
+      /reviewer reviewed/,
+    ],
+    [
+      [
+        {
+          login: "owner",
+          createdAt: "2026-10-11T06:00:30Z",
+          body: reviewer.request.comment,
+        },
+      ],
+      5,
+      /still waiting on reviewer/,
+    ],
+  ])) {
+    const result = await waitAt(
+      t,
+      { reviewConfiguration: { reviewer }, timeline: readyTimeline, comments },
+      "2026-10-11T06:01:00Z",
+    );
+    assert.equal(result.code, code, result.stdout);
+    assert.match(result.stdout, phrase);
+  }
+});
+
+test("a long draft waits from ready for the pushed head, through polls and resumed waits", async (t) => {
+  for (const installed of [false, true]) {
+    await t.test(installed ? "installed" : "source", async (t) => {
+      const state = {
+        timeline: readyTimeline,
+        comments: [
+          {
+            login: codex,
+            createdAt: "2026-10-11T06:00:05Z",
+            body: "Reviewing",
+          },
+        ],
+      };
+      const first = await waitAt(t, state, "2026-10-11T06:01:00Z", {
+        installed,
+      });
+      assert.equal(first.code, 5, first.stdout);
+      assert.equal(first.polls.length, 3);
+      assert.match(first.stdout, /still waiting on reviewer/);
+      const resumed = await waitAt(t, state, "2026-10-11T06:03:00Z", {
+        installed,
+        onPoll(current, now) {
+          if (now >= Date.parse("2026-10-11T06:03:30Z"))
+            current.reviews = [
+              {
+                user: { login: codex },
+                commit_id: head,
+                state: "APPROVED",
+                body: "",
+              },
+            ];
+        },
+      });
+      assert.equal(resumed.code, 0, resumed.stdout);
+      assert.equal(resumed.polls.length, 2);
+      assert.match(resumed.stdout, /reviewer reviewed/);
+    });
+  }
+});
+
 test("the installed wait applies the declaration without delaying for external review", async (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/wait.mjs");
   const result = await run(

@@ -395,6 +395,25 @@ export function conversationComments(pages) {
   return comments;
 }
 
+// Read the complete transition history each time; a resumed wait uses the same
+// platform time, and returning to draft does not erase an earlier ready event.
+export async function readyForReviewTime(connection, number) {
+  let latest = null;
+  for (const page of await pages(
+    connection,
+    `/repos/${connection.repository.path}/issues/${number}/timeline?per_page=100`,
+  )) {
+    if (!Array.isArray(page)) unreadable("ready-for-review history");
+    for (const event of page) {
+      if (event?.event !== "ready_for_review") continue;
+      const time = Date.parse(event.created_at);
+      if (!Number.isFinite(time)) unreadable("a ready-for-review time");
+      latest = latest === null ? time : Math.max(latest, time);
+    }
+  }
+  return latest;
+}
+
 // Whether GitHub recorded the push of the pull request's head, with its time
 // for the reviewer: the recorded time, else the committer date, never before
 // opening.

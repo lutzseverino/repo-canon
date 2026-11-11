@@ -37,6 +37,7 @@ import {
   reviewComments,
   pushTime,
   conversationComments,
+  readyForReviewTime,
 } from "./platform.mjs";
 
 import {
@@ -81,7 +82,9 @@ const workflowRunLink = (link) =>
 // A check settles that workflow's latest run only if it started at or after
 // the run's latest attempt. A workflow whose latest run failed with no check
 // from that run or attempt joins the failed checks under its name and run link;
-// `requestedAt` is the latest review request; `pushedAt` is the head's push
+// `requestedAt` is the effective review request time; `evidenceRequestedAt`
+// retains the opening/explicit-request cutoff for completion and unavailability.
+// `pushedAt` is the head's push
 // time or its committer-date fallback, used for reviewer timing. An empty
 // check set remains pending regardless of push age. Failed checks end the wait
 // immediately. It
@@ -95,6 +98,7 @@ export const decide = ({
   checks,
   runs = [],
   requestedAt,
+  evidenceRequestedAt = requestedAt,
   pushedAt,
   comments,
   reviews = [],
@@ -107,6 +111,7 @@ export const decide = ({
     author,
     head,
     requestedAt,
+    evidenceRequestedAt,
     pushedAt,
     comments,
     reviews,
@@ -262,7 +267,7 @@ const look = async (
       "Review commits are unavailable; cannot establish latest-head review.",
     );
   const pull = await connection.pullRequests.pullRequest(Number(number));
-  const [rollup, comments, reviews, reviewCommentPages, runs, push] =
+  const [rollup, comments, reviews, reviewCommentPages, runs, push, readyAt] =
     await Promise.all([
       checkRollup(connection, pull.headCommit),
       reviewer
@@ -277,6 +282,7 @@ const look = async (
         `${path}/actions/runs?head_sha=${pull.headCommit}&per_page=100`,
       ),
       pushTimes.get(pull.headCommit) ?? pushTime(pull, connection),
+      reviewer?.request.onOpen ? readyForReviewTime(connection, number) : null,
     ]);
   const commentsByReview = new Map();
   for (const comment of reviewComments(reviewCommentPages)) {
@@ -300,11 +306,19 @@ const look = async (
       body: review.body,
       comments: commentsByReview.get(review.id) ?? [],
     })),
-    requestedAt: reviewRequestedAt(
+    // Ready adjusts bounds and head freshness, while the original request
+    // cutoff keeps already-recognized completion and unavailability valid.
+    evidenceRequestedAt: reviewRequestedAt(
       Date.parse(pull.createdAt),
       neutralComments,
       reviewer,
       { policy, author: pull.author?.login },
+    ),
+    requestedAt: reviewRequestedAt(
+      Date.parse(pull.createdAt),
+      neutralComments,
+      reviewer,
+      { policy, author: pull.author?.login, readyAt },
     ),
     ...push,
     comments: neutralComments,
