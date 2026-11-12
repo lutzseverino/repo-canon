@@ -300,6 +300,126 @@ test("an issue's state, labels, comments and linked pull requests each wake the 
   }
 });
 
+test("removing an issue's only linked pull request wakes the next poll", async () => {
+  const output = capture();
+  const item = { linked: [pull(11, "OPEN")] };
+  let elapsed = 0;
+  let pauses = 0;
+  const code = await main(
+    ["--interval", "1", "--max-duration", "3", "example/tracker#7"],
+    {
+      ...output.streams,
+      connect: tracker({ "example/tracker#7": item }).connect,
+      now: () => elapsed,
+      pause: async (ms) => {
+        elapsed += ms;
+        pauses++;
+        item.linked = [];
+      },
+    },
+  );
+  assert.equal(code, 0, output.stderr);
+  assert.equal(
+    output.stdout,
+    "example/tracker#7: linked pull request https://github.com/example/tracker/pull/11 removed\n",
+  );
+  assert.equal(pauses, 1);
+  assert.equal(output.stderr, "");
+});
+
+test("a poll reports every removed link alongside additions and state changes", async (t) => {
+  for (const { name, after, lines } of [
+    {
+      name: "some links removed",
+      after: [pull(12, "OPEN")],
+      lines: [
+        "linked pull request https://github.com/example/tracker/pull/11 removed",
+        "linked pull request https://github.com/example/tracker/pull/13 removed",
+      ],
+    },
+    {
+      name: "all links removed",
+      after: [],
+      lines: [
+        "linked pull request https://github.com/example/tracker/pull/11 removed",
+        "linked pull request https://github.com/example/tracker/pull/12 removed",
+        "linked pull request https://github.com/example/tracker/pull/13 removed",
+      ],
+    },
+    {
+      name: "removal, addition and state change",
+      after: [pull(12, "MERGED"), pull(13, "OPEN"), pull(14, "OPEN")],
+      lines: [
+        "linked pull request https://github.com/example/tracker/pull/12 changed from open to merged",
+        "linked pull request https://github.com/example/tracker/pull/14 (open)",
+        "linked pull request https://github.com/example/tracker/pull/11 removed",
+      ],
+    },
+  ]) {
+    await t.test(name, async () => {
+      const output = capture();
+      const item = {
+        linked: [pull(11, "OPEN"), pull(12, "OPEN"), pull(13, "OPEN")],
+      };
+      let elapsed = 0;
+      let pauses = 0;
+      assert.equal(
+        await main(
+          ["--interval", "1", "--max-duration", "3", "example/tracker#7"],
+          {
+            ...output.streams,
+            connect: tracker({ "example/tracker#7": item }).connect,
+            now: () => elapsed,
+            pause: async (ms) => {
+              elapsed += ms;
+              pauses++;
+              item.linked = after;
+            },
+          },
+        ),
+        0,
+        output.stderr,
+      );
+      assert.equal(
+        output.stdout,
+        lines.map((line) => `example/tracker#7: ${line}\n`).join(""),
+      );
+      assert.equal(pauses, 1);
+      assert.equal(output.stderr, "");
+    });
+  }
+});
+
+test("unchanged links and order-only changes stay quiet until the deadline", async () => {
+  const output = capture();
+  const item = { linked: [pull(11, "OPEN"), pull(12, "MERGED")] };
+  let elapsed = 0;
+  let pauses = 0;
+  assert.equal(
+    await main(
+      ["--interval", "1", "--max-duration", "3", "example/tracker#7"],
+      {
+        ...output.streams,
+        connect: tracker({ "example/tracker#7": item }).connect,
+        now: () => elapsed,
+        pause: async (ms) => {
+          elapsed += ms;
+          pauses++;
+          if (pauses === 2) item.linked.reverse();
+        },
+      },
+    ),
+    0,
+    output.stderr,
+  );
+  assert.equal(pauses, 3);
+  assert.equal(
+    output.stdout,
+    "no item changed within the maximum duration of 3 seconds; arm the wait again\n",
+  );
+  assert.equal(output.stderr, "");
+});
+
 test("a pull request item reports merging, labels and comments, and reads no linked pull requests", async () => {
   const output = capture();
   const items = {
@@ -1211,6 +1331,41 @@ test("live reload removes watches, preserves unrelated baselines and inspects co
     output.stderr,
   );
   assert.match(output.stdout, /file:keep.md: created/);
+});
+
+test("records without expected links still observe subsequent link removal", async (t) => {
+  const { path, write } = records(t);
+  write({
+    flight: [
+      flightRow("R", [
+        { item: "example/tracker#7", expected: { labels: ["ready"] } },
+      ]),
+    ],
+  });
+  const output = capture();
+  const item = { labels: ["ready"], linked: [pull(11, "OPEN")] };
+  let elapsed = 0;
+  let pauses = 0;
+  assert.equal(
+    await main(["--interval", "1", "--max-duration", "3", "--from", path], {
+      ...output.streams,
+      connect: tracker({ "example/tracker#7": item }).connect,
+      now: () => elapsed,
+      pause: async (ms) => {
+        elapsed += ms;
+        pauses++;
+        item.linked = [];
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(pauses, 1);
+  assert.equal(
+    output.stdout,
+    "example/tracker#7: linked pull request https://github.com/example/tracker/pull/11 removed\n",
+  );
+  assert.equal(output.stderr, "");
 });
 
 test("reload compares changed expectations without resetting unchanged trackers", async (t) => {
