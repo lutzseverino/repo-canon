@@ -135,3 +135,6 @@ involve real alternatives.
 - [Launch hand stages with identifiers only](0036-launch-hand-stages-with-identifiers-only.md):
   a hand launch is its stage's hand skill and stage input, with the model from
   the anchor's label and no free text.
+- [Act in repositories only through launches](0037-act-in-repositories-only-through-launches.md):
+  the orchestrating agent applies no label and runs no repository's scripts;
+  it launches into the repository and reads coverage from the factory's status.
