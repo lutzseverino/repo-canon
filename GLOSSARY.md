@@ -91,10 +91,11 @@ _Avoid_: Feature request, when meaning the triage path
 
 **Orchestrating agent**:
 The agent a maintainer runs to take their ideas through intake and to triage
-requests, which schedules grilling sessions and starts research runs, receives
-every question first, records inferred intent, keeps the decision inbox,
-reviews each brief independently, and accepts a brief that holds by applying
-readiness. An owner who triages themselves is the orchestrating agent.
+requests, which schedules grilling sessions, launches every hand stage into
+the repository that stage acts on, receives every question first, records
+inferred intent and keeps the decision inbox. It changes no label and runs no
+repository's scripts itself; on an issue it posts only the record of an owner
+decision. An owner who triages themselves is the orchestrating agent.
 _Avoid_: Factory, research run
 
 **Inferred intent**:
@@ -118,6 +119,9 @@ _Avoid_: Roadmap, specification
 **Specification**:
 The issue a grill's decisions become, in the repository most of its work
 touches, parent of the tickets that deliver it; a plan groups specifications.
+A specification spanning repositories holds only what crosses them: the
+interfaces between its tickets, their order and the shared decisions; each
+repository's internals live in its own ticket.
 _Avoid_: Spec file, draft brief, plan
 
 **Amendment grill**:
@@ -127,7 +131,9 @@ _Avoid_: Conversational amendment
 
 **Factory gap**:
 A pipeline stage the factory cannot yet perform for a repository, which the
-orchestrating agent performs by hand to the same contract and logs.
+orchestrating agent launches by hand into that repository with the stage's
+hand skill, to the same contract, and logs. Intake and the grill, which need
+the owner, are never factory gaps.
 _Avoid_: Manual override, workaround
 
 **Launch report**:
