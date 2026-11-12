@@ -1,3 +1,4 @@
+import { factorySkipLabel } from "./lib/factory-labels.mjs";
 import {
   apiEndpoint,
   describeSettingChanges,
@@ -189,11 +190,7 @@ const factoryLabels = [
       },
     ],
   },
-  {
-    name: "factory:skip",
-    color: "c5def5",
-    description: "Ready agent work the factory must not pick up",
-  },
+  factorySkipLabel,
   {
     name: "factory:release-hold",
     color: "c5def5",

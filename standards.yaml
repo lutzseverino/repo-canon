@@ -133,6 +133,7 @@ defaults:
             executable: node
             script: operations/setup-github-labels.mjs
             resources:
+              - operations/lib/factory-labels.mjs
               - operations/lib/github-operation.mjs
               - vendor/postern/postern.mjs
               - vendor/postern/LICENSE
@@ -298,6 +299,11 @@ defaults:
       kind: file
       target: vendor/parse5/README.md
       exact: vendor/parse5/README.md
+
+    factory-label-metadata:
+      kind: file
+      target: operations/lib/factory-labels.mjs
+      exact: operations/lib/factory-labels.mjs
 
     rendered-markdown-runtime:
       kind: file
