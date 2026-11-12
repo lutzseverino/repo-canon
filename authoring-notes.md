@@ -213,8 +213,9 @@ repeated.
   governs every finding, including those outside the goal: a workbench wish
   never replaces filing or linking it and reporting it where the guide requires.
   Shared workflow methods stay application-independent: applications may
-  enhance them, but are never dependencies. Application-specific tool mappings
-  belong in the owner's own setup outside Repo Canon. The skill and its
+  enhance them, but are never dependencies. The methods use the capabilities
+  available in the session and follow the application's own guidance for its
+  tools. Application-specific details stay outside Repo Canon. The skill and its
   workbench layout use opaque session references and name no private
   application, tool mapping or host details; conformance coverage enforces
   that boundary throughout the installed skill. Its `CREDITS.md` credits Matt
