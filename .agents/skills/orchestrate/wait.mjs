@@ -364,6 +364,9 @@ const changes = (item, before, after) => {
         `linked pull request ${pull.url} changed from ${state} to ${pull.state}`,
       );
   }
+  const linked = new Set(after.linked.map((pull) => pull.url));
+  for (const url of known.keys())
+    if (!linked.has(url)) found.push(`linked pull request ${url} removed`);
   return found;
 };
 
