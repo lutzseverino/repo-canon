@@ -42,6 +42,36 @@ test("lazy blockquote continuations nested in lists cannot supply a review", () 
   }
 });
 
+test("content omitted by tokenization cannot expose a nested example", () => {
+  const definitions = `[r]: /a\n\n  [r]: /b\n  "${"title\n  ".repeat(4)}end"`;
+  for (const opening of [
+    `- example:\n\n  ${definitions}\n\n  > Example`,
+    `- example:\n  ${definitions}\n  > Example`,
+    `- outer:\n  - example:\n\n    ${definitions.replaceAll("\n  ", "\n    ")}\n\n    > Example`,
+  ]) {
+    const body = `${opening}\n${review}`;
+    assert.equal(reviewedHead(body), null, body);
+    assert.equal(completeReview(body, head), false, body);
+    assert.equal(holdingReview(body, head), false, body);
+    const visible = `${opening}\n\n${review}`;
+    assert.equal(reviewedHead(visible), head, visible);
+    assert.equal(completeReview(visible, head), true, visible);
+    assert.equal(holdingReview(visible, head), true, visible);
+  }
+});
+
+test("list continuations keep visible fields, and nested items are not findings", () => {
+  for (const body of [
+    `${withFinding}\nSpec: Passed again`,
+    `${withFinding}\n  Spec: Passed again`,
+  ]) {
+    assert.equal(completeReview(body, head), false, body);
+  }
+  const nested = `${withFinding}\n  - a note on the finding\n  continued`;
+  assert.equal(completeReview(nested, head), true);
+  assert.equal(holdingReview(nested, head), false);
+});
+
 test("separate fenced verification output preserves a completed review", () => {
   for (const fence of ["```", "~~~"]) {
     const log = `${fence}text\npnpm check\nAll checks passed\n${fence}`;

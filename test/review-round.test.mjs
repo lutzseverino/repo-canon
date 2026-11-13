@@ -418,6 +418,7 @@ test("source and installed rounds post and track reviews with separate verificat
       reviewBody(head).replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),
       `- > Example\n${reviewBody(head).split("\n\n")[1]}`,
       `- - > Example\n${reviewBody(head).split("\n\n")[1]}`,
+      `- example:\n\n  [r]: /a\n\n  [r]: /b\n  "${"title\n  ".repeat(4)}end"\n\n  > Example\n${reviewBody(head).split("\n\n")[1]}`,
       `- \`\`\`markdown\n${reviewBody(head).replace(/^/gm, "  ")}\n  \`\`\``,
     ]) {
       const state = pullState({}, { reviews: [restReview(body)] });
