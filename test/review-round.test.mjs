@@ -391,6 +391,11 @@ test("source and installed rounds post and track reviews with separate verificat
       `${handBack(head)}\n\n<!--\n${reviewBody(earlier)}\n-->`,
       `- example:\n  \`\`\`text\n  <!-- unclosed\n  \`\`\`\n\n${reviewBody(head)}`,
       `${reviewBody(head)}\n\n- > Example\n  > ${handBack(earlier).replaceAll("\n", "\n  > ")}`,
+      `<pre>\n${handBack(earlier)}\n</pre>\n\n${reviewBody(head)}`,
+      reviewBody(head).replace(
+        /^Spec: .*$/m,
+        "$& The parser keeps `<!--` as text.",
+      ),
     ]) {
       const state = pullState();
       const result = await run(
@@ -415,6 +420,7 @@ test("source and installed rounds post and track reviews with separate verificat
     for (const body of [
       `~~~markdown\n${reviewBody(head)}\n~~~`,
       `<!--\n${reviewBody(head)}\n-->`,
+      `<pre>\n${reviewBody(head)}\n</pre>`,
       reviewBody(head).replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),
       `- > Example\n${reviewBody(head).split("\n\n")[1]}`,
       `- - > Example\n${reviewBody(head).split("\n\n")[1]}`,
