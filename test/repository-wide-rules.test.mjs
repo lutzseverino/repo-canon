@@ -18,6 +18,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { parseStandards } from "../scripts/standards-declarations.mjs";
+import { interpretMarkdown } from "../operations/lib/rendered-markdown.mjs";
 import { stringify } from "yaml";
 import {
   ownedSetupFiles,
@@ -1012,6 +1013,43 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         readFileSync(join(root, path)),
         `${profile} installs ${path}`,
       );
+    // Resolve links in the adopter, where the source's root rules/ tree
+    // does not exist. Factory-only guidance is conditional in both profiles.
+    assert.equal(existsSync(join(project, "rules")), false);
+    assert.equal(
+      existsSync(join(project, ".repo-standards/rules/factory-workflow.md")),
+      profile === "factory",
+    );
+    const ruleLinks = interpretMarkdown(
+      readFileSync(join(project, "CONTRIBUTING.md"), "utf8"),
+    )
+      .content.text()
+      .links.filter((target) => /(?:^|\/)rules\//.test(target));
+    assert.ok(ruleLinks.length > 0, `${label} has contribution rule links`);
+    for (const target of ruleLinks) {
+      assert.ok(
+        target.startsWith(".repo-standards/rules/"),
+        `${label} links to installed rules: ${target}`,
+      );
+      const [path, fragment] = target.split("#");
+      if (
+        profile === "standard" &&
+        path === ".repo-standards/rules/factory-workflow.md"
+      )
+        continue;
+      const installedRule = readFileSync(join(project, path), "utf8");
+      if (fragment)
+        assert.ok(
+          interpretMarkdown(installedRule).headings.some(
+            ({ name }) =>
+              name
+                .toLowerCase()
+                .replace(/[^\p{L}\p{N}_\-\s]/gu, "")
+                .replace(/\s/g, "-") === decodeURIComponent(fragment),
+          ),
+          `${label} resolves section ${target}`,
+        );
+    }
     // Every selected owned skill installs whole from the owned tree. Apart from the
     // CREDITS.md each gains, a skill identical to its upstream base installs
     // the base's bytes, as it did when it installed from the snapshot, and
