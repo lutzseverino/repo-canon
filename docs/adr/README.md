@@ -160,3 +160,7 @@ involve real alternatives.
 - [Keep the contribution guide for contributors, and process in planning and delivery rules](0043-keep-the-contribution-guide-for-contributors.md):
   the guide is role-worded contribution help; planning and delivery rules hold
   the process; amends ADR 0016.
+- [Lead every message with its outcome](0040-lead-every-message-with-its-outcome.md):
+  a lead line first, the AI disclosure in a footer, notes collapsed behind a
+  summary line, links instead of copies, and reviews as a verdict line and one
+  findings table.
