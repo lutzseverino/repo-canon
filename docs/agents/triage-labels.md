@@ -1,8 +1,8 @@
 # Triage Labels
 
 Use the tracker strings below when a skill names an upstream triage role.
-Read Repo Canon's installed [GitHub rules](../../.repo-standards/rules/github-repository-configuration.md#labels)
-for canonical meanings, colors and descriptions, and factory workflow rules for their profile additions.
+For meanings, colors and descriptions, read the installed `github-repository-configuration`
+rules' Labels section and `factory-workflow` rules' State labels section.
 
 | Label in mattpocock/skills | Label in our tracker |
 | -------------------------- | -------------------- |
