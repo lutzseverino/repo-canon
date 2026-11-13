@@ -552,7 +552,7 @@ implementation contract and one draft pull request implementing it, as an
 implementing agent would, then starts a fresh review session that never saw
 the implementation, naming the pull request.
 
-Run five scenarios. The fourth continues the third's issue and pull request;
+Run six scenarios. The fourth continues the third's issue and pull request;
 the others each have their own:
 
 1. **Clean.** The change meets its contract and the standards. Observe one
@@ -574,6 +574,18 @@ the others each have their own:
    pull request marked ready, checks passed, the issue moved to `state:owner`
    and no merge. The operator removes the gate and starts a fresh session,
    which posts no second review of the unchanged head and merges.
+6. **Settled grill, unchanged head.** Start with an ambiguous contract and
+   observe its contract-finding review, draft PR and grill stop. First resume
+   without a resolution: it still stops. The operator records a grill decision
+   settling the ambiguity without code changes, and obtains any required
+   acceptance of the authoritative revision. Resume in an independent review
+   session on the same account. Observe both axes reassessed, the existing
+   review updated with the resolved finding, decision link and previous
+   assessment retained, the same SHA and round number, readiness, checks and
+   delivery. Interrupt before delivery and resume again: no duplicate review
+   is posted. Repeat with an open finding after reassessment and with an owner
+   gate: the former remains draft on its existing route, the latter stops
+   delivery under the gate. No empty or cosmetic commit is made.
 
 In every scenario, check each round's review against the comment rules'
 Reviews section and count exactly one review per reviewed head. Report the

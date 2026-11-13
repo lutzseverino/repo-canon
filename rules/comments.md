@@ -100,6 +100,13 @@ this round fixed, or is `Nothing`. `Findings` is `None`, or is empty and
 followed by one list item per finding, each starting with the file and line it
 concerns. Quoted or fenced examples and unfilled placeholders are not a review.
 
+For an unchanged-head reassessment after a settled contract finding, update
+the existing review with the actual reassessed outcomes. In `Spec`, explain
+the resolved finding and link the recorded decision. Retain the previous
+assessment as quoted history below the template so the finding remains
+traceable without remaining open. Keep the five template fields as single
+plain text lines; quoted history is not another templated review.
+
 A finding may also open a review thread on its line. Findings and their fix
 discussion stay on the pull request, in reviews and review threads.
 

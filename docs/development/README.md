@@ -227,6 +227,10 @@ fact: the running account's latest review, including an App installation's,
 is a holding review of the current head. That fact alone resumes delivery or
 lets a draft be marked ready. The tests run against an injected fetch transport and from the
 installed layout.
+They also cover reassessment of a settled contract finding on an unchanged
+head by updating its existing review, retaining the previous assessment,
+round and decision source, and refusing incomplete, stale or ineligible
+review records without granting readiness.
 `test/babysit-merge.test.mjs` also checks that the review it posts is the
 internal review record merge accepts for an app-authored pull request.
 Run `node --test test/babysit-merge.test.mjs` for the explicit squash message

@@ -463,6 +463,70 @@ test("the review skill's posted round review is the app-author internal review r
   }
 });
 
+test("a reassessed round is accepted by merge while required checks and threads still govern delivery", async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "babysit-reassessment-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const path = join(directory, "review.md");
+  const round = { pull: { number: 12, head, draft: true, closes: [] } };
+  writeFileSync(path, outcome);
+  t.mock.method(process.stdout, "write", () => true);
+  assert.equal(
+    await reviewRound(["12", "--post", path], roundConnection(round)),
+    0,
+  );
+  writeFileSync(
+    path,
+    outcome
+      .replace(/Findings:[\s\S]*/, "Findings: None")
+      .replace(
+        "Spec: Passed; all acceptance criteria in #744 verified.",
+        "Spec: Passed; reassessed against the accepted contract; https://github.com/example/repository/issues/744#issuecomment-9 settles the earlier finding without code changes.",
+      ),
+  );
+  assert.equal(
+    await reviewRound(["12", "--reassess", path], roundConnection(round)),
+    0,
+  );
+  t.mock.restoreAll();
+  assert.equal(round.reviews.length, 1);
+  for (const { state, status } of [
+    { state: {}, status: 0 },
+    {
+      state: {
+        checks: [
+          { __typename: "StatusContext", context: "CI", state: "PENDING" },
+        ],
+      },
+      status: 2,
+    },
+    {
+      state: {
+        checks: [
+          { __typename: "StatusContext", context: "CI", state: "FAILURE" },
+        ],
+      },
+      status: 2,
+    },
+    { state: { stale: true }, status: 4 },
+    {
+      state: {
+        reviewConfiguration: { policy, reviewer: configuredReviewer },
+        threads: [thread("open", false)],
+      },
+      status: 6,
+    },
+  ]) {
+    const result = run(t, {
+      author: "factory-app[bot]",
+      reviewConfiguration: { policy },
+      reviews: round.reviews,
+      ...state,
+    });
+    assert.equal(result.status, status, result.stderr);
+    if (status !== 0) assert.equal(result.state.merge, undefined);
+  }
+});
+
 test("a complete installed current-head review permits only the remaining merge gates", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const complete = [

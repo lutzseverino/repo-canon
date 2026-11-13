@@ -415,6 +415,17 @@ round still carrying a larger finding stops without converging, reports why
 and leaves the PR draft. Wrong or ambiguous contracts move the issue to
 `state:grill` under the guide's Triage section.
 
+After a recorded grill resolution requires no code change, an independent
+reviewer may reassess the unchanged head against the settled authoritative
+contract, including acceptance of revisions where required, and earlier
+findings. Recheck both Standards and Spec, including the contract against its
+issue. Resolution alone grants no holding result. Update the existing round's
+review under the `comments` rules, retaining the resolved finding and its
+decision source; create neither a duplicate review nor a cosmetic commit.
+This reassessment keeps the round number and convergence bound. Unresolved
+findings retain their existing routes; a changed head follows the ordinary
+new-head review and validation path.
+
 A round with no open finding holds: mark the PR ready and deliver under the
 guide's Merging section. List only open findings in the round's review, fixes
 under `Fixed`, and answer declines in their threads. Only the reviewing

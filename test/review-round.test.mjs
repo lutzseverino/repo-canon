@@ -240,6 +240,145 @@ test("ready needs this account's held review and marks only a draft", async (t) 
   assert.equal(state.readied, 1, "a ready PR is not marked again");
 });
 
+test("a settled contract finding is reassessed in its existing round on the unchanged head", async (t) => {
+  const original = reviewBody(head, "").concat(
+    "\n- `src/ledger.mjs:12` contract: #5 is ambiguous about refunds.",
+  );
+  const resolution =
+    "https://github.com/example/repository/issues/5#issuecomment-9";
+  const reassessment = reviewBody(head).replace(
+    "Spec: Passed; every acceptance criterion of #5 holds, and the brief matches the issue.",
+    `Spec: Passed; reassessed both axes against #5's accepted contract after ${resolution} settled refunds without code changes. The earlier ambiguity is resolved.`,
+  );
+  const state = pullState({}, { reviews: [restReview(original, { id: 17 })] });
+  let result = await run(t, ["12", "--ready"], state);
+  assert.equal(result.status, 2);
+  result = await run(t, ["12", "--reassess", file(t, reassessment)], state);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(state.reviews.length, 1);
+  assert.equal(state.reviews[0].id, 17);
+  assert.equal(state.reviews[0].commit_id, head);
+  assert.ok(state.reviews[0].body.startsWith(reassessment));
+  assert.ok(state.reviews[0].body.includes(resolution));
+  assert.ok(
+    state.reviews[0].body.includes(
+      "> - `src/ledger.mjs:12` contract: #5 is ambiguous about refunds.",
+    ),
+  );
+  assert.equal(state.posted, undefined);
+  result = await run(t, ["12"], state);
+  assert.equal(facts(result.stdout).held, "yes");
+  assert.equal(facts(result.stdout).round, "1");
+  result = await run(t, ["12", "--ready"], state);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(state.pull.draft, false);
+
+  result = await run(t, ["12", "--reassess", file(t, reassessment)], state);
+  assert.equal(
+    result.status,
+    3,
+    "a holding round is left intact on repetition",
+  );
+  assert.equal(state.updated.length, 1);
+});
+
+test("an incomplete reassessment or a resolution alone cannot clear the review", async (t) => {
+  const state = pullState({}, { reviews: [restReview(handBack(head))] });
+  for (const body of [
+    "The grill resolved #5; deliver it.",
+    reviewBody(earlier),
+    reviewBody(head).replace(
+      "Spec: Passed; every acceptance criterion of #5 holds, and the brief matches the issue.",
+      "Spec: <reassess the contract>",
+    ),
+  ]) {
+    const result = await run(t, ["12", "--reassess", file(t, body)], state);
+    assert.equal(result.status, 2, body);
+    assert.equal(state.updated, undefined);
+    assert.equal(state.posted, undefined);
+    assert.equal(state.pull.draft, true);
+  }
+  // A fresh assessment that still finds a defect does not hold or consume a round.
+  const result = await run(
+    t,
+    ["12", "--reassess", file(t, handBack(head))],
+    state,
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal((await run(t, ["12", "--ready"], state)).status, 2);
+  const current = facts((await run(t, ["12"], state)).stdout);
+  assert.equal(current.round, "1");
+  assert.equal(current.held, "no");
+  assert.equal(state.reviews.length, 1);
+  assert.equal(state.pull.draft, true);
+});
+
+test("reassessment needs this account's latest complete standing review of the exact head", async (t) => {
+  const original = restReview(handBack(head));
+  for (const reviews of [
+    [],
+    [restReview(handBack(earlier), { commit_id: earlier })],
+    [restReview(handBack(head), { user: { login: "another", type: "User" } })],
+    [restReview(handBack(head), { state: "DISMISSED" })],
+    [restReview(handBack(head), { state: "PENDING", submitted_at: undefined })],
+    [restReview(handBack(head), { commit_id: earlier })],
+    [original, restReview("An unfinished later assessment", { id: 2 })],
+    [original, restReview(handBack(earlier), { id: 2, commit_id: earlier })],
+  ]) {
+    const state = pullState({}, { reviews });
+    const result = await run(
+      t,
+      ["12", "--reassess", file(t, reviewBody(head))],
+      state,
+    );
+    assert.equal(result.status, 3, result.stderr);
+    assert.equal(state.updated, undefined);
+    assert.equal(state.posted, undefined);
+    assert.equal((await run(t, ["12", "--ready"], state)).status, 2);
+    assert.equal(state.pull.draft, true);
+  }
+});
+
+test("installed reassessment retains later round counts, App identity and owner gates", async (t) => {
+  const target = installedValidator(t, ".agents/skills/review/round.mjs");
+  const { main: entry } = await import(pathToFileURL(target).href);
+  const author = { login: "factory-app[bot]", type: "Bot" };
+  const state = pullState(
+    { labels: ["gate:owner-review"] },
+    {
+      viewer: { __typename: "Bot", login: "factory-app" },
+      reviews: [
+        restReview(handBack(earlier), {
+          id: 11,
+          commit_id: earlier,
+          user: author,
+        }),
+        restReview(handBack(head), { id: 12, user: author }),
+      ],
+    },
+  );
+  let result = await run(
+    t,
+    ["12", "--reassess", file(t, reviewBody(head))],
+    state,
+    entry,
+  );
+  assert.equal(result.status, 0, result.stderr);
+  result = await run(t, ["12"], state, entry);
+  assert.equal(facts(result.stdout).round, "2");
+  assert.equal(facts(result.stdout).held, "yes");
+  assert.equal(facts(result.stdout).gates, "gate:owner-review on the PR");
+  assert.equal(state.reviews.length, 2);
+  assert.equal((await run(t, ["12", "--ready"], state, entry)).status, 0);
+  // A new implementation head needs a new round and cannot reuse the updated review.
+  state.pull.head = "c".repeat(40);
+  result = await run(t, ["12"], state, entry);
+  assert.equal(facts(result.stdout).round, "3");
+  assert.equal(facts(result.stdout).reviewed, "no");
+  assert.equal(facts(result.stdout).held, "no");
+  assert.equal((await run(t, ["12", "--ready"], state, entry)).status, 2);
+});
+
 test("only this account's latest holding review of the current head has held", async (t) => {
   const other = { user: { login: "implementer", type: "User" } };
   const holdEarlier = restReview(reviewBody(earlier), { commit_id: earlier });
@@ -261,6 +400,14 @@ test("only this account's latest holding review of the current head has held", a
     [[holdEarlier], "no", "no"],
     // This account's round that handed back or found the contract wanting.
     [[restReview(handBack(head))], "yes", "no"],
+    [
+      [
+        restReview(reviewBody(head)),
+        restReview("Unfinished latest review", { id: 2 }),
+      ],
+      "yes",
+      "no",
+    ],
     // A review posted on another commit than the head it names is no round.
     [[restReview(reviewBody(head), { commit_id: earlier })], "no", "no"],
     // Another account's or a dismissed or pending review is no round at all.
