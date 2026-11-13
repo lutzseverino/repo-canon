@@ -31,8 +31,22 @@ const brief = (overrides = {}) => ({
   id: 12,
   node_id: "COMMENT_12",
   body: `${completeAgentBrief}\n\n${runLine("triage-7")}`,
+  created_at: "2026-11-06T10:00:00Z",
   updated_at: "2026-11-06T10:00:00Z",
   user: { login: factory },
+  ...overrides,
+});
+const commentEdit = (contract, overrides = {}) => ({
+  __typename: "IssueComment",
+  id: contract.node_id,
+  body: contract.body,
+  author: { __typename: "Bot", login: "factory" },
+  createdAt: contract.created_at,
+  updatedAt: contract.updated_at,
+  lastEditedAt: null,
+  editor: null,
+  includesCreatedEdit: false,
+  userContentEdits: { totalCount: 0, nodes: [] },
   ...overrides,
 });
 const notice = (contract) => ({
@@ -87,6 +101,7 @@ function snapshot({
     issueEvents: [readiness(actor)],
     permissions: { maintainer: role("admin"), [factory]: { role: null } },
     triageResult: configured,
+    triageCommentEdit: commentEdit(contract),
   };
 }
 
@@ -112,6 +127,115 @@ function assertRefused(decision, reason) {
 
 test("approves readiness the factory's triage run applied with its result", () => {
   assertApproved(decideIssueContract(snapshot()), factory);
+});
+
+test("refuses a person's edit even after its fresh notice and factory readiness", () => {
+  const contract = brief({
+    body: `${brief().body}\n\nChanged by another account.`,
+    updated_at: "2026-11-06T10:00:03Z",
+  });
+  const input = snapshot({ contract });
+  input.triageCommentEdit = commentEdit(contract, {
+    lastEditedAt: contract.updated_at,
+    editor: { login: "maintainer" },
+    includesCreatedEdit: true,
+    userContentEdits: { totalCount: 1, nodes: [{ id: "EDIT_1" }] },
+  });
+  assertRefused(decideIssueContract(input), /edited.*factory/i);
+});
+
+test("requires complete consistent provenance for new and recorded factory approval", async (t) => {
+  const clean = brief();
+  const accepted = decideIssueContract(snapshot());
+  const approved = {
+    id: 13,
+    user: bot,
+    body: accepted.feedback.body,
+    updated_at: "2026-11-06T10:00:20Z",
+  };
+  /** @type {[string, any][]} */
+  const cases = [
+    ["missing evidence", undefined],
+    ["unreadable evidence", null],
+    ["missing last edit", { lastEditedAt: undefined }],
+    ["missing editor", { editor: undefined }],
+    ["missing creation edit flag", { includesCreatedEdit: undefined }],
+    ["missing history", { userContentEdits: null }],
+    ["missing history nodes", { userContentEdits: { totalCount: 0 } }],
+    [
+      "inconsistent history",
+      { userContentEdits: { totalCount: 0, nodes: [{ id: "EDIT" }] } },
+    ],
+    ["different comment", { id: "OTHER_COMMENT" }],
+    ["different body", { body: `${clean.body} changed` }],
+    ["different author", { author: { __typename: "User", login: "other" } }],
+    ["different creation time", { createdAt: "2026-11-06T09:59:59Z" }],
+    ["different update time", { updatedAt: "2026-11-06T10:00:01Z" }],
+    ["missing creation time", { createdAt: undefined }],
+    ["wrong node type", { __typename: "Issue" }],
+    [
+      "same-second edit",
+      {
+        lastEditedAt: clean.created_at,
+        editor: { login: "person" },
+        includesCreatedEdit: true,
+        userContentEdits: { totalCount: 1, nodes: [{ id: "EDIT" }] },
+      },
+    ],
+    [
+      "restored original bytes",
+      {
+        lastEditedAt: "2026-11-06T10:00:02Z",
+        editor: { login: "factory" },
+        includesCreatedEdit: true,
+        userContentEdits: { totalCount: 2, nodes: [{ id: "RESTORE" }] },
+      },
+    ],
+    [
+      "hidden edit date with history",
+      { userContentEdits: { totalCount: 1, nodes: [{ id: "EDIT" }] } },
+    ],
+    ["hidden history with editor", { editor: { login: "person" } }],
+    ["hidden history with creation edit flag", { includesCreatedEdit: true }],
+  ];
+  for (const [name, changes] of cases) {
+    await t.test(String(name), () => {
+      for (const recorded of [false, true]) {
+        const input = snapshot();
+        input.triageCommentEdit =
+          changes == null ? changes : commentEdit(clean, changes);
+        // A factory role must not bypass the provenance requirement.
+        input.permissions[factory] = role("admin");
+        if (recorded) {
+          input.comments = [clean, approved];
+          input.event = neutralEvent({
+            action: "edited",
+            sender: { login: "x" },
+          });
+        }
+        assertRefused(
+          decideIssueContract(input),
+          /edit provenance|edited.*factory/i,
+        );
+      }
+    });
+  }
+});
+
+test("authorized people can review an edited or unverifiable factory brief", () => {
+  const contract = brief({ updated_at: "2026-11-06T10:00:03Z" });
+  for (const evidence of [
+    null,
+    commentEdit(contract, {
+      lastEditedAt: contract.updated_at,
+      editor: { login: "maintainer" },
+      includesCreatedEdit: true,
+    }),
+  ]) {
+    const input = snapshot({ actor: "maintainer", contract });
+    input.triageCommentEdit = evidence;
+    assertApproved(decideIssueContract(input), "maintainer", contract);
+  }
 });
 
 test("refuses the factory's readiness when triage names no result", () => {
