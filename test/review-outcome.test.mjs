@@ -20,8 +20,27 @@ const examples = [
   (body) => body.replace(/^/gm, "> "),
   (body) => body.replace(/^/gm, "    "),
   (body) => body.replace(/^/gm, "\t"),
+  (body) => `- > Example\n${body.replace(/^/gm, "  > ")}`,
+  (body) => `1. > Example\n${body.replace(/^/gm, "   > ")}`,
+  (body) => `- - > Example\n${body.replace(/^/gm, "    > ")}`,
+  (body) => `- \`\`\`markdown\n${body.replace(/^/gm, "  ")}\n  \`\`\``,
+  (body) => `1. ~~~markdown\n${body.replace(/^/gm, "   ")}\n   ~~~`,
+  (body) => `- - \`\`\`markdown\n${body.replace(/^/gm, "    ")}\n    \`\`\``,
   (body) => `<!--\n${body}\n-->`,
 ];
+
+test("lazy blockquote continuations nested in lists cannot supply a review", () => {
+  for (const opening of [
+    "- > Example",
+    "1. > Example",
+    "- outer:\n  - > Example",
+  ]) {
+    const body = `${opening}\n${review}`;
+    assert.equal(reviewedHead(body), null, body);
+    assert.equal(completeReview(body, head), false, body);
+    assert.equal(holdingReview(body, head), false, body);
+  }
+});
 
 test("separate fenced verification output preserves a completed review", () => {
   for (const fence of ["```", "~~~"]) {
@@ -83,6 +102,19 @@ test("excluded examples cannot supply a review, a missing field or a missing fin
   }
 });
 
+test("nested examples preserve genuine findings in the same list", () => {
+  for (const example of [
+    "  > Example\n  Spec: Hidden duplicate\n  > - invalid example finding",
+    "  ```text\n  <!-- unclosed\n  - invalid example finding\n  ```",
+    "  - ```text\n    <!-- unclosed\n    - invalid example finding\n    ```",
+  ]) {
+    const body = `${withFinding}\n${example}\n\n- src/ledger.mjs:24 Another actual finding.`;
+    assert.equal(reviewedHead(body), head, body);
+    assert.equal(completeReview(body, head), true, body);
+    assert.equal(holdingReview(body, head), false, body);
+  }
+});
+
 test("unterminated fences and comments keep their contents excluded", () => {
   for (const opening of ["```markdown", "~~~text", "<!--"]) {
     const example = `${opening}\n${withFinding}`;
@@ -118,6 +150,10 @@ test("comment and fence markers inside examples do not hide later visible fields
   }
   const body = `<!--\n\`\`\` never closed\n-->\n${review}`;
   assert.equal(completeReview(body, head), true);
+  const nested = `- example:\n  \`\`\`text\n  <!-- unclosed\n  \`\`\`\n\n${review}`;
+  assert.equal(reviewedHead(nested), head);
+  assert.equal(completeReview(nested, head), true);
+  assert.equal(holdingReview(nested, head), true);
 });
 
 test("hidden text cannot join fragments into a required field or head", () => {

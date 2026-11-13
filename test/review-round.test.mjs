@@ -389,6 +389,8 @@ test("source and installed rounds post and track reviews with separate verificat
       `${reviewBody(head)}\n\n<!-- verification marker -->`,
       `${reviewBody(head)}\n\n\`\`\`markdown\n${handBack(earlier)}\n\`\`\``,
       `${handBack(head)}\n\n<!--\n${reviewBody(earlier)}\n-->`,
+      `- example:\n  \`\`\`text\n  <!-- unclosed\n  \`\`\`\n\n${reviewBody(head)}`,
+      `${reviewBody(head)}\n\n- > Example\n  > ${handBack(earlier).replaceAll("\n", "\n  > ")}`,
     ]) {
       const state = pullState();
       const result = await run(
@@ -414,6 +416,9 @@ test("source and installed rounds post and track reviews with separate verificat
       `~~~markdown\n${reviewBody(head)}\n~~~`,
       `<!--\n${reviewBody(head)}\n-->`,
       reviewBody(head).replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),
+      `- > Example\n${reviewBody(head).split("\n\n")[1]}`,
+      `- - > Example\n${reviewBody(head).split("\n\n")[1]}`,
+      `- \`\`\`markdown\n${reviewBody(head).replace(/^/gm, "  ")}\n  \`\`\``,
     ]) {
       const state = pullState({}, { reviews: [restReview(body)] });
       const tracked = await run(t, ["12"], state, entry);
