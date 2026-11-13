@@ -138,3 +138,9 @@ involve real alternatives.
 - [Act in repositories only through launches](0037-act-in-repositories-only-through-launches.md):
   the orchestrating agent applies no label and runs no repository's scripts;
   it launches into the repository and reads coverage from the factory's status.
+- [Exempt genuine Dependabot pull requests from the body sections](0038-exempt-genuine-dependabot-pull-requests-from-body-sections.md):
+  the metadata validator skips the four body sections only for a trusted
+  `dependabot[bot]` author; title, breaking-change and attribution checks stay.
+- [Own pull-request text checks and retire others before adoption](0039-own-pull-request-text-checks-and-retire-others-before-adoption.md):
+  Canon's metadata contract is the only pull-request text policy; adoption stops
+  until a prerequisite pull request removes every other such check.
