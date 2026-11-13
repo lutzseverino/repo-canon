@@ -3,22 +3,23 @@
 Repo Canon's pull-request metadata contract is the only policy for
 pull-request text (title, body and branch name) in an adopting repository.
 Before adopting, the run finds every required check that validates that text
-and stops until a separate repository-policy pull request removes it, as it
-already does for repository-chosen required-check names. Checks are found by
+and stops until a separate repository-policy pull request removes each
+workflow part and its required-check entry, as it already does for
+repository-chosen required-check names. Checks are found by
 what they validate, never by name: a workflow that also does other work loses
 only its pull-request text rules, a check the run cannot inspect stops
 adoption with an owner question, and a wrapper that only delegates to the
 installed validator is Canon's policy and stays. The preserved-settings rule
-therefore no longer covers pull-request text checks; every other check, rule
-and setting stays as the repository has it. On 2026-10-31
+therefore no longer covers pull-request text checks; unrelated checks, rules
+and settings remain preserved. On 2026-10-31
 minecraft-stream-guard-site kept a legacy check demanding `Closes #N` and its
 own headings: the adoption pull request passed on an adoption-only exemption,
 and then every ordinary Canon pull request failed it, about 2 h 15 min lost on
 one row. polity caught the same conflict only because its run happened to look.
 The owner decided in the 2026-11-12 grill of #795: "RC dictates this,
 `minecraft-stream-guard-site` should follow. If it had old requirements, they
-should've been removed on adoption." and, on scope and route, "agreed to all
-then".
+should've been removed on adoption." On 2026-11-13, the owner agreed on scope
+and route: "agreed to all then".
 
 ## Considered options
 
