@@ -61,16 +61,16 @@ extract at a second launcher under the Ownership check. The host owns capacity/g
 
 ## Owner steps
 
-Consume reports and relay all owner-run steps in one owner-facing message before
-the preceding time-sensitive operation ends: deadline first (actual latest start
-when supplied), then complete copy-paste commands and needed steps/output. Relay
-commands verbatim with quoting and operational content; never send the owner to
-the worker's thread. Log report availability, relay time and supplied deadline and preceding-operation evidence. Untimed steps get no invented deadline or timeout.
-Commands start on the owner's workstation, naming the target host under the
-Workspace repository convention. If absent, ask through the owner-question route
-and record a finding. Seam (deferred): a generic workstation command rule; one
-repository consumer; revisit on another under the Ownership check. Return owner
-output to the same worker with a fresh report.
+A chore stays the owner's only when it needs their credential, device, presence, or taste or intent. An independent agent of
+another provider checks an agent's work, and the owner gets a one-screen summary and a veto. Without another provider, the
+check, still by an independent agent, follows installed factory-workflow Provider diversity's "No policy" row: host default,
+no catalog scan or wait, unavailable diversity in the summary. Relay reported chores in one message before the preceding
+time-sensitive operation ends: deadline first (actual latest start when supplied), then a card each: what it unblocks, in
+plain words; why it needs the owner; about how long; what to look for and each field's meaning in your summary table, never
+a file without a guide or the worker's thread; the commands verbatim from the owner's workstation, naming the host by the
+Workspace repository convention (if none, use the owner-question route and record a finding); and what happens if skipped.
+Log report availability, relay time, deadline and evidence; untimed chores get no invented deadline or timeout. Return owner
+output to the same worker with a fresh report. Seam (deferred): workstation commands; consumers: 1; revisit at 2.
 
 ## Triage run
 
