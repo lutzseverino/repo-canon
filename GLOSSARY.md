@@ -310,6 +310,12 @@ latest head the merge waits for. A repository that names none merges without
 waiting.
 _Avoid_: Codex, when meaning the role; review bot
 
+**Lead line**:
+The first visible line of a message an agent or the factory posts: its state or
+verdict behind a status marker, and who must act when a person must. A message
+whose lead line names nobody needs nobody.
+_Avoid_: Headline, TL;DR, disclaimer line
+
 **Direct change**:
 A change made without a ticket, at the maintainer's request in a thread or as
 a minor correction.
