@@ -38,8 +38,11 @@ remaining questions with "Agreed to all" and "Agreed".
 ## Consequences
 
 - The issue-contract validator and the review reader accept both the old and
-  the new shapes for one release, so no adopter's readiness breaks whichever of
-  Repo Canon or Scriptorium ships first.
+  the new shapes for one release, preserving compatibility with earlier
+  messages during the transition. Adopters must run the Repo Canon release
+  containing #1034 before the Scriptorium release containing
+  [scriptorium#199](https://github.com/lutzseverino/scriptorium/issues/199)
+  reaches their host: the earlier validator rejects the new footer frame.
 - Fences and HTML comments no longer void a whole review; the reader parses
   the verdict line, the findings table and the footer's head.
 - Status markers come from one fixed set and always sit beside a word, so a
