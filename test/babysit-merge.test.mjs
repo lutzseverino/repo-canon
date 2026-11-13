@@ -422,6 +422,7 @@ No external reviewer runs on app-authored PRs.`;
     `- example:\n\n  [r]: /a\n\n  [r]: /b\n  "${"title\n  ".repeat(4)}end"\n\n  > Example\n${outcome.split("\n\n")[1]}`,
     `- \`\`\`markdown\n${outcome.replace(/^/gm, "  ")}\n  \`\`\``,
     `<!--\n${outcome}\n-->`,
+    `<pre>\n${outcome}\n</pre>`,
     outcome.replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),
     outcome.replace(/^- .*$/m, "<!-- - `merge.mjs:1` hidden finding -->"),
   ].map((body) => review(body));
@@ -546,6 +547,8 @@ test("a complete installed current-head review permits only the remaining merge 
     `${outcome}\n\n\`\`\`markdown\n${outcome}\n- an invalid example finding\n\`\`\``,
     `- example:\n  \`\`\`text\n  <!-- unclosed\n  \`\`\`\n\n${outcome}`,
     `${outcome}\n\n- > Example\n  > ${outcome.replaceAll("\n", "\n  > ")}`,
+    `<details>\n${outcome.split("\n\n")[1]}\n</details>\n\n${outcome}`,
+    outcome.replace(/^Spec: .*$/m, "$& The parser keeps `<!--` as text."),
     outcome
       .replace(
         "Passed; documented repository rules checked, no findings remain.",

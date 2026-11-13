@@ -26,6 +26,10 @@ const examples = [
   (body) => `- \`\`\`markdown\n${body.replace(/^/gm, "  ")}\n  \`\`\``,
   (body) => `1. ~~~markdown\n${body.replace(/^/gm, "   ")}\n   ~~~`,
   (body) => `- - \`\`\`markdown\n${body.replace(/^/gm, "    ")}\n    \`\`\``,
+  (body) => `<pre>\n${body}\n</pre>`,
+  (body) => `<details>\n${body}\n</details>`,
+  (body) => `<script>\n${body}\n</script>`,
+  (body) => `- <pre>\n${body.replace(/^/gm, "  ")}\n  </pre>`,
   (body) => `<!--\n${body}\n-->`,
 ];
 
@@ -184,6 +188,31 @@ test("comment and fence markers inside examples do not hide later visible fields
   assert.equal(reviewedHead(nested), head);
   assert.equal(completeReview(nested, head), true);
   assert.equal(holdingReview(nested, head), true);
+});
+
+test("comment markers rendered as text do not hide later visible fields", () => {
+  for (const spec of [
+    "Passed; the parser keeps `<!--` in code spans as text.",
+    "Passed; `<!-- x -->` stays text too.",
+    "Passed; an unclosed <!-- marker renders as text.",
+  ]) {
+    const body = review.replace(/^Spec:.*$/m, `Spec: ${spec}`);
+    assert.equal(reviewedHead(body), head, body);
+    assert.equal(completeReview(body, head), true, body);
+    assert.equal(holdingReview(body, head), true, body);
+  }
+});
+
+test("comments inside inline formatting stay hidden", () => {
+  for (const wrap of [(c) => `**${c}**`, (c) => `[${c}](/a)`]) {
+    const line = review.split("\n").find((line) => line.startsWith("Spec:"));
+    const hidden = review.replace(line, wrap(`<!--\n${line}\n-->`));
+    assert.equal(completeReview(hidden, head), false, hidden);
+    assert.equal(holdingReview(hidden, head), false, hidden);
+    const visible = review.replace(line, `${line} ${wrap("a <!-- b --> c")}`);
+    assert.equal(completeReview(visible, head), true, visible);
+    assert.equal(holdingReview(visible, head), true, visible);
+  }
 });
 
 test("hidden text cannot join fragments into a required field or head", () => {
