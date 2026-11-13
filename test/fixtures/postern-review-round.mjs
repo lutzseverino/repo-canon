@@ -44,6 +44,24 @@ export function roundConnection(state, connectTo = connect) {
         html_url: `https://github.com/example/repository/pull/${pull.number}#pullrequestreview-${review.id}`,
       });
     }
+    const update = new RegExp(
+      `^${repository}/pulls/${pull.number}/reviews/(\\d+)$`,
+    ).exec(url.pathname);
+    if (method === "PUT" && update) {
+      const review = state.reviews.find(
+        (candidate) => String(candidate.id) === update[1],
+      );
+      if (!review) return json({ message: "Not Found" }, 404);
+      review.body = body.body;
+      state.updated = [
+        ...(state.updated ?? []),
+        { id: review.id, body: body.body },
+      ];
+      return json({
+        ...review,
+        html_url: `https://github.com/example/repository/pull/${pull.number}#pullrequestreview-${review.id}`,
+      });
+    }
     const issue = /^\/repos\/example\/repository\/issues\/(\d+)$/.exec(
       url.pathname,
     );
