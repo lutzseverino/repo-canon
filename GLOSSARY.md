@@ -93,9 +93,9 @@ _Avoid_: Feature request, when meaning the triage path
 The agent a maintainer runs to talk with them: it takes their ideas through
 intake, schedules grilling sessions, answers questions in their place except
 reserved decisions, and watches the work through the tracker and the factory's
-status. It launches only the factory session, changes no label and runs no
-repository's scripts; on an issue it posts only the record of an owner
-decision.
+status. It starts only the factory session and owner-facing work, changes no
+label and runs no repository's scripts; on an issue it posts only the record
+of an owner decision or a superseded issue's fate.
 _Avoid_: Factory, factory session, research run
 
 **Reserved decision**:
@@ -156,8 +156,10 @@ _Avoid_: Manual override, workaround
 **Factory session**:
 An agent session that performs the factory gaps, reading only the tracker and
 the factory's status and writing only to the tracker; the orchestrating agent
-starts it and revives it when it stops. It shrinks as the factory gains run
-kinds; on a host without a factory, every stage is its gap.
+starts it and revives it when it stops. It is a bridge: each stage it performs
+names the factory ticket that removes it, or a recorded decision that keeps
+the stage outside the factory. On a host without a factory, every stage is its
+gap.
 _Avoid_: Gap session, back session, orchestrator
 
 **Launch report**:
@@ -181,11 +183,35 @@ time and lessons by a separate session, is always one.
 _Avoid_: Post-mortem, plan audit
 
 **Done check**:
-The read-only launch, run once every row of a plan has ended, that holds each
+The read-only owner-facing work, run once every row of a plan has ended, that holds each
 of the plan's Done-means clauses against primary sources and records its
 evidence or the lack of it. Close starts only when every clause has evidence;
 the Done check is a gate before Close, never a Close review.
 _Avoid_: Done gate, completion audit, closing check
+
+**Owner-facing work**:
+Work the orchestrating agent starts because it reads the owner or the private
+plans: the grill, the retro, the Done check and the architecture review, a
+closed list. It is never a pipeline stage or a factory gap.
+_Avoid_: Workbench stage, hand launch
+
+**Fate**:
+The recorded outcome, posted on an open issue, of a newer decision that
+supersedes what the issue was written against: closed as superseded,
+rescoped, or kept with a one-line reason.
+_Avoid_: Outcome note, reconciliation
+
+**Footprint**:
+What a contract declares it supersedes, adds and deletes, naming durable
+surfaces (skills and their references, labels, configuration keys, record
+kinds) rather than file paths.
+_Avoid_: Touches, file list
+
+**Read set**:
+What an agent must read before acting from an entry-point skill, computed
+through each skill's own Reads over the skills and rules it names, and
+measured in bytes.
+_Avoid_: Context, line count
 
 **Workbench**:
 The git repository of plain Markdown in which the orchestrating agent keeps
