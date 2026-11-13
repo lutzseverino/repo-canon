@@ -100,15 +100,15 @@ ask again after expiry. In factory repositories use the installed `factory` skil
 
 ### Replacing a worker
 
-Before transferring the same PR's write responsibility, identify the predecessor and establish whether it
-can still write. Stop/cancel an active or write-capable predecessor through the available harness and verify
-retirement first; verified finished runs need no cancellation. A provider error, including a rate limit, is
-no retirement evidence. If identity, stop capability or retirement cannot be established, withhold
-responsibility and use the existing owner-question route, naming the missing evidence. Stop only the
-predecessor for this work. Preserve the PR, all branch work, review and handoff context; retain the
-predecessor reference and retirement evidence or uncertainty in existing launch/handoff records. Delivery
-and owner-review gates still apply. The host owns run mapping and stop semantics; use its instructions. Seam
-(deferred): harness run control; consumers: 1 (worker replacement); reuse host capabilities, no new adapter.
+Before transferring the same PR's write responsibility, identify the predecessor and establish whether it can
+still write. Stop/cancel an active or write-capable predecessor through the available harness and verify
+retirement first; verified finished runs need no cancellation. A provider error, including a rate limit, is no
+retirement evidence. If identity, stop capability or retirement cannot be established, withhold responsibility
+and use the existing owner-question route, naming the missing evidence. Stop only the predecessor for this
+work. Preserve the PR, all branch work, review and handoff context; retain the predecessor reference and
+retirement evidence or uncertainty in existing launch and handoff records. Delivery and owner-review gates
+still apply. The host owns run mapping and stop semantics; use its instructions. Seam (deferred): harness run
+control; consumers: 1 (worker replacement); reuse host capabilities, no new adapter.
 
 ## Expedited change
 
