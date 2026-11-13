@@ -55,6 +55,7 @@ const skills = [
 // rendered-Markdown runtime and its parsers; `babysit`, `orchestrate`'s wait
 // and that validator import Postern.
 const support = {
+  "factory-label-metadata": "operations/lib/factory-labels.mjs",
   "humanlayer-skills-license": ".agents/skills/LICENSE.humanlayer-skills",
   "issue-contract-sources": "scripts/issue-contract-sources.mjs",
   "issue-contract-store": "scripts/issue-contract-store.mjs",
@@ -160,8 +161,8 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
     }
   }
   // The other profiles lose only orchestrate; creation remains workbench-only.
-  assert.equal(validation.profiles.standard.declarations.length, 64);
-  assert.equal(validation.profiles.factory.declarations.length, 69);
+  assert.equal(validation.profiles.standard.declarations.length, 65);
+  assert.equal(validation.profiles.factory.declarations.length, 70);
   for (const name of workbenchOnly) {
     for (const profile of ["standard", "factory"])
       assert.ok(

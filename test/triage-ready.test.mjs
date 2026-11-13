@@ -12,6 +12,11 @@ import {
 const revision = `sha256:${"a".repeat(64)}`;
 const label = "state:ready";
 const model = "model:gpt-6.1-sol@high";
+const skip = {
+  name: "factory:skip",
+  color: "c5def5",
+  description: "Ready agent work the factory must not pick up",
+};
 const time = "2026-10-25T12:00:00Z";
 const policyRevision = "b".repeat(40);
 const page = (nodes) => ({
@@ -56,6 +61,7 @@ async function exercise(options = {}, command = main) {
   const repositoryLabels = [
     ...(options.repositoryLabels ?? [
       { name: model, color: "abcdef", description: "Existing model" },
+      { ...skip },
     ]),
   ];
   const events = [...(options.events ?? [])];
@@ -314,7 +320,11 @@ async function exercise(options = {}, command = main) {
         return json({ message: "Label unavailable" }, options.labelFailure);
       if (method === "GET") return json(repositoryLabels);
       if (method === "POST") {
-        if (options.createFailure)
+        if (
+          options.createFailure &&
+          (!options.createFailureLabel ||
+            options.createFailureLabel === body.name)
+        )
           return json(
             { message: "Label creation refused" },
             options.createFailure,
@@ -335,6 +345,21 @@ async function exercise(options = {}, command = main) {
       return new Response(null, { status: 204 });
     }
     if (method === "POST" && url.pathname.endsWith("/labels")) {
+      // Reject unprovisioned required companions instead of masking unsafe
+      // readiness requests with GitHub's implicit label behavior.
+      for (const name of body.labels) {
+        if (
+          (name === skip.name ||
+            name.startsWith(
+              options.configuration?.modelLabelPrefix ?? "model:",
+            )) &&
+          !repositoryLabels.some((entry) => entry.name === name)
+        )
+          return json(
+            { message: `Required label ${name} does not exist` },
+            422,
+          );
+      }
       for (const name of body.labels)
         if (!labels.includes(name)) labels.push(name);
       ownEvent = event(
@@ -409,6 +434,24 @@ test("accepts the reviewed revision with companion labels and confirms the actin
     },
   ]);
   assert.ok(result.waits > 0);
+});
+
+test("provisions a missing skip label before applying skip-route readiness", async () => {
+  const result = await exercise({
+    repositoryLabels: [
+      { name: model, color: "abcdef", description: "Existing model" },
+    ],
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.code, 0);
+  assert.deepEqual(writes(result), [
+    { method: "POST", path: "/repos/owner/repo/labels", body: skip },
+    {
+      method: "POST",
+      path: "/repos/owner/repo/issues/42/labels",
+      body: { labels: [model, skip.name, label] },
+    },
+  ]);
 });
 
 test("refuses a changed revision without applying labels", async () => {
@@ -580,7 +623,11 @@ test("reuses an existing repository model without changing its metadata", async 
     description: "Owner's description",
   };
   for (const labels of [[], [model]]) {
-    const result = await exercise({ labels, repositoryLabels: [existing] });
+    const result = await exercise({
+      labels,
+      repositoryLabels: [existing],
+      argv: ["42", revision, model],
+    });
     assert.equal(result.error, undefined);
     assert.deepEqual(result.repositoryLabels, [existing]);
     assert.equal(writes(result).length, 1);
@@ -614,7 +661,7 @@ test("the installed readiness command enforces models and provisions missing lab
   const created = await exercise({ repositoryLabels: [] }, command);
   assert.equal(created.error, undefined);
   assert.equal(created.code, 0);
-  assert.equal(created.repositoryLabels.length, 1);
+  assert.equal(created.repositoryLabels.length, 2);
   assert.ok(created.labels.includes(model));
   const specification = await exercise(
     {
@@ -625,6 +672,142 @@ test("the installed readiness command enforces models and provisions missing lab
     command,
   );
   assert.equal(specification.error, undefined);
+});
+
+async function readinessCommands(t) {
+  const target = installedValidator(t, ".agents/skills/triage/ready.mjs");
+  return [main, (await import(pathToFileURL(target).href)).main];
+}
+
+test("source and installed skip routes provision both missing labels before readiness", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    const result = await exercise({ repositoryLabels: [] }, command);
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+    assert.deepEqual(writes(result), [
+      {
+        method: "POST",
+        path: "/repos/owner/repo/labels",
+        body: {
+          name: model,
+          color: "5319e7",
+          description: "Factory model: gpt-6.1-sol@high",
+        },
+      },
+      { method: "POST", path: "/repos/owner/repo/labels", body: skip },
+      {
+        method: "POST",
+        path: "/repos/owner/repo/issues/42/labels",
+        body: { labels: [model, skip.name, label] },
+      },
+    ]);
+  }
+});
+
+test("source and installed skip routes provision skip with an already attached model", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    const result = await exercise(
+      {
+        labels: [model],
+        repositoryLabels: [
+          { name: model, color: "abcdef", description: "Model" },
+        ],
+        argv: ["42", revision, skip.name, skip.name],
+      },
+      command,
+    );
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+    assert.deepEqual(writes(result), [
+      { method: "POST", path: "/repos/owner/repo/labels", body: skip },
+      {
+        method: "POST",
+        path: "/repos/owner/repo/issues/42/labels",
+        body: { labels: [skip.name, label] },
+      },
+    ]);
+    assert.ok(result.labels.includes(model));
+  }
+});
+
+test("source and installed skip routes preserve existing customized skip metadata", async (t) => {
+  const customized = {
+    name: skip.name,
+    color: "123456",
+    description: "Owner choice",
+  };
+  const existing = [
+    { name: model, color: "abcdef", description: "Model" },
+    customized,
+  ];
+  for (const command of await readinessCommands(t)) {
+    const result = await exercise({ repositoryLabels: existing }, command);
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+    assert.deepEqual(result.repositoryLabels, existing);
+    assert.deepEqual(writes(result), [
+      {
+        method: "POST",
+        path: "/repos/owner/repo/issues/42/labels",
+        body: { labels: [model, skip.name, label] },
+      },
+    ]);
+  }
+});
+
+test("source and installed skip lookup or creation failures prevent readiness", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    for (const failure of [403, 422, 503]) {
+      for (const options of [
+        { labelFailure: failure },
+        { createFailure: failure, createFailureLabel: skip.name },
+      ]) {
+        const result = await exercise(
+          { repositoryLabels: [], ...options },
+          command,
+        );
+        assert.match(
+          result.error?.message ?? "",
+          /Label unavailable|Label creation refused/,
+        );
+        assert.equal(result.code, undefined);
+        assert.equal(result.labels.includes(label), false);
+        assert.equal(
+          writes(result).some(({ path }) => path.includes("/issues/")),
+          false,
+        );
+        if (options.createFailure)
+          assert.deepEqual(
+            result.repositoryLabels.map(({ name }) => name),
+            [model],
+          );
+      }
+    }
+  }
+});
+
+test("ordinary source and installed readiness never provisions or attaches skip implicitly", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    for (const factory of [true, false]) {
+      for (const repositoryLabels of [[], [skip]]) {
+        const result = await exercise(
+          {
+            factory,
+            repositoryLabels,
+            argv: ["42", revision, ...(factory ? [model] : [])],
+          },
+          command,
+        );
+        assert.equal(result.error, undefined);
+        assert.equal(result.code, 0);
+        assert.equal(result.labels.includes(skip.name), false);
+        assert.equal(
+          writes(result).some(({ body }) => body?.name === skip.name),
+          false,
+        );
+      }
+    }
+  }
 });
 
 test("reports a rejection after its own event but ignores an earlier rejection", async () => {
