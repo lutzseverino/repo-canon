@@ -167,12 +167,29 @@ it. On a private repository whose GitHub plan offers neither branch protection
 nor rulesets, the check is unavailable, and adoption completes without it.
 
 For unattended delivery, `babysit` confirms strict required-check enforcement
-for the merging credential. A matching active ruleset's explicit
-`current_user_can_bypass: "never"` supplies that evidence even when GitHub hides
+for the merging credential wherever GitHub offers it. A matching active
+ruleset's explicit `current_user_can_bypass: "never"` supplies that evidence even when GitHub hides
 the global bypass list or other actors can bypass. Without qualifying ruleset
 evidence, the existing strict classic protection enforced for admins can still
-qualify. Unconfirmed enforcement stops delivery for the owner; see the
-[merge script's policy checks](../development/babysit-merge.md).
+qualify.
+
+Only recognized plan-limit 403 responses for both classic protection and
+rulesets on a private repository permit merging-agent freshness verification
+instead. Private visibility or a generic 403/404 alone is insufficient. After
+slow gates and immediately before the expected-head merge, the merging agent
+verifies the live default destination, unchanged validated/reviewed head,
+successful applicable validation on that exact head, and ancestry containing
+the current default-branch tip. Another writer can advance the base after this
+verification and the merge can succeed: the owner accepts this residual
+concurrent-base race only on the proven plan-limited path. These checks narrow
+the window without providing GitHub's atomic protection; strict non-bypassable
+GitHub enforcement remains required wherever available.
+
+Ordinary permission or authentication refusals, missing or unreadable evidence,
+other unconfirmed enforcement, a missing PR metadata workflow on the default
+branch, and deferred remote setup still stop delivery for the owner. See the
+[merge script's policy checks](../development/babysit-merge.md) for the detailed
+evidence and verification requirements.
 
 ## Automated updates
 
