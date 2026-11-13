@@ -1,3 +1,5 @@
+import { marked } from "../../../vendor/marked/marked.esm.js";
+
 // The comment rules' Reviews section defines this review. The wait prints its
 // template; merge accepts only a completed review of the current head.
 export const reviewsSection = ".repo-standards/rules/comments.md#reviews";
@@ -32,9 +34,18 @@ const completed = (value) =>
 // no open finding).
 function readReview(body) {
   if (typeof body !== "string") return null;
-  // The review is plain text, never a quoted example or HTML comment.
-  if (/^\s*(?:`{3,}|~{3,})/m.test(body) || body.includes("<!--")) return null;
-  const lines = body.split(/\r?\n/);
+  // Ignore example blocks without letting their contents (including comment
+  // markers) affect visible evidence. Preserve spacing so hiding content never
+  // joins fragments into a field or a head SHA.
+  const blank = (text) => text.replace(/[^\r\n]/g, " ");
+  const visible = marked
+    .lexer(body)
+    .map((token) =>
+      ["code", "blockquote"].includes(token.type) ? blank(token.raw) : token.raw,
+    )
+    .join("")
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, blank);
+  const lines = visible.split(/\r?\n/);
   const entries = lines.flatMap((line, index) => {
     const match = field.exec(line);
     return match ? [{ key: match[1], value: match[2], index }] : [];

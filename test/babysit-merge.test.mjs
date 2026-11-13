@@ -414,7 +414,12 @@ No external reviewer runs on app-authored PRs.`;
       "Findings: <None, or one list item per finding below>",
     ),
     `\`\`\`markdown\n${outcome}\n\`\`\``,
+    `~~~markdown\n${outcome}\n~~~`,
+    outcome.replace(/^/gm, "> "),
+    outcome.replace(/^/gm, "    "),
     `<!--\n${outcome}\n-->`,
+    outcome.replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),
+    outcome.replace(/^- .*$/m, "<!-- - `merge.mjs:1` hidden finding -->"),
   ].map((body) => review(body));
   for (const body of reviews) {
     const result = run(t, {
@@ -530,6 +535,11 @@ test("a reassessed round is accepted by merge while required checks and threads 
 test("a complete installed current-head review permits only the remaining merge gates", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const complete = [
+    `${outcome}\n\n\`\`\`text\npnpm check passed\n\`\`\``,
+    `~~~text\npnpm check passed\n~~~\n\n${outcome}`,
+    `<!-- verification marker -->\n\n${outcome}`,
+    `${outcome}\n\n<!-- verification marker -->`,
+    `${outcome}\n\n\`\`\`markdown\n${outcome}\n- an invalid example finding\n\`\`\``,
     outcome
       .replace(
         "Passed; documented repository rules checked, no findings remain.",
