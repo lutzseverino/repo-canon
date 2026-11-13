@@ -161,6 +161,11 @@ test("fixture Git operations ignore inherited repository and config redirections
     },
   );
   t.diagnostic(`hostile-Git nested run: ${suite.elapsedMs.toFixed(3)} ms`);
+  // Include the nested destination-resolver invocations in full-run measurements.
+  for (const line of suite.stdout.split("\n")) {
+    if (line.startsWith("# child timing "))
+      t.diagnostic(`nested ${line.slice(2)}`);
+  }
   assert.ifError(suite.error);
   assert.equal(suite.status, 0, `${suite.stdout}\n${suite.stderr}`);
   assert.match(suite.stdout, /# tests [1-9][0-9]*/);
