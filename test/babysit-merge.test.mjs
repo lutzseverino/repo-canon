@@ -463,6 +463,42 @@ test("the review skill's posted round review is the app-author internal review r
   }
 });
 
+test("installed app-author merge accepts separate evidence but excludes examples from reviews", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const wrap of [
+    (text) => `\`\`\`markdown\n${text}\n\`\`\``,
+    (text) => `~~~markdown\n${text}\n~~~`,
+    (text) => `<!--\n${text}\n-->`,
+    (text) =>
+      text
+        .split("\n")
+        .map((line) => `> ${line}`)
+        .join("\n"),
+  ]) {
+    const evidence = wrap(`${outcome}\n- example.mjs:1 example`);
+    for (const [body, status] of [
+      [`${evidence}\n${outcome}`, 0],
+      [`${outcome}\n${evidence}`, 0],
+      [wrap(outcome), 5],
+      [`${outcome.replace(/^Spec:.*$/m, "")}\n${wrap("Spec: Passed")}`, 5],
+    ]) {
+      const result = run(
+        t,
+        {
+          author: "factory-app[bot]",
+          reviewConfiguration: { policy },
+          reviews: [review(body)],
+        },
+        undefined,
+        target,
+      );
+      assert.equal(result.status, status, `${body}\n${result.stderr}`);
+      if (status === 0) assert.equal(result.state.pullRequestState, "MERGED");
+      else assert.equal(result.state.merge, undefined);
+    }
+  }
+});
+
 test("a complete installed current-head review permits only the remaining merge gates", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const complete = [

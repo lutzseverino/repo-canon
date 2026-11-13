@@ -336,3 +336,61 @@ test("the installed command imports only what adoption installs", async (t) => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(facts(result.stdout).round, "1");
 });
+
+test("round posting and holding use only eligible review content, including when installed", async (t) => {
+  const target = installedValidator(t, ".agents/skills/review/round.mjs");
+  const installed = await import(pathToFileURL(target).href);
+  const wrappers = [
+    (text) => `\`\`\`markdown\n${text}\n\`\`\``,
+    (text) => `~~~markdown\n${text}\n~~~`,
+    (text) => `<!--\n${text}\n-->`,
+    (text) =>
+      text
+        .split("\n")
+        .map((line) => `> ${line}`)
+        .join("\n"),
+  ];
+  for (const entry of [main, installed.main]) {
+    for (const wrap of wrappers) {
+      const evidence = wrap(`${reviewBody(head)}\n- example.mjs:1 example`);
+      for (const body of [
+        `${evidence}\n${reviewBody(head)}`,
+        `${reviewBody(head)}\n${evidence}`,
+        `${handBack(head)}\n${wrap("Findings: None")}`,
+      ]) {
+        const state = pullState();
+        let result = await run(
+          t,
+          ["12", "--post", file(t, body)],
+          state,
+          entry,
+        );
+        assert.equal(result.status, 0, `${body}\n${result.stderr}`);
+        assert.equal(state.posted[0].body, body);
+        result = await run(t, ["12"], state, entry);
+        const actual = facts(result.stdout);
+        assert.equal(actual.round, "1", body);
+        assert.equal(actual.reviewed, "yes", body);
+        assert.equal(
+          actual.held,
+          body.includes("refunds") ? "no" : "yes",
+          body,
+        );
+      }
+      for (const body of [
+        wrap(reviewBody(head)),
+        `${reviewBody(head).replace("Fixed: Nothing", "")}\n${wrap("Fixed: Nothing")}`,
+      ]) {
+        const state = pullState();
+        const result = await run(
+          t,
+          ["12", "--post", file(t, body)],
+          state,
+          entry,
+        );
+        assert.equal(result.status, 2, body);
+        assert.equal(state.posted, undefined);
+      }
+    }
+  }
+});

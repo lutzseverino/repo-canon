@@ -27,14 +27,56 @@ const completed = (value) =>
   ) &&
   !placeholders.some((line) => value.includes(line.slice(line.indexOf("<"))));
 
+// Keep example fields and findings out of the record without discarding a
+// separate plain-text review. Fence contents are literal: comments and shorter
+// or mismatched fences inside them cannot change where the example ends.
+function recordLines(body) {
+  let fence = null;
+  let comment = false;
+  return body.split(/\r?\n/).map((line) => {
+    if (fence) {
+      const close = /^ {0,3}(`+|~+)[\t ]*$/.exec(line)?.[1];
+      if (close?.[0] === fence[0] && close.length >= fence.length) fence = null;
+      return "";
+    }
+    if (!comment) {
+      if (/^\s*>/.test(line)) return "";
+      const open = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+      if (open && (open[1][0] === "~" || !open[2].includes("`"))) {
+        fence = open[1];
+        return "";
+      }
+    }
+    let visible = "";
+    let offset = 0;
+    while (offset < line.length) {
+      if (comment) {
+        const end = line.indexOf("-->", offset);
+        if (end < 0) break;
+        comment = false;
+        offset = end + 3;
+      } else {
+        const start = line.indexOf("<!--", offset);
+        if (start < 0) {
+          visible += line.slice(offset);
+          break;
+        }
+        // A comment must not splice fragments into a field name or value.
+        visible += line.slice(offset, start) + " ";
+        comment = true;
+        offset = start + 4;
+      }
+    }
+    return visible;
+  });
+}
+
 // A review's fields in the template's shape, or null when it is not one: the
 // head it names, whether it is complete, and whether it holds (complete, with
 // no open finding).
 function readReview(body) {
   if (typeof body !== "string") return null;
-  // The review is plain text, never a quoted example or HTML comment.
-  if (/^\s*(?:`{3,}|~{3,})/m.test(body) || body.includes("<!--")) return null;
-  const lines = body.split(/\r?\n/);
+  const lines = recordLines(body);
   const entries = lines.flatMap((line, index) => {
     const match = field.exec(line);
     return match ? [{ key: match[1], value: match[2], index }] : [];
