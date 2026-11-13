@@ -102,8 +102,9 @@ _Avoid_: Factory, factory session, research run
 A decision the orchestrating agent never takes in the owner's place: intent a
 grill settles, unless the owner hands that grill over; a grant, credential,
 billing step or one needing the owner's device or presence; a change to the
-orchestrating agent's own powers or operating model; a major release or a
-second deferral of release scope; and anything that would carry the owner's
+orchestrating agent's own powers or operating model, which always goes to a
+grill with the owner even when other grill questions are delegated; a major
+release or a second deferral of release scope; and anything that would carry the owner's
 private setup into a repository.
 _Avoid_: Owner question, when meaning the class; veto item
 

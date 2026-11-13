@@ -12,9 +12,7 @@ the installed rules, skill or guide read at the moment it applies, reached
 from the map. Nothing relies on a file read once at the start of a long
 session, or on free text in a launch. Claude Code and Codex both load
 `AGENTS.md` into every session on their own (observed 2026-11-13: Claude Code
-2.1.322 and Codex 0.167.2), and it stays in the session's system context for
-its whole length, while a file read once sinks hundreds of thousands of tokens
-behind newer work. The owner decided on 2026-11-13: "When I talked about
+2.1.322 and Codex 0.167.2). The owner decided on 2026-11-13: "When I talked about
 `AGENTS.md` I thought the way to go would be linking the paths of the
 important places instead of moving rules there, `AGENTS.md` should not change
 over time, I feel like." This supersedes the 2026-10-17 decision on #518, "No
