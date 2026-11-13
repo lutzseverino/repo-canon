@@ -3,8 +3,14 @@
 Status: that the writer of a brief never accepts it is superseded for the
 factory's triage run by
 [ADR 0030](0030-let-factory-triage-accept-its-own-brief.md), and
-`factory:needs-input` by [ADR 0031](0031-name-labels-by-family.md); the rest
-stands.
+`factory:needs-input` by [ADR 0031](0031-name-labels-by-family.md).
+[ADR 0041](0041-answer-in-the-owners-place-except-reserved-decisions.md)
+supersedes its inference-test boundary for the orchestrating agent's decisions,
+including its owner gate for persisting operational values, and its reporting
+of inferred answers for owner veto.
+[ADR 0043](0043-keep-the-contribution-guide-for-contributors.md) supersedes its
+assignment of grill publication to the orchestrating agent. Its routing through
+the orchestrating agent and decision inbox stands.
 
 The orchestrating agent answers an intent question itself only when it can cite
 the answer's source, the owner's approved goal for the work, a recorded owner

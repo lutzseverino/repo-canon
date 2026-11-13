@@ -1,6 +1,8 @@
 # Watch instead of launching; a factory session performs the factory gaps
 
-Status: supersedes [ADR 0037](0037-act-in-repositories-only-through-launches.md).
+Status: supersedes [ADR 0037](0037-act-in-repositories-only-through-launches.md)
+and the launch and intake-model-label responsibilities in
+[ADR 0036](0036-launch-hand-stages-with-identifiers-only.md).
 
 The orchestrating agent launches no pipeline stage. It talks with the owner,
 answers in the owner's place except reserved decisions, keeps the plans, and
@@ -34,6 +36,8 @@ answered wrongly 9 times in 23.
 
 ## Consequences
 
+- Model labels are chosen and applied by the triage run, never by the
+  orchestrating agent at intake.
 - Readiness is applied when a contract is accepted; withholding it to order
   work is never used, and the factory orders ready work.
 - No label is changed, and nothing proceeds, past a script's refusal: the

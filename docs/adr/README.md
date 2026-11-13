@@ -99,7 +99,8 @@ involve real alternatives.
   the work, a grill with the owner drafts the other briefs it accepts, and
   owner-only questions reach the owner only through its decision inbox. Its
   writer rule is superseded for the factory's triage run by ADR 0030, and
-  `factory:needs-input` by ADR 0031.
+  `factory:needs-input` by ADR 0031. ADR 0041 supersedes its decision boundary
+  and veto reporting; ADR 0043 supersedes its grill-publication assignment.
 - [Add the typescript-astro and typescript-vite stacks](0026-add-the-typescript-astro-and-typescript-vite-stacks.md):
   Sites use Astro and Apps use Vite with React, as two stacks over shared web
   rules with oxlint, Prettier, pnpm and shadcn, amending ADR 0024.
@@ -135,7 +136,8 @@ involve real alternatives.
   triage writes the Agent Brief over the body and keeps the original request.
 - [Launch hand stages with identifiers only](0036-launch-hand-stages-with-identifiers-only.md):
   a hand launch is its stage's hand skill and stage input, with the model from
-  the anchor's label and no free text.
+  the anchor's label and no free text; ADR 0040 supersedes its assignment of
+  launches and intake model labels to the orchestrating agent.
 - [Act in repositories only through launches](0037-act-in-repositories-only-through-launches.md):
   the orchestrating agent applies no label and runs no repository's scripts;
   it launches into the repository and reads coverage from the factory's status.

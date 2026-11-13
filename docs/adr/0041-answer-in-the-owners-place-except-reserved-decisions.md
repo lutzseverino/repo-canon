@@ -1,5 +1,9 @@
 # Answer in the owner's place except reserved decisions, by one bundled operating model
 
+Status: supersedes the orchestrating agent's inference-test decision boundary
+and owner-veto reporting in
+[ADR 0025](0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md).
+
 The orchestrating agent answers every question in the owner's place except
 reserved decisions, and its skill holds the whole operating model: the
 decision rights, default principles (checkable fixes first, long-term design

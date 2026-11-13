@@ -2,7 +2,9 @@
 
 Status: supersedes the guide-as-delivery-home part of
 [ADR 0010](0010-carry-delivery-rules-in-the-environment.md) and amends
-[ADR 0016](0016-keep-requirements-in-installed-rules.md).
+[ADR 0016](0016-keep-requirements-in-installed-rules.md). It supersedes the
+grill-publication assignment in
+[ADR 0025](0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md).
 
 `CONTRIBUTING.md` says how to contribute, in role words, for a person or an
 agent alike: issues, setup, validation, commits, opening a pull request and

@@ -1,5 +1,10 @@
 # Launch hand stages with identifiers only
 
+Status: its assignment of hand-stage launches and intake model labels to the
+orchestrating agent is superseded by
+[ADR 0040](0040-watch-instead-of-launching.md). Its identifier-only launch
+shape and other stage methods stand.
+
 The orchestrating agent launches every hand stage the way the factory launches
 a run: the stage's hand skill followed by its stage input, the identifiers the
 Canonical stages table names for that stage, and nothing else. A fact a launch
