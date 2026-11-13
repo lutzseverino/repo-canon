@@ -1,5 +1,7 @@
 # Act in repositories only through launches
 
+Status: superseded by [ADR 0040](0040-watch-instead-of-launching.md).
+
 The orchestrating agent acts in a repository only by launching that stage's
 hand skill into the repository's own checkout, where the skill runs the
 repository's installed scripts at its adopted version. It applies no label

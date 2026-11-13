@@ -90,13 +90,29 @@ written from the owner's recorded decisions and any inferred intent.
 _Avoid_: Feature request, when meaning the triage path
 
 **Orchestrating agent**:
-The agent a maintainer runs to take their ideas through intake and to triage
-requests, which schedules grilling sessions, launches every hand stage into
-the repository that stage acts on, receives every question first, records
-inferred intent and keeps the decision inbox. It changes no label and runs no
-repository's scripts itself; on an issue it posts only the record of an owner
-decision. An owner who triages themselves is the orchestrating agent.
-_Avoid_: Factory, research run
+The agent a maintainer runs to talk with them: it takes their ideas through
+intake, schedules grilling sessions, answers questions in their place except
+reserved decisions, and watches the work through the tracker and the factory's
+status. It launches only the factory session, changes no label and runs no
+repository's scripts; on an issue it posts only the record of an owner
+decision.
+_Avoid_: Factory, factory session, research run
+
+**Reserved decision**:
+A decision the orchestrating agent never takes in the owner's place: intent a
+grill settles, unless the owner hands that grill over; a grant, credential,
+billing step or one needing the owner's device or presence; a change to the
+orchestrating agent's own powers or operating model; a major release or a
+second deferral of release scope; and anything that would carry the owner's
+private setup into a repository.
+_Avoid_: Owner question, when meaning the class; veto item
+
+**Owner values**:
+The owner's settings for the orchestrating agent, such as their timezone,
+quiet hours and additions to or narrowings of the reserved decisions, kept in
+the workbench in the format the orchestrating agent's skill defines and its
+scripts validate. They hold values, never rules.
+_Avoid_: Standing rules, preferences
 
 **Inferred intent**:
 An answer to an intent question settled under the contribution guide's
@@ -131,10 +147,17 @@ _Avoid_: Conversational amendment
 
 **Factory gap**:
 A pipeline stage the factory cannot yet perform for a repository, which the
-orchestrating agent launches by hand into that repository with the stage's
-hand skill, to the same contract, and logs. Intake and the grill, which need
-the owner, are never factory gaps.
+factory session performs by hand in that repository with the stage's hand
+skill, to the same contract, and logs. Intake and the grill, which need the
+owner, are never factory gaps.
 _Avoid_: Manual override, workaround
+
+**Factory session**:
+An agent session that performs the factory gaps, reading only the tracker and
+the factory's status and writing only to the tracker; the orchestrating agent
+starts it and revives it when it stops. It shrinks as the factory gains run
+kinds; on a host without a factory, every stage is its gap.
+_Avoid_: Gap session, back session, orchestrator
 
 **Launch report**:
 The workbench record a launched stage writes when its output is a workbench
@@ -307,6 +330,31 @@ a repository area, or work in the whole repository, such as tracker work that
 changes no file, which its checks and assessments cite. Rules outlast the
 adoption run that installs them.
 _Avoid_: Guidance, when meaning lasting requirements; skill instructions
+
+**Planning rules**:
+The installed rules for taking a request to accepted contracts, worded by
+role: triage and its inference test, grills and their publication, readiness,
+owner questions and findings routing.
+_Avoid_: Triage section, orchestrator procedure
+
+**Delivery rules**:
+The installed rules for taking a ready contract to a merged change, worded by
+role: implementation contracts, worker handoff, adoption pull requests,
+merging, agents on the maintainer's account and credentials.
+_Avoid_: Pull request section, delivery skill
+
+**Contribution guide**:
+`CONTRIBUTING.md`: how to contribute to the repository, in role words, for a
+person or an agent alike: issues, setup, validation, commits, opening a pull
+request and what review and merge need. It points each role to its planning
+or delivery rules and holds no agent mechanics.
+_Avoid_: Process manual, agent instructions
+
+**Agent guidance**:
+The always-loaded `AGENTS.md`: a short, stable map whose lines each name a
+moment of work and the authoritative file to read then. It holds no rule text
+and changes only when a path moves.
+_Avoid_: Agent rules, standing rules
 
 **Adoption guidance**:
 A standard's one-time instructions for an adoption or update run, such as a

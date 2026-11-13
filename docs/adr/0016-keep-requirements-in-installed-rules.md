@@ -3,7 +3,9 @@
 Status: its consequences on overriding a pinned skill and on forking one are
 superseded by
 [ADR 0028](0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md);
-the decision that requirements live in installed rules stands.
+the decision that requirements live in installed rules stands, and
+[ADR 0043](0043-keep-the-contribution-guide-for-contributors.md) amends it: a role rule binds
+through the planning or delivery rules, and how one setup fills a role is method.
 
 Every requirement a standard places on an adopting repository lives in
 installed, human-readable rules that its checks and assessments cite. An

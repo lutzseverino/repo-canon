@@ -37,7 +37,8 @@ involve real alternatives.
 - [Carry delivery rules in the environment and keep skills short](0010-carry-delivery-rules-in-the-environment.md):
   the contribution guide and one `AGENTS.md` line carry delivery, the delivery
   skill is deleted, and the short `babysit` skill takes a pull request to its
-  merge.
+  merge; ADR 0042 amends its `AGENTS.md` line and ADR 0043 moves the delivery
+  procedure to the delivery rules.
 - [Ship the factory with the standard](0011-ship-the-factory-with-the-standard.md):
   every adopting repository carries `.sandcastle/`, which replaces orchestrator
   prompts, and labels choose each run's mode and model; its run-mode selection
@@ -62,7 +63,7 @@ involve real alternatives.
 - [Keep requirements in installed rules, and use skills as methods](0016-keep-requirements-in-installed-rules.md):
   requirements live in installed rules that checks and assessments cite, and
   installed skills, pinned upstream ones included, never define them; ADR 0028
-  supersedes its override and fork consequences.
+  supersedes its override and fork consequences, and ADR 0043 amends it.
 - [Make the factory an optional profile](0017-make-the-factory-an-optional-profile.md):
   a standard profile for every adopting repository and a factory profile that
   adds the factory's repository files; ADR 0027 adds a workbench profile.
@@ -138,9 +139,22 @@ involve real alternatives.
 - [Act in repositories only through launches](0037-act-in-repositories-only-through-launches.md):
   the orchestrating agent applies no label and runs no repository's scripts;
   it launches into the repository and reads coverage from the factory's status.
+  Superseded by ADR 0040.
 - [Exempt genuine Dependabot pull requests from the body sections](0038-exempt-genuine-dependabot-pull-requests-from-body-sections.md):
   the metadata validator skips the four body sections only for a trusted
   `dependabot[bot]` author; title, breaking-change and attribution checks stay.
 - [Own pull-request text checks and retire others before adoption](0039-own-pull-request-text-checks-and-retire-others-before-adoption.md):
   Canon's metadata contract is the only pull-request text policy; adoption stops
   until a prerequisite pull request removes every other such check.
+- [Watch instead of launching; a factory session performs the factory gaps](0040-watch-instead-of-launching.md):
+  the orchestrating agent launches only the factory session, which works from
+  the tracker and the factory's status alone; supersedes ADR 0037.
+- [Answer in the owner's place except reserved decisions, by one bundled operating model](0041-answer-in-the-owners-place-except-reserved-decisions.md):
+  the skill holds decision rights, principles and format; the workbench holds
+  only owner values and decision records.
+- [Keep agent guidance a stable map](0042-keep-agent-guidance-a-stable-map.md):
+  `AGENTS.md` links where each rule lives, including the installed rules at
+  the start of work, and holds no rule text.
+- [Keep the contribution guide for contributors, and process in planning and delivery rules](0043-keep-the-contribution-guide-for-contributors.md):
+  the guide is role-worded contribution help; planning and delivery rules hold
+  the process; amends ADR 0016.
