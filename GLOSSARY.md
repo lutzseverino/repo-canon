@@ -301,8 +301,8 @@ host declare no ranking of models.
 _Avoid_: Weaker model, cheaper model, lower-ranked model
 
 **Stand-in**:
-A launch that runs a broader model in place of the narrower model chosen for
-it, decided by the factory at launch from its providers' usage.
+A broader model the factory runs in place of the narrower model chosen for
+a launch, decided at launch from its providers' usage.
 _Avoid_: Upgrade, fallback, substitution
 
 **Factory configuration**:
