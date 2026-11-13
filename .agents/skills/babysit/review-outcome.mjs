@@ -31,30 +31,26 @@ const completed = (value) =>
 
 const blank = (text) => text.replace(/[^\r\n]/g, " ");
 
-function withoutExamples(tokens) {
-  return tokens
-    .map((token) => {
-      if (["code", "blockquote"].includes(token.type)) return blank(token.raw);
-      if (token.type !== "list") return token.raw;
-      let visible = token.raw;
-      let offset = 0;
-      for (const entry of token.items) {
-        // List children are de-indented, but keep their source line positions.
-        // Mask those lines in the raw item to retain its markers and indentation.
-        const lines = withoutExamples(entry.tokens).split("\n");
-        const masked = entry.raw
-          .split("\n")
-          .map((line, index) =>
-            lines[index]?.trim() === "" ? blank(line) : line,
-          )
-          .join("\n");
-        const start = token.raw.indexOf(entry.raw, offset);
-        offset = start + entry.raw.length;
-        visible = visible.slice(0, start) + masked + visible.slice(offset);
-      }
-      return visible;
-    })
-    .join("");
+// The lines a reader sees outside examples, built from the visible tokens
+// rather than by masking source positions, which tokenization does not always
+// preserve. Any other token, such as code, a quote or a link definition,
+// becomes one blank line, so its content can neither supply evidence nor join
+// the lines around it. Text keeps its lines inside list items too, so a field
+// continuing an item still counts. An item's first line keeps its marker unless
+// an example opens it, indented when nested, so only top-level items are
+// findings.
+function visibleLines(tokens, nested = false) {
+  return tokens.flatMap((token) => {
+    if (["paragraph", "text", "heading", "html"].includes(token.type))
+      return token.raw.replace(/\n+$/, "").split("\n");
+    if (token.type !== "list") return [""];
+    return token.items.flatMap((entry) => {
+      const [first, ...rest] = visibleLines(entry.tokens, true);
+      const marker = /^[\t ]*\S+[\t ]*/.exec(entry.raw)?.[0] ?? "";
+      const opening = (nested ? "  " : "") + marker + first;
+      return [first?.trim() ? opening : "", ...rest];
+    });
+  });
 }
 
 // A review's fields in the template's shape, or null when it is not one: the
@@ -62,14 +58,12 @@ function withoutExamples(tokens) {
 // no open finding).
 function readReview(body) {
   if (typeof body !== "string") return null;
-  // Ignore example blocks without letting their contents (including comment
-  // markers) affect visible evidence. Preserve spacing so hiding content never
-  // joins fragments into a field or a head SHA.
-  const visible = withoutExamples(marked.lexer(body)).replace(
-    /<!--[\s\S]*?(?:-->|$)/g,
-    blank,
-  );
-  const lines = visible.split(/\r?\n/);
+  // Blank comments in place, so hiding content never joins fragments into a
+  // field or a head SHA.
+  const lines = visibleLines(marked.lexer(body))
+    .join("\n")
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, blank)
+    .split("\n");
   const entries = lines.flatMap((line, index) => {
     const match = field.exec(line);
     return match ? [{ key: match[1], value: match[2], index }] : [];

@@ -419,6 +419,7 @@ No external reviewer runs on app-authored PRs.`;
     outcome.replace(/^/gm, "    "),
     `- > Example\n${outcome.split("\n\n")[1]}`,
     `- - > Example\n${outcome.split("\n\n")[1]}`,
+    `- example:\n\n  [r]: /a\n\n  [r]: /b\n  "${"title\n  ".repeat(4)}end"\n\n  > Example\n${outcome.split("\n\n")[1]}`,
     `- \`\`\`markdown\n${outcome.replace(/^/gm, "  ")}\n  \`\`\``,
     `<!--\n${outcome}\n-->`,
     outcome.replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),
