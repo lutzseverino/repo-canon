@@ -477,6 +477,19 @@ test("a held legacy selector authenticates historical factory approval without s
   const brief = s.comments[0];
   brief.body += '\n\n<!-- factory:run {"run":"triage-7"} -->';
   brief.user = { login: "factory[bot]" };
+  brief.created_at = brief.updated_at;
+  s.triageCommentEdit = {
+    __typename: "IssueComment",
+    id: brief.node_id,
+    body: brief.body,
+    author: { __typename: "Bot", login: "factory" },
+    createdAt: brief.created_at,
+    updatedAt: brief.updated_at,
+    lastEditedAt: null,
+    editor: null,
+    includesCreatedEdit: false,
+    userContentEdits: { totalCount: 0, nodes: [] },
+  };
   s.triageResult = { author: "factory[bot]", marker: "factory:run" };
   const original = previous(s);
   original.reviewer = "factory[bot]";

@@ -280,6 +280,8 @@ const wayfinderChildFields = new Set(["parent", "question"]);
 //   records;
 // - `triageResult`: the factory's triage result as `factoryTriageResult`
 //   reads it, `null` when only people grant readiness.
+// - `triageCommentEdit`: authenticated edit-history facts for the selected
+//   factory comment, `null` when unavailable. Never inferred from timestamps.
 // The timeline is read whenever the issue uses workflow state, permissions for
 // a structurally complete contract or Seams migration evidence, and
 // `bodyRevision` only for a direct-body contract. Permissions cover every actor on a readiness-label
@@ -1589,8 +1591,8 @@ function supersedingDeletedBrief(currentEvent, result) {
 
 // Readiness the factory's triage run applied. It counts when the
 // current contract is the Agent Brief the factory's account posted as that
-// run's triage result, which names the run on exactly one marked line, and the
-// run did not write the issue. An issue the factory's account opened names the
+// run's unedited triage result, which names the run on exactly one marked line,
+// and the run did not write the issue. An issue the factory's account opened names the
 // run that wrote it on one marked line too; without one, the writer is unknown.
 function triageAuthority(snapshot, result) {
   const { issue, triageResult } = snapshot;
@@ -1617,6 +1619,12 @@ function triageAuthority(snapshot, result) {
       authorized: false,
       refusal: `@${author}'s readiness is not backed by the factory's triage result for this revision.`,
     };
+  const provenance = triageCommentProvenance(snapshot.triageCommentEdit, brief);
+  if (provenance)
+    return {
+      authorized: false,
+      refusal: `${provenance} Publish a new immutable result or have an authorized person review this revision.`,
+    };
   if (issue.user?.login !== author) return { authorized: true, run };
   const writers = markedRuns(issue.body, marker);
   if (writers.length !== 1 || !writers[0])
@@ -1630,6 +1638,47 @@ function triageAuthority(snapshot, result) {
       refusal: `The factory's triage run ${run} wrote this issue, so it cannot accept the brief. A person must review it.`,
     };
   return { authorized: true, run };
+}
+
+function triageCommentProvenance(edit, brief) {
+  if (!edit)
+    return "The triage result's edit provenance is unavailable, so it cannot grant factory readiness.";
+  // Bind the history to the same comment bytes, author and revision the
+  // discussion read selected. A racing read must not certify another revision.
+  const login =
+    edit.author?.__typename === "Bot"
+      ? `${edit.author.login}[bot]`
+      : edit.author?.login;
+  const history = edit.userContentEdits;
+  if (
+    edit.__typename !== "IssueComment" ||
+    edit.id !== (brief.node_id ?? brief.nodeId) ||
+    edit.body !== brief.body ||
+    login !== (brief.user ?? brief.author)?.login ||
+    !utcTime(edit.createdAt) ||
+    !utcTime(edit.updatedAt) ||
+    edit.createdAt !== (brief.created_at ?? brief.createdAt) ||
+    edit.updatedAt !== (brief.updated_at ?? brief.updatedAt) ||
+    !(edit.lastEditedAt === null || utcTime(edit.lastEditedAt)) ||
+    !Object.hasOwn(edit, "editor") ||
+    edit.editor === undefined ||
+    typeof edit.includesCreatedEdit !== "boolean" ||
+    !Number.isInteger(history?.totalCount) ||
+    history.totalCount < 0 ||
+    !Array.isArray(history.nodes) ||
+    history.nodes.length !== Math.min(history.totalCount, 1)
+  )
+    return "The triage result's edit provenance is incomplete or inconsistent, so it cannot grant factory readiness.";
+  if (
+    edit.lastEditedAt !== null ||
+    edit.editor !== null ||
+    edit.includesCreatedEdit ||
+    history.totalCount !== 0
+  )
+    return "The triage result was edited, so it cannot grant factory readiness.";
+  if (edit.createdAt !== edit.updatedAt)
+    return "The triage result's edit provenance contradicts its timestamps, so it cannot grant factory readiness.";
+  return null;
 }
 
 // The run each line of `markdown` marked with the factory's triage-result
@@ -2221,6 +2270,29 @@ function timelineEvent(change) {
   };
 }
 
+// Read through the authenticated access port without changing Postern's
+// comment interface. Missing/partial/error responses remain unavailable facts;
+// the decision can then remove factory readiness and retain person review.
+async function factoryTriageCommentEdit(connection, comment) {
+  const id = comment.node_id ?? comment.nodeId;
+  if (!id) return null;
+  try {
+    const response = await connection.access.request({
+      method: "POST",
+      path: "/graphql",
+      body: {
+        query: `query FactoryTriageCommentEdit($id:ID!) { node(id:$id) { __typename ... on IssueComment { id body createdAt updatedAt author { __typename login } lastEditedAt editor { login } includesCreatedEdit userContentEdits(first:1) { totalCount nodes { id } } } } }`,
+        variables: { id },
+      },
+    });
+    if (response.data?.errors?.length) return null;
+    return response.data?.data?.node ?? null;
+  } catch {
+    // Do not publish transport details or credentials in readiness feedback.
+    return null;
+  }
+}
+
 // The ID of the latest readiness change among the tracker's label changes that
 // a result records as observed, `null` for none. The `triage` readiness
 // command waits for a result that observed it.
@@ -2370,6 +2442,28 @@ export async function runIssueContractValidation(
   const readTimeline = async () =>
     (await tracker.labelChanges(issueNumber)).map(timelineEvent);
   let needs = snapshotNeeds(snapshot);
+  // A held legacy source can still need historical authority facts for its
+  // Seams exemption even when no current contract is selectable.
+  const recorded = feedbackState(findFeedback(snapshot.comments)?.body);
+  const factoryComment =
+    needs.contract?.type === "comment"
+      ? needs.contract.comment
+      : recorded?.reviewer === triageResult?.author &&
+          recorded?.source?.type === "comment"
+        ? snapshot.comments.find(
+            (comment) => String(comment.id) === recorded.source.id,
+          )
+        : null;
+  if (
+    triageResult &&
+    factoryComment &&
+    (factoryComment.user ?? factoryComment.author)?.login ===
+      triageResult.author
+  )
+    snapshot.triageCommentEdit = await factoryTriageCommentEdit(
+      connection,
+      factoryComment,
+    );
   if (needs.timeline) {
     snapshot.issueEvents = await readTimeline();
     needs = snapshotNeeds(snapshot);
