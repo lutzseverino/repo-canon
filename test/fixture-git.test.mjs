@@ -2,6 +2,7 @@ import {
   execFixtureGit,
   fixtureGitEnvironment,
 } from "../scripts/support/fixture-git.mjs";
+import { runChild } from "./helpers/child-runner.mjs";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
@@ -32,7 +33,7 @@ function tree(root) {
   return files;
 }
 
-test("fixture Git operations ignore inherited repository and config redirections in a linked worktree", (t) => {
+test("fixture Git operations ignore inherited repository and config redirections in a linked worktree", async (t) => {
   const parent = mkdtempSync(join(tmpdir(), "repo-canon-hostile-git-"));
   t.after(() => rmSync(parent, { recursive: true, force: true }));
   const outer = join(parent, "outer");
@@ -144,23 +145,22 @@ test("fixture Git operations ignore inherited repository and config redirections
   /** @type {NodeJS.ProcessEnv} */
   const suiteEnvironment = { ...cleanEnv, ...redirects };
   delete suiteEnvironment.NODE_TEST_CONTEXT;
-  const suite = spawnSync(
+  const suite = await runChild(
     process.execPath,
     [
       "--test",
-      "--test-reporter=tap",
       ...suites.map(
         (name) => new URL(`./${name}.test.mjs`, import.meta.url).pathname,
       ),
     ],
     {
       env: suiteEnvironment,
-      encoding: "utf8",
-      // The nested release regressions exercise full verification commands.
-      timeout: 240000,
-      maxBuffer: 8 * 1024 * 1024,
+      kind: "nested",
+      // Bound silence, not total runtime, while full verification commands run.
+      boundMs: 240000,
     },
   );
+  t.diagnostic(`hostile-Git nested run: ${suite.elapsedMs.toFixed(3)} ms`);
   assert.ifError(suite.error);
   assert.equal(suite.status, 0, `${suite.stdout}\n${suite.stderr}`);
   assert.match(suite.stdout, /# tests [1-9][0-9]*/);

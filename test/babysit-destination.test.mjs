@@ -2,8 +2,9 @@ import {
   execFixtureGit,
   fixtureGitEnvironment,
 } from "../scripts/support/fixture-git.mjs";
+import { runChild } from "./helpers/child-runner.mjs";
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import {
   mkdirSync,
   mkdtempSync,
@@ -40,7 +41,7 @@ const reviewer = {
  * defaultHost?: string, resolution?: string, defaultRemote?: string, defaultName?: string, extraDefault?: string,
  * currentHead?: string }} [options]
  */
-function run(
+async function run(
   t,
   entry,
   {
@@ -146,7 +147,7 @@ process.exit(result.status ?? 1);
   );
   const inherited = fixtureGitEnvironment();
   delete inherited.GH_REPO;
-  const result = spawnSync(
+  const result = await runChild(
     process.execPath,
     [
       "--input-type=module",
@@ -168,8 +169,8 @@ process.exit(result.status ?? 1);
     ],
     {
       cwd: directory,
-      encoding: "utf8",
-      timeout: 20000,
+      kind: "command",
+      boundMs: 120000,
       env: {
         ...inherited,
         PATH: `${directory}:${process.env.PATH}`,
@@ -183,12 +184,15 @@ process.exit(result.status ?? 1);
       },
     },
   );
+  t.diagnostic(
+    `child timing destination-resolver ${entry}: ${result.elapsedMs.toFixed(3)} ms`,
+  );
   assert.ifError(result.error);
   return { ...result, state: JSON.parse(readFileSync(statePath, "utf8")) };
 }
 
-test("installed request honors the configured CLI default for reads, trusted files and mutations", (t) => {
-  const result = run(t, "request");
+test("installed request honors the configured CLI default for reads, trusted files and mutations", async (t) => {
+  const result = await run(t, "request");
   assert.equal(result.status, 0, result.stderr);
   assert.match(
     result.stdout,
@@ -212,8 +216,8 @@ test("installed request honors the configured CLI default for reads, trusted fil
 });
 
 for (const entry of ["wait", "merge"]) {
-  test(`installed ${entry} honors the configured CLI default`, (t) => {
-    const result = run(t, entry);
+  test(`installed ${entry} honors the configured CLI default`, async (t) => {
+    const result = await run(t, entry);
     assert.equal(result.status, entry === "wait" ? 4 : 0, result.stderr);
     assert.ok(result.state.destinations.length > 0);
     assert.ok(
@@ -286,8 +290,8 @@ for (const entry of ["request", "wait", "merge"]) {
           },
         ]),
   ]) {
-    test(`installed ${entry} selects ${selection.name}`, (t) => {
-      const result = run(t, entry, selection.options);
+    test(`installed ${entry} selects ${selection.name}`, async (t) => {
+      const result = await run(t, entry, selection.options);
       assert.equal(result.status, entry === "wait" ? 4 : 0, result.stderr);
       assert.ok(result.state.destinations.length > 0);
       assert.ok(
@@ -302,8 +306,8 @@ for (const entry of ["request", "wait", "merge"]) {
     });
   }
 
-  test(`installed ${entry} stops when destination selection fails without falling back to origin`, (t) => {
-    const result = run(t, entry, {
+  test(`installed ${entry} stops when destination selection fails without falling back to origin`, async (t) => {
+    const result = await run(t, entry, {
       selectionFails: true,
       destination: "fork/repository",
     });
@@ -314,8 +318,8 @@ for (const entry of ["request", "wait", "merge"]) {
     assert.deepEqual(result.state.emitted ?? [], []);
   });
 
-  test(`installed ${entry} stops when the supplied credential is unavailable`, (t) => {
-    const result = run(t, entry, { credentialFails: true });
+  test(`installed ${entry} stops when the supplied credential is unavailable`, async (t) => {
+    const result = await run(t, entry, { credentialFails: true });
     assert.equal(result.status, 1);
     assert.match(
       result.stderr,
@@ -325,8 +329,8 @@ for (const entry of ["request", "wait", "merge"]) {
   });
 }
 
-test("installed merge retains the expected-head gate on the configured destination", (t) => {
-  const result = run(t, "merge", { currentHead: "d".repeat(40) });
+test("installed merge retains the expected-head gate on the configured destination", async (t) => {
+  const result = await run(t, "merge", { currentHead: "d".repeat(40) });
   assert.equal(result.status, 2, result.stderr);
   assert.match(result.stderr, /head changed.*wait again/i);
   assert.equal(result.state.merge, undefined);
@@ -334,8 +338,8 @@ test("installed merge retains the expected-head gate on the configured destinati
 });
 
 for (const entry of ["connection", "request", "wait", "merge", "ready"]) {
-  test(`installed ${entry} refuses an enterprise CLI default before any HTTP request`, (t) => {
-    const result = run(t, entry, {
+  test(`installed ${entry} refuses an enterprise CLI default before any HTTP request`, async (t) => {
+    const result = await run(t, entry, {
       defaultHost: "ghe.example.com",
       defaultName: "origin",
     });
@@ -374,8 +378,8 @@ for (const options of [
     destination: "explicit/repository",
   },
 ]) {
-  test(`installed request preserves default identity and override precedence: ${JSON.stringify(options)}`, (t) => {
-    const result = run(t, "request", options);
+  test(`installed request preserves default identity and override precedence: ${JSON.stringify(options)}`, async (t) => {
+    const result = await run(t, "request", options);
     assert.equal(result.status, 0, result.stderr);
     assert.ok(result.state.destinations.length > 0);
     assert.ok(
@@ -388,8 +392,8 @@ for (const options of [
   });
 }
 
-test("the shared installed resolver retains the configured github.com default identity", (t) => {
-  const result = run(t, "connection");
+test("the shared installed resolver retains the configured github.com default identity", async (t) => {
+  const result = await run(t, "connection");
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout), {
     platform: "github",
@@ -408,8 +412,8 @@ for (const repository of [
   "ssh://git@ssh.github.com:443/example/repository.git",
 ]) {
   for (const selector of ["environment", "explicit"]) {
-    test(`the shared installed resolver accepts ${selector} repository ${repository}`, (t) => {
-      const result = run(t, "connection", {
+    test(`the shared installed resolver accepts ${selector} repository ${repository}`, async (t) => {
+      const result = await run(t, "connection", {
         environment: "ghe.example.com/other/repository",
         [selector]: repository,
       });
@@ -442,8 +446,8 @@ for (const entry of ["connection", "request", "wait", "merge", "ready"]) {
       "github.com/example/repo\nsitory",
       "github.com/../example/repository",
     ]) {
-      test(`installed ${entry} refuses ${selector} repository ${repository} before HTTP`, (t) => {
-        const result = run(t, entry, { [selector]: repository });
+      test(`installed ${entry} refuses ${selector} repository ${repository} before HTTP`, async (t) => {
+        const result = await run(t, entry, { [selector]: repository });
         assert.equal(result.status, 1, result.stderr);
         assert.match(
           result.stderr,
@@ -459,8 +463,8 @@ for (const entry of ["connection", "request", "wait", "merge", "ready"]) {
   }
 }
 
-test("an SSH alias for an enterprise default is refused before HTTP", (t) => {
-  const result = run(t, "connection", {
+test("an SSH alias for an enterprise default is refused before HTTP", async (t) => {
+  const result = await run(t, "connection", {
     defaultHost: "ghe.example.com",
     defaultRemote: "git@enterprise-work:example/repository.git",
   });
