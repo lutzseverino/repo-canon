@@ -1,3 +1,5 @@
+import { marked } from "../../../vendor/marked/marked.esm.js";
+
 // The comment rules' Reviews section defines this review. The wait prints its
 // template; merge accepts only a completed review of the current head.
 export const reviewsSection = ".repo-standards/rules/comments.md#reviews";
@@ -27,14 +29,57 @@ const completed = (value) =>
   ) &&
   !placeholders.some((line) => value.includes(line.slice(line.indexOf("<"))));
 
+const blank = (text) => text.replace(/[^\r\n]/g, " ");
+
+// A token's source with its inline HTML comments blanked in place, so hiding
+// content never joins fragments into a field or a head SHA. Each child's
+// source follows the previous one's within its parent's, so code spans keep
+// comment markers as text. A child that cannot be located hides its parent.
+function shown(token) {
+  if (token.type === "html")
+    return token.raw.startsWith("<!--") ? blank(token.raw) : token.raw;
+  let text = token.raw;
+  let at = 0;
+  for (const child of token.tokens ?? []) {
+    const start = text.indexOf(child.raw, at);
+    if (start < 0) return blank(token.raw);
+    text =
+      text.slice(0, start) +
+      shown(child) +
+      text.slice(start + child.raw.length);
+    at = start + child.raw.length;
+  }
+  return text;
+}
+
+// The lines a reader sees outside examples, built from the visible tokens
+// rather than by masking source positions, which tokenization does not always
+// preserve. Any other token, such as code, a quote, raw HTML or a link
+// definition, becomes one blank line, so its content can neither supply
+// evidence nor join the lines around it. Text keeps its lines inside list
+// items too, so a field continuing an item still counts. An item's first line
+// keeps its marker unless an example opens it, indented when nested, so only
+// top-level items are findings.
+function visibleLines(tokens, nested = false) {
+  return tokens.flatMap((token) => {
+    if (["paragraph", "text", "heading"].includes(token.type))
+      return shown(token).replace(/\n+$/, "").split("\n");
+    if (token.type !== "list") return [""];
+    return token.items.flatMap((entry) => {
+      const [first, ...rest] = visibleLines(entry.tokens, true);
+      const marker = /^[\t ]*\S+[\t ]*/.exec(entry.raw)?.[0] ?? "";
+      const opening = (nested ? "  " : "") + marker + first;
+      return [first?.trim() ? opening : "", ...rest];
+    });
+  });
+}
+
 // A review's fields in the template's shape, or null when it is not one: the
 // head it names, whether it is complete, and whether it holds (complete, with
 // no open finding).
 function readReview(body) {
   if (typeof body !== "string") return null;
-  // The review is plain text, never a quoted example or HTML comment.
-  if (/^\s*(?:`{3,}|~{3,})/m.test(body) || body.includes("<!--")) return null;
-  const lines = body.split(/\r?\n/);
+  const lines = visibleLines(marked.lexer(body));
   const entries = lines.flatMap((line, index) => {
     const match = field.exec(line);
     return match ? [{ key: match[1], value: match[2], index }] : [];
@@ -44,7 +89,9 @@ function readReview(body) {
     new Set(entries.map(({ key }) => key)).size !== fields.length
   )
     return null;
-  const byField = Object.fromEntries(entries.map((entry) => [entry.key, entry]));
+  const byField = Object.fromEntries(
+    entries.map((entry) => [entry.key, entry]),
+  );
   const next = entries.find(({ index }) => index > byField.Findings.index);
   const findings = lines
     .slice(byField.Findings.index + 1, next?.index)
