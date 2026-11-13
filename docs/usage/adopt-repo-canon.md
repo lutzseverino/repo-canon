@@ -218,9 +218,9 @@ instructions and clone it on each host that runs an orchestrating session.
 When they name none, the skill creates one and tells you the line to add.
 
 The shared method works with the capabilities available in your session.
-Applications can enhance it, and any application-specific tool mappings belong
-in your own setup outside Repo Canon. No adoption profile installs that
-private setup.
+Applications can enhance it without becoming dependencies; follow the
+application's own guidance for its tools. Keep application-specific details
+outside Repo Canon.
 
 An orchestrating session often runs outside every project checkout, where no
 repository's skills are found. Adopt the `workbench` profile into the
