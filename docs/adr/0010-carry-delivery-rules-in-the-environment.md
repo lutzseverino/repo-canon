@@ -1,5 +1,7 @@
 # Carry delivery rules in the environment and keep skills short
 
+Status: its `AGENTS.md` line is amended by [ADR 0042](0042-keep-agent-guidance-a-stable-map.md), and its contribution guide as the delivery home is superseded by [ADR 0043](0043-keep-the-contribution-guide-for-contributors.md).
+
 Every adopting repository carries its delivery rules in its installed
 environment: the [contribution guide](../../CONTRIBUTING.md#pull-requests) says
 how to open a pull request, an adoption pull request included, and when it may
