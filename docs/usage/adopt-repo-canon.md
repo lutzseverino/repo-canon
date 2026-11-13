@@ -168,10 +168,10 @@ nor rulesets, the check is unavailable, and adoption completes without it.
 
 For unattended delivery, `babysit` confirms strict required-check enforcement
 for the merging credential wherever GitHub offers it. A matching active
-ruleset's explicit `current_user_can_bypass: "never"` supplies that evidence even when GitHub hides
-the global bypass list or other actors can bypass. Without qualifying ruleset
-evidence, the existing strict classic protection enforced for admins can still
-qualify.
+ruleset's explicit `current_user_can_bypass: "never"` supplies that evidence
+even when GitHub hides the global bypass list or other actors can bypass.
+Without qualifying ruleset evidence, the existing strict classic protection
+enforced for admins can still qualify.
 
 Only recognized plan-limit 403 responses for both classic protection and
 rulesets on a private repository permit merging-agent freshness verification
@@ -186,10 +186,10 @@ the window without providing GitHub's atomic protection; strict non-bypassable
 GitHub enforcement remains required wherever available.
 
 Ordinary permission or authentication refusals, missing or unreadable evidence,
-other unconfirmed enforcement, a missing PR metadata workflow on the default
-branch, and deferred remote setup still stop delivery for the owner. See the
-[merge script's policy checks](../development/babysit-merge.md) for the detailed
-evidence and verification requirements.
+a missing PR metadata workflow on the default branch and deferred remote setup
+grant no exception; otherwise unconfirmed enforcement still stops delivery for
+the owner. See the [merge script's policy checks](../development/babysit-merge.md)
+for the detailed evidence and verification requirements.
 
 ## Automated updates
 
