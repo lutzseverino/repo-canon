@@ -755,6 +755,7 @@ Record all actions as local Markdown. Do not change actual intake status to appr
     "triage-routing",
     [
       "triage",
+      "research",
       "grill-with-docs",
       "to-spec",
       "to-tickets",

@@ -336,6 +336,20 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     assert.doesNotMatch(text, /state:ready|state:triage|model:/);
   }
   const routing = manifest.repositories["triage-routing"];
+  const routingResearch = join(routing.path, ".agents/skills/research");
+  assert.equal(
+    readFileSync(join(routingResearch, "SKILL.md"), "utf8"),
+    readFileSync(join(root, ".agents/skills/research/SKILL.md"), "utf8"),
+  );
+  assert.ok(lstatSync(routingResearch).isSymbolicLink());
+  assert.equal(
+    realpathSync(routingResearch),
+    realpathSync(join(root, ".agents/skills/research")),
+  );
+  assert.equal(
+    realpathSync(routingResearch),
+    manifest.source.linkedSkillDirectories.research.path,
+  );
   const orchestrate = manifest.repositories.orchestrate;
   assert.deepEqual(orchestrate.skills, ["orchestrate", "factory"]);
   for (const skill of orchestrate.skills)
