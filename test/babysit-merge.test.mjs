@@ -417,6 +417,9 @@ No external reviewer runs on app-authored PRs.`;
     `~~~markdown\n${outcome}\n~~~`,
     outcome.replace(/^/gm, "> "),
     outcome.replace(/^/gm, "    "),
+    `- > Example\n${outcome.split("\n\n")[1]}`,
+    `- - > Example\n${outcome.split("\n\n")[1]}`,
+    `- \`\`\`markdown\n${outcome.replace(/^/gm, "  ")}\n  \`\`\``,
     `<!--\n${outcome}\n-->`,
     outcome.replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),
     outcome.replace(/^- .*$/m, "<!-- - `merge.mjs:1` hidden finding -->"),
@@ -540,6 +543,8 @@ test("a complete installed current-head review permits only the remaining merge 
     `<!-- verification marker -->\n\n${outcome}`,
     `${outcome}\n\n<!-- verification marker -->`,
     `${outcome}\n\n\`\`\`markdown\n${outcome}\n- an invalid example finding\n\`\`\``,
+    `- example:\n  \`\`\`text\n  <!-- unclosed\n  \`\`\`\n\n${outcome}`,
+    `${outcome}\n\n- > Example\n  > ${outcome.replaceAll("\n", "\n  > ")}`,
     outcome
       .replace(
         "Passed; documented repository rules checked, no findings remain.",

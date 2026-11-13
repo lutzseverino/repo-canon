@@ -29,6 +29,34 @@ const completed = (value) =>
   ) &&
   !placeholders.some((line) => value.includes(line.slice(line.indexOf("<"))));
 
+const blank = (text) => text.replace(/[^\r\n]/g, " ");
+
+function withoutExamples(tokens) {
+  return tokens
+    .map((token) => {
+      if (["code", "blockquote"].includes(token.type)) return blank(token.raw);
+      if (token.type !== "list") return token.raw;
+      let visible = token.raw;
+      let offset = 0;
+      for (const entry of token.items) {
+        // List children are de-indented, but keep their source line positions.
+        // Mask those lines in the raw item to retain its markers and indentation.
+        const lines = withoutExamples(entry.tokens).split("\n");
+        const masked = entry.raw
+          .split("\n")
+          .map((line, index) =>
+            lines[index]?.trim() === "" ? blank(line) : line,
+          )
+          .join("\n");
+        const start = token.raw.indexOf(entry.raw, offset);
+        offset = start + entry.raw.length;
+        visible = visible.slice(0, start) + masked + visible.slice(offset);
+      }
+      return visible;
+    })
+    .join("");
+}
+
 // A review's fields in the template's shape, or null when it is not one: the
 // head it names, whether it is complete, and whether it holds (complete, with
 // no open finding).
@@ -37,14 +65,10 @@ function readReview(body) {
   // Ignore example blocks without letting their contents (including comment
   // markers) affect visible evidence. Preserve spacing so hiding content never
   // joins fragments into a field or a head SHA.
-  const blank = (text) => text.replace(/[^\r\n]/g, " ");
-  const visible = marked
-    .lexer(body)
-    .map((token) =>
-      ["code", "blockquote"].includes(token.type) ? blank(token.raw) : token.raw,
-    )
-    .join("")
-    .replace(/<!--[\s\S]*?(?:-->|$)/g, blank);
+  const visible = withoutExamples(marked.lexer(body)).replace(
+    /<!--[\s\S]*?(?:-->|$)/g,
+    blank,
+  );
   const lines = visible.split(/\r?\n/);
   const entries = lines.flatMap((line, index) => {
     const match = field.exec(line);
