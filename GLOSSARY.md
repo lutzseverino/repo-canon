@@ -156,6 +156,13 @@ when the owner approves the plan. The plan's retro, a review of its outcome,
 time and lessons by a separate session, is always one.
 _Avoid_: Post-mortem, plan audit
 
+**Done check**:
+The read-only launch, run once every row of a plan has ended, that holds each
+of the plan's Done-means clauses against primary sources and records its
+evidence or the lack of it. Close starts only when every clause has evidence;
+the Done check is a gate before Close, never a Close review.
+_Avoid_: Done gate, completion audit, closing check
+
 **Workbench**:
 The git repository of plain Markdown in which the orchestrating agent keeps
 its plans, decision inbox and wishes, named by path in the owner's global
