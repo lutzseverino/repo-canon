@@ -60,6 +60,7 @@ async function exercise(
     failurePath,
     bodyLastEditedAt = null,
     triageResult,
+    triageCommentEdit = null,
   } = {},
 ) {
   const root = await mkdtemp(join(tmpdir(), "postern-issue-"));
@@ -115,6 +116,8 @@ async function exercise(
     if (failure && (!failurePath || failurePath(path, body)))
       return json({ message: `Read failed fixture-credential` }, failure);
     if (path === "/graphql") {
+      if (body.query.includes("FactoryTriageCommentEdit"))
+        return json({ data: { node: triageCommentEdit } });
       const number = body.variables.number;
       const source = number === 42 ? current : parent;
       const ref = (value) => ({
@@ -838,6 +841,18 @@ test("the adapter approves the factory's readiness only where its configuration 
     body: `${completeAgentBrief}\n\n<!-- factory:run {"run":"triage-7"} -->`,
     user: account(factory),
   };
+  const edit = {
+    __typename: "IssueComment",
+    id: brief.node_id,
+    body: brief.body,
+    author: { __typename: "Bot", login: "factory" },
+    createdAt: time,
+    updatedAt: time,
+    lastEditedAt: null,
+    editor: null,
+    includesCreatedEdit: false,
+    userContentEdits: { totalCount: 0, nodes: [] },
+  };
   const notice = {
     id: 13,
     body: feedbackState({
@@ -869,6 +884,7 @@ test("the adapter approves the factory's readiness only where its configuration 
       },
       pause: async () => {},
       triageResult,
+      triageCommentEdit: edit,
     });
     assert.equal(result.error, undefined);
     const posted = writes(result).find(({ method }) => method === "PATCH");
@@ -877,6 +893,131 @@ test("the adapter approves the factory's readiness only where its configuration 
       recordedState(posted.body.body).status,
       triageResult ? "approved" : "awaiting-review",
     );
+  }
+});
+
+test("the adapter refuses edited, incomplete and unreadable factory provenance but permits person review", async (t) => {
+  const factory = "factory[bot]";
+  const brief = {
+    id: 12,
+    node_id: "COMMENT_12",
+    body: `${completeAgentBrief}\n\n<!-- factory:run {"run":"triage-7"} -->`,
+    user: account(factory),
+    created_at: time,
+    updated_at: time,
+  };
+  const editedBrief = {
+    ...brief,
+    body: `${brief.body}\n\nEdited by a person.`,
+    updated_at: "2026-09-14T16:00:02Z",
+  };
+  const edit = {
+    __typename: "IssueComment",
+    id: brief.node_id,
+    body: brief.body,
+    author: { __typename: "Bot", login: "factory" },
+    createdAt: time,
+    updatedAt: time,
+    lastEditedAt: time,
+    editor: { login: "maintainer" },
+    includesCreatedEdit: true,
+    userContentEdits: { totalCount: 1, nodes: [{ id: "EDIT_1" }] },
+  };
+  /** @type {[string, any, number | null, any?][]} */
+  const scenarios = [
+    [
+      "edit before a fresh notice",
+      {
+        ...edit,
+        body: editedBrief.body,
+        updatedAt: editedBrief.updated_at,
+        lastEditedAt: editedBrief.updated_at,
+      },
+      null,
+      editedBrief,
+    ],
+    ["same-second edit", edit, null],
+    [
+      "edit and restore",
+      {
+        ...edit,
+        userContentEdits: { totalCount: 2, nodes: [{ id: "RESTORE" }] },
+      },
+      null,
+    ],
+    ["missing node", null, null],
+    ["incomplete history", { ...edit, userContentEdits: null }, null],
+    ["mismatching bytes", { ...edit, body: "Another revision" }, null],
+    ["unreadable history", null, 503],
+  ];
+  for (const [name, evidence, failure, contract = brief] of scenarios) {
+    await t.test(String(name), async (t) => {
+      for (const actor of [factory, "maintainer"]) {
+        for (const recorded of [false, true]) {
+          const notice = {
+            id: 13,
+            user: account("github-actions[bot]"),
+            body: feedbackState({
+              status: recorded ? "approved" : "awaiting-review",
+              revision: briefRevision(contract),
+              kind: "triaged Agent Brief",
+              ...(recorded ? { reviewer: actor, label: "state:ready" } : {}),
+            }),
+            updated_at: recorded
+              ? "2026-09-14T16:00:20Z"
+              : "2026-09-14T16:00:05Z",
+          };
+          const result = await exercise(t, {
+            issue: {
+              body: featureBody,
+              labels: ["type:enhancement", "state:ready"],
+            },
+            comments: [contract, notice],
+            events: [
+              {
+                ...readinessReview,
+                actor: account(actor),
+                created_at: "2026-09-14T16:00:10Z",
+              },
+            ],
+            event: recorded
+              ? { action: "edited", sender: account("reporter") }
+              : {
+                  action: "labeled",
+                  sender: account(actor),
+                  label: { name: "state:ready" },
+                },
+            permissions: { [actor]: "admin" },
+            pause: async () => {},
+            triageResult: { marker: "factory:run", author: factory },
+            triageCommentEdit: evidence,
+            failure,
+            failurePath: (path, body) =>
+              path === "/graphql" &&
+              body.query.includes("FactoryTriageCommentEdit"),
+          });
+          assert.equal(result.error, undefined);
+          assert.equal(result.code, actor === factory ? 1 : 0, result.stderr);
+          const posted = writes(result).find(
+            ({ method }) => method === "PATCH",
+          );
+          assert.equal(
+            recordedState(posted.body.body).status,
+            actor === factory ? "awaiting-review" : "approved",
+          );
+          if (actor === factory) {
+            assert.match(posted.body.body, /edit provenance|was edited/);
+            assert.ok(
+              writes(result).some(
+                ({ method, path }) =>
+                  method === "DELETE" && path.endsWith("/labels/state%3Aready"),
+              ),
+            );
+          }
+          assert.doesNotMatch(posted.body.body, /fixture-credential/);
+        }
+      }
+    });
   }
 });
 

@@ -107,6 +107,7 @@ export function contractWorld({
       body: text,
       createdAt: time,
       updatedAt: time,
+      edits: [],
     };
     comments.push(created);
     if (queue)
@@ -133,6 +134,38 @@ export function contractWorld({
       const repo = `/repos/${worldRepository}`;
       if (path === "/graphql") {
         const query = request.query;
+        if (query.includes("FactoryTriageCommentEdit")) {
+          const target = comments.find(
+            (c) => `COMMENT_${c.id}` === request.variables.id,
+          );
+          const latest = target?.edits.at(-1);
+          return json({
+            data: {
+              node: target
+                ? {
+                    __typename: "IssueComment",
+                    id: `COMMENT_${target.id}`,
+                    body: target.body,
+                    author: {
+                      __typename: isBot(target.author) ? "Bot" : "User",
+                      login: isBot(target.author)
+                        ? target.author.slice(0, -5)
+                        : target.author,
+                    },
+                    createdAt: target.createdAt,
+                    updatedAt: target.updatedAt,
+                    lastEditedAt: latest?.time ?? null,
+                    editor: latest ? { login: latest.login } : null,
+                    includesCreatedEdit: target.edits.length > 0,
+                    userContentEdits: {
+                      totalCount: target.edits.length,
+                      nodes: latest ? [{ id: latest.id }] : [],
+                    },
+                  }
+                : null,
+            },
+          });
+        }
         if (query.includes("TriageActingAccount"))
           return json({
             data: {
@@ -212,6 +245,11 @@ export function contractWorld({
         );
         target.body = request.body;
         target.updatedAt = at();
+        target.edits.push({
+          id: `EDIT_${target.id}_${target.edits.length + 1}`,
+          login,
+          time: target.updatedAt,
+        });
         return json(restComment(target));
       }
       if (path === `${repo}/issues/42/events`)
@@ -313,6 +351,11 @@ export function contractWorld({
     editComment(target, text, login, time = at()) {
       target.body = text;
       target.updatedAt = time;
+      target.edits.push({
+        id: `EDIT_${target.id}_${target.edits.length + 1}`,
+        login,
+        time,
+      });
       pending.push(
         neutral("commentEdited", login, {
           comment: {

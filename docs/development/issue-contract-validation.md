@@ -515,6 +515,19 @@ disclaimer, such as below the brief. The result names its brief revision by
 being that revision's source: an edit makes a new revision, and a newer Agent
 Brief replaces it as the contract.
 
+Comment-backed factory acceptance also requires authenticated edit provenance
+for that same comment, body, author and revision. The adapter reads the
+comment's `lastEditedAt`, `editor`, `includesCreatedEdit` and edit-history
+count through Postern's authenticated access port; the validator requires
+explicit evidence of no edits. Creation/update timestamp equality alone does
+not qualify a same-second edit. Edited comments, including exact byte
+restorations, cannot regain factory authority after another revision notice.
+Missing, incomplete, inconsistent or unreadable evidence refuses new factory
+readiness and revalidation of recorded factory approval with a published
+reason. Publish a new immutable result for factory acceptance, or obtain an
+independently authorized person's review of the current revision after its
+notice. Body-contract publication proof keeps its existing path.
+
 A readiness label event by `author` is approved, without a role, when the
 current contract is that comment with one marked run line, and the event
 follows the revision notice like any other review. An issue that `author`
