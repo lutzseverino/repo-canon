@@ -591,15 +591,17 @@ writes.
 
 ## Native blockers
 
-Parent/sub-issue links and blocker/dependency links must use GitHub's native
-relationships. Task lists and `Part of`, `Parent`, or `Blocked by` body
-references do not establish those links, even when a native link cannot be
-created or the feature is unavailable. Required named sections retain their
-content requirements.
+The installed repository-root forms `.github/ISSUE_TEMPLATE/specification.yml` and
+`.github/ISSUE_TEMPLATE/implementation-ticket.yml` define specification and ticket
+sections. Required answers need substantive, non-placeholder
+content. Optional answers may be empty; a native blocker may supply the value
+of Blocked by, whose heading is still required.
 
-GitHub's native issue dependencies are the canonical blocking relationship.
-When adding a native blocker, pass the blocking issue's numeric database ID as
-`issue_id`, not its issue number or `node_id`.
+Use GitHub's native parent/sub-issue and blocker/dependency relationships;
+task lists and `Part of`, `Parent` or `Blocked by` body references never
+establish them, even when native linking is unavailable. Named sections keep
+their content requirements. Add a blocker using its numeric database ID as
+`issue_id`, never its issue number or `node_id`.
 
 ## Agent Brief
 
@@ -672,11 +674,8 @@ by title and link. The workflow does not check these two index conventions.
 
 A child carries exactly one of `wayfinder:research`, `wayfinder:prototype`,
 `wayfinder:grilling`, and `wayfinder:task`, and never `wayfinder:map` with it.
-Its body has a Question section that is not a placeholder, and its parent is an
-issue labeled `wayfinder:map`. Make the child a native sub-issue of its map:
-on GitHub only the native parent relationship counts. A `Parent` section
-retains its content requirements but a body-only reference does not link a
-child. A failed relationship read fails validation before any mutation.
+Its body has a non-placeholder Question section and a native parent labeled
+`wayfinder:map`. A failed relationship read fails validation before mutation.
 
 Maps and children carry no readiness and no workflow state label. Their
 eligibility uses open state, assignment and native blockers, and the workflow
