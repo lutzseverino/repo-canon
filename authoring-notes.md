@@ -1,58 +1,22 @@
 # Repo Canon authoring notes
 
-These notes are the one home for Repo Canon's confirmed authoring decisions and
-their rationale. They stay beside `standards.yaml`, the source they explain.
+These notes index Repo Canon's confirmed authoring decisions and their rationale.
+They link to decision records, policy homes and methods beside `standards.yaml`,
+the source they explain.
 
 ## Ownership
 
-Repo Canon owns a file only when every adopting repository should hold the
-same bytes. Exact content includes `AGENTS.md`, `CONTRIBUTING.md`, the issue
-and pull request templates, the skill setup files under `docs/agents`, the
-trusted validation workflows with their scripts, the vendored rendered-Markdown
-runtime and parsers with their notices, the owned workflow skills with the
-upstream license notice, the HumanLayer license notice for material reproduced
-in the `pr` skill's Summary, and, in the factory
-profile, the factory configuration and the sandbox image workflow. It is installed
-identically in every adopting repository that selects its profile and changes
-only through a Repo Canon release.
+Exact content carries the standard's values; contextual files describe the
+adopting repository. [ADR 0033](docs/adr/0033-give-every-value-one-value-owner.md)
+records the value-owner decision, and the
+[source profile's ownership map](docs/development/source-profile.md#policy-and-ownership-map)
+identifies each declaration's material and ownership.
 
-Exact files carry only the standard's values. [ADR 0033](docs/adr/0033-give-every-value-one-value-owner.md)
-places repository choices in repository-owned files with a Canon-supplied
-schema and check, keeps per-repository values out of host configuration, and
-places per-issue choices in labels.
-
-`rules/` holds each declaration's lasting rules, which adoption installs in
-the adopting repository and an agent changing a covered file later reads, as
-[ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md) decides.
-Rules hold no one-time step and cite no retained source path; where one
-declaration's rules depend on another's, they name that declaration's rules.
-`guidance/` and `discovery/` are source-side instructions for the one-time
-adoption, written for a person as well as an agent, and `discovery/` also holds
-the documentation and all three TypeScript stack scope drafters, which inspection
-runs as those declarations' discovery scripts. They are not installed in the adopting
-repository; the CLI retains them with the other source inputs.
-
-The repository license, READMEs, development documentation, glossaries, and
-project-specific agent guidance belong to the adopting repository, because
-they describe it and its projects. Repo Canon shapes them through rules,
-adoption guidance, and checks. The Repository license has the fixed target `LICENSE`,
-and the Repository README has the fixed target `README.md`. Project-specific
-agent guidance has the fixed target `docs/agents/project.md`. The root
-`.gitattributes` also belongs to the adopting repository; the contextual
-`git-attributes` declaration shapes Repo Canon's language-statistics entries
-through its [rules](rules/git-attributes.md) and
-[adoption guidance](guidance/git-attributes.md), preserving project content.
-In the factory
-profile, the toolchain image has the fixed target `.scriptorium/Dockerfile`, which
-holds only the repository's toolchain, because each repository's toolchain
-differs and the factory adds its own agent layer. Discovery proposes the
-concrete paths of Project READMEs at arbitrary locations and of documentation
-files, glossaries, and indexes, including documentation moves and link
-repairs.
-The complete inspection reports when adoption would discard edits. The
-maintainer confirms those changes before adoption writes them; routine updates
-proceed without additional confirmation. A fix that overwrites an existing
-setting likewise waits for confirmation.
+[ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md) separates
+lasting requirements in installed rules from adoption guidance and skill
+methods. The [authoring procedure](docs/development/authoring-and-publication.md)
+and [adoption compatibility](docs/development/adoption-compatibility.md)
+describe the source interface and confirmation of changes during adoption.
 
 ## Confirmed preferences
 
@@ -61,19 +25,14 @@ repeated.
 
 - Name: repo-canon (Repo Canon), distinct from the repo-standards product.
   The GitHub identity is lutzseverino/repo-canon.
-- Scope: express the author's preferred standards for any repository whose
-  maintainers choose to adopt them, including collaborative repositories and
-  repositories maintained by others. The `standard` profile serves every
-  adopting repository, and the `factory` profile adds the factory's repository
-  files for a repository that a factory serves, as
-  [ADR 0017](docs/adr/0017-make-the-factory-an-optional-profile.md) decides.
-  The `workbench` profile installs only the workflow skills, with the files
-  they import and their license notices, into the orchestrating agent's
-  workbench, as [ADR 0027](docs/adr/0027-give-the-workbench-its-own-profile.md)
-  decides. The standard and factory profiles carry opt-in stacks scoped per
-  Project, as
+- Scope: the author's preferred standards for maintainers who choose them,
+  including collaborative and other-maintained repositories; no
+  ownership-based differences have been requested.
+  [ADR 0017](docs/adr/0017-make-the-factory-an-optional-profile.md),
+  [ADR 0027](docs/adr/0027-give-the-workbench-its-own-profile.md) and
   [ADR 0024](docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md)
-  decides; no ownership-based differences have been requested.
+  record profile and optional-stack decisions. The maintained inventory is
+  in the [source profile](docs/development/source-profile.md).
 - The Repository README's title, description, badges, section order, length,
   examples, Features items, and pointer sections are stated in the
   [Repository README rules](rules/repository-readme.md).
@@ -85,34 +44,16 @@ repeated.
   failing checks ship with #368 and #346 in their shared breaking release.
 - Project membership and Project README content are stated in the
   [Project README rules](rules/project-readmes.md).
-- The `typescript-node` stack is the optional discovered
-  `typescript-node-stack` declaration, whose scope is one `package.json` per
-  Project that uses it. Its tools and their majors, the workspace-root facts,
-  the pull request check, Setup and validation, one-stack and breaking-bump
-  requirements are stated in the
-  [typescript-node stack rules](rules/typescript-node-stack.md), and the
-  membership and assessment steps in its
+- Stack ownership and optional scope are recorded in
+  [ADR 0024](docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md).
+  The [Node rules](rules/typescript-node-stack.md),
   [adoption guidance](guidance/typescript-node-stack.md) and
-  [discovery guidance](discovery/typescript-node-stack.md). A repository
-  without such a Project confirms no scope, which installs no rules and runs no
-  check, so the profiles stay stack-free. It installs no configuration or
-  workflow file, as
-  [ADR 0024](docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md)
-  decides; its read-only check reads only manifest facts, and the assessment
-  covers the rest.
-- The optional `typescript-astro-stack` and `typescript-vite-stack` declarations
-  ship in the standard and factory profiles under [ADR 0026](docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md).
-  Both name the one [shared web rules file](rules/typescript-web-stacks.md).
-  Each discovers disjoint manifest scope or no scope, with Node excluding web
-  membership. The read-only checks extend Node's manifest boundary only with
-  Astro formatter availability and the holder's shadcn configuration, exact
-  CLI pin and scripts. Framework, React, Tailwind, TypeScript and runner majors,
-  CI, validation execution and UI behavior remain assessed. Discovery evidence
-  must distinguish Sites and Apps; tool configuration alone is not a general
-  classifier. Shared package membership follows in-stack web consumers, with
-  Astro winning; mixed non-web consumers preserve Node eligibility. Differing
-  existing Projects need separate migrations, so these optional additions are
-  a feature, not a forced migration.
+  [discovery guidance](discovery/typescript-node-stack.md) own requirements,
+  assessment and scope selection respectively.
+  [ADR 0026](docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md)
+  records the optional web-stack additions and why differing Projects need
+  separate migrations rather than a forced migration. Their requirements and
+  check/assessment split live in the [web rules](rules/typescript-web-stacks.md).
 - The documentation requirements are stated in
   [documentation rules](rules/documentation.md), with the adoption steps in
   the [documentation guidance](guidance/documentation.md) and the scope in the
@@ -124,223 +65,103 @@ repeated.
   documentation check enforce the index entry form, one index per document,
   the development guide's order, and scope coverage, with each check defined
   once in the shared documentation model.
-- Include only workflow skills, as
-  [ADR 0018](docs/adr/0018-install-only-workflow-skills.md) decides. Upstream's
-  promoted set and the selected skills are recorded in `upstream-bases.json`
-  and `standards.yaml`. Experimental skills and upstream's in-progress, misc,
-  and deprecated categories are excluded. The record holds the shared and
-  skill-specific edits from the upstream base; `CREDITS.md` renders them.
-  `prototype` stays because `wayfinder` calls it. The
-  vendored tree holds only those skills' bases and the setup seeds that the
-  skill setup files take as theirs; `implement-spec` is not vendored, because every
-  factory run is a direct run, as
-  [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md) decides.
-  No owned skill routes to `setup-matt-pocock-skills` or another uninstalled
-  skill; the route test fails on any such route.
-- Every workflow skill and skill setup file is Repo Canon's own, as
-  [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
-  decides. Adoption installs each skill from the owned tree, `.agents/skills/`,
-  and each setup file from itself. A skill taken from upstream names its
-  upstream base in `CREDITS.md` and says whether and how it differs, rendered
-  from `upstream-bases.json`, which also records the setup files' bases. The vendored snapshot stays
-  unedited as the base, and each upstream release is one reconciliation by a
-  three-way merge, following the
-  [upstream-compatibility procedure](docs/development/upstream-compatibility.md#upstream-reconciliation);
-  adopting contributors never update it independently. Each owned skill also
-  works without adoption, as the owner decided on 2026-10-31 in
-  [#787](https://github.com/lutzseverino/repo-canon/issues/787): it names only
-  its own files and those its `SKILL.md`'s Reads section lists, each with what
-  the skill does when the file is missing, and names no agent host
-  application; `scripts/owned-skill-reads.mjs` enforces both. Its `CREDITS.md`
-  carries the upstream license notices, and each release publishes the skills
-  at `.agents/skills/<name>` at its tag. Requirements still live in
-  `CONTRIBUTING.md` and the rules files, as
-  [ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md) decides.
-- Triage routes each request by where its uncertainty lies, as
-  [ADR 0021](docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md)
-  decides: research and independent acceptance by the orchestrating agent for
-  a code-bound request, and fact-finding and a grilling session with the owner
-  before publication for an intent-bound one. The orchestrating agent infers only
-  intent it can cite that does not outlive the work, the grill writer publishes the
-  contracts it independently accepts, and owner-only questions reach the owner only through its
-  decision inbox, as
+- The workflow-only selection rationale is in
+  [ADR 0018](docs/adr/0018-install-only-workflow-skills.md); current selection
+  and bases live in [standards.yaml](standards.yaml) and
+  [upstream-bases.json](upstream-bases.json).
+  `prototype` stays because `wayfinder` calls it; `implement-spec` is absent
+  because factory tickets are direct runs under
+  [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md).
+- [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
+  records skill and setup-file ownership. The
+  [upstream compatibility record](docs/development/upstream-compatibility.md)
+  owns base records, credits and reconciliation.
+  The owner chose standalone skill use on 2026-10-31 in
+  [#787](https://github.com/lutzseverino/repo-canon/issues/787);
+  [owned-skill validation](docs/development/README.md#setup-and-validation)
+  documents the declared-read and application-independence checks.
+- Triage and inference decisions are recorded in
+  [ADR 0021](docs/adr/0021-route-triage-by-where-its-uncertainty-lies.md),
   [ADR 0025](docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md)
-  decides. The routing and acceptance rules
-  live in [`CONTRIBUTING.md`](CONTRIBUTING.md#triage), the readiness
-  credentials in the
-  [GitHub repository configuration rules](rules/github-repository-configuration.md),
-  and the model choice and factory readiness in the
-  [factory workflow rules](rules/factory-workflow.md). The method restates
-  most of upstream's `triage` procedure, so the owned `triage` differs from its
-  upstream base: its `CREDITS.md` names that base and what changed, and the
-  upstream material keeps the upstream notice. The owner first approved a rule that the owner finish
-  every brief, then replaced it the same day; no rule restores it.
-- The canonical pipeline and configured run-kind coverage live in the
-  [factory workflow rules](rules/factory-workflow.md#canonical-stages).
-  The contribution guide's [Triage section](CONTRIBUTING.md#triage) owns grill
-  publication and amendment authority: `grill-with-docs` composes `to-spec`
-  and `to-tickets`, whose direct issue-body contracts await independent review.
-  The owner settled publication and the inference boundary on 2026-11-06 and
-  2026-11-08, and intake's two entries on 2026-11-09, as
-  [#912](https://github.com/lutzseverino/repo-canon/issues/912#issuecomment-6750712597)
-  records. The existing orchestrate Lifecycle awaits its separate consumer
-  conversion in #693; that follow-up depends on the canonical definition.
-- Repo Canon writes and installs `orchestrate`, the method by which the
-  orchestrating agent the contribution guide names runs a plan across
-  tickets. It is a workflow skill under
-  [ADR 0018](docs/adr/0018-install-only-workflow-skills.md): the issues it
-  files and the briefs it accepts are tracker items the shared workflow relies
-  on. Like `triage`, it is user-invoked only, and it is a method under
-  [ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md): it cites
-  the guide for triage, readiness, question routing and delivery. Plan state
-  lives in the owner's workbench, a git repository of plain Markdown whose
-  path the owner's global agent instructions name, so the skill hard-codes no
-  host path. The owner decided on 2026-10-29 that when none is named, the
-  skill creates one: a local git repository outside every project checkout,
-  private, with a private remote or none, whose `index.md` lists the
-  repositories it tracks. The same decision keeps current state in `now.md`,
-  rewritten on every pass, with a register of running launches that the launch
-  cap counts; the inbox holds only decisions. Two further rules are inferred
-  intent from the approved cleanup ticket list of 2026-10-30, open to the
-  owner's veto rather than decided by the owner, as
-  [#731](https://github.com/lutzseverino/repo-canon/issues/731#issuecomment-6532507498)
-  records with both: each plan's `plan.md` holds
-  its current state and an append-only `log.md` its history, so a fresh
-  session reads current state, not the log; and a filed draft gets a dated
-  line at its top linking the issues it became, while decision records stay as
-  written. Wishes hold non-finding ideas outside the plan's goal; they may
-  link reported findings for future planning. The guide's Findings rule still
-  governs every finding, including those outside the goal: a workbench wish
-  never replaces filing or linking it and reporting it where the guide requires.
-  Shared workflow methods stay application-independent: applications may
-  enhance them, but are never dependencies. The methods use the capabilities
-  available in the session and follow the application's own guidance for its
-  tools. Application-specific details stay outside Repo Canon. The skill and its
-  workbench layout use opaque session references and name no private
-  application, tool mapping or host details; conformance coverage enforces
-  that boundary throughout the installed skill. Its `CREDITS.md` credits Matt
-  Pocock's in-progress `chief-of-staff` at the commit it was compared at, whose
-  wiki rules the workbench borrows. The owner decided on 2026-10-29 that one
-  orchestrating session at a time owns the plans, handing over through
-  `index.md` and `now.md` at each plan's close and after any compaction since
-  it took over. On 2026-10-30 they decided that it wakes on events: it ends a
-  turn only when every in-flight item waits on the owner or has a wake-up
-  armed through the harness's own event mechanisms, which `now.md` names, and
-  a recurring check is optional. The skill ships a babysit-like wait script
-  for that, whose poll interval and maximum duration each invocation supplies,
-  with no default; [#732](https://github.com/lutzseverino/repo-canon/issues/732)
-  records these decisions. For sessions outside every project checkout, the
-  workbench adopts the `workbench` profile, which the skill offers when it
-  creates a workbench and the
-  [adoption guide](docs/usage/adopt-repo-canon.md#orchestrate-plans)
-  describes, replacing the earlier link from a checkout into the user's own
-  skills, which followed that checkout's unreleased working tree; the owner
-  decided this on 2026-10-30, as
-  [ADR 0027](docs/adr/0027-give-the-workbench-its-own-profile.md) records.
-- On 2026-10-29 the owner decided that `orchestrate` closes every plan with a
-  retro in a separate session reading primary sources, and that each lesson
-  goes to whoever owns its rule: the adopter's own repository or setup, a wish,
-  nowhere for a one-off, or an issue filed against Repo Canon for a Repo Canon
-  skill or rule, because an adopter who does not develop Repo Canon cannot
-  change its skills. On 2026-10-30 they decided that a plan names its Close
-  reviews at approval: the retro always, and `improve-codebase-architecture`
-  proposed for each repository whose code the plan changes, which the owner
-  keeps or removes; [#733](https://github.com/lutzseverino/repo-canon/issues/733)
-  records these decisions.
-- On 2026-10-31 the owner decided that `orchestrate` keeps a short core: its
-  `SKILL.md`, capped at 120 lines by a conformance test, holds the purpose,
-  the workbench files, the lifecycle, the wait step and the report-back rule,
-  and links references for the workbench templates, each launch's obligations
-  and the Close procedure. Factory method stays in the `factory` skill
-  installed in the repository a factory serves, since the `workbench` profile
-  installs none, and the core points to the contribution guide instead of
-  restating it; [#790](https://github.com/lutzseverino/repo-canon/issues/790)
-  records the decision.
-- On 2026-10-31 the owner decided that any session can leave the orchestrating
-  agent a message as one file in the workbench's `incoming/` directory, which
-  the wait step watches, and that a direct message between sessions is only a
-  nudge. A sender on the orchestrator's host writes the file without
-  committing; a sender elsewhere commits and pushes it, and the wait fetches a
-  workbench upstream on each poll to notice it. The orchestrating agent moves
-  each message into its plan's log or the decision inbox, which stays
-  decisions-only, and deletes the file;
-  [#792](https://github.com/lutzseverino/repo-canon/issues/792) records these
-  decisions.
-- On 2026-10-31 the owner decided that their request to do something now is
-  that work's approval and skips only the plan. `orchestrate` first records
-  the quoted words under the decision inbox's `Answered`, tracks the work in
-  `now.md` and, inside an open plan's goal, as an expedited row of that plan,
-  with no new file; each repository's own delivery rules, such as its Direct
-  change, still apply. To make room, the orchestrating agent pauses only what
-  it owns, its new launches and its merges, until the change merges, because
-  interrupting a running session needs the owner's word; running sessions
-  continue unless the owner stops them, and a factory serving the repository
-  pauses through the `factory` skill installed there;
-  [#791](https://github.com/lutzseverino/repo-canon/issues/791) records the
-  decision.
+  and the factory-triage exception in
+  [ADR 0030](docs/adr/0030-let-factory-triage-accept-its-own-brief.md).
+  They preserve the rationale and supersession of the owner's initial
+  finish-every-brief choice. Current policy lives in
+  [Triage](CONTRIBUTING.md#triage),
+  [Readiness](CONTRIBUTING.md#readiness), the
+  [GitHub rules](rules/github-repository-configuration.md#readiness-roles)
+  and [factory rules](rules/factory-workflow.md#triage-run);
+  the method lives in [triage](.agents/skills/triage/SKILL.md).
+- Publication, inference and intake decisions of 2026-11-06, 2026-11-08 and
+  2026-11-09 are recorded in
+  [#912](https://github.com/lutzseverino/repo-canon/issues/912#issuecomment-6750712597).
+  Their homes are [Triage](CONTRIBUTING.md#triage) and the factory rules'
+  [Canonical stages](rules/factory-workflow.md#canonical-stages).
+- Orchestration is a workflow method under ADRs 0016 and 0018, implemented by
+  [orchestrate](.agents/skills/orchestrate/SKILL.md). Its decision records are:
+  - [#731](https://github.com/lutzseverino/repo-canon/issues/731#issuecomment-6532507498):
+    the owner's 2026-10-29 workbench and current-state decisions, and the
+    2026-10-30 inferred plan/history separation and draft disposition, open
+    to veto. The rationale is to let a fresh session read current state
+    without replaying history; [templates](.agents/skills/orchestrate/references/templates.md)
+    own the layout.
+  - [#732](https://github.com/lutzseverino/repo-canon/issues/732): single-session
+    ownership (2026-10-29) and event-driven progress (2026-10-30).
+    [Launches](.agents/skills/orchestrate/references/launches.md) and the
+    [wait step](.agents/skills/orchestrate/SKILL.md#the-wait-step) own the methods.
+  - [ADR 0027](docs/adr/0027-give-the-workbench-its-own-profile.md): the
+    2026-10-30 replacement of checkout-linked user skills, whose bytes
+    followed unreleased work, with a released workbench profile.
+  - [#733](https://github.com/lutzseverino/repo-canon/issues/733): separate
+    retros and routing lessons to their rule owner (2026-10-29), and Close
+    reviews named at plan approval (2026-10-30). The
+    [Close procedure](.agents/skills/orchestrate/references/close.md) owns the method;
+    an adopter cannot edit Canon's skills to fix a Canon-owned lesson.
+  - [#790](https://github.com/lutzseverino/repo-canon/issues/790): the
+    2026-10-31 short-core/reference split, keeping factory method in
+    [factory](.agents/skills/factory/SKILL.md) because workbenches install none.
+  - [#792](https://github.com/lutzseverino/repo-canon/issues/792): the
+    2026-10-31 incoming-message decision; the
+    [incoming template](.agents/skills/orchestrate/references/templates.md#incoming)
+    owns the transport and consumption method.
+  - [#791](https://github.com/lutzseverino/repo-canon/issues/791): the
+    2026-10-31 immediate-work approval and pause-ownership decision; see
+    [Expedited change](.agents/skills/orchestrate/references/launches.md#expedited-change).
+    Application independence keeps shared methods usable across hosts;
+    [orchestrate](.agents/skills/orchestrate/SKILL.md) owns the capability-based
+    method and its credits name the compared `chief-of-staff` source.
 - Personal skills, such as `teach` and HumanLayer's `show-me`, are left to each
   maintainer to install from upstream at user scope; the
   [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)
   names the recommended ones.
-- Delivery belongs to this source, because Repository Standards leaves it to
-  standards sources
-  ([repo-standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0015-leave-delivery-to-standards-sources.md)).
-  The environment carries delivery, as
+- Delivery belongs to standards sources under
+  [Repository Standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0015-leave-delivery-to-standards-sources.md).
   [ADR 0010](docs/adr/0010-carry-delivery-rules-in-the-environment.md)
-  decides: [`CONTRIBUTING.md`](CONTRIBUTING.md#pull-requests) says how to open
-  a pull request, an adoption pull request included, and when it may merge,
-  and the installed `AGENTS.md` points every change through `implement`,
-  then `review` in a separate agent. The model-invocable `babysit` skill watches the pull request,
-  settles its findings, and merges it, stating no rule the guide or installed
-  rules hold. Review follows the guide's
-  [review finding rules](CONTRIBUTING.md#merging) and the
-  request rule and its bound in the
-  [GitHub repository configuration rules](rules/github-repository-configuration.md). The
-  [owner decision for #746](https://github.com/lutzseverino/repo-canon/issues/746#issuecomment-6533150044)
-  also makes first factory selection ask about post-run app-author policy
-  configuration using the repository's own app identity. Standard-only runs and
-  routine factory updates do not ask; existing policy remains untouched.
-  It waits through one bundled script that polls silently for checks and the
-  reviewer named by the optional repository-owned
-  `.github/pull-request-reviewer.json`, run in the foreground on every host.
-  Those rules
-  also state when a head with no check counts as passed, and that file's
-  schema, which the reviewer check and the wait validate with one shared
-  parser retained at its source-relative path. Repo Canon ships no reviewer file or preset; this repository carries its own configuration, outside the
-  declarations. The factory never reads it. Its
-  source is its installed path, `.agents/skills/babysit`, as for Repo Canon's
-  other original exact files; only vendored material has a separate source
-  path.
-- The factory is a product of its own, installed on a host from its own
-  releases, as
-  [ADR 0013](docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md)
-  decides, and released from its own repository, as
+  records the environment-carried decision. Current requirements live in
+  [Pull requests](CONTRIBUTING.md#pull-requests) and the
+  [GitHub rules](rules/github-repository-configuration.md); methods live in
+  [implement](.agents/skills/implement/SKILL.md),
+  [review](.agents/skills/review/SKILL.md) and
+  [babysit](.agents/skills/babysit/SKILL.md).
+  The [#746 decision of 2026-10-29](https://github.com/lutzseverino/repo-canon/issues/746#issuecomment-6533150044)
+  records the post-adoption app-author policy opt-in;
+  [factory adoption guidance](guidance/factory-workflow.md) owns its method.
+  [ADR 0015](docs/adr/0015-configure-the-pull-request-reviewer-as-repository-data.md)
+  records why reviewer choice is repository data; its schema and behavior
+  live in the [reviewer rules](rules/github-repository-configuration.md#pull-request-reviewer-file).
+- The factory product boundary is recorded in
+  [ADR 0013](docs/adr/0013-install-the-factory-on-the-host-from-its-own-releases.md),
   [ADR 0020](docs/adr/0020-release-the-factory-from-its-own-repository.md)
-  decides; every run works on one ticket, as
-  [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md)
-  decides. Repo Canon ships none of its code. A repository the factory serves
-  selects the `factory` profile, which installs `.scriptorium/config.json` as an
-  exact file, since the factory has no default for any convention, as
+  and [ADR 0012](docs/adr/0012-run-each-ticket-as-its-own-factory-run.md).
+  Repo Canon ships conventions, not factory code.
   [ADR 0014](docs/adr/0014-name-every-factory-convention-in-configuration.md)
-  decides. Its configuration version 3 turns on the triage, implement and
-  review run kinds and maps each to the skill of the same name. The owner
-  chose these optional run kinds on 2026-11-03 and 2026-11-04 (plan 16, D1 to
-  D4; [#854](https://github.com/lutzseverino/repo-canon/issues/854)), with
-  Repo Canon's skills and rules owning what each run does and the factory
-  owning its mechanism, as the factory's
-  [ADR 0008](https://github.com/lutzseverino/scriptorium/blob/5e7ecf2593cd534cfb9050a7385dbda71b5102f9/docs/adr/0008-split-work-into-run-kinds-handed-off-by-the-host.md)
-  records. The [factory workflow rules](rules/factory-workflow.md) state the
-  gates the owner chose in the same session (D7, D8). The profile installs the repository-wide
-  [factory workflow rules](rules/factory-workflow.md), with intentionally empty
-  confirmed content scope, so tracker work reads them even when it changes no
-  file. The profile also installs the contextual `.scriptorium/Dockerfile`,
-  toolchain only and Debian-based, as the
-  [toolchain image rules](rules/factory-sandbox-image.md) state, and the
-  pull request workflow that builds it. The factory workflow rules govern
-  ownership of the labels named by the configuration; the canonical labels
-  carry no `factory:` label and no `model:` label. The
-  [factory's usage documentation](https://github.com/lutzseverino/scriptorium/blob/5e7ecf2593cd534cfb9050a7385dbda71b5102f9/docs/usage/README.md) describes its
-  behavior.
+  records why configuration is explicit. The owner chose optional run kinds
+  and gates on 2026-11-03 and 2026-11-04 (plan 16, D1–D4, D7–D8), recorded in
+  [#854](https://github.com/lutzseverino/repo-canon/issues/854) and the factory's
+  [ADR 0008](https://github.com/lutzseverino/scriptorium/blob/5e7ecf2593cd534cfb9050a7385dbda71b5102f9/docs/adr/0008-split-work-into-run-kinds-handed-off-by-the-host.md).
+  Current mechanics live in [Run kinds](rules/factory-workflow.md#run-kinds)
+  and [.scriptorium/config.json](.scriptorium/config.json);
+  toolchain ownership lives in the [image rules](rules/factory-sandbox-image.md).
 - Omit contributor-facing instructions for updating the managed skill
   collection. Contributors to an adopting repository do not maintain the
   standards source.
@@ -359,23 +180,10 @@ repeated.
 - Monorepo documentation policy remains independent of directory names. Use
   the delivered v2 discovery interface for arbitrary Project README targets;
   demonstrate complete coverage before claiming monorepo adoption support.
-- CONTRIBUTING.md is the one home of Repo Canon's contribution rules: issues
-  and implementation contracts, triage, readiness, development setup, validation, pull
-  requests, and titles and commits. GitHub specifics and factory-only workflow
-  live instead in the installed rules of the declarations they belong to,
-  which apply to the whole repository. Every other file cites it
-  rather than repeating one of them. Agent implementation procedures belong in
-  skills. Files Repo Canon authors do not restate them, and cite them only for
-  delivery: `AGENTS.md` names `pr`
-  and `babysit`, and `CONTRIBUTING.md` names
-  `pr` for a pull request's body and `repo-standards adopt` for finishing or
-  recovering an adoption run, using the pinned runtime once a run has started.
-  The skill setup files may cite them.
-  CONTRIBUTING.md should be repository-agnostic exact content, copied
-  identically between adopting repositories. Its fixed link to
-  docs/development/README.md delegates project-specific setup and required
-  checks to a project-owned development entry point, required in every
-  adopting repository.
+- [ADR 0016](docs/adr/0016-keep-requirements-in-installed-rules.md) records the
+  contribution guide/rules/skills split. The exact, repository-agnostic
+  [contribution guide](CONTRIBUTING.md) delegates project setup and checks to
+  the adopting repository's [development guide](docs/development/README.md).
 - The issue templates under [`.github/ISSUE_TEMPLATE`](.github/ISSUE_TEMPLATE)
   provide the Bug report, Feature request, Implementation ticket, and
   Specification fields. Intake reporters do not need to provide implementation
@@ -387,114 +195,58 @@ repeated.
   request's description.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   states what the check enforces.
-- The readiness rules are stated in
-  [`CONTRIBUTING.md`](CONTRIBUTING.md#readiness), with factory-only parent and
-  model gates in the [factory workflow rules](rules/factory-workflow.md), the
-  GitHub roles, native blocker mechanics, and the Agent Brief and Wayfinder
-  shapes the validator enforces in the
-  [GitHub repository configuration rules](rules/github-repository-configuration.md),
-  and the mechanism that
-  enforces them in
+- Readiness policy lives in [Readiness](CONTRIBUTING.md#readiness), the
+  [factory rules](rules/factory-workflow.md#parent-readiness) and the
+  [GitHub rules](rules/github-repository-configuration.md#readiness-roles);
+  [issue contract validation](docs/development/issue-contract-validation.md)
+  describes its enforcement.
+- [ADR 0031](docs/adr/0031-name-labels-by-family.md) records the label-family
+  decision of 2026-11-04 (plan 16, D10–D12), including reporter routing,
+  question-state replacement, priority ownership and the unfamilied `wontfix`
+  outcome. Current meanings and migration live in the
+  [label rules](rules/github-repository-configuration.md#labels) and
+  [factory state rules](rules/factory-workflow.md#state-labels).
+- On 2026-10-25, the owner separated owner-only work from agent work the
+  factory cannot run because the shared label had confused them.
+  [#739](https://github.com/lutzseverino/repo-canon/issues/739) records the
+  2026-10-29 host-access and direct-worker-handoff extension, distinguishing
+  live access from source-PR owner review.
+  [#793](https://github.com/lutzseverino/repo-canon/issues/793) records the
+  2026-10-31 progress-recording, source/live-acceptance split and host-grant
+  ownership decisions. Current homes are
+  [Implementation contracts](CONTRIBUTING.md#implementation-contracts) and
+  [Skipped work](rules/factory-workflow.md#skipped-work).
+- Designated owner review's 2026-10-29 decisions are recorded in
+  [#665](https://github.com/lutzseverino/repo-canon/issues/665#issuecomment-6498159486)
+  (shared current-head approval gate and merge ownership),
+  [#716](https://github.com/lutzseverino/repo-canon/issues/716#issuecomment-6532708764)
+  (implementation-contract designation), and
+  [#717](https://github.com/lutzseverino/repo-canon/issues/717#issuecomment-6532709093)
+  (PR-comment provenance and approval records, preserving adoption bodies).
+  Current policy lives in the [owner-review rules](rules/github-repository-configuration.md#designated-owner-review)
+  and [factory rules](rules/factory-workflow.md#state-labels).
+- [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
+  supersedes ADR 0008's verbatim setup-seed rule. The
+  [base records](upstream-bases.json) distinguish unchanged and owned edits;
+  [project guidance rules](rules/project-agent-guidance.md) keep local constraints
+  separate. Repository Standards owns update notices under its
+  [ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md).
+- GitHub automation and plan-gated enforcement live in the
+  [GitHub rules](rules/github-repository-configuration.md), with mechanisms in
+  [PR metadata validation](docs/development/pr-metadata-validation.md) and
   [issue contract validation](docs/development/issue-contract-validation.md).
-- Every label Repo Canon defines, apart from `wontfix`, belongs to a family
-  named by its prefix, as
-  [ADR 0031](docs/adr/0031-name-labels-by-family.md) decides: exactly one
-  `state:` label on an open issue names whom it waits on (`triage`,
-  `reporter`, `grill`, `owner`, `ready`), and `gate:`, `factory:`, `type:`,
-  `priority:` and `model:` are separate families. The owner decided this on
-  2026-11-04 (plan 16, D11), removing `factory:needs-input`: a stop on a
-  question sets the state for whoever must answer, and an answered question
-  returns to `state:ready`. `state:reporter` is only for a fact an outside
-  reporter holds (D10). Triage sets `priority:` by the rubric in the
-  [GitHub repository configuration rules](rules/github-repository-configuration.md#labels)
-  and never replaces a person's (D12). The brief named no family for
-  `wontfix`, so it stays the closing outcome. Label setup renames each former
-  label with a one-to-one successor in place: `needs-triage`,
-  `ready-for-agent`, `ready-for-human`, `bug` and `enhancement`. `needs-info`
-  and `factory:needs-input` split across several states, so they are left for
-  triage to route.
-- `state:owner`, formerly `ready-for-human`, marks work that needs the owner's
-  own accounts or credentials, or a taste call the owner reserved. The owner
-  decided this on 2026-10-25, after the label had also marked agent work the
-  factory could not run and confused them. Agent work the factory must not
-  pick up carries `state:ready`, a `model:` label and `factory:skip`. The
-  [factory workflow rules](rules/factory-workflow.md) own that routing; canonical
-  label setup provisions skip only for the factory profile. On 2026-10-29, the
-  owner extended skip routing to work whose live steps need host access the
-  maintainer grants, and worker handoff to every PR from a directly launched
-  worker, including PRs without a skip label; see
-  [#739](https://github.com/lutzseverino/repo-canon/issues/739). Host access gates
-  only live host steps and does not designate owner review of the source PR.
-  On 2026-10-31, the owner decided that nobody edits a ready implementation
-  contract to record progress, and that work shown on a live system splits into
-  a source ticket, closed by its merge, and a live-acceptance ticket that takes
-  this route and closes only on its recorded live acceptance. The owner also
-  gave a time-bounded host access grant one owner: the orchestrating agent that
-  asked for it, so no worker ends it. See
-  [#793](https://github.com/lutzseverino/repo-canon/issues/793).
-- Designated owner review has one current-head approval gate in the standard
-  and factory profiles,
-  stated in the [GitHub repository configuration rules](rules/github-repository-configuration.md#designated-owner-review).
-  The owner chose this shared gate on 2026-10-29 in
-  [#665](https://github.com/lutzseverino/repo-canon/issues/665#issuecomment-6498159486),
-  retaining the otherwise authorized merge actor in the standard profile and
-  the orchestrating agent for factory-skip work. The
-  [factory workflow rules](rules/factory-workflow.md) retain that profile's
-  merge ownership and approval-pause continuation.
-  On 2026-10-29, the owner chose the authoritative Implementation contract as
-  a designation source alongside the worker handoff, including directly
-  authored body contracts, as recorded in
-  [#716](https://github.com/lutzseverino/repo-canon/issues/716#issuecomment-6532708764).
-  The owner also chose PR comments for designation/provenance and
-  approval/source/head-SHA records, preserving adoption PR bodies, on 2026-10-29
-  in [#717](https://github.com/lutzseverino/repo-canon/issues/717#issuecomment-6532709093).
-- The skill setup files under docs/agents are owned files whose upstream bases
-  are the vendored setup seeds, reconciled like the skills, as
-  [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
-  decides in place of the verbatim rule of
-  [ADR 0008](docs/adr/0008-install-skill-setup-files-verbatim-from-upstream-seeds.md).
-  `domain.md` is still identical to its seed; `issue-tracker.md` and
-  `triage-labels.md` differ as `upstream-bases.json` records, so they state
-  what the rules require. Project-specific guidance remains separate. AGENTS.md is an
-  identical standards-owned pointer file. Repository Standards owns the update
-  notice through its `repository-standards` system skill
-  ([repo-standards ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md)).
-  Create the optional project guidance document, docs/agents/project.md, only
-  when it has useful content.
-- GitHub automation rechecks affected issue, brief, and PR metadata on relevant
-  changes. The
-  [GitHub repository configuration rules](rules/github-repository-configuration.md)
-  make PR validation a required merge check wherever GitHub offers branch
-  protection or rulesets for the repository. It is a plan-gated requirement:
-  on a private repository whose plan offers neither, it is unavailable rather
-  than optional, and adoption completes without it. GitHub runs the PR
-  metadata workflow only from the default branch, so the requirement is
-  deferred until the workflow is there, and the next adoption or update after
-  it merges requires the check.
-  [Pull request metadata validation](docs/development/pr-metadata-validation.md)
-  and [issue contract validation](docs/development/issue-contract-validation.md)
-  state what each check requires and how a contract loses readiness.
-- Required checks include the current default branch through GitHub's strict
-  up-to-date-branch enforcement for every adopter. Setup reconciles classic
-  protection and managed rulesets with confirmation and readback, preserving
-  unrelated policy. A stale PR returns to one branch update, validation and
-  review cycle, bounded in the
-  [GitHub repository configuration rules](rules/github-repository-configuration.md#required-check-freshness);
-  GitHub guards the race wherever offered.
-  On proven private-plan unavailability of both enforcement mechanisms, the
-  merging agent verifies exact-head validation and current-base ancestry
-  immediately before merge. The owner accepted the residual concurrent-base
-  race on 2026-11-02 in
-  [#814](https://github.com/lutzseverino/repo-canon/issues/814#issuecomment-6578631340).
-  Unreadable or unconfirmed evidence and deferred setup still stop delivery. The owner accepted extra CI runs for concurrent PRs
-  in [#656](https://github.com/lutzseverino/repo-canon/issues/656#issuecomment-6451776114).
-  On 2026-10-29, approved for filing on 2026-10-30, the owner chose one
-  orchestrator recovery for a stopped ordinary factory run with an open PR,
-  recorded in [#740](https://github.com/lutzseverino/repo-canon/issues/740#issuecomment-6532707688).
-  The factory workflow rules authorize that handoff, and babysit reuses its
-  local branch-update recovery. The waiting marker prevents concurrent factory
-  resumption; the merge record stays in a PR comment. Each waiting PR refreshes
-  its own base, with no shared queue.
+  The owner accepted extra CI runs for concurrent PRs in
+  [#656](https://github.com/lutzseverino/repo-canon/issues/656#issuecomment-6451776114).
+  On 2026-11-02, the owner accepted the residual concurrent-base race only
+  for proven private-plan enforcement unavailability in
+  [#814](https://github.com/lutzseverino/repo-canon/issues/814#issuecomment-6578631340);
+  [Required-check freshness](rules/github-repository-configuration.md#required-check-freshness)
+  owns that policy.
+  The single orchestrator recovery for a stopped ordinary run with an open
+  PR was chosen on 2026-10-29 and approved for filing on 2026-10-30 in
+  [#740](https://github.com/lutzseverino/repo-canon/issues/740#issuecomment-6532707688).
+  [Factory stops](rules/factory-workflow.md#questions-and-stops)
+  owns its requirements; [babysit](.agents/skills/babysit/SKILL.md) owns its method.
 - Accepted automation prerequisites are GitHub Actions, permission to update
   issue labels/comments, and repository-setup permission for labels and branch
   rules. Metadata validation runs trusted code without executing PR-supplied
@@ -506,37 +258,22 @@ repeated.
   commands, and meaningful placement. Confirmed scope and repository evidence
   establish monorepo coverage; standalone documentation checks do not establish
   complete adoption.
-- Issue titles, pull request titles, commits, and squash merges follow
-  [`CONTRIBUTING.md`](CONTRIBUTING.md#titles-and-commits) and its issue and pull
-  request rules, and [ADR 0002](docs/adr/0002-squash-reviewed-changes.md)
-  records the squash decision. This does not prohibit local merge/rebase
-  operations or govern integration between working branches. GitHub squash
-  defaults remain editable at merge time; configuration and title checks are not
-  an immutable final-message guarantee.
-- The attribution rule lives in
-  [`CONTRIBUTING.md`](CONTRIBUTING.md#agents-on-the-maintainers-account). Its guard is that
-  rule, the tool-agnostic PR metadata check, and an explicit squash subject and
-  body supplied by `babysit`. The standard declares no per-tool attribution
-  settings. Published history stays unchanged because tags and adopters' locks
-  pin existing commits.
-- Every rule about what agents post on issues and pull requests, on any
-  account, the factory App's included, lives in the installed
-  [comment rules](rules/comments.md); the contribution guide keeps the
-  owner-question handoff and the attribution ban, the factory and GitHub rules
-  keep their mechanics, and each skill step that posts names the section to
-  read first. One templated review per round replaces the app-author outcome
-  record, and issues a factory serves carry only the contract, the run comment
-  and action comments. The owner decided this in the plan 16 factory-pipeline
-  grill on 2026-11-03 and 2026-11-04, as the triage notes of
-  [#848](https://github.com/lutzseverino/repo-canon/issues/848#issuecomment-6658040589)
-  record.
-- An implemented pull request reaches its merge through an independent
-  review, stated in the
-  [GitHub repository configuration rules](rules/github-repository-configuration.md#review-of-an-implemented-pull-request)
-  and carried out by the `review` skill. The owner decided this in the plan 16
-  factory-pipeline grill on 2026-11-03 and 2026-11-04, as the triage notes of
-  [#851](https://github.com/lutzseverino/repo-canon/issues/851#issuecomment-6658042133)
-  record.
+- Title and squash policy lives in
+  [Titles and commits](CONTRIBUTING.md#titles-and-commits) and
+  [Merging](CONTRIBUTING.md#merging), with rationale in
+  [ADR 0002](docs/adr/0002-squash-reviewed-changes.md).
+  Editable GitHub squash defaults cannot guarantee the final message.
+- Attribution policy lives in
+  [Agents on the maintainer's account](CONTRIBUTING.md#agents-on-the-maintainers-account).
+  Published history remains unchanged because tags and adopter locks pin it;
+  Canon declares no per-tool attribution settings.
+- Comment policy lives in [comment rules](rules/comments.md).
+  The owner chose the shared comment home and per-round review record on
+  2026-11-03 and 2026-11-04 in the plan 16 grill, recorded in
+  [#848](https://github.com/lutzseverino/repo-canon/issues/848#issuecomment-6658040589).
+  The independent implemented-PR review decision from that session is recorded in
+  [#851](https://github.com/lutzseverino/repo-canon/issues/851#issuecomment-6658042133);
+  its policy lives in the [review rules](rules/github-repository-configuration.md#review-of-an-implemented-pull-request).
 - The contextual `project-agent-guidance` declaration preserves useful
   repository-specific AGENTS.md instructions during adoption, under its
   [adoption guidance](guidance/project-agent-guidance.md) and
@@ -565,18 +302,13 @@ repeated.
 
 ## Source profile
 
-The complete `repo-standards/v2` source is `standards.yaml`, with the
-`standard` and `factory` profiles and the open-ended CLI compatibility minimum
-`>=10.0.0`. The
-concise policy-to-declaration, material, operation, ownership, and prerequisite
-mapping is maintained in [the source profile](docs/development/source-profile.md).
-Contextual Project README and documentation scope uses separate assessment and
-discovery guidance and resolves to individual adopter-reviewed paths.
-
-[Adoption compatibility](docs/development/adoption-compatibility.md) maps the
-accepted requirements to the delivered product interface. Use installed public
-CLI 10.0.0 as the current validation baseline; claim only compatibility
-demonstrated against the released source bytes.
+[standards.yaml](standards.yaml) is the source manifest. The maintained
+[source profile](docs/development/source-profile.md) describes its profiles,
+ownership, operations and CLI prerequisites;
+[adoption compatibility](docs/development/adoption-compatibility.md) maps the
+accepted requirements to the delivered interface. The
+[validation boundary](docs/development/source-profile.md#validation-boundary)
+distinguishes source validation from adoption evidence.
 
 ## License
 
@@ -594,17 +326,8 @@ product contracts to implement these personal preferences.
 
 ## Release versioning
 
-- Use SemVer for Repo Canon releases, following the observed release practice
-  of `repo-standards`. The owner chose the adoption product as the deciding
-  precedent. The [versioning decision](docs/adr/0003-follow-product-release-versioning.md)
-  records that rationale and its evidence.
-- Consider a stable `1.0.0` baseline after gaining experience from real
-  adoptions.
-- Judge compatibility from the adopter's perspective. New mandatory migration
-  work and incompatible workflow requirements are breaking standards changes;
-  a newly required README section that makes a previously conforming repository
-  fail is one example.
-- During `0.x`, features and breaking changes advance the middle number;
-  compatible fixes advance the last number. Release notes explicitly identify
-  breaking changes because a middle-number bump can also contain compatible
-  features. The [versioning guide](docs/usage/versioning.md) records these rules.
+[ADR 0003](docs/adr/0003-follow-product-release-versioning.md) records why
+the owner chose Repository Standards' release practice as the precedent.
+The [versioning guide](docs/usage/versioning.md) owns the compatibility and
+version-bump policy. A stable `1.0.0` baseline remains a consideration after
+experience from real adoptions.
