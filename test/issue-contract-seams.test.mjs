@@ -128,6 +128,26 @@ function setPrevious(s, state) {
   s.comments[s.comments.length - 1] = notice(state);
 }
 
+test("historical factory readiness cannot use repository role when its proof is missing", () => {
+  for (const mode of ["comment", "body"]) {
+    for (const author of ["factory[bot]", "Factory[bot]", "FACTORY[BOT]"]) {
+      for (const role of ["admin", "maintain", "triage"]) {
+        const s = historical(mode);
+        const state = previous(s);
+        state.reviewer = "factory[bot]";
+        setPrevious(s, state);
+        s.issueEvents[0].actor.login = "factory[bot]";
+        s.permissions = { "factory[bot]": { role } };
+        s.triageResult = { marker: "factory:run", author };
+        const decision = decide(s);
+        assert.equal(stateOf(decision).status, "needs-attention");
+        assert.equal(stateOf(decision).seamsExemption, undefined);
+        assert.ok(decision.removeLabels.includes("state:ready"));
+      }
+    }
+  }
+});
+
 for (const mode of ["prepared", "comment", "body"]) {
   test(`${mode}: exact pre-release approval survives repeated evaluations without renewal`, () => {
     const s = historical(mode);

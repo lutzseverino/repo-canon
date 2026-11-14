@@ -114,6 +114,62 @@ test("approves readiness the factory's triage run applied with its result", () =
   assertApproved(decideIssueContract(snapshot()), factory);
 });
 
+test("factory readiness matches only ASCII casing and retains the independent writer rule", () => {
+  for (const author of ["Factory[bot]", "FACTORY[BOT]"]) {
+    const configured = { ...triageResult, author };
+    assertApproved(decideIssueContract(snapshot({ configured })), factory);
+    assertApproved(
+      decideIssueContract(
+        snapshot({
+          configured,
+          opener: factory,
+          body: `${featureBody}\n\n${runLine("writer-1")}`,
+        }),
+      ),
+      factory,
+    );
+    assertRefused(
+      decideIssueContract(snapshot({ configured, opener: factory })),
+      /without naming the run that wrote it/,
+    );
+    assertRefused(
+      decideIssueContract(
+        snapshot({
+          configured,
+          opener: factory,
+          body: `${featureBody}\n\n${runLine("triage-7")}`,
+        }),
+      ),
+      /triage run triage-7 wrote this issue/,
+    );
+    for (const role of ["admin", "maintain", "triage"]) {
+      const s = snapshot({
+        configured,
+        contract: brief({ body: completeAgentBrief }),
+      });
+      s.permissions[factory] = { role };
+      assertRefused(
+        decideIssueContract(s),
+        /not backed by the factory's triage result/,
+      );
+    }
+  }
+  for (const author of [
+    "factory",
+    "factory-bot[bot]",
+    "factory[bot]x",
+    " factory[bot]",
+    "ſactory[bot]",
+  ]) {
+    assertRefused(
+      decideIssueContract(
+        snapshot({ configured: { ...triageResult, author } }),
+      ),
+      /is not authorized/,
+    );
+  }
+});
+
 test("refuses the factory's readiness when triage names no result", () => {
   assertRefused(
     decideIssueContract(snapshot({ configured: null })),

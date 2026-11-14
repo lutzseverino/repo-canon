@@ -19,6 +19,7 @@ import {
   same,
   intakeOriginal,
   digest,
+  isFactoryTriageAuthor,
 } from "../../scripts/issue-contract-sources.mjs";
 
 import {
@@ -606,7 +607,7 @@ function historicalSeamsApproval(snapshot, recorded) {
       event.actor?.login === recorded.reviewer,
   );
   let authority = reviewerAuthority(snapshot.permissions, recorded.reviewer);
-  if (recorded.reviewer === snapshot.triageResult?.author) {
+  if (isFactoryTriageAuthor(recorded.reviewer, snapshot.triageResult)) {
     // Authenticate historical proof without selecting it as today's contract.
     // Only the source selector and the exact match above can grant eligibility.
     if (recorded.source?.type === "issue-body")
@@ -1359,7 +1360,7 @@ function assessReadiness({
     if (
       result.kind === "triaged Agent Brief" &&
       result.contract.type === "issue-body" &&
-      grant.reviewer === snapshot.triageResult?.author
+      isFactoryTriageAuthor(grant.reviewer, snapshot.triageResult)
     ) {
       const association = bodyTriageAssociation(
         snapshot,
@@ -1390,10 +1391,12 @@ function assessReadiness({
           sourceInvalidation,
         };
     }
-    const authority =
-      grant.reviewer === snapshot.triageResult?.author
-        ? triageAuthority(snapshot, result)
-        : reviewerAuthority(permissions, grant.reviewer);
+    const authority = isFactoryTriageAuthor(
+      grant.reviewer,
+      snapshot.triageResult,
+    )
+      ? triageAuthority(snapshot, result)
+      : reviewerAuthority(permissions, grant.reviewer);
     if (!authority.authorized) {
       const error = authority.error
         ? `Could not verify @${grant.reviewer}'s review authority: ${authority.error}`
@@ -1608,7 +1611,8 @@ function triageAuthority(snapshot, result) {
   }
   const brief = result.contract.comment;
   const runs =
-    brief && (brief.user ?? brief.author)?.login === author
+    brief &&
+    isFactoryTriageAuthor((brief.user ?? brief.author)?.login, triageResult)
       ? markedRuns(brief.body, marker)
       : [];
   const run = runs.length === 1 ? runs[0] : null;
@@ -1617,7 +1621,8 @@ function triageAuthority(snapshot, result) {
       authorized: false,
       refusal: `@${author}'s readiness is not backed by the factory's triage result for this revision.`,
     };
-  if (issue.user?.login !== author) return { authorized: true, run };
+  if (!isFactoryTriageAuthor(issue.user?.login, triageResult))
+    return { authorized: true, run };
   const writers = markedRuns(issue.body, marker);
   if (writers.length !== 1 || !writers[0])
     return {
