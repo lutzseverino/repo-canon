@@ -112,7 +112,7 @@ function createRepository(name, skills, { context, development }) {
 const repositories = {};
 
 {
-  const skills = ["code-review"];
+  const skills = ["code-review", "codebase-design"];
   const root = createRepository("review", skills, {
     context: `# Ledger\n\nLanguage for balances recorded by the example ledger.\n\n## Language\n\n**Entry**:\n+A posted or pending amount recorded by the Ledger.\n_Avoid_: Row, item\n\n**Ledger summary**:\n+The posted and pending totals derived from Entries.\n_Avoid_: Report\n`,
     development: `# Development\n\nRun \`npm test\` with Node.js 24 or 26. Review changes against \`docs/specification.md\`.\n`,
@@ -276,10 +276,10 @@ const repositories = {};
 }
 
 // A repository with no Repo Canon adoption: no shared guidance, setup files,
-// glossary, rules or Repository Standards state. Its skill is a copy, as an
-// installation from a release tag leaves it.
+// glossary, rules or Repository Standards state. Its skills are copies, as an
+// installation from a release tag leaves them.
 {
-  const skills = ["code-review"];
+  const skills = ["code-review", "codebase-design"];
   const root = join(fixtureRoot, "standalone");
   write(
     root,
