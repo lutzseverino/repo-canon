@@ -14,24 +14,34 @@ export const sourceUrl = "https://github.com/fixture/repo-canon";
 // The public CLI 11.0.0 under `REPO_STANDARDS_PREFIX`, or installed in
 // `directory` when the variable is unset.
 export function publicCli(directory) {
-  const prefix = process.env.REPO_STANDARDS_PREFIX ?? join(directory, "cli");
-  if (!process.env.REPO_STANDARDS_PREFIX)
-    execFileSync(
-      "npm",
-      [
-        "install",
-        "--prefix",
-        prefix,
-        "--ignore-scripts",
-        "--registry=https://registry.npmjs.org",
-        "@lutzseverino/repo-standards@11.0.0",
-      ],
-      { stdio: "pipe" },
-    );
+  const prefix = process.env.REPO_STANDARDS_PREFIX;
+  if (!prefix) return installCli(join(directory, "cli"), "11.0.0");
   const cli = join(prefix, "node_modules/.bin/repo-standards");
   assert.equal(
     execFileSync(cli, ["--version"], { encoding: "utf8" }).trim(),
     "11.0.0",
+  );
+  return cli;
+}
+
+// The public CLI at `cliVersion`, installed in `directory`.
+export function installCli(directory, cliVersion) {
+  execFileSync(
+    "npm",
+    [
+      "install",
+      "--prefix",
+      directory,
+      "--ignore-scripts",
+      "--registry=https://registry.npmjs.org",
+      `@lutzseverino/repo-standards@${cliVersion}`,
+    ],
+    { stdio: "pipe" },
+  );
+  const cli = join(directory, "node_modules/.bin/repo-standards");
+  assert.equal(
+    execFileSync(cli, ["--version"], { encoding: "utf8" }).trim(),
+    cliVersion,
   );
   return cli;
 }

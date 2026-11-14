@@ -15,9 +15,14 @@ import {
 } from "node:fs";
 import { join, relative } from "node:path";
 import { fixtureAnswer } from "../../scripts/release/adoption.mjs";
-import { fixtureSource, publicCli, sourceUrl } from "./fixture-source.mjs";
+import {
+  fixtureSource,
+  installCli,
+  publicCli,
+  sourceUrl,
+} from "./fixture-source.mjs";
 
-export { sourceUrl };
+export { installCli, sourceUrl };
 export const locations = ["github", "runner", "self-reported"];
 // The workflow files Repo Canon installs at `github`, by profile.
 export const repoCanonWorkflows = {
@@ -77,28 +82,6 @@ export function checkLocationSource(t, root, directory) {
   publish([nextVersion, version, legacyVersion]);
   Object.assign(process.env, env);
   return { cli, validation };
-}
-
-// The public CLI at `cliVersion`, installed in `directory`.
-export function installCli(directory, cliVersion) {
-  execFileSync(
-    "npm",
-    [
-      "install",
-      "--prefix",
-      directory,
-      "--ignore-scripts",
-      "--registry=https://registry.npmjs.org",
-      `@lutzseverino/repo-standards@${cliVersion}`,
-    ],
-    { stdio: "pipe" },
-  );
-  const cli = join(directory, "node_modules/.bin/repo-standards");
-  assert.equal(
-    execFileSync(cli, ["--version"], { encoding: "utf8" }).trim(),
-    cliVersion,
-  );
-  return cli;
 }
 
 // Every project path outside Git and Repository Standards' own state.

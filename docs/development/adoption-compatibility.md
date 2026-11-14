@@ -33,9 +33,9 @@ root write scope, and subtraction of exact descendants are not discovered
 targets, and an empty scope retains its declaration and operations. Only an
 optional declaration confirmed with no scope drops its rules and operations.
 
-Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/author-format.md),
-[inspection](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/inspection.md),
-and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/script-protocol.md)
+Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/author-format.md),
+[inspection](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/inspection.md),
+and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/script-protocol.md)
 contracts when implementing. Discovery supplies scope resolution; contextual
 project agent guidance and authored GitHub setup use the routes below.
 The [release procedure](release.md) states what each release requires.
