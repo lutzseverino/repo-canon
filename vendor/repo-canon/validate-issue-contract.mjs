@@ -626,7 +626,7 @@ function historicalSeamsApproval(snapshot, recorded) {
       authority =
         contract?.revision === recorded.revision &&
         same(contract.source, recorded.source)
-          ? triageAuthority(snapshot, historical)
+          ? triageAuthority(snapshot, historical, recorded.reviewer)
           : { authorized: false };
     }
   }
@@ -1395,7 +1395,7 @@ function assessReadiness({
       grant.reviewer,
       snapshot.triageResult,
     )
-      ? triageAuthority(snapshot, result)
+      ? triageAuthority(snapshot, result, grant.reviewer)
       : reviewerAuthority(permissions, grant.reviewer);
     if (!authority.authorized) {
       const error = authority.error
@@ -1595,9 +1595,10 @@ function supersedingDeletedBrief(currentEvent, result) {
 // run's triage result, which names the run on exactly one marked line, and the
 // run did not write the issue. An issue the factory's account opened names the
 // run that wrote it on one marked line too; without one, the writer is unknown.
-function triageAuthority(snapshot, result) {
+// Refusals name `reviewer` as GitHub reports it, not the configured spelling.
+function triageAuthority(snapshot, result, reviewer) {
   const { issue, triageResult } = snapshot;
-  const { marker, author } = triageResult;
+  const { marker } = triageResult;
   if (result.contract.type === "issue-body") {
     const association = bodyTriageAssociation(
       snapshot,
@@ -1606,7 +1607,7 @@ function triageAuthority(snapshot, result) {
     if (association) return { authorized: true, run: association.run };
     return {
       authorized: false,
-      refusal: `@${author}'s readiness lacks authenticated exact-body factory triage proof. A person must review it.`,
+      refusal: `@${reviewer}'s readiness lacks authenticated exact-body factory triage proof. A person must review it.`,
     };
   }
   const brief = result.contract.comment;
@@ -1619,7 +1620,7 @@ function triageAuthority(snapshot, result) {
   if (!run)
     return {
       authorized: false,
-      refusal: `@${author}'s readiness is not backed by the factory's triage result for this revision.`,
+      refusal: `@${reviewer}'s readiness is not backed by the factory's triage result for this revision.`,
     };
   if (!isFactoryTriageAuthor(issue.user?.login, triageResult))
     return { authorized: true, run };

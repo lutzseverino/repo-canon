@@ -95,6 +95,7 @@ import {
   digest,
   attestationFormat,
   bodyTriageAssociation,
+  isFactoryTriageAuthor,
 } from "../scripts/issue-contract-sources.mjs";
 const result = (decision) =>
   issueContractResult([{ user: bot, body: decision.feedback.body }]).state;
@@ -474,6 +475,16 @@ test("public v2 platform snapshots reproduce the literal wire decisions", () => 
       fixture.name,
     );
   }
+});
+
+test("factory triage logins fold ASCII letters only", () => {
+  const configured = { marker: "factory:run", author: "kfactory[bot]" };
+  assert.ok(isFactoryTriageAuthor("KFactory[BOT]", configured));
+  // U+212A KELVIN SIGN lowercases to "k" under Unicode case mapping.
+  assert.ok(!isFactoryTriageAuthor("\u212Afactory[bot]", configured));
+  assert.ok(!isFactoryTriageAuthor(" kfactory[bot]", configured));
+  assert.ok(!isFactoryTriageAuthor(undefined, configured));
+  assert.ok(!isFactoryTriageAuthor("", { ...configured, author: "" }));
 });
 
 test("configured factory login casing preserves every v2 decision and recorded proof", () => {

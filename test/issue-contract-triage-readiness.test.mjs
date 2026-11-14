@@ -170,6 +170,33 @@ test("factory readiness matches only ASCII casing and retains the independent wr
   }
 });
 
+test("factory refusals record the same notice under configured login casing", () => {
+  const refusals = (configured) => [
+    snapshot({ configured, contract: brief({ body: completeAgentBrief }) }),
+    snapshot({ configured, opener: factory }),
+    snapshot({
+      configured,
+      opener: factory,
+      body: `${featureBody}\n\n${runLine("triage-7")}`,
+    }),
+  ];
+  const canonical = refusals(triageResult).map(decideIssueContract);
+  for (const author of ["Factory[bot]", "FACTORY[BOT]"]) {
+    const decisions = refusals({ ...triageResult, author }).map(
+      decideIssueContract,
+    );
+    for (const [index, decision] of decisions.entries()) {
+      assert.equal(decision.message, canonical[index].message, author);
+      assert.equal(
+        decision.feedback.body,
+        canonical[index].feedback.body,
+        author,
+      );
+    }
+  }
+  assert.match(canonical[0].message, /@factory\[bot\]'s readiness/);
+});
+
 test("refuses the factory's readiness when triage names no result", () => {
   assertRefused(
     decideIssueContract(snapshot({ configured: null })),
