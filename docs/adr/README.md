@@ -128,7 +128,7 @@ involve real alternatives.
 - [Give every value one value owner](0033-give-every-value-one-value-owner.md):
   each value lives only in its value owner's file: exact files hold the
   standard's values, repository-owned files the repository's, host
-  configuration the host's, and labels the issue's.
+  configuration the host's, and labels the issue's; amended by ADR 0047.
 - [Choose where checks run at adoption](0034-choose-where-checks-run-at-adoption.md):
   `github`, `runner` or `self-reported`, chosen in the selection, one check
   command, and the merge gate enforced by Repo Canon's tooling.
@@ -150,7 +150,8 @@ involve real alternatives.
   until a prerequisite pull request removes every other such check.
 - [Watch instead of launching; a factory session performs the factory gaps](0040-watch-instead-of-launching.md):
   the orchestrating agent launches only the factory session, which works from
-  the tracker and the factory's status alone; supersedes ADR 0037.
+  the tracker and the factory's status alone; supersedes ADR 0037; amended by
+  ADR 0046.
 - [Answer in the owner's place except reserved decisions, by one bundled operating model](0041-answer-in-the-owners-place-except-reserved-decisions.md):
   the skill holds decision rights, principles and format; the workbench holds
   only owner values and decision records.
@@ -164,3 +165,18 @@ involve real alternatives.
   a lead line first, the AI disclosure in a footer, notes collapsed behind a
   summary line, links instead of copies, and reviews as a verdict line and one
   findings table.
+- [Check supersession and footprint at readiness, not by hand](0045-check-supersession-and-footprint-at-readiness.md):
+  contracts name what they supersede, add and delete; readiness waits for
+  every superseded issue's fate, and the pull request checks declared
+  deletions.
+- [Start owner-facing work; the factory session is a bridge with removal conditions](0046-start-owner-facing-work-and-bridge-factory-gaps.md):
+  the grill, retro, Done check and architecture review stay with the
+  orchestrating agent; each factory-session stage names what removes it;
+  amends ADR 0040.
+- [Read nothing Scriptorium owns](0047-read-nothing-scriptorium-owns.md):
+  Repo Canon's scripts use its own labels and contract sections, and
+  Scriptorium owns the formats of its configuration, model policy and footer;
+  amends ADR 0033.
+- [Budget the computed read set, not files' lines](0048-budget-the-computed-read-set.md):
+  bytes over what each entry-point skill makes an agent read, against the
+  base branch.

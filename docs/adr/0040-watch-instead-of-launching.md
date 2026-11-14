@@ -2,7 +2,9 @@
 
 Status: supersedes [ADR 0037](0037-act-in-repositories-only-through-launches.md)
 and the launch and intake-model-label responsibilities in
-[ADR 0036](0036-launch-hand-stages-with-identifiers-only.md).
+[ADR 0036](0036-launch-hand-stages-with-identifiers-only.md). Amended by
+[ADR 0046](0046-start-owner-facing-work-and-bridge-factory-gaps.md):
+owner-facing work, and the factory session as a bridge.
 
 The orchestrating agent launches no pipeline stage. It talks with the owner,
 answers in the owner's place except reserved decisions, keeps the plans, and
