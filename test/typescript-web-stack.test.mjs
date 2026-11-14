@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { fixture, invokeCheck, snapshot } from "./helpers/operation.mjs";
+import {
+  classifyWebPackages,
+  webStackDifferences,
+} from "../operations/lib/typescript-web-stack.mjs";
 
 const manifest = (overrides = {}) =>
   JSON.stringify({
@@ -135,6 +139,143 @@ const decisions = (entry) =>
   Object.fromEntries(
     entry.candidates.map((candidate) => [candidate.path, candidate.decision]),
   );
+const astroWorkspace = () => ({
+  ...workspace,
+  "package.json": manifest({
+    name: "root",
+    devDependencies: { oxlint: "1.86.0", prettier: "3.9.9" },
+  }),
+  ...webFiles("astro", "apps/site", {
+    packageManager: undefined,
+    engines: undefined,
+    dependencies: { astro: "7.0.0", shared: "workspace:*" },
+    devDependencies: {
+      shadcn: "4.1.0",
+      "prettier-plugin-astro": "0.14.0",
+    },
+  }),
+  "packages/shared/package.json": JSON.stringify({
+    name: "shared",
+    scripts: { validate: "tsc --noEmit" },
+  }),
+});
+
+test("shared Astro packages need no formatter declaration of their own or at the root", (t) => {
+  const files = astroWorkspace();
+  const project = fixture(files);
+  t.after(project.close);
+  const paths = new Set(Object.keys(files));
+  const memberships = classifyWebPackages(project.root, paths);
+  const sharedPath = "packages/shared/package.json";
+  const membership = memberships.get(sharedPath);
+  assert.equal(membership.kind, "shared");
+  assert.equal(membership.stack, "astro");
+  assert.equal(membership.eligible, true);
+  for (const supplied of [memberships, undefined]) {
+    const result = webStackDifferences(
+      project.root,
+      sharedPath,
+      "astro",
+      paths,
+      supplied,
+    );
+    assert.deepEqual(result.differences, []);
+  }
+});
+
+test("Astro discovery and manifest checks accept shared packages and their transitive dependencies", (t) => {
+  for (const transitive of [false, true]) {
+    const files = astroWorkspace();
+    const paths = ["apps/site/package.json", "packages/shared/package.json"];
+    if (transitive) {
+      files["packages/shared/package.json"] = JSON.stringify({
+        name: "shared",
+        scripts: { validate: "tsc --noEmit" },
+        dependencies: { util: "workspace:*" },
+      });
+      files["packages/util/package.json"] = JSON.stringify({
+        name: "util",
+        scripts: { validate: "tsc --noEmit" },
+      });
+      paths.push("packages/util/package.json");
+      const project = fixture(files);
+      t.after(project.close);
+      const membership = classifyWebPackages(
+        project.root,
+        new Set(Object.keys(files)),
+      ).get("packages/util/package.json");
+      assert.equal(membership.kind, "shared");
+      assert.equal(membership.stack, "astro");
+      assert.equal(membership.eligible, true);
+    }
+    const entry = draft(t, "astro", files);
+    const included = decisions(entry);
+    for (const path of paths) assert.equal(included[path], "include", path);
+    assert.deepEqual(entry.unresolved, []);
+    assert.equal(check(t, "astro", files, paths).status, "passed");
+  }
+});
+
+test("Astro discovery and manifest checks still require the Site's formatter", (t) => {
+  const files = astroWorkspace();
+  const site = JSON.parse(files["apps/site/package.json"]);
+  delete site.devDependencies["prettier-plugin-astro"];
+  files["apps/site/package.json"] = JSON.stringify(site);
+  const correction =
+    "Declare `prettier-plugin-astro` in `apps/site/package.json` or its workspace root `package.json`; neither declares it.";
+  const entry = draft(t, "astro", files).candidates.find(
+    (candidate) => candidate.path === "apps/site/package.json",
+  );
+  assert.equal(entry.decision, "exclude");
+  assert.ok(entry.reason.includes(correction), entry.reason);
+  const result = check(t, "astro", files, [
+    "apps/site/package.json",
+    "packages/shared/package.json",
+  ]);
+  assert.equal(result.status, "failed");
+  assert.ok(result.message.includes(correction), result.message);
+});
+
+test("shared Astro packages retain Node differences without a formatter difference", (t) => {
+  const files = astroWorkspace();
+  files["packages/shared/package.json"] = JSON.stringify({ name: "shared" });
+  const project = fixture(files);
+  t.after(project.close);
+  const result = webStackDifferences(
+    project.root,
+    "packages/shared/package.json",
+    "astro",
+    new Set(Object.keys(files)),
+  );
+  assert.equal(result.differences.length, 1);
+  assert.match(result.differences[0], /validate/);
+});
+
+test("shared Astro packages with components.json retain shadcn holder requirements", (t) => {
+  const files = {
+    ...astroWorkspace(),
+    "packages/shared/components.json": JSON.stringify({
+      style: "radix-nova",
+      iconLibrary: "other",
+    }),
+  };
+  const project = fixture(files);
+  t.after(project.close);
+  const result = webStackDifferences(
+    project.root,
+    "packages/shared/package.json",
+    "astro",
+    new Set(Object.keys(files)),
+  );
+  const differences = result.differences.join("\n");
+  assert.match(differences, /base-.*style/);
+  assert.match(differences, /iconLibrary to lucide/);
+  assert.match(differences, /shadcn as an exact major-4/);
+  for (const script of ["ui:add", "ui:update", "ui:check"])
+    assert.ok(differences.includes(script), differences);
+  assert.doesNotMatch(differences, /prettier-plugin-astro/);
+});
+
 test("an App assigns framework-less UI and non-UI packages to Vite with a centralized holder", (t) => {
   const files = {
     ...workspace,
