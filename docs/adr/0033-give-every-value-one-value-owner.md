@@ -1,5 +1,9 @@
 # Give every value one value owner
 
+Status: amended by [ADR 0047](0047-read-nothing-scriptorium-owns.md):
+Scriptorium, not Repo Canon, supplies the schema and check of the repository
+model policy it reads.
+
 Every value Repo Canon installs, checks or relies on has one value owner (the
 standard, the repository, the host or the issue) and lives only in a file that
 owner holds. Exact files carry only values the standard chooses for every

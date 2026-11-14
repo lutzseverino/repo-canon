@@ -5,14 +5,14 @@ Status: accepted (2026-11-13).
 A specification or ticket contract states what it supersedes and what it adds
 and deletes, and the checks that already gate every contract enforce it. A
 contract carries a `Supersedes:` line naming the ADRs and issues it replaces,
-and `Adds:` and `Deletes:` lines naming durable surfaces (skills and their
-references, labels, configuration keys, record kinds), never file paths, as
-the Agent Brief rules require. The issue-contract validator and the readiness
+and its existing `Adds:` and `Deletes:` lines name durable surfaces (skills and
+their references, labels, configuration keys, record kinds), never file paths,
+as the Agent Brief rules require. The issue-contract validator and the readiness
 command refuse readiness to a specification while an open issue it supersedes,
 or one citing an ADR it supersedes, has no **fate** posted on it. At the pull
-request, a surface the ticket declared deleted must be gone from the diff, and
-a change that edits a surface an open ticket deletes fails. The adds and
-deletes are tallied and shown, not gated.
+request, a check fails when a surface the ticket declared deleted is still
+present after the diff, or when the change edits a surface an open ticket
+deletes. The adds and deletes are tallied and shown, not gated.
 
 The owner asked for this on 2026-11-13, after an audit found that newer
 decisions left queued tickets written against the old ones, with fates posted
@@ -40,8 +40,11 @@ their environment, how the pull in context, and so on. Predictability."
 
 ## Consequences
 
-- Deletion tickets go first by native blocking links, set by the writer from
-  the `Deletes:` lines; the pull-request check catches the case a link missed.
+- Deletion tickets go first by native blocking links; the pull-request check
+  catches the case a link missed.
+- A contract without footprint lines is listed as unknown by the checks, never
+  skipped. Open contracts gain the lines when next rescoped, with no mass
+  rescope.
 - The comment rules allow, in a factory-served repository, one comment
   recording a superseded issue's fate and one adding new evidence to an
   existing finding, each linking its source.

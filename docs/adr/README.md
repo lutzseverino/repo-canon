@@ -128,7 +128,7 @@ involve real alternatives.
 - [Give every value one value owner](0033-give-every-value-one-value-owner.md):
   each value lives only in its value owner's file: exact files hold the
   standard's values, repository-owned files the repository's, host
-  configuration the host's, and labels the issue's.
+  configuration the host's, and labels the issue's; amended by ADR 0047.
 - [Choose where checks run at adoption](0034-choose-where-checks-run-at-adoption.md):
   `github`, `runner` or `self-reported`, chosen in the selection, one check
   command, and the merge gate enforced by Repo Canon's tooling.
@@ -173,9 +173,10 @@ involve real alternatives.
   the grill, retro, Done check and architecture review stay with the
   orchestrating agent; each factory-session stage names what removes it;
   amends ADR 0040.
-- [Read nothing another project owns](0047-read-nothing-another-project-owns.md):
+- [Read nothing Scriptorium owns](0047-read-nothing-scriptorium-owns.md):
   Repo Canon's scripts use its own labels and contract sections, and
-  Scriptorium owns its configuration, model policy and footer.
+  Scriptorium owns the formats of its configuration, model policy and footer;
+  amends ADR 0033.
 - [Budget the computed read set, not files' lines](0048-budget-the-computed-read-set.md):
   bytes over what each entry-point skill makes an agent read, against the
   base branch.

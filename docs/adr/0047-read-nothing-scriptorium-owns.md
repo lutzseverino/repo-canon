@@ -1,18 +1,20 @@
-# Read nothing another project owns
+# Read nothing Scriptorium owns
 
-Status: accepted (2026-11-13).
+Status: accepted (2026-11-13); amends
+[ADR 0033](0033-give-every-value-one-value-owner.md): Scriptorium, not Repo
+Canon, supplies the schema and check of the repository model policy it reads.
 
-Repo Canon's scripts and rules read no format another project owns. The merge
-and readiness commands use the standard labels Repo Canon itself provisions
+Repo Canon's scripts and rules read no format Scriptorium owns. The merge and
+readiness commands use the standard labels Repo Canon itself provisions
 instead of reading Scriptorium's configuration, and the issue-contract
 validator reads a contract from its own sections and ignores the factory's
-frame. Scriptorium owns its configuration, its repository model policy and its
-result footer; Repo Canon owns the lead line, the status markers and the issue
-contract. Repo Canon keeps only its rule for choosing a model (fit first, then
-narrower, then cheaper) and links Scriptorium's documentation for resolution,
-fallback and diversity. Where Scriptorium needs Repo Canon's contract protocol,
-it imports the self-contained module Repo Canon already installs, in that one
-direction only.
+frame. Scriptorium owns the formats of its configuration, its repository model
+policy and its result footer; Repo Canon owns the lead line, the status
+markers and the issue contract. Repo Canon keeps only its rule for choosing a
+model (fit first, then narrower, then cheaper) and links Scriptorium's
+documentation for resolution and diversity. Where Scriptorium needs Repo
+Canon's contract protocol, it imports the self-contained module Repo Canon
+already installs, in that one direction only.
 
 The owner agreed on 2026-11-13: "Agreed to all", after "Be strategic,
 long-term thinking, as always. And don't couple projects." (2026-11-12).

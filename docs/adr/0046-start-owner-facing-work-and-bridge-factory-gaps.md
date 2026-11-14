@@ -10,15 +10,14 @@ pipeline stage and none is a factory gap; the factory session never sees a
 plan. The factory session is a bridge: every stage it performs names the
 factory ticket that will remove it, or a recorded decision that the stage stays
 outside the factory, and the list lives in the workbench plan, not in the
-installed rules. The factory's top gaps close in the factory first (review of
-any ready pull request in a served repository, an answered stop re-entering
-the factory, serving the remaining repositories, Release as a run kind), but
-removing hand launches from `orchestrate` does not wait for them.
+installed rules. The tickets closing the top gaps in the projects that own
+them keep their priority (serving the remaining repositories, review of any
+ready pull request in a served repository, an answered stop re-entering the
+factory, Release as a run kind), but a minimal factory session ships as the
+bridge, and removing hand launches from `orchestrate` does not wait for them.
 
-The owner agreed on 2026-11-13, after an audit found the gap lines were not
-falling and the factory session risked becoming a permanent second executor:
-"Agreed to all", to "the Scriptorium gap tickets keep their priority; a minimal
-factory session ships as the bridge".
+The owner agreed on 2026-11-13 ("Agreed to all"), after an audit found the
+factory session at risk of becoming a permanent second executor.
 
 ## Considered options
 

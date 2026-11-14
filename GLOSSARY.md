@@ -95,7 +95,8 @@ intake, schedules grilling sessions, answers questions in their place except
 reserved decisions, and watches the work through the tracker and the factory's
 status. It starts only the factory session and owner-facing work, changes no
 label and runs no repository's scripts; on an issue it posts only the record
-of an owner decision or a superseded issue's fate.
+of an owner decision, a superseded issue's fate, or new evidence on an
+existing finding.
 _Avoid_: Factory, factory session, research run
 
 **Reserved decision**:
@@ -183,9 +184,9 @@ time and lessons by a separate session, is always one.
 _Avoid_: Post-mortem, plan audit
 
 **Done check**:
-The read-only owner-facing work, run once every row of a plan has ended, that holds each
-of the plan's Done-means clauses against primary sources and records its
-evidence or the lack of it. Close starts only when every clause has evidence;
+The read-only owner-facing work, run once every row of a plan has ended, that
+holds each of the plan's Done-means clauses against primary sources and
+records its evidence or the lack of it. Close starts only when every clause has evidence;
 the Done check is a gate before Close, never a Close review.
 _Avoid_: Done gate, completion audit, closing check
 
@@ -193,7 +194,7 @@ _Avoid_: Done gate, completion audit, closing check
 Work the orchestrating agent starts because it reads the owner or the private
 plans: the grill, the retro, the Done check and the architecture review, a
 closed list. It is never a pipeline stage or a factory gap.
-_Avoid_: Workbench stage, hand launch
+_Avoid_: Workbench stage; hand launch, when meaning this work
 
 **Fate**:
 The recorded outcome, posted on an open issue, of a newer decision that
@@ -202,9 +203,9 @@ rescoped, or kept with a one-line reason.
 _Avoid_: Outcome note, reconciliation
 
 **Footprint**:
-What a contract declares it supersedes, adds and deletes, naming durable
-surfaces (skills and their references, labels, configuration keys, record
-kinds) rather than file paths.
+What a contract declares it supersedes, by ADR and issue, and what it adds and
+deletes, as durable surfaces (skills and their references, labels,
+configuration keys, record kinds) rather than file paths.
 _Avoid_: Touches, file list
 
 **Read set**:
