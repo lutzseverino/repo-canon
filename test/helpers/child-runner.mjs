@@ -54,6 +54,30 @@ export async function runChild(command, args, { kind, boundMs, cwd, env }) {
     /** @type {NestedTest | undefined} */
     let lastCompleted;
     const unfinished = new Map();
+    const terminate = () => {
+      if (process.platform === "win32") child.kill("SIGKILL");
+      else {
+        try {
+          process.kill(-child.pid, "SIGKILL");
+        } catch (cause) {
+          if (cause.code !== "ESRCH") throw cause;
+        }
+      }
+    };
+    // The detached group misses signals sent to this process's group, so stop
+    // the child first and then let the signal take its usual effect.
+    const signals = ["SIGHUP", "SIGINT", "SIGTERM"];
+    const forward = (/** @type {NodeJS.Signals} */ signal) => {
+      release();
+      terminate();
+      process.kill(process.pid, signal);
+    };
+    const release = () => {
+      process.off("exit", terminate);
+      for (const signal of signals) process.off(signal, forward);
+    };
+    process.once("exit", terminate);
+    for (const signal of signals) process.on(signal, forward);
     const timer = setTimeout(() => {
       timeout = {
         bound: nested ? "no-progress" : "total",
@@ -63,14 +87,7 @@ export async function runChild(command, args, { kind, boundMs, cwd, env }) {
         lastCompleted,
         unfinished: [...unfinished.values()],
       };
-      if (process.platform === "win32") child.kill("SIGKILL");
-      else {
-        try {
-          process.kill(-child.pid, "SIGKILL");
-        } catch (cause) {
-          if (cause.code !== "ESRCH") throw cause;
-        }
-      }
+      terminate();
     }, boundMs);
     const progress = () => {
       if (nested && !timeout) timer.refresh();
@@ -121,6 +138,7 @@ export async function runChild(command, args, { kind, boundMs, cwd, env }) {
     });
     child.on("close", (status, signal) => {
       clearTimeout(timer);
+      release();
       const elapsedMs = performance.now() - started;
       if (timeout)
         error = new Error(

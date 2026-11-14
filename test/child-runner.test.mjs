@@ -1,8 +1,17 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { spawn, spawnSync } from "node:child_process";
+import { once } from "node:events";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
 import { runChild } from "./helpers/child-runner.mjs";
 
 test("a command exceeding its total bound returns its partial output and diagnosis", async () => {
@@ -28,6 +37,36 @@ test("a command exceeding its total bound returns its partial output and diagnos
     /total.*1000.*partial stdout.*partial stderr/s,
   );
   assert.match(result.error.message, /node/);
+});
+
+test("a signal ending the awaiting process also ends its detached child", async (t) => {
+  const cwd = mkdtempSync(join(tmpdir(), "child-runner-"));
+  t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const pidPath = join(cwd, "pid");
+  const parent = spawn(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `import { runChild } from ${JSON.stringify(new URL("./helpers/child-runner.mjs", import.meta.url).href)};
+      await runChild(process.execPath, ["-e", ${JSON.stringify(
+        `require("node:fs").writeFileSync(${JSON.stringify(pidPath)}, String(process.pid)); setInterval(() => {}, 1000);`,
+      )}], { kind: "command", boundMs: 60000 });`,
+    ],
+    { stdio: "ignore" },
+  );
+  const exited = once(parent, "exit");
+  while (!existsSync(pidPath)) await delay(10);
+  const pid = readFileSync(pidPath, "utf8");
+  parent.kill("SIGTERM");
+  assert.deepEqual(await exited, [null, "SIGTERM"]);
+  // A killed child may linger as a zombie until init reaps it.
+  const alive = () =>
+    !/^\s*(Z|$)/.test(
+      spawnSync("ps", ["-o", "stat=", "-p", pid], { encoding: "utf8" }).stdout,
+    );
+  for (let i = 0; alive() && i < 100; i++) await delay(50);
+  assert.equal(alive(), false);
 });
 
 function nested(t, files, boundMs = 1000) {
