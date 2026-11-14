@@ -194,17 +194,24 @@ is absent, the result explicitly hands delivery to the owner and stops
 unattended merging; it does not promise ordinary plan-limited delivery.
 An unreadable workflow blocks setup before merge-setting changes.
 
-Only recognized plan-limit 403 responses for both classic protection and
-rulesets on a private repository permit merging-agent freshness verification.
+On a confirmed private repository, merging-agent freshness verification requires
+recognized plan-limit 403 responses on the branch-rules and rulesets-list reads.
+The classic-protection read must return either the recognized plan-limit 403 or
+HTTP 403 with the platform message `Resource not accessible by integration`.
+This integration refusal qualifies only on that protection probe after the
+plan-limited branch-rules read; every other permission refusal grants no exception.
 After slow gates, immediately before the expected-head merge, verify the live
 default destination, unchanged validated/reviewed head, successful applicable
 validation on that exact head, and current default-tip ancestry. Missing or
-unreadable evidence, ordinary permission refusals, missing workflow and deferred
+unreadable evidence, all other permission refusals, missing workflow and deferred
 setup grant no exception. Another writer can advance the base after this final
 check and the merge can succeed: the owner accepts this residual concurrent-base
 race only on this proven plan-limited path. Immediate checks narrow the window;
 they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
 enforcement remains required wherever available.
+This merge evidence exception does not change setup: the operation still requires
+recognized plan-limit 403s on both protection and rulesets, and an integration
+refusal on either stops setup.
 Setup preserves bypass actors and admin-enforcement settings. Its point-in-time
 readback does not replace babysit's live merge evidence.
 

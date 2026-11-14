@@ -43,14 +43,24 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         private: state.private ?? false,
       });
     const planMessage = "Upgrade to GitHub Pro or make this repository public";
-    if (path.endsWith("/rulesets"))
+    if (path.endsWith("/rulesets")) {
+      if (state.rulesetsStatus)
+        return json(
+          { message: state.rulesetsMessage ?? "rulesets read failed" },
+          state.rulesetsStatus,
+        );
       return state.planRulesets
         ? json({ message: planMessage }, 403)
         : json([]);
+    }
     if (/\/rules\/branches\//.test(path)) {
-      if (state.planRulesets) return json({ message: planMessage }, 403);
+      if (state.planBranchRules ?? state.planRulesets)
+        return json({ message: planMessage }, 403);
       if (state.failFreshness)
-        return json({ message: "freshness read failed" }, state.failFreshness);
+        return json(
+          { message: state.freshnessMessage ?? "freshness read failed" },
+          state.failFreshness,
+        );
       return json(
         state.rules ?? [
           {
@@ -77,7 +87,7 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       if (state.planProtection) return json({ message: planMessage }, 403);
       if (state.protectionStatus)
         return json(
-          { message: "protection read failed" },
+          { message: state.protectionMessage ?? "protection read failed" },
           state.protectionStatus,
         );
       return state.protection
@@ -86,7 +96,10 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
     }
     if (path.includes("/contents/.github/workflows/pr-metadata.yml")) {
       if (state.workflowStatus)
-        return json({ message: "workflow unreadable" }, state.workflowStatus);
+        return json(
+          { message: state.workflowMessage ?? "workflow unreadable" },
+          state.workflowStatus,
+        );
       return json(
         state.workflowResponse ?? {
           type: "file",

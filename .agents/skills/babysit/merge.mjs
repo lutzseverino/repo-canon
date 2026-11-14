@@ -72,15 +72,26 @@ async function enforcedFreshness(connection, branch, privateRepository) {
   } catch (error) {
     if (!privateRepository || !planLimited(error)) throw error;
     // A branch-rule refusal alone does not establish both capabilities.
+    const protectionPath = `${path}/branches/${encodeURIComponent(branch)}/protection`;
+    // Seam (deferred): accepted private-plan refusal evidence; consumers: 1; extract at 3.
     for (const endpoint of [
-      `${path}/branches/${encodeURIComponent(branch)}/protection`,
+      protectionPath,
       `${path}/rulesets?per_page=100`,
     ]) {
       try {
         await requestData(connection, { path: endpoint });
         return false;
       } catch (capabilityError) {
-        if (!planLimited(capabilityError)) throw capabilityError;
+        if (
+          !planLimited(capabilityError) &&
+          !(
+            endpoint === protectionPath &&
+            capabilityError.status === 403 &&
+            capabilityError.platformMessage ===
+              "Resource not accessible by integration"
+          )
+        )
+          throw capabilityError;
       }
     }
     return "plan-limited";
