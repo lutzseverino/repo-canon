@@ -282,16 +282,28 @@ _Avoid_: Backlog, queue
 
 **Host configuration**:
 The factory operator's settings for one host: the repositories it serves, its
-providers and their caps, its models with their model guidance, one host-wide
-effort level with optional per-model overrides, and the repository roles whose
-readiness it accepts.
+providers and their caps, its models with their model guidance and which of
+them are narrower than others, one host-wide effort level with optional
+per-model overrides, and the repository roles whose readiness it accepts.
 _Avoid_: Factory settings, environment
 
 **Model guidance**:
 The host owner's short statement of which work a model in the host's catalog
-suits, from which every launcher chooses a model by fit, the cheaper one where
-several fit.
+suits, from which every launcher chooses a model by fit: where several fit,
+the narrower model when the host declares one, otherwise the cheaper one.
 _Avoid_: Model profile, model card
+
+**Narrower model**:
+A model the host configuration declares suits a subset of the work another
+model in its catalog suits, so a launch chosen for it may run that broader
+model instead. Each such pair is declared on its own; the standard and the
+host declare no ranking of models.
+_Avoid_: Weaker model, cheaper model, lower-ranked model
+
+**Stand-in**:
+A broader model the factory runs in place of the narrower model chosen for
+a launch, decided at launch from its providers' usage.
+_Avoid_: Upgrade, fallback, substitution
 
 **Factory configuration**:
 The standard's statement of the factory's mechanics in a repository it
