@@ -359,6 +359,18 @@ and [merge wait](rules/github-repository-configuration.md#merging-with-a-configu
 live in the GitHub rules.
 _Avoid_: Codex, when meaning the role; review bot
 
+**One-way change**:
+A pull request's change that cannot be walked back once it merges, such as a
+destructive action or a hard-to-reverse decision. Its Merge Danger names the
+door one-way.
+_Avoid_: Breaking change, when meaning this; risky change
+
+**Animatic**:
+A narrated video of still frames that gives a person reading a pull request a
+map of its change: why, its shape, where to start reading, and its proof. A
+one-way change carries one in its pull request's body.
+_Avoid_: PR video, demo video, screencast
+
 **Lead line**:
 The first visible line of a message an agent or the factory posts: its state or
 verdict behind a status marker, and who must act when a person must. A message
