@@ -666,10 +666,17 @@ function factoryConfigurationFailure(configuration) {
     if (!runKindNames.includes(kind)) return `unknown run kind ${kind}`;
     if (!trimmed(run?.skill) || typeof run.arguments !== "string")
       return `runKinds.${kind} needs a skill and arguments`;
-    const fields = ["skill", "arguments"];
+    const fields = ["skill", "arguments", "resultLabels"];
     if (kind === "review") fields.push("differentProvider");
     if (Object.keys(run).some((key) => !fields.includes(key)))
       return `runKinds.${kind} has an unknown field`;
+    if (
+      run.resultLabels !== undefined &&
+      (!Array.isArray(run.resultLabels) ||
+        !run.resultLabels.every(trimmed) ||
+        new Set(run.resultLabels).size !== run.resultLabels.length)
+    )
+      return `runKinds.${kind}.resultLabels needs distinct trimmed names`;
     if (
       run.differentProvider !== undefined &&
       typeof run.differentProvider !== "boolean"
@@ -701,6 +708,12 @@ test("the factory configuration is version 3 with Repo Canon's three run kinds",
   for (const skill of runKindNames)
     assert.ok(existsSync(join(root, ".agents/skills", skill, "SKILL.md")));
   assert.equal(configuration.runKinds.review.differentProvider, true);
+  assert.deepEqual(configuration.runKinds.triage.resultLabels, [
+    "type:",
+    "model:",
+    "priority:",
+    "factory:skip",
+  ]);
   assert.equal(
     configuration.contractResult.author,
     "github-actions[bot]",
@@ -725,6 +738,20 @@ test("the factory configuration check rejects version 2 and malformed version 3"
   };
   delete implementOnly.triageResult;
   assert.equal(factoryConfigurationFailure(implementOnly), null);
+  for (const kind of runKindNames) {
+    for (const resultLabels of [[], ["type:", "factory:skip"]])
+      assert.equal(
+        factoryConfigurationFailure({
+          ...shipped,
+          runKinds: {
+            ...runKinds,
+            [kind]: { ...runKinds[kind], resultLabels },
+          },
+        }),
+        null,
+        `${kind}: ${JSON.stringify(resultLabels)}`,
+      );
+  }
   for (const configuration of [
     version2,
     { ...version2, version: 3 },
@@ -762,6 +789,23 @@ test("the factory configuration check rejects version 2 and malformed version 3"
       },
     },
     { ...implementOnly, runKinds },
+    ...runKindNames.flatMap((kind) =>
+      [
+        null,
+        "model:",
+        [""],
+        [" model:"],
+        ["model: "],
+        [1],
+        ["model:", "model:"],
+      ].map((resultLabels) => ({
+        ...shipped,
+        runKinds: {
+          ...runKinds,
+          [kind]: { ...runKinds[kind], resultLabels },
+        },
+      })),
+    ),
   ])
     assert.notEqual(
       factoryConfigurationFailure(configuration),
