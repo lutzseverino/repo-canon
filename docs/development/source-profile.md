@@ -75,7 +75,8 @@ describes direct callers and retirement of the former `scripts/` targets.
 The resolved `standard` profile combines exact files, contextual files,
 repository declarations and whole skill directories. The `factory` profile
 adds factory configuration, workflow and rules, and the `factory` skill.
-Each has nine checks, two fixes, and four discovery scripts.
+The `standard` profile has nine checks, and `factory` has ten. Each has two fixes
+and four discovery scripts.
 
 The `workbench` profile excludes the other default declarations with
 `exclude: true` and adds the `create-repository`, `create-adopted-repo`, `orchestrate` and `retro` skill
