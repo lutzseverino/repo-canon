@@ -47,6 +47,34 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "triage-routing",
     "triage-wayfinder",
   ]);
+  const projectionHeader =
+    "| Item | Running | Waiting on owner | Since (UTC) | Next check |\n" +
+    "| ---- | ------- | ---------------- | ----------- | ---------- |\n";
+  for (const path of readdirSync(target, {
+    recursive: true,
+    encoding: "utf8",
+  }).filter((path) => path.endsWith("/now.md"))) {
+    const output = execFileSync(
+      process.execPath,
+      [
+        join(root, ".agents/skills/orchestrate/wait.mjs"),
+        "--status",
+        "--from",
+        join(target, path),
+      ],
+      { cwd: target, encoding: "utf8" },
+    );
+    assert.ok(output.startsWith(projectionHeader), path);
+    if (path === "orchestrate-workbench/now.md")
+      assert.equal(output, projectionHeader);
+    if (path === "host-grant-workbench/now.md")
+      assert.equal(
+        output,
+        projectionHeader +
+          "| [receipts#2](../host-grant/.scratch/rollout/issues/02-accept-endpoint-on-staging.md) | your move: ask for staging host access | — | 2026-11-02T09:10Z | owner turn |\n" +
+          "| [receipts#3](../host-grant/.scratch/rollout/issues/03-accept-export-on-staging.md) | your move: ask for staging host access | — | 2026-11-02T09:10Z | owner turn |\n",
+      );
+  }
   assert.equal(
     manifest.source.upstreamCommit,
     "24fe0ef7737efae15c87225755e9f6f5965e4888",
