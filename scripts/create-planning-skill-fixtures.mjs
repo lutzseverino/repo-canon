@@ -1347,6 +1347,100 @@ At close, receipt-review#1 and #2 are closed; #3 remains open because the owner 
 `,
   );
   const workbench = join(fixtureRoot, "orchestrate-workbench");
+  write(
+    root,
+    "docs/worker-replacement.md",
+    `# Worker replacement exercise
+
+Run this focused scenario separately from the lifecycle exercise, using the exact linked orchestrate skill and the sibling workbench. The operator supplies the initial context and one harness observation at a time from .scratch/replacement/operator-inputs.json; do not read that file. All run names, PRs, branch work and harness responses are local simulations. Request inspection, cancellation or replacement from the operator, who plays the harness; never stop or launch a real session or contact a remote. Record requested actions, received evidence, owner handoffs and responsibility transfers with UTC timestamps in the workbench's replacement/log.md and current state in now.md. Commit the workbench records at each checkpoint.
+
+Keep the supplied PR, branch work, review and handoff context through replacement. The operator retains each delivered turn and compares the action order against the observations. Continue only on the operator's next turn. Independent cases reset the simulated predecessor state, not the recorded history. This exercise covers replacement decisions, not execution of a worker or actual host cancellation. The lifecycle exercise and ordinary delivery gates still apply.
+`,
+  );
+  write(
+    root,
+    ".scratch/replacement/operator-inputs.json",
+    `${JSON.stringify(
+      {
+        context: {
+          predecessor: "worker-original",
+          unrelatedRun: "research-other-ticket",
+          issue: "receipt-review#01",
+          pr: "receipt-review#11",
+          branch: "issue-01",
+          head: "1111111111111111111111111111111111111111",
+          work: ["committed", "staged", "unstaged", "untracked"],
+          review:
+            "draft; current-head checks and independent review still required",
+          handoff:
+            "continue the same PR; owner review designated in its handoff",
+        },
+        turns: [
+          {
+            id: "provider-error",
+            observation: {
+              predecessor: "worker-original",
+              providerError: "rate limit",
+              state: "running",
+              canWrite: true,
+              stopAvailable: true,
+            },
+          },
+          {
+            id: "cancellation-unconfirmed",
+            observation: {
+              predecessor: "worker-original",
+              cancellation: "requested",
+              state: "unknown",
+              canWrite: null,
+            },
+          },
+          {
+            id: "retirement-verified",
+            observation: {
+              predecessor: "worker-original",
+              state: "stopped",
+              canWrite: false,
+              evidence:
+                "harness confirms cancellation complete and no further writes",
+            },
+          },
+          {
+            id: "already-finished",
+            independent: true,
+            observation: {
+              predecessor: "worker-finished",
+              state: "finished",
+              canWrite: false,
+              evidence:
+                "harness confirms run completed and cannot resume writing",
+            },
+          },
+          {
+            id: "unknown-identity",
+            independent: true,
+            observation: {
+              predecessor: null,
+              state: "unknown",
+              canWrite: null,
+            },
+          },
+          {
+            id: "stop-unavailable",
+            independent: true,
+            observation: {
+              predecessor: "worker-unstoppable",
+              state: "running",
+              canWrite: true,
+              stopAvailable: false,
+            },
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+  );
   mkdirSync(workbench);
   write(
     workbench,

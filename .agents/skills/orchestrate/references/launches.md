@@ -9,24 +9,22 @@ Name each hand launch and its thread, where supported, `<stage>: <item>` using t
 under [Workbench](../SKILL.md#workbench). For heavy reads, use a covering
 installed skill or read a bounded tail; without one, pass context only.
 
-Prepare the template and [record the launch](templates.md#nowmd) before starting,
-including its linked Item and current-turn report; on resumption choose a fresh
-report or clear the previous terminal marker. Immediately before **every** launch
-below, read validated Scriptorium status **once**, from that host's installation:
+Prepare the template and [record the launch](templates.md#nowmd) before starting, including its linked
+Item and current-turn report; on resumption choose a fresh report or clear the previous terminal marker.
+Immediately before **every** launch below, read validated Scriptorium status **once**, from that host's
+installation:
 
 ```sh
 node <scriptorium>/src/main.ts status <host-configuration> --json > <budget.json>
 ```
 
-Check version 1; consume capacity, holds/provenance, unavailable observations and
-model catalog/defaults/effort/guidance.
-Use the installed factory-workflow **Model selection** rule, including for hand
-reviews. Set the launch's actual model and effective effort from this read and
-record both in the template; honor capacity and holds, inspecting unavailable
-facts before launching. Counts cover factory work only: account for your running
-launches too; the observation is no reservation or grant. Retain the same JSON
-for `wait.mjs --status --from <now.md> --budget <budget.json>`; it adds this
-observation without reading a harness. Refresh for each later launch.
+Check version 1; consume capacity, holds/provenance, unavailable observations and model
+catalog/defaults/effort/guidance. Use the installed factory-workflow **Model selection** rule, including
+for hand reviews. Set the launch's actual model and effective effort from this read and record both in the
+template; honor capacity and holds, inspecting unavailable facts before launching. Counts cover factory
+work only: account for your running launches too; the observation is no reservation or grant. Retain the
+same JSON for `wait.mjs --status --from <now.md> --budget <budget.json>`; it adds this observation without
+reading a harness. Refresh for each later launch.
 
 ### Shared launch template
 
@@ -56,8 +54,7 @@ remote. Hand back through the report only; send no closing message to the
 orchestrating thread. End the report with the final line exactly: status: done
 ```
 
-Seam (deferred): skills declaring their inputs; consumers: 1 (these templates);
-extract at a second launcher under the Ownership check. The host owns capacity/guidance/effort; the standard owns stages/templates.
+Seam (deferred): skills declaring their inputs; consumers: 1 (these templates); extract at a second launcher under the Ownership check. The host owns capacity/guidance/effort; the standard owns stages/templates.
 
 ## Owner steps
 
@@ -79,31 +76,39 @@ Plan references sets `triaged <file>` on its `plan.md` row.
 
 ## Grill
 
-Start from the [intake queue](intake.md#grill-queue), in the owner's session
-environment. Evidence includes unresolved questions and
-Scope names the decision record in the plan directory. Workspace supplies the
-owned branch/checkout and one PR destination per repository for domain edits,
-as the contribution guide requires. Plan references sets `grilled <file>` and
-records the session reference in the row's State. For `state:grill` issues,
-retain the guide's independent acceptance and readiness rules and plan approval
-gate; factory implementation of a ready issue skips triage. Continue an owner's
-grill or prototype in that same session when taking it over.
+Start from the [intake queue](intake.md#grill-queue), in the owner's session environment. Evidence
+includes unresolved questions and Scope names the decision record in the plan directory. Workspace
+supplies the owned branch/checkout and one PR destination per repository for domain edits, as the
+contribution guide requires. Plan references sets `grilled <file>` and records the session reference in
+the row's State. For `state:grill` issues, retain the guide's independent acceptance and readiness rules
+and plan approval gate; factory implementation of a ready issue skips triage. Continue an owner's grill or
+prototype in that same session when taking it over.
 
 ## Publication and review
 
-Name contract inputs/destinations in Scope/Workspace. Retain contribution-guide authority and
-independent acceptance; a publisher never accepts its own contract.
+Name contract inputs/destinations in Scope/Workspace. Retain contribution-guide authority and independent
+acceptance; a publisher never accepts its own contract.
 
 ## Worker
 
-Supply the authoritative issue contract. Workers deliver under
-the contribution guide. When installed rules assign merge ownership to you,
-read the contract/PR handoff and resume `babysit`, including on takeover;
-after a resolved question use the installed continuation rules for that worker
-or the same open PR. Live steps need a time-bounded inbox grant: list workers
-on its [grant row](templates.md#nowmd), supply grant and bound in Recorded
-decisions, and launch only while it lasts. Workers never end it; ask again after
-expiry. In factory repositories use the installed `factory` skill's skip route.
+Supply the authoritative issue contract. Workers deliver under the contribution guide. When installed
+rules assign merge ownership to you, read the contract/PR handoff and resume `babysit`, including on
+takeover; after a resolved question use the installed continuation rules for that worker or the same
+open PR. Live steps need a time-bounded inbox grant: list workers on its [grant row](templates.md#nowmd),
+supply grant and bound in Recorded decisions, and launch only while it lasts. Workers never end it;
+ask again after expiry. In factory repositories use the installed `factory` skill's skip route.
+
+### Replacing a worker
+
+Before transferring the same PR's write responsibility, identify the predecessor and establish whether it can
+still write. Stop/cancel an active or write-capable predecessor through the available harness and verify
+retirement first; verified finished runs need no cancellation. A provider error, including a rate limit, is no
+retirement evidence. If identity, stop capability or retirement cannot be established, withhold responsibility
+and use the existing owner-question route, naming the missing evidence. Stop only the predecessor for this
+work. Preserve the PR, all branch work, review and handoff context; retain the predecessor reference and
+retirement evidence or uncertainty in existing launch and handoff records. Delivery and owner-review gates
+still apply. The host owns run mapping and stop semantics; use its instructions. Seam (deferred): harness run
+control; consumers: 1 (worker replacement); reuse host capabilities, no new adapter.
 
 ## Expedited change
 
@@ -119,34 +124,29 @@ and end the rows.
 
 ## Retro
 
-Use a separate Close session. Evidence
-supplies primary plan files, cited issues/PRs/comments/run records and the latest
-Closed plan's `retro.md`, never your summary/context.
-Scope names `retro.md`: outcome against Done means; time, with waits by owner/review/check/blocker/launch;
-cost-ranked lessons and [routes/links](close.md#route-each-lesson); comparison with the previous retro
-and open issues; filed/reopened issues in `log.md` with creation evidence; counts of owner answers matching
-recommendations by decision type, proposing preapproval of a type the owner always accepted.
-Count the friction log's gap lines and file the top recurring gap in Scriptorium;
-exclude intake of ideas. Plan references marks the Close review `done <file>`.
-Session retros outside plan closure use the same lesson and gap routes.
+Use a separate Close session. Evidence supplies primary plan files, cited issues/PRs/comments/run
+records and the latest Closed plan's `retro.md`, never your summary/context. Scope names `retro.md`:
+outcome against Done means; time, with waits by owner/review/check/blocker/launch; cost-ranked lessons
+and [routes/links](close.md#route-each-lesson); comparison with the previous retro and open issues;
+filed/reopened issues in `log.md` with creation evidence; counts of owner answers matching recommendations
+by decision type, proposing preapproval of a type the owner always accepted. Count the friction log's
+gap lines and file the top recurring gap in Scriptorium; exclude intake of ideas. Plan references marks
+the Close review `done <file>`. Session retros outside plan closure use the same lesson and gap routes.
 
 ## Architecture review
 
-Scope names repository/changes, Evidence names
-sources, Plan references marks the review `done <file>`. Route its report through
-[intake](intake.md#filed-requests-and-reports).
+Scope names repository/changes, Evidence names sources, Plan references marks the review `done <file>`.
+Route its report through [intake](intake.md#filed-requests-and-reports).
 
 ## Handover
 
-Handover starts a successor orchestrating session, outside the stage pipeline.
-One session owns all plans. At plan close or compaction since takeover, update
-records, move Answered entries intact to `inbox-archive.md`, log the former owner
-reference, and commit/push. Start a fresh
-session with `/orchestrate` and the shared template where supported; otherwise
-tell the owner it is ready. Then stop: `index.md` and `now.md` are the handover.
-The successor reads them, `inbox.md` and active plans, records itself as the sole
-current owner, arms [continuous coverage](../SKILL.md#the-wait-step), keeps any
-expedited pause, and [reconciles the inbox](templates.md#inboxmd) before acting.
+Handover starts a successor orchestrating session, outside the stage pipeline. One session owns all
+plans. At plan close or compaction since takeover, update records, move Answered entries intact to
+`inbox-archive.md`, log the former owner reference, and commit/push. Start a fresh session with
+`/orchestrate` and the shared template where supported; otherwise tell the owner it is ready.
+Then stop: `index.md` and `now.md` are the handover. The successor reads them, `inbox.md` and active
+plans, records itself as the sole current owner, arms [continuous coverage](../SKILL.md#the-wait-step),
+keeps any expedited pause, and [reconciles the inbox](templates.md#inboxmd) before acting.
 
 ## Progress observation
 
