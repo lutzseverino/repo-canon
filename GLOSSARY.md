@@ -19,8 +19,8 @@ _Avoid_: Any directory, fixture, generated output, shared-only workspace configu
 **Stack**:
 The named set of development tools, each at an exact major version, that a
 Project uses, such as its package manager, runtime, compiler, linter, formatter
-and test runner. Repo Canon declares each stack as a discovered declaration
-whose scope is the Projects that use it, and a Project uses at most one.
+and test runner; a Project uses at most one. [Stacks](docs/usage/stacks.md)
+describes their scope and membership.
 _Avoid_: Stack profile, stack choice, framework
 
 **Site**:
@@ -71,10 +71,8 @@ implementation contract says. A merge never establishes it.
 _Avoid_: Deployed, merged, done
 
 **Intake**:
-The first pipeline stage, by which an owner's idea or a filed request becomes
-work: an idea through a conversation with the orchestrating agent and then a
-grill, unless the owner approves a shorter path for it; a filed request
-through triage.
+The first pipeline stage, in which an owner's idea or a filed request becomes
+work. Its entry paths are defined by [Triage](CONTRIBUTING.md#triage).
 _Avoid_: Idea capture, backlog grooming
 
 **Code-bound request**:
@@ -129,9 +127,9 @@ _Avoid_: Owner questions comment, needs-input queue
 
 **Plan**:
 An owner-approved goal, with what Done means, that the orchestrating agent
-runs across tickets, kept in the workbench; it closes once each of its tickets
-ends with a closed issue or the owner's drop; an expedited change's ticket
-without an issue ends with its merged pull request.
+runs across tickets, kept in the workbench. Its
+[plan record](.agents/skills/orchestrate/references/templates.md#planmd-and-logmd)
+defines when its tickets have ended and it closes.
 _Avoid_: Roadmap, specification
 
 **Specification**:
@@ -143,8 +141,9 @@ repository's internals live in its own ticket.
 _Avoid_: Spec file, draft brief, plan
 
 **Amendment grill**:
-A grill, as small as one round, that any change to a plan's goal, its Done
-means or a ticket's scope requires before the specification and tickets change.
+A grill, as small as one round, for a proposed change to a plan's goal, its
+Done means or a ticket's scope. See [Triage](CONTRIBUTING.md#triage) for
+amendment requirements.
 _Avoid_: Conversational amendment
 
 **Factory gap**:
@@ -164,23 +163,24 @@ gap.
 _Avoid_: Gap session, back session, orchestrator
 
 **Launch report**:
-The workbench record a launched stage writes when its output is a workbench
-record, such as a grill's decision record; the orchestrating agent writes its
-header before the launch, and its closing done line marks that the session's
-turn has ended. A stage whose output is a tracker record reports through that
-record instead.
+The workbench record of a launched stage whose output is a workbench record,
+such as a grill's decision record; tracker-producing stages report through the
+tracker instead. Its format and completion marker live in the
+[launch method](.agents/skills/orchestrate/references/launches.md).
 _Avoid_: Hand-back message, nudge, worker report
 
 **Stage input**:
-The identifiers a hand launch passes to its stage's hand skill, and its whole
-prompt: an issue, a pull request or a launch report. The skill reads
-everything else from those records.
+The identifiers a hand launch passes to its stage's hand skill: an issue, a
+pull request or a launch report. See the
+[launch template](.agents/skills/orchestrate/references/launches.md#shared-launch-template)
+for the launch contract.
 _Avoid_: Brief, task context, launch notes
 
 **Close review**:
-A review of a finished plan, run before its closing announcement and named
-when the owner approves the plan. The plan's retro, a review of its outcome,
-time and lessons by a separate session, is always one.
+A review of a finished plan, named at plan approval and performed before its
+closing announcement. The plan's retro, a review of its outcome, time and
+lessons by a separate session, is always one; see the
+[Close procedure](.agents/skills/orchestrate/references/close.md).
 _Avoid_: Post-mortem, plan audit
 
 **Done check**:
@@ -215,39 +215,36 @@ measured in bytes.
 _Avoid_: Context, line count
 
 **Workbench**:
-The git repository of plain Markdown in which the orchestrating agent keeps
-its plans, decision inbox and wishes, named by path in the owner's global
-agent instructions, or created by the orchestrating agent when none is named;
-private, and outside every project checkout.
+The private git repository of plain Markdown outside project checkouts in
+which the orchestrating agent keeps plans, the decision inbox and wishes.
+[Orchestrate](.agents/skills/orchestrate/SKILL.md#workbench) owns its setup and layout.
 _Avoid_: Notes, memory
 
 **Wish**:
 A non-finding idea outside its plan's goal, recorded in the workbench with its
-date, source and repository. A wish may link a reported finding for future
-planning; the finding retains its required issue and reporting links.
+date, source and repository. It may link a reported finding for future planning;
+[Findings](CONTRIBUTING.md#findings) owns finding-reporting requirements.
 _Avoid_: Backlog item, suggestion
 
 **Research run**:
-The sub-agent that gathers the facts for one request and, once nothing of the
-owner's intent is open, writes its Agent Brief unless a grilling session
-drafts it. Started by the orchestrating agent, it never accepts its own brief;
-run as the factory's triage, it accepts the brief it wrote for an issue it did
-not write.
+The sub-agent that gathers the facts for one request and writes its Agent
+Brief from settled intent unless a grilling session drafts it. Acceptance
+policy lives in [Triage](CONTRIBUTING.md#triage) and the
+[factory triage rules](rules/factory-workflow.md#triage-run).
 _Avoid_: Orchestrating agent, reviewer
 
 **Readiness**:
-The reviewed state of an implementation contract that an authorized reviewer
-considers sufficiently specified for work, granting it to an agent; the
-factory accepts it from a person whose current repository role the host
-configuration authorizes, or from its own triage run. A parent's readiness
-releases its tickets.
+The reviewed state of an implementation contract considered sufficiently
+specified for work. See [Readiness](CONTRIBUTING.md#readiness), the
+[GitHub authorization rules](rules/github-repository-configuration.md#readiness-roles)
+and the [factory readiness rules](rules/factory-workflow.md#parent-readiness).
 _Avoid_: Passing structural validation
 
 **Factory**:
-The unattended service, installed once on a host, that takes the issues of
-every repository its host configuration lists through its run kinds, from
-triage to a merged pull request of their own. It never runs a parent. It is a
-product of its own, separate from Repo Canon and Repository Standards.
+The unattended service, installed once on a host, that takes issues from its
+configured repositories through run kinds to merged pull requests. It is a
+product of its own, separate from Repo Canon and Repository Standards. See
+[factory workflow rules](rules/factory-workflow.md) for eligibility and delivery.
 _Avoid_: Pipeline, orchestrator
 
 **Run kind**:
@@ -273,11 +270,9 @@ owner's environment, and so may hold a fact no agent can reach.
 _Avoid_: Reporter, when meaning the owner or the factory
 
 **Frontier**:
-The open issues the factory may pick up: those carrying readiness it accepts,
-with no open native blocker, and neither claimed, marked failed or skipped.
-An issue a gate holds stays on the frontier; one waiting for an answer in
-another workflow state returns when its question is answered and it is back
-in `state:ready`.
+The set of open issues eligible for factory pickup, including those held by
+an owner gate. See the
+[factory rules](rules/factory-workflow.md) for pickup and question routing.
 _Avoid_: Backlog, queue
 
 **Host configuration**:
@@ -345,8 +340,9 @@ _Avoid_: Change request
 
 **Pull request reviewer**:
 An external account, named by the repository, whose review of a pull request's
-latest head the merge waits for. A repository that names none merges without
-waiting.
+latest head the merge waits for. Its [reviewer file](rules/github-repository-configuration.md#pull-request-reviewer-file)
+and [merge wait](rules/github-repository-configuration.md#merging-with-a-configured-reviewer)
+live in the GitHub rules.
 _Avoid_: Codex, when meaning the role; review bot
 
 **Lead line**:
@@ -454,8 +450,10 @@ for a repository that a factory serves.
 _Avoid_: Factory add-on, factory overlay
 
 **Workbench profile**:
-The profile of Repo Canon that a workbench adopts: only the workflow skills,
-with no rules, CI or branch requirements; its updates land as direct commits.
+The profile of Repo Canon for a workbench: workflow skills and their runtime
+and license files, without repository rules or CI. See the
+[source profile](docs/development/source-profile.md) for its contents and the
+[adoption guide](docs/usage/adopt-repo-canon.md#orchestrate-plans) for updates.
 _Avoid_: Orchestrator profile
 
 **Adoption**:
