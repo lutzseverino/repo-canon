@@ -344,14 +344,25 @@ declined because they do not hold or lie outside the threat model.
 
 ## Credentials
 
-An agent run uses only the credentials it was given. It never looks for, tests,
-or uses another identity, whether a token, a CLI login, an environment variable,
-a connector, or an app, including one reached through the agent provider's own
-login. Searching for one, such as listing credential environment variables or
-probing other `gh` configurations, counts as looking. When a push, merge, or API
-call is refused for permission, the refusal stands: the agent stops and asks
-the owner, as for any answer only the owner can give, and never retries under
-another identity.
+Use only supplied credentials. Never look for, test or use another identity,
+including tokens, CLI logins, environment variables, connectors, apps or provider
+logins. Listing credential variables or probing other `gh` configurations counts
+as looking. Never retry a permission-refused call; both cases below retain
+these bans.
+
+A refused write (including push or merge) or read the work depends on stops
+with an owner handoff. The work depends on reads whose results any required
+step uses: implementation contracts, issues and blockers; check, review,
+readiness and merge gate evidence, including branch protection and rulesets;
+state behind writes; and every read made by scripts the run's skill directs.
+If the run cannot show a read is unneeded, it counts as required and its refusal
+stops the run.
+
+A refused read no required step uses ends no run: continue without its result,
+never repeat it. Record its method, endpoint, platform refusal message and what
+could not be learned in the final report (factory run result) and any worker
+handoff, without tokens or credential values. Add no comment occasion; keep this
+record out of the internal review template.
 
 ## Owner questions
 
