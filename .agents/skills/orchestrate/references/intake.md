@@ -42,9 +42,8 @@ Leave requests to enabled factory triage within installed factory-workflow Hando
 and Triage run limits; otherwise use `triage` by hand and log the gap. An outside
 reporter's issue waits for the owner's word under that trigger. Put your suggestions
 in filed issues under `Suggestions (not decisions)`, following installed comment rules.
-Manually triaging with factory triage disabled logs `Gap | Intake | org/repo | triage run disabled`;
-retros count it. Owner ideas through conversation/grill log no gap and never count
-as intake gaps. Other uncovered stages retain gap accounting.
+Manually triaging with factory triage disabled logs `Gap | Intake | org/repo | triage run disabled`.
+Owner ideas through conversation/grill log no gap. Other uncovered stages retain gap accounting.
 Every retro, including session retros outside closure, routes lessons under
 [the `retro` skill](../../retro/SKILL.md#route-each-lesson). Intent-bound triage joins the grill queue.
 For architecture candidates, read the owner's current recorded delegation, pick

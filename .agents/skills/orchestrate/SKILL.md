@@ -39,8 +39,8 @@ rules (source: `rules/factory-workflow.md`). Read coverage with `.scriptorium/co
 For each covered stage hand off through `factory` and wait; otherwise perform it
 by hand to the same contract with the factory's own scripts. When recording its
 launch in `now.md`, log `Gap | <stage> | <repository> | <why>` in `log.md`.
-Intake of ideas is permanent orchestrating work, exempt from gap logging and
-retro counts; [intake](references/intake.md) owns its method.
+Intake of ideas is permanent orchestrating work, exempt from gap logging;
+[intake](references/intake.md) owns its method.
 
 A **plan update** includes proposals and heartbeat replies. Open with
 `wait.mjs --status --from <now.md>`, adding `--budget <status.json>` for the
@@ -109,8 +109,8 @@ Paths are relative to each repository or the workbench.
   `wishes.md`, `now.md`, `inbox-archive.md`, `incoming/`, `<plan>/plan.md`, `<plan>/log.md` and `retro.md`.
   Create missing files as [templates](references/templates.md) says.
 - A tracked repository's Repository Standards adoption record: the Repo Canon
-  source its Selection names, for the `workbench` profile offer and lessons
-  about a Repo Canon skill or rule. When it is missing, use the example source.
+  source its Selection names, for the `workbench` profile offer.
+  When it is missing, use the example source.
 - `.repo-standards/rules/factory-workflow.md` and `.scriptorium/config.json`: stages,
   coverage and Model selection. When configuration is missing, do uncovered work by hand;
   when rules are missing, consult source `rules/factory-workflow.md` for the stages.
