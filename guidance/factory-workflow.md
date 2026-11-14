@@ -13,7 +13,10 @@ Scriptorium v4, updating the repository and its host together.
 Version 3 replaces version 2's single `skill` and `arguments` with
 `runKinds`, which turns on `triage`, `implement` and `review` and maps each to
 the skill of the same name. Each kind's `arguments` names its work: `#{issue}`
-for triage and implement, and `#{pullRequest}` for review. Review sets `differentProvider`; execution choices live outside exact
+for triage and implement, and `#{pullRequest}` for review. Triage declares
+`resultLabels`: `["type:", "model:", "priority:", "factory:skip"]`, allowing its
+result to request those label families or the exact `factory:skip` label
+alongside its state. Review sets `differentProvider`; execution choices live outside exact
 mechanics. Host configuration supplies capabilities, credentials and per-kind
 defaults, including implement retry. The optional repository-owned
 `.github/factory-model-policy.json` supplies preferences and explicit fallback
