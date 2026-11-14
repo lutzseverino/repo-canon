@@ -863,7 +863,7 @@ function snapshotFiles(directory, prefix = "") {
 
 // Adoption installs only workflow skills, as ADR 0018 decides, each an owned
 // skill (ADR 0028): 17 taken from upstream, triage among them (ADR 0021), and
-// the creation skills, babysit, factory, orchestrate and review, written for Repo Canon.
+// the creation skills, babysit, factory, orchestrate, retro and review, written for Repo Canon.
 const workflowSkills = [
   "babysit",
   "code-review",
@@ -881,6 +881,7 @@ const workflowSkills = [
   "pr",
   "prototype",
   "research",
+  "retro",
   "review",
   "tdd",
   "to-spec",
@@ -1313,7 +1314,7 @@ test("adoption installs Repo Canon's own triage, with its retained files", () =>
     );
 });
 
-test("only workbench installs orchestrate, while Canon retains its complete standalone source", () => {
+test("only workbench installs its owner-facing skills, while Canon retains the complete orchestrate source", () => {
   for (const [profile, selected] of Object.entries(declarations(root))) {
     assert.deepEqual(
       selected
@@ -1327,6 +1328,7 @@ test("only workbench installs orchestrate, while Canon retains its complete stan
               "create-adopted-repo",
               "create-repository",
               "orchestrate",
+              "retro",
             ].includes(name) &&
             (profile === "factory" || name !== "factory"),
       ),

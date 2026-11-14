@@ -273,7 +273,8 @@ invocation names its own poll interval and maximum duration; the script has no
 default for either.
 
 Each plan you approve names its Close reviews, which run before the plan's
-closing announcement. The retro is always one: a separate session reviews the
+closing announcement. The workbench profile installs `retro` for plan and session
+retros. The retro is always one: a separate session reviews the
 plan and sends each lesson to whoever owns the rule it concerns, such as your
 own repository, your setup or a wish. A lesson about a Repo Canon skill or rule
 becomes an issue filed against Repo Canon, even when you don't develop it,
@@ -292,7 +293,6 @@ each maintainer. It recommends these:
   questionnaire for someone else.
 - `wait-what`: have the agent re-pitch a message that did not land.
 - `handoff`: compact a conversation into a document another agent picks up.
-- `retro`: run a retrospective on a coding session.
 - `wizard`: generate a bash wizard for steps only a person can perform.
 - `show-me`: explain the current topic with diagrams and focused HTML.
 
@@ -301,7 +301,7 @@ across repositories:
 
 ```sh
 npx skills@latest add mattpocock/skills --global --skill teach \
-  --skill to-questionnaire --skill wait-what --skill handoff --skill retro \
+  --skill to-questionnaire --skill wait-what --skill handoff \
   --skill wizard
 npx skills@latest add humanlayer/skills --global --skill show-me
 ```

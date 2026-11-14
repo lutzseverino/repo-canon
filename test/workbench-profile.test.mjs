@@ -41,6 +41,7 @@ const skills = [
   "pr",
   "prototype",
   "research",
+  "retro",
   "review",
   "tdd",
   "to-spec",
@@ -110,6 +111,7 @@ const workbenchOnly = [
   "create-adopted-repo",
   "create-repository",
   "orchestrate",
+  "retro",
 ];
 const additions = workbenchOnly.map((name) => `skill-${name}`).sort();
 
@@ -160,7 +162,7 @@ test("public CLI 10.0.0 adopts the workbench profile into an empty repository an
       assert.ok(declaration.exact, declaration.id);
     }
   }
-  // The other profiles lose only orchestrate; creation remains workbench-only.
+  // The creation entry points, orchestrate and retro remain workbench-only.
   assert.equal(validation.profiles.standard.declarations.length, 65);
   assert.equal(validation.profiles.factory.declarations.length, 70);
   for (const name of workbenchOnly) {

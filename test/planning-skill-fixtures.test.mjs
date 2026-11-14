@@ -97,6 +97,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "pr",
     "prototype",
     "research",
+    "retro",
     "tdd",
     "to-spec",
     "to-tickets",
@@ -115,6 +116,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "pr",
       "prototype",
       "orchestrate",
+      "retro",
       "factory",
     ],
   );
@@ -512,7 +514,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     manifest.source.linkedSkillDirectories.research.path,
   );
   const orchestrate = manifest.repositories.orchestrate;
-  assert.deepEqual(orchestrate.skills, ["orchestrate", "factory"]);
+  assert.deepEqual(orchestrate.skills, ["orchestrate", "retro", "factory"]);
   for (const skill of orchestrate.skills)
     assert.equal(
       realpathSync(join(orchestrate.path, ".agents/skills", skill)),

@@ -46,7 +46,7 @@ Manually triaging with factory triage disabled logs `Gap | Intake | org/repo | t
 retros count it. Owner ideas through conversation/grill log no gap and never count
 as intake gaps. Other uncovered stages retain gap accounting.
 Every retro, including session retros outside closure, routes lessons under
-[Close](close.md#route-each-lesson). Intent-bound triage joins the grill queue.
+[the `retro` skill](../../retro/SKILL.md#route-each-lesson). Intent-bound triage joins the grill queue.
 For architecture candidates, read the owner's current recorded delegation, pick
 within it and file each pick for triage. Without delegation, or for intent beyond it,
 use triage's normal intent-question route to `state:grill` and the queue.

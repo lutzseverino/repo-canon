@@ -46,9 +46,10 @@ also retains the GitLab and local tracker setup seeds.
 The undeclared promoted skills are left out: `ask-matt`, `grill-me`, and
 `setup-matt-pocock-skills` only set up or route the others, `implement-spec`
 builds a whole specification in one run, and `teach`, `to-questionnaire`,
-`wait-what`, `handoff`, `retro`, and `wizard` are personal skills that the
+`wait-what`, `handoff`, and `wizard` are personal skills that the
 [adoption guide](../usage/adopt-repo-canon.md#recommended-personal-skills)
-recommends installing at user scope.
+recommends installing at user scope. The workbench profile instead ships
+Canon's own `retro` skill, with no upstream base.
 
 Experimental skills are excluded; the pinned tree has no top-level
 `experimental` skill category. The `in-progress`, `misc`, and `deprecated`
