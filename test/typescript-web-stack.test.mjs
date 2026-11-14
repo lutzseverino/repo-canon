@@ -61,6 +61,13 @@ test("conforming Sites and testless Apps pass manifest checks with assessment li
     const result = check(t, stack, standalone);
     assert.equal(result.status, "passed", result.message);
     assert.match(result.message, /assessment/);
+    assert.match(result.message, /ui:check execution by validate/);
+    if (stack === "vite") assert.doesNotMatch(result.message, /astro check/);
+    else
+      assert.match(
+        result.message,
+        /astro check\/ui:check execution by validate/,
+      );
   }
 });
 
