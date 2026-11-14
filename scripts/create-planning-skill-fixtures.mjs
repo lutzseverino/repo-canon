@@ -1358,7 +1358,7 @@ At close, receipt-review#1 and #2 are closed; #3 remains open because the owner 
   write(
     workbench,
     "now.md",
-    "# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n## In flight\n\n| Item | Waiting on | Since (UTC) | Next check | Evidence |\n| ---- | ---------- | ----------- | ---------- | -------- |\n\n## Running launches\n\n| Host | Kind | Session | Started (UTC) |\n| ---- | ---- | ------- | ------------- |\n",
+    "# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n| Item | Decision/owner action | Since (UTC) | Next check |\n| ---- | --------------------- | ----------- | ---------- |\n\n## In flight\n\n| Item | Waiting on | Since (UTC) | Next check | Evidence | Watches |\n| ---- | ---------- | ----------- | ---------- | -------- | ------- |\n\n## Running launches\n\n| Host | Kind | Session | Started (UTC) | Item | Report | Next check |\n| ---- | ---- | ------- | ------------- | ---- | ------ | ---------- |\n",
   );
   initializeFixtureRepository(workbench, {
     author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
@@ -1465,7 +1465,7 @@ The operator relays these in order, one turn at a time, and runs each order from
   write(
     workbench,
     "now.md",
-    "# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n## In flight\n\n| Item | Waiting on | Since (UTC) | Next check | Evidence |\n| ---- | ---------- | ----------- | ---------- | -------- |\n| receipts#2 | staging host access, not yet asked | 2026-11-02T09:10Z | owner turn | .scratch/rollout/issues/02-accept-endpoint-on-staging.md |\n| receipts#3 | staging host access, not yet asked | 2026-11-02T09:10Z | owner turn | .scratch/rollout/issues/03-accept-export-on-staging.md |\n\n## Running launches\n\n| Host | Kind | Session | Started (UTC) |\n| ---- | ---- | ------- | ------------- |\n",
+    '# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n| Item | Decision/owner action | Since (UTC) | Next check |\n| ---- | --------------------- | ----------- | ---------- |\n\n## In flight\n\n| Item | Waiting on | Since (UTC) | Next check | Evidence | Watches |\n| ---- | ---------- | ----------- | ---------- | -------- | ------- |\n| [receipts#2](../host-grant/.scratch/rollout/issues/02-accept-endpoint-on-staging.md) | orchestrator: ask for staging host access | 2026-11-02T09:10Z | owner turn | .scratch/rollout/issues/02-accept-endpoint-on-staging.md | `[{"event":"owner turn"}]` |\n| [receipts#3](../host-grant/.scratch/rollout/issues/03-accept-export-on-staging.md) | orchestrator: ask for staging host access | 2026-11-02T09:10Z | owner turn | .scratch/rollout/issues/03-accept-export-on-staging.md | `[{"event":"owner turn"}]` |\n\n## Running launches\n\n| Host | Kind | Session | Started (UTC) | Item | Report | Next check |\n| ---- | ---- | ------- | ------------- | ---- | ------ | ---------- |\n',
   );
   write(
     workbench,
