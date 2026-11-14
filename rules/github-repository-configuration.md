@@ -124,8 +124,8 @@ Each delivery attempt, such as one `babysit` invocation, gets one branch
 update. Never merge the default branch into the PR branch, and never use
 GitHub's update-branch.
 
-Within that one update, a run resolves a reconstruction conflict itself only
-when it is in the keep-both class. All four conditions must hold:
+Within that one update, a run resolves a reconstruction conflict itself when,
+and only when, it is in the keep-both class. All four conditions must hold:
 
 - Ownership is certain: only this PR's own work is replayed onto the refreshed
   base.
@@ -147,7 +147,7 @@ hash is regenerated once. Rewrites of the same glossary definitions do not
 qualify.
 
 An in-class resolution is part of the attempt's one branch update, not a failed
-update, and never starts another update. Preserve the existing recovery steps:
+update, and never starts another update. It keeps every recovery step:
 work and PR-context preservation, required local validation before pushing,
 history and diff inspection against the refreshed base before the delivery push,
 and applicable replacement-head reviews, owner approval and review requests.

@@ -134,10 +134,10 @@ Each delivery record that the `github-repository-configuration` or
   internal review outcomes, outstanding findings, and any owner-review
   requirement with its source. It also names any refused read the run continued
   past, with the record the contribution guide's Credentials section requires.
-- A conflict-resolution record precedes the replacement head's review. For
-  every resolved file, it names what each side contributed and confirms both
-  were kept, any recomputed derived value and the command or check that
-  produced it, and why no choice between the sides was needed.
+- A conflict-resolution record names, for every resolved file, what each side
+  contributed and confirms both were kept, any recomputed derived value and
+  the command or check that produced it, and why no choice between the sides
+  was needed.
 - An owner-review designation record names the designation and its source. An
   approval record names the approval's source and the full head SHA it
   approves. For adoption pull requests, these records stay in comments and the

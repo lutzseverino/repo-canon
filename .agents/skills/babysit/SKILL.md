@@ -164,7 +164,7 @@ before changing history. Fetch origin, resolve its remote default branch again,
 and inspect outgoing history (including each merge parent) and the whole diff.
 Rebase or replay only this PR's work onto the refreshed base; keep unrelated
 work preserved separately. Apply the same section's keep-both class to every
-reconstruction conflict. Resolve only in-class conflicts within this one update;
+reconstruction conflict. Resolve every in-class conflict within this one update;
 such a resolution is not a failed branch update. For conflicts outside the class
 or uncertain ownership, preserve the work and hand off to the owner, naming the
 conflicting files and why each conflict is outside the class.
