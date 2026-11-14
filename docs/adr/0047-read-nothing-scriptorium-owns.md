@@ -13,8 +13,8 @@ policy and its result footer; Repo Canon owns the lead line, the status
 markers and the issue contract. Repo Canon keeps only its rule for choosing a
 model (fit first, then narrower, then cheaper) and links Scriptorium's
 documentation for resolution and diversity. Where Scriptorium needs Repo
-Canon's contract protocol, it imports the self-contained module Repo Canon
-already installs, in that one direction only.
+Canon's contract protocol, it imports the issue-contract module Repo Canon
+installs in a repository that adopts Repo Canon, in that one direction only.
 
 The owner agreed on 2026-11-13: "Agreed to all", after "Be strategic,
 long-term thinking, as always. And don't couple projects." (2026-11-12).
