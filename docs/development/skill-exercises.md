@@ -150,7 +150,14 @@ and `delivery` for
 `implement`, `pr`, `babysit`, and `prototype`. The delivery repository links
 `codebase-design` as the Ownership check dependency for `implement` and records
 its candidate directory and digest in the manifest with the other linked skills. It
-includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a simulated draft PR. Exercise `implement`
+includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a simulated draft PR. Its initial `main` commit
+carries the trusted `.github/required-checks.json` declaration for `Delivery tests`.
+The fixture's development guide records location `github` and command `npm test`.
+Run that command on each exact committed head and record the actual outcome as
+a simulated hosted status for its full SHA alongside the local PR body. Every
+status is labelled simulated, never as actual hosted qualification. The worker
+handoff records the full head SHA, trusted declaration revision, location,
+command, check name and outcome. Exercise `implement`
 first with the ticket, then resume it with a review finding supplied by the
 operator on that same local PR. Record each validated head, the draft state,
 and the unchanged PR and branch identity. Observe that both runs stop without
@@ -159,7 +166,9 @@ the finding; `implement` does not produce its own review on this route. Then
 remove `runKinds.review` from the delivery fixture's factory configuration and
 resume implementation. Observe it invoking `babysit` for delivery under the
 factory rules, including applicable internal reviews and merge conditions,
-instead of stopping at the draft. Keep all hosting operations simulated locally.
+instead of stopping at the draft. Its simulated wait and merge read the same
+trusted `main` declaration and simulated current-head result. Keep all hosting
+operations simulated locally.
 The manifest also records the
 support skills that exercised skills depend on, such as the productivity
 `grilling` skill that `grill-with-docs` uses.
