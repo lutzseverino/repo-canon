@@ -19,8 +19,8 @@ _Avoid_: Any directory, fixture, generated output, shared-only workspace configu
 **Stack**:
 The named set of development tools, each at an exact major version, that a
 Project uses, such as its package manager, runtime, compiler, linter, formatter
-and test runner. See the [stack rules](rules/typescript-node-stack.md) for
-scope and membership policy.
+and test runner; a Project uses at most one. [Stacks](docs/usage/stacks.md)
+describes their scope and membership.
 _Avoid_: Stack profile, stack choice, framework
 
 **Site**:
@@ -127,8 +127,9 @@ _Avoid_: Owner questions comment, needs-input queue
 
 **Plan**:
 An owner-approved goal, with what Done means, that the orchestrating agent
-runs across tickets, kept in the workbench. The
-[Close procedure](.agents/skills/orchestrate/references/close.md) defines completion.
+runs across tickets, kept in the workbench. Its
+[plan record](.agents/skills/orchestrate/references/templates.md#planmd-and-logmd)
+defines when its tickets have ended and it closes.
 _Avoid_: Roadmap, specification
 
 **Specification**:
@@ -177,8 +178,9 @@ _Avoid_: Brief, task context, launch notes
 
 **Close review**:
 A review of a finished plan, named at plan approval and performed before its
-closing announcement. A retro reviews the plan's outcome, time and lessons;
-see the [Close procedure](.agents/skills/orchestrate/references/close.md).
+closing announcement. The plan's retro, a review of its outcome, time and
+lessons by a separate session, is always one; see the
+[Close procedure](.agents/skills/orchestrate/references/close.md).
 _Avoid_: Post-mortem, plan audit
 
 **Done check**:
@@ -337,9 +339,10 @@ GitLab calls it a merge request.
 _Avoid_: Change request
 
 **Pull request reviewer**:
-An external account, named by the repository, that reviews a pull request's
-latest head. Configuration and waiting policy live in the
-[reviewer rules](rules/github-repository-configuration.md#pull-request-reviewer-file).
+An external account, named by the repository, whose review of a pull request's
+latest head the merge waits for. Its [reviewer file](rules/github-repository-configuration.md#pull-request-reviewer-file)
+and [merge wait](rules/github-repository-configuration.md#merging-with-a-configured-reviewer)
+live in the GitHub rules.
 _Avoid_: Codex, when meaning the role; review bot
 
 **Lead line**:

@@ -201,11 +201,14 @@ repeated.
   [issue contract validation](docs/development/issue-contract-validation.md)
   describes its enforcement.
 - [ADR 0031](docs/adr/0031-name-labels-by-family.md) records the label-family
-  decision of 2026-11-04 (plan 16, D10–D12), including reporter routing,
-  question-state replacement, priority ownership and the unfamilied `wontfix`
-  outcome. Current meanings and migration live in the
+  decision, including question-state replacement.
+  [#849](https://github.com/lutzseverino/repo-canon/issues/849) records plan 16's
+  dated D10–D12 decisions on reporter routing, families and priority ownership;
+  `wontfix` stays the familyless closing outcome because that brief named no
+  family for it. Current meanings live in the
   [label rules](rules/github-repository-configuration.md#labels) and
-  [factory state rules](rules/factory-workflow.md#state-labels).
+  [factory state rules](rules/factory-workflow.md#state-labels);
+  [label setup](docs/development/github-label-setup.md) owns the migration.
 - On 2026-10-25, the owner separated owner-only work from agent work the
   factory cannot run because the shared label had confused them.
   [#739](https://github.com/lutzseverino/repo-canon/issues/739) records the
@@ -224,7 +227,7 @@ repeated.
   [#717](https://github.com/lutzseverino/repo-canon/issues/717#issuecomment-6532709093)
   (PR-comment provenance and approval records, preserving adoption bodies).
   Current policy lives in the [owner-review rules](rules/github-repository-configuration.md#designated-owner-review)
-  and [factory rules](rules/factory-workflow.md#state-labels).
+  and [factory gates](rules/factory-workflow.md#gates).
 - [ADR 0028](docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md)
   supersedes ADR 0008's verbatim setup-seed rule. The
   [base records](upstream-bases.json) distinguish unchanged and owned edits;

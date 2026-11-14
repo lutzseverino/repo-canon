@@ -6,7 +6,7 @@ Project uses. Stacks are opt-in per Project, and a Project can permanently use
 no stack. The standard and factory profiles include the optional `typescript-node-stack`,
 `typescript-astro-stack` and `typescript-vite-stack` declarations, each governing only its confirmed Projects, so a
 repository with no matching Project gets no stack rules, as the
-[authoring notes](../../authoring-notes.md) explain.
+[stack scope decision](../adr/0024-scope-each-stack-to-the-projects-that-use-it.md) explains.
 
 For each Project confirmed in its scope, adoption installs the
 applicable stack rules, assesses the Project
