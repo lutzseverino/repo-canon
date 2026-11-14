@@ -152,9 +152,13 @@ preserving all work and PR context before rebasing or replaying only the PR's
 changes onto the refreshed default branch. It validates the integrated change,
 refreshes and inspects history and diff before pushing, then applies review
 policy, checks, applicable reviews and merge authorization to the replacement
-head. Old checks never qualify that head. A second stale-base result, uncertain
-ownership or conflicting reconstruction goes to the owner rather than an
-unbounded loop. The skill carries the complete recovery instructions.
+head. Old checks never qualify that head. Conflicts in the
+[Required-check freshness rules' keep-both class](../../rules/github-repository-configuration.md#required-check-freshness)
+are resolved within that one update and are not failed updates. The skill posts
+a conflict-resolution delivery record before the replacement head's review.
+A second stale-base result, uncertain ownership or a conflict outside that class
+goes to the owner, naming conflicting files and why each conflict is outside the
+class. The skill carries the complete recovery instructions.
 
 Run `node --test test/babysit-merge.test.mjs` for the executable fixtures. They
 use the same injected Postern fetch transport as the wait tests and cover the explicit message,

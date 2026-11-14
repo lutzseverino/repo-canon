@@ -26,6 +26,7 @@ arises; these rules say what the post holds:
 | A fix or a reasoned decline of a finding               | The finding's review thread                       | [Review-thread replies](#review-thread-replies)       |
 | A review request                                       | The pull request                                  | [Review request comments](#review-request-comments)   |
 | A worker handoff, owner-review designation or approval | The pull request                                  | [Delivery records](#delivery-records)                 |
+| A reconstruction conflict resolution                   | The pull request                                  | [Delivery records](#delivery-records)                 |
 | A configured reviewer that did not review a head       | The pull request                                  | [Delivery records](#delivery-records)                 |
 | A merge outcome a rule requires                        | The pull request                                  | [Delivery records](#delivery-records)                 |
 | Findings links and adoption check outcomes             | As the contribution guide's Findings section says | [Findings](#findings)                                 |
@@ -133,6 +134,10 @@ Each delivery record that the `github-repository-configuration` or
   internal review outcomes, outstanding findings, and any owner-review
   requirement with its source. It also names any refused read the run continued
   past, with the record the contribution guide's Credentials section requires.
+- A conflict-resolution record precedes the replacement head's review. For
+  every resolved file, it names what each side contributed and confirms both
+  were kept, any recomputed derived value and the command or check that
+  produced it, and why no choice between the sides was needed.
 - An owner-review designation record names the designation and its source. An
   approval record names the approval's source and the full head SHA it
   approves. For adoption pull requests, these records stay in comments and the

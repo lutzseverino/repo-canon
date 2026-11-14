@@ -163,8 +163,11 @@ staged, unstaged and untracked work and the PR's review and handoff context
 before changing history. Fetch origin, resolve its remote default branch again,
 and inspect outgoing history (including each merge parent) and the whole diff.
 Rebase or replay only this PR's work onto the refreshed base; keep unrelated
-work preserved separately. Uncertain ownership or reconstruction conflicts
-require the owner handoff.
+work preserved separately. Apply the same section's keep-both class to every
+reconstruction conflict. Resolve only in-class conflicts within this one update;
+such a resolution is not a failed branch update. For conflicts outside the class
+or uncertain ownership, preserve the work and hand off to the owner, naming the
+conflicting files and why each conflict is outside the class.
 
 Validate the integrated change with the repository's required local checks;
 wait for their final successful status before pushing with an explicit lease
@@ -172,6 +175,11 @@ when history changed. Before the delivery push, refresh origin and its default
 branch again and inspect both `git log --stat --patch -m origin/HEAD..HEAD`
 and `git diff origin/HEAD...HEAD`. Revalidate after any further reconstruction.
 A permission refusal ends recovery under Credentials, without another push.
+
+After resolving conflicts, post one conflict-resolution record on the PR under
+`.repo-standards/rules/comments.md#delivery-records` before the replacement
+head's review. Account for every resolved file, both sides' contributions kept,
+any derived value and its producing command or check, and why no choice was needed.
 
 For the replacement head, repeat applicable internal reviews and owner approval,
 then request and wait again from step 1 under freshly applied trusted app-author
