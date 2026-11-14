@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { marked } from "../vendor/marked/marked.esm.js";
+import { markdownInlineText } from "../operations/lib/rendered-markdown.mjs";
 import {
   assertProjectUnchanged,
   githubLabelSetup,
@@ -7,80 +10,27 @@ import {
 } from "./helpers/github-setup.mjs";
 import { retainedCheck, snapshot } from "./helpers/operation.mjs";
 
-const canonicalLabels = [
-  {
-    name: "state:triage",
-    color: "fbca04",
-    description: "Waits on triage to review it, or review it again",
-  },
-  {
-    name: "state:reporter",
-    color: "d4c5f9",
-    description: "Waits on its outside reporter for a fact only they hold",
-  },
-  {
-    name: "state:grill",
-    color: "d876e3",
-    description: "Waits on a grilling session for the owner's intent",
-  },
-  {
-    name: "state:owner",
-    color: "1d76db",
-    description: "Waits on the owner's answer or work only the owner can do",
-  },
-  {
-    name: "state:ready",
-    color: "0e8a16",
-    description: "Reviewed; waits on an agent to implement it",
-  },
-  { name: "type:bug", color: "d73a4a", description: "Something isn't working" },
-  {
-    name: "type:enhancement",
-    color: "a2eeef",
-    description: "New feature or request",
-  },
-  {
-    name: "priority:high",
-    color: "d93f0b",
-    description: "Picked up before normal and low priority work",
-  },
-  {
-    name: "priority:normal",
-    color: "bfdadc",
-    description: "Picked up in the usual order; no priority label means this",
-  },
-  {
-    name: "priority:low",
-    color: "c2e0c6",
-    description: "Picked up after high and normal priority work",
-  },
-  { name: "wontfix", color: "ffffff", description: "Will not be actioned" },
-  {
-    name: "wayfinder:map",
-    color: "5319e7",
-    description: "Planning map for related work",
-  },
-  {
-    name: "wayfinder:research",
-    color: "bfd4f2",
-    description: "Research question in a planning map",
-  },
-  {
-    name: "wayfinder:prototype",
-    color: "bfd4f2",
-    description: "Prototype question in a planning map",
-  },
-  {
-    name: "wayfinder:grilling",
-    color: "bfd4f2",
-    description: "Design decision requiring discussion",
-  },
-  {
-    name: "wayfinder:task",
-    color: "bfd4f2",
-    description: "Task in a planning map",
-  },
-];
+// Read the owning policy, independently of the operation's executable metadata.
+function policyLabels(file) {
+  const tables = marked
+    .lexer(readFileSync(new URL(`../rules/${file}`, import.meta.url), "utf8"))
+    .filter(
+      (token) =>
+        token.type === "table" &&
+        token.header.map((cell) => cell.text).join("|") ===
+          "Label|Color|Description",
+    );
+  assert.equal(tables.length, 1, `${file} must have one canonical label table`);
+  return tables[0].rows.map((row) => {
+    const [name, color, description] = row.map((cell) =>
+      markdownInlineText(cell.tokens),
+    );
+    return { name, color, description };
+  });
+}
+
+const canonicalLabels = policyLabels("github-repository-configuration.md");
+const factoryLabels = policyLabels("factory-workflow.md");
 const canonical = (name) =>
   canonicalLabels.find((label) => label.name === name);
 const missing = canonicalLabels.length - 1;
@@ -89,53 +39,28 @@ function setup(t, options) {
   return githubSetup(t, githubLabelSetup, options);
 }
 
-const factorySkip = {
-  name: "factory:skip",
-  color: "c5def5",
-  description: "Ready agent work the factory must not pick up",
-};
+const factorySkip = factoryLabels.find(({ name }) => name === "factory:skip");
+const factoryReleaseHold = factoryLabels.find(
+  ({ name }) => name === "factory:release-hold",
+);
+const factoryHold = factoryLabels.find(({ name }) => name === "factory:hold");
 
-const factoryReleaseHold = {
-  name: "factory:release-hold",
-  color: "c5def5",
-  description: "Hold other merges while a release PR is open",
-};
-
-const factoryHold = {
-  name: "factory:hold",
-  color: "c5def5",
-  description: "Pause factory pickups and other merges in this repository",
-};
-const factoryLabels = [
-  {
-    name: "gate:owner-review",
-    color: "e99695",
-    description: "Waits on the owner's review before its pull request merges",
-  },
-  {
-    name: "gate:major-release",
-    color: "e99695",
-    description: "Waits on the owner's go-ahead for a major release",
-  },
-  {
-    name: "factory:running",
-    color: "0052cc",
-    description: "Waits on the factory run that holds it",
-  },
-  {
-    name: "factory:paused",
-    color: "c5def5",
-    description: "Waits on the factory to resume the run it paused",
-  },
-  {
-    name: "factory:failed",
-    color: "b60205",
-    description: "Waits on a person to deal with the failed run",
-  },
-  factorySkip,
-  factoryReleaseHold,
-  factoryHold,
-];
+test("retained setup output matches the owning rules tables for each profile", (t) => {
+  const script = retainedCheck(t, "operations/setup-github-labels.mjs");
+  for (const profile of ["standard", "factory"]) {
+    const scenario = githubSetup(t, { ...githubLabelSetup, script });
+    const outcome = scenario.invoke({ profile });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.equal(outcome.result.status, "changed");
+    assert.deepEqual(
+      scenario.readState().labels,
+      profile === "factory"
+        ? [...canonicalLabels, ...factoryLabels]
+        : canonicalLabels,
+      `${profile} setup must agree with policy names, colors and descriptions`,
+    );
+  }
+});
 
 test("factory setup provisions and verifies the gate and factory labels, preserves unrelated labels and is repeat-safe", (t) => {
   const unrelated = {
@@ -506,7 +431,9 @@ test("asks about a label that differs from both the standard and GitHub's stock 
     assert.equal(outcome.status, 0, outcome.stderr);
     assert.equal(outcome.result.status, "confirmation-required");
     assert.match(outcome.result.message, /label wontfix\./i);
-    assert.ok(outcome.result.message.includes("Will not be actioned"));
+    assert.ok(
+      outcome.result.message.includes(canonical("wontfix").description),
+    );
     assert.equal(scenario.readState().mutations ?? 0, 0);
     assert.deepEqual(scenario.readState().labels, labels);
   }

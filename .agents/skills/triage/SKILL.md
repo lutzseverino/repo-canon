@@ -57,9 +57,10 @@ uses its listed issue references and deliverables as task context, assigning
 ordinary research notes to comments and the brief to the verified publication
 route above.
 
-Canonical categories are `type:bug` (broken) and `type:enhancement` (improvement).
-States name the wait: `state:triage` (evaluation), `state:reporter` (outside reporter's fact), `state:grill` (owner-intent grill), `state:owner` (owner), `state:ready` (AFK agent); `wontfix` closes work that will not be actioned. For a PR, ready means a brief is attached and an agent takes the next diff step.
-Use `docs/agents/triage-labels.md` for label strings and installed GitHub rules for meanings. Keep exactly one category and state per triaged issue; flag conflicting states and ask the maintainer before acting. Set one `priority:` label by the installed rules' Labels section.
+Use `docs/agents/triage-labels.md` for label strings and installed GitHub rules'
+Labels section for categories, states and priority. Flag conflicting states and
+ask the maintainer before acting. For a PR, ready means a brief is attached and
+an agent takes the next diff step.
 Unlabeled issues normally enter triage, then a waiting state or `wontfix`. On new information, return waiting work to triage or the guide's Readiness state for answered ready work. Flag unusual transitions and ask before acting; the maintainer may override any time.
 
 Repository issues, briefs, comments and decision records retain every relied-on
@@ -209,7 +210,7 @@ Repository Standards'
   post as each step describes; an installed issue-contract check names the Agent Brief disclaimer.
 - Installed rules, such as `github-repository-configuration` and factory workflow,
   looked up by `repository-standards`. If missing, use [AGENT-BRIEF.md](AGENT-BRIEF.md)
-  for brief shape, this skill for role meanings, and no `model:` or `factory:` label.
+  for brief shape and categories, and this skill's routing and outcomes for roles; use no `model:` or `factory:` label.
 - The `codebase-design` skill: its Ownership check supplies the Seams read
   and independent assessment. If missing, report the missing definition and
   stop brief writing or acceptance until it is available.
