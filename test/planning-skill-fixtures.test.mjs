@@ -54,6 +54,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.deepEqual(Object.keys(manifest.source.linkedSkillDirectories).sort(), [
     "babysit",
     "code-review",
+    "codebase-design",
     "domain-modeling",
     "factory",
     "grill-with-docs",
@@ -84,6 +85,66 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "factory",
     ],
   );
+  const expectedSkills = {
+    "project-agent-guidance": [],
+    planning: [
+      "grill-with-docs",
+      "to-spec",
+      "to-tickets",
+      "domain-modeling",
+      "grilling",
+    ],
+    "triage-wayfinder": [
+      "triage",
+      "grill-with-docs",
+      "to-spec",
+      "to-tickets",
+      "wayfinder",
+      "grilling",
+      "domain-modeling",
+      "research",
+      "prototype",
+    ],
+    "factory-planning": [
+      "triage",
+      "grill-with-docs",
+      "to-spec",
+      "to-tickets",
+      "grilling",
+      "domain-modeling",
+      "research",
+      "prototype",
+    ],
+    "triage-routing": [
+      "triage",
+      "research",
+      "grill-with-docs",
+      "to-spec",
+      "to-tickets",
+      "grilling",
+      "domain-modeling",
+    ],
+    "factory-triage": ["triage"],
+    delivery: [
+      "implement",
+      "pr",
+      "tdd",
+      "prototype",
+      "babysit",
+      "codebase-design",
+    ],
+    orchestrate: ["orchestrate", "factory"],
+    "host-grant": ["orchestrate", "factory"],
+    "session-naming": [],
+  };
+  for (const [name, skills] of Object.entries(expectedSkills))
+    assert.deepEqual(
+      readdirSync(
+        join(manifest.repositories[name].path, ".agents/skills"),
+      ).sort(),
+      [...skills, "repository-standards"].sort(),
+      `${name} installs exactly its selected skills`,
+    );
   const naming = manifest.repositories["session-naming"];
   assert.deepEqual(naming.skills, []);
   assert.ok(
@@ -110,9 +171,30 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   for (const path of [".scratch/delivery/spec.md", "docs/pr-evidence.md"])
     assert.ok(statSync(join(deliveryScenario.path, path)).isFile());
 
-  assert.ok(deliveryScenario.skills.includes("implement"));
-  assert.ok(deliveryScenario.skills.includes("pr"));
-  assert.ok(deliveryScenario.skills.includes("babysit"));
+  assert.deepEqual(deliveryScenario.skills, [
+    "implement",
+    "pr",
+    "babysit",
+    "prototype",
+    "codebase-design",
+  ]);
+  const deliveryDesign = join(
+    deliveryScenario.path,
+    ".agents/skills/codebase-design",
+  );
+  assert.ok(lstatSync(deliveryDesign).isSymbolicLink());
+  assert.equal(
+    realpathSync(deliveryDesign),
+    manifest.source.linkedSkillDirectories["codebase-design"].path,
+  );
+  assert.match(
+    manifest.source.linkedSkillDirectories["codebase-design"].sha256,
+    /^[0-9a-f]{64}$/,
+  );
+  assert.equal(
+    readFileSync(join(deliveryDesign, "SKILL.md"), "utf8"),
+    readFileSync(join(root, ".agents/skills/codebase-design/SKILL.md"), "utf8"),
+  );
   const deliveryConfiguration = JSON.parse(
     readFileSync(
       join(deliveryScenario.path, ".scriptorium/config.json"),

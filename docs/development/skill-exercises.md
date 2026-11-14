@@ -79,11 +79,16 @@ scenarios supply a domain glossary,
 applicable ADRs with their indexes, contributor commands, source, tests, requests, and
 specifications.
 
+The `review` repository links `codebase-design` next to `code-review` as its
+Ownership check dependency. Both skills are present in its base commit, so
+the review diff contains only the seeded Ledger source and test changes.
+
 The `standalone` repository has no Repo Canon adoption: no shared guidance,
 `CONTRIBUTING.md`, skill setup files, glossary, rules or Repository Standards
-state. Its `code-review` is a copy of the owned skill, as an
-[installation from a release tag](../usage/install-skills.md) leaves it,
-rather than a link. Its last commit totals posted entries and leaves pending
+state. Its `code-review` and its Ownership check dependency, `codebase-design`,
+are copies of the owned skills, as an
+[installation from a release tag](../usage/install-skills.md) leaves them.
+Both are present in the base commit. Its last commit totals posted entries and leaves pending
 ones at zero, against `specs/summarize-ledger.md`. Review it since the
 manifest's `fixedPoint`. The outcome shows the skill following its Reads
 section: the Spec axis finds the spec under `specs/`, the Standards axis
@@ -96,7 +101,7 @@ it with a local headless browser and inspect the result.
 
 The test verifies the shared and scenario guidance, domain and development
 context, ADR indexes, skill links and digests, the review specification, the
-standalone repository's absent adoption files and copied skill, a
+standalone repository's absent adoption files and copied skills, a
 build from a Repo Canon checkout without an `origin` remote, and an ordinary later
 commit under a host that requires signing with an unusable program.
 
@@ -142,7 +147,9 @@ by uncertainty and brief acceptance; `factory-triage` for `triage` run as the
 factory's triage run; `orchestrate` for the workbench plan lifecycle;
 `host-grant` for `orchestrate` and `factory` with a shared host access grant;
 and `delivery` for
-`implement`, `pr`, `babysit`, and `prototype`. The delivery repository
+`implement`, `pr`, `babysit`, and `prototype`. The delivery repository links
+`codebase-design` as the Ownership check dependency for `implement` and records
+its candidate directory and digest in the manifest with the other linked skills. It
 includes a local specification and child ticket for the ticket exercise, plus before-and-after evidence for a simulated draft PR. Exercise `implement`
 first with the ticket, then resume it with a review finding supplied by the
 operator on that same local PR. Record each validated head, the draft state,

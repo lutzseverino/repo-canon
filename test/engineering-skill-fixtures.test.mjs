@@ -61,8 +61,29 @@ test("creates the engineering-skill repositories with the declared engineering s
     "standalone",
     "tdd",
   ]);
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(manifest.repositories).map(([name, { skills }]) => [
+        name,
+        skills,
+      ]),
+    ),
+    {
+      review: ["code-review", "codebase-design"],
+      architecture: ["codebase-design", "improve-codebase-architecture"],
+      debugging: ["diagnosing-bugs"],
+      "modeling-research": ["domain-modeling", "research"],
+      tdd: ["tdd"],
+      standalone: ["code-review", "codebase-design"],
+    },
+  );
 
   for (const [name, repository] of Object.entries(manifest.repositories)) {
+    assert.deepEqual(
+      readdirSync(join(repository.path, ".agents/skills")).sort(),
+      [...repository.skills].sort(),
+      `${name} installs exactly its selected skills`,
+    );
     if (name === "standalone") continue;
     assert.equal(
       readFileSync(join(repository.path, "AGENTS.md"), "utf8"),
@@ -87,13 +108,33 @@ test("creates the engineering-skill repositories with the declared engineering s
 
   for (const path of ["docs/specification.md", "GLOSSARY.md"])
     assert.ok(existsSync(join(manifest.repositories.review.path, path)));
+
+  const review = manifest.repositories.review;
+  assert.deepEqual(review.skills, ["code-review", "codebase-design"]);
+  assert.equal(
+    readFileSync(
+      join(review.path, ".agents/skills/codebase-design/SKILL.md"),
+      "utf8",
+    ),
+    readFileSync(
+      join(manifest.skills["codebase-design"].path, "SKILL.md"),
+      "utf8",
+    ),
+  );
+  assert.equal(
+    execFixtureGit(["diff", "--name-only", review.fixedPoint, review.head], {
+      cwd: review.path,
+      encoding: "utf8",
+    }).trim(),
+    "src/ledger.mjs\ntest/ledger.test.mjs",
+  );
 });
 
-test("the standalone repository has no Repo Canon adoption and a copied skill", (t) => {
+test("the standalone repository has no Repo Canon adoption and copied skills", (t) => {
   const { manifest } = build(t);
   const standalone = manifest.repositories.standalone;
   assert.equal(standalone.installation, "copy");
-  assert.deepEqual(standalone.skills, ["code-review"]);
+  assert.deepEqual(standalone.skills, ["code-review", "codebase-design"]);
   for (const path of [
     "AGENTS.md",
     "CONTRIBUTING.md",
@@ -109,19 +150,27 @@ test("the standalone repository has no Repo Canon adoption and a copied skill", 
       false,
       `the standalone repository has no ${path}`,
     );
-  const skill = join(standalone.path, ".agents/skills/code-review");
-  assert.equal(lstatSync(skill).isSymbolicLink(), false);
-  for (const path of readdirSync(manifest.skills["code-review"].path, {
-    encoding: "utf8",
-    recursive: true,
-  }))
-    if (!lstatSync(join(skill, path)).isDirectory())
-      assert.deepEqual(
-        readFileSync(join(skill, path)),
-        readFileSync(join(manifest.skills["code-review"].path, path)),
-        `code-review/${path} is copied unchanged`,
-      );
-  assert.deepEqual(skillProblems(skill, "code-review"), []);
+  for (const name of standalone.skills) {
+    const skill = join(standalone.path, ".agents/skills", name);
+    assert.equal(lstatSync(skill).isDirectory(), true);
+    assert.equal(lstatSync(skill).isSymbolicLink(), false);
+    const paths = readdirSync(skill, { encoding: "utf8", recursive: true });
+    assert.deepEqual(
+      paths.sort(),
+      readdirSync(manifest.skills[name].path, {
+        encoding: "utf8",
+        recursive: true,
+      }).sort(),
+    );
+    for (const path of paths)
+      if (!lstatSync(join(skill, path)).isDirectory())
+        assert.deepEqual(
+          readFileSync(join(skill, path)),
+          readFileSync(join(manifest.skills[name].path, path)),
+          `${name}/${path} is copied unchanged`,
+        );
+    assert.deepEqual(skillProblems(skill, name), []);
+  }
   const git = (...args) =>
     execFixtureGit(args, { cwd: standalone.path, encoding: "utf8" }).trim();
   assert.equal(git("rev-parse", "HEAD"), standalone.head);

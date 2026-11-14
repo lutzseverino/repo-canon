@@ -46,6 +46,7 @@ const linkedSkillNames = [
   ...skillNames,
   "babysit",
   "code-review",
+  "codebase-design",
   "domain-modeling",
   "grilling",
   "research",
@@ -1135,7 +1136,7 @@ Signer names with accents, such as José, come out garbled in the CSV export. Pl
 {
   const root = createRepository(
     "delivery",
-    ["implement", "pr", "tdd", "prototype", "babysit"],
+    ["implement", "pr", "tdd", "prototype", "babysit", "codebase-design"],
     {
       profile: "factory",
       exercise:
@@ -1240,7 +1241,7 @@ Write the simulated draft PR at .scratch/delivery/pr.md after implementing the t
   );
   repositories.delivery = {
     path: root,
-    skills: ["implement", "pr", "babysit", "prototype"],
+    skills: ["implement", "pr", "babysit", "prototype", "codebase-design"],
     initial: commit(root, "chore: establish delivery exercises"),
   };
 }
