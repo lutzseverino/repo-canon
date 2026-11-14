@@ -132,9 +132,7 @@ Each delivery record that the `github-repository-configuration` or
 - A worker handoff records the pull request's current head, validation and
   internal review outcomes, outstanding findings, and any owner-review
   requirement with its source. It also names any refused read the run continued
-  past under the contribution guide's Credentials section, recording the call's
-  method and endpoint, the platform's refusal message without any token or
-  credential value, and what it could not learn.
+  past, with the record the contribution guide's Credentials section requires.
 - An owner-review designation record names the designation and its source. An
   approval record names the approval's source and the full head SHA it
   approves. For adoption pull requests, these records stay in comments and the
