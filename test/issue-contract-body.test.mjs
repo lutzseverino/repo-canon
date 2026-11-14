@@ -94,6 +94,8 @@ import {
   bodyWithOriginal,
   digest,
   attestationFormat,
+  bodyTriageAssociation,
+  isFactoryTriageAuthor,
 } from "../scripts/issue-contract-sources.mjs";
 const result = (decision) =>
   issueContractResult([{ user: bot, body: decision.feedback.body }]).state;
@@ -321,6 +323,76 @@ test("factory body acceptance binds the exact evaluated attestation and ready ev
   assert.equal(result(d).reviewer, "factory[bot]");
   assert.equal(result(d).reviewEventId, "101");
 });
+
+test("eligible legacy factory briefs keep case-insensitive approval and refuse their own writer run", () => {
+  for (const writer of [null, "triage-7", "writer-1"]) {
+    const s = structuredClone(snapshot());
+    s.comments[0].user.login = "factory[bot]";
+    s.comments[0].body += '\n<!-- factory:run {"run":"triage-7"} -->';
+    s.contractSources.receipt.issues[0].legacy.revision = briefRevision(
+      s.comments[0],
+    );
+    s.triageResult = { marker: "factory:run", author: "Factory[bot]" };
+    s.issue.user.login = "factory[bot]";
+    if (writer) s.issue.body += `\n<!-- factory:run {"run":"${writer}"} -->`;
+    s.comments.push(noticeFor(result(decideIssueContract(s))));
+    ready(s, "factory[bot]");
+    const state = result(decideIssueContract(s));
+    assert.equal(state.selection.state, "eligible");
+    assert.equal(
+      state.status,
+      writer === "writer-1" ? "approved" : "awaiting-review",
+    );
+  }
+});
+
+test("case-insensitive factory intake still requires independent matching writer proof", () => {
+  for (const writer of [
+    "missing run",
+    "same run",
+    "missing proof",
+    "wrong proof",
+    "independent writer",
+  ]) {
+    const s = bodySnapshot();
+    const intake = s.contractSources.record.intake;
+    intake.author = "factory[bot]";
+    intake.writerRun =
+      writer === "missing run"
+        ? null
+        : writer === "same run"
+          ? "triage-7"
+          : "writer-1";
+    intake.sourceEdit = { id: "INTAKE", editedAt: null };
+    intake.writerProof =
+      writer === "missing proof"
+        ? null
+        : {
+            repository: s.repository,
+            issue: "I42",
+            run: writer === "wrong proof" ? "other-writer" : intake.writerRun,
+            sourceEdit: intake.sourceEdit,
+          };
+    bodyProof(s);
+    s.triageResult.author = "Factory[bot]";
+    const noticed = result(decideIssueContract(s));
+    const association = bodyTriageAssociation(s, noticed);
+    s.comments.push(noticeFor(noticed));
+    ready(s, "factory[bot]");
+    for (const role of ["admin", "maintain", "triage"]) {
+      s.permissions["factory[bot]"] = { role };
+      const decision = decideIssueContract(s);
+      if (writer === "independent writer") {
+        assert.equal(association.run, "triage-7");
+        assert.equal(result(decision).status, "approved", writer);
+      } else {
+        assert.equal(association, null, writer);
+        assert.equal(result(decision).status, "awaiting-review", writer);
+        assert.equal(result(decision).factoryTriage, null, writer);
+      }
+    }
+  }
+});
 test("arbitrary or edited factory evidence cannot grant the exception; independent person review remains", async (t) => {
   const changes = [
     (s) => delete s.contractSources.record.publication,
@@ -402,6 +474,40 @@ test("public v2 platform snapshots reproduce the literal wire decisions", () => 
       fixture.expectedFactoryRun,
       fixture.name,
     );
+  }
+});
+
+test("factory triage logins fold ASCII letters only", () => {
+  const configured = { marker: "factory:run", author: "kfactory[bot]" };
+  assert.ok(isFactoryTriageAuthor("KFactory[BOT]", configured));
+  // U+212A KELVIN SIGN lowercases to "k" under Unicode case mapping.
+  assert.ok(!isFactoryTriageAuthor("\u212Afactory[bot]", configured));
+  assert.ok(!isFactoryTriageAuthor(" kfactory[bot]", configured));
+  assert.ok(!isFactoryTriageAuthor(undefined, configured));
+  assert.ok(!isFactoryTriageAuthor("", { ...configured, author: "" }));
+});
+
+test("configured factory login casing preserves every v2 decision and recorded proof", () => {
+  const fixtures = JSON.parse(
+    readFileSync(
+      new URL("./fixtures/issue-contract-v2.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  for (const fixture of fixtures.cases) {
+    const canonical = decideIssueContract(fixture.snapshot);
+    for (const author of ["Factory[bot]", "FACTORY[BOT]"]) {
+      const s = structuredClone(fixture.snapshot);
+      s.triageResult = { marker: "factory:run", author };
+      const decision = decideIssueContract(s);
+      assert.deepEqual(
+        result(decision),
+        fixture.state,
+        `${fixture.name}: ${author}`,
+      );
+      assert.deepEqual(decision.addLabels, canonical.addLabels);
+      assert.deepEqual(decision.removeLabels, canonical.removeLabels);
+    }
   }
 });
 

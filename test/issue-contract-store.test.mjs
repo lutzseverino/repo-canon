@@ -260,7 +260,7 @@ test("capture takes original and author/writer proof from platform before body p
   const record = await captureContractIntake(
     connection,
     42,
-    { marker: "factory:run", author: "factory[bot]" },
+    { marker: "factory:run", author: "Factory[bot]" },
     facts,
     issue,
     edits,
@@ -280,7 +280,7 @@ test("capture takes original and author/writer proof from platform before body p
   const verified = await captureContractIntake(
     connection,
     42,
-    { marker: "factory:run", author: "factory[bot]" },
+    { marker: "factory:run", author: "Factory[bot]" },
     facts,
     issue,
     edits,
@@ -288,6 +288,30 @@ test("capture takes original and author/writer proof from platform before body p
   );
   assert.equal(verified.intake.writerRun, "writer-1");
   assert.deepEqual(verified.intake.writerProof, proof);
+  assert.equal(verified.intake.author, "factory[bot]");
+  for (const author of [
+    "other[bot]",
+    "factory",
+    "factory-bot[bot]",
+    "factory[bot]x",
+  ]) {
+    await assert.rejects(
+      () =>
+        captureContractIntake(
+          connection,
+          42,
+          { marker: "factory:run", author },
+          facts,
+          issue,
+          edits,
+          proof,
+        ),
+      {
+        message:
+          "Authenticated intake writer proof does not match the preserved issue/source.",
+      },
+    );
+  }
   const second = store();
   const migrated = {
     ...issue,
@@ -735,6 +759,25 @@ test("proof-persistence retries request evaluation even when evidence is already
     issue: async () => issue,
     comments: async () => comments,
   };
+  s.triageResult.author = "Factory[bot]";
+  for (const author of [
+    "other[bot]",
+    "factory",
+    "factory-bot[bot]",
+    "factory[bot]x",
+  ]) {
+    await assert.rejects(
+      () =>
+        recordContractPublication(
+          connection,
+          42,
+          s.contractSources,
+          { ...s.triageResult, author },
+          { attestationId: "20" },
+        ),
+      { message: "Configured-author attestation is missing." },
+    );
+  }
   s.contractSources.record.publication.noticedAt = "2026-11-09T01:00:00Z";
   const original = connection.access.request;
   let fail = true;
@@ -761,6 +804,10 @@ test("proof-persistence retries request evaluation even when evidence is already
     s.contractSources,
     s.triageResult,
     { attestationId: 20 },
+  );
+  assert.equal(
+    comments.find((comment) => comment.id === 20).author.login,
+    "factory[bot]",
   );
   assert.deepEqual(writes.at(-1).body, {
     event_type: "repo-canon-issue-contract",
