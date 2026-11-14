@@ -141,6 +141,38 @@ test("missing, failed and unknown check facts fail instead of passing", async ()
   }
 });
 
+test("conversation comments retain their latest edit time when supplied", () => {
+  const comment = {
+    user: { login: "reviewer[bot]" },
+    created_at: "2026-11-11T02:47:43Z",
+    body: "Review in progress",
+  };
+  assert.deepEqual(
+    conversationComments([
+      [comment],
+      [{ ...comment, updated_at: "2026-11-11T04:54:46Z" }],
+    ]),
+    [
+      {
+        login: "reviewer[bot]",
+        createdAt: "2026-11-11T02:47:43Z",
+        body: "Review in progress",
+      },
+      {
+        login: "reviewer[bot]",
+        createdAt: "2026-11-11T02:47:43Z",
+        updatedAt: "2026-11-11T04:54:46Z",
+        body: "Review in progress",
+      },
+    ],
+  );
+  for (const updated_at of ["not a time", "", null]) {
+    assert.throws(() => conversationComments([[{ ...comment, updated_at }]]), {
+      reason: "invalidResponse",
+    });
+  }
+});
+
 test("Access supplements reject missing workflow, review-thread and push facts", () => {
   for (const pages of [
     [{}],

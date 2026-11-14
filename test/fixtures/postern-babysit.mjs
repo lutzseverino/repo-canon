@@ -483,15 +483,17 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         return json({ id: state.comments.length, body: body.body }, 201);
       }
       values = [
-        (state.comments ?? []).map(({ login, createdAt, body }, index) => ({
-          id: index + 1,
-          node_id: `COMMENT_${index + 1}`,
-          html_url: `https://github.com/example/repository/pull/12#issuecomment-${index + 1}`,
-          user: { login, type: "User" },
-          created_at: createdAt,
-          updated_at: createdAt,
-          body,
-        })),
+        (state.comments ?? []).map(
+          ({ login, createdAt, updatedAt, body }, index) => ({
+            id: index + 1,
+            node_id: `COMMENT_${index + 1}`,
+            html_url: `https://github.com/example/repository/pull/12#issuecomment-${index + 1}`,
+            user: { login, type: "User" },
+            created_at: createdAt,
+            updated_at: updatedAt ?? createdAt,
+            body,
+          }),
+        ),
       ];
     }
     if (values) {
