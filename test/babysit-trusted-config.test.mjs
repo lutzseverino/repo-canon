@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { runChild } from "./helpers/child-runner.mjs";
 import {
   mkdtempSync,
   mkdirSync,
@@ -71,8 +71,8 @@ function command(t, entry, { trusted = {}, local = {}, remote = {} } = {}) {
     installedValidator(t, `.agents/skills/babysit/${entry}.mjs`),
   );
   const bundle = new URL("../../../vendor/postern/postern.mjs", target);
-  const invoke = (args = []) => {
-    const result = spawnSync(
+  const invoke = async (args = []) => {
+    const result = await runChild(
       process.execPath,
       [
         "--input-type=module",
@@ -86,9 +86,12 @@ function command(t, entry, { trusted = {}, local = {}, remote = {} } = {}) {
       {
         cwd: directory,
         env: { ...process.env, FAKE_GH_STATE: statePath },
-        encoding: "utf8",
-        timeout: 10000,
+        kind: "command",
+        boundMs: 60000,
       },
+    );
+    t.diagnostic(
+      `child timing trusted-review ${entry}: ${result.elapsedMs.toFixed(3)} ms`,
     );
     assert.ifError(result.error);
     return { ...result, state: JSON.parse(readFileSync(statePath, "utf8")) };
@@ -97,7 +100,7 @@ function command(t, entry, { trusted = {}, local = {}, remote = {} } = {}) {
 }
 
 for (const entry of ["request", "wait"]) {
-  test(`${entry}: proposed policy additions, edits and deletions cannot change trusted authority`, (t) => {
+  test(`${entry}: proposed policy additions, edits and deletions cannot change trusted authority`, async (t) => {
     for (const [trustedPolicy, proposedPolicy, skip] of [
       [null, policy, false],
       [otherPolicy, policy, false],
@@ -108,7 +111,7 @@ for (const entry of ["request", "wait"]) {
       for (const args of entry === "request"
         ? [[], ["--fixes-review"]]
         : [[]]) {
-        const result = command(t, entry, {
+        const result = await command(t, entry, {
           trusted: { policy: trustedPolicy, reviewer },
           local: { policy: proposedPolicy, reviewer: null },
           remote: { crossRepository: true, baseBranch: "release/candidate" },
@@ -141,7 +144,7 @@ for (const entry of ["request", "wait"]) {
     }
   });
 
-  test(`${entry}: reviewer additions, deletion and replacement preserve trusted absence, identity and request settings`, (t) => {
+  test(`${entry}: reviewer additions, deletion and replacement preserve trusted absence, identity and request settings`, async (t) => {
     const proposed = {
       ...reviewer,
       account: "proposed-reviewer[bot]",
@@ -153,7 +156,7 @@ for (const entry of ["request", "wait"]) {
       [null, proposed],
       [null, "{"],
     ]) {
-      const result = command(t, entry, {
+      const result = await command(t, entry, {
         trusted: { reviewer: trustedReviewer },
         local: { reviewer: localReviewer },
         remote: {
@@ -179,7 +182,7 @@ for (const entry of ["request", "wait"]) {
           : [],
       );
     }
-    const bounded = command(t, entry, {
+    const bounded = await command(t, entry, {
       trusted: { reviewer },
       local: {
         reviewer: {
@@ -201,7 +204,7 @@ for (const entry of ["request", "wait"]) {
     assert.match(bounded.stdout, /request bound reached/);
   });
 
-  test(`${entry}: trusted resolution and read failures are explicit and never emit a review request`, (t) => {
+  test(`${entry}: trusted resolution and read failures are explicit and never emit a review request`, async (t) => {
     const commit = { __typename: "Commit", oid: revision };
     const blob = {
       __typename: "Blob",
@@ -268,7 +271,7 @@ for (const entry of ["request", "wait"]) {
       })),
     ];
     for (const remote of failures) {
-      const result = command(t, entry, {
+      const result = await command(t, entry, {
         remote,
         local: { policy, reviewer },
         trusted: { policy, reviewer },
@@ -280,7 +283,7 @@ for (const entry of ["request", "wait"]) {
     }
   });
 
-  test(`${entry}: invalid trusted declarations require owner correction without a local fallback`, (t) => {
+  test(`${entry}: invalid trusted declarations require owner correction without a local fallback`, async (t) => {
     /** @type {Array<[string, string, unknown, RegExp]>} */
     const invalidDeclarations = [
       ["policy", "factory-review-policy", "{", /JSON/],
@@ -318,7 +321,7 @@ for (const entry of ["request", "wait"]) {
         { policy, reviewer },
         { policy: "{", reviewer: "{" },
       ]) {
-        const result = command(t, entry, {
+        const result = await command(t, entry, {
           trusted: { policy, reviewer, [key]: invalid },
           local,
           remote: { checks: [passed], crossRepository: true },
@@ -342,7 +345,7 @@ for (const entry of ["request", "wait"]) {
     }
   });
 
-  test(`${entry}: validation causes meet recovery guidance with one period`, (t) => {
+  test(`${entry}: validation causes meet recovery guidance with one period`, async (t) => {
     for (const [trusted, cause] of [
       [
         {
@@ -361,7 +364,7 @@ for (const entry of ["request", "wait"]) {
         ".github/factory-review-policy.json: unknown field: unexpected.field",
       ],
     ]) {
-      const result = command(t, entry, { trusted }).invoke();
+      const result = await command(t, entry, { trusted }).invoke();
       assert.equal(result.status, 7, result.stderr);
       assert.ok(result.stderr.includes(`${cause}. Correct `), result.stderr);
       assert.match(
@@ -373,7 +376,7 @@ for (const entry of ["request", "wait"]) {
     }
   });
 
-  test(`${entry}: a fresh invocation uses a correction only after it reaches the trusted default branch`, (t) => {
+  test(`${entry}: a fresh invocation uses a correction only after it reaches the trusted default branch`, async (t) => {
     for (const key of ["policy", "reviewer"]) {
       const { invoke } = command(t, entry, {
         local: { policy, reviewer },
@@ -386,11 +389,13 @@ for (const entry of ["request", "wait"]) {
           },
         },
       });
-      const invalid = invoke();
+      const invalid = await invoke();
       assert.equal(invalid.status, 7, invalid.stderr);
       assert.match(invalid.stderr, /default branch main@b{40}/);
       assert.deepEqual(invalid.state.emitted ?? [], []);
-      const corrected = invoke(entry === "request" ? ["--fixes-review"] : []);
+      const corrected = await invoke(
+        entry === "request" ? ["--fixes-review"] : [],
+      );
       assert.equal(
         corrected.status,
         entry === "request" ? 0 : 4,
@@ -406,8 +411,8 @@ for (const entry of ["request", "wait"]) {
     }
   });
 
-  test(`${entry}: invocation errors retain exit 1 before configuration selection`, (t) => {
-    const result = command(t, entry, {
+  test(`${entry}: invocation errors retain exit 1 before configuration selection`, async (t) => {
+    const result = await command(t, entry, {
       trusted: { policy: "{" },
     }).invoke(["--unknown"]);
     assert.equal(result.status, 1, result.stderr);
@@ -418,8 +423,8 @@ for (const entry of ["request", "wait"]) {
   });
 }
 
-test("wait preserves standalone Unicode completion matching from trusted reviewer data", (t) => {
-  const result = command(t, "wait", {
+test("wait preserves standalone Unicode completion matching from trusted reviewer data", async (t) => {
+  const result = await command(t, "wait", {
     trusted: {
       reviewer: {
         ...reviewer,
@@ -445,7 +450,7 @@ test("wait preserves standalone Unicode completion matching from trusted reviewe
   assert.match(result.stdout, /^a{40}: checks passed, reviewer reviewed/);
 });
 
-test("wait pins both files across polls and changed heads; a resumed invocation selects the new default tip", (t) => {
+test("wait pins both files across polls and changed heads; a resumed invocation selects the new default tip", async (t) => {
   const { invoke } = command(t, "wait", {
     local: { policy },
     remote: {
@@ -470,7 +475,7 @@ test("wait pins both files across polls and changed heads; a resumed invocation 
       },
     },
   });
-  const first = invoke();
+  const first = await invoke();
   assert.equal(first.status, 4, first.stderr);
   assert.match(first.stdout, /^d{40}: checks passed, reviewer did not respond/);
   assert.match(first.stdout, /default branch trunk@b{40}/);
@@ -478,12 +483,12 @@ test("wait pins both files across polls and changed heads; a resumed invocation 
     first.state.configurationReads.map((read) => read.kind),
     ["revision", "files"],
   );
-  const resumed = invoke();
+  const resumed = await invoke();
   assert.equal(resumed.status, 6, resumed.stderr);
   assert.match(resumed.stdout, /default branch trunk@c{40}/);
 });
 
-test("request pins both files while default moves and resolves again after a fix or resume", (t) => {
+test("request pins both files while default moves and resolves again after a fix or resume", async (t) => {
   const { invoke } = command(t, "request", {
     remote: {
       moveDefaultTo: laterRevision,
@@ -493,11 +498,11 @@ test("request pins both files while default moves and resolves again after a fix
       },
     },
   });
-  const first = invoke();
+  const first = await invoke();
   assert.equal(first.status, 0, first.stderr);
   assert.deepEqual(first.state.emitted, [reviewer.request.comment]);
   assert.match(first.stdout, /default branch main@b{40}/);
-  const resumed = invoke(["--fixes-review"]);
+  const resumed = await invoke(["--fixes-review"]);
   assert.equal(resumed.status, 0, resumed.stderr);
   assert.deepEqual(resumed.state.emitted, [reviewer.request.comment]);
   assert.match(
