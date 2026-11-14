@@ -4,7 +4,8 @@
 // answers file live in a temporary directory that is removed, and the fixture
 // has no Git remote, so the run changes no repository or GitHub state. The
 // workbench profile has no remote setup, and its adoption installs no rules
-// and no `.github` file.
+// and no `.github` file. A profile offering several check locations is adopted
+// at `github`, where Repo Canon installs its workflows.
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -23,7 +24,20 @@ import {
   withTemporaryDirectory,
 } from "./support.mjs";
 
-const adoptFormat = "repo-standards/adopt/v2";
+// The adopt reports of the public CLIs a release can require: v2 from CLI 10,
+// v3 from CLI 11.
+export const adoptFormats = [
+  "repo-standards/adopt/v2",
+  "repo-standards/adopt/v3",
+];
+// The check location the fixture selects when its profile offers several.
+export const fixtureCheckLocation = "github";
+// The `--checks` flag selecting the fixture's location, which CLI 11 requires
+// to inspect a profile offering several and earlier CLIs reject.
+export const checkLocationArgs = (cliVersion) =>
+  Number(cliVersion.split(".")[0]) >= 11
+    ? ["--checks", fixtureCheckLocation]
+    : [];
 // The fixture each profile is adopted into, with the remote setup it cannot
 // apply without a GitHub remote; the workbench profile selects none.
 const projectFixture = {
@@ -65,7 +79,7 @@ function createFixture(project, profile) {
   fixtureGit("commit", "--quiet", "--no-verify", "--message", "Wordtally");
 }
 
-function adopt(cli, args, formats = [adoptFormat]) {
+function adopt(cli, args, formats = adoptFormats) {
   const child = run(cli, ["adopt", ...args, "--json"]);
   const report = parseJson(child.stdout || child.stderr, "the adopt output");
   if (!formats.includes(report.format)) {
@@ -82,8 +96,16 @@ const fixId = (entry) => `${entry.declaration}/${entry.id}`;
 // The answer the fixture gives a question, keeping one `adopt` proposed, such
 // as a discovery script's draft. A run starts only on the `inspection` answer,
 // so it names the inspection only once every other answer is in and the
-// inspection offers to defer all the remote setup.
-export function fixtureAnswer(question, report, version, profile) {
+// inspection offers to defer all the remote setup. A `checks` question keeps
+// the location `adopt` proposes, from `--checks`, and otherwise selects
+// `checks`, which must be one of the profile's offered locations.
+export function fixtureAnswer(
+  question,
+  report,
+  version,
+  profile,
+  checks = fixtureCheckLocation,
+) {
   const { id } = question;
   const [kind, name] = id.split(":");
   switch (kind) {
@@ -91,6 +113,13 @@ export function fixtureAnswer(question, report, version, profile) {
       return version;
     case "profile":
       return profile;
+    case "checks":
+      if (question.answer) return question.answer;
+      return question.choices?.includes(checks)
+        ? checks
+        : fail(
+            `the ${profile} profile offers no ${checks} check location: ${JSON.stringify(question.choices)}`,
+          );
     case "scope": {
       const open = question.details?.unresolved ?? [];
       if (open.length > 0)
@@ -177,7 +206,11 @@ export function adoptFixture(
   profile,
   floor,
   directory,
-  { initialArgs = [], formats = [adoptFormat] } = {},
+  {
+    initialArgs = [],
+    formats = adoptFormats,
+    checks = fixtureCheckLocation,
+  } = {},
 ) {
   const project = join(directory, "project");
   const answersPath = join(directory, "answers.json");
@@ -210,7 +243,7 @@ export function adoptFixture(
           );
         const questions = report.answers.questions.map((question) => ({
           ...question,
-          answer: fixtureAnswer(question, report, version, profile),
+          answer: fixtureAnswer(question, report, version, profile, checks),
         }));
         writeFileSync(
           answersPath,

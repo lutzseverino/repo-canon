@@ -11,7 +11,7 @@
 // name there is the required minimum. The update from the previous release
 // runs before publication, through `release:check-update`.
 
-import { checkAdoption } from "./adoption.mjs";
+import { checkAdoption, checkLocationArgs } from "./adoption.mjs";
 import {
   adoptionGuidePath,
   cliFloor,
@@ -159,6 +159,7 @@ function checkInspection(version, releaseCommit, read, profile) {
       version,
       "--profile",
       profile,
+      ...checkLocationArgs(floor),
       "--project",
       project,
       "--json",

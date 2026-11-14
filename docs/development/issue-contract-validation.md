@@ -7,10 +7,9 @@ Pull request comments are ignored. A `repo-canon-issue-contract` repository
 dispatch requests a fresh evaluation after host proof persistence or activation;
 it carries an issue number, shares that issue's serialization and grants no
 acceptance to its sender.
-Its `validate` job runs on `ubuntu-latest` unless the `REPO_CANON_RUNS_ON`
-variable names other runner labels as a JSON array. Unset or empty keeps the
-hosted default; the [runner rules](../../rules/github-repository-configuration.md#installed-workflow-runners)
-describes prerequisites, inheritance, and fallback.
+Its `validate` job runs on `ubuntu-latest`. The workflow installs only at the
+`github` check location; the [runner rules](../../rules/github-repository-configuration.md#installed-workflow-runners)
+describe the location and the retired runner variable.
 The workflow checks out the default branch explicitly and treats issue and
 comment Markdown only as data.
 

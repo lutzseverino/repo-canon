@@ -1,8 +1,8 @@
 # Standards update workflow
 
-The standard and factory profiles install
+At the `github` check location, the standard and factory profiles install
 `.github/workflows/standards-update.yml` as exact content
-through `standards-update-workflow`. The installed
+through `standards-update-workflow`; other locations install no caller. The installed
 [`github-repository-configuration` rules](../../rules/github-repository-configuration.md#automated-standards-updates)
 state its behavior; the [adoption guide](../usage/adopt-repo-canon.md#automated-updates)
 explains the repository settings that opt in.
@@ -11,8 +11,8 @@ explains the repository settings that opt in.
 
 The daily schedule runs at 06:23 UTC, and `workflow_dispatch` allows a manual
 run. The single job runs only when `vars.REPO_CANON_UPDATES` is `true`, so
-installing the workflow alone runs no steps. It uses `vars.REPO_CANON_RUNS_ON`
-with the hosted default and a fixed concurrency group with
+installing the workflow alone runs no steps. It runs on `ubuntu-latest` and
+uses a fixed concurrency group with
 `cancel-in-progress: false` to keep scheduled and manual runs from overlapping.
 Workflow-level permissions are empty; the job requests only `contents: write`,
 `pull-requests: write`, and `issues: write`.
@@ -72,5 +72,5 @@ Run `node --test test/shared-workflows.test.mjs test/repository-conformance.test
 for caller permissions, triggers, opt-in, token selection, action pins, shared
 runner and checkout conventions, declaration placement, and interpolation
 checks. `test/repository-wide-rules.test.mjs` also adopts both of them with
-public CLI 10.0.0 and checks the installed workflow byte for byte. These tests
+public CLI 11.0.0 and checks the installed workflow byte for byte. These tests
 do not enable scheduled updates, create an App, or mutate live GitHub settings.

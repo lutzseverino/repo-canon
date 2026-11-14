@@ -140,6 +140,7 @@ test("public CLI relocates validators in every fresh profile and preceding-relea
             if (kind === "version") answer = version;
             if (kind === "profile") answer = profile;
             if (kind === "remote-setup") answer = "defer";
+            if (kind === "checks") answer ??= "github";
             if (
               kind === "inspection" &&
               report.missing.some(
@@ -183,6 +184,8 @@ test("public CLI relocates validators in every fresh profile and preceding-relea
           candidate,
           "--profile",
           profile,
+          "--checks",
+          "github",
         );
         for (const path of retired.filter(
           (path) => profile !== "workbench" || path.includes("issue-contract"),

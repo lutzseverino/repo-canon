@@ -224,8 +224,10 @@ through the applicable owner correction and merge procedure, then invoke again
 to select the current revision. A proposed file alone cannot repair an invocation;
 there is no bootstrap bypass and no automatic selection of required names.
 
-At every check location (`github`, `runner` and `self-reported`), merge itself
-requires positive success for every declared name on the exact current head.
+At every check location (`github`, `runner` and `self-reported`), the required
+checks run the one required check command that the repository's development
+guide names, and merge itself requires positive success for every declared name
+on the exact current head.
 A completed successful check run or successful commit status qualifies. Missing,
 pending, failed, cancelled, timed-out, skipped and neutral results do not.
 Older-head success and earlier attempts cannot satisfy later pending or failed
@@ -258,49 +260,29 @@ settings stay as the repository has them.
 
 ## Installed workflow runners
 
-Every installed job reads `vars.REPO_CANON_RUNS_ON`. Unset or empty selects
-`ubuntu-latest`; public repositories normally leave it unset. Private
-repositories needing their own runners can use a non-empty JSON array of
-non-empty runner label strings, such as `["self-hosted", "homelab"]`. Set it
-only with matching runners, each carrying every listed label. Repository-owned
-workflows may read it too.
+The repository's selection records its check location. Repo Canon's workflows
+install only at `github`, and every installed job runs on `ubuntu-latest`,
+GitHub's hosted runners; on a private repository they consume the account's
+hosted Actions minutes. At `runner` and `self-reported`, Repo Canon installs
+none of its workflow files. A repository that cannot use hosted Actions selects
+one of those locations instead. Their off-Actions execution is separate work;
+until it ships they produce no issue-contract or PR metadata result and no
+automated standards update, and the merge gate above refuses rather than
+passes without the declared results.
 
-Repository-level values override an organization-level variable of the same
-name; installed jobs use no environments. Malformed JSON or unusable `runs-on`
-values fail every installed job during GitHub evaluation, before any steps.
-The expression does not validate the schema: parsed falsy JSON (`false`, `0`,
-`null`, `""`) selects the hosted default but remains invalid. Never rely on
-invalid-value fallback.
-
-The runners need `git`, `bash`, and network access for Node.js setup through
-`actions/setup-node`. The factory profile's sandbox-image job also needs a
-`docker` CLI with a daemon that can run `docker build`. A job with no matching
-online runner waits in the queue for up to 24 hours and then fails.
-Issue-contract feedback, and therefore readiness review, waits for those
-runners too.
-
-The sandbox-image job executes pull request workflow and Dockerfile content,
-including content from forks. For repositories accepting untrusted pull
-requests, keep the hosted default or select isolated, ephemeral self-hosted
-runners with no secrets or sensitive network access. This applies to private
-and internal repository forks too. A read-only workflow token does not prevent
-untrusted code from compromising a persistent runner and later jobs. Every
-runner matching the variable's labels must be suitable for that workload;
-runner isolation is a host provisioning responsibility. See GitHub's
-[self-hosted runner security guidance](https://docs.github.com/en/actions/reference/security/secure-use#hardening-for-self-hosted-runners).
-
-For unavailable self-hosted runners, delete the variable or set
-`["ubuntu-latest"]` without editing installed files. Deletion exposes any
-inherited organization value; `["ubuntu-latest"]` overrides it. Another machine
-with the same runner labels needs no change. Variable changes affect new jobs;
-cancel and rerun jobs already queued on unavailable labels.
+The `REPO_CANON_RUNS_ON` repository variable is retired. Installed jobs never
+read it, so an existing value has no effect on them: a repository whose value
+selected self-hosted runner labels runs its installed jobs on GitHub-hosted
+runners after updating at `github`. Repository-owned workflows that read the
+variable keep their own behavior. Adoption never creates, changes or deletes
+the variable or edits repository-owned workflows.
 
 ## Automated standards updates
 
-Standard and factory install `.github/workflows/standards-update.yml`. Its daily
+At `github`, standard and factory install `.github/workflows/standards-update.yml`. Its daily
 schedule and manual `workflow_dispatch` run only when
 `REPO_CANON_UPDATES` is `true`; installing the file opts nobody in. The job
-reads `vars.REPO_CANON_RUNS_ON`, checks out the default branch, and serializes
+runs on `ubuntu-latest`, checks out the default branch, and serializes
 runs through one concurrency group. Workflow-level permissions are empty; its
 job's workflow token has only
 `contents: write`, `pull-requests: write`, and `issues: write` permissions.
@@ -319,10 +301,6 @@ Otherwise it passes `github.token` (`GITHUB_TOKEN`). Pull requests opened with
 that fallback trigger no CI, and it cannot push workflow-file changes. The
 repository must allow GitHub Actions to create pull requests for that fallback
 to open one.
-
-This job puts the App private key and a write token on the
-`REPO_CANON_RUNS_ON` runners, so the warning above about persistent runners
-running untrusted pull request code applies to it too.
 
 The action moves both pins together to the newest CLI and standards release,
 maintaining one rolling PR on `repo-standards/update` on headless completion,

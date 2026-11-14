@@ -11,10 +11,13 @@ skills, the files their executables import and the license notices, for the
 orchestrating agent's workbench.
 The source identity is `repo-canon`,
 and its compatibility contract is the open-ended minimum
-`requires.repo-standards: ">=10.0.0"`. Public CLI 10.0.0 is the oldest version
-this source was validated against. It is the first that accepts an optional
-discovery declaration with no scope, which all three TypeScript stacks need to
-stay out of repositories without a matching Project. Its check request
+`requires.repo-standards: ">=11.0.0"`. Public CLI 11.0.0 is the oldest version
+this source was validated against. It is the first that accepts the profile
+and declaration `check-locations` keys, through which the standard and factory
+profiles offer `github`, `runner` and `self-reported` and Repo Canon's
+workflows install only at `github`. It also accepts an optional discovery
+declaration with no scope, which all three TypeScript stacks need to stay out of repositories
+without a matching Project. Its check request
 `invocation` field, which earlier CLIs also supply, lets
 `documentation-navigation` prove scope coverage only during adoption runs,
 while standalone checks continue checking content. The range gates which CLI versions may
@@ -165,7 +168,7 @@ repository and validate every profile without filtering:
 cli_prefix="$(mktemp -d)"
 npm install --prefix "$cli_prefix" --ignore-scripts \
   --registry=https://registry.npmjs.org \
-  @lutzseverino/repo-standards@10.0.0
+  @lutzseverino/repo-standards@11.0.0
 "$cli_prefix/node_modules/.bin/repo-standards" --version
 "$cli_prefix/node_modules/.bin/repo-standards" source validate "$PWD" --json
 ```
@@ -176,9 +179,10 @@ and validates every profile.
 
 ## Validation boundary
 
-Public CLI 10.0.0 on stable Node.js 24 or 26 returns `valid: true`, no errors,
-and the `standard`, `factory` and `workbench` profiles for the declared source selection. Local validation and CI install
-`@lutzseverino/repo-standards@10.0.0`, the oldest version the requirement admits;
+Public CLI 11.0.0 on stable Node.js 24 or 26 returns `valid: true`, no errors,
+and the `standard`, `factory` and `workbench` profiles for the declared source selection, the first two offering
+all three check locations and the workbench `github` alone. Local validation and CI install
+`@lutzseverino/repo-standards@11.0.0`, the oldest version the requirement admits;
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) records why
 the requirement is a minimum. The release pull request records local validation outcomes and separate CI
 evidence for both runtimes in its Evidence section.

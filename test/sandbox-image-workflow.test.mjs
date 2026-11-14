@@ -254,6 +254,7 @@ test("the shared workflow always reports on pull requests with read-only permiss
     {
       id: "factory-sandbox-image-workflow",
       kind: "file",
+      "check-locations": ["github"],
       target: workflowPath,
       exact: workflowPath,
     },

@@ -14,7 +14,7 @@ standards source has no build step; parser dependencies are vendored. The
 factory is developed in [its own repository](https://github.com/lutzseverino/scriptorium). Adopters do not install
 development dependencies. GitHub planning uses authenticated `gh`
 access. For source validation,
-install public Repository Standards CLI 10.0.0 outside the checkout using the
+install public Repository Standards CLI 11.0.0 outside the checkout using the
 [source profile instructions](source-profile.md#executable-prerequisites); CI
 validates with the same version.
 
@@ -44,6 +44,18 @@ own `babysit` skill), and the pnpm lockfile. Canon's authored validators in
 `vendor/repo-canon/` remain included in formatting, lint, syntax and JavaScript
 type checks; the other vendor directories keep their exclusions.
 
+Repo Canon's own required check command is `pnpm validate`, with the public
+CLI source validation below; CI runs both. Adopters choose a check location, `github` (hosted Actions),
+`runner` (a repository-named machine posting commit statuses) or
+`self-reported` (the authoring agent's sandbox, repeated by the review run),
+and every location runs the one command their own development guide names.
+[Check location support](adoption-compatibility.md#check-location-support)
+describes the declarations, the legacy and fresh selection behavior, and the
+execution work that remains separate; the
+[adoption guide](../usage/adopt-repo-canon.md#migrate-from-the-runner-variable)
+covers the CLI 11 prerequisite and the migration from the retired runner
+variable.
+
 Run `pnpm validate`, focused tests for the changed behavior, and
 `git diff --check` before opening a PR. `pnpm validate` runs, in order,
 `pnpm run format:check`, `pnpm run lint`, `pnpm run check` (the `node --check`
@@ -65,7 +77,7 @@ preferences. A single fixture runs with
 `node --test test/<name>.test.mjs`; `package.json` lists the named test groups.
 Run `node --test test/repository-wide-rules.test.mjs` for a fresh adoption of
 the standard and factory profiles and repository-wide rules lookup with public
-CLI 10.0.0: the comment and GitHub rules in both and the factory workflow
+CLI 11.0.0: the comment and GitHub rules in both and the factory workflow
 rules only in the factory profile. It confirms no `typescript-node-stack` scope in both profiles,
 so no stack rules are installed and `repo-standards check` runs no stack check,
 and adopts a third copy with one conforming package, whose `package.json` the
@@ -90,11 +102,19 @@ source and verifies whole-directory preservation,
 ready-to-commit status and retention through later updates. Set `REPO_STANDARDS_PREFIX` to reuse that public
 CLI installation, or the test installs it outside the checkout. Runtime
 preparation also needs npm registry access.
+Run `node --test test/check-locations.test.mjs test/check-location-updates.test.mjs`
+for the check-location selection with public CLI 11.0.0: source offers and
+filters, inspection and fresh adoption of both project profiles at all three
+locations through `--checks` and the `checks` answer, location switches that
+remove and restore Repo Canon's workflows while repository-owned files
+survive, a headless update that keeps its location, and a legacy selection
+recorded by public CLI 10 that continues at `github`. They also inventory the source
+for the retired runner variable.
 Run `node --test test/workbench-profile.test.mjs` for the `workbench` profile.
 It reads `standards.yaml` and fails when the profile would select any default
 declaration besides the workflow skills, the files their executables import
 and the license notices, so a new default declaration fails it until the
-profile excludes it. With public CLI 10.0.0 and the same disposable source and
+profile excludes it. With public CLI 11.0.0 and the same disposable source and
 fixtures, it then adopts the profile into a repository holding only an empty
 commit. The adoption must ask no scope, assessment or remote setup question,
 write no rules, `.github/` file or `AGENTS.md`, and leave every installed skill
@@ -150,7 +170,7 @@ Run `node --test test/factory-review-policy-check.test.mjs` for the optional
 policy adoption check's absence, app identities, invalid schemas, file-read
 errors and preservation, including retained resources without runtime packages.
 The check imports babysit's `review-policy.mjs` as a retained resource too;
-CLI 10.0.0 preserves both resources' source-relative paths.
+CLI 11.0.0 preserves both resources' source-relative paths.
 Run `node --test test/babysit-request.test.mjs test/babysit-wait.test.mjs`
 for app-author policy matching, explicit rejection of human-login declarations
 with or without a reviewer, independent request emission and wait classification,

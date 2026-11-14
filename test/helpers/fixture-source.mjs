@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const sourceUrl = "https://github.com/fixture/repo-canon";
 
-// The public CLI 10.0.0 under `REPO_STANDARDS_PREFIX`, or installed in
+// The public CLI 11.0.0 under `REPO_STANDARDS_PREFIX`, or installed in
 // `directory` when the variable is unset.
 export function publicCli(directory) {
   const prefix = process.env.REPO_STANDARDS_PREFIX ?? join(directory, "cli");
@@ -24,14 +24,14 @@ export function publicCli(directory) {
         prefix,
         "--ignore-scripts",
         "--registry=https://registry.npmjs.org",
-        "@lutzseverino/repo-standards@10.0.0",
+        "@lutzseverino/repo-standards@11.0.0",
       ],
       { stdio: "pipe" },
     );
   const cli = join(prefix, "node_modules/.bin/repo-standards");
   assert.equal(
     execFileSync(cli, ["--version"], { encoding: "utf8" }).trim(),
-    "10.0.0",
+    "11.0.0",
   );
   return cli;
 }

@@ -2,11 +2,11 @@
 
 The [Repository README](../../README.md#installation) gives the one-line `adopt`
 command that adopts Repo Canon and every later update. `adopt` asks each
-question adoption needs; this guide covers profiles, caller compatibility,
+question adoption needs; this guide covers profiles, check locations, caller compatibility,
 stacks, remote setup, opting into automated updates, orchestrating plans, and
 the personal skills adoption leaves to you. The
 CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/usage/adoption.md)
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/guides/adopt.md)
 describes `adopt` itself, at a terminal and through an agent.
 
 ## Choose a profile
@@ -32,6 +32,61 @@ Repo Canon supplies three profiles:
 
 Every update offers the profiles again, so a repository switches profile by
 answering differently when a factory starts or stops serving it.
+
+## Choose a check location
+
+The standard and factory profiles offer three check locations, the places
+where the repository's required checks run. `adopt` asks for one through its
+`checks` question, or takes `--checks github`, `--checks runner` or
+`--checks self-reported`; the hosting platform is chosen separately. The
+workbench profile offers `github` alone and installs no workflow anyway.
+
+- `github`: GitHub's hosted Actions runners. Repo Canon installs its
+  issue-contract, PR metadata and standards-update workflows, and in the
+  factory profile the sandbox-image workflow. Every installed job runs on
+  `ubuntu-latest`; on a private repository the jobs consume the account's
+  hosted Actions minutes.
+- `runner`: a machine the repository names, posting each required result as a
+  commit status, independent of the Actions scheduler.
+- `self-reported`: the authoring agent's own sandbox runs the checks, the pull
+  request identifies them as self-reported, and the separate review run repeats
+  them before merging.
+
+Every location runs the same one required check command, which your
+development guide names. Your repository owns that command; Repo Canon names
+none for you and adds no second command setting.
+
+At `runner` and `self-reported`, Repo Canon installs none of its workflow
+files. Selecting either is selection and installation support only: running
+the checks off Actions and the self-reported review rerun are separate
+[check-execution work](https://github.com/lutzseverino/repo-canon/issues/908).
+Until that work ships, such a repository gets no issue-contract result, so no
+readiness, no PR metadata result, and no automated standards updates. Merge
+gates that need results only Repo Canon's workflows produce refuse or hand off
+to the owner rather than pass, and the first-adoption owner handoff in
+[Remote setup](#remote-setup) still applies. Nothing bypasses or weakens the
+required-check, freshness or review gates.
+
+A fresh adoption asks for the location. An adoption recorded before Repo Canon
+offered locations carries no choice and continues at `github`; its next
+completed run records `github` explicitly. Later updates, including headless
+automated updates, keep the recorded location. To change it, run `adopt` with
+`--checks <location>` or answer `checks` differently: the update reports the
+changed location and removes or adds Repo Canon's workflow files under ordinary
+ownership, leaving repository-owned workflows and other files in place.
+
+### Migrate from the runner variable
+
+Check locations need Repository Standards CLI 11 or newer, the minimum this
+source requires. They replace the `REPO_CANON_RUNS_ON` repository variable,
+which is retired: installed jobs no longer read it, and adoption never reads,
+creates, changes or deletes it. A repository whose variable selected
+self-hosted runner labels runs its installed jobs on GitHub-hosted runners
+after updating at `github`, which on a private repository consumes the
+account's hosted Actions minutes. A repository that cannot use hosted Actions
+selects `runner` or `self-reported` instead, subject to the separate execution
+support above. Workflows of your own that read the variable keep their
+behavior.
 
 ## Coordinate the factory host
 
@@ -197,12 +252,11 @@ for the detailed evidence and verification requirements.
 
 ## Automated updates
 
-The standard and factory profiles install an inert
+At `github`, the standard and factory profiles install an inert
 `.github/workflows/standards-update.yml`. To
 opt in, set the repository Actions variable `REPO_CANON_UPDATES` to `true`.
 The workflow runs daily and through **Run workflow**, always against the
-default branch, using the same `REPO_CANON_RUNS_ON` runner selection as the
-other installed jobs. Delete the opt-in variable or change it from `true` to
+default branch, on `ubuntu-latest` like the other installed jobs. Delete the opt-in variable or change it from `true` to
 skip the job again.
 
 For updates that trigger CI and can change workflow files, install a GitHub

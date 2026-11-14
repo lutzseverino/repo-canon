@@ -57,6 +57,11 @@ if (command === 'source' && subcommand === 'validate') {
   const args = process.argv.slice(2);
   const version = args[args.indexOf('--standards-version') + 1];
   const profile = args[args.indexOf('--profile') + 1];
+  const checks = args.includes('--checks') ? args[args.indexOf('--checks') + 1] : undefined;
+  if (process.env.STUB_CLI_VERSION === '11.0.0' ? profile !== 'workbench' && checks !== 'github' : checks !== undefined) {
+    console.error(checks === undefined ? 'Profile offers several check-locations. Select one with --checks.' : 'Unknown option --checks');
+    process.exit(1);
+  }
   console.log(JSON.stringify({
     format: 'repo-standards/inspection/v9',
     remoteSetup: [],
@@ -464,12 +469,13 @@ function publishedRelease(
   t,
   documents = {},
   previousProfiles = ["standard", "factory"],
+  previousFloor = "6.0.0",
 ) {
   const repository = fixture(t);
   const previousCommit = repository.commit(
     {
       "standards.yaml":
-        'format: repo-standards/v2\nrequires:\n  repo-standards: ">=6.0.0"\n\nprofiles:\n' +
+        `format: repo-standards/v2\nrequires:\n  repo-standards: ">=${previousFloor}"\n\nprofiles:\n` +
         previousProfiles
           .map((name) => `  ${name}:\n    declarations: {}\n`)
           .join("\n"),
@@ -680,6 +686,68 @@ test("release:check-update accepts published CLI 11 update reports for every pro
         `pass: CLI 6\\.0\\.0 adopted v0\\.9\\.0; CLI 11\\.0\\.0 updated to v1\\.0\\.0 with the ${profile} profile; questions none; outcome complete`,
       ),
     );
+});
+
+test("release:verify and release:check-update inspect, adopt and update at github with a CLI 11.0.0 baseline", (t) => {
+  const release = {
+    previousFloor: "11.0.0",
+    documents: {
+      "docs/usage/adopt-repo-canon.md":
+        "See the CLI's [adoption guide](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/guides/adopt.md).\n",
+      "standards.yaml":
+        'format: repo-standards/v2\nrequires:\n  repo-standards: ">=11.0.0"\n',
+      ...developmentDocuments("11.0.0"),
+    },
+  };
+  const results = [verifyAdoption, checkUpdate].map((run) =>
+    run(
+      t,
+      "complete",
+      { STUB_CLI_VERSION: "11.0.0", STUB_NEWEST_CLI: "11.0.0" },
+      ["standard", "factory", "workbench"],
+      release,
+    ),
+  );
+  for (const { status, output } of results) assert.equal(status, 0, output);
+  const output = results.map((result) => result.output).join("\n");
+  const calls = results.flatMap((result) => result.calls);
+  for (const profile of ["standard", "factory", "workbench"]) {
+    assert.match(
+      output,
+      new RegExp(
+        `pass: CLI 11\\.0\\.0 inspected v1\\.0\\.0 .* with the ${profile} profile`,
+      ),
+    );
+    assert.match(
+      output,
+      new RegExp(
+        `pass: CLI 11\\.0\\.0 adopted v1\\.0\\.0 with the ${profile} profile`,
+      ),
+    );
+    assert.match(
+      output,
+      new RegExp(
+        `pass: CLI 11\\.0\\.0 adopted v0\\.9\\.0; CLI 11\\.0\\.0 updated to v1\\.0\\.0 with the ${profile} profile; questions none; outcome complete`,
+      ),
+    );
+  }
+  // The release and its baseline each answer `checks` for both project
+  // profiles; the workbench profile offers one location and asks none.
+  for (const version of ["v1.0.0", "v0.9.0"]) {
+    const started = calls.filter(
+      (answers) =>
+        answers.version === version && answers.inspection === "sha256:complete",
+    );
+    assert.deepEqual(
+      started.map((answers) => [answers.profile, answers.checks]),
+      [
+        ["standard", "github"],
+        ["factory", "github"],
+        ["workbench", undefined],
+      ],
+      version,
+    );
+  }
 });
 
 test("release:check-update updates from the previous stable release per profile using the newest CLI", (t) => {
@@ -954,12 +1022,29 @@ test("release:check-update fails when no previous stable release is published", 
 
 // Runs `script` for v1.0.0 with the fake adoption's scenario, and returns its
 // result with the answers of each adopt call. The previous release declares
-// `previousProfiles`, by default the standard and factory profiles.
-function adoptionRun(t, script, scenario, overrides, previousProfiles) {
+// `previousProfiles`, by default the standard and factory profiles, and
+// `release` optionally replaces release files and the previous CLI floor.
+/**
+ * @param {any} t
+ * @param {string} script
+ * @param {string} scenario
+ * @param {(environment: any) => Record<string, string>} overrides
+ * @param {string[]} [previousProfiles]
+ * @param {{ documents?: Record<string, string>, previousFloor?: string }} [release]
+ */
+function adoptionRun(
+  t,
+  script,
+  scenario,
+  overrides,
+  previousProfiles = undefined,
+  { documents = {}, previousFloor = undefined } = {},
+) {
   const { run, releaseCommit, environment } = publishedRelease(
     t,
-    {},
+    documents,
     previousProfiles,
+    previousFloor,
   );
   const log = join(
     mkdtempSync(join(tmpdir(), "repo-canon-adopt-log-")),
@@ -980,19 +1065,32 @@ function adoptionRun(t, script, scenario, overrides, previousProfiles) {
   return { ...result, calls };
 }
 
-function verifyAdoption(t, scenario, overrides = {}, previousProfiles) {
+function verifyAdoption(
+  t,
+  scenario,
+  overrides = {},
+  previousProfiles = undefined,
+  release = {},
+) {
   return adoptionRun(
     t,
     "verify.mjs",
     scenario,
     () => overrides,
     previousProfiles,
+    release,
   );
 }
 
 // Runs release:check-update before v1.0.0 is published: its annotated tag is
 // pushed, but GitHub has no v1.0.0 release.
-function checkUpdate(t, scenario, overrides = {}, previousProfiles) {
+function checkUpdate(
+  t,
+  scenario,
+  overrides = {},
+  previousProfiles = undefined,
+  release = {},
+) {
   return adoptionRun(
     t,
     "check-update.mjs",
@@ -1007,6 +1105,7 @@ function checkUpdate(t, scenario, overrides = {}, previousProfiles) {
       ...overrides,
     }),
     previousProfiles,
+    release,
   );
 }
 

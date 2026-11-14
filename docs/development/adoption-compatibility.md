@@ -6,10 +6,11 @@ product leaves a gap.
 
 ## Supported source and discovery route
 
-Use `repo-standards/v2` and the installed public CLI 10.0.0 with Node.js 24 or 26 as
+Use `repo-standards/v2` and the installed public CLI 11.0.0 with Node.js 24 or 26 as
 the current validation and adoption baseline. Declare a minimum that was
 actually validated against the released source bytes: `requires.repo-standards`
-is the open-ended minimum `>=10.0.0`.
+is the open-ended minimum `>=11.0.0`, the first public CLI that understands
+[check locations](#check-location-support).
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) states the
 requirement as a minimum rather than an exact version, because the requirement
 gates selection only and an exact one strands adopters. Format version and CLI
@@ -48,7 +49,32 @@ none of its checks, and the adoption still assesses that no project file
 belongs in its scope; an empty scope would instead make the stack's rules
 repository-wide. Its drafter proposes no scope whenever it includes no
 Project. CLI 10.0.0 is the first public release that accepts `optional` and
-`noScope`, and earlier CLIs reject the field, so the minimum is 10.0.0.
+`noScope`, and earlier CLIs reject the field, so the minimum was 10.0.0 until
+check locations raised it.
+
+## Check location support
+
+The standard and factory profiles offer `check-locations: [github, runner,
+self-reported]`; the workbench profile omits the key, which means `github`
+alone. Repo Canon's four workflow declarations, the issue-contract,
+PR-metadata and standards-update callers and the factory's sandbox-image
+workflow, apply only at `github`. Every other declaration, including the
+portable validators, rules, skills, factory configuration and Dockerfile,
+applies at every offered location. Repository Standards owns the selection:
+its `checks` answer or `--checks` flag, the recorded `github` meaning of a
+supported selection without the field, retained and headless preservation, and
+the additions and removals reported when a deliberate update changes the
+location. Repo Canon reads no selection itself and keeps no runner registry.
+Declaration `checks` still names executable operations.
+
+Selecting `runner` or `self-reported` changes only which files install. The
+off-Actions execution of the required check command, the self-reported review
+rerun and any location-aware workflow-presence handling are separate
+[check-execution work](https://github.com/lutzseverino/repo-canon/issues/908);
+until it ships, those locations produce no issue-contract or PR metadata
+result and no automated standards update. Sources:
+[author format](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/author-format.md#check-locations),
+[adoption run](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/adoption-run.md#choose-the-check-location).
 
 ## Required check invocation support
 

@@ -131,16 +131,26 @@ declarations, including plain human logins, and file-read failures fail with
 a correction identifying the policy and the requirement from the rules. The
 check never rewrites the file or treats invalid content as absence.
 
-## Installed workflow runners
+## Check location
 
-Assess the repository's visibility and the repository-level
-`REPO_CANON_RUNS_ON` variable as unset, valid with its labels, or invalid,
-following the
-[discovery guidance](../discovery/github-repository-configuration.md), against
-the runner rules. Disclose uncertainty about an organization-level value the
-run cannot read. Report parsed falsy JSON such as `false`, `0`, `null`, or `""`
-as invalid, even though it selects the hosted default.
+Assess against the selection's check location, following the
+[discovery guidance](../discovery/github-repository-configuration.md) and the
+runner rules. At `github`, Repo Canon's workflows install and every job runs
+on `ubuntu-latest`; disclose when a private repository's jobs consume its
+account's hosted Actions minutes. At `runner` (a repository-named machine
+posting commit statuses, independent of the Actions scheduler) or
+`self-reported` (the authoring agent's own sandbox, identified as such and
+repeated by the separate review run), Repo Canon installs no workflow file.
+Every location runs the one required check command the repository's
+development guide names; the repository owns that command.
 
-The adoption or update run reports this setting but never sets, changes, or
-deletes the variable. Setting it without matching runners would strand every
-installed job. The assessment changes nothing remotely.
+Off-Actions execution is separate check-execution work. Until it ships, a
+`runner` or `self-reported` repository gets no issue-contract result, so no
+readiness, no PR metadata result and no automated standards updates, and merge
+gates that need results only Repo Canon's workflows produce refuse or hand off
+to the owner rather than pass. Report that limit; the first-adoption owner
+handoff above still applies.
+
+The `REPO_CANON_RUNS_ON` variable is retired: the run neither reads nor sets,
+changes, or deletes it, and repository-owned workflows that read it keep their
+own behavior. The assessment changes nothing remotely.

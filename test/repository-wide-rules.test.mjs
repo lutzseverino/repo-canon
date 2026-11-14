@@ -229,7 +229,7 @@ for (const [name, attributes] of [
     for (const pattern of entries) assert.ok(owned.has(pattern), pattern);
   });
 
-test("public CLI 10.0.0 adopts and updates the standard and factory profiles with vendored installed code, repository-wide rules and stack rules only for a confirmed Project", (t) => {
+test("public CLI 11.0.0 adopts and updates the standard and factory profiles with vendored installed code, repository-wide rules and stack rules only for a confirmed Project", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const cli = publicCli(directory);
@@ -256,6 +256,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       {
         id: "standards-update-workflow",
         kind: "file",
+        "check-locations": ["github"],
         target: ".github/workflows/standards-update.yml",
         exact: ".github/workflows/standards-update.yml",
         checks: [],
@@ -665,6 +666,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
           if (kind === "version") answer = selectedVersion;
           if (kind === "profile") answer = profile;
           if (kind === "remote-setup") answer = "defer";
+          if (kind === "checks") answer ??= "github";
           if (
             kind === "inspection" &&
             report.missing.some((id) => !/^(inspection|remote-setup)$/.test(id))
@@ -861,6 +863,8 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
           version,
           "--profile",
           profile,
+          "--checks",
+          "github",
         );
         const removal = inspection.removed.find(
           ({ target }) => target === skill,
