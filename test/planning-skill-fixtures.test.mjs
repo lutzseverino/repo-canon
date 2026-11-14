@@ -50,10 +50,13 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   const projectionHeader =
     "| Item | Running | Waiting on owner | Since (UTC) | Next check |\n" +
     "| ---- | ------- | ---------------- | ----------- | ---------- |\n";
-  for (const path of readdirSync(target, {
+  const nowPaths = readdirSync(target, {
     recursive: true,
     encoding: "utf8",
-  }).filter((path) => path.endsWith("/now.md"))) {
+  }).filter((path) => path.endsWith("/now.md"));
+  assert.ok(nowPaths.includes("orchestrate-workbench/now.md"));
+  assert.ok(nowPaths.includes("host-grant-workbench/now.md"));
+  for (const path of nowPaths) {
     const output = execFileSync(
       process.execPath,
       [
