@@ -9,12 +9,13 @@ produce a failed result; all checked facts matching produces a passed result.
 
 Both reuse Node's workspace, catalog, version-range and manifest readers for
 pnpm 11, a lockfile, Node.js 24 or 26, oxlint 1, Prettier 3 and each Project's
-`validate` script. Astro adds formatter-plugin availability. Both check shadcn
-at the evidenced holder: `components.json` with `base-*` and lucide, an exact
-major-4 devDependency and `ui:add`, `ui:update`, `ui:check`. A Site/App without
-a holder fails. Dependency paths through packages in the same workspace
-establish centralized holder candidates, including transitive paths. A shared
-web package without UI needs no independent registry, pin or scripts.
+`validate` script. Astro adds formatter-plugin availability, except for
+confirmed shared web packages. Both check shadcn at the evidenced holder:
+`components.json` with `base-*` and lucide, an exact major-4 devDependency and
+`ui:add`, `ui:update`, `ui:check`. A Site/App without a holder fails.
+Dependency paths through packages in the same workspace establish centralized
+holder candidates, including transitive paths. A shared web package without UI
+needs no independent registry, pin or scripts.
 Default and named catalogs resolve checked tool declarations and exact shadcn
 pins. Unreadable or unresolved entries produce corrections rather than passes.
 The [Node guidance](../../guidance/typescript-node-stack.md#supported-workspace-yaml)

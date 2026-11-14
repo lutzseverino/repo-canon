@@ -88,6 +88,7 @@ export function webStackDifferences(
   const classification = (
     memberships ?? classifyWebPackages(projectRoot, files)
   ).get(path);
+  // Confirmed shared packages inherit the formatter from their consumers.
   const shared = classification?.kind === "shared";
   if (stack === "astro" && !shared) {
     const difference = toolDifference(
