@@ -625,7 +625,7 @@ test("the adapter reads the recorded factory comment's provenance before categor
         undefined,
         undefined,
         () => Date.parse(s.evaluatedAt),
-        { author: "factory[bot]", marker: "factory:run" },
+        { author: "Factory[bot]", marker: "factory:run" },
         { mode: "prepared" },
         async () => seamsBoundary,
       );

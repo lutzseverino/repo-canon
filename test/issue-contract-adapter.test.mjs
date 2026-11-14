@@ -865,6 +865,7 @@ test("the adapter approves the factory's readiness only where its configuration 
   };
   for (const triageResult of [
     { marker: "factory:run", author: factory },
+    { marker: "factory:run", author: "Factory[bot]" },
     undefined,
   ]) {
     const result = await exercise(t, {
@@ -888,7 +889,7 @@ test("the adapter approves the factory's readiness only where its configuration 
     });
     assert.equal(result.error, undefined);
     const posted = writes(result).find(({ method }) => method === "PATCH");
-    assert.equal(result.code, triageResult ? 0 : 1);
+    assert.equal(result.code, triageResult ? 0 : 1, triageResult?.author);
     assert.equal(
       recordedState(posted.body.body).status,
       triageResult ? "approved" : "awaiting-review",

@@ -2456,7 +2456,7 @@ export async function runIssueContractValidation(
   const factoryComment =
     needs.contract?.type === "comment"
       ? needs.contract.comment
-      : recorded?.reviewer === triageResult?.author &&
+      : isFactoryTriageAuthor(recorded?.reviewer, triageResult) &&
           recorded?.source?.type === "comment"
         ? snapshot.comments.find(
             (comment) => String(comment.id) === recorded.source.id,
@@ -2465,8 +2465,10 @@ export async function runIssueContractValidation(
   if (
     triageResult &&
     factoryComment &&
-    (factoryComment.user ?? factoryComment.author)?.login ===
-      triageResult.author
+    isFactoryTriageAuthor(
+      (factoryComment.user ?? factoryComment.author)?.login,
+      triageResult,
+    )
   )
     snapshot.triageCommentEdit = await factoryTriageCommentEdit(
       connection,

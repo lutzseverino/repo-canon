@@ -329,6 +329,19 @@ test("eligible legacy factory briefs keep case-insensitive approval and refuse t
     const s = structuredClone(snapshot());
     s.comments[0].user.login = "factory[bot]";
     s.comments[0].body += '\n<!-- factory:run {"run":"triage-7"} -->';
+    s.comments[0].created_at = s.comments[0].updated_at;
+    s.triageCommentEdit = {
+      __typename: "IssueComment",
+      id: s.comments[0].node_id,
+      body: s.comments[0].body,
+      author: { __typename: "Bot", login: "factory" },
+      createdAt: s.comments[0].created_at,
+      updatedAt: s.comments[0].updated_at,
+      lastEditedAt: null,
+      editor: null,
+      includesCreatedEdit: false,
+      userContentEdits: { totalCount: 0, nodes: [] },
+    };
     s.contractSources.receipt.issues[0].legacy.revision = briefRevision(
       s.comments[0],
     );
