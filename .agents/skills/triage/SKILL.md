@@ -210,7 +210,7 @@ Repository Standards'
   post as each step describes; an installed issue-contract check names the Agent Brief disclaimer.
 - Installed rules, such as `github-repository-configuration` and factory workflow,
   looked up by `repository-standards`. If missing, use [AGENT-BRIEF.md](AGENT-BRIEF.md)
-  for brief shape and this skill's routing and outcomes for roles; use no `model:` or `factory:` label.
+  for brief shape and categories, and this skill's routing and outcomes for roles; use no `model:` or `factory:` label.
 - The `codebase-design` skill: its Ownership check supplies the Seams read
   and independent assessment. If missing, report the missing definition and
   stop brief writing or acceptance until it is available.
