@@ -155,8 +155,8 @@ carries the trusted `.github/required-checks.json` declaration for `Delivery tes
 The fixture's development guide records location `github` and command `npm test`.
 Run that command on each exact committed head and record the actual outcome as
 a simulated hosted status for its full SHA alongside the local PR body. Every
-status is labelled simulated, never as actual hosted qualification. The worker
-handoff records the full head SHA, trusted declaration revision, location,
+status is labelled simulated, never presented as actual hosted qualification.
+The worker handoff records the full head SHA, trusted declaration revision, location,
 command, check name and outcome. Exercise `implement`
 first with the ticket, then resume it with a review finding supplied by the
 operator on that same local PR. Record each validated head, the draft state,

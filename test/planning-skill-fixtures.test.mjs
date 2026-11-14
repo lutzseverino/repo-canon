@@ -232,7 +232,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "command npm test",
     "Delivery tests",
     "simulated",
-    "never as actual hosted qualification",
+    "never presented as actual hosted qualification",
     "main:.github/required-checks.json",
     "simulated current-head result",
   ])
