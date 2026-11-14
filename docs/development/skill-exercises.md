@@ -459,6 +459,37 @@ resume and closure, and any limits. Retain transcripts and resulting workbench
 commits outside maintained documentation. Builder tests establish setup
 correctness; only these agent sessions establish exercise outcomes.
 
+### Focused worker replacement check
+
+Build fresh planning fixtures and run one bounded agent session with the exact
+candidate `orchestrate` skill, its fixture project and sibling workbench. Read
+`docs/worker-replacement.md`; the operator alone reads
+`.scratch/replacement/operator-inputs.json` and relays its context and turns
+one at a time. Use the common harness's local-only restrictions; the operator
+plays run inspection, cancellation and launch responses. No real worker is
+stopped or launched. Keep the unrelated run active in every case.
+
+First relay the provider error with the original worker still able to write.
+Observe identification/inspection and a cancellation request for that worker,
+with no transfer of responsibility. Relay cancellation requested but completion
+unconfirmed: expect an owner-question handoff naming the missing retirement
+evidence and no replacement. Only then relay verified retirement and authorized
+continuation; observe replacement on the same PR with predecessor and stop
+evidence, all branch work and delivery/review context preserved. The simulated
+launch still follows existing launch and delivery rules.
+
+Run the remaining independent cases with the supplied context: a verified
+finished predecessor permits continuation without cancellation; unknown run
+identity and unavailable stop capability each retain responsibility and produce
+an owner-question handoff naming the missing fact. The owner-review designation
+survives every successful transfer. Inspect the workbench's `replacement/log.md`
+and `now.md` against the operator's actual delivered turns, rather than asking
+the agent to recite the expected policy. Record UTC times, requested actions,
+owner handoffs, transfer order, session reference, manifest/skill digests and
+resulting commits outside maintained documentation, and report the observations
+on the PR separately from fixture-test success. This checks the shared method
+under simulated harness evidence, not a live provider cancellation mechanism.
+
 ### Focused inbox reconciliation check
 
 Build the planning fixtures from the candidate checkout and use two local

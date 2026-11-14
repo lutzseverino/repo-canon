@@ -363,6 +363,50 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     readFileSync(join(root, ".scriptorium/config.json"), "utf8"),
   );
   const workbench = orchestrate.workbench.path;
+  // The operator releases harness observations one at a time to the agent.
+  const replacement = JSON.parse(
+    readFileSync(
+      join(orchestrate.path, ".scratch/replacement/operator-inputs.json"),
+      "utf8",
+    ),
+  );
+  assert.ok(
+    statSync(join(orchestrate.path, "docs/worker-replacement.md")).isFile(),
+  );
+  assert.deepEqual(replacement.context.work, [
+    "committed",
+    "staged",
+    "unstaged",
+    "untracked",
+  ]);
+  assert.notEqual(
+    replacement.context.predecessor,
+    replacement.context.unrelatedRun,
+  );
+  const observations = replacement.turns.map(({ observation }) => observation);
+  assert.deepEqual(
+    observations.map(({ state, canWrite }) => [state, canWrite]),
+    [
+      ["running", true],
+      ["unknown", null],
+      ["stopped", false],
+      ["finished", false],
+      ["unknown", null],
+      ["running", true],
+    ],
+  );
+  assert.equal(observations[0].providerError, "rate limit");
+  assert.equal(observations[0].stopAvailable, true);
+  assert.equal(observations[1].cancellation, "requested");
+  assert.ok(observations[2].evidence);
+  assert.ok(observations[3].evidence);
+  assert.equal(observations[4].predecessor, null);
+  assert.equal(observations[5].stopAvailable, false);
+  assert.deepEqual(
+    observations.slice(0, 3).map(({ predecessor }) => predecessor),
+    Array(3).fill(replacement.context.predecessor),
+  );
+  assert.ok(replacement.turns.slice(3).every(({ independent }) => independent));
   for (const path of [orchestrate.path, workbench]) {
     assert.equal(
       execFixtureGit(["remote"], { cwd: path, encoding: "utf8" }),
