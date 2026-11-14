@@ -534,6 +534,112 @@ test("a held legacy selector authenticates historical factory approval without s
   assert.ok(!repaired.addLabels.includes("state:ready"));
 });
 
+test("the adapter reads the recorded factory comment's provenance before category repair", async (t) => {
+  for (const edited of [false, true]) {
+    await t.test(edited ? "edited" : "unedited", async () => {
+      const s = historical("prepared");
+      const brief = s.comments[0];
+      brief.body += '\n\n<!-- factory:run {"run":"triage-7"} -->';
+      brief.user = { login: "factory[bot]" };
+      brief.created_at = brief.updated_at;
+      const original = previous(s);
+      original.reviewer = "factory[bot]";
+      original.revision = revision({
+        kind: "triaged Agent Brief",
+        source: { ...original.source, id: brief.node_id },
+        body: brief.body,
+      });
+      setPrevious(s, original);
+      s.issueEvents[0].actor = { login: "factory[bot]" };
+      s.issue.labels = ["state:ready"];
+      const reads = [];
+      const connection = {
+        access: {
+          role: async () => "admin",
+          request: async ({ path, body }) => {
+            assert.equal(path, "/graphql");
+            reads.push(body.variables.id);
+            return {
+              data: {
+                data: {
+                  node: {
+                    __typename: "IssueComment",
+                    id: brief.node_id,
+                    body: brief.body,
+                    author: { __typename: "Bot", login: "factory" },
+                    createdAt: brief.created_at,
+                    updatedAt: brief.updated_at,
+                    lastEditedAt: edited ? brief.updated_at : null,
+                    editor: edited ? { login: "maintainer" } : null,
+                    includesCreatedEdit: edited,
+                    userContentEdits: edited
+                      ? { totalCount: 1, nodes: [{ id: "EDIT_1" }] }
+                      : { totalCount: 0, nodes: [] },
+                  },
+                },
+              },
+            };
+          },
+        },
+        issueTracker: {
+          capabilities: { bodyEditTime: true },
+          issue: async () => ({
+            ...s.issue,
+            nodeId: s.issue.node_id,
+            author: s.issue.user,
+          }),
+          comments: async () =>
+            s.comments.map((comment) => ({
+              ...comment,
+              nodeId: comment.node_id,
+              author: comment.user,
+              createdAt: comment.created_at,
+              updatedAt: comment.updated_at,
+            })),
+          labelChanges: async () =>
+            s.issueEvents.map((event) => ({
+              id: String(event.id),
+              action: event.event === "labeled" ? "added" : "removed",
+              label: event.label.name,
+              actor: event.actor,
+              time: event.created_at,
+            })),
+          removeLabel: async (_number, label) => {
+            s.issue.labels = s.issue.labels.filter((name) => name !== label);
+          },
+          addLabels: async (_number, labels) => {
+            s.issue.labels.push(...labels);
+          },
+          updateComment: async (id, body) => {
+            s.comments.find((comment) => comment.id === id).body = body;
+          },
+        },
+      };
+      const result = await runIssueContractValidation(
+        {
+          issue: s.issue.number,
+          kind: "edited",
+          actor: { login: "maintainer" },
+        },
+        connection,
+        undefined,
+        undefined,
+        () => Date.parse(s.evaluatedAt),
+        { author: "factory[bot]", marker: "factory:run" },
+        { mode: "prepared" },
+        async () => seamsBoundary,
+      );
+      assert.equal(result, 1);
+      assert.deepEqual(reads, [brief.node_id]);
+      assert.equal(previous(s).status, "needs-attention");
+      assert.equal(
+        previous(s).seamsExemption?.reviewer,
+        edited ? undefined : "factory[bot]",
+      );
+    });
+  }
+});
+
 test("superseding states keep exemption evidence without preserving readiness", () => {
   const s = historical("prepared");
   rewrite(s, decide(s));

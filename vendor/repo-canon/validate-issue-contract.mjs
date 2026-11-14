@@ -1594,9 +1594,10 @@ function supersedingDeletedBrief(currentEvent, result) {
 
 // Readiness the factory's triage run applied. It counts when the
 // current contract is the Agent Brief the factory's account posted as that
-// run's unedited triage result, which names the run on exactly one marked line,
-// and the run did not write the issue. An issue the factory's account opened names the
-// run that wrote it on one marked line too; without one, the writer is unknown.
+// run's unedited triage result, which names the run on exactly one marked
+// line, and the run did not write the issue. An issue the factory's account
+// opened names the run that wrote it on one marked line too; without one, the
+// writer is unknown.
 // Refusals name `reviewer` as GitHub reports it, not the configured spelling.
 function triageAuthority(snapshot, result, reviewer) {
   const { issue, triageResult } = snapshot;
@@ -1651,8 +1652,9 @@ function triageCommentProvenance(edit, brief) {
     return "The triage result's edit provenance is unavailable, so it cannot grant factory readiness.";
   // Bind the history to the same comment bytes, author and revision the
   // discussion read selected. A racing read must not certify another revision.
+  // GraphQL omits the "[bot]" suffix that REST logins carry.
   const login =
-    edit.author?.__typename === "Bot"
+    edit.author?.__typename === "Bot" && !edit.author.login?.endsWith("[bot]")
       ? `${edit.author.login}[bot]`
       : edit.author?.login;
   const history = edit.userContentEdits;

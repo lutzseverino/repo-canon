@@ -586,7 +586,7 @@ incomplete, inconsistent or unreadable edit provenance grants no factory
 authority, including when revalidating recorded approval. An edit followed by
 restoring the original bytes still requires a new immutable result for factory
 acceptance. An independently authorized person can review the edited brief's
-current revision after its matching notice. The body-contract proof path
+current revision after its matching notice. Body-contract publication proof
 retains its existing requirements. Without that configuration, readiness comes
 only from the roles above.
 
