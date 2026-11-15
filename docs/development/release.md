@@ -19,7 +19,9 @@ declaration installs from `.agents/skills/<name>`, which
 `node scripts/upstream-bases.mjs check` enforces, so the path is the same at
 every release tag. The [usage guide](../usage/install-skills.md) gives the
 install command. The reviewed diff is the diff from the
-previous release tag over the source inputs. Install the public CLI at the
+previous release tag over the source inputs. The previous release is the newest
+published stable release, so a tag that was pushed but never published is never
+the previous release. Install the public CLI at the
 required minimum version outside the checkout, as the
 [source profile](source-profile.md#executable-prerequisites) describes, and
 point `REPO_STANDARDS_PREFIX` at its prefix. With the release tags fetched,
@@ -27,7 +29,8 @@ list the inputs and show the diff from the previous release tag:
 
 ```sh
 export REPO_STANDARDS_PREFIX="$cli_prefix"
-previous_tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD)
+previous_tag=$(gh release list --exclude-drafts --exclude-pre-releases \
+  --limit 1 --json tagName --jq '.[0].tagName')
 pnpm run release:inputs "$previous_tag"
 ```
 
