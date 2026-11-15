@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   cpSync,
+  existsSync,
   lstatSync,
   mkdtempSync,
   readFileSync,
@@ -19,6 +20,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { decideIssueContract } from "./helpers/contract-decision.mjs";
 import { repository as contractRepository } from "./helpers/issue-contracts.mjs";
+import { parseRequiredChecks } from "../.agents/skills/babysit/required-checks.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -201,6 +203,52 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   }
   for (const path of [".scratch/delivery/spec.md", "docs/pr-evidence.md"])
     assert.ok(statSync(join(deliveryScenario.path, path)).isFile());
+
+  const deliveryChecks = execFixtureGit(
+    ["show", "main:.github/required-checks.json"],
+    { cwd: deliveryScenario.path, encoding: "utf8" },
+  );
+  assert.deepEqual(parseRequiredChecks(deliveryChecks), ["Delivery tests"]);
+  const deliveryDevelopment = readFileSync(
+    join(deliveryScenario.path, "docs/development/README.md"),
+    "utf8",
+  );
+  for (const requirement of [
+    "Delivery tests",
+    "`npm test`",
+    "Check location: `github`",
+    "simulated in local artifacts",
+  ])
+    assert.ok(deliveryDevelopment.includes(requirement), requirement);
+  const deliveryExercise = readFileSync(
+    join(deliveryScenario.path, "docs/exercise.md"),
+    "utf8",
+  );
+  const deliveryOutcome = deliveryExercise.split("## Expected outcome")[1];
+  for (const requirement of [
+    "full head SHA",
+    "trusted declaration revision",
+    "location github",
+    "command npm test",
+    "Delivery tests",
+    "simulated",
+    "never presented as actual hosted qualification",
+    "main:.github/required-checks.json",
+    "simulated current-head result",
+  ])
+    assert.ok(deliveryOutcome.includes(requirement), requirement);
+  for (const repository of Object.values(manifest.repositories)) {
+    if (repository !== deliveryScenario)
+      assert.equal(
+        existsSync(join(repository.path, ".github/required-checks.json")),
+        false,
+        `${repository.path} has no delivery check declaration`,
+      );
+    assert.equal(
+      readFileSync(join(repository.path, "CONTRIBUTING.md"), "utf8"),
+      readFileSync(join(root, "CONTRIBUTING.md"), "utf8"),
+    );
+  }
 
   assert.deepEqual(deliveryScenario.skills, [
     "implement",
