@@ -294,8 +294,11 @@ report. Every other intent question, and any it is unsure of, moves the issue
 to `state:grill` with the facts gathered and the open questions. A fact only
 an outside reporter holds moves it to `state:reporter`, and one only the owner
 holds to `state:owner`, each with its question; whether to close a request
-already implemented or rejected before is the owner's. Every outcome carries
-the issue's one `type:` label.
+already implemented or rejected before is the owner's. For an intake request,
+a bug report, feature request or triaged request, every outcome carries the
+issue's one `type:` label. A directly authored specification or implementation
+ticket needs no category label under the contribution guide's Implementation
+contracts rule, so a run on one asks for no `type:` label in any outcome.
 
 A brief it writes with no open question it accepts, as the GitHub rules'
 Readiness roles allow, asking for `state:ready` with the labels readiness
