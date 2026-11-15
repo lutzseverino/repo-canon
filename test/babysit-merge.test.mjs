@@ -1203,6 +1203,151 @@ test("private plan-limited installed delivery verifies the head and preserves sq
   assert.equal(result.state.merge.expectedHead, head);
 });
 
+const integrationRefusedProtection = {
+  ...planLimited,
+  planProtection: false,
+  protectionStatus: 403,
+  protectionMessage: "Resource not accessible by integration",
+};
+
+test("private plan-limited delivery accepts integration-refused protection and preserves squash bytes", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const body = "Quotes: `code`, $HOME, $(false).\r\n\nCloses #839\n";
+  for (const target of [undefined, installed]) {
+    const result = run(
+      t,
+      {
+        ...integrationRefusedProtection,
+        title: "fix: preserve squash metadata",
+        body,
+      },
+      undefined,
+      target,
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.state.merge.expectedHead, head);
+    assert.equal(
+      result.state.merge.title,
+      "fix: preserve squash metadata (#12)",
+    );
+    assert.equal(result.state.merge.body, body);
+  }
+});
+
+test("integration-refused protection retains every private-plan delivery gate", (t) => {
+  for (const { state, status } of [
+    { state: { workflowStatus: 404 }, status: 3 },
+    { state: { checks: [] }, status: 2 },
+    {
+      state: { checksByHead: { ["d".repeat(40)]: planLimited.checks } },
+      status: 2,
+    },
+    {
+      state: { checks: [{ ...planLimited.checks[0], state: "PENDING" }] },
+      status: 2,
+    },
+    {
+      state: { checks: [{ ...planLimited.checks[0], state: "FAILURE" }] },
+      status: 2,
+    },
+    {
+      state: {
+        reviewConfiguration: { reviewer: configuredReviewer },
+        threadPages: [[thread("reviewer-unresolved", false)]],
+      },
+      status: 6,
+    },
+    { state: { stale: true }, status: 4 },
+    { state: { afterChecks: { defaultRevision: "d".repeat(40) } }, status: 4 },
+    { state: { afterChecks: { private: false } }, status: 3 },
+    { state: { afterChecks: { head: "d".repeat(40) } }, status: 2 },
+    { state: { afterChecks: { defaultBranch: "other" } }, status: 3 },
+    { state: { afterChecks: { baseBranch: "other" } }, status: 3 },
+    {
+      state: {
+        factoryConfiguration: { version: 3, labels: { hold: "factory:hold" } },
+        releaseIssues: [
+          { number: 24, state: "open", labels: ["factory:hold"] },
+        ],
+      },
+      status: 9,
+    },
+    {
+      state: { factoryConfiguration, releaseIssues: [releaseIssue(24)] },
+      status: 9,
+    },
+  ]) {
+    const result = run(t, { ...integrationRefusedProtection, ...state });
+    assert.equal(result.status, status, result.stderr);
+    assert.equal(result.state.merge, undefined);
+  }
+});
+
+test("integration refusal is accepted only for private plan-limited protection", (t) => {
+  const refused = "Resource not accessible by integration";
+  for (const { state, status, lastRequest } of [
+    {
+      state: {
+        planRulesets: false,
+        failFreshness: 403,
+        freshnessMessage: refused,
+      },
+      status: 1,
+      lastRequest: /rules\/branches\/main$/,
+    },
+    ...[false, null, "true"].map((visibility) => ({
+      state: { private: visibility },
+      status: 1,
+      lastRequest: /rules\/branches\/main$/,
+    })),
+    {
+      state: { planRulesets: false, rules: [] },
+      status: 1,
+      lastRequest: /protection$/,
+    },
+    {
+      state: { rulesetsStatus: 403, rulesetsMessage: refused },
+      status: 1,
+      lastRequest: /rulesets$/,
+    },
+    {
+      state: { planBranchRules: true, planRulesets: false },
+      status: 3,
+      lastRequest: /rulesets$/,
+    },
+    {
+      state: { protectionMessage: "Must have admin rights to Repository." },
+      status: 1,
+      lastRequest: /protection$/,
+    },
+    {
+      state: { protectionMessage: `${refused} for this resource` },
+      status: 1,
+      lastRequest: /protection$/,
+    },
+    { state: { protectionStatus: 404 }, status: 3, lastRequest: /protection$/ },
+    {
+      state: { protectionStatus: null, protection: {} },
+      status: 3,
+      lastRequest: /protection$/,
+    },
+    {
+      state: { workflowStatus: 403, workflowMessage: refused },
+      status: 1,
+      lastRequest: /pr-metadata\.yml$/,
+    },
+  ]) {
+    const result = run(t, {
+      ...integrationRefusedProtection,
+      ...state,
+      traceRequests: true,
+    });
+    assert.equal(result.status, status, result.stderr);
+    assert.equal(result.state.merge, undefined);
+    assert.match(result.state.requests.at(-1), lastRequest);
+  }
+});
+
 test("plan-limited delivery requires dual private evidence and stops ordinary refusals", (t) => {
   for (const state of [
     { private: false },

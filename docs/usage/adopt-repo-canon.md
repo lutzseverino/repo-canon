@@ -173,9 +173,13 @@ even when GitHub hides the global bypass list or other actors can bypass.
 Without qualifying ruleset evidence, the existing strict classic protection
 enforced for admins can still qualify.
 
-Only recognized plan-limit 403 responses for both classic protection and
-rulesets on a private repository permit merging-agent freshness verification
-instead. Private visibility or a generic 403/404 alone is insufficient. After
+On a confirmed private repository, merging-agent freshness verification
+instead requires recognized plan-limit 403 responses on the branch-rules and
+rulesets-list reads. The classic-protection read must return either the
+recognized plan-limit 403 or HTTP 403 with the platform message
+`Resource not accessible by integration`. This integration refusal qualifies
+only on that protection probe after the plan-limited branch-rules read. Private
+visibility or a generic 403/404 alone is insufficient. After
 slow gates and immediately before the expected-head merge, the merging agent
 verifies the live default destination, unchanged validated/reviewed head,
 successful applicable validation on that exact head, and ancestry containing
@@ -185,7 +189,7 @@ concurrent-base race only on the proven plan-limited path. These checks narrow
 the window without providing GitHub's atomic protection; strict non-bypassable
 GitHub enforcement remains required wherever available.
 
-Ordinary permission or authentication refusals, missing or unreadable evidence,
+All other permission or authentication refusals, missing or unreadable evidence,
 a missing PR metadata workflow on the default branch and deferred remote setup
 grant no exception; otherwise unconfirmed enforcement still stops delivery for
 the owner. See the [merge script's policy checks](../development/babysit-merge.md)

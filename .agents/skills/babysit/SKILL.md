@@ -142,12 +142,16 @@ Every owner handoff in this section and in step 5 posts its question as
 `.repo-standards/rules/comments.md#owner-questions` says.
 
 Follow the `github-repository-configuration` rules' Required-check freshness
-section: strict non-bypassable GitHub enforcement wherever available; only
-recognized plan-limit 403s for both classic protection and rulesets on a private
-repository permit merging-agent verification. After slow gates, immediately
+section: strict non-bypassable GitHub enforcement wherever available. On a
+confirmed private repository, merging-agent verification requires recognized
+plan-limit 403s on the branch-rules and rulesets-list reads. The classic-protection
+probe must return either the recognized plan-limit 403 or HTTP 403 with the
+platform message `Resource not accessible by integration`. Accept that integration
+refusal only on the protection probe after the plan-limited branch-rules read;
+every other permission refusal grants no exception. After slow gates, immediately
 before expected-head merge, verify the live default destination, unchanged
 validated/reviewed head, successful applicable validation on that exact head
-and current default-tip ancestry. Missing/unreadable evidence, ordinary
+and current default-tip ancestry. Missing/unreadable evidence, all other
 permission refusals, missing workflow and deferred setup grant no exception.
 Only on this proven plan-limited path does the owner accept the concurrent-base
 race: another writer may advance the base after verification and merge can succeed. Immediate

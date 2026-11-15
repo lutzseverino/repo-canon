@@ -75,12 +75,16 @@ to be resolved. Replies, acknowledgements and completed reviews cannot resolve
 threads. Incomplete or unreadable check/thread evidence fails closed. No reviewer
 adds no thread requirement; app-author policy cannot waive configured threads.
 
-Only recognized plan-limit 403 responses for both classic protection and
-rulesets on a private repository permit merging-agent freshness verification.
+On a confirmed private repository, merging-agent freshness verification requires
+recognized plan-limit 403 responses on the branch-rules and rulesets-list reads.
+The classic-protection read must return either the recognized plan-limit 403 or
+HTTP 403 with the platform message `Resource not accessible by integration`.
+This integration refusal qualifies only on that protection probe after the
+plan-limited branch-rules read; every other permission refusal grants no exception.
 That path retains its default-branch PR metadata workflow-presence check.
 After all slow gates on either path, immediately before expected-head merging,
 verify the unchanged head, live default destination and current default-tip
-ancestry. Missing evidence, ordinary permission refusals and deferred setup
+ancestry. Missing evidence, all other permission refusals and deferred setup
 grant no exception. Another writer can advance the base after the final check:
 the owner accepts this residual concurrent-base race only on the proven
 plan-limited path. Strict non-bypassable GitHub enforcement supplies an additional

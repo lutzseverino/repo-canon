@@ -245,6 +245,12 @@ repeated.
   [#814](https://github.com/lutzseverino/repo-canon/issues/814#issuecomment-6578631340);
   [Required-check freshness](rules/github-repository-configuration.md#required-check-freshness)
   owns that policy.
+  On 2026-11-14 in
+  [#839](https://github.com/lutzseverino/repo-canon/issues/839#issuecomment-6877892324),
+  the owner answered “A is fine” to accepting a protection read's HTTP 403
+  `Resource not accessible by integration` on that private-plan route;
+  [Required-check freshness](rules/github-repository-configuration.md#required-check-freshness)
+  owns that evidence.
   The single orchestrator recovery for a stopped ordinary run with an open
   PR was chosen on 2026-10-29 and approved for filing on 2026-10-30 in
   [#740](https://github.com/lutzseverino/repo-canon/issues/740#issuecomment-6532707688).
