@@ -5,12 +5,13 @@ Status: accepted (2026-11-15).
 A delivery attempt's first branch update stays unconditional. When the base is
 stale again after it and the advance is not an overlapping advance, meaning
 its commits change none of the pull request's paths and the pull request's head
-merges cleanly onto it, the attempt updates again, at most two further times.
+merges cleanly onto it, the attempt updates again within a fixed cap.
 A further update whose stable patch identity is unchanged repeats only the
 required checks; any other replacement head also repeats review. An
 overlapping advance, or a stale base after the last update, still ends in the
 owner handoff with its reason. A script decides overlap and patch identity,
-with tests, rather than a reading of the rule.
+with tests, rather than a reading of the rule. The cap lives in
+[the implementation ticket](https://github.com/lutzseverino/repo-canon/issues/1113).
 
 On 2026-11-14 two reviewed pull requests with passing checks stopped for the
 owner because the base moved again, with commits touching none of their files,
