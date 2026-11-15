@@ -168,7 +168,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "babysit",
       "codebase-design",
     ],
-    orchestrate: ["orchestrate", "factory"],
+    orchestrate: ["orchestrate", "retro", "factory"],
     "host-grant": ["orchestrate", "factory"],
     "session-naming": [],
   };
