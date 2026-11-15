@@ -395,12 +395,13 @@ during draft. Native review evidence remains head-specific as above.
 
 Any comment by `account` created or last edited at or after the effective
 request time counts as a response, except a request comment, which is never a
-response. An edit before that time does not count. Edits count only as responses;
-they neither complete a review nor extend `bounds.reviewMinutes`. The reviewer did
-not respond when no response arrives within `bounds.responseMinutes` of that
-time, and did not review when no completed review arrives within
-`bounds.reviewMinutes` of it. With `request.onOpen: false`, all these cutoffs
-retain the existing explicit-request time unchanged across ready transitions.
+response. An edit before that time does not count. An edit time counts only
+toward a response; it never completes a review, marks the reviewer unavailable
+or extends `bounds.reviewMinutes`. The reviewer did not respond when no response
+arrives within `bounds.responseMinutes` of that time, and did not review when no
+completed review arrives within `bounds.reviewMinutes` of it. With
+`request.onOpen: false`, all these cutoffs retain the existing explicit-request
+time unchanged across ready transitions.
 
 For example, with placeholder values:
 
