@@ -393,7 +393,7 @@ unavailable. Ready transitions never discard a current-head completion or
 unavailability reply these rules already recognize, including evidence recorded
 during draft. Native review evidence remains head-specific as above.
 
-Any comment created or last edited by `account` at or after the effective
+Any comment by `account` created or last edited at or after the effective
 request time counts as a response, except a request comment, which is never a
 response. An edit before that time does not count. Edits count only as responses;
 they neither complete a review nor extend `bounds.reviewMinutes`. The reviewer did
