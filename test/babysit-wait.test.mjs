@@ -520,6 +520,61 @@ test("no Codex comment 5 minutes after the request is no response", () => {
   assert.equal(bounded.reviewer, "not reviewing");
 });
 
+test("an in-place summary edit answers the current request (#969)", () => {
+  const requestedAt = Date.parse("2026-11-11T04:54:33Z");
+  const comment = {
+    ...summary(inProgress, head),
+    createdAt: "2026-11-11T02:47:43Z",
+    updatedAt: "2026-11-11T04:54:46Z",
+  };
+  const look = {
+    requestedAt,
+    pushedAt: requestedAt,
+    comments: [comment],
+    now: requestedAt + 6 * minute,
+    startedAt: requestedAt + 6 * minute,
+  };
+  assert.equal(decision(look).reviewer, "pending");
+  assert.equal(decision(look).code, null);
+  const withComment = (change, overrides = {}) =>
+    decision({ ...look, comments: [{ ...comment, ...change }], ...overrides });
+  assert.equal(
+    withComment(
+      { updatedAt: "2026-11-11T04:54:32Z" },
+      {
+        now: requestedAt + 5 * minute,
+      },
+    ).reviewer,
+    "no response",
+  );
+  assert.equal(
+    withComment({ updatedAt: "2026-11-11T04:54:33Z" }).reviewer,
+    "pending",
+  );
+  assert.equal(withComment({ updatedAt: undefined }).reviewer, "no response");
+  assert.equal(
+    withComment({}, { now: requestedAt + 30 * minute }).reviewer,
+    "not reviewing",
+  );
+  assert.equal(
+    withComment({ body: unavailable(comment.createdAt).body }).reviewer,
+    "pending",
+  );
+  assert.equal(withComment({ body: "Working" }).reviewer, "pending");
+  assert.equal(
+    withComment({ body: codexReviewer.request.comment }).reviewer,
+    "no response",
+  );
+  assert.equal(withComment({ login: "someone-else" }).reviewer, "no response");
+  assert.equal(
+    withComment({
+      createdAt: "2026-11-11T04:54:33Z",
+      updatedAt: "2026-11-11T04:54:32Z",
+    }).reviewer,
+    "pending",
+  );
+});
+
 test("an account reply in the request's second is a response (#423)", () => {
   const requestedAt = Date.parse("2026-10-13T23:00:00Z");
   const at = {
@@ -1796,6 +1851,30 @@ test("unreadable or malformed ready history fails the wait instead of using open
     const result = await waitAt(t, state, "2026-10-11T06:01:00Z");
     assert.equal(result.code, 1, result.stdout);
     assert.match(result.stderr, /timeline|ready-for-review/);
+  }
+});
+
+test("source and installed waits read in-place summary edits as responses (#969)", async (t) => {
+  for (const installed of [false, true]) {
+    const result = await waitAt(
+      t,
+      {
+        createdAt: "2026-11-11T04:54:33Z",
+        pushedAt: "2026-11-11T04:54:33Z",
+        comments: [
+          {
+            ...summary(inProgress, head),
+            createdAt: "2026-11-11T02:47:43Z",
+            updatedAt: "2026-11-11T04:54:46Z",
+          },
+        ],
+      },
+      "2026-11-11T05:00:33Z",
+      { installed },
+    );
+    assert.equal(result.code, 5, result.stderr || result.stdout);
+    assert.match(result.stdout, /still waiting on reviewer/);
+    assert.equal(result.stderr, "");
   }
 });
 
