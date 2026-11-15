@@ -41,6 +41,7 @@ const skillNames = [
   "pr",
   "prototype",
   "orchestrate",
+  "retro",
   "factory",
 ];
 const linkedSkillNames = [
@@ -1270,13 +1271,16 @@ Write the simulated draft PR at .scratch/delivery/pr.md after implementing the t
 }
 
 {
-  const root = createRepository("orchestrate", ["orchestrate", "factory"], {
-    profile: "factory",
-    agents:
-      "# Agent guidance\n\nRead docs/exercise.md. This exercise uses a disposable sibling workbench; the operator supplies its path as a simulated owner instruction. Use only the local Markdown tracker.\n",
-    context:
-      "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n",
-    exercise: `## Task
+  const root = createRepository(
+    "orchestrate",
+    ["orchestrate", "retro", "factory"],
+    {
+      profile: "factory",
+      agents:
+        "# Agent guidance\n\nRead docs/exercise.md. This exercise uses a disposable sibling workbench; the operator supplies its path as a simulated owner instruction. Use only the local Markdown tracker.\n",
+      context:
+        "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n",
+      exercise: `## Task
 
 Use the exact .agents/skills/orchestrate/SKILL.md with the sibling workbench identified in manifest.json. The operator supplies its absolute path as the simulated global owner instruction before proposal. All owner, tracker and harness inputs are simulations; no remote issue, PR, message, schedule or factory operation is performed. The workbench has no remote. Participant-authored local tickets are direct implementation contracts, not triaged briefs; this scenario exercises plan lifecycle, observation and readiness decisions, not actual brief acceptance or worker delivery. Wake-ups are controlled inputs standing for a simulated wait exit, never live waits or schedules.
 
@@ -1298,9 +1302,10 @@ Turns 6d–6e exercise the expedited change. The owner's "do this now" is its ap
 
 At turn 7, consume the operator-relayed docs/closure-inputs.md. Before announcing close, reconcile the issue-creation log with PR findings comments and the prescribed reporting locations for runs without PRs. Recover the omitted factory finding using its creation evidence, consolidate by repository and issue number, check current states, and preserve provenance for pre-existing and unrelated issues. Use the expected close set in those inputs as the oracle; report reasons and evidence links, not just counts.
 
-The fresh session resumes from committed workbench state, preserves row history and cannot close while any row lacks a closed simulated issue or dropped (owner), apart from the expedited row, which ends with merged PR 12. At close, record both open-issue counts, then run the retro in a separate session that reads the workbench and simulated tracker records, not the orchestrating transcript; when the harness cannot nest it, the operator starts a fresh session and relays its result verbatim. It writes retro.md with the outcome against Done means, where the time went with each wait attributed, and its lessons ranked by cost. With no closed plan in index.md, it records that no previous retro exists. It routes each lesson locally: a lesson about a Repo Canon skill or rule is drafted under .scratch/repo-canon/issues/ as the issue it would file there, never published or applied to the installed skill. It marks the retro done on the Close reviews line. Then move the index entry under Closed and announce shipped/dropped items, inferred intent, wishes, any still-open filed issues with reasons, the lessons with their routes and links, and one suggested next direction. The suggestion alone approves no new plan. Report actual observed outcomes separately from fixture checks; keep run evidence outside maintained documentation.
+The fresh session resumes from committed workbench state, preserves row history and cannot close while any row lacks a closed simulated issue or dropped (owner), apart from the expedited row, which ends with merged PR 12. At close, record both open-issue counts, then invoke retro in a separate session with only its launch report path, whose header cites the workbench and simulated tracker evidence. The retro reads the workbench and simulated tracker records, not the orchestrating transcript; when the harness cannot nest it, the operator starts a fresh session and relays its result verbatim. It writes retro.md with the outcome against Done means, where the time went with each wait attributed, and its lessons ranked by cost. With no closed plan in index.md, it records that no previous retro exists. It routes each lesson locally: a lesson about a Repo Canon skill or rule is drafted under .scratch/repo-canon/issues/ as the issue it would file there, never published or applied to the installed skill. The orchestrating agent consumes the completed report and marks the retro done on the Close reviews line. Then move the index entry under Closed and announce shipped/dropped items, inferred intent, wishes, any still-open filed issues with reasons, the lessons with their routes and links, and one suggested next direction. The suggestion alone approves no new plan. Report actual observed outcomes separately from fixture checks; keep run evidence outside maintained documentation.
 `,
-  });
+    },
+  );
   cpSync(
     join(sourceRoot, ".scriptorium/config.json"),
     join(root, ".scriptorium/config.json"),
@@ -1483,7 +1488,7 @@ Keep the supplied PR, branch work, review and handoff context through replacemen
   });
   repositories.orchestrate = {
     path: root,
-    skills: ["orchestrate", "factory"],
+    skills: ["orchestrate", "retro", "factory"],
     initial: commit(root, "chore: establish orchestration exercise"),
     workbench: {
       path: workbench,

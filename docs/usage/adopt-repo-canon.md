@@ -273,7 +273,8 @@ invocation names its own poll interval and maximum duration; the script has no
 default for either.
 
 Each plan you approve names its Close reviews, which run before the plan's
-closing announcement. The retro is always one: a separate session reviews the
+closing announcement. The workbench profile installs `retro` for plan and session
+retros. The retro is always one: a separate session reviews the
 plan and sends each lesson to whoever owns the rule it concerns, such as your
 own repository, your setup or a wish. A lesson about a Repo Canon skill or rule
 becomes an issue filed against Repo Canon, even when you don't develop it,

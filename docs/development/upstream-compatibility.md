@@ -48,7 +48,8 @@ The undeclared promoted skills are left out: `ask-matt`, `grill-me`, and
 builds a whole specification in one run, and `teach`, `to-questionnaire`,
 `wait-what`, `handoff`, `retro`, and `wizard` are personal skills that the
 [adoption guide](../usage/adopt-repo-canon.md#recommended-personal-skills)
-recommends installing at user scope.
+recommends installing at user scope. The workbench profile separately ships
+Canon's own `retro` skill, with no upstream base.
 
 Experimental skills are excluded; the pinned tree has no top-level
 `experimental` skill category. The `in-progress`, `misc`, and `deprecated`

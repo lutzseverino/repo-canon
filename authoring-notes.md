@@ -115,7 +115,7 @@ repeated.
   - [#733](https://github.com/lutzseverino/repo-canon/issues/733): separate
     retros and routing lessons to their rule owner (2026-10-29), and Close
     reviews named at plan approval (2026-10-30). The
-    [Close procedure](.agents/skills/orchestrate/references/close.md) owns the method;
+    [retro skill](.agents/skills/retro/SKILL.md) owns the retro method;
     an adopter cannot edit Canon's skills to fix a Canon-owned lesson.
   - [#790](https://github.com/lutzseverino/repo-canon/issues/790): the
     2026-10-31 short-core/reference split, keeping factory method in

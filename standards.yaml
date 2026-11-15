@@ -667,6 +667,10 @@ profiles:
         kind: skill
         name: orchestrate
         source: .agents/skills/orchestrate
+      skill-retro:
+        kind: skill
+        name: retro
+        source: .agents/skills/retro
       agent-configuration-index: { exclude: true }
       agent-guidance: { exclude: true }
       bug-report-template: { exclude: true }
