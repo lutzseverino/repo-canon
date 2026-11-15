@@ -180,3 +180,11 @@ involve real alternatives.
 - [Budget the computed read set, not files' lines](0048-budget-the-computed-read-set.md):
   bytes over what each entry-point skill makes an agent read, against the
   base branch.
+- [Answer a stop by applying the issue's next state](0050-answer-a-stop-by-applying-the-issues-next-state.md):
+  one act returns every factory stop, and a comment alone starts nothing.
+- [Carry a request whose fate a record settles](0051-carry-a-request-whose-fate-a-record-settles.md):
+  `state:carried` cites the carrier, mentions nobody, and the orchestrating
+  agent closes what is done.
+- [Update a non-overlapping stale base within the attempt](0052-update-a-non-overlapping-stale-base-within-the-attempt.md):
+  bounded further branch updates when the advance is not overlapping, with
+  checks only for an unchanged patch.
