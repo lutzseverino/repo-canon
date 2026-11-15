@@ -122,9 +122,44 @@ its final verification with the accepted race.
 
 Each delivery attempt, such as one `babysit` invocation, gets one branch
 update. Never merge the default branch into the PR branch, and never use
-GitHub's update-branch. A failed branch update, or a stale base again after it,
-leaves the PR unmerged and requires the contribution guide's owner handoff with
-its reason; it never starts another update.
+GitHub's update-branch.
+
+Within that one update, a run resolves a reconstruction conflict itself when,
+and only when, it is in the keep-both class. All four conditions must hold:
+
+- Ownership is certain: only this PR's own work is replayed onto the refreshed
+  base.
+- Every conflicting source hunk keeps both sides' lines unchanged. Nothing
+  either side added or changed is dropped, rewritten or combined into new
+  wording. A hunk where one side deletes or rewrites what the other side
+  changed is outside the class.
+- Where the file defines an order, such as a numbered index or sorted list,
+  the kept entries follow that order.
+- Any derived value both sides changed, such as a hash, generated index or
+  snapshot, is recomputed from the merged sources by the repository command
+  or check that produces it. Never copy either side's value or pick one by
+  hand. Without such a command or check, the conflict is outside the class.
+
+Two ADR entries appended at the same place in an ordered index qualify when
+both are kept in index order. Two baseline explanations added to the same test
+with a changed generated hash qualify when both explanations are kept and the
+hash is regenerated once. Rewrites of the same glossary definitions do not
+qualify.
+
+An in-class resolution is part of the attempt's one branch update, not a failed
+update, and never starts another update. It keeps every recovery step:
+work and PR-context preservation, required local validation before pushing,
+history and diff inspection against the refreshed base before the delivery push,
+and applicable replacement-head reviews, owner approval and review requests.
+Before the replacement head's review, post the conflict-resolution delivery
+record under the `comments` rules.
+
+Conflicts outside the class and uncertain ownership require the contribution
+guide's owner handoff. Name the conflicting files and why each conflict is
+outside the class, including any ownership uncertainty. A failed branch update,
+or a stale base again after it, leaves the PR unmerged and requires the
+contribution guide's owner handoff with its reason; it never starts another
+update.
 
 ## Designated owner review
 
