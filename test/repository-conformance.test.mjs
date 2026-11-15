@@ -1451,13 +1451,11 @@ test("all hand launches share one invocation-and-context template", () => {
     .lexer(read("rules/factory-workflow.md"))
     .find((token) => token.type === "table");
   assert.ok(stages?.type === "table");
-  assert.equal(stages.header.length, 3);
-  for (const [stage, , skill] of stages.rows) {
-    assert.ok(
-      skill.tokens.some((token) => token.type === "codespan") ||
-        /^none\b/i.test(skill.text),
-      `${stage.text}: hand skill or none`,
-    );
+  assert.equal(stages.header.length, 4);
+  for (const [stage, , skill, input] of stages.rows) {
+    const named = skill.tokens.map((token) => token.type).includes("codespan");
+    assert.ok(named || /^none\b/i.test(skill.text), stage.text);
+    assert.ok(input.text, stage.text);
   }
 });
 

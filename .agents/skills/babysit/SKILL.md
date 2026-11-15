@@ -63,11 +63,11 @@ mismatching prefix grant no exemption: the diagnostic explains why the whole
 body was checked. Link-free bodies need no reconstruction.
 
 1. Run `node <this skill's directory>/wait.mjs <number>` from the repository
-   root in the foreground until it exits. It silently waits for checks and the
-   configured reviewer's review of the head. Use a 600000 ms command timeout
-   where supported and ask for the longest wait whenever it yields.
-   Wait requires positive current-head success for every name in trusted
-   `.github/required-checks.json`; no-check timeouts never qualify.
+   root and wait until it exits, in the foreground whenever its exit cannot
+   resume the session. It silently waits for checks and the configured
+   reviewer's review of the head. Use 600000 ms command timeouts where
+   supported. Wait requires positive current-head success for every name in
+   trusted `.github/required-checks.json`; no-check timeouts never qualify.
 
    | Exit | Outcome and action |
    | --- | --- |
