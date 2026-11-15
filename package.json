@@ -17,6 +17,7 @@
     "release:prepare": "node scripts/release/prepare.mjs",
     "release:inputs": "node scripts/release/inputs.mjs",
     "release:check-merge": "node scripts/release/check-merge.mjs",
+    "release:check-update": "node scripts/release/check-update.mjs",
     "release:verify": "node scripts/release/verify.mjs",
     "test:engineering-skill-fixtures": "node --test test/engineering-skill-fixtures.test.mjs",
     "test:planning-skill-fixtures": "node --test test/planning-skill-fixtures.test.mjs",

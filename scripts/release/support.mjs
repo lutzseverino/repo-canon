@@ -7,6 +7,10 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+// The released source and the profiles that release verification checks.
+export const sourceRepository = "https://github.com/lutzseverino/repo-canon";
+export const profiles = ["standard", "factory", "workbench"];
+
 export class ReleaseCheckFailure extends Error {}
 
 /** @returns {never} */
@@ -26,6 +30,29 @@ export async function runScript(name, usage, arity, body) {
     console.error(`${name}: ${error.message}`);
     process.exitCode = 1;
   }
+}
+
+// Returns a stable release version such as v1.2.3, or fails.
+export function releaseVersion(version) {
+  if (!/^v\d+\.\d+\.\d+$/.test(version))
+    fail(`${version} is not a stable release version such as v1.2.3.`);
+  return version;
+}
+
+// Reports one check's outcome and returns whether it passed or was skipped. A
+// check that cannot complete fails with its reason.
+export function report(check) {
+  let outcome;
+  try {
+    outcome = check();
+  } catch (error) {
+    if (!(error instanceof ReleaseCheckFailure)) throw error;
+    outcome = { failures: [error.message] };
+  }
+  for (const failure of outcome.failures ?? []) console.log(`fail: ${failure}`);
+  if (outcome.pass) console.log(`pass: ${outcome.pass}`);
+  if (outcome.skip) console.log(`skip: ${outcome.skip}`);
+  return !outcome.failures;
 }
 
 export function run(command, args, options = {}) {

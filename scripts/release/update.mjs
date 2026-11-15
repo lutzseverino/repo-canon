@@ -1,8 +1,10 @@
 import { parseStandards } from "../standards-declarations.mjs";
 // Verifies an update from the preceding public release without editing the
 // adopted fixture, answering the scope, remote setup and assessment questions.
-// A profile that the preceding release does not declare has no update to
-// verify, so its check is skipped.
+// Every update `adopt` call selects the candidate by its version, which the CLI
+// acquires from its tag alone, so the check runs before the candidate is
+// published. A profile that the preceding release does not declare has no
+// update to verify, so its check is skipped.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { adoptFixture, checkStatus, fixtureAnswer } from "./adoption.mjs";
@@ -74,11 +76,15 @@ function installCli(directory, version) {
   return cli;
 }
 
-function update(cli, project, args = []) {
-  const child = run(cli, ["adopt", ...args, "--json"], {
-    cwd: project,
-    timeout: 180_000,
-  });
+function update(cli, project, version, args = []) {
+  const child = run(
+    cli,
+    ["adopt", "--standards-version", version, ...args, "--json"],
+    {
+      cwd: project,
+      timeout: 180_000,
+    },
+  );
   const report = parseJson(
     child.stdout || child.stderr,
     "the update adopt output",
@@ -167,7 +173,7 @@ function checkUpdate({
       "--message",
       `Adopt ${previous}`,
     ]);
-    let { child, report } = update(cli, project);
+    let { child, report } = update(cli, project, version);
     const answered = new Set();
     for (let round = 0; round < 10; round += 1) {
       checkSelection(report, version, profile, newest, source);
@@ -216,7 +222,10 @@ function checkUpdate({
         answers,
         `${JSON.stringify({ ...report.answers, questions: submitted }, null, 2)}\n`,
       );
-      ({ child, report } = update(cli, project, ["--answers", answers]));
+      ({ child, report } = update(cli, project, version, [
+        "--answers",
+        answers,
+      ]));
     }
     checkSelection(report, version, profile, newest, source);
     if (report.outcome !== "complete")

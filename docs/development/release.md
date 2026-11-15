@@ -19,7 +19,9 @@ declaration installs from `.agents/skills/<name>`, which
 `node scripts/upstream-bases.mjs check` enforces, so the path is the same at
 every release tag. The [usage guide](../usage/install-skills.md) gives the
 install command. The reviewed diff is the diff from the
-previous release tag over the source inputs. Install the public CLI at the
+previous release tag over the source inputs. The previous release is the newest
+published stable release, so a tag that was pushed but never published is never
+the previous release. Install the public CLI at the
 required minimum version outside the checkout, as the
 [source profile](source-profile.md#executable-prerequisites) describes, and
 point `REPO_STANDARDS_PREFIX` at its prefix. With the release tags fetched,
@@ -27,7 +29,8 @@ list the inputs and show the diff from the previous release tag:
 
 ```sh
 export REPO_STANDARDS_PREFIX="$cli_prefix"
-previous_tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD)
+previous_tag=$(gh release list --exclude-drafts --exclude-pre-releases \
+  --limit 1 --json tagName --jq '.[0].tagName')
 pnpm run release:inputs "$previous_tag"
 ```
 
@@ -114,11 +117,11 @@ threshold.
 
 A selected release follows this entire procedure, including whole-source and
 external changed-script review, all-profile validation, refreshed applicable
-fixtures and skill exercises, reviewed-byte checks, immutable publication and
-published-release/update verification. A compatible fix can use a patch
-version; incompatible work retains its ordinary required bump. Source merge,
-publication and installed adoption are separate stages: adopters receive the
-correction only through their normal [adoption update](../usage/adopt-repo-canon.md).
+fixtures and skill exercises, reviewed-byte checks, the update check before
+publication, immutable publication and published-release verification. A
+compatible fix can use a patch version; incompatible work retains its ordinary
+required bump. Source merge, publication and installed adoption are separate
+stages: adopters receive the correction only through their normal [adoption update](../usage/adopt-repo-canon.md).
 
 ### Worked adopter-finding example
 
@@ -231,10 +234,10 @@ The pull request body carries the review and validation summary:
 The GitHub release carries the notes; the repository keeps no copy. Draft them
 in the release pull request so that they are reviewed with it. Open the draft
 with the expected adopter-action line: the CLI's one-line statement of the
-update class, contextual work needed, and pending remote setup. After
-`release:verify` passes, open the verified notes with the derived adopter-action
-line it printed. If the profiles produce different lines, put both first,
-labelled with their profiles. Next to each line, name the scope and remote
+update class, contextual work needed, and pending remote setup. Open the
+verified notes with the derived adopter-action line that `release:check-update`
+printed before publication. If the profiles produce different lines, put both
+first, labelled with their profiles. Next to each line, name the scope and remote
 setup questions that the update check reported, so adopters know which
 answers they will need to validate and submit.
 
@@ -311,23 +314,7 @@ release_commit=$(gh pr view "$pull_request" --json mergeCommit --template '{{.me
 git fetch origin main "$reviewed_head"
 ```
 
-Then confirm the merge commit and publish. Each command runs only when the one
-before it succeeds:
-
-```sh
-pnpm run release:check-merge "$reviewed_head" "$release_commit" &&
-  git tag --annotate "$version" "$release_commit" --message "Repo Canon $version" &&
-  git push origin "$version" &&
-  gh release create "$version" --verify-tag --title "$version" \
-    --notes-file /path/to/release-notes.md
-```
-
-`release:check-merge` confirms that the merge commit carries exactly the
-reviewed inputs, over the inputs either commit selects. If it fails, another
-change reached them, and the release needs review again. Publish an ordinary
-release; a draft or prerelease cannot be selected for adoption.
-
-Before running `release:verify`, export `GH_TOKEN` from credentials already
+Before checking the update, export `GH_TOKEN` from credentials already
 authorized for this run. When the current `gh` login is that authorized
 identity, use:
 
@@ -337,14 +324,65 @@ export GH_TOKEN="$(gh auth token)"
 
 The public Repository Standards CLI reads `GH_TOKEN` (or `GITHUB_TOKEN` as a
 fallback) for its GitHub API requests; an authenticated `gh` login alone does
-not supply that environment variable. Verification's public CLI subprocesses
-inherit the exported token, including the inspections, fixture adoptions and
-previous-release updates for every profile. These requests can exhaust the
-anonymous API quota. Keep the token value out of logs and release notes.
+not supply that environment variable. The public CLI subprocesses of
+`release:check-update` and `release:verify` inherit the exported token,
+including the previous-release updates, inspections and fixture adoptions for
+every profile. These requests can exhaust the anonymous API quota. Keep the
+token value out of logs and release notes.
+
+Then confirm the merge commit, tag it, check the update from the previous
+release against the pushed tag, and publish. Each command runs only when the one
+before it succeeds:
+
+```sh
+pnpm run release:check-merge "$reviewed_head" "$release_commit" &&
+  git tag --annotate "$version" "$release_commit" --message "Repo Canon $version" &&
+  git push origin "$version" &&
+  pnpm run release:check-update "$version" "$release_commit" &&
+  gh release create "$version" --verify-tag --title "$version" \
+    --notes-file /path/to/release-notes.md
+```
+
+`release:check-merge` confirms that the merge commit carries exactly the
+reviewed inputs, over the inputs either commit selects. If it fails, another
+change reached them, and the release needs review again. Publish an ordinary
+release; a draft or prerelease cannot be selected for adoption.
+
+`release:check-update` runs before publication. With each profile, it adopts
+the previous release, the newest published stable tag before the candidate,
+into a disposable fixture using that release's required minimum CLI, then
+commits the completed adoption. Only published releases count, so a tag that
+was pushed but never published is never the previous release. The newest published CLI then updates the fixture with
+`adopt --standards-version "$version" --json` on every call, initially with no
+answers file and no edits. The CLI acquires an explicitly selected version from
+its tag alone, while an adopter's newest-release selection reads only published
+releases, so the check reaches the pushed candidate without offering it to
+adopters. The check installs these two public CLIs outside the checkout; npm
+registry access and the previous release tag fetched locally are needed.
+
+It answers the update's scope questions with their prefilled answers unchanged,
+including a new declaration's discovery draft. A declaration without a draft
+gets the same fixture scope answer as `release:verify`'s fixture adoption. It
+answers `remote-setup` with `defer` and submits the fixture's contextual
+assessments for any declaration the run asks about, reusing that adoption's
+answers and assessments. The run must reach `complete` with exit 0, and
+`status` must report it ready to commit, with both GitHub remote setup fixes
+deferred, or none for the `workbench` profile, and selection of the release
+commit and profile. A blocker, confirmation-required change, failed check,
+question of any other kind, rejected scope answer, or further stop after
+submitting an answer fails. The check prints both CLI versions, every question
+asked (kind and declaration), the outcome, and the derived adopter-action
+line. With no previous published stable release, it fails rather than claiming
+an update was verified. A profile that the previous release does not declare
+has no adoption to update, so the check reports it skipped, as for the first
+release with the `workbench` profile.
+
+When `release:check-update` fails, the release stays unpublished; follow
+[the recovery below](#recover-verification-of-an-existing-tag).
 
 Then verify the publication, and only when it verifies, replace the notes with
-the version that opens with the printed adopter-action line and carries the
-verification paragraph:
+the version that opens with the adopter-action line that
+`release:check-update` printed and carries the verification paragraph:
 
 ```sh
 pnpm run release:verify "$version" "$release_commit" &&
@@ -377,41 +415,21 @@ pnpm run release:verify "$version" "$release_commit" &&
    assessment; `status` must list nothing deferred, and the adoption must
    install no `.repo-standards/rules/` directory and no `.github/` file.
    `pnpm test` checks the fixture against
-   both drafters and the contextual checks before a release, because `adopt`
-   acquires only published stable tags.
-5. With each profile, adopt the previous release, the newest published stable
-   tag before the verified version, into the same disposable fixture using that
-   release's required minimum CLI, then commit the completed adoption. Run the
-   newest published CLI as `adopt --json`, initially with no answers file and
-   no edits. The check installs these two public CLIs outside the checkout;
-   npm registry access and the previous release tag fetched locally are needed.
-   It answers the update's scope questions with their prefilled answers unchanged,
-   including a new declaration's discovery draft. A declaration without a draft
-   gets the same fixture scope answer as check 4. It answers `remote-setup` with
-   `defer` and submits the fixture's contextual assessments for any declaration
-   the run asks about, reusing check 4's answers and assessments. The run must
-   reach `complete` with exit 0, and `status` must report it ready to commit,
-   with both GitHub remote setup fixes deferred, or none for the `workbench`
-   profile, and selection of the verified release commit and profile. A blocker, confirmation-required change, failed
-   check, question of any other kind, rejected scope answer, or further stop
-   after submitting an answer fails. The check prints both CLI versions, every
-   question asked (kind and declaration), the outcome, and the derived
-   adopter-action line. With no previous published stable release, it fails
-   rather than claiming an update was verified. A profile that the previous
-   release does not declare has no adoption to update, so the check reports it
-   skipped, as for the first release with the `workbench` profile.
-6. The Repository README and the adoption guide at the release commit name no
+   both drafters and the contextual checks before a release, because this
+   check runs only after publication.
+5. The Repository README and the adoption guide at the release commit name no
    Repo Canon version, the Repository README names no CLI version, and every
    CLI version that the adoption guide, the development guide, the source
    profile, and the authoring notes there name is the required minimum.
 
 The verification paragraph appended to the release notes names the release
 commit and the release pull request, confirms the tag and release state, and
-reports the CLI version with the inspection, fixture adoption, and update-from-previous-release results that
-`release:verify` prints. The release scripts change no repository or GitHub
-state: the fixture adoption runs in a temporary directory and has no remote to
-change. The tag, the release, and its notes are published only by the commands
-written out above.
+reports the CLI versions with the update-from-previous-release results that
+`release:check-update` printed before publication and the inspection and
+fixture adoption results that `release:verify` prints. The release scripts
+change no repository or GitHub state: the fixture adoptions and updates run in
+temporary directories and have no remote to change. The tag, the release, and
+its notes are published only by the commands written out above.
 
 ### Account for tracked adopters
 
@@ -421,24 +439,37 @@ accounting for every adopter the maintainer tracks. Keep that tracked list
 outside Repo Canon. For each adopter, record either that it is updated to the
 release with a link to its adoption PR, or that it is waiting with a reason.
 Update the coverage in release-PR comments as waiting adopters progress.
-Preserve adoption-record bodies unchanged. Adoption uses published releases;
-there is no pre-tag adopter dry-run or unpublished-candidate install step.
+Preserve adoption-record bodies unchanged. Adoption uses published releases.
+The only install of the unpublished candidate is `release:check-update`'s
+disposable fixture update, after the tag is pushed; there is no pre-tag adopter
+dry run.
 
 ### Recover verification of an existing tag
 
+An existing tag is either published, after `gh release create`, or pushed but
+never published, when `release:check-update` failed. A failed update check
+leaves the release unpublished: do not run `gh release create` for it.
+
 A verifier tooling correction can be reviewed and merged in an ordinary pull
 request, separately from the release pull request, then used from an up-to-date
-`main` checkout to rerun `release:verify` against the existing published tag.
-Pass the original release commit, never the tooling correction's commit. The
-verifier logic and adoption fixture come from the tooling checkout; released
-requirements and documents remain pinned to the release-commit argument. Only
-a successful full authenticated run permits finalizing provisional release
-notes with its derived adopter-action lines and verification paragraph.
+`main` checkout to rerun the failed check against the existing tag:
+`release:check-update` against a pushed tag that was never published, then the
+rest of the publication sequence from `gh release create`, or `release:verify`
+against a published tag. Pass the original release commit, never the tooling
+correction's commit. The verifier logic and adoption fixture come from the
+tooling checkout; released requirements and documents remain pinned to the
+release-commit argument. Only a successful full authenticated run permits
+publishing an unpublished tag, or finalizing provisional release notes with the
+derived adopter-action lines and verification paragraph.
+
+When the failure needs a correction to released source inputs, such as an
+update that cannot complete from the previous release, the pushed tag stays
+unpublished and the correction is released under a new version.
 
 This recovery does not change released source inputs or amend their reviewed
 bytes. The rule against committing changes for the release after its pull
 request merges still applies to those inputs.
 
-A published tag is never moved, deleted, or retargeted. A correction to released
-source inputs receives a new version. Earlier finalized releases keep their
-notes.
+A pushed tag, published or not, is never moved, deleted, or retargeted. A
+correction to released source inputs receives a new version. Earlier finalized
+releases keep their notes.

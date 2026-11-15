@@ -8,11 +8,9 @@
 // an answers file, deferring remote setup, and the public copy at the release
 // commit names no Repo Canon version and its README no CLI version. Every CLI
 // version that the adoption guide and the development and authoring documents
-// name there is the required minimum. The update check also commits the
-// previous release's fixture adoption and updates it with the newest public CLI,
-// for each profile that the previous release declares.
+// name there is the required minimum. The update from the previous release
+// runs before publication, through `release:check-update`.
 
-import { checkUpdates } from "./update.mjs";
 import { checkAdoption } from "./adoption.mjs";
 import {
   adoptionGuidePath,
@@ -23,15 +21,18 @@ import {
   standardsPath,
 } from "./named-versions.mjs";
 import {
-  ReleaseCheckFailure,
   fail,
   filesAt,
   git,
   parseJson,
+  profiles,
+  releaseVersion,
   repoStandardsCli,
+  report,
   resolveCommit,
   run,
   runScript,
+  sourceRepository,
   withTemporaryDirectory,
 } from "./support.mjs";
 
@@ -78,9 +79,6 @@ export async function checkSeamsRelease(version, releaseCommit, read, request) {
     return { failures: [error.message] };
   }
 }
-
-const sourceRepository = "https://github.com/lutzseverino/repo-canon";
-const profiles = ["standard", "factory", "workbench"];
 
 function checkTag(version, releaseCommit) {
   const references = new Map();
@@ -242,30 +240,13 @@ function checkDocuments(read) {
   };
 }
 
-// Reports one check's outcome and returns whether it passed or was skipped. A
-// check that cannot complete fails with its reason.
-function report(check) {
-  let outcome;
-  try {
-    outcome = check();
-  } catch (error) {
-    if (!(error instanceof ReleaseCheckFailure)) throw error;
-    outcome = { failures: [error.message] };
-  }
-  for (const failure of outcome.failures ?? []) console.log(`fail: ${failure}`);
-  if (outcome.pass) console.log(`pass: ${outcome.pass}`);
-  if (outcome.skip) console.log(`skip: ${outcome.skip}`);
-  return !outcome.failures;
-}
-
 if (executedAsScript(import.meta.url))
   await runScript(
     "release:verify",
     "pnpm run release:verify <version> <release-commit>",
     2,
     async (version, releaseRevision) => {
-      if (!/^v\d+\.\d+\.\d+$/.test(version))
-        fail(`${version} is not a stable release version such as v1.2.3.`);
+      releaseVersion(version);
       const releaseCommit = resolveCommit(releaseRevision);
       const read = filesAt(releaseCommit);
       const boundary = await checkSeamsRelease(
@@ -288,9 +269,6 @@ if (executedAsScript(import.meta.url))
         ),
         ...profiles.map((profile) =>
           report(() => checkFixtureAdoption(version, read, profile)),
-        ),
-        ...checkUpdates(sourceRepository, version, releaseCommit, profiles).map(
-          (outcome) => report(() => outcome),
         ),
         report(() => checkDocuments(read)),
       ];

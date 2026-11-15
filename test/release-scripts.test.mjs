@@ -567,6 +567,11 @@ test("release:verify passes a published release that agrees with its commit", (t
     output,
     /pass: the public copy at the release commit names no Repo Canon version and its README no CLI version, and every CLI version the adoption guide and the development and authoring documents name is the required minimum 7\.0\.0\./,
   );
+  assert.doesNotMatch(
+    output,
+    /update/,
+    "the update from the previous release runs before publication",
+  );
 });
 
 test("release:verify uses released requirements and documents when the tooling checkout is newer", (t) => {
@@ -658,8 +663,8 @@ for (const [name, overrides, failure] of wrongInspectionSelections) {
   });
 }
 
-test("release:verify accepts published CLI 11 update reports for every profile", (t) => {
-  const { status, output } = verifyAdoption(
+test("release:check-update accepts published CLI 11 update reports for every profile", (t) => {
+  const { status, output } = checkUpdate(
     t,
     "complete",
     {
@@ -677,10 +682,22 @@ test("release:verify accepts published CLI 11 update reports for every profile",
     );
 });
 
-test("release:verify updates from the previous stable release per profile using the newest CLI", (t) => {
-  const { status, output, calls } = verifyAdoption(t, "complete");
+test("release:check-update updates from the previous stable release per profile using the newest CLI", (t) => {
+  const { status, output, calls } = checkUpdate(t, "complete");
 
   assert.equal(status, 0, output);
+  assert.match(output, /the update to v1\.0\.0 verified at [0-9a-f]{40}\./);
+  const updates = calls.filter((entry) => entry.update);
+  assert.deepEqual(
+    updates.map((entry) => entry.profile),
+    ["standard", "factory"],
+  );
+  for (const entry of updates)
+    assert.deepEqual(
+      entry.args,
+      ["adopt", "--standards-version", "v1.0.0", "--json"],
+      "the unpublished candidate is selected by its version",
+    );
   for (const profile of ["standard", "factory"]) {
     assert.match(
       output,
@@ -707,8 +724,8 @@ test("release:verify updates from the previous stable release per profile using 
   );
 });
 
-test("release:verify updates the workbench profile once the previous release declares it", (t) => {
-  const { status, output, calls } = verifyAdoption(t, "complete", {}, [
+test("release:check-update updates the workbench profile once the previous release declares it", (t) => {
+  const { status, output, calls } = checkUpdate(t, "complete", {}, [
     "standard",
     "factory",
     "workbench",
@@ -723,19 +740,32 @@ test("release:verify updates the workbench profile once the previous release dec
   const workbench = calls.find(
     (answers) => answers.update && answers.profile === "workbench",
   );
-  assert.deepEqual(workbench.args, ["adopt", "--json"]);
+  assert.deepEqual(workbench.args, [
+    "adopt",
+    "--standards-version",
+    "v1.0.0",
+    "--json",
+  ]);
 });
 
 for (const newest of ["10.0.0", "11.0.0"]) {
   for (const scenario of ["questions", "fallback-scope"]) {
-    test(`CLI ${newest}: release:verify answers renewed scope, new discovery and remote setup questions (${scenario})`, (t) => {
-      const { status, output, calls } = verifyAdoption(t, "complete", {
+    test(`CLI ${newest}: release:check-update answers renewed scope, new discovery and remote setup questions (${scenario})`, (t) => {
+      const { status, output, calls } = checkUpdate(t, "complete", {
         STUB_NEWEST_CLI: newest,
         FAKE_UPDATE: scenario,
       });
       assert.equal(status, 0, output);
       const protocols = calls.filter((entry) => entry.answersFormat);
       assert.equal(protocols.length, 4);
+      for (const entry of protocols) {
+        assert.deepEqual(entry.args.slice(0, 3), [
+          "adopt",
+          "--standards-version",
+          "v1.0.0",
+        ]);
+        assert.ok(entry.args.includes("--answers"));
+      }
       for (const entry of protocols)
         assert.equal(
           entry.answersFormat,
@@ -780,8 +810,8 @@ for (const newest of ["10.0.0", "11.0.0"]) {
   }
 
   for (const scenario of ["contextual", "extra-assessment"]) {
-    test(`CLI ${newest}: release:verify submits requested contextual assessments (${scenario}) and requires completion`, (t) => {
-      const { status, output, calls } = verifyAdoption(t, "complete", {
+    test(`CLI ${newest}: release:check-update submits requested contextual assessments (${scenario}) and requires completion`, (t) => {
+      const { status, output, calls } = checkUpdate(t, "complete", {
         STUB_NEWEST_CLI: newest,
         FAKE_UPDATE: scenario,
       });
@@ -821,8 +851,8 @@ for (const newest of ["10.0.0", "11.0.0"]) {
     });
   }
 
-  test(`CLI ${newest}: release:verify reports a stopped update's quota reason and retry time`, (t) => {
-    const { status, output } = verifyAdoption(t, "complete", {
+  test(`CLI ${newest}: release:check-update reports a stopped update's quota reason and retry time`, (t) => {
+    const { status, output } = checkUpdate(t, "complete", {
       STUB_NEWEST_CLI: newest,
       FAKE_UPDATE: "quota",
     });
@@ -833,8 +863,8 @@ for (const newest of ["10.0.0", "11.0.0"]) {
     );
   });
 
-  test(`CLI ${newest}: release:verify reports a stopped update without optional cause fields`, (t) => {
-    const { status, output } = verifyAdoption(t, "complete", {
+  test(`CLI ${newest}: release:check-update reports a stopped update without optional cause fields`, (t) => {
+    const { status, output } = checkUpdate(t, "complete", {
       STUB_NEWEST_CLI: newest,
       FAKE_UPDATE: "no-cause",
     });
@@ -846,8 +876,8 @@ for (const newest of ["10.0.0", "11.0.0"]) {
     assert.doesNotMatch(output, /undefined|TypeError/);
   });
 
-  test(`CLI ${newest}: release:verify preserves blockers, failed checks and the update stop reason together`, (t) => {
-    const { status, output } = verifyAdoption(t, "complete", {
+  test(`CLI ${newest}: release:check-update preserves blockers, failed checks and the update stop reason together`, (t) => {
+    const { status, output } = checkUpdate(t, "complete", {
       STUB_NEWEST_CLI: newest,
       FAKE_UPDATE: "all-diagnostics",
     });
@@ -882,8 +912,8 @@ for (const newest of ["10.0.0", "11.0.0"]) {
     ["wrong-commit", /the ready status does not identify the verified release/],
     ["missing-line", /did not report a derived adopter-action line/],
   ])) {
-    test(`CLI ${newest}: release:verify fails an update with ${scenario}`, (t) => {
-      const { status, output, calls } = verifyAdoption(t, "complete", {
+    test(`CLI ${newest}: release:check-update fails an update with ${scenario}`, (t) => {
+      const { status, output, calls } = checkUpdate(t, "complete", {
         STUB_NEWEST_CLI: newest,
         FAKE_UPDATE: scenario,
       });
@@ -901,8 +931,8 @@ for (const newest of ["10.0.0", "11.0.0"]) {
     });
   }
 
-  test(`CLI ${newest}: release:verify fails if submitting the named contextual assessments does not complete`, (t) => {
-    const { status, output } = verifyAdoption(t, "complete", {
+  test(`CLI ${newest}: release:check-update fails if submitting the named contextual assessments does not complete`, (t) => {
+    const { status, output } = checkUpdate(t, "complete", {
       STUB_NEWEST_CLI: newest,
       FAKE_UPDATE: "contextual-repeat",
     });
@@ -914,18 +944,18 @@ for (const newest of ["10.0.0", "11.0.0"]) {
   });
 }
 
-test("release:verify fails when no previous stable release is published", (t) => {
-  const { status, output } = verifyAdoption(t, "complete", {
+test("release:check-update fails when no previous stable release is published", (t) => {
+  const { status, output } = checkUpdate(t, "complete", {
     STUB_RELEASES: "[]",
   });
   assert.notEqual(status, 0, output);
   assert.match(output, /no published stable release precedes v1\.0\.0/);
 });
 
-// Runs release:verify of v1.0.0 with the fake adoption's scenario, and returns
-// its result with the answers of each adopt call. The previous release declares
+// Runs `script` for v1.0.0 with the fake adoption's scenario, and returns its
+// result with the answers of each adopt call. The previous release declares
 // `previousProfiles`, by default the standard and factory profiles.
-function verifyAdoption(t, scenario, overrides = {}, previousProfiles) {
+function adoptionRun(t, script, scenario, overrides, previousProfiles) {
   const { run, releaseCommit, environment } = publishedRelease(
     t,
     {},
@@ -937,17 +967,47 @@ function verifyAdoption(t, scenario, overrides = {}, previousProfiles) {
   );
   t.after(() => rmSync(dirname(log), { recursive: true, force: true }));
   writeFileSync(log, "");
-  const result = run("verify.mjs", ["v1.0.0", releaseCommit], {
+  const result = run(script, ["v1.0.0", releaseCommit], {
     ...environment,
     FAKE_ADOPT: scenario,
     FAKE_ADOPT_LOG: log,
-    ...overrides,
+    ...overrides(environment),
   });
   const calls = readFileSync(log, "utf8")
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line));
   return { ...result, calls };
+}
+
+function verifyAdoption(t, scenario, overrides = {}, previousProfiles) {
+  return adoptionRun(
+    t,
+    "verify.mjs",
+    scenario,
+    () => overrides,
+    previousProfiles,
+  );
+}
+
+// Runs release:check-update before v1.0.0 is published: its annotated tag is
+// pushed, but GitHub has no v1.0.0 release.
+function checkUpdate(t, scenario, overrides = {}, previousProfiles) {
+  return adoptionRun(
+    t,
+    "check-update.mjs",
+    scenario,
+    (environment) => ({
+      STUB_RELEASE: "",
+      STUB_RELEASES: JSON.stringify(
+        JSON.parse(environment.STUB_RELEASES).map((page) =>
+          page.filter((release) => release.tag_name !== "v1.0.0"),
+        ),
+      ),
+      ...overrides,
+    }),
+    previousProfiles,
+  );
 }
 
 test("release:verify adopts the release with the verified version, the drafted scope, and deferred remote setup", (t) => {
@@ -1175,21 +1235,26 @@ test("release:verify fails an inspection that does not resolve the release commi
   );
 });
 
-test("release:verify rejects a version that is not a stable release tag", (t) => {
-  const { run, releaseCommit, environment } = publishedRelease(t);
+for (const [name, script] of [
+  ["release:verify", "verify.mjs"],
+  ["release:check-update", "check-update.mjs"],
+]) {
+  test(`${name} rejects a version that is not a stable release tag`, (t) => {
+    const { run, releaseCommit, environment } = publishedRelease(t);
 
-  const { status, output } = run(
-    "verify.mjs",
-    ["v1.0.0-rc.1", releaseCommit],
-    environment,
-  );
+    const { status, output } = run(
+      script,
+      ["v1.0.0-rc.1", releaseCommit],
+      environment,
+    );
 
-  assert.notEqual(status, 0);
-  assert.match(
-    output,
-    /v1\.0\.0-rc\.1 is not a stable release version such as v1\.2\.3/,
-  );
-});
+    assert.notEqual(status, 0);
+    assert.match(
+      output,
+      /v1\.0\.0-rc\.1 is not a stable release version such as v1\.2\.3/,
+    );
+  });
+}
 
 // Every declaration with adoption guidance is assessed during adoption, in
 // one profile or both, so the fixture answers each of them.
