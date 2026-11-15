@@ -5,7 +5,7 @@ Repo Canon standards source.
 
 ## Setup and validation
 
-Clone the repository with Git 2.32.0 or newer and use Node.js 24 or 26 with
+Clone the repository with Git 2.38.0 or newer and use Node.js 24 or 26 with
 pnpm 11, at the version that `packageManager` in `package.json` pins. Run
 `pnpm install --frozen-lockfile` to install the pinned development
 dependencies, including TypeScript 7, oxlint 1, and Prettier 3; tests run with
