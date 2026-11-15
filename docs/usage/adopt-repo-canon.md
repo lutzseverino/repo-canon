@@ -293,6 +293,7 @@ each maintainer. It recommends these:
   questionnaire for someone else.
 - `wait-what`: have the agent re-pitch a message that did not land.
 - `handoff`: compact a conversation into a document another agent picks up.
+- `retro`: run a retrospective on a coding session.
 - `wizard`: generate a bash wizard for steps only a person can perform.
 - `show-me`: explain the current topic with diagrams and focused HTML.
 
@@ -301,7 +302,7 @@ across repositories:
 
 ```sh
 npx skills@latest add mattpocock/skills --global --skill teach \
-  --skill to-questionnaire --skill wait-what --skill handoff \
+  --skill to-questionnaire --skill wait-what --skill handoff --skill retro \
   --skill wizard
 npx skills@latest add humanlayer/skills --global --skill show-me
 ```

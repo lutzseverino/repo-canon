@@ -375,10 +375,10 @@ Use the planning builder above from the candidate checkout. Its manifest entry
 `repositories.orchestrate` names the disposable project, its initial commit,
 and a separate `workbench` with its own initial commit. Both start clean on
 `main` with local signing disabled and no remote. The project links the exact
-candidate `.agents/skills/orchestrate` and `.agents/skills/factory`
-directories, whose digests the manifest records alongside the source HEAD and
-builder/input hashes, and copies the source's `.scriptorium/config.json` for the
-factory's labels. No package install is needed. Keep the workbench path in the
+candidate `.agents/skills/orchestrate`, `.agents/skills/retro` and
+`.agents/skills/factory` directories, whose digests the manifest records
+alongside the source HEAD and builder/input hashes, and copies the source's
+`.scriptorium/config.json` for the factory's labels. No package install is needed. Keep the workbench path in the
 exercise sandbox's writable roots.
 
 Prerequisites are Node.js 24 or 26, Git, an agent harness that supports a fresh
@@ -459,9 +459,10 @@ parked issue stays open. Relay turn 10: only then may the remaining closed
 simulated issues plus the owner drop permit closure. Check the final counts
 and closing announcement against the skill.
 Before that announcement, check that a separate retro session, started by the
-operator when the harness cannot nest one, writes `retro.md` from the workbench
-and simulated tracker records, attributes each wait, ranks its lessons by cost
-and records that no previous retro exists. The Close reviews line, set at
+operator when the harness cannot nest one and invoking `retro` with only its
+launch report path, writes `retro.md` from the workbench and simulated tracker
+records, attributes each wait, ranks its lessons by cost and records that no
+previous retro exists. The Close reviews line, set at
 turn 2, holds only the retro, because the plan changes no code. A lesson about
 a Repo Canon skill or rule is drafted under `.scratch/repo-canon/issues/`,
 never published. The counts are recorded before the retro, so its lessons

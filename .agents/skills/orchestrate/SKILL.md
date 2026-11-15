@@ -116,5 +116,5 @@ Paths are relative to each repository or the workbench.
   when rules are missing, consult source `rules/factory-workflow.md` for the stages.
 - Scriptorium status JSON: budget/model observations. When absent or unavailable,
   report missing facts and establish them before launching.
-- The `retro` skill: method and lesson routes. If missing, obtain it before closing the plan.
-- The `babysit` skill: the wait's GitHub CLI connection and merge continuation. If missing, re-read records each turn as [the wait step](#the-wait-step) says.
+- The `retro` skill: method and lesson routes. When missing, obtain it before closing the plan.
+- The `babysit` skill: the wait's GitHub CLI connection and merge continuation. When missing, re-read records each turn as [the wait step](#the-wait-step) says.

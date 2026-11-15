@@ -22,10 +22,8 @@ and installed comment rules before filing or reopening issues.
 Follow the header's evidence links to primary records. Read the plan's goal and
 Done means, its history and run records, and the decision records in `inbox.md`
 and `inbox-archive.md`. Use `index.md` to find the latest Closed plan's `retro.md`.
-Compare that retro and open issues before routing lessons. When a recurring
-lesson's issue is closed, check its current state and reopen it rather than
-filing a duplicate. Record unavailable evidence as missing; do not replace it
-with the orchestrating agent's account.
+Compare that retro and open issues before routing lessons. Record unavailable
+evidence as missing.
 
 ## Write the retro record
 
@@ -37,9 +35,9 @@ Write the record into the launch report, with evidence links for:
 - Lessons ranked by cost, each with its route and link.
 - Comparison with the previous retro and open issues; explicitly record when
   no previous retro or matching issue exists.
-- Filed or reopened issues, also logged in the plan's `log.md` with creation
-  evidence (and the reopening record for a reopened issue). Outside a plan,
-  keep that evidence in the report.
+- Filed or reopened issues, each with its repository and number, also logged
+  in the plan's `log.md` with creation evidence (and the reopening record for a
+  reopened issue). Outside a plan, keep that evidence in the report.
 - Counts of owner answers matching recommendations, by decision type; propose
   preapproval of a type the owner always accepted. A proposal grants no approval.
 - The friction log's gap-line count, excluding intake of ideas. File the top
@@ -58,10 +56,8 @@ Write the record into the launch report, with evidence links for:
   Waiting on you, linking its evidence.
 - **One-off:** retain its evidence in the retro record.
 
-Log each filed or reopened issue with its repository, number and creation
-evidence. Complete the report under the launch-report protocol, commit the
-workbench writes and push when it has a remote. The orchestrating agent consumes
-it and marks the Close review done before announcing the close.
+Complete the report under the launch-report protocol. The orchestrating agent
+consumes it and marks the Close review done before announcing the close.
 
 Seam (deferred): workbench record reads use orchestrate's format; consumers: 2
 (orchestrate and retro); propose extraction at 3 under the Ownership check.

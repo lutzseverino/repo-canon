@@ -24,8 +24,7 @@ Then run each of the plan's Close reviews in its own session, as a launch:
 **The retro**, as [Retro](launches.md#retro) says, and each other Close
 review, as [Architecture review](launches.md#architecture-review) says.
 
-Consume each finished report and mark its Close review `done <file>` in the
-plan. The `retro` skill owns the record and [lesson routes](../../retro/SKILL.md#route-each-lesson).
+The `retro` skill owns the retro record and [lesson routes](../../retro/SKILL.md#route-each-lesson).
 
 ## Announce the close
 
