@@ -148,10 +148,12 @@ const questions = submitted?.questions ?? [];
 if (submitted && state?.version === "v1.0.0" && updateCli) {
   if (submitted.format !== answersFormat || submitted.source !== source)
     reject("The update answers must retain their protocol and source.");
+  if (option("--standards-version") !== "v1.0.0")
+    reject("Every update adopt call must select the candidate by its version.");
   if (process.env.FAKE_ADOPT_LOG)
     appendFileSync(
       process.env.FAKE_ADOPT_LOG,
-      JSON.stringify({ answersFormat: submitted.format }) + "\n",
+      JSON.stringify({ answersFormat: submitted.format, args }) + "\n",
     );
 }
 const given = new Map(
@@ -214,8 +216,10 @@ if (state?.phase === "complete" && !answersPath && updateCli) {
   }).trim();
   if (count !== "2" || dirty)
     reject("The previous adoption must be committed before the update.");
-  if (args.join(" ") !== "adopt --json")
-    reject("The update must start without flags or answers.");
+  if (args.join(" ") !== "adopt --standards-version v1.0.0 --json")
+    reject(
+      "The update must start selecting the candidate by its version, without other flags or answers.",
+    );
   if (process.env.FAKE_ADOPT_LOG)
     appendFileSync(
       process.env.FAKE_ADOPT_LOG,
