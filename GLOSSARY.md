@@ -255,8 +255,22 @@ _Avoid_: Stage, phase, mode
 
 **Workflow state**:
 The one `state:` label an open issue carries, naming whom it waits on: triage,
-an outside reporter, a grill, the owner, or the factory once ready.
+an outside reporter, a grill, the owner, another record that carries it, or
+the factory once ready. A stop is answered by applying the issue's next state.
 _Avoid_: Status label, needs-input
+
+**Carried request**:
+An open request whose fate another record or ticket already settles, such as
+the change that implemented it, the issue it duplicates, the rejection it
+repeats, or the ticket whose pull request closes it, and which waits on that
+carrier rather than on the owner.
+_Avoid_: Covered request, held request
+
+**Overlapping advance**:
+A move of the default branch, after a pull request's branch update, that
+changes a path the pull request changes or does not merge cleanly with its
+head.
+_Avoid_: Conflict, when the merge is clean
 
 **Owner gate**:
 A `gate:` label the owner, or a grill at the owner's request, sets before the
