@@ -364,6 +364,7 @@ test("self-adoption leaves Repo Canon's own installed source unvendored", () => 
     "vendor/repo-canon/validate.mjs",
     "operations/lib/rendered-markdown.mjs",
     "operations/lib/factory-labels.mjs",
+    "operations/lib/canonical-labels.mjs",
     ".agents/skills/triage/ready.mjs",
     ".agents/skills/review/round.mjs",
     ".agents/skills/code-review/ownership-facts.mjs",
