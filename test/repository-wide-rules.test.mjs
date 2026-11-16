@@ -249,7 +249,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     const profile = validation.profiles[name];
     assert.equal(
       profile.declarations.length,
-      { standard: 65, factory: 70 }[name],
+      { standard: 66, factory: 71 }[name],
     );
     assert.deepEqual(
       profile.declarations.find(({ id }) => id === "standards-update-workflow"),
